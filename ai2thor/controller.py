@@ -1,3 +1,4 @@
+# Copyright Allen Institute for Artificial Intelligence 2017
 import atexit
 from collections import deque, defaultdict
 from itertools import product

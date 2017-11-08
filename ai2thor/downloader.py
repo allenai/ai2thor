@@ -1,3 +1,4 @@
+# Copyright Allen Institute for Artificial Intelligence 2017
 import requests
 from progressbar import ProgressBar, Bar, Percentage, FileTransferSpeed
 

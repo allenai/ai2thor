@@ -1,3 +1,4 @@
+# Copyright Allen Institute for Artificial Intelligence 2017
 import datetime
 import io
 import json
@@ -17,10 +18,6 @@ import numpy as np
 LOG = logging.getLogger('werkzeug')
 LOG.setLevel(logging.ERROR)
 
-
-def format_sse(**params):
-    lines = ["%s: %s" % (k, v) for k, v in params.items()]
-    return "\n".join(lines) + "\n\n"
 
 # get with timeout to allow quit
 def queue_get(q):
