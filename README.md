@@ -1,5 +1,6 @@
+<p align="center"><img width="65%" src="doc/static/thor-logo-main.png" /></p>
 
-## AI2Thor
+
 
 An [Apache 2.0](https://github.com/allenai/allennlp/blob/master/LICENSE) Visual AI Platform based on the Unity game engine. Please read the [tutorial](http://ai2thor.allenai.org/tutorials/installation) for a more detailed walkthrough.
 
