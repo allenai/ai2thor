@@ -32,7 +32,6 @@ setup(name='ai2thor',
       install_requires=[
           'Pillow',
           'flask',
-          'pyyaml',
           'numpy',
           'requests',
           'progressbar2'

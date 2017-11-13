@@ -20,11 +20,10 @@ LOG.setLevel(logging.ERROR)
 
 
 # get with timeout to allow quit
-def queue_get(q):
+def queue_get(qu):
     while True:
         try:
-            r = q.get(block=False, timeout=0.5)
-            return r
+            return qu.get(block=False, timeout=0.5)
         except Empty:
             pass
 
@@ -118,11 +117,11 @@ class Server(object):
                 raise Exception("Sequence id mismatch: %s vs %s" % (
                     metadata['sequenceId'], self.sequence_id))
 
-            #image = request.files['image']
-            #image_data = image.read()
-            filename = None #image.filename
+            image = request.files['image']
+            image_data = image.read()
+            filename = None  # image.filename
             # decode image from string encoding
-            image = None #np.asarray(Image.open(io.BytesIO(image_data))) 
+            image = np.asarray(Image.open(io.BytesIO(image_data)))
 
             event = Event(metadata, filename, image)
             request_queue.put_nowait(event)
