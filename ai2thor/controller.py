@@ -2,7 +2,9 @@
 import atexit
 from collections import deque, defaultdict
 from itertools import product
+import io
 import json
+import logging
 import math
 import random
 import shlex
@@ -12,15 +14,26 @@ import threading
 import os
 import platform
 from queue import Queue
+import zipfile
 
 import numpy as np
 
+import ai2thor.downloader
 import ai2thor.server
 from ai2thor.server import queue_get
 
+logger = logging.getLogger(__name__)
 
-LINUX_BUILD = "projects/thor-local/Contents/MacOS/thor-local-OSXIntel64"
-DARWIN_BUILD = "projects/thor-local/Contents/MacOS/thor-local-OSXIntel64"
+BUILDS = dict(
+    Linux={
+        'url':'https://s3-us-west-2.amazonaws.com/ai2-thor/builds/thor-201711131440-Linux64.zip',
+        'sha256':'c9b69cdc68ab22320680b58b016649b0cda9f995d69af6d9fc60981afdb56c85'
+    },
+    Darwin={
+        'url':'https://s3-us-west-2.amazonaws.com/ai2-thor/builds/thor-201711131440-OSXIntel64.zip',
+        'sha256':'fdb31d8fdefea43883ce77f0b516727e849525f46a8cf625eb77f224f7233869'
+    },
+)
 
 RECEPTACLE_OBJECTS = {
     'Box': {'Candle',
@@ -306,6 +319,11 @@ def process_alive(pid):
         return False
     return True
 
+# python2.7 compatible makedirs
+def makedirs(d):
+    if not os.path.isdir(d):
+        os.makedirs(d)
+
 def distance(point1, point2):
     x_diff = (point1['x'] - point2['x']) ** 2
     z_diff = (point1['z'] - point2['z']) ** 2
@@ -389,21 +407,9 @@ class Controller(object):
 
     def unity_command(self, width, height):
 
-        target_arch = platform.system()
-        if target_arch == 'Darwin':
-            executable_path = DARWIN_BUILD
-        elif target_arch == 'Linux':
-            executable_path = LINUX_BUILD
-            # we can lose the executable permission when unzipping a build
-        else:
-            raise Exception('unable to handle target arch %s' % target_arch)
-
-        os.chmod(executable_path, 0o755)
-        executable_path += (" -screen-width %s -screen-height %s" % (width, height))
-
-        command = shlex.split("./%s" % executable_path)
-
-        return command
+        command = self.executable_path()
+        command += (" -screen-width %s -screen-height %s" % (width, height))
+        return shlex.split(command)
 
     def _start_thread(self, env, width, height, port=0, start_unity=True):
         # get environment variables
@@ -415,7 +421,7 @@ class Controller(object):
         env['AI2THOR_PORT'] = str(port)
         env['AI2THOR_CLIENT_TOKEN'] = self.server.client_token
         env['AI2THOR_CLIENT_TOKEN'] = self.server.client_token
-        env['AI2THOR_SERVER_SIDE_SCREENSHOT'] = 'True'
+        # env['AI2THOR_SERVER_SIDE_SCREENSHOT'] = 'True'
 
         # print("Viewer: http://%s:%s/viewer" % (host, port))
 
@@ -429,6 +435,47 @@ class Controller(object):
 
         self.server.start()
 
+    def base_dir(self):
+        return os.path.join(os.path.expanduser('~'), '.ai2thor')
+
+    def build_name(self):
+        return os.path.splitext(os.path.basename(BUILDS[platform.system()]['url']))[0]
+
+    def executable_path(self):
+
+        target_arch = platform.system()
+
+        if target_arch == 'Linux':
+            return os.path.join(self.base_dir(), 'releases', self.build_name(), self.build_name())
+        elif target_arch == 'Darwin':
+            return os.path.join(self.base_dir(), 'releases', self.build_name(),  self.build_name() + ".app", "Contents/MacOS", self.build_name())
+            # we can lose the executable permission when unzipping a build
+        else:
+            raise Exception('unable to handle target arch %s' % target_arch)
+
+    def download_binary(self):
+
+        if platform.architecture()[0] != '64bit':
+            raise Exception("Only 64bit currently supported")
+
+        url = BUILDS[platform.system()]['url']
+        releases_dir = os.path.join(self.base_dir(), 'releases')
+        tmp_dir = os.path.join(self.base_dir(), 'tmp')
+        makedirs(releases_dir)
+        makedirs(tmp_dir)
+
+        if not os.path.isfile(self.executable_path()):
+            zip_data = ai2thor.downloader.download(url, self.build_name(), BUILDS[platform.system()]['sha256'])
+            z = zipfile.ZipFile(io.BytesIO(zip_data))
+            # use tmpdir instead or a random number
+            extract_dir = os.path.join(tmp_dir, self.build_name())
+            logger.debug("Extracting zipfile %s" % os.path.basename(url))
+            z.extractall(extract_dir)
+            os.rename(extract_dir, os.path.join(releases_dir, self.build_name()))
+            os.chmod(self.executable_path(), 0o755)
+        else:
+            logger.debug("%s exists - skipping download" % self.executable_path())
+
     def start(
             self,
             port=0,
@@ -439,9 +486,10 @@ class Controller(object):
 
         env = os.environ.copy()
 
-        display = None
         if platform.system() == 'Linux':
-            display = env['DISPLAY'] = ':' + x_display
+            env['DISPLAY'] = ':' + x_display
+
+        self.download_binary()
 
         self.server = ai2thor.server.Server(
             self.request_queue,
@@ -486,7 +534,7 @@ class BFSSearchPoint:
 class BFSController(Controller):
 
     def __init__(self):
-        super().__init__()
+        super(BFSController, self).__init__()
         self.rotations = [0, 90, 180, 270]
         self.horizons = [330, 0, 30]
         self.move_magnitude = 0.25
