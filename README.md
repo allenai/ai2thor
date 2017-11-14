@@ -108,6 +108,23 @@ event = controller.step(dict(
     objectId="Mug|0.25|-0.27",
     receptacleObjectId="Fridge|0.05|0.75"))
  ```
+ 
+#### Event/Metadata
+Each call to ```controller.step()``` returns an instance of an Event.  Detailed descriptions of each field can be found within the [tutorial](http://ai2thor.allenai.org/tutorials/event-metadata).  The Event object contains a screen capture from the point the last action completed as well as metadata about each object within the scene.
+
+```python
+event = controller.step(dict(action=MoveAhead))
+
+# Numpy Array - shape (width, height, channels), channels are in RGB order
+event.frame
+
+# Pillow Image
+event.image()
+
+# Metadata dictionary
+event.metadata
+```
+
 
 ## PIP Installation
 
