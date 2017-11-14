@@ -5,9 +5,112 @@
 
 An [Apache 2.0](https://github.com/allenai/allennlp/blob/master/LICENSE) Visual AI Platform based on the Unity game engine. Please read the [tutorial](http://ai2thor.allenai.org/tutorials/installation) for a more detailed walkthrough.
 
+
+THOR is an interactive 3D Visual AI platform that allows an agent to be controlled via an API through Python. The framework advances AI by providing capabilities for learning by interaction in near-photo-realistic scenes. The current state-of-the-art AI models are trained using still images or videos or trained in non-realistic settings such as ATARI games, which are very different from how humans learn. AI2Thor is a step towards learning like humans.
+
+## Requirements
+
+* OS: Mac OS X 10.9+, Ubuntu 14.04+
+* Graphics Card: DX9 (shader model 3.0) or DX11 with feature level 9.3 capabilities.
+* CPU: SSE2 instruction set support.
+* Python 2.7 or Python 3.5+
+* Linux: X server with GLX module enabled
+
+## Concepts
+
+* Agent: A capsule shaped entity that can navigate within scenes and interact with objects.
+* Scene: A scene within THOR represents a virtual room that an agent can navigate and interact with.
+* Action: A discrete command for the Agent to perform within a scene (e.g. MoveAhead, RotateRight, PickupObject)
+* Object Visibility: An object is said to be visible when it is within a threshold of distance (default: 1 meter) when measured from the Agent’s camera to the centerpoint of the target object. This determines whether the agent can interact with the object or not.
+* Receptacle: A type of object that can contain another object. These types of objects include: sinks, refrigerators, cabinets and tabletops. A receptacle cannot be picked up.
+
+
+## Scene Initialization
+
+Before performing any actions a scene must be loaded.
+
+```python
+import ai2thor.controller
+controller = ai2thor.controller.Controller()
+controller.start()
+
+# The scene can be any of the following:
+# FloorPlan1 - FloorPlan30, FloorPlan201 - FloorPlan230, FloorPlan301 - FloorPlan330, FloorPLan401 - FloorPlan430
+controller.reset('FloorPlan28')
+
+# gridSize determines the step size the agent moves 
+controller.step(dict(action='Initialize', gridSize=0.25))
+```
+
+## Actions
+
+The agent can perform the following API controlled actions.  
+
+#### MoveAhead
+Move ahead in the amount of the grid size
+```python
+event = controller.step(dict(action='MoveAhead'))
+```
+
+#### MoveRight
+Move right in the amount of the grid size
+```python
+event = controller.step(dict(action='MoveRight'))
+```
+#### MoveLeft
+Move left in the amount of the grid size
+```python
+event = controller.step(dict(action='MoveLeft'))
+```
+#### MoveBack
+Move back in the amount of the grid size
+```python
+event = controller.step(dict(action='MoveBack'))
+```
+#### RotateRight
+Rotate the agent by 90 degrees to the right
+```python
+event = controller.step(dict(action='RotateRight'))
+```
+
+#### RotateLeft
+Rotate the agent by 90 degrees to the left
+```python
+event = controller.step(dict(action='RotateLeft'))
+```
+
+#### OpenObject
+Open an object (assuming the object is visible to the agent). In the case of the Refrigerator, the door will open.
+```python
+event = controller.step(dict(action='OpenObject', objectId="Fridge|0.25|0.75"))
+```
+
+#### CloseObject
+Close an object (assuming object is visible to the agent). In the case of the Refrigerator, the door will fridge.
+```python
+event = controller.step(dict(action='CloseObject', objectId="Fridge|0.25|0.75"))
+```
+
+#### PickupObject
+
+Pick a visible object up that is in a scene and place it into the Agent’s inventory. Currently the Agent can only have a single object in its inventory. See below for a more complex example.
+
+```python
+event = controller.step(dict(action='PickupObject', objectId="Mug|0.25|-0.27"))
+```
+
+
+#### PutObject
+Put an object in the Agent’s inventory into a visible receptacle. In order for this to work, the agent must pick up a visible Mug and open a visible Fridge. See below for a more complete example.
+
+```python
+event = controller.step(dict(
+    objectId="Mug|0.25|-0.27",
+    receptacleObjectId="Fridge|0.05|0.75"))
+ ```
+
 ## PIP Installation
 
-AI2Thor will run on OSX and Linux platforms with Python 2.7+/Python 3.5+.
 ```bash
 pip install ai2thor
 ```
@@ -31,9 +134,6 @@ event.metadata
 ```
 Upon executing the ```controller.start()``` a window should appear on screen with a view of the room FloorPlan28.
 
-## What is AI2Thor?
-
-THOR is an interactive 3D Visual AI platform that allows an agent to be controlled via an API through Python. The framework advances AI by providing capabilities for learning by interaction in near-photo-realistic scenes. The current state-of-the-art AI models are trained using still images or videos or trained in non-realistic settings such as ATARI games, which are very different from how humans learn. AI2Thor is a step towards learning like humans.
 
 ## Architecture
 
