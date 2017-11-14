@@ -19,7 +19,7 @@ THOR is an interactive 3D Visual AI platform that allows an agent to be controll
 ## Concepts
 
 * Agent: A capsule shaped entity that can navigate within scenes and interact with objects.
-* Scene: A scene within THOR represents a virtual room that an agent can navigate and interact with.
+* Scene: A scene within THOR represents a virtual room that an agent can navigate in and interact with.
 * Action: A discrete command for the Agent to perform within a scene (e.g. MoveAhead, RotateRight, PickupObject)
 * Object Visibility: An object is said to be visible when it is within a threshold of distance (default: 1 meter) when measured from the Agent’s camera to the centerpoint of the target object. This determines whether the agent can interact with the object or not.
 * Receptacle: A type of object that can contain another object. These types of objects include: sinks, refrigerators, cabinets and tabletops. A receptacle cannot be picked up.
