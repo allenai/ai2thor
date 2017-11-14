@@ -1,5 +1,6 @@
 <p align="center"><img width="30%" src="doc/static/thor-logo-main.png" /></p>
 
+--------------------------------------------------------------------------------
 
 
 An [Apache 2.0](https://github.com/allenai/allennlp/blob/master/LICENSE) Visual AI Platform based on the Unity game engine. Please read the [tutorial](http://ai2thor.allenai.org/tutorials/installation) for a more detailed walkthrough.
@@ -40,7 +41,7 @@ AI2Thor is made up of two components: a set of scenes built within the Unity Gam
 
 On the Python side there is a Flask service that listens for HTTP requests from the Unity Game engine. After an action is executed within the game engine, a screen capture is taken and a JSON metadata object is constructed from the state of all the objects of the scene and POST'd to the Python Flask service.  This payload is then used to construct an Event object comprised of a numpy array (the screen capture) and metadata (dictionary containing the current state of every object including the agent).  At this point the game engine waits for a response from the Python service, which it receives when the next ```controller.step()``` call is made.  Once the response is received within Unity, the requested action is taken and the process repeats.
 
-## Scene Bugs
+## Support
 
 It is possible that during navigation or interaction you notice that the agent passes through what should be a solid object or an object appears in a peculiar location after performing a PutObject action.  Please open issues for these and include the scene name as well as the event.metadata from the moment that the bug can be identified.
 
