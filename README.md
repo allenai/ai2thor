@@ -1,12 +1,133 @@
 <p align="center"><img width="30%" src="doc/static/thor-logo-main.png" /></p>
 
+--------------------------------------------------------------------------------
 
 
 An [Apache 2.0](https://github.com/allenai/allennlp/blob/master/LICENSE) Visual AI Platform based on the Unity game engine. Please read the [tutorial](http://ai2thor.allenai.org/tutorials/installation) for a more detailed walkthrough.
 
+
+THOR is an interactive 3D Visual AI platform that allows an agent to be controlled via an API through Python. The framework advances AI by providing capabilities for learning by interaction in near-photo-realistic scenes. The current state-of-the-art AI models are trained using still images or videos or trained in non-realistic settings such as ATARI games, which are very different from how humans learn. AI2Thor is a step towards learning like humans.
+
+## Requirements
+
+* OS: Mac OS X 10.9+, Ubuntu 14.04+
+* Graphics Card: DX9 (shader model 3.0) or DX11 with feature level 9.3 capabilities.
+* CPU: SSE2 instruction set support.
+* Python 2.7 or Python 3.5+
+* Linux: X server with GLX module enabled
+
+## Concepts
+
+* Agent: A capsule shaped entity that can navigate within scenes and interact with objects.
+* Scene: A scene within THOR represents a virtual room that an agent can navigate in and interact with.
+* Action: A discrete command for the Agent to perform within a scene (e.g. MoveAhead, RotateRight, PickupObject)
+* Object Visibility: An object is said to be visible when it is within a threshold of distance (default: 1 meter) when measured from the Agent’s camera to the centerpoint of the target object. This determines whether the agent can interact with the object or not.
+* Receptacle: A type of object that can contain another object. These types of objects include: sinks, refrigerators, cabinets and tabletops. A receptacle cannot be picked up.
+
+
+## Scene Initialization
+
+Before performing any actions a scene must be loaded.
+
+```python
+import ai2thor.controller
+controller = ai2thor.controller.Controller()
+controller.start()
+
+# The scene can be any of the following:
+# FloorPlan1 - FloorPlan30, FloorPlan201 - FloorPlan230, FloorPlan301 - FloorPlan330, FloorPLan401 - FloorPlan430
+controller.reset('FloorPlan28')
+
+# gridSize determines the step size the agent moves 
+controller.step(dict(action='Initialize', gridSize=0.25))
+```
+
+## Actions
+
+The agent can perform the following API controlled actions.  
+
+#### MoveAhead
+Move ahead in the amount of the grid size
+```python
+event = controller.step(dict(action='MoveAhead'))
+```
+
+#### MoveRight
+Move right in the amount of the grid size
+```python
+event = controller.step(dict(action='MoveRight'))
+```
+#### MoveLeft
+Move left in the amount of the grid size
+```python
+event = controller.step(dict(action='MoveLeft'))
+```
+#### MoveBack
+Move back in the amount of the grid size
+```python
+event = controller.step(dict(action='MoveBack'))
+```
+#### RotateRight
+Rotate the agent by 90 degrees to the right
+```python
+event = controller.step(dict(action='RotateRight'))
+```
+
+#### RotateLeft
+Rotate the agent by 90 degrees to the left
+```python
+event = controller.step(dict(action='RotateLeft'))
+```
+
+#### OpenObject
+Open an object (assuming the object is visible to the agent). In the case of the Refrigerator, the door will open.
+```python
+event = controller.step(dict(action='OpenObject', objectId="Fridge|0.25|0.75"))
+```
+
+#### CloseObject
+Close an object (assuming object is visible to the agent). In the case of the Refrigerator, the door will fridge.
+```python
+event = controller.step(dict(action='CloseObject', objectId="Fridge|0.25|0.75"))
+```
+
+#### PickupObject
+
+Pick a visible object up that is in a scene and place it into the Agent’s inventory. Currently the Agent can only have a single object in its inventory. See below for a more complex example.
+
+```python
+event = controller.step(dict(action='PickupObject', objectId="Mug|0.25|-0.27"))
+```
+
+
+#### PutObject
+Put an object in the Agent’s inventory into a visible receptacle. In order for this to work, the agent must pick up a visible Mug and open a visible Fridge. See below for a more complete example.
+
+```python
+event = controller.step(dict(
+    objectId="Mug|0.25|-0.27",
+    receptacleObjectId="Fridge|0.05|0.75"))
+ ```
+ 
+#### Event/Metadata
+Each call to ```controller.step()``` returns an instance of an Event.  Detailed descriptions of each field can be found within the [tutorial](http://ai2thor.allenai.org/tutorials/event-metadata).  The Event object contains a screen capture from the point the last action completed as well as metadata about each object within the scene.
+
+```python
+event = controller.step(dict(action=MoveAhead))
+
+# Numpy Array - shape (width, height, channels), channels are in RGB order
+event.frame
+
+# byte[] PNG image
+event.image()
+
+# Metadata dictionary
+event.metadata
+```
+
+
 ## PIP Installation
 
-AI2Thor will run on OSX and Linux platforms with Python 2.7+/Python 3.5+.
 ```bash
 pip install ai2thor
 ```
@@ -30,15 +151,16 @@ event.metadata
 ```
 Upon executing the ```controller.start()``` a window should appear on screen with a view of the room FloorPlan28.
 
-## What is AI2Thor?
-
-THOR is an interactive 3D Visual AI platform that allows an agent to be controlled via an API through Python. The framework advances AI by providing capabilities for learning by interaction in near-photo-realistic scenes. The current state-of-the-art AI models are trained using still images or videos or trained in non-realistic settings such as ATARI games, which are very different from how humans learn. AI2Thor is a step towards learning like humans.
 
 ## Architecture
 
 AI2Thor is made up of two components: a set of scenes built within the Unity Game engine, a lightweight Python API that interacts with the game engine.
 
 On the Python side there is a Flask service that listens for HTTP requests from the Unity Game engine. After an action is executed within the game engine, a screen capture is taken and a JSON metadata object is constructed from the state of all the objects of the scene and POST'd to the Python Flask service.  This payload is then used to construct an Event object comprised of a numpy array (the screen capture) and metadata (dictionary containing the current state of every object including the agent).  At this point the game engine waits for a response from the Python service, which it receives when the next ```controller.step()``` call is made.  Once the response is received within Unity, the requested action is taken and the process repeats.
+
+## Support
+
+It is possible that during navigation or interaction you notice that the agent passes through what should be a solid object or an object appears in a peculiar location after performing a PutObject action.  Please open issues for these and include the scene name as well as the event.metadata from the moment that the bug can be identified.
 
 
 ## Team
