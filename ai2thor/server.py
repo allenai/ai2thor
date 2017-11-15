@@ -1,4 +1,12 @@
 # Copyright Allen Institute for Artificial Intelligence 2017
+"""
+ai2thor.server
+
+Handles all communication with Unity through a Flask service.  Messages
+are sent to the controller using a pair of request/response queues.
+"""
+
+
 import datetime
 import io
 import json
@@ -6,7 +14,6 @@ import logging
 import os
 import os.path
 from queue import Empty
-import random
 import time
 import uuid
 
@@ -20,55 +27,38 @@ LOG.setLevel(logging.ERROR)
 
 
 # get with timeout to allow quit
-def queue_get(qu):
+def queue_get(que):
     while True:
         try:
-            return qu.get(block=False, timeout=0.5)
+            return que.get(block=False, timeout=0.5)
         except Empty:
             pass
 
 
 class Event(object):
+    """
+    Object that is returned from a call to  controller.step().
+    This class wraps the screenshot that Unity captures as well
+    as the metadata sent about each object
+    """
 
     def __init__(self, metadata, frame_id, frame):
         self.metadata = metadata
         self.frame_id = frame_id
         self.frame = frame
 
-    # return frame as PNG
     def image(self):
+        """
+        Return byte[] PNG Image based on Event.frame
+        """
+
         img = Image.fromarray(self.frame, mode='RGB')
 
         buf = io.BytesIO()
         img.save(buf, 'PNG')
         buf.seek(0)
+
         return buf.read()
-
-class DiscreteModel(object):
-
-    def __init__(self):
-        self.events = []
-
-    def next_action(self, event):
-        methods = [
-            'MoveAhead',
-            'MoveBack',
-            'LookUp',
-            'LookDown',
-            'RotateLeft',
-            'RotateRight',
-            'MoveRight',
-            'MoveLeft']
-        action = methods[random.randint(0, len(methods) - 1)]
-        return dict(action=action)
-
-class Model(object):
-
-    def __init__(self):
-        self.events = []
-
-    def next_action(self, event):
-        return random.randint(0, 5)
 
 class Server(object):
 
@@ -79,7 +69,7 @@ class Server(object):
                         os.path.join(
                             os.path.dirname(os.path.abspath(__file__)), '..', 'templates')))
 
-        self.image_buffer = None 
+        self.image_buffer = None
 
         self.app = app
         self.client_token = str(uuid.uuid4())
