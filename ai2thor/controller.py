@@ -1,4 +1,11 @@
 # Copyright Allen Institute for Artificial Intelligence 2017
+"""
+ai2thor.controller
+
+Primary entrypoint into the Thor API. Provides all the high-level functions
+needed to control the in-game agent through ai2thor.server.
+
+"""
 import atexit
 from collections import deque, defaultdict
 from itertools import product
@@ -313,16 +320,22 @@ RECEPTACLE_OBJECTS = {
     'TowelHolder': {'Cloth'}}
 
 def process_alive(pid):
+    """
+    Use kill(0) to determine if pid is alive
+    :param pid: process id
+    :rtype: bool
+    """
     try:
         os.kill(pid, 0)
-    except ProcessLookupError as e:
+    except ProcessLookupError:
         return False
+
     return True
 
 # python2.7 compatible makedirs
-def makedirs(d):
-    if not os.path.isdir(d):
-        os.makedirs(d)
+def makedirs(directory):
+    if not os.path.isdir(directory):
+        os.makedirs(directory)
 
 def distance(point1, point2):
     x_diff = (point1['x'] - point2['x']) ** 2
@@ -420,7 +433,6 @@ class Controller(object):
         _, port = self.server.wsgi_server.socket.getsockname()
         env['AI2THOR_PORT'] = str(port)
         env['AI2THOR_CLIENT_TOKEN'] = self.server.client_token
-        env['AI2THOR_CLIENT_TOKEN'] = self.server.client_token
         # env['AI2THOR_SERVER_SIDE_SCREENSHOT'] = 'True'
 
         # print("Viewer: http://%s:%s/viewer" % (host, port))
@@ -448,8 +460,13 @@ class Controller(object):
         if target_arch == 'Linux':
             return os.path.join(self.base_dir(), 'releases', self.build_name(), self.build_name())
         elif target_arch == 'Darwin':
-            return os.path.join(self.base_dir(), 'releases', self.build_name(),  self.build_name() + ".app", "Contents/MacOS", self.build_name())
-            # we can lose the executable permission when unzipping a build
+            return os.path.join(
+                self.base_dir(),
+                'releases',
+                self.build_name(),
+                self.build_name() + ".app",
+                "Contents/MacOS",
+                self.build_name())
         else:
             raise Exception('unable to handle target arch %s' % target_arch)
 
@@ -465,13 +482,18 @@ class Controller(object):
         makedirs(tmp_dir)
 
         if not os.path.isfile(self.executable_path()):
-            zip_data = ai2thor.downloader.download(url, self.build_name(), BUILDS[platform.system()]['sha256'])
+            zip_data = ai2thor.downloader.download(
+                url,
+                self.build_name(),
+                BUILDS[platform.system()]['sha256'])
+
             z = zipfile.ZipFile(io.BytesIO(zip_data))
             # use tmpdir instead or a random number
             extract_dir = os.path.join(tmp_dir, self.build_name())
             logger.debug("Extracting zipfile %s" % os.path.basename(url))
             z.extractall(extract_dir)
             os.rename(extract_dir, os.path.join(releases_dir, self.build_name()))
+            # we can lose the executable permission when unzipping a build
             os.chmod(self.executable_path(), 0o755)
         else:
             logger.debug("%s exists - skipping download" % self.executable_path())
@@ -515,7 +537,7 @@ class Controller(object):
         if self.unity_pid and process_alive(self.unity_pid):
             os.kill(self.unity_pid, signal.SIGKILL)
 
-    def _check_action(self, action):
+    def _check_action(self, _):
         return True
 
 class BFSSearchPoint:
