@@ -118,7 +118,7 @@ event = controller.step(dict(action=MoveAhead))
 # Numpy Array - shape (width, height, channels), channels are in RGB order
 event.frame
 
-# Pillow Image
+# byte[] PNG image
 event.image()
 
 # Metadata dictionary
