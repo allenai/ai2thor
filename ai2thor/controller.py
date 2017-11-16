@@ -354,6 +354,7 @@ class Controller(object):
         self.receptacle_nearest_pivot_points = {}
         self.server = None
         self.unity_pid = None
+        self.last_event = None
 
     def reset(self, scene_name=None):
         self.response_queue.put_nowait(dict(action='Reset', sceneName=scene_name, sequenceId=0))
@@ -370,24 +371,24 @@ class Controller(object):
 
         receptacle_objects = []
 
-        for r, object_types in RECEPTACLE_OBJECTS:
+        for rec_obj_type, object_types in RECEPTACLE_OBJECTS:
             receptacle_objects.append(
-                dict(receptacleObjectType=r, itemObjectTypes=list(object_types))
+                dict(receptacleObjectType=rec_obj_type, itemObjectTypes=list(object_types))
             )
         if random_seed is None:
             random_seed = random.randint(0, 2**32)
 
         exclude_object_ids = []
 
-        for o in self.last_event.metadata['objects']:
-            pp = self.receptacle_nearest_pivot_points
+        for obj in self.last_event.metadata['objects']:
+            pivot_points = self.receptacle_nearest_pivot_points
             # don't put things in pot or pan currently
-            if (pp and o['receptacle'] \
-                and pp[o['objectId']].keys()) \
-                or o['objectType'] in ['Pot', 'Pan']:
+            if (pivot_points and obj['receptacle'] \
+                and pivot_points[obj['objectId']].keys()) \
+                or obj['objectType'] in ['Pot', 'Pan']:
 
                 #print("no visible pivots for receptacle %s" % o['objectId'])
-                exclude_object_ids.append(o['objectId'])
+                exclude_object_ids.append(obj['objectId'])
 
         return self.step(dict(
             action='RandomInitialize',
@@ -588,8 +589,8 @@ class BFSController(Controller):
         min_z = min(zs)  - 1
         max_z = max(zs) + 1
 
-        for p in list(points):
-            x, z = map(float, p.split(','))
+        for point in list(points):
+            x, z = map(float, point.split(','))
             circle_x = round(((x - min_x)/float(max_x - min_x)) * image_width)
             z = (max_z - z) + min_z
             circle_y = round(((z - min_z)/float(max_z - min_z)) * image_height)
@@ -726,8 +727,8 @@ class BFSController(Controller):
         self.grid_points = pruned_grid_points
 
     def is_object_visible(self, object_id):
-        for o in self.last_event.metadata['objects']:
-            if o['objectId'] == object_id and o['visible']:
+        for obj in self.last_event.metadata['objects']:
+            if obj['objectId'] == object_id and obj['visible']:
                 return True
         return False
 
@@ -738,21 +739,25 @@ class BFSController(Controller):
         # pickup all objects
         visibility_object_id = None
         visibility_object_types = ['Mug', 'CellPhone']
-        for o in self.last_event.metadata['objects']:
-            if o['pickupable']:
+        for obj in self.last_event.metadata['objects']:
+            if obj['pickupable']:
                 self.step(action=dict(
                     action='PickupObject',
-                    objectId=o['objectId'],
+                    objectId=obj['objectId'],
                     forceVisible=True))
-            if visibility_object_id is None and o['objectType'] in visibility_object_types:
-                visibility_object_id = o['objectId']
+            if visibility_object_id is None and obj['objectType'] in visibility_object_types:
+                visibility_object_id = obj['objectId']
 
-        for p in self.grid_points:
-            self.step(dict(action='Teleport', x=p['x'], y=p['y'], z=p['z']), raise_for_failure=True)
+        for point in self.grid_points:
+            self.step(dict(
+                action='Teleport',
+                x=point['x'],
+                y=point['y'],
+                z=point['z']), raise_for_failure=True)
 
-            for r, h in product(self.rotations, self.horizons):
+            for rot, hor in product(self.rotations, self.horizons):
                 event = self.step(
-                    dict(action='RotateLook', rotation=r, horizon=h),
+                    dict(action='RotateLook', rotation=rot, horizon=hor),
                     raise_for_failure=True)
                 for j in event.metadata['objects']:
                     if j['receptacle'] and j['visible']:
@@ -761,14 +766,14 @@ class BFSController(Controller):
                             pivotId=0,
                             receptacleObjectId=j['objectId'],
                             searchNode=dict(
-                                horizon=h,
-                                rotation=r,
+                                horizon=hor,
+                                rotation=rot,
                                 openReceptacle=False,
                                 pivotId=0,
                                 receptacleObjectId='',
-                                x=p['x'],
-                                y=p['y'],
-                                z=p['z'])))
+                                x=point['x'],
+                                y=point['y'],
+                                z=point['z'])))
 
                         if j['openable']:
                             self.step(action=dict(
@@ -786,18 +791,18 @@ class BFSController(Controller):
                                     pivot=pivot_id, raise_for_failure=True))
                             if self.is_object_visible(visibility_object_id):
                                 receptacle_pivot_points.append(dict(
-                                    distance=o['distance'],
+                                    distance=j['distance'],
                                     pivotId=pivot_id,
                                     receptacleObjectId=j['objectId'],
                                     searchNode=dict(
-                                        horizon=h,
-                                        rotation=r,
+                                        horizon=hor,
+                                        rotation=rot,
                                         openReceptacle=j['openable'],
                                         pivotId=pivot_id,
                                         receptacleObjectId=j['objectId'],
-                                        x=p['x'],
-                                        y=p['y'],
-                                        z=p['z'])))
+                                        x=point['x'],
+                                        y=point['y'],
+                                        z=point['z'])))
 
 
                         if j['openable']:
@@ -812,35 +817,39 @@ class BFSController(Controller):
 
     def find_visible_objects(self):
         seen_target_objects = {}
-        for p in self.grid_points:
-            self.step(dict(action='Teleport', x=p['x'], y=p['y'], z=p['z']), raise_for_failure=True)
+        for point in self.grid_points:
+            self.step(dict(
+                action='Teleport',
+                x=point['x'],
+                y=point['y'],
+                z=point['z']), raise_for_failure=True)
 
 
-            for r in [0, 90, 180, 270]:
-                for h in [330, 0, 30, 60]:
+            for rot in [0, 90, 180, 270]:
+                for hor in [330, 0, 30, 60]:
                     event = self.step(dict(
                         action='RotateLook',
-                        rotation=r,
-                        horizon=h), raise_for_failure=True)
+                        rotation=rot,
+                        horizon=hor), raise_for_failure=True)
 
                     object_receptacle = dict()
-                    for j in event.metadata['objects']:
-                        if j['receptacle']:
-                            for pso in j['pivotSimObjs']:
-                                object_receptacle[pso['objectId']] = j
-                    for o in filter(
+                    for obj in event.metadata['objects']:
+                        if obj['receptacle']:
+                            for pso in obj['pivotSimObjs']:
+                                object_receptacle[pso['objectId']] = obj
+                    for obj in filter(
                             lambda x: x['visible'] and x['pickupable'],
                             event.metadata['objects']):
 
-                        if o['objectId'] in object_receptacle \
-                            and object_receptacle[o['objectId']]['openable'] \
-                            and not object_receptacle[o['objectId']]['isopen']:
+                        if obj['objectId'] in object_receptacle \
+                            and object_receptacle[obj['objectId']]['openable'] \
+                            and not object_receptacle[obj['objectId']]['isopen']:
                             continue
 
-                        if o['objectId'] not in seen_target_objects \
-                            or o['distance'] < seen_target_objects[o['objectId']]['distance']:
-                            seen_target_objects[o['objectId']] = dict(
-                                distance=o['distance'],
+                        if obj['objectId'] not in seen_target_objects \
+                            or obj['distance'] < seen_target_objects[obj['objectId']]['distance']:
+                            seen_target_objects[obj['objectId']] = dict(
+                                distance=obj['distance'],
                                 agent=event.metadata['agent'])
 
         #for o in filter(lambda x: x in seen_target_objects.keys(), self.target_objects):
@@ -857,18 +866,18 @@ class BFSController(Controller):
         self.open_receptacles = []
         open_pickupable = {}
         pickupable = {}
-        for o in filter(lambda x: x['receptacle'], self.last_event.metadata['objects']):
-            for oid in o['receptacleObjectIds']:
-                self.object_receptacle[oid] = o
+        for obj in filter(lambda x: x['receptacle'], self.last_event.metadata['objects']):
+            for oid in obj['receptacleObjectIds']:
+                self.object_receptacle[oid] = obj
 
-        for o in filter(lambda x: x['receptacle'], self.last_event.metadata['objects']):
-            for oid in o['receptacleObjectIds']:
-                if o['openable'] or (o['objectId'] in self.object_receptacle \
-                    and self.object_receptacle[o['objectId']]['openable']):
+        for obj in filter(lambda x: x['receptacle'], self.last_event.metadata['objects']):
+            for oid in obj['receptacleObjectIds']:
+                if obj['openable'] or (obj['objectId'] in self.object_receptacle \
+                    and self.object_receptacle[obj['objectId']]['openable']):
 
-                    open_pickupable[oid] = o['objectId']
+                    open_pickupable[oid] = obj['objectId']
                 else:
-                    pickupable[oid] = o['objectId']
+                    pickupable[oid] = obj['objectId']
 
         if open_pickupable.keys():
             self.target_objects = random.sample(open_pickupable.keys(), k=1)
@@ -902,9 +911,9 @@ class BFSController(Controller):
 
         print(event.metadata['errorMessage'])
         assert event.metadata['lastActionSuccess']
-        mv = search_point.move_vector
-        mv['moveMagnitude'] = self.move_magnitude
-        event = self.step(dict(action='Move', **mv))
+        move_vec = search_point.move_vector
+        move_vec['moveMagnitude'] = self.move_magnitude
+        event = self.step(dict(action='Move', **move_vec))
 
         if event.metadata['lastActionSuccess']:
             if event.metadata['agent']['position']['y'] > 1.3:
