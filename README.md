@@ -3,7 +3,7 @@
 --------------------------------------------------------------------------------
 
 
-An [Apache 2.0](https://github.com/allenai/allennlp/blob/master/LICENSE) Visual AI Platform based on the Unity game engine. Please read the [tutorial](http://ai2thor.allenai.org/tutorials/installation) for a more detailed walkthrough.
+A Visual AI Platform based on the Unity game engine. Please read the [tutorial](http://ai2thor.allenai.org/tutorials/installation) for a more detailed walkthrough.
 
 
 THOR is an interactive 3D Visual AI platform that allows an agent to be controlled via an API through Python. The framework advances AI by providing capabilities for learning by interaction in near-photo-realistic scenes. The current state-of-the-art AI models are trained using still images or videos or trained in non-realistic settings such as ATARI games, which are very different from how humans learn. AI2Thor is a step towards learning like humans.
