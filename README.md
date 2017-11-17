@@ -3,10 +3,11 @@
 --------------------------------------------------------------------------------
 
 
-A Visual AI Platform based on the Unity game engine. Please read the [tutorial](http://ai2thor.allenai.org/tutorials/installation) for a more detailed walkthrough.
+THOR is an interactive 3D Visual AI platform that allows an agent to be controlled via an API through Python.
 
+## Tutorial
 
-THOR is an interactive 3D Visual AI platform that allows an agent to be controlled via an API through Python. The framework advances AI by providing capabilities for learning by interaction in near-photo-realistic scenes. The current state-of-the-art AI models are trained using still images or videos or trained in non-realistic settings such as ATARI games, which are very different from how humans learn. AI2Thor is a step towards learning like humans.
+Please refer to the [tutorial page](http://ai2thor.allenai.org/tutorials/installation) for a detailed walkthrough.
 
 ## Requirements
 
@@ -44,7 +45,7 @@ controller.step(dict(action='Initialize', gridSize=0.25))
 
 ## Actions
 
-The agent can perform the following API controlled actions.  
+We currently provide the following API controlled actions. New actions can be easily added to the API.
 
 #### MoveAhead
 Move ahead in the amount of the grid size
@@ -160,7 +161,7 @@ On the Python side there is a Flask service that listens for HTTP requests from 
 
 ## Support
 
-It is possible that during navigation or interaction you notice that the agent passes through what should be a solid object or an object appears in a peculiar location after performing a PutObject action.  Please open issues for these and include the scene name as well as the event.metadata from the moment that the bug can be identified.
+We have done our best to remove all bugs and issues. However, you might still encounter some bugs during navigation and interaction. We will be glad to fix the bugs. Please open issues for these and include the scene name as well as the event.metadata from the moment that the bug can be identified.
 
 
 ## Team
