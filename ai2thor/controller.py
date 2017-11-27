@@ -358,6 +358,7 @@ class Controller(object):
         self.receptacle_nearest_pivot_points = {}
         self.server = None
         self.unity_pid = None
+        self.local_executable_path = None
         self.last_event = None
 
     def reset(self, scene_name=None):
@@ -459,6 +460,9 @@ class Controller(object):
         return os.path.splitext(os.path.basename(BUILDS[platform.system()]['url']))[0]
 
     def executable_path(self):
+
+        if self.local_executable_path is not None:
+            return self.local_executable_path
 
         target_arch = platform.system()
 
