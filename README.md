@@ -144,6 +144,16 @@ AI2Thor is made up of two components: a set of scenes built for the Unity game e
 
 On the Python side there is a Flask service that listens for HTTP requests from the Unity Game engine. After an action is executed within the game engine, a screen capture is taken and a JSON metadata object is constructed from the state of all the objects of the scene and POST'd to the Python Flask service.  This payload is then used to construct an Event object comprised of a numpy array (the screen capture) and metadata (dictionary containing the current state of every object including the agent).  At this point the game engine waits for a response from the Python service, which it receives when the next ```controller.step()``` call is made.  Once the response is received within Unity, the requested action is taken and the process repeats.
 
+## Citation
+
+    @inproceedings{ai2thor,
+        Author = {Eric Kolve and Roozbeh Mottaghi and Daniel Gordon and Yuke Zhu and Abhinav Gupta and Ali Farhadi},
+        Title = {AI2-THOR: An Interactive 3D Environment for Visual AI},
+        Booktitle = {arXiv},
+        Year = {2017}
+    }
+    
+
 ## Support
 
 We have done our best to remove all bugs and issues. However, you might still encounter some bugs during navigation and interaction. We will be glad to fix the bugs. Please open issues for these and include the scene name as well as the event.metadata from the moment that the bug can be identified.
