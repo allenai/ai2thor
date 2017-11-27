@@ -371,7 +371,7 @@ class Controller(object):
 
         receptacle_objects = []
 
-        for rec_obj_type, object_types in RECEPTACLE_OBJECTS:
+        for rec_obj_type, object_types in RECEPTACLE_OBJECTS.items():
             receptacle_objects.append(
                 dict(receptacleObjectType=rec_obj_type, itemObjectTypes=list(object_types))
             )
@@ -413,7 +413,7 @@ class Controller(object):
 
         self.response_queue.put_nowait(action)
         self.last_event = queue_get(self.request_queue)
-        print(self.last_event.metadata['errorMessage'])
+        #print(self.last_event.metadata['errorMessage'])
         if raise_for_failure:
             assert self.last_event.metadata['lastActionSuccess']
 
@@ -443,7 +443,7 @@ class Controller(object):
             proc = subprocess.Popen(self.unity_command(width, height), env=env)
             self.unity_pid = proc.pid
 
-            print("launched pid %s" % self.unity_pid)
+            # print("launched pid %s" % self.unity_pid)
             atexit.register(lambda: os.kill(self.unity_pid, signal.SIGKILL))
 
         self.server.start()
@@ -909,7 +909,7 @@ class BFSController(Controller):
             y=search_point.start_position['y'],
             z=search_point.start_position['z']))
 
-        print(event.metadata['errorMessage'])
+        #print(event.metadata['errorMessage'])
         assert event.metadata['lastActionSuccess']
         move_vec = search_point.move_vector
         move_vec['moveMagnitude'] = self.move_magnitude
