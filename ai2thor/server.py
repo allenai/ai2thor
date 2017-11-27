@@ -28,11 +28,14 @@ LOG.setLevel(logging.ERROR)
 
 # get with timeout to allow quit
 def queue_get(que):
+    res = None
     while True:
         try:
-            return que.get(block=False, timeout=0.5)
+            res = que.get(block=True, timeout=0.5)
+            break
         except Empty:
             pass
+    return res
 
 
 class Event(object):
@@ -99,7 +102,7 @@ class Server(object):
             if self.frame_counter % self.debug_frames_per_interval == 0:
                 now = time.time()
                 rate = self.debug_frames_per_interval / float(now - self.last_rate_timestamp)
-                print("%s %s/s" % (datetime.datetime.now().isoformat(), rate))
+                # print("%s %s/s" % (datetime.datetime.now().isoformat(), rate))
                 self.last_rate_timestamp = now
 
             metadata = json.loads(request.form['metadata'])
