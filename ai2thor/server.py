@@ -13,7 +13,12 @@ import json
 import logging
 import os
 import os.path
-from queue import Empty
+
+try:
+    from queue import Empty
+except ImportError:
+    from Queue import Empty
+
 import time
 import uuid
 
