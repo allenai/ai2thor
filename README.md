@@ -140,9 +140,27 @@ event = controller.step(dict(
 
 ## Architecture
 
-AI2Thor is made up of two components: a set of scenes built for the Unity game engine located in ```unity``` folder, a lightweight Python API that interacts with the game engine located in ```ai2thor``` folder.
+AI2-THOR is made up of two components: a set of scenes built for the Unity game engine located in ```unity``` folder, a lightweight Python API that interacts with the game engine located in ```ai2thor``` folder.
 
 On the Python side there is a Flask service that listens for HTTP requests from the Unity Game engine. After an action is executed within the game engine, a screen capture is taken and a JSON metadata object is constructed from the state of all the objects of the scene and POST'd to the Python Flask service.  This payload is then used to construct an Event object comprised of a numpy array (the screen capture) and metadata (dictionary containing the current state of every object including the agent).  At this point the game engine waits for a response from the Python service, which it receives when the next ```controller.step()``` call is made.  Once the response is received within Unity, the requested action is taken and the process repeats.
+
+
+## Unity Development
+
+If you wish to make changes to the Unity scenes/assets you will need to install Unity Editor version 5.4.1f1 for OSX (Linux Editor is currently in Beta) from [Unity Download Archive](https://unity3d.com/get-unity/download/archive).  After making your desired changes using the Unity Editor you will need to build.  To do this you must first exit the editor, then run the following commands from the ai2thor base directory.
+
+```python
+pip install invoke
+invoke local-build
+```
+
+This will create a build beneath the directory 'unity/builds/local-build/thor-local-OSXIntel64.app'. To use this build in your code, make the following change:
+
+```python
+controller = ai2thor.controller.Controller()
+controller.local_executable_path = "<BASE_DIR>/unity/builds/local-build/thor-local-OSXIntel64.app/Contents/MacOS/thor-local-OSXIntel64"
+controller.start()
+```
 
 ## Citation
 
@@ -161,5 +179,5 @@ We have done our best to remove all bugs and issues. However, you might still en
 
 ## Team
 
-AI2Thor is an open-source project backed by [the Allen Institute for Artificial Intelligence (AI2)](http://www.allenai.org).
+AI2-THOR is an open-source project backed by [the Allen Institute for Artificial Intelligence (AI2)](http://www.allenai.org).
 AI2 is a non-profit institute with the mission to contribute to humanity through high-impact AI research and engineering.
