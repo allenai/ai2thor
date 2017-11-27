@@ -7,7 +7,7 @@ AI2-THOR is an interactive 3D environment for Visual AI that allows an agent to 
 
 ## Tutorial
 
-Please refer to the [tutorial page](http://ai2thor.allenai.org/tutorials/installation) for a detailed walkthrough.
+Please refer to the [tutorial page](http://ai2thor.allenai.org/tutorials/) for a detailed walkthrough.
 
 ## Requirements
 
