@@ -20,7 +20,7 @@ Please refer to the [tutorial page](http://ai2thor.allenai.org/tutorials/) for a
 ## Concepts
 
 * Agent: A capsule shaped entity that can navigate within scenes and interact with objects.
-* Scene: A scene within THOR represents a virtual room that an agent can navigate in and interact with.
+* Scene: A scene within AI2-THOR represents a virtual room that an agent can navigate in and interact with.
 * Action: A discrete command for the Agent to perform within a scene (e.g. MoveAhead, RotateRight, PickupObject)
 * Object Visibility: An object is said to be visible when it is in camera view and within a threshold of distance (default: 1 meter) when measured from the Agent’s camera to the centerpoint of the target object. This determines whether the agent can interact with the object or not.
 * Receptacle: A type of object that can contain another object. These types of objects include: sinks, refrigerators, cabinets and tabletops. 
