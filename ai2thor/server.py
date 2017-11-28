@@ -50,23 +50,11 @@ class Event(object):
     as the metadata sent about each object
     """
 
-    def __init__(self, metadata, frame_id, frame):
+    def __init__(self, metadata, image_data):
         self.metadata = metadata
-        self.frame_id = frame_id
-        self.frame = frame
-
-    def image(self):
-        """
-        Return byte[] PNG Image based on Event.frame
-        """
-
-        img = Image.fromarray(self.frame, mode='RGB')
-
-        buf = io.BytesIO()
-        img.save(buf, 'PNG')
-        buf.seek(0)
-
-        return buf.read()
+        self.image = image_data
+        # decode image from string encoding
+        self.frame = np.asarray(Image.open(io.BytesIO(image_data)))
 
 class Server(object):
 
@@ -117,11 +105,8 @@ class Server(object):
 
             image = request.files['image']
             image_data = image.read()
-            filename = None  # image.filename
-            # decode image from string encoding
-            image = np.asarray(Image.open(io.BytesIO(image_data)))
 
-            event = Event(metadata, filename, image)
+            event = Event(metadata, image_data)
             request_queue.put_nowait(event)
             self.frame_counter += 1
 
