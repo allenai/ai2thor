@@ -43,6 +43,7 @@ controller.start()
 # Bathrooms:      FloorPLan401 - FloorPlan430
 controller.reset('FloorPlan28')
 
+# gridSize specifies the coarseness of the grid that the agent navigates on
 controller.step(dict(action='Initialize', gridSize=0.25))
 event = controller.step(dict(action='MoveAhead'))
 ```
