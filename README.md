@@ -158,10 +158,15 @@ controller.start()
 
 ## Citation
 
-    @inproceedings{ai2thor,
-        Author = {Eric Kolve and Roozbeh Mottaghi and Daniel Gordon and Yuke Zhu and Abhinav Gupta and Ali Farhadi},
+    @article{ai2thor,
+        Author = {Eric Kolve and 
+                  Roozbeh Mottaghi and 
+                  Daniel Gordon and 
+                  Yuke Zhu and 
+                  Abhinav Gupta and 
+                  Ali Farhadi},
         Title = {AI2-THOR: An Interactive 3D Environment for Visual AI},
-        Booktitle = {arXiv},
+        Journal = {arXiv},
         Year = {2017}
     }
     
