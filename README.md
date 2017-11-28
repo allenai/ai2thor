@@ -45,13 +45,6 @@ controller.reset('FloorPlan28')
 
 controller.step(dict(action='Initialize', gridSize=0.25))
 event = controller.step(dict(action='MoveAhead'))
-
-# current frame (numpy array)
-event.image
-
-# current metadata about the state of the scene
-event.metadata
-
 ```
 Upon executing the ```controller.start()``` a window should appear on screen with a view of the room FloorPlan28.
 
@@ -67,7 +60,7 @@ event.frame
 # byte[] PNG image
 event.image()
 
-# Metadata dictionary
+# current metadata dictionary that includes the state of the scene
 event.metadata
 ```
 
