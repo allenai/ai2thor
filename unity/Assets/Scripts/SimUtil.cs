@@ -542,7 +542,7 @@ public static class SimUtil {
 	static void ReplacePrefabsInAllScenes () {
 		UnityEditor.SceneManagement.EditorSceneManager.SaveOpenScenes ();
 		for (int i = 1; i <= 30; i++) {
-			string scenePath = "Assets/Scenes/UNFINISHED/FloorPlan" + i.ToString () + ".unity";
+			string scenePath = "Assets/Scenes/FloorPlan" + i.ToString () + ".unity";
 			UnityEditor.EditorUtility.DisplayProgressBar ("Replacing generics...", scenePath, (1f / 30) * i);
 			UnityEngine.SceneManagement.Scene openScene = new UnityEngine.SceneManagement.Scene ();
 			try {
@@ -567,7 +567,7 @@ public static class SimUtil {
 	static void SetSceneManagerSceneNumber () {
 		UnityEditor.SceneManagement.EditorSceneManager.SaveOpenScenes ();
 		for (int i = 1; i <= 30; i++) {
-			string scenePath = "Assets/Scenes/UNFINISHED/FloorPlan" + (i + 200).ToString () + ".unity";
+			string scenePath = "Assets/Scenes/FloorPlan" + (i + 200).ToString () + ".unity";
 			UnityEditor.EditorUtility.DisplayProgressBar ("Setting scene numbers...", scenePath, (1f / 30) * i);
 			UnityEngine.SceneManagement.Scene openScene = new UnityEngine.SceneManagement.Scene ();
 			try {
