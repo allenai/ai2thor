@@ -116,14 +116,14 @@ event = controller.step(dict(action='CloseObject', objectId="Fridge|0.25|0.75"))
 
 #### PickupObject
 
-Pick a visible object up that is in a scene and place it into the Agent’s inventory. Currently the Agent can only have a single object in its inventory. See below for a more complex example.
+Pick up a visible object and place it into the Agent’s inventory. Currently the Agent can only have a single object in its inventory. 
 
 ```python
 event = controller.step(dict(action='PickupObject', objectId="Mug|0.25|-0.27"))
 ```
 
 #### PutObject
-Put an object in the Agent’s inventory into a visible receptacle. In order for this to work, the agent must pick up a visible Mug and open a visible Fridge. See below for a more complete example.
+Put an object in the Agent’s inventory into a visible receptacle. In the following example, it is assumed that the agent holds a Mug in its inventory, and there is an open visible Fridge. 
 
 ```python
 event = controller.step(dict(
