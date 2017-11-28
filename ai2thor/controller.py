@@ -408,8 +408,7 @@ class Controller(object):
         if not self._check_action(action):
             new_event = ai2thor.server.Event(
                 json.loads(json.dumps(self.last_event.metadata)),
-                self.last_event.frame_id,
-                self.last_event.frame)
+                self.last_event.image)
 
             new_event.metadata['lastActionSuccess'] = False
             self.last_event = new_event
