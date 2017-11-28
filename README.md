@@ -165,7 +165,7 @@ controller.start()
                   Yuke Zhu and 
                   Abhinav Gupta and 
                   Ali Farhadi},
-        Title = {AI2-THOR: An Interactive 3D Environment for Visual AI},
+        Title = {{AI2-THOR: An Interactive 3D Environment for Visual AI}},
         Journal = {arXiv},
         Year = {2017}
     }
