@@ -59,7 +59,7 @@ event = controller.step(dict(action=MoveAhead))
 event.frame
 
 # byte[] PNG image
-event.image()
+event.image
 
 # current metadata dictionary that includes the state of the scene
 event.metadata
