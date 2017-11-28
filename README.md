@@ -20,7 +20,7 @@ Please refer to the [tutorial page](http://ai2thor.allenai.org/tutorials/) for a
 ## Concepts
 
 * Agent: A capsule shaped entity that can navigate within scenes and interact with objects.
-* Scene: A scene within THOR represents a virtual room that an agent can navigate in and interact with.
+* Scene: A scene within AI2-THOR represents a virtual room that an agent can navigate in and interact with.
 * Action: A discrete command for the Agent to perform within a scene (e.g. MoveAhead, RotateRight, PickupObject)
 * Object Visibility: An object is said to be visible when it is in camera view and within a threshold of distance (default: 1 meter) when measured from the Agent’s camera to the centerpoint of the target object. This determines whether the agent can interact with the object or not.
 * Receptacle: A type of object that can contain another object. These types of objects include: sinks, refrigerators, cabinets and tabletops. 
@@ -43,15 +43,9 @@ controller.start()
 # Bathrooms:      FloorPLan401 - FloorPlan430
 controller.reset('FloorPlan28')
 
+# gridSize specifies the coarseness of the grid that the agent navigates on
 controller.step(dict(action='Initialize', gridSize=0.25))
 event = controller.step(dict(action='MoveAhead'))
-
-# current frame (numpy array)
-event.image
-
-# current metadata about the state of the scene
-event.metadata
-
 ```
 Upon executing the ```controller.start()``` a window should appear on screen with a view of the room FloorPlan28.
 
@@ -67,7 +61,7 @@ event.frame
 # byte[] PNG image
 event.image()
 
-# Metadata dictionary
+# current metadata dictionary that includes the state of the scene
 event.metadata
 ```
 
@@ -122,14 +116,14 @@ event = controller.step(dict(action='CloseObject', objectId="Fridge|0.25|0.75"))
 
 #### PickupObject
 
-Pick a visible object up that is in a scene and place it into the Agent’s inventory. Currently the Agent can only have a single object in its inventory. See below for a more complex example.
+Pick up a visible object and place it into the Agent’s inventory. Currently the Agent can only have a single object in its inventory. 
 
 ```python
 event = controller.step(dict(action='PickupObject', objectId="Mug|0.25|-0.27"))
 ```
 
 #### PutObject
-Put an object in the Agent’s inventory into a visible receptacle. In order for this to work, the agent must pick up a visible Mug and open a visible Fridge. See below for a more complete example.
+Put an object in the Agent’s inventory into a visible receptacle. In the following example, it is assumed that the agent holds a Mug in its inventory, and there is an open visible Fridge. 
 
 ```python
 event = controller.step(dict(
@@ -147,7 +141,7 @@ On the Python side there is a Flask service that listens for HTTP requests from 
 
 ## Unity Development
 
-If you wish to make changes to the Unity scenes/assets you will need to install Unity Editor version 5.4.1f1 for OSX (Linux Editor is currently in Beta) from [Unity Download Archive](https://unity3d.com/get-unity/download/archive).  After making your desired changes using the Unity Editor you will need to build.  To do this you must first exit the editor, then run the following commands from the ai2thor base directory.
+If you wish to make changes to the Unity scenes/assets you will need to install Unity Editor version 5.4.1f1 for OSX (Linux Editor is currently in Beta) from [Unity Download Archive](https://unity3d.com/get-unity/download/archive).  After making your desired changes using the Unity Editor you will need to build.  To do this you must first exit the editor, then run the following commands from the ai2thor base directory. Individual scenes can be found beneath the Assets/Scenes directory - scenes are named FloorPlan###.
 
 ```python
 pip install invoke
@@ -174,7 +168,7 @@ controller.start()
 
 ## Support
 
-We have done our best to remove all bugs and issues. However, you might still encounter some bugs during navigation and interaction. We will be glad to fix the bugs. Please open issues for these and include the scene name as well as the event.metadata from the moment that the bug can be identified.
+We have done our best to fix all bugs and issues. However, you might still encounter some bugs during navigation and interaction. We will be glad to fix the bugs. Please open issues for these and include the scene name as well as the event.metadata from the moment that the bug can be identified.
 
 
 ## Team
