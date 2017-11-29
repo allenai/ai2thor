@@ -30,7 +30,7 @@ Please refer to the [tutorial page](http://ai2thor.allenai.org/tutorials/) for a
 ```bash
 pip install ai2thor
 ```
-Once installed you can now launch the framework.
+Once installed you can launch the framework.
 
 ```python
 import ai2thor.controller
