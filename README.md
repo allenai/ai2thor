@@ -3,7 +3,7 @@
 --------------------------------------------------------------------------------
 
 
-AI2-THOR is an interactive 3D environment for Visual AI that allows an agent to be controlled via an API through Python.
+AI2-THOR is a photo-realistic interactable framework for AI agents.
 
 ## Tutorial
 
