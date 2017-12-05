@@ -67,7 +67,7 @@ event.metadata
 
 ## Actions
 
-We currently provide the following API controlled actions. New actions such as turning on faucet or slicing a loaf of bread can be easily added to the API. Actions are defined in ```unity/Assets/Scripts/DiscreteRemoteFPSAgentController.cs```. Please refer to the [this page](http://ai2thor.allenai.org/tutorials/object-types) to check which objects are actionable.
+We currently provide the following API controlled actions. New actions such as turning on faucet or slicing a loaf of bread can be easily added to the API. Actions are defined in ```unity/Assets/Scripts/DiscreteRemoteFPSAgentController.cs```. Please refer to [this page](http://ai2thor.allenai.org/tutorials/object-types) to check which objects are actionable.
 
 #### MoveAhead
 Move ahead in the amount of the grid size
