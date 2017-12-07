@@ -37,11 +37,11 @@ logger = logging.getLogger(__name__)
 
 BUILDS = dict(
     Linux={
-        'url':'https://s3-us-west-2.amazonaws.com/ai2-thor/builds/thor-201711271629-Linux64.zip',
+        'url':'http://s3-us-west-2.amazonaws.com/ai2-thor/builds/thor-201711271629-Linux64.zip',
         'sha256':'bf21bf43238dd334cdc042d80ce534a3f6bf1f7440f555a665ca1497cad9eeb6'
     },
     Darwin={
-        'url':'https://s3-us-west-2.amazonaws.com/ai2-thor/builds/thor-201711271629-OSXIntel64.zip',
+        'url':'http://s3-us-west-2.amazonaws.com/ai2-thor/builds/thor-201711271629-OSXIntel64.zip',
         'sha256':'edd4190b77ac8d0f6e151168c0fe048d5f6e467d9e0e2867e93fad7a04e2350a'
     },
 )
