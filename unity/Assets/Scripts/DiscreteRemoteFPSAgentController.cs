@@ -793,20 +793,30 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 		public void LookDown(ServerAction response) {
 
-			if (currentHorizonAngleIndex () > 0) {
-				float targetHorizon = horizonAngles [currentHorizonAngleIndex () - 1];
-				m_Camera.transform.localEulerAngles = new Vector3 (targetHorizon, 0.0f, 0.0f);
+			if (currentHorizonAngleIndex() > 0)
+			{
+				float targetHorizon = horizonAngles[currentHorizonAngleIndex() - 1];
+				m_Camera.transform.localEulerAngles = new Vector3(targetHorizon, 0.0f, 0.0f);
 				actionFinished(true);
 
+			}
+			else { 
+				errorMessage = "can't LookDown below the min horizon angle";
+				actionFinished(false);
 			}
 		}
 
 		public void LookUp(ServerAction controlCommand) {
 
-			if (currentHorizonAngleIndex () < horizonAngles.Length - 1) {
-				float targetHorizon = horizonAngles [currentHorizonAngleIndex () + 1];
-				m_Camera.transform.localEulerAngles = new Vector3 (targetHorizon, 0.0f, 0.0f);
+			if (currentHorizonAngleIndex() < horizonAngles.Length - 1)
+			{
+				float targetHorizon = horizonAngles[currentHorizonAngleIndex() + 1];
+				m_Camera.transform.localEulerAngles = new Vector3(targetHorizon, 0.0f, 0.0f);
 				actionFinished(true);
+			}
+			else {
+				errorMessage = "can't LookUp beyond the max horizon angle";
+				actionFinished(false);
 			}
 		}
 
