@@ -567,11 +567,11 @@ class BFSController(Controller):
         super(BFSController, self).__init__()
         self.rotations = [0, 90, 180, 270]
         self.horizons = [330, 0, 30]
-        self.move_magnitude = 0.25
         self.allow_enqueue = True
         self.queue = deque()
         self.seen_points = []
         self.grid_points = []
+        self.grid_size = 0.25
 
     def visualize_points(self, scene_name, wait_key=10):
         import cv2
@@ -610,7 +610,7 @@ class BFSController(Controller):
     def has_islands(self):
         queue = []
         seen_points = set()
-        mag = self.move_magnitude
+        mag = self.grid_size
         def enqueue_island_points(p):
             if json.dumps(p) in seen_points:
                 return
@@ -635,11 +635,111 @@ class BFSController(Controller):
 
         return len(seen_points) != len(self.grid_points)
 
+    def build_graph(self):
+        import networkx as nx
+        graph = nx.Graph()
+        for point in self.grid_points:
+            self._build_graph_point(graph, point)
+
+        return graph
+
+    def key_for_point(self, point):
+        return "{x:0.3f}|{z:0.3f}".format(**point)
+
+    def _build_graph_point(self, graph, point):
+        for p in self.grid_points:
+            dist = math.sqrt(((point['x'] - p['x']) ** 2) + ((point['z'] - p['z']) ** 2))
+            if dist <= (self.grid_size + 0.01) and dist > 0:
+                graph.add_edge(self.key_for_point(point), self.key_for_point(p))
+
+    def move_relative_points(self, all_points, graph, position, rotation):
+
+        action_orientation = {
+            0:dict(x=0, z=1, action='MoveAhead'),
+            90:dict(x=1, z=0, action='MoveRight'),
+            180:dict(x=0, z=-1, action='MoveBack'),
+            270:dict(x=-1, z=0, action='MoveLeft')
+        }
+
+        move_points = dict()
+
+        for n in graph.neighbors(self.key_for_point(position)):
+            point = all_points[n]
+            x_o = round((point['x'] - position['x']) / self.grid_size)
+            z_o = round((point['z'] - position['z']) / self.grid_size)
+            for target_rotation, offsets in action_orientation.items():
+                delta = round(rotation + target_rotation) % 360
+                ao = action_orientation[delta]
+                action_name = action_orientation[target_rotation]['action']
+                if x_o == ao['x'] and z_o == ao['z']:
+                    move_points[action_name] = point
+                    break
+
+        return move_points
+
+    def plan_horizons(self, agent_horizon, target_horizon):
+        actions = []
+        horizon_step_map = {330:3, 0:2, 30:1, 60:0}
+        look_diff = horizon_step_map[int(agent_horizon)] - horizon_step_map[int(target_horizon)]
+        if look_diff > 0:
+            for i in range(look_diff):
+                actions.append(dict(action='LookDown'))
+        else:
+            for i in range(abs(look_diff)):
+                actions.append(dict(action='LookUp'))
+
+        return actions
+
+    def plan_rotations(self, agent_rotation, target_rotation):
+        right_diff = target_rotation - agent_rotation
+        if right_diff < 0:
+            right_diff += 360
+        right_steps = right_diff / 90
+
+        left_diff = agent_rotation - target_rotation
+        if left_diff < 0:
+            left_diff += 360
+        left_steps = left_diff / 90
+
+        actions = []
+        if right_steps < left_steps:
+            for i in range(int(right_steps)):
+                actions.append(dict(action='RotateRight'))
+        else:
+            for i in range(int(left_steps)):
+                actions.append(dict(action='RotateLeft'))
+
+        return actions
+
+    def shortest_plan(self, graph, agent, target):
+        import networkx as nx
+        path = nx.shortest_path(graph, self.key_for_point(agent['position']), self.key_for_point(target['position']))
+        actions = []
+        all_points = {}
+
+        for point in self.grid_points:
+            all_points[self.key_for_point(point)] = point
+
+        #assert all_points[path[0]] == agent['position']
+
+        current_position = agent['position']
+        current_rotation = agent['rotation']['y']
+
+        for p in path[1:]:
+            inv_pms = {self.key_for_point(v): k for k, v in self.move_relative_points(all_points, graph, current_position, current_rotation).items()}
+            actions.append(dict(action=inv_pms[p]))
+            current_position = all_points[p]
+
+        actions += self.plan_horizons(agent['cameraHorizon'], target['cameraHorizon'])
+        actions += self.plan_rotations(agent['rotation']['y'], target['rotation']['y'])
+        # self.visualize_points(path)
+
+        return actions
 
     def enqueue_point(self, point):
 
         # ensure there are no points near the new point
-        threshold = self.move_magnitude/5.0
+        threshold = self.grid_size/5.0
         if not any(map(lambda p: distance(p, point.target_point()) < threshold, self.seen_points)):
             self.seen_points.append(point.target_point())
             self.queue.append(point)
@@ -647,10 +747,10 @@ class BFSController(Controller):
     def enqueue_points(self, agent_position):
         if not self.allow_enqueue:
             return
-        self.enqueue_point(BFSSearchPoint(agent_position, dict(x=-1 * self.move_magnitude)))
-        self.enqueue_point(BFSSearchPoint(agent_position, dict(x=self.move_magnitude)))
-        self.enqueue_point(BFSSearchPoint(agent_position, dict(z=-1 * self.move_magnitude)))
-        self.enqueue_point(BFSSearchPoint(agent_position, dict(z=1 * self.move_magnitude)))
+        self.enqueue_point(BFSSearchPoint(agent_position, dict(x=-1 * self.grid_size)))
+        self.enqueue_point(BFSSearchPoint(agent_position, dict(x=self.grid_size)))
+        self.enqueue_point(BFSSearchPoint(agent_position, dict(z=-1 * self.grid_size)))
+        self.enqueue_point(BFSSearchPoint(agent_position, dict(z=1 * self.grid_size)))
 
     def search_all_closed(self, scene_name):
         self.allow_enqueue = True
@@ -662,7 +762,7 @@ class BFSController(Controller):
         self.enqueue_points(event.metadata['agent']['position'])
         while self.queue:
             self.queue_step()
-            self.visualize_points(scene_name)
+            #self.visualize_points(scene_name)
 
     def start_search(
             self,
@@ -703,10 +803,10 @@ class BFSController(Controller):
         self.initialize_scene()
         while self.queue:
             self.queue_step()
-            self.visualize_points(scene_name)
+            #self.visualize_points(scene_name)
 
         self.prune_points()
-        self.visualize_points(scene_name)
+        #self.visualize_points(scene_name)
 
     # get rid of unreachable points
     def prune_points(self):
@@ -721,12 +821,12 @@ class BFSController(Controller):
             found = False
             for x in [1, -1]:
                 found |= key_for_point(gp['x'] +\
-                    (self.move_magnitude * x), gp['z']) in final_grid_points
+                    (self.grid_size * x), gp['z']) in final_grid_points
 
             for z in [1, -1]:
                 found |= key_for_point(
                     gp['x'],
-                    (self.move_magnitude * z) + gp['z']) in final_grid_points
+                    (self.grid_size * z) + gp['z']) in final_grid_points
 
             if found:
                 pruned_grid_points.append(gp)
@@ -821,9 +921,10 @@ class BFSController(Controller):
 
         return receptacle_pivot_points, receptacle_points
 
-
     def find_visible_objects(self):
-        seen_target_objects = {}
+
+        seen_target_objects = defaultdict(list)
+
         for point in self.grid_points:
             self.step(dict(
                 action='Teleport',
@@ -831,38 +932,31 @@ class BFSController(Controller):
                 y=point['y'],
                 z=point['z']), raise_for_failure=True)
 
+            for rot, hor in product(self.rotations, self.horizons):
+                event = self.step(dict(
+                    action='RotateLook',
+                    rotation=rot,
+                    horizon=hor), raise_for_failure=True)
 
-            for rot in [0, 90, 180, 270]:
-                for hor in [330, 0, 30, 60]:
-                    event = self.step(dict(
-                        action='RotateLook',
-                        rotation=rot,
-                        horizon=hor), raise_for_failure=True)
+                object_receptacle = dict()
+                for obj in event.metadata['objects']:
+                    if obj['receptacle']:
+                        for pso in obj['pivotSimObjs']:
+                            object_receptacle[pso['objectId']] = obj
 
-                    object_receptacle = dict()
-                    for obj in event.metadata['objects']:
-                        if obj['receptacle']:
-                            for pso in obj['pivotSimObjs']:
-                                object_receptacle[pso['objectId']] = obj
-                    for obj in filter(
-                            lambda x: x['visible'] and x['pickupable'],
-                            event.metadata['objects']):
+                for obj in filter(
+                        lambda x: x['visible'] and x['pickupable'],
+                        event.metadata['objects']):
 
-                        if obj['objectId'] in object_receptacle \
-                            and object_receptacle[obj['objectId']]['openable'] \
-                            and not object_receptacle[obj['objectId']]['isopen']:
-                            continue
+                    if obj['objectId'] in object_receptacle and\
+                            object_receptacle[obj['objectId']]['openable'] and not \
+                            object_receptacle[obj['objectId']]['isopen']:
+                        continue
 
-                        if obj['objectId'] not in seen_target_objects \
-                            or obj['distance'] < seen_target_objects[obj['objectId']]['distance']:
-                            seen_target_objects[obj['objectId']] = dict(
-                                distance=obj['distance'],
-                                agent=event.metadata['agent'])
+                    seen_target_objects[obj['objectId']].append(dict(
+                        distance=obj['distance'],
+                        agent=event.metadata['agent']))
 
-        #for o in filter(lambda x: x in seen_target_objects.keys(), self.target_objects):
-        #    print("saw target object %s" % o)
-
-        #print("saw total objects %s" % seen_target_objects.keys())
         return seen_target_objects
 
     def initialize_scene(self):
@@ -919,7 +1013,7 @@ class BFSController(Controller):
         #print(event.metadata['errorMessage'])
         assert event.metadata['lastActionSuccess']
         move_vec = search_point.move_vector
-        move_vec['moveMagnitude'] = self.move_magnitude
+        move_vec['moveMagnitude'] = self.grid_size
         event = self.step(dict(action='Move', **move_vec))
 
         if event.metadata['lastActionSuccess']:
