@@ -2,6 +2,8 @@ import os
 import datetime
 import zipfile
 from invoke import task
+import hashlib
+import pprint
 
 S3_BUCKET='ai2-thor'
 
@@ -40,26 +42,47 @@ def local_build(context, prefix='local'):
     else:
         print("Build Failure")
 
+def build_sha256(path):
+
+    m = hashlib.sha256()
+
+    with open(path, "rb") as f:
+        m.update(f.read())
+
+    return m.hexdigest()
+
 @task
 def build(context, local=False):
     timestamp = datetime.datetime.now().strftime('%Y%m%d%H%M')
+    build_url_base = 'http://s3-us-west-2.amazonaws.com/%s/' % S3_BUCKET
 
+    builds = {}
     for arch in ['OSXIntel64', 'Linux64']:
         build_name = "builds/thor-%s-%s" % (timestamp, arch)
+        url = build_url_base + build_name + ".zip"
 
         x = _build(context, arch, build_name)
 
+        build_info = None
         if x:
             archive_name = os.path.join('unity', build_name + ".zip")
             zipf = zipfile.ZipFile(archive_name, 'w', zipfile.ZIP_DEFLATED)
             if arch == 'OSXIntel64':
                 add_files(zipf, os.path.join('unity', build_name + ".app"))
+                build_info = builds['Darwin'] = {}
             elif arch == 'Linux64':
+                build_info = builds['Linux'] = {}
                 add_files(zipf, os.path.join('unity', build_name + "_Data"))
                 zipf.write(os.path.join('unity', build_name), os.path.basename(build_name))
-
+            build_info['url'] = url
             zipf.close()
+
+            build_info['sha256'] = build_sha256(archive_name)
             push_build(archive_name)
             print("Build successful")
         else:
-            print("Build Failure")
+            raise Exception("Build Failure")
+
+        with open("ai2thor/_builds.py", "w") as fi:
+            fi.write("# GENERATED FILE - DO NOT EDIT\n")
+            fi.write("BUILDS = " + pprint.pformat(builds))
