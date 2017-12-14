@@ -9,6 +9,9 @@ AI2-THOR is a photo-realistic interactable framework for AI agents.
 
 Please refer to the [tutorial page](http://ai2thor.allenai.org/tutorials/) for a detailed walkthrough.
 
+## News
+* (12/13/2017) We will release a docker container soon. 
+
 ## Requirements
 
 * OS: Mac OS X 10.9+, Ubuntu 14.04+
@@ -141,7 +144,7 @@ On the Python side there is a Flask service that listens for HTTP requests from 
 
 ## Unity Development
 
-If you wish to make changes to the Unity scenes/assets you will need to install Unity Editor version 5.4.1f1 for OSX (Linux Editor is currently in Beta) from [Unity Download Archive](https://unity3d.com/get-unity/download/archive).  After making your desired changes using the Unity Editor you will need to build.  To do this you must first exit the editor, then run the following commands from the ai2thor base directory. Individual scenes (the 3D models) can be found beneath the unity/Assets/Scenes directory - scenes are named FloorPlan###.
+If you wish to make changes to the Unity scenes/assets you will need to install Unity Editor version 5.4.6f3 for OSX (Linux Editor is currently in Beta) from [Unity Download Archive](https://unity3d.com/get-unity/download/archive).  After making your desired changes using the Unity Editor you will need to build.  To do this you must first exit the editor, then run the following commands from the ai2thor base directory. Individual scenes (the 3D models) can be found beneath the unity/Assets/Scenes directory - scenes are named FloorPlan###.
 
 ```python
 pip install invoke
