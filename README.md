@@ -9,6 +9,9 @@ AI2-THOR is a photo-realistic interactable framework for AI agents.
 
 Please refer to the [tutorial page](http://ai2thor.allenai.org/tutorials/) for a detailed walkthrough.
 
+## News
+* (12/13/2017) We will release a docker container soon. 
+
 ## Requirements
 
 * OS: Mac OS X 10.9+, Ubuntu 14.04+
