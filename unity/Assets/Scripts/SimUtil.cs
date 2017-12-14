@@ -120,8 +120,8 @@ public static class SimUtil {
 						break;
 				}
 			}
-			if (canSeeItem) {
 
+			if (canSeeItem) {
 				//if it's the same object, add it to the list
 				#if UNITY_EDITOR
 				item.VisibleNow = ShowObjectVisibility & true;
