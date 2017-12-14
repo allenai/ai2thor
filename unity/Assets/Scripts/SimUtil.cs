@@ -73,7 +73,8 @@ public static class SimUtil {
 			}
         }
         //now check to see if they're actually visible
-        RaycastHit hit;
+		// Make compiler happy by initializing hit.
+		RaycastHit hit = new RaycastHit();
         foreach (SimObj item in uniqueItems) {
 
 			if (!CheckItemBounds (item, agentCameraPos)) {
@@ -119,8 +120,8 @@ public static class SimUtil {
 						break;
 				}
 			}
-
 			if (canSeeItem) {
+
 				//if it's the same object, add it to the list
 				#if UNITY_EDITOR
 				item.VisibleNow = ShowObjectVisibility & true;
