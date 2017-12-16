@@ -134,7 +134,7 @@ event = controller.step(dict(
     receptacleObjectId="Fridge|0.05|0.75"))
  ```
 #### Teleport
-Move the agent to any location in the scene. Using this command its possible to put the agent into places that would not normally be possible to navigate to, but it can be useful if you need to place an agent in the exact same spot for a task.
+Move the agent to any location in the scene. Using this command it is possible to put the agent into places that would not normally be possible to navigate to, but it can be useful if you need to place an agent in the exact same spot for a task.
 ```python
 event = controller.step(dict(action='Teleport', x=0.999, y=1.01, z=-0.3541))
 ``` 
