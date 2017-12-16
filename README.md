@@ -112,7 +112,7 @@ event = controller.step(dict(action='OpenObject', objectId="Fridge|0.25|0.75"))
 ```
 
 #### CloseObject
-Close an object (assuming object is visible to the agent). In the case of the Refrigerator, the door will fridge.
+Close an object (assuming object is visible to the agent). In the case of the Refrigerator, the door will close.
 ```python
 event = controller.step(dict(action='CloseObject', objectId="Fridge|0.25|0.75"))
 ```
