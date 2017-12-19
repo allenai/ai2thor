@@ -99,6 +99,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		public float forwardVelocity = 2.0f;
 		public float rotateVelocity = 2.0f;
 		public int   actionDuration = 3;
+        private int defaultScreenWidth = 300;
+        private int defaultScreenHeight = 300;
+
 
 		// internal state variables
 		private float lastEmitTime;
@@ -128,6 +131,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			//rotateVelocity = LoadFloatVariable (rotateVelocity, prefix + "TURN_VELOCITY");
 			actionDuration = LoadIntVariable (actionDuration, prefix + "ACTION_LENGTH");
 			maxVisibleDistance = LoadFloatVariable (defaultMaxVisibleDistance, prefix + "VISIBILITY_DISTANCE");
+
+
+			int screenWidth =  LoadIntVariable (defaultScreenWidth, "SCREEN_WIDTH");
+			int screenHeight =  LoadIntVariable (defaultScreenHeight, "SCREEN_HEIGHT");
+			Screen.SetResolution(screenWidth, screenHeight, false);
+
 
 
 			// character controller parameters

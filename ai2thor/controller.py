@@ -414,10 +414,9 @@ class Controller(object):
 
         return self.last_event
 
-    def unity_command(self, width, height):
+    def unity_command(self):
 
         command = self.executable_path()
-        command += (" -screen-width %s -screen-height %s" % (width, height))
         return shlex.split(command)
 
     def _start_thread(self, env, width, height, port=0, start_unity=True):
@@ -429,13 +428,16 @@ class Controller(object):
         _, port = self.server.wsgi_server.socket.getsockname()
         env['AI2THOR_PORT'] = str(port)
         env['AI2THOR_CLIENT_TOKEN'] = self.server.client_token
+        env['AI2THOR_SCREEN_WIDTH'] = str(width)
+        env['AI2THOR_SCREEN_HEIGHT'] = str(height)
+
         # env['AI2THOR_SERVER_SIDE_SCREENSHOT'] = 'True'
 
         # print("Viewer: http://%s:%s/viewer" % (host, port))
 
         # launch simulator
         if start_unity:
-            proc = subprocess.Popen(self.unity_command(width, height), env=env)
+            proc = subprocess.Popen(self.unity_command(), env=env)
             self.unity_pid = proc.pid
 
             # print("launched pid %s" % self.unity_pid)
