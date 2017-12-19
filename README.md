@@ -112,7 +112,7 @@ event = controller.step(dict(action='OpenObject', objectId="Fridge|0.25|0.75"))
 ```
 
 #### CloseObject
-Close an object (assuming object is visible to the agent). In the case of the Refrigerator, the door will fridge.
+Close an object (assuming object is visible to the agent). In the case of the Refrigerator, the door will close.
 ```python
 event = controller.step(dict(action='CloseObject', objectId="Fridge|0.25|0.75"))
 ```
@@ -133,13 +133,17 @@ event = controller.step(dict(
     objectId="Mug|0.25|-0.27",
     receptacleObjectId="Fridge|0.05|0.75"))
  ```
- 
+#### Teleport
+Move the agent to any location in the scene. Using this command it is possible to put the agent into places that would not normally be possible to navigate to, but it can be useful if you need to place an agent in the exact same spot for a task.
+```python
+event = controller.step(dict(action='Teleport', x=0.999, y=1.01, z=-0.3541))
+``` 
 
 ## Architecture
 
 AI2-THOR is made up of two components: a set of scenes built for the Unity game engine located in ```unity``` folder, a lightweight Python API that interacts with the game engine located in ```ai2thor``` folder.
 
-On the Python side there is a Flask service that listens for HTTP requests from the Unity Game engine. After an action is executed within the game engine, a screen capture is taken and a JSON metadata object is constructed from the state of all the objects of the scene and POST'd to the Python Flask service.  This payload is then used to construct an Event object comprised of a numpy array (the screen capture) and metadata (dictionary containing the current state of every object including the agent).  At this point the game engine waits for a response from the Python service, which it receives when the next ```controller.step()``` call is made.  Once the response is received within Unity, the requested action is taken and the process repeats.
+On the Python side there is a Flask service that listens for HTTP requests from the Unity game engine. After an action is executed within the game engine, a screen capture is taken and a JSON metadata object is constructed from the state of all the objects of the scene and POST'd to the Python Flask service.  This payload is then used to construct an Event object comprised of a numpy array (the screen capture) and metadata (dictionary containing the current state of every object including the agent).  At this point the game engine waits for a response from the Python service, which it receives when the next ```controller.step()``` call is made.  Once the response is received within Unity, the requested action is taken and the process repeats.
 
 
 ## Unity Development
