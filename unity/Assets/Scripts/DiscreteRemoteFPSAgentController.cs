@@ -80,8 +80,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		public void Initialize(ServerAction action) {
 
 			this.gridSize = action.gridSize;
-			Debug.Log ("grid size " + this.gridSize);
-			Debug.Log("openable types" + OpenableTypes.Length);
 			StartCoroutine (checkInitializeAgentLocationAction ());
 		}
 
@@ -92,8 +90,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			// move ahead
 			// move back
 			Debug.Log("trying to find nearest location on the grid");
-			float grid_x1 = startingPosition.x - (startingPosition.x % gridSize);
-			float grid_z1 = startingPosition.z - (startingPosition.z % gridSize);
+			float mult = 1 / gridSize;
+			float grid_x1 = Convert.ToSingle(Math.Floor(this.transform.position.x * mult) / mult);
+			float grid_z1 = Convert.ToSingle(Math.Floor(this.transform.position.z * mult) / mult);
+
 			float[] xs = new float[]{ grid_x1, grid_x1 + gridSize };
 			float[] zs = new float[]{ grid_z1, grid_z1 + gridSize };
 			List<Vector3> validMovements = new List<Vector3> (); 
@@ -101,18 +101,21 @@ namespace UnityStandardAssets.Characters.FirstPerson
 				foreach (float z in zs) {
 					this.transform.position = startingPosition;
 					yield return null;
-					Debug.Log ("moving to: " + x.ToString() + " " + z.ToString());
+
 					Vector3 target = new Vector3 (x, this.transform.position.y, z);
 					Vector3 dir = target - this.transform.position;
 					Vector3 movement = dir.normalized * 100.0f;
 					if (movement.magnitude > dir.magnitude) {
 						movement = dir;
 					}
+
 					m_CharacterController.Move (movement);
 
 					for (int i = 0; i < actionDuration; i++) {
 						yield return null;
 						Vector3 diff = this.transform.position - target;
+	
+
 						if ((Math.Abs (diff.x) < 0.005) && (Math.Abs (diff.z) < 0.005)) {
 							Debug.Log ("initialize move succeeded");
 							validMovements.Add (movement);
