@@ -178,11 +178,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			for (int i = 0; i < actionDuration; i++) {
 				Vector3 currentPosition = this.transform.position;
 				Vector3 diff = currentPosition - lastPosition;
-				Debug.Log ("diff ***");
+		
+				if (
+					((moveMagnitude - Math.Abs (diff.x) < 0.005) && (Math.Abs (diff.z) < 0.005)) ||
+					((moveMagnitude - Math.Abs (diff.z) < 0.005) && (Math.Abs (diff.x) < 0.005))
 
-				Debug.Log (diff.x);
-				Debug.Log (diff.z);
-				if ((moveMagnitude - Math.Abs (diff.x) < 0.005) || (moveMagnitude - Math.Abs (diff.z) < 0.005)) {
+				) {
 					this.snapToGrid ();
 					result = true;
 					break;
