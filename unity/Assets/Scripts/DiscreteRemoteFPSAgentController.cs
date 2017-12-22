@@ -17,8 +17,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
 	public class DiscreteRemoteFPSAgentController : BaseFPSAgentController
 	{
 
-		protected string robosimsClientToken;
-		protected string robosimsPort;
+		protected string robosimsClientToken = "";
+		protected int robosimsPort = 8200;
+		protected string robosimsHost = "127.0.0.1";
 		protected bool serverSideScreenshot;
 		protected int actionCounter;
 		protected int frameCounter;
@@ -41,16 +42,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		// Initialize parameters from environment variables
 		protected override void Awake() {
 			// load config parameters from the server side
-			robosimsPort = LoadStringVariable (robosimsPort, "PORT");
+			robosimsPort = LoadIntVariable (robosimsPort, "PORT");
+			robosimsHost = LoadStringVariable(robosimsHost, "HOST");
+
 			serverSideScreenshot = LoadBoolVariable (serverSideScreenshot, "SERVER_SIDE_SCREENSHOT");
 			robosimsClientToken = LoadStringVariable (robosimsClientToken, "CLIENT_TOKEN");
 
-
-
-			if (robosimsPort == null) {
-				robosimsPort = "8200";
-				robosimsClientToken = "";
-			}
 			base.Awake ();
 
 		}
@@ -169,23 +166,42 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			float gridX = Convert.ToSingle (Math.Round (this.transform.position.x * mult) / mult);
 			float gridZ = Convert.ToSingle (Math.Round (this.transform.position.z * mult) / mult);
 			this.transform.position = new Vector3 (gridX, transform.position.y, gridZ);
+
 		}
 
 		virtual protected IEnumerator checkMoveAction() {
 			yield return null;
 
 			bool result = false;
+
 			for (int i = 0; i < actionDuration; i++) {
 				Vector3 currentPosition = this.transform.position;
 				Vector3 diff = currentPosition - lastPosition;
-		
 				if (
 					((moveMagnitude - Math.Abs (diff.x) < 0.005) && (Math.Abs (diff.z) < 0.005)) ||
 					((moveMagnitude - Math.Abs (diff.z) < 0.005) && (Math.Abs (diff.x) < 0.005))
 
 				) {
 					this.snapToGrid ();
-					result = true;
+					if (this.IsCollided())
+					{
+
+						currentPosition = this.transform.position;
+						for (int j = 0; j < actionDuration; j++)
+						{
+							yield return null;
+						}
+						if ((currentPosition - this.transform.position).magnitude <= 0.001f)
+						{
+							result = true;
+
+						}
+					}
+					else {
+						result = true;
+					}
+
+
 					break;
 				} else {
 					yield return null;
@@ -408,7 +424,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			form.AddField("metadata", JsonUtility.ToJson(metaMessage));
 			form.AddField("token", robosimsClientToken);
 
-			WWW w = new WWW ("http://127.0.0.1:" + robosimsPort + "/train", form);
+			WWW w = new WWW ("http://" + robosimsHost + ":" + robosimsPort + "/train", form);
 			yield return w;
 
 			if (!string.IsNullOrEmpty (w.error)) {

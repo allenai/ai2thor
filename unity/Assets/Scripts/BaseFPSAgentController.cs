@@ -282,6 +282,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			{
 				m_MoveDir += Physics.gravity * m_GravityMultiplier * Time.fixedDeltaTime;
 			}
+
 			m_CollisionFlags = m_CharacterController.Move (m_MoveDir * Time.fixedDeltaTime);
 
 			if ((m_CollisionFlags & CollisionFlags.Sides) != 0) {
@@ -350,7 +351,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 
 		// Check if agent is collided with other objects
-		private bool IsCollided() {
+		protected bool IsCollided() {
 			return collisionsInAction.Count > 0;
 		}
 
@@ -545,6 +546,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		protected void ProcessControlCommand(string msg) {
 			Debug.Log ("Procssing control commands: " + msg);
 			errorMessage = "";
+			collisionsInAction = new List<string> ();
 
 			ServerAction controlCommand = JsonUtility.FromJson<ServerAction>(msg);
             this.currentSequenceId = controlCommand.sequenceId;
