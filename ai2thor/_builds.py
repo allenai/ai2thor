@@ -1,5 +1,5 @@
 # GENERATED FILE - DO NOT EDIT
-BUILDS = {'Darwin': {'sha256': '91fcd1b260cc616d54ea2f775546e5de2560d82e638cbf169e2a978d36041521',
-            'url': 'http://s3-us-west-2.amazonaws.com/ai2-thor/builds/thor-201712201400-OSXIntel64.zip'},
- 'Linux': {'sha256': 'edecaab3e20f2ed2d779a685cc032ec34479216f743d172ebd39a8e2d0d9d9d1',
-           'url': 'http://s3-us-west-2.amazonaws.com/ai2-thor/builds/thor-201712201400-Linux64.zip'}}
+BUILDS = {'Darwin': {'sha256': '25427a473308aa402e6c1ff667e11c5090e607b8f7ec6f80c0e40fc9152d9023',
+            'url': 'http://s3-us-west-2.amazonaws.com/ai2-thor/builds/thor-201712211442-OSXIntel64.zip'},
+ 'Linux': {'sha256': '5f1a4f12472b0be9aba6702c26d6f2689ad58e63c83da9bacaf7484dd99acb0a',
+           'url': 'http://s3-us-west-2.amazonaws.com/ai2-thor/builds/thor-201712211442-Linux64.zip'}}
