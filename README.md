@@ -33,7 +33,7 @@ Please refer to the [tutorial page](http://ai2thor.allenai.org/tutorials/) for a
 ```bash
 pip install ai2thor
 ```
-Once installed you can launch the framework. **Make sure X server is running before running the following commands. You can check by running ```glxinfo```**
+Once installed you can launch the framework. **Make sure X server is running before running the following commands. You can check by running ```glxinfo```.**
 
 ```python
 import ai2thor.controller
