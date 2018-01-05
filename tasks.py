@@ -52,13 +52,25 @@ def build_sha256(path):
 
     return m.hexdigest()
 
+def generate_dockerignore(version):
+    return """ai2thor/
+ai2thor.egg-info/
+unity/
+build/
+dist/
+doc/
+!unity/builds/thor-%s-Linux64*
+""" % version
+
+
 @task
 def build_docker(context, version):
+    with open(".dockerignore", "w") as f:
+        f.write(generate_dockerignore(version))
 
     subprocess.check_call(
         "docker build --rm --no-cache --build-arg AI2THOR_VERSION={version} -t  ai2thor/ai2thor-base:{version} .".format(version=version),
-        shell=True
-        )
+        shell=True)
 
 @task
 def build(context, local=False):

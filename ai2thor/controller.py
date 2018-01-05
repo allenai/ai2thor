@@ -352,6 +352,7 @@ class Controller(object):
         self.receptacle_nearest_pivot_points = {}
         self.server = None
         self.unity_pid = None
+        self.docker_enabled = False
         self.container_id = None
         self.local_executable_path = None
         self.last_event = None
@@ -432,8 +433,7 @@ class Controller(object):
 
         _, port = self.server.wsgi_server.socket.getsockname()
 
-        allowed_keys = {'AI2THOR_PORT', 'AI2THOR_CLIENT_TOKEN', 'AI2THOR_SCREEN_WIDTH', 'AI2THOR_SCREEN_HEIGHT', 'AI2THOR_HOST',
-            'DISPLAY', 'AI2THOR_VERSION'}
+
         env['AI2THOR_VERSION'] = ai2thor._builds.VERSION
         env['AI2THOR_HOST'] = host
         env['AI2THOR_PORT'] = str(port)
@@ -441,8 +441,6 @@ class Controller(object):
         env['AI2THOR_SCREEN_WIDTH'] = str(width)
         env['AI2THOR_SCREEN_HEIGHT'] = str(height)
 
-        for k in [k for k in env.keys() if k not in allowed_keys]:
-            del(env[k])
 
         # env['AI2THOR_SERVER_SIDE_SCREENSHOT'] = 'True'
 
@@ -537,7 +535,7 @@ class Controller(object):
 
         if platform.system() == 'Linux':
 
-            if ai2thor.docker.has_docker() and ai2thor.docker.nvidia_version() is not None:
+            if self.docker_enabled and ai2thor.docker.has_docker() and ai2thor.docker.nvidia_version() is not None:
                 image_name = ai2thor.docker.build_image()
                 host = ai2thor.docker.bridge_gateway()
             else:

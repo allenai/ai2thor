@@ -80,9 +80,12 @@ def image_exists(image_name):
 
 
 def run(image_name, environment):
+    allowed_keys = {'AI2THOR_PORT', 'AI2THOR_CLIENT_TOKEN', 'AI2THOR_SCREEN_WIDTH', 'AI2THOR_SCREEN_HEIGHT', 'AI2THOR_HOST', 'AI2THOR_VERSION'}
+
     environment_string = ""
     for k,v in environment.items():
-        environment_string += " -e %s=%s " % (k,v)
+        if k in allowed_keys:
+            environment_string += " -e %s=%s " % (k,v)
 
     environment_string += " -e %s=%s " % ("AI2THOR_DEVICE_BUSID", xorg_bus_id())
     command = "docker run -d --privileged {environment} {image_name} /root/start.sh".format(environment=environment_string, image_name=image_name)
