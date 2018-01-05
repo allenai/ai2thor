@@ -58,7 +58,7 @@ class Event(object):
 
 class Server(object):
 
-    def __init__(self, request_queue, response_queue, port=0):
+    def __init__(self, request_queue, response_queue, host, port=0):
 
         app = Flask(__name__,
                     template_folder=os.path.realpath(
@@ -76,7 +76,7 @@ class Server(object):
         self.frame_counter = 0
         self.debug_frames_per_interval = 50
         self.xwindow_id = None
-        self.wsgi_server = werkzeug.serving.BaseWSGIServer('127.0.0.1', self.port, self.app)
+        self.wsgi_server = werkzeug.serving.BaseWSGIServer(host, self.port, self.app)
         # used to ensure that we are receiving frames for the action we sent
         self.sequence_id = 0
 
