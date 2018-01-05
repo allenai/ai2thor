@@ -29,6 +29,7 @@ import zipfile
 
 import numpy as np
 
+import ai2thor.docker
 import ai2thor.downloader
 import ai2thor.server
 from ai2thor.server import queue_get
@@ -314,6 +315,8 @@ RECEPTACLE_OBJECTS = {
     'ToiletPaperHanger': {'ToiletPaper'},
     'TowelHolder': {'Cloth'}}
 
+
+
 def process_alive(pid):
     """
     Use kill(0) to determine if pid is alive
@@ -349,8 +352,10 @@ class Controller(object):
         self.receptacle_nearest_pivot_points = {}
         self.server = None
         self.unity_pid = None
+        self.container_id = None
         self.local_executable_path = None
         self.last_event = None
+        self.server_thread = None
 
     def reset(self, scene_name=None):
         self.response_queue.put_nowait(dict(action='Reset', sceneName=scene_name, sequenceId=0))
@@ -419,17 +424,25 @@ class Controller(object):
         command = self.executable_path()
         return shlex.split(command)
 
-    def _start_thread(self, env, width, height, port=0, start_unity=True):
+    def _start_thread(self, env, width, height, host, port, image_name, start_unity):
         # get environment variables
 
         if not start_unity:
             self.server.client_token = None
 
         _, port = self.server.wsgi_server.socket.getsockname()
+
+        allowed_keys = {'AI2THOR_PORT', 'AI2THOR_CLIENT_TOKEN', 'AI2THOR_SCREEN_WIDTH', 'AI2THOR_SCREEN_HEIGHT', 'AI2THOR_HOST',
+            'DISPLAY', 'AI2THOR_VERSION'}
+        env['AI2THOR_VERSION'] = ai2thor._builds.VERSION
+        env['AI2THOR_HOST'] = host
         env['AI2THOR_PORT'] = str(port)
         env['AI2THOR_CLIENT_TOKEN'] = self.server.client_token
         env['AI2THOR_SCREEN_WIDTH'] = str(width)
         env['AI2THOR_SCREEN_HEIGHT'] = str(height)
+
+        for k in [k for k in env.keys() if k not in allowed_keys]:
+            del(env[k])
 
         # env['AI2THOR_SERVER_SIDE_SCREENSHOT'] = 'True'
 
@@ -437,11 +450,16 @@ class Controller(object):
 
         # launch simulator
         if start_unity:
-            proc = subprocess.Popen(self.unity_command(), env=env)
-            self.unity_pid = proc.pid
 
-            # print("launched pid %s" % self.unity_pid)
-            atexit.register(lambda: os.kill(self.unity_pid, signal.SIGKILL))
+            if image_name is not None:
+                self.container_id = ai2thor.docker.run(image_name, env)
+                atexit.register(lambda: ai2thor.docker.kill_container(self.container_id))
+            else:
+                proc = subprocess.Popen(self.unity_command(), env=env)
+                self.unity_pid = proc.pid
+
+                # print("launched pid %s" % self.unity_pid)
+                atexit.register(lambda: os.kill(self.unity_pid, signal.SIGKILL))
 
         self.server.start()
 
@@ -498,6 +516,8 @@ class Controller(object):
             os.chmod(self.executable_path(), 0o755)
         else:
             logger.debug("%s exists - skipping download" % self.executable_path())
+    
+
 
     def start(
             self,
@@ -507,21 +527,34 @@ class Controller(object):
             player_screen_height=300,
             x_display="0.0"):
 
+        if self.server_thread is not None:
+            raise Exception("server has already been started - cannot start more than once")
+
         env = os.environ.copy()
 
-        if platform.system() == 'Linux':
-            env['DISPLAY'] = ':' + x_display
+        image_name = None
+        host = '127.0.0.1'
 
-        self.download_binary()
+        if platform.system() == 'Linux':
+
+            if ai2thor.docker.has_docker() and ai2thor.docker.nvidia_version() is not None:
+                image_name = ai2thor.docker.build_image()
+                host = ai2thor.docker.bridge_gateway()
+            else:
+                env['DISPLAY'] = ':' + x_display
+                self.download_binary()
+        else:
+            self.download_binary()
 
         self.server = ai2thor.server.Server(
             self.request_queue,
             self.response_queue,
-            port)
+            host,
+            port=port)
 
         self.server_thread = threading.Thread(
             target=self._start_thread,
-            args=(env, player_screen_width, player_screen_height, port, start_unity))
+            args=(env, player_screen_width, player_screen_height, host, port, image_name, start_unity))
         self.server_thread.daemon = True
         self.server_thread.start()
 
@@ -532,7 +565,13 @@ class Controller(object):
 
     def stop(self):
         self.stop_unity()
+        self.stop_container()
         self.server.wsgi_server.shutdown()
+
+    def stop_container(self):
+        if self.container_id:
+            ai2thor.docker.kill_container(self.container_id)
+            self.container_id = None
 
     def stop_unity(self):
         if self.unity_pid and process_alive(self.unity_pid):

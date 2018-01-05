@@ -4,6 +4,7 @@ import zipfile
 from invoke import task
 import hashlib
 import pprint
+import subprocess
 
 S3_BUCKET='ai2-thor'
 
@@ -52,13 +53,22 @@ def build_sha256(path):
     return m.hexdigest()
 
 @task
+def build_docker(context, version):
+
+    subprocess.check_call(
+        "docker build --rm --no-cache --build-arg AI2THOR_VERSION={version} -t  ai2thor/ai2thor-base:{version} .".format(version=version),
+        shell=True
+        )
+
+@task
 def build(context, local=False):
-    timestamp = datetime.datetime.now().strftime('%Y%m%d%H%M')
+    version = datetime.datetime.now().strftime('%Y%m%d%H%M')
     build_url_base = 'http://s3-us-west-2.amazonaws.com/%s/' % S3_BUCKET
 
-    builds = {}
+    builds = {'Docker': {'tag': version}}
+
     for arch in ['OSXIntel64', 'Linux64']:
-        build_name = "builds/thor-%s-%s" % (timestamp, arch)
+        build_name = "builds/thor-%s-%s" % (version, arch)
         url = build_url_base + build_name + ".zip"
 
         x = _build(context, arch, build_name)
@@ -85,4 +95,5 @@ def build(context, local=False):
 
         with open("ai2thor/_builds.py", "w") as fi:
             fi.write("# GENERATED FILE - DO NOT EDIT\n")
+            fi.write("VERSION = '%s'\n" % version)
             fi.write("BUILDS = " + pprint.pformat(builds))
