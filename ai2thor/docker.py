@@ -6,6 +6,7 @@ import requests
 import tempfile
 import ai2thor._builds
 import shlex
+import shutil
 
 def pci_records():
     records = []
@@ -106,12 +107,12 @@ def build_image():
     if image_exists(image_name):
         return image_name
 
-    tf = tempfile.NamedTemporaryFile(mode="w", delete=False)
-    tf.write(generate_dockerfile(tag))
-    tf.close()
+    td = tempfile.mkdtemp()
+    with open("%s/Dockerfile" % td, "w") as f:
+        f.write(generate_dockerfile(tag))
 
-    subprocess.check_call("docker build --rm -t %s -f %s ." % (image_name, tf.name), shell=True)
+    subprocess.check_call("docker build --rm -t %s %s" % (image_name, td), shell=True)
 
-    os.unlink(tf.name)
+    shutil.rmtree(td)
 
     return image_name
