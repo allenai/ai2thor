@@ -29,7 +29,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		private Dictionary<int, Material[]> currentMaskMaterials;
 		private SimObj currentMaskObj;
 		private SimObj currentHandSimObj;
-		private static float gridSize;
+		private static float gridSize = 0.25;
 
 
 		private enum emitStates {Send, Wait, Received};
@@ -86,8 +86,14 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			Vector3 startingPosition = this.transform.position;
 			// move ahead
 			// move back
+
 			Debug.Log("trying to find nearest location on the grid");
-			float mult = Convert.ToSingle(Math.Max(1 / gridSize, 0.00001));
+			if (gridSize <= 0 || gridSize > 5) {
+				Debug.Log ("grid size must be in the range (0,5]");
+				errorMessage = "grid size must be in the range (0,5]";
+				actionFinished (false);
+			}
+			float mult = 1 / gridSize;
 			float grid_x1 = Convert.ToSingle(Math.Floor(this.transform.position.x * mult) / mult);
 			float grid_z1 = Convert.ToSingle(Math.Floor(this.transform.position.z * mult) / mult);
 
@@ -161,7 +167,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		}
 
 		private void snapToGrid() {
-			float mult = Convert.ToSingle(Math.Max(1 / gridSize, 0.00001));
+			float mult = 1 / gridSize;
 			float gridX = Convert.ToSingle (Math.Round (this.transform.position.x * mult) / mult);
 			float gridZ = Convert.ToSingle (Math.Round (this.transform.position.z * mult) / mult);
 			this.transform.position = new Vector3 (gridX, transform.position.y, gridZ);
