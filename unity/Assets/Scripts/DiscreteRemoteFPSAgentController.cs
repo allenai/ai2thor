@@ -29,7 +29,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		private Dictionary<int, Material[]> currentMaskMaterials;
 		private SimObj currentMaskObj;
 		private SimObj currentHandSimObj;
-		private float gridSize;
+		private static float gridSize;
 
 
 		private enum emitStates {Send, Wait, Received};
@@ -76,7 +76,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 		public void Initialize(ServerAction action) {
 
-			this.gridSize = action.gridSize;
+			gridSize = action.gridSize;
 			StartCoroutine (checkInitializeAgentLocationAction ());
 		}
 
@@ -87,7 +87,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			// move ahead
 			// move back
 			Debug.Log("trying to find nearest location on the grid");
-			float mult = 1 / gridSize;
+			float mult = Convert.ToSingle(Math.Max(1 / gridSize, 0.00001));
 			float grid_x1 = Convert.ToSingle(Math.Floor(this.transform.position.x * mult) / mult);
 			float grid_z1 = Convert.ToSingle(Math.Floor(this.transform.position.z * mult) / mult);
 
@@ -161,8 +161,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		}
 
 		private void snapToGrid() {
-			float mult = 1 / this.gridSize;
-
+			float mult = Convert.ToSingle(Math.Max(1 / gridSize, 0.00001));
 			float gridX = Convert.ToSingle (Math.Round (this.transform.position.x * mult) / mult);
 			float gridZ = Convert.ToSingle (Math.Round (this.transform.position.z * mult) / mult);
 			this.transform.position = new Vector3 (gridX, transform.position.y, gridZ);
@@ -441,7 +440,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 		virtual protected void moveCharacter(ServerAction action, int targetOrientation) {
 			resetHand ();
-			moveMagnitude = this.gridSize;
+			moveMagnitude = gridSize;
 			if (action.moveMagnitude > 0) {
 				moveMagnitude = action.moveMagnitude;
 			}
