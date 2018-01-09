@@ -78,7 +78,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		{
 			if (action.gridSize <= 0 || action.gridSize > 5)
 			{
-				errorMessage = "grid size must be in the range [0,5]";
+				errorMessage = "grid size must be in the range (0,5]";
 				Debug.Log(errorMessage);
 				actionFinished(false);
 			}
