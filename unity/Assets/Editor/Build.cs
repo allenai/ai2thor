@@ -20,13 +20,13 @@ public class Build
 
     static void build(string buildName, BuildTarget target)	{		
         List<string> scenes = new List<string>();
-        foreach (string f in Directory.GetFiles("Assets/Scenes/")) {
+        foreach (string f in Directory.GetFiles("Assets/Scenes/UNFINISHED/")) {
             if (f.EndsWith(".unity")) {
-                Debug.Log ("Adding Scene " + f);
 				scenes.Add (f);
             }
         }
 
-		BuildPipeline.BuildPlayer(scenes.ToArray(), buildName, target, BuildOptions.StrictMode);
+		BuildPipeline.BuildPlayer(scenes.ToArray(), buildName, target, BuildOptions.None);
+		//BuildPipeline.BuildPlayer(scenes.ToArray(), buildName, target, BuildOptions.StrictMode);
     }
 }

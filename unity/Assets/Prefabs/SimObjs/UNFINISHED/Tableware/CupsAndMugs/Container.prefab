@@ -19,10 +19,9 @@ GameObject:
   serializedVersion: 4
   m_Component:
   - 4: {fileID: 4000010065776206}
-  - 65: {fileID: 65000011118038100}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Base
-  m_TagString: Untagged
+  m_TagString: SimObj
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -37,11 +36,12 @@ GameObject:
   - 4: {fileID: 4000011430588002}
   - 23: {fileID: 23000012136773632}
   - 33: {fileID: 33000011639009854}
+  - 64: {fileID: 64000012187686806}
   m_Layer: 8
   m_Name: Container
   m_TagString: SimObj
   m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
+  m_NavMeshLayer: 1
   m_StaticEditorFlags: 0
   m_IsActive: 1
 --- !u!1 &1000011083586320
@@ -73,6 +73,7 @@ GameObject:
   - 4: {fileID: 4000010568324124}
   - 23: {fileID: 23000013619604574}
   - 33: {fileID: 33000010073748410}
+  - 64: {fileID: 64000014209913864}
   m_Layer: 8
   m_Name: ContainerFull
   m_TagString: SimObj
@@ -159,7 +160,7 @@ Transform:
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 1000011083586320}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -0.15525997, y: 0.93037033, z: -2.937127}
+  m_LocalPosition: {x: -1.9368811, y: 0.9, z: -0.382249}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_Children:
@@ -285,22 +286,34 @@ Rigidbody:
   m_Drag: 0
   m_AngularDrag: 0.05
   m_UseGravity: 1
-  m_IsKinematic: 1
+  m_IsKinematic: 0
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
---- !u!65 &65000011118038100
-BoxCollider:
+--- !u!64 &64000012187686806
+MeshCollider:
   m_ObjectHideFlags: 1
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 100100000}
-  m_GameObject: {fileID: 1000010102716516}
+  m_GameObject: {fileID: 1000010526192586}
   m_Material: {fileID: 0}
   m_IsTrigger: 0
   m_Enabled: 1
   serializedVersion: 2
-  m_Size: {x: 0.02, y: 0.02, z: 0.045651156}
-  m_Center: {x: 0.000000038184226, y: -0.000000009313226, z: 0.02282556}
+  m_Convex: 1
+  m_Mesh: {fileID: 4300218, guid: bbe55e9be025f4c638f456252b5e2954, type: 3}
+--- !u!64 &64000014209913864
+MeshCollider:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1000011903407326}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Convex: 1
+  m_Mesh: {fileID: 4300218, guid: bbe55e9be025f4c638f456252b5e2954, type: 3}
 --- !u!95 &95000010335182876
 Animator:
   serializedVersion: 3

@@ -25,7 +25,7 @@ GameObject:
   m_Name: VenetianFrame.003
   m_TagString: Untagged
   m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
+  m_NavMeshLayer: 1
   m_StaticEditorFlags: 0
   m_IsActive: 1
 --- !u!1 &1000011318637734
@@ -42,9 +42,9 @@ GameObject:
   m_Name: FrameOpen
   m_TagString: Untagged
   m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
+  m_NavMeshLayer: 1
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!1 &1000011661801370
 GameObject:
   m_ObjectHideFlags: 1
@@ -59,9 +59,9 @@ GameObject:
   m_Name: FrameClosed
   m_TagString: Untagged
   m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
+  m_NavMeshLayer: 1
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!1 &1000013071040728
 GameObject:
   m_ObjectHideFlags: 0
@@ -71,9 +71,9 @@ GameObject:
   m_Component:
   - 4: {fileID: 4000013239927968}
   - 65: {fileID: 65000011641176728}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Base
-  m_TagString: Untagged
+  m_TagString: SimObj
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -92,7 +92,7 @@ GameObject:
   - 114: {fileID: 114000011778986810}
   m_Layer: 0
   m_Name: Blinds1
-  m_TagString: Untagged
+  m_TagString: SimObj
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -129,10 +129,10 @@ Transform:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 1000013855449906}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -2.529, y: 1.194, z: 4.116}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalRotation: {x: -0, y: -0.70710576, z: -0, w: 0.70710784}
+  m_LocalPosition: {x: 1.044, y: 2.083, z: -2.086}
+  m_LocalScale: {x: 1.2008815, y: 0.84453213, z: 1.6009322}
+  m_LocalEulerAnglesHint: {x: 0, y: -90.00001, z: 0}
   m_Children:
   - {fileID: 4000011805732036}
   - {fileID: 4000013239927968}
@@ -237,7 +237,7 @@ MeshRenderer:
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
   m_Materials:
-  - {fileID: 2100000, guid: 0abe4a02834de433a86bb9675c512163, type: 2}
+  - {fileID: 2100000, guid: cd14cae82a0c84d1e8627c0806237786, type: 2}
   m_SubsetIndices: 
   m_StaticBatchRoot: {fileID: 0}
   m_ProbeAnchor: {fileID: 0}
@@ -330,7 +330,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   Type: 82
-  Manipulation: 0
+  Manipulation: 1
   UseCustomBounds: 0
   UseWidthSearch: 0
   BoundsTransform: {fileID: 0}
@@ -347,6 +347,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   ParentObj: {fileID: 114000010008132482}
-  EditorOpen: 0
+  EditorOpen: 1
+  OpenByDefault: 1
   OpenObject: {fileID: 1000011318637734}
   ClosedObject: {fileID: 1000011661801370}

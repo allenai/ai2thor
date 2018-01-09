@@ -21,6 +21,7 @@ GameObject:
   - 4: {fileID: 4000010831873868}
   - 33: {fileID: 33000014043523644}
   - 23: {fileID: 23000013924425972}
+  - 64: {fileID: 64000012903307312}
   m_Layer: 0
   m_Name: SoapBottle
   m_TagString: Untagged
@@ -53,7 +54,6 @@ GameObject:
   serializedVersion: 4
   m_Component:
   - 4: {fileID: 4000013464058742}
-  - 65: {fileID: 65000014001548632}
   m_Layer: 8
   m_Name: Base
   m_TagString: SimObj
@@ -90,6 +90,7 @@ GameObject:
   - 4: {fileID: 4000012349425882}
   - 33: {fileID: 33000011632054838}
   - 23: {fileID: 23000012470897500}
+  - 64: {fileID: 64000011995736760}
   m_Layer: 0
   m_Name: SoapBottleFilled
   m_TagString: Untagged
@@ -160,10 +161,10 @@ Transform:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 1000011223323136}
-  m_LocalRotation: {x: -0, y: -0.79335344, z: -0, w: 0.6087613}
-  m_LocalPosition: {x: -0.707, y: 0.9577743, z: 5.0434}
+  m_LocalRotation: {x: -0, y: -1, z: -0, w: 0.00000026822087}
+  m_LocalPosition: {x: -3.4087, y: 1.1414, z: 1.358}
   m_LocalScale: {x: 1, y: 1, z: 1}
-  m_LocalEulerAnglesHint: {x: 0, y: -104.692, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: -180.00002, z: 0}
   m_Children:
   - {fileID: 4000013464058742}
   m_Father: {fileID: 0}
@@ -354,22 +355,34 @@ Rigidbody:
   m_Drag: 0
   m_AngularDrag: 0.05
   m_UseGravity: 1
-  m_IsKinematic: 1
+  m_IsKinematic: 0
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
---- !u!65 &65000014001548632
-BoxCollider:
+--- !u!64 &64000011995736760
+MeshCollider:
   m_ObjectHideFlags: 1
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 100100000}
-  m_GameObject: {fileID: 1000011140593694}
+  m_GameObject: {fileID: 1000012390871796}
   m_Material: {fileID: 0}
   m_IsTrigger: 0
   m_Enabled: 1
   serializedVersion: 2
-  m_Size: {x: 0.075, y: 0.13, z: 0.075}
-  m_Center: {x: 0, y: 0.065, z: 0}
+  m_Convex: 1
+  m_Mesh: {fileID: 4300000, guid: a1eb09189830a45cb8841486a6ce2428, type: 3}
+--- !u!64 &64000012903307312
+MeshCollider:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1000010336822468}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Convex: 1
+  m_Mesh: {fileID: 4300000, guid: a1eb09189830a45cb8841486a6ce2428, type: 3}
 --- !u!95 &95000012769276552
 Animator:
   serializedVersion: 3

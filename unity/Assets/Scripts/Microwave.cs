@@ -1,5 +1,4 @@
-// Copyright Allen Institute for Artificial Intelligence 2017
-using UnityEngine;
+﻿using UnityEngine;
 using System.Collections;
 
 //[ExecuteInEditMode]

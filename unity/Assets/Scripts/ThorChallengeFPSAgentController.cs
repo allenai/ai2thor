@@ -1,5 +1,4 @@
-// Copyright Allen Institute for Artificial Intelligence 2017
-using System;
+﻿using System;
 using System.IO;
 using System.Collections;
 using System.Collections.Generic;
@@ -36,7 +35,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 			return new Vector3 ();
 		}
-		protected MetadataWrapper generateMetadataWrapper() {
+		protected override MetadataWrapper generateMetadataWrapper() {
 			MetadataWrapper metaMessage = base.generateMetadataWrapper ();
 
 			if (ThorChallengeInfo.IsValidationScene(UnityEngine.SceneManagement.SceneManager.GetActiveScene ().name)) {
@@ -91,11 +90,22 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		}
 
 
-
+		// this only gets hit during continuous movements
+		override protected IEnumerator checkMoveAction() {
+			yield return null;
+			float deltaY = this.transform.position.y / lastPosition.y;
+			// don't allow the agent to get up on top of objects
+			if (deltaY < 1.4) {
+				lastActionSuccess = true;
+			} else {
+				lastActionSuccess = false;
+				transform.position = lastPosition;
+				actionCounter = 0;
+			}
+		}
 
 		private void moveCharacterContinuous(ServerAction action, int targetOrientation) {			
 			moveMagnitude = action.moveMagnitude;
-			int currentRotation = (int)Math.Round(transform.rotation.eulerAngles.y, 0);
 			Dictionary<int, Vector3> actionOrientation = new Dictionary<int, Vector3> ();
 			actionOrientation.Add (0, transform.forward );
 			actionOrientation.Add (90, transform.right);
@@ -103,6 +113,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			actionOrientation.Add (270, transform.right * -1);
 			Vector3 v = actionOrientation [targetOrientation] * moveMagnitude;
 			m_CharacterController.Move (v);
+			StartCoroutine (checkMoveAction ());
+
 		}
 
 		private void moveCharacterGrid(ServerAction action, int targetOrientation) {			
@@ -124,6 +136,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 				lastActionSuccess = false;
 			} else {
 				m_CharacterController.transform.position = targetTeleport;
+				StartCoroutine (checkTeleportAction ());
 			}
 		}
 
@@ -141,3 +154,4 @@ namespace UnityStandardAssets.Characters.FirstPerson
 	}
 
 }
+

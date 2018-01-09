@@ -1,5 +1,4 @@
-// Copyright Allen Institute for Artificial Intelligence 2017
-using System;
+﻿using System;
 
 [Serializable]
 public enum SimObjManipType : int {
@@ -102,5 +101,4 @@ public enum SimObjType : int
 	TowelHolder = 84,
 	Towel = 85,
 	Watch = 86,
-	MiscTableObject = 87
 }

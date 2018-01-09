@@ -38,7 +38,7 @@ GameObject:
   - 4: {fileID: 4000014091967778}
   - 33: {fileID: 33000010599402304}
   - 23: {fileID: 23000013682656950}
-  - 65: {fileID: 65000013449380294}
+  - 64: {fileID: 64000011256981396}
   m_Layer: 8
   m_Name: Cube.004
   m_TagString: SimObj
@@ -56,7 +56,7 @@ GameObject:
   - 4: {fileID: 4000010143854066}
   - 33: {fileID: 33000010612963072}
   - 23: {fileID: 23000013135043484}
-  - 65: {fileID: 65000013925296610}
+  - 64: {fileID: 64000013819416154}
   m_Layer: 8
   m_Name: Cube.005
   m_TagString: SimObj
@@ -114,7 +114,7 @@ Transform:
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 1000013327450410}
   m_LocalRotation: {x: -0, y: -0.6880576, z: -0, w: 0.72565615}
-  m_LocalPosition: {x: 1.2647305, y: 0.9, z: -0.229}
+  m_LocalPosition: {x: -1.0599189, y: 0.07594347, z: 0.20951246}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_LocalEulerAnglesHint: {x: 0, y: -87.04201, z: 0}
   m_Children:
@@ -221,8 +221,8 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
---- !u!65 &65000013449380294
-BoxCollider:
+--- !u!64 &64000011256981396
+MeshCollider:
   m_ObjectHideFlags: 1
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 100100000}
@@ -231,10 +231,10 @@ BoxCollider:
   m_IsTrigger: 0
   m_Enabled: 1
   serializedVersion: 2
-  m_Size: {x: 0.002607001, y: 0.0024962346, z: 0.0036355928}
-  m_Center: {x: 0.00000014272518, y: 0.00001565553, z: -0.0000041590533}
---- !u!65 &65000013925296610
-BoxCollider:
+  m_Convex: 1
+  m_Mesh: {fileID: 4300002, guid: d414d8db1e81f4c64a3ee2af63322377, type: 3}
+--- !u!64 &64000013819416154
+MeshCollider:
   m_ObjectHideFlags: 1
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 100100000}
@@ -243,8 +243,8 @@ BoxCollider:
   m_IsTrigger: 0
   m_Enabled: 1
   serializedVersion: 2
-  m_Size: {x: 0.004411659, y: 0.0032030316, z: 0.0005985941}
-  m_Center: {x: -0.0005019371, y: -0.0002621874, z: 0.00002272785}
+  m_Convex: 1
+  m_Mesh: {fileID: 4300000, guid: d414d8db1e81f4c64a3ee2af63322377, type: 3}
 --- !u!114 &114000010832533126
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -257,4 +257,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   Type: 22
+  Manipulation: 0
   UseCustomBounds: 0
+  UseWidthSearch: 0
+  BoundsTransform: {fileID: 0}
+  VisibleNow: 0

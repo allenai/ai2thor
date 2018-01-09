@@ -21,7 +21,7 @@ GameObject:
   - 4: {fileID: 4000010730883754}
   - 33: {fileID: 33000012796216468}
   - 23: {fileID: 23000010626208970}
-  - 65: {fileID: 65000013453817154}
+  - 64: {fileID: 64000011073602732}
   m_Layer: 8
   m_Name: Cube.012
   m_TagString: SimObj
@@ -71,7 +71,7 @@ GameObject:
   - 4: {fileID: 4000013452716496}
   - 33: {fileID: 33000010337725528}
   - 23: {fileID: 23000012103303202}
-  - 65: {fileID: 65000011500326182}
+  - 64: {fileID: 64000012872571862}
   m_Layer: 8
   m_Name: Cube.035
   m_TagString: SimObj
@@ -99,7 +99,7 @@ Transform:
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 1000013095821130}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -0.40021235, y: 1.062, z: -0.38067052}
+  m_LocalPosition: {x: -0.38, y: -0.047225147, z: 0.119}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_Children:
@@ -221,20 +221,8 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
---- !u!65 &65000011500326182
-BoxCollider:
-  m_ObjectHideFlags: 1
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 100100000}
-  m_GameObject: {fileID: 1000013944349128}
-  m_Material: {fileID: 0}
-  m_IsTrigger: 0
-  m_Enabled: 1
-  serializedVersion: 2
-  m_Size: {x: 0.0015821414, y: 0.0057415506, z: 0.0047139963}
-  m_Center: {x: -0.00014109514, y: -0.00039417855, z: -0.000032448665}
---- !u!65 &65000013453817154
-BoxCollider:
+--- !u!64 &64000011073602732
+MeshCollider:
   m_ObjectHideFlags: 1
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 100100000}
@@ -243,8 +231,20 @@ BoxCollider:
   m_IsTrigger: 0
   m_Enabled: 1
   serializedVersion: 2
-  m_Size: {x: 0.003821445, y: 0.0036284393, z: 0.0042122463}
-  m_Center: {x: -0.001054044, y: 0.00011670186, z: -0.00023498268}
+  m_Convex: 1
+  m_Mesh: {fileID: 4300002, guid: bef59da4678e44be59bfee90db6af85a, type: 3}
+--- !u!64 &64000012872571862
+MeshCollider:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1000013944349128}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Convex: 1
+  m_Mesh: {fileID: 4300000, guid: bef59da4678e44be59bfee90db6af85a, type: 3}
 --- !u!114 &114000013887721806
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -257,4 +257,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   Type: 22
+  Manipulation: 0
   UseCustomBounds: 0
+  UseWidthSearch: 0
+  BoundsTransform: {fileID: 0}
+  VisibleNow: 0

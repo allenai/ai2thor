@@ -1,5 +1,4 @@
-// Copyright Allen Institute for Artificial Intelligence 2017
-using System;
+﻿using System;
 using System.IO;
 using System.Collections;
 using System.Collections.Generic;
@@ -17,9 +16,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
 	public class DiscreteRemoteFPSAgentController : BaseFPSAgentController
 	{
 
-		protected string robosimsClientToken = "";
-		protected int robosimsPort = 8200;
-		protected string robosimsHost = "127.0.0.1";
+		protected string robosimsClientToken;
+		protected string robosimsPort;
 		protected bool serverSideScreenshot;
 		protected int actionCounter;
 		protected int frameCounter;
@@ -42,17 +40,21 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		// Initialize parameters from environment variables
 		protected override void Awake() {
 			// load config parameters from the server side
-			robosimsPort = LoadIntVariable (robosimsPort, "PORT");
-			robosimsHost = LoadStringVariable(robosimsHost, "HOST");
-
+			robosimsPort = LoadStringVariable (robosimsPort, "PORT");
 			serverSideScreenshot = LoadBoolVariable (serverSideScreenshot, "SERVER_SIDE_SCREENSHOT");
 			robosimsClientToken = LoadStringVariable (robosimsClientToken, "CLIENT_TOKEN");
 
+
+
+			if (robosimsPort == null) {
+				robosimsPort = "8200";
+				robosimsClientToken = "";
+			}
 			base.Awake ();
 
 		}
 
-		protected override void actionFinished(bool success) {
+		private void actionFinished(bool success) {
 			lastActionSuccess = success;
 			emitState = emitStates.Send;
 			actionCounter = 0;
@@ -69,7 +71,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 			transform.rotation = Quaternion.Euler (new Vector3 (0.0f, 0.0f, 0.0f));
 			m_Camera.transform.localEulerAngles = new Vector3 (0.0f, 0.0f, 0.0f);
-			//startingHandPosition = getHand ().transform.localPosition;
+			startingHandPosition = getHand ().transform.localPosition;
 
 		}
 
@@ -77,6 +79,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		public void Initialize(ServerAction action) {
 
 			this.gridSize = action.gridSize;
+			Debug.Log ("grid size " + this.gridSize);
 			StartCoroutine (checkInitializeAgentLocationAction ());
 		}
 
@@ -87,10 +90,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			// move ahead
 			// move back
 			Debug.Log("trying to find nearest location on the grid");
-			float mult = 1 / gridSize;
-			float grid_x1 = Convert.ToSingle(Math.Floor(this.transform.position.x * mult) / mult);
-			float grid_z1 = Convert.ToSingle(Math.Floor(this.transform.position.z * mult) / mult);
-
+			float grid_x1 = startingPosition.x - (startingPosition.x % gridSize);
+			float grid_z1 = startingPosition.z - (startingPosition.z % gridSize);
 			float[] xs = new float[]{ grid_x1, grid_x1 + gridSize };
 			float[] zs = new float[]{ grid_z1, grid_z1 + gridSize };
 			List<Vector3> validMovements = new List<Vector3> (); 
@@ -98,21 +99,18 @@ namespace UnityStandardAssets.Characters.FirstPerson
 				foreach (float z in zs) {
 					this.transform.position = startingPosition;
 					yield return null;
-
+					Debug.Log ("moving to: " + x.ToString() + " " + z.ToString());
 					Vector3 target = new Vector3 (x, this.transform.position.y, z);
 					Vector3 dir = target - this.transform.position;
 					Vector3 movement = dir.normalized * 100.0f;
 					if (movement.magnitude > dir.magnitude) {
 						movement = dir;
 					}
-
 					m_CharacterController.Move (movement);
 
 					for (int i = 0; i < actionDuration; i++) {
 						yield return null;
 						Vector3 diff = this.transform.position - target;
-	
-
 						if ((Math.Abs (diff.x) < 0.005) && (Math.Abs (diff.z) < 0.005)) {
 							Debug.Log ("initialize move succeeded");
 							validMovements.Add (movement);
@@ -166,42 +164,22 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			float gridX = Convert.ToSingle (Math.Round (this.transform.position.x * mult) / mult);
 			float gridZ = Convert.ToSingle (Math.Round (this.transform.position.z * mult) / mult);
 			this.transform.position = new Vector3 (gridX, transform.position.y, gridZ);
-
 		}
 
 		virtual protected IEnumerator checkMoveAction() {
 			yield return null;
 
 			bool result = false;
-
 			for (int i = 0; i < actionDuration; i++) {
 				Vector3 currentPosition = this.transform.position;
 				Vector3 diff = currentPosition - lastPosition;
-				if (
-					((moveMagnitude - Math.Abs (diff.x) < 0.005) && (Math.Abs (diff.z) < 0.005)) ||
-					((moveMagnitude - Math.Abs (diff.z) < 0.005) && (Math.Abs (diff.x) < 0.005))
+				Debug.Log ("diff ***");
 
-				) {
+				Debug.Log (diff.x);
+				Debug.Log (diff.z);
+				if ((moveMagnitude - Math.Abs (diff.x) < 0.005) || (moveMagnitude - Math.Abs (diff.z) < 0.005)) {
 					this.snapToGrid ();
-					if (this.IsCollided())
-					{
-
-						currentPosition = this.transform.position;
-						for (int j = 0; j < actionDuration; j++)
-						{
-							yield return null;
-						}
-						if ((currentPosition - this.transform.position).magnitude <= 0.001f)
-						{
-							result = true;
-
-						}
-					}
-					else {
-						result = true;
-					}
-
-
+					result = true;
 					break;
 				} else {
 					yield return null;
@@ -424,7 +402,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			form.AddField("metadata", JsonUtility.ToJson(metaMessage));
 			form.AddField("token", robosimsClientToken);
 
-			WWW w = new WWW ("http://" + robosimsHost + ":" + robosimsPort + "/train", form);
+			WWW w = new WWW ("http://127.0.0.1:" + robosimsPort + "/train", form);
 			yield return w;
 
 			if (!string.IsNullOrEmpty (w.error)) {
@@ -653,12 +631,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		}
 
 		private void resetHand() {
-			//GameObject hand = getHand ();
-			//if (currentHandSimObj != null) {
-			//	currentHandSimObj.hasCollision = false;
-			//}
-			//hand.transform.localPosition = startingHandPosition;
-			//hand.transform.localRotation = Quaternion.Euler (new Vector3 ());
+			GameObject hand = getHand ();
+			if (currentHandSimObj != null) {
+				currentHandSimObj.hasCollision = false;
+			}
+			hand.transform.localPosition = startingHandPosition;
+			hand.transform.localRotation = Quaternion.Euler (new Vector3 ());
 
 		}
 
@@ -724,14 +702,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			actionFinished(success);
 		}
 
-		public void PickupObject(ServerAction action)
-		{
+		public void PickupObject(ServerAction action) {
 			bool success = false;
-			foreach (SimObj so in VisibleSimObjs(action)){
-				Debug.Log(" got sim object: " + so.UniqueID);
-				if (!so.IsReceptacle && (!IsOpenable (so) || so.Manipulation == SimObjManipType.Inventory)) {
+			foreach (SimObj so in VisibleSimObjs(action)) {
+				// XXX CHECK IF OPEN
+				if (!so.IsReceptacle && !IsOpenable (so)) {
 					if (inventory.Count == 0) {
-						Debug.Log("trying to take item: " + so.UniqueID);
 						SimUtil.TakeItem (so);
 						addObjectInventory (so);
 						success = true;
@@ -775,7 +751,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 
 						SimObj so = removeObjectInventory (response.objectId);
-			
+
 						if ((!IsOpenable(rso) || IsOpen(rso)) && 
 							((response.forceVisible && SimUtil.AddItemToReceptacle(so, rso.Receptacle)) || 
 								SimUtil.AddItemToVisibleReceptacle (so, rso.Receptacle, m_Camera))) {
@@ -813,30 +789,20 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 		public void LookDown(ServerAction response) {
 
-			if (currentHorizonAngleIndex() > 0)
-			{
-				float targetHorizon = horizonAngles[currentHorizonAngleIndex() - 1];
-				m_Camera.transform.localEulerAngles = new Vector3(targetHorizon, 0.0f, 0.0f);
+			if (currentHorizonAngleIndex () > 0) {
+				float targetHorizon = horizonAngles [currentHorizonAngleIndex () - 1];
+				m_Camera.transform.localEulerAngles = new Vector3 (targetHorizon, 0.0f, 0.0f);
 				actionFinished(true);
 
-			}
-			else { 
-				errorMessage = "can't LookDown below the min horizon angle";
-				actionFinished(false);
 			}
 		}
 
 		public void LookUp(ServerAction controlCommand) {
 
-			if (currentHorizonAngleIndex() < horizonAngles.Length - 1)
-			{
-				float targetHorizon = horizonAngles[currentHorizonAngleIndex() + 1];
-				m_Camera.transform.localEulerAngles = new Vector3(targetHorizon, 0.0f, 0.0f);
+			if (currentHorizonAngleIndex () < horizonAngles.Length - 1) {
+				float targetHorizon = horizonAngles [currentHorizonAngleIndex () + 1];
+				m_Camera.transform.localEulerAngles = new Vector3 (targetHorizon, 0.0f, 0.0f);
 				actionFinished(true);
-			}
-			else {
-				errorMessage = "can't LookUp beyond the max horizon angle";
-				actionFinished(false);
 			}
 		}
 
@@ -883,3 +849,4 @@ namespace UnityStandardAssets.Characters.FirstPerson
 	}
 
 }
+

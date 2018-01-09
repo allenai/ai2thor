@@ -1,5 +1,4 @@
-// Copyright Allen Institute for Artificial Intelligence 2017
-using UnityEngine;
+﻿using UnityEngine;
 using System.Collections.Generic;
 using System.Reflection;
 
@@ -65,11 +64,7 @@ public class SceneManager : MonoBehaviour {
 			transform.SetAsFirstSibling ();
 		}
 		#endif
-        this.AnimationMode = SceneAnimationMode.Instant;
-
 	}
-
-	
 
 	//generates a unique ID for a sim object
 	public void AssignUniqueID (SimObj obj) {
@@ -94,7 +89,7 @@ public class SceneManager : MonoBehaviour {
 	#if UNITY_EDITOR
 	//returns an array of required types NOT found in scene
 	public SimObjType[] CheckSceneForRequiredTypes () {
-		
+
 		List<SimObjType> typesToCheck = null;
 		switch (LocalSceneType) {
 		case SceneType.Kitchen:
@@ -240,9 +235,9 @@ public class SceneManager : MonoBehaviour {
 		} while (iter.Next(true));*/
 
 		settingsObject.FindProperty ("m_GISettings.m_EnableBakedLightmaps").boolValue = false;
-		settingsObject.FindProperty ("m_GISettings.m_EnableRealtimeLightmaps").boolValue = false;
-		settingsObject.FindProperty ("m_LightmapEditorSettings.m_FinalGather").boolValue = false;
-		settingsObject.FindProperty ("m_LightmapEditorSettings.m_LightmapsBakeMode").boolValue = false;
+		settingsObject.FindProperty ("m_GISettings.m_EnableRealtimeLightmaps").boolValue = true;
+		settingsObject.FindProperty ("m_LightmapEditorSettings.m_FinalGather").boolValue = true;
+		settingsObject.FindProperty ("m_LightmapEditorSettings.m_LightmapsBakeMode").boolValue = true;
 
 		settingsObject.ApplyModifiedProperties ();
 	}
@@ -320,15 +315,15 @@ public class SceneManager : MonoBehaviour {
 		cam.nearClipPlane = 0.1f;
 
 		//remove all other cameras in the scene
-		//Camera[] cams = GameObject.FindObjectsOfType<Camera>();
-		//foreach (Camera c in cams) {
-		//	if (c != cam) {
-		//		CameraControls controls = c.GetComponent <CameraControls> ();
-		//		if (controls == null) {
-		//			GameObject.DestroyImmediate (c.gameObject);
-		//		}
-		//	}
-		//}
+		Camera[] cams = GameObject.FindObjectsOfType<Camera>();
+		foreach (Camera c in cams) {
+			if (c != cam) {
+				CameraControls controls = c.GetComponent <CameraControls> ();
+				if (controls == null) {
+					GameObject.DestroyImmediate (c.gameObject);
+				}
+			}
+		}
 	}
 
 	void FindOrCreateParent (ref Transform parentTransform, string parentName) {

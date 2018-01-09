@@ -62,7 +62,8 @@ Transform:
   m_LocalPosition: {x: 0, y: 0.675, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_Children: []
+  m_Children:
+  - {fileID: 4000012334490570}
   m_Father: {fileID: 400000}
   m_RootOrder: 0
 --- !u!20 &2000000
@@ -156,6 +157,34 @@ Prefab:
   m_ParentPrefab: {fileID: 0}
   m_RootGameObject: {fileID: 100000}
   m_IsPrefabParent: 1
+--- !u!1 &1000011965677168
+GameObject:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  serializedVersion: 4
+  m_Component:
+  - 4: {fileID: 4000012334490570}
+  m_Layer: 0
+  m_Name: FirstPersonHand
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &4000012334490570
+Transform:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1000011965677168}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: -0.146, z: -0.362}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_Children: []
+  m_Father: {fileID: 400002}
+  m_RootOrder: 0
 --- !u!114 &114000010008992890
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -260,6 +289,8 @@ MonoBehaviour:
   m_FootstepSounds: []
   m_JumpSound: {fileID: 0}
   m_LandSound: {fileID: 0}
+  OpenableTypes: 120000001300000010000000
+  ImmobileTypes: 150000000e0000000f0000002c00000020000000
   rotateMouseLook: 0
   thingdone: 0
   captureScreenshot: 0
@@ -345,6 +376,8 @@ MonoBehaviour:
     BobDuration: 0
     BobAmount: 0
   m_StepInterval: 5
+  OpenableTypes: 120000001300000010000000
+  ImmobileTypes: 150000000e0000000f0000002c00000020000000
   excludeObjectIds: []
   forwardVelocity: 2
   rotateVelocity: 2

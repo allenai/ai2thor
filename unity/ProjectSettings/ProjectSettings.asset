@@ -11,7 +11,7 @@ PlayerSettings:
   useOnDemandResources: 0
   accelerometerFrequency: 60
   companyName: Allen Institute for Artificial Intelligence
-  productName: AI2-Thor
+  productName: RoboSims Platform - FloorPlan18
   defaultCursor: {fileID: 0}
   cursorHotspot: {x: 0, y: 0}
   m_SplashScreenStyle: 0
@@ -440,9 +440,19 @@ PlayerSettings:
   XboxOneAllowedProductIds: []
   XboxOnePersistentLocalStorageSize: 0
   intPropertyNames:
+  - Android::ScriptingBackend
   - Standalone::ScriptingBackend
+  - WebGL::ScriptingBackend
+  - WebGL::audioCompressionFormat
+  - WebGL::exceptionSupport
+  - WebGL::memorySize
   - WebPlayer::ScriptingBackend
+  Android::ScriptingBackend: 0
   Standalone::ScriptingBackend: 0
+  WebGL::ScriptingBackend: 1
+  WebGL::audioCompressionFormat: 4
+  WebGL::exceptionSupport: 1
+  WebGL::memorySize: 256
   WebPlayer::ScriptingBackend: 0
   boolPropertyNames:
   - Android::VR::enable
@@ -456,6 +466,9 @@ PlayerSettings:
   - Standalone::VR::enable
   - Tizen::VR::enable
   - WebGL::VR::enable
+  - WebGL::analyzeBuildSize
+  - WebGL::dataCaching
+  - WebGL::useEmbeddedResources
   - WebPlayer::VR::enable
   - WiiU::VR::enable
   - Xbox360::VR::enable
@@ -474,6 +487,9 @@ PlayerSettings:
   Standalone::VR::enable: 0
   Tizen::VR::enable: 0
   WebGL::VR::enable: 0
+  WebGL::analyzeBuildSize: 0
+  WebGL::dataCaching: 0
+  WebGL::useEmbeddedResources: 0
   WebPlayer::VR::enable: 0
   WiiU::VR::enable: 0
   Xbox360::VR::enable: 0
@@ -491,6 +507,9 @@ PlayerSettings:
   - Purchasing_ServiceEnabled::Purchasing_ServiceEnabled
   - UNet_ServiceEnabled::UNet_ServiceEnabled
   - Unity_Ads_ServiceEnabled::Unity_Ads_ServiceEnabled
+  - WebGL::emscriptenArgs
+  - WebGL::template
+  - additionalIl2CppArgs::additionalIl2CppArgs
   Analytics_ServiceEnabled::Analytics_ServiceEnabled: False
   Build_ServiceEnabled::Build_ServiceEnabled: False
   Collab_ServiceEnabled::Collab_ServiceEnabled: False
@@ -500,6 +519,9 @@ PlayerSettings:
   Purchasing_ServiceEnabled::Purchasing_ServiceEnabled: False
   UNet_ServiceEnabled::UNet_ServiceEnabled: True
   Unity_Ads_ServiceEnabled::Unity_Ads_ServiceEnabled: False
+  WebGL::emscriptenArgs: 
+  WebGL::template: APPLICATION:Default
+  additionalIl2CppArgs::additionalIl2CppArgs: 
   vectorPropertyNames:
   - Android::VR::enabledDevices
   - Metro::VR::enabledDevices
