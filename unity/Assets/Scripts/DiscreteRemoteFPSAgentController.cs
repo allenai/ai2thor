@@ -296,6 +296,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 
 		public void RandomInitialize(ServerAction response) {
+			bool success = true;
 			this.excludeObjectIds = response.excludeObjectIds;
 			System.Random rnd = new System.Random (response.randomSeed);
 			SimObj[] simObjects = GameObject.FindObjectsOfType (typeof(SimObj)) as SimObj[];
@@ -343,6 +344,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			while (pickupableCount > 0) {
 				if (randomTries > 5) {
 					Debug.Log ("Pickupable count still at, but couldn't place all objects: " + pickupableCount);
+					success = false;
 					break;
 				}
 				randomTries++;
@@ -372,6 +374,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 					}
 				}
 			}
+			actionFinished(success);
 		}
 
 		private IEnumerator EmitFrame() {
