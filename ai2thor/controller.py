@@ -420,9 +420,10 @@ class Controller(object):
 
         return self.last_event
 
-    def unity_command(self):
+    def unity_command(self, width, height):
 
         command = self.executable_path()
+        command += " -screen-width %s -screen-height %s" % (width, height)
         return shlex.split(command)
 
     def _start_thread(self, env, width, height, host, port, image_name, start_unity):
@@ -453,7 +454,7 @@ class Controller(object):
                 self.container_id = ai2thor.docker.run(image_name, env)
                 atexit.register(lambda: ai2thor.docker.kill_container(self.container_id))
             else:
-                proc = subprocess.Popen(self.unity_command(), env=env)
+                proc = subprocess.Popen(self.unity_command(width, height), env=env)
                 self.unity_pid = proc.pid
 
                 # print("launched pid %s" % self.unity_pid)
@@ -524,6 +525,9 @@ class Controller(object):
             player_screen_width=300,
             player_screen_height=300,
             x_display="0.0"):
+
+        if player_screen_height < 300 or player_screen_width < 300:
+            raise Exception("Screen resolution must be >= 300x300")
 
         if self.server_thread is not None:
             raise Exception("server has already been started - cannot start more than once")

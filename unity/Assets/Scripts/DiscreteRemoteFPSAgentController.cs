@@ -178,6 +178,14 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 		}
 
+		virtual protected IEnumerator checkWaitAction(bool success) {
+			yield return null;
+			actionFinished(success);
+		}
+
+
+
+
 		virtual protected IEnumerator checkMoveAction() {
 			yield return null;
 
@@ -448,7 +456,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             }
 		}
 
-			
+
 
 
 		virtual protected void moveCharacter(ServerAction action, int targetOrientation) {
@@ -562,8 +570,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			}
 			float targetRotation = headingAngles [index];
 			transform.rotation = Quaternion.Euler(new Vector3(0.0f,targetRotation,0.0f));
-			actionFinished(true);
-		}
+            actionFinished(true);
+
+      	}
 
 
 
@@ -576,7 +585,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 				
 			float targetRotation = headingAngles [index];
 			transform.rotation = Quaternion.Euler(new Vector3(0.0f,targetRotation,0.0f));
-			actionFinished(true);
+            actionFinished(true);
 		}
 
 
@@ -599,6 +608,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			return false;
 		}
 
+
+
 		public void OpenObject(ServerAction action) {
 			bool success = false;
 			foreach (SimObj so in VisibleSimObjs(action)) {
@@ -607,7 +618,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 				break;
 			}
-			actionFinished(success);
+			StartCoroutine(checkWaitAction(success));
 		}
 
 		public void CloseObject(ServerAction action) {
@@ -616,7 +627,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 				success = closeSimObj (so);
 				break;
 			}
-			actionFinished(success);
+		   StartCoroutine(checkWaitAction(success));
 		}
 
 		public SimObj[] VisibleSimObjs(ServerAction action) {
@@ -752,7 +763,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 					break;
 				}
 			}
-			actionFinished(success);
+            StartCoroutine(checkWaitAction(success));
 		}
 
 		// empty target receptacle and put object into receptacle
@@ -801,7 +812,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 					}
 				}
 			}
-			actionFinished(success);
+            StartCoroutine(checkWaitAction(success));
 		}
 
 		public void RotateLook(ServerAction response) {

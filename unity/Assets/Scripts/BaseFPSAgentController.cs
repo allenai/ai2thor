@@ -133,12 +133,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			maxVisibleDistance = LoadFloatVariable (defaultMaxVisibleDistance, prefix + "VISIBILITY_DISTANCE");
 
 
-			int screenWidth =  LoadIntVariable (defaultScreenWidth, "SCREEN_WIDTH");
-			int screenHeight =  LoadIntVariable (defaultScreenHeight, "SCREEN_HEIGHT");
-			Screen.SetResolution(screenWidth, screenHeight, false);
-
-
-
 			// character controller parameters
 			m_CharacterController = GetComponent<CharacterController>();
 			//float radius = m_CharacterController.radius;
