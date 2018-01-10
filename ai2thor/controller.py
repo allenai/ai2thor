@@ -537,16 +537,17 @@ class Controller(object):
         image_name = None
         host = '127.0.0.1'
 
-        if platform.system() == 'Linux':
+        if start_unity:
+            if platform.system() == 'Linux':
 
-            if self.docker_enabled and ai2thor.docker.has_docker() and ai2thor.docker.nvidia_version() is not None:
-                image_name = ai2thor.docker.build_image()
-                host = ai2thor.docker.bridge_gateway()
+                if self.docker_enabled and ai2thor.docker.has_docker() and ai2thor.docker.nvidia_version() is not None:
+                    image_name = ai2thor.docker.build_image()
+                    host = ai2thor.docker.bridge_gateway()
+                else:
+                    env['DISPLAY'] = ':' + x_display
+                    self.download_binary()
             else:
-                env['DISPLAY'] = ':' + x_display
                 self.download_binary()
-        else:
-            self.download_binary()
 
         self.server = ai2thor.server.Server(
             self.request_queue,
