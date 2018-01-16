@@ -70,7 +70,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			transform.rotation = Quaternion.Euler (new Vector3 (0.0f, 0.0f, 0.0f));
 			m_Camera.transform.localEulerAngles = new Vector3 (0.0f, 0.0f, 0.0f);
 			//startingHandPosition = getHand ().transform.localPosition;
-
+			snapToGrid ();
 		}
 
 
