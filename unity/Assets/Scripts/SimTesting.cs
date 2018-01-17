@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+// Copyright Allen Institute for Artificial Intelligence 2017
+using UnityEngine;
 using System.Collections;
 using System;
 
@@ -25,6 +26,7 @@ public class SimTesting : MonoBehaviour {
     public float SpherecastRadius;
     public Camera Cam;
     RaycastHit hit;
+    RaycastHit[] hits = new RaycastHit[MaxHits];
 	public Vector3 placementPoint;
 	public bool foundPlacementPoint;
 	public SimObj inventoryObject;

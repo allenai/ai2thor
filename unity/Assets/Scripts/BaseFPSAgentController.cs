@@ -1,4 +1,4 @@
-﻿
+// Copyright Allen Institute for Artificial Intelligence 2017
 using System;
 using System.IO;
 using System.Collections;
@@ -11,35 +11,59 @@ using Random = UnityEngine.Random;
 
 namespace UnityStandardAssets.Characters.FirstPerson
 {
-	[RequireComponent(typeof (CharacterController))]
+	[RequireComponent(typeof(CharacterController))]
 
 	public class BaseFPSAgentController : MonoBehaviour
 	{
 		// first person controller parameters
-		[SerializeField] protected bool m_IsWalking;
-		[SerializeField] protected float m_WalkSpeed;
-		[SerializeField] protected float m_RunSpeed;
-		[SerializeField] [Range(0f, 1f)] private float m_RunstepLenghten;
-		[SerializeField] private float m_JumpSpeed;
-		[SerializeField] private float m_StickToGroundForce;
-		[SerializeField] private float m_GravityMultiplier;
-		[SerializeField] protected MouseLook m_MouseLook;
-		[SerializeField] protected bool m_UseFovKick;
-		[SerializeField] protected FOVKick m_FovKick = new FOVKick();
-		[SerializeField] private bool m_UseHeadBob;
-		[SerializeField] private CurveControlledBob m_HeadBob = new CurveControlledBob();
-		[SerializeField] protected LerpControlledBob m_JumpBob = new LerpControlledBob();
-		[SerializeField] private float m_StepInterval;
-		public SimObjType[] OpenableTypes = new SimObjType[]{ SimObjType.Fridge, SimObjType.Cabinet, SimObjType.Microwave};
-		public SimObjType[] ImmobileTypes = new SimObjType[]{SimObjType.Chair, SimObjType.Toaster, SimObjType.CoffeeMachine, SimObjType.Television, SimObjType.StoveKnob};
+		[SerializeField]
+		protected bool m_IsWalking;
+		[SerializeField]
+		protected float m_WalkSpeed;
+		[SerializeField]
+		protected float m_RunSpeed;
+		[SerializeField]
+		[Range(0f, 1f)]
+		private float m_RunstepLenghten;
+		[SerializeField]
+		private float m_JumpSpeed;
+		[SerializeField]
+		private float m_StickToGroundForce;
+		[SerializeField]
+		private float m_GravityMultiplier;
+		[SerializeField]
+		protected MouseLook m_MouseLook;
+		[SerializeField]
+		protected bool m_UseFovKick;
+		[SerializeField]
+		protected FOVKick m_FovKick = new FOVKick();
+		[SerializeField]
+		private bool m_UseHeadBob;
+		[SerializeField]
+		private CurveControlledBob m_HeadBob = new CurveControlledBob();
+		[SerializeField]
+		protected LerpControlledBob m_JumpBob = new LerpControlledBob();
+		[SerializeField]
+		private float m_StepInterval;
+		protected SimObjType[] OpenableTypes = new SimObjType[] { SimObjType.Fridge, SimObjType.Cabinet, SimObjType.Microwave, SimObjType.LightSwitch, SimObjType.Blinds, SimObjType.Book, SimObjType.Toilet };
+		protected SimObjType[] ImmobileTypes = new SimObjType[] { SimObjType.Chair, SimObjType.Toaster, SimObjType.CoffeeMachine, SimObjType.Television, SimObjType.StoveKnob };
 
-		protected float[] headingAngles = new float[]{0.0f, 90.0f, 180.0f, 270.0f};
-		protected float[] horizonAngles = new float[]{60.0f, 30.0f, 0.0f, 330.0f};
+		protected float[] headingAngles = new float[] { 0.0f, 90.0f, 180.0f, 270.0f };
+		protected float[] horizonAngles = new float[] { 60.0f, 30.0f, 0.0f, 330.0f };
 
-		protected int OPEN_MICROWAVE_STATE = 2;
-		protected int CLOSE_MICROWAVE_STATE = 1;
+		protected Dictionary<SimObjType, Dictionary<string, int>> OPEN_CLOSE_STATES = new Dictionary<SimObjType, Dictionary<string, int>>{
+			{SimObjType.Microwave, new Dictionary<string, int>{{"open", 2}, {"close", 1}}},
+			{SimObjType.Laptop, new Dictionary<string, int>{{"open", 2}, {"close", 1}}},
+			{SimObjType.Book, new Dictionary<string, int>{{"open", 1}, {"close", 2}}},
+			{SimObjType.Toilet, new Dictionary<string, int>{{"open", 2}, {"close", 3}}},
+			{SimObjType.Sink, new Dictionary<string, int>{{"open", 2}, {"close", 1}}}
+		};
+
+
+
 		public string[] excludeObjectIds = new string[0];
 		protected Camera m_Camera;
+        protected string ENVIRONMENT_PREFIX = "AI2THOR_";
 		protected bool m_Jump;
 		protected float m_XRotation;
 		protected float m_ZRotation;
@@ -75,6 +99,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		public float forwardVelocity = 2.0f;
 		public float rotateVelocity = 2.0f;
 		public int   actionDuration = 3;
+        private int defaultScreenWidth = 300;
+        private int defaultScreenHeight = 300;
+
 
 		// internal state variables
 		private float lastEmitTime;
@@ -104,6 +131,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			//rotateVelocity = LoadFloatVariable (rotateVelocity, prefix + "TURN_VELOCITY");
 			actionDuration = LoadIntVariable (actionDuration, prefix + "ACTION_LENGTH");
 			maxVisibleDistance = LoadFloatVariable (defaultMaxVisibleDistance, prefix + "VISIBILITY_DISTANCE");
+
+
+			int screenWidth =  LoadIntVariable (defaultScreenWidth, "SCREEN_WIDTH");
+			int screenHeight =  LoadIntVariable (defaultScreenHeight, "SCREEN_HEIGHT");
+			//Screen.SetResolution(screenWidth, screenHeight, false);
+
 
 
 			// character controller parameters
@@ -144,8 +177,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			init_position = transform.position;
 			init_rotation = transform.rotation;
 
-			updateAnimatorParameters ();
-
 			//allowNodes = false;
 		}
 
@@ -167,69 +198,26 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		}
 
 
-		private void updateAnimatorParameters(){
-			string environmentPrefix = "ROBOSIMS_ANIMATOR_PARAM_";
-			GameObject[] gameObjects = GameObject.FindObjectsOfType (typeof(GameObject)) as GameObject[];
-
-			foreach(GameObject go in gameObjects) {
-				Component[] animators = go.GetComponents(typeof(Animator)) as Component[];
-				foreach (Component a in animators) {
-					Animator ani = (Animator)a;
-
-					foreach (AnimatorControllerParameter param in ani.parameters) {
-						string envName = (environmentPrefix + go.name + "__" + param.name).ToUpper();
-						string value = Environment.GetEnvironmentVariable (envName);
-						float outfloat;
-						int outint;
-						if (value != null) {
-							bool updateSuccess = false;
-							switch(param.type.ToString()) {
-							case "Float":
-								if (float.TryParse(value, out outfloat)) {
-									ani.SetFloat(param.name, outfloat);
-									updateSuccess = true;
-								}
-								break;
-							case "Bool":
-								ani.SetBool (param.name, value.ToLower () == "true"); 
-								updateSuccess = true;
-								break;
-							case "Int":
-								if (int.TryParse(value, out outint)) {
-									ani.SetInteger(param.name, outint);
-									updateSuccess = true;
-								}
-								break;
-							}
-
-							if (updateSuccess){
-								Debug.Log("Assigned " + envName + " value " + value);
-							} else {
-								Debug.Log("Failed to assign " + envName + " value " + value);
-
-							}
-						}
-					}
-				}
-			}
-
-		}
+		protected virtual void actionFinished(bool success) { }
 
 		protected bool closeSimObj(SimObj so) {
 			bool res = false;
-			if (so.Type == SimObjType.Microwave) {
-				res = updateAnimState (so.Animator, CLOSE_MICROWAVE_STATE);
-			} else if (IsOpenable(so)) {
+			if (OPEN_CLOSE_STATES.ContainsKey(so.Type))
+			{
+				res = updateAnimState(so.Animator, OPEN_CLOSE_STATES[so.Type]["close"]);
+			} else if (so.IsAnimated) {
 				res = updateAnimState (so.Animator, false);
 			}
 			return res;
 		}
 
 		protected bool openSimObj(SimObj so) {
+
 			bool res = false;
-			if (so.Type == SimObjType.Microwave) {
-				res = updateAnimState (so.Animator, OPEN_MICROWAVE_STATE);
-			} else if (IsOpenable(so)){
+			if (OPEN_CLOSE_STATES.ContainsKey(so.Type)){
+				res = updateAnimState(so.Animator, OPEN_CLOSE_STATES[so.Type]["open"]);
+
+			} else if (so.IsAnimated){
 				res = updateAnimState (so.Animator, true);
 			}
 			return res;
@@ -294,6 +282,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			{
 				m_MoveDir += Physics.gravity * m_GravityMultiplier * Time.fixedDeltaTime;
 			}
+
 			m_CollisionFlags = m_CharacterController.Move (m_MoveDir * Time.fixedDeltaTime);
 
 			if ((m_CollisionFlags & CollisionFlags.Sides) != 0) {
@@ -362,7 +351,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 
 		// Check if agent is collided with other objects
-		private bool IsCollided() {
+		protected bool IsCollided() {
 			return collisionsInAction.Count > 0;
 		}
 
@@ -402,8 +391,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		public bool IsOpen(SimObj simobj) {
 			Animator anim = simobj.Animator;
 			AnimatorControllerParameter param = anim.parameters [0];
-			if (simobj.Type == SimObjType.Microwave) {
-				return anim.GetInteger (param.name) == OPEN_MICROWAVE_STATE;
+			if (OPEN_CLOSE_STATES.ContainsKey(simobj.Type)){
+				return anim.GetInteger(param.name) == OPEN_CLOSE_STATES[simobj.Type]["open"];
 			} else {
 				return anim.GetBool (param.name);
 			}
@@ -411,6 +400,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		}
 
 		public bool IsOpenable(SimObj so) {
+
 			return Array.IndexOf (OpenableTypes, so.Type) >= 0 && so.IsAnimated;
 		}
 
@@ -528,34 +518,35 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 		// Extra helper functions
 		protected string LoadStringVariable(string variable, string name) {
-			string envVarName =  "ROBOSIMS_" + name.ToUpper ();
+			string envVarName =  ENVIRONMENT_PREFIX + name.ToUpper ();
 			string envVarValue = Environment.GetEnvironmentVariable (envVarName);
 			return envVarValue == null ? variable : envVarValue;
 		}
 
 		protected int LoadIntVariable(int variable, string name) {
-			string envVarName =  "ROBOSIMS_" + name.ToUpper ();
+			string envVarName =  ENVIRONMENT_PREFIX + name.ToUpper ();
 			string envVarValue = Environment.GetEnvironmentVariable (envVarName);
 			return envVarValue == null ? variable : int.Parse (envVarValue);
 		}
 
 		protected float LoadFloatVariable(float variable, string name) {
-			string envVarName =  "ROBOSIMS_" + name.ToUpper ();
+			string envVarName =  ENVIRONMENT_PREFIX + name.ToUpper ();
 			string envVarValue = Environment.GetEnvironmentVariable (envVarName);
 			return envVarValue == null ? variable : float.Parse (envVarValue);
 		}
 
 		protected bool LoadBoolVariable(bool variable, string name) {
-			string envVarName =  "ROBOSIMS_" + name.ToUpper ();
+			string envVarName =  ENVIRONMENT_PREFIX + name.ToUpper ();
 			string envVarValue = Environment.GetEnvironmentVariable (envVarName);
 			return envVarValue == null ? variable : bool.Parse (envVarValue);
 		}
 
-
+		
 
 		protected void ProcessControlCommand(string msg) {
 			Debug.Log ("Procssing control commands: " + msg);
-			errorMessage = null;
+			errorMessage = "";
+			collisionsInAction = new List<string> ();
 
 			ServerAction controlCommand = JsonUtility.FromJson<ServerAction>(msg);
             this.currentSequenceId = controlCommand.sequenceId;
@@ -564,8 +555,16 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			lastPosition = new Vector3 (transform.position.x, transform.position.y, transform.position.z);
 			Debug.Log ("sending message: " + this.name);
 			System.Reflection.MethodInfo method = this.GetType ().GetMethod (controlCommand.action);
-
-			method.Invoke (this, new object[]{ controlCommand });
+			try
+			{
+				method.Invoke(this, new object[] { controlCommand });
+			}
+			catch (Exception e) {
+				Debug.LogError("caught error with invoke");
+				Debug.LogError(e);
+				errorMessage += e.ToString();
+				actionFinished(false);
+			}
 		}
 
 
@@ -678,4 +677,3 @@ public class ReceptacleObjectList {
 	public string receptacleObjectType;
 	public string[] itemObjectTypes;
 }
-

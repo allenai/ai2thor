@@ -20,7 +20,7 @@ public class Build
 
     static void build(string buildName, BuildTarget target)	{		
         List<string> scenes = new List<string>();
-        foreach (string f in Directory.GetFiles("Assets/Scenes/UNFINISHED/")) {
+        foreach (string f in Directory.GetFiles("Assets/Scenes/Physics_enabled/")) {
             if (f.EndsWith(".unity")) {
 				scenes.Add (f);
             }

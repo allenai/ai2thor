@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+// Copyright Allen Institute for Artificial Intelligence 2017
+using UnityEngine;
 using System.Collections;
 using System;
 using System.Collections.Generic;
@@ -465,6 +466,7 @@ public static class SimUtil {
 	//this does not TAKE any of these items
 	public static SimObj[] GetVisibleItemsFromReceptacle (Receptacle r, Camera agentCamera, Vector3 agentCameraPos, float maxDistance) {
 		List<SimObj> items = new List<SimObj>();
+		RaycastHit hit;
 		foreach (Transform t in r.Pivots) {
 			if (t.childCount > 0) {
 				SimObj item = t.GetChild (0).GetComponent <SimObj> ();
@@ -540,7 +542,7 @@ public static class SimUtil {
 	static void ReplacePrefabsInAllScenes () {
 		UnityEditor.SceneManagement.EditorSceneManager.SaveOpenScenes ();
 		for (int i = 1; i <= 30; i++) {
-			string scenePath = "Assets/Scenes/UNFINISHED/FloorPlan" + i.ToString () + ".unity";
+			string scenePath = "Assets/Scenes/FloorPlan" + i.ToString () + ".unity";
 			UnityEditor.EditorUtility.DisplayProgressBar ("Replacing generics...", scenePath, (1f / 30) * i);
 			UnityEngine.SceneManagement.Scene openScene = new UnityEngine.SceneManagement.Scene ();
 			try {
@@ -565,7 +567,7 @@ public static class SimUtil {
 	static void SetSceneManagerSceneNumber () {
 		UnityEditor.SceneManagement.EditorSceneManager.SaveOpenScenes ();
 		for (int i = 1; i <= 30; i++) {
-			string scenePath = "Assets/Scenes/UNFINISHED/FloorPlan" + (i + 200).ToString () + ".unity";
+			string scenePath = "Assets/Scenes/FloorPlan" + (i + 200).ToString () + ".unity";
 			UnityEditor.EditorUtility.DisplayProgressBar ("Setting scene numbers...", scenePath, (1f / 30) * i);
 			UnityEngine.SceneManagement.Scene openScene = new UnityEngine.SceneManagement.Scene ();
 			try {

@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+// Copyright Allen Institute for Artificial Intelligence 2017
+using UnityEngine;
 using System.Collections;
 
 public enum CabinetOpenStyle {
@@ -30,6 +31,7 @@ public class Cabinet : MonoBehaviour {
 	Vector3 rightDoorTargetRotation;
 	Vector3 leftDoorTargetRotation;
 	Vector3 drawerTargetPosition;
+	bool lastOpen = false;
 	float animatingDistance;
 
 	public void OnEnable() {

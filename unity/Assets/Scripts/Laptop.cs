@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+// Copyright Allen Institute for Artificial Intelligence 2017
+using UnityEngine;
 using System.Collections;
 
 [ExecuteInEditMode]
@@ -61,7 +62,7 @@ public class Laptop : MonoBehaviour {
 				break;
 
 			case 2:
-				rot = ClosedRot;
+				rot = OpenRot;
 				mat = OffScreenMat;
 				break;
 
