@@ -51,7 +51,7 @@ LightmapSettings:
     m_TemporalCoherenceThreshold: 1
     m_EnvironmentLightingMode: 0
     m_EnableBakedLightmaps: 0
-    m_EnableRealtimeLightmaps: 1
+    m_EnableRealtimeLightmaps: 0
   m_LightmapEditorSettings:
     serializedVersion: 4
     m_Resolution: 2
@@ -64,10 +64,10 @@ LightmapSettings:
     m_CompAOExponentDirect: 0
     m_Padding: 2
     m_LightmapParameters: {fileID: 0}
-    m_LightmapsBakeMode: 1
+    m_LightmapsBakeMode: 0
     m_TextureCompression: 1
     m_DirectLightInLightProbes: 1
-    m_FinalGather: 1
+    m_FinalGather: 0
     m_FinalGatherFiltering: 1
     m_FinalGatherRayCount: 256
     m_ReflectionCompression: 2
@@ -9252,6 +9252,7 @@ MonoBehaviour:
   Manipulation: 3
   UseCustomBounds: 0
   UseWidthSearch: 0
+  hasCollision: 0
   BoundsTransform: {fileID: 0}
   VisibleNow: 0
 --- !u!95 &527472009
@@ -9393,6 +9394,7 @@ MonoBehaviour:
   Manipulation: 3
   UseCustomBounds: 0
   UseWidthSearch: 0
+  hasCollision: 0
   BoundsTransform: {fileID: 0}
   VisibleNow: 0
 --- !u!95 &527472018
@@ -9483,6 +9485,7 @@ MonoBehaviour:
   Manipulation: 3
   UseCustomBounds: 0
   UseWidthSearch: 0
+  hasCollision: 0
   BoundsTransform: {fileID: 0}
   VisibleNow: 0
 --- !u!95 &527472024
@@ -9561,6 +9564,7 @@ MonoBehaviour:
   Manipulation: 3
   UseCustomBounds: 0
   UseWidthSearch: 0
+  hasCollision: 0
   BoundsTransform: {fileID: 0}
   VisibleNow: 0
 --- !u!95 &527472029
@@ -9663,6 +9667,7 @@ MonoBehaviour:
   Manipulation: 3
   UseCustomBounds: 0
   UseWidthSearch: 0
+  hasCollision: 0
   BoundsTransform: {fileID: 0}
   VisibleNow: 0
 --- !u!95 &527472035
@@ -9741,6 +9746,7 @@ MonoBehaviour:
   Manipulation: 3
   UseCustomBounds: 0
   UseWidthSearch: 0
+  hasCollision: 0
   BoundsTransform: {fileID: 0}
   VisibleNow: 0
 --- !u!95 &527472040
@@ -9819,6 +9825,7 @@ MonoBehaviour:
   Manipulation: 3
   UseCustomBounds: 0
   UseWidthSearch: 0
+  hasCollision: 0
   BoundsTransform: {fileID: 0}
   VisibleNow: 0
 --- !u!95 &527472045
@@ -9897,6 +9904,7 @@ MonoBehaviour:
   Manipulation: 3
   UseCustomBounds: 0
   UseWidthSearch: 0
+  hasCollision: 0
   BoundsTransform: {fileID: 0}
   VisibleNow: 0
 --- !u!95 &527472050
@@ -9975,6 +9983,7 @@ MonoBehaviour:
   Manipulation: 3
   UseCustomBounds: 0
   UseWidthSearch: 0
+  hasCollision: 0
   BoundsTransform: {fileID: 0}
   VisibleNow: 1
 --- !u!95 &527472055
@@ -10053,6 +10062,7 @@ MonoBehaviour:
   Manipulation: 3
   UseCustomBounds: 0
   UseWidthSearch: 0
+  hasCollision: 0
   BoundsTransform: {fileID: 0}
   VisibleNow: 1
 --- !u!95 &527472060
@@ -10131,6 +10141,7 @@ MonoBehaviour:
   Manipulation: 3
   UseCustomBounds: 0
   UseWidthSearch: 0
+  hasCollision: 0
   BoundsTransform: {fileID: 0}
   VisibleNow: 0
 --- !u!95 &527472065
@@ -10209,6 +10220,7 @@ MonoBehaviour:
   Manipulation: 3
   UseCustomBounds: 0
   UseWidthSearch: 0
+  hasCollision: 0
   BoundsTransform: {fileID: 0}
   VisibleNow: 0
 --- !u!95 &527472070
@@ -10311,6 +10323,7 @@ MonoBehaviour:
   Manipulation: 3
   UseCustomBounds: 0
   UseWidthSearch: 0
+  hasCollision: 0
   BoundsTransform: {fileID: 0}
   VisibleNow: 0
 --- !u!95 &527472076
@@ -10413,6 +10426,7 @@ MonoBehaviour:
   Manipulation: 3
   UseCustomBounds: 0
   UseWidthSearch: 0
+  hasCollision: 0
   BoundsTransform: {fileID: 0}
   VisibleNow: 0
 --- !u!95 &527472082
@@ -10491,6 +10505,7 @@ MonoBehaviour:
   Manipulation: 3
   UseCustomBounds: 0
   UseWidthSearch: 0
+  hasCollision: 0
   BoundsTransform: {fileID: 0}
   VisibleNow: 0
 --- !u!95 &527472087
@@ -11722,11 +11737,6 @@ Prefab:
   m_Modification:
     m_TransformParent: {fileID: 0}
     m_Modifications:
-    - target: {fileID: 114000013958963096, guid: 5e9e851c0e142814dac026a256ba2ac0,
-        type: 2}
-      propertyPath: SimObjsInView.Array.size
-      value: 3
-      objectReference: {fileID: 0}
     - target: {fileID: 400000, guid: 5e9e851c0e142814dac026a256ba2ac0, type: 2}
       propertyPath: m_LocalPosition.x
       value: 0.847
@@ -11758,79 +11768,6 @@ Prefab:
     - target: {fileID: 400000, guid: 5e9e851c0e142814dac026a256ba2ac0, type: 2}
       propertyPath: m_RootOrder
       value: 6
-      objectReference: {fileID: 0}
-    - target: {fileID: 400000, guid: 5e9e851c0e142814dac026a256ba2ac0, type: 2}
-      propertyPath: m_LocalEulerAnglesHint.y
-      value: -168.412
-      objectReference: {fileID: 0}
-    - target: {fileID: 114000013958963096, guid: 5e9e851c0e142814dac026a256ba2ac0,
-        type: 2}
-      propertyPath: FoundSimObjs
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 114000013958963096, guid: 5e9e851c0e142814dac026a256ba2ac0,
-        type: 2}
-      propertyPath: NumItems
-      value: 3
-      objectReference: {fileID: 0}
-    - target: {fileID: 114000013958963096, guid: 5e9e851c0e142814dac026a256ba2ac0,
-        type: 2}
-      propertyPath: SimObjsInView.Array.data[0]
-      value: 
-      objectReference: {fileID: 527472059}
-    - target: {fileID: 114000013958963096, guid: 5e9e851c0e142814dac026a256ba2ac0,
-        type: 2}
-      propertyPath: SimObjsInView.Array.data[1]
-      value: 
-      objectReference: {fileID: 2071351910}
-    - target: {fileID: 114000013958963096, guid: 5e9e851c0e142814dac026a256ba2ac0,
-        type: 2}
-      propertyPath: SimObjsInView.Array.data[2]
-      value: 
-      objectReference: {fileID: 527472054}
-    - target: {fileID: 114000013958963096, guid: 5e9e851c0e142814dac026a256ba2ac0,
-        type: 2}
-      propertyPath: foundPlacementPoint
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 114000013958963096, guid: 5e9e851c0e142814dac026a256ba2ac0,
-        type: 2}
-      propertyPath: inventoryObject
-      value: 
-      objectReference: {fileID: 2137456763}
-    - target: {fileID: 114000010621761404, guid: 5e9e851c0e142814dac026a256ba2ac0,
-        type: 2}
-      propertyPath: m_WalkSpeed
-      value: 2
-      objectReference: {fileID: 0}
-    - target: {fileID: 114000010621761404, guid: 5e9e851c0e142814dac026a256ba2ac0,
-        type: 2}
-      propertyPath: m_MouseLook.clampVerticalRotation
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 114000010621761404, guid: 5e9e851c0e142814dac026a256ba2ac0,
-        type: 2}
-      propertyPath: rotateMouseLook
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 114000010621761404, guid: 5e9e851c0e142814dac026a256ba2ac0,
-        type: 2}
-      propertyPath: m_Enabled
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 5400000, guid: 5e9e851c0e142814dac026a256ba2ac0, type: 2}
-      propertyPath: m_Constraints
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 114000010621761404, guid: 5e9e851c0e142814dac026a256ba2ac0,
-        type: 2}
-      propertyPath: m_StickToGroundForce
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 114000010621761404, guid: 5e9e851c0e142814dac026a256ba2ac0,
-        type: 2}
-      propertyPath: m_GravityMultiplier
-      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: 5e9e851c0e142814dac026a256ba2ac0, type: 2}
@@ -34177,12 +34114,6 @@ Transform:
   m_PrefabParentObject: {fileID: 4000014129219924, guid: a9c16c8f5a75b44898cb96d02e21b801,
     type: 2}
   m_PrefabInternal: {fileID: 2137456761}
---- !u!114 &2137456763 stripped
-MonoBehaviour:
-  m_PrefabParentObject: {fileID: 114000013134478132, guid: a9c16c8f5a75b44898cb96d02e21b801,
-    type: 2}
-  m_PrefabInternal: {fileID: 2137456761}
-  m_Script: {fileID: 11500000, guid: 1f732babb581945adb81fe8a78762d3f, type: 3}
 --- !u!1 &2137835605
 GameObject:
   m_ObjectHideFlags: 0

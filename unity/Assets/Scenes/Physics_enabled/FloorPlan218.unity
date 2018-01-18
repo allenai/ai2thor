@@ -51,7 +51,7 @@ LightmapSettings:
     m_TemporalCoherenceThreshold: 1
     m_EnvironmentLightingMode: 0
     m_EnableBakedLightmaps: 0
-    m_EnableRealtimeLightmaps: 1
+    m_EnableRealtimeLightmaps: 0
   m_LightmapEditorSettings:
     serializedVersion: 4
     m_Resolution: 2
@@ -64,10 +64,10 @@ LightmapSettings:
     m_CompAOExponentDirect: 0
     m_Padding: 2
     m_LightmapParameters: {fileID: 0}
-    m_LightmapsBakeMode: 1
+    m_LightmapsBakeMode: 0
     m_TextureCompression: 1
     m_DirectLightInLightProbes: 1
-    m_FinalGather: 1
+    m_FinalGather: 0
     m_FinalGatherFiltering: 1
     m_FinalGatherRayCount: 256
     m_ReflectionCompression: 2
@@ -842,7 +842,7 @@ Transform:
   m_PrefabParentObject: {fileID: 400016, guid: 10d95cb72c1454859b795a9a908122bf, type: 3}
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 189097656}
-  m_LocalRotation: {x: -0.63279706, y: -0.31554383, z: -0.31554383, w: 0.632797}
+  m_LocalRotation: {x: -0.6327971, y: -0.31554386, z: -0.31554386, w: 0.63279706}
   m_LocalPosition: {x: -1.451135, y: -0.9690117, z: 2.3847384}
   m_LocalScale: {x: 100, y: 100, z: 100}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -924,7 +924,7 @@ Transform:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 193236839}
-  m_LocalRotation: {x: 0.16895863, y: 0.68662435, z: 0.68662435, w: -0.16895862}
+  m_LocalRotation: {x: 0.16895865, y: 0.6866244, z: 0.6866244, w: -0.16895863}
   m_LocalPosition: {x: 0, y: 0.411, z: 0}
   m_LocalScale: {x: 146.30038, y: 146.30038, z: 129.97495}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -1046,31 +1046,6 @@ Prefab:
     - target: {fileID: 400000, guid: 5e9e851c0e142814dac026a256ba2ac0, type: 2}
       propertyPath: m_RootOrder
       value: 6
-      objectReference: {fileID: 0}
-    - target: {fileID: 114000010621761404, guid: 5e9e851c0e142814dac026a256ba2ac0,
-        type: 2}
-      propertyPath: m_Enabled
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 114000010621761404, guid: 5e9e851c0e142814dac026a256ba2ac0,
-        type: 2}
-      propertyPath: m_WalkSpeed
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 114000010621761404, guid: 5e9e851c0e142814dac026a256ba2ac0,
-        type: 2}
-      propertyPath: m_StickToGroundForce
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 114000010621761404, guid: 5e9e851c0e142814dac026a256ba2ac0,
-        type: 2}
-      propertyPath: m_GravityMultiplier
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 114000010621761404, guid: 5e9e851c0e142814dac026a256ba2ac0,
-        type: 2}
-      propertyPath: rotateMouseLook
-      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: 5e9e851c0e142814dac026a256ba2ac0, type: 2}
@@ -1280,6 +1255,7 @@ MonoBehaviour:
   Manipulation: 1
   UseCustomBounds: 0
   UseWidthSearch: 0
+  hasCollision: 0
   BoundsTransform: {fileID: 0}
   VisibleNow: 0
 --- !u!54 &459814514
@@ -4347,6 +4323,7 @@ MonoBehaviour:
   Manipulation: 0
   UseCustomBounds: 0
   UseWidthSearch: 0
+  hasCollision: 0
   BoundsTransform: {fileID: 0}
   VisibleNow: 0
 --- !u!54 &1539708669
