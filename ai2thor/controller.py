@@ -412,6 +412,15 @@ class Controller(object):
             return new_event
         assert self.request_queue.empty()
 
+        # Converts numpy scalars to python scalars so they can be encoded in
+        # JSON.
+        action_filtered = {}
+        for k,v in action.items():
+            if isinstance(v, np.generic):
+                v = np.asscalar(v)
+            action_filtered[k] = v
+        action = action_filtered
+
         self.response_queue.put_nowait(action)
         self.last_event = queue_get(self.request_queue)
         #print(self.last_event.metadata['errorMessage'])
