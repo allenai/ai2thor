@@ -339,7 +339,6 @@ public class SceneManager : MonoBehaviour {
 		//set to root just in case
 		parentGo.transform.parent = null;
 		parentTransform = parentGo.transform;
-		Debug.Log("find or create parent: " + parentName);
 		parentTransform.SetAsLastSibling ();
 	}
 	#endif
