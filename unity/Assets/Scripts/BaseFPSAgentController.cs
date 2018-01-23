@@ -568,7 +568,50 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		}
 
 
-	}
+
+
+#if UNITY_EDITOR
+		[UnityEditor.MenuItem("Thor/Revert FPSAgent to Prefab")]
+		public static void RevertFPSAgentController()
+		{
+			//UnityEditor.SceneManagement.EditorSceneManager.SaveOpenScenes ();
+			foreach (int baseNumber in new int[] { 0 , 200, 300, 400 })
+			{
+				for (int i = 1; i <= 30; i++)
+				{
+					string scenePath = "Assets/Scenes/Physics_enabled/FloorPlan" + (baseNumber + i).ToString() + ".unity";
+					UnityEditor.EditorUtility.DisplayProgressBar("Reverting FPSController to PrefabState...", scenePath, (1f / 30) * i);
+					Debug.Log("loading scene" + scenePath);
+					try
+					{
+						UnityEngine.SceneManagement.Scene openScene = UnityEditor.SceneManagement.EditorSceneManager.OpenScene(scenePath);
+
+						GameObject fpsController = GameObject.Find("FPSController");
+
+						bool res = UnityEditor.PrefabUtility.RevertPrefabInstance(fpsController);
+
+						UnityEditor.SceneManagement.EditorSceneManager.SaveScene(openScene);
+						if (UnityEditor.SceneManagement.EditorSceneManager.loadedSceneCount > 1)
+						{
+							UnityEditor.SceneManagement.EditorSceneManager.CloseScene(openScene, true);
+						}
+					}
+					catch (Exception e)
+					{
+						Debug.LogException(e);
+						continue;
+					}
+
+
+				}
+			}
+		
+			UnityEditor.EditorUtility.ClearProgressBar();
+		}
+    #endif
+
+    }
+
 }
 [Serializable]
 public class ObjectMetadata
