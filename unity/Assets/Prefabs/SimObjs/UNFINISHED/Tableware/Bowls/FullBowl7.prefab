@@ -21,6 +21,7 @@ GameObject:
   - 4: {fileID: 4000013298331720}
   - 33: {fileID: 33000012140735964}
   - 23: {fileID: 23000012277270796}
+  - 64: {fileID: 64000011979105560}
   m_Layer: 0
   m_Name: Bowl
   m_TagString: Untagged
@@ -55,22 +56,6 @@ GameObject:
   - 114: {fileID: 114000012483527878}
   m_Layer: 8
   m_Name: FullBowl7
-  m_TagString: SimObj
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!1 &1000011291585364
-GameObject:
-  m_ObjectHideFlags: 1
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 100100000}
-  serializedVersion: 4
-  m_Component:
-  - 4: {fileID: 4000013816497548}
-  - 65: {fileID: 65000013451754610}
-  m_Layer: 8
-  m_Name: BaseCollider
   m_TagString: SimObj
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -162,7 +147,7 @@ Transform:
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 1000011277694184}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: -1.338, y: 0, z: -0.2553159}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_Children:
@@ -195,7 +180,6 @@ Transform:
   m_Children:
   - {fileID: 4000013298331720}
   - {fileID: 4000010355607692}
-  - {fileID: 4000013816497548}
   m_Father: {fileID: 4000010836515478}
   m_RootOrder: 0
 --- !u!4 &4000013298331720
@@ -211,19 +195,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 4000013128627466}
   m_RootOrder: 0
---- !u!4 &4000013816497548
-Transform:
-  m_ObjectHideFlags: 1
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 100100000}
-  m_GameObject: {fileID: 1000011291585364}
-  m_LocalRotation: {x: -0.7071068, y: -0, z: -0, w: 0.7071067}
-  m_LocalPosition: {x: -0.0009167411, y: -0.0834, z: 0.0022145081}
-  m_LocalScale: {x: 100, y: 99.99994, z: 122.49998}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_Children: []
-  m_Father: {fileID: 4000013128627466}
-  m_RootOrder: 2
 --- !u!23 &23000010423762354
 MeshRenderer:
   m_ObjectHideFlags: 1
@@ -384,18 +355,18 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
---- !u!65 &65000013451754610
-BoxCollider:
+--- !u!64 &64000011979105560
+MeshCollider:
   m_ObjectHideFlags: 1
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 100100000}
-  m_GameObject: {fileID: 1000011291585364}
+  m_GameObject: {fileID: 1000010344391934}
   m_Material: {fileID: 0}
   m_IsTrigger: 0
   m_Enabled: 1
   serializedVersion: 2
-  m_Size: {x: 0.0020686244, y: 0.002068624, z: 0.00058204366}
-  m_Center: {x: -2.3283064e-10, y: -6.4028427e-10, z: 0.00028572447}
+  m_Convex: 1
+  m_Mesh: {fileID: 4300002, guid: 3c0d1ea94e49a4d35b2c1a91477c8b52, type: 3}
 --- !u!114 &114000012483527878
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -408,4 +379,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   Type: 13
+  Manipulation: 0
   UseCustomBounds: 0
+  UseWidthSearch: 0
+  hasCollision: 0
+  BoundsTransform: {fileID: 0}
+  VisibleNow: 0
