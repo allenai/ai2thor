@@ -132,23 +132,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 0
---- !u!1 &1000012310880486
-GameObject:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 100100000}
-  serializedVersion: 4
-  m_Component:
-  - 4: {fileID: 4000013777568596}
-  - 33: {fileID: 33000014087610202}
-  - 23: {fileID: 23000010960690952}
-  m_Layer: 8
-  m_Name: Pan
-  m_TagString: SimObj
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 1
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
 --- !u!1 &1000012331806032
 GameObject:
   m_ObjectHideFlags: 1
@@ -470,7 +453,7 @@ Transform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_Children: []
   m_Father: {fileID: 4000011782872588}
-  m_RootOrder: 2
+  m_RootOrder: 1
 --- !u!4 &4000011782872588
 Transform:
   m_ObjectHideFlags: 1
@@ -478,11 +461,10 @@ Transform:
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 1000010084374078}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -0.065, y: 0.0033347893, z: -0.959}
+  m_LocalPosition: {x: -0.139, y: 0.0033347893, z: -1.381}
   m_LocalScale: {x: 1.0000014, y: 1, z: 1.0000014}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_Children:
-  - {fileID: 4000013777568596}
   - {fileID: 4000013397197422}
   - {fileID: 4000011638637858}
   m_Father: {fileID: 0}
@@ -600,19 +582,6 @@ Transform:
   - {fileID: 4000010197174118}
   - {fileID: 4000010517250356}
   m_Father: {fileID: 4000011782872588}
-  m_RootOrder: 1
---- !u!4 &4000013777568596
-Transform:
-  m_ObjectHideFlags: 1
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 100100000}
-  m_GameObject: {fileID: 1000012310880486}
-  m_LocalRotation: {x: -0.7071068, y: -0, z: -0, w: 0.7071067}
-  m_LocalPosition: {x: 0.000012278557, y: 0.06201285, z: 0.000047445297}
-  m_LocalScale: {x: 100, y: 99.99992, z: 99.99992}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_Children: []
-  m_Father: {fileID: 4000011782872588}
   m_RootOrder: 0
 --- !u!23 &23000010056516906
 MeshRenderer:
@@ -661,36 +630,6 @@ MeshRenderer:
   - {fileID: 2100000, guid: f8daaeec6c3dece408272735c89e3611, type: 2}
   - {fileID: 2100000, guid: b51b4023309164fcf96ce24b84003b18, type: 2}
   - {fileID: 2100000, guid: f3e4bebc76c82ab47be48b02cfa25494, type: 2}
-  m_SubsetIndices: 
-  m_StaticBatchRoot: {fileID: 0}
-  m_ProbeAnchor: {fileID: 0}
-  m_LightProbeVolumeOverride: {fileID: 0}
-  m_ScaleInLightmap: 1
-  m_PreserveUVs: 0
-  m_IgnoreNormalsForChartDetection: 0
-  m_ImportantGI: 0
-  m_SelectedWireframeHidden: 0
-  m_MinimumChartSize: 4
-  m_AutoUVMaxDistance: 0.5
-  m_AutoUVMaxAngle: 89
-  m_LightmapParameters: {fileID: 0}
-  m_SortingLayerID: 0
-  m_SortingOrder: 0
---- !u!23 &23000010960690952
-MeshRenderer:
-  m_ObjectHideFlags: 1
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 100100000}
-  m_GameObject: {fileID: 1000012310880486}
-  m_Enabled: 0
-  m_CastShadows: 1
-  m_ReceiveShadows: 1
-  m_MotionVectors: 1
-  m_LightProbeUsage: 1
-  m_ReflectionProbeUsage: 1
-  m_Materials:
-  - {fileID: 2100000, guid: be9d13bb687dd684b816ed574384806e, type: 2}
-  - {fileID: 2100000, guid: dde3f0a6ae5724e69ae510666146192e, type: 2}
   m_SubsetIndices: 
   m_StaticBatchRoot: {fileID: 0}
   m_ProbeAnchor: {fileID: 0}
@@ -979,13 +918,6 @@ MeshFilter:
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 1000012932364478}
   m_Mesh: {fileID: 4300002, guid: 1a1137318b2664ff2b2545ad2f7a9720, type: 3}
---- !u!33 &33000014087610202
-MeshFilter:
-  m_ObjectHideFlags: 1
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 100100000}
-  m_GameObject: {fileID: 1000012310880486}
-  m_Mesh: {fileID: 4300002, guid: 1a1137318b2664ff2b2545ad2f7a9720, type: 3}
 --- !u!54 &54000012329671098
 Rigidbody:
   m_ObjectHideFlags: 1
@@ -997,7 +929,7 @@ Rigidbody:
   m_Drag: 0
   m_AngularDrag: 0.05
   m_UseGravity: 1
-  m_IsKinematic: 0
+  m_IsKinematic: 1
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
@@ -2428,6 +2360,7 @@ MonoBehaviour:
   Manipulation: 0
   UseCustomBounds: 0
   UseWidthSearch: 0
+  hasCollision: 0
   BoundsTransform: {fileID: 0}
   VisibleNow: 0
 --- !u!114 &114000013476348122
