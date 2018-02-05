@@ -5,6 +5,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityStandardAssets.CrossPlatformInput;
 using UnityStandardAssets.Utility;
+using System.Globalization;
 using UnityEngine.SceneManagement;
 
 using UnityEngine;
@@ -71,6 +72,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			m_Camera.transform.localEulerAngles = new Vector3 (0.0f, 0.0f, 0.0f);
 			//startingHandPosition = getHand ().transform.localPosition;
 			snapToGrid ();
+
 		}
 
 
@@ -190,34 +192,30 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			yield return null;
 
 			bool result = false;
-
 			for (int i = 0; i < actionDuration; i++) {
 				Vector3 currentPosition = this.transform.position;
+
 				Vector3 diff = currentPosition - lastPosition;
 				if (
 					((moveMagnitude - Math.Abs (diff.x) < 0.005) && (Math.Abs (diff.z) < 0.005)) ||
 					((moveMagnitude - Math.Abs (diff.z) < 0.005) && (Math.Abs (diff.x) < 0.005))
 
 				) {
+					currentPosition = this.transform.position;
 					this.snapToGrid ();
+					yield return null;
 					if (this.IsCollided())
 					{
-
-						currentPosition = this.transform.position;
 						for (int j = 0; j < actionDuration; j++)
 						{
 							yield return null;
 						}
-						if ((currentPosition - this.transform.position).magnitude <= 0.001f)
-						{
-							result = true;
-
-						}
+		
 					}
-					else {
+
+					if ((currentPosition - this.transform.position).magnitude <= 0.001f){
 						result = true;
 					}
-
 
 					break;
 				} else {
@@ -225,6 +223,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
 				}
 			}
 
+
+			// Debug.Log(this.transform.position.z.ToString("F3", CultureInfo.InvariantCulture));
 
 			if (!result) {
 				Debug.Log ("check move failed");
