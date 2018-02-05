@@ -187,11 +187,16 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 
 
+		private string formatPos(Vector3 pos) {
+			return "x=" + pos.x.ToString("F3") + " y=" + pos.y.ToString("F3") + " z=" + pos.z.ToString("F3");
+		}
 
 		virtual protected IEnumerator checkMoveAction() {
 			yield return null;
 
 			bool result = false;
+
+
 			for (int i = 0; i < actionDuration; i++) {
 				Vector3 currentPosition = this.transform.position;
 
@@ -199,7 +204,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
 				if (
 					((moveMagnitude - Math.Abs (diff.x) < 0.005) && (Math.Abs (diff.z) < 0.005)) ||
 					((moveMagnitude - Math.Abs (diff.z) < 0.005) && (Math.Abs (diff.x) < 0.005))
-
 				) {
 					currentPosition = this.transform.position;
 					this.snapToGrid ();
@@ -226,10 +230,20 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 			// Debug.Log(this.transform.position.z.ToString("F3", CultureInfo.InvariantCulture));
 
-			if (!result) {
-				Debug.Log ("check move failed");
+			// if for some reason we moved in the Y space too much, then we assume that something is wrong
+			// In FloorPlan 223 @ x=-1, z=2.0 its possible to move through the wall using move=0.5
+
+			if (Math.Abs((this.transform.position - lastPosition).y) > 0.2) {
+				result = false;
+			}
+
+
+			if (!result)
+			{
+				Debug.Log("check move failed");
 				transform.position = lastPosition;
 			}
+
 
 			actionFinished (result);
 		}
