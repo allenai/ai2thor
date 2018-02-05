@@ -401,6 +401,14 @@ class Controller(object):
             excludeReceptacleObjectPairs=exclude_receptacle_object_pairs,
             randomSeed=random_seed))
 
+    def scene_names(self):
+        scenes = []
+        for low, high in [(1,31), (201, 231), (301, 331), (401, 431)]:
+            for i in range(low, high):
+                scenes.append('FloorPlan%s' % i)
+
+        return scenes
+
     def step(self, action, raise_for_failure=False):
         if not self._check_action(action):
             new_event = ai2thor.server.Event(
@@ -423,7 +431,6 @@ class Controller(object):
 
         self.response_queue.put_nowait(action)
         self.last_event = queue_get(self.request_queue)
-        #print(self.last_event.metadata['errorMessage'])
         if raise_for_failure:
             assert self.last_event.metadata['lastActionSuccess']
 
@@ -533,10 +540,12 @@ class Controller(object):
             start_unity=True,
             player_screen_width=300,
             player_screen_height=300,
-            x_display="0.0"):
+            x_display=None):
 
         if player_screen_height < 300 or player_screen_width < 300:
             raise Exception("Screen resolution must be >= 300x300")
+
+
 
         if self.server_thread is not None:
             raise Exception("server has already been started - cannot start more than once")
@@ -553,7 +562,12 @@ class Controller(object):
                     image_name = ai2thor.docker.build_image()
                     host = ai2thor.docker.bridge_gateway()
                 else:
-                    env['DISPLAY'] = ':' + x_display
+
+                    if x_display:
+                        env['DISPLAY'] = ':' + x_display
+                    elif 'DISPLAY' not in env:
+                        env['DISPLAY'] = ':0.0'
+
                     self.download_binary()
             else:
                 self.download_binary()
@@ -791,6 +805,7 @@ class BFSController(Controller):
     def enqueue_points(self, agent_position):
         if not self.allow_enqueue:
             return
+
         self.enqueue_point(BFSSearchPoint(agent_position, dict(x=-1 * self.grid_size)))
         self.enqueue_point(BFSSearchPoint(agent_position, dict(x=self.grid_size)))
         self.enqueue_point(BFSSearchPoint(agent_position, dict(z=-1 * self.grid_size)))
@@ -806,7 +821,7 @@ class BFSController(Controller):
         self.enqueue_points(event.metadata['agent']['position'])
         while self.queue:
             self.queue_step()
-            #self.visualize_points(scene_name)
+            # self.visualize_points(scene_name)
 
     def start_search(
             self,
@@ -1054,7 +1069,6 @@ class BFSController(Controller):
             y=search_point.start_position['y'],
             z=search_point.start_position['z']))
 
-        #print(event.metadata['errorMessage'])
         assert event.metadata['lastActionSuccess']
         move_vec = search_point.move_vector
         move_vec['moveMagnitude'] = self.grid_size
