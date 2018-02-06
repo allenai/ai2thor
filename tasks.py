@@ -63,13 +63,16 @@ doc/
 """ % version
 
 
-@task
-def build_docker(context, version):
+def build_docker(version):
     with open(".dockerignore", "w") as f:
         f.write(generate_dockerignore(version))
 
     subprocess.check_call(
         "docker build --rm --no-cache --build-arg AI2THOR_VERSION={version} -t  ai2thor/ai2thor-base:{version} .".format(version=version),
+        shell=True)
+
+    subprocess.check_call(
+        "docker push ai2thor/ai2thor-base:{version}".format(version=version),
         shell=True)
 
 @task
@@ -109,3 +112,5 @@ def build(context, local=False):
             fi.write("# GENERATED FILE - DO NOT EDIT\n")
             fi.write("VERSION = '%s'\n" % version)
             fi.write("BUILDS = " + pprint.pformat(builds))
+
+    build_docker(version)
