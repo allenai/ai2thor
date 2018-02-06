@@ -173,6 +173,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		}
 
 		private void snapToGrid() {
+			
 			float mult = 1 / gridSize;
 			float gridX = Convert.ToSingle (Math.Round (this.transform.position.x * mult) / mult);
 			float gridZ = Convert.ToSingle (Math.Round (this.transform.position.z * mult) / mult);
@@ -191,7 +192,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			return "x=" + pos.x.ToString("F3") + " y=" + pos.y.ToString("F3") + " z=" + pos.z.ToString("F3");
 		}
 
-		virtual protected IEnumerator checkMoveAction() {
+		virtual protected IEnumerator checkMoveAction(ServerAction action) {
 			yield return null;
 
 			bool result = false;
@@ -202,11 +203,17 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 				Vector3 diff = currentPosition - lastPosition;
 				if (
-					((moveMagnitude - Math.Abs (diff.x) < 0.005) && (Math.Abs (diff.z) < 0.005)) ||
-					((moveMagnitude - Math.Abs (diff.z) < 0.005) && (Math.Abs (diff.x) < 0.005))
-				) {
+					((moveMagnitude - Math.Abs(diff.x) < 0.005) && (Math.Abs(diff.z) < 0.005)) ||
+					((moveMagnitude - Math.Abs(diff.z) < 0.005) && (Math.Abs(diff.x) < 0.005))
+				)
+				{
 					currentPosition = this.transform.position;
-					this.snapToGrid ();
+
+					if (action.snapToGrid){
+						this.snapToGrid();
+					}
+
+
 					yield return null;
 					if (this.IsCollided())
 					{
@@ -490,7 +497,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			int delta = (currentRotation + targetOrientation) % 360;
 
 			m_CharacterController.Move (actionOrientation[delta]);
-			StartCoroutine (checkMoveAction ());
+			StartCoroutine (checkMoveAction (action));
 
 		}
 
@@ -503,7 +510,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			}
 
 			m_CharacterController.Move (new Vector3(action.x, action.y, action.z));
-			StartCoroutine (checkMoveAction ());
+			StartCoroutine (checkMoveAction (action));
 		}
 
 		public void MoveLeft(ServerAction action) {

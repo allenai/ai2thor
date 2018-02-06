@@ -627,6 +627,7 @@ public class ServerAction
 	public float x;
 	public float z;
     public int sequenceId;
+	public bool snapToGrid = true;
 	public string sceneName;
 	public int sceneConfigIndex;
 	public int agentPositionIndex;
