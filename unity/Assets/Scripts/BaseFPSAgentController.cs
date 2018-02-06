@@ -358,6 +358,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 			MetadataWrapper metaMessage = new MetadataWrapper();
 			metaMessage.agent = agentMeta;
+			metaMessage.sceneName = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
 			metaMessage.objects = generateObjectMetadataForTag("SimObj", false);
 			metaMessage.collided = collidedObjects.Length > 0;
 			metaMessage.collidedObjects = collidedObjects;
@@ -601,6 +602,7 @@ public struct MetadataWrapper {
 	public bool collided;
 	public string[] collidedObjects;
 	public InventoryObject[] inventoryObjects;
+	public string sceneName;
 	public string lastAction;
 	public string errorMessage;
 	public bool lastActionSuccess;
