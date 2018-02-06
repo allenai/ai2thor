@@ -43,6 +43,16 @@ def local_build(context, prefix='local'):
     else:
         print("Build Failure")
 
+def increment_version():
+    import ai2thor._version
+
+    major, minor, subv = ai2thor._version.__version__.split('.')
+    subv = int(subv) + 1
+    with open("ai2thor/_version.py", "w") as fi:
+        fi.write("# Copyright Allen Institute for Artificial Intelligence 2017\n")
+        fi.write("# GENERATED FILE - DO NOT EDIT\n")
+        fi.write("__version__ = '%s.%s.%s'\n" % (major, minor, subv))
+
 def build_sha256(path):
 
     m = hashlib.sha256()
@@ -113,4 +123,5 @@ def build(context, local=False):
             fi.write("VERSION = '%s'\n" % version)
             fi.write("BUILDS = " + pprint.pformat(builds))
 
+    increment_version()
     build_docker(version)
