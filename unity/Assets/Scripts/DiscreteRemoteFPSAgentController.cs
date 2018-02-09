@@ -70,6 +70,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			transform.rotation = Quaternion.Euler (new Vector3 (0.0f, 0.0f, 0.0f));
 			m_Camera.transform.localEulerAngles = new Vector3 (0.0f, 0.0f, 0.0f);
 			startingHandPosition = getHand ().transform.localPosition;
+			snapToGrid ();
 
 		}
 
@@ -178,7 +179,18 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 		}
 
-		virtual protected IEnumerator checkMoveAction() {
+		virtual protected IEnumerator checkWaitAction(bool success) {
+			yield return null;
+			actionFinished(success);
+		}
+
+
+
+		private string formatPos(Vector3 pos) {
+			return "x=" + pos.x.ToString("F3") + " y=" + pos.y.ToString("F3") + " z=" + pos.z.ToString("F3");
+		}
+
+		virtual protected IEnumerator checkMoveAction(ServerAction action) {
 			yield return null;
 
 			bool result = false;
@@ -187,34 +199,39 @@ namespace UnityStandardAssets.Characters.FirstPerson
 				Vector3 currentPosition = this.transform.position;
 				Vector3 diff = currentPosition - lastPosition;
 				if (
-					((moveMagnitude - Math.Abs (diff.x) < 0.005) && (Math.Abs (diff.z) < 0.005)) ||
-					((moveMagnitude - Math.Abs (diff.z) < 0.005) && (Math.Abs (diff.x) < 0.005))
+					((moveMagnitude - Math.Abs(diff.x) < 0.005) && (Math.Abs(diff.z) < 0.005)) ||
+					((moveMagnitude - Math.Abs(diff.z) < 0.005) && (Math.Abs(diff.x) < 0.005))
+				)
+				{
+					currentPosition = this.transform.position;
 
-				) {
-					this.snapToGrid ();
+					if (action.snapToGrid){
+						this.snapToGrid();
+					}
+
+
+					yield return null;
 					if (this.IsCollided())
 					{
-
-						currentPosition = this.transform.position;
 						for (int j = 0; j < actionDuration; j++)
 						{
 							yield return null;
 						}
-						if ((currentPosition - this.transform.position).magnitude <= 0.001f)
-						{
-							result = true;
-
-						}
+		
 					}
-					else {
+
+					if ((currentPosition - this.transform.position).magnitude <= 0.001f){
 						result = true;
 					}
-
 
 					break;
 				} else {
 					yield return null;
 				}
+			}
+
+			if (Math.Abs((this.transform.position - lastPosition).y) > 0.2) {
+				result = false;
 			}
 
 
@@ -467,7 +484,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			int delta = (currentRotation + targetOrientation) % 360;
 
 			m_CharacterController.Move (actionOrientation[delta]);
-			StartCoroutine (checkMoveAction ());
+			StartCoroutine (checkMoveAction (action));
 
 		}
 
@@ -480,7 +497,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			}
 
 			m_CharacterController.Move (new Vector3(action.x, action.y, action.z));
-			StartCoroutine (checkMoveAction ());
+			StartCoroutine (checkMoveAction (action));
 		}
 
 		public void MoveLeft(ServerAction action) {
@@ -561,8 +578,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			}
 			float targetRotation = headingAngles [index];
 			transform.rotation = Quaternion.Euler(new Vector3(0.0f,targetRotation,0.0f));
-			actionFinished(true);
-		}
+            actionFinished(true);
+        }
 
 
 
@@ -575,7 +592,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 				
 			float targetRotation = headingAngles [index];
 			transform.rotation = Quaternion.Euler(new Vector3(0.0f,targetRotation,0.0f));
-			actionFinished(true);
+            actionFinished(true);
 		}
 
 
@@ -606,7 +623,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 				break;
 			}
-			actionFinished(success);
+			StartCoroutine(checkWaitAction(success));
 		}
 
 		public void CloseObject(ServerAction action) {
@@ -615,7 +632,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 				success = closeSimObj (so);
 				break;
 			}
-			actionFinished(success);
+		   StartCoroutine(checkWaitAction(success));
 		}
 
 		public SimObj[] VisibleSimObjs(ServerAction action) {
@@ -732,7 +749,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 					break;
 				}
 			}
-			actionFinished(success);
+            StartCoroutine(checkWaitAction(success));
 		}
 
 		public void PickupObject(ServerAction action)
@@ -751,7 +768,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 					break;
 				}
 			}
-			actionFinished(success);
+            StartCoroutine(checkWaitAction(success));
 		}
 
 		// empty target receptacle and put object into receptacle
@@ -800,7 +817,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 					}
 				}
 			}
-			actionFinished(success);
+            StartCoroutine(checkWaitAction(success));
 		}
 
 		public void RotateLook(ServerAction response) {
