@@ -107,7 +107,7 @@ GameObject:
   serializedVersion: 4
   m_Component:
   - 4: {fileID: 4000013397197422}
-  - 65: {fileID: 65000013778795484}
+  - 64: {fileID: 64000012381475208}
   m_Layer: 8
   m_Name: Base
   m_TagString: Receptacle
@@ -982,6 +982,18 @@ MeshCollider:
   serializedVersion: 2
   m_Convex: 0
   m_Mesh: {fileID: 4300002, guid: 1a1137318b2664ff2b2545ad2f7a9720, type: 3}
+--- !u!64 &64000012381475208
+MeshCollider:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1000012121464982}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Convex: 1
+  m_Mesh: {fileID: 0}
 --- !u!64 &64000013151683404
 MeshCollider:
   m_ObjectHideFlags: 1
@@ -2194,18 +2206,6 @@ BoxCollider:
   serializedVersion: 2
   m_Size: {x: 0.00037077084, y: 0.00020778444, z: 0.000055023433}
   m_Center: {x: -0.0008149316, y: -0.0006233536, z: 0.00024535638}
---- !u!65 &65000013778795484
-BoxCollider:
-  m_ObjectHideFlags: 1
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 100100000}
-  m_GameObject: {fileID: 1000012121464982}
-  m_Material: {fileID: 0}
-  m_IsTrigger: 0
-  m_Enabled: 1
-  serializedVersion: 2
-  m_Size: {x: 1, y: 1, z: 1}
-  m_Center: {x: 0, y: 0, z: 0}
 --- !u!65 &65000013837619516
 BoxCollider:
   m_ObjectHideFlags: 1
@@ -2337,7 +2337,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f003674f2c1ff47aa9f18c968a3c479f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  VisibilityCollider: {fileID: 65000013778795484}
+  VisibilityCollider: {fileID: 64000012381475208}
   Pivots:
   - {fileID: 4000011638637858}
   MessItem: {fileID: 0}
