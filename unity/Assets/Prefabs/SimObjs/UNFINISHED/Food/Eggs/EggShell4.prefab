@@ -36,8 +36,9 @@ GameObject:
   - 4: {fileID: 4000010401308090}
   - 33: {fileID: 33000012237337054}
   - 23: {fileID: 23000013218356914}
+  - 64: {fileID: 64000012702554700}
   m_Layer: 0
-  m_Name: Sphere.003
+  m_Name: shell4_A
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -53,8 +54,9 @@ GameObject:
   - 4: {fileID: 4000013877783562}
   - 33: {fileID: 33000013532363092}
   - 23: {fileID: 23000014149785038}
+  - 64: {fileID: 64000013013429148}
   m_Layer: 0
-  m_Name: Sphere.004
+  m_Name: shell4_B
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -98,7 +100,7 @@ Transform:
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 1000012707948990}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0.512, y: 0, z: -0.687}
+  m_LocalPosition: {x: -1.613832, y: 0, z: 0.12833034}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_Children:
@@ -220,6 +222,30 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
+--- !u!64 &64000012702554700
+MeshCollider:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1000010824298656}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Convex: 1
+  m_Mesh: {fileID: 4300002, guid: 5aa09159bb8814563a979cba62b7728a, type: 3}
+--- !u!64 &64000013013429148
+MeshCollider:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1000011397153226}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Convex: 1
+  m_Mesh: {fileID: 4300000, guid: 5aa09159bb8814563a979cba62b7728a, type: 3}
 --- !u!65 &65000011368102872
 BoxCollider:
   m_ObjectHideFlags: 1
@@ -244,4 +270,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   Type: 30
+  Manipulation: 0
   UseCustomBounds: 0
+  UseWidthSearch: 0
+  hasCollision: 0
+  BoundsTransform: {fileID: 0}
+  VisibleNow: 0

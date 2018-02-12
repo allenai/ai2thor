@@ -36,8 +36,9 @@ GameObject:
   - 4: {fileID: 4000013467168528}
   - 33: {fileID: 33000010797283760}
   - 23: {fileID: 23000011517608280}
+  - 64: {fileID: 64000010803530162}
   m_Layer: 0
-  m_Name: Sphere.001
+  m_Name: shell5_B
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -51,7 +52,6 @@ GameObject:
   serializedVersion: 4
   m_Component:
   - 4: {fileID: 4000013248507432}
-  - 65: {fileID: 65000012525813058}
   - 54: {fileID: 54000013940472034}
   - 114: {fileID: 114000014271811940}
   m_Layer: 8
@@ -71,8 +71,9 @@ GameObject:
   - 4: {fileID: 4000013495755128}
   - 33: {fileID: 33000010432363094}
   - 23: {fileID: 23000010584762852}
+  - 64: {fileID: 64000011265169346}
   m_Layer: 0
-  m_Name: Sphere
+  m_Name: shell5_A
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -100,7 +101,7 @@ Transform:
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 1000013572412432}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0.512, y: 0, z: -0.352}
+  m_LocalPosition: {x: -1.613832, y: 0, z: 0.2477094}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_Children:
@@ -220,18 +221,30 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
---- !u!65 &65000012525813058
-BoxCollider:
+--- !u!64 &64000010803530162
+MeshCollider:
   m_ObjectHideFlags: 1
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 100100000}
-  m_GameObject: {fileID: 1000013572412432}
+  m_GameObject: {fileID: 1000013141708966}
   m_Material: {fileID: 0}
   m_IsTrigger: 0
   m_Enabled: 1
   serializedVersion: 2
-  m_Size: {x: 1, y: 1, z: 1}
-  m_Center: {x: 0, y: 0, z: 0}
+  m_Convex: 1
+  m_Mesh: {fileID: 4300000, guid: 44c04669c27154eba9d23f157d08fae7, type: 3}
+--- !u!64 &64000011265169346
+MeshCollider:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1000014137097248}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Convex: 1
+  m_Mesh: {fileID: 4300002, guid: 44c04669c27154eba9d23f157d08fae7, type: 3}
 --- !u!114 &114000014271811940
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -244,4 +257,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   Type: 30
+  Manipulation: 0
   UseCustomBounds: 0
+  UseWidthSearch: 0
+  hasCollision: 0
+  BoundsTransform: {fileID: 0}
+  VisibleNow: 0

@@ -36,8 +36,9 @@ GameObject:
   - 4: {fileID: 4000013814776220}
   - 33: {fileID: 33000014022594502}
   - 23: {fileID: 23000013745250294}
+  - 64: {fileID: 64000012017659766}
   m_Layer: 0
-  m_Name: Sphere.008
+  m_Name: shell2_B
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -53,8 +54,9 @@ GameObject:
   - 4: {fileID: 4000011718063720}
   - 33: {fileID: 33000011999915546}
   - 23: {fileID: 23000012243052304}
+  - 64: {fileID: 64000010081370946}
   m_Layer: 0
-  m_Name: Sphere.007
+  m_Name: shell2_A
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -68,7 +70,6 @@ GameObject:
   serializedVersion: 4
   m_Component:
   - 4: {fileID: 4000014098930858}
-  - 65: {fileID: 65000013616355930}
   - 54: {fileID: 54000011391537410}
   - 114: {fileID: 114000011010139840}
   m_Layer: 8
@@ -126,7 +127,7 @@ Transform:
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 1000014173838040}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0.512, y: 0, z: -0.486}
+  m_LocalPosition: {x: -1.6146342, y: -8.88916, z: -0.119019985}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_Children:
@@ -220,18 +221,30 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
---- !u!65 &65000013616355930
-BoxCollider:
+--- !u!64 &64000010081370946
+MeshCollider:
   m_ObjectHideFlags: 1
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 100100000}
-  m_GameObject: {fileID: 1000014173838040}
+  m_GameObject: {fileID: 1000013939929084}
   m_Material: {fileID: 0}
   m_IsTrigger: 0
   m_Enabled: 1
   serializedVersion: 2
-  m_Size: {x: 1, y: 1, z: 1}
-  m_Center: {x: 0, y: 0, z: 0}
+  m_Convex: 1
+  m_Mesh: {fileID: 4300002, guid: 5f16d9a80539240f991445b699164619, type: 3}
+--- !u!64 &64000012017659766
+MeshCollider:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1000013344708060}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Convex: 1
+  m_Mesh: {fileID: 4300000, guid: 5f16d9a80539240f991445b699164619, type: 3}
 --- !u!114 &114000011010139840
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -244,4 +257,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   Type: 30
+  Manipulation: 0
   UseCustomBounds: 0
+  UseWidthSearch: 0
+  hasCollision: 0
+  BoundsTransform: {fileID: 0}
+  VisibleNow: 0
