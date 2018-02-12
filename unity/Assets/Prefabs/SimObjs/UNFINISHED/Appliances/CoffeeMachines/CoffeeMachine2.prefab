@@ -42,6 +42,8 @@ GameObject:
   - 33: {fileID: 33000011220922608}
   - 23: {fileID: 23000014235861990}
   - 65: {fileID: 65000013639813308}
+  - 65: {fileID: 65000013508507660}
+  - 65: {fileID: 65000012862089848}
   m_Layer: 8
   m_Name: Base
   m_TagString: Receptacle
@@ -253,7 +255,7 @@ Transform:
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 1000010179974708}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -2.6547642, y: 0.93037015, z: -3.864789}
+  m_LocalPosition: {x: -1.4231968, y: 0, z: 0.046279877}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_LocalEulerAnglesHint: {x: 0, y: 180, z: 0}
   m_Children:
@@ -494,6 +496,30 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
+--- !u!65 &65000012862089848
+BoxCollider:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1000011045084446}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Size: {x: 115.11988, y: 63.50468, z: 121.83044}
+  m_Center: {x: 0, y: 127.55996, z: 2.4088328}
+--- !u!65 &65000013508507660
+BoxCollider:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1000011045084446}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Size: {x: 115.11988, y: 160.2725, z: 55.80316}
+  m_Center: {x: 0, y: 79.17625, z: 35.422455}
 --- !u!65 &65000013639813308
 BoxCollider:
   m_ObjectHideFlags: 1
@@ -504,8 +530,8 @@ BoxCollider:
   m_IsTrigger: 1
   m_Enabled: 1
   serializedVersion: 2
-  m_Size: {x: 115.11988, y: 160.2725, z: 130.03673}
-  m_Center: {x: 0, y: 79.17625, z: -1.6943283}
+  m_Size: {x: 115.11988, y: 16.121891, z: 130.03673}
+  m_Center: {x: 0, y: 7.10092, z: -1.694325}
 --- !u!95 &95000011381336820
 Animator:
   serializedVersion: 3
@@ -534,7 +560,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f003674f2c1ff47aa9f18c968a3c479f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  VisibilityCollider: {fileID: 65000013639813308}
+  VisibilityCollider: {fileID: 0}
   Pivots:
   - {fileID: 4000010044412916}
   MessItem: {fileID: 0}
@@ -568,5 +594,6 @@ MonoBehaviour:
   Manipulation: 3
   UseCustomBounds: 0
   UseWidthSearch: 0
+  hasCollision: 0
   BoundsTransform: {fileID: 0}
   VisibleNow: 0

@@ -41,6 +41,8 @@ GameObject:
   - 33: {fileID: 33000012942807436}
   - 23: {fileID: 23000010160945824}
   - 65: {fileID: 65000014257157990}
+  - 65: {fileID: 65000010418892960}
+  - 65: {fileID: 65000011994297764}
   m_Layer: 8
   m_Name: Base
   m_TagString: SimObj
@@ -55,7 +57,7 @@ Transform:
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 1000013235453118}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -4.536, y: -72.49822, z: 14.130596}
+  m_LocalPosition: {x: -1.0412923, y: 0, z: -0.03274354}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_LocalEulerAnglesHint: {x: 0, y: 180, z: 0}
   m_Children:
@@ -130,6 +132,30 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
+--- !u!65 &65000010418892960
+BoxCollider:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1000014093790304}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Size: {x: 119.92431, y: 201.27527, z: 107.65227}
+  m_Center: {x: 0, y: 106.93471, z: -15.880404}
+--- !u!65 &65000011994297764
+BoxCollider:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1000014093790304}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Size: {x: 49.353043, y: 67.85188, z: 80.99035}
+  m_Center: {x: -0.11167146, y: 161.67458, z: -75.51791}
 --- !u!65 &65000014257157990
 BoxCollider:
   m_ObjectHideFlags: 1
@@ -140,8 +166,8 @@ BoxCollider:
   m_IsTrigger: 0
   m_Enabled: 1
   serializedVersion: 2
-  m_Size: {x: 119.9243, y: 201.27527, z: 158.7457}
-  m_Center: {x: 0, y: 106.93475, z: -41.427147}
+  m_Size: {x: 119.92431, y: 17.024427, z: 158.74571}
+  m_Center: {x: 0, y: 14.809251, z: -41.427155}
 --- !u!95 &95000011428343612
 Animator:
   serializedVersion: 3
@@ -188,5 +214,7 @@ MonoBehaviour:
   Type: 15
   Manipulation: 3
   UseCustomBounds: 0
+  UseWidthSearch: 0
+  hasCollision: 0
   BoundsTransform: {fileID: 0}
   VisibleNow: 0

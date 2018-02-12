@@ -22,6 +22,8 @@ GameObject:
   - 33: {fileID: 33000010422036380}
   - 23: {fileID: 23000012151771392}
   - 65: {fileID: 65000013653246738}
+  - 65: {fileID: 65000012451923278}
+  - 65: {fileID: 65000014224087680}
   m_Layer: 8
   m_Name: Base
   m_TagString: Receptacle
@@ -220,7 +222,7 @@ Transform:
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 1000010782561486}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -0.20454754, y: 0.8122108, z: 0.709}
+  m_LocalPosition: {x: -1.8, y: 0, z: 0.04979148}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_LocalEulerAnglesHint: {x: 0, y: 86.219, z: 0}
   m_Children:
@@ -388,6 +390,18 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
+--- !u!65 &65000012451923278
+BoxCollider:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1000010771380854}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Size: {x: 99.56814, y: 110.97134, z: 69.82608}
+  m_Center: {x: 0.000093517774, y: 54.485607, z: 33.41856}
 --- !u!65 &65000013653246738
 BoxCollider:
   m_ObjectHideFlags: 1
@@ -398,8 +412,20 @@ BoxCollider:
   m_IsTrigger: 1
   m_Enabled: 1
   serializedVersion: 2
-  m_Size: {x: 99.56814, y: 161.09012, z: 145.83905}
-  m_Center: {x: 0, y: 79.54506, z: -4.588108}
+  m_Size: {x: 99.56814, y: 22.596535, z: 145.83905}
+  m_Center: {x: 0.00023034746, y: 10.298211, z: -4.588106}
+--- !u!65 &65000014224087680
+BoxCollider:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1000010771380854}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Size: {x: 99.56814, y: 52.93866, z: 135.26334}
+  m_Center: {x: 0.00018397262, y: 133.62051, z: 0.69976574}
 --- !u!95 &95000012276825188
 Animator:
   serializedVersion: 3
@@ -462,5 +488,6 @@ MonoBehaviour:
   Manipulation: 3
   UseCustomBounds: 0
   UseWidthSearch: 0
+  hasCollision: 0
   BoundsTransform: {fileID: 0}
   VisibleNow: 0
