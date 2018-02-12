@@ -21,7 +21,7 @@ GameObject:
   - 4: {fileID: 4000010687311710}
   - 23: {fileID: 23000013524529724}
   - 33: {fileID: 33000010414594550}
-  - 65: {fileID: 65000011676302514}
+  - 64: {fileID: 64000013437883584}
   m_Layer: 8
   m_Name: Base
   m_TagString: SimObj
@@ -66,7 +66,7 @@ Transform:
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 1000012467417086}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -3.131, y: -72.5326, z: 13.3572}
+  m_LocalPosition: {x: -1.2310975, y: 0, z: -2.411112}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_Children:
@@ -124,8 +124,8 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
---- !u!65 &65000011676302514
-BoxCollider:
+--- !u!64 &64000013437883584
+MeshCollider:
   m_ObjectHideFlags: 1
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 100100000}
@@ -134,8 +134,8 @@ BoxCollider:
   m_IsTrigger: 0
   m_Enabled: 1
   serializedVersion: 2
-  m_Size: {x: 0.0008323421, y: 0.00079574157, z: 0.00072063756}
-  m_Center: {x: 0.0000073315314, y: -0.000039853345, z: 0.00004813794}
+  m_Convex: 1
+  m_Mesh: {fileID: 4300000, guid: 844c64d6c3db84543971ea65bc65163e, type: 3}
 --- !u!114 &114000011026704042
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -148,4 +148,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   Type: 3
+  Manipulation: 0
   UseCustomBounds: 0
+  UseWidthSearch: 0
+  hasCollision: 0
+  BoundsTransform: {fileID: 0}
+  VisibleNow: 0
