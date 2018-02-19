@@ -621,7 +621,7 @@ class BFSSearchPoint:
 
 class BFSController(Controller):
 
-    def __init__(self):
+    def __init__(self, grid_size=0.25):
         super(BFSController, self).__init__()
         self.rotations = [0, 90, 180, 270]
         self.horizons = [330, 0, 30]
@@ -629,7 +629,7 @@ class BFSController(Controller):
         self.queue = deque()
         self.seen_points = []
         self.grid_points = []
-        self.grid_size = 0.25
+        self.grid_size = grid_size
 
     def visualize_points(self, scene_name, wait_key=10):
         import cv2
@@ -817,7 +817,7 @@ class BFSController(Controller):
         self.seen_points = []
         self.grid_points = []
         event = self.reset(scene_name)
-        event = self.step(dict(action='Initialize', gridSize=0.25))
+        event = self.step(dict(action='Initialize', gridSize=self.grid_size))
         self.enqueue_points(event.metadata['agent']['position'])
         while self.queue:
             self.queue_step()
