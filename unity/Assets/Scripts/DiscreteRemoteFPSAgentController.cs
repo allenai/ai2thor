@@ -726,6 +726,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 		public void RotateHand(ServerAction action) {
 			getHand().transform.localRotation = Quaternion.Euler(new Vector3(action.x, action.y, action.z));
+            actionFinished(true);
 		}
 
 		public void MoveHandLeft(ServerAction action) {
