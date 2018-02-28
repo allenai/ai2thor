@@ -954,7 +954,7 @@ class BFSController(Controller):
                                     forceVisible=True,
                                     receptacleObjectId=j['objectId'],
                                     objectId=visibility_object_id,
-                                    pivot=pivot_id, raise_for_failure=True))
+                                    pivot=pivot_id), raise_for_failure=True)
                             if self.is_object_visible(visibility_object_id):
                                 receptacle_pivot_points.append(dict(
                                     distance=j['distance'],
