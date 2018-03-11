@@ -250,7 +250,7 @@ public class SceneManager : MonoBehaviour {
 	public void SetUpNavigation () {
 		//thanks for not exposing these props, Unity :P
 		//this may break in later versions
-		SerializedObject settingsObject = new SerializedObject (NavMeshBuilder.navMeshSettingsObject);
+		SerializedObject settingsObject = new SerializedObject (UnityEditor.AI.NavMeshBuilder.navMeshSettingsObject);
 
 		/*var iter = settingsObject.GetIterator();
 		do {
