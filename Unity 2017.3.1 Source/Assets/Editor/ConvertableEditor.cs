@@ -45,7 +45,7 @@ public class ConvertableEditor : Editor
 		}
 
 		List<GameObject> availableItems = new List<GameObject> ();
-		Transform baseTransform = c.transform.FindChild ("Base");
+		Transform baseTransform = c.transform.Find ("Base");
 		if (baseTransform == null) {
 			GUI.color = Color.red;
 			EditorGUILayout.LabelField ("MUST HAVE BASE OBJECT!");

@@ -135,7 +135,7 @@ public class SimObjectEditor : Editor
 				}
 			}
 			if (GUILayout.Button ("Fix base rotation/scale")) {
-				Transform baseObj = simObj.transform.FindChild ("Base");
+				Transform baseObj = simObj.transform.Find ("Base");
 				if (baseObj == null) {
 					Debug.LogError ("No base object found, not adjusting");
 				} else {
