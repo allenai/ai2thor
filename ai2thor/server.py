@@ -20,7 +20,6 @@ except ImportError:
     from Queue import Empty
 
 import time
-import uuid
 
 from flask import Flask, request, make_response, abort
 import werkzeug.serving
@@ -68,7 +67,7 @@ class Server(object):
         self.image_buffer = None
 
         self.app = app
-        self.client_token = str(uuid.uuid4())
+        self.client_token = None
         self.subscriptions = []
         self.app.config.update(PROPAGATE_EXCEPTIONS=True, JSONIFY_PRETTYPRINT_REGULAR=False)
         self.port = port
