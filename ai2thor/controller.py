@@ -20,6 +20,7 @@ import subprocess
 import threading
 import os
 import platform
+import uuid
 try:
     from queue import Queue
 except ImportError:
@@ -442,19 +443,14 @@ class Controller(object):
         command += " -screen-width %s -screen-height %s" % (width, height)
         return shlex.split(command)
 
-    def _start_thread(self, env, width, height, host, port, image_name, start_unity):
+    def _start_unity_thread(self, env, width, height, host, port, image_name):
         # get environment variables
-
-        if not start_unity:
-            self.server.client_token = None
-
-        _, port = self.server.wsgi_server.socket.getsockname()
-
-
+        
+        env['AI2THOR_CLIENT_TOKEN'] = self.server.client_token = str(uuid.uuid4())
         env['AI2THOR_VERSION'] = ai2thor._builds.VERSION
         env['AI2THOR_HOST'] = host
         env['AI2THOR_PORT'] = str(port)
-        env['AI2THOR_CLIENT_TOKEN'] = self.server.client_token
+        
         env['AI2THOR_SCREEN_WIDTH'] = str(width)
         env['AI2THOR_SCREEN_HEIGHT'] = str(height)
 
@@ -462,20 +458,29 @@ class Controller(object):
         # env['AI2THOR_SERVER_SIDE_SCREENSHOT'] = 'True'
 
         # print("Viewer: http://%s:%s/viewer" % (host, port))
+        if image_name is not None:
+            self.container_id = ai2thor.docker.run(image_name, env)
+            atexit.register(lambda: ai2thor.docker.kill_container(self.container_id))
+        else:
+            command = self.unity_command(width, height)
+            proc = subprocess.Popen(command, env=env)
+            self.unity_pid = proc.pid
+            atexit.register(lambda: proc.kill())
+            returncode = proc.wait()
+            if returncode != 0:
+                raise Exception("command: %s exited with %s" % (command, returncode))
 
-        # launch simulator
-        if start_unity:
+    def check_docker(self):
+        if self.docker_enabled:
+            assert ai2thor.docker.has_docker(), "Docker enabled, but could not find docker binary in path"
+            assert ai2thor.docker.nvidia_version() is not None, "No nvidia driver version found at /proc/driver/nvidia/version - Dockerized THOR is only compatible with hosts with Nvidia cards with a driver installed"
 
-            if image_name is not None:
-                self.container_id = ai2thor.docker.run(image_name, env)
-                atexit.register(lambda: ai2thor.docker.kill_container(self.container_id))
-            else:
-                proc = subprocess.Popen(self.unity_command(width, height), env=env)
-                self.unity_pid = proc.pid
+    def check_x_display(self, x_display):
+        with open(os.devnull, "w") as dn:
+            if subprocess.call(['which', 'xdpyinfo'], stdout=dn) == 0:
+                assert subprocess.call("xdpyinfo", stdout=dn, env=dict(DISPLAY=x_display), shell=True) == 0, ("Invalid DISPLAY %s - cannot find X server with xdpyinfo" % x_display)
 
-                # print("launched pid %s" % self.unity_pid)
-                atexit.register(lambda: os.kill(self.unity_pid, signal.SIGKILL))
-
+    def _start_server_thread(self):
         self.server.start()
 
     def base_dir(self):
@@ -545,8 +550,6 @@ class Controller(object):
         if player_screen_height < 300 or player_screen_width < 300:
             raise Exception("Screen resolution must be >= 300x300")
 
-
-
         if self.server_thread is not None:
             raise Exception("server has already been started - cannot start more than once")
 
@@ -555,8 +558,23 @@ class Controller(object):
         image_name = None
         host = '127.0.0.1'
 
+        self.server = ai2thor.server.Server(
+            self.request_queue,
+            self.response_queue,
+            host,
+            port=port)
+
+        _, port = self.server.wsgi_server.socket.getsockname()
+
+        self.server_thread = threading.Thread(target=self._start_server_thread)
+
+        self.server_thread.daemon = True
+        self.server_thread.start()
+
         if start_unity:
             if platform.system() == 'Linux':
+
+                self.check_docker()
 
                 if self.docker_enabled and ai2thor.docker.has_docker() and ai2thor.docker.nvidia_version() is not None:
                     image_name = ai2thor.docker.build_image()
@@ -568,21 +586,15 @@ class Controller(object):
                     elif 'DISPLAY' not in env:
                         env['DISPLAY'] = ':0.0'
 
-                    self.download_binary()
-            else:
-                self.download_binary()
+                    self.check_x_display(env['DISPLAY'])
 
-        self.server = ai2thor.server.Server(
-            self.request_queue,
-            self.response_queue,
-            host,
-            port=port)
+            self.download_binary()
 
-        self.server_thread = threading.Thread(
-            target=self._start_thread,
-            args=(env, player_screen_width, player_screen_height, host, port, image_name, start_unity))
-        self.server_thread.daemon = True
-        self.server_thread.start()
+            unity_thread = threading.Thread(
+                target=self._start_unity_thread,
+                args=(env, player_screen_width, player_screen_height, host, port, image_name))
+            unity_thread.daemon = True
+            unity_thread.start()
 
         # receive the first request
         self.last_event = queue_get(self.request_queue)
