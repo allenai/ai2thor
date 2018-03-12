@@ -539,6 +539,7 @@ class Controller(object):
     
 
 
+
     def start(
             self,
             port=0,
@@ -556,7 +557,12 @@ class Controller(object):
         env = os.environ.copy()
 
         image_name = None
+
         host = '127.0.0.1'
+
+        if self.docker_enabled:
+            self.check_docker()
+            host = ai2thor.docker.bridge_gateway()
 
         self.server = ai2thor.server.Server(
             self.request_queue,
@@ -574,11 +580,8 @@ class Controller(object):
         if start_unity:
             if platform.system() == 'Linux':
 
-                self.check_docker()
-
-                if self.docker_enabled and ai2thor.docker.has_docker() and ai2thor.docker.nvidia_version() is not None:
+                if self.docker_enabled:
                     image_name = ai2thor.docker.build_image()
-                    host = ai2thor.docker.bridge_gateway()
                 else:
 
                     if x_display:
