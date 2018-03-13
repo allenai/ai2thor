@@ -1,5 +1,3 @@
-// Upgrade NOTE: replaced 'mul(UNITY_MATRIX_MVP,*)' with 'UnityObjectToClipPos(*)'
-
 
 Shader "Hidden/FastBloom" {
 	Properties {
@@ -38,7 +36,7 @@ Shader "Hidden/FastBloom" {
 		{
 			v2f_simple o;
 			
-			o.pos = UnityObjectToClipPos (v.vertex);
+			o.pos = mul (UNITY_MATRIX_MVP, v.vertex);
         	o.uv = UnityStereoScreenSpaceUVAdjust(v.texcoord, _MainTex_ST);
         	
         #if UNITY_UV_STARTS_AT_TOP
@@ -63,7 +61,7 @@ Shader "Hidden/FastBloom" {
 		{
 			v2f_tap o;
 
-			o.pos = UnityObjectToClipPos (v.vertex);
+			o.pos = mul (UNITY_MATRIX_MVP, v.vertex);
         	o.uv20 = UnityStereoScreenSpaceUVAdjust(v.texcoord + _MainTex_TexelSize.xy, _MainTex_ST);
 			o.uv21 = UnityStereoScreenSpaceUVAdjust(v.texcoord + _MainTex_TexelSize.xy * half2(-0.5h,-0.5h), _MainTex_ST);
 			o.uv22 = UnityStereoScreenSpaceUVAdjust(v.texcoord + _MainTex_TexelSize.xy * half2(0.5h,-0.5h), _MainTex_ST);
@@ -120,7 +118,7 @@ Shader "Hidden/FastBloom" {
 		v2f_withBlurCoords8 vertBlurHorizontal (appdata_img v)
 		{
 			v2f_withBlurCoords8 o;
-			o.pos = UnityObjectToClipPos (v.vertex);
+			o.pos = mul (UNITY_MATRIX_MVP, v.vertex);
 			
 			o.uv = half4(v.texcoord.xy,1,1);
 			o.offs = _MainTex_TexelSize.xy * half2(1.0, 0.0) * _Parameter.x;
@@ -131,7 +129,7 @@ Shader "Hidden/FastBloom" {
 		v2f_withBlurCoords8 vertBlurVertical (appdata_img v)
 		{
 			v2f_withBlurCoords8 o;
-			o.pos = UnityObjectToClipPos (v.vertex);
+			o.pos = mul (UNITY_MATRIX_MVP, v.vertex);
 			
 			o.uv = half4(v.texcoord.xy,1,1);
 			o.offs = _MainTex_TexelSize.xy * half2(0.0, 1.0) * _Parameter.x;
@@ -159,7 +157,7 @@ Shader "Hidden/FastBloom" {
 		v2f_withBlurCoordsSGX vertBlurHorizontalSGX (appdata_img v)
 		{
 			v2f_withBlurCoordsSGX o;
-			o.pos = UnityObjectToClipPos (v.vertex);
+			o.pos = mul (UNITY_MATRIX_MVP, v.vertex);
 			
 			o.uv = v.texcoord.xy;
 
@@ -174,7 +172,7 @@ Shader "Hidden/FastBloom" {
 		v2f_withBlurCoordsSGX vertBlurVerticalSGX (appdata_img v)
 		{
 			v2f_withBlurCoordsSGX o;
-			o.pos = UnityObjectToClipPos (v.vertex);
+			o.pos = mul (UNITY_MATRIX_MVP, v.vertex);
 			
 			o.uv = half4(v.texcoord.xy,1,1);
 

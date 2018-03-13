@@ -1,5 +1,3 @@
-// Upgrade NOTE: replaced 'mul(UNITY_MATRIX_MVP,*)' with 'UnityObjectToClipPos(*)'
-
 
 
 Shader "Hidden/SimpleClear" {
@@ -26,7 +24,7 @@ struct v2f {
 v2f vert( appdata_img v )
 {
 	v2f o;
-	o.pos = UnityObjectToClipPos(v.vertex);
+	o.pos = mul(UNITY_MATRIX_MVP, v.vertex);
 	return o;
 }
 

@@ -21,8 +21,8 @@ public class PlacementManager : MonoBehaviour {
 	public const float MaxRaycastCheckDistance = 0.25f;
 
 	public static bool GetPlacementPoint (Vector3 origin, Vector3 direction, Camera agentCamera, float reach, float maxDistance, ref Vector3 point) {
-		UnityEngine.AI.NavMeshHit hit;
-		if (UnityEngine.AI.NavMesh.SamplePosition (origin + (direction.normalized * reach), out hit, maxDistance, 1 << NavmeshShelfArea)) {
+		NavMeshHit hit;
+		if (NavMesh.SamplePosition (origin + (direction.normalized * reach), out hit, maxDistance, 1 << NavmeshShelfArea)) {
 			//check whether we can see this point
 			Vector3 viewPoint = agentCamera.WorldToViewportPoint(hit.position);
 			Vector3 pointDirection = Vector3.zero;

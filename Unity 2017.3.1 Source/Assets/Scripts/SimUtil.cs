@@ -73,26 +73,20 @@ public static class SimUtil {
 			}
         }
         //now check to see if they're actually visible
-        RaycastHit hit = new RaycastHit();
+        RaycastHit hit;
+        foreach (SimObj item in uniqueItems) {
 
-        foreach (SimObj item in uniqueItems) 
-        {
-
-			if (!CheckItemBounds (item, agentCameraPos)) 
-            {
+			if (!CheckItemBounds (item, agentCameraPos)) {
 				//if the camera isn't in bounds, skip this item
 				continue;
 			}
-
 			//check whether we can see the point in a sweep from top to bottom
 			bool canSeeItem = false;
 
 			//if it's a receptacle
 			//raycast against every pivot in the receptacle just to make sure we don't miss anything
-			if (item.IsReceptacle) 
-            {
-				foreach (Transform pivot in item.Receptacle.Pivots) 
-                {
+			if (item.IsReceptacle) {
+				foreach (Transform pivot in item.Receptacle.Pivots) {
 					canSeeItem = CheckPointVisibility (
 						item,
 						pivot.position,
@@ -108,10 +102,8 @@ public static class SimUtil {
 				}
 			}
 
-			if (!canSeeItem) 
-            {
-				for (int i = 0; i < VisibilityCheckSteps; i++) 
-                {
+			if (!canSeeItem) {
+				for (int i = 0; i < VisibilityCheckSteps; i++) {
 					canSeeItem = CheckPointVisibility (
 						item,
 						Vector3.Lerp (item.TopPoint, item.BottomPoint, (float)i / VisibilityCheckSteps),
@@ -128,22 +120,19 @@ public static class SimUtil {
 				}
 			}
 
-			if (canSeeItem) 
-            {
+			if (canSeeItem) {
 				//if it's the same object, add it to the list
 				#if UNITY_EDITOR
 				item.VisibleNow = ShowObjectVisibility & true;
 				#endif
 				items.Add (item);
 				//now check to see if it's a receptacle interior
-				if (item.IsReceptacle && hit.collider.CompareTag (SimUtil.ReceptacleTag)) 
-                {
+				if (item.IsReceptacle && hit.collider.CompareTag (SimUtil.ReceptacleTag)) {
 					//if it is, add the items in the receptacle as well
 					items.AddRange (GetVisibleItemsFromReceptacle (item.Receptacle, agentCamera, agentCameraPos, maxDistance));
 				}
 			}
         }
-
         //now sort the items by distance to camera
         items.Sort((x, y) => Vector3.Distance(x.transform.position, agentCameraPos).CompareTo(Vector3.Distance(y.transform.position, agentCameraPos)));
         //we're done!

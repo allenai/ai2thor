@@ -1,5 +1,3 @@
-// Upgrade NOTE: replaced 'mul(UNITY_MATRIX_MVP,*)' with 'UnityObjectToClipPos(*)'
-
 // Reduces input image (_MainTex) by 2x2.
 // Outputs maximum value in R, minimum in G.
 Shader "Hidden/Contrast Stretch Reduction" {
@@ -28,7 +26,7 @@ half4 _MainTex_ST;
 
 v2f vert (appdata_img v) {
 	v2f o;
-	o.position = UnityObjectToClipPos (v.vertex);
+	o.position = mul (UNITY_MATRIX_MVP, v.vertex);
 	float2 uv = MultiplyUV (UNITY_MATRIX_TEXTURE0, v.texcoord);
 	
 	// Compute UVs to sample 2x2 pixel block.

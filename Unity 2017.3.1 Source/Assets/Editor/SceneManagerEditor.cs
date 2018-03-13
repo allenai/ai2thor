@@ -10,7 +10,7 @@ public class SceneManagerEditor : Editor
 {
 	public BuildTarget[] Targets = new BuildTarget[] {
 		BuildTarget.StandaloneOSXIntel,
-		BuildTarget.StandaloneOSX,
+		BuildTarget.StandaloneOSXUniversal,
 		BuildTarget.StandaloneOSXIntel64,
 		BuildTarget.StandaloneLinux64,
 		BuildTarget.StandaloneLinux,
