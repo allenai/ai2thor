@@ -1,3 +1,5 @@
+// Upgrade NOTE: replaced 'mul(UNITY_MATRIX_MVP,*)' with 'UnityObjectToClipPos(*)'
+
 Shader "Hidden/BlurEffectConeTap" {
 	Properties { _MainTex ("", any) = "" {} }
 	CGINCLUDE
@@ -13,7 +15,7 @@ Shader "Hidden/BlurEffectConeTap" {
 	half4 _BlurOffsets;
 	v2f vert( appdata_img v ) {
 		v2f o; 
-		o.pos = mul(UNITY_MATRIX_MVP, v.vertex);
+		o.pos = UnityObjectToClipPos(v.vertex);
 
 		o.uv = v.texcoord - _BlurOffsets.xy * _MainTex_TexelSize.xy; // hack, see BlurEffect.cs for the reason for this. let's make a new blur effect soon
 #ifdef UNITY_SINGLE_PASS_STEREO
