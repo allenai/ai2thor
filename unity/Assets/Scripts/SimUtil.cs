@@ -466,7 +466,7 @@ public static class SimUtil {
 	//this does not TAKE any of these items
 	public static SimObj[] GetVisibleItemsFromReceptacle (Receptacle r, Camera agentCamera, Vector3 agentCameraPos, float maxDistance) {
 		List<SimObj> items = new List<SimObj>();
-		RaycastHit hit;
+		RaycastHit hit = new RaycastHit();
 		foreach (Transform t in r.Pivots) {
 			if (t.childCount > 0) {
 				SimObj item = t.GetChild (0).GetComponent <SimObj> ();

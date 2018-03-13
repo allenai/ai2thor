@@ -14,7 +14,9 @@ public class SimObjectEditor : Editor
 		}
 		if (SimUtil.ShowBasePivots) {
 			Handles.color = Color.white;
-			Handles.CircleCap (0, simObj.transform.position, Quaternion.Euler (-90f, 0f, 0f), 0.05f);
+            //this was originally Handles.CircleCap, which is obsolete, had to add the EventType.Repaint parameter in upgrading to new CircleHandleCap implementation
+            //not sure if the event type should be EventType.Repaint or EventType.Layout, but if Repaint isn't working change it to Layout
+			Handles.CircleHandleCap (0, simObj.transform.position, Quaternion.Euler (-90f, 0f, 0f), 1f,EventType.Repaint); 
 		}
 	}
 
