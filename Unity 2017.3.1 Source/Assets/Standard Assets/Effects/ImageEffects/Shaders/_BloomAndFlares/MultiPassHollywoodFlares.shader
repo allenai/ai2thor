@@ -1,5 +1,3 @@
-// Upgrade NOTE: replaced 'mul(UNITY_MATRIX_MVP,*)' with 'UnityObjectToClipPos(*)'
-
 Shader "Hidden/MultipassHollywoodFlares" {
 	Properties {
 		_MainTex ("Base (RGB)", 2D) = "" {}
@@ -34,14 +32,14 @@ Shader "Hidden/MultipassHollywoodFlares" {
 		
 	v2f vert (appdata_img v) {
 		v2f o;
-		o.pos = UnityObjectToClipPos(v.vertex);
+		o.pos = mul(UNITY_MATRIX_MVP, v.vertex);
 		o.uv =  v.texcoord.xy;
 		return o;
 	}
 
 	v2f_opts vertStretch (appdata_img v) {
 		v2f_opts o;
-		o.pos = UnityObjectToClipPos(v.vertex);
+		o.pos = mul(UNITY_MATRIX_MVP, v.vertex);
 		half b = stretchWidth;		
 		o.uv[0] = UnityStereoScreenSpaceUVAdjust(v.texcoord.xy, _MainTex_ST);
 		o.uv[1] = UnityStereoScreenSpaceUVAdjust(v.texcoord.xy + b * 2.0 * offsets.xy, _MainTex_ST);
@@ -55,7 +53,7 @@ Shader "Hidden/MultipassHollywoodFlares" {
 	
 	v2f_opts vertVerticalCoords (appdata_img v) {
 		v2f_opts o;
-		o.pos = UnityObjectToClipPos(v.vertex);
+		o.pos = mul(UNITY_MATRIX_MVP, v.vertex);
 		o.uv[0] = UnityStereoScreenSpaceUVAdjust(v.texcoord.xy, _MainTex_ST);
 		o.uv[1] = UnityStereoScreenSpaceUVAdjust(v.texcoord.xy + 0.5 * _MainTex_TexelSize.xy * half2(0,1), _MainTex_ST);
 		o.uv[2] = UnityStereoScreenSpaceUVAdjust(v.texcoord.xy - 0.5 * _MainTex_TexelSize.xy * half2(0,1), _MainTex_ST);

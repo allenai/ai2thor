@@ -1,5 +1,3 @@
-// Upgrade NOTE: replaced 'mul(UNITY_MATRIX_MVP,*)' with 'UnityObjectToClipPos(*)'
-
 Shader "Hidden/SSAO" {
 Properties {
 	_MainTex ("", 2D) = "" {}
@@ -24,7 +22,7 @@ float4 _CameraDepthNormalsTexture_ST;
 v2f_ao vert_ao (appdata_img v)
 {
 	v2f_ao o;
-	o.pos = UnityObjectToClipPos (v.vertex);
+	o.pos = mul (UNITY_MATRIX_MVP, v.vertex);
 	o.uv = TRANSFORM_TEX(v.texcoord, _CameraDepthNormalsTexture);
 	o.uvr = v.texcoord.xy * _NoiseScale;
 	return o;
@@ -186,7 +184,7 @@ float4 _MainTex_ST;
 v2f vert (appdata_img v)
 {
 	v2f o;
-	o.pos = UnityObjectToClipPos (v.vertex);
+	o.pos = mul (UNITY_MATRIX_MVP, v.vertex);
 	o.uv = TRANSFORM_TEX (v.texcoord, _CameraDepthNormalsTexture);
 	return o;
 }
@@ -261,7 +259,7 @@ half4 _SSAO_ST;
 v2f vert (appdata_img v)
 {
 	v2f o;
-	o.pos = UnityObjectToClipPos (v.vertex);
+	o.pos = mul (UNITY_MATRIX_MVP, v.vertex);
 	o.uv[0] = UnityStereoScreenSpaceUVAdjust(MultiplyUV (UNITY_MATRIX_TEXTURE0, v.texcoord), _MainTex_ST);
 	o.uv[1] = UnityStereoScreenSpaceUVAdjust(MultiplyUV (UNITY_MATRIX_TEXTURE1, v.texcoord), _SSAO_ST);
 	return o;

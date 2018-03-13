@@ -1,5 +1,3 @@
-// Upgrade NOTE: replaced 'mul(UNITY_MATRIX_MVP,*)' with 'UnityObjectToClipPos(*)'
-
 Shader "Hidden/BlendModesOverlay" {
 	Properties {
 		_MainTex ("Screen Blended", 2D) = "" {}
@@ -27,7 +25,7 @@ Shader "Hidden/BlendModesOverlay" {
 		
 	v2f vert( appdata_img v ) { 
 		v2f o;
-		o.pos = UnityObjectToClipPos(v.vertex);
+		o.pos = mul(UNITY_MATRIX_MVP, v.vertex);
 		
 		o.uv[0] = UnityStereoScreenSpaceUVAdjust(float2(
 			dot(v.texcoord.xy, _UV_Transform.xy),

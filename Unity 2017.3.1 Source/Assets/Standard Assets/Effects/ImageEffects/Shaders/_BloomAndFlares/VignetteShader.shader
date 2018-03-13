@@ -1,5 +1,3 @@
-// Upgrade NOTE: replaced 'mul(UNITY_MATRIX_MVP,*)' with 'UnityObjectToClipPos(*)'
-
 Shader "Hidden/VignetteShader" {
 	Properties {
 		_MainTex ("Base (RGB)", 2D) = "" {}
@@ -21,7 +19,7 @@ Shader "Hidden/VignetteShader" {
 		
 	v2f vert( appdata_img v ) {
 		v2f o;
-		o.pos = UnityObjectToClipPos(v.vertex);	
+		o.pos = mul(UNITY_MATRIX_MVP, v.vertex);	
 		
 		o.uv = v.texcoord.xy;
 		return o;

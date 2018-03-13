@@ -1,5 +1,3 @@
-// Upgrade NOTE: replaced 'mul(UNITY_MATRIX_MVP,*)' with 'UnityObjectToClipPos(*)'
-
 
 Shader "Hidden/SSAA" {
 Properties {
@@ -31,7 +29,7 @@ SubShader {
 
 	v2f vert( appdata_img v ) {
 		v2f o;
-		o.pos = UnityObjectToClipPos (v.vertex);
+		o.pos = mul (UNITY_MATRIX_MVP, v.vertex);
 		
 		float2 uv = v.texcoord.xy;
 	    
