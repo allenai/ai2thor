@@ -194,29 +194,38 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 		protected virtual void actionFinished(bool success) { }
 
-		protected bool closeSimObj(SimObj so) {
+		protected bool closeSimObj(SimObj so) 
+        {
 			bool res = false;
 			if (OPEN_CLOSE_STATES.ContainsKey(so.Type))
 			{
 				res = updateAnimState(so.Animator, OPEN_CLOSE_STATES[so.Type]["close"]);
-			} else if (so.IsAnimated) {
+			} 
+            else if (so.IsAnimated) 
+            {
 				res = updateAnimState (so.Animator, false);
 			}
+
 			return res;
 		}
 
-		protected bool openSimObj(SimObj so) {
+		protected bool openSimObj(SimObj so) 
+        {
 
 			bool res = false;
-			if (OPEN_CLOSE_STATES.ContainsKey(so.Type)){
+			if (OPEN_CLOSE_STATES.ContainsKey(so.Type))
+            {
 				res = updateAnimState(so.Animator, OPEN_CLOSE_STATES[so.Type]["open"]);
 
-			} else if (so.IsAnimated){
+			} 
+
+            else if (so.IsAnimated)
+            {
 				res = updateAnimState (so.Animator, true);
 			}
-			return res;
 
-		}
+			return res;
+        }
 
 
 		private bool updateAnimState(Animator anim, int value) {

@@ -631,14 +631,17 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 
 
-		public void OpenObject(ServerAction action) {
+		public void OpenObject(ServerAction action) 
+        {
 			bool success = false;
-			foreach (SimObj so in VisibleSimObjs(action)) {
+			foreach (SimObj so in VisibleSimObjs(action)) 
+            {
 
 				success = openSimObj(so);
 
 				break;
 			}
+
 			StartCoroutine(checkWaitAction(success));
 		}
 
