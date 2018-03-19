@@ -52,7 +52,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		private float m_StepCycle;
 		private float m_NextStep;
 		private bool m_Jumping;
-		private AudioSource m_AudioSource;
+		//private AudioSource m_AudioSource;
 
 		SimObj[] currentVisibleObjects;
 
@@ -103,7 +103,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			m_StepCycle = 0f;
 			m_NextStep = m_StepCycle/2f;
 			m_Jumping = false;
-			m_AudioSource = GetComponent<AudioSource>();
+			//m_AudioSource = GetComponent<AudioSource>();
 			m_MouseLook.Init(transform , m_Camera.transform);
 
 
@@ -152,11 +152,14 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 		}
 */
-		protected bool openSimObj(SimObj so) {
+		protected bool openSimObj(SimObj so) 
+        {
 			return updateAnimState (so.Animator, true);
 		}
 
-		private bool updateAnimState(Animator anim, bool value) {
+
+		private bool updateAnimState(Animator anim, bool value) 
+        {
 			AnimatorControllerParameter param = anim.parameters [0];
 
 			if (anim.GetBool(param.name) == value) {
@@ -283,7 +286,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 				if (m_Jump)
 				{
 					m_MoveDir.y = m_JumpSpeed;
-					PlayJumpSound();
+					//PlayJumpSound();
 					m_Jump = false;
 					m_Jumping = true;
 				}
@@ -303,12 +306,15 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 		}
 
+        //don't need jump sound for now
+		
+		//private void PlayJumpSound()
+		//{
+	//		m_AudioSource.clip = m_JumpSound;
+//			m_AudioSource.Play();
+//		}
 
-		private void PlayJumpSound()
-		{
-			m_AudioSource.clip = m_JumpSound;
-			m_AudioSource.Play();
-		}
+
 
 
 		private void ProgressStepCycle(float speed)
