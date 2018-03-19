@@ -31,7 +31,7 @@ public class Cabinet : MonoBehaviour {
 	Vector3 rightDoorTargetRotation;
 	Vector3 leftDoorTargetRotation;
 	Vector3 drawerTargetPosition;
-	bool lastOpen = false;
+	//bool lastOpen = false;
 	float animatingDistance;
 
 	public void OnEnable() {

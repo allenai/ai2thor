@@ -39,7 +39,8 @@ public class Lamp : MonoBehaviour {
 			on = ParentObj.Animator.GetBool ("AnimState1");
 		}
 
-		if (LampshadeRenderer == null || OnMaterial == null || OffMaterial == null || Lights.Length == null) {
+        //lights.length was == null
+		if (LampshadeRenderer == null || OnMaterial == null || OffMaterial == null || Lights.Length == 0) {
 			Debug.LogError ("Required item null in lamp " + name);
 			return;
 		}

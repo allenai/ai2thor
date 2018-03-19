@@ -26,7 +26,7 @@ public class SimTesting : MonoBehaviour {
     public float SpherecastRadius;
     public Camera Cam;
     RaycastHit hit;
-    RaycastHit[] hits = new RaycastHit[MaxHits];
+    //RaycastHit[] hits = new RaycastHit[MaxHits];
 	public Vector3 placementPoint;
 	public bool foundPlacementPoint;
 	public SimObj inventoryObject;

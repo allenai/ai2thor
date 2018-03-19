@@ -113,7 +113,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 //			pickupAllObjects ();
 		}
-
+        /*
 		private Vector3 nearestGridPoint(GridPoint[] gridPoints, Vector3 target) {
 			foreach (GridPoint gp in gridPoints) {
 				if (Math.Abs(target.x - gp.x) < 0.01 && Math.Abs(target.z - gp.z) < 0.01) {
@@ -151,7 +151,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 //			m_CharacterController.Move ();
 
 		}
-
+*/
 		protected bool openSimObj(SimObj so) {
 			return updateAnimState (so.Animator, true);
 		}
@@ -179,7 +179,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			RotateView();
 
 
-			SimObj[] simObjects = GameObject.FindObjectsOfType (typeof(SimObj)) as SimObj[];
+			//SimObj[] simObjects = GameObject.FindObjectsOfType (typeof(SimObj)) as SimObj[];
 
 
 //			if (pickupObject) {
