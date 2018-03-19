@@ -40,7 +40,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
 	
         [SerializeField] private GameObject Target_Text = null;
         [SerializeField] private GameObject Debug_Canvas = null;
-        [SerializeField] private GameObject MainCamera = null;
         [SerializeField] private bool isReceptacle = false;
         [SerializeField] private bool isPickup = false;
 
@@ -60,6 +59,14 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		//private AudioSource m_AudioSource;
 
 		SimObj[] currentVisibleObjects;
+
+        protected Dictionary<SimObjType, Dictionary<string, int>> OPEN_CLOSE_STATES = new Dictionary<SimObjType, Dictionary<string, int>>{
+            {SimObjType.Microwave, new Dictionary<string, int>{{"open", 2}, {"close", 1}}},
+            {SimObjType.Laptop, new Dictionary<string, int>{{"open", 2}, {"close", 1}}},
+            {SimObjType.Book, new Dictionary<string, int>{{"open", 1}, {"close", 2}}},
+            {SimObjType.Toilet, new Dictionary<string, int>{{"open", 2}, {"close", 3}}},
+            {SimObjType.Sink, new Dictionary<string, int>{{"open", 2}, {"close", 1}}}
+        };
 
 
 
@@ -112,9 +119,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			m_MouseLook.Init(transform , m_Camera.transform);
 
             //grab text object on canvas to update with what is currently targeted by reticle
-            Target_Text = GameObject.Find("Canvas/TargetText");;
-            Debug_Canvas = GameObject.Find("Canvas");
-            MainCamera = GameObject.FindWithTag("MainCamera");
+           // Target_Text = GameObject.Find("Canvas/TargetText");;
+           // Debug_Canvas = GameObject.Find("Canvas");
+
 
             //if this component is enabled, turn on the targeting reticle and target text
             if (this.isActiveAndEnabled)
@@ -173,8 +180,20 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		protected bool openSimObj(SimObj so) 
         {
   
-                return updateAnimState(so.Animator, true);
+               // return updateAnimState(so.Animator, true);
+            bool res = false;
+            if (OPEN_CLOSE_STATES.ContainsKey(so.Type))
+            {
+                res = updateAnimState(so.Animator, OPEN_CLOSE_STATES[so.Type]["open"]);
 
+            }
+
+            else if (so.IsAnimated)
+            {
+                res = updateAnimState(so.Animator, true);
+            }
+
+            return res;
    
 		}
 
@@ -182,22 +201,53 @@ namespace UnityStandardAssets.Characters.FirstPerson
         {
       
                 //res = updateAnimState (so.Animator, false);
-                return updateAnimState(so.Animator, false);
+                //return updateAnimState(so.Animator, false);
+
+            bool res = false;
+            if (OPEN_CLOSE_STATES.ContainsKey(so.Type))
+            {
+                res = updateAnimState(so.Animator, OPEN_CLOSE_STATES[so.Type]["close"]);
+            }
+            else if (so.IsAnimated)
+            {
+                res = updateAnimState(so.Animator, false);
+            }
+
+            return res;
 
         }
 
 
-		private bool updateAnimState(Animator anim, bool value) 
+        ///overloaded updateAnimState
+        private bool updateAnimState(Animator anim, int value)
         {
-			AnimatorControllerParameter param = anim.parameters [0];
+            AnimatorControllerParameter param = anim.parameters[0];
 
-			if (anim.GetBool(param.name) == value) {
-				return false;
-			} else {
-				anim.SetBool (param.name, value);
-				return true;
-			}
-		}
+            if (anim.GetInteger(param.name) == value)
+            {
+                return false;
+            }
+            else
+            {
+                anim.SetInteger(param.name, value);
+                return true;
+            }
+        }
+
+        private bool updateAnimState(Animator anim, bool value)
+        {
+            AnimatorControllerParameter param = anim.parameters[0];
+
+            if (anim.GetBool(param.name) == value)
+            {
+                return false;
+            }
+            else
+            {
+                anim.SetBool(param.name, value);
+                return true;
+            }
+        }
 
 
 		// Update is called once per frame
@@ -211,7 +261,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
            // print("trying to raycast");
             int x = Screen.width / 2;
             int y = Screen.height / 2;
-            Ray ray = MainCamera.GetComponent<Camera>().ScreenPointToRay(new Vector3(x, y));
+            Ray ray = m_Camera.GetComponent<Camera>().ScreenPointToRay(new Vector3(x, y));
             RaycastHit hit = new RaycastHit();
 
             if (Physics.Raycast(ray, out hit))
@@ -260,7 +310,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
         {
             int x = Screen.width / 2;
             int y = Screen.height / 2;
-            Ray ray = MainCamera.GetComponent<Camera>().ScreenPointToRay(new Vector3(x, y));
+            Ray ray = m_Camera.GetComponent<Camera>().ScreenPointToRay(new Vector3(x, y));
             RaycastHit hit = new RaycastHit();
 
             if (Physics.Raycast(ray, out hit))
@@ -274,7 +324,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
         {
             int x = Screen.width / 2;
             int y = Screen.height / 2;
-            Ray ray = MainCamera.GetComponent<Camera>().ScreenPointToRay(new Vector3(x, y));
+            Ray ray = m_Camera.GetComponent<Camera>().ScreenPointToRay(new Vector3(x, y));
             RaycastHit hit = new RaycastHit();
 
             if (Physics.Raycast(ray, out hit))
