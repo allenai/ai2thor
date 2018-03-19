@@ -16,7 +16,7 @@ using UnityEngine.UI;
 namespace UnityStandardAssets.Characters.FirstPerson
 {
 	[RequireComponent(typeof (CharacterController))]
-	public class DebugFPSAgentController : MonoBehaviour
+    public class DebugFPSAgentController : MonoBehaviour
 	{
 		public float MaxDistance = 1f;
 
@@ -67,6 +67,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
             {SimObjType.Toilet, new Dictionary<string, int>{{"open", 2}, {"close", 3}}},
             {SimObjType.Sink, new Dictionary<string, int>{{"open", 2}, {"close", 1}}}
         };
+
+        private Dictionary<string, SimObj> inventory = new Dictionary<string, SimObj>();
 
 
 
@@ -134,49 +136,51 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 Cursor.lockState = CursorLockMode.Locked;
             }
 
-//			pickupAllObjects ();
-		}
-
-
-        /*
-		private Vector3 nearestGridPoint(GridPoint[] gridPoints, Vector3 target) {
-			foreach (GridPoint gp in gridPoints) {
-				if (Math.Abs(target.x - gp.x) < 0.01 && Math.Abs(target.z - gp.z) < 0.01) {
-					return new Vector3 (gp.x, gp.y, gp.z);
-				}
-			}
-
-			return new Vector3 ();
-		}
-
-		private void moveCharacterGrid(int targetOrientation) {
-			float moveMagnitude = 0.25f;
-			int currentRotation = (int)Math.Round(transform.rotation.eulerAngles.y, 0);
-			Debug.Log ("current rotation" + currentRotation);
-			Dictionary<int, Vector3> actionOrientation = new Dictionary<int, Vector3> ();
-			actionOrientation.Add (0, new Vector3 (0f, 0f, 1.0f * moveMagnitude));
-			actionOrientation.Add (90, new Vector3 (1.0f * moveMagnitude, 0.0f, 0.0f));
-			actionOrientation.Add (180, new Vector3 (0f, 0f, -1.0f * moveMagnitude));
-			actionOrientation.Add (270, new Vector3 (-1.0f * moveMagnitude, 0.0f, 0.0f));
-			int delta = (currentRotation + targetOrientation) % 360;
-
-			string sceneName = UnityEngine.SceneManagement.SceneManager.GetActiveScene ().name;
-			string json = ThorChallengeInfo.RawSceneInfo[sceneName];
-			SceneConfigurationList sceneConfigList = JsonUtility.FromJson<SceneConfigurationList>(json);
-			GridPoint[] gridPoints = sceneConfigList.configs [0].gridPoints;
-			Vector3 currentPoint = nearestGridPoint (gridPoints, transform.position);
-			Vector3 targetVector = nearestGridPoint (gridPoints, (new Vector3 (currentPoint.x, currentPoint.y, currentPoint.z)) + actionOrientation [delta]);
-			Debug.Log ("got target" + targetVector);
-			Debug.Log (targetVector == new Vector3 ());
-
-
-				
-//
-//			checkMove = true;
-//			m_CharacterController.Move ();
 
 		}
-*/
+
+
+   public void addObjectInventory(SimObj simObj)
+        {
+            inventory[simObj.UniqueID] = simObj;
+        }
+
+        public SimObj removeObjectInventory(string objectId)
+        {
+            SimObj so = inventory[objectId];
+            inventory.Remove(objectId);
+            return so;
+        }
+
+        public bool haveTypeInventory(SimObjType objectType)
+        {
+            foreach (SimObj so in inventory.Values)
+            {
+                if (so.Type == objectType)
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        protected void TakeItem(SimObj item)
+        {
+            //make item visible to raycasts
+            //unparent in case it's in a receptacle
+            item.VisibleToRaycasts = true;
+            item.transform.parent = null;
+            //disable the item entirely
+            item.gameObject.SetActive(false);
+            //set the position to 'up' so it's rotated correctly when it comes back
+            item.transform.up = Vector3.up;
+            //reset the scale (to prevent floating point weirdness)
+            item.ResetScale();
+
+            //now add to inventory
+            addObjectInventory(item);
+        }
+
 		protected bool openSimObj(SimObj so) 
         {
   
@@ -218,6 +222,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
         }
 
 
+
+
         ///overloaded updateAnimState
         private bool updateAnimState(Animator anim, int value)
         {
@@ -249,8 +255,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
             }
         }
 
-
-		// Update is called once per frame
 		public bool thingdone;
 		public bool captureScreenshot;
 		public int screenshotCounter;
@@ -306,7 +310,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             }
         }
 
-        private void OpenReceptacle()
+        private void OpenReceptacle_ray()
         {
             int x = Screen.width / 2;
             int y = Screen.height / 2;
@@ -320,7 +324,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             }
         }
 
-        private void CloseReceptacle()
+        private void CloseReceptacle_ray()
         {
             int x = Screen.width / 2;
             int y = Screen.height / 2;
@@ -330,6 +334,19 @@ namespace UnityStandardAssets.Characters.FirstPerson
             if (Physics.Raycast(ray, out hit))
             {
                 closeSimObj(hit.transform.GetComponent<SimObj>());
+            }
+        }
+
+        private void TakeObject_ray()
+        {
+            int x = Screen.width / 2;
+            int y = Screen.height / 2;
+            Ray ray = m_Camera.GetComponent<Camera>().ScreenPointToRay(new Vector3(x, y));
+            RaycastHit hit = new RaycastHit();
+
+            if (Physics.Raycast(ray, out hit))
+            {
+                TakeItem(hit.transform.GetComponent<SimObj>());
             }
         }
 
@@ -343,8 +360,14 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 //check if what we are looking at is a receptacle and can be opened
                 if(isReceptacle)
                 {
-                    OpenReceptacle();
+                    OpenReceptacle_ray();
                     //open receptacle here
+                }
+
+                if(isPickup)
+                {
+                    //try to pick up the thing?
+                    TakeObject_ray();
                 }
 
             }
@@ -353,7 +376,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             {
                 if(isReceptacle)
                 {
-                    CloseReceptacle();
+                    CloseReceptacle_ray();
                 }
             }
 
