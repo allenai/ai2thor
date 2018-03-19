@@ -76,7 +76,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		protected float m_NextStep;
 		protected bool m_Jumping;
 		protected Vector3 lastPosition;
-		private Vector3 m_OriginalCameraPosition;
+		// Vector3 m_OriginalCameraPosition;
 		protected string lastAction;
 		protected bool lastActionSuccess;
 		protected string errorMessage;
@@ -99,8 +99,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		public float forwardVelocity = 2.0f;
 		public float rotateVelocity = 2.0f;
 		public int   actionDuration = 3;
-        private int defaultScreenWidth = 300;
-        private int defaultScreenHeight = 300;
+       // private int defaultScreenWidth = 300;
+       // private int defaultScreenHeight = 300;
 
 
 		// internal state variables
@@ -153,7 +153,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		// Use this for initialization
 		protected virtual void Start () {
 			m_Camera = Camera.main;
-			m_OriginalCameraPosition = m_Camera.transform.localPosition;
+			//m_OriginalCameraPosition = m_Camera.transform.localPosition;
 			m_FovKick.Setup(m_Camera);
 			m_HeadBob.Setup(m_Camera, m_StepInterval);
 			m_StepCycle = 0f;
