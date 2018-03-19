@@ -11,6 +11,7 @@ using System.Collections.Generic;
 using UnityStandardAssets.CrossPlatformInput;
 using UnityStandardAssets.Utility;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 
 namespace UnityStandardAssets.Characters.FirstPerson
 {
@@ -37,7 +38,11 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		[SerializeField] private AudioClip m_JumpSound;           // the sound played when character leaves the ground.
 		[SerializeField] private AudioClip m_LandSound;           // the sound played when character touches back on ground.
 	
-
+        [SerializeField] private GameObject Target_Text = null;
+        [SerializeField] private GameObject Debug_Canvas = null;
+        [SerializeField] private GameObject MainCamera = null;
+        [SerializeField] private bool isReceptacle = false;
+        [SerializeField] private bool isPickup = false;
 
 		private Camera m_Camera;
 		private bool m_Jump;
@@ -106,13 +111,26 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			//m_AudioSource = GetComponent<AudioSource>();
 			m_MouseLook.Init(transform , m_Camera.transform);
 
+            //grab text object on canvas to update with what is currently targeted by reticle
+            Target_Text = GameObject.Find("Canvas/TargetText");;
+            Debug_Canvas = GameObject.Find("Canvas");
+            MainCamera = GameObject.FindWithTag("MainCamera");
+
+            //if this component is enabled, turn on the targeting reticle and target text
+            if (this.isActiveAndEnabled)
+            {
+                Debug_Canvas.SetActive(true);
+                Target_Text.SetActive(true);
 
 
-
-
+                Cursor.visible = false;
+                Cursor.lockState = CursorLockMode.Locked;
+            }
 
 //			pickupAllObjects ();
 		}
+
+
         /*
 		private Vector3 nearestGridPoint(GridPoint[] gridPoints, Vector3 target) {
 			foreach (GridPoint gp in gridPoints) {
@@ -154,8 +172,19 @@ namespace UnityStandardAssets.Characters.FirstPerson
 */
 		protected bool openSimObj(SimObj so) 
         {
-			return updateAnimState (so.Animator, true);
+  
+                return updateAnimState(so.Animator, true);
+
+   
 		}
+
+        protected bool closeSimObj(SimObj so)
+        {
+      
+                //res = updateAnimState (so.Animator, false);
+                return updateAnimState(so.Animator, false);
+
+        }
 
 
 		private bool updateAnimState(Animator anim, bool value) 
@@ -177,8 +206,107 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		public int screenshotCounter;
 		public bool pickupObject;
 
+        private void RaycastTarget()
+        {
+           // print("trying to raycast");
+            int x = Screen.width / 2;
+            int y = Screen.height / 2;
+            Ray ray = MainCamera.GetComponent<Camera>().ScreenPointToRay(new Vector3(x, y));
+            RaycastHit hit = new RaycastHit();
 
-		private void Update()	{
+            if (Physics.Raycast(ray, out hit))
+            {
+                //check for SimObjects that we are looking at
+                if(hit.transform.tag == "SimObj")
+                {
+                    //update text to show what we are looking at
+                    Target_Text.GetComponent<Text>().text = hit.transform.name;
+
+                    //check if it is a receptacle
+                    if(hit.transform.GetComponent<Receptacle>())
+                    {
+                        //print("this is a receptacle");
+                        isReceptacle = true;
+                    }
+
+                    else
+                    {
+                        isReceptacle = false;
+                    }
+
+                    if(hit.transform.GetComponent<Convertable>())
+                    {
+                        //print("able to pick up");
+                        isPickup = true;
+                    }
+
+                    else
+                    {
+                        isPickup = false;    
+                    }
+                }
+
+                else
+                {
+                    Target_Text.GetComponent<Text>().text = " ";
+                    isReceptacle = false;
+                    isPickup = false;
+                }
+
+            }
+        }
+
+        private void OpenReceptacle()
+        {
+            int x = Screen.width / 2;
+            int y = Screen.height / 2;
+            Ray ray = MainCamera.GetComponent<Camera>().ScreenPointToRay(new Vector3(x, y));
+            RaycastHit hit = new RaycastHit();
+
+            if (Physics.Raycast(ray, out hit))
+            {
+
+                openSimObj(hit.transform.GetComponent<SimObj>());
+            }
+        }
+
+        private void CloseReceptacle()
+        {
+            int x = Screen.width / 2;
+            int y = Screen.height / 2;
+            Ray ray = MainCamera.GetComponent<Camera>().ScreenPointToRay(new Vector3(x, y));
+            RaycastHit hit = new RaycastHit();
+
+            if (Physics.Raycast(ray, out hit))
+            {
+                closeSimObj(hit.transform.GetComponent<SimObj>());
+            }
+        }
+
+		private void Update()	
+        {
+            RaycastTarget();
+
+            //try to open on left click
+            if(Input.GetMouseButtonDown(0))
+            {
+                //check if what we are looking at is a receptacle and can be opened
+                if(isReceptacle)
+                {
+                    OpenReceptacle();
+                    //open receptacle here
+                }
+
+            }
+
+            if(Input.GetMouseButtonDown(1))
+            {
+                if(isReceptacle)
+                {
+                    CloseReceptacle();
+                }
+            }
+
 			RotateView();
 
 
@@ -300,7 +428,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			ProgressStepCycle(speed);
 			UpdateCameraPosition(speed);
 
-			m_MouseLook.UpdateCursorLock();
+			//m_MouseLook.UpdateCursorLock();
 
 			//currentVisibleObjects = SimUtil.GetAllVisibleSimObjs (m_Camera, MaxDistance);
 
