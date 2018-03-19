@@ -3,6 +3,7 @@ using UnityEngine;
 using System.Collections;
 using System;
 using System.Collections.Generic;
+using UnityEngine.SceneManagement;
 
 public static class SimUtil {
 
@@ -525,7 +526,7 @@ public static class SimUtil {
 		UnityEditor.PlayerSettings.resizableWindow = false;
 		UnityEditor.PlayerSettings.macFullscreenMode = UnityEditor.MacFullscreenMode.FullscreenWindowWithDockAndMenuBar;
 		UnityEditor.PlayerSettings.d3d11FullscreenMode = UnityEditor.D3D11FullscreenMode.FullscreenWindow;
-		UnityEditor.PlayerSettings.d3d9FullscreenMode = UnityEditor.D3D9FullscreenMode.FullscreenWindow;
+		//UnityEditor.PlayerSettings.d3d9FullscreenMode = UnityEditor.D3D9FullscreenMode.FullscreenWindow;
 		UnityEditor.PlayerSettings.visibleInBackground = false;
 		UnityEditor.PlayerSettings.allowFullscreenSwitch = true;
 
@@ -616,11 +617,13 @@ public static class SimUtil {
 				pivot.parent = tempParent;
 				if (prefabParent != null) {
 					Debug.Log ("Reconnecting to " + prefabParent.name);
-					UnityEditor.EditorUtility.ReconnectToLastPrefab (t.gameObject);
+					//UnityEditor.EditorUtility.ReconnectToLastPrefab (t.gameObject); depricated call, now use PrefabUtility
+                    UnityEditor.PrefabUtility.ReconnectToLastPrefab(t.gameObject);
 				}
 			}
 		}
-		UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty (UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene ());
+        UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty (UnityEngine.SceneManagement.SceneManager.GetActiveScene());//(UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene ());
+
 	}
 
 	#endif
