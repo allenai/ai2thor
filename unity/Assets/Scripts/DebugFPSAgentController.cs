@@ -113,7 +113,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
 						if (GeometryUtility.TestPlanesAABB (planes, bounds)) 
                         {
                             position_number += 1;
-                            suffix += " VISIBLE: " + "Press '" + position_number + "' to pick up";
+
+                            if (o.GetComponent<Convertable>() && !o.GetComponent<Receptacle>())
+                                suffix += " VISIBLE: " + "Press '" + position_number + "' to pick up";
+
+                            else
+                                suffix += " VISIBLE";
 						}
 							
 							
@@ -426,9 +431,14 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
             if (Physics.Raycast(ray, out hit))
             {
-              
-                SimUtil.AddItemToReceptacle(inventory[current_Object_In_Inventory], hit.transform.GetComponent<Receptacle>());
+
+                if (SimUtil.AddItemToReceptacle(inventory[current_Object_In_Inventory], hit.transform.GetComponent<Receptacle>()) == false)
+                    Debug.Log("There's no space for that!");
+
+                else
                 removeObjectInventory(current_Object_In_Inventory);
+
+
 
             }
         }
@@ -448,18 +458,19 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     //open receptacle here
                 }
 
+
                 if(isPickup && !isReceptacle)
                 {
                     //try to pick up the thing?
-                    TakeObject_ray();
+                    Debug.Log("You can't open that!");
                 }
 
                 //this is to turn on items like the Sink that have both a Receptacle and a Convertable component
-                /*if(isPickup && isReceptacle)
+                if(isPickup && isReceptacle)
                 {
-                    OpenReceptacle_ray();
+                    Debug.Log("You can't open that!");
                 }
-                */
+
 
             }
 
@@ -469,17 +480,21 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
                 //are we looking at a receptacle and there is something we have picked up?
                 //then place it in the receptacle
-               /* if (isReceptacle && !String.IsNullOrEmpty(current_Object_In_Inventory))
-                {
-                    //print("place object");
-                    PutObject_ray(current_Object_In_Inventory);
-                }
+                /* if (isReceptacle && !String.IsNullOrEmpty(current_Object_In_Inventory))
+                 {
+                     //print("place object");
+                     PutObject_ray(current_Object_In_Inventory);
+                 }
 
-                else */if(isReceptacle)
+                 else */
+                if (isReceptacle)
                 {
                     //print("close recept");
                     CloseReceptacle_ray();
                 }
+
+                else
+                    Debug.Log("You can't close that!");
 
             }
 
@@ -543,8 +558,13 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     PutObject_ray(current_Object_In_Inventory);
                 }
 
-                else
-                    Debug.Log("Inventory Empty!");
+                else if(!String.IsNullOrEmpty(current_Object_In_Inventory))
+                    Debug.Log("You can't put that there!");
+
+                else if(isReceptacle && String.IsNullOrEmpty(current_Object_In_Inventory))
+                {
+                    Debug.Log("Nothing in your Inventory!");
+                }
             }
 
             ///////////////////////////////////////////////////////////////////////////
