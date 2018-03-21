@@ -793,17 +793,22 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 		// empty target receptacle and put object into receptacle
 
-		public void Replace(ServerAction response) {
+		public void Replace(ServerAction response) 
+        {
 			bool success = false;
 
             SimObj[] simObjs = SceneManager.Current.ObjectsInScene.ToArray ();
-			foreach (SimObj rso in simObjs) {
-				if (response.receptacleObjectId == rso.UniqueID) {
-					foreach (SimObj so in SimUtil.GetItemsFromReceptacle(rso.Receptacle)) {
+			foreach (SimObj rso in simObjs) 
+            {
+				if (response.receptacleObjectId == rso.UniqueID) 
+                {
+					foreach (SimObj so in SimUtil.GetItemsFromReceptacle(rso.Receptacle)) 
+                    {
 						SimUtil.TakeItem (so);
 					}
 					foreach (SimObj so in simObjs) {
-						if (so.UniqueID == response.objectId && SimUtil.AddItemToReceptaclePivot (so, rso.Receptacle.Pivots[response.pivot])) {
+						if (so.UniqueID == response.objectId && SimUtil.AddItemToReceptaclePivot (so, rso.Receptacle.Pivots[response.pivot])) 
+                        {
 							success = true;
 
 						}
@@ -814,7 +819,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 		}
 
-		public void PutObject(ServerAction response) {
+		public void PutObject(ServerAction response) 
+        {
 			bool success = false;
 			if(inventory.ContainsKey(response.objectId)) {
 

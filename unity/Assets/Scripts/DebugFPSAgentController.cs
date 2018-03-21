@@ -43,6 +43,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
         [SerializeField] private bool isReceptacle = false;
         [SerializeField] private bool isPickup = false;
 
+        [SerializeField] private string current_Object_In_Inventory = null;
+        [SerializeField] private GameObject Inventory_Text = null;
+
 		private Camera m_Camera;
 		private bool m_Jump;
 		private float m_YRotation;
@@ -68,6 +71,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             {SimObjType.Sink, new Dictionary<string, int>{{"open", 2}, {"close", 1}}}
         };
 
+        //inventory to store picked up objects
         private Dictionary<string, SimObj> inventory = new Dictionary<string, SimObj>();
 
 
@@ -139,16 +143,22 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 		}
 
-
-   public void addObjectInventory(SimObj simObj)
+        //add object to the inventory
+        public void addObjectInventory(SimObj simObj)
         {
             inventory[simObj.UniqueID] = simObj;
+            current_Object_In_Inventory = simObj.UniqueID;
         }
 
+
+        //remove current object in inventory
         public SimObj removeObjectInventory(string objectId)
         {
             SimObj so = inventory[objectId];
             inventory.Remove(objectId);
+
+            current_Object_In_Inventory = null;
+            Inventory_Text.GetComponent<Text>().text = "In Inventory: Nothing!";
             return so;
         }
 
@@ -164,21 +174,33 @@ namespace UnityStandardAssets.Characters.FirstPerson
             return false;
         }
 
+
+        //take a pickupable item, place in inventory if inventory is not full
         protected void TakeItem(SimObj item)
         {
-            //make item visible to raycasts
-            //unparent in case it's in a receptacle
-            item.VisibleToRaycasts = true;
-            item.transform.parent = null;
-            //disable the item entirely
-            item.gameObject.SetActive(false);
-            //set the position to 'up' so it's rotated correctly when it comes back
-            item.transform.up = Vector3.up;
-            //reset the scale (to prevent floating point weirdness)
-            item.ResetScale();
+            //check so we only have one item in the inventory at a time
+            if (inventory.Count == 0)
+            {
+                //make item visible to raycasts
+                //unparent in case it's in a receptacle
+                item.VisibleToRaycasts = true;
+                item.transform.parent = null;
+                //disable the item entirely
+                item.gameObject.SetActive(false);
+                //set the position to 'up' so it's rotated correctly when it comes back
+                item.transform.up = Vector3.up;
+                //reset the scale (to prevent floating point weirdness)
+                item.ResetScale();
 
-            //now add to inventory
-            addObjectInventory(item);
+                //now add to inventory
+                addObjectInventory(item);
+                Inventory_Text.GetComponent<Text>().text = "In Inventory: " + item.UniqueID;
+              
+            }
+
+            else
+                print("inventory full!");
+
         }
 
 		protected bool openSimObj(SimObj so) 
@@ -221,9 +243,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
         }
 
-
-
-
         ///overloaded updateAnimState
         private bool updateAnimState(Animator anim, int value)
         {
@@ -260,9 +279,11 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		public int screenshotCounter;
 		public bool pickupObject;
 
+        //called on update, constantly shoots rays out to identify SimObjects that can 
+        //either be picked up or opened
         private void RaycastTarget()
         {
-           // print("trying to raycast");
+           // raycast from the center of the screen
             int x = Screen.width / 2;
             int y = Screen.height / 2;
             Ray ray = m_Camera.GetComponent<Camera>().ScreenPointToRay(new Vector3(x, y));
@@ -276,7 +297,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     //update text to show what we are looking at
                     Target_Text.GetComponent<Text>().text = hit.transform.name;
 
-                    //check if it is a receptacle
+                    //All openable items have a Receptacle component
                     if(hit.transform.GetComponent<Receptacle>())
                     {
                         //print("this is a receptacle");
@@ -288,9 +309,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         isReceptacle = false;
                     }
 
+                    //all pickup-able items have a Convertable component
                     if(hit.transform.GetComponent<Convertable>())
                     {
-                        //print("able to pick up");
+                        print("able to pick up");
                         isPickup = true;
                     }
 
@@ -337,6 +359,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             }
         }
 
+        //shoots ray from center of screen to pick up an object with
         private void TakeObject_ray()
         {
             int x = Screen.width / 2;
@@ -350,6 +373,22 @@ namespace UnityStandardAssets.Characters.FirstPerson
             }
         }
 
+        private void PutObject_ray(string item)
+        {
+            int x = Screen.width / 2;
+            int y = Screen.height / 2;
+            Ray ray = m_Camera.GetComponent<Camera>().ScreenPointToRay(new Vector3(x, y));
+            RaycastHit hit = new RaycastHit();
+
+            if (Physics.Raycast(ray, out hit))
+            {
+              
+                SimUtil.AddItemToReceptacle(inventory[current_Object_In_Inventory], hit.transform.GetComponent<Receptacle>());
+                removeObjectInventory(current_Object_In_Inventory);
+
+            }
+        }
+
 		private void Update()	
         {
             RaycastTarget();
@@ -358,60 +397,48 @@ namespace UnityStandardAssets.Characters.FirstPerson
             if(Input.GetMouseButtonDown(0))
             {
                 //check if what we are looking at is a receptacle and can be opened
-                if(isReceptacle)
+                if(isReceptacle && !isPickup)
                 {
                     OpenReceptacle_ray();
                     //open receptacle here
                 }
 
-                if(isPickup)
+                if(isPickup && !isReceptacle)
                 {
                     //try to pick up the thing?
                     TakeObject_ray();
                 }
 
+                //this is to turn on items like the Sink that have both a Receptacle and a Convertable component
+                /*if(isPickup && isReceptacle)
+                {
+                    OpenReceptacle_ray();
+                }
+                */
+
             }
 
             if(Input.GetMouseButtonDown(1))
             {
-                if(isReceptacle)
+
+                //are we looking at a receptacle and there is something we have picked up?
+                //then place it in the receptacle
+                if (isReceptacle && !String.IsNullOrEmpty(current_Object_In_Inventory))
                 {
+                    print("place object");
+                    PutObject_ray(current_Object_In_Inventory);
+                }
+
+                else if(isReceptacle)
+                {
+                    print("close recept");
                     CloseReceptacle_ray();
                 }
+
             }
 
 			RotateView();
 
-
-			//SimObj[] simObjects = GameObject.FindObjectsOfType (typeof(SimObj)) as SimObj[];
-
-
-//			if (pickupObject) {
-//				GameObject hand = GameObject.Find ("FirstPersonHand");
-//
-//				foreach (SimObj so in simObjects) {
-//					if (so.UniqueID == "Lettuce|+01.36|+00.99|+00.79") {
-//						Rigidbody rb = so.GetComponentInChildren (typeof(Rigidbody)) as Rigidbody;
-//						rb.useGravity = false;
-//						so.transform.position = hand.transform.position;
-//						so.transform.parent = this.transform;
-//						so.transform.parent = m_CharacterController.transform;
-//						
-//					}
-//				}
-//				Vector3 target = new Vector3 (hand.transform.position.x - 0.5f, hand.transform.position.y, hand.transform.position.z);
-//				hand.transform.position = Vector3.MoveTowards (hand.transform.position, target, 0.01f);
-//			} else {
-//				foreach (SimObj so in simObjects) {
-//					if (so.UniqueID == "Lettuce|+01.36|+00.99|+00.79") {
-//						Rigidbody rb = so.GetComponentInChildren (typeof(Rigidbody)) as Rigidbody;
-//						rb.useGravity = true;
-//						so.transform.parent = null;
-//
-//					}
-//				}
-//			}
-//
 
 			if (captureScreenshot) {
 				screenshotCounter++;
@@ -442,7 +469,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			m_PreviouslyGrounded = m_CharacterController.isGrounded;
 		}
 
-		protected byte[] captureScreen() {
+		protected byte[] captureScreen() 
+        {
 			int width = Screen.width;
 			int height = Screen.height;
 
@@ -458,7 +486,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			return bytes;
 		}
 
-		private IEnumerator EmitFrame() {
+		private IEnumerator EmitFrame() 
+        {
 			yield return new WaitForEndOfFrame ();
 			File.WriteAllBytes ("/Users/erick/Desktop/screenshots/screenshot-" + screenshotCounter.ToString () + ".png", captureScreen ());
 		}
@@ -492,6 +521,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 					m_Jumping = true;
 				}
 			}
+
 			else
 			{
 				m_MoveDir += Physics.gravity*m_GravityMultiplier*Time.fixedDeltaTime;
@@ -501,19 +531,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			ProgressStepCycle(speed);
 			UpdateCameraPosition(speed);
 
-			//m_MouseLook.UpdateCursorLock();
-
-			//currentVisibleObjects = SimUtil.GetAllVisibleSimObjs (m_Camera, MaxDistance);
-
 		}
-
-        //don't need jump sound for now
-		
-		//private void PlayJumpSound()
-		//{
-	//		m_AudioSource.clip = m_JumpSound;
-//			m_AudioSource.Play();
-//		}
 
 
 
@@ -620,3 +638,33 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		}
 	}
 }
+
+//SimObj[] simObjects = GameObject.FindObjectsOfType (typeof(SimObj)) as SimObj[];
+
+
+//          if (pickupObject) {
+//              GameObject hand = GameObject.Find ("FirstPersonHand");
+//
+//              foreach (SimObj so in simObjects) {
+//                  if (so.UniqueID == "Lettuce|+01.36|+00.99|+00.79") {
+//                      Rigidbody rb = so.GetComponentInChildren (typeof(Rigidbody)) as Rigidbody;
+//                      rb.useGravity = false;
+//                      so.transform.position = hand.transform.position;
+//                      so.transform.parent = this.transform;
+//                      so.transform.parent = m_CharacterController.transform;
+//                      
+//                  }
+//              }
+//              Vector3 target = new Vector3 (hand.transform.position.x - 0.5f, hand.transform.position.y, hand.transform.position.z);
+//              hand.transform.position = Vector3.MoveTowards (hand.transform.position, target, 0.01f);
+//          } else {
+//              foreach (SimObj so in simObjects) {
+//                  if (so.UniqueID == "Lettuce|+01.36|+00.99|+00.79") {
+//                      Rigidbody rb = so.GetComponentInChildren (typeof(Rigidbody)) as Rigidbody;
+//                      rb.useGravity = true;
+//                      so.transform.parent = null;
+//
+//                  }
+//              }
+//          }
+//
