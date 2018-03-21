@@ -457,6 +457,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
         private void PutObject_ray(string item)
         {
+
             int x = Screen.width / 2;
             int y = Screen.height / 2;
             Ray ray = m_Camera.GetComponent<Camera>().ScreenPointToRay(new Vector3(x, y));
@@ -465,11 +466,33 @@ namespace UnityStandardAssets.Characters.FirstPerson
             if (Physics.Raycast(ray, out hit))
             {
 
-                if (SimUtil.AddItemToReceptacle(inventory[current_Object_In_Inventory], hit.transform.GetComponent<Receptacle>()) == false)
-                    Debug.Log("There's no space for that!");
+                //check if the receptacle is in visible range
+                bool inrange = false;
+                //check if the object we are trying to open is in visible range
+                foreach (SimObj o in currentVisibleObjects)
+                {
+                    //check if the ID of the object we are looking at is in array of visible objects
+                    if (hit.transform.GetComponent<SimObj>().UniqueID == o.UniqueID)
+                    {
+                        inrange = true;
+                    }
+                }
 
-                else
-                removeObjectInventory(current_Object_In_Inventory);
+                if (inrange)
+                {
+
+                    if (SimUtil.AddItemToReceptacle(inventory[current_Object_In_Inventory], hit.transform.GetComponent<Receptacle>()) == false)
+                        Debug.Log("There's no space for that!");
+
+                    else
+                        removeObjectInventory(current_Object_In_Inventory);
+                }
+
+                if(!inrange)
+                {
+                    Debug.Log("It's too far away to put stuff in");
+                }
+
 
 
 
@@ -584,6 +607,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
             if(Input.GetKeyDown(KeyCode.Space))
             {
+
+
+
+
                 //is there something in the inventory? if so, place it in the receptacle we are looking at
                 if (isReceptacle && !String.IsNullOrEmpty(current_Object_In_Inventory))
                 {
