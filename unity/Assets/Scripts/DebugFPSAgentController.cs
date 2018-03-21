@@ -223,43 +223,76 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
         }
 
-		protected bool openSimObj(SimObj so) 
+		protected void openSimObj(SimObj so) 
         {
-  
-               // return updateAnimState(so.Animator, true);
-            bool res = false;
-            if (OPEN_CLOSE_STATES.ContainsKey(so.Type))
+            bool inrange = false;
+            //check if the object we are trying to open is in visible range
+            foreach(SimObj o in currentVisibleObjects) 
             {
-                res = updateAnimState(so.Animator, OPEN_CLOSE_STATES[so.Type]["open"]);
-
+                //check if the ID of the object we are looking at is in array of visible objects
+                if(so.UniqueID == o.UniqueID)
+                {
+                    inrange = true;
+                }
             }
 
-            else if (so.IsAnimated)
+            if(inrange)
             {
-                res = updateAnimState(so.Animator, true);
+                bool res = false;
+                if (OPEN_CLOSE_STATES.ContainsKey(so.Type))
+                {
+                    res = updateAnimState(so.Animator, OPEN_CLOSE_STATES[so.Type]["open"]);
+
+                }
+
+                else if (so.IsAnimated)
+                {
+                    res = updateAnimState(so.Animator, true);
+                }
+
+                //return res;
             }
 
-            return res;
+            if(!inrange)
+            {
+                Debug.Log("Target out of range!");
+            }
+
    
 		}
 
-        protected bool closeSimObj(SimObj so)
+        protected void closeSimObj(SimObj so)
         {
       
-                //res = updateAnimState (so.Animator, false);
-                //return updateAnimState(so.Animator, false);
-
-            bool res = false;
-            if (OPEN_CLOSE_STATES.ContainsKey(so.Type))
+            bool inrange = false;
+            //check if the object we are trying to open is in visible range
+            foreach (SimObj o in currentVisibleObjects)
             {
-                res = updateAnimState(so.Animator, OPEN_CLOSE_STATES[so.Type]["close"]);
-            }
-            else if (so.IsAnimated)
-            {
-                res = updateAnimState(so.Animator, false);
+                //check if the ID of the object we are looking at is in array of visible objects
+                if (so.UniqueID == o.UniqueID)
+                {
+                    inrange = true;
+                }
             }
 
-            return res;
+
+            if (inrange)
+            {
+                bool res = false;
+                if (OPEN_CLOSE_STATES.ContainsKey(so.Type))
+                {
+                    res = updateAnimState(so.Animator, OPEN_CLOSE_STATES[so.Type]["close"]);
+                }
+                else if (so.IsAnimated)
+                {
+                    res = updateAnimState(so.Animator, false);
+                }
+            }
+
+            if (!inrange)
+            {
+                Debug.Log("Target out of range!");
+            }
 
         }
 
@@ -347,7 +380,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     //All openable items have a Receptacle component
                     if(hit.transform.GetComponent<Receptacle>())
                     {
-                        //print("this is a receptacle");
+                        print("this is a receptacle");
                         isReceptacle = true;
                     }
 
@@ -771,32 +804,3 @@ namespace UnityStandardAssets.Characters.FirstPerson
 	}
 }
 
-//SimObj[] simObjects = GameObject.FindObjectsOfType (typeof(SimObj)) as SimObj[];
-
-
-//          if (pickupObject) {
-//              GameObject hand = GameObject.Find ("FirstPersonHand");
-//
-//              foreach (SimObj so in simObjects) {
-//                  if (so.UniqueID == "Lettuce|+01.36|+00.99|+00.79") {
-//                      Rigidbody rb = so.GetComponentInChildren (typeof(Rigidbody)) as Rigidbody;
-//                      rb.useGravity = false;
-//                      so.transform.position = hand.transform.position;
-//                      so.transform.parent = this.transform;
-//                      so.transform.parent = m_CharacterController.transform;
-//                      
-//                  }
-//              }
-//              Vector3 target = new Vector3 (hand.transform.position.x - 0.5f, hand.transform.position.y, hand.transform.position.z);
-//              hand.transform.position = Vector3.MoveTowards (hand.transform.position, target, 0.01f);
-//          } else {
-//              foreach (SimObj so in simObjects) {
-//                  if (so.UniqueID == "Lettuce|+01.36|+00.99|+00.79") {
-//                      Rigidbody rb = so.GetComponentInChildren (typeof(Rigidbody)) as Rigidbody;
-//                      rb.useGravity = true;
-//                      so.transform.parent = null;
-//
-//                  }
-//              }
-//          }
-//
