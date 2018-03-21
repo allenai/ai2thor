@@ -78,28 +78,42 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 		#if UNITY_EDITOR
 		//used to show what's currently visible
-		void OnGUI () {
-			if (currentVisibleObjects != null) {
-				if (currentVisibleObjects.Length > 10) {
+		void OnGUI () 
+        {
+			if (currentVisibleObjects != null) 
+            {
+				if (currentVisibleObjects.Length > 10) 
+                {
 					int horzIndex = -1;
 					GUILayout.BeginHorizontal ();
-					foreach (SimObj o in currentVisibleObjects) {
+					foreach (SimObj o in currentVisibleObjects) 
+                    {
 						horzIndex++;
-						if (horzIndex >= 3) {
+						if (horzIndex >= 3) 
+                        {
 							GUILayout.EndHorizontal ();
 							GUILayout.BeginHorizontal ();
 							horzIndex = 0;
 						}
 						GUILayout.Button (o.UniqueID, UnityEditor.EditorStyles.miniButton, GUILayout.MaxWidth (200f));
 					}
+
 					GUILayout.EndHorizontal ();
-				} else {
+				}
+
+                else 
+                {
 					Plane[] planes = GeometryUtility.CalculateFrustumPlanes(m_Camera);
-					foreach (SimObj o in currentVisibleObjects) {
+
+                    int position_number = 0;
+					foreach (SimObj o in currentVisibleObjects) 
+                    {
 						string suffix = "";
 						Bounds bounds = new Bounds (o.gameObject.transform.position, new Vector3 (0.05f, 0.05f, 0.05f));
-						if (GeometryUtility.TestPlanesAABB (planes, bounds)) {
-							suffix += " VISIBLE";
+						if (GeometryUtility.TestPlanesAABB (planes, bounds)) 
+                        {
+                            position_number += 1;
+                            suffix += " VISIBLE: " + "Press '" + position_number + "' to pick up";
 						}
 							
 							
@@ -125,8 +139,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			m_MouseLook.Init(transform , m_Camera.transform);
 
             //grab text object on canvas to update with what is currently targeted by reticle
-           // Target_Text = GameObject.Find("Canvas/TargetText");;
-           // Debug_Canvas = GameObject.Find("Canvas");
+           Target_Text = GameObject.Find("DebugCanvas/TargetText");;
+           Debug_Canvas = GameObject.Find("DebugCanvas");
+           Inventory_Text = GameObject.Find("DebugCanvas/InventoryText");
 
 
             //if this component is enabled, turn on the targeting reticle and target text
@@ -194,7 +209,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
                 //now add to inventory
                 addObjectInventory(item);
-                Inventory_Text.GetComponent<Text>().text = "In Inventory: " + item.UniqueID;
+                Inventory_Text.GetComponent<Text>().text = "In Inventory: " + item.UniqueID + " | Press 'Space' to put in Receptacle";
               
             }
 
@@ -281,16 +296,43 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
         //called on update, constantly shoots rays out to identify SimObjects that can 
         //either be picked up or opened
+
+
+        protected void TryAndPickUp(int i)
+        {
+            if (currentVisibleObjects.Length != 0 && currentVisibleObjects.Length > i)
+            {
+                //grab only pickup objects ,not objects like the sink that are both convertable and a receptacle
+                if (currentVisibleObjects[i].GetComponent<Convertable>() && !currentVisibleObjects[i].GetComponent<Receptacle>())
+                    TakeItem(currentVisibleObjects[i]);
+
+                else
+                    Debug.Log("can't pick " + currentVisibleObjects[i].name + " up!");
+            }
+        }
+
         private void RaycastTarget()
         {
            // raycast from the center of the screen
             int x = Screen.width / 2;
             int y = Screen.height / 2;
             Ray ray = m_Camera.GetComponent<Camera>().ScreenPointToRay(new Vector3(x, y));
+
+            //raycastAll implementation
+            //array of all objects intercepted, sort through the
+
+
+
+
+            /////////////////RaycastHit implementation
+
             RaycastHit hit = new RaycastHit();
+           
+            //int layer = 1 << LayerMask.NameToLayer("Default");
 
             if (Physics.Raycast(ray, out hit))
             {
+                Debug.DrawLine(m_Camera.transform.position, hit.point, Color.red);
                 //check for SimObjects that we are looking at
                 if(hit.transform.tag == "SimObj")
                 {
@@ -312,7 +354,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     //all pickup-able items have a Convertable component
                     if(hit.transform.GetComponent<Convertable>())
                     {
-                        print("able to pick up");
+                       // print("able to pick up");
                         isPickup = true;
                     }
 
@@ -330,6 +372,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 }
 
             }
+
+
         }
 
         private void OpenReceptacle_ray()
@@ -393,7 +437,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
         {
             RaycastTarget();
 
-            //try to open on left click
+            //////MOUSE AND KEYBAORD INPUT///////////////////////////////////////////////////
+            //on left mouse click
             if(Input.GetMouseButtonDown(0))
             {
                 //check if what we are looking at is a receptacle and can be opened
@@ -418,25 +463,91 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
             }
 
+            //on right mouse click
             if(Input.GetMouseButtonDown(1))
             {
 
                 //are we looking at a receptacle and there is something we have picked up?
                 //then place it in the receptacle
-                if (isReceptacle && !String.IsNullOrEmpty(current_Object_In_Inventory))
+               /* if (isReceptacle && !String.IsNullOrEmpty(current_Object_In_Inventory))
                 {
-                    print("place object");
+                    //print("place object");
                     PutObject_ray(current_Object_In_Inventory);
                 }
 
-                else if(isReceptacle)
+                else */if(isReceptacle)
                 {
-                    print("close recept");
+                    //print("close recept");
                     CloseReceptacle_ray();
                 }
 
             }
 
+            //try to pick up an item from the currently visible objects stored in SimObj[] currentVisibleObjects;
+            if(Input.GetKeyDown(KeyCode.Alpha1))
+            {
+                TryAndPickUp(0);
+            }
+
+            if (Input.GetKeyDown(KeyCode.Alpha2))
+            {
+                TryAndPickUp(1);
+            }
+
+            if (Input.GetKeyDown(KeyCode.Alpha3))
+            {
+                TryAndPickUp(2);
+            }
+
+            if (Input.GetKeyDown(KeyCode.Alpha4))
+            {
+                TryAndPickUp(3);
+            }
+
+            if (Input.GetKeyDown(KeyCode.Alpha5))
+            {
+                TryAndPickUp(4);
+            }
+
+            if (Input.GetKeyDown(KeyCode.Alpha6))
+            {
+                TryAndPickUp(5);
+            }
+
+            if (Input.GetKeyDown(KeyCode.Alpha7))
+            {
+                TryAndPickUp(6);
+            }
+
+            if (Input.GetKeyDown(KeyCode.Alpha8))
+            {
+                TryAndPickUp(7);
+            }
+
+            if (Input.GetKeyDown(KeyCode.Alpha9))
+            {
+                TryAndPickUp(8);
+            }
+
+            if (Input.GetKeyDown(KeyCode.Alpha0))
+            {
+                TryAndPickUp(9);
+            }
+
+            if(Input.GetKeyDown(KeyCode.Space))
+            {
+                //is there something in the inventory? if so, place it in the receptacle we are looking at
+                if (isReceptacle && !String.IsNullOrEmpty(current_Object_In_Inventory))
+                {
+                    //print("place object");
+                    PutObject_ray(current_Object_In_Inventory);
+                }
+
+                else
+                    Debug.Log("Inventory Empty!");
+            }
+
+            ///////////////////////////////////////////////////////////////////////////
 			RotateView();
 
 
@@ -468,6 +579,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 			m_PreviouslyGrounded = m_CharacterController.isGrounded;
 		}
+
 
 		protected byte[] captureScreen() 
         {

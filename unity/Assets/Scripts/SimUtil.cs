@@ -35,7 +35,8 @@ public static class SimUtil {
 
 	#region SimObj utility functions
 
-    public static SimObj[] GetAllVisibleSimObjs (Camera agentCamera, float maxDistance) {
+    public static SimObj[] GetAllVisibleSimObjs (Camera agentCamera, float maxDistance) 
+    {
 		#if UNITY_EDITOR
 		if (ShowObjectVisibility) {
 			//set all objects to invisible before starting - THIS IS EXPENSIVE

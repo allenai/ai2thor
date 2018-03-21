@@ -822,17 +822,21 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		public void PutObject(ServerAction response) 
         {
 			bool success = false;
-			if(inventory.ContainsKey(response.objectId)) {
+			if(inventory.ContainsKey(response.objectId)) 
+            {
 
-				foreach (SimObj rso in VisibleSimObjs(response.forceVisible)) {
-					if (rso.IsReceptacle && ( rso.UniqueID == response.receptacleObjectId || rso.Type == response.ReceptableSimObjType())) {
+				foreach (SimObj rso in VisibleSimObjs(response.forceVisible)) 
+                {
+					if (rso.IsReceptacle && ( rso.UniqueID == response.receptacleObjectId || rso.Type == response.ReceptableSimObjType())) 
+                    {
 
 
 						SimObj so = removeObjectInventory (response.objectId);
 			
 						if ((!IsOpenable(rso) || IsOpen(rso)) && 
 							((response.forceVisible && SimUtil.AddItemToReceptacle(so, rso.Receptacle)) || 
-								SimUtil.AddItemToVisibleReceptacle (so, rso.Receptacle, m_Camera))) {
+								SimUtil.AddItemToVisibleReceptacle (so, rso.Receptacle, m_Camera))) 
+                             {
 							success = true;
 						} else {
 							addObjectInventory (so);
