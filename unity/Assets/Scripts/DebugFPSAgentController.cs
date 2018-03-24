@@ -358,6 +358,37 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
             //raycastAll implementation
             //array of all objects intercepted, sort through the
+            RaycastHit[] hits;
+
+            List<string> targetTextList = new List<string>();
+
+            hits = Physics.RaycastAll(m_Camera.transform.position, m_Camera.transform.forward, 10f);
+
+            for (int i = 0; i < hits.Length; i++)
+            {
+                RaycastHit target = hits[i];
+
+                if(target.transform.GetComponent<Receptacle>() || target.transform.GetComponent<Convertable>())
+                {
+                    targetTextList.Add(target.transform.name);
+                }
+
+                else
+                {
+                    targetTextList.Clear();
+                }
+
+            }
+
+            string toDisplay = " ";
+
+            foreach(string txt in targetTextList)
+            {
+                toDisplay = toDisplay.ToString() + txt.ToString() + "\n";
+            }
+
+            Target_Text.GetComponent<Text>().text = toDisplay;
+
 
 
 
@@ -375,7 +406,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 if(hit.transform.tag == "SimObj")
                 {
                     //update text to show what we are looking at
-                    Target_Text.GetComponent<Text>().text = hit.transform.name;
+                   // Target_Text.GetComponent<Text>().text = hit.transform.name;
 
                     //All openable items have a Receptacle component
                     if(hit.transform.GetComponent<Receptacle>())
