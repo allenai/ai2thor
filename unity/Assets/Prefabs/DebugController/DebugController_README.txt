@@ -33,12 +33,12 @@ will be listed under the cursor.
 Only one item can be stored in the inventory at a time. You must have an item in your inventory to place an item in a receptacle (duh)
 
 //Pickup SimObject//
--Alphanumeric 1, 2, 3... 9, 0 - Press to try and pick up object from corresponding list of currently visible objects on top left of screen. 
-                                Which number to press is dictated by the SimObject's position in the array.
+-Alphanumeric 1, 2, 3... 9, 0 - Press to try and pick up object from corresponding list of currently visible objects on top left of screen. Which number to press is dictated by the SimObject's position in the array.
 
+                                
 //Pickup First SimObject//
--Shift + Space - Goes through the array of currently visible objects, then picks up the first sim object able to be placed in inventory encountered in the array.
-                 This is useful for when there are so many SimObjects within visibility that the Alphanumeric inputs start getting overwritten.
+-Shift - Goes through the array of currently visible objects, then picks up the first sim object able to be placed in inventory encountered in the array. This is useful for when there are so many SimObjects within visibility that the Alphanumeric inputs start getting overwritten.
+                
 
 //Place SimObject in Receptacle//
 -Space - Place object currently in inventory in targeted Receptacle under reticle
