@@ -132,7 +132,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		}
 		#endif
 
-        /*
+
         //is object pickupable?
         public bool IsPickupable(SimObj so)
         {
@@ -143,9 +143,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
         public bool IsOpenable(SimObj so)
         {
 
-            return Array.IndexOf(OpenableTypes, so.Type) >= 0 && so.IsAnimated;
+           return Array.IndexOf(OpenableTypes, so.Type) >= 0 && so.IsAnimated;
         }
-        */
+
 
 		// Use this for initialization
 		private void Start()
@@ -449,6 +449,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
             {
                 Debug.DrawLine(m_Camera.transform.position, hit.point, Color.red);
                 //check for SimObjects that we are looking at
+
+
+             
                 if(hit.transform.tag == "SimObj")
                 {
                     //update text to show what we are looking at

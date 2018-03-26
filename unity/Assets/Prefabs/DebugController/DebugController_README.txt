@@ -37,7 +37,7 @@ Only one item can be stored in the inventory at a time. You must have an item in
 
                                 
 //Pickup First SimObject//
--Shift - Goes through the array of currently visible objects, then picks up the first sim object able to be placed in inventory encountered in the array. This is useful for when there are so many SimObjects within visibility that the Alphanumeric inputs start getting overwritten.
+-E - Goes through the array of currently visible objects, then picks up the first sim object able to be placed in inventory encountered in the array. This is useful for when there are so many SimObjects within visibility that the Alphanumeric inputs start getting overwritten.
                 
 
 //Place SimObject in Receptacle//
