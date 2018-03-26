@@ -40,6 +40,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 		private Dictionary<string, SimObj> inventory = new Dictionary<string, SimObj>();
 
+        protected DebugFPSAgentController DebugComponent = null;
+        protected Canvas DebugCanvas = null;
+
 		// Initialize parameters from environment variables
 		protected override void Awake() {
 			// load config parameters from the server side
@@ -51,6 +54,11 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 			base.Awake ();
 
+            DebugCanvas = GameObject.Find("DebugCanvas").GetComponent<Canvas>();
+            DebugComponent = this.GetComponent<DebugFPSAgentController>();
+
+            DebugCanvas.enabled = false;
+            DebugComponent.enabled = false;
 		}
 
 		protected override void actionFinished(bool success) {
@@ -72,6 +80,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			m_Camera.transform.localEulerAngles = new Vector3 (0.0f, 0.0f, 0.0f);
 			//startingHandPosition = getHand ().transform.localPosition;
 			snapToGrid ();
+
+
 
 		}
 
@@ -329,6 +339,17 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 emitState = emitStates.Wait;
 				StartCoroutine (EmitFrame ());
 			}
+
+
+		}
+
+		public void Update()
+		{
+            if (Input.GetKeyDown(KeyCode.BackQuote))
+            {
+                DebugCanvas.enabled = true;
+                DebugComponent.enabled = true;
+            }
 		}
 
 

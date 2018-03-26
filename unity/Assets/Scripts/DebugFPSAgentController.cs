@@ -74,6 +74,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
         //inventory to store picked up objects
         private Dictionary<string, SimObj> inventory = new Dictionary<string, SimObj>();
 
+        //what things are openable or not, used to determine if pickupable
+        protected SimObjType[] OpenableTypes = new SimObjType[] { SimObjType.Fridge, SimObjType.Cabinet, SimObjType.Microwave, SimObjType.LightSwitch, SimObjType.Blinds, SimObjType.Book, SimObjType.Toilet };
+        protected SimObjType[] ImmobileTypes = new SimObjType[] { SimObjType.Chair, SimObjType.Toaster, SimObjType.CoffeeMachine, SimObjType.Television, SimObjType.StoveKnob };
 
 
 		#if UNITY_EDITOR
@@ -114,7 +117,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         {
                             position_number += 1;
 
-                            if (o.GetComponent<Convertable>() && !o.GetComponent<Receptacle>())
+                            if (o.GetComponent<SimObj>().Manipulation == SimObjManipType.Inventory)
                                 suffix += " VISIBLE: " + "Press '" + position_number + "' to pick up";
 
                             else
@@ -128,6 +131,21 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			}
 		}
 		#endif
+
+        /*
+        //is object pickupable?
+        public bool IsPickupable(SimObj so)
+        {
+            return !IsOpenable(so) && !so.IsReceptacle && !(Array.IndexOf(ImmobileTypes, so.Type) >= 0);
+        }
+
+        //is object openable?
+        public bool IsOpenable(SimObj so)
+        {
+
+            return Array.IndexOf(OpenableTypes, so.Type) >= 0 && so.IsAnimated;
+        }
+        */
 
 		// Use this for initialization
 		private void Start()
@@ -198,6 +216,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
         //take a pickupable item, place in inventory if inventory is not full
         protected void TakeItem(SimObj item)
         {
+
+           // print(item.Manipulation);
+
             //check so we only have one item in the inventory at a time
             if (inventory.Count == 0)
             {
@@ -257,7 +278,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
             if(!inrange)
             {
-                Debug.Log("Target out of range!");
+                
+                Debug.Log("This SimObj can't be opened!");
               //  return res;
 
             }
@@ -348,8 +370,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
         {
             if (currentVisibleObjects.Length != 0 && currentVisibleObjects.Length > i)
             {
-                //grab only pickup objects ,not objects like the sink that are both convertable and a receptacle
-                if (currentVisibleObjects[i].GetComponent<Convertable>() && !currentVisibleObjects[i].GetComponent<Receptacle>())
+                //grab only pickup objects with the inventory manip type
+                if (currentVisibleObjects[i].GetComponent<SimObj>().Manipulation == SimObjManipType.Inventory)//(IsPickupable(currentVisibleObjects[i]))//
                     TakeItem(currentVisibleObjects[i]);
 
                 else
@@ -363,7 +385,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
         {
             for (int i = 0; i < currentVisibleObjects.Length; i++)
             {
-                if (currentVisibleObjects[i].GetComponent<Convertable>() && !currentVisibleObjects[i].GetComponent<Receptacle>())
+                if (currentVisibleObjects[i].GetComponent<SimObj>().Manipulation == SimObjManipType.Inventory)
+                    //(IsPickupable(currentVisibleObjects[i]))//
                     TakeItem(currentVisibleObjects[i]);
 
                 else
@@ -391,7 +414,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             {
                 RaycastHit target = hits[i];
 
-                if(target.transform.GetComponent<Receptacle>() || target.transform.GetComponent<Convertable>())
+                if(target.transform.GetComponent<SimObj>())//((target.transform.GetComponent<Receptacle>() && target.transform.GetComponent<Receptacle>().isActiveAndEnabled) || (target.transform.GetComponent<Convertable>() && target.transform.GetComponent<Convertable>().isActiveAndEnabled))
                 {
                     targetTextList.Add(target.transform.name);
                 }
@@ -444,7 +467,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     }
 
                     //all pickup-able items have a Convertable component
-                    if(hit.transform.GetComponent<Convertable>())
+                    if(hit.transform.GetComponent<SimObj>().Manipulation == SimObjManipType.Inventory)//(hit.transform.GetComponent<Convertable>())
                     {
                        // print("able to pick up");
                         isPickup = true;
@@ -660,7 +683,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 TryAndPickUp(9);
             }
 
-            if(Input.GetKey(KeyCode.Space) && Input.GetKey(KeyCode.LeftShift))
+            if(Input.GetKey(KeyCode.E))
             {
                 TryAndPickUp_All();
             }
