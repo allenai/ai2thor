@@ -223,7 +223,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
         }
 
-		protected void openSimObj(SimObj so) 
+		protected bool openSimObj(SimObj so) 
         {
             bool inrange = false;
             //check if the object we are trying to open is in visible range
@@ -236,9 +236,11 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 }
             }
 
+            bool res = false;
+
             if(inrange)
             {
-                bool res = false;
+                
                 if (OPEN_CLOSE_STATES.ContainsKey(so.Type))
                 {
                     res = updateAnimState(so.Animator, OPEN_CLOSE_STATES[so.Type]["open"]);
@@ -250,18 +252,22 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     res = updateAnimState(so.Animator, true);
                 }
 
-                //return res;
+               // return res;
             }
 
             if(!inrange)
             {
                 Debug.Log("Target out of range!");
+              //  return res;
+
             }
+
+            return res;
 
    
 		}
 
-        protected void closeSimObj(SimObj so)
+        protected bool closeSimObj(SimObj so)
         {
       
             bool inrange = false;
@@ -275,10 +281,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 }
             }
 
-
+            bool res = false;
             if (inrange)
             {
-                bool res = false;
+                
                 if (OPEN_CLOSE_STATES.ContainsKey(so.Type))
                 {
                     res = updateAnimState(so.Animator, OPEN_CLOSE_STATES[so.Type]["close"]);
@@ -294,6 +300,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 Debug.Log("Target out of range!");
             }
 
+            return res;
         }
 
         ///overloaded updateAnimState
@@ -335,12 +342,27 @@ namespace UnityStandardAssets.Characters.FirstPerson
         //called on update, constantly shoots rays out to identify SimObjects that can 
         //either be picked up or opened
 
-
+        //pick up item in specific position in list of visible objects
+        //this doesn't work great when there are so many visible objects that the list of visible objects overflows, use TryAndPickUp_All for that
         protected void TryAndPickUp(int i)
         {
             if (currentVisibleObjects.Length != 0 && currentVisibleObjects.Length > i)
             {
                 //grab only pickup objects ,not objects like the sink that are both convertable and a receptacle
+                if (currentVisibleObjects[i].GetComponent<Convertable>() && !currentVisibleObjects[i].GetComponent<Receptacle>())
+                    TakeItem(currentVisibleObjects[i]);
+
+                else
+                    Debug.Log("can't pick " + currentVisibleObjects[i].name + " up!");
+            }
+        }
+
+        //loops through current array of visible objects and picks up the first Convertable component found.
+        //useful for when there are so many visible objects in array, it overflows and the alphanumeric pickup key inputs become wonky
+        protected void TryAndPickUp_All()
+        {
+            for (int i = 0; i < currentVisibleObjects.Length; i++)
+            {
                 if (currentVisibleObjects[i].GetComponent<Convertable>() && !currentVisibleObjects[i].GetComponent<Receptacle>())
                     TakeItem(currentVisibleObjects[i]);
 
@@ -356,8 +378,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
             int y = Screen.height / 2;
             Ray ray = m_Camera.GetComponent<Camera>().ScreenPointToRay(new Vector3(x, y));
 
-            //raycastAll implementation
-            //array of all objects intercepted, sort through the
+            //Casts raycast through all objects under reticle, sorts through them to see if
+            //they are sim objects or not, if they are either a receptacle or a pickup, show the name
+
             RaycastHit[] hits;
 
             List<string> targetTextList = new List<string>();
@@ -411,7 +434,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     //All openable items have a Receptacle component
                     if(hit.transform.GetComponent<Receptacle>())
                     {
-                        print("this is a receptacle");
+                        //print("this is a receptacle");
                         isReceptacle = true;
                     }
 
@@ -435,6 +458,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
                 else
                 {
+                    //if no sim objects are under the reticle, show no text
                     Target_Text.GetComponent<Text>().text = " ";
                     isReceptacle = false;
                     isPickup = false;
@@ -636,16 +660,17 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 TryAndPickUp(9);
             }
 
+            if(Input.GetKey(KeyCode.Space) && Input.GetKey(KeyCode.LeftShift))
+            {
+                TryAndPickUp_All();
+            }
+
             if(Input.GetKeyDown(KeyCode.Space))
             {
-
-
-
 
                 //is there something in the inventory? if so, place it in the receptacle we are looking at
                 if (isReceptacle && !String.IsNullOrEmpty(current_Object_In_Inventory))
                 {
-                    //print("place object");
                     PutObject_ray(current_Object_In_Inventory);
                 }
 
@@ -671,7 +696,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			// the jump state needs to read here to make sure it is not missed
 			if (!m_Jump)
 			{
-				m_Jump = CrossPlatformInputManager.GetButtonDown("Jump");
+				//m_Jump = CrossPlatformInputManager.GetButtonDown("Jump");
 			}
 
 			if (!m_PreviouslyGrounded && m_CharacterController.isGrounded)

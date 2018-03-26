@@ -85,8 +85,7 @@ namespace UnityStandardAssets.CrossPlatformInput.Inspector
             {
                 BuildTargetGroup.Standalone,
                 BuildTargetGroup.Android,
-                BuildTargetGroup.iOS,
-                BuildTargetGroup.WSA
+                BuildTargetGroup.iOS
             };
 
         private static BuildTargetGroup[] mobileBuildTargetGroups = new BuildTargetGroup[]
@@ -94,7 +93,6 @@ namespace UnityStandardAssets.CrossPlatformInput.Inspector
                 BuildTargetGroup.Android,
                 BuildTargetGroup.iOS,
                 BuildTargetGroup.PSM, 
-                //BuildTargetGroup.SamsungTV,
                 BuildTargetGroup.Tizen,
                 BuildTargetGroup.WSA 
             };
