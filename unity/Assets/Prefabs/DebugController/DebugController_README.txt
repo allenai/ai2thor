@@ -1,9 +1,9 @@
 Debug FPX Agent Controller
 
 Scene Setup:
-1) Enable the DebugFPSAgentController script on the FPS Controller in the scene
-2) Disable the DiscreteRemoteFPSAgentController script
-3) make sure the “DebugCanvas” prefab is in the scene and enabled
+1) Make sure the <DebugFPSAgentController> script is on the FPS Controller
+2) Make sure the DebugCanvas prefab is in the scene
+3) Press "~" ingame to activate Debug Controller
 
 Controls:
 
