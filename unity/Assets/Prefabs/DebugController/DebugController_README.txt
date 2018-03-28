@@ -1,5 +1,11 @@
 Debug FPX Agent Controller
 
+Debug Controller Notes:
+
+All game SimObjects that are either Receptacles or Pickupable will have their name shown when under the reticle. This means you might see multiple instances of "Fridge" since the raycast is piercing multiple parts of the fridge at the same time.
+
+
+
 Scene Setup:
 1) Make sure the <DebugFPSAgentController> script is on the FPS Controller
 2) Make sure the DebugCanvas prefab is in the scene
@@ -10,21 +16,19 @@ Controls:
 ////MOVEMENT////
 
 //Target//
--Mouse to look at things with the Reticle
+-Mouse to look at things with the Reticle -Point central reticle at objects to see if they are sim objects. Receptacles and Pickups under the reticle
+will be listed under the cursor.
 
 //Move//
 -WASD to move
 
--Point central reticle at objects to see if they are sim objects. Receptacles and Pickups under the reticle
-will be listed under the cursor.
-
 ////RECEPTACLES////
 
 //Open//
--Left Click - Open targeted Receptacle
+-Left Click - Open Receptacle under cursor
 
 //Close//
--Right Click - Close targeted Receptacle
+-Right Click - Close Receptacle under cursor
 
 -An "Out of Range" debug error will appear if Receptacle under reticle is too far away
 
@@ -42,3 +46,10 @@ Only one item can be stored in the inventory at a time. You must have an item in
 
 //Place SimObject in Receptacle//
 -Space - Place object currently in inventory in targeted Receptacle under reticle
+
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////
+
+Other Debug Notes:
+If you edit an object's text fields, sometimes the scene will not save if you only edit those fields. Grab a random object and wiggle it a little, that will make Unity see something in the scene has actually changed, and then all changes will save.
