@@ -1,5 +1,6 @@
 // Copyright Allen Institute for Artificial Intelligence 2017
 
+//Check Assets/Prefabs/DebugController for ReadMe on how to use this Debug Controller
 using UnityEngine;
 
 using Random = UnityEngine.Random;
@@ -178,7 +179,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 Cursor.lockState = CursorLockMode.Locked;
             }
 
-
+            
 		}
 
         //add object to the inventory
