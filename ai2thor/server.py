@@ -21,14 +21,13 @@ except ImportError:
 
 import time
 
-from flask import Flask, request, make_response, abort
+from flask import Flask, request, make_response, abort, Response
 import werkzeug.serving
 from PIL import Image
 import numpy as np
 
 LOG = logging.getLogger('werkzeug')
 LOG.setLevel(logging.ERROR)
-
 
 # get with timeout to allow quit
 def queue_get(que):
@@ -57,7 +56,7 @@ class Event(object):
 
 class Server(object):
 
-    def __init__(self, request_queue, response_queue, host, port=0):
+    def __init__(self, request_queue, response_queue, host, port=0, threaded=False):
 
         app = Flask(__name__,
                     template_folder=os.path.realpath(
@@ -75,9 +74,40 @@ class Server(object):
         self.frame_counter = 0
         self.debug_frames_per_interval = 50
         self.xwindow_id = None
-        self.wsgi_server = werkzeug.serving.BaseWSGIServer(host, self.port, self.app)
+        self.wsgi_server = werkzeug.serving.make_server(host, self.port, self.app, threaded=threaded)
         # used to ensure that we are receiving frames for the action we sent
         self.sequence_id = 0
+        self.last_event = None
+
+        def stream_gen():
+            while True:
+                event = self.last_event
+                if event:
+                    time.sleep(0.02)
+                    yield (b'--frame\r\n' + b'Content-Type: image/png\r\n\r\n' + event.image + b'\r\n')
+
+        @app.route('/stream', methods=['get'])
+        def stream():
+            return Response(stream_gen(),
+                mimetype='multipart/x-mixed-replace; boundary=frame')
+
+        @app.route('/viewer', methods=['get'])
+        def viewer():
+            html = """
+<html>
+  <head>
+    <title></title>
+    <script>
+  </head>
+  <body>
+    <img id="image" src="/stream">
+  </body>
+</html>
+<html
+"""
+            return make_response(html)
+
+
 
         @app.route('/ping', methods=['get'])
         def ping():
@@ -105,7 +135,7 @@ class Server(object):
             image = request.files['image']
             image_data = image.read()
 
-            event = Event(metadata, image_data)
+            self.last_event = event = Event(metadata, image_data)
             request_queue.put_nowait(event)
             self.frame_counter += 1
 
