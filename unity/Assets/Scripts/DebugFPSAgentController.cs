@@ -459,7 +459,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                    // Target_Text.GetComponent<Text>().text = hit.transform.name;
 
                     //All openable items have a Receptacle component
-                    if(hit.transform.GetComponent<Receptacle>())
+                    if(hit.transform.GetComponent<Receptacle>() && hit.transform.GetComponent<Receptacle>() != null)
                     {
                         //print("this is a receptacle");
                         isReceptacle = true;
@@ -471,7 +471,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     }
 
                     //all pickup-able items have a Convertable component
-                    if(hit.transform.GetComponent<SimObj>().Manipulation == SimObjManipType.Inventory)//(hit.transform.GetComponent<Convertable>())
+                    if(hit.transform.GetComponent<SimObj>().Manipulation == SimObjManipType.Inventory && hit.transform.GetComponent<SimObj>() != null)//(hit.transform.GetComponent<Convertable>())
                     {
                        // print("able to pick up");
                         isPickup = true;
@@ -737,7 +737,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
 				m_MoveDir.y = 0f;
 			}
 
-			currentVisibleObjects = SimUtil.GetAllVisibleSimObjs (m_Camera, MaxDistance);
+            //populate array of what objects are visible
+            currentVisibleObjects = SimUtil.GetAllVisibleSimObjs(m_Camera, MaxDistance);
 
 
 			m_PreviouslyGrounded = m_CharacterController.isGrounded;
