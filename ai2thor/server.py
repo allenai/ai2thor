@@ -11,6 +11,7 @@ import datetime
 import io
 import json
 import logging
+import sys
 import os
 import os.path
 
@@ -22,13 +23,13 @@ except ImportError:
 import time
 
 from flask import Flask, request, make_response, abort, Response
+import werkzeug
 import werkzeug.serving
 import werkzeug.http
 import numpy as np
 from PIL import Image
 
-LOG = logging.getLogger('werkzeug')
-LOG.setLevel(logging.ERROR)
+logging.getLogger('werkzeug').setLevel(logging.ERROR)
 
 # get with timeout to allow quit
 def queue_get(que):
@@ -53,13 +54,19 @@ class Event(object):
         self.metadata = metadata
         width = metadata['screenWidth']
         height = metadata['screenHeight']
-        self.frame = np.flip(np.frombuffer(image_data, dtype=np.uint8).reshape(width, height, 3), axis=0)
+        if sys.version_info.major < 3:
+            # support for Python 2.7 - can't handle memoryview in Python2.7 and Numpy frombuffer
+            self.frame = np.flip(np.frombuffer(image_data.tobytes(), dtype=np.uint8).reshape(width, height, 3), axis=0)
+        else:
+            self.frame = np.flip(np.frombuffer(image_data, dtype=np.uint8).reshape(width, height, 3), axis=0)
+
     def cv2image(self):
         return self.frame[...,::-1]
 
 
 class MultipartFormParser(object):
 
+    @staticmethod
     def get_boundary(request_headers):
         for h, value in request_headers:
             if h == 'Content-Type':
