@@ -470,7 +470,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         isReceptacle = false;
                     }
 
-                    //all pickup-able items have a Convertable component
+                    //all pickup-able items are of type inventory
                     if(hit.transform.GetComponent<SimObj>().Manipulation == SimObjManipType.Inventory && hit.transform.GetComponent<SimObj>() != null)//(hit.transform.GetComponent<Convertable>())
                     {
                        // print("able to pick up");
