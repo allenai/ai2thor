@@ -2,7 +2,7 @@ Debug FPX Agent Controller
 
 Debug Controller Notes:
 
-All game SimObjects that are either Receptacles or Pickupable will have their name shown when under the reticle. This means you might see multiple instances of "Fridge" since the raycast is piercing multiple parts of the fridge at the same time.
+All game SimObjects that are either Receptacles or Pickupable will have their name shown when under the reticle. This is determined by the SimObjManipType. This means you might see multiple instances of "Fridge" since the raycast is piercing multiple parts of the fridge at the same time.
 
 
 
@@ -52,4 +52,4 @@ Only one item can be stored in the inventory at a time. You must have an item in
 /////////////////////////////////////////////////////////////////////////////////////////////////////
 
 Other Debug Notes:
-If you edit an object's text fields, sometimes the scene will not save if you only edit those fields. Grab a random object and wiggle it a little, that will make Unity see something in the scene has actually changed, and then all changes will save.
+If you edit an object's text fields, sometimes the scene will not save if you only edit ONLY those fields. Grab a random object and wiggle it a little, that will make Unity see something in the scene has actually changed, and then all changes will save.
