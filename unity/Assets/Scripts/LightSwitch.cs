@@ -40,17 +40,24 @@ public class LightSwitch : MonoBehaviour {
 		}
 	}
 	
-	void Update () {
+	void Update () 
+    {
+        //print(SourceRenderers.Length);
+
 		bool on = EditorOn;
-		if (Application.isPlaying) {
+		if (Application.isPlaying) 
+        {
 			on = ParentObj.Animator.GetBool ("AnimState1");
 		}
 
-		for (int i = 0; i < Lights.Length; i++) {
+		for (int i = 0; i < Lights.Length; i++) 
+        {
 			Lights [i].enabled = on;
 		}
 
-		for (int i = 0; i < SourceRenderers.Length; i++) {
+		for (int i = 0; i < SourceRenderers.Length; i++) 
+        {
+          //  print(i);
 			Material[] sharedMats = SourceRenderers [i].sharedMaterials;
 			sharedMats [SourceMatIndexes [i]] = on ? OnMaterial : OffMaterial;
 			SourceRenderers [i].sharedMaterials = sharedMats;
