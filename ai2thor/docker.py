@@ -35,8 +35,10 @@ def xorg_bus_id():
 
     return bus_id
 
+
 def has_docker():
-    return subprocess.call(['which', 'docker']) == 0
+    with open(os.devnull, "w") as dn:
+        return subprocess.call(['which', 'docker'], stdout=dn) == 0
 
 
 def bridge_gateway():
@@ -68,7 +70,7 @@ def generate_dockerfile(tag):
 
     dockerfile = """
 FROM ai2thor/ai2thor-base:{tag}
-RUN wget -q {driver_url} -P /root/
+RUN wget {driver_url} -P /root/
 RUN sh /root/{driver_filename} -s --no-kernel-module
 """.format(driver_filename=driver_filename, driver_url=driver_url, tag=tag)
 

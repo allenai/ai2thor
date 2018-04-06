@@ -31,6 +31,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		private SimObj currentMaskObj;
 		private SimObj currentHandSimObj;
 		private static float gridSize = 0.25f;
+		private Texture2D tex;
 
 
 		private enum emitStates {Send, Wait, Received};
@@ -51,6 +52,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 			serverSideScreenshot = LoadBoolVariable (serverSideScreenshot, "SERVER_SIDE_SCREENSHOT");
 			robosimsClientToken = LoadStringVariable (robosimsClientToken, "CLIENT_TOKEN");
+			tex = new Texture2D(UnityEngine.Screen.width, UnityEngine.Screen.height, TextureFormat.RGB24, false);
 
 			base.Awake ();
 
@@ -158,20 +160,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			}
 		}
 
-		protected override byte[] captureScreen() {
-			int width = Screen.width;
-			int height = Screen.height;
-			Texture2D tex = new Texture2D(width, height, TextureFormat.RGB24, false);
-
-			// read screen contents into the texture
-			tex.ReadPixels(new Rect(0, 0, width, height), 0, 0);
-			tex.Apply();
-
-			// encode texture into JPG - XXX SHOULD SET QUALITY
-			byte[] bytes = tex.EncodeToPNG();
-			Destroy(tex);
-			return bytes;
-		}
 
 
 		// Check if agent is moving
@@ -467,25 +455,24 @@ namespace UnityStandardAssets.Characters.FirstPerson
 				// create a texture the size of the screen, RGB24 format
 				int width = Screen.width;
 				int height = Screen.height;
-				Texture2D tex = new Texture2D(width, height, TextureFormat.RGB24, false);
 
 				// read screen contents into the texture
 				tex.ReadPixels(new Rect(0, 0, width, height), 0, 0);
 				tex.Apply();
 
-				// encode texture into JPG - XXX SHOULD SET QUALITY
-				byte[] bytes = tex.EncodeToPNG();
-				Destroy(tex);
-				form.AddBinaryData("image", bytes, "frame-" + frameCounter.ToString().PadLeft(7, '0') + ".png", "image/png");
-			}
 
+				byte[] bytes = tex.GetRawTextureData();
+			
+				
+				form.AddBinaryData("image", bytes, "frame-" + frameCounter.ToString().PadLeft(7, '0') + ".png", "image/raw-rgb");
+
+			}
 			// for testing purposes, also write to a file in the project folder
 			// File.WriteAllBytes(Application.dataPath + "/Screenshots/SavedScreen" + frameCounter.ToString() + ".png", bytes);
 			// Debug.Log ("Frame Bytes: " + bytes.Length.ToString());
 			//string img_str = System.Convert.ToBase64String (bytes);
 			form.AddField("metadata", JsonUtility.ToJson(metaMessage));
 			form.AddField("token", robosimsClientToken);
-
 			WWW w = new WWW ("http://" + robosimsHost + ":" + robosimsPort + "/train", form);
 			yield return w;
 
