@@ -27,4 +27,4 @@ EOF
 Xorg -noreset -logverbose -logfile xorg.log -config /root/xorg.conf :0&
 sleep 1
 # x11vnc -display :0 -rfbauth /root/.vnc/passwd&
-DISPLAY=:0.0 /root/thor-$AI2THOR_VERSION-Linux64/thor-$AI2THOR_VERSION-Linux64
+DISPLAY=:0.0 /root/thor-$AI2THOR_VERSION-Linux64/thor-$AI2THOR_VERSION-Linux64 -screen-height $AI2THOR_SCREEN_HEIGHT -screen-width $AI2THOR_SCREEN_WIDTH
