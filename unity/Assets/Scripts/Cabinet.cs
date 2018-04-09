@@ -44,9 +44,9 @@ public class Cabinet : MonoBehaviour
     Vector3 drawerVisColScale;    //Drawer's visibility collider scale if open or closed
 
     public Vector3 ClosedVisColPosition = new Vector3(0f, 0f, 0f); //Drawer's visibility collider position if CLOSED
-    public Vector3 ClosedVisColScale = new Vector3(1f, 1f, 0.2f); //drawer's visiblity collider scale if CLOSED
+    public Vector3 ClosedVisColScale = new Vector3(1f, 1f, 1f); //drawer's visiblity collider scale if CLOSED
 
-    public Vector3 OpenVisColPosition = new Vector3(0f, 0f, -0.17f); //drawer's visibility collider position if OPEN
+    public Vector3 OpenVisColPosition = new Vector3(0f, 0f, 0f); //drawer's visibility collider position if OPEN
     public Vector3 OpenVisColScale = new Vector3(1f, 1f, 1f); //drawer's visiiblity collider scale if OPEN
 
 	//bool lastOpen = false;
