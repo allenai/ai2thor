@@ -7,7 +7,7 @@ using UnityEngine.SceneManagement;
 
 public static class SimUtil {
 
-	//how fast smooth-animated drawers / cabinets / etc animate
+	//how fast smooth-animated s / cabinets / etc animate
 	public const float SmoothAnimationSpeed = 0.5f;
 
 	public const int RaycastVisibleLayer = 8;
@@ -21,7 +21,7 @@ public static class SimUtil {
 	public const float ViewPointRangeLow = 0f;
 	public const int VisibilityCheckSteps = 10;
 
-	public const float DownwardRangeExtension = 1.45f;
+    public const float DownwardRangeExtension = 2.0f;//1.45f; changes this so the agent can see low enough to open all drawers
 	public const float MinDownwardLooKangle = 15f;
 	public const float MaxDownwardLookAngle = 60f;
 

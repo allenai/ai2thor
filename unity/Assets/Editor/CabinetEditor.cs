@@ -64,29 +64,71 @@ public class CabinetEditor : Editor
 			c.DrawerDoor = (Transform)EditorGUILayout.ObjectField ("Drawer", c.DrawerDoor, typeof(Transform), true);
 			c.OpenLocalPosition = EditorGUILayout.Vector3Field ("Open Position (local)", c.OpenLocalPosition);
 			c.ClosedLocalPosition = EditorGUILayout.Vector3Field ("Closed Position (local)", c.ClosedLocalPosition);
+
+            //visibility collider needs to change scale and position if drawer is open or closed
+            c.VisCollider = (Transform)EditorGUILayout.ObjectField("Visibility Collider", c.VisCollider, typeof(Transform), true);
+
+                //open position and scale for the visibility collider, set this manually in editor
+                c.OpenVisColPosition = EditorGUILayout.Vector3Field("Visibility Collider Open Position (local)", c.OpenVisColPosition);
+                c.OpenVisColScale = EditorGUILayout.Vector3Field("Visibility Collider Open Scale (local)", c.OpenVisColScale);
+                //closed position and scale for visibility collider, set this manually in editor
+                c.ClosedVisColPosition = EditorGUILayout.Vector3Field("Visibility Collider Closed Position (local)", c.ClosedVisColPosition);
+                c.ClosedVisColScale = EditorGUILayout.Vector3Field("Visibility Collider Closed Scale (local)", c.ClosedVisColScale);
 			break;
 		}
+
 		EditorGUILayout.EndVertical ();
 
 		GUI.color = Color.grey;
 		EditorGUILayout.BeginVertical (EditorStyles.helpBox);
 		GUI.color = Color.white;
 		EditorGUILayout.LabelField ("Utilities:", EditorStyles.miniLabel);
-		if (c.OpenStyle == CabinetOpenStyle.Drawer) {
-			if (GUILayout.Button ("Set drawer open position")) {
+
+		if (c.OpenStyle == CabinetOpenStyle.Drawer) 
+        {
+			if (GUILayout.Button ("Set drawer open position")) 
+            {
 				c.OpenLocalPosition = c.DrawerDoor.localPosition;
 			}
-			if (GUILayout.Button ("Set drawer closed position")) {
+			if (GUILayout.Button ("Set drawer closed position")) 
+            {
 				c.ClosedLocalPosition = c.DrawerDoor.localPosition;
 			}
+
+            /*
+             * if(GUILayout.Button ("Set vis collider open position"))
+            {
+                c.OpenVisColPosition = c.VisCollider.localPosition;
+            }
+
+            if(GUILayout.Button ("Set vis collider closed position"))
+            {
+                c.ClosedVisColPosition = c.VisCollider.localPosition;
+            }
+
+            if(GUILayout.Button ("Set vis collider open scale"))
+            {
+                c.OpenVisColScale = c.VisCollider.localScale;
+            }
+
+            if(GUILayout.Button ("Set vis collider closed scale"))
+            {
+                c.ClosedVisColScale = c.VisCollider.localScale;
+            }
+            Because of where the visibility collider is parented, setting the positions with buttons doesn't work!
+            */
 		}
 
-		if (c.ParentObj != null && c.ParentObj.Animator == null) {
-			if (GUILayout.Button ("Add animation controller to parent SimObj")) {
+		if (c.ParentObj != null && c.ParentObj.Animator == null) 
+        {
+			if (GUILayout.Button ("Add animation controller to parent SimObj")) 
+            {
 				Animator a = c.ParentObj.GetComponent <Animator> ();
-				if (a == null) {
+				if (a == null) 
+                {
 					a = c.ParentObj.gameObject.AddComponent<Animator> ();
 				}
+
 				a.runtimeAnimatorController = Resources.Load ("ToggleableAnimController") as RuntimeAnimatorController;
 			}
 		}
