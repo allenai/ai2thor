@@ -565,8 +565,8 @@ Transform:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 47969948}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0.10699999, y: 0.040374994, z: 0.00000028840958}
-  m_LocalScale: {x: 1, y: 1, z: 1.6129032}
+  m_LocalPosition: {x: 0.142, y: 0.021, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 1101922198}
   m_RootOrder: 1
@@ -687,8 +687,8 @@ Transform:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 67692999}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: -0.335}
-  m_LocalScale: {x: 0.75, y: 0.75, z: 10}
+  m_LocalPosition: {x: 0, y: 0, z: 0.02}
+  m_LocalScale: {x: 1, y: 1, z: 0.01}
   m_Children: []
   m_Father: {fileID: 1775795715}
   m_RootOrder: 0
@@ -1150,14 +1150,14 @@ Transform:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 165761401}
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0.040374994, z: -0.100000024}
+  m_LocalRotation: {x: -0, y: 0.70710576, z: -0, w: 0.70710784}
+  m_LocalPosition: {x: -0.021277428, y: 0.040374994, z: -0.12127742}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 634877837}
   m_Father: {fileID: 527325807}
   m_RootOrder: 1
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 90.00001, z: 0}
 --- !u!1 &217611447
 GameObject:
   m_ObjectHideFlags: 0
@@ -1204,6 +1204,7 @@ MonoBehaviour:
   Animate: 0
   Open: 0
   ParentObj: {fileID: 584751356}
+  VisCollider: {fileID: 0}
   OpenStyle: 0
   LeftDoor: {fileID: 217611448}
   RightDoor: {fileID: 0}
@@ -1214,6 +1215,10 @@ MonoBehaviour:
   ClosedAngleLeft: {x: 0, y: 0, z: 0}
   ClosedLocalPosition: {x: 0, y: 0, z: 0}
   OpenLocalPosition: {x: 0, y: 0, z: 0}
+  ClosedVisColPosition: {x: 0, y: 0, z: 0}
+  ClosedVisColScale: {x: 1, y: 1, z: 0.2}
+  OpenVisColPosition: {x: 0, y: 0, z: -0.17}
+  OpenVisColScale: {x: 1, y: 1, z: 1}
 --- !u!65 &217611450
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -1585,6 +1590,7 @@ MonoBehaviour:
   Animate: 1
   Open: 0
   ParentObj: {fileID: 584751396}
+  VisCollider: {fileID: 0}
   OpenStyle: 0
   LeftDoor: {fileID: 268161703}
   RightDoor: {fileID: 0}
@@ -1595,6 +1601,10 @@ MonoBehaviour:
   ClosedAngleLeft: {x: 0, y: 0, z: 0}
   ClosedLocalPosition: {x: 0, y: 0, z: 0}
   OpenLocalPosition: {x: 0, y: 0, z: 0}
+  ClosedVisColPosition: {x: 0, y: 0, z: 0}
+  ClosedVisColScale: {x: 1, y: 1, z: 0.2}
+  OpenVisColPosition: {x: 0, y: 0, z: -0.17}
+  OpenVisColScale: {x: 1, y: 1, z: 1}
 --- !u!65 &268161705
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -2080,6 +2090,7 @@ MonoBehaviour:
   Animate: 1
   Open: 0
   ParentObj: {fileID: 584751294}
+  VisCollider: {fileID: 926971996}
   OpenStyle: 3
   LeftDoor: {fileID: 0}
   RightDoor: {fileID: 0}
@@ -2090,6 +2101,10 @@ MonoBehaviour:
   ClosedAngleLeft: {x: 0, y: 0, z: 0}
   ClosedLocalPosition: {x: 0, y: 0, z: 0}
   OpenLocalPosition: {x: 0, y: 0, z: 0.266}
+  ClosedVisColPosition: {x: 0, y: 0, z: 0.02}
+  ClosedVisColScale: {x: 1, y: 1, z: 0.01}
+  OpenVisColPosition: {x: 0, y: 0, z: -0.26}
+  OpenVisColScale: {x: 1, y: 1, z: 9.09}
 --- !u!65 &423585908
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -2360,6 +2375,7 @@ MonoBehaviour:
   Animate: 1
   Open: 0
   ParentObj: {fileID: 584751422}
+  VisCollider: {fileID: 0}
   OpenStyle: 2
   LeftDoor: {fileID: 584751282}
   RightDoor: {fileID: 466986589}
@@ -2370,6 +2386,10 @@ MonoBehaviour:
   ClosedAngleLeft: {x: 0, y: 0, z: 0}
   ClosedLocalPosition: {x: 0, y: 0, z: 0}
   OpenLocalPosition: {x: 0, y: 0, z: 0}
+  ClosedVisColPosition: {x: 0, y: 0, z: 0}
+  ClosedVisColScale: {x: 1, y: 1, z: 0.2}
+  OpenVisColPosition: {x: 0, y: 0, z: -0.17}
+  OpenVisColScale: {x: 1, y: 1, z: 1}
 --- !u!65 &466986591
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -2503,6 +2523,7 @@ MonoBehaviour:
   Animate: 0
   Open: 0
   ParentObj: {fileID: 584751351}
+  VisCollider: {fileID: 0}
   OpenStyle: 0
   LeftDoor: {fileID: 499956766}
   RightDoor: {fileID: 0}
@@ -2513,6 +2534,10 @@ MonoBehaviour:
   ClosedAngleLeft: {x: 0, y: 0, z: 0}
   ClosedLocalPosition: {x: 0, y: 0, z: 0}
   OpenLocalPosition: {x: 0, y: 0, z: 0}
+  ClosedVisColPosition: {x: 0, y: 0, z: 0}
+  ClosedVisColScale: {x: 1, y: 1, z: 0.2}
+  OpenVisColPosition: {x: 0, y: 0, z: -0.17}
+  OpenVisColScale: {x: 1, y: 1, z: 1}
 --- !u!65 &499956768
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -2618,8 +2643,8 @@ Transform:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 508182716}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: -0.335}
-  m_LocalScale: {x: 0.75, y: 0.75, z: 10}
+  m_LocalPosition: {x: 0, y: 0, z: 0.02}
+  m_LocalScale: {x: 1, y: 1, z: 0.01}
   m_Children: []
   m_Father: {fileID: 527325807}
   m_RootOrder: 0
@@ -2744,6 +2769,7 @@ MonoBehaviour:
   Animate: 1
   Open: 0
   ParentObj: {fileID: 584751313}
+  VisCollider: {fileID: 508182717}
   OpenStyle: 3
   LeftDoor: {fileID: 0}
   RightDoor: {fileID: 0}
@@ -2754,6 +2780,10 @@ MonoBehaviour:
   ClosedAngleLeft: {x: 0, y: 0, z: 0}
   ClosedLocalPosition: {x: 0, y: 0, z: 0}
   OpenLocalPosition: {x: 0, y: 0, z: 0.266}
+  ClosedVisColPosition: {x: 0, y: 0, z: 0.02}
+  ClosedVisColScale: {x: 1, y: 1, z: 0.01}
+  OpenVisColPosition: {x: 0, y: 0, z: -0.26}
+  OpenVisColScale: {x: 1, y: 1, z: 9.09}
 --- !u!65 &527325809
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -2937,6 +2967,7 @@ MonoBehaviour:
   Animate: 0
   Open: 0
   ParentObj: {fileID: 584751401}
+  VisCollider: {fileID: 0}
   OpenStyle: 1
   LeftDoor: {fileID: 0}
   RightDoor: {fileID: 574062305}
@@ -2947,6 +2978,10 @@ MonoBehaviour:
   ClosedAngleLeft: {x: 0, y: 0, z: 0}
   ClosedLocalPosition: {x: 0, y: 0, z: 0}
   OpenLocalPosition: {x: 0, y: 0, z: 0}
+  ClosedVisColPosition: {x: 0, y: 0, z: 0}
+  ClosedVisColScale: {x: 1, y: 1, z: 0.2}
+  OpenVisColPosition: {x: 0, y: 0, z: -0.17}
+  OpenVisColScale: {x: 1, y: 1, z: 1}
 --- !u!65 &574062307
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -3269,7 +3304,7 @@ GameObject:
   m_Component:
   - component: {fileID: 584751329}
   m_Layer: 0
-  m_Name: Drawer
+  m_Name: NOTaDrawer
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -6095,6 +6130,7 @@ MonoBehaviour:
   Animate: 1
   Open: 0
   ParentObj: {fileID: 584751376}
+  VisCollider: {fileID: 0}
   OpenStyle: 0
   LeftDoor: {fileID: 611863818}
   RightDoor: {fileID: 0}
@@ -6105,6 +6141,10 @@ MonoBehaviour:
   ClosedAngleLeft: {x: 0, y: 0, z: 0}
   ClosedLocalPosition: {x: 0, y: 0, z: 0}
   OpenLocalPosition: {x: 0, y: 0, z: 0}
+  ClosedVisColPosition: {x: 0, y: 0, z: 0}
+  ClosedVisColScale: {x: 1, y: 1, z: 0.2}
+  OpenVisColPosition: {x: 0, y: 0, z: -0.17}
+  OpenVisColScale: {x: 1, y: 1, z: 1}
 --- !u!65 &611863820
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -6252,13 +6292,13 @@ Transform:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 623497878}
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0.040374994, z: -0.100000024}
+  m_LocalRotation: {x: -0, y: 0.70710576, z: -0, w: 0.70710784}
+  m_LocalPosition: {x: -0.021277428, y: 0.040374994, z: -0.12127742}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 1286474637}
   m_RootOrder: 1
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 90.00001, z: 0}
 --- !u!1001 &631121467
 Prefab:
   m_ObjectHideFlags: 0
@@ -6431,7 +6471,7 @@ Transform:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 651575153}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0.12099999, y: 0, z: 0}
+  m_LocalPosition: {x: 0.142, y: 0.021, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 1531020702}
@@ -6489,8 +6529,8 @@ Transform:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 687314195}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0.192, y: 0, z: 0}
-  m_LocalScale: {x: 5, y: 0.75, z: 0.75}
+  m_LocalPosition: {x: -0.02, y: 0, z: 0}
+  m_LocalScale: {x: 0.01, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 1531020702}
   m_RootOrder: 0
@@ -7327,8 +7367,8 @@ Transform:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 926971995}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: -0.335}
-  m_LocalScale: {x: 0.75, y: 0.75, z: 10}
+  m_LocalPosition: {x: 0, y: 0, z: 0.02}
+  m_LocalScale: {x: 1, y: 1, z: 0.01}
   m_Children: []
   m_Father: {fileID: 423585906}
   m_RootOrder: 0
@@ -8006,6 +8046,7 @@ MonoBehaviour:
   Animate: 1
   Open: 0
   ParentObj: {fileID: 584751371}
+  VisCollider: {fileID: 0}
   OpenStyle: 1
   LeftDoor: {fileID: 0}
   RightDoor: {fileID: 1046730015}
@@ -8016,6 +8057,10 @@ MonoBehaviour:
   ClosedAngleLeft: {x: 0, y: 0, z: 0}
   ClosedLocalPosition: {x: 0, y: 0, z: 0}
   OpenLocalPosition: {x: 0, y: 0, z: 0}
+  ClosedVisColPosition: {x: 0, y: 0, z: 0}
+  ClosedVisColScale: {x: 1, y: 1, z: 0.2}
+  OpenVisColPosition: {x: 0, y: 0, z: -0.17}
+  OpenVisColScale: {x: 1, y: 1, z: 1}
 --- !u!65 &1046730017
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -8210,6 +8255,7 @@ MonoBehaviour:
   Animate: 1
   Open: 0
   ParentObj: {fileID: 584751290}
+  VisCollider: {fileID: 1232116854}
   OpenStyle: 3
   LeftDoor: {fileID: 0}
   RightDoor: {fileID: 0}
@@ -8220,6 +8266,10 @@ MonoBehaviour:
   ClosedAngleLeft: {x: 0, y: 0, z: 0}
   ClosedLocalPosition: {x: 0, y: 0, z: 0}
   OpenLocalPosition: {x: -0.235, y: 0, z: -0.000000015021334}
+  ClosedVisColPosition: {x: -0.02, y: 0, z: 0}
+  ClosedVisColScale: {x: 0.01, y: 1, z: 1}
+  OpenVisColPosition: {x: 0.24, y: 0, z: 0}
+  OpenVisColScale: {x: 9.09, y: 1, z: 1}
 --- !u!65 &1101922200
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -8583,6 +8633,7 @@ MonoBehaviour:
   Animate: 0
   Open: 0
   ParentObj: {fileID: 584751411}
+  VisCollider: {fileID: 0}
   OpenStyle: 0
   LeftDoor: {fileID: 1168478300}
   RightDoor: {fileID: 0}
@@ -8593,6 +8644,10 @@ MonoBehaviour:
   ClosedAngleLeft: {x: 0, y: 0, z: 0}
   ClosedLocalPosition: {x: 0, y: 0, z: 0}
   OpenLocalPosition: {x: 0, y: 0, z: 0}
+  ClosedVisColPosition: {x: 0, y: 0, z: 0}
+  ClosedVisColScale: {x: 1, y: 1, z: 0.2}
+  OpenVisColPosition: {x: 0, y: 0, z: -0.17}
+  OpenVisColScale: {x: 1, y: 1, z: 1}
 --- !u!65 &1168478302
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -8900,14 +8955,14 @@ Transform:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 1217077194}
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0.040374994, z: -0.100000024}
+  m_LocalRotation: {x: -0, y: 0.70710576, z: -0, w: 0.70710784}
+  m_LocalPosition: {x: -0.021277428, y: 0.040374994, z: -0.12127742}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 704352201}
   m_Father: {fileID: 1775795715}
   m_RootOrder: 1
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 90.00001, z: 0}
 --- !u!1001 &1230456577
 Prefab:
   m_ObjectHideFlags: 0
@@ -9024,8 +9079,8 @@ Transform:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 1232116853}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0.192, y: 0, z: 0}
-  m_LocalScale: {x: 5, y: 0.75, z: 0.75}
+  m_LocalPosition: {x: -0.02, y: 0, z: 0}
+  m_LocalScale: {x: 0.01, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 1101922198}
   m_RootOrder: 0
@@ -9300,6 +9355,7 @@ MonoBehaviour:
   Animate: 1
   Open: 0
   ParentObj: {fileID: 584751333}
+  VisCollider: {fileID: 1714180390}
   OpenStyle: 3
   LeftDoor: {fileID: 0}
   RightDoor: {fileID: 0}
@@ -9310,6 +9366,10 @@ MonoBehaviour:
   ClosedAngleLeft: {x: 0, y: 0, z: 0}
   ClosedLocalPosition: {x: 0, y: 0, z: 0}
   OpenLocalPosition: {x: 0, y: 0, z: 0.266}
+  ClosedVisColPosition: {x: 0, y: 0, z: 0.02}
+  ClosedVisColScale: {x: 1, y: 1, z: 0.01}
+  OpenVisColPosition: {x: 0, y: 0, z: -0.26}
+  OpenVisColScale: {x: 1, y: 1, z: 9.09}
 --- !u!65 &1286474639
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -9504,6 +9564,7 @@ MonoBehaviour:
   Animate: 1
   Open: 0
   ParentObj: {fileID: 584751340}
+  VisCollider: {fileID: 1899109328}
   OpenStyle: 3
   LeftDoor: {fileID: 0}
   RightDoor: {fileID: 0}
@@ -9514,6 +9575,10 @@ MonoBehaviour:
   ClosedAngleLeft: {x: 0, y: 0, z: 0}
   ClosedLocalPosition: {x: 0, y: 0, z: 0}
   OpenLocalPosition: {x: 0, y: 0, z: 0.265}
+  ClosedVisColPosition: {x: 0, y: 0, z: 0.02}
+  ClosedVisColScale: {x: 1, y: 1, z: 0.01}
+  OpenVisColPosition: {x: 0, y: 0, z: -0.26}
+  OpenVisColScale: {x: 1, y: 1, z: 9.09}
 --- !u!65 &1308396561
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -9613,6 +9678,7 @@ MonoBehaviour:
   Animate: 0
   Open: 0
   ParentObj: {fileID: 584751361}
+  VisCollider: {fileID: 0}
   OpenStyle: 1
   LeftDoor: {fileID: 0}
   RightDoor: {fileID: 1328551236}
@@ -9623,6 +9689,10 @@ MonoBehaviour:
   ClosedAngleLeft: {x: 0, y: 0, z: 0}
   ClosedLocalPosition: {x: 0, y: 0, z: 0}
   OpenLocalPosition: {x: 0, y: 0, z: 0}
+  ClosedVisColPosition: {x: 0, y: 0, z: 0}
+  ClosedVisColScale: {x: 1, y: 1, z: 0.2}
+  OpenVisColPosition: {x: 0, y: 0, z: -0.17}
+  OpenVisColScale: {x: 1, y: 1, z: 1}
 --- !u!65 &1328551238
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -9886,6 +9956,7 @@ MonoBehaviour:
   Animate: 1
   Open: 0
   ParentObj: {fileID: 584751391}
+  VisCollider: {fileID: 0}
   OpenStyle: 1
   LeftDoor: {fileID: 0}
   RightDoor: {fileID: 1424734611}
@@ -9896,6 +9967,10 @@ MonoBehaviour:
   ClosedAngleLeft: {x: 0, y: 0, z: 0}
   ClosedLocalPosition: {x: 0, y: 0, z: 0}
   OpenLocalPosition: {x: 0, y: 0, z: 0}
+  ClosedVisColPosition: {x: 0, y: 0, z: 0}
+  ClosedVisColScale: {x: 1, y: 1, z: 0.2}
+  OpenVisColPosition: {x: 0, y: 0, z: -0.17}
+  OpenVisColScale: {x: 1, y: 1, z: 1}
 --- !u!65 &1424734613
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -10243,6 +10318,7 @@ MonoBehaviour:
   Animate: 0
   Open: 0
   ParentObj: {fileID: 584751346}
+  VisCollider: {fileID: 0}
   OpenStyle: 1
   LeftDoor: {fileID: 0}
   RightDoor: {fileID: 1507468603}
@@ -10253,6 +10329,10 @@ MonoBehaviour:
   ClosedAngleLeft: {x: 0, y: 0, z: 0}
   ClosedLocalPosition: {x: 0, y: 0, z: 0}
   OpenLocalPosition: {x: 0, y: 0, z: 0}
+  ClosedVisColPosition: {x: 0, y: 0, z: 0}
+  ClosedVisColScale: {x: 1, y: 1, z: 0.2}
+  OpenVisColPosition: {x: 0, y: 0, z: -0.17}
+  OpenVisColScale: {x: 1, y: 1, z: 1}
 --- !u!65 &1507468605
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -10421,6 +10501,7 @@ MonoBehaviour:
   Animate: 0
   Open: 0
   ParentObj: {fileID: 584751406}
+  VisCollider: {fileID: 0}
   OpenStyle: 0
   LeftDoor: {fileID: 1529735199}
   RightDoor: {fileID: 0}
@@ -10431,6 +10512,10 @@ MonoBehaviour:
   ClosedAngleLeft: {x: 0, y: 0, z: 0}
   ClosedLocalPosition: {x: 0, y: 0, z: 0}
   OpenLocalPosition: {x: 0, y: 0, z: 0}
+  ClosedVisColPosition: {x: 0, y: 0, z: 0}
+  ClosedVisColScale: {x: 1, y: 1, z: 0.2}
+  OpenVisColPosition: {x: 0, y: 0, z: -0.17}
+  OpenVisColScale: {x: 1, y: 1, z: 1}
 --- !u!65 &1529735201
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -10561,6 +10646,7 @@ MonoBehaviour:
   Animate: 1
   Open: 0
   ParentObj: {fileID: 584751322}
+  VisCollider: {fileID: 687314196}
   OpenStyle: 3
   LeftDoor: {fileID: 0}
   RightDoor: {fileID: 0}
@@ -10571,6 +10657,10 @@ MonoBehaviour:
   ClosedAngleLeft: {x: 0, y: 0, z: 0}
   ClosedLocalPosition: {x: 0, y: 0, z: 0}
   OpenLocalPosition: {x: -0.235, y: 0, z: 0}
+  ClosedVisColPosition: {x: -0.02, y: 0, z: 0}
+  ClosedVisColScale: {x: 0.01, y: 1, z: 1}
+  OpenVisColPosition: {x: 0.24, y: 0, z: 0}
+  OpenVisColScale: {x: 9.09, y: 1, z: 1}
 --- !u!65 &1531020704
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -11057,6 +11147,7 @@ MonoBehaviour:
   Animate: 0
   Open: 0
   ParentObj: {fileID: 584751416}
+  VisCollider: {fileID: 0}
   OpenStyle: 1
   LeftDoor: {fileID: 0}
   RightDoor: {fileID: 1632591494}
@@ -11067,6 +11158,10 @@ MonoBehaviour:
   ClosedAngleLeft: {x: 0, y: 0, z: 0}
   ClosedLocalPosition: {x: 0, y: 0, z: 0}
   OpenLocalPosition: {x: 0, y: 0, z: 0}
+  ClosedVisColPosition: {x: 0, y: 0, z: 0}
+  ClosedVisColScale: {x: 1, y: 1, z: 0.2}
+  OpenVisColPosition: {x: 0, y: 0, z: -0.17}
+  OpenVisColScale: {x: 1, y: 1, z: 1}
 --- !u!65 &1632591496
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -11141,13 +11236,13 @@ Transform:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 1635671833}
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0.10699999, y: 0.040374994, z: 0}
+  m_LocalRotation: {x: -0, y: 0.70701015, z: -0, w: 0.70720345}
+  m_LocalPosition: {x: 0.0990002, y: 0.040374994, z: -0.008413136}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 2037266290}
   m_RootOrder: 1
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 89.984, z: 0}
 --- !u!1 &1639275176
 GameObject:
   m_ObjectHideFlags: 0
@@ -11171,8 +11266,8 @@ Transform:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 1639275176}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0.192, y: 0, z: 0}
-  m_LocalScale: {x: 5, y: 0.75, z: 0.75}
+  m_LocalPosition: {x: -0.02, y: 0, z: 0}
+  m_LocalScale: {x: 0.01, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 2037266290}
   m_RootOrder: 0
@@ -11369,8 +11464,8 @@ Transform:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 1714180389}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: -0.335}
-  m_LocalScale: {x: 0.75, y: 0.75, z: 10}
+  m_LocalPosition: {x: 0, y: 0, z: 0.02}
+  m_LocalScale: {x: 1, y: 1, z: 0.01}
   m_Children: []
   m_Father: {fileID: 1286474637}
   m_RootOrder: 0
@@ -11767,6 +11862,7 @@ MonoBehaviour:
   Animate: 0
   Open: 0
   ParentObj: {fileID: 584751381}
+  VisCollider: {fileID: 0}
   OpenStyle: 1
   LeftDoor: {fileID: 0}
   RightDoor: {fileID: 1753562819}
@@ -11777,6 +11873,10 @@ MonoBehaviour:
   ClosedAngleLeft: {x: 0, y: 0, z: 0}
   ClosedLocalPosition: {x: 0, y: 0, z: 0}
   OpenLocalPosition: {x: 0, y: 0, z: 0}
+  ClosedVisColPosition: {x: 0, y: 0, z: 0}
+  ClosedVisColScale: {x: 1, y: 1, z: 0.2}
+  OpenVisColPosition: {x: 0, y: 0, z: -0.17}
+  OpenVisColScale: {x: 1, y: 1, z: 1}
 --- !u!65 &1753562821
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -11977,6 +12077,7 @@ MonoBehaviour:
   Animate: 1
   Open: 0
   ParentObj: {fileID: 584751327}
+  VisCollider: {fileID: 67693000}
   OpenStyle: 3
   LeftDoor: {fileID: 0}
   RightDoor: {fileID: 0}
@@ -11987,6 +12088,10 @@ MonoBehaviour:
   ClosedAngleLeft: {x: 0, y: 0, z: 0}
   ClosedLocalPosition: {x: 0, y: 0, z: 0}
   OpenLocalPosition: {x: 0, y: 0, z: 0.266}
+  ClosedVisColPosition: {x: 0, y: 0, z: 0.02}
+  ClosedVisColScale: {x: 1, y: 1, z: 0.01}
+  OpenVisColPosition: {x: 0, y: 0, z: -0.26}
+  OpenVisColScale: {x: 1, y: 1, z: 9.09}
 --- !u!65 &1775795717
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -12586,8 +12691,8 @@ Transform:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 1899109327}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: -0.335}
-  m_LocalScale: {x: 0.75, y: 0.75, z: 10}
+  m_LocalPosition: {x: 0, y: 0, z: 0.02}
+  m_LocalScale: {x: 1, y: 1, z: 0.01}
   m_Children: []
   m_Father: {fileID: 1308396559}
   m_RootOrder: 0
@@ -12906,6 +13011,7 @@ MonoBehaviour:
   Animate: 0
   Open: 0
   ParentObj: {fileID: 584751366}
+  VisCollider: {fileID: 0}
   OpenStyle: 0
   LeftDoor: {fileID: 1954005440}
   RightDoor: {fileID: 0}
@@ -12916,6 +13022,10 @@ MonoBehaviour:
   ClosedAngleLeft: {x: 0, y: 0, z: 0}
   ClosedLocalPosition: {x: 0, y: 0, z: 0}
   OpenLocalPosition: {x: 0, y: 0, z: 0}
+  ClosedVisColPosition: {x: 0, y: 0, z: 0}
+  ClosedVisColScale: {x: 1, y: 1, z: 0.2}
+  OpenVisColPosition: {x: 0, y: 0, z: -0.17}
+  OpenVisColScale: {x: 1, y: 1, z: 1}
 --- !u!65 &1954005442
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -13031,13 +13141,13 @@ Transform:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 1964235057}
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0.040374994, z: -0.100000024}
+  m_LocalRotation: {x: -0, y: 0.70710576, z: -0, w: 0.70710784}
+  m_LocalPosition: {x: -0.021277428, y: 0.040374994, z: -0.12127742}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 1308396559}
   m_RootOrder: 1
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 90.00001, z: 0}
 --- !u!1 &1979663114
 GameObject:
   m_ObjectHideFlags: 0
@@ -13084,6 +13194,7 @@ MonoBehaviour:
   Animate: 1
   Open: 0
   ParentObj: {fileID: 584751386}
+  VisCollider: {fileID: 0}
   OpenStyle: 0
   LeftDoor: {fileID: 1979663115}
   RightDoor: {fileID: 0}
@@ -13094,6 +13205,10 @@ MonoBehaviour:
   ClosedAngleLeft: {x: 0, y: 0, z: 0}
   ClosedLocalPosition: {x: 0, y: 0, z: 0}
   OpenLocalPosition: {x: 0, y: 0, z: 0}
+  ClosedVisColPosition: {x: 0, y: 0, z: 0}
+  ClosedVisColScale: {x: 1, y: 1, z: 0.2}
+  OpenVisColPosition: {x: 0, y: 0, z: -0.17}
+  OpenVisColScale: {x: 1, y: 1, z: 1}
 --- !u!65 &1979663117
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -13347,6 +13462,7 @@ MonoBehaviour:
   Animate: 1
   Open: 0
   ParentObj: {fileID: 584751284}
+  VisCollider: {fileID: 1639275177}
   OpenStyle: 3
   LeftDoor: {fileID: 0}
   RightDoor: {fileID: 0}
@@ -13357,6 +13473,10 @@ MonoBehaviour:
   ClosedAngleLeft: {x: 0, y: 0, z: 0}
   ClosedLocalPosition: {x: 0, y: 0, z: 0}
   OpenLocalPosition: {x: -0.235, y: 0, z: 0.000000059604645}
+  ClosedVisColPosition: {x: -0.02, y: 0, z: 0}
+  ClosedVisColScale: {x: 0.01, y: 1, z: 1}
+  OpenVisColPosition: {x: 0.24, y: 0, z: 0}
+  OpenVisColScale: {x: 9.09, y: 1, z: 1}
 --- !u!65 &2037266292
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -14001,7 +14121,7 @@ Prefab:
     m_Modifications:
     - target: {fileID: 4000012402960426, guid: 1eb0a01588bdd49558a02f1ee254ad66, type: 2}
       propertyPath: m_LocalPosition.x
-      value: 1.207
+      value: 1.169
       objectReference: {fileID: 0}
     - target: {fileID: 4000012402960426, guid: 1eb0a01588bdd49558a02f1ee254ad66, type: 2}
       propertyPath: m_LocalPosition.y
@@ -14009,7 +14129,7 @@ Prefab:
       objectReference: {fileID: 0}
     - target: {fileID: 4000012402960426, guid: 1eb0a01588bdd49558a02f1ee254ad66, type: 2}
       propertyPath: m_LocalPosition.z
-      value: -0.032
+      value: -0.006
       objectReference: {fileID: 0}
     - target: {fileID: 4000012402960426, guid: 1eb0a01588bdd49558a02f1ee254ad66, type: 2}
       propertyPath: m_LocalRotation.x
@@ -14054,6 +14174,10 @@ Prefab:
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 1000012937635836, guid: 1eb0a01588bdd49558a02f1ee254ad66, type: 2}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1000012815202630, guid: 1eb0a01588bdd49558a02f1ee254ad66, type: 2}
       propertyPath: m_IsActive
       value: 1
       objectReference: {fileID: 0}
