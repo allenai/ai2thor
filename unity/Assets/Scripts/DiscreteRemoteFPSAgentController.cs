@@ -414,6 +414,11 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			metaMessage.lastAction = lastAction;
 			metaMessage.lastActionSuccess = lastActionSuccess;
 			metaMessage.errorMessage = errorMessage;
+
+			if (errorCode != ServerActionErrorCode.Undefined) {
+				metaMessage.errorCode = Enum.GetName(typeof(ServerActionErrorCode), errorCode);
+			}
+
             metaMessage.sequenceId = this.currentSequenceId;
 			List<InventoryObject> ios = new List<InventoryObject>();
 
@@ -759,19 +764,41 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		public void PickupObject(ServerAction action)
 		{
 			bool success = false;
-			foreach (SimObj so in VisibleSimObjs(action)){
-				Debug.Log(" got sim object: " + so.UniqueID);
-				if (!so.IsReceptacle && (!IsOpenable (so) || so.Manipulation == SimObjManipType.Inventory)) {
-					if (inventory.Count == 0) {
-						Debug.Log("trying to take item: " + so.UniqueID);
-						SimUtil.TakeItem (so);
-						addObjectInventory (so);
-						success = true;
 
+			bool objectVisible = false;
+			foreach (SimObj so in VisibleSimObjs(action)){
+				objectVisible = true;
+				Debug.Log(" got sim object: " + so.UniqueID);
+				if (!so.IsReceptacle && (!IsOpenable(so) || so.Manipulation == SimObjManipType.Inventory))
+				{
+					if (inventory.Count == 0)
+					{
+						Debug.Log("trying to take item: " + so.UniqueID);
+						SimUtil.TakeItem(so);
+						addObjectInventory(so);
+						success = true;
+					}
+					else
+					{
+						errorCode = ServerActionErrorCode.InventoryFull;
 					}
 					break;
 				}
+				else {
+					errorCode = ServerActionErrorCode.ObjectNotPickupable;
+				}
 			}
+
+			if (success) {
+				errorCode = ServerActionErrorCode.Undefined;
+			}
+			else { 
+				if (!objectVisible) {
+					errorCode = ServerActionErrorCode.ObjectNotVisible;
+				}
+			}
+			Debug.Log("error code: " + errorCode);
+
             StartCoroutine(checkWaitAction(success));
 		}
 
@@ -800,25 +827,72 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 		public void PutObject(ServerAction response) {
 			bool success = false;
-			if(inventory.ContainsKey(response.objectId)) {
+			bool receptacleVisible = false;
+			if (inventory.ContainsKey(response.objectId))
+			{
 
-				foreach (SimObj rso in VisibleSimObjs(response.forceVisible)) {
-					if (rso.IsReceptacle && ( rso.UniqueID == response.receptacleObjectId || rso.Type == response.ReceptableSimObjType())) {
+				foreach (SimObj rso in VisibleSimObjs(response.forceVisible))
+				{
+
+					if (rso.IsReceptacle && (rso.UniqueID == response.receptacleObjectId || rso.Type == response.ReceptableSimObjType()))
+					{
+						receptacleVisible = true;
+						SimObj so = removeObjectInventory(response.objectId);
+						if (!IsOpenable(rso) || IsOpen(rso))
+						{
+							Transform emptyPivot = null;
+
+							if (!SimUtil.GetFirstEmptyReceptaclePivot(rso.Receptacle, out emptyPivot))
+							{
+								errorCode = ServerActionErrorCode.ReceptacleFull;
+							}
+							else { 
+							
+								if (response.forceVisible)
+								{
+									SimUtil.AddItemToReceptaclePivot(so, emptyPivot);
+									success = true;
+								}
+								else
+								{
+									emptyPivot = null;
+									if (!SimUtil.GetFirstEmptyVisibleReceptaclePivot(rso.Receptacle, m_Camera, out emptyPivot))
+									{
+										errorCode = ServerActionErrorCode.ReceptaclePivotNotVisible;
+									}
+									else { 
+										SimUtil.AddItemToReceptaclePivot(so, emptyPivot);
+										success = true;
+									}
+								}
+							}
 
 
-						SimObj so = removeObjectInventory (response.objectId);
-			
-						if ((!IsOpenable(rso) || IsOpen(rso)) && 
-							((response.forceVisible && SimUtil.AddItemToReceptacle(so, rso.Receptacle)) || 
-								SimUtil.AddItemToVisibleReceptacle (so, rso.Receptacle, m_Camera))) {
-							success = true;
-						} else {
-							addObjectInventory (so);
+						}
+						else {
+							errorCode = ServerActionErrorCode.ReceptacleNotOpen;
 						}
 
 
+
+						if (!success) { 
+                            addObjectInventory(so);
+						}
+
 						break;
 					}
+				}
+			}
+			else {
+				errorCode = ServerActionErrorCode.ObjectNotInInventory;
+			}
+
+			if (success)
+			{
+				errorCode = ServerActionErrorCode.Undefined;
+			} else {
+				if (!receptacleVisible && errorCode == ServerActionErrorCode.Undefined) {
+					errorCode = ServerActionErrorCode.ReceptacleNotVisible;
 				}
 			}
             StartCoroutine(checkWaitAction(success));
@@ -854,6 +928,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			}
 			else { 
 				errorMessage = "can't LookDown below the min horizon angle";
+				errorCode = ServerActionErrorCode.LookDownCantExceedMin;
 				actionFinished(false);
 			}
 		}
@@ -868,6 +943,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			}
 			else {
 				errorMessage = "can't LookUp beyond the max horizon angle";
+				errorCode = ServerActionErrorCode.LookUpCantExceedMax;
 				actionFinished(false);
 			}
 		}

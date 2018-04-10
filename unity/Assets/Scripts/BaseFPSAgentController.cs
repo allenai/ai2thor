@@ -63,7 +63,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 		public string[] excludeObjectIds = new string[0];
 		protected Camera m_Camera;
-        protected string ENVIRONMENT_PREFIX = "AI2THOR_";
+		protected string ENVIRONMENT_PREFIX = "AI2THOR_";
 		protected bool m_Jump;
 		protected float m_XRotation;
 		protected float m_ZRotation;
@@ -80,7 +80,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		protected string lastAction;
 		protected bool lastActionSuccess;
 		protected string errorMessage;
-        protected int currentSequenceId;
+		protected ServerActionErrorCode errorCode;
+		protected int currentSequenceId;
 
 
 
@@ -92,21 +93,21 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 		// initial states
 		protected Vector3 init_position;
-		protected Quaternion init_rotation; 
+		protected Quaternion init_rotation;
 
 		// server controls
 		// agent movement parameters
 		public float forwardVelocity = 2.0f;
 		public float rotateVelocity = 2.0f;
-		public int   actionDuration = 3;
-        private int defaultScreenWidth = 300;
-        private int defaultScreenHeight = 300;
+		public int actionDuration = 3;
+		private int defaultScreenWidth = 300;
+		private int defaultScreenHeight = 300;
 
 
 		// internal state variables
 		private float lastEmitTime;
 		protected List<string> collisionsInAction; // tracking collided objects
-		protected string[] collidedObjects;		 // container for collided objects
+		protected string[] collidedObjects;      // container for collided objects
 
 
 		public Hashtable ObjectTriggers;
@@ -118,19 +119,20 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		}
 
 		// Initialize parameters from environment variables
-		protected virtual void Awake() {
+		protected virtual void Awake()
+		{
 
 			// whether it's in training or test phase
 			bool trainPhase = true;
-			trainPhase = LoadBoolVariable (trainPhase, "TRAIN_PHASE");
+			trainPhase = LoadBoolVariable(trainPhase, "TRAIN_PHASE");
 
 			// read additional configurations for model
 			// agent speed and action length
 			string prefix = trainPhase ? "TRAIN_" : "TEST_";
 			//forwardVelocity = LoadFloatVariable (forwardVelocity, prefix + "WALK_VELOCITY");
 			//rotateVelocity = LoadFloatVariable (rotateVelocity, prefix + "TURN_VELOCITY");
-			actionDuration = LoadIntVariable (actionDuration, prefix + "ACTION_LENGTH");
-			maxVisibleDistance = LoadFloatVariable (defaultMaxVisibleDistance, prefix + "VISIBILITY_DISTANCE");
+			actionDuration = LoadIntVariable(actionDuration, prefix + "ACTION_LENGTH");
+			maxVisibleDistance = LoadFloatVariable(defaultMaxVisibleDistance, prefix + "VISIBILITY_DISTANCE");
 
 
 			// character controller parameters
@@ -151,21 +153,22 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 
 		// Use this for initialization
-		protected virtual void Start () {
+		protected virtual void Start()
+		{
 			m_Camera = Camera.main;
 			m_OriginalCameraPosition = m_Camera.transform.localPosition;
 			m_FovKick.Setup(m_Camera);
 			m_HeadBob.Setup(m_Camera, m_StepInterval);
 			m_StepCycle = 0f;
-			m_NextStep = m_StepCycle/2f;
+			m_NextStep = m_StepCycle / 2f;
 			m_Jumping = false;
-			m_MouseLook.Init(transform , m_Camera.transform);
-			ObjectTriggers = new Hashtable ();
+			m_MouseLook.Init(transform, m_Camera.transform);
+			ObjectTriggers = new Hashtable();
 
 			// set agent initial states
 			targetRotation = transform.rotation;
 			collidedObjects = new string[0];
-			collisionsInAction = new List<string> ();
+			collisionsInAction = new List<string>();
 
 			// record initial positions and rotations
 			init_position = transform.position;
@@ -174,7 +177,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			//allowNodes = false;
 		}
 
-		protected virtual byte[] captureScreen() {
+		protected virtual byte[] captureScreen()
+		{
 			int width = Screen.width;
 			int height = Screen.height;
 
@@ -194,59 +198,76 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 		protected virtual void actionFinished(bool success) { }
 
-		protected bool closeSimObj(SimObj so) {
+		protected bool closeSimObj(SimObj so)
+		{
 			bool res = false;
 			if (OPEN_CLOSE_STATES.ContainsKey(so.Type))
 			{
 				res = updateAnimState(so.Animator, OPEN_CLOSE_STATES[so.Type]["close"]);
-			} else if (so.IsAnimated) {
-				res = updateAnimState (so.Animator, false);
+			}
+			else if (so.IsAnimated)
+			{
+				res = updateAnimState(so.Animator, false);
 			}
 			return res;
 		}
 
-		protected bool openSimObj(SimObj so) {
+		protected bool openSimObj(SimObj so)
+		{
 
 			bool res = false;
-			if (OPEN_CLOSE_STATES.ContainsKey(so.Type)){
+			if (OPEN_CLOSE_STATES.ContainsKey(so.Type))
+			{
 				res = updateAnimState(so.Animator, OPEN_CLOSE_STATES[so.Type]["open"]);
 
-			} else if (so.IsAnimated){
-				res = updateAnimState (so.Animator, true);
+			}
+			else if (so.IsAnimated)
+			{
+				res = updateAnimState(so.Animator, true);
 			}
 			return res;
 
 		}
 
 
-		private bool updateAnimState(Animator anim, int value) {
-			AnimatorControllerParameter param = anim.parameters [0];
+		private bool updateAnimState(Animator anim, int value)
+		{
+			AnimatorControllerParameter param = anim.parameters[0];
 
-			if (anim.GetInteger(param.name) == value) {
+			if (anim.GetInteger(param.name) == value)
+			{
 				return false;
-			} else {
-				anim.SetInteger (param.name, value);
+			}
+			else
+			{
+				anim.SetInteger(param.name, value);
 				return true;
 			}
 		}
 
-		private bool updateAnimState(Animator anim, bool value) {
-			AnimatorControllerParameter param = anim.parameters [0];
+		private bool updateAnimState(Animator anim, bool value)
+		{
+			AnimatorControllerParameter param = anim.parameters[0];
 
-			if (anim.GetBool(param.name) == value) {
+			if (anim.GetBool(param.name) == value)
+			{
 				return false;
-			} else {
-				anim.SetBool (param.name, value);
+			}
+			else
+			{
+				anim.SetBool(param.name, value);
 				return true;
 			}
 		}
 
-		protected virtual float FixedUpdateSpeed() {
+		protected virtual float FixedUpdateSpeed()
+		{
 			return forwardVelocity;
 		}
 
 		// Deal with rigid body in FixedUpdate
-		protected void FixedUpdate() {
+		protected void FixedUpdate()
+		{
 
 			float speed = FixedUpdateSpeed();
 
@@ -256,7 +277,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			// get a normal for the surface that is being touched to move along it
 			RaycastHit hitInfo;
 			Physics.SphereCast(transform.position, m_CharacterController.radius, Vector3.down, out hitInfo,
-				m_CharacterController.height/2f);
+				m_CharacterController.height / 2f);
 			desiredMove = Vector3.ProjectOnPlane(desiredMove, hitInfo.normal).normalized;
 
 			m_MoveDir.x = desiredMove.x * speed;
@@ -277,9 +298,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
 				m_MoveDir += Physics.gravity * m_GravityMultiplier * Time.fixedDeltaTime;
 			}
 
-			m_CollisionFlags = m_CharacterController.Move (m_MoveDir * Time.fixedDeltaTime);
+			m_CollisionFlags = m_CharacterController.Move(m_MoveDir * Time.fixedDeltaTime);
 
-			if ((m_CollisionFlags & CollisionFlags.Sides) != 0) {
+			if ((m_CollisionFlags & CollisionFlags.Sides) != 0)
+			{
 				// If this condition satisfies, that means the agent hits some objects
 				// We can set negative rewards here
 			}
@@ -311,13 +333,15 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		protected virtual void RotateView()
 		{
 			// turn up & down
-			if (Mathf.Abs (m_XRotation) > Mathf.Epsilon) {
-				transform.Rotate (Vector3.right * m_XRotation, Space.Self);
+			if (Mathf.Abs(m_XRotation) > Mathf.Epsilon)
+			{
+				transform.Rotate(Vector3.right * m_XRotation, Space.Self);
 			}
 
 			// turn left & right
-			if (Mathf.Abs (m_ZRotation) > Mathf.Epsilon) {
-				transform.Rotate (Vector3.up * m_ZRotation, Space.Self);
+			if (Mathf.Abs(m_ZRotation) > Mathf.Epsilon)
+			{
+				transform.Rotate(Vector3.up * m_ZRotation, Space.Self);
 			}
 
 			// heading
@@ -330,10 +354,13 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			// move this out of Unity
 			// constrain vertical turns in safe range
 			float X_SAFE_RANGE = 30.0f;
-			if (eulerX < 180.0f) {
-				eulerX = Mathf.Min (X_SAFE_RANGE, eulerX);
-			} else {
-				eulerX = 360.0f - Mathf.Min (X_SAFE_RANGE, 360.0f - eulerX);
+			if (eulerX < 180.0f)
+			{
+				eulerX = Mathf.Min(X_SAFE_RANGE, eulerX);
+			}
+			else
+			{
+				eulerX = 360.0f - Mathf.Min(X_SAFE_RANGE, 360.0f - eulerX);
 			}
 
 			// freeze y-axis
@@ -345,12 +372,14 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 
 		// Check if agent is collided with other objects
-		protected bool IsCollided() {
+		protected bool IsCollided()
+		{
 			return collisionsInAction.Count > 0;
 		}
 
-		protected virtual MetadataWrapper generateMetadataWrapper() {
-			ObjectMetadata agentMeta = new ObjectMetadata ();
+		protected virtual MetadataWrapper generateMetadataWrapper()
+		{
+			ObjectMetadata agentMeta = new ObjectMetadata();
 			agentMeta.name = "agent";
 			agentMeta.position = transform.position;
 			agentMeta.rotation = transform.eulerAngles;
@@ -369,112 +398,133 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		}
 
 
-		public SimObj[] VisibleSimObjs() {
-			return SimUtil.GetAllVisibleSimObjs (m_Camera, maxVisibleDistance);
+		public SimObj[] VisibleSimObjs()
+		{
+			return SimUtil.GetAllVisibleSimObjs(m_Camera, maxVisibleDistance);
 		}
 
 
-		public SimObj[] VisibleSimObjs(bool forceVisible) {
-			if (forceVisible) {
-				return GameObject.FindObjectsOfType (typeof(SimObj)) as SimObj[];
-			} else {
-				return VisibleSimObjs ();
+		public SimObj[] VisibleSimObjs(bool forceVisible)
+		{
+			if (forceVisible)
+			{
+				return GameObject.FindObjectsOfType(typeof(SimObj)) as SimObj[];
+			}
+			else
+			{
+				return VisibleSimObjs();
 
 			}
 		}
 
-		public bool IsOpen(SimObj simobj) {
+		public bool IsOpen(SimObj simobj)
+		{
 			Animator anim = simobj.Animator;
-			AnimatorControllerParameter param = anim.parameters [0];
-			if (OPEN_CLOSE_STATES.ContainsKey(simobj.Type)){
+			AnimatorControllerParameter param = anim.parameters[0];
+			if (OPEN_CLOSE_STATES.ContainsKey(simobj.Type))
+			{
 				return anim.GetInteger(param.name) == OPEN_CLOSE_STATES[simobj.Type]["open"];
-			} else {
-				return anim.GetBool (param.name);
+			}
+			else
+			{
+				return anim.GetBool(param.name);
 			}
 
 		}
 
-		public bool IsOpenable(SimObj so) {
+		public bool IsOpenable(SimObj so)
+		{
 
-			return Array.IndexOf (OpenableTypes, so.Type) >= 0 && so.IsAnimated;
+			return Array.IndexOf(OpenableTypes, so.Type) >= 0 && so.IsAnimated;
 		}
 
 
-		public bool IsPickupable(SimObj so) {
-			return !IsOpenable (so) && !so.IsReceptacle && !(Array.IndexOf (ImmobileTypes, so.Type) >= 0);
+		public bool IsPickupable(SimObj so)
+		{
+			return !IsOpenable(so) && !so.IsReceptacle && !(Array.IndexOf(ImmobileTypes, so.Type) >= 0);
 		}
 
-		public bool excludeObject(SimObj so) {
-			return Array.IndexOf (this.excludeObjectIds, so.UniqueID) >= 0;
+		public bool excludeObject(SimObj so)
+		{
+			return Array.IndexOf(this.excludeObjectIds, so.UniqueID) >= 0;
 		}
 
-		private ObjectMetadata[] generateObjectMetadataForTag(string tag, bool isAnimated) {
+		private ObjectMetadata[] generateObjectMetadataForTag(string tag, bool isAnimated)
+		{
 			// Encode these in a json string and send it to the server
-			SimObj[] simObjects = GameObject.FindObjectsOfType (typeof(SimObj)) as SimObj[];
+			SimObj[] simObjects = GameObject.FindObjectsOfType(typeof(SimObj)) as SimObj[];
 
-			HashSet<SimObj> visibleObjectIds = new HashSet<SimObj> ();
-			foreach (SimObj so in VisibleSimObjs()) {
-				visibleObjectIds.Add (so);
+			HashSet<SimObj> visibleObjectIds = new HashSet<SimObj>();
+			foreach (SimObj so in VisibleSimObjs())
+			{
+				visibleObjectIds.Add(so);
 			}
 			int numObj = simObjects.Length;
-			List<ObjectMetadata> metadata = new List<ObjectMetadata> ();
-			for (int k=0; k<numObj; k++) {
-				ObjectMetadata meta = new ObjectMetadata ();
-				SimObj simObj = simObjects [k];
-				if (this.excludeObject (simObj)) {
+			List<ObjectMetadata> metadata = new List<ObjectMetadata>();
+			for (int k = 0; k < numObj; k++)
+			{
+				ObjectMetadata meta = new ObjectMetadata();
+				SimObj simObj = simObjects[k];
+				if (this.excludeObject(simObj))
+				{
 					continue;
 				}
 				GameObject o = simObj.gameObject;
 
-					
+
 				meta.name = o.name;
 				meta.position = o.transform.position;
 				meta.rotation = o.transform.eulerAngles;
 
-				meta.objectType = Enum.GetName (typeof(SimObjType), simObj.Type);
+				meta.objectType = Enum.GetName(typeof(SimObjType), simObj.Type);
 				meta.receptacle = simObj.IsReceptacle;
-				meta.openable = IsOpenable (simObj);
-				if (meta.openable) {
-					meta.isopen = IsOpen (simObj);
+				meta.openable = IsOpenable(simObj);
+				if (meta.openable)
+				{
+					meta.isopen = IsOpen(simObj);
 				}
-				meta.pickupable = IsPickupable (simObj);
+				meta.pickupable = IsPickupable(simObj);
 
-				if (meta.receptacle) {
-					List<string> receptacleObjectIds = new List<string> ();
-					foreach (SimObj cso in SimUtil.GetItemsFromReceptacle(simObj.Receptacle)) {
-						receptacleObjectIds.Add (cso.UniqueID);
+				if (meta.receptacle)
+				{
+					List<string> receptacleObjectIds = new List<string>();
+					foreach (SimObj cso in SimUtil.GetItemsFromReceptacle(simObj.Receptacle))
+					{
+						receptacleObjectIds.Add(cso.UniqueID);
 
 					}
-					List<PivotSimObj> pivotSimObjs = new List<PivotSimObj> ();
-					for (int i = 0; i < simObj.Receptacle.Pivots.Length; i++){
-						Transform t = simObj.Receptacle.Pivots [i];
-						if (t.childCount > 0) {
-							SimObj psimobj = t.GetChild (0).GetComponent<SimObj> ();
+					List<PivotSimObj> pivotSimObjs = new List<PivotSimObj>();
+					for (int i = 0; i < simObj.Receptacle.Pivots.Length; i++)
+					{
+						Transform t = simObj.Receptacle.Pivots[i];
+						if (t.childCount > 0)
+						{
+							SimObj psimobj = t.GetChild(0).GetComponent<SimObj>();
 							PivotSimObj pso = new PivotSimObj();
 							pso.objectId = psimobj.UniqueID;
 							pso.pivotId = i;
-							pivotSimObjs.Add (pso);
+							pivotSimObjs.Add(pso);
 						}
 					}
 					meta.pivotSimObjs = pivotSimObjs.ToArray();
-					meta.receptacleObjectIds = receptacleObjectIds.ToArray ();
+					meta.receptacleObjectIds = receptacleObjectIds.ToArray();
 					meta.receptacleCount = simObj.Receptacle.Pivots.Length;
-	
+
 				}
-					
+
 				meta.objectId = simObj.UniqueID;
 
 
 				meta.visible = (visibleObjectIds.Contains(simObj));
-				meta.distance = Vector3.Distance (transform.position, o.transform.position);
+				meta.distance = Vector3.Distance(transform.position, o.transform.position);
 
-				metadata.Add (meta);
+				metadata.Add(meta);
 			}
-			return metadata.ToArray ();
+			return metadata.ToArray();
 
 		}
 
-	
+
 
 
 
@@ -482,18 +532,21 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		// Handle collisions
 		protected void OnControllerColliderHit(ControllerColliderHit hit)
 		{
-			if (!enabled) {
+			if (!enabled)
+			{
 				return;
 			}
 
-			if (hit.gameObject.name.Equals ("Floor")) {
+			if (hit.gameObject.name.Equals("Floor"))
+			{
 				return;
 			}
 
 
-			if (!collisionsInAction.Contains (hit.gameObject.name)) {
-				Debug.Log ("Collided with " + hit.gameObject.name);
-				collisionsInAction.Add (hit.gameObject.name);
+			if (!collisionsInAction.Contains(hit.gameObject.name))
+			{
+				Debug.Log("Collided with " + hit.gameObject.name);
+				collisionsInAction.Add(hit.gameObject.name);
 			}
 
 			Rigidbody body = hit.collider.attachedRigidbody;
@@ -507,54 +560,61 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			{
 				return;
 			}
-			body.AddForceAtPosition (m_CharacterController.velocity * 0.1f, hit.point, ForceMode.Impulse);
+			body.AddForceAtPosition(m_CharacterController.velocity * 0.1f, hit.point, ForceMode.Impulse);
 		}
 
 
 		// Extra helper functions
-		protected string LoadStringVariable(string variable, string name) {
-			string envVarName =  ENVIRONMENT_PREFIX + name.ToUpper ();
-			string envVarValue = Environment.GetEnvironmentVariable (envVarName);
+		protected string LoadStringVariable(string variable, string name)
+		{
+			string envVarName = ENVIRONMENT_PREFIX + name.ToUpper();
+			string envVarValue = Environment.GetEnvironmentVariable(envVarName);
 			return envVarValue == null ? variable : envVarValue;
 		}
 
-		protected int LoadIntVariable(int variable, string name) {
-			string envVarName =  ENVIRONMENT_PREFIX + name.ToUpper ();
-			string envVarValue = Environment.GetEnvironmentVariable (envVarName);
-			return envVarValue == null ? variable : int.Parse (envVarValue);
+		protected int LoadIntVariable(int variable, string name)
+		{
+			string envVarName = ENVIRONMENT_PREFIX + name.ToUpper();
+			string envVarValue = Environment.GetEnvironmentVariable(envVarName);
+			return envVarValue == null ? variable : int.Parse(envVarValue);
 		}
 
-		protected float LoadFloatVariable(float variable, string name) {
-			string envVarName =  ENVIRONMENT_PREFIX + name.ToUpper ();
-			string envVarValue = Environment.GetEnvironmentVariable (envVarName);
-			return envVarValue == null ? variable : float.Parse (envVarValue);
+		protected float LoadFloatVariable(float variable, string name)
+		{
+			string envVarName = ENVIRONMENT_PREFIX + name.ToUpper();
+			string envVarValue = Environment.GetEnvironmentVariable(envVarName);
+			return envVarValue == null ? variable : float.Parse(envVarValue);
 		}
 
-		protected bool LoadBoolVariable(bool variable, string name) {
-			string envVarName =  ENVIRONMENT_PREFIX + name.ToUpper ();
-			string envVarValue = Environment.GetEnvironmentVariable (envVarName);
-			return envVarValue == null ? variable : bool.Parse (envVarValue);
+		protected bool LoadBoolVariable(bool variable, string name)
+		{
+			string envVarName = ENVIRONMENT_PREFIX + name.ToUpper();
+			string envVarValue = Environment.GetEnvironmentVariable(envVarName);
+			return envVarValue == null ? variable : bool.Parse(envVarValue);
 		}
 
-		
 
-		protected void ProcessControlCommand(string msg) {
-			Debug.Log ("Procssing control commands: " + msg);
+
+		protected void ProcessControlCommand(string msg)
+		{
+			Debug.Log("Procssing control commands: " + msg);
 			errorMessage = "";
-			collisionsInAction = new List<string> ();
+			errorCode = ServerActionErrorCode.Undefined;
+			collisionsInAction = new List<string>();
 
 			ServerAction controlCommand = JsonUtility.FromJson<ServerAction>(msg);
-            this.currentSequenceId = controlCommand.sequenceId;
+			this.currentSequenceId = controlCommand.sequenceId;
 			lastAction = controlCommand.action;
 			lastActionSuccess = false;
-			lastPosition = new Vector3 (transform.position.x, transform.position.y, transform.position.z);
-			Debug.Log ("sending message: " + this.name);
-			System.Reflection.MethodInfo method = this.GetType ().GetMethod (controlCommand.action);
+			lastPosition = new Vector3(transform.position.x, transform.position.y, transform.position.z);
+			Debug.Log("sending message: " + this.name);
+			System.Reflection.MethodInfo method = this.GetType().GetMethod(controlCommand.action);
 			try
 			{
 				method.Invoke(this, new object[] { controlCommand });
 			}
-			catch (Exception e) {
+			catch (Exception e)
+			{
 				Debug.LogError("caught error with invoke");
 				Debug.LogError(e);
 				errorMessage += e.ToString();
@@ -585,18 +645,21 @@ public class ObjectMetadata
 	public string objectId;
 }
 [Serializable]
-public class InventoryObject {
+public class InventoryObject
+{
 	public string objectId;
 	public string objectType;
 }
 
 [Serializable]
-public class PivotSimObj {
+public class PivotSimObj
+{
 	public int pivotId;
 	public string objectId;
 }
 [Serializable]
-public struct MetadataWrapper {
+public struct MetadataWrapper
+{
 	public ObjectMetadata[] objects;
 	public ObjectMetadata agent;
 	public bool collided;
@@ -605,10 +668,11 @@ public struct MetadataWrapper {
 	public string sceneName;
 	public string lastAction;
 	public string errorMessage;
+	public string errorCode; // comes from ServerActionErrorCode
 	public bool lastActionSuccess;
 	public int screenWidth;
 	public int screenHeight;
-    public int sequenceId;
+	public int sequenceId;
 }
 
 
@@ -617,7 +681,7 @@ public struct MetadataWrapper {
 public class ServerAction
 {
 	public string action;
-	public string objectType; 
+	public string objectType;
 	public string receptacleObjectType;
 	public string receptacleObjectId;
 	public float gridSize;
@@ -626,7 +690,7 @@ public class ServerAction
 	public float y;
 	public float x;
 	public float z;
-    public int sequenceId;
+	public int sequenceId;
 	public bool snapToGrid = true;
 	public string sceneName;
 	public int sceneConfigIndex;
@@ -644,25 +708,30 @@ public class ServerAction
 	public ReceptacleObjectList[] receptacleObjects;
 	public ReceptacleObjectPair[] excludeReceptacleObjectPairs;
 
-	public SimObjType ReceptableSimObjType() {
-		if (string.IsNullOrEmpty(receptacleObjectType)) {
+	public SimObjType ReceptableSimObjType()
+	{
+		if (string.IsNullOrEmpty(receptacleObjectType))
+		{
 			return SimObjType.Undefined;
 		}
-		return (SimObjType)Enum.Parse(typeof(SimObjType), receptacleObjectType);   
+		return (SimObjType)Enum.Parse(typeof(SimObjType), receptacleObjectType);
 	}
 
-	public SimObjType GetSimObjType() {
+	public SimObjType GetSimObjType()
+	{
 
-		if (string.IsNullOrEmpty(objectType)) {
+		if (string.IsNullOrEmpty(objectType))
+		{
 			return SimObjType.Undefined;
 		}
-		return (SimObjType)Enum.Parse(typeof(SimObjType), objectType);   
+		return (SimObjType)Enum.Parse(typeof(SimObjType), objectType);
 	}
 
 
 }
 [Serializable]
-public class ReceptacleObjectPair {
+public class ReceptacleObjectPair
+{
 	public string receptacleObjectId;
 	public string objectId;
 	public int pivot;
@@ -670,7 +739,23 @@ public class ReceptacleObjectPair {
 
 
 [Serializable]
-public class ReceptacleObjectList {
+public class ReceptacleObjectList
+{
 	public string receptacleObjectType;
 	public string[] itemObjectTypes;
+}
+
+public enum ServerActionErrorCode  {
+	Undefined,
+	ReceptacleNotVisible,
+	ReceptacleNotOpen,
+	ObjectNotInInventory,
+	ReceptacleFull,
+	ReceptaclePivotNotVisible,
+	ObjectNotAllowedInReceptacle,
+	ObjectNotVisible,
+	InventoryFull,
+	ObjectNotPickupable,
+	LookUpCantExceedMax,
+	LookDownCantExceedMin
 }
