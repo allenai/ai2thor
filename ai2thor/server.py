@@ -54,6 +54,7 @@ class Event(object):
         self.metadata = metadata
         width = metadata['screenWidth']
         height = metadata['screenHeight']
+        self.image_data = image_data
         if sys.version_info.major < 3:
             # support for Python 2.7 - can't handle memoryview in Python2.7 and Numpy frombuffer
             self.frame = np.flip(np.frombuffer(image_data.tobytes(), dtype=np.uint8).reshape(width, height, 3), axis=0)

@@ -39,7 +39,6 @@ from ai2thor._builds import BUILDS
 
 logger = logging.getLogger(__name__)
 
-
 RECEPTACLE_OBJECTS = {
     'Box': {'Candle',
             'CellPhone',
@@ -412,14 +411,20 @@ class Controller(object):
         return scenes
 
     def step(self, action, raise_for_failure=False):
-        if not self._check_action(action):
-            new_event = ai2thor.server.Event(
-                json.loads(json.dumps(self.last_event.metadata)),
-                self.last_event.image)
 
-            new_event.metadata['lastActionSuccess'] = False
-            self.last_event = new_event
-            return new_event
+        if action['action'] == 'PutObject':
+            receptacle_type = action['receptacleObjectId'].split('|')[0]
+            object_type = action['objectId'].split('|')[0]
+            if object_type not in RECEPTACLE_OBJECTS[receptacle_type]:
+                new_event = ai2thor.server.Event(
+                    json.loads(json.dumps(self.last_event.metadata)),
+                    self.last_event.image_data)
+
+                new_event.metadata['lastActionSuccess'] = False
+                new_event.metadata['errorCode'] = 'ObjectNotAllowedInReceptacle'
+                self.last_event = new_event
+                return new_event
+
         assert self.request_queue.empty()
 
         # Converts numpy scalars to python scalars so they can be encoded in
@@ -626,9 +631,6 @@ class Controller(object):
     def stop_unity(self):
         if self.unity_pid and process_alive(self.unity_pid):
             os.kill(self.unity_pid, signal.SIGKILL)
-
-    def _check_action(self, _):
-        return True
 
 class BFSSearchPoint:
     def __init__(self, start_position, move_vector, heading_angle=0.0, horizon_angle=0.0):
