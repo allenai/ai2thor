@@ -119,6 +119,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 		// Initialize parameters from environment variables
 		protected virtual void Awake() {
+			Application.targetFrameRate = 300;
+            QualitySettings.vSyncCount = 0;
 
 			// whether it's in training or test phase
 			bool trainPhase = true;
@@ -548,7 +550,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		
 
 		protected void ProcessControlCommand(string msg) {
-			Debug.Log ("Procssing control commands: " + msg);
+			//Debug.Log ("Procssing control commands: " + msg);
 			errorMessage = "";
 			collisionsInAction = new List<string> ();
 
@@ -557,7 +559,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			lastAction = controlCommand.action;
 			lastActionSuccess = false;
 			lastPosition = new Vector3 (transform.position.x, transform.position.y, transform.position.z);
-			Debug.Log ("sending message: " + this.name);
 			System.Reflection.MethodInfo method = this.GetType ().GetMethod (controlCommand.action);
 			try
 			{
