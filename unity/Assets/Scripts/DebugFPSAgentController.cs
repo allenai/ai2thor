@@ -550,7 +550,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
                 //check if the receptacle is in visible range
                 bool inrange = false;
-                //check if the object we are trying to open is in visible range
+                //check if the object we are trying to put something in is in visible range
                 foreach (SimObj o in currentVisibleObjects)
                 {
                     //check if the ID of the object we are looking at is in array of visible objects
@@ -562,6 +562,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
                 if (inrange)
                 {
+                    //if (SimUtil.AddItemToVisibleReceptacle(inventory[current_Object_In_Inventory], hit.transform.GetComponent<Receptacle>(), gameObject.GetComponentInChildren<Camera>()) == false)
+
 
                     if (SimUtil.AddItemToReceptacle(inventory[current_Object_In_Inventory], hit.transform.GetComponent<Receptacle>()) == false)
                         Debug.Log("There's no space for that!");

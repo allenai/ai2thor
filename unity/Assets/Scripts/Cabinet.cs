@@ -18,7 +18,7 @@ public class Cabinet : MonoBehaviour
 	public bool Open;
 	public SimObj ParentObj;
 
-    public Transform VisCollider; //the visibility collider for reference if this is a drawer
+
 
 	public CabinetOpenStyle OpenStyle;
 	public Transform LeftDoor;
@@ -37,7 +37,26 @@ public class Cabinet : MonoBehaviour
 	Vector3 rightDoorTargetRotation;
 	Vector3 leftDoorTargetRotation;
 
-    //Drawer 
+    //Drawer Stuff// 
+    /*
+    In order for any drawer to be visible under the visibiliy checking sphere, make sure that
+    the drawer parenting heirarchy is set up as:
+    
+    -Cabinet
+        -Base
+            -Door
+                -Visibility Collider
+                 -Pivot
+
+    When a drawer is in the closed position, the visibiliy collider will become flat and move up to the forward
+    face of the drawer so the agent's sight is not occluded by stacked drawers or geometry. 
+
+    When a drawer is in the open position, the visibility collider resets the position to the
+    center and expands so that the Agent can see what is inside the drawer.
+    */
+
+    public Transform VisCollider; //the visibility collider for reference if this is a drawer
+
 	Vector3 drawerTargetPosition; //Drawer's position if either open or closed
 
     Vector3 drawerVisColPosition; //Drawer's visibility collider position if open or closed
@@ -48,6 +67,8 @@ public class Cabinet : MonoBehaviour
 
     public Vector3 OpenVisColPosition = new Vector3(0f, 0f, 0f); //drawer's visibility collider position if OPEN
     public Vector3 OpenVisColScale = new Vector3(1f, 1f, 1f); //drawer's visiiblity collider scale if OPEN
+
+    //End of Drawer Stuff//
 
 	//bool lastOpen = false;
 	float animatingDistance;
