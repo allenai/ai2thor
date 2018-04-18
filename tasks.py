@@ -1,6 +1,7 @@
 import os
 import datetime
 import zipfile
+import time
 from invoke import task
 import hashlib
 import pprint
@@ -37,7 +38,7 @@ def _build(context, arch, build_name):
 @task
 def local_build(context, prefix='local'):
     arch = 'OSXIntel64'
-    build_name = "builds/thor-%s-%s" % (prefix, arch)
+    build_name = "builds/thor-physics-%s-%s" % (prefix, arch)
     if _build(context, arch, build_name):
         print("Build Successful")
     else:
@@ -83,7 +84,7 @@ def build(context, local=False):
     builds = {'Docker': {'tag': version}}
 
     for arch in ['OSXIntel64', 'Linux64']:
-        build_name = "builds/thor-%s-%s" % (version, arch)
+        build_name = "builds/thor-physics-%s-%s" % (version, arch)
         url = build_url_base + build_name + ".zip"
 
         x = _build(context, arch, build_name)
@@ -113,4 +114,5 @@ def build(context, local=False):
             fi.write("VERSION = '%s'\n" % version)
             fi.write("BUILDS = " + pprint.pformat(builds))
 
-    build_docker(version)
+    #build_docker(version)
+

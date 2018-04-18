@@ -26,6 +26,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		protected float moveMagnitude;
 		protected Vector3 targetTeleport;
 		protected Vector3 startingHandPosition;
+		protected Vector3 lastHandPosition;
 		private Dictionary<int, Material[]> currentMaskMaterials;
 		private SimObj currentMaskObj;
 		private SimObj currentHandSimObj;
@@ -70,6 +71,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			transform.rotation = Quaternion.Euler (new Vector3 (0.0f, 0.0f, 0.0f));
 			m_Camera.transform.localEulerAngles = new Vector3 (0.0f, 0.0f, 0.0f);
 			startingHandPosition = getHand ().transform.localPosition;
+			lastHandPosition = startingHandPosition;
 			snapToGrid ();
 
 		}
@@ -262,6 +264,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
 				}
 
 			}
+			currentHandSimObj = null;
+            resetHand ();
 
 			actionFinished (result);
 		}
@@ -274,9 +278,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			if (currentHandSimObj != null && currentHandSimObj.hasCollision) {
 				Debug.Log ("hand moved object into a collision");
 				errorMessage = "hand object had a collision";
-				resetHand ();
+				resetHandLastPosition ();
 				actionFinished (false);
 			} else {
+				lastHandPosition = getHand().transform.localPosition;
 				actionFinished (true);
 				Debug.Log ("hand move with object success");
 
@@ -667,17 +672,27 @@ namespace UnityStandardAssets.Characters.FirstPerson
 				Rigidbody rb = currentHandSimObj.GetComponentInChildren (typeof(Rigidbody)) as Rigidbody;
 				rb.constraints = RigidbodyConstraints.None;
 				rb.useGravity = true;
-
+				rb.isKinematic = false;
 				currentHandSimObj.transform.parent = null;
 				removeObjectInventory (currentHandSimObj.UniqueID);
 				StartCoroutine (checkDropHandObjectAction ());
-				//currentHandSimObj = null;
-				//resetHand ();
+
 			} else {
-				lastActionSuccess = false;
+				actionFinished(false);
+
 			}
 
 
+		}
+
+		private void resetHandLastPosition()
+		{
+			GameObject hand = getHand();
+			if (currentHandSimObj != null)
+			{
+				currentHandSimObj.hasCollision = false;
+			}
+			hand.transform.localPosition = lastHandPosition;
 		}
 
 		private void resetHand() {
@@ -694,30 +709,56 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			resetHand ();
 		}
 
-		private void moveHand(Vector3 target) {
+		private void moveHand(GameObject hand, Vector3 direction, float magnitude) {
 
-			GameObject hand = getHand ();
 			currentHandSimObj.hasCollision = false;
-			hand.transform.position = hand.transform.position + target;
-			StartCoroutine (checkMoveHandAction());
+			Rigidbody rb = currentHandSimObj.GetComponentInChildren(typeof(Rigidbody)) as Rigidbody;
+			RaycastHit hit;
 
+			if (rb.SweepTest(direction, out hit, maxDistance: magnitude))
+			{
+				//Debug.DrawLine(hand.transform.position, hit.point, Color.red, 300);
+				actionFinished(false);
+			} else {
+				hand.transform.position = hand.transform.position + (direction * magnitude);
+				actionFinished(true);
+			}
 		}
 
+
+		public void MoveHandBack(ServerAction action)
+		{
+			GameObject hand = getHand ();
+
+			moveHand(hand, hand.transform.forward * - 1, action.moveMagnitude);
+		}
+
+
 		public void MoveHandForward(ServerAction action) {
-			moveHand (m_CharacterController.transform.forward * action.moveMagnitude);
+			GameObject hand = getHand ();
+
+			moveHand (hand, hand.transform.forward, action.moveMagnitude);
 		}
 
 
 		public void RotateHand(ServerAction action) {
+            //getHand().transform.RotateAround(Vector3.zero, Vector3.forward, action.rotation);
+
 			getHand().transform.localRotation = Quaternion.Euler(new Vector3(action.x, action.y, action.z));
+			actionFinished(true);
 		}
 
 		public void MoveHandLeft(ServerAction action) {
-			moveHand (m_CharacterController.transform.right * action.moveMagnitude * -1);
+			GameObject hand = getHand ();
+
+			moveHand (hand, hand.transform.right * -1, action.moveMagnitude);
 		}
 
 		public void MoveHandRight(ServerAction action) {
-			moveHand (m_CharacterController.transform.right * action.moveMagnitude);
+			GameObject hand = getHand();
+
+			moveHand(hand, hand.transform.right, action.moveMagnitude);
+
 		}
 
 
@@ -737,10 +778,11 @@ namespace UnityStandardAssets.Characters.FirstPerson
 						rb.freezeRotation = true;
 						rb.constraints = RigidbodyConstraints.FreezeAll;
 						rb.useGravity = false;
-						so.transform.position = hand.transform.position;
+						//so.transform.position = hand.transform.position;
 //						so.transform.parent = this.transform;
 //						so.transform.parent = m_CharacterController.transform;
 						so.transform.parent = hand.transform;
+					
 						so.ResetScale ();
 						so.transform.localPosition = new Vector3 ();
 						so.hasCollision = false;
