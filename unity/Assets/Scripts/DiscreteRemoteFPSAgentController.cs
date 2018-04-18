@@ -32,6 +32,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		private SimObj currentHandSimObj;
 		private static float gridSize = 0.25f;
 		private Texture2D tex;
+		private Rect readPixelsRect;
 
 
 		private enum emitStates {Send, Wait, Received};
@@ -53,7 +54,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			serverSideScreenshot = LoadBoolVariable (serverSideScreenshot, "SERVER_SIDE_SCREENSHOT");
 			robosimsClientToken = LoadStringVariable (robosimsClientToken, "CLIENT_TOKEN");
 			tex = new Texture2D(UnityEngine.Screen.width, UnityEngine.Screen.height, TextureFormat.RGB24, false);
-
+            readPixelsRect = new Rect(0, 0, UnityEngine.Screen.width, UnityEngine.Screen.height);
 			base.Awake ();
 
             DebugCanvas = GameObject.Find("DebugCanvas").GetComponent<Canvas>();
@@ -82,8 +83,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			m_Camera.transform.localEulerAngles = new Vector3 (0.0f, 0.0f, 0.0f);
 			//startingHandPosition = getHand ().transform.localPosition;
 			snapToGrid ();
-
-
 
 		}
 
@@ -129,6 +128,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 					if (movement.magnitude > dir.magnitude) {
 						movement = dir;
 					}
+					movement.y = Physics.gravity.y* this.m_GravityMultiplier;
 
 					m_CharacterController.Move (movement);
 
@@ -151,6 +151,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			if (validMovements.Count > 0) {
 				Debug.Log ("got total valid targets: " + validMovements.Count);
 				Vector3 firstMove = validMovements [0];
+				firstMove.y = Physics.gravity.y* this.m_GravityMultiplier;
+
 				m_CharacterController.Move (firstMove);
 				snapToGrid ();
 				actionFinished (true);
@@ -175,6 +177,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			float mult = 1 / gridSize;
 			float gridX = Convert.ToSingle (Math.Round (this.transform.position.x * mult) / mult);
 			float gridZ = Convert.ToSingle (Math.Round (this.transform.position.z * mult) / mult);
+
 			this.transform.position = new Vector3 (gridX, transform.position.y, gridZ);
 
 		}
@@ -192,12 +195,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 		virtual protected IEnumerator checkMoveAction(ServerAction action) {
 			yield return null;
-
 			bool result = false;
 
 
 			for (int i = 0; i < actionDuration; i++) {
 				Vector3 currentPosition = this.transform.position;
+
 
 				Vector3 diff = currentPosition - lastPosition;
 				if (
@@ -259,10 +262,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 			bool result = false;
 			for (int i = 0; i < 30; i++) {
-				Debug.Log("in drop hand action");
 				Debug.Log (currentHandSimObj.transform.position.ToString());
 				Rigidbody rb = currentHandSimObj.GetComponentInChildren (typeof(Rigidbody)) as Rigidbody;
-				Debug.Log (rb.velocity.sqrMagnitude);
 				if (Math.Abs (rb.angularVelocity.sqrMagnitude + rb.velocity.sqrMagnitude) < 0.00001) {
 					Debug.Log ("object is now at rest");
 					result = true;
@@ -333,12 +334,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 		public void Update()
 		{
-            if (Input.GetKeyDown(KeyCode.BackQuote))
-            {
-                DebugCanvas.enabled = true;
-                DebugComponent.enabled = true;
-            }
-		}
+          if (robosimsClientToken.Length == 0 && Input.GetKeyDown(KeyCode.BackQuote))
+          {
+              DebugCanvas.enabled = true;
+              DebugComponent.enabled = true;
+          }
+        }
 
 
 
@@ -452,19 +453,11 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			WWWForm form = new WWWForm();
 
 			if (!serverSideScreenshot) {
-				// create a texture the size of the screen, RGB24 format
-				int width = Screen.width;
-				int height = Screen.height;
-
 				// read screen contents into the texture
-				tex.ReadPixels(new Rect(0, 0, width, height), 0, 0);
+				tex.ReadPixels(readPixelsRect, 0, 0);
 				tex.Apply();
-
-
 				byte[] bytes = tex.GetRawTextureData();
-			
-				
-				form.AddBinaryData("image", bytes, "frame-" + frameCounter.ToString().PadLeft(7, '0') + ".png", "image/raw-rgb");
+				form.AddBinaryData("image", bytes, "frame-" + frameCounter.ToString().PadLeft(7, '0') + ".rgb", "image/raw-rgb");
 
 			}
 			// for testing purposes, also write to a file in the project folder
@@ -480,6 +473,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             	Debug.Log ("Error: " + w.error);
                 yield break;
             } else {
+
                 emitState = emitStates.Received;
                 ProcessControlCommand (w.text);
             }
@@ -504,7 +498,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			actionOrientation.Add (270, new Vector3 (-1.0f * moveMagnitude, 0.0f, 0.0f));
 			int delta = (currentRotation + targetOrientation) % 360;
 
-			m_CharacterController.Move (actionOrientation[delta]);
+            Vector3 m = actionOrientation[delta];
+            m.y = Physics.gravity.y * this.m_GravityMultiplier;
+			m_CharacterController.Move (m);
 			StartCoroutine (checkMoveAction (action));
 
 		}
@@ -517,6 +513,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 				moveMagnitude = Math.Abs (action.z);
 			}
 
+            action.y = Physics.gravity.y * this.m_GravityMultiplier;
 			m_CharacterController.Move (new Vector3(action.x, action.y, action.z));
 			StartCoroutine (checkMoveAction (action));
 		}
