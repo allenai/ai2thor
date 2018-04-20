@@ -16,12 +16,12 @@ public static class SimUtil {
 	public const int RaycastHiddenLayerMask = 1 << RaycastHiddenLayer;
 	public const string ReceptacleTag = "Receptacle";
 	public const string SimObjTag = "SimObj";
-	public const string StructureTag = "Structure";
+	public const string StructureTag = "Structure";// what is this used for?
 	public const float ViewPointRangeHigh = 1f;
 	public const float ViewPointRangeLow = 0f;
 	public const int VisibilityCheckSteps = 10;
 
-    public const float DownwardRangeExtension = 2.0f;//1.45f; changes this so the agent can see low enough to open all drawers
+    public const float DownwardRangeExtension = 2.0f;//1.45f; changed this so the agent can see low enough to open all drawers
 	public const float MinDownwardLooKangle = 15f;
 	public const float MaxDownwardLookAngle = 60f;
 
