@@ -355,9 +355,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			agentMeta.position = transform.position;
 			agentMeta.rotation = transform.eulerAngles;
 			agentMeta.cameraHorizon = m_Camera.transform.rotation.eulerAngles.x;
-
+			 
 			MetadataWrapper metaMessage = new MetadataWrapper();
 			metaMessage.agent = agentMeta;
+			metaMessage.hand = new HandMetadata();
 			metaMessage.sceneName = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
 			metaMessage.objects = generateObjectMetadataForTag("SimObj", false);
 			metaMessage.collided = collidedObjects.Length > 0;
@@ -633,6 +634,14 @@ public class InventoryObject {
 }
 
 [Serializable]
+public class HandMetadata {
+	public Vector3 position;
+	public Vector3 rotation;
+	public Vector3 localPosition;
+	public Vector3 localRotation;
+}
+
+[Serializable]
 public class PivotSimObj {
 	public int pivotId;
 	public string objectId;
@@ -641,6 +650,7 @@ public class PivotSimObj {
 public struct MetadataWrapper {
 	public ObjectMetadata[] objects;
 	public ObjectMetadata agent;
+	public HandMetadata hand;
 	public bool collided;
 	public string[] collidedObjects;
 	public InventoryObject[] inventoryObjects;

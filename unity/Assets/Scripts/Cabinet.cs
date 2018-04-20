@@ -35,6 +35,10 @@ public class Cabinet : MonoBehaviour {
 	float animatingDistance;
 
 	public void OnEnable() {
+		if (ParentObj == null) {
+			Debug.Log("Parent object should be set.");
+			return;
+		}
 		ParentObj.Manipulation = SimObjManipType.StaticNoPlacement;
 		if (!Application.isPlaying) {
 			Animator a = ParentObj.gameObject.GetComponent<Animator> ();
@@ -47,6 +51,10 @@ public class Cabinet : MonoBehaviour {
 
 
 	public void Update () {
+		if (ParentObj == null) {
+			Debug.Log("Parent object should be set.");
+			return;
+		}
 		bool open = Open;
 		if (Application.isPlaying) {
 			//get whether we're open from our animation state

@@ -36,8 +36,7 @@ def _build(context, arch, build_name):
     return context.run(command, warn=True, env=dict(UNITY_BUILD_NAME=build_name))
 
 @task
-def local_build(context, prefix='local'):
-    arch = 'OSXIntel64'
+def local_build(context, prefix='local', arch='OSXIntel64'):
     build_name = "builds/thor-physics-%s-%s" % (prefix, arch)
     if _build(context, arch, build_name):
         print("Build Successful")

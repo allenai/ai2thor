@@ -28,6 +28,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		protected Vector3 startingHandPosition;
 		protected Vector3 lastHandPosition;
 		private Dictionary<int, Material[]> currentMaskMaterials;
+		private Dictionary<string, Dictionary<int, Material[]>> maskedObjects = new Dictionary<string, Dictionary<int, Material[]>>();
+		private List<Collider> visibilityColliders;
 		private SimObj currentMaskObj;
 		private SimObj currentHandSimObj;
 		private static float gridSize = 0.25f;
@@ -74,6 +76,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			lastHandPosition = startingHandPosition;
 			snapToGrid ();
 
+			visibilityColliders = new List<Collider>();
+			foreach(Collider c in UnityEngine.Object.FindObjectsOfType<Collider>()) {
+				if (c.name == "VisibilityCollider") {
+					visibilityColliders.Add(c);
+				}
+			}
 		}
 
 
@@ -415,6 +423,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			yield return new WaitForEndOfFrame();
 
 			MetadataWrapper metaMessage = generateMetadataWrapper();
+			metaMessage.hand.position = getHand().transform.position;
+			metaMessage.hand.localPosition = getHand().transform.localPosition;
+			metaMessage.hand.rotation = getHand().transform.eulerAngles;
+			metaMessage.hand.localRotation = getHand().transform.localEulerAngles;
 			metaMessage.lastAction = lastAction;
 			metaMessage.lastActionSuccess = lastActionSuccess;
 			metaMessage.errorMessage = errorMessage;
@@ -427,7 +439,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
 				io.objectId = so.UniqueID;
 				io.objectType = Enum.GetName (typeof(SimObjType), so.Type);
 				ios.Add(io);
-
 			}
 
 			metaMessage.inventoryObjects = ios.ToArray();
@@ -495,13 +506,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 		public void Move(ServerAction action) {
 			resetHand ();
-			if (Math.Abs (action.x) > 0) {
-				moveMagnitude = Math.Abs (action.x);
-			} else {
-				moveMagnitude = Math.Abs (action.z);
-			}
-
-			m_CharacterController.Move (new Vector3(action.x, action.y, action.z));
+			action.z = action.z == null ? 0.0f : action.z;
+			action.x = action.x == null ? 0.0f : action.x;
+			action.y = action.y == null ? 0.0f : action.y;
+			Vector3 direction = new Vector3(action.x, action.y, action.z);
+			moveMagnitude = direction.magnitude;
+			m_CharacterController.Move (direction);
 			StartCoroutine (checkMoveAction (action));
 		}
 
@@ -515,6 +525,106 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 		public void MoveAhead(ServerAction action) {
 			moveCharacter (action, 0);
+		}
+
+		private void UpdateDisplayGameObject(GameObject go, bool display) {
+			foreach (MeshRenderer mr in go.GetComponentsInChildren<MeshRenderer> () as MeshRenderer[]) {
+				if(mr != null) {
+					mr.enabled = display;
+				}
+			}
+		}
+
+		private void HideAll() {
+			foreach (GameObject go in UnityEngine.Object.FindObjectsOfType<GameObject>()) {
+				UpdateDisplayGameObject(go, false);
+			}
+		}
+
+		private void UnhideAll() {
+			foreach (GameObject go in UnityEngine.Object.FindObjectsOfType<GameObject>()) {
+				UpdateDisplayGameObject(go, true);
+			}
+		}
+
+		private void HideAllObjectsExcept(ServerAction action) {
+			foreach (GameObject go in UnityEngine.Object.FindObjectsOfType<GameObject>()) {
+				UpdateDisplayGameObject(go, false);
+			}
+			foreach (SimObj so in GameObject.FindObjectsOfType (typeof(SimObj)) as SimObj[]) {
+				if (!so.UniqueID.Equals(action.objectId)) {
+					UpdateDisplayGameObject(so.gameObject, true);
+				}
+			}
+			actionFinished(true);
+		}
+		
+		public void UnhideObject(ServerAction action) {
+			foreach (SimObj so in GameObject.FindObjectsOfType (typeof(SimObj)) as SimObj[]) {
+				if (!so.UniqueID.Equals(action.objectId)) {
+					UpdateDisplayGameObject(so.gameObject, true);
+				}
+			}
+			actionFinished(true);
+		}
+
+		public void HideAllObjects(ServerAction action) {
+			HideAll();
+			actionFinished(true);
+		}
+
+		public void UnhideAllObjects(ServerAction action) {
+			UnhideAll();
+			actionFinished(true);
+		}
+
+		private void MaskSimObj(SimObj so) {
+			if (!maskedObjects.ContainsKey(so.UniqueID)) {
+				Dictionary<int, Material[]> dict = new Dictionary<int, Material[]>();
+				foreach (MeshRenderer r in so.gameObject.GetComponentsInChildren<MeshRenderer>() as MeshRenderer[]) {
+					if (r != null) {
+						dict[r.GetInstanceID()] = r.materials;
+						Material material = new Material(Shader.Find("Unlit/Color"));
+						material.color = Color.magenta;
+						Material[] newMaterials = new Material[]{ material };
+						r.materials = newMaterials;
+					}
+				}
+				maskedObjects[so.UniqueID] = dict;
+			}
+		}
+
+		private void UnmaskSimObj(SimObj so) {
+			if (maskedObjects.ContainsKey(so.UniqueID)) {
+				foreach (MeshRenderer r in so.gameObject.GetComponentsInChildren<MeshRenderer> () as MeshRenderer[]) {
+					if (r != null) {
+						if (maskedObjects[so.UniqueID].ContainsKey(r.GetInstanceID())) {
+							r.materials = maskedObjects[so.UniqueID][r.GetInstanceID()];
+						}
+					}
+				}
+				maskedObjects.Remove(so.UniqueID);
+			}
+		}
+
+		public void EmphasizeObject(ServerAction action) {
+			HideAll();
+			foreach (SimObj so in GameObject.FindObjectsOfType (typeof(SimObj)) as SimObj[]) {
+				if (so.UniqueID.Equals(action.objectId)) {
+					UpdateDisplayGameObject(so.gameObject, true);
+					MaskSimObj(so);
+					break;
+				}
+			}
+			actionFinished(true);
+		}
+
+		public void UnemphasizeAll(ServerAction action) {
+			UnhideAll();
+			foreach (SimObj so in GameObject.FindObjectsOfType (typeof(SimObj)) as SimObj[]) {
+				UnmaskSimObj(so);
+            }
+			actionFinished(true);
 		}
 
 		public void MaskObject(ServerAction action) {
@@ -712,56 +822,94 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		private void moveHand(GameObject hand, Vector3 direction, float magnitude) {
 
 			currentHandSimObj.hasCollision = false;
+
+			Vector3 newHandViewPos = m_Camera.WorldToViewportPoint(hand.transform.position + (direction * magnitude));
+			if (newHandViewPos.x < 0 || newHandViewPos.x > 1 ||
+				newHandViewPos.y < 0 || newHandViewPos.y > 1 ||
+				newHandViewPos.z < 0) {
+				errorMessage = "Hand left field of view.";
+				actionFinished(false);
+				return;
+			}
+
+			foreach(Collider c in currentHandSimObj.GetComponentsInChildren<Collider>() as Collider[]) {
+				foreach(Collider vc in visibilityColliders) {
+					Physics.IgnoreCollision(c, vc);
+				}
+			}
+
 			Rigidbody rb = currentHandSimObj.GetComponentInChildren(typeof(Rigidbody)) as Rigidbody;
 			RaycastHit hit;
-
-			if (rb.SweepTest(direction, out hit, maxDistance: magnitude))
+			if (rb.SweepTest(direction, out hit, maxDistance: direction.magnitude * magnitude))
 			{
 				//Debug.DrawLine(hand.transform.position, hit.point, Color.red, 300);
+				errorMessage = "Hand collided with object.";
 				actionFinished(false);
 			} else {
+				
 				hand.transform.position = hand.transform.position + (direction * magnitude);
 				actionFinished(true);
 			}
 		}
 
+		public void MoveHand(ServerAction action) {
+			GameObject hand = getHand ();
+
+			action.z = action.z == null ? 0.0f : action.z;
+			action.x = action.x == null ? 0.0f : action.x;
+			action.y = action.y == null ? 0.0f : action.y;
+			Vector3 direction = transform.forward * action.z + 
+			                    transform.right * action.x + 
+								transform.up * action.y;
+			// If we want to instead move relative to the camera angle we should
+			// instead use, doing hand.transform.forward can lead to problems.
+			// Vector3 direction = m_Camera.transform.forward * action.z + 
+			//                     m_Camera.transform.right * action.x + 
+			// 					m_Camera.transform.up * action.y;
+			moveHand(hand, direction, 1.0f);
+		}
 
 		public void MoveHandBack(ServerAction action)
 		{
-			GameObject hand = getHand ();
-
-			moveHand(hand, hand.transform.forward * - 1, action.moveMagnitude);
+			action.x = action.y = 0.0f;
+			action.z = -1 * action.moveMagnitude;
+			MoveHand(action);
 		}
-
 
 		public void MoveHandForward(ServerAction action) {
-			GameObject hand = getHand ();
-
-			moveHand (hand, hand.transform.forward, action.moveMagnitude);
-		}
-
-
-		public void RotateHand(ServerAction action) {
-            //getHand().transform.RotateAround(Vector3.zero, Vector3.forward, action.rotation);
-
-			getHand().transform.localRotation = Quaternion.Euler(new Vector3(action.x, action.y, action.z));
-			actionFinished(true);
+			action.x = action.y = 0.0f;
+			action.z = action.moveMagnitude;
+			MoveHand(action);
 		}
 
 		public void MoveHandLeft(ServerAction action) {
-			GameObject hand = getHand ();
-
-			moveHand (hand, hand.transform.right * -1, action.moveMagnitude);
+			action.z = action.y = 0.0f;
+			action.x = -1 * action.moveMagnitude;
+			MoveHand(action);
 		}
 
 		public void MoveHandRight(ServerAction action) {
-			GameObject hand = getHand();
-
-			moveHand(hand, hand.transform.right, action.moveMagnitude);
-
+			action.z = action.y = 0.0f;
+			action.x = action.moveMagnitude;
+			MoveHand(action);
 		}
 
+		public void MoveHandDown(ServerAction action) {
+			action.z = action.x = 0.0f;
+			action.y = -1 * action.moveMagnitude;
+			MoveHand(action);
+		}
 
+		public void MoveHandUp(ServerAction action) {
+			action.z = action.x = 0.0f;
+			action.y = action.moveMagnitude;
+			MoveHand(action);
+		}
+
+		public void RotateHand(ServerAction action) {
+			getHand().transform.localRotation *= Quaternion.Euler(action.x, action.y, action.z);
+			actionFinished(true);
+		}
 
 		public void PickupHandObject(ServerAction action) {
 			GameObject hand = getHand ();
