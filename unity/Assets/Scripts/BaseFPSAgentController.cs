@@ -22,13 +22,13 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		protected float m_WalkSpeed;
 		[SerializeField]
 		protected float m_RunSpeed;
-		[SerializeField]
-		[Range(0f, 1f)]
-		private float m_RunstepLenghten;
-		[SerializeField]
-		private float m_JumpSpeed;
-		[SerializeField]
-		private float m_StickToGroundForce;
+		//[SerializeField]
+		//[Range(0f, 1f)]
+		//private float m_RunstepLenghten;
+		//[SerializeField]
+		//private float m_JumpSpeed;
+		//SerializeField]
+		//private float m_StickToGroundForce;
 		[SerializeField]
 		protected float m_GravityMultiplier;
 		[SerializeField]
@@ -136,9 +136,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			//m_CharacterController.height = LoadFloatVariable (height, "AGENT_HEIGHT");
 			this.m_WalkSpeed = 2;
 			this.m_RunSpeed = 10;
-			this.m_RunstepLenghten = 0.4f;
-			this.m_JumpSpeed = 10;
-			this.m_StickToGroundForce = 10;
+			//this.m_RunstepLenghten = 0.4f;
+			//this.m_JumpSpeed = 10;
+			//this.m_StickToGroundForce = 10;
 			this.m_GravityMultiplier = 2;
 			this.m_UseFovKick = true;
 			this.m_StepInterval = 5;
