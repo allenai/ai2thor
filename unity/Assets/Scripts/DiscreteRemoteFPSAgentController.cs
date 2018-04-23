@@ -506,9 +506,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 		public void Move(ServerAction action) {
 			resetHand ();
-			action.z = action.z == null ? 0.0f : action.z;
-			action.x = action.x == null ? 0.0f : action.x;
-			action.y = action.y == null ? 0.0f : action.y;
 			Vector3 direction = new Vector3(action.x, action.y, action.z);
 			moveMagnitude = direction.magnitude;
 			m_CharacterController.Move (direction);
@@ -777,8 +774,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 		public void DropHandObject(ServerAction action) {
 			if (currentHandSimObj != null) {
-
-
 				Rigidbody rb = currentHandSimObj.GetComponentInChildren (typeof(Rigidbody)) as Rigidbody;
 				rb.constraints = RigidbodyConstraints.None;
 				rb.useGravity = true;
@@ -855,9 +850,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		public void MoveHand(ServerAction action) {
 			GameObject hand = getHand ();
 
-			action.z = action.z == null ? 0.0f : action.z;
-			action.x = action.x == null ? 0.0f : action.x;
-			action.y = action.y == null ? 0.0f : action.y;
 			Vector3 direction = transform.forward * action.z + 
 			                    transform.right * action.x + 
 								transform.up * action.y;
@@ -871,37 +863,31 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 		public void MoveHandBack(ServerAction action)
 		{
-			action.x = action.y = 0.0f;
 			action.z = -1 * action.moveMagnitude;
 			MoveHand(action);
 		}
 
 		public void MoveHandForward(ServerAction action) {
-			action.x = action.y = 0.0f;
 			action.z = action.moveMagnitude;
 			MoveHand(action);
 		}
 
 		public void MoveHandLeft(ServerAction action) {
-			action.z = action.y = 0.0f;
 			action.x = -1 * action.moveMagnitude;
 			MoveHand(action);
 		}
 
 		public void MoveHandRight(ServerAction action) {
-			action.z = action.y = 0.0f;
 			action.x = action.moveMagnitude;
 			MoveHand(action);
 		}
 
 		public void MoveHandDown(ServerAction action) {
-			action.z = action.x = 0.0f;
 			action.y = -1 * action.moveMagnitude;
 			MoveHand(action);
 		}
 
 		public void MoveHandUp(ServerAction action) {
-			action.z = action.x = 0.0f;
 			action.y = action.moveMagnitude;
 			MoveHand(action);
 		}
