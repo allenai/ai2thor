@@ -530,40 +530,40 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			moveCharacter (action, 0);
 		}
 
-		public void MaskObject(ServerAction action) {
+		//public void MaskObject(ServerAction action) {
 			
-			Unmask (action);
-			currentMaskMaterials = new Dictionary<int, Material[]> ();
-			foreach (SimObj so in VisibleSimObjs(action)) {
-				currentMaskObj = so;
+		//	Unmask (action);
+		//	currentMaskMaterials = new Dictionary<int, Material[]> ();
+		//	foreach (SimObj so in VisibleSimObjs(action)) {
+		//		currentMaskObj = so;
 
-				foreach (MeshRenderer r in so.gameObject.GetComponentsInChildren<MeshRenderer> () as MeshRenderer[]) {
-					currentMaskMaterials [r.GetInstanceID ()] = r.materials;
-					Material material = new Material(Shader.Find("Unlit/Color"));
-					material.color = Color.magenta;
-					Material[] newMaterials = new Material[]{ material };
-					r.materials = newMaterials;
-				}
-				actionFinished(true);
-			}	
-		}
+		//		foreach (MeshRenderer r in so.gameObject.GetComponentsInChildren<MeshRenderer> () as MeshRenderer[]) {
+		//			currentMaskMaterials [r.GetInstanceID ()] = r.materials;
+		//			Material material = new Material(Shader.Find("Unlit/Color"));
+		//			material.color = Color.magenta;
+		//			Material[] newMaterials = new Material[]{ material };
+		//			r.materials = newMaterials;
+		//		}
+		//		actionFinished(true);
+		//	}	
+		//}
 
-		public void Unmask(ServerAction action) {
-			if (currentMaskMaterials != null) {
-				foreach (SimObj so in VisibleSimObjs(true)) {
-					if (so.UniqueID == currentMaskObj.UniqueID) {
-						foreach (MeshRenderer r in so.gameObject.GetComponentsInChildren<MeshRenderer> () as MeshRenderer[]) {
-							if (currentMaskMaterials.ContainsKey(r.GetInstanceID())) {
-								r.materials = currentMaskMaterials[r.GetInstanceID()];
-							}
-						}
+		//public void Unmask(ServerAction action) {
+		//	if (currentMaskMaterials != null) {
+		//		foreach (SimObj so in VisibleSimObjs(true)) {
+		//			if (so.UniqueID == currentMaskObj.UniqueID) {
+		//				foreach (MeshRenderer r in so.gameObject.GetComponentsInChildren<MeshRenderer> () as MeshRenderer[]) {
+		//					if (currentMaskMaterials.ContainsKey(r.GetInstanceID())) {
+		//						r.materials = currentMaskMaterials[r.GetInstanceID()];
+		//					}
+		//				}
 
-					}
-				}
-			}
-			currentMaskMaterials = null;
+		//			}
+		//		}
+		//	}
+		//	currentMaskMaterials = null;
 			
-		}
+		//}
 
 		public void MoveBack(ServerAction action) {
 			moveCharacter (action, 180);
