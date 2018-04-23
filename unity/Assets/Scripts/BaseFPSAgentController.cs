@@ -446,7 +446,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			}
 
             //if we touched something with a rigidbody that needs to simulate physics, generate a force at the impact point
-            body.AddForceAtPosition (m_CharacterController.velocity * 15f, hit.point, ForceMode.Force);//might have to adjust the force vector scalar later
+            body.AddForceAtPosition (m_CharacterController.velocity * 15f, hit.point, ForceMode.Acceleration);//might have to adjust the force vector scalar later
 		}
 
 

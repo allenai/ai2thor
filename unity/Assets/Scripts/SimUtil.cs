@@ -431,7 +431,8 @@ public static class SimUtil {
 	}
 
 	//tries to get a SimObj from a collider, returns false if none found
-	public static bool GetSimObjFromCollider (Collider c, out SimObj o) {
+	public static bool GetSimObjFromCollider (Collider c, out SimObj o) 
+    {
 		o = null;
 		if (c.attachedRigidbody == null) {
 			//all sim objs must have a kinematic rigidbody
