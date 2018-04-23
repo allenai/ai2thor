@@ -5,8 +5,8 @@ public enum SimObjManipType_Physics : int
 {
     Undefined = 0,
     Static = 1, //no physics interaction, for things like walls, fridge, big static objects
-    Can_PickUp = 2, //for small physics sim objects that can be picked up by the hand
-    Moveable = 3, //for large physics sim objects that can not be picked up, but can be shoved around
+    Moveable = 2, //for small physics sim objects that can be picked up by the hand
+    CanPickup = 3, //for large physics sim objects that can not be picked up, but can be shoved around
 }
 
 [Serializable]
@@ -102,5 +102,6 @@ public enum SimObjType_Physics : int
     TowelHolder = 84,
     Towel = 85,
     Watch = 86,
-    MiscTableObject = 87
+    MiscTableObject = 87,
+    Drawer = 88
 }

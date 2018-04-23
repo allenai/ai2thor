@@ -64,13 +64,13 @@ namespace UnityStandardAssets.Characters.FirstPerson
         public bool looking = false;
 		//private AudioSource m_AudioSource;
 
-		public SimObj[] currentVisibleObjects;
+		public SimObj_Physics[] currentVisibleObjects;
 
         public Collider[] testcolliders;
 
-        public void GetAllVisibleSimObj_Physics(Camera agentCamera, float maxDistance)
+        public SimObj_Physics[] GetAllVisibleSimObj_Physics(Camera agentCamera, float maxDistance)
         {
-            List<SimObj> items = new List<SimObj>();
+            List<SimObj_Physics> currentlyVisibleItems = new List<SimObj_Physics>();
 
             Vector3 agentCameraPos = agentCamera.transform.position;
 
@@ -89,40 +89,75 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
             foreach (Collider item in colliders_in_view)
             {
+                //get the SimObj_Physics component from the collider that was found
+                SimObj_Physics sop = item.GetComponent<SimObj_Physics>();
+
                 //first check if the item is even in the camera's viewport
                 if(CheckVisibilityPoint(item.transform.GetComponent<SimObj_Physics>(),
-                                     item.GetComponent<SimObj_Physics>().VisibilityPointLocation(),
+                                     sop.VisibilityPointLocation(),
                                         agentCamera))
                 {
                     //raycast from camera to the visibility point on the item we are checking
-                    Physics.Raycast(agentCameraPos,
-                                    item.GetComponent<SimObj_Physics>().VisibilityPointLocation() - agentCameraPos,
-                                    out hit);
-
-                    //compare the unique id of what we hit and the item we are checking right now. 
-                    if (hit.transform.GetComponent<SimObj_Physics>().UniqueID == item.transform.GetComponent<SimObj_Physics>().UniqueID)
+                    if(Physics.Raycast(agentCameraPos,
+                                    sop.VisibilityPointLocation() - agentCameraPos,
+                                       out hit, 
+                                       Vector3.Distance(agentCameraPos, sop.VisibilityPointLocation())
+                                      ) && hit.transform.tag == "SimObj_Physics")
                     {
-                        //yay nothing was occluding the item
-                        item.transform.GetComponent<SimObj_Physics>().isVisible = true;
+                        //print(hit.transform.name);
+                        //compare the unique id of what we hit and the item we are checking right now. 
+                        //WARNING! Make sure that the visibility point is inside of the Collider that is being checked
+                        //otherwise the above raycast might hit the visibility point WITHOUT touching a collider
+                        if (hit.transform.GetComponent<SimObj_Physics>().UniqueID ==
+                           sop.UniqueID)
+                        {
+                            //yay nothing was occluding the item
+                            sop.isVisible = true;
+
+                            //debug draw camera sight to the item we are checking
+                            #if UNITY_EDITOR
+                            Debug.DrawLine(agentCameraPos, hit.point, Color.Lerp(Color.green, Color.blue, 
+                                                                                 Vector3.Distance(agentCameraPos, sop.VisibilityPointLocation())));
+                            #endif
+
+                            //add to list of currently visible objects
+                            currentlyVisibleItems.Add(sop);
+                        }
+
+                        else
+                        {
+                            Debug.Log("Raycast from Camera to Visibility Point failed");
+                        }
                     }
 
+                    //nothing was hit
                     else
                     {
-                        //something was occluding the item, so it is not visible
-                        item.transform.GetComponent<SimObj_Physics>().isVisible = false;
+                        Debug.Log("Nothing in the way. Please check that the Visibility Point is inside of the collider");
+                        break;
                     }
                 }
 
                 //the collider is within the sphere's radius but it is not visible by the camera
                 else
                 {
+                    //remove from array of visible objects
+
+                    currentlyVisibleItems.Remove(sop);
+
                     item.transform.GetComponent<SimObj_Physics>().isVisible = false;
+
+
                 }
 
-
             }
+
+            currentlyVisibleItems.Sort((x, y) => Vector3.Distance(x.transform.position, agentCameraPos).CompareTo(Vector3.Distance(y.transform.position, agentCameraPos)));
+            //we're done!
+            return currentlyVisibleItems.ToArray();
         }
 
+        //check if the visibility point on the physics sim object in question is in the viewport at all
         static bool CheckVisibilityPoint(SimObj_Physics item, Vector3 itemVisibilityPointLocation, Camera agentCamera)
         {
             Vector3 viewPoint = agentCamera.WorldToViewportPoint(itemVisibilityPointLocation);
@@ -188,7 +223,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 {
 					int horzIndex = -1;
 					GUILayout.BeginHorizontal ();
-					foreach (SimObj o in currentVisibleObjects) 
+					foreach (SimObj_Physics o in currentVisibleObjects) 
                     {
 						horzIndex++;
 						if (horzIndex >= 3) 
@@ -207,20 +242,20 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 {
 					Plane[] planes = GeometryUtility.CalculateFrustumPlanes(m_Camera);
 
-                    int position_number = 0;
-					foreach (SimObj o in currentVisibleObjects) 
+                    //int position_number = 0;
+					foreach (SimObj_Physics o in currentVisibleObjects) 
                     {
 						string suffix = "";
 						Bounds bounds = new Bounds (o.gameObject.transform.position, new Vector3 (0.05f, 0.05f, 0.05f));
 						if (GeometryUtility.TestPlanesAABB (planes, bounds)) 
                         {
-                            position_number += 1;
+                            //position_number += 1;
 
-                            if (o.GetComponent<SimObj>().Manipulation == SimObjManipType.Inventory)
-                                suffix += " VISIBLE: " + "Press '" + position_number + "' to pick up";
+                            //if (o.GetComponent<SimObj>().Manipulation == SimObjManipType.Inventory)
+                            //    suffix += " VISIBLE: " + "Press '" + position_number + "' to pick up";
 
-                            else
-                                suffix += " VISIBLE";
+                            //else
+                                //suffix += " VISIBLE";
 						}
 							
 							
@@ -683,7 +718,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 		private void Update()	
         {
-
+            currentVisibleObjects = 
             GetAllVisibleSimObj_Physics(m_Camera, 1.0f);
             RaycastTarget();
 
@@ -851,7 +886,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			}
 
             //populate array of what objects are visible
-            currentVisibleObjects = SimUtil.GetAllVisibleSimObjs(m_Camera, MaxDistance);
+            //currentVisibleObjects = SimUtil.GetAllVisibleSimObjs(m_Camera, MaxDistance);
 
 
 			m_PreviouslyGrounded = m_CharacterController.isGrounded;
