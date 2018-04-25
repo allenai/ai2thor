@@ -885,6 +885,12 @@ class BFSController(Controller):
                 unique_object_types=True,
                 exclude_receptacle_object_pairs=receptacle_object_pairs)
 
+        # there is some randomization in initialize scene
+        # and if a seed is passed in this will keep it 
+        # deterministic
+        if random_seed is not None:
+            random.seed(random_seed)
+
         self.initialize_scene()
         while self.queue:
             self.queue_step()
@@ -1052,9 +1058,13 @@ class BFSController(Controller):
         self.open_receptacles = []
         open_pickupable = {}
         pickupable = {}
+        is_open = {}
+
         for obj in filter(lambda x: x['receptacle'], self.last_event.metadata['objects']):
             for oid in obj['receptacleObjectIds']:
                 self.object_receptacle[oid] = obj
+
+            is_open[obj['objectId']] = (obj['openable'] and obj['isopen'])
 
         for obj in filter(lambda x: x['receptacle'], self.last_event.metadata['objects']):
             for oid in obj['receptacleObjectIds']:
@@ -1081,6 +1091,8 @@ class BFSController(Controller):
                     break
 
         for roid in set(map(lambda x: open_pickupable[x], self.target_objects)):
+            if roid in is_open:
+                continue
             self.open_receptacles.append(roid)
             self.step(dict(
                 action='OpenObject',
