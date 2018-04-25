@@ -47,6 +47,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
         [SerializeField] private string current_Object_In_Inventory = null;
         [SerializeField] private GameObject Inventory_Text = null;
 
+        [SerializeField] private GameObject AgentHand = null;
+
 		private Camera m_Camera;
 		private bool m_Jump;
 		private float m_YRotation;
@@ -64,136 +66,192 @@ namespace UnityStandardAssets.Characters.FirstPerson
         public bool looking = false;
 		//private AudioSource m_AudioSource;
 
-		public SimObj_Physics[] currentVisibleObjects;
+		public SimObjPhysics[] VisibleObjects;
 
-        public Collider[] testcolliders;
+        //public Collider[] testcolliders_in_view;
 
-        public SimObj_Physics[] GetAllVisibleSimObj_Physics(Camera agentCamera, float maxDistance)
+        //public Transform[] SweepResults;
+
+        public SimObjPhysics[] GetAllVisibleSimObjPhysics(Camera agentCamera, float maxDistance)
         {
-            List<SimObj_Physics> currentlyVisibleItems = new List<SimObj_Physics>();
+            List<SimObjPhysics> currentlyVisibleItems = new List<SimObjPhysics>();
 
             Vector3 agentCameraPos = agentCamera.transform.position;
 
             //sphere from the camera center with radius max distance * downward range extension
             //check what objects are in range by looking for their colliders
 
-            testcolliders = Physics.OverlapSphere(agentCameraPos, maxDistance * 2.0f,
-                                                    1 << 8, QueryTriggerInteraction.Collide);
-            
-            Collider[] colliders_in_view = Physics.OverlapSphere(agentCameraPos, maxDistance * 2.0f, 
+            //testcolliders_in_view = Physics.OverlapSphere(agentCameraPos, maxDistance,
+                                                    //1 << 8, QueryTriggerInteraction.Collide);
+
+            //get all sim objects in range around us
+            Collider[] colliders_in_view = Physics.OverlapSphere(agentCameraPos, maxDistance, 
                                                          1 << 8 , QueryTriggerInteraction.Collide); //layermask is 8
 
-            //now check if they are physics objects with their visibility point unobstructed by other objects
-            RaycastHit hit = new RaycastHit();
-
-
-            foreach (Collider item in colliders_in_view)
+            if(colliders_in_view != null)
             {
-                //get the SimObj_Physics component from the collider that was found
-                SimObj_Physics sop = item.GetComponent<SimObj_Physics>();
-
-                //first check if the item is even in the camera's viewport
-                if(CheckVisibilityPoint(item.transform.GetComponent<SimObj_Physics>(),
-                                     sop.VisibilityPointLocation(),
-                                        agentCamera))
+                foreach (Collider item in colliders_in_view)
                 {
-                    //raycast from camera to the visibility point on the item we are checking
-                    if(Physics.Raycast(agentCameraPos,
-                                    sop.VisibilityPointLocation() - agentCameraPos,
-                                       out hit, 
-                                       Vector3.Distance(agentCameraPos, sop.VisibilityPointLocation())
-                                      ) && hit.transform.tag == "SimObj_Physics")
+                    //get the SimObjPhysics component from the collider that was found
+                    SimObjPhysics sop = item.GetComponent<SimObjPhysics>();
+
+                    //is the sim object in range, check if it is bounds of the camera's viewport
+                    if (CheckIfInViewport(sop, agentCamera, maxDistance - 0.01f))
                     {
-                        //print(hit.transform.name);
-                        //compare the unique id of what we hit and the item we are checking right now. 
-                        //WARNING! Make sure that the visibility point is inside of the Collider that is being checked
-                        //otherwise the above raycast might hit the visibility point WITHOUT touching a collider
-                        if (hit.transform.GetComponent<SimObj_Physics>().UniqueID ==
-                           sop.UniqueID)
-                        {
-                            //yay nothing was occluding the item
-                            sop.isVisible = true;
+                        sop.isVisible = true;
+                        currentlyVisibleItems.Add(sop);
 
-                            //debug draw camera sight to the item we are checking
-                            #if UNITY_EDITOR
-                            Debug.DrawLine(agentCameraPos, hit.point, Color.Lerp(Color.green, Color.blue, 
-                                                                                 Vector3.Distance(agentCameraPos, sop.VisibilityPointLocation())));
-                            #endif
-
-                            //add to list of currently visible objects
-                            currentlyVisibleItems.Add(sop);
-                        }
-
-                        else
-                        {
-                            Debug.Log("Raycast from Camera to Visibility Point failed");
-                        }
+                        //draw a debug line to the object's transform
+#if UNITY_EDITOR
+                        Debug.DrawLine(agentCameraPos, sop.transform.position, Color.yellow);
+#endif
                     }
 
-                    //nothing was hit
                     else
                     {
-                        Debug.Log("Nothing in the way. Please check that the Visibility Point is inside of the collider");
-                        break;
+
+                        print("out of range");
+                        sop.isVisible = false;
+                        currentlyVisibleItems.Remove(sop);
                     }
                 }
 
-                //the collider is within the sphere's radius but it is not visible by the camera
-                else
+                //now that we have a list of currently visible items, let's see which ones are interactable!
+                Rigidbody HandRB = AgentHand.GetComponent<Rigidbody>();
+                RaycastHit hit = new RaycastHit();
+
+                foreach (SimObjPhysics visibleSimObjP in currentlyVisibleItems)
                 {
-                    //remove from array of visible objects
+                    //sweeptest from the agent's hand to the interaction point on the sim object
+                    //sweeptest returns true if intersects any collider, otherwise false
+                    //print(HandRB.SweepTest(visibleSimObjP.transform.position - AgentHand.transform.position, out hit, maxDistance));
+                    //print(hit.collider);
 
-                    currentlyVisibleItems.Remove(sop);
+                    //get all interaction points on the visible sim object we are checking here
+                    Transform[] InteractionPoints = visibleSimObjP.InteractionPoints;
 
-                    item.transform.GetComponent<SimObj_Physics>().isVisible = false;
+                    //cast ray from the agent's hand to each of the sim object's interaction points
 
+                    int AccessibleInteractionPointCount = 0;
+                    foreach (Transform ip in InteractionPoints)
+                    {
+                        float DistanceToInteractionPoint = Vector3.Distance(AgentHand.transform.position, ip.position);
 
+                        Physics.Raycast(AgentHand.transform.position, ip.position - AgentHand.transform.position,
+                                        out hit, DistanceToInteractionPoint);
+
+                        //is the object that was hit the same as the visible sim object? great!
+                        if (hit.transform.name == visibleSimObjP.transform.name)
+                        {
+                            //show succesfull raycast from hand to the interaction point
+#if UNITY_EDITOR
+                            Debug.DrawLine(AgentHand.transform.position, ip.transform.position, Color.magenta);
+#endif
+
+                            AccessibleInteractionPointCount++;
+                            //visibleSimObjP.isInteractable = true;
+                            //now set the game object as interactable somehow....
+                        }
+
+                        //sweeptest stuff
+                        RaycastHit[] SweptObjects = AgentHand.GetComponent<Rigidbody>().SweepTestAll(ip.position - AgentHand.transform.position);
+
+                        //for each thing hit by this sweep, check if it's hit.transform.name == the interactive point's parent's name
+                        //print(SweptObjects.ToString());
+
+                    }
+
+                    if (AccessibleInteractionPointCount != 0)
+                        visibleSimObjP.isInteractable = true;
+
+                    else
+                    {
+                        visibleSimObjP.isInteractable = false;
+                    }
                 }
-
             }
-
             currentlyVisibleItems.Sort((x, y) => Vector3.Distance(x.transform.position, agentCameraPos).CompareTo(Vector3.Distance(y.transform.position, agentCameraPos)));
             //we're done!
             return currentlyVisibleItems.ToArray();
         }
 
         //check if the visibility point on the physics sim object in question is in the viewport at all
-        static bool CheckVisibilityPoint(SimObj_Physics item, Vector3 itemVisibilityPointLocation, Camera agentCamera)
+        //static bool CheckVisibilityPoint(SimObjPhysics item, Vector3 itemVisibilityPointLocation, Camera agentCamera)
+        //{
+        //    SimObjManipTypePhysics[] itemManipType = item.GetComponent<SimObjPhysics>().ManipType;
+
+        //    bool DoWeCareABoutThisObjectsVisibility = false;
+
+        //    foreach(SimObjManipTypePhysics type in itemManipType)
+        //    {
+        //        if (type == SimObjManipTypePhysics.CanPickup || type == SimObjManipTypePhysics.Receptacle)
+        //        {
+        //            DoWeCareABoutThisObjectsVisibility = true;
+        //        }
+        //    }
+        //    //is this sim object one that doesn't care about being visible?
+        //    if (DoWeCareABoutThisObjectsVisibility == true)
+        //    {
+        //        Vector3 viewPoint = agentCamera.WorldToViewportPoint(itemVisibilityPointLocation);
+
+        //        //move these two up to variables later
+        //        float ViewPointRangeHigh = 1.0f;
+        //        float ViewPointRangeLow = 0.0f;
+
+        //        if (viewPoint.z > 0 //is in front of camera
+        //           && viewPoint.x < ViewPointRangeHigh && viewPoint.x > ViewPointRangeLow//within x bounds
+        //            && viewPoint.y < ViewPointRangeHigh && viewPoint.y > ViewPointRangeLow)//within y bounds
+        //        {
+        //            return true;
+        //        }
+
+        //        else
+        //            return false;
+
+        //    }
+
+        //    else
+        //        return false;
+
+        //}
+
+        //see if a given SimObjPhysics is within the camera's range and field of view
+        static bool CheckIfInViewport(SimObjPhysics item, Camera agentCamera, float maxDistance)
         {
-            Vector3 viewPoint = agentCamera.WorldToViewportPoint(itemVisibilityPointLocation);
+            SimObjManipTypePhysics[] itemManipType = item.GetComponent<SimObjPhysics>().ManipType;
 
-            //move these two up to variables later
-            float ViewPointRangeHigh = 1.0f;
-            float ViewPointRangeLow = 0.0f;
+            bool DoWeCareABoutThisObjectsVisibility = false;
 
-            if (viewPoint.z > 0 //is in front of camera
-               && viewPoint.x < ViewPointRangeHigh && viewPoint.x > ViewPointRangeLow//within x bounds
-                && viewPoint.y < ViewPointRangeHigh && viewPoint.y > ViewPointRangeLow)//within y bounds
+            foreach (SimObjManipTypePhysics type in itemManipType)
             {
-                return true;
+                if (type == SimObjManipTypePhysics.CanPickup || type == SimObjManipTypePhysics.Receptacle)
+                {
+                    DoWeCareABoutThisObjectsVisibility = true;
+                }
             }
 
-            else
-                return false;
+            if (DoWeCareABoutThisObjectsVisibility == true)
+            {
+                Vector3 viewPoint = agentCamera.WorldToViewportPoint(item.transform.position);
 
+                //move these two up to variables later
+                float ViewPointRangeHigh = 1.0f;
+                float ViewPointRangeLow = 0.0f;
 
+                if (viewPoint.z > 0 && viewPoint.z < maxDistance //is in front of camera and within range of visibility sphere
+                   && viewPoint.x < ViewPointRangeHigh && viewPoint.x > ViewPointRangeLow//within x bounds
+                    && viewPoint.y < ViewPointRangeHigh && viewPoint.y > ViewPointRangeLow)//within y bounds
+                {
+                    return true;
+                }
 
+                else
+                    return false;
+            }
+
+            else return false;
         }
-        /*protected Dictionary<SimObjType, Dictionary<string, int>> OPEN_CLOSE_STATES = new Dictionary<SimObjType, Dictionary<string, int>>{
-            {SimObjType.Microwave, new Dictionary<string, int>{{"open", 2}, {"close", 1}}},
-            {SimObjType.Laptop, new Dictionary<string, int>{{"open", 2}, {"close", 1}}},
-            {SimObjType.Book, new Dictionary<string, int>{{"open", 1}, {"close", 2}}},
-            {SimObjType.Toilet, new Dictionary<string, int>{{"open", 2}, {"close", 3}}},
-            {SimObjType.Sink, new Dictionary<string, int>{{"open", 2}, {"close", 1}}}
-        };*/
-
-        //inventory to store picked up objects
-        /*private Dictionary<string, SimObj> inventory = new Dictionary<string, SimObj>();*/
-
-        //what things are openable or not, used to determine if pickupable
-        /*protected SimObjType[] OpenableTypes = new SimObjType[] { SimObjType.Fridge, SimObjType.Cabinet, SimObjType.Microwave, SimObjType.LightSwitch, SimObjType.Blinds, SimObjType.Book, SimObjType.Toilet };
-        protected SimObjType[] ImmobileTypes = new SimObjType[] { SimObjType.Chair, SimObjType.Toaster, SimObjType.CoffeeMachine, SimObjType.Television, SimObjType.StoveKnob };
-        */
+      
 
 		#if UNITY_EDITOR
 		//used to show what's currently visible
@@ -217,13 +275,13 @@ namespace UnityStandardAssets.Characters.FirstPerson
             //GUILayout.Label("World position: " + p.ToString("F3"));
             //GUILayout.EndArea();
 
-			if (currentVisibleObjects != null) 
+			if (VisibleObjects != null) 
             {
-				if (currentVisibleObjects.Length > 10) 
+				if (VisibleObjects.Length > 10) 
                 {
 					int horzIndex = -1;
 					GUILayout.BeginHorizontal ();
-					foreach (SimObj_Physics o in currentVisibleObjects) 
+					foreach (SimObjPhysics o in VisibleObjects) 
                     {
 						horzIndex++;
 						if (horzIndex >= 3) 
@@ -243,7 +301,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 					Plane[] planes = GeometryUtility.CalculateFrustumPlanes(m_Camera);
 
                     //int position_number = 0;
-					foreach (SimObj_Physics o in currentVisibleObjects) 
+					foreach (SimObjPhysics o in VisibleObjects) 
                     {
 						string suffix = "";
 						Bounds bounds = new Bounds (o.gameObject.transform.position, new Vector3 (0.05f, 0.05f, 0.05f));
@@ -265,21 +323,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			}
 		}
 		#endif
-
-
-        //is object pickupable?
-        //public bool IsPickupable(SimObj so)
-        //{
-        //    return !IsOpenable(so) && !so.IsReceptacle && !(Array.IndexOf(ImmobileTypes, so.Type) >= 0);
-        //}
-
-        //is object openable?
-        //public bool IsOpenable(SimObj so)
-        //{
-
-        //   return Array.IndexOf(OpenableTypes, so.Type) >= 0 && so.IsAnimated;
-        //}
-
 
 		// Use this for initialization
 		private void Start()
@@ -315,218 +358,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
             
 		}
 
-        //add object to the inventory
-        //public void addObjectInventory(SimObj simObj)
-        //{
-        //    inventory[simObj.UniqueID] = simObj;
-        //    current_Object_In_Inventory = simObj.UniqueID;
-        //}
-
-
-        //remove current object in inventory
-        //public SimObj removeObjectInventory(string objectId)
-        //{
-        //    SimObj so = inventory[objectId];
-        //    inventory.Remove(objectId);
-
-        //    current_Object_In_Inventory = null;
-        //    Inventory_Text.GetComponent<Text>().text = "In Inventory: Nothing!";
-        //    return so;
-        //}
-
-        //public bool haveTypeInventory(SimObjType objectType)
-        //{
-        //    foreach (SimObj so in inventory.Values)
-        //    {
-        //        if (so.Type == objectType)
-        //        {
-        //            return true;
-        //        }
-        //    }
-        //    return false;
-        //}
-
-
-        //take a pickupable item, place in inventory if inventory is not full
-        //protected void TakeItem(SimObj item)
-        //{
-
-        //   // print(item.Manipulation);
-
-        //    //check so we only have one item in the inventory at a time
-        //    if (inventory.Count == 0)
-        //    {
-        //        //make item visible to raycasts
-        //        //unparent in case it's in a receptacle
-        //        item.VisibleToRaycasts = true;
-        //        item.transform.parent = null;
-        //        //disable the item entirely
-        //        item.gameObject.SetActive(false);
-        //        //set the position to 'up' so it's rotated correctly when it comes back
-        //        item.transform.up = Vector3.up;
-        //        //reset the scale (to prevent floating point weirdness)
-        //        item.ResetScale();
-
-        //        //now add to inventory
-        //        addObjectInventory(item);
-        //        Inventory_Text.GetComponent<Text>().text = "In Inventory: " + item.UniqueID + " | Press 'Space' to put in Receptacle";
-              
-        //    }
-
-        //    else
-        //        print("inventory full!");
-
-        //}
-
-		//protected bool openSimObj(SimObj so) 
-  //      {
-  //          bool inrange = false;
-  //          //check if the object we are trying to open is in visible range
-  //          foreach(SimObj o in currentVisibleObjects) 
-  //          {
-  //              //check if the ID of the object we are looking at is in array of visible objects
-  //              if(so.UniqueID == o.UniqueID)
-  //              {
-  //                  inrange = true;
-  //              }
-  //          }
-
-  //          bool res = false;
-
-  //          if(inrange)
-  //          {
-                
-  //              if (OPEN_CLOSE_STATES.ContainsKey(so.Type))
-  //              {
-  //                  res = updateAnimState(so.Animator, OPEN_CLOSE_STATES[so.Type]["open"]);
-
-  //              }
-
-  //              else if (so.IsAnimated)
-  //              {
-  //                  res = updateAnimState(so.Animator, true);
-  //              }
-
-  //             // return res;
-  //          }
-
-  //          if(!inrange)
-  //          {
-                
-  //              Debug.Log("This SimObj can't be opened!");
-  //            //  return res;
-
-  //          }
-
-  //          return res;
-
-   
-		//}
-
-        //protected bool closeSimObj(SimObj so)
-        //{
-      
-        //    bool inrange = false;
-        //    //check if the object we are trying to open is in visible range
-        //    foreach (SimObj o in currentVisibleObjects)
-        //    {
-        //        //check if the ID of the object we are looking at is in array of visible objects
-        //        if (so.UniqueID == o.UniqueID)
-        //        {
-        //            inrange = true;
-        //        }
-        //    }
-
-        //    bool res = false;
-        //    if (inrange)
-        //    {
-                
-        //        if (OPEN_CLOSE_STATES.ContainsKey(so.Type))
-        //        {
-        //            res = updateAnimState(so.Animator, OPEN_CLOSE_STATES[so.Type]["close"]);
-        //        }
-        //        else if (so.IsAnimated)
-        //        {
-        //            res = updateAnimState(so.Animator, false);
-        //        }
-        //    }
-
-        //    if (!inrange)
-        //    {
-        //        Debug.Log("Target out of range!");
-        //    }
-
-        //    return res;
-        //}
-
-        ///overloaded updateAnimState
-        //private bool updateAnimState(Animator anim, int value)
-        //{
-        //    AnimatorControllerParameter param = anim.parameters[0];
-
-        //    if (anim.GetInteger(param.name) == value)
-        //    {
-        //        return false;
-        //    }
-        //    else
-        //    {
-        //        anim.SetInteger(param.name, value);
-        //        return true;
-        //    }
-        //}
-
-        //private bool updateAnimState(Animator anim, bool value)
-        //{
-        //    AnimatorControllerParameter param = anim.parameters[0];
-
-        //    if (anim.GetBool(param.name) == value)
-        //    {
-        //        return false;
-        //    }
-        //    else
-        //    {
-        //        anim.SetBool(param.name, value);
-        //        return true;
-        //    }
-        //}
-
-		//public bool thingdone;
-		//public bool captureScreenshot;
-		//public int screenshotCounter;
-		//public bool pickupObject;
-
-        //called on update, constantly shoots rays out to identify SimObjects that can 
-        //either be picked up or opened
-
-        //pick up item in specific position in list of visible objects
-        //this doesn't work great when there are so many visible objects that the list of visible objects overflows, use TryAndPickUp_All for that
-        //protected void TryAndPickUp(int i)
-        //{
-        //    if (currentVisibleObjects.Length != 0 && currentVisibleObjects.Length > i)
-        //    {
-        //        //grab only pickup objects with the inventory manip type
-        //        if (currentVisibleObjects[i].GetComponent<SimObj>().Manipulation == SimObjManipType.Inventory)//(IsPickupable(currentVisibleObjects[i]))//
-        //            TakeItem(currentVisibleObjects[i]);
-
-        //        else
-        //            Debug.Log("can't pick " + currentVisibleObjects[i].name + " up!");
-        //    }
-        //}
-
-        //loops through current array of visible objects and picks up the first Convertable component found.
-        //useful for when there are so many visible objects in array, it overflows and the alphanumeric pickup key inputs become wonky
-        //protected void TryAndPickUp_All()
-        //{
-        //    for (int i = 0; i < currentVisibleObjects.Length; i++)
-        //    {
-        //        if (currentVisibleObjects[i].GetComponent<SimObj>().Manipulation == SimObjManipType.Inventory)
-        //            //(IsPickupable(currentVisibleObjects[i]))//
-        //            TakeItem(currentVisibleObjects[i]);
-
-        //        else
-        //            Debug.Log("can't pick " + currentVisibleObjects[i].name + " up!");
-        //    }
-        //}
 
         private void RaycastTarget()
         {
@@ -629,123 +460,19 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
         }
 
-        //private void OpenReceptacle_ray()
-        //{
-        //    int x = Screen.width / 2;
-        //    int y = Screen.height / 2;
-        //    Ray ray = m_Camera.GetComponent<Camera>().ScreenPointToRay(new Vector3(x, y));
-        //    RaycastHit hit = new RaycastHit();
-
-        //    if (Physics.Raycast(ray, out hit))
-        //    {
-
-        //        openSimObj(hit.transform.GetComponent<SimObj>());
-        //    }
-        //}
-
-        //private void CloseReceptacle_ray()
-        //{
-        //    int x = Screen.width / 2;
-        //    int y = Screen.height / 2;
-        //    Ray ray = m_Camera.GetComponent<Camera>().ScreenPointToRay(new Vector3(x, y));
-        //    RaycastHit hit = new RaycastHit();
-
-        //    if (Physics.Raycast(ray, out hit))
-        //    {
-        //        closeSimObj(hit.transform.GetComponent<SimObj>());
-        //    }
-        //}
-
-        ////shoots ray from center of screen to pick up an object with
-        //private void TakeObject_ray()
-        //{
-        //    int x = Screen.width / 2;
-        //    int y = Screen.height / 2;
-        //    Ray ray = m_Camera.GetComponent<Camera>().ScreenPointToRay(new Vector3(x, y));
-        //    RaycastHit hit = new RaycastHit();
-
-        //    if (Physics.Raycast(ray, out hit))
-        //    {
-        //        TakeItem(hit.transform.GetComponent<SimObj>());
-        //    }
-        //}
-
-        //private void PutObject_ray(string item)
-        //{
-
-        //    int x = Screen.width / 2;
-        //    int y = Screen.height / 2;
-        //    Ray ray = m_Camera.GetComponent<Camera>().ScreenPointToRay(new Vector3(x, y));
-        //    RaycastHit hit = new RaycastHit();
-
-        //    if (Physics.Raycast(ray, out hit))
-        //    {
-
-        //        //check if the receptacle is in visible range
-        //        bool inrange = false;
-        //        //check if the object we are trying to put something in is in visible range
-        //        foreach (SimObj o in currentVisibleObjects)
-        //        {
-        //            //check if the ID of the object we are looking at is in array of visible objects
-        //            if (hit.transform.GetComponent<SimObj>().UniqueID == o.UniqueID)
-        //            {
-        //                inrange = true;
-        //            }
-        //        }
-
-        //        if (inrange)
-        //        {
-        //            //if (SimUtil.AddItemToVisibleReceptacle(inventory[current_Object_In_Inventory], hit.transform.GetComponent<Receptacle>(), gameObject.GetComponentInChildren<Camera>()) == false)
-
-
-        //            if (SimUtil.AddItemToReceptacle(inventory[current_Object_In_Inventory], hit.transform.GetComponent<Receptacle>()) == false)
-        //                Debug.Log("There's no space for that!");
-
-        //            else
-        //                removeObjectInventory(current_Object_In_Inventory);
-        //        }
-
-        //        if(!inrange)
-        //        {
-        //            Debug.Log("It's too far away to put stuff in");
-        //        }
-
-
-
-
-        //    }
-        //}
+     
 
 		private void Update()	
         {
-            currentVisibleObjects = 
-            GetAllVisibleSimObj_Physics(m_Camera, 1.0f);
-            RaycastTarget();
+            VisibleObjects = GetAllVisibleSimObjPhysics(m_Camera, 2.0f);
+            
+            //RaycastTarget();
 
             //////MOUSE AND KEYBAORD INPUT///////////////////////////////////////////////////
             //on left mouse click
             if(Input.GetMouseButtonDown(0))
             {
-                ////check if what we are looking at is a receptacle and can be opened
-                //if(isReceptacle && !isPickup)
-                //{
-                //    OpenReceptacle_ray();
-                //    //open receptacle here
-                //}
-
-
-                //if(isPickup && !isReceptacle)
-                //{
-                //    //try to pick up the thing?
-                //    Debug.Log("You can't open that!");
-                //}
-
-                ////this is to turn on items like the Sink that have both a Receptacle and a Convertable component
-                //if(isPickup && isReceptacle)
-                //{
-                //    Debug.Log("You can't open that!");
-                //}
-
+             
 
             }
 
@@ -753,81 +480,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
             if(Input.GetMouseButtonDown(1))
             {
 
-                ////are we looking at a receptacle and there is something we have picked up?
-                ////then place it in the receptacle
-                ///* if (isReceptacle && !String.IsNullOrEmpty(current_Object_In_Inventory))
-                // {
-                //     //print("place object");
-                //     PutObject_ray(current_Object_In_Inventory);
-                // }
-
-                // else */
-                //if (isReceptacle)
-                //{
-                //    //print("close recept");
-                //    CloseReceptacle_ray();
-                //}
-
-                //else
-                    //Debug.Log("You can't close that!");
+              
 
             }
-
-            //try to pick up an item from the currently visible objects stored in SimObj[] currentVisibleObjects;
-            //if(Input.GetKeyDown(KeyCode.Alpha1))
-            //{
-            //    TryAndPickUp(0);
-            //}
-
-            //if (Input.GetKeyDown(KeyCode.Alpha2))
-            //{
-            //    TryAndPickUp(1);
-            //}
-
-            //if (Input.GetKeyDown(KeyCode.Alpha3))
-            //{
-            //    TryAndPickUp(2);
-            //}
-
-            //if (Input.GetKeyDown(KeyCode.Alpha4))
-            //{
-            //    TryAndPickUp(3);
-            //}
-
-            //if (Input.GetKeyDown(KeyCode.Alpha5))
-            //{
-            //    TryAndPickUp(4);
-            //}
-
-            //if (Input.GetKeyDown(KeyCode.Alpha6))
-            //{
-            //    TryAndPickUp(5);
-            //}
-
-            //if (Input.GetKeyDown(KeyCode.Alpha7))
-            //{
-            //    TryAndPickUp(6);
-            //}
-
-            //if (Input.GetKeyDown(KeyCode.Alpha8))
-            //{
-            //    TryAndPickUp(7);
-            //}
-
-            //if (Input.GetKeyDown(KeyCode.Alpha9))
-            //{
-            //    TryAndPickUp(8);
-            //}
-
-            //if (Input.GetKeyDown(KeyCode.Alpha0))
-            //{
-            //    TryAndPickUp(9);
-            //}
-
-            //if(Input.GetKey(KeyCode.E))
-            //{
-            //    TryAndPickUp_All();
-            //}
 
             if(Input.GetKey(KeyCode.Space))
             {
@@ -835,6 +490,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 Cursor.visible = true;
                 Cursor.lockState = CursorLockMode.None;
                 looking = true;
+
+                Vector3 Where = m_Camera.ScreenToWorldPoint(Input.mousePosition);
                 //is there something in the inventory? if so, place it in the receptacle we are looking at
                 /*if (isReceptacle && !String.IsNullOrEmpty(current_Object_In_Inventory))
                 {

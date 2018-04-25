@@ -2,22 +2,30 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class SimObj_Physics : MonoBehaviour 
+public class SimObjPhysics : MonoBehaviour 
 {
 
     [SerializeField]
     public string UniqueID = string.Empty;
 
     [SerializeField]
-    public SimObjType_Physics Type = SimObjType_Physics.Undefined; //set the type of the prefab in editor
+    public SimObjManipTypePhysics[] ManipType; //is this static, moveable, CanPickup, or a receptacle? Can be multiple manip types, like Pots = CanPIckup and Receptacle
+
+    [SerializeField]
+    public SimObjTypePhysics Type = SimObjTypePhysics.Undefined; //set the type of the prefab in editor
+
+
 
     //raycast to this point on the object to check if it is visible
     //if the raycast hits only this object's hitbox, then it is visible
     //if the raycast is blocked by another object's hitbox, it is not visible
     [SerializeField]
-    public Transform VisibilityPoint = null;
+    public Transform[] InteractionPoints = null;
+
+
 
     public bool isVisible = false;
+    public bool isInteractable = false;
     //public bool Receptacle = false;
     //public bool Pickupable = false;
     //public bool Actionable = false;
@@ -54,19 +62,33 @@ public class SimObj_Physics : MonoBehaviour
         this.UniqueID = this.Type.ToString() + "|" + xPos + "|" + yPos + "|" + zPos;
     }
 
-    public Vector3 VisibilityPointLocation()
-    {
-        return VisibilityPoint.transform.position;
-    }
+    //public Vector3 VisibilityPointLocation()
+    //{
+    //    return VisibilityPoint.transform.position;
+    //}
 
     void OnDrawGizmos()
     {
+        Gizmos.color = Color.white;
+
         //if this object is in visibile range and not blocked by any other object, it is visible
-        if(isVisible == true)
+        if (isVisible == true)
         {
             MeshFilter mf = gameObject.GetComponentInChildren<MeshFilter>(false);
             Gizmos.color = Color.yellow;
             Gizmos.DrawWireMesh(mf.sharedMesh, -1, mf.transform.position, mf.transform.rotation, mf.transform.lossyScale);
+        }
+
+        if(isInteractable == true)
+        {
+            MeshFilter mf = gameObject.GetComponentInChildren<MeshFilter>(false);
+            Gizmos.color = Color.magenta;
+            Gizmos.DrawWireMesh(mf.sharedMesh, -1, mf.transform.position, mf.transform.rotation, mf.transform.lossyScale);
+        }
+
+        if(isVisible == false)
+        {
+            isInteractable = false;
         }
 
     }
