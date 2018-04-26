@@ -66,7 +66,7 @@ public class TestCabinetVisibility : MonoBehaviour {
 		Vector3 startPos = transform.position;
 
 		foreach (SimObj c in cabinets) {
-			bool seenAtLeastOnce = false;
+			//bool seenAtLeastOnce = false;
 			currentCabinet = c;
 			//close the cabinet
 			currentCabinet.Animator.SetBool ("AnimState1", false);
@@ -140,7 +140,7 @@ public class TestCabinetVisibility : MonoBehaviour {
 						foreach (SimObj visibleSimObj in SimUtil.GetAllVisibleSimObjs (cam, MaxDistance)) {
 							if (visibleSimObj == currentCabinet) {
 								cabinetVisibleClosed = true;
-								seenAtLeastOnce = true;
+								//seenAtLeastOnce = true;
 								break;
 							}
 						}
@@ -158,7 +158,7 @@ public class TestCabinetVisibility : MonoBehaviour {
 						foreach (SimObj visibleSimObj in SimUtil.GetAllVisibleSimObjs (cam, MaxDistance)) {
 							if (visibleSimObj == currentCabinet) {
 								cabinetVisibleOpen = true;
-								seenAtLeastOnce = true;
+								//seenAtLeastOnce = true;
 								break;
 							}
 						}

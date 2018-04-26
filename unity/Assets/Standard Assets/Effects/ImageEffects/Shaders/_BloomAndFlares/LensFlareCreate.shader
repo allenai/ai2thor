@@ -1,3 +1,5 @@
+// Upgrade NOTE: replaced 'mul(UNITY_MATRIX_MVP,*)' with 'UnityObjectToClipPos(*)'
+
 Shader "Hidden/LensFlareCreate" {
 	Properties {
 		_MainTex ("Base (RGB)", 2D) = "" {}
@@ -22,7 +24,7 @@ Shader "Hidden/LensFlareCreate" {
 		
 	v2f vert( appdata_img v ) {
 		v2f o;
-		o.pos = mul(UNITY_MATRIX_MVP, v.vertex);
+		o.pos = UnityObjectToClipPos(v.vertex);
 
 		o.uv[0] = UnityStereoScreenSpaceUVAdjust(( ( v.texcoord.xy - 0.5 ) * -0.85 ) + 0.5, _MainTex_ST);
 		o.uv[1] = UnityStereoScreenSpaceUVAdjust(( ( v.texcoord.xy - 0.5 ) * -1.45 ) + 0.5, _MainTex_ST);

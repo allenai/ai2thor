@@ -7,7 +7,7 @@ using System.Collections.Generic;
 public class Build
 {
     static void OSXIntel64() {
-		build(GetBuildName(), BuildTarget.StandaloneOSXIntel64);
+		build(GetBuildName(), BuildTarget.StandaloneOSX); //was BuildTarget.StandaloneOSXIntel64
     }
 
     static string GetBuildName() {

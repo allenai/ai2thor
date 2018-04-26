@@ -9,9 +9,9 @@ using UnityEngine.SceneManagement;
 public class SceneManagerEditor : Editor 
 {
 	public BuildTarget[] Targets = new BuildTarget[] {
-		BuildTarget.StandaloneOSXIntel,
-		BuildTarget.StandaloneOSXUniversal,
-		BuildTarget.StandaloneOSXIntel64,
+		//BuildTarget.StandaloneOSXIntel, //this is obsolete, StandaloneOSXIntel doesn't exist in Unity 2017.3
+		BuildTarget.StandaloneOSX,
+		//BuildTarget.StandaloneOSXIntel64, //this is obbsolete, StandaloneOSXIntel64 doesn't exist in Unity 2017.3
 		BuildTarget.StandaloneLinux64,
 		BuildTarget.StandaloneLinux,
 		BuildTarget.StandaloneLinuxUniversal,
@@ -160,7 +160,7 @@ public class SceneManagerEditor : Editor
 
 		string scenePath = string.Empty;
 		string buildName = string.Empty;
-		BuildTarget buildTarget = BuildTarget.StandaloneOSXIntel;
+		BuildTarget buildTarget = BuildTarget.StandaloneOSX; //this was BuildTarget.StandaloneOSXIntel, which is deprecated, so the new default should be StandaloneOSX unless we want something else?
 
 		if (showBuildOptions) {
 			//figure out what scene we want to build
