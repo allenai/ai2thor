@@ -16,22 +16,22 @@ GameObject:
   m_ObjectHideFlags: 0
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 100100000}
-  serializedVersion: 4
+  serializedVersion: 5
   m_Component:
-  - 4: {fileID: 4000012641393822}
-  - 33: {fileID: 33000013206937126}
-  - 23: {fileID: 23000012339621948}
-  - 64: {fileID: 64000012260001254}
-  - 114: {fileID: 114000012082114710}
-  - 54: {fileID: 54000013204343022}
-  - 114: {fileID: 114000010048460254}
-  - 95: {fileID: 95000012316650866}
+  - component: {fileID: 4000012641393822}
+  - component: {fileID: 33000013206937126}
+  - component: {fileID: 23000012339621948}
+  - component: {fileID: 64000012260001254}
+  - component: {fileID: 114000012082114710}
+  - component: {fileID: 54000013204343022}
+  - component: {fileID: 114000010048460254}
+  - component: {fileID: 95000012316650866}
   m_Layer: 8
   m_Name: ShowerDoor
   m_TagString: SimObj
   m_Icon: {fileID: 0}
-  m_NavMeshLayer: 1
-  m_StaticEditorFlags: 0
+  m_NavMeshLayer: 3
+  m_StaticEditorFlags: 12
   m_IsActive: 1
 --- !u!4 &4000012641393822
 Transform:
@@ -40,12 +40,12 @@ Transform:
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 1000012959724078}
   m_LocalRotation: {x: -0.5, y: 0.5, z: -0.5, w: -0.5}
-  m_LocalPosition: {x: -1.187, y: 0.917, z: -2.172}
-  m_LocalScale: {x: 92.78244, y: 80.94485, z: 80.94485}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: 0.565, y: 1.018, z: 1.115}
+  m_LocalScale: {x: 92.78244, y: 80.94485, z: 91.64004}
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 0
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!23 &23000012339621948
 MeshRenderer:
   m_ObjectHideFlags: 1
@@ -55,13 +55,16 @@ MeshRenderer:
   m_Enabled: 1
   m_CastShadows: 1
   m_ReceiveShadows: 1
+  m_DynamicOccludee: 1
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
   m_Materials:
   - {fileID: 2100000, guid: be9d13bb687dd684b816ed574384806e, type: 2}
   - {fileID: 2100000, guid: f902bf02312b6544aa565996ed0845cd, type: 2}
-  m_SubsetIndices: 
+  m_StaticBatchInfo:
+    firstSubMesh: 0
+    subMeshCount: 0
   m_StaticBatchRoot: {fileID: 0}
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
@@ -69,12 +72,14 @@ MeshRenderer:
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
-  m_SelectedWireframeHidden: 0
+  m_StitchLightmapSeams: 0
+  m_SelectedEditorRenderState: 3
   m_MinimumChartSize: 4
   m_AutoUVMaxDistance: 0.5
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_SortingLayerID: 0
+  m_SortingLayer: 0
   m_SortingOrder: 0
 --- !u!33 &33000013206937126
 MeshFilter:
@@ -107,8 +112,10 @@ MeshCollider:
   m_Material: {fileID: 0}
   m_IsTrigger: 0
   m_Enabled: 1
-  serializedVersion: 2
+  serializedVersion: 3
   m_Convex: 1
+  m_CookingOptions: 14
+  m_SkinWidth: 0.01
   m_Mesh: {fileID: 4300028, guid: 2d2efafdcca9940beb927255c3f3b895, type: 3}
 --- !u!95 &95000012316650866
 Animator:
@@ -139,9 +146,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   Type: 70
-  Manipulation: 0
+  Manipulation: 1
   UseCustomBounds: 0
   UseWidthSearch: 0
+  hasCollision: 0
   BoundsTransform: {fileID: 0}
   VisibleNow: 0
 --- !u!114 &114000012082114710
@@ -156,7 +164,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   ParentObj: {fileID: 114000010048460254}
-  OpenRotation: {x: 90, y: 350, z: 0}
+  OpenRotation: {x: 90, y: 200, z: 0}
   ClosedRotation: {x: 90, y: 270, z: 0}
   Pivot: {fileID: 4000012641393822}
   EditorOpen: 0

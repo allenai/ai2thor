@@ -3,10 +3,11 @@ using UnityEngine;
 using System.Collections;
 using System;
 using System.Collections.Generic;
+using UnityEngine.SceneManagement;
 
 public static class SimUtil {
 
-	//how fast smooth-animated drawers / cabinets / etc animate
+	//how fast smooth-animated s / cabinets / etc animate
 	public const float SmoothAnimationSpeed = 0.5f;
 
 	public const int RaycastVisibleLayer = 8;
@@ -20,7 +21,7 @@ public static class SimUtil {
 	public const float ViewPointRangeLow = 0f;
 	public const int VisibilityCheckSteps = 10;
 
-	public const float DownwardRangeExtension = 1.45f;
+    public const float DownwardRangeExtension = 2.0f;//1.45f; changes this so the agent can see low enough to open all drawers
 	public const float MinDownwardLooKangle = 15f;
 	public const float MaxDownwardLookAngle = 60f;
 
@@ -34,7 +35,8 @@ public static class SimUtil {
 
 	#region SimObj utility functions
 
-    public static SimObj[] GetAllVisibleSimObjs (Camera agentCamera, float maxDistance) {
+    public static SimObj[] GetAllVisibleSimObjs (Camera agentCamera, float maxDistance) 
+    {
 		#if UNITY_EDITOR
 		if (ShowObjectVisibility) {
 			//set all objects to invisible before starting - THIS IS EXPENSIVE
@@ -73,7 +75,7 @@ public static class SimUtil {
 			}
         }
         //now check to see if they're actually visible
-        RaycastHit hit;
+        RaycastHit hit = new RaycastHit();
         foreach (SimObj item in uniqueItems) {
 
 			if (!CheckItemBounds (item, agentCameraPos)) {
@@ -466,7 +468,7 @@ public static class SimUtil {
 	//this does not TAKE any of these items
 	public static SimObj[] GetVisibleItemsFromReceptacle (Receptacle r, Camera agentCamera, Vector3 agentCameraPos, float maxDistance) {
 		List<SimObj> items = new List<SimObj>();
-		RaycastHit hit;
+		//RaycastHit hit = new RaycastHit();
 		foreach (Transform t in r.Pivots) {
 			if (t.childCount > 0) {
 				SimObj item = t.GetChild (0).GetComponent <SimObj> ();
@@ -525,7 +527,7 @@ public static class SimUtil {
 		UnityEditor.PlayerSettings.resizableWindow = false;
 		UnityEditor.PlayerSettings.macFullscreenMode = UnityEditor.MacFullscreenMode.FullscreenWindowWithDockAndMenuBar;
 		UnityEditor.PlayerSettings.d3d11FullscreenMode = UnityEditor.D3D11FullscreenMode.FullscreenWindow;
-		UnityEditor.PlayerSettings.d3d9FullscreenMode = UnityEditor.D3D9FullscreenMode.FullscreenWindow;
+		//UnityEditor.PlayerSettings.d3d9FullscreenMode = UnityEditor.D3D9FullscreenMode.FullscreenWindow;
 		UnityEditor.PlayerSettings.visibleInBackground = false;
 		UnityEditor.PlayerSettings.allowFullscreenSwitch = true;
 
@@ -616,11 +618,13 @@ public static class SimUtil {
 				pivot.parent = tempParent;
 				if (prefabParent != null) {
 					Debug.Log ("Reconnecting to " + prefabParent.name);
-					UnityEditor.EditorUtility.ReconnectToLastPrefab (t.gameObject);
+					//UnityEditor.EditorUtility.ReconnectToLastPrefab (t.gameObject); depricated call, now use PrefabUtility
+                    UnityEditor.PrefabUtility.ReconnectToLastPrefab(t.gameObject);
 				}
 			}
 		}
-		UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty (UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene ());
+        UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty (UnityEngine.SceneManagement.SceneManager.GetActiveScene());//(UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene ());
+
 	}
 
 	#endif

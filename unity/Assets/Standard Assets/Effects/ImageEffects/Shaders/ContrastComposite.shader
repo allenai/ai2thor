@@ -1,3 +1,5 @@
+// Upgrade NOTE: replaced 'mul(UNITY_MATRIX_MVP,*)' with 'UnityObjectToClipPos(*)'
+
 Shader "Hidden/ContrastComposite" {
 	Properties {
 		_MainTex ("Base (RGB)", 2D) = "" {}
@@ -27,7 +29,7 @@ Shader "Hidden/ContrastComposite" {
 		
 	v2f vert( appdata_img v ) {
 		v2f o;
-		o.pos = mul(UNITY_MATRIX_MVP, v.vertex);
+		o.pos = UnityObjectToClipPos(v.vertex);
 		
 		o.uv[0] = UnityStereoScreenSpaceUVAdjust(v.texcoord.xy, _MainTexBlurred_ST);
 		o.uv[1] = UnityStereoScreenSpaceUVAdjust(v.texcoord.xy, _MainTex_ST);

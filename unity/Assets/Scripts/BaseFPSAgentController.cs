@@ -23,16 +23,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		[SerializeField]
 		protected float m_RunSpeed;
 		[SerializeField]
-		[Range(0f, 1f)]
-		private float m_RunstepLenghten;
-		[SerializeField]
-		private float m_JumpSpeed;
-		[SerializeField]
-		private float m_StickToGroundForce;
-		[SerializeField]
-		private float m_GravityMultiplier;
-		[SerializeField]
-		protected MouseLook m_MouseLook;
+		protected float m_GravityMultiplier;
 		[SerializeField]
 		protected bool m_UseFovKick;
 		[SerializeField]
@@ -72,11 +63,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		protected CharacterController m_CharacterController;
 		protected CollisionFlags m_CollisionFlags;
 		protected bool m_PreviouslyGrounded;
-		protected float m_StepCycle;
-		protected float m_NextStep;
 		protected bool m_Jumping;
 		protected Vector3 lastPosition;
-		private Vector3 m_OriginalCameraPosition;
+		// Vector3 m_OriginalCameraPosition;
 		protected string lastAction;
 		protected bool lastActionSuccess;
 		protected string errorMessage;
@@ -88,9 +77,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		float defaultMaxVisibleDistance = 1.0f;
 		float maxVisibleDistance;
 
-
-
-
 		// initial states
 		protected Vector3 init_position;
 		protected Quaternion init_rotation;
@@ -100,17 +86,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		public float forwardVelocity = 2.0f;
 		public float rotateVelocity = 2.0f;
 		public int actionDuration = 3;
-		private int defaultScreenWidth = 300;
-		private int defaultScreenHeight = 300;
-
 
 		// internal state variables
 		private float lastEmitTime;
 		protected List<string> collisionsInAction; // tracking collided objects
 		protected string[] collidedObjects;      // container for collided objects
 
-
-		public Hashtable ObjectTriggers;
 
 		private Quaternion targetRotation;
 		public Quaternion TargetRotation
@@ -121,6 +102,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		// Initialize parameters from environment variables
 		protected virtual void Awake()
 		{
+			Application.targetFrameRate = 300;
+            QualitySettings.vSyncCount = 0;
 
 			// whether it's in training or test phase
 			bool trainPhase = true;
@@ -143,9 +126,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			//m_CharacterController.height = LoadFloatVariable (height, "AGENT_HEIGHT");
 			this.m_WalkSpeed = 2;
 			this.m_RunSpeed = 10;
-			this.m_RunstepLenghten = 0.4f;
-			this.m_JumpSpeed = 10;
-			this.m_StickToGroundForce = 10;
 			this.m_GravityMultiplier = 2;
 			this.m_UseFovKick = true;
 			this.m_StepInterval = 5;
@@ -156,14 +136,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		protected virtual void Start()
 		{
 			m_Camera = Camera.main;
-			m_OriginalCameraPosition = m_Camera.transform.localPosition;
+			//m_OriginalCameraPosition = m_Camera.transform.localPosition;
 			m_FovKick.Setup(m_Camera);
 			m_HeadBob.Setup(m_Camera, m_StepInterval);
-			m_StepCycle = 0f;
-			m_NextStep = m_StepCycle / 2f;
 			m_Jumping = false;
-			m_MouseLook.Init(transform, m_Camera.transform);
-			ObjectTriggers = new Hashtable();
 
 			// set agent initial states
 			targetRotation = transform.rotation;
@@ -209,6 +185,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			{
 				res = updateAnimState(so.Animator, false);
 			}
+
 			return res;
 		}
 
@@ -225,9 +202,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			{
 				res = updateAnimState(so.Animator, true);
 			}
-			return res;
 
-		}
+			return res;
+        }
 
 
 		private bool updateAnimState(Animator anim, int value)
@@ -259,75 +236,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
 				return true;
 			}
 		}
-
-		protected virtual float FixedUpdateSpeed()
-		{
-			return forwardVelocity;
-		}
-
-		// Deal with rigid body in FixedUpdate
-		protected void FixedUpdate()
-		{
-
-			float speed = FixedUpdateSpeed();
-
-			// always move along the camera forward as it is the direction that it being aimed at
-			Vector3 desiredMove = transform.forward * m_Input.y + transform.right * m_Input.x;
-
-			// get a normal for the surface that is being touched to move along it
-			RaycastHit hitInfo;
-			Physics.SphereCast(transform.position, m_CharacterController.radius, Vector3.down, out hitInfo,
-				m_CharacterController.height / 2f);
-			desiredMove = Vector3.ProjectOnPlane(desiredMove, hitInfo.normal).normalized;
-
-			m_MoveDir.x = desiredMove.x * speed;
-			m_MoveDir.z = desiredMove.z * speed;
-
-			if (m_CharacterController.isGrounded)
-			{
-				m_MoveDir.y = -m_StickToGroundForce;
-				if (m_Jump)
-				{
-					m_MoveDir.y = m_JumpSpeed;
-					m_Jump = false;
-					m_Jumping = true;
-				}
-			}
-			else
-			{
-				m_MoveDir += Physics.gravity * m_GravityMultiplier * Time.fixedDeltaTime;
-			}
-
-			m_CollisionFlags = m_CharacterController.Move(m_MoveDir * Time.fixedDeltaTime);
-
-			if ((m_CollisionFlags & CollisionFlags.Sides) != 0)
-			{
-				// If this condition satisfies, that means the agent hits some objects
-				// We can set negative rewards here
-			}
-
-			ProgressStepCycle(speed);
-		}
-
-
-
-		protected virtual void ProgressStepCycle(float speed)
-		{
-			if (m_CharacterController.velocity.sqrMagnitude > 0 && (m_Input.x != 0 || m_Input.y != 0))
-			{
-				m_StepCycle += (m_CharacterController.velocity.magnitude + (speed * (m_IsWalking ? 1f : m_RunstepLenghten))) *
-					Time.fixedDeltaTime;
-			}
-
-			if (!(m_StepCycle > m_NextStep))
-			{
-				return;
-			}
-			m_NextStep = m_StepCycle + m_StepInterval;
-
-		}
-
-
 
 		// rotate view with respect to mouse or server controls
 		protected virtual void RotateView()
@@ -597,7 +505,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 		protected void ProcessControlCommand(string msg)
 		{
-			Debug.Log("Procssing control commands: " + msg);
 			errorMessage = "";
 			errorCode = ServerActionErrorCode.Undefined;
 			collisionsInAction = new List<string>();
@@ -606,9 +513,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			this.currentSequenceId = controlCommand.sequenceId;
 			lastAction = controlCommand.action;
 			lastActionSuccess = false;
-			lastPosition = new Vector3(transform.position.x, transform.position.y, transform.position.z);
-			Debug.Log("sending message: " + this.name);
-			System.Reflection.MethodInfo method = this.GetType().GetMethod(controlCommand.action);
+			lastPosition = new Vector3 (transform.position.x, transform.position.y, transform.position.z);
+			System.Reflection.MethodInfo method = this.GetType ().GetMethod (controlCommand.action);
 			try
 			{
 				method.Invoke(this, new object[] { controlCommand });
