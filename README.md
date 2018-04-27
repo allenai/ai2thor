@@ -10,7 +10,7 @@ AI2-THOR is a photo-realistic interactable framework for AI agents.
 Please refer to the [tutorial page](http://ai2thor.allenai.org/tutorials/) for a detailed walkthrough.
 
 ## News
-* (4/2018) We have released a new version of AI2-THOR. The main changes include: upgrade to Unity 2017, performance optimization to improve frame rate, and various bug fixes. We have also added some physics functionalities. Please contact us for instructions. 
+* (4/2018) We have released version 0.0.25 of AI2-THOR. The main changes include: upgrade to Unity 2017, performance optimization to improve frame rate, and various bug fixes. We have also added some physics functionalities. Please contact us for instructions. 
 * (1/2018) If you need a docker version, please contact us so we provide you with the instructions. Our docker version is in beta mode.
 
 ## Requirements
