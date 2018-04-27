@@ -33,6 +33,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		private static float gridSize = 0.25f;
 		private Texture2D tex;
 		private Rect readPixelsRect;
+		private bool continuousMode;
 
 
 		private enum emitStates {Send, Wait, Received};
@@ -89,7 +90,11 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 		public void Initialize(ServerAction action)
 		{
-			if (action.gridSize <= 0 || action.gridSize > 5)
+			if (action.continuous) {
+				continuousMode = true;
+				actionFinished(true);
+			} 
+			else if (action.gridSize <= 0 || action.gridSize > 5)
 			{
 				errorMessage = "grid size must be in the range (0,5]";
 				Debug.Log(errorMessage);
@@ -194,6 +199,13 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		}
 
 		virtual protected IEnumerator checkMoveAction(ServerAction action) {
+
+			if (continuousMode) {
+				actionFinished(true);
+				yield break;
+
+			}
+
 			yield return null;
 			bool result = false;
 
@@ -493,8 +505,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			if (action.moveMagnitude > 0) {
 				moveMagnitude = action.moveMagnitude;
 			}
-			Debug.Log ("move magnitude");
-			Debug.Log (moveMagnitude);
 			int currentRotation = (int)Math.Round(transform.rotation.eulerAngles.y, 0);
 			Dictionary<int, Vector3> actionOrientation = new Dictionary<int, Vector3> ();
 			actionOrientation.Add (0, new Vector3 (0f, 0f, 1.0f * moveMagnitude));

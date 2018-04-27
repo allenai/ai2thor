@@ -13,6 +13,7 @@ import io
 import json
 import logging
 import math
+import time
 import random
 import shlex
 import signal
@@ -22,6 +23,9 @@ import threading
 import os
 import platform
 import uuid
+import tty
+import sys
+import termios
 try:
     from queue import Queue
 except ImportError:
@@ -316,7 +320,15 @@ RECEPTACLE_OBJECTS = {
     'ToiletPaperHanger': {'ToiletPaper'},
     'TowelHolder': {'Cloth'}}
 
-
+def get_term_character():
+    fd = sys.stdin.fileno()
+    old_settings = termios.tcgetattr(fd)
+    try:
+        tty.setraw(sys.stdin.fileno())
+        ch = sys.stdin.read(1)
+    finally:
+        termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
+    return ch
 
 def process_alive(pid):
     """
@@ -358,6 +370,7 @@ class Controller(object):
         self.local_executable_path = None
         self.last_event = None
         self.server_thread = None
+        self.killing_unity = False
 
     def reset(self, scene_name=None):
         self.response_queue.put_nowait(dict(action='Reset', sceneName=scene_name, sequenceId=0))
@@ -409,6 +422,88 @@ class Controller(object):
                 scenes.append('FloorPlan%s' % i)
 
         return scenes
+
+    def next_interact_command(self):
+        current_buffer = ''
+        while True:
+            commands = self._interact_commands
+            current_buffer += get_term_character()
+            if current_buffer == 'q' or current_buffer == '\x03':
+                break
+
+            if current_buffer in commands:
+                yield commands[current_buffer]
+                current_buffer = ''
+            else:
+                match = False
+                for k,v in commands.items():
+                    if k.startswith(current_buffer):
+                        match = True
+                        break
+
+                if not match:
+                    current_buffer = ''
+
+    def interact(self):
+        default_interact_commands = {
+            '\x1b[C': dict(action='MoveRight', moveMagnitude=0.25),
+            '\x1b[D': dict(action='MoveLeft', moveMagnitude=0.25),
+            '\x1b[A': dict(action='MoveAhead', moveMagnitude=0.25),
+            '\x1b[B': dict(action='MoveBack', moveMagnitude=0.25),
+            '\x1b[1;2A': dict(action='LookUp'),
+            '\x1b[1;2B': dict(action='LookDown'),
+            '\x1b[1;2C': dict(action='RotateRight'),
+            '\x1b[1;2D': dict(action='RotateLeft')
+        }
+
+        self._interact_commands = default_interact_commands.copy()
+
+        print("Enter a Command: Move ← ↑↓→, Rotate/Look Shift+← ↑↓→, Quit 'q' or Ctrl-C")
+        for a in self.next_interact_command():
+            new_commands = {}
+            command_counter = 1
+            def add_command(action, **args):
+                nonlocal command_counter
+                com = dict(action=action)
+                com.update(args)
+                new_commands[str(command_counter)] = com
+                command_counter += 1
+
+            event = self.step(a)
+            # check inventory
+            for o in event.metadata['objects']:
+                if o['visible']:
+                    if o['openable']:
+                        if o['isopen']:
+                            add_command('CloseObject', objectId=o['objectId'])
+                        else:
+                            add_command('OpenObject', objectId=o['objectId'])
+                    if len(event.metadata['inventoryObjects']) > 0:
+                        if o['receptacle'] and (not o['openable'] or o['isopen']):
+                            inventoryObjectId = event.metadata['inventoryObjects'][0]['objectId']
+                            add_command('PutObject', objectId=inventoryObjectId, receptacleObjectId=o['objectId'])
+
+                    elif o['pickupable']:
+                        add_command('PickupObject', objectId=o['objectId'])
+
+            self._interact_commands = default_interact_commands.copy()
+            self._interact_commands.update(new_commands)
+
+            print("Enter a Command: Move ← ↑↓→, Rotate/Look Shift+← ↑↓→, Quit 'q' or Ctrl-C")
+
+            skip_keys = ['action', 'objectId']
+            for k,v in new_commands.items():
+                command_info = [k + ")", v['action']]
+                if 'objectId' in v:
+                    command_info.append(v['objectId'])
+
+                for a, av in v.items():
+                    if a in skip_keys:
+                        continue
+                    command_info.append("%s: %s" % (a, av))
+
+                print(' '.join(command_info))
+
 
     def step(self, action, raise_for_failure=False):
 
@@ -473,7 +568,7 @@ class Controller(object):
             self.unity_pid = proc.pid
             atexit.register(lambda: proc.kill())
             returncode = proc.wait()
-            if returncode != 0:
+            if returncode != 0 and not self.killing_unity:
                 raise Exception("command: %s exited with %s" % (command, returncode))
 
     def check_docker(self):
@@ -621,6 +716,7 @@ class Controller(object):
     def stop(self):
         self.stop_unity()
         self.stop_container()
+        self.response_queue.put_nowait({})
         self.server.wsgi_server.shutdown()
 
     def stop_container(self):
@@ -630,7 +726,14 @@ class Controller(object):
 
     def stop_unity(self):
         if self.unity_pid and process_alive(self.unity_pid):
-            os.kill(self.unity_pid, signal.SIGKILL)
+            self.killing_unity = True
+            os.kill(self.unity_pid, signal.SIGTERM)
+            for i in range(10):
+                if not process_alive(self.unity_pid):
+                    break
+                time.sleep(0.1)
+            if process_alive(self.unity_pid):
+                os.kill(self.unity_pid, signal.SIGKILL)
 
 class BFSSearchPoint:
     def __init__(self, start_position, move_vector, heading_angle=0.0, horizon_angle=0.0):
