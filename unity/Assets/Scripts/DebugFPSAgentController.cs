@@ -41,11 +41,11 @@ namespace UnityStandardAssets.Characters.FirstPerson
 	
         [SerializeField] private GameObject Target_Text = null;
         [SerializeField] private GameObject Debug_Canvas = null;
-        [SerializeField] private bool isReceptacle = false;
-        [SerializeField] private bool isPickup = false;
+       // [SerializeField] private bool isReceptacle = false;
+      //  [SerializeField] private bool isPickup = false;
 
-        [SerializeField] private string current_Object_In_Inventory = null;
-        [SerializeField] private GameObject Inventory_Text = null;
+       // [SerializeField] private string current_Object_In_Inventory = null;
+      //  [SerializeField] private GameObject Inventory_Text = null;
 
         [SerializeField] private GameObject AgentHand = null;
 
@@ -56,7 +56,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		private Vector2 m_Input;
 		private Vector3 m_MoveDir = Vector3.zero;
 		private CharacterController m_CharacterController;
-		private CollisionFlags m_CollisionFlags;
+		//private CollisionFlags m_CollisionFlags;
 		private bool m_PreviouslyGrounded;
 		private Vector3 m_OriginalCameraPosition;
 		private float m_StepCycle;
@@ -66,13 +66,36 @@ namespace UnityStandardAssets.Characters.FirstPerson
         public bool looking = false;
 		//private AudioSource m_AudioSource;
 
-		public SimObjPhysics[] VisibleObjects; //these sie objects are within the camera viewport and in range of the agent
+		public SimObjPhysics[] VisibleObjects; //these objects are within the camera viewport and in range of the agent
 
-        //public SimObjPhysics[] InteractableObjects;
-        //public List<SimObjPhysics> InteractableObjects; //these sim objects are Visible AND can be accessed by the agent's Hand
-        //public Collider[] testcolliders_in_view;
+        private void Start()
+        {
+            m_CharacterController = GetComponent<CharacterController>();
+            m_Camera = Camera.main;
+            m_OriginalCameraPosition = m_Camera.transform.localPosition;
+            m_FovKick.Setup(m_Camera);
+            m_HeadBob.Setup(m_Camera, m_StepInterval);
+            m_StepCycle = 0f;
+            m_NextStep = m_StepCycle / 2f;
+            m_Jumping = false;
+            //m_AudioSource = GetComponent<AudioSource>();
+            m_MouseLook.Init(transform, m_Camera.transform);
 
-        //public Transform[] SweepResults;
+            //grab text object on canvas to update with what is currently targeted by reticle
+            Target_Text = GameObject.Find("DebugCanvas/TargetText"); ;
+            Debug_Canvas = GameObject.Find("DebugCanvas");
+            //Inventory_Text = GameObject.Find("DebugCanvas/InventoryText");
+
+            //if this component is enabled, turn on the targeting reticle and target text
+            if (this.isActiveAndEnabled)
+            {
+                Debug_Canvas.SetActive(true);
+                Target_Text.SetActive(true);
+
+                Cursor.visible = false;
+                Cursor.lockState = CursorLockMode.Locked;
+            }
+        }
 
         public SimObjPhysics[] GetAllVisibleSimObjPhysics(Camera agentCamera, float maxDistance)
         {
@@ -139,7 +162,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                             //if the object only has one interaction point to check
                             if(visibleSimObjP.InteractionPoints.Length == 1)
                             {
-                                if (hit.transform.name == visibleSimObjP.transform.name)
+                                if (hit.transform == visibleSimObjP.transform)
                                 {
                                     #if UNITY_EDITOR
                                     Debug.DrawLine(AgentHand.transform.position, ip.transform.position, Color.magenta);
@@ -157,7 +180,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                             if(visibleSimObjP.InteractionPoints.Length > 1)
                             {
                                 
-                                if(hit.transform.name == visibleSimObjP.transform.name)
+                                if(hit.transform == visibleSimObjP.transform)
                                 {
                                     #if UNITY_EDITOR
                                     Debug.DrawLine(AgentHand.transform.position, ip.transform.position, Color.magenta);
@@ -190,13 +213,13 @@ namespace UnityStandardAssets.Characters.FirstPerson
         //see if a given SimObjPhysics is within the camera's range and field of view
         static bool CheckIfInViewport(SimObjPhysics item, Camera agentCamera, float maxDistance)
         {
-            SimObjManipTypePhysics[] itemManipType = item.GetComponent<SimObjPhysics>().ManipType;
+            SimObjManipTypePhysics[] itemManipType = item.GetComponent<SimObjPhysics>().ManipTypes;
 
             bool DoWeCareABoutThisObjectsVisibility = false;
 
             foreach (SimObjManipTypePhysics type in itemManipType)
             {
-                if (type == SimObjManipTypePhysics.CanPickup || type == SimObjManipTypePhysics.CanOpen || type == SimObjManipTypePhysics.Interactable)
+                if (type != SimObjManipTypePhysics.Static && type != SimObjManipTypePhysics.Moveable)
                 {
                     DoWeCareABoutThisObjectsVisibility = true;
                 }
@@ -220,33 +243,13 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 else
                     return false;
             }
-
             else return false;
         }
       
-
 		#if UNITY_EDITOR
 		//used to show what's currently visible
 		void OnGUI () 
         {
-            //Vector3 p = new Vector3();
-            //Camera c = Camera.main;
-            //Event e = Event.current;
-            //Vector2 mousePos = new Vector2();
-
-            //// Get the mouse position from Event.
-            //// Note that the y position from Event is inverted.
-            //mousePos.x = e.mousePosition.x;
-            //mousePos.y = c.pixelHeight - e.mousePosition.y;
-
-            //p = c.ScreenToWorldPoint(new Vector3(mousePos.x, mousePos.y, c.nearClipPlane));
-
-            //GUILayout.BeginArea(new Rect(20, 20, 250, 120));
-            //GUILayout.Label("Screen pixels: " + c.pixelWidth + ":" + c.pixelHeight);
-            //GUILayout.Label("Mouse position: " + mousePos);
-            //GUILayout.Label("World position: " + p.ToString("F3"));
-            //GUILayout.EndArea();
-
 			if (VisibleObjects != null) 
             {
 				if (VisibleObjects.Length > 10) 
@@ -286,6 +289,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
                             //else
                                 //suffix += " VISIBLE";
+                            if(o.isInteractable == true)
+                            {
+                                suffix += " INTERACTABLE";
+                            }
 						}
 							
 							
@@ -296,163 +303,120 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		}
 		#endif
 
-		// Use this for initialization
-		private void Start()
-		{
-			m_CharacterController = GetComponent<CharacterController>();
-			m_Camera = Camera.main;
-			m_OriginalCameraPosition = m_Camera.transform.localPosition;
-			m_FovKick.Setup(m_Camera);
-			m_HeadBob.Setup(m_Camera, m_StepInterval);
-			m_StepCycle = 0f;
-			m_NextStep = m_StepCycle/2f;
-			m_Jumping = false;
-			//m_AudioSource = GetComponent<AudioSource>();
-			m_MouseLook.Init(transform , m_Camera.transform);
+        //private void RaycastTarget()
+        //{
+        //   // raycast from the center of the screen
+        //    int x = Screen.width / 2;
+        //    int y = Screen.height / 2;
+        //    Ray ray = m_Camera.GetComponent<Camera>().ScreenPointToRay(new Vector3(x, y));
 
-            //grab text object on canvas to update with what is currently targeted by reticle
-           Target_Text = GameObject.Find("DebugCanvas/TargetText");;
-           Debug_Canvas = GameObject.Find("DebugCanvas");
-           Inventory_Text = GameObject.Find("DebugCanvas/InventoryText");
+        //    //Casts raycast through all objects under reticle, sorts through them to see if
+        //    //they are sim objects or not, if they are either a receptacle or a pickup, show the name
 
+        //    RaycastHit[] hits;
 
-            //if this component is enabled, turn on the targeting reticle and target text
-            if (this.isActiveAndEnabled)
-            {
-                Debug_Canvas.SetActive(true);
-                Target_Text.SetActive(true);
+        //    List<string> targetTextList = new List<string>();
 
+        //    hits = Physics.RaycastAll(m_Camera.transform.position, m_Camera.transform.forward, 10f);
 
-                Cursor.visible = false;
-                Cursor.lockState = CursorLockMode.Locked;
-            }
+        //    for (int i = 0; i < hits.Length; i++)
+        //    {
+        //        RaycastHit target = hits[i];
 
-            
-		}
+        //        if(target.transform.GetComponent<SimObj>())//((target.transform.GetComponent<Receptacle>() && target.transform.GetComponent<Receptacle>().isActiveAndEnabled) || (target.transform.GetComponent<Convertable>() && target.transform.GetComponent<Convertable>().isActiveAndEnabled))
+        //        {
+        //            targetTextList.Add(target.transform.name);
+        //        }
 
+        //        else
+        //        {
+        //            targetTextList.Clear();
+        //        }
 
-        private void RaycastTarget()
-        {
-           // raycast from the center of the screen
-            int x = Screen.width / 2;
-            int y = Screen.height / 2;
-            Ray ray = m_Camera.GetComponent<Camera>().ScreenPointToRay(new Vector3(x, y));
+        //    }
 
-            //Casts raycast through all objects under reticle, sorts through them to see if
-            //they are sim objects or not, if they are either a receptacle or a pickup, show the name
+        //    string toDisplay = " ";
 
-            RaycastHit[] hits;
+        //    foreach(string txt in targetTextList)
+        //    {
+        //        toDisplay = toDisplay.ToString() + txt.ToString() + "\n";
+        //    }
 
-            List<string> targetTextList = new List<string>();
-
-            hits = Physics.RaycastAll(m_Camera.transform.position, m_Camera.transform.forward, 10f);
-
-            for (int i = 0; i < hits.Length; i++)
-            {
-                RaycastHit target = hits[i];
-
-                if(target.transform.GetComponent<SimObj>())//((target.transform.GetComponent<Receptacle>() && target.transform.GetComponent<Receptacle>().isActiveAndEnabled) || (target.transform.GetComponent<Convertable>() && target.transform.GetComponent<Convertable>().isActiveAndEnabled))
-                {
-                    targetTextList.Add(target.transform.name);
-                }
-
-                else
-                {
-                    targetTextList.Clear();
-                }
-
-            }
-
-            string toDisplay = " ";
-
-            foreach(string txt in targetTextList)
-            {
-                toDisplay = toDisplay.ToString() + txt.ToString() + "\n";
-            }
-
-            Target_Text.GetComponent<Text>().text = toDisplay;
+        //    Target_Text.GetComponent<Text>().text = toDisplay;
 
 
 
 
 
-            /////////////////RaycastHit implementation
+        //    /////////////////RaycastHit implementation
 
-            RaycastHit hit = new RaycastHit();
+        //    RaycastHit hit = new RaycastHit();
            
-            //int layer = 1 << LayerMask.NameToLayer("Default");
+        //    //int layer = 1 << LayerMask.NameToLayer("Default");
 
-            if (Physics.Raycast(ray, out hit))
-            {
-                Debug.DrawLine(m_Camera.transform.position, hit.point, Color.red);
-                //check for SimObjects that we are looking at
+        //    if (Physics.Raycast(ray, out hit))
+        //    {
+        //        Debug.DrawLine(m_Camera.transform.position, hit.point, Color.red);
+        //        //check for SimObjects that we are looking at
 
 
              
-                if(hit.transform.tag == "SimObj")
-                {
-                    //update text to show what we are looking at
-                   // Target_Text.GetComponent<Text>().text = hit.transform.name;
+        //        if(hit.transform.tag == "SimObj")
+        //        {
+        //            //update text to show what we are looking at
+        //           // Target_Text.GetComponent<Text>().text = hit.transform.name;
 
-                    //All openable items have a Receptacle component
-                    if(hit.transform.GetComponent<Receptacle>() && hit.transform.GetComponent<Receptacle>() != null)
-                    {
-                        //print("this is a receptacle");
-                        isReceptacle = true;
-                    }
+        //            //All openable items have a Receptacle component
+        //            if(hit.transform.GetComponent<Receptacle>() && hit.transform.GetComponent<Receptacle>() != null)
+        //            {
+        //                //print("this is a receptacle");
+        //                isReceptacle = true;
+        //            }
 
-                    else
-                    {
-                        isReceptacle = false;
-                    }
+        //            else
+        //            {
+        //                isReceptacle = false;
+        //            }
 
-                    //all pickup-able items are of type inventory
-                    if(hit.transform.GetComponent<SimObj>().Manipulation == SimObjManipType.Inventory && hit.transform.GetComponent<SimObj>() != null)//(hit.transform.GetComponent<Convertable>())
-                    {
-                       // print("able to pick up");
-                        isPickup = true;
-                    }
+        //            //all pickup-able items are of type inventory
+        //            if(hit.transform.GetComponent<SimObj>().Manipulation == SimObjManipType.Inventory && hit.transform.GetComponent<SimObj>() != null)//(hit.transform.GetComponent<Convertable>())
+        //            {
+        //               // print("able to pick up");
+        //                isPickup = true;
+        //            }
 
-                    else
-                    {
-                        isPickup = false;    
-                    }
-                }
+        //            else
+        //            {
+        //                isPickup = false;    
+        //            }
+        //        }
 
-                else
-                {
-                    //if no sim objects are under the reticle, show no text
-                    Target_Text.GetComponent<Text>().text = " ";
-                    isReceptacle = false;
-                    isPickup = false;
-                }
+        //        else
+        //        {
+        //            //if no sim objects are under the reticle, show no text
+        //            Target_Text.GetComponent<Text>().text = " ";
+        //            isReceptacle = false;
+        //            isPickup = false;
+        //        }
 
-            }
+        //    }
 
 
-        }
-
-     
+        //}
 
 		private void Update()	
         {
             VisibleObjects = GetAllVisibleSimObjPhysics(m_Camera, 2.0f);
-            
-            //RaycastTarget();
-
             //////MOUSE AND KEYBAORD INPUT///////////////////////////////////////////////////
             //on left mouse click
             if(Input.GetMouseButtonDown(0))
             {
-             
 
             }
 
             //on right mouse click
             if(Input.GetMouseButtonDown(1))
             {
-
-              
 
             }
 
@@ -462,21 +426,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 Cursor.visible = true;
                 Cursor.lockState = CursorLockMode.None;
                 looking = true;
-
-                Vector3 Where = m_Camera.ScreenToWorldPoint(Input.mousePosition);
-                //is there something in the inventory? if so, place it in the receptacle we are looking at
-                /*if (isReceptacle && !String.IsNullOrEmpty(current_Object_In_Inventory))
-                {
-                    PutObject_ray(current_Object_In_Inventory);
-                }
-
-                else if(!String.IsNullOrEmpty(current_Object_In_Inventory))
-                    Debug.Log("You can't put that there!");
-
-                else if(isReceptacle && String.IsNullOrEmpty(current_Object_In_Inventory))
-                {
-                    Debug.Log("Nothing in your Inventory!");
-                }*/
             }
 
             if(Input.GetKeyUp(KeyCode.Space))
@@ -489,13 +438,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
             ///////////////////////////////////////////////////////////////////////////
 			if(looking == false)
             RotateView();
-
-
-			//if (captureScreenshot) {
-			//	screenshotCounter++;
-			//	StartCoroutine (EmitFrame ());
-			//	captureScreenshot = false;
-			//}
 
 			// the jump state needs to read here to make sure it is not missed
 			if (!m_Jump)
@@ -514,75 +456,50 @@ namespace UnityStandardAssets.Characters.FirstPerson
 				m_MoveDir.y = 0f;
 			}
 
-            //populate array of what objects are visible
-            //currentVisibleObjects = SimUtil.GetAllVisibleSimObjs(m_Camera, MaxDistance);
-
-
 			m_PreviouslyGrounded = m_CharacterController.isGrounded;
+
+            float speed;
+            GetInput(out speed);
+            // always move along the camera forward as it is the direction that it being aimed at
+            Vector3 desiredMove = transform.forward * m_Input.y + transform.right * m_Input.x;
+
+            // get a normal for the surface that is being touched to move along it
+            RaycastHit hitInfo;
+            Physics.SphereCast(transform.position, m_CharacterController.radius, Vector3.down, out hitInfo,
+                m_CharacterController.height / 2f, Physics.AllLayers, QueryTriggerInteraction.Ignore);
+            desiredMove = Vector3.ProjectOnPlane(desiredMove, hitInfo.normal).normalized;
+
+            m_MoveDir.x = desiredMove.x * speed;
+            m_MoveDir.z = desiredMove.z * speed;
+
+
+            if (m_CharacterController.isGrounded)
+            {
+                m_MoveDir.y = -m_StickToGroundForce;
+
+                if (m_Jump)
+                {
+                    m_MoveDir.y = m_JumpSpeed;
+                    //PlayJumpSound();
+                    m_Jump = false;
+                    m_Jumping = true;
+                }
+            }
+
+            else
+            {
+                m_MoveDir += Physics.gravity * m_GravityMultiplier * Time.fixedDeltaTime;
+            }
+
+            m_CharacterController.Move(m_MoveDir * Time.fixedDeltaTime);
+
+            ProgressStepCycle(speed);
+            UpdateCameraPosition(speed);
 		}
-
-
-		//protected byte[] captureScreen() 
-  //      {
-		//	int width = Screen.width;
-		//	int height = Screen.height;
-
-		//	Texture2D tex = new Texture2D(width, height, TextureFormat.RGB24, false);
-
-		//	// read screen contents into the texture
-		//	tex.ReadPixels(new Rect(0, 0, width, height), 0, 0);
-		//	tex.Apply();
-
-		//	// encode texture into JPG - XXX SHOULD SET QUALITY
-		//	byte[] bytes = tex.EncodeToPNG();
-		//	Destroy(tex);
-		//	return bytes;
-		//}
-
-		//private IEnumerator EmitFrame() 
-  //      {
-		//	yield return new WaitForEndOfFrame ();
-		//	File.WriteAllBytes ("/Users/erick/Desktop/screenshots/screenshot-" + screenshotCounter.ToString () + ".png", captureScreen ());
-		//}
 
 		private void FixedUpdate()
 		{
-			float speed;
-			GetInput(out speed);
-			// always move along the camera forward as it is the direction that it being aimed at
-			Vector3 desiredMove = transform.forward*m_Input.y + transform.right*m_Input.x;
 
-			// get a normal for the surface that is being touched to move along it
-			RaycastHit hitInfo;
-			Physics.SphereCast(transform.position, m_CharacterController.radius, Vector3.down, out hitInfo,
-				m_CharacterController.height/2f, Physics.AllLayers, QueryTriggerInteraction.Ignore);
-			desiredMove = Vector3.ProjectOnPlane(desiredMove, hitInfo.normal).normalized;
-
-			m_MoveDir.x = desiredMove.x*speed;
-			m_MoveDir.z = desiredMove.z*speed;
-
-
-			if (m_CharacterController.isGrounded)
-			{
-				m_MoveDir.y = -m_StickToGroundForce;
-
-				if (m_Jump)
-				{
-					m_MoveDir.y = m_JumpSpeed;
-					//PlayJumpSound();
-					m_Jump = false;
-					m_Jumping = true;
-				}
-			}
-
-			else
-			{
-				m_MoveDir += Physics.gravity*m_GravityMultiplier*Time.fixedDeltaTime;
-			}
-			m_CollisionFlags = m_CharacterController.Move(m_MoveDir*Time.fixedDeltaTime);
-
-			ProgressStepCycle(speed);
-			UpdateCameraPosition(speed);
 
 		}
 
@@ -664,32 +581,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			}
 		}
 
-
 		private void RotateView()
 		{
 			if (/*!captureScreenshot &&*/ rotateMouseLook) {
 				m_MouseLook.LookRotation (transform, m_Camera.transform);
 			}
-
 		}
-
-
-		/*private void OnControllerColliderHit(ControllerColliderHit hit)
-		{
-			Rigidbody body = hit.collider.attachedRigidbody;
-			//dont move the rigidbody if the character is on top of it
-			if (m_CollisionFlags == CollisionFlags.Below)
-			{
-				return;
-			}
-
-			if (body == null || body.isKinematic || m_CharacterController == null)
-			{
-				return;
-			}
-
-			//body.AddForceAtPosition(m_CharacterController.velocity * 0.1f, hit.point, ForceMode.Impulse);
-		}*/
 	}
 }
 
