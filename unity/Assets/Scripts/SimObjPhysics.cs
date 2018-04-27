@@ -9,7 +9,7 @@ public class SimObjPhysics : MonoBehaviour
     public string UniqueID = string.Empty;
 
     [SerializeField]
-    public SimObjManipTypePhysics[] ManipType; //is this static, moveable, CanPickup, or a receptacle? Can be multiple manip types, like Pots = CanPIckup and Receptacle
+    public SimObjManipTypePhysics[] ManipTypes; //is this static, moveable, CanPickup, or a receptacle? Can be multiple manip types, like Pots = CanPIckup and Receptacle
 
     [SerializeField]
     public SimObjTypePhysics Type = SimObjTypePhysics.Undefined; //set the type of the prefab in editor
