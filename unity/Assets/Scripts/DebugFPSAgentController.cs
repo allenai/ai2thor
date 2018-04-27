@@ -66,8 +66,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
         public bool looking = false;
 		//private AudioSource m_AudioSource;
 
-		public SimObjPhysics[] VisibleObjects;
+		public SimObjPhysics[] VisibleObjects; //these sie objects are within the camera viewport and in range of the agent
 
+        //public SimObjPhysics[] InteractableObjects;
+        //public List<SimObjPhysics> InteractableObjects; //these sim objects are Visible AND can be accessed by the agent's Hand
         //public Collider[] testcolliders_in_view;
 
         //public Transform[] SweepResults;
@@ -85,7 +87,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
                                                     //1 << 8, QueryTriggerInteraction.Collide);
 
             //get all sim objects in range around us
-            Collider[] colliders_in_view = Physics.OverlapSphere(agentCameraPos, maxDistance, 
+            //the range is the maxDistance + offset to make sure sim objects that leave the sphere have time to properly update physics
+            //if the OverlapSphere is exactly at the max Distance, the physics update can be missed
+            Collider[] colliders_in_view = Physics.OverlapSphere(agentCameraPos, maxDistance + 0.5f, 
                                                          1 << 8 , QueryTriggerInteraction.Collide); //layermask is 8
 
             if(colliders_in_view != null)
@@ -102,15 +106,14 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         currentlyVisibleItems.Add(sop);
 
                         //draw a debug line to the object's transform
-#if UNITY_EDITOR
+                        #if UNITY_EDITOR
                         Debug.DrawLine(agentCameraPos, sop.transform.position, Color.yellow);
-#endif
+                        #endif
                     }
 
                     else
                     {
-
-                        print("out of range");
+                        //print("out of range");
                         sop.isVisible = false;
                         currentlyVisibleItems.Remove(sop);
                     }
@@ -118,102 +121,71 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
                 //now that we have a list of currently visible items, let's see which ones are interactable!
                 Rigidbody HandRB = AgentHand.GetComponent<Rigidbody>();
-                RaycastHit hit = new RaycastHit();
+                //RaycastHit hit = new RaycastHit();
 
                 foreach (SimObjPhysics visibleSimObjP in currentlyVisibleItems)
                 {
-                    //sweeptest from the agent's hand to the interaction point on the sim object
-                    //sweeptest returns true if intersects any collider, otherwise false
-                    //print(HandRB.SweepTest(visibleSimObjP.transform.position - AgentHand.transform.position, out hit, maxDistance));
-                    //print(hit.collider);
 
                     //get all interaction points on the visible sim object we are checking here
                     Transform[] InteractionPoints = visibleSimObjP.InteractionPoints;
 
-                    //cast ray from the agent's hand to each of the sim object's interaction points
-
-                    int AccessibleInteractionPointCount = 0;
+                    int ReachableInteractionPointCount = 0;
                     foreach (Transform ip in InteractionPoints)
                     {
-                        float DistanceToInteractionPoint = Vector3.Distance(AgentHand.transform.position, ip.position);
-
-                        Physics.Raycast(AgentHand.transform.position, ip.position - AgentHand.transform.position,
-                                        out hit, DistanceToInteractionPoint);
-
-                        //is the object that was hit the same as the visible sim object? great!
-                        if (hit.transform.name == visibleSimObjP.transform.name)
+                        //sweep test from agent's hand to each Interaction point
+                        RaycastHit hit;
+                        if(HandRB.SweepTest(ip.position - AgentHand.transform.position, out hit, maxDistance))
                         {
-                            //show succesfull raycast from hand to the interaction point
-#if UNITY_EDITOR
-                            Debug.DrawLine(AgentHand.transform.position, ip.transform.position, Color.magenta);
-#endif
+                            //if the object only has one interaction point to check
+                            if(visibleSimObjP.InteractionPoints.Length == 1)
+                            {
+                                if (hit.transform.name == visibleSimObjP.transform.name)
+                                {
+                                    #if UNITY_EDITOR
+                                    Debug.DrawLine(AgentHand.transform.position, ip.transform.position, Color.magenta);
+                                    #endif
 
-                            AccessibleInteractionPointCount++;
-                            //visibleSimObjP.isInteractable = true;
-                            //now set the game object as interactable somehow....
+                                    visibleSimObjP.isInteractable = true;
+                                }
+
+                                else
+                                    visibleSimObjP.isInteractable = false;
+                            }
+
+                            //this object has 2 or more interaction points
+                            //if any one of them can be accessed by the Agent's hand, this object is interactable
+                            if(visibleSimObjP.InteractionPoints.Length > 1)
+                            {
+                                
+                                if(hit.transform.name == visibleSimObjP.transform.name)
+                                {
+                                    #if UNITY_EDITOR
+                                    Debug.DrawLine(AgentHand.transform.position, ip.transform.position, Color.magenta);
+                                    #endif
+                                    ReachableInteractionPointCount++;
+                                }
+
+                                //check if at least one of the interaction points on this multi interaction point object
+                                //is accessible to the agent Hand
+                                if (ReachableInteractionPointCount > 0)
+                                {
+                                    visibleSimObjP.isInteractable = true;
+                                }
+
+                                else
+                                    visibleSimObjP.isInteractable = false;
+                            }
                         }
 
-                        //sweeptest stuff
-                        RaycastHit[] SweptObjects = AgentHand.GetComponent<Rigidbody>().SweepTestAll(ip.position - AgentHand.transform.position);
-
-                        //for each thing hit by this sweep, check if it's hit.transform.name == the interactive point's parent's name
-                        //print(SweptObjects.ToString());
-
                     }
 
-                    if (AccessibleInteractionPointCount != 0)
-                        visibleSimObjP.isInteractable = true;
-
-                    else
-                    {
-                        visibleSimObjP.isInteractable = false;
-                    }
                 }
             }
+
+            //populate array of visible items in order by distance
             currentlyVisibleItems.Sort((x, y) => Vector3.Distance(x.transform.position, agentCameraPos).CompareTo(Vector3.Distance(y.transform.position, agentCameraPos)));
-            //we're done!
             return currentlyVisibleItems.ToArray();
         }
-
-        //check if the visibility point on the physics sim object in question is in the viewport at all
-        //static bool CheckVisibilityPoint(SimObjPhysics item, Vector3 itemVisibilityPointLocation, Camera agentCamera)
-        //{
-        //    SimObjManipTypePhysics[] itemManipType = item.GetComponent<SimObjPhysics>().ManipType;
-
-        //    bool DoWeCareABoutThisObjectsVisibility = false;
-
-        //    foreach(SimObjManipTypePhysics type in itemManipType)
-        //    {
-        //        if (type == SimObjManipTypePhysics.CanPickup || type == SimObjManipTypePhysics.Receptacle)
-        //        {
-        //            DoWeCareABoutThisObjectsVisibility = true;
-        //        }
-        //    }
-        //    //is this sim object one that doesn't care about being visible?
-        //    if (DoWeCareABoutThisObjectsVisibility == true)
-        //    {
-        //        Vector3 viewPoint = agentCamera.WorldToViewportPoint(itemVisibilityPointLocation);
-
-        //        //move these two up to variables later
-        //        float ViewPointRangeHigh = 1.0f;
-        //        float ViewPointRangeLow = 0.0f;
-
-        //        if (viewPoint.z > 0 //is in front of camera
-        //           && viewPoint.x < ViewPointRangeHigh && viewPoint.x > ViewPointRangeLow//within x bounds
-        //            && viewPoint.y < ViewPointRangeHigh && viewPoint.y > ViewPointRangeLow)//within y bounds
-        //        {
-        //            return true;
-        //        }
-
-        //        else
-        //            return false;
-
-        //    }
-
-        //    else
-        //        return false;
-
-        //}
 
         //see if a given SimObjPhysics is within the camera's range and field of view
         static bool CheckIfInViewport(SimObjPhysics item, Camera agentCamera, float maxDistance)
@@ -224,7 +196,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
             foreach (SimObjManipTypePhysics type in itemManipType)
             {
-                if (type == SimObjManipTypePhysics.CanPickup || type == SimObjManipTypePhysics.Receptacle)
+                if (type == SimObjManipTypePhysics.CanPickup || type == SimObjManipTypePhysics.CanOpen || type == SimObjManipTypePhysics.Interactable)
                 {
                     DoWeCareABoutThisObjectsVisibility = true;
                 }
