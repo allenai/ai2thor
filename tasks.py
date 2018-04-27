@@ -133,5 +133,6 @@ def interact(ctx, scene):
     env = ai2thor.controller.Controller( )
     e = env.start(player_screen_width=600, player_screen_height=600)
     event = env.reset(scene)
-    env.step(dict(action='Initialize', gridSize='0.25'))
+    env.step(dict(action='Initialize', gridSize=0.25))
     env.interact()
+    env.stop()
