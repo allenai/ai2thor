@@ -48,6 +48,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
       //  [SerializeField] private GameObject Inventory_Text = null;
 
         [SerializeField] private GameObject AgentHand = null;
+        [SerializeField] private GameObject ItemInHand = null;
 
 		private Camera m_Camera;
 		private bool m_Jump;
@@ -247,7 +248,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
         }
       
 		#if UNITY_EDITOR
-		//used to show what's currently visible
+		//used to show what's currently visible on the top left of the screen
 		void OnGUI () 
         {
 			if (VisibleObjects != null) 
@@ -303,136 +304,84 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		}
 		#endif
 
-        //private void RaycastTarget()
-        //{
-        //   // raycast from the center of the screen
-        //    int x = Screen.width / 2;
-        //    int y = Screen.height / 2;
-        //    Ray ray = m_Camera.GetComponent<Camera>().ScreenPointToRay(new Vector3(x, y));
+        //pickup a sim object
+        public void PickUp(Transform target)
+        {
+            //turn off the hand's collision and physics properties
+            //make the object kinematic
+            if (ItemInHand == null)
+            {
+                //move the object to the hand's default position.
+                target.GetComponent<Rigidbody>().isKinematic = true;
+                //target.GetComponent<Rigidbody>().constraints = RigidbodyConstraints.FreezeRotation;
+                target.position = AgentHand.transform.position;
+                //AgentHand.transform.parent = target;
+                target.parent = AgentHand.transform;
+                //update "inventory"
+                ItemInHand = target.gameObject;
+            }
 
-        //    //Casts raycast through all objects under reticle, sorts through them to see if
-        //    //they are sim objects or not, if they are either a receptacle or a pickup, show the name
-
-        //    RaycastHit[] hits;
-
-        //    List<string> targetTextList = new List<string>();
-
-        //    hits = Physics.RaycastAll(m_Camera.transform.position, m_Camera.transform.forward, 10f);
-
-        //    for (int i = 0; i < hits.Length; i++)
-        //    {
-        //        RaycastHit target = hits[i];
-
-        //        if(target.transform.GetComponent<SimObj>())//((target.transform.GetComponent<Receptacle>() && target.transform.GetComponent<Receptacle>().isActiveAndEnabled) || (target.transform.GetComponent<Convertable>() && target.transform.GetComponent<Convertable>().isActiveAndEnabled))
-        //        {
-        //            targetTextList.Add(target.transform.name);
-        //        }
-
-        //        else
-        //        {
-        //            targetTextList.Clear();
-        //        }
-
-        //    }
-
-        //    string toDisplay = " ";
-
-        //    foreach(string txt in targetTextList)
-        //    {
-        //        toDisplay = toDisplay.ToString() + txt.ToString() + "\n";
-        //    }
-
-        //    Target_Text.GetComponent<Text>().text = toDisplay;
+            else
+                Debug.Log("Your hand is full!");
 
 
 
 
-
-        //    /////////////////RaycastHit implementation
-
-        //    RaycastHit hit = new RaycastHit();
-           
-        //    //int layer = 1 << LayerMask.NameToLayer("Default");
-
-        //    if (Physics.Raycast(ray, out hit))
-        //    {
-        //        Debug.DrawLine(m_Camera.transform.position, hit.point, Color.red);
-        //        //check for SimObjects that we are looking at
-
-
-             
-        //        if(hit.transform.tag == "SimObj")
-        //        {
-        //            //update text to show what we are looking at
-        //           // Target_Text.GetComponent<Text>().text = hit.transform.name;
-
-        //            //All openable items have a Receptacle component
-        //            if(hit.transform.GetComponent<Receptacle>() && hit.transform.GetComponent<Receptacle>() != null)
-        //            {
-        //                //print("this is a receptacle");
-        //                isReceptacle = true;
-        //            }
-
-        //            else
-        //            {
-        //                isReceptacle = false;
-        //            }
-
-        //            //all pickup-able items are of type inventory
-        //            if(hit.transform.GetComponent<SimObj>().Manipulation == SimObjManipType.Inventory && hit.transform.GetComponent<SimObj>() != null)//(hit.transform.GetComponent<Convertable>())
-        //            {
-        //               // print("able to pick up");
-        //                isPickup = true;
-        //            }
-
-        //            else
-        //            {
-        //                isPickup = false;    
-        //            }
-        //        }
-
-        //        else
-        //        {
-        //            //if no sim objects are under the reticle, show no text
-        //            Target_Text.GetComponent<Text>().text = " ";
-        //            isReceptacle = false;
-        //            isPickup = false;
-        //        }
-
-        //    }
-
-
-        //}
+        }
 
 		private void Update()	
         {
             VisibleObjects = GetAllVisibleSimObjPhysics(m_Camera, 2.0f);
             //////MOUSE AND KEYBAORD INPUT///////////////////////////////////////////////////
+            /// 
+            if(Input.GetKey(KeyCode.Space))
+            {
+                //turn on cursor targeting mode
+                Cursor.visible = true;
+                Cursor.lockState = CursorLockMode.None;
+                looking = true;
+            }
+
+
+            if (Input.GetKeyUp(KeyCode.Space))
+            {
+                Cursor.visible = false;
+                Cursor.lockState = CursorLockMode.Locked;
+                looking = false;
+            }
+
             //on left mouse click
             if(Input.GetMouseButtonDown(0))
             {
+                //check if we are in cursor targeting mode
+                if(Cursor.visible == true)
+                {
+                    RaycastHit hit;
+                    Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+                    //shoot a ray out to select an object
+                    if(Physics.Raycast(ray, out hit))
+                    {
+                        //check if the hit object is a SimObj in our array of Accessible sim objects
+                        if(hit.transform.tag == "SimObjPhysics")
+                        {
+                            //if an interaction point is accessible by the hand, proceed to try and pick it up
+                            if(hit.transform.GetComponent<SimObjPhysics>().isInteractable == true)
+                            {
+                                //print(hit.transform.name + " is pickupable!");
 
+                                //pickup the object here
+                                PickUp(hit.transform);
+
+                            }
+                        }
+                    }
+                }
             }
 
             //on right mouse click
             if(Input.GetMouseButtonDown(1))
             {
 
-            }
-
-            if(Input.GetKey(KeyCode.Space))
-            {
-
-                Cursor.visible = true;
-                Cursor.lockState = CursorLockMode.None;
-                looking = true;
-            }
-
-            if(Input.GetKeyUp(KeyCode.Space))
-            {
-                Cursor.visible = false;
-                Cursor.lockState = CursorLockMode.Locked;
-                looking = false;
             }
 
             ///////////////////////////////////////////////////////////////////////////
