@@ -338,7 +338,7 @@ def process_alive(pid):
     """
     try:
         os.kill(pid, 0)
-    except ProcessLookupError:
+    except OSError:
         return False
 
     return True
@@ -458,16 +458,17 @@ class Controller(object):
 
         self._interact_commands = default_interact_commands.copy()
 
-        print("Enter a Command: Move ← ↑↓→, Rotate/Look Shift+← ↑↓→, Quit 'q' or Ctrl-C")
+        command_message = u"Enter a Command: Move \u2190\u2191\u2192\u2193, Rotate/Look Shift + \u2190\u2191\u2192\u2193, Quit 'q' or Ctrl-C"
+        print(command_message)
         for a in self.next_interact_command():
             new_commands = {}
-            command_counter = 1
-            def add_command(action, **args):
-                nonlocal command_counter
-                com = dict(action=action)
-                com.update(args)
-                new_commands[str(command_counter)] = com
-                command_counter += 1
+            command_counter = dict(counter=1)
+            def add_command(cc, action, **args):
+                if cc['counter'] < 10:
+                    com = dict(action=action)
+                    com.update(args)
+                    new_commands[str(cc['counter'])] = com
+                    cc['counter'] += 1
 
             event = self.step(a)
             # check inventory
@@ -475,24 +476,25 @@ class Controller(object):
                 if o['visible']:
                     if o['openable']:
                         if o['isopen']:
-                            add_command('CloseObject', objectId=o['objectId'])
+                            add_command(command_counter, 'CloseObject', objectId=o['objectId'])
                         else:
-                            add_command('OpenObject', objectId=o['objectId'])
+                            add_command(command_counter, 'OpenObject', objectId=o['objectId'])
                     if len(event.metadata['inventoryObjects']) > 0:
                         if o['receptacle'] and (not o['openable'] or o['isopen']):
                             inventoryObjectId = event.metadata['inventoryObjects'][0]['objectId']
-                            add_command('PutObject', objectId=inventoryObjectId, receptacleObjectId=o['objectId'])
+                            add_command(command_counter, 'PutObject', objectId=inventoryObjectId, receptacleObjectId=o['objectId'])
 
                     elif o['pickupable']:
-                        add_command('PickupObject', objectId=o['objectId'])
+                        add_command(command_counter, 'PickupObject', objectId=o['objectId'])
 
             self._interact_commands = default_interact_commands.copy()
             self._interact_commands.update(new_commands)
 
-            print("Enter a Command: Move ← ↑↓→, Rotate/Look Shift+← ↑↓→, Quit 'q' or Ctrl-C")
+            print(command_message)
 
             skip_keys = ['action', 'objectId']
-            for k,v in new_commands.items():
+            for k in sorted(new_commands.keys()):
+                v = new_commands[k]
                 command_info = [k + ")", v['action']]
                 if 'objectId' in v:
                     command_info.append(v['objectId'])
@@ -566,7 +568,7 @@ class Controller(object):
             command = self.unity_command(width, height)
             proc = subprocess.Popen(command, env=env)
             self.unity_pid = proc.pid
-            atexit.register(lambda: proc.kill())
+            atexit.register(lambda: proc.poll() is None and proc.kill())
             returncode = proc.wait()
             if returncode != 0 and not self.killing_unity:
                 raise Exception("command: %s exited with %s" % (command, returncode))
@@ -714,10 +716,10 @@ class Controller(object):
         return self.last_event
 
     def stop(self):
-        self.stop_unity()
-        self.stop_container()
         self.response_queue.put_nowait({})
         self.server.wsgi_server.shutdown()
+        self.stop_container()
+        self.stop_unity()
 
     def stop_container(self):
         if self.container_id:
