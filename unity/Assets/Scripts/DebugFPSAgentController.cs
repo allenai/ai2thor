@@ -304,8 +304,15 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		}
 		#endif
 
+        public void MoveHand(Vector3 targetPosition)
+        {
+            //two versions, one for if an object is in the hand, one for if there is not an object in the hand. 
+
+         
+        }
+
         //pickup a sim object
-        public void PickUp(Transform target)
+        public void PickUpSimObjPhysics(Transform target)
         {
             //turn off the hand's collision and physics properties
             //make the object kinematic
@@ -322,18 +329,78 @@ namespace UnityStandardAssets.Characters.FirstPerson
             }
 
             else
-                Debug.Log("Your hand is full!");
+                Debug.Log("Your hand has something in it already!");
 
+        }
 
+        public void RotateSimObjPhysicsInHand(Vector3 vec)
+        {
+            if(ItemInHand != null)
+            {
+                
 
+                //get rigidbody of object in hand
+                Rigidbody objInHandRB = ItemInHand.GetComponent<Rigidbody>();
+                //OverlapSphere to see if there is enough room to completely rotate this object.
+                //center hand
+                //radius - length of the rigidbody /2? get the rigidbody's longest point?
+                //layermask to ignore colliders we don't care about... but i think we care about all of them so yes
+
+                //for items that use box colliders
+                if(ItemInHand.GetComponent<BoxCollider>())
+                {
+                    Vector3 sizeOfBox = ItemInHand.GetComponent<BoxCollider>().size;
+                    //do an overlapshere around the agent with radius based on max size of xyz of object in hand's collider
+                    Collider[] hitColliders = Physics.OverlapSphere(AgentHand.transform.position, 
+                                                                    Math.Max(Math.Max(sizeOfBox.x, sizeOfBox.y), sizeOfBox.z) / 2);
+
+                    foreach(Collider col in hitColliders)
+                    {
+                        //if anything other than the agent, the agent's hand, or the object currently being held is touched, no room to rotate
+                        if(col.name != "FPSController" && col.name != "TheHand" && col.name != ItemInHand.name)
+                        {
+                            print(col.name);
+                            print("Not Enough Room to Rotate");
+                            return;
+                        }
+                    }
+                }
+
+                if (ItemInHand.GetComponent<SphereCollider>())
+                {
+                    float radiusOfSphere = ItemInHand.GetComponent<SphereCollider>().radius;
+                    Collider[] hitColliders = Physics.OverlapSphere(AgentHand.transform.position, radiusOfSphere);
+
+                    foreach (Collider col in hitColliders)
+                    {
+                        //print(col.name);
+                        if (col.name != "FPSController" && col.name != "TheHand" && col.name != ItemInHand.name)
+                        {
+                            print("Not Enough Room to Rotate");
+                            return;
+                        }
+                    }
+                }
+
+                //rotate agent hand's local rotation. This way it is consistant regardless of the default rotation of an object
+                //picked up. Some objects (because of the model imported at weird rotations) must default to weird rotations
+                AgentHand.transform.localRotation = Quaternion.Euler(vec);
+
+            }
+
+            else
+            {
+                Debug.Log("Nothing In Hand to rotate!");
+                return;
+            }
 
         }
 
 		private void Update()	
         {
             VisibleObjects = GetAllVisibleSimObjPhysics(m_Camera, 2.0f);
+
             //////MOUSE AND KEYBAORD INPUT///////////////////////////////////////////////////
-            /// 
             if(Input.GetKey(KeyCode.Space))
             {
                 //turn on cursor targeting mode
@@ -341,7 +408,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 Cursor.lockState = CursorLockMode.None;
                 looking = true;
             }
-
 
             if (Input.GetKeyUp(KeyCode.Space))
             {
@@ -370,7 +436,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                                 //print(hit.transform.name + " is pickupable!");
 
                                 //pickup the object here
-                                PickUp(hit.transform);
+                                PickUpSimObjPhysics(hit.transform);
 
                             }
                         }
@@ -381,9 +447,28 @@ namespace UnityStandardAssets.Characters.FirstPerson
             //on right mouse click
             if(Input.GetMouseButtonDown(1))
             {
-
+                //RotateObjectInHand(new Vector3(90, 0, 0));
             }
 
+            if(Input.GetKeyDown(KeyCode.UpArrow))
+            {
+                RotateSimObjPhysicsInHand(new Vector3(0, 0, 0));
+            }
+
+            if (Input.GetKeyDown(KeyCode.DownArrow))
+            {
+                RotateSimObjPhysicsInHand(new Vector3(180, 0, 0));
+            }
+
+            if (Input.GetKeyDown(KeyCode.LeftArrow))
+            {
+                RotateSimObjPhysicsInHand(new Vector3(90, 0, 0));
+            }
+
+            if (Input.GetKeyDown(KeyCode.RightArrow))
+            {
+                RotateSimObjPhysicsInHand(new Vector3(-90, 0, 0));
+            }
             ///////////////////////////////////////////////////////////////////////////
 			if(looking == false)
             RotateView();
