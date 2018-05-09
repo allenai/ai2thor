@@ -92,4 +92,11 @@ public class SimObjPhysics : MonoBehaviour
         }
 
     }
+
+	//private void OnTriggerEnter(Collider other)
+	//{
+	//       print("AAAAH");
+	//}
+
+
 }

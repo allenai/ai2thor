@@ -335,7 +335,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 			return Array.IndexOf (OpenableTypes, so.Type) >= 0 && so.IsAnimated;
 		}
-
+         
 
 		public bool IsPickupable(SimObj so) {
 			return !IsOpenable (so) && !so.IsReceptacle && !(Array.IndexOf (ImmobileTypes, so.Type) >= 0);
@@ -429,7 +429,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 
 			if (!collisionsInAction.Contains (hit.gameObject.name)) {
-				Debug.Log ("Collided with " + hit.gameObject.name);
+				Debug.Log ("Agent Collided with " + hit.gameObject.name);
 				collisionsInAction.Add (hit.gameObject.name);
 			}
 
