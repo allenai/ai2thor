@@ -67,6 +67,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
         public bool looking = false;
 		//private AudioSource m_AudioSource;
 
+
+		public Collider[] TestcollidersHit = null;
+
 		public SimObjPhysics[] VisibleObjects; //these objects are within the camera viewport and in range of the agent
 
         private void Start()
@@ -322,8 +325,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 target.GetComponent<Rigidbody>().isKinematic = true;
                 //target.GetComponent<Rigidbody>().constraints = RigidbodyConstraints.FreezeRotation;
                 target.position = AgentHand.transform.position;
-                //AgentHand.transform.parent = target;
-                target.parent = AgentHand.transform;
+				//AgentHand.transform.parent = target;
+				target.SetParent(AgentHand.transform);
+                //target.parent = AgentHand.transform;
                 //update "inventory"
                 ItemInHand = target.gameObject;
             }
@@ -333,14 +337,41 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
         }
 
+        public void DropSimObjPhysics()
+		{
+			//make sure something is actually in our hands
+			if (ItemInHand != null)
+			{
+				ItemInHand.GetComponent<Rigidbody>().isKinematic = false;
+				ItemInHand.transform.parent = null;
+				ItemInHand = null;
+			}
+
+			else
+				Debug.Log("nothing in hand to drop!");
+		}
+        
+        bool CheckForMatches(IEnumerable<Transform> objects, Transform toCompare )
+		{
+			foreach (Transform t in objects)
+			{
+				if(toCompare == t)
+				{
+					return true;
+				}
+			}
+
+			return false;
+		}
+
         public void RotateSimObjPhysicsInHand(Vector3 vec)
         {
             if(ItemInHand != null)
             {
                 
 
-                //get rigidbody of object in hand
-                Rigidbody objInHandRB = ItemInHand.GetComponent<Rigidbody>();
+                ////get rigidbody of object in hand
+                //Rigidbody objInHandRB = ItemInHand.GetComponent<Rigidbody>();
                 //OverlapSphere to see if there is enough room to completely rotate this object.
                 //center hand
                 //radius - length of the rigidbody /2? get the rigidbody's longest point?
@@ -350,25 +381,67 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 if(ItemInHand.GetComponent<BoxCollider>())
                 {
                     Vector3 sizeOfBox = ItemInHand.GetComponent<BoxCollider>().size;
-                    //do an overlapshere around the agent with radius based on max size of xyz of object in hand's collider
+					//do an overlapshere around the agent with radius based on max size of xyz of object in hand's collider
+
+                    //find the radius of the overlap sphere based on max length of dimensions of box collider
+					float overlapRadius = Math.Max(Math.Max(sizeOfBox.x, sizeOfBox.y), sizeOfBox.z) / 2;
+
+					//since the sim objects have wonky scales, find the percent increase or decrease to multiply the radius by to match the scale of the sim object
+					//print(ItemInHand.transform.lossyScale);
+					Vector3 itemInHandScale = ItemInHand.transform.lossyScale;
+					//take the average of each axis scale, even though they should all be THE SAME but just in case
+					float avgScale = (itemInHandScale.x + itemInHandScale.y + itemInHandScale.z) / 3;
+
+					//print(avgScale);
+                    //adjust radius according to scale of item in hand
+					overlapRadius = overlapRadius * avgScale;
+
                     Collider[] hitColliders = Physics.OverlapSphere(AgentHand.transform.position, 
-                                                                    Math.Max(Math.Max(sizeOfBox.x, sizeOfBox.y), sizeOfBox.z) / 2);
+					                                                overlapRadius);
+
+					TestcollidersHit = hitColliders;
+                    //for objects that might have compound colliders, make sure we track them here for comparison below
+					Transform[] anyChildren = ItemInHand.GetComponentsInChildren<Transform>();
+
+					//print(Math.Max(Math.Max(sizeOfBox.x, sizeOfBox.y), sizeOfBox.z) / 2);
 
                     foreach(Collider col in hitColliders)
                     {
-                        //if anything other than the agent, the agent's hand, or the object currently being held is touched, no room to rotate
+                        //check if the thing collided with by the OverlapSphere is the agent, the hand, or the object itself
                         if(col.name != "FPSController" && col.name != "TheHand" && col.name != ItemInHand.name)
                         {
-                            print(col.name);
-                            print("Not Enough Room to Rotate");
-                            return;
+							//also check against any children the ItemInHand has for prefabs with compound colliders
+
+							//set to true if there is a match between this collider among ANY of the children of ItemInHand
+
+							if(CheckForMatches(anyChildren, col.transform) == false)
+							{
+								print(col.name + " blocking");
+                                print("Not Enough Room to Rotate");
+                                return;
+							}
+                     
                         }
+                  
+
+						else
+							AgentHand.transform.localRotation = Quaternion.Euler(vec);
+
                     }
                 }
+
+
 
                 if (ItemInHand.GetComponent<SphereCollider>())
                 {
                     float radiusOfSphere = ItemInHand.GetComponent<SphereCollider>().radius;
+
+					Vector3 itemInHandScale = ItemInHand.transform.lossyScale;
+
+					float avgScale = (itemInHandScale.x + itemInHandScale.y + itemInHandScale.z) / 3;
+
+					radiusOfSphere = radiusOfSphere * avgScale;
+
                     Collider[] hitColliders = Physics.OverlapSphere(AgentHand.transform.position, radiusOfSphere);
 
                     foreach (Collider col in hitColliders)
@@ -379,12 +452,15 @@ namespace UnityStandardAssets.Characters.FirstPerson
                             print("Not Enough Room to Rotate");
                             return;
                         }
+
+						else
+                            AgentHand.transform.localRotation = Quaternion.Euler(vec);
                     }
                 }
 
                 //rotate agent hand's local rotation. This way it is consistant regardless of the default rotation of an object
                 //picked up. Some objects (because of the model imported at weird rotations) must default to weird rotations
-                AgentHand.transform.localRotation = Quaternion.Euler(vec);
+               // AgentHand.transform.localRotation = Quaternion.Euler(vec);
 
             }
 
@@ -447,7 +523,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             //on right mouse click
             if(Input.GetMouseButtonDown(1))
             {
-                //RotateObjectInHand(new Vector3(90, 0, 0));
+				DropSimObjPhysics();
             }
 
             if(Input.GetKeyDown(KeyCode.UpArrow))
@@ -462,12 +538,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
             if (Input.GetKeyDown(KeyCode.LeftArrow))
             {
-                RotateSimObjPhysicsInHand(new Vector3(90, 0, 0));
+				RotateSimObjPhysicsInHand(new Vector3(0, 0, 90));
             }
 
             if (Input.GetKeyDown(KeyCode.RightArrow))
             {
-                RotateSimObjPhysicsInHand(new Vector3(-90, 0, 0));
+                RotateSimObjPhysicsInHand(new Vector3(0, 0, -90));
             }
             ///////////////////////////////////////////////////////////////////////////
 			if(looking == false)
