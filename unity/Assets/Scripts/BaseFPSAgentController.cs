@@ -610,7 +610,6 @@ public class ServerAction
 	public int pivot;
 	public int randomSeed;
 	public float moveMagnitude;
-	public bool continuousMode;
 	public bool uniquePickupableObjectTypes; // only allow one of each object type to be visible
 	public ReceptacleObjectList[] receptacleObjects;
 	public ReceptacleObjectPair[] excludeReceptacleObjectPairs;

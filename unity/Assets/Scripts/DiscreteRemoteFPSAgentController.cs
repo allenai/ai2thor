@@ -90,11 +90,15 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 		public void Initialize(ServerAction action)
 		{
+
 			if (action.continuous) {
 				continuousMode = true;
-				actionFinished(true);
+				if (action.gridSize == 0) {
+					action.gridSize = 0.25f;
+				}
 			} 
-			else if (action.gridSize <= 0 || action.gridSize > 5)
+
+			if (action.gridSize <= 0 || action.gridSize > 5)
 			{
 				errorMessage = "grid size must be in the range (0,5]";
 				Debug.Log(errorMessage);
@@ -200,25 +204,22 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 		virtual protected IEnumerator checkMoveAction(ServerAction action) {
 
+			yield return null;
+
 			if (continuousMode) {
 				actionFinished(true);
 				yield break;
-
 			}
 
-			yield return null;
 			bool result = false;
 
 
 			for (int i = 0; i < actionDuration; i++) {
 				Vector3 currentPosition = this.transform.position;
+				Vector3 zeroY = new Vector3 (1.0f, 0.0f, 1.0f);
 
-
-				Vector3 diff = currentPosition - lastPosition;
-				if (
-					((moveMagnitude - Math.Abs(diff.x) < 0.005) && (Math.Abs(diff.z) < 0.005)) ||
-					((moveMagnitude - Math.Abs(diff.z) < 0.005) && (Math.Abs(diff.x) < 0.005))
-				)
+				float distance = Vector3.Distance (Vector3.Scale(lastPosition, zeroY), Vector3.Scale(currentPosition, zeroY));
+				if (Math.Abs(moveMagnitude - distance) < 0.005)			
 				{
 					currentPosition = this.transform.position;
 
@@ -258,9 +259,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			}
 
 
-			if (!result)
-			{
-				Debug.Log("check move failed");
+			if (!result) {
+				Debug.Log ("check move failed");
 				transform.position = lastPosition;
 			}
 
@@ -507,13 +507,27 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			}
 			int currentRotation = (int)Math.Round(transform.rotation.eulerAngles.y, 0);
 			Dictionary<int, Vector3> actionOrientation = new Dictionary<int, Vector3> ();
-			actionOrientation.Add (0, new Vector3 (0f, 0f, 1.0f * moveMagnitude));
-			actionOrientation.Add (90, new Vector3 (1.0f * moveMagnitude, 0.0f, 0.0f));
-			actionOrientation.Add (180, new Vector3 (0f, 0f, -1.0f * moveMagnitude));
-			actionOrientation.Add (270, new Vector3 (-1.0f * moveMagnitude, 0.0f, 0.0f));
+			actionOrientation.Add (0, new Vector3 (0f, 0f, 1.0f));
+			actionOrientation.Add (90, new Vector3 (1.0f, 0.0f, 0.0f));
+			actionOrientation.Add (180, new Vector3 (0f, 0f, -1.0f));
+			actionOrientation.Add (270, new Vector3 (-1.0f, 0.0f, 0.0f));
 			int delta = (currentRotation + targetOrientation) % 360;
 
-            Vector3 m = actionOrientation[delta];
+			Vector3 m;
+			if (actionOrientation.ContainsKey (delta)) {
+				m = actionOrientation [delta];
+				
+			} else {
+				actionOrientation = new Dictionary<int, Vector3> ();
+				actionOrientation.Add (0, transform.forward);
+				actionOrientation.Add (90, transform.right);
+				actionOrientation.Add (180, transform.forward * -1);
+				actionOrientation.Add (270, transform.right * -1);
+				m = actionOrientation[targetOrientation];
+			}
+
+			m *= moveMagnitude;
+
             m.y = Physics.gravity.y * this.m_GravityMultiplier;
 			m_CharacterController.Move (m);
 			StartCoroutine (checkMoveAction (action));
