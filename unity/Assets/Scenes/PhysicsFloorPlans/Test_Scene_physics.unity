@@ -344,6 +344,21 @@ Prefab:
       propertyPath: TestObject
       value: 
       objectReference: {fileID: 2128663540}
+    - target: {fileID: 114000010621761404, guid: 5e9e851c0e142814dac026a256ba2ac0,
+        type: 2}
+      propertyPath: IsHandDefault
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 114000010621761404, guid: 5e9e851c0e142814dac026a256ba2ac0,
+        type: 2}
+      propertyPath: m_MouseLook.MinimumX
+      value: -30
+      objectReference: {fileID: 0}
+    - target: {fileID: 114000010621761404, guid: 5e9e851c0e142814dac026a256ba2ac0,
+        type: 2}
+      propertyPath: m_MouseLook.MaximumX
+      value: 30
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: 5e9e851c0e142814dac026a256ba2ac0, type: 2}
   m_IsPrefabParent: 0
@@ -1298,7 +1313,7 @@ GameObject:
   - component: {fileID: 425888522}
   m_Layer: 0
   m_Name: Floor (1)
-  m_TagString: Untagged
+  m_TagString: Structure
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -1962,10 +1977,10 @@ GameObject:
   - component: {fileID: 602181906}
   m_Layer: 0
   m_Name: Cube (2)
-  m_TagString: Untagged
+  m_TagString: Structure
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
+  m_StaticEditorFlags: 4294967295
   m_IsActive: 1
 --- !u!23 &602181906
 MeshRenderer:
@@ -2730,6 +2745,23 @@ BoxCollider:
   m_Enabled: 1
   serializedVersion: 2
   m_Size: {x: 1, y: 1, z: 1}
+  m_Center: {x: 0, y: 0, z: 0}
+--- !u!1 &907736252 stripped
+GameObject:
+  m_PrefabParentObject: {fileID: 100000, guid: 5e9e851c0e142814dac026a256ba2ac0, type: 2}
+  m_PrefabInternal: {fileID: 85333367}
+--- !u!136 &907736257
+CapsuleCollider:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 907736252}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_Enabled: 1
+  m_Radius: 0.2
+  m_Height: 1.8
+  m_Direction: 1
   m_Center: {x: 0, y: 0, z: 0}
 --- !u!1 &955344540
 GameObject:
@@ -3602,7 +3634,7 @@ GameObject:
   - component: {fileID: 1338350852}
   m_Layer: 0
   m_Name: Cube
-  m_TagString: Untagged
+  m_TagString: Structure
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -3756,10 +3788,10 @@ GameObject:
   - component: {fileID: 1411930461}
   m_Layer: 0
   m_Name: Cube (1)
-  m_TagString: Untagged
+  m_TagString: Structure
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
+  m_StaticEditorFlags: 4294967295
   m_IsActive: 1
 --- !u!23 &1411930461
 MeshRenderer:
@@ -5032,7 +5064,7 @@ GameObject:
   - component: {fileID: 1922468122}
   m_Layer: 0
   m_Name: Floor
-  m_TagString: Untagged
+  m_TagString: Structure
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
