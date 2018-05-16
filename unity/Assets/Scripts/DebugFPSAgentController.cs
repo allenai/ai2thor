@@ -80,6 +80,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 		public GameObject TestObject = null;
 
+		public bool IsHandDefault = true;
+
         private void Start()
         {
             m_CharacterController = GetComponent<CharacterController>();
@@ -92,7 +94,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             m_Jumping = false;
             //m_AudioSource = GetComponent<AudioSource>();
             m_MouseLook.Init(transform, m_Camera.transform);
-
+            
             //grab text object on canvas to update with what is currently targeted by reticle
             //Target_Text = GameObject.Find("DebugCanvas/TargetText"); ;
             Debug_Canvas = GameObject.Find("DebugCanvas");
@@ -372,196 +374,333 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			return result;
 		}
         
-        //check if if the agent's HAND would hit anything in front/left/right of it, if the agent moved/strafed
-        public bool CheckIfHandCanMoveForward(float moveMagnitude)
+		public bool CheckIfHandBlocksMovement(float moveMagnitude, string direction)
 		{
-			//Note: sweeptest forward using TheHandDefaultPosition since its forward is constant
-
 			bool result = false;
 
-			RaycastHit hit;
-
-            //for empty handed
+            //if there is nothing in our hand, we are good, return!
 			if(ItemInHand == null)
 			{
-				Rigidbody rb = AgentHand.GetComponent<Rigidbody>();
-             
-                //yo we hit something
-                if (rb.SweepTest(DefaultHandPosition.forward, out hit, moveMagnitude))
-                {
-					Debug.Log(hit.transform.name + " is blocking Agent Hand FORWARD movement");
-					result = false;
-                }
+				result = true;
+				Debug.Log("Agent has nothing in hand blocking movement");
+				return result;
+   			}
 
-                //nothing hit, we are clear!
-				else
-				{
-					Debug.Log("Agent hand can move FORWARD " + moveMagnitude + " units");
-					result = true;
-				}
-			}
-
-            //oh we are holding something 
+            //otherwise we are holding an object and need to do a sweep using that object's rb
 			else
 			{
-				Rigidbody rb = ItemInHand.GetComponent<Rigidbody>();
-                
-                //the item rb hit something
-                if(rb.SweepTest(DefaultHandPosition.forward, out hit, moveMagnitude))
-				{
-					Debug.Log(hit.transform.name + " is blocking Agent Hand holding " + ItemInHand.name + " from moving FORWARD");
-					result = false;
-				}
+				Vector3 dir = new Vector3();
 
-                //nothing was hit, we good
-				else
+                //use the agent's forward as reference
+				switch (direction)
+                {
+                    case "forward":
+                        dir = gameObject.transform.forward;
+                        break;
+
+                    case "left":
+                        dir = -gameObject.transform.right;
+                        break;
+
+                    case "right":
+                        dir = gameObject.transform.right;
+                        break;
+
+                    default:
+                        Debug.Log("Incorrect direction input! Allowed Directions: forward, left, right");
+                        break;
+                }
+				//otherwise we haev an item in our hand, so sweep using it's rigid body.
+                RaycastHit hit;
+                
+                Rigidbody rb = ItemInHand.GetComponent<Rigidbody>();
+				if(rb.SweepTest(dir, out hit, moveMagnitude, QueryTriggerInteraction.Ignore))
 				{
-					Debug.Log("Agent hand holding " + ItemInHand.name + " can move FORWARD " + moveMagnitude + " units");
+					Debug.Log(hit.transform.name + " is blocking Agent Hand holding " + ItemInHand.name + " from moving " + direction);
+                    result = false;
 				}
+				//nothing was hit, we good
+                else
+                {
+					Debug.Log("Agent hand holding " + ItemInHand.name + " can move " + direction + " " + moveMagnitude + " units");
+                }
 			}
          
 			return result;
 		}
 
-        public bool CheckIfHandCanMoveLeft(float moveMagnitude)
-		{
-			//Note: sweeptest forward using TheHandDefaultPosition since its forward is constant
+  //      //check if if the agent's HAND would hit anything in front/left/right of it, if the agent moved/strafed
+  //      public bool CheckIfHandCanMoveForward(float moveMagnitude)
+		//{
+		//	//Note: sweeptest forward using TheHandDefaultPosition since its forward is constant
 
-            bool result = false;
+		//	bool result = false;
 
-            RaycastHit hit;
+		//	RaycastHit hit;
 
-            //for empty handed
-            if (ItemInHand == null)
-            {
-                Rigidbody rb = AgentHand.GetComponent<Rigidbody>();
+  //          //for empty handed
+		//	if(ItemInHand == null)
+		//	{
+		//		Rigidbody rb = AgentHand.GetComponent<Rigidbody>();
+             
+  //              //yo we hit something
+  //              if (rb.SweepTest(DefaultHandPosition.forward, out hit, moveMagnitude))
+  //              {
+		//			Debug.Log(hit.transform.name + " is blocking Agent Hand FORWARD movement");
+		//			result = false;
+  //              }
 
-                //yo we hit something
-                if (rb.SweepTest(-DefaultHandPosition.right, out hit, moveMagnitude))
-                {
-                    Debug.Log(hit.transform.name + " is blocking Agent Hand LEFT movement");
-                    result = false;
-                }
+  //              //nothing hit, we are clear!
+		//		else
+		//		{
+		//			Debug.Log("Agent hand can move FORWARD " + moveMagnitude + " units");
+		//			result = true;
+		//		}
+		//	}
+
+  //          //oh we are holding something 
+		//	else
+		//	{
+		//		Rigidbody rb = ItemInHand.GetComponent<Rigidbody>();
                 
-                //nothing hit, we are clear!
-                else
-                {
-                    Debug.Log("Agent hand can move LEFT " + moveMagnitude + " units");
-                    result = true;
-                }
-            }
+  //              //the item rb hit something
+  //              if(rb.SweepTest(DefaultHandPosition.forward, out hit, moveMagnitude))
+		//		{
+		//			Debug.Log(hit.transform.name + " is blocking Agent Hand holding " + ItemInHand.name + " from moving FORWARD");
+		//			result = false;
+		//		}
 
-            //oh we are holding something 
-            else
-            {
-                Rigidbody rb = ItemInHand.GetComponent<Rigidbody>();
+  //              //nothing was hit, we good
+		//		else
+		//		{
+		//			Debug.Log("Agent hand holding " + ItemInHand.name + " can move FORWARD " + moveMagnitude + " units");
+		//		}
+		//	}
+         
+		//	return result;
+		//}
 
-                //the item rb hit something
-                if (rb.SweepTest(-DefaultHandPosition.right, out hit, moveMagnitude))
-                {
-                    Debug.Log(hit.transform.name + " is blocking Agent Hand holding " + ItemInHand.name + " from moving LEFT");
-                    result = false;
-                }
+  //      public bool CheckIfHandCanMoveLeft(float moveMagnitude)
+		//{
+		//	//Note: sweeptest forward using TheHandDefaultPosition since its forward is constant
 
-                //nothing was hit, we good
-                else
-                {
-                    Debug.Log("Agent hand holding " + ItemInHand.name + " can move LEFT " + moveMagnitude + " units");
-                }
-            }
+  //          bool result = false;
 
-            return result;
-		}
+  //          RaycastHit hit;
 
-		public bool CheckIfHandCanMoveRight(float moveMagnitude)
-		{
-			//Note: sweeptest forward using TheHandDefaultPosition since its forward is constant
+  //          //for empty handed
+  //          if (ItemInHand == null)
+  //          {
+  //              Rigidbody rb = AgentHand.GetComponent<Rigidbody>();
 
-            bool result = false;
+  //              //yo we hit something
+  //              if (rb.SweepTest(-DefaultHandPosition.right, out hit, moveMagnitude))
+  //              {
+  //                  Debug.Log(hit.transform.name + " is blocking Agent Hand LEFT movement");
+  //                  result = false;
+  //              }
+                
+  //              //nothing hit, we are clear!
+  //              else
+  //              {
+  //                  Debug.Log("Agent hand can move LEFT " + moveMagnitude + " units");
+  //                  result = true;
+  //              }
+  //          }
+
+  //          //oh we are holding something 
+  //          else
+  //          {
+  //              Rigidbody rb = ItemInHand.GetComponent<Rigidbody>();
+
+  //              //the item rb hit something
+  //              if (rb.SweepTest(-DefaultHandPosition.right, out hit, moveMagnitude))
+  //              {
+  //                  Debug.Log(hit.transform.name + " is blocking Agent Hand holding " + ItemInHand.name + " from moving LEFT");
+  //                  result = false;
+  //              }
+
+  //              //nothing was hit, we good
+  //              else
+  //              {
+  //                  Debug.Log("Agent hand holding " + ItemInHand.name + " can move LEFT " + moveMagnitude + " units");
+  //              }
+  //          }
+
+  //          return result;
+		//}
+
+		//public bool CheckIfHandCanMoveRight(float moveMagnitude)
+		//{
+		//	//Note: sweeptest forward using TheHandDefaultPosition since its forward is constant
+
+  //          bool result = false;
             
-            RaycastHit hit;
+  //          RaycastHit hit;
 
-            //for empty handed
-            if (ItemInHand == null)
-            {
-                Rigidbody rb = AgentHand.GetComponent<Rigidbody>();
+  //          //for empty handed
+  //          if (ItemInHand == null)
+  //          {
+  //              Rigidbody rb = AgentHand.GetComponent<Rigidbody>();
 
-                //yo we hit something
-                if (rb.SweepTest(DefaultHandPosition.right, out hit, moveMagnitude))
-                {
-                    Debug.Log(hit.transform.name + " is blocking Agent Hand RIGHT movement");
-                    result = false;
-                }
+  //              //yo we hit something
+  //              if (rb.SweepTest(DefaultHandPosition.right, out hit, moveMagnitude))
+  //              {
+  //                  Debug.Log(hit.transform.name + " is blocking Agent Hand RIGHT movement");
+  //                  result = false;
+  //              }
 
-                //nothing hit, we are clear!
-                else
-                {
-                    Debug.Log("Agent hand can move RIGHT " + moveMagnitude + " units");
-                    result = true;
-                }
-            }
+  //              //nothing hit, we are clear!
+  //              else
+  //              {
+  //                  Debug.Log("Agent hand can move RIGHT " + moveMagnitude + " units");
+  //                  result = true;
+  //              }
+  //          }
             
-            //oh we are holding something 
-            else
-            {
-                Rigidbody rb = ItemInHand.GetComponent<Rigidbody>();
+  //          //oh we are holding something 
+  //          else
+  //          {
+  //              Rigidbody rb = ItemInHand.GetComponent<Rigidbody>();
 
-                //the item rb hit something
-                if (rb.SweepTest(DefaultHandPosition.right, out hit, moveMagnitude))
-                {
-                    Debug.Log(hit.transform.name + " is blocking Agent Hand holding " + ItemInHand.name + " from moving RIGHT");
-                    result = false;
-                }
+  //              //the item rb hit something
+  //              if (rb.SweepTest(DefaultHandPosition.right, out hit, moveMagnitude))
+  //              {
+  //                  Debug.Log(hit.transform.name + " is blocking Agent Hand holding " + ItemInHand.name + " from moving RIGHT");
+  //                  result = false;
+  //              }
 
-                //nothing was hit, we good
-                else
-                {
-                    Debug.Log("Agent hand holding " + ItemInHand.name + " can move RIGHT " + moveMagnitude + " units");
-                }
-            }
+  //              //nothing was hit, we good
+  //              else
+  //              {
+  //                  Debug.Log("Agent hand holding " + ItemInHand.name + " can move RIGHT " + moveMagnitude + " units");
+  //              }
+  //          }
 
-            return result;
-		}
+  //          return result;
+		//}
 
-        //check if the AGENT ITSELF would hit anything if it were to move/strafe forward, left, or right, no check for rotation since it doesn't matter with capsule
-        public bool CheckIfAgentCanMoveForward(float moveMagnitude)
+  //      //check if the AGENT ITSELF would hit anything if it were to move/strafe forward, left, or right, no check for rotation since it doesn't matter with capsule
+  //      public bool CheckIfAgentCanMoveForward(float moveMagnitude)
+		//{
+		//	bool result = false;
+		//	RaycastHit hit;
+
+		//	Rigidbody rb = gameObject.GetComponent<Rigidbody>();
+
+		//	if(rb.SweepTest(DefaultHandPosition.forward, out hit, moveMagnitude))
+		//	{
+		//		Debug.Log(hit.transform.name + " is blocking the Agent Body's forward movement");
+		//		result = false;
+		//	}
+
+		//	else
+		//	{
+		//		Debug.Log("Agent Body can move forward");
+		//		result = true;
+		//	}
+
+		//	return result;
+		//}
+
+  //      public void CheckIfAgentCanMoveLeft(float moveMagnitude)
+		//{
+			
+		//}
+
+  //      public void CheckIfAgentCanMoveRight(float moveMagnitude)
+		//{
+			
+		//}
+
+        public bool CheckIfAgentCanMove(float moveMagnitude, string direction)
 		{
 			bool result = false;
-			RaycastHit hit;
+			//RaycastHit hit;
+
+			Vector3 dir = new Vector3();
+
+            switch(direction)
+			{
+				case "forward":
+					dir = gameObject.transform.forward;
+					break;
+
+				case "left":
+					dir = -gameObject.transform.right;
+					break;
+
+				case "right":
+					dir = gameObject.transform.right;
+					break;
+                
+				default:
+					Debug.Log("Incorrect direction input! Allowed Directions: forward, left, right");
+					break;
+			}
 
 			Rigidbody rb = gameObject.GetComponent<Rigidbody>();
 
-			if(rb.SweepTest(DefaultHandPosition.forward, out hit, moveMagnitude))
-			{
-				Debug.Log(hit.transform.name + " is blocking the Agent Body's forward movement");
-				result = false;
-			}
+            //might need to sweep test all, check for static..... want to be able to try and move through sim objects that can pickup and move yes
+			RaycastHit[] sweepResults = rb.SweepTestAll(dir, moveMagnitude, QueryTriggerInteraction.Ignore);
 
-			else
+            //check each of the hit results, check if its tag is a "structure" and if so, we can't move, otherwise clear to move?
+            //i guess also check if it is a sim object, make sure it isn't static?
+			foreach(RaycastHit res in sweepResults)
 			{
-				Debug.Log("Agent Body can move forward");
+				if(res.transform.tag == "Structure")
+				{
+					result = false;
+					Debug.Log(res.transform.name + " is blocking the Agent from moving " + direction);
+					return result;
+				}
+
+				if(res.transform.GetComponent<SimObjPhysics>())
+				{
+					SimObjManipTypePhysics[] resManipTypes = res.transform.GetComponent<SimObjPhysics>().ManipTypes;
+                    //now check if any of the manip types are Static, if so we can't move through them either
+					foreach(SimObjManipTypePhysics rmt in resManipTypes)
+					{
+						if(rmt == SimObjManipTypePhysics.Static)
+						{
+							result = false;
+							Debug.Log(res.transform.name + " is blocking the Agent from moving " + direction);
+							return result;
+						}
+					}
+				}
+			}
+         
+			//if(rb.SweepTest(dir, out hit, moveMagnitude, QueryTriggerInteraction.Ignore))
+			//{
+			//	Debug.Log(hit.transform.name + " is blocking the Agent Body's " + direction + " movement");
+			//	result = false;
+			//}
+
+			//else
+			//{
+				Debug.Log("Agent Body can move " + direction);
 				result = true;
-			}
-
-			return result;
-		}
-
-        public void CheckIfAgentCanMoveLeft(float moveMagnitude)
-		{
-			
-		}
-
-        public void CheckIfAgentCanMoveRight(float moveMagnitude)
-		{
-			
+			//}
+            
+            return result;
 		}
         
         //returns true if the Hand Movement was succesful
         //false if blocked by something or out of range
         public bool MoveHand(Vector3 targetPosition)
         {
-			//result if movement was succesful or not
 			bool result = false;
+
+			//can only move hand if there is an object in it.
+			if(ItemInHand == null)
+			{
+				Debug.Log("Agent can only move hand if holding an item");
+				result = false;
+				return result;
+			}
+			//result if movement was succesful or not
+
          
 			//first check if passed in targetPosition is in range or not           
 			if(Vector3.Distance(gameObject.transform.position, targetPosition) > MaxDistance + 0.3)
@@ -582,73 +721,37 @@ namespace UnityStandardAssets.Characters.FirstPerson
 				result = false;
 				return result;
             }
+         
+			Rigidbody ItemRB = ItemInHand.GetComponent<Rigidbody>();
+			RaycastHit hit;
 
-            //two versions, one for if an object is in the hand, one for if there is not an object in the hand. 
-
-            //test using just the Agent's hand
-			if(ItemInHand == null)
+            //put the Hand position update inside this, soince the object will always hit the agent Hand once, which we ignore
+            if(ItemRB.SweepTest(targetPosition - AgentHand.transform.position, out hit, Vector3.Distance(targetPosition, AgentHand.transform.position)))
 			{
-				//sweeptest to position with Hand's RigidBody
-				Rigidbody HandRB = AgentHand.GetComponent<Rigidbody>();
-				RaycastHit hit;
-
-				if(HandRB.SweepTest(targetPosition - AgentHand.transform.position, out hit, Vector3.Distance(targetPosition, AgentHand.transform.position)))
+				//return error if anything but the Agent Hand or the Agent are hit
+				if(hit.transform != AgentHand.transform && hit.transform != gameObject.transform)
 				{
-					//we hit something! Can't move the hand there
-					if (hit.transform != AgentHand.transform && hit.transform != gameObject.transform)
-					{
-						Debug.Log(hit.transform.name + " is in Agent Hand's Path! Can't move Agent Hand");
-						result = false;
-					}
-
+				Debug.Log(hit.transform.name + " is in Object In Hand's Path! Can't Move Hand holding " + ItemInHand.name);
+					result = false;
 				}
 
-				else
-				{
-					Debug.Log("Movement of Agent Hand succesful!");
-					AgentHand.transform.position = targetPosition;
-					result = true;
-				}
-     
-			}
-
-            //test using the item in hand's rigidbody
-			else
-			{
-				//sweeptest to position using Held Object's RigidBody
-				Rigidbody ItemRB = ItemInHand.GetComponent<Rigidbody>();
-				RaycastHit hit;
-
-                //put the Hand position update inside this, soince the object will always hit the agent Hand once, which we ignore
-                if(ItemRB.SweepTest(targetPosition - AgentHand.transform.position, out hit, Vector3.Distance(targetPosition, AgentHand.transform.position)))
-				{
-					//return error if anything but the Agent Hand or the Agent are hit
-					if(hit.transform != AgentHand.transform && hit.transform != gameObject.transform)
-					{
-						Debug.Log(hit.transform.name + " is in Object In Hand's Path! Can't Move Hand and Object");
-						result = false;
-					}
-
-
-					else
-                    {
-						Debug.Log("Movement of Agent Hand holding " + ItemInHand.name + " succesful!");
-                        AgentHand.transform.position = targetPosition;
-						result = true;
-                    }
-				}
 
 				else
                 {
+					Debug.Log("Movement of Agent Hand holding " + ItemInHand.name + " succesful!");
                     AgentHand.transform.position = targetPosition;
+				    IsHandDefault = false;
 					result = true;
                 }
-
-
-
 			}
 
-			return result;
+			else
+            {
+                AgentHand.transform.position = targetPosition;
+				result = true;
+            }
+
+		return result;
          
         }
         
@@ -674,6 +777,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			AgentHand.transform.localRotation = Quaternion.Euler(Vector3.zero);
 		}
 
+		public void DefaultAgentHand()
+		{
+			ResetAgentHandPosition();
+			ResetAgentHandRotation();
+			IsHandDefault = true;
+		}
 
         //pickup a sim object
         public bool PickUpSimObjPhysics(Transform target)
@@ -682,6 +791,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
             //and make the object kinematic
             if (ItemInHand == null)
             {
+				if(IsHandDefault == false)
+				{
+					Debug.Log("Reset Hand to default position before attempting to Pick Up objects");
+					return false;
+				}
+
 				//default hand rotation for further rotation manipulation
 				ResetAgentHandRotation();
                 //move the object to the hand's default position.
@@ -692,9 +807,14 @@ namespace UnityStandardAssets.Characters.FirstPerson
 				target.SetParent(AgentHand.transform);
                 //target.parent = AgentHand.transform;
                 //update "inventory"
+
+                //this is only in debug mode - probs delete this part when porting to BaseFPSAgent
+                
                 ItemInHand = target.gameObject;
 				Text txt = Inventory_Text.GetComponent<Text>();
 				txt.text = "In Inventory: " + target.name;
+
+                /////////////////
 
 				return true;
             }
@@ -704,8 +824,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 				Debug.Log("Your hand has something in it already!");
 				return false;
 			}
-
-
+         
         }
 
         public bool DropSimObjPhysics()
@@ -716,8 +835,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
 				ItemInHand.GetComponent<Rigidbody>().isKinematic = false;
 				ItemInHand.transform.parent = null;
 				ItemInHand = null;
+
+                //take this out later when moving to BaseFPS agent controller
 				Text txt = Inventory_Text.GetComponent<Text>();
 				txt.text = "In Inventory: Nothing!";
+                ///////
+            
 				return true;
 			}
 
@@ -963,8 +1086,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 //default position and rotation
                 if(Input.GetKeyDown(KeyCode.Q))
 				{
-					ResetAgentHandPosition();
-					ResetAgentHandRotation();
+					DefaultAgentHand();
 				}
 
                 //check if the agent can rotate left or right, return errors if the agent hand would hit anything
@@ -1005,17 +1127,20 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 //Check Forward Movement
                 if(Input.GetKeyDown(KeyCode.I))
 				{
-					CheckIfHandCanMoveForward(1.0f);
+					CheckIfHandBlocksMovement(1.0f, "forward");
+					//CheckIfAgentCanMove(1.0f, "forward");
 				}
 
                 if(Input.GetKeyDown(KeyCode.J))
 				{
-					CheckIfHandCanMoveLeft(1.0f);
+					CheckIfHandBlocksMovement(1.0f, "left");
+					//CheckIfAgentCanMove(1.0f, "left");
 				}
 
 				if (Input.GetKeyDown(KeyCode.L))
                 {
-					CheckIfHandCanMoveRight(1.0f);
+					CheckIfHandBlocksMovement(1.0f, "right");
+					//CheckIfAgentCanMove(1.0f, "right");
                 }
 
             }
