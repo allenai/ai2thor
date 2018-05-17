@@ -18,12 +18,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 	public class DiscreteRemoteFPSAgentController : BaseFPSAgentController
 	{
 
-		protected string robosimsClientToken = "";
-		protected int robosimsPort = 8200;
-		protected string robosimsHost = "127.0.0.1";
-		protected bool serverSideScreenshot;
 		protected int actionCounter;
-		protected int frameCounter;
 		protected float moveMagnitude;
 		protected Vector3 targetTeleport;
 		protected Vector3 startingHandPosition;
@@ -31,13 +26,11 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		private SimObj currentMaskObj;
 		private SimObj currentHandSimObj;
 		private static float gridSize = 0.25f;
-		private Texture2D tex;
-		private Rect readPixelsRect;
+
 		private bool continuousMode;
 
 
-		private enum emitStates {Send, Wait, Received};
-		private emitStates emitState;
+
 
 	
 
@@ -49,13 +42,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		// Initialize parameters from environment variables
 		protected override void Awake() {
 			// load config parameters from the server side
-			robosimsPort = LoadIntVariable (robosimsPort, "PORT");
-			robosimsHost = LoadStringVariable(robosimsHost, "HOST");
 
-			serverSideScreenshot = LoadBoolVariable (serverSideScreenshot, "SERVER_SIDE_SCREENSHOT");
-			robosimsClientToken = LoadStringVariable (robosimsClientToken, "CLIENT_TOKEN");
-			tex = new Texture2D(UnityEngine.Screen.width, UnityEngine.Screen.height, TextureFormat.RGB24, false);
-            readPixelsRect = new Rect(0, 0, UnityEngine.Screen.width, UnityEngine.Screen.height);
 			base.Awake ();
 
             DebugCanvas = GameObject.Find("DebugCanvas").GetComponent<Canvas>();
@@ -67,15 +54,13 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 		protected override void actionFinished(bool success) {
 			lastActionSuccess = success;
-			emitState = emitStates.Send;
+			actionComplete = true;
 			actionCounter = 0;
 			targetTeleport = Vector3.zero;
 		}
 
 		protected override void Start() {
-			frameCounter = actionCounter = 0;
-			emitState = emitStates.Send;
-
+			actionComplete = true;
 
 			base.Start ();
 			// always zero out the rotation
@@ -98,6 +83,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
 				}
 			} 
 
+			if (action.visibilityDistance > 0.0f) {
+				this.maxVisibleDistance = action.visibilityDistance;
+			}
+
 			if (action.gridSize <= 0 || action.gridSize > 5)
 			{
 				errorMessage = "grid size must be in the range (0,5]";
@@ -111,6 +100,34 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			}
 		}
 
+		public override MetadataWrapper generateMetadataWrapper() {
+
+
+			MetadataWrapper metaMessage = base.generateMetadataWrapper ();
+			metaMessage.lastAction = lastAction;
+			metaMessage.lastActionSuccess = lastActionSuccess;
+			metaMessage.errorMessage = errorMessage;
+
+			if (errorCode != ServerActionErrorCode.Undefined) {
+				metaMessage.errorCode = Enum.GetName(typeof(ServerActionErrorCode), errorCode);
+			}
+
+			List<InventoryObject> ios = new List<InventoryObject>();
+
+					foreach (string objectId in inventory.Keys) {
+						SimObj so = inventory [objectId];
+						InventoryObject io = new InventoryObject();
+						io.objectId = so.UniqueID;
+						io.objectType = Enum.GetName (typeof(SimObjType), so.Type);
+						ios.Add(io);
+			
+					}
+
+			metaMessage.inventoryObjects = ios.ToArray();
+
+			return metaMessage;
+		}
+
 		public IEnumerator checkInitializeAgentLocationAction() {
 			yield return null;
 
@@ -118,7 +135,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			// move ahead
 			// move back
 
-			Debug.Log("trying to find nearest location on the grid");
 			float mult = 1 / gridSize;
 			float grid_x1 = Convert.ToSingle(Math.Floor(this.transform.position.x * mult) / mult);
 			float grid_z1 = Convert.ToSingle(Math.Floor(this.transform.position.z * mult) / mult);
@@ -137,7 +153,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 					if (movement.magnitude > dir.magnitude) {
 						movement = dir;
 					}
-					movement.y = Physics.gravity.y* this.m_GravityMultiplier;
+					movement.y = Physics.gravity.y * this.m_GravityMultiplier;
 
 					m_CharacterController.Move (movement);
 
@@ -147,7 +163,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
 	
 
 						if ((Math.Abs (diff.x) < 0.005) && (Math.Abs (diff.z) < 0.005)) {
-							Debug.Log ("initialize move succeeded");
 							validMovements.Add (movement);
 							break;
 						}
@@ -158,7 +173,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			this.transform.position = startingPosition;
 			yield return null;
 			if (validMovements.Count > 0) {
-				Debug.Log ("got total valid targets: " + validMovements.Count);
+				Debug.Log ("Initialize: got total valid initial targets: " + validMovements.Count);
 				Vector3 firstMove = validMovements [0];
 				firstMove.y = Physics.gravity.y* this.m_GravityMultiplier;
 
@@ -166,7 +181,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 				snapToGrid ();
 				actionFinished (true);
 			} else {
-				Debug.Log ("no valid starting positions found");
+				Debug.Log ("Initialize: no valid starting positions found");
 				actionFinished (false);
 			}
 		}
@@ -333,25 +348,16 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		}
 
 
-		// Decide whether agent has stopped actions
-		// And if we need to capture a new frame
-		private void LateUpdate() {
-			if (emitState == emitStates.Send) {
-                emitState = emitStates.Wait;
-				StartCoroutine (EmitFrame ());
-			}
-
-
-		}
-
-		public void Update()
-		{
-          if (robosimsClientToken.Length == 0 && Input.GetKeyDown(KeyCode.BackQuote))
-          {
-              DebugCanvas.enabled = true;
-              DebugComponent.enabled = true;
-          }
-        }
+		#if UNITY_EDITOR
+            public void Update() 
+            {
+              if ( Input.GetKeyDown(KeyCode.BackQuote))
+              {
+                  DebugCanvas.enabled = true;
+                  DebugComponent.enabled = true;
+              }
+            }
+		#endif
 
 
 
@@ -437,68 +443,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			actionFinished(success);
 		}
 
-		private IEnumerator EmitFrame() {
-
-			frameCounter += 1;
-
-			// we should only read the screen buffer after rendering is complete
-			yield return new WaitForEndOfFrame();
-
-			MetadataWrapper metaMessage = generateMetadataWrapper();
-			metaMessage.lastAction = lastAction;
-			metaMessage.lastActionSuccess = lastActionSuccess;
-			metaMessage.errorMessage = errorMessage;
-
-			if (errorCode != ServerActionErrorCode.Undefined) {
-				metaMessage.errorCode = Enum.GetName(typeof(ServerActionErrorCode), errorCode);
-			}
-
-            metaMessage.sequenceId = this.currentSequenceId;
-			List<InventoryObject> ios = new List<InventoryObject>();
-
-			foreach (string objectId in inventory.Keys) {
-				SimObj so = inventory [objectId];
-				InventoryObject io = new InventoryObject();
-				io.objectId = so.UniqueID;
-				io.objectType = Enum.GetName (typeof(SimObjType), so.Type);
-				ios.Add(io);
-
-			}
-
-			metaMessage.inventoryObjects = ios.ToArray();
-
-			WWWForm form = new WWWForm();
-
-			if (!serverSideScreenshot) {
-				// read screen contents into the texture
-				tex.ReadPixels(readPixelsRect, 0, 0);
-				tex.Apply();
-				byte[] bytes = tex.GetRawTextureData();
-				form.AddBinaryData("image", bytes, "frame-" + frameCounter.ToString().PadLeft(7, '0') + ".rgb", "image/raw-rgb");
-
-			}
-			// for testing purposes, also write to a file in the project folder
-			// File.WriteAllBytes(Application.dataPath + "/Screenshots/SavedScreen" + frameCounter.ToString() + ".png", bytes);
-			// Debug.Log ("Frame Bytes: " + bytes.Length.ToString());
-			//string img_str = System.Convert.ToBase64String (bytes);
-			form.AddField("metadata", JsonUtility.ToJson(metaMessage));
-			form.AddField("token", robosimsClientToken);
-			WWW w = new WWW ("http://" + robosimsHost + ":" + robosimsPort + "/train", form);
-			yield return w;
-
-			if (!string.IsNullOrEmpty (w.error)) {
-            	Debug.Log ("Error: " + w.error);
-                yield break;
-            } else {
-
-                emitState = emitStates.Received;
-                ProcessControlCommand (w.text);
-            }
-		}
-
-
-
-
 		virtual protected void moveCharacter(ServerAction action, int targetOrientation) {
 			resetHand ();
 			moveMagnitude = gridSize;
@@ -576,7 +520,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 				actionFinished(true);
 			}	
 		}
-
+		
 		public void Unmask(ServerAction action) {
 			if (currentMaskMaterials != null) {
 				foreach (SimObj so in VisibleSimObjs(true)) {

@@ -509,6 +509,10 @@ class Controller(object):
 
     def step(self, action, raise_for_failure=False):
 
+        # XXX should be able to get rid of this with some sort of deprecation warning
+        if 'AI2THOR_VISIBILITY_DISTANCE' in os.environ:
+            action['visibilityDistance'] = float(os.environ['AI2THOR_VISIBILITY_DISTANCE'])
+
         if action['action'] == 'PutObject':
             receptacle_type = action['receptacleObjectId'].split('|')[0]
             object_type = action['objectId'].split('|')[0]
@@ -639,9 +643,6 @@ class Controller(object):
             os.chmod(self.executable_path(), 0o755)
         else:
             logger.debug("%s exists - skipping download" % self.executable_path())
-    
-
-
 
     def start(
             self,
@@ -651,6 +652,10 @@ class Controller(object):
             player_screen_height=300,
             x_display=None,
             enable_remote_viewer=False):
+
+        if 'AI2THOR_VISIBILITY_DISTANCE' in os.environ:
+            import warnings
+            warnings.warn("AI2THOR_VISIBILITY_DISTANCE environment variable is deprecated, use the parameter visibilityDistance parameter with the Initialize action instead")
 
         if player_screen_height < 300 or player_screen_width < 300:
             raise Exception("Screen resolution must be >= 300x300")

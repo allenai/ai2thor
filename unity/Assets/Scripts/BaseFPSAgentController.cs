@@ -53,29 +53,28 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 
 		public string[] excludeObjectIds = new string[0];
-		protected Camera m_Camera;
-		protected string ENVIRONMENT_PREFIX = "AI2THOR_";
+		public Camera m_Camera;
 		protected bool m_Jump;
 		protected float m_XRotation;
 		protected float m_ZRotation;
 		protected Vector2 m_Input;
 		protected Vector3 m_MoveDir = Vector3.zero;
-		protected CharacterController m_CharacterController;
+		public CharacterController m_CharacterController;
 		protected CollisionFlags m_CollisionFlags;
 		protected bool m_PreviouslyGrounded;
 		protected bool m_Jumping;
 		protected Vector3 lastPosition;
-		// Vector3 m_OriginalCameraPosition;
 		protected string lastAction;
 		protected bool lastActionSuccess;
 		protected string errorMessage;
 		protected ServerActionErrorCode errorCode;
-		protected int currentSequenceId;
+		public bool actionComplete = false;
 
 
+		// Vector3 m_OriginalCameraPosition;
 
-		float defaultMaxVisibleDistance = 1.0f;
-		float maxVisibleDistance;
+
+		protected float maxVisibleDistance = 1.0f;
 
 		// initial states
 		protected Vector3 init_position;
@@ -102,20 +101,11 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		// Initialize parameters from environment variables
 		protected virtual void Awake()
 		{
-			Application.targetFrameRate = 300;
-            QualitySettings.vSyncCount = 0;
+
 
 			// whether it's in training or test phase
-			bool trainPhase = true;
-			trainPhase = LoadBoolVariable(trainPhase, "TRAIN_PHASE");
 
-			// read additional configurations for model
-			// agent speed and action length
-			string prefix = trainPhase ? "TRAIN_" : "TEST_";
-			//forwardVelocity = LoadFloatVariable (forwardVelocity, prefix + "WALK_VELOCITY");
-			//rotateVelocity = LoadFloatVariable (rotateVelocity, prefix + "TURN_VELOCITY");
-			actionDuration = LoadIntVariable(actionDuration, prefix + "ACTION_LENGTH");
-			maxVisibleDistance = LoadFloatVariable(defaultMaxVisibleDistance, prefix + "VISIBILITY_DISTANCE");
+
 
 
 			// character controller parameters
@@ -135,7 +125,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		// Use this for initialization
 		protected virtual void Start()
 		{
-			m_Camera = Camera.main;
+			m_Camera = this.gameObject.GetComponentInChildren<Camera> ();
 			//m_OriginalCameraPosition = m_Camera.transform.localPosition;
 			m_FovKick.Setup(m_Camera);
 			m_HeadBob.Setup(m_Camera, m_StepInterval);
@@ -153,26 +143,43 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			//allowNodes = false;
 		}
 
-		protected virtual byte[] captureScreen()
-		{
-			int width = Screen.width;
-			int height = Screen.height;
-
-			Texture2D tex = new Texture2D(width, height, TextureFormat.RGB24, false);
-
-
-			// read screen contents into the texture
-			tex.ReadPixels(new Rect(0, 0, width, height), 0, 0);
-			tex.Apply();
-
-			// encode texture into JPG - XXX SHOULD SET QUALITY
-			byte[] bytes = tex.EncodeToJPG();
-			Destroy(tex);
-			return bytes;
-		}
 
 
 		protected virtual void actionFinished(bool success) { }
+
+
+		public bool IsOpen(SimObj simobj)
+		{
+			Animator anim = simobj.Animator;
+			AnimatorControllerParameter param = anim.parameters[0];
+			if (OPEN_CLOSE_STATES.ContainsKey(simobj.Type))
+			{
+				return anim.GetInteger(param.name) == OPEN_CLOSE_STATES[simobj.Type]["open"];
+			}
+			else
+			{
+				return anim.GetBool(param.name);
+			}
+
+		}
+
+		public bool IsOpenable(SimObj so)
+		{
+
+			return Array.IndexOf(OpenableTypes, so.Type) >= 0 && so.IsAnimated;
+		}
+
+
+		public bool IsPickupable(SimObj so)
+		{
+			return !IsOpenable(so) && !so.IsReceptacle && !(Array.IndexOf(ImmobileTypes, so.Type) >= 0);
+		}
+
+		public bool excludeObject(SimObj so)
+		{
+			return Array.IndexOf(this.excludeObjectIds, so.UniqueID) >= 0;
+		}
+
 
 		protected bool closeSimObj(SimObj so)
 		{
@@ -285,7 +292,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			return collisionsInAction.Count > 0;
 		}
 
-		protected virtual MetadataWrapper generateMetadataWrapper()
+		public virtual MetadataWrapper generateMetadataWrapper()
 		{
 			ObjectMetadata agentMeta = new ObjectMetadata();
 			agentMeta.name = "agent";
@@ -306,56 +313,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		}
 
 
-		public SimObj[] VisibleSimObjs()
-		{
-			return SimUtil.GetAllVisibleSimObjs(m_Camera, maxVisibleDistance);
-		}
 
-
-		public SimObj[] VisibleSimObjs(bool forceVisible)
-		{
-			if (forceVisible)
-			{
-				return GameObject.FindObjectsOfType(typeof(SimObj)) as SimObj[];
-			}
-			else
-			{
-				return VisibleSimObjs();
-
-			}
-		}
-
-		public bool IsOpen(SimObj simobj)
-		{
-			Animator anim = simobj.Animator;
-			AnimatorControllerParameter param = anim.parameters[0];
-			if (OPEN_CLOSE_STATES.ContainsKey(simobj.Type))
-			{
-				return anim.GetInteger(param.name) == OPEN_CLOSE_STATES[simobj.Type]["open"];
-			}
-			else
-			{
-				return anim.GetBool(param.name);
-			}
-
-		}
-
-		public bool IsOpenable(SimObj so)
-		{
-
-			return Array.IndexOf(OpenableTypes, so.Type) >= 0 && so.IsAnimated;
-		}
-
-
-		public bool IsPickupable(SimObj so)
-		{
-			return !IsOpenable(so) && !so.IsReceptacle && !(Array.IndexOf(ImmobileTypes, so.Type) >= 0);
-		}
-
-		public bool excludeObject(SimObj so)
-		{
-			return Array.IndexOf(this.excludeObjectIds, so.UniqueID) >= 0;
-		}
 
 		private ObjectMetadata[] generateObjectMetadataForTag(string tag, bool isAnimated)
 		{
@@ -432,8 +390,50 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 		}
 
+		public void ProcessControlCommand(ServerAction controlCommand)
+		{
+			errorMessage = "";
+			errorCode = ServerActionErrorCode.Undefined;
+			collisionsInAction = new List<string>();
+
+			lastAction = controlCommand.action;
+			lastActionSuccess = false;
+			lastPosition = new Vector3 (transform.position.x, transform.position.y, transform.position.z);
+			System.Reflection.MethodInfo method = this.GetType ().GetMethod (controlCommand.action);
+			actionComplete = false;
+			try
+			{
+				method.Invoke(this, new object[] { controlCommand });
+			}
+			catch (Exception e)
+			{
+				Debug.LogError("caught error with invoke");
+				Debug.LogError(e);
+				errorMessage += e.ToString();
+				actionFinished(false);
+			}
+		}
 
 
+
+		public SimObj[] VisibleSimObjs()
+		{
+			return SimUtil.GetAllVisibleSimObjs(m_Camera, maxVisibleDistance);
+		}
+
+
+		public SimObj[] VisibleSimObjs(bool forceVisible)
+		{
+			if (forceVisible)
+			{
+				return GameObject.FindObjectsOfType(typeof(SimObj)) as SimObj[];
+			}
+			else
+			{
+				return VisibleSimObjs();
+
+			}
+		}
 
 
 
@@ -472,196 +472,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		}
 
 
-		// Extra helper functions
-		protected string LoadStringVariable(string variable, string name)
-		{
-			string envVarName = ENVIRONMENT_PREFIX + name.ToUpper();
-			string envVarValue = Environment.GetEnvironmentVariable(envVarName);
-			return envVarValue == null ? variable : envVarValue;
-		}
-
-		protected int LoadIntVariable(int variable, string name)
-		{
-			string envVarName = ENVIRONMENT_PREFIX + name.ToUpper();
-			string envVarValue = Environment.GetEnvironmentVariable(envVarName);
-			return envVarValue == null ? variable : int.Parse(envVarValue);
-		}
-
-		protected float LoadFloatVariable(float variable, string name)
-		{
-			string envVarName = ENVIRONMENT_PREFIX + name.ToUpper();
-			string envVarValue = Environment.GetEnvironmentVariable(envVarName);
-			return envVarValue == null ? variable : float.Parse(envVarValue);
-		}
-
-		protected bool LoadBoolVariable(bool variable, string name)
-		{
-			string envVarName = ENVIRONMENT_PREFIX + name.ToUpper();
-			string envVarValue = Environment.GetEnvironmentVariable(envVarName);
-			return envVarValue == null ? variable : bool.Parse(envVarValue);
-		}
 
 
 
-		protected void ProcessControlCommand(string msg)
-		{
-			errorMessage = "";
-			errorCode = ServerActionErrorCode.Undefined;
-			collisionsInAction = new List<string>();
-
-			ServerAction controlCommand = JsonUtility.FromJson<ServerAction>(msg);
-			this.currentSequenceId = controlCommand.sequenceId;
-			lastAction = controlCommand.action;
-			lastActionSuccess = false;
-			lastPosition = new Vector3 (transform.position.x, transform.position.y, transform.position.z);
-			System.Reflection.MethodInfo method = this.GetType ().GetMethod (controlCommand.action);
-			try
-			{
-				method.Invoke(this, new object[] { controlCommand });
-			}
-			catch (Exception e)
-			{
-				Debug.LogError("caught error with invoke");
-				Debug.LogError(e);
-				errorMessage += e.ToString();
-				actionFinished(false);
-			}
-		}
 
 
 	}
-}
-[Serializable]
-public class ObjectMetadata
-{
-	public string name;
-	public Vector3 position;
-	public Vector3 rotation;
-	public float cameraHorizon;
-	public bool visible;
-	public bool receptacle;
-	public int receptacleCount;
-	public bool openable;
-	public bool pickupable;
-	public bool isopen;
-	public string[] receptacleObjectIds;
-	public PivotSimObj[] pivotSimObjs;
-	public float distance;
-	public String objectType;
-	public string objectId;
-}
-[Serializable]
-public class InventoryObject
-{
-	public string objectId;
-	public string objectType;
-}
-
-[Serializable]
-public class PivotSimObj
-{
-	public int pivotId;
-	public string objectId;
-}
-[Serializable]
-public struct MetadataWrapper
-{
-	public ObjectMetadata[] objects;
-	public ObjectMetadata agent;
-	public bool collided;
-	public string[] collidedObjects;
-	public InventoryObject[] inventoryObjects;
-	public string sceneName;
-	public string lastAction;
-	public string errorMessage;
-	public string errorCode; // comes from ServerActionErrorCode
-	public bool lastActionSuccess;
-	public int screenWidth;
-	public int screenHeight;
-	public int sequenceId;
-}
-
-
-
-[Serializable]
-public class ServerAction
-{
-	public string action;
-	public string objectType;
-	public string receptacleObjectType;
-	public string receptacleObjectId;
-	public float gridSize;
-	public string[] excludeObjectIds;
-	public string objectId;
-	public float y;
-	public float x;
-	public float z;
-	public int sequenceId;
-	public bool snapToGrid = true;
-	public bool continuous;
-	public string sceneName;
-	public int sceneConfigIndex;
-	public int agentPositionIndex;
-	public bool rotateOnTeleport;
-	public bool forceVisible;
-	public int rotation;
-	public int horizon;
-	public bool randomizeOpen;
-	public int pivot;
-	public int randomSeed;
-	public float moveMagnitude;
-	public bool uniquePickupableObjectTypes; // only allow one of each object type to be visible
-	public ReceptacleObjectList[] receptacleObjects;
-	public ReceptacleObjectPair[] excludeReceptacleObjectPairs;
-
-	public SimObjType ReceptableSimObjType()
-	{
-		if (string.IsNullOrEmpty(receptacleObjectType))
-		{
-			return SimObjType.Undefined;
-		}
-		return (SimObjType)Enum.Parse(typeof(SimObjType), receptacleObjectType);
-	}
-
-	public SimObjType GetSimObjType()
-	{
-
-		if (string.IsNullOrEmpty(objectType))
-		{
-			return SimObjType.Undefined;
-		}
-		return (SimObjType)Enum.Parse(typeof(SimObjType), objectType);
-	}
-
-
-}
-[Serializable]
-public class ReceptacleObjectPair
-{
-	public string receptacleObjectId;
-	public string objectId;
-	public int pivot;
-}
-
-
-[Serializable]
-public class ReceptacleObjectList
-{
-	public string receptacleObjectType;
-	public string[] itemObjectTypes;
-}
-
-public enum ServerActionErrorCode  {
-	Undefined,
-	ReceptacleNotVisible,
-	ReceptacleNotOpen,
-	ObjectNotInInventory,
-	ReceptacleFull,
-	ReceptaclePivotNotVisible,
-	ObjectNotAllowedInReceptacle,
-	ObjectNotVisible,
-	InventoryFull,
-	ObjectNotPickupable,
-	LookUpCantExceedMax,
-	LookDownCantExceedMin
 }
