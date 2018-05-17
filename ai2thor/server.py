@@ -235,7 +235,7 @@ class Server(object):
                 form = request
 
             if self.client_token:
-                token = form.form['token']
+                token = form.form['token'][0]
                 if token is None or token != self.client_token:
                     abort(403)
 
