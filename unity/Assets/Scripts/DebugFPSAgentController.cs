@@ -128,27 +128,31 @@ namespace UnityStandardAssets.Characters.FirstPerson
             {
                 foreach (Collider item in colliders_in_view)
                 {
-                    //get the SimObjPhysics component from the collider that was found
-                    SimObjPhysics sop = item.GetComponent<SimObjPhysics>();
+					if(item.tag == "SimObjPhysics")
+					{
+						//get the SimObjPhysics component from the collider that was found
+                        SimObjPhysics sop = item.GetComponent<SimObjPhysics>();
 
-                    //is the sim object in range, check if it is bounds of the camera's viewport
-                    if (CheckIfInViewport(sop, agentCamera, maxDistance))
-                    {
-                        sop.isVisible = true;
-                        currentlyVisibleItems.Add(sop);
+                        //is the sim object in range, check if it is bounds of the camera's viewport
+                        if (CheckIfInViewport(sop, agentCamera, maxDistance))
+                        {
+                            sop.isVisible = true;
+                            currentlyVisibleItems.Add(sop);
 
-                        //draw a debug line to the object's transform
-                        #if UNITY_EDITOR
-                        Debug.DrawLine(agentCameraPos, sop.transform.position, Color.yellow);
-                        #endif
-                    }
+                            //draw a debug line to the object's transform
+                            #if UNITY_EDITOR
+                            Debug.DrawLine(agentCameraPos, sop.transform.position, Color.yellow);
+                            #endif
+                        }
 
-                    else
-                    {
-                        //print("out of range");
-                        sop.isVisible = false;
-                        currentlyVisibleItems.Remove(sop);
-                    }
+                        else
+                        {
+                            //print("out of range");
+                            sop.isVisible = false;
+                            currentlyVisibleItems.Remove(sop);
+                        }
+					}
+                  
                 }
 
                 //now that we have a list of currently visible items, let's see which ones are interactable!
