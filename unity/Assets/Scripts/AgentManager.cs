@@ -61,7 +61,8 @@ public class AgentManager : MonoBehaviour
 
 	public void Initialize(ServerAction action)
 	{
-		primaryAgent.Initialize (action);
+		
+		primaryAgent.ProcessControlCommand (action);
 		StartCoroutine (addAgents (action));
 
 	}
@@ -86,12 +87,11 @@ public class AgentManager : MonoBehaviour
 
 
 			DiscreteRemoteFPSAgentController clone = UnityEngine.Object.Instantiate (primaryAgent);
-			clone.actionComplete = false;
 			clone.actionDuration = this.actionDuration;
 			clone.m_Camera.targetDisplay = this.agents.Count;
 			clone.transform.position = clonePosition;
 			updateAgentColor(clone, agentColors[this.agents.Count]);
-			clone.Initialize (action);
+			clone.ProcessControlCommand (action);
 			this.agents.Add (clone);
 		} else {
 			Debug.LogError ("couldn't find a valid start position for a new agent");

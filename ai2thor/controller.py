@@ -472,8 +472,10 @@ class Controller(object):
 
             event = self.step(a)
             # check inventory
+            visible_objects = []
             for o in event.metadata['objects']:
                 if o['visible']:
+                    visible_objects.append(o['objectId'])
                     if o['openable']:
                         if o['isopen']:
                             add_command(command_counter, 'CloseObject', objectId=o['objectId'])
@@ -491,6 +493,8 @@ class Controller(object):
             self._interact_commands.update(new_commands)
 
             print(command_message)
+            print("Visible Objects:\n" + "\n".join(sorted(visible_objects)))
+
 
             skip_keys = ['action', 'objectId']
             for k in sorted(new_commands.keys()):
