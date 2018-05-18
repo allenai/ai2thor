@@ -31,6 +31,8 @@ from PIL import Image
 
 logging.getLogger('werkzeug').setLevel(logging.ERROR)
 
+MAX_DEPTH = 5000
+
 # get with timeout to allow quit
 def queue_get(que):
     res = None
@@ -50,6 +52,36 @@ class MultiAgentEvent(object):
         self.cv2image = self._active_event.cv2image
         self.metadata = self._active_event.metadata
         self.events = events
+        # XXX add methods for depth,sem_seg
+
+def read_buffer_image(buf, width, height):
+
+    if sys.version_info.major < 3:
+        # support for Python 2.7 - can't handle memoryview in Python2.7 and Numpy frombuffer
+        return np.flip(np.frombuffer(
+            buf.tobytes(), dtype=np.uint8).reshape(width, height, -1), axis=0)
+    else:
+        return np.flip(np.frombuffer(buf, dtype=np.uint8).reshape(width, height, -1), axis=0)
+
+def unique_rows(arr, return_index=False, return_inverse=False):
+        arr = np.ascontiguousarray(arr).copy()
+        b = arr.view(np.dtype((np.void, arr.dtype.itemsize * arr.shape[1])))
+        if return_inverse:
+            _, idx, inv = np.unique(b, return_index=True, return_inverse=True)
+        else:
+            _, idx = np.unique(b, return_index=True)
+        unique = arr[idx]
+        if return_index and return_inverse:
+            return unique, idx, inv
+        elif return_index:
+            sort_order = np.lexsort(unique.T)
+            return unique[sort_order], idx[sort_order]
+        elif return_inverse:
+            return unique, inv
+        else:
+            sort_order = np.lexsort(unique.T)
+            return unique[sort_order]
+
 
 class Event(object):
     """
@@ -58,19 +90,135 @@ class Event(object):
     as the metadata sent about each object
     """
 
-    def __init__(self, metadata, image_data):
+    def __init__(self, metadata):
         self.metadata = metadata
-        width = metadata['screenWidth']
-        height = metadata['screenHeight']
+        self.screen_width = metadata['screenWidth']
+        self.screen_height = metadata['screenHeight']
+
+        # XXX may want this to be None when we don't have it? since it could be misleading?
+        self.frame = np.zeros((self.screen_width, self.screen_height, 3), dtype=np.uint8)
+        self.image_depth = None
+        self.color_arr = []
+        self.color_names = []
+        self.color_to_object_id = {}
+        self.process_colors()
+        self.bounds2D = {}
+        self.masks = {}
+        self.detections = {}
+        self.detection_images = {}
+        
+
+    def process_colors(self):
+        for color_data in self.metadata['colors']:
+            color = np.array([color_data['color']['r'], color_data['color']['g'], color_data['color']['b']])
+            color *= 255
+            color = np.round(color) # deals with very close round off errors
+            #name = ''.join([x for x in color_data['name'] if x.isalpha()]).lower() # Keep only alpha chars
+            name = color_data['name']
+            self.color_arr.append(color)
+            self.color_names.append(name)
+            self.color_to_object_id[tuple(int(cc) for cc in color)] = name
+        self.color_arr = np.array(self.color_arr, dtype=np.uint8)
+
+    def objects_by_type(self, object_type):
+        return [obj for obj in self.metadata['objects'] if obj['objectType'] == object_type]
+
+    def process_colors_ids(self):
+        MIN_DETECTION_LEN = 10
+
+        OBJECT_CLASS_TO_COCO_CLASS = {
+            'Background': 'background',
+            'Spoon': 'spoon',
+            'Potato': 'potato',
+            'Fork': 'fork',
+            'Plate': 'plate',
+            'Egg': 'egg',
+            'Tomato': 'tomato',
+            'Bowl': 'bowl',
+            'Lettuce': 'lettuce',
+            'Apple': 'apple',
+            'Knife': 'knife',
+            'Container': 'container',
+            'Bread': 'bread',
+            'Mug': 'mug',
+            'Sink': 'sink',
+            'StoveBurner': 'stoveburner',
+            'TableTop': 'table',
+            'GarbageCan': 'garbagecan',
+            'Microwave': 'microwave',
+            'Fridge': 'fridge',
+            'Cabinet': 'cabinet',
+         }
+
+        COCO_CLASS_TO_OBJECT_CLASS = {v : k for k,v in OBJECT_CLASS_TO_COCO_CLASS.items()}
+
+        unique_ids, unique_inverse = unique_rows(self.frame_ids.reshape(-1, 3), return_inverse=True)
+        unique_inverse = unique_inverse.reshape(self.frame_ids.shape[:2])
+        unique_masks = (np.tile(unique_inverse[np.newaxis, :, :], (len(unique_ids), 1, 1)) == np.arange(len(unique_ids))[:, np.newaxis, np.newaxis])
+        #for unique_color_ind, unique_color in enumerate(unique_ids):
+        for color_bounds in self.metadata['colorBounds']:
+            color = np.array([color_bounds['color']['r'], color_bounds['color']['g'], color_bounds['color']['b']])
+            color *= 255
+            color = np.round(color) # deals with very close round off errors
+            color_name = self.color_to_object_id.get(tuple(int(cc) for cc in color), 'background')
+            cls = color_name.lower()
+            simObj = False
+            if '|' in cls:
+                cls = cls.split('|')[0]
+                simObj = True
+            elif 'sink' in cls:
+                cls = 'sink'
+                simObj = True
+                color_name = self.objects_by_type('Sink')[0]['objectId']
+
+            if cls not in COCO_CLASS_TO_OBJECT_CLASS:
+                continue
+            cls = COCO_CLASS_TO_OBJECT_CLASS[cls]
+            bb = np.array(color_bounds['bounds'])
+            bb[[1,3]] = self.metadata['screenHeight'] - bb[[3,1]]
+            if not((bb[2] - bb[0]) < MIN_DETECTION_LEN or (bb[3] - bb[1]) < MIN_DETECTION_LEN):
+                if cls not in self.detections:
+                    self.detections[cls] = []
+                    self.detection_images[cls] = []
+                self.detections[cls].append(bb)
+                if simObj:
+                    self.bounds2D[color_name] = bb
+                    color_ind = np.argmin(np.sum(np.abs(unique_ids - color), axis=1))
+                    self.masks[color_name] = unique_masks[color_ind, ...]
+
+
+    def add_image_depth(self, image_depth_data):
+
+        image_depth = read_buffer_image(image_depth_data, self.screen_width, self.screen_height).astype(np.float32)
+        max_spots = image_depth[:,:,0] == 255
+        image_depth_out = image_depth[:,:,0] + image_depth[:,:,1] / 256 + image_depth[:,:,2] / 256 ** 2
+        image_depth_out[max_spots] = 256
+        image_depth_out *= 10.0 / 256.0 * 1000  # converts to meters then to mm
+        image_depth_out[image_depth_out > MAX_DEPTH] = MAX_DEPTH
+        self.image_depth = image_depth_out.astype(np.float32)
+
+    def add_image(self, image_data):
         self.image_data = image_data
-        if sys.version_info.major < 3:
-            # support for Python 2.7 - can't handle memoryview in Python2.7 and Numpy frombuffer
-            self.frame = np.flip(np.frombuffer(image_data.tobytes(), dtype=np.uint8).reshape(width, height, 3), axis=0)
-        else:
-            self.frame = np.flip(np.frombuffer(image_data, dtype=np.uint8).reshape(width, height, 3), axis=0)
+        self.frame = read_buffer_image(image_data, self.screen_width, self.screen_height)
+
+    def add_image_ids(self, image_ids_data):
+        self.frame_ids = read_buffer_image(image_ids_data, self.screen_width, self.screen_height)
+
+    def add_image_classes(self, image_classes_data):
+        self.frame_classes = read_buffer_image(image_classes_data, self.screen_width, self.screen_height)
 
     def cv2image(self):
         return self.frame[...,::-1]
+
+    @property
+    def pose(self):
+        # XXX need to change this to work with continuous
+        step_size = 0.25
+        agent_meta = self.metadata['agent']
+        loc = agent_meta['position']
+        rotation = int(agent_meta['rotation']['y'] / 90.0)
+        horizon = int(round(agent_meta['cameraHorizon']))
+        return (int(loc['x'] / step_size), int(loc['z'] / step_size, rotation, horizon))
 
 
 class MultipartFormParser(object):
@@ -254,11 +402,28 @@ class Server(object):
 
                 self.last_event = event = MultiAgentEvent(metadata['activeAgentId'], events)
             else:
-                self.last_event = event = Event(metadata['agents'][0], form.files['image'][0])
+                self.last_event = event = Event(metadata['agents'][0])
 
             if metadata['sequenceId'] != self.sequence_id:
                 raise Exception("Sequence id mismatch: %s vs %s" % (
                     metadata['sequenceId'], self.sequence_id))
+
+            self.last_event = event = Event(metadata)
+
+            print(list(form.files.keys()))
+
+            image_mapping = dict(
+                image=event.add_image,
+                image_depth=event.add_image_depth,
+                image_ids=event.add_image_ids,
+                image_classes=event.add_image_classes
+            )
+
+            for key in image_mapping.keys():
+                if key in form.files:
+                    image_mapping[key](form.files[key][0])
+
+            event.process_colors_ids()
 
             request_queue.put_nowait(event)
             self.frame_counter += 1

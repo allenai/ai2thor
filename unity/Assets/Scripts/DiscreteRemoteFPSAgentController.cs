@@ -9,6 +9,8 @@ using System.Globalization;
 using UnityEngine.SceneManagement;
 
 using UnityEngine;
+using System.Diagnostics;
+using Debug = UnityEngine.Debug;
 
 
 namespace UnityStandardAssets.Characters.FirstPerson
@@ -26,13 +28,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		private SimObj currentMaskObj;
 		private SimObj currentHandSimObj;
 		private static float gridSize = 0.25f;
-
 		private bool continuousMode;
-
-
-
-
-	
 
 		private Dictionary<string, SimObj> inventory = new Dictionary<string, SimObj>();
 
@@ -50,6 +46,11 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
             DebugCanvas.enabled = false;
             DebugComponent.enabled = false;
+
+//			renderImage = LoadBoolVariable (renderImage, "SEND_IMAGE");
+//			renderDepthImage = LoadBoolVariable (renderDepthImage, "SEND_DEPTH_IMAGE");
+//			renderClassImage = LoadBoolVariable (renderClassImage, "SEND_CLASS_IMAGE");
+//			renderObjectImage = LoadBoolVariable (renderObjectImage, "SEND_OBJECT_IMAGE");
 		}
 
 		protected override void actionFinished(bool success) {
@@ -288,6 +289,52 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			actionFinished (result);
 		}
 
+
+
+		virtual protected IEnumerator checkOpenAction(SimObj so) {
+			yield return null;
+
+			bool result = false;
+			//Debug.Log ("checkOpenAction");
+			for (int i = 0; i < actionDuration; i++) {
+				Debug.Log ("checkOpenAction action duration " + i);
+				//Debug.Log ("Action duration " + i);
+				Vector3 currentPosition = this.transform.position;
+				Debug.Log ("collided in open");
+
+				currentPosition = this.transform.position;
+				for (int j = 0; j < actionDuration; j++) {
+					Debug.Log ("yield return null");
+					yield return null;
+				}
+				Vector3 snapDiff = currentPosition - this.transform.position;
+				snapDiff.y = Mathf.Min (Math.Abs(snapDiff.y), 0.05f);
+				Debug.Log ("currentY " + currentPosition.y);
+				Debug.Log ("positionY " + this.transform.position.y);
+				Debug.Log ("snapDiff " + snapDiff.y);
+				if (snapDiff.magnitude >= 0.005f) {
+					result = false;
+					break;
+				} else {
+					result = true;
+				}
+			}
+
+
+			if (!result) {
+				Debug.Log ("check open failed");
+				closeSimObj (so);
+				transform.position = lastPosition;
+				for (int j = 0; j < actionDuration; j++) {
+					Debug.Log ("open yield return null");
+					yield return null;
+				}
+			}
+
+			actionFinished (result);
+		}
+
+
 		private IEnumerator checkDropHandObjectAction() {
 			yield return null; // wait for one frame to pass
 
@@ -364,11 +411,22 @@ namespace UnityStandardAssets.Characters.FirstPerson
             }
 		#endif
 
-
-
 		public void RandomInitialize(ServerAction response) {
 			bool success = true;
 			this.excludeObjectIds = response.excludeObjectIds;
+
+			Dictionary<SimObjType, HashSet<SimObjType>> receptacleObjects = new Dictionary<SimObjType, HashSet<SimObjType>> ();
+			HashSet<SimObjType> pickupable = new HashSet<SimObjType> ();
+			foreach (ReceptacleObjectList rol in response.receptacleObjects) {
+				HashSet<SimObjType> objectTypes = new HashSet<SimObjType> ();
+				SimObjType receptacleType = (SimObjType)Enum.Parse (typeof(SimObjType), rol.receptacleObjectType);
+				foreach (string itemObjectType in rol.itemObjectTypes) {
+					objectTypes.Add ((SimObjType)Enum.Parse (typeof(SimObjType), itemObjectType));
+					pickupable.Add ((SimObjType)Enum.Parse (typeof(SimObjType), itemObjectType));
+				}
+				receptacleObjects.Add (receptacleType, objectTypes);
+			}
+
 			System.Random rnd = new System.Random (response.randomSeed);
 			SimObj[] simObjects = GameObject.FindObjectsOfType (typeof(SimObj)) as SimObj[];
 			int pickupableCount = 0;
@@ -391,6 +449,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			}
 
 			//shuffle objects
+			rnd = new System.Random (response.randomSeed);
+
 			for (int i = 0; i < simObjects.Length; i++) {
 				SimObj so = simObjects [i];
 				int randomIndex = rnd.Next (i, simObjects.Length);
@@ -399,15 +459,35 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			}
 
 
-			Dictionary<SimObjType, HashSet<SimObjType>> receptacleObjects = new Dictionary<SimObjType, HashSet<SimObjType>> ();
-			foreach (ReceptacleObjectList rol in response.receptacleObjects) {
-				HashSet<SimObjType> objectTypes = new HashSet<SimObjType> ();
-				SimObjType receptacleType = (SimObjType)Enum.Parse (typeof(SimObjType), rol.receptacleObjectType);
-				foreach (string itemObjectType in rol.itemObjectTypes) {
-					objectTypes.Add ((SimObjType)Enum.Parse (typeof(SimObjType), itemObjectType));
+
+			rnd = new System.Random (response.randomSeed);
+			List<SimObj> simObjectsFiltered = new List<SimObj> ();
+			for (int i = 0; i < simObjects.Length; i++) {
+				SimObj so = simObjects [i];
+				if (IsPickupable(so) && pickupable.Contains (so.Type)) {
+					double val = rnd.NextDouble ();
+					if (val > response.removeProb) {
+						// Keep the item
+						int numRepeats = 1;
+						if (response.maxNumRepeats > 1) {
+							numRepeats = rnd.Next(1, response.maxNumRepeats);
+						}
+						for (int j = 0; j < numRepeats; j++) {
+							// Add a copy of the item.
+							SimObj copy = Instantiate(so);
+							copy.name += "" + j;
+							copy.UniqueID = so.UniqueID + "_copy_" + j;
+							simObjectsFiltered.Add (copy);
+						}
+					} else {
+						pickupableCount--;
+					}
+				} else {
+					simObjectsFiltered.Add (simObjects [i]);
 				}
-				receptacleObjects.Add (receptacleType, objectTypes);	
 			}
+
+
 
 			bool[] consumedObjects = new bool[simObjects.Length];
 			int randomTries = 0;
@@ -445,6 +525,26 @@ namespace UnityStandardAssets.Characters.FirstPerson
 					}
 				}
 			}
+
+			if (response.randomizeObjectAppearance) {
+				// Use a random texture for each object individually.
+				rnd = new System.Random (response.randomSeed);
+				for (int i = 0; i < simObjects.Length; i++) {
+					SimObj so = simObjects [i];
+					if (so.gameObject.activeSelf) {
+						Randomizer randomizer = (so.gameObject.GetComponentInChildren<Randomizer> () as Randomizer);
+						if (randomizer != null) {
+							randomizer.Randomize (rnd.Next (0, 2147483647));
+						}
+					}
+				}
+			}
+
+			var im_synth = m_Camera.GetComponent<ImageSynthesis> ();
+			if (im_synth != null) {
+				im_synth.OnSceneChange ();
+			}
+
 			actionFinished(success);
 		}
 

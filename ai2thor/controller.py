@@ -685,8 +685,7 @@ class Controller(object):
             self.request_queue,
             self.response_queue,
             host,
-            port=port,
-            threaded=enable_remote_viewer)
+            port=port)
 
         _, port = self.server.wsgi_server.socket.getsockname()
         if enable_remote_viewer:

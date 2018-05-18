@@ -127,6 +127,21 @@ def build(context, local=False):
     build_docker(version)
 
 @task
+def test(ctx):
+    import ai2thor.controller
+
+    env = ai2thor.controller.Controller( )
+    e = env.start(8200, False)
+    event = env.reset('FloorPlan28')
+    e = env.step(dict(action='Initialize', gridSize=0.25))
+    e = env.step(dict(action='RotateRight'))
+    e = env.step(dict(action='RotateRight'))
+    from pprint import pprint
+    pprint(e.metadata)
+    #env.interact()
+    #env.stop()
+
+@task
 def interact(ctx, scene):
     import ai2thor.controller
 
