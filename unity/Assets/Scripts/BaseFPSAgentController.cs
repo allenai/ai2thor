@@ -68,7 +68,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		protected bool lastActionSuccess;
 		protected string errorMessage;
 		protected ServerActionErrorCode errorCode;
-		public bool actionComplete = false;
+		public bool actionComplete;
 
 
 		// Vector3 m_OriginalCameraPosition;
@@ -400,7 +400,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			lastActionSuccess = false;
 			lastPosition = new Vector3 (transform.position.x, transform.position.y, transform.position.z);
 			System.Reflection.MethodInfo method = this.GetType ().GetMethod (controlCommand.action);
-			actionComplete = false;
+			this.actionComplete = false;
 			try
 			{
 				method.Invoke(this, new object[] { controlCommand });

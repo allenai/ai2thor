@@ -53,16 +53,21 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		}
 
 		protected override void actionFinished(bool success) {
+			
+			if (actionComplete) {
+				Debug.LogError ("ActionFinished called with actionComplete already set to true");
+			}
+
 			lastActionSuccess = success;
-			actionComplete = true;
+			this.actionComplete = true;
 			actionCounter = 0;
 			targetTeleport = Vector3.zero;
 		}
 
 		protected override void Start() {
-			actionComplete = true;
 
 			base.Start ();
+			this.actionComplete = true;
 			// always zero out the rotation
 
 			transform.rotation = Quaternion.Euler (new Vector3 (0.0f, 0.0f, 0.0f));
@@ -75,13 +80,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 		public void Initialize(ServerAction action)
 		{
+			if (action.gridSize == 0) {
+				action.gridSize = 0.25f;
+			}
 
-			if (action.continuous) {
-				continuousMode = true;
-				if (action.gridSize == 0) {
-					action.gridSize = 0.25f;
-				}
-			} 
+			this.continuousMode = action.continuous;
+			 
 
 			if (action.visibilityDistance > 0.0f) {
 				this.maxVisibleDistance = action.visibilityDistance;
@@ -229,10 +233,11 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			bool result = false;
 
 
+
+
 			for (int i = 0; i < actionDuration; i++) {
 				Vector3 currentPosition = this.transform.position;
 				Vector3 zeroY = new Vector3 (1.0f, 0.0f, 1.0f);
-
 				float distance = Vector3.Distance (Vector3.Scale(lastPosition, zeroY), Vector3.Scale(currentPosition, zeroY));
 				if (Math.Abs(moveMagnitude - distance) < 0.005)			
 				{
