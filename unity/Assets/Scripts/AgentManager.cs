@@ -19,6 +19,10 @@ public class AgentManager : MonoBehaviour
 	private Rect readPixelsRect;
 	private int currentSequenceId;
 	private int activeAgentId;
+	private bool renderImage = true;
+	private bool renderDepthImage = true;
+	private bool renderClassImage = true;
+	private bool renderObjectImage = true;
 
 	private bool readyToEmit;
 
@@ -191,23 +195,6 @@ public class AgentManager : MonoBehaviour
 
 		WWWForm form = new WWWForm();
 
-		if (!serverSideScreenshot) {
-			// read screen contents into the texture
-
-			RenderTexture currentTexture = RenderTexture.active;
-			form.AddBinaryData("image", captureScreen(), "frame-" + frameCounter.ToString().PadLeft(7, '0') + ".rgb", "image/raw-rgb");
-
-			DiscreteRemoteFPSAgentController[] agentsAr = this.agents.ToArray ();
-			for(int i = 1; i < agentsAr.Length; i++) {
-				DiscreteRemoteFPSAgentController agent = agentsAr [i];
-				RenderTexture.active = agent.m_Camera.activeTexture;
-				agent.m_Camera.Render ();
-				form.AddBinaryData("image", captureScreen(), "frame-" + frameCounter.ToString().PadLeft(7, '0') + ".rgb", "image/raw-rgb");
-			}
-
-			RenderTexture.active = currentTexture;
-		}
-
 		MultiAgentMetadata multiMeta = new MultiAgentMetadata ();
 		multiMeta.agents = new MetadataWrapper[this.agents.Count];
 		multiMeta.activeAgentId = this.activeAgentId;
@@ -217,6 +204,98 @@ public class AgentManager : MonoBehaviour
 			multiMeta.agents [i] = this.agents.ToArray () [i].generateMetadataWrapper ();
 			multiMeta.agents [i].agentId = i;
 		}
+		MetadataWrapper metaMessage = multiMeta.agents [0];
+
+        if (!serverSideScreenshot) {
+            // read screen contents into the texture
+            float totalStartTime = Time.realtimeSinceStartup;
+			var im_synth = primaryAgent.m_Camera.GetComponent<ImageSynthesis> ();
+            if (im_synth != null) {
+                byte[] bytes;
+                if (renderImage) {
+                    // read screen contents into the texture
+                    //
+                    RenderTexture currentTexture = RenderTexture.active;
+                    form.AddBinaryData("image", captureScreen());
+
+                    DiscreteRemoteFPSAgentController[] agentsAr = this.agents.ToArray ();
+                    for(int i = 1; i < agentsAr.Length; i++) {
+                        DiscreteRemoteFPSAgentController agent = agentsAr [i];
+                        RenderTexture.active = agent.m_Camera.activeTexture;
+                        agent.m_Camera.Render ();
+                        form.AddBinaryData("image", captureScreen());
+                    }
+                    RenderTexture.active = currentTexture;
+                }
+
+                if (renderDepthImage && im_synth.hasCapturePass("_depth")) {
+                    bytes = im_synth.Encode ("_depth");
+                    //form.AddBinaryData ("image_depth", bytes, "frame2-" + frameCounter.ToString().PadLeft(7, '0') + ".png", "image/png");
+                    form.AddBinaryData ("image_depth", bytes);
+
+                }
+                if (renderObjectImage && im_synth.hasCapturePass ("_id")) {
+                    bytes = im_synth.Encode ("_id");
+                    //form.AddBinaryData ("image_ids", bytes3, "frame3-" + frameCounter.ToString ().PadLeft (7, '0') + ".png", "image/png");
+                    form.AddBinaryData ("image_ids", bytes);
+                    Color[] id_image = im_synth.tex.GetPixels();
+                    Dictionary<Color, int[]> colorBounds = new Dictionary<Color, int[]> ();
+                    for (int yy = 0; yy < tex.height; yy++) {
+                        for (int xx = 0; xx < tex.width; xx++) {
+                            Color colorOn = id_image [yy * tex.width + xx];
+                            if (!colorBounds.ContainsKey (colorOn)) {
+                                colorBounds [colorOn] = new int[]{xx, yy, xx, yy};
+                            } else {
+                                int[] oldPoint = colorBounds [colorOn];
+                                if (xx < oldPoint [0]) {
+                                    oldPoint [0] = xx;
+                                }
+                                if (yy < oldPoint [1]) {
+                                    oldPoint [1] = yy;
+                                }
+                                if (xx > oldPoint [2]) {
+                                    oldPoint [2] = xx;
+                                }
+                                if (yy > oldPoint [3]) {
+                                    oldPoint [3] = yy;
+                                }
+                            }
+                        }
+                    }
+                    List<ColorBounds> boundsList = new List<ColorBounds> ();
+                    foreach (Color key in colorBounds.Keys) {
+                        ColorBounds bounds = new ColorBounds ();
+                        bounds.color = key;
+                        bounds.bounds = colorBounds [key];
+                        boundsList.Add (bounds);
+                    }
+                    metaMessage.colorBounds = boundsList.ToArray ();
+
+                }
+                if (renderClassImage && im_synth.hasCapturePass ("_class")) {
+                    bytes = im_synth.Encode ("_class");
+                    //form.AddBinaryData ("image_classes", bytes, "frame4-" + frameCounter.ToString ().PadLeft (7, '0') + ".png", "image/png");
+                    form.AddBinaryData ("image_classes", bytes);
+                }
+                if (renderObjectImage && im_synth.hasCapturePass ("_id")) {
+                    if (!im_synth.sentColorCorrespondence) {
+                        //im_synth.sentColorCorrespondence = true;
+                        List<ColorId> colors = new List<ColorId> ();
+                        foreach (Color key in im_synth.colorIds.Keys) {
+                            ColorId cid = new ColorId ();
+                            cid.color = key;
+                            cid.name = im_synth.colorIds [key];
+                            colors.Add (cid);
+                        }
+                        metaMessage.colors = colors.ToArray ();
+                    }
+                }
+            } else {
+                Debug.Log ("ImageSynthesis is not availble");
+            }
+
+        }
+
 
 		// for testing purposes, also write to a file in the project folder
 		// File.WriteAllBytes(Application.dataPath + "/Screenshots/SavedScreen" + frameCounter.ToString() + ".png", bytes);
@@ -316,7 +395,9 @@ public class ObjectMetadata
 	public float distance;
 	public String objectType;
 	public string objectId;
+	public string parentReceptacle;
 }
+
 [Serializable]
 public class InventoryObject
 {
@@ -330,6 +411,20 @@ public class PivotSimObj
 	public int pivotId;
 	public string objectId;
 }
+
+[Serializable]
+public class ColorId {
+	public Color color;
+	public string name;
+}
+
+[Serializable]
+public class ColorBounds {
+	public Color color;
+	public int[] bounds;
+}
+
+
 [Serializable]
 public struct MetadataWrapper
 {
@@ -346,6 +441,8 @@ public struct MetadataWrapper
 	public int screenWidth;
 	public int screenHeight;
 	public int agentId;
+	public ColorId [] colors;
+	public ColorBounds[] colorBounds;
 }
 
 
@@ -369,8 +466,6 @@ public class ServerAction
 	public bool snapToGrid = true;
 	public bool continuous;
 	public string sceneName;
-	public int sceneConfigIndex;
-	public int agentPositionIndex;
 	public bool rotateOnTeleport;
 	public bool forceVisible;
 	public int rotation;
@@ -384,6 +479,9 @@ public class ServerAction
 	public bool uniquePickupableObjectTypes; // only allow one of each object type to be visible
 	public ReceptacleObjectList[] receptacleObjects;
 	public ReceptacleObjectPair[] excludeReceptacleObjectPairs;
+	public float removeProb;
+	public int maxNumRepeats;
+	public bool randomizeObjectAppearance;
 
 	public SimObjType ReceptableSimObjType()
 	{
@@ -406,6 +504,7 @@ public class ServerAction
 
 
 }
+
 [Serializable]
 public class ReceptacleObjectPair
 {
