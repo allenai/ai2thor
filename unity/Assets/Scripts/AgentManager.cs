@@ -69,7 +69,7 @@ public class AgentManager : MonoBehaviour
 
 	private IEnumerator addAgents(ServerAction action) {
 
-		for (int i = 1; i < action.agentCount && this.agents.Count < action.agentCount; i++) {
+		for (int i = 1; i < action.agentCount && this.agents.Count < Math.Min(agentColors.Length, action.agentCount); i++) {
 			addAgent (action);
 			yield return null; // must do this so we wait a frame so that when we CapsuleCast we see the most recently added agent
 		}
