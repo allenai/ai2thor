@@ -4,16 +4,16 @@ using UnityEngine;
 
 public class SimObjPhysics : MonoBehaviour
 {
-
+    
 	[SerializeField]
 	public string UniqueID = string.Empty;
 
 	[SerializeField]
-	public SimObjManipTypePhysics[] ManipTypes; //is this static, moveable, CanPickup, or a receptacle? Can be multiple manip types, like Pots = CanPIckup and Receptacle
-
+	public SimObjProperty[] Properties; //is this static, moveable, CanPickup, or a receptacle? Can be multiple manip types, like Pots = CanPIckup and Receptacle
+    
 	[SerializeField]
-	public SimObjTypePhysics Type = SimObjTypePhysics.Undefined; //set the type of the prefab in editor
-
+	public SimObjCategory Category = SimObjCategory.Undefined; //set the type of the prefab in editor
+    
 
 
 	//raycast to this point on the object to check if it is visible
@@ -62,7 +62,7 @@ public class SimObjPhysics : MonoBehaviour
 		string xPos = (pos.x >= 0 ? "+" : "") + pos.x.ToString("00.00");
 		string yPos = (pos.y >= 0 ? "+" : "") + pos.y.ToString("00.00");
 		string zPos = (pos.z >= 0 ? "+" : "") + pos.z.ToString("00.00");
-		this.UniqueID = this.Type.ToString() + "|" + xPos + "|" + yPos + "|" + zPos;
+		this.UniqueID = this.Category.ToString() + "|" + xPos + "|" + yPos + "|" + zPos;
 	}
 
 #if UNITY_EDITOR
