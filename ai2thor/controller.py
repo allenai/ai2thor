@@ -1153,10 +1153,10 @@ class BFSController(Controller):
                         lambda x: x['visible'] and x['pickupable'],
                         event.metadata['objects']):
 
-                    if obj['objectId'] in object_receptacle and\
-                            object_receptacle[obj['objectId']]['openable'] and not \
-                            object_receptacle[obj['objectId']]['isopen']:
-                        continue
+                    #if obj['objectId'] in object_receptacle and\
+                    #        object_receptacle[obj['objectId']]['openable'] and not \
+                    #        object_receptacle[obj['objectId']]['isopen']:
+                    #    continue
 
                     seen_target_objects[obj['objectId']].append(dict(
                         distance=obj['distance'],

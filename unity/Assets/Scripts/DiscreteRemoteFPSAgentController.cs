@@ -510,8 +510,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 		public void MaskObject(ServerAction action) {
 			
-			Unmask (action);
+			unmaskCurrent ();
 			currentMaskMaterials = new Dictionary<int, Material[]> ();
+			bool success = false;
 			foreach (SimObj so in VisibleSimObjs(action)) {
 				currentMaskObj = so;
 
@@ -522,11 +523,13 @@ namespace UnityStandardAssets.Characters.FirstPerson
 					Material[] newMaterials = new Material[]{ material };
 					r.materials = newMaterials;
 				}
-				actionFinished(true);
-			}	
+				success = true;
+			}
+
+			actionFinished (success);
 		}
-		
-		public void Unmask(ServerAction action) {
+
+		private void unmaskCurrent() {
 			if (currentMaskMaterials != null) {
 				foreach (SimObj so in VisibleSimObjs(true)) {
 					if (so.UniqueID == currentMaskObj.UniqueID) {
@@ -540,6 +543,11 @@ namespace UnityStandardAssets.Characters.FirstPerson
 				}
 			}
 			currentMaskMaterials = null;
+		}
+
+		public void Unmask(ServerAction action) {
+			unmaskCurrent ();
+			actionFinished (true);
 			
 		}
 
