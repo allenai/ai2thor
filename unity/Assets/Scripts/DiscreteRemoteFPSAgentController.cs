@@ -84,6 +84,11 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			//startingHandPosition = getHand ().transform.localPosition;
 			snapToGrid ();
 
+            //On start, activate gravity
+			Vector3 movement = Vector3.zero;
+            movement.y = Physics.gravity.y * m_GravityMultiplier;
+            m_CharacterController.Move(movement);
+
 		}
 
 

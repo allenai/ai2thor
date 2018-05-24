@@ -19,7 +19,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 	[RequireComponent(typeof (CharacterController))]
     public class DebugFPSAgentController : MonoBehaviour
 	{
-		public float MaxDistance = 1f;
+		public float MaxDistance = 1.0f;
 
 		[SerializeField] private bool m_IsWalking;
 		[SerializeField] private float m_WalkSpeed;
@@ -38,6 +38,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		//[SerializeField] private AudioClip[] m_FootstepSounds;    // an array of footstep sounds that will be randomly selected from.
 		//[SerializeField] private AudioClip m_JumpSound;           // the sound played when character leaves the ground.
 		//[SerializeField] private AudioClip m_LandSound;           // the sound played when character touches back on ground.
+
+
 	
         //[SerializeField] private GameObject Target_Text = null;
         [SerializeField] private GameObject Debug_Canvas = null;
@@ -117,6 +119,33 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 			//Time.timeScale = 10.0f;
         }
+        
+        public void MoveForward()
+		{
+			Vector3 motion = new Vector3(0f, 0f, 0.5f);
+			motion.y = Physics.gravity.y * m_GravityMultiplier;
+			m_CharacterController.Move(motion);
+		}
+
+        public void MoveLeft()
+		{
+			
+		}
+
+        public void MoveRight()
+		{
+			
+		}
+
+        public void LookUp()
+		{
+			
+		}
+
+        public void LookDown()
+		{
+			
+		}
 
         public SimObjPhysics[] GetAllVisibleSimObjPhysics(Camera agentCamera, float maxDistance)
         {
@@ -269,11 +298,16 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			return result;
         }
       
-        //if the agent were to rotate Left/Right, would the hand hit anything that should prevent the agent from rotating
-        //pass in 0 to check if there is room to rotate left
-        //pass in 1 to check if there is room to rotate right
-        public bool CheckIfAgentCanRotate(int direction)
+        //if the agent were to rotate Left/Right/up/down, would the hand hit anything that should prevent the agent from rotating
+        public bool CheckIfAgentCanRotate(string rotation)
 		{
+
+			if (ItemInHand == null)
+            {
+                Debug.Log("No need to check rotation if empty handed");
+                return false;
+            }
+
 			//returns true if Rotation is allowed
 			bool result = false;
 
@@ -283,56 +317,62 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			//first move position to wheever the Agent's hand is
 			HandSweepPosition.transform.position = AgentHand.transform.position;
 
-            if(direction == 1)
+            if(rotation == "right")
    				//next rotate the RotationSweepTestPivot to simulate the Agent rotating 90 degrees
                 RotationSweepTestPivot.transform.localRotation = Quaternion.Euler(new Vector3(0, 90, 0));
-			else
+			if(rotation == "left")
 				RotationSweepTestPivot.transform.localRotation = Quaternion.Euler(new Vector3(0, -90, 0));
+			if (rotation == "up")
+				RotationSweepTestPivot.transform.localRotation = Quaternion.Euler(new Vector3(-30, 0, 0));
+			if (rotation == "down")
+				RotationSweepTestPivot.transform.localRotation = Quaternion.Euler(new Vector3(45, 0, 0));
+
          
 
             //now perform a sweeptest from AgentHand's current position to HandSweepPosition after the rotation
 
             RaycastHit hit;
 
-			if (ItemInHand == null)
-			{
-				Rigidbody HandRB = AgentHand.GetComponent<Rigidbody>();
-				if (HandRB.SweepTest(HandSweepPosition.transform.position - AgentHand.transform.position, out hit,
-                     Vector3.Distance(HandSweepPosition.transform.position, AgentHand.transform.position)))
-                {
-                    //ignore hits if it is the Agent itself or the Agent's Hand
-                    if (hit.transform != AgentHand.transform && hit.transform != gameObject.transform)
-                    {
-						if(direction == 1)
-						{
-							Debug.Log(hit.transform.name + " is in Agent Hand's Path! Can't rotate Agent RIGHT");
-                            result = false;
-						}
 
-						else
-						{
-							Debug.Log(hit.transform.name + " is in Agent Hand's Path! Can't rotate Agent LEFT");
-                            result = false;
-						}
+			//if (ItemInHand == null)
+			//{
+			//	Rigidbody HandRB = AgentHand.GetComponent<Rigidbody>();
+			//	if (HandRB.SweepTest(HandSweepPosition.transform.position - AgentHand.transform.position, out hit,
+   //                  Vector3.Distance(HandSweepPosition.transform.position, AgentHand.transform.position)))
+   //             {
+   //                 //ignore hits if it is the Agent itself or the Agent's Hand
+   //                 if (hit.transform != AgentHand.transform && hit.transform != gameObject.transform)
+   //                 {
+			//			if(rotation == "right")
+			//			{
+			//				Debug.Log(hit.transform.name + " is in Agent Hand's Path! Can't rotate Agent RIGHT");
+   //                         result = false;
+			//			}
 
-                    }               
-                }
+			//			else
+			//			{
+			//				Debug.Log(hit.transform.name + " is in Agent Hand's Path! Can't rotate Agent LEFT");
+   //                         result = false;
+			//			}
 
-				else
-                {
-                    if (direction == 1)
-                    {
-                        Debug.Log("Rotation to the RIGHT 90 degrees is possible!");
-                        result = true;
-                    }
+   //                 }               
+   //             }
 
-                    else
-                    {
-                        Debug.Log("Rotation to the LEFT 90 degrees is possible!");
-                        result = true;
-                    }
-                }
-			}
+			//	else
+   //             {
+   //                 if (direction == 1)
+   //                 {
+   //                     Debug.Log("Rotation to the RIGHT 90 degrees is possible!");
+   //                     result = true;
+   //                 }
+
+   //                 else
+   //                 {
+   //                     Debug.Log("Rotation to the LEFT 90 degrees is possible!");
+   //                     result = true;
+   //                 }
+   //             }
+			//}
          
 
             //for i there is an Item in the agent's hand right now
@@ -346,30 +386,41 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     //ignore hits if it is the Agent itself or the Agent's Hand
 					if (hit.transform != AgentHand.transform && hit.transform != gameObject.transform && hit.transform != ItemInHand.transform)
                     {
-						if (direction == 1)
+						if(rotation == "right")
                         {
                             Debug.Log(hit.transform.name + " is in Agent Hand's Path! Can't rotate Agent RIGHT");
                             result = false;
                         }
 
-                        else
-                        {
+						if(rotation == "left")                       
+						{
                             Debug.Log(hit.transform.name + " is in Agent Hand's Path! Can't rotate Agent LEFT");
                             result = false;
                         }
+
+                        if(rotation == "up")
+						{
+							Debug.Log(hit.transform.name + " is in Agent Hand's Path! Can't rotate View UP");
+						}
+
+                        if(rotation == "down")
+						{
+							Debug.Log(hit.transform.name + " is in Agent Hand's Path! Can't rotate View DOWN");
+
+						}
                     }
      
                 }
 
 				else
                 {
-                    if (direction == 1)
+                    if (rotation == "right")
                     {
                         Debug.Log("Rotation to the RIGHT 90 degrees is possible!");
                         result = true;
                     }
 
-                    else
+					else
                     {
                         Debug.Log("Rotation to the LEFT 90 degrees is possible!");
                         result = true;
@@ -943,12 +994,22 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 //check if the agent can rotate left or right, return errors if the agent hand would hit anything
                 if (Input.GetKeyDown(KeyCode.Alpha2))
                 {
-                    CheckIfAgentCanRotate(1);
+                    CheckIfAgentCanRotate("right");
                 }
 
                 if (Input.GetKeyDown(KeyCode.Alpha1))
                 {
-                    CheckIfAgentCanRotate(0);
+                    CheckIfAgentCanRotate("left");
+                }
+
+				if (Input.GetKeyDown(KeyCode.Alpha3))
+                {
+                    CheckIfAgentCanRotate("up");
+                }
+
+				if (Input.GetKeyDown(KeyCode.Alpha4))
+                {
+                    CheckIfAgentCanRotate("down");
                 }
                 //
 
@@ -980,11 +1041,13 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 {
                     CheckIfHandBlocksMovement(1.0f, "forward");
                     //CheckIfAgentCanMove(1.0f, "forward");
+                 
                 }
 
                 if (Input.GetKeyDown(KeyCode.J))
                 {
-                    CheckIfHandBlocksMovement(1.0f, "left");
+					CheckIfAgentCanRotate("left");
+                   // CheckIfHandBlocksMovement(1.0f, "left");
                     //CheckIfAgentCanMove(1.0f, "left");
                 }
 
@@ -1000,7 +1063,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		private void Update()	
         {
 			//constantly check for visible objects in front of agent
-            VisibleObjects = GetAllVisibleSimObjPhysics(m_Camera, 2.0f);
+			VisibleObjects = GetAllVisibleSimObjPhysics(m_Camera, MaxDistance);
 
 			DebugKeyboardControls();
          
