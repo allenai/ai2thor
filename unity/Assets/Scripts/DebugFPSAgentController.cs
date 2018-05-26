@@ -115,38 +115,44 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 Cursor.visible = false;
                 Cursor.lockState = CursorLockMode.Locked;
             }
-
+            
 
 			//Time.timeScale = 10.0f;
         }
-        
-        public void MoveForward()
+
+        public void MoveAgent(string direction, float magnitude)
 		{
-			Vector3 motion = new Vector3(0f, 0f, 0.5f);
-			motion.y = Physics.gravity.y * m_GravityMultiplier;
-			m_CharacterController.Move(motion);
+			if(direction == "forward")
+			{
+
+				Vector3 motion = transform.forward * magnitude;
+                motion.y = Physics.gravity.y * m_GravityMultiplier;
+                m_CharacterController.Move(motion);
+			}
+
+			if (direction == "backward")
+            {
+				Vector3 motion = -transform.forward * magnitude;
+                motion.y = Physics.gravity.y * m_GravityMultiplier;
+                m_CharacterController.Move(motion);
+            }
+
+			if (direction == "left")
+            {
+				Vector3 motion = -transform.right * magnitude;
+                motion.y = Physics.gravity.y * m_GravityMultiplier;
+                m_CharacterController.Move(motion);
+            }
+
+			if (direction == "right")
+            {
+				Vector3 motion = transform.right * magnitude; 
+				motion.y = Physics.gravity.y * m_GravityMultiplier;
+                m_CharacterController.Move(motion);
+            }
 		}
 
-        public void MoveLeft()
-		{
-			
-		}
-
-        public void MoveRight()
-		{
-			
-		}
-
-        public void LookUp()
-		{
-			
-		}
-
-        public void LookDown()
-		{
-			
-		}
-
+   
         public SimObjPhysics[] GetAllVisibleSimObjPhysics(Camera agentCamera, float maxDistance)
         {
             List<SimObjPhysics> currentlyVisibleItems = new List<SimObjPhysics>();
@@ -298,14 +304,63 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			return result;
         }
       
+        //changes agent's rotation, turn left or right
+        public void Turn(string dir)
+		{
+			if( dir == "left")
+			{
+				if(CheckIfAgentCanRotate("left"))
+				{
+					//transform.rotation = Quaternion.Euler(new Vector3(0, -90, 0));
+					transform.Rotate(transform.rotation.x, transform.rotation.y - 90, transform.rotation.z);
+				}
+			}
+
+            if(dir == "right")
+			{
+				if (CheckIfAgentCanRotate("right"))
+                {
+					transform.Rotate(transform.rotation.x, transform.rotation.y + 90, transform.rotation.z);
+                }
+			}
+		}
+
+        //changes if the agent is looing forward, up, or down
+        public void Look(string where)
+		{
+			if (where == "up")
+            {
+                if (CheckIfAgentCanRotate("up"))
+                    m_Camera.transform.localRotation = Quaternion.Euler(new Vector3(-30, 0, 0));
+            }
+            
+            if (where == "forward")
+            {
+                if (CheckIfAgentCanRotate("forward"))
+                    m_Camera.transform.localRotation = Quaternion.Euler(new Vector3(0, 0, 0));
+            }
+
+            if (where == "down")
+            {
+                if (CheckIfAgentCanRotate("down"))
+                    m_Camera.transform.localRotation = Quaternion.Euler(new Vector3(30, 0, 0));
+            }
+
+			if (where == "superdown")
+            {
+                if (CheckIfAgentCanRotate("superdown"))
+                    m_Camera.transform.localRotation = Quaternion.Euler(new Vector3(60, 0, 0));
+            }
+		}
+
         //if the agent were to rotate Left/Right/up/down, would the hand hit anything that should prevent the agent from rotating
         public bool CheckIfAgentCanRotate(string rotation)
-		{
+		{ 
 
 			if (ItemInHand == null)
             {
-                Debug.Log("No need to check rotation if empty handed");
-                return false;
+				Debug.Log("Rotation check passed: nothing in Agent Hand");
+                return true;
             }
 
 			//returns true if Rotation is allowed
@@ -318,14 +373,24 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			HandSweepPosition.transform.position = AgentHand.transform.position;
 
             if(rotation == "right")
-   				//next rotate the RotationSweepTestPivot to simulate the Agent rotating 90 degrees
                 RotationSweepTestPivot.transform.localRotation = Quaternion.Euler(new Vector3(0, 90, 0));
+			
 			if(rotation == "left")
 				RotationSweepTestPivot.transform.localRotation = Quaternion.Euler(new Vector3(0, -90, 0));
+			
 			if (rotation == "up")
 				RotationSweepTestPivot.transform.localRotation = Quaternion.Euler(new Vector3(-30, 0, 0));
+			
 			if (rotation == "down")
-				RotationSweepTestPivot.transform.localRotation = Quaternion.Euler(new Vector3(45, 0, 0));
+				RotationSweepTestPivot.transform.localRotation = Quaternion.Euler(new Vector3(30, 0, 0));
+
+            if(rotation == "superdown")
+				RotationSweepTestPivot.transform.localRotation = Quaternion.Euler(new Vector3(60, 0, 0));
+
+
+            if(rotation == "forward")
+				RotationSweepTestPivot.transform.localRotation = Quaternion.Euler(new Vector3(0, 0, 0));
+
 
          
 
@@ -380,7 +445,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			{
 				Rigidbody ItemRB = ItemInHand.GetComponent<Rigidbody>();
 				if (ItemRB.SweepTest(HandSweepPosition.transform.position - AgentHand.transform.position, out hit,
-                     Vector3.Distance(HandSweepPosition.transform.position, AgentHand.transform.position)))
+				                     Vector3.Distance(HandSweepPosition.transform.position, AgentHand.transform.position), 
+				                     QueryTriggerInteraction.Ignore))
                 {
 					print(hit.transform.name);
                     //ignore hits if it is the Agent itself or the Agent's Hand
@@ -409,6 +475,19 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 						}
                     }
+
+					else
+					{
+
+						print("why");
+
+						if (rotation == "right")
+                        {
+                            Debug.Log("Rotation to the RIGHT 90 degrees is possible!");
+                            result = true;
+                        }
+
+					}
      
                 }
 
@@ -432,7 +511,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		}
         
         //If an object is in the agent's hand, sweeptest desired move distance to check for blocking objects
-		public bool CheckIfHandBlocksMovement(float moveMagnitude, string direction)
+		public bool CheckIfHandBlocksAgentMovement(float moveMagnitude, string direction)
 		{
 			bool result = false;
 
@@ -501,6 +580,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
 					dir = gameObject.transform.forward;
 					break;
 
+				case "backward":
+					dir = -gameObject.transform.forward;
+					break;
+
 				case "left":
 					dir = -gameObject.transform.right;
 					break;
@@ -510,7 +593,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 					break;
                 
 				default:
-					Debug.Log("Incorrect direction input! Allowed Directions: forward, left, right");
+					Debug.Log("Incorrect direction input! Allowed Directions: forward, backward, left, right");
 					break;
 			}
 
@@ -922,7 +1005,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 if (Input.GetKeyDown(KeyCode.Return))
                 {
                     UnityEngine.EventSystems.EventSystem.current.SetSelectedGameObject(InputFieldObj);
-                    print("input field");
+
                 }
             }
 
@@ -1039,7 +1122,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 //Check Forward Movement
                 if (Input.GetKeyDown(KeyCode.I))
                 {
-                    CheckIfHandBlocksMovement(1.0f, "forward");
+                    CheckIfHandBlocksAgentMovement(1.0f, "forward");
                     //CheckIfAgentCanMove(1.0f, "forward");
                  
                 }
@@ -1053,7 +1136,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
                 if (Input.GetKeyDown(KeyCode.L))
                 {
-                    CheckIfHandBlocksMovement(1.0f, "right");
+                    CheckIfHandBlocksAgentMovement(1.0f, "right");
                     //CheckIfAgentCanMove(1.0f, "right");
                 }
 
@@ -1077,7 +1160,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 				if(Cursor.visible == false)
 				{
-					RotateView();
+					MouseRotateView();
 				}
 			}
 
@@ -1128,7 +1211,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			//}
 		}
 
-		private void RotateView()
+		private void MouseRotateView()
 		{
 			if (/*!captureScreenshot &&*/ rotateMouseLook) {
 				m_MouseLook.LookRotation (transform, m_Camera.transform);
@@ -1137,6 +1220,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
         private void FPSInput()
 		{
+			//print("fps");
 			//// the jump state needs to read here to make sure it is not missed
             //if (!m_Jump)
             //{

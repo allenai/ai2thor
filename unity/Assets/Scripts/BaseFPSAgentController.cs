@@ -49,6 +49,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		protected float[] headingAngles = new float[] { 0.0f, 90.0f, 180.0f, 270.0f };
 		protected float[] horizonAngles = new float[] { 60.0f, 30.0f, 0.0f, 330.0f };
 
+		protected bool PushMode = false;
+
 		protected Dictionary<SimObjType, Dictionary<string, int>> OPEN_CLOSE_STATES = new Dictionary<SimObjType, Dictionary<string, int>>{
 			{SimObjType.Microwave, new Dictionary<string, int>{{"open", 2}, {"close", 1}}},
 			{SimObjType.Laptop, new Dictionary<string, int>{{"open", 2}, {"close", 1}}},
@@ -445,8 +447,16 @@ namespace UnityStandardAssets.Characters.FirstPerson
 				return;
 			}
 
+            if(PushMode)
+			{
+				float pushPower = 2.0f;
+                Vector3 pushDir = new Vector3(hit.moveDirection.x, 0, hit.moveDirection.z);
+                body.velocity = pushDir * pushPower;
+			}
+
+
 			//if we touched something with a rigidbody that needs to simulate physics, generate a force at the impact point
-			body.AddForce(m_CharacterController.velocity * 15f, ForceMode.Acceleration);
+			//body.AddForce(m_CharacterController.velocity * 15f, ForceMode.Force);
             //body.AddForceAtPosition (m_CharacterController.velocity * 15f, hit.point, ForceMode.Acceleration);//might have to adjust the force vector scalar later
 		}
 
