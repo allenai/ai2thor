@@ -271,16 +271,26 @@ public class ImageSynthesis : MonoBehaviour {
 				}
 			}
 
-			if (r.material.name.ToLower().Contains ("lightray")) {
-				objColor.a = 0;
-				classColor.a = 0;
-				mpb.SetFloat ("_Opacity", 0);
-
-			} else {
-				objColor.a = 1;
-				classColor.a = 1;
-				mpb.SetFloat ("_Opacity", 1);
+//			if (r.material.name.ToLower().Contains ("lightray")) {
+//				objColor.a = 0;
+//				classColor.a = 0;
+//				mpb.SetFloat ("_Opacity", 0);
+//
+//			} else {
+//				objColor.a = 1;
+//				classColor.a = 1;
+//				mpb.SetFloat ("_Opacity", 1);
+//			}
+//
+			// updated per @danielg - replaces commented out code
+			if (r.material.name.ToLower ().Contains ("lightray")) {
+				r.enabled = false;
+				continue;
 			}
+
+			objColor.a = 1;
+			classColor.a = 1;
+			mpb.SetFloat ("_Opacity", 1);
 
 
 			mpb.SetColor("_CategoryColor", classColor);
