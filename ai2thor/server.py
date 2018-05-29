@@ -96,7 +96,7 @@ class Event(object):
         self.screen_height = metadata['screenHeight']
 
         self.frame = None
-        self.image_depth = None
+        self.frame_depth = None
         self.color_arr = []
         self.color_names = []
         self.color_to_object_id = {}
@@ -204,7 +204,7 @@ class Event(object):
         image_depth_out[max_spots] = 256
         image_depth_out *= 10.0 / 256.0 * 1000  # converts to meters then to mm
         image_depth_out[image_depth_out > MAX_DEPTH] = MAX_DEPTH
-        self.image_depth = image_depth_out.astype(np.float32)
+        self.frame_depth = image_depth_out.astype(np.float32)
 
     def add_image(self, image_data):
         self.image_data = image_data
