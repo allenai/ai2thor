@@ -33,6 +33,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		private Dictionary<string, SimObj> inventory = new Dictionary<string, SimObj>();
 
         protected DebugFPSAgentController DebugComponent = null;
+		public ImageSynthesis imageSynthesis;
         protected Canvas DebugCanvas = null;
 
 		// Initialize parameters from environment variables
@@ -47,10 +48,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
             DebugCanvas.enabled = false;
             DebugComponent.enabled = false;
 
-//			renderImage = LoadBoolVariable (renderImage, "SEND_IMAGE");
-//			renderDepthImage = LoadBoolVariable (renderDepthImage, "SEND_DEPTH_IMAGE");
-//			renderClassImage = LoadBoolVariable (renderClassImage, "SEND_CLASS_IMAGE");
-//			renderObjectImage = LoadBoolVariable (renderObjectImage, "SEND_OBJECT_IMAGE");
 		}
 
 		protected override void actionFinished(bool success) {
@@ -86,7 +83,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			}
 
 			this.continuousMode = action.continuous;
-			 
+
+			if (action.renderDepthImage || action.renderClassImage || action.renderObjectImage) {
+				this.enableImageSynthesis ();
+			}
 
 			if (action.visibilityDistance > 0.0f) {
 				this.maxVisibleDistance = action.visibilityDistance;
@@ -103,6 +103,11 @@ namespace UnityStandardAssets.Characters.FirstPerson
 				gridSize = action.gridSize;
 				StartCoroutine(checkInitializeAgentLocationAction());
 			}
+		}
+
+		private void enableImageSynthesis() {
+			imageSynthesis = this.gameObject.GetComponentInChildren<ImageSynthesis> () as ImageSynthesis;
+			imageSynthesis.enabled = true;			
 		}
 
 		public override MetadataWrapper generateMetadataWrapper() {
@@ -297,21 +302,20 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			bool result = false;
 			//Debug.Log ("checkOpenAction");
 			for (int i = 0; i < actionDuration; i++) {
-				Debug.Log ("checkOpenAction action duration " + i);
+				//Debug.Log ("checkOpenAction action duration " + i);
 				//Debug.Log ("Action duration " + i);
 				Vector3 currentPosition = this.transform.position;
-				Debug.Log ("collided in open");
+				//Debug.Log ("collided in open");
 
 				currentPosition = this.transform.position;
 				for (int j = 0; j < actionDuration; j++) {
-					Debug.Log ("yield return null");
 					yield return null;
 				}
 				Vector3 snapDiff = currentPosition - this.transform.position;
 				snapDiff.y = Mathf.Min (Math.Abs(snapDiff.y), 0.05f);
-				Debug.Log ("currentY " + currentPosition.y);
-				Debug.Log ("positionY " + this.transform.position.y);
-				Debug.Log ("snapDiff " + snapDiff.y);
+//				Debug.Log ("currentY " + currentPosition.y);
+//				Debug.Log ("positionY " + this.transform.position.y);
+//				Debug.Log ("snapDiff " + snapDiff.y);
 				if (snapDiff.magnitude >= 0.005f) {
 					result = false;
 					break;
@@ -426,7 +430,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 				}
 				receptacleObjects.Add (receptacleType, objectTypes);
 			}
-
+			Debug.Log ("random seed:Z " + response.randomSeed);
 			System.Random rnd = new System.Random (response.randomSeed);
 			SimObj[] simObjects = GameObject.FindObjectsOfType (typeof(SimObj)) as SimObj[];
 			int pickupableCount = 0;
@@ -464,8 +468,11 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			List<SimObj> simObjectsFiltered = new List<SimObj> ();
 			for (int i = 0; i < simObjects.Length; i++) {
 				SimObj so = simObjects [i];
+
 				if (IsPickupable(so) && pickupable.Contains (so.Type)) {
 					double val = rnd.NextDouble ();
+	
+
 					if (val > response.removeProb) {
 						// Keep the item
 						int numRepeats = 1;
@@ -488,8 +495,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			}
 
 
-
-			bool[] consumedObjects = new bool[simObjects.Length];
+			simObjects = simObjectsFiltered.ToArray ();
 			int randomTries = 0;
 			HashSet<SimObjType> seenObjTypes = new HashSet<SimObjType> ();
 			while (pickupableCount > 0) {
@@ -499,26 +505,32 @@ namespace UnityStandardAssets.Characters.FirstPerson
 					break;
 				}
 				randomTries++;
-				foreach (SimObj so in simObjects) {
-					if (so.IsReceptacle && !excludeObject(so)) {
-						int totalRandomObjects = rnd.Next (1, so.Receptacle.Pivots.Length + 1);
-						for (int i = 0; i < totalRandomObjects; i++) {
-							for (int j = 0; j < simObjects.Length; j++) {
 
-								if (Array.Exists (response.excludeReceptacleObjectPairs, e => e.objectId == simObjects [j].UniqueID && e.receptacleObjectId == so.UniqueID)) {
-									Debug.Log ("skipping object id receptacle id pair, " + simObjects [j].UniqueID + " " + so.UniqueID);
-									continue;
-								}
+				int[] randomOrder = new int[simObjects.Length];
+				for (int rr = simObjects.Length - 1; rr >= 0; rr--) {
+					int randomLoc = simObjects.Length - 1 - rnd.Next(0, (simObjects.Length - rr));
+					randomOrder [rr] = randomOrder [randomLoc];
+					randomOrder [randomLoc] = rr;
+				}
+				for (int ss = 0; ss < simObjects.Length; ss++) {
+					int j = randomOrder [ss];
+					foreach (SimObj so in simObjects) {
+						if (so.IsReceptacle && !excludeObject (so)) {
+							if (response.excludeReceptacleObjectPairs != null &&
+								Array.Exists (response.excludeReceptacleObjectPairs, e => e.objectId == simObjects [j].UniqueID && e.receptacleObjectId == so.UniqueID)) {
+								//Debug.Log ("skipping object id receptacle id pair, " + simObjects [j].UniqueID + " " + so.UniqueID);
+								continue;
+							}
 
-								if (!consumedObjects[j] && IsPickupable(simObjects[j]) && 
-									receptacleObjects[so.Type].Contains(simObjects[j].Type) && 
-									(!response.uniquePickupableObjectTypes || !seenObjTypes.Contains(simObjects[j].Type)) &&
-									SimUtil.AddItemToReceptacle (simObjects [j], so.Receptacle)) {
-									consumedObjects [j] = true;
-									seenObjTypes.Add (simObjects [j].Type);
-									pickupableCount--;
-									break;
-								}
+							if (IsPickupable (simObjects [j]) &&
+								receptacleObjects.ContainsKey (so.Type) &&
+								receptacleObjects [so.Type].Contains (simObjects [j].Type) &&
+								(!response.uniquePickupableObjectTypes || !seenObjTypes.Contains (simObjects [j].Type)) &&
+								SimUtil.AddItemToReceptacle (simObjects [j], so.Receptacle)) {
+								//Debug.Log ("Put " + simObjects [j].Type + " " + simObjects[j].name + " in " + so.Type);
+								seenObjTypes.Add (simObjects [j].Type);
+								pickupableCount--;
+								break;
 							}
 
 						}
@@ -540,9 +552,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
 				}
 			}
 
-			var im_synth = m_Camera.GetComponent<ImageSynthesis> ();
-			if (im_synth != null) {
-				im_synth.OnSceneChange ();
+
+			if (imageSynthesis != null) {
+				imageSynthesis.OnSceneChange ();
 			}
 
 			actionFinished(success);
@@ -717,15 +729,20 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		public void OpenObject(ServerAction action) 
         {
 			bool success = false;
+			SimObj openedSimObj = null;
 			foreach (SimObj so in VisibleSimObjs(action)) 
             {
 
 				success = openSimObj(so);
-
+				openedSimObj = so;
 				break;
 			}
 
-			StartCoroutine(checkWaitAction(success));
+			if (success) {
+				StartCoroutine (checkOpenAction (openedSimObj));
+			} else {
+				StartCoroutine(checkWaitAction(success));
+			}
 		}
 
 		public void CloseObject(ServerAction action) {

@@ -383,7 +383,9 @@ class Controller(object):
             random_seed=None,
             randomize_open=False,
             unique_object_types=False,
-            exclude_receptacle_object_pairs=[]):
+            exclude_receptacle_object_pairs=[],
+            max_num_repeats=1,
+            remove_prob=0.5):
 
         receptacle_objects = []
 
@@ -413,6 +415,8 @@ class Controller(object):
             uniquePickupableObjectTypes=unique_object_types,
             excludeObjectIds=exclude_object_ids,
             excludeReceptacleObjectPairs=exclude_receptacle_object_pairs,
+            maxNumRepeats=max_num_repeats,
+            removeProb=remove_prob,
             randomSeed=random_seed))
 
     def scene_names(self):

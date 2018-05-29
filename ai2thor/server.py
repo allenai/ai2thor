@@ -95,19 +95,26 @@ class Event(object):
         self.screen_width = metadata['screenWidth']
         self.screen_height = metadata['screenHeight']
 
-        # XXX may want this to be None when we don't have it? since it could be misleading?
-        self.frame = np.zeros((self.screen_width, self.screen_height, 3), dtype=np.uint8)
+        self.frame = None
         self.image_depth = None
         self.color_arr = []
         self.color_names = []
         self.color_to_object_id = {}
-        self.process_colors()
         self.bounds2D = {}
         self.masks = {}
+        self.frame_ids = None
+        self.frame_classes = None
         self.detections = {}
         self.detection_images = {}
-        
+        self.process_colors()
+        self.process_visible_bounds2D()
 
+    def process_visible_bounds2D(self):
+        if len(self.bounds2D) > 0:
+            for obj in self.metadata['objects']:
+                obj['visibleBounds2D'] = (obj['visible'] and obj['objectId'] in self.bounds2D)
+
+    # XXX add caching???
     def process_colors(self):
         for color_data in self.metadata['colors']:
             color = np.array([color_data['color']['r'], color_data['color']['g'], color_data['color']['b']])
@@ -124,6 +131,9 @@ class Event(object):
         return [obj for obj in self.metadata['objects'] if obj['objectType'] == object_type]
 
     def process_colors_ids(self):
+        if self.frame_ids is None:
+            return
+
         MIN_DETECTION_LEN = 10
 
         OBJECT_CLASS_TO_COCO_CLASS = {
@@ -185,7 +195,6 @@ class Event(object):
                     self.bounds2D[color_name] = bb
                     color_ind = np.argmin(np.sum(np.abs(unique_ids - color), axis=1))
                     self.masks[color_name] = unique_masks[color_ind, ...]
-
 
     def add_image_depth(self, image_depth_data):
 
@@ -408,9 +417,7 @@ class Server(object):
                 raise Exception("Sequence id mismatch: %s vs %s" % (
                     metadata['sequenceId'], self.sequence_id))
 
-            self.last_event = event = Event(metadata)
-
-            print(list(form.files.keys()))
+            #print(list(form.files.keys()))
 
             image_mapping = dict(
                 image=event.add_image,
@@ -423,6 +430,7 @@ class Server(object):
                 if key in form.files:
                     image_mapping[key](form.files[key][0])
 
+            # XXX restore
             event.process_colors_ids()
 
             request_queue.put_nowait(event)
