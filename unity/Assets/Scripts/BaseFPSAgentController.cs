@@ -119,6 +119,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 		// Initialize parameters from environment variables
 		protected virtual void Awake() {
+			Application.targetFrameRate = 300;
+            QualitySettings.vSyncCount = 0;
 
 			// whether it's in training or test phase
 			bool trainPhase = true;

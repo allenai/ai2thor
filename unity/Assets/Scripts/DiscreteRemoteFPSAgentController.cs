@@ -33,6 +33,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		private SimObj currentMaskObj;
 		private SimObj currentHandSimObj;
 		private static float gridSize = 0.25f;
+		private Texture2D tex;
+		private Rect readPixelsRect;
 
 
 		private enum emitStates {Send, Wait, Received};
@@ -51,6 +53,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			serverSideScreenshot = LoadBoolVariable (serverSideScreenshot, "SERVER_SIDE_SCREENSHOT");
 			robosimsClientToken = LoadStringVariable (robosimsClientToken, "CLIENT_TOKEN");
 
+			tex = new Texture2D(UnityEngine.Screen.width, UnityEngine.Screen.height, TextureFormat.RGB24, false);
+            readPixelsRect = new Rect(0, 0, UnityEngine.Screen.width, UnityEngine.Screen.height);
 			base.Awake ();
 
 		}
@@ -446,19 +450,11 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			WWWForm form = new WWWForm();
 
 			if (!serverSideScreenshot) {
-				// create a texture the size of the screen, RGB24 format
-				int width = Screen.width;
-				int height = Screen.height;
-				Texture2D tex = new Texture2D(width, height, TextureFormat.RGB24, false);
-
 				// read screen contents into the texture
-				tex.ReadPixels(new Rect(0, 0, width, height), 0, 0);
+				tex.ReadPixels(readPixelsRect, 0, 0);
 				tex.Apply();
-
-				// encode texture into JPG - XXX SHOULD SET QUALITY
-				byte[] bytes = tex.EncodeToPNG();
-				Destroy(tex);
-				form.AddBinaryData("image", bytes, "frame-" + frameCounter.ToString().PadLeft(7, '0') + ".png", "image/png");
+				byte[] bytes = tex.GetRawTextureData();
+				form.AddBinaryData("image", bytes, "frame-" + frameCounter.ToString().PadLeft(7, '0') + ".rgb", "image/raw-rgb");
 			}
 
 			// for testing purposes, also write to a file in the project folder
