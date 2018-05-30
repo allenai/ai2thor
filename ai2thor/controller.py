@@ -13,6 +13,7 @@ import io
 import json
 import logging
 import math
+import time
 import random
 import shlex
 import signal
@@ -22,6 +23,9 @@ import threading
 import os
 import platform
 import uuid
+import tty
+import sys
+import termios
 try:
     from queue import Queue
 except ImportError:
@@ -38,7 +42,6 @@ from ai2thor.server import queue_get
 from ai2thor._builds import BUILDS
 
 logger = logging.getLogger(__name__)
-
 
 RECEPTACLE_OBJECTS = {
     'Box': {'Candle',
@@ -317,7 +320,15 @@ RECEPTACLE_OBJECTS = {
     'ToiletPaperHanger': {'ToiletPaper'},
     'TowelHolder': {'Cloth'}}
 
-
+def get_term_character():
+    fd = sys.stdin.fileno()
+    old_settings = termios.tcgetattr(fd)
+    try:
+        tty.setraw(sys.stdin.fileno())
+        ch = sys.stdin.read(1)
+    finally:
+        termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
+    return ch
 
 def process_alive(pid):
     """
@@ -327,7 +338,7 @@ def process_alive(pid):
     """
     try:
         os.kill(pid, 0)
-    except ProcessLookupError:
+    except OSError:
         return False
 
     return True
@@ -359,6 +370,7 @@ class Controller(object):
         self.local_executable_path = None
         self.last_event = None
         self.server_thread = None
+        self.killing_unity = False
 
     def reset(self, scene_name=None):
         self.response_queue.put_nowait(dict(action='Reset', sceneName=scene_name, sequenceId=0))
@@ -411,15 +423,113 @@ class Controller(object):
 
         return scenes
 
-    def step(self, action, raise_for_failure=False):
-        if not self._check_action(action):
-            new_event = ai2thor.server.Event(
-                json.loads(json.dumps(self.last_event.metadata)),
-                self.last_event.image)
+    def next_interact_command(self):
+        current_buffer = ''
+        while True:
+            commands = self._interact_commands
+            current_buffer += get_term_character()
+            if current_buffer == 'q' or current_buffer == '\x03':
+                break
 
-            new_event.metadata['lastActionSuccess'] = False
-            self.last_event = new_event
-            return new_event
+            if current_buffer in commands:
+                yield commands[current_buffer]
+                current_buffer = ''
+            else:
+                match = False
+                for k,v in commands.items():
+                    if k.startswith(current_buffer):
+                        match = True
+                        break
+
+                if not match:
+                    current_buffer = ''
+
+    def interact(self):
+        default_interact_commands = {
+            '\x1b[C': dict(action='MoveRight', moveMagnitude=0.25),
+            '\x1b[D': dict(action='MoveLeft', moveMagnitude=0.25),
+            '\x1b[A': dict(action='MoveAhead', moveMagnitude=0.25),
+            '\x1b[B': dict(action='MoveBack', moveMagnitude=0.25),
+            '\x1b[1;2A': dict(action='LookUp'),
+            '\x1b[1;2B': dict(action='LookDown'),
+            '\x1b[1;2C': dict(action='RotateRight'),
+            '\x1b[1;2D': dict(action='RotateLeft')
+        }
+
+        self._interact_commands = default_interact_commands.copy()
+
+        command_message = u"Enter a Command: Move \u2190\u2191\u2192\u2193, Rotate/Look Shift + \u2190\u2191\u2192\u2193, Quit 'q' or Ctrl-C"
+        print(command_message)
+        for a in self.next_interact_command():
+            new_commands = {}
+            command_counter = dict(counter=1)
+            def add_command(cc, action, **args):
+                if cc['counter'] < 10:
+                    com = dict(action=action)
+                    com.update(args)
+                    new_commands[str(cc['counter'])] = com
+                    cc['counter'] += 1
+
+            event = self.step(a)
+            # check inventory
+            visible_objects = []
+            for o in event.metadata['objects']:
+                if o['visible']:
+                    visible_objects.append(o['objectId'])
+                    if o['openable']:
+                        if o['isopen']:
+                            add_command(command_counter, 'CloseObject', objectId=o['objectId'])
+                        else:
+                            add_command(command_counter, 'OpenObject', objectId=o['objectId'])
+                    if len(event.metadata['inventoryObjects']) > 0:
+                        if o['receptacle'] and (not o['openable'] or o['isopen']):
+                            inventoryObjectId = event.metadata['inventoryObjects'][0]['objectId']
+                            add_command(command_counter, 'PutObject', objectId=inventoryObjectId, receptacleObjectId=o['objectId'])
+
+                    elif o['pickupable']:
+                        add_command(command_counter, 'PickupObject', objectId=o['objectId'])
+
+            self._interact_commands = default_interact_commands.copy()
+            self._interact_commands.update(new_commands)
+
+            print(command_message)
+            print("Visible Objects:\n" + "\n".join(sorted(visible_objects)))
+
+
+            skip_keys = ['action', 'objectId']
+            for k in sorted(new_commands.keys()):
+                v = new_commands[k]
+                command_info = [k + ")", v['action']]
+                if 'objectId' in v:
+                    command_info.append(v['objectId'])
+
+                for a, av in v.items():
+                    if a in skip_keys:
+                        continue
+                    command_info.append("%s: %s" % (a, av))
+
+                print(' '.join(command_info))
+
+
+    def step(self, action, raise_for_failure=False):
+
+        # XXX should be able to get rid of this with some sort of deprecation warning
+        if 'AI2THOR_VISIBILITY_DISTANCE' in os.environ:
+            action['visibilityDistance'] = float(os.environ['AI2THOR_VISIBILITY_DISTANCE'])
+
+        if action['action'] == 'PutObject':
+            receptacle_type = action['receptacleObjectId'].split('|')[0]
+            object_type = action['objectId'].split('|')[0]
+            if object_type not in RECEPTACLE_OBJECTS[receptacle_type]:
+                new_event = ai2thor.server.Event(
+                    json.loads(json.dumps(self.last_event.metadata)),
+                    self.last_event.image_data)
+
+                new_event.metadata['lastActionSuccess'] = False
+                new_event.metadata['errorCode'] = 'ObjectNotAllowedInReceptacle'
+                self.last_event = new_event
+                return new_event
+
         assert self.request_queue.empty()
 
         # Converts numpy scalars to python scalars so they can be encoded in
@@ -466,9 +576,9 @@ class Controller(object):
             command = self.unity_command(width, height)
             proc = subprocess.Popen(command, env=env)
             self.unity_pid = proc.pid
-            atexit.register(lambda: proc.kill())
+            atexit.register(lambda: proc.poll() is None and proc.kill())
             returncode = proc.wait()
-            if returncode != 0:
+            if returncode != 0 and not self.killing_unity:
                 raise Exception("command: %s exited with %s" % (command, returncode))
 
     def check_docker(self):
@@ -537,9 +647,6 @@ class Controller(object):
             os.chmod(self.executable_path(), 0o755)
         else:
             logger.debug("%s exists - skipping download" % self.executable_path())
-    
-
-
 
     def start(
             self,
@@ -549,6 +656,10 @@ class Controller(object):
             player_screen_height=300,
             x_display=None,
             enable_remote_viewer=False):
+
+        if 'AI2THOR_VISIBILITY_DISTANCE' in os.environ:
+            import warnings
+            warnings.warn("AI2THOR_VISIBILITY_DISTANCE environment variable is deprecated, use the parameter visibilityDistance parameter with the Initialize action instead")
 
         if player_screen_height < 300 or player_screen_width < 300:
             raise Exception("Screen resolution must be >= 300x300")
@@ -614,9 +725,10 @@ class Controller(object):
         return self.last_event
 
     def stop(self):
-        self.stop_unity()
-        self.stop_container()
+        self.response_queue.put_nowait({})
         self.server.wsgi_server.shutdown()
+        self.stop_container()
+        self.stop_unity()
 
     def stop_container(self):
         if self.container_id:
@@ -625,10 +737,14 @@ class Controller(object):
 
     def stop_unity(self):
         if self.unity_pid and process_alive(self.unity_pid):
-            os.kill(self.unity_pid, signal.SIGKILL)
-
-    def _check_action(self, _):
-        return True
+            self.killing_unity = True
+            os.kill(self.unity_pid, signal.SIGTERM)
+            for i in range(10):
+                if not process_alive(self.unity_pid):
+                    break
+                time.sleep(0.1)
+            if process_alive(self.unity_pid):
+                os.kill(self.unity_pid, signal.SIGKILL)
 
 class BFSSearchPoint:
     def __init__(self, start_position, move_vector, heading_angle=0.0, horizon_angle=0.0):
@@ -883,6 +999,12 @@ class BFSController(Controller):
                 unique_object_types=True,
                 exclude_receptacle_object_pairs=receptacle_object_pairs)
 
+        # there is some randomization in initialize scene
+        # and if a seed is passed in this will keep it 
+        # deterministic
+        if random_seed is not None:
+            random.seed(random_seed)
+
         self.initialize_scene()
         while self.queue:
             self.queue_step()
@@ -1031,10 +1153,10 @@ class BFSController(Controller):
                         lambda x: x['visible'] and x['pickupable'],
                         event.metadata['objects']):
 
-                    if obj['objectId'] in object_receptacle and\
-                            object_receptacle[obj['objectId']]['openable'] and not \
-                            object_receptacle[obj['objectId']]['isopen']:
-                        continue
+                    #if obj['objectId'] in object_receptacle and\
+                    #        object_receptacle[obj['objectId']]['openable'] and not \
+                    #        object_receptacle[obj['objectId']]['isopen']:
+                    #    continue
 
                     seen_target_objects[obj['objectId']].append(dict(
                         distance=obj['distance'],
@@ -1050,9 +1172,13 @@ class BFSController(Controller):
         self.open_receptacles = []
         open_pickupable = {}
         pickupable = {}
+        is_open = {}
+
         for obj in filter(lambda x: x['receptacle'], self.last_event.metadata['objects']):
             for oid in obj['receptacleObjectIds']:
                 self.object_receptacle[oid] = obj
+
+            is_open[obj['objectId']] = (obj['openable'] and obj['isopen'])
 
         for obj in filter(lambda x: x['receptacle'], self.last_event.metadata['objects']):
             for oid in obj['receptacleObjectIds']:
@@ -1079,6 +1205,8 @@ class BFSController(Controller):
                     break
 
         for roid in set(map(lambda x: open_pickupable[x], self.target_objects)):
+            if roid in is_open:
+                continue
             self.open_receptacles.append(roid)
             self.step(dict(
                 action='OpenObject',

@@ -3,8 +3,8 @@ import datetime
 import zipfile
 from invoke import task
 import hashlib
-import pprint
 import subprocess
+import pprint
 
 S3_BUCKET='ai2-thor'
 
@@ -19,7 +19,6 @@ def add_files(zipf, start_dir):
 
 def push_build(build_archive_name):
     import boto3
-    import subprocess
     #subprocess.run("ls %s" % build_archive_name, shell=True)
     #subprocess.run("gsha256sum %s" % build_archive_name)
     s3 = boto3.resource('s3')
@@ -31,7 +30,8 @@ def push_build(build_archive_name):
 
 def _build(context, arch, build_name):
     project_path = os.path.join(os.getcwd(), 'unity')
-    command = "/Applications/Unity/Unity.app/Contents/MacOS/Unity -quit -batchmode -logFile build.log -projectpath %s -executeMethod Build.%s" % (project_path, arch)
+    command = "/Applications/Unity-2017.3.1f1/Unity.app/Contents/MacOS/Unity -quit -batchmode -logFile build.log -projectpath %s -executeMethod Build.%s" % (project_path, arch)
+
     return context.run(command, warn=True, env=dict(UNITY_BUILD_NAME=build_name))
 
 @task
@@ -118,10 +118,21 @@ def build(context, local=False):
         else:
             raise Exception("Build Failure")
 
-        with open("ai2thor/_builds.py", "w") as fi:
-            fi.write("# GENERATED FILE - DO NOT EDIT\n")
-            fi.write("VERSION = '%s'\n" % version)
-            fi.write("BUILDS = " + pprint.pformat(builds))
+    with open("ai2thor/_builds.py", "w") as fi:
+        fi.write("# GENERATED FILE - DO NOT EDIT\n")
+        fi.write("VERSION = '%s'\n" % version)
+        fi.write("BUILDS = " + pprint.pformat(builds))
 
     increment_version()
     build_docker(version)
+
+@task
+def interact(ctx, scene):
+    import ai2thor.controller
+
+    env = ai2thor.controller.Controller( )
+    e = env.start(player_screen_width=600, player_screen_height=600)
+    event = env.reset(scene)
+    env.step(dict(action='Initialize', gridSize=0.25))
+    env.interact()
+    env.stop()
