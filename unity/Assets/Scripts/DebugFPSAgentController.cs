@@ -115,37 +115,42 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 Cursor.visible = false;
                 Cursor.lockState = CursorLockMode.Locked;
             }
-            
 
-			//Time.timeScale = 10.0f;
         }
 
         public void MoveAgent(string direction, float magnitude)
 		{
-			if(direction == "forward")
-			{
+			//checks for if any object is obstructing agent/agent hand movement before executing move
 
+			if(direction == "forward" && CheckIfHandBlocksAgentMovement(magnitude, "forward")
+			   && CheckIfAgentCanMove(magnitude, "forward"))
+			{
 				Vector3 motion = transform.forward * magnitude;
                 motion.y = Physics.gravity.y * m_GravityMultiplier;
                 m_CharacterController.Move(motion);
 			}
 
-			if (direction == "backward")
-            {
+			if (direction == "backward" && CheckIfAgentCanMove(magnitude, "backward"))
+            {            
 				Vector3 motion = -transform.forward * magnitude;
                 motion.y = Physics.gravity.y * m_GravityMultiplier;
                 m_CharacterController.Move(motion);
             }
 
-			if (direction == "left")
+			if (direction == "left" && CheckIfHandBlocksAgentMovement(magnitude, "left")
+			    && CheckIfAgentCanMove(magnitude, "left"))
             {
+				CheckIfHandBlocksAgentMovement(magnitude, "left");
+
 				Vector3 motion = -transform.right * magnitude;
                 motion.y = Physics.gravity.y * m_GravityMultiplier;
                 m_CharacterController.Move(motion);
             }
 
-			if (direction == "right")
+			if (direction == "right" && CheckIfHandBlocksAgentMovement(magnitude, "right")
+			    && CheckIfAgentCanMove(magnitude, "right"))
             {
+				CheckIfHandBlocksAgentMovement(magnitude, "right");
 				Vector3 motion = transform.right * magnitude; 
 				motion.y = Physics.gravity.y * m_GravityMultiplier;
                 m_CharacterController.Move(motion);
@@ -444,12 +449,14 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			if (ItemInHand != null)
 			{
 				Rigidbody ItemRB = ItemInHand.GetComponent<Rigidbody>();
+
+                //check if the sweep hits anything at all
 				if (ItemRB.SweepTest(HandSweepPosition.transform.position - AgentHand.transform.position, out hit,
 				                     Vector3.Distance(HandSweepPosition.transform.position, AgentHand.transform.position), 
 				                     QueryTriggerInteraction.Ignore))
                 {
 					print(hit.transform.name);
-                    //ignore hits if it is the Agent itself or the Agent's Hand
+                    //If the thing hit was anything except the object itself, the agent, or the agent's hand - it's blocking
 					if (hit.transform != AgentHand.transform && hit.transform != gameObject.transform && hit.transform != ItemInHand.transform)
                     {
 						if(rotation == "right")
@@ -467,25 +474,21 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         if(rotation == "up")
 						{
 							Debug.Log(hit.transform.name + " is in Agent Hand's Path! Can't rotate View UP");
+							result = false;
 						}
 
                         if(rotation == "down")
 						{
 							Debug.Log(hit.transform.name + " is in Agent Hand's Path! Can't rotate View DOWN");
+							result = false;
 
 						}
                     }
 
 					else
 					{
-
-						print("why");
-
-						if (rotation == "right")
-                        {
-                            Debug.Log("Rotation to the RIGHT 90 degrees is possible!");
-                            result = true;
-                        }
+						//the sweep hit something that it is ok to hit (agent itself, agent's hand, object itself somehow)
+						result = true;
 
 					}
      
@@ -493,17 +496,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 				else
                 {
-                    if (rotation == "right")
-                    {
-                        Debug.Log("Rotation to the RIGHT 90 degrees is possible!");
-                        result = true;
-                    }
-
-					else
-                    {
-                        Debug.Log("Rotation to the LEFT 90 degrees is possible!");
-                        result = true;
-                    }
+					//oh we didn't hit anything, good to go
+					result = true;
                 }
 			}
 
@@ -560,6 +554,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 else
                 {
 					Debug.Log("Agent hand holding " + ItemInHand.name + " can move " + direction + " " + moveMagnitude + " units");
+					result = true;
                 }
 			}
          
@@ -602,45 +597,50 @@ namespace UnityStandardAssets.Characters.FirstPerson
             //might need to sweep test all, check for static..... want to be able to try and move through sim objects that can pickup and move yes
 			RaycastHit[] sweepResults = rb.SweepTestAll(dir, moveMagnitude, QueryTriggerInteraction.Ignore);
 
-            //check each of the hit results, check if its tag is a "structure" and if so, we can't move, otherwise clear to move?
-            //i guess also check if it is a sim object, make sure it isn't static?
-			foreach(RaycastHit res in sweepResults)
+            //check if we hit an environmental structure or a sim object that we aren't actively holding. If so we can't move
+			if(sweepResults.Length > 0)
 			{
-				if(res.transform.tag == "Structure")
-				{
-					result = false;
-					Debug.Log(res.transform.name + " is blocking the Agent from moving " + direction);
-					return result;
-				}
+				foreach(RaycastHit res in sweepResults)
+                {
+                    if(res.transform.tag == "Structure")
+                    {
+                        print("hit a structure");
+                        result = false;
+                        Debug.Log(res.transform.name + " is blocking the Agent from moving " + direction);
+                        return result;
+                    }
 
-				if(res.transform.GetComponent<SimObjPhysics>())
-				{
-					SimObjProperty[] resProperties = res.transform.GetComponent<SimObjPhysics>().Properties;
-                    //now check if any of the manip types are Static, if so we can't move through them either
-					foreach(SimObjProperty rmt in resProperties)
-					{
-						if(rmt == SimObjProperty.Static)
-						{
-							result = false;
-							Debug.Log(res.transform.name + " is blocking the Agent from moving " + direction);
-							return result;
-						}
-					}
-				}
+                    //nothing in our hand, so nothing to ignore
+                    if(ItemInHand == null)
+                    {
+                        if(res.transform.GetComponent<SimObjPhysics>())
+                        {
+                            result = false;
+                            Debug.Log(res.transform.name + " is blocking the Agent from moving " + direction);
+                            return result;
+                        }
+                    }
+
+                    //oh if there is something in our hand, ignore it if that is what we hit
+                    if(ItemInHand != null)
+                    {
+                        if(ItemInHand.transform == res.transform)
+                        {
+                            break;
+                        }
+                    }
+                    
+                }
+             
 			}
-         
-			//if(rb.SweepTest(dir, out hit, moveMagnitude, QueryTriggerInteraction.Ignore))
-			//{
-			//	Debug.Log(hit.transform.name + " is blocking the Agent Body's " + direction + " movement");
-			//	result = false;
-			//}
 
-			//else
-			//{
+            //if the array is empty, nothing was hit by the sweeptest so we are clear to move
+			else
+			{
 				Debug.Log("Agent Body can move " + direction);
-				result = true;
-			//}
-            
+                result = true;	
+			}
+
             return result;
 		}
         
@@ -1074,28 +1074,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     DefaultAgentHand();
                 }
 
-                //check if the agent can rotate left or right, return errors if the agent hand would hit anything
-                if (Input.GetKeyDown(KeyCode.Alpha2))
-                {
-                    CheckIfAgentCanRotate("right");
-                }
-
-                if (Input.GetKeyDown(KeyCode.Alpha1))
-                {
-                    CheckIfAgentCanRotate("left");
-                }
-
-				if (Input.GetKeyDown(KeyCode.Alpha3))
-                {
-                    CheckIfAgentCanRotate("up");
-                }
-
-				if (Input.GetKeyDown(KeyCode.Alpha4))
-                {
-                    CheckIfAgentCanRotate("down");
-                }
-                //
-
                 //Rotate tests for objects in agent hand
                 if (Input.GetKeyDown(KeyCode.UpArrow))
                 {
@@ -1115,29 +1093,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 if (Input.GetKeyDown(KeyCode.RightArrow))
                 {
                     RotateSimObjPhysicsInHand(new Vector3(0, 0, -90));
-                }
-                ////////////
-                /// 
-
-                //Check Forward Movement
-                if (Input.GetKeyDown(KeyCode.I))
-                {
-                    CheckIfHandBlocksAgentMovement(1.0f, "forward");
-                    //CheckIfAgentCanMove(1.0f, "forward");
-                 
-                }
-
-                if (Input.GetKeyDown(KeyCode.J))
-                {
-					CheckIfAgentCanRotate("left");
-                   // CheckIfHandBlocksMovement(1.0f, "left");
-                    //CheckIfAgentCanMove(1.0f, "left");
-                }
-
-                if (Input.GetKeyDown(KeyCode.L))
-                {
-                    CheckIfHandBlocksAgentMovement(1.0f, "right");
-                    //CheckIfAgentCanMove(1.0f, "right");
                 }
 
             }
