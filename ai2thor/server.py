@@ -43,6 +43,14 @@ def queue_get(que):
     return res
 
 
+class MultiAgentEvent(object):
+
+    def __init__(self, active_agent_id, events):
+        self._active_event = events[active_agent_id]
+        self.cv2image = self._active_event.cv2image
+        self.metadata = self._active_event.metadata
+        self.events = events
+
 class Event(object):
     """
     Object that is returned from a call to  controller.step().
@@ -54,6 +62,7 @@ class Event(object):
         self.metadata = metadata
         width = metadata['screenWidth']
         height = metadata['screenHeight']
+        self.image_data = image_data
         if sys.version_info.major < 3:
             # support for Python 2.7 - can't handle memoryview in Python2.7 and Numpy frombuffer
             self.frame = np.flip(np.frombuffer(image_data.tobytes(), dtype=np.uint8).reshape(width, height, 3), axis=0)
@@ -87,7 +96,7 @@ class MultipartFormParser(object):
             next_offset = data.find(full_boundary, i + len(full_boundary))
             if next_offset < 0:
                 break
-            headers_offset = i + len(full_boundary) + 2 
+            headers_offset = i + len(full_boundary) + 2
             body_offset = data.find(b'\r\n\r\n', headers_offset)
             raw_headers = view[headers_offset: body_offset]
             body = view[body_offset + 4: next_offset]
@@ -98,17 +107,24 @@ class MultipartFormParser(object):
 
                 k,v = header.split(':')
                 headers[k.strip()] = v.strip()
-            
+
             ctype, ct_opts = werkzeug.http.parse_options_header(headers['Content-Type'])
             cdisp, cd_opts = werkzeug.http.parse_options_header(headers['Content-disposition'])
             assert cdisp == 'form-data'
 
             if 'filename' in cd_opts:
-                self.files[cd_opts['name']] = body
+                if cd_opts['name'] not in self.files:
+                    self.files[cd_opts['name']] = []
+
+                self.files[cd_opts['name']].append(body)
+
             else:
                 if ctype == 'text/plain' and 'charset' in ct_opts:
                     body = body.tobytes().decode(ct_opts['charset'])
-                self.form[cd_opts['name']] = body
+                if cd_opts['name'] not in self.form:
+                    self.form[cd_opts['name']] = []
+
+                self.form[cd_opts['name']].append(body)
 
 
 class Server(object):
@@ -219,7 +235,7 @@ class Server(object):
                 form = request
 
             if self.client_token:
-                token = form.form['token']
+                token = form.form['token'][0]
                 if token is None or token != self.client_token:
                     abort(403)
 
@@ -229,12 +245,21 @@ class Server(object):
                 # print("%s %s/s" % (datetime.datetime.now().isoformat(), rate))
                 self.last_rate_timestamp = now
 
-            metadata = json.loads(form.form['metadata'])
+            metadata = json.loads(form.form['metadata'][0])
+
+            if len(metadata['agents']) > 1:
+                events = []
+                for a in metadata['agents']:
+                    events.append(Event(a, form.files['image'][len(events)]))
+
+                self.last_event = event = MultiAgentEvent(metadata['activeAgentId'], events)
+            else:
+                self.last_event = event = Event(metadata['agents'][0], form.files['image'][0])
+
             if metadata['sequenceId'] != self.sequence_id:
                 raise Exception("Sequence id mismatch: %s vs %s" % (
                     metadata['sequenceId'], self.sequence_id))
 
-            self.last_event = event = Event(metadata, form.files['image'])
             request_queue.put_nowait(event)
             self.frame_counter += 1
 
