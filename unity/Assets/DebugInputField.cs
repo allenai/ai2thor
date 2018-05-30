@@ -51,35 +51,25 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			/// camera rotate stuff
             if(command =="lookup")
 			{
-				AgentController.Look("up");
+				AgentController.LookUp();
     		}
-
-			if (command == "lookforward")
-            {
-				AgentController.Look("forward");
-            }
 
 			if (command == "lookdown")
             {
-				AgentController.Look("down");
+                AgentController.LookDown();
             }
 
-            if( command == "looksuperdown")
-			{
-				AgentController.Look("superdown");
-
-			}
 
             /////////////////////
 			/// rotate
             if (command == "turnleft")
 			{
-				AgentController.Turn("left");
+				AgentController.Turn(-90);
 			}
 
 			if (command == "turnright")
             {
-				AgentController.Turn("right");
+				AgentController.Turn(90);
 
             }
 

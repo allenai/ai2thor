@@ -87,6 +87,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 		public GameObject InputFieldObj = null;
 
+		protected float[] LookAngles = new float[] { 60.0f, 30.0f, 0.0f, -30.0f };//make sure LookAngleIndex defaults to 0.0f's index
+		protected int LookAngleIndex = 2; //keep track of which look angle we are currently on for Looking up/down
+
         private void Start()
         {
             m_CharacterController = GetComponent<CharacterController>();
@@ -310,52 +313,198 @@ namespace UnityStandardAssets.Characters.FirstPerson
         }
       
         //changes agent's rotation, turn left or right
-        public void Turn(string dir)
+  //      public void Turn(string dir)
+		//{
+		//	if( dir == "left")
+		//	{
+		//		if(CheckIfAgentCanRotate("left"))
+		//		{
+		//			//transform.rotation = Quaternion.Euler(new Vector3(0, -90, 0));
+		//			transform.Rotate(transform.rotation.x, transform.rotation.y - 90, transform.rotation.z);
+		//		}
+		//	}
+
+  //          if(dir == "right")
+		//	{
+		//		if (CheckIfAgentCanRotate("right"))
+  //              {
+		//			transform.Rotate(transform.rotation.x, transform.rotation.y + 90, transform.rotation.z);
+  //              }
+		//	}
+		//}
+        
+        //for turning agent left/right
+        public void Turn(int direction)
 		{
-			if( dir == "left")
+			//currently restricting turning to 90 degrees left or right
+			if(direction != 90 && direction != -90)
 			{
-				if(CheckIfAgentCanRotate("left"))
-				{
-					//transform.rotation = Quaternion.Euler(new Vector3(0, -90, 0));
-					transform.Rotate(transform.rotation.x, transform.rotation.y - 90, transform.rotation.z);
-				}
+				Debug.Log("Please give -90(left) or 90(right) as direction parameter");
+				return;
 			}
 
-            if(dir == "right")
+			if(CheckIfAgentCanTurn(direction))
+			transform.Rotate(transform.rotation.x, transform.rotation.y + direction, transform.rotation.z);
+		}
+
+        public bool CheckIfAgentCanTurn(int direction)
+		{
+			bool result = false;
+
+			if (ItemInHand == null)
+            {
+                Debug.Log("Rotation check passed: nothing in Agent Hand");
+                return true;
+            }
+
+			if (direction != 90 && direction != -90)
+            {
+                Debug.Log("Please give -90(left) or 90(right) as direction parameter");
+                return false;
+            }
+
+			//zero out the pivot and default to hand's current position
+			RotationSweepTestPivot.transform.localRotation = Quaternion.Euler(Vector3.zero);
+   			HandSweepPosition.transform.position = AgentHand.transform.position;         
+
+
+			RotationSweepTestPivot.transform.localRotation = Quaternion.Euler(new Vector3(0, direction, 0));
+
+			RaycastHit hit;
+
+			Rigidbody ItemRB = ItemInHand.GetComponent<Rigidbody>();
+
+			//check if the sweep hits anything at all
+			if (ItemRB.SweepTest(HandSweepPosition.transform.position - AgentHand.transform.position, out hit,
+								 Vector3.Distance(HandSweepPosition.transform.position, AgentHand.transform.position),
+								 QueryTriggerInteraction.Ignore))
 			{
-				if (CheckIfAgentCanRotate("right"))
+				//print(hit.transform.name);
+				//If the thing hit was anything except the object itself, the agent, or the agent's hand - it's blocking
+				if (hit.transform != AgentHand.transform && hit.transform != gameObject.transform && hit.transform != ItemInHand.transform)
+				{
+					if (direction == 90)
+					{
+						Debug.Log(hit.transform.name + " is in Agent Hand's Path! Can't rotate Agent RIGHT");
+						result = false;
+					}
+
+					else
+					{
+						Debug.Log(hit.transform.name + " is in Agent Hand's Path! Can't rotate Agent LEFT");
+						result = false;
+					}
+				} 
+
+				else
                 {
-					transform.Rotate(transform.rotation.x, transform.rotation.y + 90, transform.rotation.z);
+                    //the sweep hit something that it is ok to hit (agent itself, agent's hand, object itself somehow)
+                    result = true;
                 }
+			}
+
+			else
+            {
+                //oh we didn't hit anything, good to go
+                result = true;
+            }
+           
+			return result;         
+		}
+
+        public void LookUp()
+		{
+			if(LookAngleIndex < LookAngles.Length - 1)
+			{
+				//look up here, iterate to next upward angle
+				float targetAngle = LookAngles[LookAngleIndex + 1];
+				print("looking up " + targetAngle);
+
+				if(CheckIfAgentCanLook(targetAngle))
+				{
+					m_Camera.transform.localRotation = Quaternion.AngleAxis(targetAngle, Vector3.right);
+                    LookAngleIndex++;
+				}
+
+			}
+
+			else
+			{
+				Debug.Log("Can't LookUp() beyond maximum angle!");
 			}
 		}
 
-        //changes if the agent is looing forward, up, or down
-        public void Look(string where)
+        public void LookDown()
 		{
-			if (where == "up")
+			if(LookAngleIndex > 0)
+			{
+				float targetAngle = LookAngles[LookAngleIndex - 1];
+				print("looking down " + targetAngle);
+				if(CheckIfAgentCanLook(targetAngle))
+				{
+					m_Camera.transform.localRotation = Quaternion.AngleAxis(targetAngle, Vector3.right);
+                    LookAngleIndex--;
+				}            
+			}
+
+			else
+			{
+				Debug.Log("Can't LookDown() below minimum angle!");
+			}
+		}
+
+        public bool CheckIfAgentCanLook(float targetAngle)
+		{
+			print(targetAngle);
+			if (ItemInHand == null)
             {
-                if (CheckIfAgentCanRotate("up"))
-                    m_Camera.transform.localRotation = Quaternion.Euler(new Vector3(-30, 0, 0));
-            }
-            
-            if (where == "forward")
-            {
-                if (CheckIfAgentCanRotate("forward"))
-                    m_Camera.transform.localRotation = Quaternion.Euler(new Vector3(0, 0, 0));
+                Debug.Log("Rotation check passed: nothing in Agent Hand");
+                return true;
             }
 
-            if (where == "down")
+            //returns true if Rotation is allowed
+            bool result = false;
+
+			//zero out the pivot and default to hand's current position
+            RotationSweepTestPivot.transform.localRotation = Quaternion.Euler(Vector3.zero);
+			HandSweepPosition.transform.position = AgentHand.transform.position;
+
+			//rotate pivot to target location, then sweep for obstacles
+			RotationSweepTestPivot.transform.localRotation = Quaternion.AngleAxis(targetAngle, Vector3.right);
+			//RotationSweepTestPivot.transform.localRotation = Quaternion.Euler(new Vector3(targetAngle, 0, 0));
+
+			RaycastHit hit;
+
+            Rigidbody ItemRB = ItemInHand.GetComponent<Rigidbody>();
+
+            //check if the sweep hits anything at all
+            if (ItemRB.SweepTest(HandSweepPosition.transform.position - AgentHand.transform.position, out hit,
+                                 Vector3.Distance(HandSweepPosition.transform.position, AgentHand.transform.position),
+                                 QueryTriggerInteraction.Ignore))
             {
-                if (CheckIfAgentCanRotate("down"))
-                    m_Camera.transform.localRotation = Quaternion.Euler(new Vector3(30, 0, 0));
+                //If the thing hit was anything except the object itself, the agent, or the agent's hand - it's blocking
+                if (hit.transform != AgentHand.transform && hit.transform != gameObject.transform && hit.transform != ItemInHand.transform)
+                {
+					Debug.Log("Can't change view to " + targetAngle + ", " + hit.transform.name + "is blocking the way");
+					result = false;
+                }
+
+                else
+                {
+                    //the sweep hit something that it is ok to hit (agent itself, agent's hand, object itself somehow)
+                    result = true;
+
+                }
+
             }
 
-			if (where == "superdown")
+            else
             {
-                if (CheckIfAgentCanRotate("superdown"))
-                    m_Camera.transform.localRotation = Quaternion.Euler(new Vector3(60, 0, 0));
+                //oh we didn't hit anything, good to go
+                result = true;
             }
+         
+            return result;
 		}
 
         //if the agent were to rotate Left/Right/up/down, would the hand hit anything that should prevent the agent from rotating
@@ -376,12 +525,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 			//first move position to wheever the Agent's hand is
 			HandSweepPosition.transform.position = AgentHand.transform.position;
-
-            if(rotation == "right")
-                RotationSweepTestPivot.transform.localRotation = Quaternion.Euler(new Vector3(0, 90, 0));
-			
-			if(rotation == "left")
-				RotationSweepTestPivot.transform.localRotation = Quaternion.Euler(new Vector3(0, -90, 0));
 			
 			if (rotation == "up")
 				RotationSweepTestPivot.transform.localRotation = Quaternion.Euler(new Vector3(-30, 0, 0));
@@ -391,61 +534,15 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
             if(rotation == "superdown")
 				RotationSweepTestPivot.transform.localRotation = Quaternion.Euler(new Vector3(60, 0, 0));
-
-
+                         
             if(rotation == "forward")
 				RotationSweepTestPivot.transform.localRotation = Quaternion.Euler(new Vector3(0, 0, 0));
+                         
+			//now perform a sweeptest from AgentHand's current position to HandSweepPosition after the rotation
 
+			RaycastHit hit;
 
-         
-
-            //now perform a sweeptest from AgentHand's current position to HandSweepPosition after the rotation
-
-            RaycastHit hit;
-
-
-			//if (ItemInHand == null)
-			//{
-			//	Rigidbody HandRB = AgentHand.GetComponent<Rigidbody>();
-			//	if (HandRB.SweepTest(HandSweepPosition.transform.position - AgentHand.transform.position, out hit,
-   //                  Vector3.Distance(HandSweepPosition.transform.position, AgentHand.transform.position)))
-   //             {
-   //                 //ignore hits if it is the Agent itself or the Agent's Hand
-   //                 if (hit.transform != AgentHand.transform && hit.transform != gameObject.transform)
-   //                 {
-			//			if(rotation == "right")
-			//			{
-			//				Debug.Log(hit.transform.name + " is in Agent Hand's Path! Can't rotate Agent RIGHT");
-   //                         result = false;
-			//			}
-
-			//			else
-			//			{
-			//				Debug.Log(hit.transform.name + " is in Agent Hand's Path! Can't rotate Agent LEFT");
-   //                         result = false;
-			//			}
-
-   //                 }               
-   //             }
-
-			//	else
-   //             {
-   //                 if (direction == 1)
-   //                 {
-   //                     Debug.Log("Rotation to the RIGHT 90 degrees is possible!");
-   //                     result = true;
-   //                 }
-
-   //                 else
-   //                 {
-   //                     Debug.Log("Rotation to the LEFT 90 degrees is possible!");
-   //                     result = true;
-   //                 }
-   //             }
-			//}
-         
-
-            //for i there is an Item in the agent's hand right now
+            //only need to do test if there is an item in hand
 			if (ItemInHand != null)
 			{
 				Rigidbody ItemRB = ItemInHand.GetComponent<Rigidbody>();
@@ -459,17 +556,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     //If the thing hit was anything except the object itself, the agent, or the agent's hand - it's blocking
 					if (hit.transform != AgentHand.transform && hit.transform != gameObject.transform && hit.transform != ItemInHand.transform)
                     {
-						if(rotation == "right")
-                        {
-                            Debug.Log(hit.transform.name + " is in Agent Hand's Path! Can't rotate Agent RIGHT");
-                            result = false;
-                        }
-
-						if(rotation == "left")                       
-						{
-                            Debug.Log(hit.transform.name + " is in Agent Hand's Path! Can't rotate Agent LEFT");
-                            result = false;
-                        }
 
                         if(rotation == "up")
 						{
@@ -626,12 +712,11 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     {
                         if(ItemInHand.transform == res.transform)
                         {
+							result = true;
                             break;
                         }
                     }
-                    
                 }
-             
 			}
 
             //if the array is empty, nothing was hit by the sweeptest so we are clear to move
