@@ -432,7 +432,16 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			}
 			Debug.Log ("random seed:Z " + response.randomSeed);
 			System.Random rnd = new System.Random (response.randomSeed);
+
+
 			SimObj[] simObjects = GameObject.FindObjectsOfType (typeof(SimObj)) as SimObj[];
+			// Sorting to ensure that our randomization is deterministic when using a seed
+			// without sorting, there is no guarantee how the objects will get returned from from FindObjectsOfType
+			// so the shuffle becomes non-deterministic
+			Array.Sort (simObjects, delegate(SimObj a, SimObj b) {
+				return a.UniqueID.CompareTo (b.UniqueID);
+			});
+
 			int pickupableCount = 0;
 			for (int i = 0; i < simObjects.Length; i++) {
 				SimObj so = simObjects [i];
@@ -498,6 +507,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			simObjects = simObjectsFiltered.ToArray ();
 			int randomTries = 0;
 			HashSet<SimObjType> seenObjTypes = new HashSet<SimObjType> ();
+			rnd = new System.Random (response.randomSeed);
 			while (pickupableCount > 0) {
 				if (randomTries > 5) {
 					Debug.Log ("Pickupable count still at, but couldn't place all objects: " + pickupableCount);
