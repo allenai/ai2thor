@@ -92,6 +92,11 @@ namespace UnityStandardAssets.Characters.FirstPerson
 				this.maxVisibleDistance = action.visibilityDistance;
 			}
 
+			if (action.cameraY > 0.0) {
+				Vector3 pos = m_Camera.transform.localPosition;
+				m_Camera.transform.localPosition = new Vector3 (pos.x, action.cameraY, pos.z);
+			}
+
 			if (action.gridSize <= 0 || action.gridSize > 5)
 			{
 				errorMessage = "grid size must be in the range (0,5]";

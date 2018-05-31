@@ -513,6 +513,7 @@ public class ServerAction
 	public bool renderClassImage;
 	public bool renderObjectImage;
 	public string qualitySetting;
+	public float cameraY;
 
 	public SimObjType ReceptableSimObjType()
 	{
