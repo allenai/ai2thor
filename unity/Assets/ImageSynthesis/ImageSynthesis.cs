@@ -250,7 +250,7 @@ public class ImageSynthesis : MonoBehaviour {
 
 			if (simObj != null) {
 				classColor = ColorEncoding.EncodeTagAsColor ("" + simObj.Type);
-				objColor = ColorEncoding.EncodeTagAsColor ("" + simObj.UniqueID + " " + simObj.GetInstanceID());
+				objColor = ColorEncoding.EncodeTagAsColor ("" + simObj.UniqueID);
 
 				//Debug.Log ("renderer type " + simObj.Type + " " + simObj.name + " " + simObj.UniqueID + " " + MD5Hash(simObj.UniqueID) + " " + MD5Hash(simObj.UniqueID).GetHashCode());
 
