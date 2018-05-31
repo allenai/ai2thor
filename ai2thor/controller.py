@@ -63,6 +63,7 @@ RECEPTACLE_OBJECTS = {
                 'ButterKnife',
                 'Candle',
                 'CellPhone',
+                'Cloth',
                 'CoffeeMachine',
                 'Container',
                 'ContainerFull',
