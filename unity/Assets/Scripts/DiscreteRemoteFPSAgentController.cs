@@ -397,6 +397,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			if (!result) {
 				Debug.Log ("Teleport failed");
 				transform.position = lastPosition;
+			} else {
+				Vector3 m = new Vector3 ();
+				m.y = Physics.gravity.y * this.m_GravityMultiplier;
+				m_CharacterController.Move (m);
 			}
 
 			actionFinished (result);
