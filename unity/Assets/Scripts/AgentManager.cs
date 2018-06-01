@@ -76,21 +76,6 @@ public class AgentManager : MonoBehaviour
 		this.renderDepthImage = action.renderDepthImage;
 		this.renderObjectImage = action.renderObjectImage;
 
-		if (action.qualitySetting != null) {
-			bool qualitySet = false;
-			for (int i = 0; i < QualitySettings.names.Length; i++) {
-				if (QualitySettings.names [i].ToLower () == action.qualitySetting.ToLower ()) {
-					Debug.Log ("setting quality level to : " + QualitySettings.names [i]);
-					QualitySettings.SetQualityLevel (i);
-					qualitySet = true;
-					break;
-				}
-			}
-
-			if (!qualitySet) {
-				Debug.LogError ("invalid quality setting: " + action.qualitySetting);
-			}
-		}
 
 	
 		StartCoroutine (addAgents (action));
@@ -231,7 +216,7 @@ public class AgentManager : MonoBehaviour
 		}
 	}
 
-	private void addObjectImageForm(WWWForm form, DiscreteRemoteFPSAgentController agent, MetadataWrapper metadata) {
+	private void addObjectImageForm(WWWForm form, DiscreteRemoteFPSAgentController agent, ref MetadataWrapper metadata) {
 		if (this.renderObjectImage) {
 			if (!agent.imageSynthesis.hasCapturePass("_id")) {
 				Debug.LogError("Object Image not available in imagesynthesis - returning empty image");
@@ -266,7 +251,11 @@ public class AgentManager : MonoBehaviour
 			List<ColorBounds> boundsList = new List<ColorBounds> ();
 			foreach (Color key in colorBounds.Keys) {
 				ColorBounds bounds = new ColorBounds ();
-				bounds.color = key;
+				bounds.color = new byte[] {
+					(byte)Math.Round (key.r * 255),
+					(byte)Math.Round (key.g * 255),
+					(byte)Math.Round (key.b * 255)
+				};
 				bounds.bounds = colorBounds [key];
 				boundsList.Add (bounds);
 			}
@@ -275,7 +264,12 @@ public class AgentManager : MonoBehaviour
 			List<ColorId> colors = new List<ColorId> ();
 			foreach (Color key in agent.imageSynthesis.colorIds.Keys) {
 				ColorId cid = new ColorId ();
-				cid.color = key;
+				cid.color = new byte[] {
+					(byte)Math.Round (key.r * 255),
+					(byte)Math.Round (key.g * 255),
+					(byte)Math.Round (key.b * 255)
+				};
+
 				cid.name = agent.imageSynthesis.colorIds [key];
 				colors.Add (cid);
 			}
@@ -320,7 +314,7 @@ public class AgentManager : MonoBehaviour
 			// we don't need to render the agent's camera for the first agent
 			addImageForm (form, agent, i > 0);
 			addDepthImageForm (form, agent);
-			addObjectImageForm (form, agent, metadata);
+			addObjectImageForm (form, agent, ref metadata);
 			addClassImageForm (form, agent);
 			multiMeta.agents [i] = metadata;
 		}
@@ -421,6 +415,7 @@ public class ObjectMetadata
 	public float distance;
 	public String objectType;
 	public string objectId;
+	public float[] bounds3D;
 	public string parentReceptacle;
 }
 
@@ -440,13 +435,13 @@ public class PivotSimObj
 
 [Serializable]
 public class ColorId {
-	public Color color;
+	public byte[] color;
 	public string name;
 }
 
 [Serializable]
 public class ColorBounds {
-	public Color color;
+	public byte[] color;
 	public int[] bounds;
 }
 
@@ -512,7 +507,6 @@ public class ServerAction
 	public bool renderDepthImage;
 	public bool renderClassImage;
 	public bool renderObjectImage;
-	public string qualitySetting;
 	public float cameraY;
 
 	public SimObjType ReceptableSimObjType()

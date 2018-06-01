@@ -102,6 +102,12 @@ public class SimObj : MonoBehaviour {
 		}
 	}
 
+	public Bounds Bounds {
+		get {
+			return bounds;
+		}
+	}
+
 	public bool VisibleNow = false;
 
 	#if UNITY_EDITOR
@@ -128,6 +134,8 @@ public class SimObj : MonoBehaviour {
 	private bool startedInReceptacle;
 	private bool isAnimating = false;
 	private Transform startupTransform;
+	private Bounds bounds;
+
 
 	public void ResetScale() {
 		Transform tempParent = transform.parent;
@@ -153,6 +161,7 @@ public class SimObj : MonoBehaviour {
 				topPoint = centerPoint + (Vector3.up * r.bounds.extents.y);
 				bottomPoint = centerPoint + (Vector3.down * r.bounds.extents.y);
 			}
+			bounds = r.bounds;
 		} else {
 			//get the first collider
 			Collider c = null;
@@ -171,6 +180,7 @@ public class SimObj : MonoBehaviour {
 					topPoint = centerPoint + (Vector3.up * c.bounds.extents.y);
 					bottomPoint = centerPoint + (Vector3.down * c.bounds.extents.y);
 				}
+				bounds = c.bounds;
 			} else {
 				Debug.Log ("Couldn't calculate center point in " + gameObject.name);
 			}

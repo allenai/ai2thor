@@ -117,9 +117,7 @@ class Event(object):
     # XXX add caching???
     def process_colors(self):
         for color_data in self.metadata['colors']:
-            color = np.array([color_data['color']['r'], color_data['color']['g'], color_data['color']['b']])
-            color *= 255
-            color = np.round(color) # deals with very close round off errors
+            color = np.array(color_data['color'])
             #name = ''.join([x for x in color_data['name'] if x.isalpha()]).lower() # Keep only alpha chars
             name = color_data['name']
             self.color_arr.append(color)
