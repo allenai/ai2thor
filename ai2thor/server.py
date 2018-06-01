@@ -141,7 +141,7 @@ class Server(object):
         self.app = app
         self.client_token = None
         self.subscriptions = []
-        self.app.config.update(PROPAGATE_EXCEPTIONS=True, JSONIFY_PRETTYPRINT_REGULAR=False)
+        self.app.config.update(PROPAGATE_EXCEPTIONS=False, JSONIFY_PRETTYPRINT_REGULAR=False)
         self.port = port
         self.last_rate_timestamp = time.time()
         self.frame_counter = 0
