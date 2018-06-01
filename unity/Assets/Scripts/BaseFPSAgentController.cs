@@ -389,6 +389,15 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 				meta.visible = (visibleObjectIds.Contains(simObj));
 				meta.distance = Vector3.Distance(transform.position, o.transform.position);
+				Bounds bounds = simObj.Bounds;
+				meta.bounds3D = new [] {
+					bounds.min.x,
+					bounds.min.y,
+					bounds.min.z,
+					bounds.max.x,
+					bounds.max.y,
+					bounds.max.z,
+				};
 
 				metadata.Add(meta);
 			}
