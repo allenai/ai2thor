@@ -158,16 +158,14 @@ class Event(object):
             'Cabinet': 'cabinet',
          }
 
-        COCO_CLASS_TO_OBJECT_CLASS = {v : k for k,v in OBJECT_CLASS_TO_COCO_CLASS.items()}
+        COCO_CLASS_TO_OBJECT_CLASS = {v: k for k,v in OBJECT_CLASS_TO_COCO_CLASS.items()}
 
         unique_ids, unique_inverse = unique_rows(self.frame_ids.reshape(-1, 3), return_inverse=True)
         unique_inverse = unique_inverse.reshape(self.frame_ids.shape[:2])
         unique_masks = (np.tile(unique_inverse[np.newaxis, :, :], (len(unique_ids), 1, 1)) == np.arange(len(unique_ids))[:, np.newaxis, np.newaxis])
         #for unique_color_ind, unique_color in enumerate(unique_ids):
         for color_bounds in self.metadata['colorBounds']:
-            color = np.array([color_bounds['color']['r'], color_bounds['color']['g'], color_bounds['color']['b']])
-            color *= 255
-            color = np.round(color) # deals with very close round off errors
+            color = np.array(color_bounds['color'])
             color_name = self.color_to_object_id.get(tuple(int(cc) for cc in color), 'background')
             cls = color_name.lower()
             simObj = False
