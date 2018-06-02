@@ -12,8 +12,8 @@ public class SimObjPhysics : MonoBehaviour
 	public SimObjProperty[] Properties; //is this static, moveable, CanPickup, or a receptacle? Can be multiple manip types, like Pots = CanPIckup and Receptacle
     
 	[SerializeField]
-	public SimObjCategory Category = SimObjCategory.Undefined; //set the type of the prefab in editor
-    
+	//public SimObjCategory Category = SimObjCategory.Undefined; //set the type of the prefab in editor
+	public SimObjType Type = SimObjType.Undefined;
 
 
 	//raycast to this point on the object to check if it is visible
@@ -22,10 +22,13 @@ public class SimObjPhysics : MonoBehaviour
 	[SerializeField]
 	public Transform[] InteractionPoints = null;
 
+	[SerializeField]
+	public Transform[] VisibilityPoints = null;
 
 
 	public bool isVisible = false;
 	public bool isInteractable = false;
+	public bool isColliding = false;
 	//public bool Receptacle = false;
 	//public bool Pickupable = false;
 	//public bool Actionable = false;
@@ -56,13 +59,26 @@ public class SimObjPhysics : MonoBehaviour
 		isInteractable = false;
 	}
 
+	private void FixedUpdate()
+	{
+		isColliding = false;
+
+	}
+
 	private void Generate_UniqueID()
 	{
 		Vector3 pos = this.transform.position;
 		string xPos = (pos.x >= 0 ? "+" : "") + pos.x.ToString("00.00");
 		string yPos = (pos.y >= 0 ? "+" : "") + pos.y.ToString("00.00");
 		string zPos = (pos.z >= 0 ? "+" : "") + pos.z.ToString("00.00");
-		this.UniqueID = this.Category.ToString() + "|" + xPos + "|" + yPos + "|" + zPos;
+		this.UniqueID = this.Type.ToString() + "|" + xPos + "|" + yPos + "|" + zPos;
+	}
+
+	public void OnTriggerStay(Collider other)
+	{
+		if (other.transform.name != "TheHand")
+			isColliding = true;
+		//print(transform.name + "aaaah");
 	}
 
 #if UNITY_EDITOR
