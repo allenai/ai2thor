@@ -24,24 +24,26 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		protected float m_RunSpeed;
 		[SerializeField]
 		protected float m_GravityMultiplier;
-		[SerializeField]
-		protected bool m_UseFovKick;
-		[SerializeField]
-		protected FOVKick m_FovKick = new FOVKick();
-		[SerializeField]
-		private bool m_UseHeadBob;
-		[SerializeField]
-		private CurveControlledBob m_HeadBob = new CurveControlledBob();
-		[SerializeField]
-		protected LerpControlledBob m_JumpBob = new LerpControlledBob();
-		[SerializeField]
-		private float m_StepInterval;
+		//[SerializeField]
+		//protected bool m_UseFovKick;
+		//[SerializeField]
+		//protected FOVKick m_FovKick = new FOVKick();
+		//[SerializeField]
+		//private bool m_UseHeadBob;
+		//[SerializeField]
+		//private CurveControlledBob m_HeadBob = new CurveControlledBob();
+		//[SerializeField]
+		//protected LerpControlledBob m_JumpBob = new LerpControlledBob();
+		//[SerializeField]
+		//private float m_StepInterval;
+
 		protected SimObjType[] OpenableTypes = new SimObjType[] { SimObjType.Fridge, SimObjType.Cabinet, SimObjType.Microwave, SimObjType.LightSwitch, SimObjType.Blinds, SimObjType.Book, SimObjType.Toilet };
 		protected SimObjType[] ImmobileTypes = new SimObjType[] { SimObjType.Chair, SimObjType.Toaster, SimObjType.CoffeeMachine, SimObjType.Television, SimObjType.StoveKnob };
 
 		protected float[] headingAngles = new float[] { 0.0f, 90.0f, 180.0f, 270.0f };
 		protected float[] horizonAngles = new float[] { 60.0f, 30.0f, 0.0f, 330.0f };
 
+        //allow agent to push sim objects that can move
 		protected bool PushMode = false;
 
 		protected Dictionary<SimObjType, Dictionary<string, int>> OPEN_CLOSE_STATES = new Dictionary<SimObjType, Dictionary<string, int>>{
@@ -102,14 +104,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 		// Initialize parameters from environment variables
 		protected virtual void Awake()
-		{
-
-
-			// whether it's in training or test phase
-
-
-
-
+		{         
+			// whether it's in training or test phase         
 			// character controller parameters
 			m_CharacterController = GetComponent<CharacterController>();
 			//float radius = m_CharacterController.radius;
@@ -119,8 +115,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			this.m_WalkSpeed = 2;
 			this.m_RunSpeed = 10;
 			this.m_GravityMultiplier = 2;
-			this.m_UseFovKick = true;
-			this.m_StepInterval = 5;
+			//this.m_UseFovKick = true;
+			//this.m_StepInterval = 5;
 		}
 
 
@@ -129,9 +125,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		{
 			m_Camera = this.gameObject.GetComponentInChildren<Camera> ();
 			//m_OriginalCameraPosition = m_Camera.transform.localPosition;
-			m_FovKick.Setup(m_Camera);
-			m_HeadBob.Setup(m_Camera, m_StepInterval);
-			m_Jumping = false;
+			//m_FovKick.Setup(m_Camera);
+			//m_HeadBob.Setup(m_Camera, m_StepInterval);
+			//m_Jumping = false;
 
 			// set agent initial states
 			targetRotation = transform.rotation;
@@ -284,10 +280,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			transform.rotation = Quaternion.Euler(eulerX, eulerY, 0);
 
 		}
-
-
-
-
+      
 		// Check if agent is collided with other objects
 		protected bool IsCollided()
 		{

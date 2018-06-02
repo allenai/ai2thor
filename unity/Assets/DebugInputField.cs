@@ -64,12 +64,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			/// rotate
             if (command == "turnleft")
 			{
-				AgentController.Turn(-90);
+				AgentController.TurnLeft();
 			}
 
 			if (command == "turnright")
             {
-				AgentController.Turn(90);
+				AgentController.TurnRight();
 
             }
 

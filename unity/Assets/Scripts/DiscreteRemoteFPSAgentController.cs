@@ -7,9 +7,7 @@ using UnityStandardAssets.CrossPlatformInput;
 using UnityStandardAssets.Utility;
 using System.Globalization;
 using UnityEngine.SceneManagement;
-
 using UnityEngine;
-
 
 namespace UnityStandardAssets.Characters.FirstPerson
 {
@@ -17,7 +15,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 	public class DiscreteRemoteFPSAgentController : BaseFPSAgentController
 	{
-
 		protected int actionCounter;
 		protected float moveMagnitude;
 		protected Vector3 targetTeleport;
@@ -28,12 +25,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		private static float gridSize = 0.25f;
 
 		private bool continuousMode;
-
-
-
-
-	
-
+              
 		private Dictionary<string, SimObj> inventory = new Dictionary<string, SimObj>();
 
         protected DebugFPSAgentController DebugComponent = null;
@@ -318,8 +310,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		private IEnumerator checkMoveHandAction() {
 
 			yield return null;
-
-
+           
 			if (currentHandSimObj != null && currentHandSimObj.hasCollision) {
 				Debug.Log ("hand moved object into a collision");
 				errorMessage = "hand object had a collision";

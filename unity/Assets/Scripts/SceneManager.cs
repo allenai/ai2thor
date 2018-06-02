@@ -68,9 +68,7 @@ public class SceneManager : MonoBehaviour {
         this.AnimationMode = SceneAnimationMode.Instant;
 
 	}
-
-	
-
+   
 	//generates a unique ID for a sim object
 	public void AssignUniqueID (SimObj obj) {
 		//unique ID is a string consisting of:
