@@ -97,15 +97,23 @@ class Event(object):
 
         self.frame = None
         self.frame_depth = None
-        self.color_arr = []
-        self.color_names = []
+
         self.color_to_object_id = {}
+        self.object_id_to_color = {}
+
         self.bounds2D = {}
-        self.masks = {}
-        self.frame_ids = None
-        self.frame_classes = None
+        self.instance_masks = {}
+        # XXX todo
+        self.class_masks = {}
+
+        self.instance_segmentation_image = None
+        self.class_segmentation_image = None
+
         self.detections = {}
-        self.detection_images = {}
+
+        self.class_detections2D = {}
+        self.instance_detections2D = {}
+
         self.process_colors()
         self.process_visible_bounds2D()
 
@@ -114,54 +122,25 @@ class Event(object):
             for obj in self.metadata['objects']:
                 obj['visibleBounds2D'] = (obj['visible'] and obj['objectId'] in self.bounds2D)
 
-    # XXX add caching???
     def process_colors(self):
         for color_data in self.metadata['colors']:
-            color = np.array(color_data['color'])
-            #name = ''.join([x for x in color_data['name'] if x.isalpha()]).lower() # Keep only alpha chars
+            name = ''.join([x for x in color_data['name'] if x.isalpha()]).lower()  # Keep only alpha chars
             name = color_data['name']
-            self.color_arr.append(color)
-            self.color_names.append(name)
-            self.color_to_object_id[tuple(int(cc) for cc in color)] = name
-        self.color_arr = np.array(self.color_arr, dtype=np.uint8)
+            c_key = tuple(color_data['color'])
+            self.color_to_object_id[c_key] = name
+            self.object_id_to_color[name] = c_key
 
     def objects_by_type(self, object_type):
         return [obj for obj in self.metadata['objects'] if obj['objectType'] == object_type]
 
     def process_colors_ids(self):
-        if self.frame_ids is None:
+        if self.instance_segmentation_image is None:
             return
 
         MIN_DETECTION_LEN = 10
 
-        OBJECT_CLASS_TO_COCO_CLASS = {
-            'Background': 'background',
-            'Spoon': 'spoon',
-            'Potato': 'potato',
-            'Fork': 'fork',
-            'Plate': 'plate',
-            'Egg': 'egg',
-            'Tomato': 'tomato',
-            'Bowl': 'bowl',
-            'Lettuce': 'lettuce',
-            'Apple': 'apple',
-            'Knife': 'knife',
-            'Container': 'container',
-            'Bread': 'bread',
-            'Mug': 'mug',
-            'Sink': 'sink',
-            'StoveBurner': 'stoveburner',
-            'TableTop': 'table',
-            'GarbageCan': 'garbagecan',
-            'Microwave': 'microwave',
-            'Fridge': 'fridge',
-            'Cabinet': 'cabinet',
-         }
-
-        COCO_CLASS_TO_OBJECT_CLASS = {v: k for k,v in OBJECT_CLASS_TO_COCO_CLASS.items()}
-
-        unique_ids, unique_inverse = unique_rows(self.frame_ids.reshape(-1, 3), return_inverse=True)
-        unique_inverse = unique_inverse.reshape(self.frame_ids.shape[:2])
+        unique_ids, unique_inverse = unique_rows(self.instance_segmentation_image.reshape(-1, 3), return_inverse=True)
+        unique_inverse = unique_inverse.reshape(self.instance_segmentation_image.shape[:2])
         unique_masks = (np.tile(unique_inverse[np.newaxis, :, :], (len(unique_ids), 1, 1)) == np.arange(len(unique_ids))[:, np.newaxis, np.newaxis])
         #for unique_color_ind, unique_color in enumerate(unique_ids):
         for color_bounds in self.metadata['colorBounds']:
@@ -177,20 +156,19 @@ class Event(object):
                 simObj = True
                 color_name = self.objects_by_type('Sink')[0]['objectId']
 
-            if cls not in COCO_CLASS_TO_OBJECT_CLASS:
-                continue
-            cls = COCO_CLASS_TO_OBJECT_CLASS[cls]
             bb = np.array(color_bounds['bounds'])
             bb[[1,3]] = self.metadata['screenHeight'] - bb[[3,1]]
             if not((bb[2] - bb[0]) < MIN_DETECTION_LEN or (bb[3] - bb[1]) < MIN_DETECTION_LEN):
                 if cls not in self.detections:
                     self.detections[cls] = []
-                    self.detection_images[cls] = []
                 self.detections[cls].append(bb)
                 if simObj:
                     self.bounds2D[color_name] = bb
                     color_ind = np.argmin(np.sum(np.abs(unique_ids - color), axis=1))
-                    self.masks[color_name] = unique_masks[color_ind, ...]
+                    self.instance_masks[color_name] = unique_masks[color_ind, ...]
+
+            self.instance_detections2D = self.bounds2D
+            self.class_detections2D = self.detections
 
     def add_image_depth(self, image_depth_data):
 
@@ -207,17 +185,24 @@ class Event(object):
         self.frame = read_buffer_image(image_data, self.screen_width, self.screen_height)
 
     def add_image_ids(self, image_ids_data):
-        self.frame_ids = read_buffer_image(image_ids_data, self.screen_width, self.screen_height)
+        self.instance_segmentation_image = read_buffer_image(image_ids_data, self.screen_width, self.screen_height)
 
     def add_image_classes(self, image_classes_data):
-        self.frame_classes = read_buffer_image(image_classes_data, self.screen_width, self.screen_height)
+        self.class_segmentation_image = read_buffer_image(image_classes_data, self.screen_width, self.screen_height)
 
     def cv2image(self):
         return self.frame[...,::-1]
 
     @property
+    def pose_continuous(self):
+        agent_meta = self.metadata['agent']
+        loc = agent_meta['position']
+        rotation = round(agent_meta['rotation']['y'] * 1000)
+        horizon = round(agent_meta['cameraHorizon'] * 1000)
+        return (round(loc['x'] * 1000), round(loc['z'] * 1000), rotation, horizon)
+
+    @property
     def pose(self):
-        # XXX need to change this to work with continuous
         step_size = 0.25
         agent_meta = self.metadata['agent']
         loc = agent_meta['position']
