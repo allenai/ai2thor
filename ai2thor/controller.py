@@ -533,7 +533,7 @@ class Controller(object):
                 should_fail = True
 
             obj_metadata = self.last_event.get_object(action['objectId'])
-            if obj_metadata is None or obj_metadata['isOpen'] == (action['action'] == 'OpenObject'):
+            if obj_metadata is None or obj_metadata['isopen'] == (action['action'] == 'OpenObject'):
                 should_fail = True
 
         elif action['action'] == 'PutObject':
