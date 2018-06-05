@@ -9,52 +9,38 @@ public class SimObjPhysics : MonoBehaviour
 	public string UniqueID = string.Empty;
 
 	[SerializeField]
-	public SimObjProperty[] Properties; //is this static, moveable, CanPickup, or a receptacle? Can be multiple manip types, like Pots = CanPIckup and Receptacle
+    public SimObjType Type = SimObjType.Undefined;
+
+	[SerializeField]
+	public SimObjPrimaryProperty PrimaryProperty;
     
 	[SerializeField]
-	//public SimObjCategory Category = SimObjCategory.Undefined; //set the type of the prefab in editor
-	public SimObjType Type = SimObjType.Undefined;
+	public SimObjSecondaryProperty[] SecondaryProperties;
 
-
-	//raycast to this point on the object to check if it is visible
-	//if the raycast hits only this object's hitbox, then it is visible
-	//if the raycast is blocked by another object's hitbox, it is not visible
 	[SerializeField]
 	public Transform[] InteractionPoints = null;
 
 	[SerializeField]
 	public Transform[] VisibilityPoints = null;
-
-
+   
 	public bool isVisible = false;
 	public bool isInteractable = false;
 	public bool isColliding = false;
-	//public bool Receptacle = false;
-	//public bool Pickupable = false;
-	//public bool Actionable = false;
-	//public bool Openable = false;
-
-	//center point of the object based on it's Visibility Collider. This is NOT the same collider as the one used for
-	//rigidbody physics, the Visibility Collider is set to isTrigger and is only for the visibility range check.
-	private Vector3 centerPoint;
-
+   
 	//initial position object spawned in in case we want to reset the scene
-	private Vector3 startPosition;
-
-
-
+	//private Vector3 startPosition;   
 
 	// Use this for initialization
 	void Start()
 	{
 		Generate_UniqueID();
+		//startPosition = transform.position;
 	}
 
 	// Update is called once per frame
 	void Update()
 	{
-
-		//this is overriden by the Agent when doing the Visibility Sphere test
+  		//this is overriden by the Agent when doing the Visibility Sphere test
 		isVisible = false;
 		isInteractable = false;
 	}

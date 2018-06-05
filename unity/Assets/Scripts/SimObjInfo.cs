@@ -1,4 +1,5 @@
-﻿using System;
+﻿// DO NOT USE THIS ANYMORE - WAS USED FOR DEBUG TESTING - Please see SimObjType.cs
+using System;
 
 [Serializable]
 public enum SimObjProperty : int //Properties of a SimObjPhysics that determine how they can be interacted with
