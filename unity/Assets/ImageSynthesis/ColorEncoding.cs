@@ -1,4 +1,7 @@
 ﻿using UnityEngine;
+using System.Security.Cryptography;
+
+
 
 public class ColorEncoding
 {
@@ -40,12 +43,13 @@ public class ColorEncoding
 
 	public static Color EncodeTagAsColor(string tag)
 	{
-		var hash = tag.GetHashCode();
-		var a = (byte)(hash >> 24);
-		var r = (byte)(hash >> 16);
-		var g = (byte)(hash >> 8);
-		var b = (byte)(hash);
-		return new Color32 (r, g, b, a);
+		using (MD5 md5 = MD5.Create ()) {
+			
+			byte[] data = md5.ComputeHash(System.Text.Encoding.Default.GetBytes(tag));
+
+			return new Color32 (data[0], data[1], data[2], data[3]);
+		}
+
 	}
 
 	public static Color EncodeLayerAsColor(int layer)
