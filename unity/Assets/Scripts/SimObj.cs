@@ -7,10 +7,15 @@ using System.Collections;
 public class SimObj : MonoBehaviour 
 {
 
-	public string UniqueID {
-		get {
+	public string UniqueID 
+	{
+		get 
+		{
 			return uniqueID;
-		} set {
+		} 
+
+		set 
+		{
 			//TODO add an ID lock
 			uniqueID = value;
 		}

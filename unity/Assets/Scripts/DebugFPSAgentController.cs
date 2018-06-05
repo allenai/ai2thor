@@ -53,16 +53,16 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		public SimObjPhysics[] VisibleObjects; //these objects are within the camera viewport and in range of the agent
 
 		//public GameObject TestObject = null;
-
+        
 		public bool IsHandDefault = true;
 
 		public GameObject InputFieldObj = null;
 
-		protected float[] LookAngles = new float[] { 60.0f, 30.0f, 0.0f, -30.0f };//make sure LookAngleIndex defaults to 0.0f's index
+		protected float[] LookAngles = { 60.0f, 30.0f, 0.0f, -30.0f };//make sure LookAngleIndex defaults to 0.0f's index
 		protected int LookAngleIndex = 2; //default to index 2, since agent defaults looking forward
 
         //set turn angles to prevent floating point error on rotation
-		protected float[] TurnAngles = new float[] { 0.0f, 90.0f, 180.0f, 270.0f };
+		protected float[] TurnAngles = { 0.0f, 90.0f, 180.0f, 270.0f };
 		protected int TurnAngleIndex = 0; 
 
         private void Start()
@@ -142,22 +142,21 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 {
 					if(item.tag == "SimObjPhysics")
 					{
-						//get the SimObjPhysics component from the collider that was found
-                        SimObjPhysics sop = item.GetComponent<SimObjPhysics>();
+						SimObjPhysics sop;
 
-                        //is the sim object in range, check if it is bounds of the camera's viewport
-                        //if (CheckIfInViewport(sop, agentCamera, maxDistance))
-                        //{
-                        //    sop.isVisible = true;
-                        //    currentlyVisibleItems.Add(sop);
+                        //if the object has no compound trigger colliders
+						if (item.GetComponent<SimObjPhysics>())
+						{
+							sop = item.GetComponent<SimObjPhysics>();
+       					}
 
-                        //    //draw a debug line to the object's transform
-                        //    #if UNITY_EDITOR
-                        //    Debug.DrawLine(agentCameraPos, sop.transform.position, Color.yellow);
-                        //    #endif
-                        //}
+                        //if the object does have compount trigger colliders, get the SimObjPhysics component from the parent
+						else
+						{
+							sop = item.GetComponentInParent<SimObjPhysics>();
+						}
 
-						if(sop.VisibilityPoints.Length > 0)
+						if (sop.VisibilityPoints.Length > 0)
 						{
 							Transform[] visPoints = sop.VisibilityPoints;
 							int visPointCount = 0;
@@ -165,25 +164,23 @@ namespace UnityStandardAssets.Characters.FirstPerson
 							foreach (Transform point in visPoints)
 							{
 								//if this particular point is in view...
-								if(CheckIfVisibilityPointInViewport(point, agentCamera, maxDistance))
+								if (CheckIfVisibilityPointInViewport(point, agentCamera, maxDistance))
 								{
 									visPointCount++;
 								}
 							}
-                            
-							if(visPointCount > 0)
+
+							if (visPointCount > 0)
 							{
 								sop.isVisible = true;
-								currentlyVisibleItems.Add(sop);
+								if (!currentlyVisibleItems.Contains(sop))
+									currentlyVisibleItems.Add(sop);
 							}
 						}
 
-                        else
-                        {
-                            //print("out of range");
-                            sop.isVisible = false;
-                            currentlyVisibleItems.Remove(sop);
-                        }
+						else
+							Debug.Log("Error! Set at least 1 visibility point on SimObjPhysics prefab!");
+                  
 					}
                   
                 }
@@ -285,21 +282,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			//return true result if object is within the Viewport, false if not in viewport or the viewport doesn't care about the object
 			bool result = false;
 
-			//SimObjProperty[] itemProperty = item.GetComponent<SimObjPhysics>().Properties;
-
-   //         bool DoWeCareABoutThisObjectsVisibility = false;
-
-			//foreach (SimObjProperty prop in itemProperty)
-    //        {
-				////Check if these are SimObjPhysics 
-				//if (prop != SimObjProperty.Static && prop != SimObjProperty.Moveable)
-            //    {
-            //        DoWeCareABoutThisObjectsVisibility = true;
-            //    }
-            //}
-
-            //if (DoWeCareABoutThisObjectsVisibility == true)
-            //{
                 Vector3 viewPoint = agentCamera.WorldToViewportPoint(item.transform.position);
 
                 //move these two up top as serialized variables later, or maybe not? values between 0 and 1 will cause "tunnel vision"
@@ -814,6 +796,11 @@ namespace UnityStandardAssets.Characters.FirstPerson
         //pickup a sim object
         public bool PickUpSimObjPhysics(Transform target)
         {
+			if(target.GetComponent<SimObjPhysics>().PrimaryProperty!= SimObjPrimaryProperty.CanPickup)
+			{
+				Debug.Log("Only SimObjPhysics that have the property CanPickup can be picked up");
+				return false;
+			}
             //make sure hand is empty, turn off the target object's collision and physics properties
             //and make the object kinematic
             if (ItemInHand == null)
