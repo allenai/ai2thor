@@ -74,14 +74,11 @@ def unique_rows(arr, return_index=False, return_inverse=False):
         if return_index and return_inverse:
             return unique, idx, inv
         elif return_index:
-            sort_order = np.lexsort(unique.T)
-            return unique[sort_order], idx[sort_order]
+            return unique, idx
         elif return_inverse:
             return unique, inv
         else:
-            sort_order = np.lexsort(unique.T)
-            return unique[sort_order]
-
+            return unique
 
 class Event(object):
     """
