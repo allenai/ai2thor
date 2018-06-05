@@ -541,10 +541,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 yield break;
             }
 
-            bool result = false;
-
-
-
+            bool result = false;         
 
             for (int i = 0; i < actionDuration; i++)
             {
@@ -584,8 +581,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     yield return null;
                 }
             }
-
-
+         
             // Debug.Log(this.transform.position.z.ToString("F3", CultureInfo.InvariantCulture));
 
             // if for some reason we moved in the Y space too much, then we assume that something is wrong
@@ -602,8 +598,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 Debug.Log("check move failed");
                 transform.position = lastPosition;
             }
-
-
+         
             actionFinished(result);
         }
 
