@@ -98,7 +98,7 @@ class Event(object):
         self.color_to_object_id = {}
         self.object_id_to_color = {}
 
-        self.bounds2D = {}
+        self.bounds2D = None
         self.instance_masks = {}
         self.class_masks = {}
 
@@ -114,7 +114,7 @@ class Event(object):
         self.process_visible_bounds2D()
 
     def process_visible_bounds2D(self):
-        if len(self.bounds2D) > 0:
+        if self.bounds2D and len(self.bounds2D) > 0:
             for obj in self.metadata['objects']:
                 obj['visibleBounds2D'] = (obj['visible'] and obj['objectId'] in self.bounds2D)
 
@@ -135,6 +135,7 @@ class Event(object):
 
         MIN_DETECTION_LEN = 10
 
+        self.bounds2D = {}
         unique_ids, unique_inverse = unique_rows(self.instance_segmentation_image.reshape(-1, 3), return_inverse=True)
         unique_inverse = unique_inverse.reshape(self.instance_segmentation_image.shape[:2])
         unique_masks = (np.tile(unique_inverse[np.newaxis, :, :], (len(unique_ids), 1, 1)) == np.arange(len(unique_ids))[:, np.newaxis, np.newaxis])
@@ -210,6 +211,12 @@ class Event(object):
         rotation = int(agent_meta['rotation']['y'] / 90.0)
         horizon = int(round(agent_meta['cameraHorizon']))
         return (int(loc['x'] / step_size), int(loc['z'] / step_size, rotation, horizon))
+
+    def get_object(self, object_id):
+        for obj in self.metadata['objects']:
+            if obj['objectId'] == object_id:
+                return obj
+        return None
 
 
 class MultipartFormParser(object):
