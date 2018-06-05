@@ -11,6 +11,7 @@ from collections import deque, defaultdict
 from itertools import product
 import io
 import json
+import copy
 import logging
 import math
 import time
@@ -523,18 +524,29 @@ class Controller(object):
         if 'AI2THOR_VISIBILITY_DISTANCE' in os.environ:
             action['visibilityDistance'] = float(os.environ['AI2THOR_VISIBILITY_DISTANCE'])
 
-        if action['action'] == 'PutObject':
+        should_fail = False
+        self.last_action = action
+
+        if ('objectId' in action and (action['action'] == 'OpenObject' or action['action'] == 'CloseObject')):
+
+            if self.last_event.bounds2D and action['objectId'] not in self.last_event.bounds2D:
+                should_fail = True
+
+            obj_metadata = self.last_event.get_object(action['objectId'])
+            if obj_metadata is None or obj_metadata['isOpen'] == (action['action'] == 'OpenObject'):
+                should_fail = True
+
+        elif action['action'] == 'PutObject':
             receptacle_type = action['receptacleObjectId'].split('|')[0]
             object_type = action['objectId'].split('|')[0]
             if object_type not in RECEPTACLE_OBJECTS[receptacle_type]:
-                new_event = ai2thor.server.Event(
-                    json.loads(json.dumps(self.last_event.metadata)),
-                    self.last_event.image_data)
+                should_fail = True
 
-                new_event.metadata['lastActionSuccess'] = False
-                new_event.metadata['errorCode'] = 'ObjectNotAllowedInReceptacle'
-                self.last_event = new_event
-                return new_event
+        if should_fail:
+            new_event = copy.deepcopy(self.last_event)
+            new_event.metadata['lastActionSuccess'] = False
+            self.last_event = new_event
+            return new_event
 
         assert self.request_queue.empty()
 
