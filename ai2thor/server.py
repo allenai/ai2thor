@@ -100,7 +100,6 @@ class Event(object):
 
         self.bounds2D = {}
         self.instance_masks = {}
-        # XXX todo
         self.class_masks = {}
 
         self.instance_segmentation_image = None
@@ -163,6 +162,11 @@ class Event(object):
                     self.bounds2D[color_name] = bb
                     color_ind = np.argmin(np.sum(np.abs(unique_ids - color), axis=1))
                     self.instance_masks[color_name] = unique_masks[color_ind, ...]
+
+                    if cls not in self.class_masks:
+                        self.class_masks[cls] = unique_masks[color_ind, ...]
+                    else:
+                        self.class_masks[cls] = np.logical_or(self.class_masks[cls], unique_masks[color_ind, ...])
 
             self.instance_detections2D = self.bounds2D
             self.class_detections2D = self.detections
