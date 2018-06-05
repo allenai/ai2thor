@@ -43,8 +43,8 @@ Transform:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 100000}
-  m_LocalRotation: {x: 0, y: 1, z: 0, w: 0}
-  m_LocalPosition: {x: -0.86, y: 1, z: -0.32}
+  m_LocalRotation: {x: 0, y: -0.7071068, z: 0, w: 0.7071068}
+  m_LocalPosition: {x: 0.055, y: 1, z: -1.78}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 400002}
@@ -417,9 +417,6 @@ MonoBehaviour:
   m_IsWalking: 1
   m_WalkSpeed: 1
   m_RunSpeed: 2
-  m_RunstepLenghten: 0
-  m_JumpSpeed: 0
-  m_StickToGroundForce: 0
   m_GravityMultiplier: 0
   m_MouseLook:
     XSensitivity: 2
@@ -429,79 +426,21 @@ MonoBehaviour:
     MaximumX: 90
     smooth: 0
     smoothTime: 5
-    lockCursor: 1
-  m_UseFovKick: 0
-  m_FovKick:
-    Camera: {fileID: 0}
-    originalFov: 0
-    FOVIncrease: 3
-    TimeToIncrease: 1
-    TimeToDecrease: 1
-    IncreaseCurve:
-      serializedVersion: 2
-      m_Curve: []
-      m_PreInfinity: 2
-      m_PostInfinity: 2
-      m_RotationOrder: 4
-  m_UseHeadBob: 0
-  m_HeadBob:
-    HorizontalBobRange: 0.33
-    VerticalBobRange: 0.33
-    Bobcurve:
-      serializedVersion: 2
-      m_Curve:
-      - serializedVersion: 2
-        time: 0
-        value: 0
-        inSlope: 0
-        outSlope: 0
-        tangentMode: 0
-      - serializedVersion: 2
-        time: 0.5
-        value: 1
-        inSlope: 0
-        outSlope: 0
-        tangentMode: 0
-      - serializedVersion: 2
-        time: 1
-        value: 0
-        inSlope: 0
-        outSlope: 0
-        tangentMode: 0
-      - serializedVersion: 2
-        time: 1.5
-        value: -1
-        inSlope: 0
-        outSlope: 0
-        tangentMode: 0
-      - serializedVersion: 2
-        time: 2
-        value: 0
-        inSlope: 0
-        outSlope: 0
-        tangentMode: 0
-      m_PreInfinity: 2
-      m_PostInfinity: 2
-      m_RotationOrder: 4
-    VerticaltoHorizontalRatio: 1
-  m_JumpBob:
-    BobDuration: 0
-    BobAmount: 0
-  m_StepInterval: 0
-  m_FootstepSounds: []
-  m_JumpSound: {fileID: 0}
-  m_LandSound: {fileID: 0}
-  Target_Text: {fileID: 0}
+    lockCursor: 0
   Debug_Canvas: {fileID: 0}
-  isReceptacle: 0
-  isPickup: 0
-  current_Object_In_Inventory: 
   Inventory_Text: {fileID: 0}
-  rotateMouseLook: 1
-  thingdone: 0
-  captureScreenshot: 0
-  screenshotCounter: 0
-  pickupObject: 0
+  InputMode_Text: {fileID: 0}
+  AgentHand: {fileID: 0}
+  ItemInHand: {fileID: 0}
+  TextInputMode: 0
+  DefaultHandPosition: {fileID: 0}
+  LookSweepPosition: {fileID: 0}
+  LookSweepTestPivot: {fileID: 0}
+  TurnSweepPosition: {fileID: 0}
+  TurnSweepTestPivot: {fileID: 0}
+  VisibleObjects: []
+  IsHandDefault: 1
+  InputFieldObj: {fileID: 0}
 --- !u!114 &114000011054666674
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -517,69 +456,8 @@ MonoBehaviour:
   m_WalkSpeed: 1
   m_RunSpeed: 2
   m_GravityMultiplier: 2
-  m_UseFovKick: 0
-  m_FovKick:
-    Camera: {fileID: 0}
-    originalFov: 0
-    FOVIncrease: 3
-    TimeToIncrease: 1
-    TimeToDecrease: 1
-    IncreaseCurve:
-      serializedVersion: 2
-      m_Curve: []
-      m_PreInfinity: 2
-      m_PostInfinity: 2
-      m_RotationOrder: 4
-  m_UseHeadBob: 0
-  m_HeadBob:
-    HorizontalBobRange: 0.33
-    VerticalBobRange: 0.33
-    Bobcurve:
-      serializedVersion: 2
-      m_Curve:
-      - serializedVersion: 2
-        time: 0
-        value: 0
-        inSlope: 0
-        outSlope: 0
-        tangentMode: 0
-      - serializedVersion: 2
-        time: 0.5
-        value: 1
-        inSlope: 0
-        outSlope: 0
-        tangentMode: 0
-      - serializedVersion: 2
-        time: 1
-        value: 0
-        inSlope: 0
-        outSlope: 0
-        tangentMode: 0
-      - serializedVersion: 2
-        time: 1.5
-        value: -1
-        inSlope: 0
-        outSlope: 0
-        tangentMode: 0
-      - serializedVersion: 2
-        time: 2
-        value: 0
-        inSlope: 0
-        outSlope: 0
-        tangentMode: 0
-      m_PreInfinity: 2
-      m_PostInfinity: 2
-      m_RotationOrder: 4
-    VerticaltoHorizontalRatio: 1
-  m_JumpBob:
-    BobDuration: 0
-    BobAmount: 0
-  m_StepInterval: 5
   excludeObjectIds: []
   m_Camera: {fileID: 0}
   m_CharacterController: {fileID: 0}
-  maxVisibleDistance: 0
-  forwardVelocity: 2
-  rotateVelocity: 2
+  actionComplete: 0
   actionDuration: 3
-  emitState: 0
