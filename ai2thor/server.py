@@ -103,8 +103,8 @@ class Event(object):
         self.instance_masks = {}
         self.class_masks = {}
 
-        self.instance_segmentation_image = None
-        self.class_segmentation_image = None
+        self.instance_segmentation_frame = None
+        self.class_segmentation_frame = None
 
         self.detections = {}
 
@@ -137,14 +137,14 @@ class Event(object):
         return [obj for obj in self.metadata['objects'] if obj['objectType'] == object_type]
 
     def process_colors_ids(self):
-        if self.instance_segmentation_image is None:
+        if self.instance_segmentation_frame is None:
             return
 
         MIN_DETECTION_LEN = 10
 
         self.bounds2D = {}
-        unique_ids, unique_inverse = unique_rows(self.instance_segmentation_image.reshape(-1, 3), return_inverse=True)
-        unique_inverse = unique_inverse.reshape(self.instance_segmentation_image.shape[:2])
+        unique_ids, unique_inverse = unique_rows(self.instance_segmentation_frame.reshape(-1, 3), return_inverse=True)
+        unique_inverse = unique_inverse.reshape(self.instance_segmentation_frame.shape[:2])
         unique_masks = (np.tile(unique_inverse[np.newaxis, :, :], (len(unique_ids), 1, 1)) == np.arange(len(unique_ids))[:, np.newaxis, np.newaxis])
         #for unique_color_ind, unique_color in enumerate(unique_ids):
         for color_bounds in self.metadata['colorBounds']:
@@ -193,10 +193,10 @@ class Event(object):
         self.frame = read_buffer_image(image_data, self.screen_width, self.screen_height)
 
     def add_image_ids(self, image_ids_data):
-        self.instance_segmentation_image = read_buffer_image(image_ids_data, self.screen_width, self.screen_height)
+        self.instance_segmentation_frame = read_buffer_image(image_ids_data, self.screen_width, self.screen_height)
 
     def add_image_classes(self, image_classes_data):
-        self.class_segmentation_image = read_buffer_image(image_classes_data, self.screen_width, self.screen_height)
+        self.class_segmentation_frame = read_buffer_image(image_classes_data, self.screen_width, self.screen_height)
 
     def cv2image(self):
         return self.frame[...,::-1]
