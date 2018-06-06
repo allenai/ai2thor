@@ -21,6 +21,7 @@ except ImportError:
     from Queue import Empty
 
 import time
+import warnings
 
 from flask import Flask, request, make_response, abort, Response
 import werkzeug
@@ -64,21 +65,21 @@ def read_buffer_image(buf, width, height):
         return np.flip(np.frombuffer(buf, dtype=np.uint8).reshape(width, height, -1), axis=0)
 
 def unique_rows(arr, return_index=False, return_inverse=False):
-        arr = np.ascontiguousarray(arr).copy()
-        b = arr.view(np.dtype((np.void, arr.dtype.itemsize * arr.shape[1])))
-        if return_inverse:
-            _, idx, inv = np.unique(b, return_index=True, return_inverse=True)
-        else:
-            _, idx = np.unique(b, return_index=True)
-        unique = arr[idx]
-        if return_index and return_inverse:
-            return unique, idx, inv
-        elif return_index:
-            return unique, idx
-        elif return_inverse:
-            return unique, inv
-        else:
-            return unique
+    arr = np.ascontiguousarray(arr).copy()
+    b = arr.view(np.dtype((np.void, arr.dtype.itemsize * arr.shape[1])))
+    if return_inverse:
+        _, idx, inv = np.unique(b, return_index=True, return_inverse=True)
+    else:
+        _, idx = np.unique(b, return_index=True)
+    unique = arr[idx]
+    if return_index and return_inverse:
+        return unique, idx, inv
+    elif return_index:
+        return unique, idx
+    elif return_inverse:
+        return unique, inv
+    else:
+        return unique
 
 class Event(object):
     """
@@ -112,6 +113,12 @@ class Event(object):
 
         self.process_colors()
         self.process_visible_bounds2D()
+    
+    @property
+    def image_data(self):
+        warnings.warn("Event.image_data has been removed - RGB data can be retrieved from event.frame and encoded to an image format")
+        return None
+
 
     def process_visible_bounds2D(self):
         if self.bounds2D and len(self.bounds2D) > 0:
@@ -183,7 +190,6 @@ class Event(object):
         self.frame_depth = image_depth_out.astype(np.float32)
 
     def add_image(self, image_data):
-        self.image_data = image_data
         self.frame = read_buffer_image(image_data, self.screen_width, self.screen_height)
 
     def add_image_ids(self, image_ids_data):
@@ -205,12 +211,13 @@ class Event(object):
 
     @property
     def pose(self):
+        # XXX should have this as a parameter
         step_size = 0.25
         agent_meta = self.metadata['agent']
         loc = agent_meta['position']
         rotation = int(agent_meta['rotation']['y'] / 90.0)
         horizon = int(round(agent_meta['cameraHorizon']))
-        return (int(loc['x'] / step_size), int(loc['z'] / step_size, rotation, horizon))
+        return (int(loc['x'] / step_size), int(loc['z'] / step_size), rotation, horizon)
 
     def get_object(self, object_id):
         for obj in self.metadata['objects']:
@@ -419,7 +426,6 @@ class Server(object):
                 if key in form.files:
                     image_mapping[key](form.files[key][0])
 
-            # XXX restore
             event.process_colors_ids()
 
             request_queue.put_nowait(event)
