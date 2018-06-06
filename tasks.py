@@ -1,12 +1,12 @@
+import pprint
 import os
 import datetime
 import zipfile
-from invoke import task
 import hashlib
 import subprocess
-import pprint
+from invoke import task
 
-S3_BUCKET='ai2-thor'
+S3_BUCKET = 'ai2-thor'
 
 def add_files(zipf, start_dir):
     for root, dirs, files in os.walk(start_dir):
@@ -15,6 +15,7 @@ def add_files(zipf, start_dir):
             arcname = os.path.relpath(fn, 'unity/builds')
             #print("adding %s" % arcname)
             zipf.write(fn, arcname)
+
 
 
 def push_build(build_archive_name):
@@ -38,6 +39,7 @@ def _build(context, arch, build_name):
 def local_build(context, prefix='local'):
     arch = 'OSXIntel64'
     build_name = "builds/thor-%s-%s" % (prefix, arch)
+    fetch_source_textures(context)
     if _build(context, arch, build_name):
         print("Build Successful")
     else:
@@ -85,12 +87,26 @@ def build_docker(version):
         "docker push ai2thor/ai2thor-base:{version}".format(version=version),
         shell=True)
 
+
+@task
+def fetch_source_textures(context):
+    import ai2thor.downloader
+    import io
+    zip_data = ai2thor.downloader.download(
+        "http://s3-us-west-2.amazonaws.com/ai2-thor/assets/source-textures.zip",
+        "source-textures",
+        "75476d60a05747873f1173ba2e1dbe3686500f63bcde3fc3b010eea45fa58de7")
+
+    z = zipfile.ZipFile(io.BytesIO(zip_data))
+    z.extractall(os.getcwd())
+
 @task
 def build(context, local=False):
     version = datetime.datetime.now().strftime('%Y%m%d%H%M')
     build_url_base = 'http://s3-us-west-2.amazonaws.com/%s/' % S3_BUCKET
 
     builds = {'Docker': {'tag': version}}
+    fetch_source_textures(context)
 
     for arch in ['OSXIntel64', 'Linux64']:
         build_name = "builds/thor-%s-%s" % (version, arch)
@@ -130,9 +146,9 @@ def build(context, local=False):
 def interact(ctx, scene):
     import ai2thor.controller
 
-    env = ai2thor.controller.Controller( )
-    e = env.start(player_screen_width=600, player_screen_height=600)
-    event = env.reset(scene)
+    env = ai2thor.controller.Controller()
+    env.start(player_screen_width=600, player_screen_height=600)
+    env.reset(scene)
     env.step(dict(action='Initialize', gridSize=0.25))
     env.interact()
     env.stop()
