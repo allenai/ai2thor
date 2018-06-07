@@ -42,6 +42,32 @@ def local_build(context, prefix='local'):
         print("Build Successful")
     else:
         print("Build Failure")
+    generate_quality_settings(context)
+
+@task
+def generate_quality_settings(ctx):
+    import yaml
+    class YamlUnity3dTag(yaml.SafeLoader):
+        def let_through(self, node):
+            return self.construct_mapping(node)
+
+
+    YamlUnity3dTag.add_constructor(u'tag:unity3d.com,2011:47', YamlUnity3dTag.let_through)
+
+    qs = yaml.load(open('unity/ProjectSettings/QualitySettings.asset').read(), Loader=YamlUnity3dTag)
+
+    quality_settings = {}
+    default = 'Ultra'
+    for i, q in enumerate(qs['QualitySettings']['m_QualitySettings']):
+        quality_settings[q['name']] = i
+
+    assert default in quality_settings
+
+    with open("ai2thor/_quality_settings.py", "w") as f:
+        f.write("# GENERATED FILE - DO NOT EDIT\n")
+        f.write("DEFAULT_QUALITY = '%s'\n" % default)
+        f.write("QUALITY_SETTINGS = " + pprint.pformat(quality_settings))
+
 
 def increment_version():
     import ai2thor._version
@@ -117,6 +143,8 @@ def build(context, local=False):
             print("Build successful")
         else:
             raise Exception("Build Failure")
+
+    generate_quality_settings(context)
 
     with open("ai2thor/_builds.py", "w") as fi:
         fi.write("# GENERATED FILE - DO NOT EDIT\n")
