@@ -33,6 +33,7 @@ setup(name='ai2thor',
           'Pillow',
           'flask',
           'numpy',
+          'pyyaml',
           'requests',
           'progressbar2'
       ],
