@@ -11,6 +11,7 @@ from collections import deque, defaultdict
 from itertools import product
 import io
 import json
+import copy
 import logging
 import math
 import time
@@ -40,6 +41,7 @@ import ai2thor.downloader
 import ai2thor.server
 from ai2thor.server import queue_get
 from ai2thor._builds import BUILDS
+from ai2thor._quality_settings import QUALITY_SETTINGS, DEFAULT_QUALITY
 
 logger = logging.getLogger(__name__)
 
@@ -360,7 +362,7 @@ def key_for_point(x, z):
 
 class Controller(object):
 
-    def __init__(self):
+    def __init__(self, quality=DEFAULT_QUALITY):
         self.request_queue = Queue(maxsize=1)
         self.response_queue = Queue(maxsize=1)
         self.receptacle_nearest_pivot_points = {}
@@ -372,6 +374,7 @@ class Controller(object):
         self.last_event = None
         self.server_thread = None
         self.killing_unity = False
+        self.quality = quality
 
     def reset(self, scene_name=None):
         self.response_queue.put_nowait(dict(action='Reset', sceneName=scene_name, sequenceId=0))
@@ -384,7 +387,9 @@ class Controller(object):
             random_seed=None,
             randomize_open=False,
             unique_object_types=False,
-            exclude_receptacle_object_pairs=[]):
+            exclude_receptacle_object_pairs=[],
+            max_num_repeats=1,
+            remove_prob=0.5):
 
         receptacle_objects = []
 
@@ -414,6 +419,8 @@ class Controller(object):
             uniquePickupableObjectTypes=unique_object_types,
             excludeObjectIds=exclude_object_ids,
             excludeReceptacleObjectPairs=exclude_receptacle_object_pairs,
+            maxNumRepeats=max_num_repeats,
+            removeProb=remove_prob,
             randomSeed=random_seed))
 
     def scene_names(self):
@@ -518,18 +525,29 @@ class Controller(object):
         if 'AI2THOR_VISIBILITY_DISTANCE' in os.environ:
             action['visibilityDistance'] = float(os.environ['AI2THOR_VISIBILITY_DISTANCE'])
 
-        if action['action'] == 'PutObject':
+        should_fail = False
+        self.last_action = action
+
+        if ('objectId' in action and (action['action'] == 'OpenObject' or action['action'] == 'CloseObject')):
+
+            if self.last_event.bounds2D and action['objectId'] not in self.last_event.bounds2D:
+                should_fail = True
+
+            obj_metadata = self.last_event.get_object(action['objectId'])
+            if obj_metadata is None or obj_metadata['isopen'] == (action['action'] == 'OpenObject'):
+                should_fail = True
+
+        elif action['action'] == 'PutObject':
             receptacle_type = action['receptacleObjectId'].split('|')[0]
             object_type = action['objectId'].split('|')[0]
             if object_type not in RECEPTACLE_OBJECTS[receptacle_type]:
-                new_event = ai2thor.server.Event(
-                    json.loads(json.dumps(self.last_event.metadata)),
-                    self.last_event.image_data)
+                should_fail = True
 
-                new_event.metadata['lastActionSuccess'] = False
-                new_event.metadata['errorCode'] = 'ObjectNotAllowedInReceptacle'
-                self.last_event = new_event
-                return new_event
+        if should_fail:
+            new_event = copy.deepcopy(self.last_event)
+            new_event.metadata['lastActionSuccess'] = False
+            self.last_event = new_event
+            return new_event
 
         assert self.request_queue.empty()
 
@@ -552,7 +570,7 @@ class Controller(object):
     def unity_command(self, width, height):
 
         command = self.executable_path()
-        command += " -screen-width %s -screen-height %s" % (width, height)
+        command += " -screen-quality %s -screen-width %s -screen-height %s" % (QUALITY_SETTINGS[self.quality], width, height)
         return shlex.split(command)
 
     def _start_unity_thread(self, env, width, height, host, port, image_name):
@@ -686,8 +704,7 @@ class Controller(object):
             self.request_queue,
             self.response_queue,
             host,
-            port=port,
-            threaded=enable_remote_viewer)
+            port=port)
 
         _, port = self.server.wsgi_server.socket.getsockname()
         if enable_remote_viewer:

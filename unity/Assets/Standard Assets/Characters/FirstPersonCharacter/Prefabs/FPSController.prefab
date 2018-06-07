@@ -30,6 +30,7 @@ GameObject:
   - component: {fileID: 2000000}
   - component: {fileID: 8100000}
   - component: {fileID: 12474086}
+  - component: {fileID: 114013651166627750}
   m_Layer: 0
   m_Name: FirstPersonCharacter
   m_TagString: MainCamera
@@ -578,8 +579,27 @@ MonoBehaviour:
   excludeObjectIds: []
   m_Camera: {fileID: 0}
   m_CharacterController: {fileID: 0}
-  maxVisibleDistance: 0
+  actionComplete: 0
   forwardVelocity: 2
   rotateVelocity: 2
   actionDuration: 3
-  emitState: 0
+  imageSynthesis: {fileID: 0}
+--- !u!114 &114013651166627750
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 100002}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6b7e9fcb795b84664bfc1ac40799a68f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  uberReplacementShader: {fileID: 4800000, guid: 171e6e515a12e4a298dce708924e98ba,
+    type: 3}
+  opticalFlowShader: {fileID: 4800000, guid: 2a970eca3c9e84f13b5b616e530a7919, type: 3}
+  depthShader: {fileID: 4800000, guid: cdf4223aff4114212bb5196565b0abce, type: 3}
+  positionShader: {fileID: 0}
+  opticalFlowSensitivity: 0
+  sentColorCorrespondence: 0
+  tex: {fileID: 0}

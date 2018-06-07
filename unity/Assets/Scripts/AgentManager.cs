@@ -19,6 +19,11 @@ public class AgentManager : MonoBehaviour
 	private Rect readPixelsRect;
 	private int currentSequenceId;
 	private int activeAgentId;
+	private bool renderImage = true;
+	private bool renderDepthImage;
+	private bool renderClassImage;
+	private bool renderObjectImage;
+	
 
 	private bool readyToEmit;
 
@@ -46,6 +51,9 @@ public class AgentManager : MonoBehaviour
 		// agent speed and action length
 		string prefix = trainPhase ? "TRAIN_" : "TEST_";
 
+
+		
+
 		actionDuration = LoadIntVariable(actionDuration, prefix + "ACTION_LENGTH");
 
 	}
@@ -63,6 +71,13 @@ public class AgentManager : MonoBehaviour
 	{
 		
 		primaryAgent.ProcessControlCommand (action);
+		this.renderImage = action.renderImage;
+		this.renderClassImage = action.renderClassImage;
+		this.renderDepthImage = action.renderDepthImage;
+		this.renderObjectImage = action.renderObjectImage;
+
+
+	
 		StartCoroutine (addAgents (action));
 
 	}
@@ -95,7 +110,6 @@ public class AgentManager : MonoBehaviour
 			this.agents.Add (clone);
 		} else {
 			Debug.LogError ("couldn't find a valid start position for a new agent");
-			// XXX add to errorMessage
 		}
 
 
@@ -180,6 +194,101 @@ public class AgentManager : MonoBehaviour
 	}
 
 
+	private void addImageForm(WWWForm form, DiscreteRemoteFPSAgentController agent, bool renderCamera) {
+		if (this.renderImage) {
+
+			if (renderCamera) {
+				RenderTexture.active = agent.m_Camera.activeTexture;
+				agent.m_Camera.Render ();
+			}
+			form.AddBinaryData("image", captureScreen());
+		}
+	}
+
+	private void addDepthImageForm(WWWForm form, DiscreteRemoteFPSAgentController agent) {
+		if (this.renderDepthImage) {
+			if (!agent.imageSynthesis.hasCapturePass ("_depth")) {
+				Debug.LogError ("Depth image not available - returning empty image");
+			}
+
+			byte[] bytes = agent.imageSynthesis.Encode ("_depth");
+			form.AddBinaryData ("image_depth", bytes);
+		}
+	}
+
+	private void addObjectImageForm(WWWForm form, DiscreteRemoteFPSAgentController agent, ref MetadataWrapper metadata) {
+		if (this.renderObjectImage) {
+			if (!agent.imageSynthesis.hasCapturePass("_id")) {
+				Debug.LogError("Object Image not available in imagesynthesis - returning empty image");
+			}
+			byte[] bytes = agent.imageSynthesis.Encode ("_id");
+			form.AddBinaryData ("image_ids", bytes);
+
+			Color[] id_image = agent.imageSynthesis.tex.GetPixels();
+			Dictionary<Color, int[]> colorBounds = new Dictionary<Color, int[]> ();
+			for (int yy = 0; yy < tex.height; yy++) {
+				for (int xx = 0; xx < tex.width; xx++) {
+					Color colorOn = id_image [yy * tex.width + xx];
+					if (!colorBounds.ContainsKey (colorOn)) {
+						colorBounds [colorOn] = new int[]{xx, yy, xx, yy};
+					} else {
+						int[] oldPoint = colorBounds [colorOn];
+						if (xx < oldPoint [0]) {
+							oldPoint [0] = xx;
+						}
+						if (yy < oldPoint [1]) {
+							oldPoint [1] = yy;
+						}
+						if (xx > oldPoint [2]) {
+							oldPoint [2] = xx;
+						}
+						if (yy > oldPoint [3]) {
+							oldPoint [3] = yy;
+						}
+					}
+				}
+			}
+			List<ColorBounds> boundsList = new List<ColorBounds> ();
+			foreach (Color key in colorBounds.Keys) {
+				ColorBounds bounds = new ColorBounds ();
+				bounds.color = new byte[] {
+					(byte)Math.Round (key.r * 255),
+					(byte)Math.Round (key.g * 255),
+					(byte)Math.Round (key.b * 255)
+				};
+				bounds.bounds = colorBounds [key];
+				boundsList.Add (bounds);
+			}
+			metadata.colorBounds = boundsList.ToArray ();
+
+			List<ColorId> colors = new List<ColorId> ();
+			foreach (Color key in agent.imageSynthesis.colorIds.Keys) {
+				ColorId cid = new ColorId ();
+				cid.color = new byte[] {
+					(byte)Math.Round (key.r * 255),
+					(byte)Math.Round (key.g * 255),
+					(byte)Math.Round (key.b * 255)
+				};
+
+				cid.name = agent.imageSynthesis.colorIds [key];
+				colors.Add (cid);
+			}
+			metadata.colors = colors.ToArray ();
+
+		}
+	}
+
+	private void addClassImageForm (WWWForm form, DiscreteRemoteFPSAgentController agent) {
+		if (this.renderClassImage) {
+			if (!agent.imageSynthesis.hasCapturePass ("_class")) {
+				Debug.LogError ("class image not available - sending empty image");
+			}
+			byte[] bytes = agent.imageSynthesis.Encode ("_class");
+			form.AddBinaryData ("image_classes", bytes);
+		}
+
+	}
+
 	private IEnumerator EmitFrame() {
 
 
@@ -191,37 +300,27 @@ public class AgentManager : MonoBehaviour
 
 		WWWForm form = new WWWForm();
 
-		if (!serverSideScreenshot) {
-			// read screen contents into the texture
-
-			RenderTexture currentTexture = RenderTexture.active;
-			form.AddBinaryData("image", captureScreen(), "frame-" + frameCounter.ToString().PadLeft(7, '0') + ".rgb", "image/raw-rgb");
-
-			DiscreteRemoteFPSAgentController[] agentsAr = this.agents.ToArray ();
-			for(int i = 1; i < agentsAr.Length; i++) {
-				DiscreteRemoteFPSAgentController agent = agentsAr [i];
-				RenderTexture.active = agent.m_Camera.activeTexture;
-				agent.m_Camera.Render ();
-				form.AddBinaryData("image", captureScreen(), "frame-" + frameCounter.ToString().PadLeft(7, '0') + ".rgb", "image/raw-rgb");
-			}
-
-			RenderTexture.active = currentTexture;
-		}
-
 		MultiAgentMetadata multiMeta = new MultiAgentMetadata ();
 		multiMeta.agents = new MetadataWrapper[this.agents.Count];
 		multiMeta.activeAgentId = this.activeAgentId;
 		multiMeta.sequenceId = this.currentSequenceId;
+		RenderTexture currentTexture = RenderTexture.active;
+
 
 		for (int i = 0; i < this.agents.Count; i++) {
-			multiMeta.agents [i] = this.agents.ToArray () [i].generateMetadataWrapper ();
-			multiMeta.agents [i].agentId = i;
+			DiscreteRemoteFPSAgentController agent = this.agents.ToArray () [i];
+			MetadataWrapper metadata = agent.generateMetadataWrapper ();
+			metadata.agentId = i;
+			// we don't need to render the agent's camera for the first agent
+			addImageForm (form, agent, i > 0);
+			addDepthImageForm (form, agent);
+			addObjectImageForm (form, agent, ref metadata);
+			addClassImageForm (form, agent);
+			multiMeta.agents [i] = metadata;
 		}
 
-		// for testing purposes, also write to a file in the project folder
-		// File.WriteAllBytes(Application.dataPath + "/Screenshots/SavedScreen" + frameCounter.ToString() + ".png", bytes);
-		// Debug.Log ("Frame Bytes: " + bytes.Length.ToString());
-		//string img_str = System.Convert.ToBase64String (bytes);
+		RenderTexture.active = currentTexture;
+
 		form.AddField("metadata", JsonUtility.ToJson(multiMeta));
 		form.AddField("token", robosimsClientToken);
 		WWW w = new WWW ("http://" + robosimsHost + ":" + robosimsPort + "/train", form);
@@ -316,7 +415,10 @@ public class ObjectMetadata
 	public float distance;
 	public String objectType;
 	public string objectId;
+	public float[] bounds3D;
+	public string parentReceptacle;
 }
+
 [Serializable]
 public class InventoryObject
 {
@@ -330,6 +432,20 @@ public class PivotSimObj
 	public int pivotId;
 	public string objectId;
 }
+
+[Serializable]
+public class ColorId {
+	public byte[] color;
+	public string name;
+}
+
+[Serializable]
+public class ColorBounds {
+	public byte[] color;
+	public int[] bounds;
+}
+
+
 [Serializable]
 public struct MetadataWrapper
 {
@@ -346,6 +462,8 @@ public struct MetadataWrapper
 	public int screenWidth;
 	public int screenHeight;
 	public int agentId;
+	public ColorId [] colors;
+	public ColorBounds[] colorBounds;
 }
 
 
@@ -369,8 +487,6 @@ public class ServerAction
 	public bool snapToGrid = true;
 	public bool continuous;
 	public string sceneName;
-	public int sceneConfigIndex;
-	public int agentPositionIndex;
 	public bool rotateOnTeleport;
 	public bool forceVisible;
 	public int rotation;
@@ -384,6 +500,14 @@ public class ServerAction
 	public bool uniquePickupableObjectTypes; // only allow one of each object type to be visible
 	public ReceptacleObjectList[] receptacleObjects;
 	public ReceptacleObjectPair[] excludeReceptacleObjectPairs;
+	public float removeProb;
+	public int maxNumRepeats;
+	public bool randomizeObjectAppearance;
+	public bool renderImage = true;
+	public bool renderDepthImage;
+	public bool renderClassImage;
+	public bool renderObjectImage;
+	public float cameraY;
 
 	public SimObjType ReceptableSimObjType()
 	{
@@ -406,6 +530,7 @@ public class ServerAction
 
 
 }
+
 [Serializable]
 public class ReceptacleObjectPair
 {
