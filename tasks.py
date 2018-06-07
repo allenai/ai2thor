@@ -152,3 +152,69 @@ def interact(ctx, scene):
     env.step(dict(action='Initialize', gridSize=0.25))
     env.interact()
     env.stop()
+
+@task
+def check_visible_objects_closed_receptacles(ctx, start_scene, end_scene):
+    from itertools import product
+
+    import ai2thor.controller
+    import cv2
+    controller = ai2thor.controller.BFSController()
+    controller.local_executable_path = 'unity/builds/thor-local-OSXIntel64.app/Contents/MacOS/thor-local-OSXIntel64'
+    controller.start()
+    for i in range(int(start_scene), int(end_scene)):
+        bad_objects = set()
+        print("working on floorplan %s" % i)
+        controller.search_all_closed('FloorPlan%s' % i)
+
+        visibility_object_id = None
+        visibility_object_types = ['Mug', 'CellPhone', 'SoapBar']
+        for obj in controller.last_event.metadata['objects']:
+            if obj['pickupable']:
+                controller.step(action=dict(
+                    action='PickupObject',
+                    objectId=obj['objectId'],
+                    forceVisible=True))
+
+            if visibility_object_id is None and obj['objectType'] in visibility_object_types:
+                visibility_object_id = obj['objectId']
+
+        if visibility_object_id is None:
+            raise Exception("Couldn't get a visibility_object")
+
+        bad_receptacles = set()
+        for point in controller.grid_points:
+            controller.step(dict(
+                action='Teleport',
+                x=point['x'],
+                y=point['y'],
+                z=point['z']), raise_for_failure=True)
+
+            for rot, hor in product(controller.rotations, controller.horizons):
+                event = controller.step(
+                    dict(action='RotateLook', rotation=rot, horizon=hor),
+                    raise_for_failure=True)
+                for j in event.metadata['objects']:
+                    if j['receptacle'] and j['visible'] and j['openable']:
+
+                        controller.step(
+                            action=dict(
+                                action='Replace',
+                                forceVisible=True,
+                                pivot=0,
+                                receptacleObjectId=j['objectId'],
+                                objectId=visibility_object_id))
+
+                        replace_success = controller.last_event.metadata['lastActionSuccess']
+
+
+                        if replace_success:
+                            if controller.is_object_visible(visibility_object_id) and j['objectId'] not in bad_receptacles:
+                                bad_receptacles.add(j['objectId'])
+                                print("Got bad receptacle: %s" % j['objectId'])
+                                #cv2.imshow('aoeu', controller.last_event.cv2image())
+                                #cv2.waitKey(0)
+
+                            controller.step(action=dict( action='PickupObject',
+                                objectId=visibility_object_id,
+                                forceVisible=True))
