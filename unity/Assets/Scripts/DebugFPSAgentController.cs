@@ -50,7 +50,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		public GameObject TurnSweepPosition = null;
 		public GameObject TurnSweepTestPivot = null;
 
-		public SimObjPhysics[] VisibleObjects; //these objects are within the camera viewport and in range of the agent
+		//public SimObjPhysics[] VisibleObjects; //these objects are within the camera viewport and in range of the agent
 
 		//public GameObject TestObject = null;
         
@@ -86,224 +86,224 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
         }
 
-        public void MoveAgent(string direction, float magnitude)
-		{
-			//checks for if any object is obstructing agent/agent hand movement before executing move
+  //      public void MoveAgent(string direction, float magnitude)
+		//{
+		//	//checks for if any object is obstructing agent/agent hand movement before executing move
 
-			if(direction == "forward" && CheckIfHandBlocksAgentMovement(magnitude, "forward")
-			   && CheckIfAgentCanMove(magnitude, "forward"))
-			{
-				Vector3 motion = transform.forward * magnitude;
-                motion.y = Physics.gravity.y * m_GravityMultiplier;
-                m_CharacterController.Move(motion);
-			}
+		//	if(direction == "forward" && CheckIfHandBlocksAgentMovement(magnitude, "forward")
+		//	   && CheckIfAgentCanMove(magnitude, "forward"))
+		//	{
+		//		Vector3 motion = transform.forward * magnitude;
+  //              motion.y = Physics.gravity.y * m_GravityMultiplier;
+  //              m_CharacterController.Move(motion);
+		//	}
 
-			if (direction == "backward" && CheckIfAgentCanMove(magnitude, "backward"))
-            {            
-				Vector3 motion = -transform.forward * magnitude;
-                motion.y = Physics.gravity.y * m_GravityMultiplier;
-                m_CharacterController.Move(motion);
-            }
+		//	if (direction == "backward" && CheckIfAgentCanMove(magnitude, "backward"))
+  //          {            
+		//		Vector3 motion = -transform.forward * magnitude;
+  //              motion.y = Physics.gravity.y * m_GravityMultiplier;
+  //              m_CharacterController.Move(motion);
+  //          }
 
-			if (direction == "left" && CheckIfHandBlocksAgentMovement(magnitude, "left")
-			    && CheckIfAgentCanMove(magnitude, "left"))
-            {
-				CheckIfHandBlocksAgentMovement(magnitude, "left");
+		//	if (direction == "left" && CheckIfHandBlocksAgentMovement(magnitude, "left")
+		//	    && CheckIfAgentCanMove(magnitude, "left"))
+  //          {
+		//		CheckIfHandBlocksAgentMovement(magnitude, "left");
 
-				Vector3 motion = -transform.right * magnitude;
-                motion.y = Physics.gravity.y * m_GravityMultiplier;
-                m_CharacterController.Move(motion);
-            }
+		//		Vector3 motion = -transform.right * magnitude;
+  //              motion.y = Physics.gravity.y * m_GravityMultiplier;
+  //              m_CharacterController.Move(motion);
+  //          }
 
-			if (direction == "right" && CheckIfHandBlocksAgentMovement(magnitude, "right")
-			    && CheckIfAgentCanMove(magnitude, "right"))
-            {
-				CheckIfHandBlocksAgentMovement(magnitude, "right");
-				Vector3 motion = transform.right * magnitude; 
-				motion.y = Physics.gravity.y * m_GravityMultiplier;
-                m_CharacterController.Move(motion);
-            }
-		}
+		//	if (direction == "right" && CheckIfHandBlocksAgentMovement(magnitude, "right")
+		//	    && CheckIfAgentCanMove(magnitude, "right"))
+  //          {
+		//		CheckIfHandBlocksAgentMovement(magnitude, "right");
+		//		Vector3 motion = transform.right * magnitude; 
+		//		motion.y = Physics.gravity.y * m_GravityMultiplier;
+  //              m_CharacterController.Move(motion);
+  //          }
+		//}
 
    
-        public SimObjPhysics[] GetAllVisibleSimObjPhysics(Camera agentCamera, float maxDistance)
-        {
-            List<SimObjPhysics> currentlyVisibleItems = new List<SimObjPhysics>();
+  //      public SimObjPhysics[] GetAllVisibleSimObjPhysics(Camera agentCamera, float maxDistance)
+  //      {
+  //          List<SimObjPhysics> currentlyVisibleItems = new List<SimObjPhysics>();
 
-            Vector3 agentCameraPos = agentCamera.transform.position;
+  //          Vector3 agentCameraPos = agentCamera.transform.position;
             
-			//get all sim objects in range around us
-            Collider[] colliders_in_view = Physics.OverlapSphere(agentCameraPos, maxDistance, 
-                                                         1 << 8 , QueryTriggerInteraction.Collide); //layermask is 8
+		//	//get all sim objects in range around us
+  //          Collider[] colliders_in_view = Physics.OverlapSphere(agentCameraPos, maxDistance, 
+  //                                                       1 << 8 , QueryTriggerInteraction.Collide); //layermask is 8
 
-            if(colliders_in_view != null)
-            {
-                foreach (Collider item in colliders_in_view)
-                {
-					if(item.tag == "SimObjPhysics")
-					{
-						SimObjPhysics sop;
+  //          if(colliders_in_view != null)
+  //          {
+  //              foreach (Collider item in colliders_in_view)
+  //              {
+		//			if(item.tag == "SimObjPhysics")
+		//			{
+		//				SimObjPhysics sop;
 
-                        //if the object has no compound trigger colliders
-						if (item.GetComponent<SimObjPhysics>())
-						{
-							sop = item.GetComponent<SimObjPhysics>();
-       					}
+  //                      //if the object has no compound trigger colliders
+		//				if (item.GetComponent<SimObjPhysics>())
+		//				{
+		//					sop = item.GetComponent<SimObjPhysics>();
+  //     					}
 
-                        //if the object does have compount trigger colliders, get the SimObjPhysics component from the parent
-						else
-						{
-							sop = item.GetComponentInParent<SimObjPhysics>();
-						}
+  //                      //if the object does have compount trigger colliders, get the SimObjPhysics component from the parent
+		//				else
+		//				{
+		//					sop = item.GetComponentInParent<SimObjPhysics>();
+		//				}
 
-						if (sop.VisibilityPoints.Length > 0)
-						{
-							Transform[] visPoints = sop.VisibilityPoints;
-							int visPointCount = 0;
+		//				if (sop.VisibilityPoints.Length > 0)
+		//				{
+		//					Transform[] visPoints = sop.VisibilityPoints;
+		//					int visPointCount = 0;
 
-							foreach (Transform point in visPoints)
-							{
-								//if this particular point is in view...
-								if (CheckIfVisibilityPointInViewport(point, agentCamera, maxDistance))
-								{
-									visPointCount++;
-								}
-							}
+		//					foreach (Transform point in visPoints)
+		//					{
+		//						//if this particular point is in view...
+		//						if (CheckIfVisibilityPointInViewport(point, agentCamera, maxDistance))
+		//						{
+		//							visPointCount++;
+		//						}
+		//					}
 
-							if (visPointCount > 0)
-							{
-								sop.isVisible = true;
-								if (!currentlyVisibleItems.Contains(sop))
-									currentlyVisibleItems.Add(sop);
-							}
-						}
+		//					if (visPointCount > 0)
+		//					{
+		//						sop.isVisible = true;
+		//						if (!currentlyVisibleItems.Contains(sop))
+		//							currentlyVisibleItems.Add(sop);
+		//					}
+		//				}
 
-						else
-							Debug.Log("Error! Set at least 1 visibility point on SimObjPhysics prefab!");
+		//				else
+		//					Debug.Log("Error! Set at least 1 visibility point on SimObjPhysics prefab!");
                   
-					}
+		//			}
                   
-                }
+  //              }
 
-                //now that we have a list of currently visible items, let's see which ones are interactable!
-                Rigidbody HandRB = AgentHand.GetComponent<Rigidbody>();
-                //RaycastHit hit = new RaycastHit();
+  //              //now that we have a list of currently visible items, let's see which ones are interactable!
+  //              Rigidbody HandRB = AgentHand.GetComponent<Rigidbody>();
+  //              //RaycastHit hit = new RaycastHit();
 
-                foreach (SimObjPhysics visibleSimObjP in currentlyVisibleItems)
-                {
+  //              foreach (SimObjPhysics visibleSimObjP in currentlyVisibleItems)
+  //              {
 
-                    //get all interaction points on the visible sim object we are checking here
-                    Transform[] InteractionPoints = visibleSimObjP.InteractionPoints;
+  //                  //get all interaction points on the visible sim object we are checking here
+  //                  Transform[] InteractionPoints = visibleSimObjP.InteractionPoints;
 
-                    int ReachableInteractionPointCount = 0;
-                    foreach (Transform ip in InteractionPoints)
-                    {
-                        //sweep test from agent's hand to each Interaction point
-                        RaycastHit hit;
-                        if(HandRB.SweepTest(ip.position - AgentHand.transform.position, out hit, maxDistance))
-                        {
-                            //if the object only has one interaction point to check
-                            if(visibleSimObjP.InteractionPoints.Length == 1)
-                            {
-                                if (hit.transform == visibleSimObjP.transform)
-                                {
-                                    #if UNITY_EDITOR
-                                    Debug.DrawLine(AgentHand.transform.position, ip.transform.position, Color.magenta);
-                                    #endif
+  //                  int ReachableInteractionPointCount = 0;
+  //                  foreach (Transform ip in InteractionPoints)
+  //                  {
+  //                      //sweep test from agent's hand to each Interaction point
+  //                      RaycastHit hit;
+  //                      if(HandRB.SweepTest(ip.position - AgentHand.transform.position, out hit, maxDistance))
+  //                      {
+  //                          //if the object only has one interaction point to check
+  //                          if(visibleSimObjP.InteractionPoints.Length == 1)
+  //                          {
+  //                              if (hit.transform == visibleSimObjP.transform)
+  //                              {
+  //                                  #if UNITY_EDITOR
+  //                                  Debug.DrawLine(AgentHand.transform.position, ip.transform.position, Color.magenta);
+  //                                  #endif
 
-                                    visibleSimObjP.isInteractable = true;
-                                }
+  //                                  visibleSimObjP.isInteractable = true;
+  //                              }
 
-                                else
-                                    visibleSimObjP.isInteractable = false;
-                            }
+  //                              else
+  //                                  visibleSimObjP.isInteractable = false;
+  //                          }
 
-                            //this object has 2 or more interaction points
-                            //if any one of them can be accessed by the Agent's hand, this object is interactable
-                            if(visibleSimObjP.InteractionPoints.Length > 1)
-                            {
+  //                          //this object has 2 or more interaction points
+  //                          //if any one of them can be accessed by the Agent's hand, this object is interactable
+  //                          if(visibleSimObjP.InteractionPoints.Length > 1)
+  //                          {
                                 
-                                if(hit.transform == visibleSimObjP.transform)
-                                {
-                                    #if UNITY_EDITOR
-                                    Debug.DrawLine(AgentHand.transform.position, ip.transform.position, Color.magenta);
-                                    #endif
-                                    ReachableInteractionPointCount++;
-                                }
+  //                              if(hit.transform == visibleSimObjP.transform)
+  //                              {
+  //                                  #if UNITY_EDITOR
+  //                                  Debug.DrawLine(AgentHand.transform.position, ip.transform.position, Color.magenta);
+  //                                  #endif
+  //                                  ReachableInteractionPointCount++;
+  //                              }
 
-                                //check if at least one of the interaction points on this multi interaction point object
-                                //is accessible to the agent Hand
-                                if (ReachableInteractionPointCount > 0)
-                                {
-                                    visibleSimObjP.isInteractable = true;
-                                }
+  //                              //check if at least one of the interaction points on this multi interaction point object
+  //                              //is accessible to the agent Hand
+  //                              if (ReachableInteractionPointCount > 0)
+  //                              {
+  //                                  visibleSimObjP.isInteractable = true;
+  //                              }
 
-                                else
-                                    visibleSimObjP.isInteractable = false;
-                            }
-                        }                  
-                    }               
-                }
-            }
+  //                              else
+  //                                  visibleSimObjP.isInteractable = false;
+  //                          }
+  //                      }                  
+  //                  }               
+  //              }
+  //          }
 
-            //populate array of visible items in order by distance
-            currentlyVisibleItems.Sort((x, y) => Vector3.Distance(x.transform.position, agentCameraPos).CompareTo(Vector3.Distance(y.transform.position, agentCameraPos)));
-            return currentlyVisibleItems.ToArray();
-        }
+  //          //populate array of visible items in order by distance
+  //          currentlyVisibleItems.Sort((x, y) => Vector3.Distance(x.transform.position, agentCameraPos).CompareTo(Vector3.Distance(y.transform.position, agentCameraPos)));
+  //          return currentlyVisibleItems.ToArray();
+  //      }
 
-        public bool CheckIfVisibilityPointInViewport(Transform point, Camera agentCamera, float maxDistance)
-		{
-			bool result = false;
+  //      public bool CheckIfVisibilityPointInViewport(Transform point, Camera agentCamera, float maxDistance)
+		//{
+		//	bool result = false;
 
-			Vector3 viewPoint = agentCamera.WorldToViewportPoint(point.position);
+		//	Vector3 viewPoint = agentCamera.WorldToViewportPoint(point.position);
 
-			float ViewPointRangeHigh = 1.0f;
-			float ViewPointRangeLow = 0.0f;
+		//	float ViewPointRangeHigh = 1.0f;
+		//	float ViewPointRangeLow = 0.0f;
 
-			if (viewPoint.z > 0 && viewPoint.z < maxDistance //is in front of camera and within range of visibility sphere
-                   && viewPoint.x < ViewPointRangeHigh && viewPoint.x > ViewPointRangeLow//within x bounds of viewport
-                    && viewPoint.y < ViewPointRangeHigh && viewPoint.y > ViewPointRangeLow)//within y bounds of viewport
-            {
-                result = true;
-				#if UNITY_EDITOR
-				Debug.DrawLine(agentCamera.transform.position, point.position, Color.yellow);
-                #endif
-            }
+		//	if (viewPoint.z > 0 && viewPoint.z < maxDistance //is in front of camera and within range of visibility sphere
+  //                 && viewPoint.x < ViewPointRangeHigh && viewPoint.x > ViewPointRangeLow//within x bounds of viewport
+  //                  && viewPoint.y < ViewPointRangeHigh && viewPoint.y > ViewPointRangeLow)//within y bounds of viewport
+  //          {
+  //              result = true;
+		//		#if UNITY_EDITOR
+		//		Debug.DrawLine(agentCamera.transform.position, point.position, Color.yellow);
+  //              #endif
+  //          }
 
-            else
-                result = false;
+  //          else
+  //              result = false;
          
-            return result;
+  //          return result;
 
-		}
-        //see if a given SimObjPhysics is within the camera's range and field of view
-        public bool CheckIfInViewport(SimObjPhysics item, Camera agentCamera, float maxDistance)
-        {
-			//return true result if object is within the Viewport, false if not in viewport or the viewport doesn't care about the object
-			bool result = false;
+		//}
+   //     //see if a given SimObjPhysics is within the camera's range and field of view
+   //     public bool CheckIfInViewport(SimObjPhysics item, Camera agentCamera, float maxDistance)
+   //     {
+			////return true result if object is within the Viewport, false if not in viewport or the viewport doesn't care about the object
+			//bool result = false;
 
-                Vector3 viewPoint = agentCamera.WorldToViewportPoint(item.transform.position);
+   //             Vector3 viewPoint = agentCamera.WorldToViewportPoint(item.transform.position);
 
-                //move these two up top as serialized variables later, or maybe not? values between 0 and 1 will cause "tunnel vision"
-                float ViewPointRangeHigh = 1.0f;
-                float ViewPointRangeLow = 0.0f;
+   //             //move these two up top as serialized variables later, or maybe not? values between 0 and 1 will cause "tunnel vision"
+   //             float ViewPointRangeHigh = 1.0f;
+   //             float ViewPointRangeLow = 0.0f;
 
-				//note: Viewport space normalized as bottom left (0,0) and top right(1, 1)
-                if (viewPoint.z > 0 && viewPoint.z < maxDistance //is in front of camera and within range of visibility sphere
-                   && viewPoint.x < ViewPointRangeHigh && viewPoint.x > ViewPointRangeLow//within x bounds of viewport
-                    && viewPoint.y < ViewPointRangeHigh && viewPoint.y > ViewPointRangeLow)//within y bounds of viewport
-                {
-                    result = true;
-                }
+			//	//note: Viewport space normalized as bottom left (0,0) and top right(1, 1)
+   //             if (viewPoint.z > 0 && viewPoint.z < maxDistance //is in front of camera and within range of visibility sphere
+   //                && viewPoint.x < ViewPointRangeHigh && viewPoint.x > ViewPointRangeLow//within x bounds of viewport
+   //                 && viewPoint.y < ViewPointRangeHigh && viewPoint.y > ViewPointRangeLow)//within y bounds of viewport
+   //             {
+   //                 result = true;
+   //             }
 
-                else
-                    result = false;
-            //}
-            //else 
-				//result = false;
+   //             else
+   //                 result = false;
+   //         //}
+   //         //else 
+			//	//result = false;
 
-			return result;
-        }
+			//return result;
+        //}
       
         //changes agent's rotation, turn left or right
   //      public void Turn(string dir)
@@ -327,373 +327,373 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		//}
         
         //for turning agent left/right
-        public void Turn(int direction)
-		{
-			//currently restricting turning to 90 degrees left or right
-			if(direction != 90 && direction != -90)
-			{
-				Debug.Log("Please give -90(left) or 90(right) as direction parameter");
-				return;
-			}
+  //      public void Turn(int direction)
+		//{
+		//	//currently restricting turning to 90 degrees left or right
+		//	if(direction != 90 && direction != -90)
+		//	{
+		//		Debug.Log("Please give -90(left) or 90(right) as direction parameter");
+		//		return;
+		//	}
 
-			if(CheckIfAgentCanTurn(direction))
-			transform.Rotate(transform.rotation.x, transform.rotation.y + direction, transform.rotation.z);
-			//transform.rotation = Quaternion.Euler(new Vector3(transform.rotation.x, transform.rotation.y + direction, transform.rotation.z));
-			//transform.rotation = Quaternion.AngleAxis(transform.rotation.y + direction, Vector3.up);
+		//	if(CheckIfAgentCanTurn(direction))
+		//	transform.Rotate(transform.rotation.x, transform.rotation.y + direction, transform.rotation.z);
+		//	//transform.rotation = Quaternion.Euler(new Vector3(transform.rotation.x, transform.rotation.y + direction, transform.rotation.z));
+		//	//transform.rotation = Quaternion.AngleAxis(transform.rotation.y + direction, Vector3.up);
 			
-		}
+		//}
 
-        private int nearestAngleIndex(float angle, float[] arrayOfAngles)
-		{
-			for (int i = 0; i < arrayOfAngles.Length; i++)
-			{
-				if(Math.Abs(angle - arrayOfAngles[i]) < 2.0f)
-				{
-					return i;
-				}
-			}
+  //      private int nearestAngleIndex(float angle, float[] arrayOfAngles)
+		//{
+		//	for (int i = 0; i < arrayOfAngles.Length; i++)
+		//	{
+		//		if(Math.Abs(angle - arrayOfAngles[i]) < 2.0f)
+		//		{
+		//			return i;
+		//		}
+		//	}
 
-			return 0;
-		}
+		//	return 0;
+		//}
 
-        private int CurrentTurnAngleIndex()
-		{
-			return nearestAngleIndex(Quaternion.LookRotation (transform.forward).eulerAngles.y, TurnAngles);
-		}
+  //      private int CurrentTurnAngleIndex()
+		//{
+		//	return nearestAngleIndex(Quaternion.LookRotation (transform.forward).eulerAngles.y, TurnAngles);
+		//}
 
-        public void TurnLeft()
-		{
-			if(CheckIfAgentCanTurn(-90))
-			{
-				int index = CurrentTurnAngleIndex() - 1;
-                if (index < 0)
-                {
-                    index = TurnAngles.Length - 1;
-                }
+  //      public void TurnLeft()
+		//{
+		//	if(CheckIfAgentCanTurn(-90))
+		//	{
+		//		int index = CurrentTurnAngleIndex() - 1;
+  //              if (index < 0)
+  //              {
+  //                  index = TurnAngles.Length - 1;
+  //              }
 
-                float targetRotation = TurnAngles[index];
-                transform.rotation = Quaternion.Euler(new Vector3(0.0f, targetRotation, 0.0f));
-			}
-		}
+  //              float targetRotation = TurnAngles[index];
+  //              transform.rotation = Quaternion.Euler(new Vector3(0.0f, targetRotation, 0.0f));
+		//	}
+		//}
 
-        public void TurnRight()
-		{
-			if(CheckIfAgentCanTurn(90))
-			{
-				int index = CurrentTurnAngleIndex() + 1;
-                if (index == TurnAngles.Length)
-                {
-                    index = 0;
-                }
+  //      public void TurnRight()
+		//{
+		//	if(CheckIfAgentCanTurn(90))
+		//	{
+		//		int index = CurrentTurnAngleIndex() + 1;
+  //              if (index == TurnAngles.Length)
+  //              {
+  //                  index = 0;
+  //              }
 
-                float targetRotation = TurnAngles[index];
-                transform.rotation = Quaternion.Euler(new Vector3(0.0f, targetRotation, 0.0f));
-			}
-		}
+  //              float targetRotation = TurnAngles[index];
+  //              transform.rotation = Quaternion.Euler(new Vector3(0.0f, targetRotation, 0.0f));
+		//	}
+		//}
 
-        public bool CheckIfAgentCanTurn(int direction)
-		{
-			bool result = false;
+  //      public bool CheckIfAgentCanTurn(int direction)
+		//{
+		//	bool result = false;
 
-			if (ItemInHand == null)
-            {
-                Debug.Log("Rotation check passed: nothing in Agent Hand");
-                return true;
-            }
+		//	if (ItemInHand == null)
+  //          {
+  //              Debug.Log("Rotation check passed: nothing in Agent Hand");
+  //              return true;
+  //          }
 
-			if (direction != 90 && direction != -90)
-            {
-                Debug.Log("Please give -90(left) or 90(right) as direction parameter");
-                return false;
-            }
+		//	if (direction != 90 && direction != -90)
+  //          {
+  //              Debug.Log("Please give -90(left) or 90(right) as direction parameter");
+  //              return false;
+  //          }
 
-			//zero out the pivot and default to hand's current position
-			TurnSweepTestPivot.transform.localRotation = Quaternion.Euler(Vector3.zero);
-   			TurnSweepPosition.transform.position = AgentHand.transform.position;         
+		//	//zero out the pivot and default to hand's current position
+		//	TurnSweepTestPivot.transform.localRotation = Quaternion.Euler(Vector3.zero);
+  // 			TurnSweepPosition.transform.position = AgentHand.transform.position;         
 
 
-			TurnSweepTestPivot.transform.localRotation = Quaternion.Euler(new Vector3(0, direction, 0));
+		//	TurnSweepTestPivot.transform.localRotation = Quaternion.Euler(new Vector3(0, direction, 0));
             
-			RaycastHit hit;
+		//	RaycastHit hit;
             
-			Rigidbody ItemRB = ItemInHand.GetComponent<Rigidbody>();
+		//	Rigidbody ItemRB = ItemInHand.GetComponent<Rigidbody>();
 
-			//check if the sweep hits anything at all
-			if (ItemRB.SweepTest(TurnSweepPosition.transform.position - AgentHand.transform.position, out hit,
-								 Vector3.Distance(TurnSweepPosition.transform.position, AgentHand.transform.position),
-								 QueryTriggerInteraction.Ignore))
-			{
-				//print(hit.transform.name);
-				//If the thing hit was anything except the object itself, the agent, or the agent's hand - it's blocking
-				if (hit.transform != AgentHand.transform && hit.transform != gameObject.transform && hit.transform != ItemInHand.transform)
-				{
-					if (direction == 90)
-					{
-						Debug.Log(hit.transform.name + " is in Agent Hand's Path! Can't rotate Agent RIGHT");
-						result = false;
-					}
+		//	//check if the sweep hits anything at all
+		//	if (ItemRB.SweepTest(TurnSweepPosition.transform.position - AgentHand.transform.position, out hit,
+		//						 Vector3.Distance(TurnSweepPosition.transform.position, AgentHand.transform.position),
+		//						 QueryTriggerInteraction.Ignore))
+		//	{
+		//		//print(hit.transform.name);
+		//		//If the thing hit was anything except the object itself, the agent, or the agent's hand - it's blocking
+		//		if (hit.transform != AgentHand.transform && hit.transform != gameObject.transform && hit.transform != ItemInHand.transform)
+		//		{
+		//			if (direction == 90)
+		//			{
+		//				Debug.Log(hit.transform.name + " is in Agent Hand's Path! Can't rotate Agent RIGHT");
+		//				result = false;
+		//			}
 
-					else
-					{
-						Debug.Log(hit.transform.name + " is in Agent Hand's Path! Can't rotate Agent LEFT");
-						result = false;
-					}
-				} 
+		//			else
+		//			{
+		//				Debug.Log(hit.transform.name + " is in Agent Hand's Path! Can't rotate Agent LEFT");
+		//				result = false;
+		//			}
+		//		} 
 
-				else
-                {
-                    //the sweep hit something that it is ok to hit (agent itself, agent's hand, object itself somehow)
-                    result = true;
-                }
-			}
+		//		else
+  //              {
+  //                  //the sweep hit something that it is ok to hit (agent itself, agent's hand, object itself somehow)
+  //                  result = true;
+  //              }
+		//	}
 
-			else
-            {
-                //oh we didn't hit anything, good to go
-                result = true;
-            }
+		//	else
+  //          {
+  //              //oh we didn't hit anything, good to go
+  //              result = true;
+  //          }
            
-			return result;         
-		}
+		//	return result;         
+		//}
 
-        public void LookUp()
-		{
-			if(LookAngleIndex < LookAngles.Length - 1)
-			{
-				//look up here, iterate to next upward angle
-				float targetAngle = LookAngles[LookAngleIndex + 1];
-				//print("looking up " + targetAngle);
+  //      public void LookUp()
+		//{
+		//	if(LookAngleIndex < LookAngles.Length - 1)
+		//	{
+		//		//look up here, iterate to next upward angle
+		//		float targetAngle = LookAngles[LookAngleIndex + 1];
+		//		//print("looking up " + targetAngle);
 
-				if(CheckIfAgentCanLook(targetAngle))
-				{
-					m_Camera.transform.localRotation = Quaternion.AngleAxis(targetAngle, Vector3.right);
-                    LookAngleIndex++;
-				}
+		//		if(CheckIfAgentCanLook(targetAngle))
+		//		{
+		//			m_Camera.transform.localRotation = Quaternion.AngleAxis(targetAngle, Vector3.right);
+  //                  LookAngleIndex++;
+		//		}
 
-			}
+		//	}
 
-			else
-			{
-				Debug.Log("Can't LookUp() beyond maximum angle!");
-			}
-		}
+		//	else
+		//	{
+		//		Debug.Log("Can't LookUp() beyond maximum angle!");
+		//	}
+		//}
 
-        public void LookDown()
-		{
-			if(LookAngleIndex > 0)
-			{
-				float targetAngle = LookAngles[LookAngleIndex - 1];
-				//print("looking down " + targetAngle);
-				if(CheckIfAgentCanLook(targetAngle))
-				{
-					m_Camera.transform.localRotation = Quaternion.AngleAxis(targetAngle, Vector3.right);
-                    LookAngleIndex--;
-				}            
-			}
+  //      public void LookDown()
+		//{
+		//	if(LookAngleIndex > 0)
+		//	{
+		//		float targetAngle = LookAngles[LookAngleIndex - 1];
+		//		//print("looking down " + targetAngle);
+		//		if(CheckIfAgentCanLook(targetAngle))
+		//		{
+		//			m_Camera.transform.localRotation = Quaternion.AngleAxis(targetAngle, Vector3.right);
+  //                  LookAngleIndex--;
+		//		}            
+		//	}
 
-			else
-			{
-				Debug.Log("Can't LookDown() below minimum angle!");
-			}
-		}
+		//	else
+		//	{
+		//		Debug.Log("Can't LookDown() below minimum angle!");
+		//	}
+		//}
 
-        public bool CheckIfAgentCanLook(float targetAngle)
-		{
-			//print(targetAngle);
-			if (ItemInHand == null)
-            {
-                Debug.Log("Look check passed: nothing in Agent Hand to prevent Angle change");
-                return true;
-            }
+  //      public bool CheckIfAgentCanLook(float targetAngle)
+		//{
+		//	//print(targetAngle);
+		//	if (ItemInHand == null)
+  //          {
+  //              Debug.Log("Look check passed: nothing in Agent Hand to prevent Angle change");
+  //              return true;
+  //          }
 
-            //returns true if Rotation is allowed
-            bool result = false;
+  //          //returns true if Rotation is allowed
+  //          bool result = false;
 
-			//zero out the pivot and default to hand's current position AND rotation
-			LookSweepTestPivot.transform.localRotation = m_Camera.transform.localRotation;
-			LookSweepPosition.transform.position = AgentHand.transform.position;
+		//	//zero out the pivot and default to hand's current position AND rotation
+		//	LookSweepTestPivot.transform.localRotation = m_Camera.transform.localRotation;
+		//	LookSweepPosition.transform.position = AgentHand.transform.position;
 
-			//rotate pivot to target location, then sweep for obstacles
-			LookSweepTestPivot.transform.localRotation = Quaternion.AngleAxis(targetAngle, Vector3.right);
-			//RotationSweepTestPivot.transform.localRotation = Quaternion.Euler(new Vector3(targetAngle, 0, 0));
+		//	//rotate pivot to target location, then sweep for obstacles
+		//	LookSweepTestPivot.transform.localRotation = Quaternion.AngleAxis(targetAngle, Vector3.right);
+		//	//RotationSweepTestPivot.transform.localRotation = Quaternion.Euler(new Vector3(targetAngle, 0, 0));
             
-			RaycastHit hit;
+		//	RaycastHit hit;
 
-            Rigidbody ItemRB = ItemInHand.GetComponent<Rigidbody>();
+  //          Rigidbody ItemRB = ItemInHand.GetComponent<Rigidbody>();
 
-            //check if the sweep hits anything at all
-            if (ItemRB.SweepTest(LookSweepPosition.transform.position - AgentHand.transform.position, out hit,
-                                 Vector3.Distance(LookSweepPosition.transform.position, AgentHand.transform.position),
-                                 QueryTriggerInteraction.Ignore))
-            {
-                //If the thing hit was anything except the object itself, the agent, or the agent's hand - it's blocking
-				if (hit.transform != AgentHand.transform && hit.transform != ItemInHand.transform && hit.transform != gameObject.transform) //&& hit.transform != gameObject.transform
-                {
-					Debug.Log("Can't change view to " + targetAngle + ", " + hit.transform.name + "is blocking the way");
-					result = false;
-                }
+  //          //check if the sweep hits anything at all
+  //          if (ItemRB.SweepTest(LookSweepPosition.transform.position - AgentHand.transform.position, out hit,
+  //                               Vector3.Distance(LookSweepPosition.transform.position, AgentHand.transform.position),
+  //                               QueryTriggerInteraction.Ignore))
+  //          {
+  //              //If the thing hit was anything except the object itself, the agent, or the agent's hand - it's blocking
+		//		if (hit.transform != AgentHand.transform && hit.transform != ItemInHand.transform && hit.transform != gameObject.transform) //&& hit.transform != gameObject.transform
+  //              {
+		//			Debug.Log("Can't change view to " + targetAngle + ", " + hit.transform.name + "is blocking the way");
+		//			result = false;
+  //              }
 
-                else
-                {
-                    //the sweep hit something that it is ok to hit (agent itself, agent's hand, object itself somehow)
-                    result = true;
+  //              else
+  //              {
+  //                  //the sweep hit something that it is ok to hit (agent itself, agent's hand, object itself somehow)
+  //                  result = true;
 
-                }
+  //              }
 
-            }
+  //          }
 
-            else
-            {
-                //oh we didn't hit anything, good to go
-                result = true;
-            }
+  //          else
+  //          {
+  //              //oh we didn't hit anything, good to go
+  //              result = true;
+  //          }
          
-            return result;
-		}
+  //          return result;
+		//}
         
         
-        //If an object is in the agent's hand, sweeptest desired move distance to check for blocking objects
-		public bool CheckIfHandBlocksAgentMovement(float moveMagnitude, string direction)
-		{
-			bool result = false;
+  //      //If an object is in the agent's hand, sweeptest desired move distance to check for blocking objects
+		//public bool CheckIfHandBlocksAgentMovement(float moveMagnitude, string direction)
+		//{
+		//	bool result = false;
 
-            //if there is nothing in our hand, we are good, return!
-			if(ItemInHand == null)
-			{
-				result = true;
-				Debug.Log("Agent has nothing in hand blocking movement");
-				return result;
-   			}
+  //          //if there is nothing in our hand, we are good, return!
+		//	if(ItemInHand == null)
+		//	{
+		//		result = true;
+		//		Debug.Log("Agent has nothing in hand blocking movement");
+		//		return result;
+  // 			}
 
-            //otherwise we are holding an object and need to do a sweep using that object's rb
-			else
-			{
-				Vector3 dir = new Vector3();
+  //          //otherwise we are holding an object and need to do a sweep using that object's rb
+		//	else
+		//	{
+		//		Vector3 dir = new Vector3();
 
-                //use the agent's forward as reference
-				switch (direction)
-                {
-                    case "forward":
-                        dir = gameObject.transform.forward;
-                        break;
+  //              //use the agent's forward as reference
+		//		switch (direction)
+  //              {
+  //                  case "forward":
+  //                      dir = gameObject.transform.forward;
+  //                      break;
 
-                    case "left":
-                        dir = -gameObject.transform.right;
-                        break;
+  //                  case "left":
+  //                      dir = -gameObject.transform.right;
+  //                      break;
 
-                    case "right":
-                        dir = gameObject.transform.right;
-                        break;
+  //                  case "right":
+  //                      dir = gameObject.transform.right;
+  //                      break;
 
-                    default:
-                        Debug.Log("Incorrect direction input! Allowed Directions: forward, left, right");
-                        break;
-                }
-				//otherwise we haev an item in our hand, so sweep using it's rigid body.
-                RaycastHit hit;
+  //                  default:
+  //                      Debug.Log("Incorrect direction input! Allowed Directions: forward, left, right");
+  //                      break;
+  //              }
+		//		//otherwise we haev an item in our hand, so sweep using it's rigid body.
+  //              RaycastHit hit;
                 
-                Rigidbody rb = ItemInHand.GetComponent<Rigidbody>();
-				if(rb.SweepTest(dir, out hit, moveMagnitude, QueryTriggerInteraction.Ignore))
-				{
-					Debug.Log(hit.transform.name + " is blocking Agent Hand holding " + ItemInHand.name + " from moving " + direction);
-                    result = false;
-				}
-				//nothing was hit, we good
-                else
-                {
-					Debug.Log("Agent hand holding " + ItemInHand.name + " can move " + direction + " " + moveMagnitude + " units");
-					result = true;
-                }
-			}
+  //              Rigidbody rb = ItemInHand.GetComponent<Rigidbody>();
+		//		if(rb.SweepTest(dir, out hit, moveMagnitude, QueryTriggerInteraction.Ignore))
+		//		{
+		//			Debug.Log(hit.transform.name + " is blocking Agent Hand holding " + ItemInHand.name + " from moving " + direction);
+  //                  result = false;
+		//		}
+		//		//nothing was hit, we good
+  //              else
+  //              {
+		//			Debug.Log("Agent hand holding " + ItemInHand.name + " can move " + direction + " " + moveMagnitude + " units");
+		//			result = true;
+  //              }
+		//	}
          
-			return result;
-		}
+		//	return result;
+		//}
               
-        //
-        public bool CheckIfAgentCanMove(float moveMagnitude, string direction)
-		{
-			bool result = false;
-			//RaycastHit hit;
+  //      //
+  //      public bool CheckIfAgentCanMove(float moveMagnitude, string direction)
+		//{
+		//	bool result = false;
+		//	//RaycastHit hit;
 
-			Vector3 dir = new Vector3();
+		//	Vector3 dir = new Vector3();
 
-            switch(direction)
-			{
-				case "forward":
-					dir = gameObject.transform.forward;
-					break;
+  //          switch(direction)
+		//	{
+		//		case "forward":
+		//			dir = gameObject.transform.forward;
+		//			break;
 
-				case "backward":
-					dir = -gameObject.transform.forward;
-					break;
+		//		case "backward":
+		//			dir = -gameObject.transform.forward;
+		//			break;
 
-				case "left":
-					dir = -gameObject.transform.right;
-					break;
+		//		case "left":
+		//			dir = -gameObject.transform.right;
+		//			break;
 
-				case "right":
-					dir = gameObject.transform.right;
-					break;
+		//		case "right":
+		//			dir = gameObject.transform.right;
+		//			break;
                 
-				default:
-					Debug.Log("Incorrect direction input! Allowed Directions: forward, backward, left, right");
-					break;
-			}
+		//		default:
+		//			Debug.Log("Incorrect direction input! Allowed Directions: forward, backward, left, right");
+		//			break;
+		//	}
 
-			Rigidbody rb = gameObject.GetComponent<Rigidbody>();
+		//	Rigidbody rb = gameObject.GetComponent<Rigidbody>();
 
-            //might need to sweep test all, check for static..... want to be able to try and move through sim objects that can pickup and move yes
-			RaycastHit[] sweepResults = rb.SweepTestAll(dir, moveMagnitude, QueryTriggerInteraction.Ignore);
+  //          //might need to sweep test all, check for static..... want to be able to try and move through sim objects that can pickup and move yes
+		//	RaycastHit[] sweepResults = rb.SweepTestAll(dir, moveMagnitude, QueryTriggerInteraction.Ignore);
 
-            //check if we hit an environmental structure or a sim object that we aren't actively holding. If so we can't move
-			if(sweepResults.Length > 0)
-			{
-				foreach(RaycastHit res in sweepResults)
-                {
-                    //if(res.transform.tag == "Structure")
-                    //{
-                    //    print("hit a structure");
-                    //    result = false;
-                    //    Debug.Log(res.transform.name + " is blocking the Agent from moving " + direction);
-                    //    return result;
-                    //}
+  //          //check if we hit an environmental structure or a sim object that we aren't actively holding. If so we can't move
+		//	if(sweepResults.Length > 0)
+		//	{
+		//		foreach(RaycastHit res in sweepResults)
+  //              {
+  //                  //if(res.transform.tag == "Structure")
+  //                  //{
+  //                  //    print("hit a structure");
+  //                  //    result = false;
+  //                  //    Debug.Log(res.transform.name + " is blocking the Agent from moving " + direction);
+  //                  //    return result;
+  //                  //}
 
-                    //nothing in our hand, so nothing to ignore
-                    if(ItemInHand == null)
-                    {
-                        if(res.transform.GetComponent<SimObjPhysics>())
-                        {
-                            result = false;
-                            Debug.Log(res.transform.name + " is blocking the Agent from moving " + direction);
-							break;
-                        }
+  //                  //nothing in our hand, so nothing to ignore
+  //                  if(ItemInHand == null)
+  //                  {
+  //                      if(res.transform.GetComponent<SimObjPhysics>())
+  //                      {
+  //                          result = false;
+  //                          Debug.Log(res.transform.name + " is blocking the Agent from moving " + direction);
+		//					break;
+  //                      }
                   
-                    }               
-                    //oh if there is something in our hand, ignore it if that is what we hit
-                    if(ItemInHand != null)
-                    {
-                        if(ItemInHand.transform == res.transform)
-                        {
-							result = true;
-                            break;
-                        }
-                    }
+  //                  }               
+  //                  //oh if there is something in our hand, ignore it if that is what we hit
+  //                  if(ItemInHand != null)
+  //                  {
+  //                      if(ItemInHand.transform == res.transform)
+  //                      {
+		//					result = true;
+  //                          break;
+  //                      }
+  //                  }
 
-					Debug.Log(res.transform.name + " is blocking the Agent from moving " + direction);
+		//			Debug.Log(res.transform.name + " is blocking the Agent from moving " + direction);
 
-                }
-			}
+  //              }
+		//	}
 
 
-            //if the array is empty, nothing was hit by the sweeptest so we are clear to move
-			else
-			{
-				Debug.Log("Agent Body can move " + direction);
-                result = true;	
-			}
+  //          //if the array is empty, nothing was hit by the sweeptest so we are clear to move
+		//	else
+		//	{
+		//		Debug.Log("Agent Body can move " + direction);
+  //              result = true;	
+		//	}
 
-            return result;
-		}
+  //          return result;
+		//}
         
         //returns true if the Hand Movement was succesful
         //false if blocked by something or out of range
@@ -794,6 +794,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		}
 
         //pickup a sim object
+        //hand must be in defualt position, then does a sweep to see if the hand can get to the object's interaction point
         public bool PickUpSimObjPhysics(Transform target)
         {
 			if(target.GetComponent<SimObjPhysics>().PrimaryProperty!= SimObjPrimaryProperty.CanPickup)
@@ -983,62 +984,62 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
         }
 
-		#if UNITY_EDITOR
-        //used to show what's currently visible on the top left of the screen
-        void OnGUI()
-        {
-            if (VisibleObjects != null)
-            {
-                if (VisibleObjects.Length > 10)
-                {
-                    int horzIndex = -1;
-                    GUILayout.BeginHorizontal();
-                    foreach (SimObjPhysics o in VisibleObjects)
-                    {
-                        horzIndex++;
-                        if (horzIndex >= 3)
-                        {
-                            GUILayout.EndHorizontal();
-                            GUILayout.BeginHorizontal();
-                            horzIndex = 0;
-                        }
-                        GUILayout.Button(o.UniqueID, UnityEditor.EditorStyles.miniButton, GUILayout.MaxWidth(200f));
-                    }
+		//#if UNITY_EDITOR
+        ////used to show what's currently visible on the top left of the screen
+        //void OnGUI()
+        //{
+        //    if (VisibleObjects != null)
+        //    {
+        //        if (VisibleObjects.Length > 10)
+        //        {
+        //            int horzIndex = -1;
+        //            GUILayout.BeginHorizontal();
+        //            foreach (SimObjPhysics o in VisibleObjects)
+        //            {
+        //                horzIndex++;
+        //                if (horzIndex >= 3)
+        //                {
+        //                    GUILayout.EndHorizontal();
+        //                    GUILayout.BeginHorizontal();
+        //                    horzIndex = 0;
+        //                }
+        //                GUILayout.Button(o.UniqueID, UnityEditor.EditorStyles.miniButton, GUILayout.MaxWidth(200f));
+        //            }
 
-                    GUILayout.EndHorizontal();
-                }
+        //            GUILayout.EndHorizontal();
+        //        }
 
-                else
-                {
-                    Plane[] planes = GeometryUtility.CalculateFrustumPlanes(m_Camera);
+        //        else
+        //        {
+        //            Plane[] planes = GeometryUtility.CalculateFrustumPlanes(m_Camera);
 
-                    //int position_number = 0;
-                    foreach (SimObjPhysics o in VisibleObjects)
-                    {
-                        string suffix = "";
-                        Bounds bounds = new Bounds(o.gameObject.transform.position, new Vector3(0.05f, 0.05f, 0.05f));
-                        if (GeometryUtility.TestPlanesAABB(planes, bounds))
-                        {
-                            //position_number += 1;
+        //            //int position_number = 0;
+        //            foreach (SimObjPhysics o in VisibleObjects)
+        //            {
+        //                string suffix = "";
+        //                Bounds bounds = new Bounds(o.gameObject.transform.position, new Vector3(0.05f, 0.05f, 0.05f));
+        //                if (GeometryUtility.TestPlanesAABB(planes, bounds))
+        //                {
+        //                    //position_number += 1;
 
-                            //if (o.GetComponent<SimObj>().Manipulation == SimObjManipProperty.Inventory)
-                            //    suffix += " VISIBLE: " + "Press '" + position_number + "' to pick up";
+        //                    //if (o.GetComponent<SimObj>().Manipulation == SimObjManipProperty.Inventory)
+        //                    //    suffix += " VISIBLE: " + "Press '" + position_number + "' to pick up";
 
-                            //else
-                            //suffix += " VISIBLE";
-                            if (o.isInteractable == true)
-                            {
-                                suffix += " INTERACTABLE";
-                            }
-                        }
+        //                    //else
+        //                    //suffix += " VISIBLE";
+        //                    if (o.isInteractable == true)
+        //                    {
+        //                        suffix += " INTERACTABLE";
+        //                    }
+        //                }
 
 
-                        GUILayout.Button(o.UniqueID + suffix, UnityEditor.EditorStyles.miniButton, GUILayout.MinWidth(100f));
-                    }
-                }
-            }
-        }
-        #endif
+        //                GUILayout.Button(o.UniqueID + suffix, UnityEditor.EditorStyles.miniButton, GUILayout.MinWidth(100f));
+        //            }
+        //        }
+        //    }
+        //}
+        //#endif
 
         private void DebugKeyboardControls()
 		{
@@ -1100,6 +1101,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         //check if the hit object is a SimObj in our array of Accessible sim objects
                         if (hit.transform.tag == "SimObjPhysics")
                         {
+							//print(hit.transform.name);
                             //if an interaction point is accessible by the hand, proceed to try and pick it up
                             if (hit.transform.GetComponent<SimObjPhysics>().isInteractable == true)
                             {
@@ -1166,7 +1168,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		private void Update()	
         {
 			//constantly check for visible objects in front of agent
-			VisibleObjects = GetAllVisibleSimObjPhysics(m_Camera, MaxDistance);
+			//VisibleObjects = GetAllVisibleSimObjPhysics(m_Camera, MaxDistance);
 
 			DebugKeyboardControls();
          

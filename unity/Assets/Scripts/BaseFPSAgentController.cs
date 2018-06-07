@@ -658,7 +658,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             return 0;
         }
 
-        private int currentHorizonAngleIndex()
+        protected int currentHorizonAngleIndex()
         {
             return nearestAngleIndex(Quaternion.LookRotation(m_Camera.transform.forward).eulerAngles.x, horizonAngles);
         }
@@ -692,7 +692,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
         }
 
         //rotates 90 degrees left w/ respect to current forward
-		public void RotateLeft(ServerAction controlCommand)
+		public virtual void RotateLeft(ServerAction controlCommand)
         {
             int index = currentHeadingAngleIndex() - 1;
             if (index < 0)
@@ -706,7 +706,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
         }
       
         //rotates 90 degrees right w/ respect to current forward
-        public void RotateRight(ServerAction controlCommand)
+        public virtual void RotateRight(ServerAction controlCommand)
         {
 
             int index = currentHeadingAngleIndex() + 1;

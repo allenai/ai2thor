@@ -29,34 +29,34 @@ namespace UnityStandardAssets.Characters.FirstPerson
             if (command == "moveforward")
             {
 				//MoveForward();
-				AgentController.MoveAgent("forward", 0.5f);
+				//AgentController.MoveAgent("forward", 0.5f);
             }
 
             if (command == "moveleft")
 			{
-				AgentController.MoveAgent("left", 0.5f);
+				//AgentController.MoveAgent("left", 0.5f);
 			}
 
 			if (command == "moveright")
 			{
-				AgentController.MoveAgent("right", 0.5f);
+				//AgentController.MoveAgent("right", 0.5f);
 			}
 
             if (command == "movebackward")
 			{
-				AgentController.MoveAgent("backward", 0.5f);
+				//AgentController.MoveAgent("backward", 0.5f);
 			}
 
             //////////////////////
 			/// camera rotate stuff
             if(command =="lookup")
 			{
-				AgentController.LookUp();
+				//AgentController.LookUp();
     		}
 
 			if (command == "lookdown")
             {
-                AgentController.LookDown();
+                //AgentController.LookDown();
             }
 
 
@@ -64,12 +64,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			/// rotate
             if (command == "turnleft")
 			{
-				AgentController.TurnLeft();
+				//AgentController.TurnLeft();
 			}
 
 			if (command == "turnright")
             {
-				AgentController.TurnRight();
+				//AgentController.TurnRight();
 
             }
 
