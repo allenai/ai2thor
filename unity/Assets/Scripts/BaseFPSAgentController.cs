@@ -299,6 +299,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			agentMeta.position = transform.position;
 			agentMeta.rotation = transform.eulerAngles;
 			agentMeta.cameraHorizon = m_Camera.transform.rotation.eulerAngles.x;
+			if (agentMeta.cameraHorizon > 180) {
+				agentMeta.cameraHorizon -= 360;
+			}
 
 			MetadataWrapper metaMessage = new MetadataWrapper();
 			metaMessage.agent = agentMeta;
@@ -327,6 +330,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			}
 			int numObj = simObjects.Length;
 			List<ObjectMetadata> metadata = new List<ObjectMetadata>();
+			Dictionary<string, string> parentReceptacles = new Dictionary<string, string> ();
+
 			for (int k = 0; k < numObj; k++)
 			{
 				ObjectMetadata meta = new ObjectMetadata();
@@ -357,8 +362,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
 					foreach (SimObj cso in SimUtil.GetItemsFromReceptacle(simObj.Receptacle))
 					{
 						receptacleObjectIds.Add(cso.UniqueID);
-
+						parentReceptacles.Add (cso.UniqueID, simObj.UniqueID);
 					}
+
 					List<PivotSimObj> pivotSimObjs = new List<PivotSimObj>();
 					for (int i = 0; i < simObj.Receptacle.Pivots.Length; i++)
 					{
@@ -383,9 +389,26 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 				meta.visible = (visibleObjectIds.Contains(simObj));
 				meta.distance = Vector3.Distance(transform.position, o.transform.position);
+				Bounds bounds = simObj.Bounds;
+				meta.bounds3D = new [] {
+					bounds.min.x,
+					bounds.min.y,
+					bounds.min.z,
+					bounds.max.x,
+					bounds.max.y,
+					bounds.max.z,
+				};
 
 				metadata.Add(meta);
 			}
+
+
+			foreach (ObjectMetadata meta in metadata) {
+				if (parentReceptacles.ContainsKey (meta.objectId)) {
+					meta.parentReceptacle = parentReceptacles [meta.objectId];
+				}
+			}
+
 			return metadata.ToArray();
 
 		}
@@ -470,12 +493,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			}
 			body.AddForceAtPosition(m_CharacterController.velocity * 0.1f, hit.point, ForceMode.Impulse);
 		}
-
-
-
-
-
-
 
 	}
 }

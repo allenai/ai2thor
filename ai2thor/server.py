@@ -21,6 +21,7 @@ except ImportError:
     from Queue import Empty
 
 import time
+import warnings
 
 from flask import Flask, request, make_response, abort, Response
 import werkzeug
@@ -30,6 +31,8 @@ import numpy as np
 from PIL import Image
 
 logging.getLogger('werkzeug').setLevel(logging.ERROR)
+
+MAX_DEPTH = 5000
 
 # get with timeout to allow quit
 def queue_get(que):
@@ -50,6 +53,33 @@ class MultiAgentEvent(object):
         self.cv2image = self._active_event.cv2image
         self.metadata = self._active_event.metadata
         self.events = events
+        # XXX add methods for depth,sem_seg
+
+def read_buffer_image(buf, width, height):
+
+    if sys.version_info.major < 3:
+        # support for Python 2.7 - can't handle memoryview in Python2.7 and Numpy frombuffer
+        return np.flip(np.frombuffer(
+            buf.tobytes(), dtype=np.uint8).reshape(width, height, -1), axis=0)
+    else:
+        return np.flip(np.frombuffer(buf, dtype=np.uint8).reshape(width, height, -1), axis=0)
+
+def unique_rows(arr, return_index=False, return_inverse=False):
+    arr = np.ascontiguousarray(arr).copy()
+    b = arr.view(np.dtype((np.void, arr.dtype.itemsize * arr.shape[1])))
+    if return_inverse:
+        _, idx, inv = np.unique(b, return_index=True, return_inverse=True)
+    else:
+        _, idx = np.unique(b, return_index=True)
+    unique = arr[idx]
+    if return_index and return_inverse:
+        return unique, idx, inv
+    elif return_index:
+        return unique, idx
+    elif return_inverse:
+        return unique, inv
+    else:
+        return unique
 
 class Event(object):
     """
@@ -58,19 +88,142 @@ class Event(object):
     as the metadata sent about each object
     """
 
-    def __init__(self, metadata, image_data):
+    def __init__(self, metadata):
         self.metadata = metadata
-        width = metadata['screenWidth']
-        height = metadata['screenHeight']
-        self.image_data = image_data
-        if sys.version_info.major < 3:
-            # support for Python 2.7 - can't handle memoryview in Python2.7 and Numpy frombuffer
-            self.frame = np.flip(np.frombuffer(image_data.tobytes(), dtype=np.uint8).reshape(width, height, 3), axis=0)
-        else:
-            self.frame = np.flip(np.frombuffer(image_data, dtype=np.uint8).reshape(width, height, 3), axis=0)
+        self.screen_width = metadata['screenWidth']
+        self.screen_height = metadata['screenHeight']
+
+        self.frame = None
+        self.frame_depth = None
+
+        self.color_to_object_id = {}
+        self.object_id_to_color = {}
+
+        self.bounds2D = None
+        self.instance_masks = {}
+        self.class_masks = {}
+
+        self.instance_segmentation_frame = None
+        self.class_segmentation_frame = None
+
+        self.detections = {}
+
+        self.class_detections2D = {}
+        self.instance_detections2D = {}
+
+        self.process_colors()
+        self.process_visible_bounds2D()
+    
+    @property
+    def image_data(self):
+        warnings.warn("Event.image_data has been removed - RGB data can be retrieved from event.frame and encoded to an image format")
+        return None
+
+
+    def process_visible_bounds2D(self):
+        if self.bounds2D and len(self.bounds2D) > 0:
+            for obj in self.metadata['objects']:
+                obj['visibleBounds2D'] = (obj['visible'] and obj['objectId'] in self.bounds2D)
+
+    def process_colors(self):
+        for color_data in self.metadata['colors']:
+            name = ''.join([x for x in color_data['name'] if x.isalpha()]).lower()  # Keep only alpha chars
+            name = color_data['name']
+            c_key = tuple(color_data['color'])
+            self.color_to_object_id[c_key] = name
+            self.object_id_to_color[name] = c_key
+
+    def objects_by_type(self, object_type):
+        return [obj for obj in self.metadata['objects'] if obj['objectType'] == object_type]
+
+    def process_colors_ids(self):
+        if self.instance_segmentation_frame is None:
+            return
+
+        MIN_DETECTION_LEN = 10
+
+        self.bounds2D = {}
+        unique_ids, unique_inverse = unique_rows(self.instance_segmentation_frame.reshape(-1, 3), return_inverse=True)
+        unique_inverse = unique_inverse.reshape(self.instance_segmentation_frame.shape[:2])
+        unique_masks = (np.tile(unique_inverse[np.newaxis, :, :], (len(unique_ids), 1, 1)) == np.arange(len(unique_ids))[:, np.newaxis, np.newaxis])
+        #for unique_color_ind, unique_color in enumerate(unique_ids):
+        for color_bounds in self.metadata['colorBounds']:
+            color = np.array(color_bounds['color'])
+            color_name = self.color_to_object_id.get(tuple(int(cc) for cc in color), 'background')
+            cls = color_name.lower()
+            simObj = False
+            if '|' in cls:
+                cls = cls.split('|')[0]
+                simObj = True
+            elif 'sink' in cls:
+                cls = 'sink'
+                simObj = True
+                color_name = self.objects_by_type('Sink')[0]['objectId']
+
+            bb = np.array(color_bounds['bounds'])
+            bb[[1,3]] = self.metadata['screenHeight'] - bb[[3,1]]
+            if not((bb[2] - bb[0]) < MIN_DETECTION_LEN or (bb[3] - bb[1]) < MIN_DETECTION_LEN):
+                if cls not in self.detections:
+                    self.detections[cls] = []
+                self.detections[cls].append(bb)
+                if simObj:
+                    self.bounds2D[color_name] = bb
+                    color_ind = np.argmin(np.sum(np.abs(unique_ids - color), axis=1))
+                    self.instance_masks[color_name] = unique_masks[color_ind, ...]
+
+                    if cls not in self.class_masks:
+                        self.class_masks[cls] = unique_masks[color_ind, ...]
+                    else:
+                        self.class_masks[cls] = np.logical_or(self.class_masks[cls], unique_masks[color_ind, ...])
+
+            self.instance_detections2D = self.bounds2D
+            self.class_detections2D = self.detections
+
+    def add_image_depth(self, image_depth_data):
+
+        image_depth = read_buffer_image(image_depth_data, self.screen_width, self.screen_height).astype(np.float32)
+        max_spots = image_depth[:,:,0] == 255
+        image_depth_out = image_depth[:,:,0] + image_depth[:,:,1] / 256 + image_depth[:,:,2] / 256 ** 2
+        image_depth_out[max_spots] = 256
+        image_depth_out *= 10.0 / 256.0 * 1000  # converts to meters then to mm
+        image_depth_out[image_depth_out > MAX_DEPTH] = MAX_DEPTH
+        self.frame_depth = image_depth_out.astype(np.float32)
+
+    def add_image(self, image_data):
+        self.frame = read_buffer_image(image_data, self.screen_width, self.screen_height)
+
+    def add_image_ids(self, image_ids_data):
+        self.instance_segmentation_frame = read_buffer_image(image_ids_data, self.screen_width, self.screen_height)
+
+    def add_image_classes(self, image_classes_data):
+        self.class_segmentation_frame = read_buffer_image(image_classes_data, self.screen_width, self.screen_height)
 
     def cv2image(self):
         return self.frame[...,::-1]
+
+    @property
+    def pose_continuous(self):
+        agent_meta = self.metadata['agent']
+        loc = agent_meta['position']
+        rotation = round(agent_meta['rotation']['y'] * 1000)
+        horizon = round(agent_meta['cameraHorizon'] * 1000)
+        return (round(loc['x'] * 1000), round(loc['z'] * 1000), rotation, horizon)
+
+    @property
+    def pose(self):
+        # XXX should have this as a parameter
+        step_size = 0.25
+        agent_meta = self.metadata['agent']
+        loc = agent_meta['position']
+        rotation = int(agent_meta['rotation']['y'] / 90.0)
+        horizon = int(round(agent_meta['cameraHorizon']))
+        return (int(loc['x'] / step_size), int(loc['z'] / step_size), rotation, horizon)
+
+    def get_object(self, object_id):
+        for obj in self.metadata['objects']:
+            if obj['objectId'] == object_id:
+                return obj
+        return None
 
 
 class MultipartFormParser(object):
@@ -254,11 +407,26 @@ class Server(object):
 
                 self.last_event = event = MultiAgentEvent(metadata['activeAgentId'], events)
             else:
-                self.last_event = event = Event(metadata['agents'][0], form.files['image'][0])
+                self.last_event = event = Event(metadata['agents'][0])
 
             if metadata['sequenceId'] != self.sequence_id:
                 raise Exception("Sequence id mismatch: %s vs %s" % (
                     metadata['sequenceId'], self.sequence_id))
+
+            #print(list(form.files.keys()))
+
+            image_mapping = dict(
+                image=event.add_image,
+                image_depth=event.add_image_depth,
+                image_ids=event.add_image_ids,
+                image_classes=event.add_image_classes
+            )
+
+            for key in image_mapping.keys():
+                if key in form.files:
+                    image_mapping[key](form.files[key][0])
+
+            event.process_colors_ids()
 
             request_queue.put_nowait(event)
             self.frame_counter += 1
