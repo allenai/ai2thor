@@ -155,10 +155,6 @@ class Event(object):
             if '|' in cls:
                 cls = cls.split('|')[0]
                 simObj = True
-            elif 'sink' in cls:
-                cls = 'sink'
-                simObj = True
-                color_name = self.objects_by_type('Sink')[0]['objectId']
 
             bb = np.array(color_bounds['bounds'])
             bb[[1,3]] = self.metadata['screenHeight'] - bb[[3,1]]
@@ -202,7 +198,7 @@ class Event(object):
         return self.frame[...,::-1]
 
     @property
-    def pose_continuous(self):
+    def pose(self):
         agent_meta = self.metadata['agent']
         loc = agent_meta['position']
         rotation = round(agent_meta['rotation']['y'] * 1000)
@@ -210,7 +206,7 @@ class Event(object):
         return (round(loc['x'] * 1000), round(loc['z'] * 1000), rotation, horizon)
 
     @property
-    def pose(self):
+    def pose_discrete(self):
         # XXX should have this as a parameter
         step_size = 0.25
         agent_meta = self.metadata['agent']
