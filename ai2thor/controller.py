@@ -405,9 +405,8 @@ class Controller(object):
         for obj in self.last_event.metadata['objects']:
             pivot_points = self.receptacle_nearest_pivot_points
             # don't put things in pot or pan currently
-            if (pivot_points and obj['receptacle'] \
-                and pivot_points[obj['objectId']].keys()) \
-                or obj['objectType'] in ['Pot', 'Pan']:
+            if (pivot_points and obj['receptacle'] and
+                    pivot_points[obj['objectId']].keys()) or obj['objectType'] in ['Pot', 'Pan']:
 
                 #print("no visible pivots for receptacle %s" % o['objectId'])
                 exclude_object_ids.append(obj['objectId'])
@@ -471,6 +470,7 @@ class Controller(object):
         for a in self.next_interact_command():
             new_commands = {}
             command_counter = dict(counter=1)
+
             def add_command(cc, action, **args):
                 if cc['counter'] < 10:
                     com = dict(action=action)
@@ -503,7 +503,6 @@ class Controller(object):
             print(command_message)
             print("Visible Objects:\n" + "\n".join(sorted(visible_objects)))
 
-
             skip_keys = ['action', 'objectId']
             for k in sorted(new_commands.keys()):
                 v = new_commands[k]
@@ -518,7 +517,6 @@ class Controller(object):
 
                 print(' '.join(command_info))
 
-
     def step(self, action, raise_for_failure=False):
 
         # XXX should be able to get rid of this with some sort of deprecation warning
@@ -530,7 +528,7 @@ class Controller(object):
 
         if ('objectId' in action and (action['action'] == 'OpenObject' or action['action'] == 'CloseObject')):
 
-            if self.last_event.bounds2D and action['objectId'] not in self.last_event.bounds2D:
+            if self.last_event.instance_detections2D and action['objectId'] not in self.last_event.instance_detections2D:
                 should_fail = True
 
             obj_metadata = self.last_event.get_object(action['objectId'])
@@ -575,15 +573,14 @@ class Controller(object):
 
     def _start_unity_thread(self, env, width, height, host, port, image_name):
         # get environment variables
-        
+
         env['AI2THOR_CLIENT_TOKEN'] = self.server.client_token = str(uuid.uuid4())
         env['AI2THOR_VERSION'] = ai2thor._builds.VERSION
         env['AI2THOR_HOST'] = host
         env['AI2THOR_PORT'] = str(port)
-        
+
         env['AI2THOR_SCREEN_WIDTH'] = str(width)
         env['AI2THOR_SCREEN_HEIGHT'] = str(height)
-
 
         # env['AI2THOR_SERVER_SIDE_SCREENSHOT'] = 'True'
 
@@ -603,12 +600,15 @@ class Controller(object):
     def check_docker(self):
         if self.docker_enabled:
             assert ai2thor.docker.has_docker(), "Docker enabled, but could not find docker binary in path"
-            assert ai2thor.docker.nvidia_version() is not None, "No nvidia driver version found at /proc/driver/nvidia/version - Dockerized THOR is only compatible with hosts with Nvidia cards with a driver installed"
+            assert ai2thor.docker.nvidia_version() is not None,\
+                "No nvidia driver version found at /proc/driver/nvidia/version - Dockerized THOR is only \
+                    compatible with hosts with Nvidia cards with a driver installed"
 
     def check_x_display(self, x_display):
         with open(os.devnull, "w") as dn:
             if subprocess.call(['which', 'xdpyinfo'], stdout=dn) == 0:
-                assert subprocess.call("xdpyinfo", stdout=dn, env=dict(DISPLAY=x_display), shell=True) == 0, ("Invalid DISPLAY %s - cannot find X server with xdpyinfo" % x_display)
+                assert subprocess.call("xdpyinfo", stdout=dn, env=dict(DISPLAY=x_display), shell=True) == 0, \
+                    ("Invalid DISPLAY %s - cannot find X server with xdpyinfo" % x_display)
 
     def _start_server_thread(self):
         self.server.start()
@@ -678,7 +678,8 @@ class Controller(object):
 
         if 'AI2THOR_VISIBILITY_DISTANCE' in os.environ:
             import warnings
-            warnings.warn("AI2THOR_VISIBILITY_DISTANCE environment variable is deprecated, use the parameter visibilityDistance parameter with the Initialize action instead")
+            warnings.warn("AI2THOR_VISIBILITY_DISTANCE environment variable is deprecated, use \
+                the parameter visibilityDistance parameter with the Initialize action instead")
 
         if player_screen_height < 300 or player_screen_width < 300:
             raise Exception("Screen resolution must be >= 300x300")
@@ -795,7 +796,7 @@ class BFSController(Controller):
         xs = []
         zs = []
 
-            # Follow the file as it grows
+        # Follow the file as it grows
         for point in self.grid_points:
             xs.append(point['x'])
             zs.append(point['z'])
@@ -807,26 +808,26 @@ class BFSController(Controller):
         if not xs:
             return
 
-        min_x = min(xs)  - 1
+        min_x = min(xs) - 1
         max_x = max(xs) + 1
-        min_z = min(zs)  - 1
+        min_z = min(zs) - 1
         max_z = max(zs) + 1
 
         for point in list(points):
             x, z = map(float, point.split(','))
-            circle_x = round(((x - min_x)/float(max_x - min_x)) * image_width)
+            circle_x = round(((x - min_x) / float(max_x - min_x)) * image_width)
             z = (max_z - z) + min_z
-            circle_y = round(((z - min_z)/float(max_z - min_z)) * image_height)
+            circle_y = round(((z - min_z) / float(max_z - min_z)) * image_height)
             cv2.circle(image, (circle_x, circle_y), 5, (0, 255, 0), -1)
 
         cv2.imshow(scene_name, image)
         cv2.waitKey(wait_key)
 
-
     def has_islands(self):
         queue = []
         seen_points = set()
         mag = self.grid_size
+
         def enqueue_island_points(p):
             if json.dumps(p) in seen_points:
                 return
@@ -836,14 +837,13 @@ class BFSController(Controller):
             queue.append(dict(z=p['z'], x=p['x'] - mag))
             seen_points.add(json.dumps(p))
 
-
         enqueue_island_points(self.grid_points[0])
 
         while queue:
             point_to_find = queue.pop()
             for p in self.grid_points:
                 dist = math.sqrt(
-                    ((point_to_find['x'] - p['x']) ** 2) + \
+                    ((point_to_find['x'] - p['x']) ** 2) +
                     ((point_to_find['z'] - p['z']) ** 2))
 
                 if dist < 0.05:
@@ -955,7 +955,7 @@ class BFSController(Controller):
     def enqueue_point(self, point):
 
         # ensure there are no points near the new point
-        threshold = self.grid_size/5.0
+        threshold = self.grid_size / 5.0
         if not any(map(lambda p: distance(p, point.target_point()) < threshold, self.seen_points)):
             self.seen_points.append(point.target_point())
             self.queue.append(point)
@@ -1010,7 +1010,6 @@ class BFSController(Controller):
                 dict(receptacleObjectId=receptacle_object_id,
                      objectId=object_id))
 
-
         if randomize:
             self.random_initialize(
                 random_seed=random_seed,
@@ -1018,7 +1017,7 @@ class BFSController(Controller):
                 exclude_receptacle_object_pairs=receptacle_object_pairs)
 
         # there is some randomization in initialize scene
-        # and if a seed is passed in this will keep it 
+        # and if a seed is passed in this will keep it
         # deterministic
         if random_seed is not None:
             random.seed(random_seed)
@@ -1043,8 +1042,7 @@ class BFSController(Controller):
         for gp in self.grid_points:
             found = False
             for x in [1, -1]:
-                found |= key_for_point(gp['x'] +\
-                    (self.grid_size * x), gp['z']) in final_grid_points
+                found |= key_for_point(gp['x'] + (self.grid_size * x), gp['z']) in final_grid_points
 
             for z in [1, -1]:
                 found |= key_for_point(
@@ -1134,7 +1132,6 @@ class BFSController(Controller):
                                         y=point['y'],
                                         z=point['z'])))
 
-
                         if j['openable']:
                             self.step(action=dict(
                                 action='CloseObject',
@@ -1200,8 +1197,7 @@ class BFSController(Controller):
 
         for obj in filter(lambda x: x['receptacle'], self.last_event.metadata['objects']):
             for oid in obj['receptacleObjectIds']:
-                if obj['openable'] or (obj['objectId'] in self.object_receptacle \
-                    and self.object_receptacle[obj['objectId']]['openable']):
+                if obj['openable'] or (obj['objectId'] in self.object_receptacle and self.object_receptacle[obj['objectId']]['openable']):
 
                     open_pickupable[oid] = obj['objectId']
                 else:
@@ -1215,7 +1211,7 @@ class BFSController(Controller):
                 position_target = self.object_receptacle[self.target_objects[0]]['position']
                 position_candidate = self.object_receptacle[oid]['position']
                 dist = math.sqrt(
-                    (position_target['x'] - position_candidate['x']) ** 2 + \
+                    (position_target['x'] - position_candidate['x']) ** 2 +
                     (position_target['y'] - position_candidate['y']) ** 2)
                 # try to find something that is far to avoid having the doors collide
                 if dist > 1.25:
@@ -1253,6 +1249,5 @@ class BFSController(Controller):
 
             self.enqueue_points(event.metadata['agent']['position'])
             self.grid_points.append(event.metadata['agent']['position'])
-
 
         return event

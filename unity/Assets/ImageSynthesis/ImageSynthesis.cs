@@ -65,6 +65,8 @@ public class ImageSynthesis : MonoBehaviour {
 
 	public float opticalFlowSensitivity;
 
+	private Dictionary<int, string> nonSimObjUniqueIds = new Dictionary<int, string>();
+
 	// cached materials
 	private Material opticalFlowMaterial;
 	private Material depthMaterial;
@@ -226,6 +228,23 @@ public class ImageSynthesis : MonoBehaviour {
 	}
 
 
+	private string getUniqueId(GameObject gameObject) {
+		// the uniqueid is generated this way to handle the edge case
+		// where a non-simobject could get moved from its initial position 
+		// during a simulation.  This forces the uniqueId to get generated once
+		// on scene startup
+		int key = gameObject.GetInstanceID();
+		if (nonSimObjUniqueIds.ContainsKey(key)) {
+			return nonSimObjUniqueIds[key];
+		} else {
+			Transform t = gameObject.transform;
+			string uniqueId = gameObject.name + "|" + t.position.x + "|" + t.position.y + "|" + t.position.z;
+			nonSimObjUniqueIds[key] = uniqueId;
+			return uniqueId;
+		}
+	}
+
+
 	public void OnSceneChange()
 	{
 		sentColorCorrespondence = false;
@@ -237,7 +256,6 @@ public class ImageSynthesis : MonoBehaviour {
 
 		foreach (var r in renderers)
 		{
-			var id = r.gameObject.GetInstanceID();
 			var layer = r.gameObject.layer;
 			var tag = r.gameObject.tag;
 			SimObj simObj = r.gameObject.GetComponent<SimObj> ();
@@ -245,16 +263,18 @@ public class ImageSynthesis : MonoBehaviour {
 				simObj = r.gameObject.GetComponentInParent<SimObj> ();
 			}
 
-			Color classColor = ColorEncoding.EncodeTagAsColor ("" + r.name);
-			Color objColor = ColorEncoding.EncodeIDAsColor(id);
 
-			if (simObj != null) {
+			Color classColor;
+			Color objColor;
+			if (simObj == null) {
+				classColor = ColorEncoding.EncodeTagAsColor ("" + r.name);
+				objColor = ColorEncoding.EncodeTagAsColor(getUniqueId(r.gameObject));
+			} else {
 				classColor = ColorEncoding.EncodeTagAsColor ("" + simObj.Type);
 				objColor = ColorEncoding.EncodeTagAsColor ("" + simObj.UniqueID);
-
 				//Debug.Log ("renderer type " + simObj.Type + " " + simObj.name + " " + simObj.UniqueID + " " + MD5Hash(simObj.UniqueID) + " " + MD5Hash(simObj.UniqueID).GetHashCode());
-
 			}
+
 			capturePasses [0].camera.WorldToScreenPoint (r.bounds.center);
 
 			//mpb.SetVector ("_Scale", scaleVector);
