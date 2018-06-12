@@ -18,7 +18,6 @@ import time
 import random
 import shlex
 import signal
-import socket
 import subprocess
 import threading
 import os
@@ -673,8 +672,7 @@ class Controller(object):
             start_unity=True,
             player_screen_width=300,
             player_screen_height=300,
-            x_display=None,
-            enable_remote_viewer=False):
+            x_display=None):
 
         if 'AI2THOR_VISIBILITY_DISTANCE' in os.environ:
             import warnings
@@ -690,16 +688,11 @@ class Controller(object):
         env = os.environ.copy()
 
         image_name = None
-
-        remote_viewer_host = host = '127.0.0.1'
+        host = '127.0.0.1'
 
         if self.docker_enabled:
             self.check_docker()
             host = ai2thor.docker.bridge_gateway()
-            remote_viewer_host = host
-        elif enable_remote_viewer:
-            host = '0.0.0.0'
-            remote_viewer_host = socket.gethostname()
 
         self.server = ai2thor.server.Server(
             self.request_queue,
@@ -708,8 +701,6 @@ class Controller(object):
             port=port)
 
         _, port = self.server.wsgi_server.socket.getsockname()
-        if enable_remote_viewer:
-            print("Remote viewer: http://%s:%s/viewer" % (remote_viewer_host, port))
 
         self.server_thread = threading.Thread(target=self._start_server_thread)
 

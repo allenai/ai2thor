@@ -7,7 +7,6 @@ are sent to the controller using a pair of request/response queues.
 """
 
 
-import io
 import json
 import logging
 import sys
@@ -22,12 +21,11 @@ except ImportError:
 import time
 import warnings
 
-from flask import Flask, request, make_response, abort, Response
+from flask import Flask, request, make_response, abort
 import werkzeug
 import werkzeug.serving
 import werkzeug.http
 import numpy as np
-from PIL import Image
 
 logging.getLogger('werkzeug').setLevel(logging.ERROR)
 
@@ -93,7 +91,7 @@ class Event(object):
         self.screen_height = metadata['screenHeight']
 
         self.frame = None
-        self.frame_depth = None
+        self.depth_frame = None
 
         self.color_to_object_id = {}
         self.object_id_to_color = {}
@@ -156,16 +154,19 @@ class Event(object):
             if not((bb[2] - bb[0]) < MIN_DETECTION_LEN or (bb[3] - bb[1]) < MIN_DETECTION_LEN):
                 if cls not in self.class_detections2D:
                     self.class_detections2D[cls] = []
+
                 self.class_detections2D[cls].append(bb)
+
+                color_ind = np.argmin(np.sum(np.abs(unique_ids - color), axis=1))
+
                 if simObj:
                     self.instance_detections2D[color_name] = bb
-                    color_ind = np.argmin(np.sum(np.abs(unique_ids - color), axis=1))
                     self.instance_masks[color_name] = unique_masks[color_ind, ...]
 
-                    if cls not in self.class_masks:
-                        self.class_masks[cls] = unique_masks[color_ind, ...]
-                    else:
-                        self.class_masks[cls] = np.logical_or(self.class_masks[cls], unique_masks[color_ind, ...])
+                if cls not in self.class_masks:
+                    self.class_masks[cls] = unique_masks[color_ind, ...]
+                else:
+                    self.class_masks[cls] = np.logical_or(self.class_masks[cls], unique_masks[color_ind, ...])
 
     def add_image_depth(self, image_depth_data):
 
@@ -175,7 +176,7 @@ class Event(object):
         image_depth_out[max_spots] = 256
         image_depth_out *= 10.0 / 256.0 * 1000  # converts to meters then to mm
         image_depth_out[image_depth_out > MAX_DEPTH] = MAX_DEPTH
-        self.frame_depth = image_depth_out.astype(np.float32)
+        self.depth_frame = image_depth_out.astype(np.float32)
 
     def add_image(self, image_data):
         self.frame = read_buffer_image(image_data, self.screen_width, self.screen_height)
@@ -187,6 +188,11 @@ class Event(object):
         self.class_segmentation_frame = read_buffer_image(image_classes_data, self.screen_width, self.screen_height)
 
     def cv2image(self):
+        warnings.warn("Deprecated - please use event.cv2img")
+        return self.cv2img
+
+    @property
+    def cv2img(self):
         return self.frame[...,::-1]
 
     @property
@@ -292,73 +298,6 @@ class Server(object):
         # used to ensure that we are receiving frames for the action we sent
         self.sequence_id = 0
         self.last_event = None
-
-        def stream_gen():
-            while True:
-                event = self.last_event
-                if event:
-                    b = io.BytesIO()
-                    i = Image.fromarray(event.frame)
-                    i.save(b, format='PNG')
-                    b.seek(0)
-
-                    time.sleep(0.02)
-                    yield (b'--frame\r\n' + b'Content-Type: image/png\r\n\r\n' + b.read() + b'\r\n')
-
-        @app.route('/stream', methods=['get'])
-        def stream():
-            if threaded:
-                return Response(stream_gen(), mimetype='multipart/x-mixed-replace; boundary=frame')
-            else:
-                return abort(404)
-
-        @app.route('/viewer', methods=['get'])
-        def viewer():
-            html = """
-<html>
-  <head>
-    <title></title>
-    <script>
-        var image_url = "/stream";
-        var image_data = [];
-        function checkDiff() {
-            var image = document.getElementById('image');
-            var canvas = document.getElementById('canvas');
-            var count = 0;
-            try {
-                canvas.width = image.width;
-                canvas.height = image.height;
-                var context = canvas.getContext('2d');
-                context.drawImage(image, 0, 0);
-                var current_image_data = context.getImageData(0, 0, image.width, image.height).data;
-                for (var i = 0; i < image_data.length; i++) {
-                    if (image_data[i] != current_image_data[i]) {
-                        count++;
-                        break;
-                    }
-                }
-            } catch (err) {
-               console.log("caught err: " + err)
-            }
-            if (count === 0) {
-                console.log("trying to reload");
-                image.src = image_url + "?" + (new Date().getTime());
-            }
-
-            image_data = current_image_data;
-            setTimeout(checkDiff, 5000);
-        }
-        setTimeout(checkDiff, 5000);
-    </script
-  </head>
-  <body>
-    <img id="image" src="/stream">
-    <canvas id="canvas" style="display: none"></canvas>
-  </body>
-</html>
-<html
-"""
-            return make_response(html)
 
         @app.route('/ping', methods=['get'])
         def ping():
