@@ -1,4 +1,3 @@
-import os
 from setuptools import setup, find_packages
 
 exec(open('ai2thor/_version.py').read())
@@ -30,7 +29,6 @@ setup(name='ai2thor',
       license='Apache',
       packages=find_packages(),
       install_requires=[
-          'Pillow',
           'flask',
           'numpy',
           'pyyaml',
