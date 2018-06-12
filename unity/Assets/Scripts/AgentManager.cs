@@ -78,7 +78,7 @@ public class AgentManager : MonoBehaviour
 
 	private void addAgent(ServerAction action) {
 
-
+        
 		Vector3 clonePosition = agentStartPosition (primaryAgent);
 
 		if (clonePosition.magnitude > 0) {

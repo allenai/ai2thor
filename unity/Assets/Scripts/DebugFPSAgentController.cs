@@ -16,8 +16,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
 	[RequireComponent(typeof (CharacterController))]
     public class DebugFPSAgentController : MonoBehaviour
 	{
-		public float MaxDistance = 1.0f;
-        
         //for use with mouse/keyboard input
 		[SerializeField] private bool m_IsWalking;
 		[SerializeField] private float m_WalkSpeed;
@@ -28,10 +26,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		[SerializeField] private MouseLook m_MouseLook;
 
         [SerializeField] private GameObject Debug_Canvas = null;
-        [SerializeField] private GameObject Inventory_Text = null;
+//        [SerializeField] private GameObject Inventory_Text = null;
 		[SerializeField] private GameObject InputMode_Text = null;
-        [SerializeField] private GameObject AgentHand = null;
-        [SerializeField] private GameObject ItemInHand = null;
+//        [SerializeField] private GameObject AgentHand = null;
+//        [SerializeField] private GameObject ItemInHand = null;
 
 		private Camera m_Camera;
 		//public bool rotateMouseLook;
@@ -42,28 +40,28 @@ namespace UnityStandardAssets.Characters.FirstPerson
         //this is true if FPScontrol mode using Mouse and Keyboard is active
         public bool TextInputMode = false;
              
-		public Transform DefaultHandPosition = null;
+		//public Transform DefaultHandPosition = null;
         
-        //for turning and look Sweeptests
-		public GameObject LookSweepPosition = null;
-		public GameObject LookSweepTestPivot = null; //if the Camera position ever moves, make sure this is set to the same local position as FirstPersonCharacter
-		public GameObject TurnSweepPosition = null;
-		public GameObject TurnSweepTestPivot = null;
+  //      //for turning and look Sweeptests
+		//public GameObject LookSweepPosition = null;
+		//public GameObject LookSweepTestPivot = null; //if the Camera position ever moves, make sure this is set to the same local position as FirstPersonCharacter
+		//public GameObject TurnSweepPosition = null;
+		//public GameObject TurnSweepTestPivot = null;
 
 		//public SimObjPhysics[] VisibleObjects; //these objects are within the camera viewport and in range of the agent
 
 		//public GameObject TestObject = null;
         
-		public bool IsHandDefault = true;
+		//public bool IsHandDefault = true;
 
 		public GameObject InputFieldObj = null;
 
-		protected float[] LookAngles = { 60.0f, 30.0f, 0.0f, -30.0f };//make sure LookAngleIndex defaults to 0.0f's index
-		protected int LookAngleIndex = 2; //default to index 2, since agent defaults looking forward
+		//protected float[] LookAngles = { 60.0f, 30.0f, 0.0f, -30.0f };//make sure LookAngleIndex defaults to 0.0f's index
+		//protected int LookAngleIndex = 2; //default to index 2, since agent defaults looking forward
 
-        //set turn angles to prevent floating point error on rotation
-		protected float[] TurnAngles = { 0.0f, 90.0f, 180.0f, 270.0f };
-		protected int TurnAngleIndex = 0; 
+  //      //set turn angles to prevent floating point error on rotation
+		//protected float[] TurnAngles = { 0.0f, 90.0f, 180.0f, 270.0f };
+		//protected int TurnAngleIndex = 0; 
 
         private void Start()
         {
@@ -73,15 +71,19 @@ namespace UnityStandardAssets.Characters.FirstPerson
             
             //find debug canvas related objects 
             Debug_Canvas = GameObject.Find("DebugCanvas");
-			Inventory_Text = GameObject.Find("DebugCanvas/InventoryText");
+			//Inventory_Text = GameObject.Find("DebugCanvas/InventoryText");
 			InputMode_Text = GameObject.Find("DebugCanvas/InputModeText");
 
             //if this component is enabled, turn on the targeting reticle and target text
             if (this.isActiveAndEnabled)
             {
-                Debug_Canvas.SetActive(true);            
+				Debug_Canvas.GetComponent<Canvas>().enabled = true;            
                 Cursor.visible = false;
                 Cursor.lockState = CursorLockMode.Locked;
+
+				//ServerAction action = new ServerAction();
+				//action.action = "test";
+				//this.GetComponent<PhysicsRemoteFPSAgentController>().ProcessControlCommand(action);
             }
 
         }
@@ -697,72 +699,72 @@ namespace UnityStandardAssets.Characters.FirstPerson
         
         //returns true if the Hand Movement was succesful
         //false if blocked by something or out of range
-        public bool MoveHand(Vector3 targetPosition)
-        {
-			bool result = false;
+  //      public bool MoveHand(Vector3 targetPosition)
+  //      {
+		//	bool result = false;
 
-			//can only move hand if there is an object in it.
-			if(ItemInHand == null)
-			{
-				Debug.Log("Agent can only move hand if holding an item");
-				result = false;
-				return result;
-			}
-			//result if movement was succesful or not
+		//	//can only move hand if there is an object in it.
+		//	if(ItemInHand == null)
+		//	{
+		//		Debug.Log("Agent can only move hand if holding an item");
+		//		result = false;
+		//		return result;
+		//	}
+		//	//result if movement was succesful or not
 
          
-			//first check if passed in targetPosition is in range or not           
-			if(Vector3.Distance(gameObject.transform.position, targetPosition) > MaxDistance + 0.3)
-			{           
-				Debug.Log("The target position is out of range");
-				result = false;
-				return result;
-			}
+		//	//first check if passed in targetPosition is in range or not           
+		//	if(Vector3.Distance(gameObject.transform.position, targetPosition) > MaxDistance + 0.3)
+		//	{           
+		//		Debug.Log("The target position is out of range");
+		//		result = false;
+		//		return result;
+		//	}
 
-			//get viewport point of target position
-            Vector3 vp = m_Camera.WorldToViewportPoint(targetPosition);
+		//	//get viewport point of target position
+  //          Vector3 vp = m_Camera.WorldToViewportPoint(targetPosition);
 
-            //Note: Viewport normalizes to (0,0) bottom left, (1, 0) top right of screen
-            //now make sure the targetPosition is actually within the Camera Bounds       
-			if (vp.z < 0 || vp.x > 1.0f || vp.x < 0.0f || vp.y > 1.0f || vp.y < 0.0f)
-            {
-				Debug.Log("The target position is not in the Agent's Viewport!");
-				result = false;
-				return result;
-            }
+  //          //Note: Viewport normalizes to (0,0) bottom left, (1, 0) top right of screen
+  //          //now make sure the targetPosition is actually within the Camera Bounds       
+		//	if (vp.z < 0 || vp.x > 1.0f || vp.x < 0.0f || vp.y > 1.0f || vp.y < 0.0f)
+  //          {
+		//		Debug.Log("The target position is not in the Agent's Viewport!");
+		//		result = false;
+		//		return result;
+  //          }
          
-			Rigidbody ItemRB = ItemInHand.GetComponent<Rigidbody>();
-			RaycastHit hit;
+		//	Rigidbody ItemRB = ItemInHand.GetComponent<Rigidbody>();
+		//	RaycastHit hit;
 
-            //put the Hand position update inside this, soince the object will always hit the agent Hand once, which we ignore
-            if(ItemRB.SweepTest(targetPosition - AgentHand.transform.position, out hit, Vector3.Distance(targetPosition, AgentHand.transform.position)))
-			{
-				//return error if anything but the Agent Hand or the Agent are hit
-				if(hit.transform != AgentHand.transform && hit.transform != gameObject.transform)
-				{
-				    Debug.Log(hit.transform.name + " is in Object In Hand's Path! Can't Move Hand holding " + ItemInHand.name);
-					result = false;
-				}
+  //          //put the Hand position update inside this, soince the object will always hit the agent Hand once, which we ignore
+  //          if(ItemRB.SweepTest(targetPosition - AgentHand.transform.position, out hit, Vector3.Distance(targetPosition, AgentHand.transform.position)))
+		//	{
+		//		//return error if anything but the Agent Hand or the Agent are hit
+		//		if(hit.transform != AgentHand.transform && hit.transform != gameObject.transform)
+		//		{
+		//		    Debug.Log(hit.transform.name + " is in Object In Hand's Path! Can't Move Hand holding " + ItemInHand.name);
+		//			result = false;
+		//		}
             
-				else
-                {
-					Debug.Log("Movement of Agent Hand holding " + ItemInHand.name + " succesful!");
-                    AgentHand.transform.position = targetPosition;
-				    IsHandDefault = false;
-					result = true;
-                }
-			}
+		//		else
+  //              {
+		//			Debug.Log("Movement of Agent Hand holding " + ItemInHand.name + " succesful!");
+  //                  AgentHand.transform.position = targetPosition;
+		//		    IsHandDefault = false;
+		//			result = true;
+  //              }
+		//	}
 
-			else
-            {
-                AgentHand.transform.position = targetPosition;
-				IsHandDefault = false;            
-				result = true;
-            }
+		//	else
+  //          {
+  //              AgentHand.transform.position = targetPosition;
+		//		IsHandDefault = false;            
+		//		result = true;
+  //          }
 
-		return result;
+		//return result;
          
-        }
+        //}
         
 		//for DebugController use only: cast ray from camera point to world, attempt to move hand to that position + a Y offset
 		public Vector3 ScreenPointMoveHand(float yOffset)
@@ -776,213 +778,213 @@ namespace UnityStandardAssets.Characters.FirstPerson
 				return hit.point + new Vector3(0, yOffset, 0);
 		}
 
-        public void ResetAgentHandPosition()
-		{
-			AgentHand.transform.position = DefaultHandPosition.position;
-		}
+  //      public void ResetAgentHandPosition()
+		//{
+		//	AgentHand.transform.position = DefaultHandPosition.position;
+		//}
 
-		public void ResetAgentHandRotation()
-		{
-			AgentHand.transform.localRotation = Quaternion.Euler(Vector3.zero);
-		}
+		//public void ResetAgentHandRotation()
+		//{
+		//	AgentHand.transform.localRotation = Quaternion.Euler(Vector3.zero);
+		//}
 
-		public void DefaultAgentHand()
-		{
-			ResetAgentHandPosition();
-			ResetAgentHandRotation();
-			IsHandDefault = true;
-		}
+		//public void DefaultAgentHand()
+		//{
+		//	ResetAgentHandPosition();
+		//	ResetAgentHandRotation();
+		//	IsHandDefault = true;
+		//}
 
-        //pickup a sim object
-        //hand must be in defualt position, then does a sweep to see if the hand can get to the object's interaction point
-        public bool PickUpSimObjPhysics(Transform target)
-        {
-			if(target.GetComponent<SimObjPhysics>().PrimaryProperty!= SimObjPrimaryProperty.CanPickup)
-			{
-				Debug.Log("Only SimObjPhysics that have the property CanPickup can be picked up");
-				return false;
-			}
-            //make sure hand is empty, turn off the target object's collision and physics properties
-            //and make the object kinematic
-            if (ItemInHand == null)
-            {
-				if(IsHandDefault == false)
-				{
-					Debug.Log("Reset Hand to default position before attempting to Pick Up objects");
-					return false;
-				}
+  //      //pickup a sim object
+  //      //hand must be in defualt position, then does a sweep to see if the hand can get to the object's interaction point
+  //      public bool PickUpSimObjPhysics(Transform target)
+  //      {
+		//	if(target.GetComponent<SimObjPhysics>().PrimaryProperty!= SimObjPrimaryProperty.CanPickup)
+		//	{
+		//		Debug.Log("Only SimObjPhysics that have the property CanPickup can be picked up");
+		//		return false;
+		//	}
+  //          //make sure hand is empty, turn off the target object's collision and physics properties
+  //          //and make the object kinematic
+  //          if (ItemInHand == null)
+  //          {
+		//		if(IsHandDefault == false)
+		//		{
+		//			Debug.Log("Reset Hand to default position before attempting to Pick Up objects");
+		//			return false;
+		//		}
 
-				//default hand rotation for further rotation manipulation
-				ResetAgentHandRotation();
-                //move the object to the hand's default position.
-                target.GetComponent<Rigidbody>().isKinematic = true;
-                //target.GetComponent<Rigidbody>().constraints = RigidbodyConstraints.FreezeRotation;
-                target.position = AgentHand.transform.position;
-				//AgentHand.transform.parent = target;
-				target.SetParent(AgentHand.transform);
-                //target.parent = AgentHand.transform;
-                //update "inventory"
+		//		//default hand rotation for further rotation manipulation
+		//		ResetAgentHandRotation();
+  //              //move the object to the hand's default position.
+  //              target.GetComponent<Rigidbody>().isKinematic = true;
+  //              //target.GetComponent<Rigidbody>().constraints = RigidbodyConstraints.FreezeRotation;
+  //              target.position = AgentHand.transform.position;
+		//		//AgentHand.transform.parent = target;
+		//		target.SetParent(AgentHand.transform);
+  //              //target.parent = AgentHand.transform;
+  //              //update "inventory"
 
-                //this is only in debug mode - probs delete this part when porting to BaseFPSAgent
+  //              //this is only in debug mode - probs delete this part when porting to BaseFPSAgent
                 
-                ItemInHand = target.gameObject;
-				Text txt = Inventory_Text.GetComponent<Text>();
-				txt.text = "In Inventory: " + target.name + " " + target.GetComponent<SimObjPhysics>().UniqueID;
+  //              ItemInHand = target.gameObject;
+		//		Text txt = Inventory_Text.GetComponent<Text>();
+		//		txt.text = "In Inventory: " + target.name + " " + target.GetComponent<SimObjPhysics>().UniqueID;
 
-                /////////////////
+  //              /////////////////
 
-				return true;
-            }
+		//		return true;
+  //          }
 
-            else
-			{
-				Debug.Log("Your hand has something in it already!");
-				return false;
-			}
+  //          else
+		//	{
+		//		Debug.Log("Your hand has something in it already!");
+		//		return false;
+		//	}
          
-        }
+  //      }
         
-        public bool DropSimObjPhysics()
-		{
-			//make sure something is actually in our hands
-			if (ItemInHand != null)
-			{
+  //      public bool DropSimObjPhysics()
+		//{
+		//	//make sure something is actually in our hands
+		//	if (ItemInHand != null)
+		//	{
 
-				if(ItemInHand.GetComponent<SimObjPhysics>().isColliding)
-				{
-					Debug.Log(ItemInHand.transform.name + " can't be dropped. It must be clear of all other objects first");
-					return false;
-				}
+		//		if(ItemInHand.GetComponent<SimObjPhysics>().isColliding)
+		//		{
+		//			Debug.Log(ItemInHand.transform.name + " can't be dropped. It must be clear of all other objects first");
+		//			return false;
+		//		}
 
-				else
-				{
-					ItemInHand.GetComponent<Rigidbody>().isKinematic = false;
-                    ItemInHand.transform.parent = null;
-                    ItemInHand = null;
+		//		else
+		//		{
+		//			ItemInHand.GetComponent<Rigidbody>().isKinematic = false;
+  //                  ItemInHand.transform.parent = null;
+  //                  ItemInHand = null;
 
-                    //take this out later when moving to BaseFPS agent controller
-                    Text txt = Inventory_Text.GetComponent<Text>();
-                    txt.text = "In Inventory: Nothing!";
-                    ///////
+  //                  //take this out later when moving to BaseFPS agent controller
+  //                  Text txt = Inventory_Text.GetComponent<Text>();
+  //                  txt.text = "In Inventory: Nothing!";
+  //                  ///////
 
-                    return true;
-				}
+  //                  return true;
+		//		}
 
-			}
+		//	}
 
-			else
-			{
-				Debug.Log("nothing in hand to drop!");
-				return false;
-			}
+		//	else
+		//	{
+		//		Debug.Log("nothing in hand to drop!");
+		//		return false;
+		//	}
 
-		}
+		//}
         
-        //used by RotateSimObjPhysicsInHand for compound collider object comparison
-        private bool CheckForMatches(IEnumerable<Transform> objects, Transform toCompare )
-		{
-			foreach (Transform t in objects)
-			{
-				if(toCompare == t)
-				{
-					return true;
-				}
-			}     
-			return false;
-		}
+  //      //used by RotateSimObjPhysicsInHand for compound collider object comparison
+  //      private bool CheckForMatches(IEnumerable<Transform> objects, Transform toCompare )
+		//{
+		//	foreach (Transform t in objects)
+		//	{
+		//		if(toCompare == t)
+		//		{
+		//			return true;
+		//		}
+		//	}     
+		//	return false;
+		//}
 
-        public bool RotateSimObjPhysicsInHand(Vector3 vec)
-        {
-			//based on the collider type of the item in the Agent's Hand, set the radius of the OverlapSphere to check if there is room for rotation
-            if(ItemInHand != null)
-            {
-                //for items that use box colliders
-                if(ItemInHand.GetComponent<BoxCollider>())
-                {
-                    Vector3 sizeOfBox = ItemInHand.GetComponent<BoxCollider>().size;
-					//do an overlapshere around the agent with radius based on max size of xyz of object in hand's collider
+   //     public bool RotateSimObjPhysicsInHand(Vector3 vec)
+   //     {
+			////based on the collider type of the item in the Agent's Hand, set the radius of the OverlapSphere to check if there is room for rotation
+     //       if(ItemInHand != null)
+     //       {
+     //           //for items that use box colliders
+     //           if(ItemInHand.GetComponent<BoxCollider>())
+     //           {
+     //               Vector3 sizeOfBox = ItemInHand.GetComponent<BoxCollider>().size;
+					////do an overlapshere around the agent with radius based on max size of xyz of object in hand's collider
 
-                    //find the radius of the overlap sphere based on max length of dimensions of box collider
-					float overlapRadius = Math.Max(Math.Max(sizeOfBox.x, sizeOfBox.y), sizeOfBox.z) / 2;
-     					//since the sim objects have wonky scales, find the percent increase or decrease to multiply the radius by to match the scale of the sim object
-					Vector3 itemInHandScale = ItemInHand.transform.lossyScale;
-					//take the average of each axis scale, even though they should all be THE SAME but just in case
-					float avgScale = (itemInHandScale.x + itemInHandScale.y + itemInHandScale.z) / 3;
-                    //adjust radius according to scale of item in hand
-					overlapRadius = overlapRadius * avgScale;
+     //               //find the radius of the overlap sphere based on max length of dimensions of box collider
+					//float overlapRadius = Math.Max(Math.Max(sizeOfBox.x, sizeOfBox.y), sizeOfBox.z) / 2;
+     //					//since the sim objects have wonky scales, find the percent increase or decrease to multiply the radius by to match the scale of the sim object
+					//Vector3 itemInHandScale = ItemInHand.transform.lossyScale;
+					////take the average of each axis scale, even though they should all be THE SAME but just in case
+					//float avgScale = (itemInHandScale.x + itemInHandScale.y + itemInHandScale.z) / 3;
+     //               //adjust radius according to scale of item in hand
+					//overlapRadius = overlapRadius * avgScale;
 
-                    Collider[] hitColliders = Physics.OverlapSphere(AgentHand.transform.position, 
-					                                                overlapRadius);
+     //               Collider[] hitColliders = Physics.OverlapSphere(AgentHand.transform.position, 
+					//                                                overlapRadius);
                
-                    //for objects that might have compound colliders, make sure we track them here for comparison below
-					//NOTE: Make sure any objects with compound colliders have an "isTrigger" Collider on the highest object in the 
-					//Heirarchy. The check for "Box" or "Sphere" Collider will use that trigger collider for radius calculations, since
-                    //getting the dimensions of a compound collider wouldn't make any sense due to irregular shapes
-					Transform[] anyChildren = ItemInHand.GetComponentsInChildren<Transform>();
+     //               //for objects that might have compound colliders, make sure we track them here for comparison below
+					////NOTE: Make sure any objects with compound colliders have an "isTrigger" Collider on the highest object in the 
+					////Heirarchy. The check for "Box" or "Sphere" Collider will use that trigger collider for radius calculations, since
+     //               //getting the dimensions of a compound collider wouldn't make any sense due to irregular shapes
+					//Transform[] anyChildren = ItemInHand.GetComponentsInChildren<Transform>();
                
-                    foreach(Collider col in hitColliders)
-                    {
-                        //check if the thing collided with by the OverlapSphere is the agent, the hand, or the object itself
-                        if(col.name != "TextInputModeler" && col.name != "TheHand" && col.name != ItemInHand.name)
-                        {
-							//also check against any children the ItemInHand has for prefabs with compound colliders                     
-							//set to true if there is a match between this collider among ANY of the children of ItemInHand
+     //               foreach(Collider col in hitColliders)
+     //               {
+     //                   //check if the thing collided with by the OverlapSphere is the agent, the hand, or the object itself
+     //                   if(col.name != "TextInputModeler" && col.name != "TheHand" && col.name != ItemInHand.name)
+     //                   {
+					//		//also check against any children the ItemInHand has for prefabs with compound colliders                     
+					//		//set to true if there is a match between this collider among ANY of the children of ItemInHand
                             
-							if(CheckForMatches(anyChildren, col.transform) == false)
-							{
-								Debug.Log(col.name + " blocking rotation");
-                                Debug.Log("Not Enough Room to Rotate");
-                                return false;
-							}
+					//		if(CheckForMatches(anyChildren, col.transform) == false)
+					//		{
+					//			Debug.Log(col.name + " blocking rotation");
+     //                           Debug.Log("Not Enough Room to Rotate");
+     //                           return false;
+					//		}
                      
-                        }
+     //                   }
                   
-						else
-						{
-							AgentHand.transform.localRotation = Quaternion.Euler(vec);
-							return true;
-						}
-                    }               
-                }
+					//	else
+					//	{
+					//		AgentHand.transform.localRotation = Quaternion.Euler(vec);
+					//		return true;
+					//	}
+     //               }               
+     //           }
 
 
-                //for items with sphere collider
-                if (ItemInHand.GetComponent<SphereCollider>())
-                {
-                    float radiusOfSphere = ItemInHand.GetComponent<SphereCollider>().radius;
+     //           //for items with sphere collider
+     //           if (ItemInHand.GetComponent<SphereCollider>())
+     //           {
+     //               float radiusOfSphere = ItemInHand.GetComponent<SphereCollider>().radius;
 
-					Vector3 itemInHandScale = ItemInHand.transform.lossyScale;
+					//Vector3 itemInHandScale = ItemInHand.transform.lossyScale;
 
-					float avgScale = (itemInHandScale.x + itemInHandScale.y + itemInHandScale.z) / 3;
+					//float avgScale = (itemInHandScale.x + itemInHandScale.y + itemInHandScale.z) / 3;
 
-					radiusOfSphere = radiusOfSphere * avgScale;
+					//radiusOfSphere = radiusOfSphere * avgScale;
 
-                    Collider[] hitColliders = Physics.OverlapSphere(AgentHand.transform.position, radiusOfSphere);
+      //              Collider[] hitColliders = Physics.OverlapSphere(AgentHand.transform.position, radiusOfSphere);
 
-                    foreach (Collider col in hitColliders)
-                    {
-                        //print(col.name);
-                        if (col.name != "TextInputModeler" && col.name != "TheHand" && col.name != ItemInHand.name)
-                        {
-                            Debug.Log("Not Enough Room to Rotate");
-                            return false;
-                        }
+      //              foreach (Collider col in hitColliders)
+      //              {
+      //                  //print(col.name);
+      //                  if (col.name != "TextInputModeler" && col.name != "TheHand" && col.name != ItemInHand.name)
+      //                  {
+      //                      Debug.Log("Not Enough Room to Rotate");
+      //                      return false;
+      //                  }
 
-						else
-						{
-							AgentHand.transform.localRotation = Quaternion.Euler(vec);
-							return true;
-						}
-                    }
+						//else
+						//{
+						//	AgentHand.transform.localRotation = Quaternion.Euler(vec);
+						//	return true;
+						//}
+        //            }
                
-                }            
-            }
+        //        }            
+        //    }
          
-            //if nothing is in your hand, nothing to rotate so don't!
-            Debug.Log("Nothing In Hand to rotate!");
-            return false;
+        //    //if nothing is in your hand, nothing to rotate so don't!
+        //    Debug.Log("Nothing In Hand to rotate!");
+        //    return false;
 
-        }
+        //}
 
 		//#if UNITY_EDITOR
         ////used to show what's currently visible on the top left of the screen
@@ -1049,7 +1051,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 				//Switch to Text Mode
                 if (TextInputMode == false)
                 {
-					InputMode_Text.GetComponent<Text>().text = "Input Mode: Text";
+					InputMode_Text.GetComponent<Text>().text = "Text Input Mode";
                     TextInputMode = true;
                     return;
                 }
@@ -1057,7 +1059,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 //Switch to Mouse and Keyboard Mode
                 if (TextInputMode == true)
                 {               
-					InputMode_Text.GetComponent<Text>().text = "Input Mode: Keyboard/Mouse";
+					InputMode_Text.GetComponent<Text>().text = "Free Mode";
                     TextInputMode = false;
                     return;
                 }
@@ -1091,40 +1093,40 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 				}
 
-                if (Input.GetMouseButtonDown(0))
-                {
-                    RaycastHit hit;
-                    Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-                    //shoot a ray out to select an object
-                    if (Physics.Raycast(ray, out hit))
-                    {
-                        //check if the hit object is a SimObj in our array of Accessible sim objects
-                        if (hit.transform.tag == "SimObjPhysics")
-                        {
-							//print(hit.transform.name);
-                            //if an interaction point is accessible by the hand, proceed to try and pick it up
-                            if (hit.transform.GetComponent<SimObjPhysics>().isInteractable == true)
-                            {
-                                //print(hit.transform.name + " is pickupable!");
+       //         if (Input.GetMouseButtonDown(0))
+       //         {
+       //             RaycastHit hit;
+       //             Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+       //             //shoot a ray out to select an object
+       //             if (Physics.Raycast(ray, out hit))
+       //             {
+       //                 //check if the hit object is a SimObj in our array of Accessible sim objects
+       //                 if (hit.transform.tag == "SimObjPhysics")
+       //                 {
+							////print(hit.transform.name);
+                //            //if an interaction point is accessible by the hand, proceed to try and pick it up
+                //            if (hit.transform.GetComponent<SimObjPhysics>().isInteractable == true)
+                //            {
+                //                //print(hit.transform.name + " is pickupable!");
 
-                                //pickup the object here
-                                PickUpSimObjPhysics(hit.transform);
+                //                //pickup the object here
+                //                PickUpSimObjPhysics(hit.transform);
 
-                            }
-                        }
-                    }
-                }
+                //            }
+                //        }
+                //    }
+                //}
 
 
-                //on right mouse click
-                if (Input.GetMouseButtonDown(1))
-                {
-                    DropSimObjPhysics();
-                }
+                ////on right mouse click
+                //if (Input.GetMouseButtonDown(1))
+                //{
+                //    //DropSimObjPhysics();
+                //}
 
                 if (Input.GetKeyDown(KeyCode.E))
                 {
-                    MoveHand(ScreenPointMoveHand(0.1f));
+                    //MoveHand(ScreenPointMoveHand(0.1f));
 
                     //MoveHand(TestObject.transform.position);
                     //print(TestObject.transform.position);
@@ -1132,34 +1134,34 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
                 if (Input.GetKeyDown(KeyCode.R))
                 {
-                    MoveHand(ScreenPointMoveHand(0.3f));
+                    //MoveHand(ScreenPointMoveHand(0.3f));
                 }
 
                 //default position and rotation
                 if (Input.GetKeyDown(KeyCode.Q))
                 {
-                    DefaultAgentHand();
+                    //DefaultAgentHand();
                 }
 
                 //Rotate tests for objects in agent hand
                 if (Input.GetKeyDown(KeyCode.UpArrow))
                 {
-                    RotateSimObjPhysicsInHand(new Vector3(0, 0, 0));
+                    //RotateSimObjPhysicsInHand(new Vector3(0, 0, 0));
                 }
 
                 if (Input.GetKeyDown(KeyCode.DownArrow))
                 {
-                    RotateSimObjPhysicsInHand(new Vector3(180, 0, 0));
+                    //RotateSimObjPhysicsInHand(new Vector3(180, 0, 0));
                 }
 
                 if (Input.GetKeyDown(KeyCode.LeftArrow))
                 {
-                    RotateSimObjPhysicsInHand(new Vector3(0, 0, 90));
+                    //RotateSimObjPhysicsInHand(new Vector3(0, 0, 90));
                 }
 
                 if (Input.GetKeyDown(KeyCode.RightArrow))
                 {
-                    RotateSimObjPhysicsInHand(new Vector3(0, 0, -90));
+                    //RotateSimObjPhysicsInHand(new Vector3(0, 0, -90));
                 }
 
             }
@@ -1196,12 +1198,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
 	
 		}
 
-		private void FixedUpdate()
-		{
-
-
-		}
-      
 		private void GetInput(out float speed)
 		{
 			// Read input

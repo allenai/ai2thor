@@ -19,7 +19,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
         
 		[SerializeField] protected GameObject AgentHand = null;
 		[SerializeField] protected GameObject DefaultHandPosition = null;
-        [SerializeField] protected GameObject ItemInHand = null;
+        [SerializeField] protected GameObject ItemInHand = null;//current object in inventory
 
 		//for turning and look Sweeptests
 		[SerializeField] protected GameObject LookSweepPosition = null;
@@ -49,8 +49,18 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 			TurnSweepTestPivot.SetActive(true);
 			TurnSweepPosition.SetActive(true);
+
+			//On start, activate gravity
+            Vector3 movement = Vector3.zero;
+            movement.y = Physics.gravity.y * m_GravityMultiplier;
+            m_CharacterController.Move(movement);
         }
 
+        public void DebugInitialize(Vector3 pos)
+		{
+			lastPosition = pos;
+		}
+        
         // Update is called once per frame
         void Update()
         {
@@ -87,7 +97,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                             sop = item.GetComponent<SimObjPhysics>();
                         }
 
-                        //if the object does have compount trigger colliders, get the SimObjPhysics component from the parent
+                        //if the object does have compound trigger colliders, get the SimObjPhysics component from the parent
                         else
                         {
                             sop = item.GetComponentInParent<SimObjPhysics>();
@@ -419,6 +429,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		{
 			if (CheckIfItemBlocksAgentMovement(action.moveMagnitude, 0) && CheckIfAgentCanMove(action.moveMagnitude, 0))
 			base.MoveAhead(action);
+			
 		}
         
 		public override void MoveBack(ServerAction action)
@@ -549,10 +560,11 @@ namespace UnityStandardAssets.Characters.FirstPerson
             }
 
             Rigidbody rb = gameObject.GetComponent<Rigidbody>();
-
+			//print(rb.name);
+			//print(dir);
             //might need to sweep test all, check for static..... want to be able to try and move through sim objects that can pickup and move yes
             RaycastHit[] sweepResults = rb.SweepTestAll(dir, moveMagnitude, QueryTriggerInteraction.Ignore);
-
+			//print(sweepResults[0]);
             //check if we hit an environmental structure or a sim object that we aren't actively holding. If so we can't move
             if (sweepResults.Length > 0)
             {
@@ -569,7 +581,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     //nothing in our hand, so nothing to ignore
                     if (ItemInHand == null)
                     {
-                        if (res.transform.GetComponent<SimObjPhysics>())
+						if (res.transform.GetComponent<SimObjPhysics>() || res.transform.tag == "Structure")
                         {
                             result = false;
                             Debug.Log(res.transform.name + " is blocking the Agent from moving " + orientation);
@@ -601,31 +613,32 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
             return result;
         }
-
+        
 
         /////AGENT HAND STUFF////
 
-		public void ResetAgentHandPosition()
+		public void ResetAgentHandPosition(ServerAction action)
         {
             AgentHand.transform.position = DefaultHandPosition.transform.position;
         }
 
-        public void ResetAgentHandRotation()
+        public void ResetAgentHandRotation(ServerAction action)
         {
             AgentHand.transform.localRotation = Quaternion.Euler(Vector3.zero);
         }
         
-        public void DefaultAgentHand()
+        public void DefaultAgentHand(ServerAction action)
         {
-            ResetAgentHandPosition();
-            ResetAgentHandRotation();
+            ResetAgentHandPosition(action);
+            ResetAgentHandRotation(action);
             IsHandDefault = true;
         }
 
 		//returns true if the Hand Movement was succesful
         //false if blocked by something or out of range
-        public bool MoveHand(Vector3 targetPosition)
+        public bool MoveHand(ServerAction action) //uses server action.x,y,z to create target position
         {
+			Vector3 targetPosition = new Vector3(action.x, action.y, action.z);
             bool result = false;
 
             //can only move hand if there is an object in it.
@@ -680,16 +693,16 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 }
             }
 
+            //nothing hit in sweep, so clear to move hand and item to target position
             else
             {
+				Debug.Log("Movement of Agent Hand holding " + ItemInHand.name + " succesful!");            
                 AgentHand.transform.position = targetPosition;
                 IsHandDefault = false;
                 result = true;
-            }
-
+            }         
             return result;
-
-        }
+           }
 
 		//used by RotateSimObjPhysicsInHand for compound collider object comparison
         private bool CheckForMatches(IEnumerable<Transform> objects, Transform toCompare)
@@ -703,26 +716,32 @@ namespace UnityStandardAssets.Characters.FirstPerson
             }
             return false;
         }
-
-        public bool RotateSimObjPhysicsInHand(Vector3 vec)
+        
+        //rotat ethe hand if there is an object in it
+		public void RotateHand(ServerAction action)
         {
+			Vector3 vec = new Vector3(action.x, action.y, action.z);
+
             //based on the collider type of the item in the Agent's Hand, set the radius of the OverlapSphere to check if there is room for rotation
             if (ItemInHand != null)
             {
-                //for items that use box colliders
-                if (ItemInHand.GetComponent<BoxCollider>())
+                //for items that uses a box collider for rotation check
+				if (ItemInHand.GetComponent<SimObjPhysics>().RotateCollider.GetComponent<BoxCollider>())
                 {
-                    Vector3 sizeOfBox = ItemInHand.GetComponent<BoxCollider>().size;
-                    //do an overlapshere around the agent with radius based on max size of xyz of object in hand's collider
+					//print("yes yes yes");
+					Vector3 sizeOfBox = ItemInHand.GetComponent<SimObjPhysics>().RotateCollider.GetComponent<BoxCollider>().size;
+					//do an overlapshere around the agent with radius based on max size of xyz of object in hand's collider
 
+					print(sizeOfBox);
                     //find the radius of the overlap sphere based on max length of dimensions of box collider
                     float overlapRadius = Math.Max(Math.Max(sizeOfBox.x, sizeOfBox.y), sizeOfBox.z) / 2;
-                    //since the sim objects have wonky scales, find the percent increase or decrease to multiply the radius by to match the scale of the sim object
-                    Vector3 itemInHandScale = ItemInHand.transform.lossyScale;
-                    //take the average of each axis scale, even though they should all be THE SAME but just in case
-                    float avgScale = (itemInHandScale.x + itemInHandScale.y + itemInHandScale.z) / 3;
-                    //adjust radius according to scale of item in hand
-                    overlapRadius = overlapRadius * avgScale;
+					print(overlapRadius);
+                    ////since the sim objects have wonky scales, find the percent increase or decrease to multiply the radius by to match the scale of the sim object
+                    //Vector3 itemInHandScale = ItemInHand.transform.lossyScale;
+                    ////take the average of each axis scale, even though they should all be THE SAME but just in case
+                    //float avgScale = (itemInHandScale.x + itemInHandScale.y + itemInHandScale.z) / 3;
+                    ////adjust radius according to scale of item in hand
+                    //overlapRadius = overlapRadius * avgScale;
 
                     Collider[] hitColliders = Physics.OverlapSphere(AgentHand.transform.position,
                                                                     overlapRadius);
@@ -736,7 +755,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     foreach (Collider col in hitColliders)
                     {
                         //check if the thing collided with by the OverlapSphere is the agent, the hand, or the object itself
-                        if (col.name != "TextInputModeler" && col.name != "TheHand" && col.name != ItemInHand.name)
+                        if (col.name != "TheHand" && col.name != ItemInHand.name)
                         {
                             //also check against any children the ItemInHand has for prefabs with compound colliders                     
                             //set to true if there is a match between this collider among ANY of the children of ItemInHand
@@ -745,7 +764,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
                             {
                                 Debug.Log(col.name + " blocking rotation");
                                 Debug.Log("Not Enough Room to Rotate");
-                                return false;
+								actionFinished(false);
+								return;
+                                //return false;
                             }
 
                         }
@@ -753,107 +774,161 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         else
                         {
                             AgentHand.transform.localRotation = Quaternion.Euler(vec);
-                            return true;
+							actionFinished(true);
+							return;
+                            //return true;
                         }
                     }
                 }
 
 
                 //for items with sphere collider
-                if (ItemInHand.GetComponent<SphereCollider>())
+				if (ItemInHand.GetComponent<SimObjPhysics>().RotateCollider.GetComponent<SphereCollider>())
                 {
-                    float radiusOfSphere = ItemInHand.GetComponent<SphereCollider>().radius;
+					float radiusOfSphere = ItemInHand.GetComponent<SimObjPhysics>().RotateCollider.GetComponent<SphereCollider>().radius;
+                    
+                    //Vector3 itemInHandScale = ItemInHand.transform.lossyScale;
 
-                    Vector3 itemInHandScale = ItemInHand.transform.lossyScale;
+                    //float avgScale = (itemInHandScale.x + itemInHandScale.y + itemInHandScale.z) / 3;
 
-                    float avgScale = (itemInHandScale.x + itemInHandScale.y + itemInHandScale.z) / 3;
-
-                    radiusOfSphere = radiusOfSphere * avgScale;
+                    //radiusOfSphere = radiusOfSphere * avgScale;
 
                     Collider[] hitColliders = Physics.OverlapSphere(AgentHand.transform.position, radiusOfSphere);
+
+					Transform[] anyChildren = ItemInHand.GetComponentsInChildren<Transform>();
 
                     foreach (Collider col in hitColliders)
                     {
                         //print(col.name);
-                        if (col.name != "TextInputModeler" && col.name != "TheHand" && col.name != ItemInHand.name)
+                        if (col.name != "TheHand" && col.name != ItemInHand.name)
                         {
-                            Debug.Log("Not Enough Room to Rotate");
-                            return false;
+							if (CheckForMatches(anyChildren, col.transform) == false)
+                            {
+                                Debug.Log(col.name + " blocking rotation");
+                                Debug.Log("Not Enough Room to Rotate");
+                                actionFinished(false);
+                                return;
+                                //return false;
+                            }
                         }
 
                         else
                         {
                             AgentHand.transform.localRotation = Quaternion.Euler(vec);
-                            return true;
+							actionFinished(true);
+							return;
+                            //return true;
                         }
                     }
 
                 }
             }
 
-            //if nothing is in your hand, nothing to rotate so don't!
-            Debug.Log("Nothing In Hand to rotate!");
-            return false;
-
+			else
+			{
+				//if nothing is in your hand, nothing to rotate so don't!
+                Debug.Log("Nothing In Hand to rotate!");
+                actionFinished(false);
+                return;
+                //return false;
+			}
+         
         }
-
-		public bool PickUpSimObjPhysics(Transform target)
+        
+		public void PickupObject(ServerAction action)//use serveraction objectid
         {
-            if (target.GetComponent<SimObjPhysics>().PrimaryProperty != SimObjPrimaryProperty.CanPickup)
-            {
-                Debug.Log("Only SimObjPhysics that have the property CanPickup can be picked up");
-                return false;
-            }
-            //make sure hand is empty, turn off the target object's collision and physics properties
-            //and make the object kinematic
-            if (ItemInHand == null)
-            {
-                if (IsHandDefault == false)
+			//print("Invoked Pickup");
+
+			//print(action.action);
+			//print(action.objectId);
+			if(ItemInHand != null)
+			{
+				Debug.Log("Agent hand has something in it already! Can't pick up anything else");
+                actionFinished(false);
+                return;
+			}
+
+            //else our hand is empty, commence other checks
+			else
+			{
+				if (IsHandDefault == false)
                 {
                     Debug.Log("Reset Hand to default position before attempting to Pick Up objects");
-                    return false;
+                    actionFinished(false);
+                    //return false;
                 }
 
-                //default hand rotation for further rotation manipulation
-                ResetAgentHandRotation();
+                SimObjPhysics target = null;
+
+                foreach (SimObjPhysics sop in VisibleSimObjPhysics)
+                {
+                    if (action.objectId == sop.UniqueID)
+                    {
+                        //print("found it");
+
+                        target = sop;
+                    }
+                }
+
+                //GameObject target = GameObject.Find(action.objectId);
+                if (target == null)
+                {
+                    Debug.Log("No valid target to pickup");
+                    actionFinished(false);
+                    return;
+                }
+
+                if (!target.GetComponent<SimObjPhysics>())
+                {
+                    Debug.Log("Target must be SimObjPhysics to pickup");
+                    actionFinished(false);
+                    return;
+                }
+
+                if (target.PrimaryProperty != SimObjPrimaryProperty.CanPickup)
+                {
+                    Debug.Log("Only SimObjPhysics that have the property CanPickup can be picked up");
+                    actionFinished(false);
+                    return;
+                    //return false;
+                }
+
+				if(target.isInteractable != true)
+				{
+					Debug.Log("Target not in Interactable range of Agent Hand");
+                    actionFinished(false);
+                    return;
+				}
+
+                ////default hand rotation for further rotation manipulation
+                //ResetAgentHandRotation();
                 //move the object to the hand's default position.
                 target.GetComponent<Rigidbody>().isKinematic = true;
                 //target.GetComponent<Rigidbody>().constraints = RigidbodyConstraints.FreezeRotation;
-                target.position = AgentHand.transform.position;
+                target.transform.position = AgentHand.transform.position;
                 //AgentHand.transform.parent = target;
-                target.SetParent(AgentHand.transform);
+                target.transform.SetParent(AgentHand.transform);
                 //target.parent = AgentHand.transform;
-                //update "inventory"
-
-                //this is only in debug mode - probs delete this part when porting to BaseFPSAgent
-
+                //update "inventory"            
                 ItemInHand = target.gameObject;
-                //Text txt = Inventory_Text.GetComponent<Text>();
-                //txt.text = "In Inventory: " + target.name + " " + target.GetComponent<SimObjPhysics>().UniqueID;
 
-                /////////////////
-
-                return true;
-            }
-
-            else
-            {
-                Debug.Log("Your hand has something in it already!");
-                return false;
-            }
-
+                //return true;
+                actionFinished(true);
+                return;
+			}      
         }
 
-        public bool DropSimObjPhysics()
+		public void DropHandObject(ServerAction action)
         {
             //make sure something is actually in our hands
             if (ItemInHand != null)
             {
-
-                if (ItemInHand.GetComponent<SimObjPhysics>().isColliding)
+                    if (ItemInHand.GetComponent<SimObjPhysics>().isColliding)
                 {
                     Debug.Log(ItemInHand.transform.name + " can't be dropped. It must be clear of all other objects first");
-                    return false;
+					actionFinished(false);
+					return;
+                    //return false;
                 }
 
                 else
@@ -862,12 +937,13 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     ItemInHand.transform.parent = null;
                     ItemInHand = null;
 
-                    //take this out later when moving to BaseFPS agent controller
-                    //Text txt = Inventory_Text.GetComponent<Text>();
-                    //txt.text = "In Inventory: Nothing!";
-                    ///////
-
-                    return true;
+					//take this out later when moving to BaseFPS agent controller
+					//Text txt = Inventory_Text.GetComponent<Text>();
+					//txt.text = "In Inventory: Nothing!";
+					///////
+					actionFinished(true);
+					return;
+                    //return true;
                 }
 
             }
@@ -875,21 +951,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
             else
             {
                 Debug.Log("nothing in hand to drop!");
-                return false;
-            }
-
-        }
-
-
-
-
-
-
-
-
-
-
-        
+				actionFinished(false);
+				return;
+                //return false;
+            }         
+        }  
+       
 		#if UNITY_EDITOR
         //used to show what's currently visible on the top left of the screen
         void OnGUI()
@@ -938,8 +1005,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                                 suffix += " INTERACTABLE";
                             }
                         }
-
-
+                  
                         GUILayout.Button(o.UniqueID + suffix, UnityEditor.EditorStyles.miniButton, GUILayout.MinWidth(100f));
                     }
                 }
