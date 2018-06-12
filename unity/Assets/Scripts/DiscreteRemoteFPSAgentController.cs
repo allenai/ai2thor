@@ -563,8 +563,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			{
 				lastActionSuccess = false;
 			}
-
-
+         
 		}
 
 		private void resetHand() 

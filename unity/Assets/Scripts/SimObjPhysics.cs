@@ -17,6 +17,8 @@ public class SimObjPhysics : MonoBehaviour
 	[SerializeField]
 	public SimObjSecondaryProperty[] SecondaryProperties;
 
+	public GameObject RotateCollider = null;
+
 	[SerializeField]
 	public Transform[] InteractionPoints = null;
 
@@ -26,7 +28,8 @@ public class SimObjPhysics : MonoBehaviour
 	public bool isVisible = false;
 	public bool isInteractable = false;
 	public bool isColliding = false;
-   
+
+
 	//initial position object spawned in in case we want to reset the scene
 	//private Vector3 startPosition;   
 

@@ -49,7 +49,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		protected float[] headingAngles = new float[] { 0.0f, 90.0f, 180.0f, 270.0f };
 		protected float[] horizonAngles = new float[] { 60.0f, 30.0f, 0.0f, 330.0f };
 
-        //allow agent to push sim objects that can move, for physics
+		//allow agent to push sim objects that can move, for physics
 		protected bool PushMode = false;
 
 		protected Dictionary<SimObjType, Dictionary<string, int>> OPEN_CLOSE_STATES = new Dictionary<SimObjType, Dictionary<string, int>>{
@@ -111,7 +111,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 		// Initialize parameters from environment variables
 		protected virtual void Awake()
-		{         
+		{
 			// whether it's in training or test phase         
 			// character controller parameters
 			m_CharacterController = GetComponent<CharacterController>();
@@ -130,7 +130,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		// Use this for initialization
 		protected virtual void Start()
 		{
-			m_Camera = this.gameObject.GetComponentInChildren<Camera> ();
+			m_Camera = this.gameObject.GetComponentInChildren<Camera>();
 			//m_OriginalCameraPosition = m_Camera.transform.localPosition;
 			//m_FovKick.Setup(m_Camera);
 			//m_HeadBob.Setup(m_Camera, m_StepInterval);
@@ -216,7 +216,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			}
 
 			return res;
-        }
+		}
 
 
 		private bool updateAnimState(Animator anim, int value)
@@ -287,7 +287,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			transform.rotation = Quaternion.Euler(eulerX, eulerY, 0);
 
 		}
-      
+
 		// Check if agent is collided with other objects
 		protected bool IsCollided()
 		{
@@ -392,14 +392,14 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 		public void ProcessControlCommand(ServerAction controlCommand)
 		{
-			errorMessage = "";
+	        errorMessage = "";
 			errorCode = ServerActionErrorCode.Undefined;
 			collisionsInAction = new List<string>();
 
 			lastAction = controlCommand.action;
 			lastActionSuccess = false;
-			lastPosition = new Vector3 (transform.position.x, transform.position.y, transform.position.z);
-			System.Reflection.MethodInfo method = this.GetType ().GetMethod (controlCommand.action);
+			lastPosition = new Vector3(transform.position.x, transform.position.y, transform.position.z);
+			System.Reflection.MethodInfo method = this.GetType().GetMethod(controlCommand.action);
 			this.actionComplete = false;
 			try
 			{
@@ -434,7 +434,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 			}
 		}
-              
+
 		// Handle collisions - CharacterControllers don't apply physics innately, see "PushMode" check below
 		protected void OnControllerColliderHit(ControllerColliderHit hit)
 		{
@@ -449,10 +449,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			}
 
 
-			if (!collisionsInAction.Contains (hit.gameObject.name)) 
+			if (!collisionsInAction.Contains(hit.gameObject.name))
 			{
-				Debug.Log ("Agent Collided with " + hit.gameObject.name);
-				collisionsInAction.Add (hit.gameObject.name);
+				Debug.Log("Agent Collided with " + hit.gameObject.name);
+				collisionsInAction.Add(hit.gameObject.name);
 			}
 
 			Rigidbody body = hit.collider.attachedRigidbody;
@@ -468,293 +468,299 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			}
 
 			//push objects out of the way if moving through them and they are Moveable or CanPickup (Physics)
-            if(PushMode)
+			if (PushMode)
 			{
 				float pushPower = 2.0f;
-                Vector3 pushDir = new Vector3(hit.moveDirection.x, 0, hit.moveDirection.z);
-                body.velocity = pushDir * pushPower;
-			}         
+				Vector3 pushDir = new Vector3(hit.moveDirection.x, 0, hit.moveDirection.z);
+				body.velocity = pushDir * pushPower;
+			}
 			//if we touched something with a rigidbody that needs to simulate physics, generate a force at the impact point
 			//body.AddForce(m_CharacterController.velocity * 15f, ForceMode.Force);
-            //body.AddForceAtPosition (m_CharacterController.velocity * 15f, hit.point, ForceMode.Acceleration);//might have to adjust the force vector scalar later
+			//body.AddForceAtPosition (m_CharacterController.velocity * 15f, hit.point, ForceMode.Acceleration);//might have to adjust the force vector scalar later
 		}
 
 		protected void snapToGrid()
-        {
-            float mult = 1 / gridSize;
-            float gridX = Convert.ToSingle(Math.Round(this.transform.position.x * mult) / mult);
-            float gridZ = Convert.ToSingle(Math.Round(this.transform.position.z * mult) / mult);
+		{
+			float mult = 1 / gridSize;
+			float gridX = Convert.ToSingle(Math.Round(this.transform.position.x * mult) / mult);
+			float gridZ = Convert.ToSingle(Math.Round(this.transform.position.z * mult) / mult);
 
-            this.transform.position = new Vector3(gridX, transform.position.y, gridZ);
-        }
+			this.transform.position = new Vector3(gridX, transform.position.y, gridZ);
+		}
 
 		//move in cardinal directions
-        virtual protected void moveCharacter(ServerAction action, int targetOrientation)
-        {
-            //resetHand(); when I looked at this resetHand in DiscreteRemoteFPSAgent was just commented out doing nothing so...
-            moveMagnitude = gridSize;
-            if (action.moveMagnitude > 0)
-            {
-                moveMagnitude = action.moveMagnitude;
-            }
-            int currentRotation = (int)Math.Round(transform.rotation.eulerAngles.y, 0);
-            Dictionary<int, Vector3> actionOrientation = new Dictionary<int, Vector3>();
-            actionOrientation.Add(0, new Vector3(0f, 0f, 1.0f));
-            actionOrientation.Add(90, new Vector3(1.0f, 0.0f, 0.0f));
-            actionOrientation.Add(180, new Vector3(0f, 0f, -1.0f));
-            actionOrientation.Add(270, new Vector3(-1.0f, 0.0f, 0.0f));
-            int delta = (currentRotation + targetOrientation) % 360;
+		virtual protected void moveCharacter(ServerAction action, int targetOrientation)
+		{
+			//resetHand(); when I looked at this resetHand in DiscreteRemoteFPSAgent was just commented out doing nothing so...
+			moveMagnitude = gridSize;
+			if (action.moveMagnitude > 0)
+			{
+				moveMagnitude = action.moveMagnitude;
+			}
+			int currentRotation = (int)Math.Round(transform.rotation.eulerAngles.y, 0);
+			Dictionary<int, Vector3> actionOrientation = new Dictionary<int, Vector3>();
+			actionOrientation.Add(0, new Vector3(0f, 0f, 1.0f));
+			actionOrientation.Add(90, new Vector3(1.0f, 0.0f, 0.0f));
+			actionOrientation.Add(180, new Vector3(0f, 0f, -1.0f));
+			actionOrientation.Add(270, new Vector3(-1.0f, 0.0f, 0.0f));
+			int delta = (currentRotation + targetOrientation) % 360;
 
-            Vector3 m;
-            if (actionOrientation.ContainsKey(delta))
-            {
-                m = actionOrientation[delta];
+			Vector3 m;
+			if (actionOrientation.ContainsKey(delta))
+			{
+				m = actionOrientation[delta];
 
-            }
+			}
 
-            else
-            {
-                actionOrientation = new Dictionary<int, Vector3>();
-                actionOrientation.Add(0, transform.forward);
-                actionOrientation.Add(90, transform.right);
-                actionOrientation.Add(180, transform.forward * -1);
-                actionOrientation.Add(270, transform.right * -1);
-                m = actionOrientation[targetOrientation];
-            }
+			else
+			{
+				actionOrientation = new Dictionary<int, Vector3>();
+				actionOrientation.Add(0, transform.forward);
+				actionOrientation.Add(90, transform.right);
+				actionOrientation.Add(180, transform.forward * -1);
+				actionOrientation.Add(270, transform.right * -1);
+				m = actionOrientation[targetOrientation];
+			}
 
-            m *= moveMagnitude;
+			m *= moveMagnitude;
 
-            m.y = Physics.gravity.y * this.m_GravityMultiplier;
-            m_CharacterController.Move(m);
-            StartCoroutine(checkMoveAction(action));
+			m.y = Physics.gravity.y * this.m_GravityMultiplier;
+			m_CharacterController.Move(m);
+			StartCoroutine(checkMoveAction(action));
 
-        }
+		}
 
 		virtual protected IEnumerator checkMoveAction(ServerAction action)
-        {
+		{
 
-            yield return null;
+			yield return null;
 
-            if (continuousMode)
-            {
-                actionFinished(true);
-                yield break;
-            }
+			if (continuousMode)
+			{
+				actionFinished(true);
+				yield break;
+			}
 
-            bool result = false;         
+			bool result = false;
 
-            for (int i = 0; i < actionDuration; i++)
-            {
-                Vector3 currentPosition = this.transform.position;
-                Vector3 zeroY = new Vector3(1.0f, 0.0f, 1.0f);
-                float distance = Vector3.Distance(Vector3.Scale(lastPosition, zeroY), Vector3.Scale(currentPosition, zeroY));
-                if (Math.Abs(moveMagnitude - distance) < 0.005)
-                {
-                    currentPosition = this.transform.position;
+			for (int i = 0; i < actionDuration; i++)
+			{
+				Vector3 currentPosition = this.transform.position;
+				Vector3 zeroY = new Vector3(1.0f, 0.0f, 1.0f);
+				float distance = Vector3.Distance(Vector3.Scale(lastPosition, zeroY), Vector3.Scale(currentPosition, zeroY));
+				if (Math.Abs(moveMagnitude - distance) < 0.005)
+				{
+					currentPosition = this.transform.position;
 
-                    if (action.snapToGrid)
-                    {
-                        this.snapToGrid();
-                    }
-
-
-                    yield return null;
-                    if (this.IsCollided())
-                    {
-                        for (int j = 0; j < actionDuration; j++)
-                        {
-                            yield return null;
-                        }
-
-                    }
-
-                    if ((currentPosition - this.transform.position).magnitude <= 0.001f)
-                    {
-                        result = true;
-                    }
-
-                    break;
-                }
-
-                else
-                {
-                    yield return null;
-                }
-            }
-         
-            // Debug.Log(this.transform.position.z.ToString("F3", CultureInfo.InvariantCulture));
-
-            // if for some reason we moved in the Y space too much, then we assume that something is wrong
-            // In FloorPlan 223 @ x=-1, z=2.0 its possible to move through the wall using move=0.5
-
-            if (Math.Abs((this.transform.position - lastPosition).y) > 0.2)
-            {
-                result = false;
-            }
+					if (action.snapToGrid)
+					{
+						this.snapToGrid();
+					}
 
 
-            if (!result)
-            {
-                Debug.Log("check move failed");
-                transform.position = lastPosition;
-            }
-         
-            actionFinished(result);
-        }
+					yield return null;
+					if (this.IsCollided())
+					{
+						for (int j = 0; j < actionDuration; j++)
+						{
+							yield return null;
+						}
+
+					}
+
+					if ((currentPosition - this.transform.position).magnitude <= 0.001f)
+					{
+						result = true;
+						//lastPosition = transform.position;//debugging
+					}
+
+					break;
+				}
+
+				else
+				{
+					yield return null;
+				}
+			}
+
+			// Debug.Log(this.transform.position.z.ToString("F3", CultureInfo.InvariantCulture));
+
+			// if for some reason we moved in the Y space too much, then we assume that something is wrong
+			// In FloorPlan 223 @ x=-1, z=2.0 its possible to move through the wall using move=0.5
+
+			if (Math.Abs((this.transform.position - lastPosition).y) > 0.2)
+			{
+				result = false;
+			}
+
+
+			if (!result)
+			{
+				Debug.Log("check move failed");
+				transform.position = lastPosition;
+			}
+
+			actionFinished(result);
+		}
 
 
 
 
 		public virtual void MoveLeft(ServerAction action)
-        {
-            moveCharacter(action, 270);
-        }
-        
-        public virtual void MoveRight(ServerAction action)
-        {
-            moveCharacter(action, 90);
-        }
+		{
+			moveCharacter(action, 270);
+		}
 
-        public virtual void MoveAhead(ServerAction action)
-        {
-            moveCharacter(action, 0);
-        }
+		public virtual void MoveRight(ServerAction action)
+		{
+			moveCharacter(action, 90);
+		}
+
+		public virtual void MoveAhead(ServerAction action)
+		{
+			moveCharacter(action, 0);
+		}
 
 		public virtual void MoveBack(ServerAction action)
-        {
-            moveCharacter(action, 180);
-        }
+		{
+			moveCharacter(action, 180);
+		}
 
 		//free move
-        public virtual void Move(ServerAction action)
-        {
-            //resetHand(); again, reset hand was commented out so was doing nothing
-            if (Math.Abs(action.x) > 0)
-            {
-                moveMagnitude = Math.Abs(action.x);
-            }
+		public virtual void Move(ServerAction action)
+		{
+			//resetHand(); again, reset hand was commented out so was doing nothing
+			if (Math.Abs(action.x) > 0)
+			{
+				moveMagnitude = Math.Abs(action.x);
+			}
 
-            else
-            {
-                moveMagnitude = Math.Abs(action.z);
-            }
+			else
+			{
+				moveMagnitude = Math.Abs(action.z);
+			}
 
-            action.y = Physics.gravity.y * this.m_GravityMultiplier;
-            m_CharacterController.Move(new Vector3(action.x, action.y, action.z));
-            StartCoroutine(checkMoveAction(action));
-        }
+			action.y = Physics.gravity.y * this.m_GravityMultiplier;
+			m_CharacterController.Move(new Vector3(action.x, action.y, action.z));
+			StartCoroutine(checkMoveAction(action));
+		}
 
 
-        private int nearestAngleIndex(float angle, float[] array)
-        {
+		private int nearestAngleIndex(float angle, float[] array)
+		{
 
-            for (int i = 0; i < array.Length; i++)
-            {
-                if (Math.Abs(angle - array[i]) < 2.0f)
-                {
-                    return i;
-                }
-            }
-            return 0;
-        }
+			for (int i = 0; i < array.Length; i++)
+			{
+				if (Math.Abs(angle - array[i]) < 2.0f)
+				{
+					return i;
+				}
+			}
+			return 0;
+		}
 
-        protected int currentHorizonAngleIndex()
-        {
-            return nearestAngleIndex(Quaternion.LookRotation(m_Camera.transform.forward).eulerAngles.x, horizonAngles);
-        }
+		protected int currentHorizonAngleIndex()
+		{
+			return nearestAngleIndex(Quaternion.LookRotation(m_Camera.transform.forward).eulerAngles.x, horizonAngles);
+		}
 
-        private int currentHeadingAngleIndex()
-        {
-            return nearestAngleIndex(Quaternion.LookRotation(transform.forward).eulerAngles.y, headingAngles);
-        }
-            
-        //free look, change up/down angle of camera view
-        public void Look(ServerAction response)
-        {
-            m_Camera.transform.localEulerAngles = new Vector3(response.horizon, 0.0f, 0.0f);
-            actionFinished(true);
-        }
+		private int currentHeadingAngleIndex()
+		{
+			return nearestAngleIndex(Quaternion.LookRotation(transform.forward).eulerAngles.y, headingAngles);
+		}
 
-        //free rotate, change forward facing of Agent
-        public void Rotate(ServerAction response)
-        {
-            transform.rotation = Quaternion.Euler(new Vector3(0.0f, response.rotation, 0.0f));
-            actionFinished(true);
-        }
+		//free look, change up/down angle of camera view
+		public void Look(ServerAction response)
+		{
+			m_Camera.transform.localEulerAngles = new Vector3(response.horizon, 0.0f, 0.0f);
+			actionFinished(true);
+		}
+
+		//free rotate, change forward facing of Agent
+		public void Rotate(ServerAction response)
+		{
+			transform.rotation = Quaternion.Euler(new Vector3(0.0f, response.rotation, 0.0f));
+			actionFinished(true);
+		}
 
 		//looks like thisfree rotates AND free changes camera look angle?
-        public void RotateLook(ServerAction response)
-        {
-            transform.rotation = Quaternion.Euler(new Vector3(0.0f, response.rotation, 0.0f));
-            m_Camera.transform.localEulerAngles = new Vector3(response.horizon, 0.0f, 0.0f);
-            actionFinished(true);
+		public void RotateLook(ServerAction response)
+		{
+			transform.rotation = Quaternion.Euler(new Vector3(0.0f, response.rotation, 0.0f));
+			m_Camera.transform.localEulerAngles = new Vector3(response.horizon, 0.0f, 0.0f);
+			actionFinished(true);
 
-        }
+		}
 
-        //rotates 90 degrees left w/ respect to current forward
+		//rotates 90 degrees left w/ respect to current forward
 		public virtual void RotateLeft(ServerAction controlCommand)
-        {
-            int index = currentHeadingAngleIndex() - 1;
-            if (index < 0)
-            {
-                index = headingAngles.Length - 1;
-            }
-            float targetRotation = headingAngles[index];
-            transform.rotation = Quaternion.Euler(new Vector3(0.0f, targetRotation, 0.0f));
-            actionFinished(true);
+		{
+			int index = currentHeadingAngleIndex() - 1;
+			if (index < 0)
+			{
+				index = headingAngles.Length - 1;
+			}
+			float targetRotation = headingAngles[index];
+			transform.rotation = Quaternion.Euler(new Vector3(0.0f, targetRotation, 0.0f));
+			actionFinished(true);
 
-        }
-      
-        //rotates 90 degrees right w/ respect to current forward
-        public virtual void RotateRight(ServerAction controlCommand)
-        {
+		}
 
-            int index = currentHeadingAngleIndex() + 1;
-            if (index == headingAngles.Length)
-            {
-                index = 0;
-            }
+		//rotates 90 degrees right w/ respect to current forward
+		public virtual void RotateRight(ServerAction controlCommand)
+		{
 
-            float targetRotation = headingAngles[index];
-            transform.rotation = Quaternion.Euler(new Vector3(0.0f, targetRotation, 0.0f));
-            actionFinished(true);
-        }
-              
+			int index = currentHeadingAngleIndex() + 1;
+			if (index == headingAngles.Length)
+			{
+				index = 0;
+			}
+
+			float targetRotation = headingAngles[index];
+			transform.rotation = Quaternion.Euler(new Vector3(0.0f, targetRotation, 0.0f));
+			actionFinished(true);
+		}
+
 		//iterates to next allowed downward horizon angle for AgentCamera (max 60 degrees down)
-        public virtual void LookDown(ServerAction response)
-        {
-            if (currentHorizonAngleIndex() > 0)
-            {
-                float targetHorizon = horizonAngles[currentHorizonAngleIndex() - 1];
-                m_Camera.transform.localEulerAngles = new Vector3(targetHorizon, 0.0f, 0.0f);
-                actionFinished(true);
+		public virtual void LookDown(ServerAction response)
+		{
+			if (currentHorizonAngleIndex() > 0)
+			{
+				float targetHorizon = horizonAngles[currentHorizonAngleIndex() - 1];
+				m_Camera.transform.localEulerAngles = new Vector3(targetHorizon, 0.0f, 0.0f);
+				actionFinished(true);
 
-            }
-            else
-            {
-                errorMessage = "can't LookDown below the min horizon angle";
-                errorCode = ServerActionErrorCode.LookDownCantExceedMin;
-                actionFinished(false);
-            }
-        }
+			}
+			else
+			{
+				errorMessage = "can't LookDown below the min horizon angle";
+				errorCode = ServerActionErrorCode.LookDownCantExceedMin;
+				actionFinished(false);
+			}
+		}
 
 		//iterates to next allowed upward horizon angle for agent camera (max 30 degrees up)
-        public virtual void LookUp(ServerAction controlCommand)
-        {
+		public virtual void LookUp(ServerAction controlCommand)
+		{
 
-            if (currentHorizonAngleIndex() < horizonAngles.Length - 1)
-            {
-                float targetHorizon = horizonAngles[currentHorizonAngleIndex() + 1];
-                m_Camera.transform.localEulerAngles = new Vector3(targetHorizon, 0.0f, 0.0f);
-                actionFinished(true);
-            }
+			if (currentHorizonAngleIndex() < horizonAngles.Length - 1)
+			{
+				float targetHorizon = horizonAngles[currentHorizonAngleIndex() + 1];
+				m_Camera.transform.localEulerAngles = new Vector3(targetHorizon, 0.0f, 0.0f);
+				actionFinished(true);
+			}
 
-            else
-            {
-                errorMessage = "can't LookUp beyond the max horizon angle";
-                errorCode = ServerActionErrorCode.LookUpCantExceedMax;
-                actionFinished(false);
-            }
-        }
+			else
+			{
+				errorMessage = "can't LookUp beyond the max horizon angle";
+				errorCode = ServerActionErrorCode.LookUpCantExceedMax;
+				actionFinished(false);
+			}
+		}
+
+		//public virtual void P(ServerAction action)//use
+		//{
+
+		//}
 	}
 }
