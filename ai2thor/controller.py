@@ -13,12 +13,14 @@ import io
 import json
 import copy
 import logging
+import fcntl
 import math
 import time
 import random
 import shlex
 import signal
 import subprocess
+import shutil
 import threading
 import os
 import platform
@@ -374,6 +376,7 @@ class Controller(object):
         self.server_thread = None
         self.killing_unity = False
         self.quality = quality
+        self.lock_file = None
 
     def reset(self, scene_name=None):
         self.response_queue.put_nowait(dict(action='Reset', sceneName=scene_name, sequenceId=0))
@@ -428,6 +431,32 @@ class Controller(object):
                 scenes.append('FloorPlan%s' % i)
 
         return scenes
+
+    def unlock_release(self):
+        if self.lock_file:
+            fcntl.flock(self.lock_file, fcntl.LOCK_UN)
+
+    def lock_release(self):
+        build_dir = os.path.join(self.releases_dir(), self.build_name())
+        if os.path.isdir(build_dir):
+            self.lock_file = open(os.path.join(build_dir, ".lock"), "w")
+            fcntl.flock(self.lock_file, fcntl.LOCK_SH)
+
+    def prune_releases(self):
+        current_exec_path = self.executable_path()
+        for d in os.listdir(self.releases_dir()):
+            release = os.path.join(self.releases_dir(), d)
+
+            if current_exec_path.startswith(release):
+                continue
+
+            if os.path.isdir(release):
+                try:
+                    with open(os.path.join(release, ".lock"), "w") as f:
+                        fcntl.flock(f, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                        shutil.rmtree(release)
+                except Exception as e:
+                    pass
 
     def next_interact_command(self):
         current_buffer = ''
@@ -612,6 +641,9 @@ class Controller(object):
     def _start_server_thread(self):
         self.server.start()
 
+    def releases_dir(self):
+        return os.path.join(self.base_dir(), 'releases')
+
     def base_dir(self):
         return os.path.join(os.path.expanduser('~'), '.ai2thor')
 
@@ -626,11 +658,10 @@ class Controller(object):
         target_arch = platform.system()
 
         if target_arch == 'Linux':
-            return os.path.join(self.base_dir(), 'releases', self.build_name(), self.build_name())
+            return os.path.join(self.releases_dir(), self.build_name(), self.build_name())
         elif target_arch == 'Darwin':
             return os.path.join(
-                self.base_dir(),
-                'releases',
+                self.releases_dir(),
                 self.build_name(),
                 self.build_name() + ".app",
                 "Contents/MacOS",
@@ -644,9 +675,8 @@ class Controller(object):
             raise Exception("Only 64bit currently supported")
 
         url = BUILDS[platform.system()]['url']
-        releases_dir = os.path.join(self.base_dir(), 'releases')
         tmp_dir = os.path.join(self.base_dir(), 'tmp')
-        makedirs(releases_dir)
+        makedirs(self.releases_dir())
         makedirs(tmp_dir)
 
         if not os.path.isfile(self.executable_path()):
@@ -660,7 +690,7 @@ class Controller(object):
             extract_dir = os.path.join(tmp_dir, self.build_name())
             logger.debug("Extracting zipfile %s" % os.path.basename(url))
             z.extractall(extract_dir)
-            os.rename(extract_dir, os.path.join(releases_dir, self.build_name()))
+            os.rename(extract_dir, os.path.join(self.releases_dir(), self.build_name()))
             # we can lose the executable permission when unzipping a build
             os.chmod(self.executable_path(), 0o755)
         else:
@@ -722,6 +752,7 @@ class Controller(object):
                     self.check_x_display(env['DISPLAY'])
 
             self.download_binary()
+            self.lock_release()
 
             unity_thread = threading.Thread(
                 target=self._start_unity_thread,
@@ -739,6 +770,7 @@ class Controller(object):
         self.server.wsgi_server.shutdown()
         self.stop_container()
         self.stop_unity()
+        self.unlock_release()
 
     def stop_container(self):
         if self.container_id:
