@@ -751,6 +751,7 @@ class Controller(object):
 
             self.download_binary()
             self.lock_release()
+            self.prune_releases()
 
             unity_thread = threading.Thread(
                 target=self._start_unity_thread,
