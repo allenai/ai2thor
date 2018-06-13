@@ -1,7 +1,7 @@
 # GENERATED FILE - DO NOT EDIT
-VERSION = '201806111301'
-BUILDS = {'Darwin': {'sha256': '6b6f85e2a938cd2ed314aea025383fc2e1b9f4623e880ceea86723d88c71707d',
-            'url': 'http://s3-us-west-2.amazonaws.com/ai2-thor/builds/thor-201806111301-OSXIntel64.zip'},
- 'Docker': {'tag': '201806111301'},
- 'Linux': {'sha256': '47b857572e2fb39d6c128d1c79a4e0f4141377927bd0d1d5e4ea175d631a633e',
-           'url': 'http://s3-us-west-2.amazonaws.com/ai2-thor/builds/thor-201806111301-Linux64.zip'}}
+VERSION = '201806131124'
+BUILDS = {'Darwin': {'sha256': 'd4c1921d99f3c0d4e92969160ef1bbed087e050fa7a5a08386d85098a2f290da',
+            'url': 'http://s3-us-west-2.amazonaws.com/ai2-thor/builds/thor-201806131124-OSXIntel64.zip'},
+ 'Docker': {'tag': '201806131124'},
+ 'Linux': {'sha256': 'ed09fcff6e2c0edddd9351aa25ed37e9e96e19bf9f4411b645cc67a3ece16a46',
+           'url': 'http://s3-us-west-2.amazonaws.com/ai2-thor/builds/thor-201806131124-Linux64.zip'}}
