@@ -1,8 +1,6 @@
 import subprocess
 import os.path
 import re
-import json
-import requests
 import tempfile
 import ai2thor._builds
 import shlex
