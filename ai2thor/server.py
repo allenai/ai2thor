@@ -133,7 +133,7 @@ class Event(object):
         if self.instance_segmentation_frame is None:
             return
 
-        MIN_DETECTION_LEN = 10
+        MIN_DETECTION_LEN = 0
 
         self.instance_detections2D = {}
         unique_ids, unique_inverse = unique_rows(self.instance_segmentation_frame.reshape(-1, 3), return_inverse=True)
