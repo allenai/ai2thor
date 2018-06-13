@@ -16,8 +16,6 @@ def add_files(zipf, start_dir):
             #print("adding %s" % arcname)
             zipf.write(fn, arcname)
 
-
-
 def push_build(build_archive_name):
     import boto3
     #subprocess.run("ls %s" % build_archive_name, shell=True)
@@ -49,10 +47,10 @@ def local_build(context, prefix='local'):
 @task
 def generate_quality_settings(ctx):
     import yaml
+
     class YamlUnity3dTag(yaml.SafeLoader):
         def let_through(self, node):
             return self.construct_mapping(node)
-
 
     YamlUnity3dTag.add_constructor(u'tag:unity3d.com,2011:47', YamlUnity3dTag.let_through)
 
@@ -90,20 +88,8 @@ def build_sha256(path):
 
     return m.hexdigest()
 
-def generate_dockerignore(version):
-    return """ai2thor/
-ai2thor.egg-info/
-unity/
-build/
-dist/
-doc/
-!unity/builds/thor-%s-Linux64*
-""" % version
-
 
 def build_docker(version):
-    with open(".dockerignore", "w") as f:
-        f.write(generate_dockerignore(version))
 
     subprocess.check_call(
         "docker build --rm --no-cache --build-arg AI2THOR_VERSION={version} -t  ai2thor/ai2thor-base:{version} .".format(version=version),
@@ -186,12 +172,10 @@ def check_visible_objects_closed_receptacles(ctx, start_scene, end_scene):
     from itertools import product
 
     import ai2thor.controller
-    import cv2
     controller = ai2thor.controller.BFSController()
     controller.local_executable_path = 'unity/builds/thor-local-OSXIntel64.app/Contents/MacOS/thor-local-OSXIntel64'
     controller.start()
     for i in range(int(start_scene), int(end_scene)):
-        bad_objects = set()
         print("working on floorplan %s" % i)
         controller.search_all_closed('FloorPlan%s' % i)
 
@@ -235,14 +219,15 @@ def check_visible_objects_closed_receptacles(ctx, start_scene, end_scene):
 
                         replace_success = controller.last_event.metadata['lastActionSuccess']
 
-
                         if replace_success:
                             if controller.is_object_visible(visibility_object_id) and j['objectId'] not in bad_receptacles:
                                 bad_receptacles.add(j['objectId'])
                                 print("Got bad receptacle: %s" % j['objectId'])
-                                #cv2.imshow('aoeu', controller.last_event.cv2image())
-                                #cv2.waitKey(0)
+                                # import cv2
+                                # cv2.imshow('aoeu', controller.last_event.cv2image())
+                                # cv2.waitKey(0)
 
-                            controller.step(action=dict( action='PickupObject',
+                            controller.step(action=dict(
+                                action='PickupObject',
                                 objectId=visibility_object_id,
                                 forceVisible=True))
