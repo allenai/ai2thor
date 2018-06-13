@@ -402,10 +402,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			if (!result) {
 				Debug.Log ("Teleport failed");
 				transform.position = lastPosition;
-			} else {
-				Vector3 m = new Vector3 ();
-				m.y = Physics.gravity.y * this.m_GravityMultiplier;
-				m_CharacterController.Move (m);
 			}
 
 			actionFinished (result);
@@ -1098,7 +1094,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 				}
 				
 			}
-			StartCoroutine (checkTeleportAction ());
+			actionFinished(true);
 		}
 
 
@@ -1109,6 +1105,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			transform.rotation = Quaternion.Euler(new Vector3(0.0f,response.rotation,0.0f));
 			m_Camera.transform.localEulerAngles = new Vector3 (response.horizon, 0.0f, 0.0f);
 
+			Vector3 m = new Vector3 ();
+			m.y = Physics.gravity.y * this.m_GravityMultiplier;
+			m_CharacterController.Move (m);
+
 			StartCoroutine (checkTeleportAction ());
 		}
 
@@ -1118,6 +1118,11 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			if (response.rotateOnTeleport) {
 				transform.rotation = Quaternion.Euler(new Vector3(0.0f,response.rotation,0.0f));
 			}
+
+			Vector3 m = new Vector3 ();
+			m.y = Physics.gravity.y * this.m_GravityMultiplier;
+			m_CharacterController.Move (m);
+
 			StartCoroutine (checkTeleportAction ());
 		}
 
