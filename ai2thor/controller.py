@@ -604,21 +604,18 @@ class Controller(object):
         # get environment variables
 
         env['AI2THOR_CLIENT_TOKEN'] = self.server.client_token = str(uuid.uuid4())
-        env['AI2THOR_VERSION'] = ai2thor._builds.VERSION
         env['AI2THOR_HOST'] = host
         env['AI2THOR_PORT'] = str(port)
-
-        env['AI2THOR_SCREEN_WIDTH'] = str(width)
-        env['AI2THOR_SCREEN_HEIGHT'] = str(height)
 
         # env['AI2THOR_SERVER_SIDE_SCREENSHOT'] = 'True'
 
         # print("Viewer: http://%s:%s/viewer" % (host, port))
+        command = self.unity_command(width, height)
+
         if image_name is not None:
-            self.container_id = ai2thor.docker.run(image_name, env)
+            self.container_id = ai2thor.docker.run(image_name, self.base_dir(), ' '.join(command), env)
             atexit.register(lambda: ai2thor.docker.kill_container(self.container_id))
         else:
-            command = self.unity_command(width, height)
             proc = subprocess.Popen(command, env=env)
             self.unity_pid = proc.pid
             atexit.register(lambda: proc.poll() is None and proc.kill())
