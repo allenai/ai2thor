@@ -589,6 +589,10 @@ class Controller(object):
 
         self.response_queue.put_nowait(action)
         self.last_event = queue_get(self.request_queue)
+
+        if not self.last_event.metadata['lastActionSuccess'] and self.last_event.metadata['errorCode'] == 'InvalidAction':
+            raise ValueError(self.last_event.metadata['errorMessage'])
+
         if raise_for_failure:
             assert self.last_event.metadata['lastActionSuccess']
 

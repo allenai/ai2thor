@@ -559,5 +559,6 @@ public enum ServerActionErrorCode  {
 	InventoryFull,
 	ObjectNotPickupable,
 	LookUpCantExceedMax,
-	LookDownCantExceedMin
+	LookDownCantExceedMin,
+	InvalidAction
 }

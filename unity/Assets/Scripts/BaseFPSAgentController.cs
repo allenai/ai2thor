@@ -424,14 +424,23 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			lastPosition = new Vector3 (transform.position.x, transform.position.y, transform.position.z);
 			System.Reflection.MethodInfo method = this.GetType ().GetMethod (controlCommand.action);
 			this.actionComplete = false;
+
 			try
 			{
-				method.Invoke(this, new object[] { controlCommand });
+				if (method == null) {
+					errorMessage = "Invalid action: " + controlCommand.action;
+					errorCode = ServerActionErrorCode.InvalidAction;
+					Debug.LogError(errorMessage);
+					actionFinished(false);
+				} else {
+					method.Invoke(this, new object[] { controlCommand });
+				}
 			}
 			catch (Exception e)
 			{
 				Debug.LogError("caught error with invoke");
 				Debug.LogError(e);
+
 				errorMessage += e.ToString();
 				actionFinished(false);
 			}
