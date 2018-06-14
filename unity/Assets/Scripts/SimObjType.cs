@@ -18,7 +18,12 @@ public enum SimObjPrimaryProperty : int // EACH SimObjPhysics MUST HAVE 1 Primar
     //PRIMARY PROPERTIES
     Static = 1,
     Moveable = 2,
-    CanPickup = 3
+    CanPickup = 3,
+
+    //these are to identify walls, floor, ceiling
+    Wall = 4,
+    Floor = 5,
+    Ceiling = 6
 }
 
 [Serializable]
