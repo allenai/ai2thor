@@ -451,6 +451,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 			if (!collisionsInAction.Contains(hit.gameObject.name))
 			{
+
+                //XXX - Yeh so we will need to search up the gameobject's parentint Heirarchy for a SimObj or SimObjPhysics component, otherwise
+                //compound colliders will report back nonsense names
 				Debug.Log("Agent Collided with " + hit.gameObject.name);
 				collisionsInAction.Add(hit.gameObject.name);
 			}

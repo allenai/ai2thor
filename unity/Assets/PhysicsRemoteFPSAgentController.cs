@@ -103,31 +103,36 @@ namespace UnityStandardAssets.Characters.FirstPerson
                             sop = item.GetComponentInParent<SimObjPhysics>();
                         }
 
-                        if (sop.VisibilityPoints.Length > 0)
-                        {
-                            Transform[] visPoints = sop.VisibilityPoints;
-                            int visPointCount = 0;
-
-                            foreach (Transform point in visPoints)
+						if(sop)
+						{
+							if (sop.VisibilityPoints.Length > 0)
                             {
-                                //if this particular point is in view...
-                                if (CheckIfVisibilityPointInViewport(point, agentCamera, maxDistance))
+                                Transform[] visPoints = sop.VisibilityPoints;
+                                int visPointCount = 0;
+
+                                foreach (Transform point in visPoints)
                                 {
-                                    visPointCount++;
+                                    //if this particular point is in view...
+                                    if (CheckIfVisibilityPointInViewport(sop, point, agentCamera, maxDistance))
+                                    {
+                                        visPointCount++;
+                                    }
+                                }
+
+                                //if we see at least one vis point, the object is "visible"
+                                if (visPointCount > 0)
+                                {
+                                    sop.isVisible = true;
+                                    if (!currentlyVisibleItems.Contains(sop))
+                                        currentlyVisibleItems.Add(sop);
                                 }
                             }
 
-                            if (visPointCount > 0)
-                            {
-                                sop.isVisible = true;
-                                if (!currentlyVisibleItems.Contains(sop))
-                                    currentlyVisibleItems.Add(sop);
-                            }
-                        }
+                            else
+                                Debug.Log("Error! Set at least 1 visibility point on SimObjPhysics prefab!");
 
-                        else
-                            Debug.Log("Error! Set at least 1 visibility point on SimObjPhysics prefab!");
-
+						}
+                        
                     }
 
                 }
@@ -200,7 +205,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
         }
 
         
-		protected bool CheckIfVisibilityPointInViewport(Transform point, Camera agentCamera, float maxDistance)
+		protected bool CheckIfVisibilityPointInViewport(SimObjPhysics sop, Transform point, Camera agentCamera, float maxDistance)
         {
             bool result = false;
 
@@ -208,15 +213,36 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
             float ViewPointRangeHigh = 1.0f;
             float ViewPointRangeLow = 0.0f;
-
+            
             if (viewPoint.z > 0 && viewPoint.z < maxDistance //is in front of camera and within range of visibility sphere
                    && viewPoint.x < ViewPointRangeHigh && viewPoint.x > ViewPointRangeLow//within x bounds of viewport
                     && viewPoint.y < ViewPointRangeHigh && viewPoint.y > ViewPointRangeLow)//within y bounds of viewport
             {
-                result = true;
-                #if UNITY_EDITOR
-                Debug.DrawLine(agentCamera.transform.position, point.position, Color.yellow);
-                #endif
+                
+				//now cast a ray out toward the point, if anything occludes this point, that point is not visible
+				RaycastHit hit;
+				if(Physics.Raycast(agentCamera.transform.position, point.position - agentCamera.transform.position, out hit, 
+				                   Vector3.Distance(point.position,agentCamera.transform.position), 1<<8))//layer mask automatically excludes Agent from this check
+				{
+					print(hit.transform.name);
+                    if(hit.transform.name != sop.name)
+					{
+						result = false;
+					}
+
+					else
+					{
+						result = true;
+                        #if UNITY_EDITOR
+                        Debug.DrawLine(agentCamera.transform.position, point.position, Color.yellow);
+                        #endif
+					}
+
+				}
+
+
+
+
             }
 
             else

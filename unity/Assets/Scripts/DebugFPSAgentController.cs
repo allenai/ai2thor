@@ -70,9 +70,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
             m_MouseLook.Init(transform, m_Camera.transform);
             
             //find debug canvas related objects 
-            Debug_Canvas = GameObject.Find("DebugCanvas");
+            Debug_Canvas = GameObject.Find("DebugCanvasPhysics");
 			//Inventory_Text = GameObject.Find("DebugCanvas/InventoryText");
-			InputMode_Text = GameObject.Find("DebugCanvas/InputModeText");
+			InputMode_Text = GameObject.Find("DebugCanvasPhysics/InputModeText");
 
             //if this component is enabled, turn on the targeting reticle and target text
             if (this.isActiveAndEnabled)

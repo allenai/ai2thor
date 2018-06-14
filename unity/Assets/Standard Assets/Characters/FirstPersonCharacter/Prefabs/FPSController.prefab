@@ -13,7 +13,8 @@ GameObject:
   - component: {fileID: 114000010621761404}
   - component: {fileID: 114000011054666674}
   - component: {fileID: 114749714472260818}
-  m_Layer: 0
+  - component: {fileID: 136752831871764314}
+  m_Layer: 10
   m_Name: FPSController
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -31,7 +32,7 @@ GameObject:
   - component: {fileID: 2000000}
   - component: {fileID: 8100000}
   - component: {fileID: 12474086}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: FirstPersonCharacter
   m_TagString: MainCamera
   m_Icon: {fileID: 0}
@@ -173,7 +174,7 @@ GameObject:
   - component: {fileID: 4388216329316454}
   - component: {fileID: 33738807010676660}
   - component: {fileID: 23211651934385210}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: CylinderBody
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -190,7 +191,7 @@ GameObject:
   - component: {fileID: 4814150076264710}
   - component: {fileID: 33075962301487672}
   - component: {fileID: 23543399429828970}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: TurnSweepPosition
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -207,7 +208,7 @@ GameObject:
   - component: {fileID: 4910578092771568}
   - component: {fileID: 33702874596772296}
   - component: {fileID: 23340602404554254}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: LookSweepPosition
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -226,7 +227,7 @@ GameObject:
   - component: {fileID: 135767805892767156}
   - component: {fileID: 23319849515510428}
   - component: {fileID: 54720904359052188}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: TheHand
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -243,7 +244,7 @@ GameObject:
   - component: {fileID: 4749554731555412}
   - component: {fileID: 33102152961603922}
   - component: {fileID: 23480515255610562}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: SphereTop
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -260,7 +261,7 @@ GameObject:
   - component: {fileID: 4196665514424728}
   - component: {fileID: 33376093304596038}
   - component: {fileID: 23961168196861190}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: SphereBottom
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -275,7 +276,7 @@ GameObject:
   serializedVersion: 5
   m_Component:
   - component: {fileID: 4372852436466418}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: VisibilityCapsule
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -742,8 +743,8 @@ MonoBehaviour:
     XSensitivity: 2
     YSensitivity: 2
     clampVerticalRotation: 1
-    MinimumX: -90
-    MaximumX: 90
+    MinimumX: -30
+    MaximumX: 60
     smooth: 0
     smoothTime: 5
     lockCursor: 0
@@ -762,7 +763,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 45eeae044512743b8b15a08eaa699216, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_IsWalking: 1
+  m_IsWalking: 0
   m_WalkSpeed: 1
   m_RunSpeed: 2
   m_GravityMultiplier: 2
@@ -785,7 +786,7 @@ MonoBehaviour:
   m_IsWalking: 0
   m_WalkSpeed: 0
   m_RunSpeed: 0
-  m_GravityMultiplier: 0
+  m_GravityMultiplier: 2
   excludeObjectIds: []
   m_Camera: {fileID: 0}
   m_CharacterController: {fileID: 0}
@@ -812,4 +813,17 @@ SphereCollider:
   m_Enabled: 1
   serializedVersion: 2
   m_Radius: 0.5
+  m_Center: {x: 0, y: 0, z: 0}
+--- !u!136 &136752831871764314
+CapsuleCollider:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 100000}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 1
+  m_Enabled: 1
+  m_Radius: 0.2
+  m_Height: 1.8
+  m_Direction: 1
   m_Center: {x: 0, y: 0, z: 0}
