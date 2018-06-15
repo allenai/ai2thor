@@ -99,6 +99,12 @@ def build_docker(version):
         "docker push ai2thor/ai2thor-base:{version}".format(version=version),
         shell=True)
 
+@task
+def build_pip(context):
+    import shutil
+    subprocess.check_call("python setup.py clean --all", shell=True)
+    shutil.rmtree("dist")
+    subprocess.check_call("python setup.py sdist bdist_wheel --universal", shell=True)
 
 @task
 def fetch_source_textures(context):
@@ -155,6 +161,7 @@ def build(context, local=False):
 
     increment_version()
     build_docker(version)
+    build_pip(context)
 
 @task
 def interact(ctx, scene):
