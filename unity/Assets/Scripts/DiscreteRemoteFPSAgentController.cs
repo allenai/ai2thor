@@ -77,34 +77,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		}
 
 
-		public void Initialize(ServerAction action)
-		{
-			if (action.gridSize == 0) 
-			{
-				action.gridSize = 0.25f;
-			}
 
-			this.continuousMode = action.continuous;
-			 
 
-			if (action.visibilityDistance > 0.0f) 
-			{
-				this.maxVisibleDistance = action.visibilityDistance;
-			}
-
-			if (action.gridSize <= 0 || action.gridSize > 5)
-			{
-				errorMessage = "grid size must be in the range (0,5]";
-				Debug.Log(errorMessage);
-				actionFinished(false);
-			}
-
-			else
-			{
-				gridSize = action.gridSize;
-				StartCoroutine(checkInitializeAgentLocationAction());
-			}
-		}
 
 		public override MetadataWrapper generateMetadataWrapper() 
 		{
@@ -137,76 +111,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			return metaMessage;
 		}
 
-		public IEnumerator checkInitializeAgentLocationAction() 
-		{
-			yield return null;
-
-			Vector3 startingPosition = this.transform.position;
-			// move ahead
-			// move back
-
-			float mult = 1 / gridSize;
-			float grid_x1 = Convert.ToSingle(Math.Floor(this.transform.position.x * mult) / mult);
-			float grid_z1 = Convert.ToSingle(Math.Floor(this.transform.position.z * mult) / mult);
-
-			float[] xs = new float[]{ grid_x1, grid_x1 + gridSize };
-			float[] zs = new float[]{ grid_z1, grid_z1 + gridSize };
-			List<Vector3> validMovements = new List<Vector3> (); 
-
-			foreach (float x in xs ) 
-			{
-				foreach (float z in zs) 
-				{
-					this.transform.position = startingPosition;
-					yield return null;
-
-					Vector3 target = new Vector3 (x, this.transform.position.y, z);
-					Vector3 dir = target - this.transform.position;
-					Vector3 movement = dir.normalized * 100.0f;
-					if (movement.magnitude > dir.magnitude) 
-					{
-						movement = dir;
-					}
-
-					movement.y = Physics.gravity.y * this.m_GravityMultiplier;
-
-					m_CharacterController.Move (movement);
-
-					for (int i = 0; i < actionDuration; i++) 
-					{
-						yield return null;
-						Vector3 diff = this.transform.position - target;
-	
-
-						if ((Math.Abs (diff.x) < 0.005) && (Math.Abs (diff.z) < 0.005)) 
-						{
-							validMovements.Add (movement);
-							break;
-						}
-					}
-
-				}
-			}
-
-			this.transform.position = startingPosition;
-			yield return null;
-			if (validMovements.Count > 0) 
-			{
-				Debug.Log ("Initialize: got total valid initial targets: " + validMovements.Count);
-				Vector3 firstMove = validMovements [0];
-				firstMove.y = Physics.gravity.y* this.m_GravityMultiplier;
-
-				m_CharacterController.Move (firstMove);
-				snapToGrid ();
-				actionFinished (true);
-			} 
-
-			else 
-			{
-				Debug.Log ("Initialize: no valid starting positions found");
-				actionFinished (false);
-			}
-		}
 
 
 
