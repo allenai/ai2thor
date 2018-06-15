@@ -49,12 +49,20 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         break;
                     }
 
+					//turn on all pivot things, disable all physics things
+                case "init":
+                    {
+						ServerAction action = new ServerAction();
+      			        PhysicsController.Initialize(action);
+                        break;
+                    }
+
                     //move ahead
                 case "ma":
                     {
                         ServerAction action = new ServerAction();
                         action.action = "MoveAhead";
-                        action.moveMagnitude = 0.5f;
+                        action.moveMagnitude = 0.25f;
                         PhysicsController.ProcessControlCommand(action);
 
                         //PhysicsController.CheckIfAgentCanMove(5.0f, 0);
@@ -66,7 +74,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     {
                         ServerAction action = new ServerAction();
                         action.action = "MoveBack";
-                        action.moveMagnitude = 0.5f;
+                        action.moveMagnitude = 0.25f;
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }
@@ -76,7 +84,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     {
                         ServerAction action = new ServerAction();
                         action.action = "MoveLeft";
-                        action.moveMagnitude = 0.5f;
+                        action.moveMagnitude = 0.25f;
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }
@@ -86,7 +94,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     {
                         ServerAction action = new ServerAction();
                         action.action = "MoveRight";
-                        action.moveMagnitude = 0.5f;
+                        action.moveMagnitude = 0.25f;
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }
