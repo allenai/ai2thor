@@ -27,7 +27,7 @@ setup(name='ai2thor',
       author='Allen Institute for Artificial Intelligence',
       author_email='ai2thor@allenai.org',
       license='Apache',
-      packages=find_packages(),
+      packages=find_packages(exclude=["*.tests", "*.tests.*", "tests.*", "tests"]),
       install_requires=[
           'flask',
           'numpy',
