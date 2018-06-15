@@ -36,5 +36,5 @@ setup(name='ai2thor',
           'progressbar2'
       ],
       setup_requires=['pytest-runner'],
-      tests_require=['pytest'],
+      tests_require=['pytest', 'pytest-cov'],
       include_package_data=False)
