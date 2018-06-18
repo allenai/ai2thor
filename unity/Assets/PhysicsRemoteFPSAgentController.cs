@@ -150,51 +150,66 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     int ReachableInteractionPointCount = 0;
                     foreach (Transform ip in InteractionPoints)
                     {
-                        //sweep test from agent's hand to each Interaction point
-                        RaycastHit hit;
-                        if (HandRB.SweepTest(ip.position - AgentHand.transform.position, out hit, maxDistance))
-                        {
-                            //if the object only has one interaction point to check
-                            if (visibleSimObjP.InteractionPoints.Length == 1)
-                            {
-                                if (hit.transform == visibleSimObjP.transform)
-                                {
-                                    #if UNITY_EDITOR
-                                    Debug.DrawLine(AgentHand.transform.position, ip.transform.position, Color.magenta);
-                                    #endif
+						Vector3 viewPoint = agentCamera.WorldToViewportPoint(ip.position);
 
-									//print(hit.transform.name);
-                                    visibleSimObjP.isInteractable = true;
+                        float ViewPointRangeHigh = 1.0f;
+                        float ViewPointRangeLow = 0.0f;
+
+                        //check if the interaction point is within the viewport
+                        if (viewPoint.z > 0 && viewPoint.z < maxDistance //is in front of camera and within range of visibility sphere
+                               && viewPoint.x < ViewPointRangeHigh && viewPoint.x > ViewPointRangeLow//within x bounds of viewport
+                                && viewPoint.y < ViewPointRangeHigh && viewPoint.y > ViewPointRangeLow)//within y bounds of viewport
+						{
+							//sweep test from agent's hand to each Interaction point
+                            RaycastHit hit;
+                            if (HandRB.SweepTest(ip.position - AgentHand.transform.position, out hit, maxDistance))
+                            {
+                                //if the object only has one interaction point to check
+                                if (visibleSimObjP.InteractionPoints.Length == 1)
+                                {
+                                    if (hit.transform == visibleSimObjP.transform)
+                                    {
+                                        #if UNITY_EDITOR
+                                        Debug.DrawLine(AgentHand.transform.position, ip.transform.position, Color.magenta);
+                                        #endif
+
+                                        //print(hit.transform.name);
+                                        visibleSimObjP.isInteractable = true;
+                                    }
+
+                                    else
+                                        visibleSimObjP.isInteractable = false;
                                 }
 
-                                else
-                                    visibleSimObjP.isInteractable = false;
+                                //this object has 2 or more interaction points
+                                //if any one of them can be accessed by the Agent's hand, this object is interactable
+                                if (visibleSimObjP.InteractionPoints.Length > 1)
+                                {
+
+                                    if (hit.transform == visibleSimObjP.transform)
+                                    {
+                                        #if UNITY_EDITOR
+                                        Debug.DrawLine(AgentHand.transform.position, ip.transform.position, Color.magenta);
+                                        #endif
+                                        ReachableInteractionPointCount++;
+                                    }
+
+                                    //check if at least one of the interaction points on this multi interaction point object
+                                    //is accessible to the agent Hand
+                                    if (ReachableInteractionPointCount > 0)
+                                    {
+                                        visibleSimObjP.isInteractable = true;
+                                    }
+
+                                    else
+                                        visibleSimObjP.isInteractable = false;
+                                }
                             }
 
-                            //this object has 2 or more interaction points
-                            //if any one of them can be accessed by the Agent's hand, this object is interactable
-                            if (visibleSimObjP.InteractionPoints.Length > 1)
-                            {
-
-                                if (hit.transform == visibleSimObjP.transform)
-                                {
-                                    #if UNITY_EDITOR
-                                    Debug.DrawLine(AgentHand.transform.position, ip.transform.position, Color.magenta);
-                                    #endif
-                                    ReachableInteractionPointCount++;
-                                }
-
-                                //check if at least one of the interaction points on this multi interaction point object
-                                //is accessible to the agent Hand
-                                if (ReachableInteractionPointCount > 0)
-                                {
-                                    visibleSimObjP.isInteractable = true;
-                                }
-
-                                else
-                                    visibleSimObjP.isInteractable = false;
-                            }
-                        }
+							else
+                                visibleSimObjP.isInteractable = false;
+						}
+                      
                     }
                 }
             }
@@ -389,51 +404,79 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 return false;
             }
 
-            //zero out the pivot and default to hand's current position
-            TurnSweepTestPivot.transform.localRotation = Quaternion.Euler(Vector3.zero);
-            TurnSweepPosition.transform.position = AgentHand.transform.position;
+			//zero out the pivot to prep for rotation
+			TurnSweepTestPivot.transform.localRotation = Quaternion.Euler(Vector3.zero);
 
+
+            GameObject RotateCol = ItemInHand.GetComponent<SimObjPhysics>().RotateCollider;
+
+            //move the sweep position to where the rotation collider of the item in hand is
+			TurnSweepPosition.transform.position = RotateCol.transform.position;//AgentHand.transform.position;
+			TurnSweepPosition.transform.rotation = RotateCol.transform.rotation;
+            
+			BoxCollider RotTestBox = TurnSweepPosition.GetComponent<BoxCollider>();
+
+            //set the collision checking box on TurnSweepPosition to the same size and center of item in hand's rotation box
+			RotTestBox.center = RotateCol.GetComponent<BoxCollider>().center;
+			RotTestBox.size = RotateCol.GetComponent<BoxCollider>().size;
+
+            //rotate the collision checking box to the target location
+            
+            //turning right
+			if(direction > 0)
+			{
+				//check in 30 degree increments to see if the object in hand would collide with anything
+				TurnSweepTestPivot.transform.localRotation = Quaternion.Euler(new Vector3(0, direction - 60, 0));
+
+			}
+
+            //turning left
+            if(direction < 0)
+			{
+				
+			}
 
             TurnSweepTestPivot.transform.localRotation = Quaternion.Euler(new Vector3(0, direction, 0));
 
-            RaycastHit hit;
 
-            Rigidbody ItemRB = ItemInHand.GetComponent<Rigidbody>();
+            //RaycastHit hit;
 
-            //check if the sweep hits anything at all
-            if (ItemRB.SweepTest(TurnSweepPosition.transform.position - AgentHand.transform.position, out hit,
-                                 Vector3.Distance(TurnSweepPosition.transform.position, AgentHand.transform.position),
-                                 QueryTriggerInteraction.Ignore))
-            {
-                //print(hit.transform.name);
-                //If the thing hit was anything except the object itself, the agent, or the agent's hand - it's blocking
-                if (hit.transform != AgentHand.transform && hit.transform != gameObject.transform && hit.transform != ItemInHand.transform)
-                {
-                    if (direction == 90)
-                    {
-                        Debug.Log(hit.transform.name + " is in Agent Hand's Path! Can't rotate Agent RIGHT");
-                        result = false;
-                    }
+            //Rigidbody ItemRB = ItemInHand.GetComponent<Rigidbody>();
 
-                    else
-                    {
-                        Debug.Log(hit.transform.name + " is in Agent Hand's Path! Can't rotate Agent LEFT");
-                        result = false;
-                    }
-                }
+            ////check if the sweep hits anything at all
+            //if (ItemRB.SweepTest(TurnSweepPosition.transform.position - AgentHand.transform.position, out hit,
+            //                     Vector3.Distance(TurnSweepPosition.transform.position, AgentHand.transform.position),
+            //                     QueryTriggerInteraction.Ignore))
+            //{
+            //    //print(hit.transform.name);
+            //    //If the thing hit was anything except the object itself, the agent, or the agent's hand - it's blocking
+            //    if (hit.transform != AgentHand.transform && hit.transform != gameObject.transform && hit.transform != ItemInHand.transform)
+            //    {
+            //        if (direction == 90)
+            //        {
+            //            Debug.Log(hit.transform.name + " is in Agent Hand's Path! Can't rotate Agent RIGHT");
+            //            result = false;
+            //        }
 
-                else
-                {
-                    //the sweep hit something that it is ok to hit (agent itself, agent's hand, object itself somehow)
-                    result = true;
-                }
-            }
+            //        else
+            //        {
+            //            Debug.Log(hit.transform.name + " is in Agent Hand's Path! Can't rotate Agent LEFT");
+            //            result = false;
+            //        }
+            //    }
 
-            else
-            {
-                //oh we didn't hit anything, good to go
-                result = true;
-            }
+            //    else
+            //    {
+            //        //the sweep hit something that it is ok to hit (agent itself, agent's hand, object itself somehow)
+            //        result = true;
+            //    }
+            //}
+
+            //else
+            //{
+            //    //oh we didn't hit anything, good to go
+            //    result = true;
+            //}
 
             return result;
         }
