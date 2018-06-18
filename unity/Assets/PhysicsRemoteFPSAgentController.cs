@@ -258,10 +258,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 					}
 
 				}
-
-
-
-
+            
             }
 
             else
@@ -408,7 +405,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 return false;
             }
 
-			TurnSweepPosition.GetComponent<BoxCollider>().enabled = true;
+			//TurnSweepPosition.GetComponent<BoxCollider>().enabled = true;
             
 			//zero out the pivot to prep for rotation
 			TurnSweepTestPivot.transform.localRotation = Quaternion.Euler(Vector3.zero);
@@ -455,14 +452,14 @@ namespace UnityStandardAssets.Characters.FirstPerson
             }
             
 
-            //check final position
-            TurnSweepTestPivot.transform.localRotation = Quaternion.Euler(new Vector3(0, direction, 0));
-			if (RotTestBox.GetComponent<RotationTriggerCheck>().isColliding)
-            {
-				Debug.Log("rotate failed 90 degrees");
+   //         //check final position
+   //         TurnSweepTestPivot.transform.localRotation = Quaternion.Euler(new Vector3(0, direction, 0));
+			//if (RotTestBox.GetComponent<RotationTriggerCheck>().isColliding)
+    //        {
+				//Debug.Log("rotate failed 90 degrees");
 
-                result = false;
-            }
+            //    result = false;
+            //}
 
             //RaycastHit hit;
 
@@ -502,7 +499,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             //    //oh we didn't hit anything, good to go
             //    result = true;
             //}
-			TurnSweepPosition.GetComponent<BoxCollider>().enabled = false;
+			//TurnSweepPosition.GetComponent<BoxCollider>().enabled = false;
 
             return result;
         }
