@@ -2,31 +2,40 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class RotationTriggerCheck : MonoBehaviour 
+namespace UnityStandardAssets.Characters.FirstPerson
 {
-	public bool isColliding = false;
-
-	// Use this for initialization
-	void Start () 
-	{
-		
-	}
-	
-	// Update is called once per frame
-	void Update () 
-	{
-		
-	}
-
-	private void FixedUpdate()
+	public class RotationTriggerCheck : MonoBehaviour
     {
-        isColliding = false;
+        public bool isColliding = false;
+        public GameObject ItemInHand;
+		public PhysicsRemoteFPSAgentController AgentRef;
+        // Use this for initialization
+        void Start()
+        {
+			AgentRef = gameObject.GetComponentInParent<PhysicsRemoteFPSAgentController>();
+        }
 
-    }
+        // Update is called once per frame
+        void Update()
+        {
+			ItemInHand = AgentRef.WhatAmIHolding();
+    
+        }
 
-	public void OnTriggerStay(Collider other)
-    {
-	    //this is in the Agent layer, so is the rest of the agent, so it won't collide with itself
-        isColliding = true;
+        private void FixedUpdate()
+        {
+            isColliding = false;
+
+        }
+
+        public void OnTriggerStay(Collider other)
+        {
+            //this is in the Agent layer, so is the rest of the agent, so it won't collide with itself
+            //print(other.name);
+            //(other.GetComponentInParent<SimObjPhysics>().name);
+			if(other.GetComponentInParent<SimObjPhysics>().name != ItemInHand.name)
+            isColliding = true;
+        }
     }
 }
+
