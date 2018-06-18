@@ -24,8 +24,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
         private void FixedUpdate()
         {
-            isColliding = false;
-
+            isColliding = false;         
         }
 
         public void OnTriggerStay(Collider other)
@@ -33,8 +32,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
             //this is in the Agent layer, so is the rest of the agent, so it won't collide with itself
             //print(other.name);
             //(other.GetComponentInParent<SimObjPhysics>().name);
-			if(other.GetComponentInParent<SimObjPhysics>().name != ItemInHand.name)
-            isColliding = true;
+			if(ItemInHand != null)
+			{
+				if (other.name != ItemInHand.name)
+                    isColliding = true;
+			}
+
         }
     }
 }
