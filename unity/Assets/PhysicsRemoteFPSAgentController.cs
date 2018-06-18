@@ -56,11 +56,15 @@ namespace UnityStandardAssets.Characters.FirstPerson
             m_CharacterController.Move(movement);
         }
 
-        public void DebugInitialize(Vector3 pos)
+  //      public void DebugInitialize(Vector3 pos)
+		//{
+		//	lastPosition = pos;
+		//}
+		public GameObject WhatAmIHolding()
 		{
-			lastPosition = pos;
+			return ItemInHand;
 		}
-        
+
         // Update is called once per frame
         void Update()
         {
@@ -390,7 +394,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
         //checks if agent is clear to rotate left/right without object in hand hitting anything
 		public bool CheckIfAgentCanTurn(int direction)
         {
-            bool result = false;
+            bool result = true;
 
             if (ItemInHand == null)
             {
@@ -404,6 +408,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 return false;
             }
 
+			TurnSweepPosition.GetComponent<BoxCollider>().enabled = true;
+            
 			//zero out the pivot to prep for rotation
 			TurnSweepTestPivot.transform.localRotation = Quaternion.Euler(Vector3.zero);
 
@@ -420,24 +426,43 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			RotTestBox.center = RotateCol.GetComponent<BoxCollider>().center;
 			RotTestBox.size = RotateCol.GetComponent<BoxCollider>().size;
 
-            //rotate the collision checking box to the target location
-            
-            //turning right
-			if(direction > 0)
-			{
-				//check in 30 degree increments to see if the object in hand would collide with anything
-				TurnSweepTestPivot.transform.localRotation = Quaternion.Euler(new Vector3(0, direction - 60, 0));
+			//prep to check in 30 degree increments, default right check
+			int thirty = 30;
+			int sixty = 60;
 
-			}
-
-            //turning left
+            //swap signs for checking left
             if(direction < 0)
 			{
-				
+				thirty *= -1;
+				sixty *= -1;
+			}
+            
+			//check first 30 degree increment to see if the object in hand would collide with anything
+			TurnSweepTestPivot.transform.localRotation = Quaternion.Euler(new Vector3(0, direction - sixty, 0));
+			if(RotTestBox.GetComponent<RotationTriggerCheck>().isColliding)
+			{
+				Debug.Log("rotate failed 30 degrees");
+				result = false;
 			}
 
-            TurnSweepTestPivot.transform.localRotation = Quaternion.Euler(new Vector3(0, direction, 0));
+            //check next 30 degree increment
+			TurnSweepTestPivot.transform.localRotation = Quaternion.Euler(new Vector3(0, direction - thirty, 0));
+            if (RotTestBox.GetComponent<RotationTriggerCheck>().isColliding)
+            {
+				Debug.Log("rotate failed 60 degrees");
 
+                result = false;
+            }
+            
+
+            //check final position
+            TurnSweepTestPivot.transform.localRotation = Quaternion.Euler(new Vector3(0, direction, 0));
+			if (RotTestBox.GetComponent<RotationTriggerCheck>().isColliding)
+            {
+				Debug.Log("rotate failed 90 degrees");
+
+                result = false;
+            }
 
             //RaycastHit hit;
 
@@ -477,6 +502,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             //    //oh we didn't hit anything, good to go
             //    result = true;
             //}
+			TurnSweepPosition.GetComponent<BoxCollider>().enabled = false;
 
             return result;
         }
