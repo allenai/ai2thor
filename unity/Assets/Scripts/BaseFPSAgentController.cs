@@ -839,6 +839,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			else
 			{
 				errorMessage = "can't LookDown below the min horizon angle";
+				Debug.Log(errorMessage);
 				errorCode = ServerActionErrorCode.LookDownCantExceedMin;
 				actionFinished(false);
 			}
@@ -858,6 +859,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			else
 			{
 				errorMessage = "can't LookUp beyond the max horizon angle";
+				Debug.Log(errorMessage);
 				errorCode = ServerActionErrorCode.LookUpCantExceedMax;
 				actionFinished(false);
 			}
