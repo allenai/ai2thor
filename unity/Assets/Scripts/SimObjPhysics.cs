@@ -36,7 +36,7 @@ public class SimObjPhysics : MonoBehaviour
 	// Use this for initialization
 	void Start()
 	{
-		Generate_UniqueID();
+		//Generate_UniqueID();
 		//startPosition = transform.position;
 	}
 
@@ -54,14 +54,14 @@ public class SimObjPhysics : MonoBehaviour
 
 	}
 
-	private void Generate_UniqueID()
-	{
-		Vector3 pos = this.transform.position;
-		string xPos = (pos.x >= 0 ? "+" : "") + pos.x.ToString("00.00");
-		string yPos = (pos.y >= 0 ? "+" : "") + pos.y.ToString("00.00");
-		string zPos = (pos.z >= 0 ? "+" : "") + pos.z.ToString("00.00");
-		this.UniqueID = this.Type.ToString() + "|" + xPos + "|" + yPos + "|" + zPos;
-	}
+	//private void Generate_UniqueID()
+	//{
+	//	Vector3 pos = this.transform.position;
+	//	string xPos = (pos.x >= 0 ? "+" : "") + pos.x.ToString("00.00");
+	//	string yPos = (pos.y >= 0 ? "+" : "") + pos.y.ToString("00.00");
+	//	string zPos = (pos.z >= 0 ? "+" : "") + pos.z.ToString("00.00");
+	//	this.UniqueID = this.Type.ToString() + "|" + xPos + "|" + yPos + "|" + zPos;
+	//}
 
 	public void OnTriggerStay(Collider other)
 	{
