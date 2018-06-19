@@ -15,6 +15,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
 	[RequireComponent(typeof (CharacterController))]   
 	public class PhysicsRemoteFPSAgentController : BaseFPSAgentController
     {
+		[SerializeField] protected GameObject[] ToSetActive = null;
+
 		[SerializeField] protected float MaxViewDistancePhysics = 1.7f; //change MaxVisibleDistance of BaseAgent to this value to account for Physics
         
 		[SerializeField] protected GameObject AgentHand = null;
@@ -41,19 +43,17 @@ namespace UnityStandardAssets.Characters.FirstPerson
         {
 			base.Start();
 
+			ServerAction action = new ServerAction();
+			Initialize(action);
 			//enable all the GameObjects on the Agent that Physics Mode requires
 
             //physics requires max distance to be extended to be able to see objects on ground
 			maxVisibleDistance = MaxViewDistancePhysics;
 
-			AgentHand.SetActive(true);
-			DefaultHandPosition.SetActive(true);
-
-			//LookSweepTestPivot.SetActive(true);
-			//LookSweepPosition.SetActive(true);
-
-			//TurnSweepTestPivot.SetActive(true);
-			//TurnSweepPosition.SetActive(true);
+			foreach (GameObject go in ToSetActive)
+			{
+				go.SetActive(true);
+			}
 
 			//On start, activate gravity
             Vector3 movement = Vector3.zero;
@@ -917,7 +917,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     //NOTE: Make sure any objects with compound colliders have an "isTrigger" Collider on the highest object in the 
                     //Heirarchy. The check for "Box" or "Sphere" Collider will use that trigger collider for radius calculations, since
                     //getting the dimensions of a compound collider wouldn't make any sense due to irregular shapes
-                    Transform[] anyChildren = ItemInHand.GetComponentsInChildren<Transform>();
+                    //Transform[] anyChildren = ItemInHand.GetComponentsInChildren<Transform>();
 
                     foreach (Collider col in hitColliders)
                     {
