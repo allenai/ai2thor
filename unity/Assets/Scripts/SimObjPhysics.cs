@@ -65,8 +65,11 @@ public class SimObjPhysics : MonoBehaviour
 
 	public void OnTriggerStay(Collider other)
 	{
-		if (other.transform.name != "TheHand")
+		if (other.tag != "Player")
+		{
 			isColliding = true;
+
+		}
 		//print(transform.name + "aaaah");
 	}
 

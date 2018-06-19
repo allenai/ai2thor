@@ -34,11 +34,32 @@ namespace UnityStandardAssets.Characters.FirstPerson
             //(other.GetComponentInParent<SimObjPhysics>().name);
 			if(ItemInHand != null)
 			{
-				if (other.name != ItemInHand.name)
-                    isColliding = true;
+				//if the item is a sim object....
+				if(other.GetComponentInParent<SimObjPhysics>())
+				{
+					if(other.GetComponentInParent<SimObjPhysics>().name != ItemInHand.name)
+					{
+						isColliding = true;
+						//print(other.GetComponentInParent<SimObjPhysics>().name);
+					}
+				}
+
+                //ok so the collider we hit was not a sim obj
+				else
+				{
+					//print(this.name + " is hitting non sim "+ other.name);
+					isColliding = true;
+				}
+
+
 			}
 
         }
-    }
+
+		public void OnTriggerExit(Collider other)
+		{
+			isColliding = false;
+		}
+	}
 }
 

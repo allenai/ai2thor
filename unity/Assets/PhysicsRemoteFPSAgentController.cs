@@ -21,11 +21,16 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		[SerializeField] protected GameObject DefaultHandPosition = null;
         [SerializeField] protected GameObject ItemInHand = null;//current object in inventory
 
-		//for turning and look Sweeptests
-		[SerializeField] protected GameObject LookSweepPosition = null;
-		[SerializeField] protected GameObject LookSweepTestPivot = null; //if the Camera position ever moves, make sure this is set to the same local position as FirstPersonCharacter
-		[SerializeField] protected GameObject TurnSweepPosition = null;
-        [SerializeField] protected GameObject TurnSweepTestPivot = null;
+		////for turning and look Sweeptests
+		//[SerializeField] protected GameObject LookSweepPosition = null;
+		//[SerializeField] protected GameObject LookSweepTestPivot = null; //if the Camera position ever moves, make sure this is set to the same local position as FirstPersonCharacter
+
+        [SerializeField] protected GameObject[] RotateRLPivots = null;
+		[SerializeField] protected GameObject[] RotateRLTriggerBoxes = null;
+
+		[SerializeField] protected GameObject[] LookUDPivots = null;
+		[SerializeField] protected GameObject[] LookUDTriggerBoxes = null;
+
         
 		[SerializeField] protected SimObjPhysics[] VisibleSimObjPhysics; //all SimObjPhysics that are within camera viewport and range dictated by MaxViewDistancePhysics
 
@@ -44,11 +49,11 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			AgentHand.SetActive(true);
 			DefaultHandPosition.SetActive(true);
 
-			LookSweepTestPivot.SetActive(true);
-			LookSweepPosition.SetActive(true);
+			//LookSweepTestPivot.SetActive(true);
+			//LookSweepPosition.SetActive(true);
 
-			TurnSweepTestPivot.SetActive(true);
-			TurnSweepPosition.SetActive(true);
+			//TurnSweepTestPivot.SetActive(true);
+			//TurnSweepPosition.SetActive(true);
 
 			//On start, activate gravity
             Vector3 movement = Vector3.zero;
@@ -302,9 +307,11 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			{
 				targetHorizon = horizonAngles[currentHorizonAngleIndex() - 1];
 			}
+			int down = -1;
 
-			if(CheckIfAgentCanLook(targetHorizon))            
+			if(CheckIfAgentCanLook(targetHorizon, down))            
 			base.LookDown(response);
+			SetUpRotationBoxChecks();
 		}
 
 		public override void LookUp(ServerAction controlCommand)
@@ -316,60 +323,90 @@ namespace UnityStandardAssets.Characters.FirstPerson
 				targetHorizon = horizonAngles[currentHorizonAngleIndex() + 1];
 			}
 
-			if(CheckIfAgentCanLook(targetHorizon))                        
+			int up = 1;
+
+			if(CheckIfAgentCanLook(targetHorizon, up))                        
 			base.LookUp(controlCommand);
+			SetUpRotationBoxChecks();
 		}
 
-		public bool CheckIfAgentCanLook(float targetAngle)
+		public bool CheckIfAgentCanLook(float targetAngle, int updown)
         {
             //print(targetAngle);
             if (ItemInHand == null)
             {
-                Debug.Log("Look check passed: nothing in Agent Hand to prevent Angle change");
+                //Debug.Log("Look check passed: nothing in Agent Hand to prevent Angle change");
                 return true;
             }
-
-            //returns true if Rotation is allowed
-            bool result = false;
-
-            //zero out the pivot and default to hand's current position AND rotation
-            LookSweepTestPivot.transform.localRotation = m_Camera.transform.localRotation;
-            LookSweepPosition.transform.position = AgentHand.transform.position;
-
-            //rotate pivot to target location, then sweep for obstacles
-            LookSweepTestPivot.transform.localRotation = Quaternion.AngleAxis(targetAngle, Vector3.right);
-            //RotationSweepTestPivot.transform.localRotation = Quaternion.Euler(new Vector3(targetAngle, 0, 0));
             
-            RaycastHit hit;
+            //returns true if Rotation is allowed
+            bool result = true;
 
-            Rigidbody ItemRB = ItemInHand.GetComponent<Rigidbody>();
-
-            //check if the sweep hits anything at all
-            if (ItemRB.SweepTest(LookSweepPosition.transform.position - AgentHand.transform.position, out hit,
-                                 Vector3.Distance(LookSweepPosition.transform.position, AgentHand.transform.position),
-                                 QueryTriggerInteraction.Ignore))
-            {
-                //If the thing hit was anything except the object itself, the agent, or the agent's hand - it's blocking
-                if (hit.transform != AgentHand.transform && hit.transform != ItemInHand.transform && hit.transform != gameObject.transform) //&& hit.transform != gameObject.transform
+            //check if we can look up without hitting something
+            if(updown > 0)
+			{
+				for (int i = 0; i < 3; i++)
                 {
-                    Debug.Log("Can't change view to " + targetAngle + ", " + hit.transform.name + "is blocking the way");
-                    result = false;
+					if (LookUDTriggerBoxes[i].GetComponent<RotationTriggerCheck>().isColliding == true)
+                    {
+						Debug.Log("Can't Look Up");
+                        return false;
+                    }
                 }
+			}
 
-                else
+            //check if we can look down without hitting something
+            if(updown <0)
+			{
+				for (int i = 3; i < 6; i++)
                 {
-                    //the sweep hit something that it is ok to hit (agent itself, agent's hand, object itself somehow)
-                    result = true;
-
+                    if (LookUDTriggerBoxes[i].GetComponent<RotationTriggerCheck>().isColliding == true)
+                    {
+						Debug.Log("Can't Look down");
+                        return false;
+                    }
                 }
+			}
 
-            }
 
-            else
-            {
-                //oh we didn't hit anything, good to go
-                result = true;
-            }
+            ////zero out the pivot and default to hand's current position AND rotation
+            //LookSweepTestPivot.transform.localRotation = m_Camera.transform.localRotation;
+            //LookSweepPosition.transform.position = AgentHand.transform.position;
+
+            ////rotate pivot to target location, then sweep for obstacles
+            //LookSweepTestPivot.transform.localRotation = Quaternion.AngleAxis(targetAngle, Vector3.right);
+            ////RotationSweepTestPivot.transform.localRotation = Quaternion.Euler(new Vector3(targetAngle, 0, 0));
+            
+            //RaycastHit hit;
+
+            //Rigidbody ItemRB = ItemInHand.GetComponent<Rigidbody>();
+
+            ////check if the sweep hits anything at all
+            //if (ItemRB.SweepTest(LookSweepPosition.transform.position - AgentHand.transform.position, out hit,
+            //                     Vector3.Distance(LookSweepPosition.transform.position, AgentHand.transform.position),
+            //                     QueryTriggerInteraction.Ignore))
+            //{
+            //    //If the thing hit was anything except the object itself, the agent, or the agent's hand - it's blocking
+            //    if (hit.transform != AgentHand.transform && hit.transform != ItemInHand.transform && hit.transform != gameObject.transform) //&& hit.transform != gameObject.transform
+            //    {
+            //        Debug.Log("Can't change view to " + targetAngle + ", " + hit.transform.name + "is blocking the way");
+            //        result = false;
+            //    }
+
+            //    else
+            //    {
+            //        //the sweep hit something that it is ok to hit (agent itself, agent's hand, object itself somehow)
+            //        result = true;
+
+            //    }
+
+            //}
+
+            //else
+            //{
+            //    //oh we didn't hit anything, good to go
+            //    result = true;
+            //}
          
             return result;
         }
@@ -405,52 +442,81 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 return false;
             }
 
+			//if turning right, check first 3 in array (30R, 60R, 90R)
+            if(direction > 0)
+			{
+				for (int i = 0; i < 3; i++)
+				{
+					if(RotateRLTriggerBoxes[i].GetComponent<RotationTriggerCheck>().isColliding == true)
+					{
+						Debug.Log("Can't rotate right");
+						return false;
+					}
+				}
+			}
+
+			//if turning left, check last 3 in array (30L, 60L, 90L)
+			else
+			{
+				for (int i = 3; i < 6; i++)
+                {
+                    if (RotateRLTriggerBoxes[i].GetComponent<RotationTriggerCheck>().isColliding == true)
+                    {
+						Debug.Log("Can't rotate left");
+                        return false;
+                    }
+                }
+			}
+
 			//TurnSweepPosition.GetComponent<BoxCollider>().enabled = true;
             
 			//zero out the pivot to prep for rotation
-			TurnSweepTestPivot.transform.localRotation = Quaternion.Euler(Vector3.zero);
+		 //   TurnSweepTestPivot.transform.localRotation = Quaternion.Euler(Vector3.zero);
 
 
-            GameObject RotateCol = ItemInHand.GetComponent<SimObjPhysics>().RotateCollider;
+   //         GameObject RotateCol = ItemInHand.GetComponent<SimObjPhysics>().RotateCollider;
 
-            //move the sweep position to where the rotation collider of the item in hand is
-			TurnSweepPosition.transform.position = RotateCol.transform.position;//AgentHand.transform.position;
-			TurnSweepPosition.transform.rotation = RotateCol.transform.rotation;
+   //         //move the sweep position to where the rotation collider of the item in hand is
+			//TurnSweepPosition.transform.position = RotateCol.transform.position;//AgentHand.transform.position;
+			//TurnSweepPosition.transform.rotation = RotateCol.transform.rotation;
             
-			BoxCollider RotTestBox = TurnSweepPosition.GetComponent<BoxCollider>();
+			//BoxCollider RotTestBox = TurnSweepPosition.GetComponent<BoxCollider>();
 
-            //set the collision checking box on TurnSweepPosition to the same size and center of item in hand's rotation box
-			RotTestBox.center = RotateCol.GetComponent<BoxCollider>().center;
-			RotTestBox.size = RotateCol.GetComponent<BoxCollider>().size;
+   //         //set the collision checking box on TurnSweepPosition to the same size and center of item in hand's rotation box
+			//RotTestBox.center = RotateCol.GetComponent<BoxCollider>().center;
+			//RotTestBox.size = RotateCol.GetComponent<BoxCollider>().size;
 
-			//prep to check in 30 degree increments, default right check
-			int thirty = 30;
-			int sixty = 60;
+			////prep to check in 30 degree increments, default right check
+			//int thirty = 30;
+			//int sixty = 60;
 
-            //swap signs for checking left
-            if(direction < 0)
-			{
-				thirty *= -1;
-				sixty *= -1;
-			}
+   //         //swap signs for checking left
+   //         if(direction < 0)
+			//{
+			//	thirty *= -1;
+			//	sixty *= -1;
+			//}
+
+			//bool firstcheck = true;
+			//bool secondcheck = true;
+			//bool thirdcheck = true;
+			////check first 30 degree increment to see if the object in hand would collide with anything
+			//TurnSweepTestPivot.transform.localRotation = Quaternion.Euler(new Vector3(0, direction - sixty, 0));
+			//if (RotTestBox.GetComponent<RotationTriggerCheck>().isColliding)
+			//{
+			//	Debug.Log("rotate failed 30 degrees");
+			//	firstcheck = false;
+			//}
             
-			//check first 30 degree increment to see if the object in hand would collide with anything
-			TurnSweepTestPivot.transform.localRotation = Quaternion.Euler(new Vector3(0, direction - sixty, 0));
-			if(RotTestBox.GetComponent<RotationTriggerCheck>().isColliding)
-			{
-				Debug.Log("rotate failed 30 degrees");
-				result = false;
-			}
 
-            //check next 30 degree increment
-			TurnSweepTestPivot.transform.localRotation = Quaternion.Euler(new Vector3(0, direction - thirty, 0));
-            if (RotTestBox.GetComponent<RotationTriggerCheck>().isColliding)
-            {
-				Debug.Log("rotate failed 60 degrees");
-
-                result = false;
-            }
-            
+   //         //check next 30 degree increment
+			//TurnSweepTestPivot.transform.localRotation = Quaternion.Euler(new Vector3(0, direction - thirty, 0));
+    //        if (RotTestBox.GetComponent<RotationTriggerCheck>().isColliding)
+    //        {
+				//Debug.Log("rotate failed 60 degrees");
+                
+				//secondcheck = false;
+            //}
 
    //         //check final position
    //         TurnSweepTestPivot.transform.localRotation = Quaternion.Euler(new Vector3(0, direction, 0));
@@ -458,9 +524,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
     //        {
 				//Debug.Log("rotate failed 90 degrees");
 
-            //    result = false;
+            //    thirdcheck = false;
             //}
-
+            
             //RaycastHit hit;
 
             //Rigidbody ItemRB = ItemInHand.GetComponent<Rigidbody>();
@@ -500,6 +566,15 @@ namespace UnityStandardAssets.Characters.FirstPerson
             //    result = true;
             //}
 			//TurnSweepPosition.GetComponent<BoxCollider>().enabled = false;
+			//if(firstcheck == false || secondcheck == false || thirdcheck == false)
+			//{
+			//	result = false;
+			//}
+
+			//else
+			//{
+			//	result = true;
+			//}
 
             return result;
         }
@@ -539,7 +614,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             if (ItemInHand == null)
             {
                 result = true;
-                Debug.Log("Agent has nothing in hand blocking movement");
+              //  Debug.Log("Agent has nothing in hand blocking movement");
                 return result;
             }
 
@@ -699,7 +774,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             //if the array is empty, nothing was hit by the sweeptest so we are clear to move
             else
             {
-                Debug.Log("Agent Body can move " + orientation);
+                //Debug.Log("Agent Body can move " + orientation);
                 result = true;
             }
 
@@ -846,22 +921,31 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
                     foreach (Collider col in hitColliders)
                     {
-                        //check if the thing collided with by the OverlapSphere is the agent, the hand, or the object itself
-                        if (col.name != "TheHand" && col.name != ItemInHand.name)
-                        {
-                            //also check against any children the ItemInHand has for prefabs with compound colliders                     
-                            //set to true if there is a match between this collider among ANY of the children of ItemInHand
+        //                //check if the thing collided with by the OverlapSphere is the agent, the hand, or the object itself
+        //                if (col.name != "TheHand" && col.name != ItemInHand.name)
+        //                {
+        //                    //also check against any children the ItemInHand has for prefabs with compound colliders                     
+        //                    //set to true if there is a match between this collider among ANY of the children of ItemInHand
 
-                            if (CheckForMatches(anyChildren, col.transform) == false)
-                            {
-                                Debug.Log(col.name + " blocking rotation");
-                                Debug.Log("Not Enough Room to Rotate");
-								actionFinished(false);
-								return;
-                                //return false;
-                            }
+        //                    if (CheckForMatches(anyChildren, col.transform) == false)
+        //                    {
+        //                        Debug.Log(col.name + " blocking rotation");
+        //                        Debug.Log("Not Enough Room to Rotate");
+								//actionFinished(false);
+								//return;
+                        //        //return false;
+                        //    }
 
-                        }
+                        //}
+
+                        if(col.tag != "Player")
+						{
+	                        Debug.Log(col.name + " blocking rotation");
+                            Debug.Log("Not Enough Room to Rotate");
+                            actionFinished(false);
+                            return;
+
+						}
 
                         else
                         {
@@ -1004,6 +1088,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 //update "inventory"            
                 ItemInHand = target.gameObject;
 
+				SetUpRotationBoxChecks();
+
                 //return true;
                 actionFinished(true);
                 return;
@@ -1048,6 +1134,70 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 //return false;
             }         
         }  
+
+        public void SetUpRotationBoxChecks()
+		{
+			if (ItemInHand == null)
+				return;
+
+
+			BoxCollider HeldItemBox = ItemInHand.GetComponent<SimObjPhysics>().RotateCollider.GetComponent<BoxCollider>();
+			//ok so we picked up an object time to set all our boxes to the correct rotation
+
+
+            //rotate all pivots to 0, move all box colliders to the position of the box collider of item in hand
+            //change each box collider's size and center
+            //rotate all pivots to where they need to go
+
+            //Left and Right rotation boxes first
+			for (int i = 0; i < RotateRLPivots.Length; i++)
+			{
+				RotateRLPivots[i].transform.localRotation = Quaternion.Euler(Vector3.zero);
+			}
+
+			for (int i = 0 ; i < RotateRLTriggerBoxes.Length; i++)
+			{
+				RotateRLTriggerBoxes[i].transform.position = HeldItemBox.transform.position;
+				RotateRLTriggerBoxes[i].transform.rotation = HeldItemBox.transform.rotation;
+
+				RotateRLTriggerBoxes[i].GetComponent<BoxCollider>().size = HeldItemBox.size;
+				RotateRLTriggerBoxes[i].GetComponent<BoxCollider>().center = HeldItemBox.center;
+			}
+
+            //set all pivots to their corresponding location
+			RotateRLPivots[0].transform.localRotation = Quaternion.Euler(new Vector3(0, 30, 0));
+			RotateRLPivots[1].transform.localRotation = Quaternion.Euler(new Vector3(0, 60, 0));
+			RotateRLPivots[2].transform.localRotation = Quaternion.Euler(new Vector3(0, 90, 0));
+			RotateRLPivots[3].transform.localRotation = Quaternion.Euler(new Vector3(0, -30, 0));
+			RotateRLPivots[4].transform.localRotation = Quaternion.Euler(new Vector3(0, -60, 0)); 
+			RotateRLPivots[5].transform.localRotation = Quaternion.Euler(new Vector3(0, -90, 0));
+
+			//Up and Down rotation boxes now
+			for (int i = 0; i < LookUDPivots.Length; i ++)
+			{
+				LookUDPivots[i].transform.localRotation = Quaternion.Euler(Vector3.zero);
+			}
+
+			for (int i = 0; i < LookUDTriggerBoxes.Length; i++)
+			{
+				LookUDTriggerBoxes[i].transform.position = HeldItemBox.transform.position;
+				LookUDTriggerBoxes[i].transform.rotation = HeldItemBox.transform.rotation;
+                
+				LookUDTriggerBoxes[i].GetComponent<BoxCollider>().size = HeldItemBox.size;
+                LookUDTriggerBoxes[i].GetComponent<BoxCollider>().center = HeldItemBox.center;
+			}
+
+			LookUDPivots[0].transform.localRotation = Quaternion.Euler(new Vector3(-30, 0, 0)); //30 up
+			LookUDPivots[1].transform.localRotation = Quaternion.Euler(new Vector3(-20, 0, 0));//look forward
+			LookUDPivots[2].transform.localRotation = Quaternion.Euler(new Vector3(-10, 0, 0)); // 30 down
+			LookUDPivots[3].transform.localRotation = Quaternion.Euler(new Vector3(10, 0, 0)); // 60 down
+			LookUDPivots[4].transform.localRotation = Quaternion.Euler(new Vector3(20, 0, 0)); // 60 down         
+			LookUDPivots[5].transform.localRotation = Quaternion.Euler(new Vector3(30, 0, 0)); // 60 down
+
+
+            
+		}
+        
        
 		#if UNITY_EDITOR
         //used to show what's currently visible on the top left of the screen
