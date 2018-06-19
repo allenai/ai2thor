@@ -73,7 +73,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
         // Update is called once per frame
         void Update()
         {
-			//VisibleSimObjPhysics = GetAllVisibleSimObjPhysics(m_Camera, maxVisibleDistance);
+			
         }
 
 		private void LateUpdate()
@@ -138,12 +138,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
                             }
 
                             else
-                                Debug.Log("Error! Set at least 1 visibility point on SimObjPhysics prefab!");
-
+                                Debug.Log("Error! Set at least 1 visibility point on SimObjPhysics prefab!");                     
 						}
-                        
-                    }
-
+                    }               
                 }
 
                 //now that we have a list of currently visible items, let's see which ones are interactable!
@@ -166,8 +163,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
                         //check if the interaction point is within the viewport
                         if (viewPoint.z > 0 && viewPoint.z < maxDistance //is in front of camera and within range of visibility sphere
-                               && viewPoint.x < ViewPointRangeHigh && viewPoint.x > ViewPointRangeLow//within x bounds of viewport
-                                && viewPoint.y < ViewPointRangeHigh && viewPoint.y > ViewPointRangeLow)//within y bounds of viewport
+                            && viewPoint.x < ViewPointRangeHigh && viewPoint.x > ViewPointRangeLow//within x bounds of viewport
+                            && viewPoint.y < ViewPointRangeHigh && viewPoint.y > ViewPointRangeLow)//within y bounds of viewport
 						{
 							//sweep test from agent's hand to each Interaction point
                             RaycastHit hit;
@@ -217,8 +214,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 							else
                                 visibleSimObjP.isInteractable = false;
-						}
-                      
+						}                    
                     }
                 }
             }
@@ -239,14 +235,14 @@ namespace UnityStandardAssets.Characters.FirstPerson
             float ViewPointRangeLow = 0.0f;
             
             if (viewPoint.z > 0 && viewPoint.z < maxDistance //is in front of camera and within range of visibility sphere
-                   && viewPoint.x < ViewPointRangeHigh && viewPoint.x > ViewPointRangeLow//within x bounds of viewport
-                    && viewPoint.y < ViewPointRangeHigh && viewPoint.y > ViewPointRangeLow)//within y bounds of viewport
+                && viewPoint.x < ViewPointRangeHigh && viewPoint.x > ViewPointRangeLow//within x bounds of viewport
+                && viewPoint.y < ViewPointRangeHigh && viewPoint.y > ViewPointRangeLow)//within y bounds of viewport
             {
                 
 				//now cast a ray out toward the point, if anything occludes this point, that point is not visible
 				RaycastHit hit;
 				if(Physics.Raycast(agentCamera.transform.position, point.position - agentCamera.transform.position, out hit, 
-				                   Vector3.Distance(point.position,agentCamera.transform.position), 1<<8))//layer mask automatically excludes Agent from this check
+                   Vector3.Distance(point.position,agentCamera.transform.position), 1<<8))//layer mask automatically excludes Agent from this check
 				{
 					//print(hit.transform.name);
                     if(hit.transform.name != sop.name)
@@ -260,10 +256,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         #if UNITY_EDITOR
                         Debug.DrawLine(agentCamera.transform.position, point.position, Color.yellow);
                         #endif
-					}
-
-				}
-            
+					}               
+				}          
             }
 
             else
@@ -307,6 +301,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			{
 				targetHorizon = horizonAngles[currentHorizonAngleIndex() - 1];
 			}
+
 			int down = -1;
 
 			if(CheckIfAgentCanLook(targetHorizon, down))            
@@ -349,7 +344,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 {
 					if (LookUDTriggerBoxes[i].GetComponent<RotationTriggerCheck>().isColliding == true)
                     {
-						Debug.Log("Can't Look Up");
+						Debug.Log("Object In way, Can't Look Up");
                         return false;
                     }
                 }
@@ -362,13 +357,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 {
                     if (LookUDTriggerBoxes[i].GetComponent<RotationTriggerCheck>().isColliding == true)
                     {
-						Debug.Log("Can't Look down");
+						Debug.Log("Object in way, Can't Look down");
                         return false;
                     }
                 }
 			}
-
-
+         
             ////zero out the pivot and default to hand's current position AND rotation
             //LookSweepTestPivot.transform.localRotation = m_Camera.transform.localRotation;
             //LookSweepPosition.transform.position = AgentHand.transform.position;
@@ -676,7 +670,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 				//if the array is empty, nothing was hit by the sweeptest so we are clear to move
                 else
                 {
-                    Debug.Log("Agent Body can move " + orientation);
+                    //Debug.Log("Agent Body can move " + orientation);
                     result = true;
                 }
 
@@ -1101,7 +1095,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             //make sure something is actually in our hands
             if (ItemInHand != null)
             {
-                    if (ItemInHand.GetComponent<SimObjPhysics>().isColliding)
+                if (ItemInHand.GetComponent<SimObjPhysics>().isColliding)
                 {
                     Debug.Log(ItemInHand.transform.name + " can't be dropped. It must be clear of all other objects first");
 					actionFinished(false);

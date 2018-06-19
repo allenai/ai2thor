@@ -19,7 +19,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
         void Update()
         {
 			ItemInHand = AgentRef.WhatAmIHolding();
-    
         }
 
         private void FixedUpdate()

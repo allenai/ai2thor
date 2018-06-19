@@ -68,7 +68,7 @@ public class SimObjPhysics : MonoBehaviour
 		if (other.tag != "Player")
 		{
 			isColliding = true;
-
+			//print(this.name +" is touching " + other.name);
 		}
 		//print(transform.name + "aaaah");
 	}
