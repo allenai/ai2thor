@@ -159,10 +159,14 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     {
                         ServerAction action = new ServerAction();
                         action.action = "RotateHand";
-						action.x = float.Parse(splitcommand[1]);
-						action.y = float.Parse(splitcommand[2]);
-						action.z = float.Parse(splitcommand[3]);
-                        PhysicsController.ProcessControlCommand(action);
+						if(splitcommand.Length > 1)
+						{
+							action.x = float.Parse(splitcommand[1]);
+                            action.y = float.Parse(splitcommand[2]);
+                            action.z = float.Parse(splitcommand[3]);
+                            PhysicsController.ProcessControlCommand(action);
+						}
+
                         break;
                     }  
 
@@ -253,6 +257,21 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         break;
                     }  
 
+					//move hand down relative to agent's facing
+                    //throw <move magnitude> to adjust strength of throw
+                case "throw":
+					{
+						ServerAction action = new ServerAction();
+						action.action = "ThrowObject";
+
+						if (splitcommand.Length > 1)
+						{
+							action.moveMagnitude = float.Parse(splitcommand[1]);
+						}
+
+						PhysicsController.ProcessControlCommand(action);                  
+						break;
+					}
                    
 
 				default:

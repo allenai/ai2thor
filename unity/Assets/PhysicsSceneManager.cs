@@ -36,10 +36,10 @@ public class PhysicsSceneManager : MonoBehaviour
 			Generate_UniqueID(o);
 		}
 	}
-
+    
 	private void Generate_UniqueID(SimObjPhysics o)
     {
-        Vector3 pos = this.transform.position;
+        Vector3 pos = o.transform.position;
         string xPos = (pos.x >= 0 ? "+" : "") + pos.x.ToString("00.00");
         string yPos = (pos.y >= 0 ? "+" : "") + pos.y.ToString("00.00");
         string zPos = (pos.z >= 0 ? "+" : "") + pos.z.ToString("00.00");
