@@ -426,7 +426,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
             if (ItemInHand == null)
             {
-                Debug.Log("Rotation check passed: nothing in Agent Hand");
+                //Debug.Log("Rotation check passed: nothing in Agent Hand");
                 return true;
             }
 
@@ -834,28 +834,49 @@ namespace UnityStandardAssets.Characters.FirstPerson
             //ok now actually check if the Agent Hand holding ItemInHand can move to the target position without
             //being obstructed by anything
 			Rigidbody ItemRB = ItemInHand.GetComponent<Rigidbody>();
-            RaycastHit hit;
-            
-			if (ItemRB.SweepTest(targetPosition - AgentHand.transform.position, out hit, Vector3.Distance(targetPosition, AgentHand.transform.position)))
+			//RaycastHit hit;
+
+			//RaycastHit[] sweepResults = rb.SweepTestAll(dir, moveMagnitude, QueryTriggerInteraction.Ignore);
+			//if (sweepResults.Length > 0)
+			//{
+			//	foreach (RaycastHit res in sweepResults)
+			//	{
+			//	}
+			//}
+
+			RaycastHit[] sweepResults = ItemRB.SweepTestAll(targetPosition - AgentHand.transform.position, 
+			                                                Vector3.Distance(targetPosition, AgentHand.transform.position),
+															QueryTriggerInteraction.Ignore);
+
+            //did we hit anything?
+			if (sweepResults.Length > 0)
 			{
-				//ignore if we hit the Agent or if the ItemInHand collided with itself (somehow?)
-				if (hit.transform.tag != "Player" && hit.transform.name != ItemInHand.name)
+
+				foreach (RaycastHit hit in sweepResults)
 				{
-					Debug.Log(hit.transform.name + " is in Object In Hand's Path! Can't Move Hand holding " + ItemInHand.name);
-					result = false;
-					return result;
+					//hit the player? it's cool, no problem
+					if (hit.transform.tag == "Player")
+                    {
+                        result = true;                  
+                    }
+
+                    //oh we hit something else? oh boy, that's blocking!
+                    else
+                    {
+                        //  print("sweep didn't hit anything?");
+                        Debug.Log(hit.transform.name + " is in Object In Hand's Path! Can't Move Hand holding " + ItemInHand.name);
+                        result = false;
+                    }
 				}
 
-                //didn't hit anything! clear to move!
-				else
-				{
-					print("sweep didn't hit anything?");
-					result = true;
-					return result;
-				}
 			}
-         
-			result = true;
+
+            //didnt hit anything in sweep, we are good to go
+			else
+			{
+				result = true;
+			}
+
 			return result;
 		}
 
