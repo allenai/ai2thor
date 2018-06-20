@@ -13,7 +13,6 @@ import io
 import json
 import copy
 import logging
-import fcntl
 import math
 import time
 import random
@@ -25,9 +24,7 @@ import threading
 import os
 import platform
 import uuid
-import tty
 import sys
-import termios
 try:
     from queue import Queue
 except ImportError:
@@ -324,15 +321,34 @@ RECEPTACLE_OBJECTS = {
     'ToiletPaperHanger': {'ToiletPaper'},
     'TowelHolder': {'Cloth'}}
 
-def get_term_character():
-    fd = sys.stdin.fileno()
-    old_settings = termios.tcgetattr(fd)
-    try:
-        tty.setraw(sys.stdin.fileno())
-        ch = sys.stdin.read(1)
-    finally:
-        termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
-    return ch
+try:
+    import tty
+    import termios
+except ImportError:
+    if sys.version_info[0] > 2:
+        from msvcrt import getwch as getch
+    else:
+        from msvcrt import getch
+    getch_translation = {
+        'H': '\x1b[A', 'P': '\x1b[B','M': '\x1b[C', 'K': '\x1b[D',
+        '\x8d': '\x1b[1;2A', '\x91': '\x1b[1;2B','t': '\x1b[1;2C', 's': '\x1b[1;2D',
+    }
+    def get_term_character():
+        c1 = getch()
+        if c1 in ('\x00', '\xe0'):
+            c2 = getch()
+            return getch_translation.get(c2, c1 + c2)
+        return c1
+else:
+    def get_term_character():
+        fd = sys.stdin.fileno()
+        old_settings = termios.tcgetattr(fd)
+        try:
+            tty.setraw(sys.stdin.fileno())
+            ch = sys.stdin.read(1)
+        finally:
+            termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
+        return ch
 
 def process_alive(pid):
     """
@@ -434,11 +450,13 @@ class Controller(object):
 
     def unlock_release(self):
         if self.lock_file:
+            import fcntl
             fcntl.flock(self.lock_file, fcntl.LOCK_UN)
 
     def lock_release(self):
         build_dir = os.path.join(self.releases_dir(), self.build_name())
         if os.path.isdir(build_dir):
+            import fcntl
             self.lock_file = open(os.path.join(build_dir, ".lock"), "w")
             fcntl.flock(self.lock_file, fcntl.LOCK_SH)
 
@@ -453,6 +471,7 @@ class Controller(object):
             if os.path.isdir(release):
                 try:
                     with open(os.path.join(release, ".lock"), "w") as f:
+                        import fcntl
                         fcntl.flock(f, fcntl.LOCK_EX | fcntl.LOCK_NB)
                         shutil.rmtree(release)
                 except Exception as e:
@@ -493,7 +512,8 @@ class Controller(object):
 
         self._interact_commands = default_interact_commands.copy()
 
-        command_message = u"Enter a Command: Move \u2190\u2191\u2192\u2193, Rotate/Look Shift + \u2190\u2191\u2192\u2193, Quit 'q' or Ctrl-C"
+        modifier_key = (u"Ctrl" if platform.system() == 'Windows' else u"Shift")
+        command_message = u"Enter a Command: Move \u2190\u2191\u2192\u2193, Rotate/Look " + modifier_key + u" + \u2190\u2191\u2192\u2193, Quit 'q' or Ctrl-C"
         print(command_message)
         for a in self.next_interact_command():
             new_commands = {}
@@ -650,6 +670,8 @@ class Controller(object):
         return os.path.join(os.path.expanduser('~'), '.ai2thor')
 
     def build_name(self):
+        if platform.system() not in BUILDS:
+            return 'unknown'
         return os.path.splitext(os.path.basename(BUILDS[platform.system()]['url']))[0]
 
     def executable_path(self):
@@ -668,6 +690,8 @@ class Controller(object):
                 self.build_name() + ".app",
                 "Contents/MacOS",
                 self.build_name())
+        elif target_arch == 'Windows':
+            return os.path.join(self.releases_dir(), self.build_name(), self.build_name())
         else:
             raise Exception('unable to handle target arch %s' % target_arch)
 
@@ -676,12 +700,12 @@ class Controller(object):
         if platform.architecture()[0] != '64bit':
             raise Exception("Only 64bit currently supported")
 
-        url = BUILDS[platform.system()]['url']
         tmp_dir = os.path.join(self.base_dir(), 'tmp')
         makedirs(self.releases_dir())
         makedirs(tmp_dir)
 
         if not os.path.isfile(self.executable_path()):
+            url = BUILDS[platform.system()]['url']
             zip_data = ai2thor.downloader.download(
                 url,
                 self.build_name(),

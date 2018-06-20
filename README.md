@@ -15,7 +15,7 @@ Please refer to the [tutorial page](http://ai2thor.allenai.org/tutorials/) for a
 
 ## Requirements
 
-* OS: Mac OS X 10.9+, Ubuntu 14.04+
+* OS: Mac OS X 10.9+, Ubuntu 14.04+, Windows 7+
 * Graphics Card: DX9 (shader model 3.0) or DX11 with feature level 9.3 capabilities.
 * CPU: SSE2 instruction set support.
 * Python 2.7 or Python 3.5+
@@ -52,6 +52,13 @@ controller.step(dict(action='Initialize', gridSize=0.25))
 event = controller.step(dict(action='MoveAhead'))
 ```
 Upon executing the ```controller.start()``` a window should appear on screen with a view of the room FloorPlan28.
+
+## Windows Installation
+
+- Install with `pip`, as above.
+- Since a pre-built game environment isn't available, you have to clone this repository, open the Unity project, and build it yourself. Make sure to add all the scenes to the build.
+- Set `controller.local_executable_path` to your built executable before called `start`.
+- The Rotate/Look modifier is `Ctrl` (instead of `Shift`).
 
 ## Event/Metadata
 Each call to ```controller.step()``` returns an instance of an Event.  Detailed descriptions of each field can be found within the [tutorial](http://ai2thor.allenai.org/tutorials/event-metadata).  The Event object contains a screen capture from the point the last action completed as well as metadata about each object within the scene.
