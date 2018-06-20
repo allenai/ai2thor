@@ -165,6 +165,94 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }  
+
+                    //default the Hand's position and rotation to the starting position
+				case "dh": 
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "DefaultAgentHand";
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }   
+
+                    //move hand forward relative to agent's facing
+				case "mhf":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "MoveHandMagnitude";
+						action.moveMagnitude = 0.25f;
+						action.x = 0f;
+						action.y = 0f;
+						action.z = 1f;
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    } 
+
+					//move hand backward relative to agent's facing
+                case "mhb":
+                    {
+						ServerAction action = new ServerAction();
+                        action.action = "MoveHandMagnitude";
+                        action.moveMagnitude = 0.25f;
+                        action.x = 0f;
+                        action.y = 0f;
+                        action.z = -1f;
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }  
+
+					//move hand left relative to agent's facing
+                case "mhl":
+                    {
+						ServerAction action = new ServerAction();
+                        action.action = "MoveHandMagnitude";
+                        action.moveMagnitude = 0.25f;
+                        action.x = -1f;
+                        action.y = 0f;
+                        action.z = 0f;
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }  
+
+					//move hand right relative to agent's facing
+                case "mhr":
+                    {
+						ServerAction action = new ServerAction();
+                        action.action = "MoveHandMagnitude";
+                        action.moveMagnitude = 0.25f;
+                        action.x = 1f;
+                        action.y = 0f;
+                        action.z = 0f;
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }  
+
+					//move hand down relative to agent's facing
+                case "mhu":
+                    {
+						ServerAction action = new ServerAction();
+                        action.action = "MoveHandMagnitude";
+                        action.moveMagnitude = 0.25f;
+                        action.x = 0f;
+                        action.y = 1f;
+                        action.z = 0f;
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }  
+
+					//move hand down relative to agent's facing
+                case "mhd":
+                    {
+						ServerAction action = new ServerAction();
+                        action.action = "MoveHandMagnitude";
+                        action.moveMagnitude = 0.25f;
+                        action.x = 0f;
+                        action.y = -1f;
+                        action.z = 0f;
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }  
+
                    
 
 				default:
