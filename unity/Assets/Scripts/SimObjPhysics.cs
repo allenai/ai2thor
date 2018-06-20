@@ -51,7 +51,14 @@ public class SimObjPhysics : MonoBehaviour
 	private void FixedUpdate()
 	{
 		isColliding = false;
-
+        
+	}
+    
+	public void ApplyForce(ServerAction action)
+	{
+		Vector3 dir = new Vector3(action.x, action.y, action.z);
+		Rigidbody myrb = gameObject.GetComponent<Rigidbody>();
+		myrb.AddForce(dir * action.moveMagnitude);
 	}
 
 	//private void Generate_UniqueID()

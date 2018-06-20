@@ -651,7 +651,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 					foreach (RaycastHit res in sweepResults)
 					{
                         //did the item in the hand touch the agent? if so, ignore it's fine
-						if (gameObject.transform == res.transform)
+						if (res.transform.tag == "Player")
                         {
                             result = true;
                             break;
@@ -661,7 +661,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 						{
 							result = false;
 							Debug.Log(res.transform.name + " is blocking the Agent from moving " + orientation + " with " + ItemInHand.name);
-
+							return result;
 						}
                                           
 					}
@@ -675,17 +675,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 }
 
                 return result;
-                //if (rb.SweepTest(dir, out hit, moveMagnitude, QueryTriggerInteraction.Ignore))
-                //{
-                //    Debug.Log(hit.transform.name + " is blocking Agent Hand holding " + ItemInHand.name + " from moving " + orientation);
-                //    result = false;
-                //}
-                ////nothing was hit, we good
-                //else
-                //{
-                //    Debug.Log("Agent hand holding " + ItemInHand.name + " can move " + orientation + " " + moveMagnitude + " units");
-                //    result = true;
-                //}
             }
         }
 
@@ -834,15 +823,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
             //ok now actually check if the Agent Hand holding ItemInHand can move to the target position without
             //being obstructed by anything
 			Rigidbody ItemRB = ItemInHand.GetComponent<Rigidbody>();
-			//RaycastHit hit;
-
-			//RaycastHit[] sweepResults = rb.SweepTestAll(dir, moveMagnitude, QueryTriggerInteraction.Ignore);
-			//if (sweepResults.Length > 0)
-			//{
-			//	foreach (RaycastHit res in sweepResults)
-			//	{
-			//	}
-			//}
 
 			RaycastHit[] sweepResults = ItemRB.SweepTestAll(targetPosition - AgentHand.transform.position, 
 			                                                Vector3.Distance(targetPosition, AgentHand.transform.position),
@@ -857,7 +837,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
 					//hit the player? it's cool, no problem
 					if (hit.transform.tag == "Player")
                     {
-                        result = true;                  
+                        result = true;
+						break;
                     }
 
                     //oh we hit something else? oh boy, that's blocking!
@@ -866,6 +847,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         //  print("sweep didn't hit anything?");
                         Debug.Log(hit.transform.name + " is in Object In Hand's Path! Can't Move Hand holding " + ItemInHand.name);
                         result = false;
+						return result;
                     }
 				}
 
@@ -943,186 +925,78 @@ namespace UnityStandardAssets.Characters.FirstPerson
             MoveHand(newAction);
 		}
 
-  //      public void MoveHandForward(ServerAction action)
-		//{
-		//	Vector3 currentPos = AgentHand.transform.position;
+        public bool CheckIfAgentCanRotateHand()
+		{
+			bool result = false;
 
-		//	Vector3 newPos = new Vector3(currentPos.x, currentPos.y, currentPos.z + action.moveMagnitude);
+            //make sure there is a box collider
+			if (ItemInHand.GetComponent<SimObjPhysics>().RotateCollider.GetComponent<BoxCollider>())
+			{
+				//print("yes yes yes");
+				Vector3 sizeOfBox = ItemInHand.GetComponent<SimObjPhysics>().RotateCollider.GetComponent<BoxCollider>().size;
+				float overlapRadius = Math.Max(Math.Max(sizeOfBox.x, sizeOfBox.y), sizeOfBox.z);
 
-		//	ServerAction newAction = new ServerAction();
-		//	newAction.x = newPos.x;
-		//	newAction.y = newPos.y;
-		//	newAction.z = newPos.z;
 
-		//	MoveHand(newAction);
-		//}
+                Collider[] hitColliders = Physics.OverlapSphere(AgentHand.transform.position,
+                                                                overlapRadius);
 
-		//public void MoveHandBackward(ServerAction action)
-  //      {
-
-  //      }
-
-		//public void MoveHandLeft(ServerAction action)
-  //      {
-
-  //      }
-
-		//public void MoveHandRight(ServerAction action)
-  //      {
-
-  //      }
-
-		//public void MoveHandDown(ServerAction action)
-        //{
-
-        //}
-
-		////used by RotateSimObjPhysicsInHand for compound collider object comparison
-        //private bool CheckForMatches(IEnumerable<Transform> objects, Transform toCompare)
-        //{
-        //    foreach (Transform t in objects)
-        //    {
-        //        if (toCompare == t)
-        //        {
-        //            return true;
-        //        }
-        //    }
-        //    return false;
-        //}
-        
-        //rotat ethe hand if there is an object in it
-		public void RotateHand(ServerAction action)
-        {
-			Vector3 vec = new Vector3(action.x, action.y, action.z);
-
-            //based on the collider type of the item in the Agent's Hand, set the radius of the OverlapSphere to check if there is room for rotation
-            if (ItemInHand != null)
-            {
-                //for items that uses a box collider for rotation check
-				if (ItemInHand.GetComponent<SimObjPhysics>().RotateCollider.GetComponent<BoxCollider>())
-                {
-					//print("yes yes yes");
-					Vector3 sizeOfBox = ItemInHand.GetComponent<SimObjPhysics>().RotateCollider.GetComponent<BoxCollider>().size;
-					//do an overlapshere around the agent with radius based on max size of xyz of object in hand's collider
-
-					print(sizeOfBox);
-                    //find the radius of the overlap sphere based on max length of dimensions of box collider
-                    float overlapRadius = Math.Max(Math.Max(sizeOfBox.x, sizeOfBox.y), sizeOfBox.z) / 2;
-					print(overlapRadius);
-                    ////since the sim objects have wonky scales, find the percent increase or decrease to multiply the radius by to match the scale of the sim object
-                    //Vector3 itemInHandScale = ItemInHand.transform.lossyScale;
-                    ////take the average of each axis scale, even though they should all be THE SAME but just in case
-                    //float avgScale = (itemInHandScale.x + itemInHandScale.y + itemInHandScale.z) / 3;
-                    ////adjust radius according to scale of item in hand
-                    //overlapRadius = overlapRadius * avgScale;
-
-                    Collider[] hitColliders = Physics.OverlapSphere(AgentHand.transform.position,
-                                                                    overlapRadius);
-
-                    //for objects that might have compound colliders, make sure we track them here for comparison below
-                    //NOTE: Make sure any objects with compound colliders have an "isTrigger" Collider on the highest object in the 
-                    //Heirarchy. The check for "Box" or "Sphere" Collider will use that trigger collider for radius calculations, since
-                    //getting the dimensions of a compound collider wouldn't make any sense due to irregular shapes
-                    //Transform[] anyChildren = ItemInHand.GetComponentsInChildren<Transform>();
-
-                    foreach (Collider col in hitColliders)
+				if(hitColliders.Length > 0)
+				{
+					foreach (Collider col in hitColliders)
                     {
-        //                //check if the thing collided with by the OverlapSphere is the agent, the hand, or the object itself
-        //                if (col.name != "TheHand" && col.name != ItemInHand.name)
-        //                {
-        //                    //also check against any children the ItemInHand has for prefabs with compound colliders                     
-        //                    //set to true if there is a match between this collider among ANY of the children of ItemInHand
+                        //if anything hit is not the player, then there is no room to rotate
+                        if (col.tag == "Player")
+                        {
+                            result = true;
+							break;
+                        }
 
-        //                    if (CheckForMatches(anyChildren, col.transform) == false)
-        //                    {
-        //                        Debug.Log(col.name + " blocking rotation");
-        //                        Debug.Log("Not Enough Room to Rotate");
-								//actionFinished(false);
-								//return;
-                        //        //return false;
-                        //    }
-
-                        //}
-
-                        if(col.tag != "Player")
-						{
-	                        Debug.Log(col.name + " blocking rotation");
-                            Debug.Log("Not Enough Room to Rotate");
-                            actionFinished(false);
-                            return;
-
-						}
-
+                        //hit something that wasn't the player, it's blocking!
                         else
                         {
-                            AgentHand.transform.localRotation = Quaternion.Euler(vec);
-							actionFinished(true);
-							return;
-                            //return true;
+							Debug.Log(col.name + " is blocking rotation");
+                            result = false;
+							return result;
                         }
                     }
-                }
+				}
 
-
-    //            //for items with sphere collider
-				//if (ItemInHand.GetComponent<SimObjPhysics>().RotateCollider.GetComponent<SphereCollider>())
-     //           {
-					//float radiusOfSphere = ItemInHand.GetComponent<SimObjPhysics>().RotateCollider.GetComponent<SphereCollider>().radius;
-                    
-     //               //Vector3 itemInHandScale = ItemInHand.transform.lossyScale;
-
-     //               //float avgScale = (itemInHandScale.x + itemInHandScale.y + itemInHandScale.z) / 3;
-
-     //               //radiusOfSphere = radiusOfSphere * avgScale;
-
-     //               Collider[] hitColliders = Physics.OverlapSphere(AgentHand.transform.position, radiusOfSphere);
-
-					//Transform[] anyChildren = ItemInHand.GetComponentsInChildren<Transform>();
-
-       //             foreach (Collider col in hitColliders)
-       //             {
-       //                 //print(col.name);
-       //                 if (col.name != "TheHand" && col.name != ItemInHand.name)
-       //                 {
-							//if (CheckForMatches(anyChildren, col.transform) == false)
-       //                     {
-       //                         Debug.Log(col.name + " blocking rotation");
-       //                         Debug.Log("Not Enough Room to Rotate");
-       //                         actionFinished(false);
-       //                         return;
-       //                         //return false;
-       //                     }
-       //                 }
-
-       //                 else
-       //                 {
-       //                     AgentHand.transform.localRotation = Quaternion.Euler(vec);
-							//actionFinished(true);
-							//return;
-                //            //return true;
-                //        }
-                //    }
-
-                //}
-            }
+                //nothing hit, so clear to rotate
+				else
+				{
+					result = true;
+				}
+			}
 
 			else
 			{
-				//if nothing is in your hand, nothing to rotate so don't!
-                Debug.Log("Nothing In Hand to rotate!");
-                actionFinished(false);
-                return;
-                //return false;
+				Debug.Log("item in hand is missing a collider box for some reason! Oh nooo!");
 			}
-         
+
+			return result;
+		}
+
+        //rotat ethe hand if there is an object in it
+		public void RotateHand(ServerAction action)
+        {
+
+			if(ItemInHand == null)
+			{
+				Debug.Log("Can't rotate hand unless holding object");
+				return;
+			}
+
+			if(CheckIfAgentCanRotateHand())
+			{
+				Vector3 vec = new Vector3(action.x, action.y, action.z);
+                AgentHand.transform.localRotation = Quaternion.Euler(vec);
+				SetUpRotationBoxChecks();
+                actionFinished(true);
+			}         
         }
         
 		public void PickupObject(ServerAction action)//use serveraction objectid
         {
-			//print("Invoked Pickup");
-
-			//print(action.action);
-			//print(action.objectId);
 			if(ItemInHand != null)
 			{
 				Debug.Log("Agent hand has something in it already! Can't pick up anything else");
@@ -1181,9 +1055,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     actionFinished(false);
                     return;
 				}
-
-                ////default hand rotation for further rotation manipulation
-                //ResetAgentHandRotation();
+                
                 //move the object to the hand's default position.
                 target.GetComponent<Rigidbody>().isKinematic = true;
                 //target.GetComponent<Rigidbody>().constraints = RigidbodyConstraints.FreezeRotation;
@@ -1212,7 +1084,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     Debug.Log(ItemInHand.transform.name + " can't be dropped. It must be clear of all other objects first");
 					actionFinished(false);
 					return;
-                    //return false;
                 }
 
                 else
@@ -1223,15 +1094,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 					ServerAction a = new ServerAction();
 					DefaultAgentHand(a);
-					//take this out later when moving to BaseFPS agent controller
-					//Text txt = Inventory_Text.GetComponent<Text>();
-					//txt.text = "In Inventory: Nothing!";
-					///////
+
 					actionFinished(true);
 					return;
-                    //return true;
                 }
-
             }
 
             else
@@ -1239,61 +1105,85 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 Debug.Log("nothing in hand to drop!");
 				actionFinished(false);
 				return;
-                //return false;
             }         
         }  
+
+        //x, y, z direction of throw
+        //moveMagnitude, strength of throw
+        public void ThrowObject(ServerAction action)
+		{
+			if(ItemInHand == null)
+			{
+				Debug.Log("can't throw nothing!");            
+				return;
+			}
+
+			GameObject go = ItemInHand;
+
+			DropHandObject(action);
+
+			ServerAction apply = new ServerAction();
+			apply.moveMagnitude = action.moveMagnitude;
+
+			Vector3 dir = m_Camera.transform.forward;
+			apply.x = dir.x;
+			apply.y = dir.y;
+			apply.z = dir.z;
+
+			go.GetComponent<SimObjPhysics>().ApplyForce(apply);         
+		}
 
         public void SetUpRotationBoxChecks()
 		{
 			if (ItemInHand == null)
+			{
+				Debug.Log("no need to set up boxes if nothing in hand");
 				return;
 
-
+			}
+         
 			BoxCollider HeldItemBox = ItemInHand.GetComponent<SimObjPhysics>().RotateCollider.GetComponent<BoxCollider>();
-			//ok so we picked up an object time to set all our boxes to the correct rotation
-
-
+         
             //rotate all pivots to 0, move all box colliders to the position of the box collider of item in hand
             //change each box collider's size and center
             //rotate all pivots to where they need to go
 
-            //Left and Right rotation boxes first
+            //////////////Left/Right stuff first
+
+            //zero out everything first
 			for (int i = 0; i < RotateRLPivots.Length; i++)
 			{
 				RotateRLPivots[i].transform.localRotation = Quaternion.Euler(Vector3.zero);
 			}
 
+            //set the size of all RotateRL trigger boxes to the Rotation Collider's dimesnions
 			for (int i = 0 ; i < RotateRLTriggerBoxes.Length; i++)
 			{
 				RotateRLTriggerBoxes[i].transform.position = HeldItemBox.transform.position;
 				RotateRLTriggerBoxes[i].transform.rotation = HeldItemBox.transform.rotation;
+				RotateRLTriggerBoxes[i].transform.localScale = HeldItemBox.transform.localScale;
 
 				RotateRLTriggerBoxes[i].GetComponent<BoxCollider>().size = HeldItemBox.size;
 				RotateRLTriggerBoxes[i].GetComponent<BoxCollider>().center = HeldItemBox.center;
 			}
 
-			float deg = -90;
+			int deg = -90;
 
-			//set all pivots to their corresponding location
-			for (int i = 11; i >0; i--)
-			{
+			//set all pivots to their corresponding rotations
+			for (int i = 0; i < RotateRLTriggerBoxes.Length; i++)
+			{            
+                if(deg == 0)
+				{
+					deg = 15;
+				}
+
 				RotateRLPivots[i].transform.localRotation = Quaternion.Euler(new Vector3(0, deg, 0));
 				deg += 15;
 			}
-			//RotateRLPivots[0].transform.localRotation = Quaternion.Euler(new Vector3(0, 30, 0));
-			//RotateRLPivots[1].transform.localRotation = Quaternion.Euler(new Vector3(0, 60, 0));
-			//RotateRLPivots[2].transform.localRotation = Quaternion.Euler(new Vector3(0, 90, 0));
-			//RotateRLPivots[3].transform.localRotation = Quaternion.Euler(new Vector3(0, -30, 0));
-			//RotateRLPivots[4].transform.localRotation = Quaternion.Euler(new Vector3(0, -60, 0)); 
-			//RotateRLPivots[5].transform.localRotation = Quaternion.Euler(new Vector3(0, -90, 0));
-			//RotateRLPivots[5].transform.localRotation = Quaternion.Euler(new Vector3(0, -90, 0));
-			//RotateRLPivots[5].transform.localRotation = Quaternion.Euler(new Vector3(0, -90, 0));
-			//RotateRLPivots[5].transform.localRotation = Quaternion.Euler(new Vector3(0, -90, 0));
-			//RotateRLPivots[5].transform.localRotation = Quaternion.Euler(new Vector3(0, -90, 0));
-			//RotateRLPivots[5].transform.localRotation = Quaternion.Euler(new Vector3(0, -90, 0));
-			//RotateRLPivots[5].transform.localRotation = Quaternion.Euler(new Vector3(0, -90, 0));
 
-			//Up and Down rotation boxes now
+            //////////////////Up/Down stuff now
+         
+			//zero out everything first
 			for (int i = 0; i < LookUDPivots.Length; i ++)
 			{
 				LookUDPivots[i].transform.localRotation = Quaternion.Euler(Vector3.zero);
@@ -1303,20 +1193,31 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			{
 				LookUDTriggerBoxes[i].transform.position = HeldItemBox.transform.position;
 				LookUDTriggerBoxes[i].transform.rotation = HeldItemBox.transform.rotation;
-                
+				LookUDTriggerBoxes[i].transform.localScale = HeldItemBox.transform.localScale;
+
 				LookUDTriggerBoxes[i].GetComponent<BoxCollider>().size = HeldItemBox.size;
                 LookUDTriggerBoxes[i].GetComponent<BoxCollider>().center = HeldItemBox.center;
 			}
 
-			LookUDPivots[0].transform.localRotation = Quaternion.Euler(new Vector3(-30, 0, 0)); //30 up
-			LookUDPivots[1].transform.localRotation = Quaternion.Euler(new Vector3(-20, 0, 0));//look forward
-			LookUDPivots[2].transform.localRotation = Quaternion.Euler(new Vector3(-10, 0, 0)); // 30 down
-			LookUDPivots[3].transform.localRotation = Quaternion.Euler(new Vector3(10, 0, 0)); // 60 down
-			LookUDPivots[4].transform.localRotation = Quaternion.Euler(new Vector3(20, 0, 0)); // 60 down         
-			LookUDPivots[5].transform.localRotation = Quaternion.Euler(new Vector3(30, 0, 0)); // 60 down
+			int otherdeg = -30;
 
+			for (int i = 0; i < LookUDPivots.Length; i++)
+			{
+				if(otherdeg == 0)
+				{
+					otherdeg = 10;
+				}
+				LookUDPivots[i].transform.localRotation = Quaternion.Euler(new Vector3(otherdeg, 0, 0)); //30 up
+				otherdeg += 10;
+				//print(otherdeg);
+			}
+			//LookUDPivots[0].transform.localRotation = Quaternion.Euler(new Vector3(-30, 0, 0)); //30 up
+			//LookUDPivots[1].transform.localRotation = Quaternion.Euler(new Vector3(-20, 0, 0));//look forward
+			//LookUDPivots[2].transform.localRotation = Quaternion.Euler(new Vector3(-10, 0, 0)); // 30 down
+			//LookUDPivots[3].transform.localRotation = Quaternion.Euler(new Vector3(10, 0, 0)); // 60 down
+			//LookUDPivots[4].transform.localRotation = Quaternion.Euler(new Vector3(20, 0, 0)); // 60 down         
+			//LookUDPivots[5].transform.localRotation = Quaternion.Euler(new Vector3(30, 0, 0)); // 60 down
 
-            
 		}
         
        
