@@ -26,28 +26,11 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
         public void Execute(string command)
         {
-
+            //pass in multiple parameters separated by spaces
 			string[] splitcommand = command.Split(new string[] { " " }, System.StringSplitOptions.None);
 
 			switch(splitcommand[0])
 			{            
-				//turn on all physics things, disable all pivot things
-				case "physicsenabled":
-                    {
-                        PhysicsController.enabled = true;
-                        PivotController.enabled = false;
-
-                        //PhysicsController.DebugInitialize(Agent.transform.position);
-                        break;
-                    }
-                
-                    //turn on all pivot things, disable all physics things
-                case "pivotenabled":
-                    {
-                        PhysicsController.enabled = false;
-                        PivotController.enabled = true;
-                        break;
-                    }
 
 					//turn on all pivot things, disable all physics things
                 case "init":
@@ -135,12 +118,21 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         break;
                     }   
 
-                    //pickup object
+                    //pickup object, if no specific object passed in, it will pick up the closest interactable simobj in the agent's viewport
 				case "pu":
                     {
                         ServerAction action = new ServerAction();
                         action.action = "PickupObject";
-                        action.objectId = splitcommand[1];
+						if(splitcommand.Length > 1)
+						{
+							action.objectId = splitcommand[1];
+						}
+
+						else
+						{
+							action.objectId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().UniqueIDOfClosestInteractableObject();
+						}
+
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }
@@ -170,7 +162,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         break;
                     }  
 
-                    //default the Hand's position and rotation to the starting position
+                    //default the Hand's position and rotation to the starting position and rotation
 				case "dh": 
                     {
                         ServerAction action = new ServerAction();
@@ -179,25 +171,45 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         break;
                     }   
 
-                    //move hand forward relative to agent's facing
-				case "mhf":
+                    //move hand ahead, forward relative to agent's facing
+                    //pass in move magnitude or default is 0.25 units
+				case "mha":
                     {
                         ServerAction action = new ServerAction();
                         action.action = "MoveHandMagnitude";
-						action.moveMagnitude = 0.25f;
+
+						if(splitcommand.Length > 1)
+						{
+							action.moveMagnitude = float.Parse(splitcommand[1]);
+						}
+
+						else
+						    action.moveMagnitude = 0.25f;
+						
 						action.x = 0f;
 						action.y = 0f;
 						action.z = 1f;
+
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     } 
 
-					//move hand backward relative to agent's facing
+					//move hand backward. relative to agent's facing
+					//pass in move magnitude or default is 0.25 units               
                 case "mhb":
                     {
 						ServerAction action = new ServerAction();
                         action.action = "MoveHandMagnitude";
-                        action.moveMagnitude = 0.25f;
+
+
+                        if (splitcommand.Length > 1)
+                        {
+                            action.moveMagnitude = float.Parse(splitcommand[1]);
+                        }
+
+                        else
+                            action.moveMagnitude = 0.25f;
+						
                         action.x = 0f;
                         action.y = 0f;
                         action.z = -1f;
@@ -205,12 +217,21 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         break;
                     }  
 
-					//move hand left relative to agent's facing
+					//move hand left, relative to agent's facing
+					//pass in move magnitude or default is 0.25 units
                 case "mhl":
                     {
 						ServerAction action = new ServerAction();
-                        action.action = "MoveHandMagnitude";
-                        action.moveMagnitude = 0.25f;
+                        action.action = "MoveHandMagnitude";                  
+
+                        if (splitcommand.Length > 1)
+                        {
+                            action.moveMagnitude = float.Parse(splitcommand[1]);
+                        }
+
+                        else
+                            action.moveMagnitude = 0.25f;
+						
                         action.x = -1f;
                         action.y = 0f;
                         action.z = 0f;
@@ -218,12 +239,21 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         break;
                     }  
 
-					//move hand right relative to agent's facing
+					//move hand right, relative to agent's facing
+					//pass in move magnitude or default is 0.25 units
                 case "mhr":
                     {
 						ServerAction action = new ServerAction();
                         action.action = "MoveHandMagnitude";
-                        action.moveMagnitude = 0.25f;
+
+                        if (splitcommand.Length > 1)
+                        {
+                            action.moveMagnitude = float.Parse(splitcommand[1]);
+                        }
+
+                        else
+                            action.moveMagnitude = 0.25f;
+						
                         action.x = 1f;
                         action.y = 0f;
                         action.z = 0f;
@@ -231,12 +261,21 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         break;
                     }  
 
-					//move hand down relative to agent's facing
+					//move hand up, relative to agent's facing
+					//pass in move magnitude or default is 0.25 units
                 case "mhu":
                     {
 						ServerAction action = new ServerAction();
                         action.action = "MoveHandMagnitude";
-                        action.moveMagnitude = 0.25f;
+
+                        if (splitcommand.Length > 1)
+                        {
+                            action.moveMagnitude = float.Parse(splitcommand[1]);
+                        }
+
+                        else
+                            action.moveMagnitude = 0.25f;
+						
                         action.x = 0f;
                         action.y = 1f;
                         action.z = 0f;
@@ -244,21 +283,30 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         break;
                     }  
 
-					//move hand down relative to agent's facing
+					//move hand down, relative to agent's facing
+					//pass in move magnitude or default is 0.25 units
                 case "mhd":
                     {
 						ServerAction action = new ServerAction();
                         action.action = "MoveHandMagnitude";
-                        action.moveMagnitude = 0.25f;
+
+                        if (splitcommand.Length > 1)
+                        {
+                            action.moveMagnitude = float.Parse(splitcommand[1]);
+                        }
+
+                        else
+                            action.moveMagnitude = 0.25f;
+						
                         action.x = 0f;
                         action.y = -1f;
                         action.z = 0f;
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }  
-
-					//move hand down relative to agent's facing
-                    //throw <move magnitude> to adjust strength of throw
+                    
+                    //throw object by dropping it and applying force.
+                    //default is with strength of 120, can pass in custom magnitude of throw force
                 case "throw":
 					{
 						ServerAction action = new ServerAction();
@@ -268,6 +316,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
 						{
 							action.moveMagnitude = float.Parse(splitcommand[1]);
 						}
+
+						else
+							action.moveMagnitude = 120f;
 
 						PhysicsController.ProcessControlCommand(action);                  
 						break;
