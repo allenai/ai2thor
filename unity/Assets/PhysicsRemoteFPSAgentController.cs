@@ -78,8 +78,25 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 		private void LateUpdate()
 		{
+			//make sure this happens in late update so all physics related checks are done ahead of time
 			VisibleSimObjPhysics = GetAllVisibleSimObjPhysics(m_Camera, maxVisibleDistance);
+   		}
 
+        public string UniqueIDOfClosestInteractableObject()
+		{
+			string objectID = null;
+
+			foreach (SimObjPhysics o in VisibleSimObjPhysics)
+			{
+				if(o.isInteractable == true)
+				{
+					objectID = o.UniqueID;
+					print(objectID);
+					break;
+				}
+			}
+
+			return objectID;
 		}
 
 		protected SimObjPhysics[] GetAllVisibleSimObjPhysics(Camera agentCamera, float maxDistance)
@@ -165,7 +182,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         if (viewPoint.z > 0 && viewPoint.z < maxDistance //is in front of camera and within range of visibility sphere
                             && viewPoint.x < ViewPointRangeHigh && viewPoint.x > ViewPointRangeLow//within x bounds of viewport
                             && viewPoint.y < ViewPointRangeHigh && viewPoint.y > ViewPointRangeLow)//within y bounds of viewport
-						{
+						{                        
 							//sweep test from agent's hand to each Interaction point
                             RaycastHit hit;
                             if (HandRB.SweepTest(ip.position - AgentHand.transform.position, out hit, maxDistance))

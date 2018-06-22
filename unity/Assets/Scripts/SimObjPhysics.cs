@@ -72,6 +72,13 @@ public class SimObjPhysics : MonoBehaviour
 
 	public void OnTriggerStay(Collider other)
 	{
+		//make sure nothing is dropped while inside the agent (the agent will try to "push(?)" it out and it will fall in unpredictable ways
+		if(other.tag == "Player" && other.name == "FPSController")
+		{
+			isColliding = true;
+		}
+
+        //ignore the trigger boxes the agent is using to check rotation, otherwise the object is colliding
 		if (other.tag != "Player")
 		{
 			isColliding = true;
@@ -80,7 +87,7 @@ public class SimObjPhysics : MonoBehaviour
 		//print(transform.name + "aaaah");
 	}
 
-#if UNITY_EDITOR
+    #if UNITY_EDITOR
 	void OnDrawGizmos()
 	{
 		Gizmos.color = Color.white;
@@ -101,7 +108,7 @@ public class SimObjPhysics : MonoBehaviour
 		}
       
 	}
-#endif
+    #endif
 	//private void OnTriggerEnter(Collider other)
 	//{
 	//       print("AAAAH");
