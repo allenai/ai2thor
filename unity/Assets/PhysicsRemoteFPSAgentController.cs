@@ -91,7 +91,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 				if(o.isInteractable == true)
 				{
 					objectID = o.UniqueID;
-					print(objectID);
+				//	print(objectID);
 					break;
 				}
 			}
@@ -1154,7 +1154,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		{
 			if (ItemInHand == null)
 			{
-				Debug.Log("no need to set up boxes if nothing in hand");
+				//Debug.Log("no need to set up boxes if nothing in hand");
 				return;
 
 			}
