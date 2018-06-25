@@ -90,7 +90,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 			foreach (SimObjPhysics o in VisibleSimObjPhysics)
 			{
-				if(o.isInteractable == true)
+				if(o.isInteractable == true && o.PrimaryProperty == SimObjPrimaryProperty.CanPickup)
 				{
 					objectID = o.UniqueID;
 				//	print(objectID);

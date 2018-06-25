@@ -6,6 +6,8 @@ public class CanOpen : MonoBehaviour
 {
     public Vector3 openPosition;     public Vector3 closedPosition;      public float animationTime;     // Use this for initialization     public bool isOpen = false;     private Hashtable iTweenArgs;
 
+	private bool canReset = true;
+
 	//[SerializeField] TriggerColliderCheck CabinetTrigger = null;      private enum MovementType { Slide, Rotate } ;      [SerializeField] private MovementType movementType;      void Start ()      {         iTweenArgs = iTween.Hash();         iTweenArgs.Add("position", openPosition);         iTweenArgs.Add("time", animationTime);         iTweenArgs.Add("islocal", true);                   if(isOpen)         {             iTweenArgs["position"] = openPosition;             iTweenArgs["time"] = 0f;             iTween.MoveTo(gameObject, iTweenArgs);             iTweenArgs["time"] = animationTime;          }     }      // Update is called once per frame     void Update ()      {         if(Input.GetKeyDown(KeyCode.E))         { 			Interact();         }     }
 
     public void Interact()
@@ -36,21 +38,30 @@ public class CanOpen : MonoBehaviour
         }   
 	}
 
-    //sweeptest forward to check if there is enough room to open the object
-    public bool CheckIfThereIsRoom()
+	public void OnTriggerEnter(Collider other)
 	{
-		bool result = false;
-
-		return result;
+		if (other.name == "FPSController" && canReset == true)
+		{
+			//print("AAAAAH");
+			canReset = false;
+			Reset();
+		}
 	}
 
- //   //check if there is space in front of this object to actually complete the open/close interaction.
- //   public bool CheckIfInteractable()
-	//{
-	//	if (CabinetTrigger.isColliding == true)
-	//		return false;
+	public void OnTriggerExit(Collider other)
+	{
+		if(other.name == "FPSController")
+		{
+			//print("HAAAAA");
+			canReset = true;
+		}
+	}
 
-	//	else
-	//		return true;
-	//} 
+	public void Reset()
+	{
+		if(!canReset)
+		Interact();      
+	}
+
+
 }
