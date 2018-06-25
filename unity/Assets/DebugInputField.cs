@@ -45,6 +45,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     {
                         ServerAction action = new ServerAction();
                         action.action = "MoveAhead";
+
+						if (splitcommand.Length > 1)
+						{
+							action.moveMagnitude = float.Parse(splitcommand[1]);
+						}
+
                         action.moveMagnitude = 0.25f;
                         PhysicsController.ProcessControlCommand(action);
 
@@ -56,7 +62,13 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 case "mb":
                     {
                         ServerAction action = new ServerAction();
-                        action.action = "MoveBack";
+                        action.action = "MoveBack";     
+
+                        if (splitcommand.Length > 1)
+                        {
+                            action.moveMagnitude = float.Parse(splitcommand[1]);
+                        }
+
                         action.moveMagnitude = 0.25f;
                         PhysicsController.ProcessControlCommand(action);
                         break;
@@ -67,6 +79,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     {
                         ServerAction action = new ServerAction();
                         action.action = "MoveLeft";
+
+                        if (splitcommand.Length > 1)
+                        {
+                            action.moveMagnitude = float.Parse(splitcommand[1]);
+                        }
+
                         action.moveMagnitude = 0.25f;
                         PhysicsController.ProcessControlCommand(action);
                         break;
@@ -77,6 +95,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     {
                         ServerAction action = new ServerAction();
                         action.action = "MoveRight";
+
+                        if (splitcommand.Length > 1)
+                        {
+                            action.moveMagnitude = float.Parse(splitcommand[1]);
+                        }
+
                         action.moveMagnitude = 0.25f;
                         PhysicsController.ProcessControlCommand(action);
                         break;
