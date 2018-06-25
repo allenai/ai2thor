@@ -363,7 +363,7 @@ def key_for_point(x, z):
 
 class Controller(object):
 
-    def __init__(self, quality=DEFAULT_QUALITY):
+    def __init__(self, quality=DEFAULT_QUALITY, fullscreen=False):
         self.request_queue = Queue(maxsize=1)
         self.response_queue = Queue(maxsize=1)
         self.receptacle_nearest_pivot_points = {}
@@ -377,6 +377,7 @@ class Controller(object):
         self.killing_unity = False
         self.quality = quality
         self.lock_file = None
+        self.fullscreen = fullscreen
 
     def reset(self, scene_name=None):
         self.response_queue.put_nowait(dict(action='Reset', sceneName=scene_name, sequenceId=0))
@@ -601,7 +602,8 @@ class Controller(object):
     def unity_command(self, width, height):
 
         command = self.executable_path()
-        command += " -screen-quality %s -screen-width %s -screen-height %s" % (QUALITY_SETTINGS[self.quality], width, height)
+        fullscreen = 1 if self.fullscreen else 0
+        command += " -screen-fullscreen %s -screen-quality %s -screen-width %s -screen-height %s" % (fullscreen, QUALITY_SETTINGS[self.quality], width, height)
         return shlex.split(command)
 
     def _start_unity_thread(self, env, width, height, host, port, image_name):
