@@ -3150,7 +3150,7 @@ GameObject:
   - component: {fileID: 293353900}
   - component: {fileID: 293353901}
   m_Layer: 9
-  m_Name: RotateCollider
+  m_Name: RotateAgentCollider
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -3179,8 +3179,8 @@ BoxCollider:
   m_IsTrigger: 1
   m_Enabled: 0
   serializedVersion: 2
-  m_Size: {x: 0.1946702, y: 0.14015079, z: 0.1939826}
-  m_Center: {x: 0.000947237, y: 0.06085217, z: -0.0006058216}
+  m_Size: {x: 0.24442555, y: 0.16917479, z: 0.2116043}
+  m_Center: {x: -0.002162464, y: 0.062407076, z: 0.00043073297}
 --- !u!1 &296346145
 GameObject:
   m_ObjectHideFlags: 0
@@ -4293,7 +4293,7 @@ MonoBehaviour:
   Type: 52
   PrimaryProperty: 3
   SecondaryProperties: 
-  RotateCollider: {fileID: 984058995}
+  RotateAgentCollider: {fileID: 984058995}
   InteractionPoints:
   - {fileID: 232652843}
   - {fileID: 1536168900}
@@ -4304,6 +4304,8 @@ MonoBehaviour:
   - {fileID: 1927004444}
   - {fileID: 2135443415}
   - {fileID: 713060280}
+  MyColliders: []
+  MyTriggerColliders: []
   isVisible: 0
   isInteractable: 0
   isColliding: 0
@@ -6627,7 +6629,7 @@ GameObject:
   - component: {fileID: 539860478}
   - component: {fileID: 539860479}
   m_Layer: 9
-  m_Name: RotateCollider
+  m_Name: RotateAgentCollider
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -7064,7 +7066,7 @@ MonoBehaviour:
   Type: 52
   PrimaryProperty: 3
   SecondaryProperties: 
-  RotateCollider: {fileID: 139239016}
+  RotateAgentCollider: {fileID: 139239016}
   InteractionPoints:
   - {fileID: 204966597}
   - {fileID: 1066110300}
@@ -7075,6 +7077,8 @@ MonoBehaviour:
   - {fileID: 2095324828}
   - {fileID: 1870034682}
   - {fileID: 315016889}
+  MyColliders: []
+  MyTriggerColliders: []
   isVisible: 0
   isInteractable: 0
   isColliding: 0
@@ -7222,8 +7226,9 @@ GameObject:
   - component: {fileID: 624138111}
   - component: {fileID: 624138112}
   - component: {fileID: 624138113}
+  - component: {fileID: 624138114}
   m_Layer: 8
-  m_Name: Cabinet
+  m_Name: CabinetDoor
   m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -7235,16 +7240,16 @@ Transform:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 624138110}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0.68, y: 0.49499997, z: -2.2}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 474431559}
   - {fileID: 1186738136}
   - {fileID: 1181999309}
   - {fileID: 2025927700}
-  m_Father: {fileID: 1232419672}
-  m_RootOrder: 2
+  m_Father: {fileID: 1545979863}
+  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!54 &624138112
 Rigidbody:
@@ -7276,14 +7281,32 @@ MonoBehaviour:
   Type: 19
   PrimaryProperty: 1
   SecondaryProperties: 08000000
-  RotateCollider: {fileID: 0}
+  RotateAgentCollider: {fileID: 0}
   InteractionPoints:
   - {fileID: 1181999309}
   VisibilityPoints:
   - {fileID: 2025927700}
+  MyColliders: []
+  MyTriggerColliders: []
   isVisible: 0
   isInteractable: 0
   isColliding: 0
+--- !u!114 &624138114
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 624138110}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f443cc0f5915a47c3aefd8b4aeb5fb17, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  openPosition: {x: 0, y: 90, z: 0}
+  closedPosition: {x: 0, y: 0, z: 0}
+  animationTime: 1
+  isOpen: 0
+  movementType: 1
 --- !u!1 &624307523
 GameObject:
   m_ObjectHideFlags: 0
@@ -7458,7 +7481,7 @@ GameObject:
   - component: {fileID: 644491569}
   - component: {fileID: 644491570}
   m_Layer: 9
-  m_Name: RotateCollider
+  m_Name: RotateAgentCollider
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -9149,7 +9172,7 @@ MonoBehaviour:
   Type: 52
   PrimaryProperty: 3
   SecondaryProperties: 
-  RotateCollider: {fileID: 1978079175}
+  RotateAgentCollider: {fileID: 1978079175}
   InteractionPoints:
   - {fileID: 2088214994}
   - {fileID: 610249075}
@@ -9160,6 +9183,8 @@ MonoBehaviour:
   - {fileID: 1832027323}
   - {fileID: 1035150118}
   - {fileID: 485429214}
+  MyColliders: []
+  MyTriggerColliders: []
   isVisible: 0
   isInteractable: 0
   isColliding: 0
@@ -10763,7 +10788,7 @@ GameObject:
   - component: {fileID: 875196502}
   - component: {fileID: 875196500}
   m_Layer: 8
-  m_Name: RotateCollider
+  m_Name: RotateAgentCollider
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -12838,7 +12863,7 @@ MonoBehaviour:
   Type: 52
   PrimaryProperty: 3
   SecondaryProperties: 
-  RotateCollider: {fileID: 2030487493}
+  RotateAgentCollider: {fileID: 2030487493}
   InteractionPoints:
   - {fileID: 2033872301}
   - {fileID: 129905691}
@@ -12849,6 +12874,8 @@ MonoBehaviour:
   - {fileID: 1507365329}
   - {fileID: 528166213}
   - {fileID: 1196919100}
+  MyColliders: []
+  MyTriggerColliders: []
   isVisible: 0
   isInteractable: 0
   isColliding: 0
@@ -12946,7 +12973,7 @@ MonoBehaviour:
   Type: 90
   PrimaryProperty: 3
   SecondaryProperties: 
-  RotateCollider: {fileID: 1962990165}
+  RotateAgentCollider: {fileID: 1962990165}
   InteractionPoints:
   - {fileID: 1648657819}
   - {fileID: 1532116604}
@@ -12961,6 +12988,10 @@ MonoBehaviour:
   - {fileID: 2052470329}
   - {fileID: 2038969058}
   - {fileID: 378013571}
+  MyColliders:
+  - {fileID: 319327950}
+  MyTriggerColliders:
+  - {fileID: 646388707}
   isVisible: 0
   isInteractable: 0
   isColliding: 0
@@ -13661,7 +13692,7 @@ MonoBehaviour:
   Type: 52
   PrimaryProperty: 3
   SecondaryProperties: 
-  RotateCollider: {fileID: 787249651}
+  RotateAgentCollider: {fileID: 787249651}
   InteractionPoints:
   - {fileID: 1071698803}
   - {fileID: 656721603}
@@ -13672,6 +13703,8 @@ MonoBehaviour:
   - {fileID: 1669996267}
   - {fileID: 141259385}
   - {fileID: 467159761}
+  MyColliders: []
+  MyTriggerColliders: []
   isVisible: 0
   isInteractable: 0
   isColliding: 0
@@ -14494,7 +14527,7 @@ Transform:
   m_Children:
   - {fileID: 1617436701}
   - {fileID: 2046597852}
-  - {fileID: 624138111}
+  - {fileID: 1545979863}
   - {fileID: 849136449}
   - {fileID: 1559694892}
   - {fileID: 1172700515}
@@ -15542,7 +15575,7 @@ MonoBehaviour:
   Type: 90
   PrimaryProperty: 3
   SecondaryProperties: 
-  RotateCollider: {fileID: 2088573016}
+  RotateAgentCollider: {fileID: 2088573016}
   InteractionPoints:
   - {fileID: 1029090751}
   - {fileID: 1753985787}
@@ -15557,6 +15590,8 @@ MonoBehaviour:
   - {fileID: 2019407083}
   - {fileID: 1255330320}
   - {fileID: 1726721780}
+  MyColliders: []
+  MyTriggerColliders: []
   isVisible: 0
   isInteractable: 0
   isColliding: 0
@@ -18232,7 +18267,7 @@ MonoBehaviour:
   Type: 52
   PrimaryProperty: 3
   SecondaryProperties: 
-  RotateCollider: {fileID: 1483284218}
+  RotateAgentCollider: {fileID: 1483284218}
   InteractionPoints:
   - {fileID: 1954257224}
   - {fileID: 1622404136}
@@ -18243,6 +18278,8 @@ MonoBehaviour:
   - {fileID: 1732456773}
   - {fileID: 837879584}
   - {fileID: 101868257}
+  MyColliders: []
+  MyTriggerColliders: []
   isVisible: 0
   isInteractable: 0
   isColliding: 0
@@ -18379,6 +18416,35 @@ Transform:
   - {fileID: 1824917169}
   - {fileID: 1979963875}
   m_Father: {fileID: 1756340999}
+  m_RootOrder: 2
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1545979862
+GameObject:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  serializedVersion: 5
+  m_Component:
+  - component: {fileID: 1545979863}
+  m_Layer: 8
+  m_Name: Cabinet
+  m_TagString: SimObjPhysics
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1545979863
+Transform:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 1545979862}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0.68, y: 0.49499997, z: -2.2}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children:
+  - {fileID: 624138111}
+  m_Father: {fileID: 1232419672}
   m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1551318714
@@ -19711,7 +19777,7 @@ MonoBehaviour:
   Type: 52
   PrimaryProperty: 3
   SecondaryProperties: 
-  RotateCollider: {fileID: 445588061}
+  RotateAgentCollider: {fileID: 0}
   InteractionPoints:
   - {fileID: 55060486}
   - {fileID: 1421517164}
@@ -19722,6 +19788,8 @@ MonoBehaviour:
   - {fileID: 1861184599}
   - {fileID: 254156543}
   - {fileID: 604128067}
+  MyColliders: []
+  MyTriggerColliders: []
   isVisible: 0
   isInteractable: 0
   isColliding: 0
@@ -19810,7 +19878,7 @@ MonoBehaviour:
   Type: 111
   PrimaryProperty: 3
   SecondaryProperties: 
-  RotateCollider: {fileID: 644491568}
+  RotateAgentCollider: {fileID: 644491568}
   InteractionPoints:
   - {fileID: 1967330207}
   VisibilityPoints:
@@ -19819,6 +19887,8 @@ MonoBehaviour:
   - {fileID: 143154178}
   - {fileID: 1306848200}
   - {fileID: 542561201}
+  MyColliders: []
+  MyTriggerColliders: []
   isVisible: 0
   isInteractable: 0
   isColliding: 0
@@ -20432,7 +20502,7 @@ MonoBehaviour:
   Type: 19
   PrimaryProperty: 1
   SecondaryProperties: 08000000
-  RotateCollider: {fileID: 0}
+  RotateAgentCollider: {fileID: 0}
   InteractionPoints:
   - {fileID: 1294626275}
   - {fileID: 1810618917}
@@ -20445,6 +20515,8 @@ MonoBehaviour:
   - {fileID: 2025154130}
   - {fileID: 1511912488}
   - {fileID: 1199809739}
+  MyColliders: []
+  MyTriggerColliders: []
   isVisible: 0
   isInteractable: 0
   isColliding: 0
@@ -21295,7 +21367,7 @@ MonoBehaviour:
   Type: 52
   PrimaryProperty: 3
   SecondaryProperties: 
-  RotateCollider: {fileID: 1263079607}
+  RotateAgentCollider: {fileID: 1263079607}
   InteractionPoints:
   - {fileID: 24812845}
   - {fileID: 1822816937}
@@ -21306,6 +21378,8 @@ MonoBehaviour:
   - {fileID: 2045001648}
   - {fileID: 1824917169}
   - {fileID: 1979963875}
+  MyColliders: []
+  MyTriggerColliders: []
   isVisible: 0
   isInteractable: 0
   isColliding: 0
@@ -23005,7 +23079,7 @@ MonoBehaviour:
   Type: 8
   PrimaryProperty: 3
   SecondaryProperties: 0e000000
-  RotateCollider: {fileID: 293353899}
+  RotateAgentCollider: {fileID: 293353899}
   InteractionPoints:
   - {fileID: 2100977330}
   - {fileID: 1700031954}
@@ -23017,6 +23091,26 @@ MonoBehaviour:
   - {fileID: 1638856243}
   - {fileID: 1313797789}
   - {fileID: 145893567}
+  MyColliders:
+  - {fileID: 274178277}
+  - {fileID: 1355889590}
+  - {fileID: 730915776}
+  - {fileID: 799276234}
+  - {fileID: 1180637880}
+  - {fileID: 1426732344}
+  - {fileID: 1771939139}
+  - {fileID: 374336322}
+  - {fileID: 1356358610}
+  MyTriggerColliders:
+  - {fileID: 1486939961}
+  - {fileID: 53867171}
+  - {fileID: 1554488183}
+  - {fileID: 483784535}
+  - {fileID: 1616343863}
+  - {fileID: 1307723775}
+  - {fileID: 261743975}
+  - {fileID: 675972748}
+  - {fileID: 476462547}
   isVisible: 0
   isInteractable: 0
   isColliding: 0
@@ -24227,7 +24321,7 @@ GameObject:
   - component: {fileID: 1962990168}
   - component: {fileID: 1962990166}
   m_Layer: 8
-  m_Name: RotateCollider
+  m_Name: RotateAgentCollider
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -25224,7 +25318,7 @@ MonoBehaviour:
   Type: 8
   PrimaryProperty: 3
   SecondaryProperties: 0e000000
-  RotateCollider: {fileID: 539860477}
+  RotateAgentCollider: {fileID: 539860477}
   InteractionPoints:
   - {fileID: 114974891}
   - {fileID: 993278098}
@@ -25236,6 +25330,8 @@ MonoBehaviour:
   - {fileID: 536704181}
   - {fileID: 1257738865}
   - {fileID: 1352517699}
+  MyColliders: []
+  MyTriggerColliders: []
   isVisible: 0
   isInteractable: 0
   isColliding: 0
@@ -25910,7 +26006,7 @@ GameObject:
   - component: {fileID: 2088573019}
   - component: {fileID: 2088573017}
   m_Layer: 8
-  m_Name: RotateCollider
+  m_Name: RotateAgentCollider
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -26352,7 +26448,7 @@ MonoBehaviour:
   Type: 52
   PrimaryProperty: 3
   SecondaryProperties: 
-  RotateCollider: {fileID: 1349099666}
+  RotateAgentCollider: {fileID: 1349099666}
   InteractionPoints:
   - {fileID: 1131194253}
   - {fileID: 821262684}
@@ -26363,6 +26459,8 @@ MonoBehaviour:
   - {fileID: 599044809}
   - {fileID: 1340767770}
   - {fileID: 1800245777}
+  MyColliders: []
+  MyTriggerColliders: []
   isVisible: 0
   isInteractable: 0
   isColliding: 0
@@ -26398,7 +26496,7 @@ MonoBehaviour:
   Type: 90
   PrimaryProperty: 3
   SecondaryProperties: 
-  RotateCollider: {fileID: 875196499}
+  RotateAgentCollider: {fileID: 875196499}
   InteractionPoints:
   - {fileID: 1801872674}
   - {fileID: 652352625}
@@ -26413,6 +26511,8 @@ MonoBehaviour:
   - {fileID: 1422257702}
   - {fileID: 1059173260}
   - {fileID: 811879303}
+  MyColliders: []
+  MyTriggerColliders: []
   isVisible: 0
   isInteractable: 0
   isColliding: 0

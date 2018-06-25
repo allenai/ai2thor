@@ -18,7 +18,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		[SerializeField] protected GameObject[] ToSetActive = null;
 
 		[SerializeField] protected float MaxViewDistancePhysics = 1.7f; //change MaxVisibleDistance of BaseAgent to this value to account for Physics
-        
+		[SerializeField] protected float PhysicsAgentSkinWidth = 0.04f; //change agent's skin width so that it collides directly with ground - otherwise sweeptests will fail for flat objects on floor
+
 		[SerializeField] protected GameObject AgentHand = null;
 		[SerializeField] protected GameObject DefaultHandPosition = null;
         [SerializeField] protected GameObject ItemInHand = null;//current object in inventory
@@ -49,6 +50,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
             //physics requires max distance to be extended to be able to see objects on ground
 			maxVisibleDistance = MaxViewDistancePhysics;
+			gameObject.GetComponent<CharacterController>().skinWidth = PhysicsAgentSkinWidth;
 
 			foreach (GameObject go in ToSetActive)
 			{
@@ -485,7 +487,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		 //   TurnSweepTestPivot.transform.localRotation = Quaternion.Euler(Vector3.zero);
 
 
-   //         GameObject RotateCol = ItemInHand.GetComponent<SimObjPhysics>().RotateCollider;
+   //         GameObject RotateCol = ItemInHand.GetComponent<SimObjPhysics>().RotateAgentCollider;
 
    //         //move the sweep position to where the rotation collider of the item in hand is
 			//TurnSweepPosition.transform.position = RotateCol.transform.position;//AgentHand.transform.position;
@@ -942,43 +944,59 @@ namespace UnityStandardAssets.Characters.FirstPerson
             MoveHand(newAction);
 		}
 
+		public bool IsInArray(Collider collider, GameObject[] arrayOfCol)
+		{
+			for (int i = 0; i < arrayOfCol.Length; i++)
+			{
+				if (collider == arrayOfCol[i].GetComponent<Collider>())
+					return true;
+			}
+			return false;
+		}
+
         public bool CheckIfAgentCanRotateHand()
 		{
 			bool result = false;
-
+                     
             //make sure there is a box collider
-			if (ItemInHand.GetComponent<SimObjPhysics>().RotateCollider.GetComponent<BoxCollider>())
+			if (ItemInHand.GetComponent<SimObjPhysics>().RotateAgentCollider.GetComponent<BoxCollider>())
 			{
 				//print("yes yes yes");
-				Vector3 sizeOfBox = ItemInHand.GetComponent<SimObjPhysics>().RotateCollider.GetComponent<BoxCollider>().size;
+				Vector3 sizeOfBox = ItemInHand.GetComponent<SimObjPhysics>().RotateAgentCollider.GetComponent<BoxCollider>().size;
 				float overlapRadius = Math.Max(Math.Max(sizeOfBox.x, sizeOfBox.y), sizeOfBox.z);
 
-
+                //all colliders hit by overlapsphere
                 Collider[] hitColliders = Physics.OverlapSphere(AgentHand.transform.position,
                                                                 overlapRadius);
 
+                //did we even hit enything?
 				if(hitColliders.Length > 0)
 				{
+					GameObject[] ItemInHandColliders = ItemInHand.GetComponent<SimObjPhysics>().MyColliders;
+                    GameObject[] ItemInHandTriggerColliders = ItemInHand.GetComponent<SimObjPhysics>().MyTriggerColliders;
+
 					foreach (Collider col in hitColliders)
                     {
-                        //if anything hit is not the player, then there is no room to rotate
-                        if (col.tag == "Player")
-                        {
-                            result = true;
-							break;
-                        }
+						//check each collider hit
 
-                        //hit something that wasn't the player, it's blocking!
-                        else
-                        {
-							Debug.Log(col.name + " is blocking rotation");
-                            result = false;
-							return result;
-                        }
+                        //if it's the player, ignore it
+                        if(col.tag != "Player")
+						{
+							if(IsInArray(col, ItemInHandColliders) || IsInArray(col, ItemInHandTriggerColliders))
+							{
+								result = true;
+							}
+
+							else
+							{
+								Debug.Log(col.name + "  is blocking hand from rotating");
+								result = false;
+							}
+						}
                     }
 				}
 
-                //nothing hit, so clear to rotate
+                //nothing hit by sphere, so we are safe to rotate
 				else
 				{
 					result = true;
@@ -1159,7 +1177,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 			}
          
-			BoxCollider HeldItemBox = ItemInHand.GetComponent<SimObjPhysics>().RotateCollider.GetComponent<BoxCollider>();
+			BoxCollider HeldItemBox = ItemInHand.GetComponent<SimObjPhysics>().RotateAgentCollider.GetComponent<BoxCollider>();
          
             //rotate all pivots to 0, move all box colliders to the position of the box collider of item in hand
             //change each box collider's size and center

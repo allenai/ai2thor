@@ -17,13 +17,21 @@ public class SimObjPhysics : MonoBehaviour
 	[SerializeField]
 	public SimObjSecondaryProperty[] SecondaryProperties;
 
-	public GameObject RotateCollider = null;
+	public GameObject RotateAgentCollider = null;
+
+	//public GameObject RotateAgentHandCollider = null;
 
 	[SerializeField]
 	public Transform[] InteractionPoints = null;
 
 	[SerializeField]
 	public Transform[] VisibilityPoints = null;
+
+	[SerializeField]
+	public GameObject[] MyColliders = null;
+
+	[SerializeField]
+    public GameObject[] MyTriggerColliders = null;
    
 	public bool isVisible = false;
 	public bool isInteractable = false;
