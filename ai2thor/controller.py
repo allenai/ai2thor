@@ -376,6 +376,7 @@ class Controller(object):
         self.server_thread = None
         self.killing_unity = False
         self.quality = quality
+        self.fullscreen = True
         self.lock_file = None
 
     def reset(self, scene_name=None):
@@ -602,6 +603,8 @@ class Controller(object):
 
         command = self.executable_path()
         command += " -screen-quality %s -screen-width %s -screen-height %s" % (QUALITY_SETTINGS[self.quality], width, height)
+        if not self.fullscreen:
+            command += " -screen-fullscreen 0"
         return shlex.split(command)
 
     def _start_unity_thread(self, env, width, height, host, port, image_name):
