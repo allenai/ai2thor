@@ -142,6 +142,8 @@ def test_unity_command():
     c = ai2thor.controller.Controller()
     assert c.unity_command(650, 550) == [
         c.executable_path(),
+        '-screen-fullscreen', 
+        '0',
         '-screen-quality', 
         '6', 
         '-screen-width', 
@@ -149,9 +151,11 @@ def test_unity_command():
         '-screen-height', 
         '550'] 
 
-    c = ai2thor.controller.Controller(quality='Low')
+    c = ai2thor.controller.Controller(quality='Low', fullscreen=True)
     assert c.unity_command(650, 550) == [
         c.executable_path(),
+        '-screen-fullscreen', 
+        '1',
         '-screen-quality', 
         '1', 
         '-screen-width', 
