@@ -159,7 +159,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 			if (action.renderDepthImage || action.renderClassImage || action.renderObjectImage) 
             {
-				this.enableImageSynthesis ();
+				//this.enableImageSynthesis ();
 			}
 
 			if (action.cameraY > 0.0) 
