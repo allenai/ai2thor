@@ -29,6 +29,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		protected float moveMagnitude;
 
 		protected bool continuousMode;
+		public ImageSynthesis imageSynthesis;
 
 		//[SerializeField]
 		//protected bool m_UseFovKick;
@@ -520,6 +521,11 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 			return metadata.ToArray();
 
+		}
+
+		private void enableImageSynthesis() {
+			imageSynthesis = this.gameObject.GetComponentInChildren<ImageSynthesis> () as ImageSynthesis;
+			imageSynthesis.enabled = true;			
 		}
 
 		public void ProcessControlCommand(ServerAction controlCommand)

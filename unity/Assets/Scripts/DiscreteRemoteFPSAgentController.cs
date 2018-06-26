@@ -31,8 +31,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
         //protected DebugFPSAgentController DebugComponent = null;
         //protected Canvas DebugCanvas = null;
 
-		public ImageSynthesis imageSynthesis;
-
 		// Initialize parameters from environment variables
 		protected override void Awake() 
 		{
@@ -80,10 +78,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 		}
 
-		private void enableImageSynthesis() {
-			imageSynthesis = this.gameObject.GetComponentInChildren<ImageSynthesis> () as ImageSynthesis;
-			imageSynthesis.enabled = true;			
-		}
 
 		public override MetadataWrapper generateMetadataWrapper() 
         {
