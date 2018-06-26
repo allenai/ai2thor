@@ -14,7 +14,16 @@ public class CanOpen : MonoBehaviour
 	//[SerializeField] TriggerColliderCheck CabinetTrigger = null;      private enum MovementType { Slide, Rotate } ;      [SerializeField] private MovementType movementType;      void Start ()      {
 		iTween.Init(gameObject);//init itween cuase the documentation said so?
          iTweenArgs = iTween.Hash();         iTweenArgs.Add("position", openPosition);         iTweenArgs.Add("time", animationTime);         iTweenArgs.Add("islocal", true);         
-        //if we want to start in open position, initialize here?         if(isOpen)         {             iTweenArgs["position"] = openPosition;             iTweenArgs["time"] = 0f;             iTween.MoveTo(gameObject, iTweenArgs);             iTweenArgs["time"] = animationTime;          }     }      // Update is called once per frame     void Update ()      {         if(Input.GetKeyDown(KeyCode.E))         { 			Interact();         }     }
+        //if we want to start in open position, initialize here?         if(isOpen)         {             iTweenArgs["position"] = openPosition;             iTweenArgs["time"] = 0f;             iTween.MoveTo(gameObject, iTweenArgs);             iTweenArgs["time"] = animationTime;          }     }      // Update is called once per frame     void Update ()      {         if(Input.GetKeyDown(KeyCode.E))         { 			//Interact();         }     }
+
+    public void SetOpenPercent(float val)
+	{
+		if (val >= 0.0 && val <= 1.0)
+			openPercentage = val;
+
+		else
+			Debug.Log("Please give an open percentage between 0.0f and 1.0f");
+	}
 
     public void Interact()
 	{
