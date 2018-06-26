@@ -50,8 +50,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
 						{
 							action.moveMagnitude = float.Parse(splitcommand[1]);
 						}
-
+						else
                         action.moveMagnitude = 0.25f;
+						
                         PhysicsController.ProcessControlCommand(action);
 
                         //PhysicsController.CheckIfAgentCanMove(5.0f, 0);
@@ -69,7 +70,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
                             action.moveMagnitude = float.Parse(splitcommand[1]);
                         }
 
+						else
                         action.moveMagnitude = 0.25f;
+						
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }
@@ -85,7 +88,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
                             action.moveMagnitude = float.Parse(splitcommand[1]);
                         }
 
+						else
                         action.moveMagnitude = 0.25f;
+						
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }
@@ -101,7 +106,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
                             action.moveMagnitude = float.Parse(splitcommand[1]);
                         }
 
+						else
                         action.moveMagnitude = 0.25f;
+						
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }
@@ -347,11 +354,40 @@ namespace UnityStandardAssets.Characters.FirstPerson
 						PhysicsController.ProcessControlCommand(action);                  
 						break;
 					}
+
+				case "open":
+					{
+						ServerAction action = new ServerAction();
+						action.action = "OpenObject";
+
+						if (splitcommand.Length > 1)
+                        {
+                            action.objectId = splitcommand[1];
+                        }
+
+						PhysicsController.ProcessControlCommand(action);                  
+
+						break;
+					}
+
+				case "close":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "CloseObject";
+
+                        if (splitcommand.Length > 1)
+                        {
+                            action.objectId = splitcommand[1];
+                        }
+
+                        PhysicsController.ProcessControlCommand(action);
+
+                        break;
+                    }
                    
 
 				default:
-                    {
-
+                    {                  
                         //Debug.Log("Invalid Command");
                         break;
                     }
