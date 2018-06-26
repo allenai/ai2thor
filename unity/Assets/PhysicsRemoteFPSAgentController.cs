@@ -23,21 +23,16 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		[SerializeField] protected GameObject AgentHand = null;
 		[SerializeField] protected GameObject DefaultHandPosition = null;
         [SerializeField] protected GameObject ItemInHand = null;//current object in inventory
-
-		////for turning and look Sweeptests
-		//[SerializeField] protected GameObject LookSweepPosition = null;
-		//[SerializeField] protected GameObject LookSweepTestPivot = null; //if the Camera position ever moves, make sure this is set to the same local position as FirstPersonCharacter
-
+              
         [SerializeField] protected GameObject[] RotateRLPivots = null;
 		[SerializeField] protected GameObject[] RotateRLTriggerBoxes = null;
 
 		[SerializeField] protected GameObject[] LookUDPivots = null;
 		[SerializeField] protected GameObject[] LookUDTriggerBoxes = null;
-
         
 		[SerializeField] protected SimObjPhysics[] VisibleSimObjPhysics; //all SimObjPhysics that are within camera viewport and range dictated by MaxViewDistancePhysics
 
-		[SerializeField] public bool IsHandDefault = true;
+		[SerializeField] protected bool IsHandDefault = true;
 
         // Use this for initialization
         protected override void Start()
@@ -46,7 +41,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 			ServerAction action = new ServerAction();
 			Initialize(action);
-			//enable all the GameObjects on the Agent that Physics Mode requires
+
+			//below, enable all the GameObjects on the Agent that Physics Mode requires
 
             //physics requires max distance to be extended to be able to see objects on ground
 			maxVisibleDistance = MaxViewDistancePhysics;
@@ -63,10 +59,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
             m_CharacterController.Move(movement);
         }
 
-  //      public void DebugInitialize(Vector3 pos)
-		//{
-		//	lastPosition = pos;
-		//}
 		public GameObject WhatAmIHolding()
 		{
 			return ItemInHand;
@@ -285,33 +277,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             return result;
 
         }
-
-		//old check if in viewport for SimObjPhysics without multiple visibility points
-		//public bool CheckIfInViewport(SimObjPhysics item, Camera agentCamera, float maxDistance)
-		//{
-		//    //return true result if object is within the Viewport, false if not in viewport or the viewport doesn't care about the object
-		//    bool result = false;
-
-		//    Vector3 viewPoint = agentCamera.WorldToViewportPoint(item.transform.position);
-
-		//    //move these two up top as serialized variables later, or maybe not? values between 0 and 1 will cause "tunnel vision"
-		//    float ViewPointRangeHigh = 1.0f;
-		//    float ViewPointRangeLow = 0.0f;
-
-		//    //note: Viewport space normalized as bottom left (0,0) and top right(1, 1)
-		//    if (viewPoint.z > 0 && viewPoint.z < maxDistance //is in front of camera and within range of visibility sphere
-		//       && viewPoint.x < ViewPointRangeHigh && viewPoint.x > ViewPointRangeLow//within x bounds of viewport
-		//        && viewPoint.y < ViewPointRangeHigh && viewPoint.y > ViewPointRangeLow)//within y bounds of viewport
-		//    {
-		//        result = true;
-		//    }
-
-		//    else
-		//        result = false;
-
-		//    return result;
-		//}
-
+      
 		public override void LookDown(ServerAction response)
 		{
 			float targetHorizon = 0.0f;
@@ -382,45 +348,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 }
 			}
          
-            ////zero out the pivot and default to hand's current position AND rotation
-            //LookSweepTestPivot.transform.localRotation = m_Camera.transform.localRotation;
-            //LookSweepPosition.transform.position = AgentHand.transform.position;
-
-            ////rotate pivot to target location, then sweep for obstacles
-            //LookSweepTestPivot.transform.localRotation = Quaternion.AngleAxis(targetAngle, Vector3.right);
-            ////RotationSweepTestPivot.transform.localRotation = Quaternion.Euler(new Vector3(targetAngle, 0, 0));
-            
-            //RaycastHit hit;
-
-            //Rigidbody ItemRB = ItemInHand.GetComponent<Rigidbody>();
-
-            ////check if the sweep hits anything at all
-            //if (ItemRB.SweepTest(LookSweepPosition.transform.position - AgentHand.transform.position, out hit,
-            //                     Vector3.Distance(LookSweepPosition.transform.position, AgentHand.transform.position),
-            //                     QueryTriggerInteraction.Ignore))
-            //{
-            //    //If the thing hit was anything except the object itself, the agent, or the agent's hand - it's blocking
-            //    if (hit.transform != AgentHand.transform && hit.transform != ItemInHand.transform && hit.transform != gameObject.transform) //&& hit.transform != gameObject.transform
-            //    {
-            //        Debug.Log("Can't change view to " + targetAngle + ", " + hit.transform.name + "is blocking the way");
-            //        result = false;
-            //    }
-
-            //    else
-            //    {
-            //        //the sweep hit something that it is ok to hit (agent itself, agent's hand, object itself somehow)
-            //        result = true;
-
-            //    }
-
-            //}
-
-            //else
-            //{
-            //    //oh we didn't hit anything, good to go
-            //    result = true;
-            //}
-         
             return result;
         }
         
@@ -480,114 +407,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     }
                 }
 			}
-
-			//TurnSweepPosition.GetComponent<BoxCollider>().enabled = true;
-            
-			//zero out the pivot to prep for rotation
-		 //   TurnSweepTestPivot.transform.localRotation = Quaternion.Euler(Vector3.zero);
-
-
-   //         GameObject RotateCol = ItemInHand.GetComponent<SimObjPhysics>().RotateAgentCollider;
-
-   //         //move the sweep position to where the rotation collider of the item in hand is
-			//TurnSweepPosition.transform.position = RotateCol.transform.position;//AgentHand.transform.position;
-			//TurnSweepPosition.transform.rotation = RotateCol.transform.rotation;
-            
-			//BoxCollider RotTestBox = TurnSweepPosition.GetComponent<BoxCollider>();
-
-   //         //set the collision checking box on TurnSweepPosition to the same size and center of item in hand's rotation box
-			//RotTestBox.center = RotateCol.GetComponent<BoxCollider>().center;
-			//RotTestBox.size = RotateCol.GetComponent<BoxCollider>().size;
-
-			////prep to check in 30 degree increments, default right check
-			//int thirty = 30;
-			//int sixty = 60;
-
-   //         //swap signs for checking left
-   //         if(direction < 0)
-			//{
-			//	thirty *= -1;
-			//	sixty *= -1;
-			//}
-
-			//bool firstcheck = true;
-			//bool secondcheck = true;
-			//bool thirdcheck = true;
-			////check first 30 degree increment to see if the object in hand would collide with anything
-			//TurnSweepTestPivot.transform.localRotation = Quaternion.Euler(new Vector3(0, direction - sixty, 0));
-			//if (RotTestBox.GetComponent<RotationTriggerCheck>().isColliding)
-			//{
-			//	Debug.Log("rotate failed 30 degrees");
-			//	firstcheck = false;
-			//}
-            
-
-   //         //check next 30 degree increment
-			//TurnSweepTestPivot.transform.localRotation = Quaternion.Euler(new Vector3(0, direction - thirty, 0));
-    //        if (RotTestBox.GetComponent<RotationTriggerCheck>().isColliding)
-    //        {
-				//Debug.Log("rotate failed 60 degrees");
-                
-				//secondcheck = false;
-            //}
-
-   //         //check final position
-   //         TurnSweepTestPivot.transform.localRotation = Quaternion.Euler(new Vector3(0, direction, 0));
-			//if (RotTestBox.GetComponent<RotationTriggerCheck>().isColliding)
-    //        {
-				//Debug.Log("rotate failed 90 degrees");
-
-            //    thirdcheck = false;
-            //}
-            
-            //RaycastHit hit;
-
-            //Rigidbody ItemRB = ItemInHand.GetComponent<Rigidbody>();
-
-            ////check if the sweep hits anything at all
-            //if (ItemRB.SweepTest(TurnSweepPosition.transform.position - AgentHand.transform.position, out hit,
-            //                     Vector3.Distance(TurnSweepPosition.transform.position, AgentHand.transform.position),
-            //                     QueryTriggerInteraction.Ignore))
-            //{
-            //    //print(hit.transform.name);
-            //    //If the thing hit was anything except the object itself, the agent, or the agent's hand - it's blocking
-            //    if (hit.transform != AgentHand.transform && hit.transform != gameObject.transform && hit.transform != ItemInHand.transform)
-            //    {
-            //        if (direction == 90)
-            //        {
-            //            Debug.Log(hit.transform.name + " is in Agent Hand's Path! Can't rotate Agent RIGHT");
-            //            result = false;
-            //        }
-
-            //        else
-            //        {
-            //            Debug.Log(hit.transform.name + " is in Agent Hand's Path! Can't rotate Agent LEFT");
-            //            result = false;
-            //        }
-            //    }
-
-            //    else
-            //    {
-            //        //the sweep hit something that it is ok to hit (agent itself, agent's hand, object itself somehow)
-            //        result = true;
-            //    }
-            //}
-
-            //else
-            //{
-            //    //oh we didn't hit anything, good to go
-            //    result = true;
-            //}
-			//TurnSweepPosition.GetComponent<BoxCollider>().enabled = false;
-			//if(firstcheck == false || secondcheck == false || thirdcheck == false)
-			//{
-			//	result = false;
-			//}
-
-			//else
-			//{
-			//	result = true;
-			//}
 
             return result;
         }
@@ -738,15 +557,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             if (sweepResults.Length > 0)
             {
                 foreach (RaycastHit res in sweepResults)
-                {
-                    //if(res.transform.tag == "Structure")
-                    //{
-                    //    print("hit a structure");
-                    //    result = false;
-                    //    Debug.Log(res.transform.name + " is blocking the Agent from moving " + direction);
-                    //    return result;
-                    //}
-
+                {               
                     //nothing in our hand, so nothing to ignore
                     if (ItemInHand == null)
                     {
@@ -766,10 +577,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                             result = true;
                             break;
                         }
-                    }
-
-                    //Debug.Log(res.transform.name + " is blocking the Agent from moving " + orientation);
-
+                    }      
                 }
             }
          
@@ -782,8 +590,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
             return result;
         }
-        
-
+      
         /////AGENT HAND STUFF////
 
 		public void ResetAgentHandPosition(ServerAction action)
@@ -1168,6 +975,69 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			go.GetComponent<SimObjPhysics>().ApplyForce(apply);         
 		}
 
+        //isOpen is true if trying to Close object, False if trying to open object
+        public void OpenOrCloseObject(ServerAction action, bool open)
+		{
+			//pass name of object in from action.objectID
+            //check if that object is in the viewport
+            //also check to make sure that target object is interactable
+			if(action.objectId == null)
+			{
+				Debug.Log("Hey, actually give me an object ID to pick up, yeah?");
+				return;
+			}
+				
+			SimObjPhysics target = null;
+
+            foreach (SimObjPhysics sop in VisibleSimObjPhysics)
+            {
+				//print("why not?");
+				//check for object in current visible objects, and also check that it's interactable
+				if (action.objectId == sop.UniqueID && sop.GetComponent<CanOpen>())
+				{
+					//print("wobbuffet");
+					target = sop;
+				}
+	
+            }
+
+            if(target)
+			{
+				CanOpen co = target.GetComponent<CanOpen>();
+
+                //trying to close object
+				if(open == true)
+				{
+					if (co.isOpen == true)
+						co.Interact();
+                                       
+					else
+						Debug.Log("can't close object if it's already closed");
+				}
+
+                else if(open == false)
+				{
+					if (co.isOpen == false)
+						co.Interact();
+					else
+                        Debug.Log("can't open object if it's already open");
+				}
+				//print("i have a target");
+				//target.GetComponent<CanOpen>().Interact();
+			}
+            
+		}
+
+        public void CloseObject(ServerAction action)
+		{
+			OpenOrCloseObject(action, true);
+		}
+
+        public void OpenObject(ServerAction action)
+		{
+			OpenOrCloseObject(action, false);
+		}
+
         public void SetUpRotationBoxChecks()
 		{
 			if (ItemInHand == null)
@@ -1245,15 +1115,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
 				LookUDPivots[i].transform.localRotation = Quaternion.Euler(new Vector3(otherdeg, 0, 0)); //30 up
 				otherdeg += 10;
 				//print(otherdeg);
-			}
-			//LookUDPivots[0].transform.localRotation = Quaternion.Euler(new Vector3(-30, 0, 0)); //30 up
-			//LookUDPivots[1].transform.localRotation = Quaternion.Euler(new Vector3(-20, 0, 0));//look forward
-			//LookUDPivots[2].transform.localRotation = Quaternion.Euler(new Vector3(-10, 0, 0)); // 30 down
-			//LookUDPivots[3].transform.localRotation = Quaternion.Euler(new Vector3(10, 0, 0)); // 60 down
-			//LookUDPivots[4].transform.localRotation = Quaternion.Euler(new Vector3(20, 0, 0)); // 60 down         
-			//LookUDPivots[5].transform.localRotation = Quaternion.Euler(new Vector3(30, 0, 0)); // 60 down
-
+			}         
 		}
+        
         
        
 		#if UNITY_EDITOR
@@ -1310,7 +1174,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 }
             }
         }
-#endif
+        #endif
 	}
 
 }
