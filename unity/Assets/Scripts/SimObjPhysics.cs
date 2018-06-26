@@ -46,8 +46,12 @@ public class SimObjPhysics : MonoBehaviour
 	{
 		//Generate_UniqueID();
 		//startPosition = transform.position;
-	}
 
+        //maybe we can set these up more efficiently here....
+
+
+	}
+   
 	// Update is called once per frame
 	void Update()
 	{
@@ -117,10 +121,93 @@ public class SimObjPhysics : MonoBehaviour
       
 	}
     #endif
-	//private void OnTriggerEnter(Collider other)
-	//{
-	//       print("AAAAH");
-	//}
+
+    //CONTEXT MENU STUFF FOR SETTING UP SIM OBJECTS
+    //RIGHT CLICK this script in the inspector to reveal these options
+
+	[ContextMenu("Set Up Colliders")]
+    void ContextSetUpColliders()
+    {
+        if (transform.Find("Colliders"))
+        {
+            Transform Colliders = transform.Find("Colliders");
+
+            List<GameObject> listColliders = new List<GameObject>();
+
+            foreach (Transform child in Colliders)
+            {
+                //list.toarray
+                listColliders.Add(child.gameObject);
+            }
+
+            MyColliders = listColliders.ToArray();
+        }
+    }
+
+    [ContextMenu("Set Up TriggerColliders")]
+    void ContextSetUpTriggerColliders()
+    {
+        if (transform.Find("TriggerColliders"))
+        {
+            Transform tc = transform.Find("TriggerColliders");
+
+            List<GameObject> listtc = new List<GameObject>();
+
+            foreach (Transform child in tc)
+            {
+                //list.toarray
+                listtc.Add(child.gameObject);
+            }
+
+            MyTriggerColliders = listtc.ToArray();
+        }
+    }
+
+    [ContextMenu("Set Up VisibilityPoints")]
+    void ContextSetUpVisibilityPoints()
+    {
+        if (transform.Find("VisibilityPoints"))
+        {
+            Transform vp = transform.Find("VisibilityPoints");
+
+            List<Transform> vplist = new List<Transform>();
+
+            foreach (Transform child in vp)
+            {
+                vplist.Add(child);
+            }
+
+            VisibilityPoints = vplist.ToArray();
+        }
+    }
+
+    [ContextMenu("Set Up Interaction Points")]
+    void ContextSetUpInteractionPoints()
+    {
+        if (transform.Find("InteractionPoints"))
+        {
+            Transform ip = transform.Find("InteractionPoints");
+
+            List<Transform> iplist = new List<Transform>();
+
+            foreach (Transform child in ip)
+            {
+                iplist.Add(child);
+            }
+
+            InteractionPoints = iplist.ToArray();
+        }
+    }
+
+    [ContextMenu("Set Up Rotate Agent Collider")]
+    void ContextSetUpRotateAgentCollider()
+    {
+        if (transform.Find("RotateAgentCollider"))
+        {
+            RotateAgentCollider = transform.Find("RotateAgentCollider").gameObject;
+        }
+    }
+
 
 
 }
