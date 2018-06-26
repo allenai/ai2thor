@@ -1009,16 +1009,27 @@ namespace UnityStandardAssets.Characters.FirstPerson
 				if(open == true)
 				{
 					if (co.isOpen == true)
+					{                  
 						co.Interact();
-                                       
+					}
+                  
 					else
 						Debug.Log("can't close object if it's already closed");
 				}
 
+                //trying to open object
                 else if(open == false)
 				{
 					if (co.isOpen == false)
-						co.Interact();
+					{
+						if (action.moveMagnitude > 0.0f)
+                        {
+                            co.SetOpenPercent(action.moveMagnitude);
+                        }
+
+						co.Interact();		
+					}
+
 					else
                         Debug.Log("can't open object if it's already open");
 				}
