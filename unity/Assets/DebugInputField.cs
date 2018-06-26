@@ -355,15 +355,25 @@ namespace UnityStandardAssets.Characters.FirstPerson
 						break;
 					}
 
+                    //opens given object the given percent, default is 100% open
+                    //open <object ID> percent
 				case "open":
 					{
 						ServerAction action = new ServerAction();
 						action.action = "OpenObject";
 
-						if (splitcommand.Length > 1)
+                        //default open 100%
+						if (splitcommand.Length > 1 && splitcommand.Length < 3)
                         {
                             action.objectId = splitcommand[1];
                         }
+
+						//give the open percentage as 3rd param, from 0.0 to 1.0
+						if(splitcommand.Length > 2)
+						{
+							action.objectId = splitcommand[1];
+							action.moveMagnitude = float.Parse(splitcommand[2]);
+						}
 
 						PhysicsController.ProcessControlCommand(action);                  
 
