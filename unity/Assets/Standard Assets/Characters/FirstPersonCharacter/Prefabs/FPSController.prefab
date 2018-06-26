@@ -32,6 +32,7 @@ GameObject:
   - component: {fileID: 2000000}
   - component: {fileID: 8100000}
   - component: {fileID: 12474086}
+  - component: {fileID: 114317082596199212}
   m_Layer: 10
   m_Name: FirstPersonCharacter
   m_TagString: MainCamera
@@ -45,8 +46,8 @@ Transform:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 100000}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 1, z: -1.75}
+  m_LocalRotation: {x: 0, y: -0.7071068, z: 0, w: 0.7071068}
+  m_LocalPosition: {x: 0.055, y: 1, z: -1.78}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 400002}
@@ -2986,6 +2987,7 @@ MonoBehaviour:
   m_CharacterController: {fileID: 0}
   actionComplete: 0
   actionDuration: 3
+  imageSynthesis: {fileID: 0}
 --- !u!114 &114022453732966872
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -3070,6 +3072,25 @@ MonoBehaviour:
   isColliding: 0
   ItemInHand: {fileID: 0}
   AgentRef: {fileID: 0}
+--- !u!114 &114317082596199212
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 100002}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6b7e9fcb795b84664bfc1ac40799a68f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  uberReplacementShader: {fileID: 4800000, guid: 171e6e515a12e4a298dce708924e98ba,
+    type: 3}
+  opticalFlowShader: {fileID: 4800000, guid: 2a970eca3c9e84f13b5b616e530a7919, type: 3}
+  depthShader: {fileID: 4800000, guid: cdf4223aff4114212bb5196565b0abce, type: 3}
+  positionShader: {fileID: 0}
+  opticalFlowSensitivity: 0
+  sentColorCorrespondence: 0
+  tex: {fileID: 0}
 --- !u!114 &114340739300122134
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -3209,6 +3230,7 @@ MonoBehaviour:
   - {fileID: 1890475479083370}
   - {fileID: 1673061887459306}
   MaxViewDistancePhysics: 1.7
+  PhysicsAgentSkinWidth: 0.04
   AgentHand: {fileID: 1340499340313870}
   DefaultHandPosition: {fileID: 1863262018947090}
   ItemInHand: {fileID: 0}
