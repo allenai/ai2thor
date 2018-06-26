@@ -135,6 +135,12 @@ public class SimObj : MonoBehaviour
 		}
 	}
 
+	public Bounds Bounds {
+		get {
+			return bounds;
+		}
+	}
+
 	public bool VisibleNow = false;
 
 	#if UNITY_EDITOR
@@ -163,6 +169,8 @@ public class SimObj : MonoBehaviour
 	private bool startedInReceptacle;
 	private bool isAnimating = false;
 	private Transform startupTransform;
+	private Bounds bounds;
+
 
     //this guy right here caused the giant groceries... should only be an issue with pivots
 	public void ResetScale() 
@@ -197,6 +205,7 @@ public class SimObj : MonoBehaviour
 				topPoint = centerPoint + (Vector3.up * r.bounds.extents.y);
 				bottomPoint = centerPoint + (Vector3.down * r.bounds.extents.y);
 			}
+			bounds = r.bounds;
 		} 
 
         else 
@@ -227,6 +236,7 @@ public class SimObj : MonoBehaviour
 					topPoint = centerPoint + (Vector3.up * c.bounds.extents.y);
 					bottomPoint = centerPoint + (Vector3.down * c.bounds.extents.y);
 				}
+				bounds = c.bounds;
 			}
 
             else 

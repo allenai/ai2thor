@@ -1,8 +1,6 @@
 import subprocess
 import os.path
 import re
-import json
-import requests
 import tempfile
 import ai2thor._builds
 import shlex
@@ -82,16 +80,19 @@ def image_exists(image_name):
     return len(output) > 0
 
 
-def run(image_name, environment):
-    allowed_keys = {'AI2THOR_PORT', 'AI2THOR_CLIENT_TOKEN', 'AI2THOR_SCREEN_WIDTH', 'AI2THOR_SCREEN_HEIGHT', 'AI2THOR_HOST', 'AI2THOR_VERSION'}
+def run(image_name, base_dir, command, environment):
+    allowed_keys = {'AI2THOR_PORT', 'AI2THOR_CLIENT_TOKEN', 'AI2THOR_HOST'}
 
     environment_string = ""
     for k,v in environment.items():
         if k in allowed_keys:
             environment_string += " -e %s=%s " % (k,v)
 
-    environment_string += " -e %s=%s " % ("AI2THOR_DEVICE_BUSID", xorg_bus_id())
-    command = "docker run -d --privileged {environment} {image_name} /root/start.sh".format(environment=environment_string, image_name=image_name)
+    relative_command = os.path.relpath(command, base_dir)
+    docker_command = os.path.join('/root/.ai2thor', relative_command)
+    environment_string += " -e %s=%s -e %s='%s'" % ("AI2THOR_DEVICE_BUSID", xorg_bus_id(), "AI2THOR_COMMAND", docker_command)
+    command = "docker run -v {base_dir}:/root/.ai2thor -d --privileged {environment} {image_name} /root/start.sh".format(
+        environment=environment_string, image_name=image_name, base_dir=base_dir)
     container_id = subprocess.check_output(command, shell=True).decode('ascii').strip()
     return container_id
 

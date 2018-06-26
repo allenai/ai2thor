@@ -155,7 +155,18 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 action.gridSize = 0.25f;
             }
 
-            this.continuousMode = action.continuous;
+			this.continuousMode = action.continuous;
+
+			if (action.renderDepthImage || action.renderClassImage || action.renderObjectImage) 
+            {
+				this.enableImageSynthesis ();
+			}
+
+			if (action.cameraY > 0.0) 
+            {
+				Vector3 pos = m_Camera.transform.localPosition;
+				m_Camera.transform.localPosition = new Vector3 (pos.x, action.cameraY, pos.z);
+			}
 
 
             if (action.visibilityDistance > 0.0f)
@@ -169,7 +180,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 Debug.Log(errorMessage);
                 actionFinished(false);
             }
-
             else
             {
                 gridSize = action.gridSize;
@@ -400,6 +410,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			agentMeta.position = transform.position;
 			agentMeta.rotation = transform.eulerAngles;
 			agentMeta.cameraHorizon = m_Camera.transform.rotation.eulerAngles.x;
+			if (agentMeta.cameraHorizon > 180) {
+				agentMeta.cameraHorizon -= 360;
+			}
 
 			MetadataWrapper metaMessage = new MetadataWrapper();
 			metaMessage.agent = agentMeta;
@@ -426,6 +439,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			}
 			int numObj = simObjects.Length;
 			List<ObjectMetadata> metadata = new List<ObjectMetadata>();
+			Dictionary<string, string> parentReceptacles = new Dictionary<string, string> ();
+
 			for (int k = 0; k < numObj; k++)
 			{
 				ObjectMetadata meta = new ObjectMetadata();
@@ -456,8 +471,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
 					foreach (SimObj cso in SimUtil.GetItemsFromReceptacle(simObj.Receptacle))
 					{
 						receptacleObjectIds.Add(cso.UniqueID);
-
+						parentReceptacles.Add (cso.UniqueID, simObj.UniqueID);
 					}
+
 					List<PivotSimObj> pivotSimObjs = new List<PivotSimObj>();
 					for (int i = 0; i < simObj.Receptacle.Pivots.Length; i++)
 					{
@@ -482,9 +498,26 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 				meta.visible = (visibleObjectIds.Contains(simObj));
 				meta.distance = Vector3.Distance(transform.position, o.transform.position);
+				Bounds bounds = simObj.Bounds;
+				meta.bounds3D = new [] {
+					bounds.min.x,
+					bounds.min.y,
+					bounds.min.z,
+					bounds.max.x,
+					bounds.max.y,
+					bounds.max.z,
+				};
 
 				metadata.Add(meta);
 			}
+
+
+			foreach (ObjectMetadata meta in metadata) {
+				if (parentReceptacles.ContainsKey (meta.objectId)) {
+					meta.parentReceptacle = parentReceptacles [meta.objectId];
+				}
+			}
+
 			return metadata.ToArray();
 
 		}
@@ -500,14 +533,23 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			lastPosition = new Vector3(transform.position.x, transform.position.y, transform.position.z);
 			System.Reflection.MethodInfo method = this.GetType().GetMethod(controlCommand.action);
 			this.actionComplete = false;
+
 			try
 			{
-				method.Invoke(this, new object[] { controlCommand });
+				if (method == null) {
+					errorMessage = "Invalid action: " + controlCommand.action;
+					errorCode = ServerActionErrorCode.InvalidAction;
+					Debug.LogError(errorMessage);
+					actionFinished(false);
+				} else {
+					method.Invoke(this, new object[] { controlCommand });
+				}
 			}
 			catch (Exception e)
 			{
 				Debug.LogError("caught error with invoke");
 				Debug.LogError(e);
+
 				errorMessage += e.ToString();
 				actionFinished(false);
 			}
