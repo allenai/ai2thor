@@ -30,7 +30,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
         //protected DebugFPSAgentController DebugComponent = null;
         //protected Canvas DebugCanvas = null;
-		private bool continuousMode;
 
 		public ImageSynthesis imageSynthesis;
 
