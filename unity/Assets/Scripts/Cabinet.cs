@@ -173,6 +173,13 @@ public class Cabinet : MonoBehaviour
 
 	void UpdateAnimationInstant(bool open) 
     {
+		if (VisCollider) {
+			VisCollider.gameObject.SetActive(open);
+		} else {
+			// this handles Cabinets
+			ParentObj.Receptacle.VisibilityCollider.gameObject.SetActive(open);
+		}
+
 		switch (OpenStyle) 
         {
 		case CabinetOpenStyle.DoubleDoors:

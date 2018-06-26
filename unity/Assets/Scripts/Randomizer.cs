@@ -27,6 +27,7 @@ public class Randomizer : MonoBehaviour {
 	public Color ColorRangeLow = Color.grey;
 	public Color ColorRangeHigh = Color.white;
 	public float ColorSaturation = 1f;
+	public System.Random rand = null;
 
 	void OnEnable() {
 		Randomize ();
@@ -40,11 +41,20 @@ public class Randomizer : MonoBehaviour {
 			}
 		}
 
+		if (rand == null) {
+			rand = new System.Random (SceneNumber);
+		}
+
 		if (Application.isPlaying) {
 			StartCoroutine (StaggerRandomize ());
 		} else {
 			RandomizeNow ();
 		}
+	}
+
+	public void Randomize (int seed) {
+		rand = new System.Random (seed);
+		Randomize ();
 	}
 
 	IEnumerator StaggerRandomize () {
@@ -81,16 +91,18 @@ public class Randomizer : MonoBehaviour {
 			if (Mats != null && Mats.Length > 0 && TargetRenderers != null && TargetRenderers.Length > 0) {
 				int matNum = SceneNumber % Mats.Length;
 				for (int i = 0; i < TargetRenderers.Length; i++) {
-					Material[] sharedMats = TargetRenderers [i].sharedMaterials;
-					sharedMats[TargetMats[i]] = Mats[matNum];
-					TargetRenderers [i].sharedMaterials = sharedMats;
+					if (TargetRenderers [i] != null) {
+						Material[] sharedMats = TargetRenderers [i].sharedMaterials;
+						sharedMats [TargetMats [i]] = Mats [matNum];
+						TargetRenderers [i].sharedMaterials = sharedMats;
+					}
 				}
 			}
 			break;
 
 		case RandomizerStyle.GameObject:
 			if (TargetGameObjects != null && TargetGameObjects.Length > 0) {
-				int goNum = SceneNumber % TargetGameObjects.Length;
+				int goNum = rand.Next(0, TargetGameObjects.Length);
 				for (int i = 0; i < TargetGameObjects.Length; i++) {
 					TargetGameObjects [i].SetActive (i == goNum);
 				}

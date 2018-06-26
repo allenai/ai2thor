@@ -11,14 +11,16 @@ from collections import deque, defaultdict
 from itertools import product
 import io
 import json
+import copy
 import logging
+import fcntl
 import math
 import time
 import random
 import shlex
 import signal
-import socket
 import subprocess
+import shutil
 import threading
 import os
 import platform
@@ -40,6 +42,7 @@ import ai2thor.downloader
 import ai2thor.server
 from ai2thor.server import queue_get
 from ai2thor._builds import BUILDS
+from ai2thor._quality_settings import QUALITY_SETTINGS, DEFAULT_QUALITY
 
 logger = logging.getLogger(__name__)
 
@@ -63,6 +66,7 @@ RECEPTACLE_OBJECTS = {
                 'ButterKnife',
                 'Candle',
                 'CellPhone',
+                'Cloth',
                 'CoffeeMachine',
                 'Container',
                 'ContainerFull',
@@ -359,7 +363,7 @@ def key_for_point(x, z):
 
 class Controller(object):
 
-    def __init__(self):
+    def __init__(self, quality=DEFAULT_QUALITY, fullscreen=False):
         self.request_queue = Queue(maxsize=1)
         self.response_queue = Queue(maxsize=1)
         self.receptacle_nearest_pivot_points = {}
@@ -371,6 +375,9 @@ class Controller(object):
         self.last_event = None
         self.server_thread = None
         self.killing_unity = False
+        self.quality = quality
+        self.lock_file = None
+        self.fullscreen = fullscreen
 
     def reset(self, scene_name=None):
         self.response_queue.put_nowait(dict(action='Reset', sceneName=scene_name, sequenceId=0))
@@ -383,7 +390,9 @@ class Controller(object):
             random_seed=None,
             randomize_open=False,
             unique_object_types=False,
-            exclude_receptacle_object_pairs=[]):
+            exclude_receptacle_object_pairs=[],
+            max_num_repeats=1,
+            remove_prob=0.5):
 
         receptacle_objects = []
 
@@ -399,9 +408,8 @@ class Controller(object):
         for obj in self.last_event.metadata['objects']:
             pivot_points = self.receptacle_nearest_pivot_points
             # don't put things in pot or pan currently
-            if (pivot_points and obj['receptacle'] \
-                and pivot_points[obj['objectId']].keys()) \
-                or obj['objectType'] in ['Pot', 'Pan']:
+            if (pivot_points and obj['receptacle'] and
+                    pivot_points[obj['objectId']].keys()) or obj['objectType'] in ['Pot', 'Pan']:
 
                 #print("no visible pivots for receptacle %s" % o['objectId'])
                 exclude_object_ids.append(obj['objectId'])
@@ -413,6 +421,8 @@ class Controller(object):
             uniquePickupableObjectTypes=unique_object_types,
             excludeObjectIds=exclude_object_ids,
             excludeReceptacleObjectPairs=exclude_receptacle_object_pairs,
+            maxNumRepeats=max_num_repeats,
+            removeProb=remove_prob,
             randomSeed=random_seed))
 
     def scene_names(self):
@@ -422,6 +432,32 @@ class Controller(object):
                 scenes.append('FloorPlan%s' % i)
 
         return scenes
+
+    def unlock_release(self):
+        if self.lock_file:
+            fcntl.flock(self.lock_file, fcntl.LOCK_UN)
+
+    def lock_release(self):
+        build_dir = os.path.join(self.releases_dir(), self.build_name())
+        if os.path.isdir(build_dir):
+            self.lock_file = open(os.path.join(build_dir, ".lock"), "w")
+            fcntl.flock(self.lock_file, fcntl.LOCK_SH)
+
+    def prune_releases(self):
+        current_exec_path = self.executable_path()
+        for d in os.listdir(self.releases_dir()):
+            release = os.path.join(self.releases_dir(), d)
+
+            if current_exec_path.startswith(release):
+                continue
+
+            if os.path.isdir(release):
+                try:
+                    with open(os.path.join(release, ".lock"), "w") as f:
+                        fcntl.flock(f, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                        shutil.rmtree(release)
+                except Exception as e:
+                    pass
 
     def next_interact_command(self):
         current_buffer = ''
@@ -463,6 +499,7 @@ class Controller(object):
         for a in self.next_interact_command():
             new_commands = {}
             command_counter = dict(counter=1)
+
             def add_command(cc, action, **args):
                 if cc['counter'] < 10:
                     com = dict(action=action)
@@ -495,7 +532,6 @@ class Controller(object):
             print(command_message)
             print("Visible Objects:\n" + "\n".join(sorted(visible_objects)))
 
-
             skip_keys = ['action', 'objectId']
             for k in sorted(new_commands.keys()):
                 v = new_commands[k]
@@ -510,25 +546,36 @@ class Controller(object):
 
                 print(' '.join(command_info))
 
-
     def step(self, action, raise_for_failure=False):
 
         # XXX should be able to get rid of this with some sort of deprecation warning
         if 'AI2THOR_VISIBILITY_DISTANCE' in os.environ:
             action['visibilityDistance'] = float(os.environ['AI2THOR_VISIBILITY_DISTANCE'])
 
-        if action['action'] == 'PutObject':
+        should_fail = False
+        self.last_action = action
+
+        if ('objectId' in action and (action['action'] == 'OpenObject' or action['action'] == 'CloseObject')):
+
+            force_visible = action.get('forceVisible', False)
+            if not force_visible and self.last_event.instance_detections2D and action['objectId'] not in self.last_event.instance_detections2D:
+                should_fail = True
+
+            obj_metadata = self.last_event.get_object(action['objectId'])
+            if obj_metadata is None or obj_metadata['isopen'] == (action['action'] == 'OpenObject'):
+                should_fail = True
+
+        elif action['action'] == 'PutObject':
             receptacle_type = action['receptacleObjectId'].split('|')[0]
             object_type = action['objectId'].split('|')[0]
             if object_type not in RECEPTACLE_OBJECTS[receptacle_type]:
-                new_event = ai2thor.server.Event(
-                    json.loads(json.dumps(self.last_event.metadata)),
-                    self.last_event.image_data)
+                should_fail = True
 
-                new_event.metadata['lastActionSuccess'] = False
-                new_event.metadata['errorCode'] = 'ObjectNotAllowedInReceptacle'
-                self.last_event = new_event
-                return new_event
+        if should_fail:
+            new_event = copy.deepcopy(self.last_event)
+            new_event.metadata['lastActionSuccess'] = False
+            self.last_event = new_event
+            return new_event
 
         assert self.request_queue.empty()
 
@@ -543,6 +590,10 @@ class Controller(object):
 
         self.response_queue.put_nowait(action)
         self.last_event = queue_get(self.request_queue)
+
+        if not self.last_event.metadata['lastActionSuccess'] and self.last_event.metadata['errorCode'] == 'InvalidAction':
+            raise ValueError(self.last_event.metadata['errorMessage'])
+
         if raise_for_failure:
             assert self.last_event.metadata['lastActionSuccess']
 
@@ -551,29 +602,26 @@ class Controller(object):
     def unity_command(self, width, height):
 
         command = self.executable_path()
-        command += " -screen-width %s -screen-height %s" % (width, height)
+        fullscreen = 1 if self.fullscreen else 0
+        command += " -screen-fullscreen %s -screen-quality %s -screen-width %s -screen-height %s" % (fullscreen, QUALITY_SETTINGS[self.quality], width, height)
         return shlex.split(command)
 
     def _start_unity_thread(self, env, width, height, host, port, image_name):
         # get environment variables
-        
+
         env['AI2THOR_CLIENT_TOKEN'] = self.server.client_token = str(uuid.uuid4())
-        env['AI2THOR_VERSION'] = ai2thor._builds.VERSION
         env['AI2THOR_HOST'] = host
         env['AI2THOR_PORT'] = str(port)
-        
-        env['AI2THOR_SCREEN_WIDTH'] = str(width)
-        env['AI2THOR_SCREEN_HEIGHT'] = str(height)
-
 
         # env['AI2THOR_SERVER_SIDE_SCREENSHOT'] = 'True'
 
         # print("Viewer: http://%s:%s/viewer" % (host, port))
+        command = self.unity_command(width, height)
+
         if image_name is not None:
-            self.container_id = ai2thor.docker.run(image_name, env)
+            self.container_id = ai2thor.docker.run(image_name, self.base_dir(), ' '.join(command), env)
             atexit.register(lambda: ai2thor.docker.kill_container(self.container_id))
         else:
-            command = self.unity_command(width, height)
             proc = subprocess.Popen(command, env=env)
             self.unity_pid = proc.pid
             atexit.register(lambda: proc.poll() is None and proc.kill())
@@ -584,15 +632,21 @@ class Controller(object):
     def check_docker(self):
         if self.docker_enabled:
             assert ai2thor.docker.has_docker(), "Docker enabled, but could not find docker binary in path"
-            assert ai2thor.docker.nvidia_version() is not None, "No nvidia driver version found at /proc/driver/nvidia/version - Dockerized THOR is only compatible with hosts with Nvidia cards with a driver installed"
+            assert ai2thor.docker.nvidia_version() is not None,\
+                "No nvidia driver version found at /proc/driver/nvidia/version - Dockerized THOR is only \
+                    compatible with hosts with Nvidia cards with a driver installed"
 
     def check_x_display(self, x_display):
         with open(os.devnull, "w") as dn:
             if subprocess.call(['which', 'xdpyinfo'], stdout=dn) == 0:
-                assert subprocess.call("xdpyinfo", stdout=dn, env=dict(DISPLAY=x_display), shell=True) == 0, ("Invalid DISPLAY %s - cannot find X server with xdpyinfo" % x_display)
+                assert subprocess.call("xdpyinfo", stdout=dn, env=dict(DISPLAY=x_display), shell=True) == 0, \
+                    ("Invalid DISPLAY %s - cannot find X server with xdpyinfo" % x_display)
 
     def _start_server_thread(self):
         self.server.start()
+
+    def releases_dir(self):
+        return os.path.join(self.base_dir(), 'releases')
 
     def base_dir(self):
         return os.path.join(os.path.expanduser('~'), '.ai2thor')
@@ -608,11 +662,10 @@ class Controller(object):
         target_arch = platform.system()
 
         if target_arch == 'Linux':
-            return os.path.join(self.base_dir(), 'releases', self.build_name(), self.build_name())
+            return os.path.join(self.releases_dir(), self.build_name(), self.build_name())
         elif target_arch == 'Darwin':
             return os.path.join(
-                self.base_dir(),
-                'releases',
+                self.releases_dir(),
                 self.build_name(),
                 self.build_name() + ".app",
                 "Contents/MacOS",
@@ -626,9 +679,8 @@ class Controller(object):
             raise Exception("Only 64bit currently supported")
 
         url = BUILDS[platform.system()]['url']
-        releases_dir = os.path.join(self.base_dir(), 'releases')
         tmp_dir = os.path.join(self.base_dir(), 'tmp')
-        makedirs(releases_dir)
+        makedirs(self.releases_dir())
         makedirs(tmp_dir)
 
         if not os.path.isfile(self.executable_path()):
@@ -642,7 +694,7 @@ class Controller(object):
             extract_dir = os.path.join(tmp_dir, self.build_name())
             logger.debug("Extracting zipfile %s" % os.path.basename(url))
             z.extractall(extract_dir)
-            os.rename(extract_dir, os.path.join(releases_dir, self.build_name()))
+            os.rename(extract_dir, os.path.join(self.releases_dir(), self.build_name()))
             # we can lose the executable permission when unzipping a build
             os.chmod(self.executable_path(), 0o755)
         else:
@@ -654,12 +706,12 @@ class Controller(object):
             start_unity=True,
             player_screen_width=300,
             player_screen_height=300,
-            x_display=None,
-            enable_remote_viewer=False):
+            x_display=None):
 
         if 'AI2THOR_VISIBILITY_DISTANCE' in os.environ:
             import warnings
-            warnings.warn("AI2THOR_VISIBILITY_DISTANCE environment variable is deprecated, use the parameter visibilityDistance parameter with the Initialize action instead")
+            warnings.warn("AI2THOR_VISIBILITY_DISTANCE environment variable is deprecated, use \
+                the parameter visibilityDistance parameter with the Initialize action instead")
 
         if player_screen_height < 300 or player_screen_width < 300:
             raise Exception("Screen resolution must be >= 300x300")
@@ -670,27 +722,19 @@ class Controller(object):
         env = os.environ.copy()
 
         image_name = None
-
-        remote_viewer_host = host = '127.0.0.1'
+        host = '127.0.0.1'
 
         if self.docker_enabled:
             self.check_docker()
             host = ai2thor.docker.bridge_gateway()
-            remote_viewer_host = host
-        elif enable_remote_viewer:
-            host = '0.0.0.0'
-            remote_viewer_host = socket.gethostname()
 
         self.server = ai2thor.server.Server(
             self.request_queue,
             self.response_queue,
             host,
-            port=port,
-            threaded=enable_remote_viewer)
+            port=port)
 
         _, port = self.server.wsgi_server.socket.getsockname()
-        if enable_remote_viewer:
-            print("Remote viewer: http://%s:%s/viewer" % (remote_viewer_host, port))
 
         self.server_thread = threading.Thread(target=self._start_server_thread)
 
@@ -712,6 +756,8 @@ class Controller(object):
                     self.check_x_display(env['DISPLAY'])
 
             self.download_binary()
+            self.lock_release()
+            self.prune_releases()
 
             unity_thread = threading.Thread(
                 target=self._start_unity_thread,
@@ -729,6 +775,7 @@ class Controller(object):
         self.server.wsgi_server.shutdown()
         self.stop_container()
         self.stop_unity()
+        self.unlock_release()
 
     def stop_container(self):
         if self.container_id:
@@ -777,7 +824,7 @@ class BFSController(Controller):
         xs = []
         zs = []
 
-            # Follow the file as it grows
+        # Follow the file as it grows
         for point in self.grid_points:
             xs.append(point['x'])
             zs.append(point['z'])
@@ -789,26 +836,26 @@ class BFSController(Controller):
         if not xs:
             return
 
-        min_x = min(xs)  - 1
+        min_x = min(xs) - 1
         max_x = max(xs) + 1
-        min_z = min(zs)  - 1
+        min_z = min(zs) - 1
         max_z = max(zs) + 1
 
         for point in list(points):
             x, z = map(float, point.split(','))
-            circle_x = round(((x - min_x)/float(max_x - min_x)) * image_width)
+            circle_x = round(((x - min_x) / float(max_x - min_x)) * image_width)
             z = (max_z - z) + min_z
-            circle_y = round(((z - min_z)/float(max_z - min_z)) * image_height)
+            circle_y = round(((z - min_z) / float(max_z - min_z)) * image_height)
             cv2.circle(image, (circle_x, circle_y), 5, (0, 255, 0), -1)
 
         cv2.imshow(scene_name, image)
         cv2.waitKey(wait_key)
 
-
     def has_islands(self):
         queue = []
         seen_points = set()
         mag = self.grid_size
+
         def enqueue_island_points(p):
             if json.dumps(p) in seen_points:
                 return
@@ -818,14 +865,13 @@ class BFSController(Controller):
             queue.append(dict(z=p['z'], x=p['x'] - mag))
             seen_points.add(json.dumps(p))
 
-
         enqueue_island_points(self.grid_points[0])
 
         while queue:
             point_to_find = queue.pop()
             for p in self.grid_points:
                 dist = math.sqrt(
-                    ((point_to_find['x'] - p['x']) ** 2) + \
+                    ((point_to_find['x'] - p['x']) ** 2) +
                     ((point_to_find['z'] - p['z']) ** 2))
 
                 if dist < 0.05:
@@ -937,7 +983,7 @@ class BFSController(Controller):
     def enqueue_point(self, point):
 
         # ensure there are no points near the new point
-        threshold = self.grid_size/5.0
+        threshold = self.grid_size / 5.0
         if not any(map(lambda p: distance(p, point.target_point()) < threshold, self.seen_points)):
             self.seen_points.append(point.target_point())
             self.queue.append(point)
@@ -992,7 +1038,6 @@ class BFSController(Controller):
                 dict(receptacleObjectId=receptacle_object_id,
                      objectId=object_id))
 
-
         if randomize:
             self.random_initialize(
                 random_seed=random_seed,
@@ -1000,7 +1045,7 @@ class BFSController(Controller):
                 exclude_receptacle_object_pairs=receptacle_object_pairs)
 
         # there is some randomization in initialize scene
-        # and if a seed is passed in this will keep it 
+        # and if a seed is passed in this will keep it
         # deterministic
         if random_seed is not None:
             random.seed(random_seed)
@@ -1025,8 +1070,7 @@ class BFSController(Controller):
         for gp in self.grid_points:
             found = False
             for x in [1, -1]:
-                found |= key_for_point(gp['x'] +\
-                    (self.grid_size * x), gp['z']) in final_grid_points
+                found |= key_for_point(gp['x'] + (self.grid_size * x), gp['z']) in final_grid_points
 
             for z in [1, -1]:
                 found |= key_for_point(
@@ -1116,7 +1160,6 @@ class BFSController(Controller):
                                         y=point['y'],
                                         z=point['z'])))
 
-
                         if j['openable']:
                             self.step(action=dict(
                                 action='CloseObject',
@@ -1182,8 +1225,7 @@ class BFSController(Controller):
 
         for obj in filter(lambda x: x['receptacle'], self.last_event.metadata['objects']):
             for oid in obj['receptacleObjectIds']:
-                if obj['openable'] or (obj['objectId'] in self.object_receptacle \
-                    and self.object_receptacle[obj['objectId']]['openable']):
+                if obj['openable'] or (obj['objectId'] in self.object_receptacle and self.object_receptacle[obj['objectId']]['openable']):
 
                     open_pickupable[oid] = obj['objectId']
                 else:
@@ -1197,7 +1239,7 @@ class BFSController(Controller):
                 position_target = self.object_receptacle[self.target_objects[0]]['position']
                 position_candidate = self.object_receptacle[oid]['position']
                 dist = math.sqrt(
-                    (position_target['x'] - position_candidate['x']) ** 2 + \
+                    (position_target['x'] - position_candidate['x']) ** 2 +
                     (position_target['y'] - position_candidate['y']) ** 2)
                 # try to find something that is far to avoid having the doors collide
                 if dist > 1.25:
@@ -1235,6 +1277,5 @@ class BFSController(Controller):
 
             self.enqueue_points(event.metadata['agent']['position'])
             self.grid_points.append(event.metadata['agent']['position'])
-
 
         return event

@@ -1,4 +1,3 @@
-import os
 from setuptools import setup, find_packages
 
 exec(open('ai2thor/_version.py').read())
@@ -28,14 +27,14 @@ setup(name='ai2thor',
       author='Allen Institute for Artificial Intelligence',
       author_email='ai2thor@allenai.org',
       license='Apache',
-      packages=find_packages(),
+      packages=find_packages(exclude=["*.tests", "*.tests.*", "tests.*", "tests"]),
       install_requires=[
-          'Pillow',
           'flask',
           'numpy',
+          'pyyaml',
           'requests',
           'progressbar2'
       ],
       setup_requires=['pytest-runner'],
-      tests_require=['pytest'],
+      tests_require=['pytest', 'pytest-cov'],
       include_package_data=False)
