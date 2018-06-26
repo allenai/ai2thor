@@ -17,7 +17,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
     {
 		[SerializeField] protected GameObject[] ToSetActive = null;
 
-		[SerializeField] protected float MaxViewDistancePhysics = 1.7f; //change MaxVisibleDistance of BaseAgent to this value to account for Physics
+		//[SerializeField] protected float MaxViewDistancePhysics = 1.7f; //change MaxVisibleDistance of BaseAgent to this value to account for Physics
 		[SerializeField] protected float PhysicsAgentSkinWidth = 0.04f; //change agent's skin width so that it collides directly with ground - otherwise sweeptests will fail for flat objects on floor
 
 		[SerializeField] protected GameObject AgentHand = null;
@@ -34,6 +34,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 		[SerializeField] protected bool IsHandDefault = true;
 
+
+        //change visibility check to use this distance when looking down
+		protected float DownwardViewDistance = 2.0f;
+    
         // Use this for initialization
         protected override void Start()
         {
@@ -45,7 +49,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			//below, enable all the GameObjects on the Agent that Physics Mode requires
 
             //physics requires max distance to be extended to be able to see objects on ground
-			maxVisibleDistance = MaxViewDistancePhysics;
+			//maxVisibleDistance = MaxViewDistancePhysics;//default maxVisibleDistance is 1.0f
 			gameObject.GetComponent<CharacterController>().skinWidth = PhysicsAgentSkinWidth;
 
 			foreach (GameObject go in ToSetActive)
@@ -99,8 +103,20 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
             Vector3 agentCameraPos = agentCamera.transform.position;
 
+			//Vector3 itemDirection = Vector3.zero;
+			//         //do a raycast in the direction of the item
+			//         itemDirection = (itemTargetPoint - agentCameraPos).normalized;
+			//Vector3 agentForward = agentCamera.transform.forward;
+			//agentForward.y = 0f;
+			//agentForward.Normalize();
+			////clap the angle so we can't wrap around
+			//float maxDistanceLerp = 0f;
+			//float lookAngle = Mathf.Clamp(Vector3.Angle(agentForward, itemDirection), 0f, MaxDownwardLookAngle) - MinDownwardLooKangle;
+			//maxDistanceLerp = lookAngle / MaxDownwardLookAngle;
+			//maxDistance = Mathf.Lerp(maxDistance, maxDistance * DownwardRangeExtension, maxDistanceLerp);
+
             //get all sim objects in range around us
-            Collider[] colliders_in_view = Physics.OverlapSphere(agentCameraPos, maxDistance,
+			Collider[] colliders_in_view = Physics.OverlapSphere(agentCameraPos, maxDistance * DownwardViewDistance,
                                                          1 << 8, QueryTriggerInteraction.Collide); //layermask is 8
 
             if (colliders_in_view != null)
@@ -173,10 +189,29 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         float ViewPointRangeLow = 0.0f;
 
                         //check if the interaction point is within the viewport
-                        if (viewPoint.z > 0 && viewPoint.z < maxDistance //is in front of camera and within range of visibility sphere
+						if (viewPoint.z > 0 //&& viewPoint.z < maxDistance * DownwardViewDistance //is in front of camera and within range of visibility sphere
                             && viewPoint.x < ViewPointRangeHigh && viewPoint.x > ViewPointRangeLow//within x bounds of viewport
                             && viewPoint.y < ViewPointRangeHigh && viewPoint.y > ViewPointRangeLow)//within y bounds of viewport
-						{                        
+						{   
+                            ////down extension stuff
+							float MaxDownwardLookAngle = 60f;
+                            float MinDownwardLookAngle = 15f;
+                            
+                            Vector3 itemDirection = Vector3.zero;
+                            //do a raycast in the direction of the item
+                            itemDirection = (ip.position - agentCamera.transform.position).normalized;
+                            Vector3 agentForward = agentCamera.transform.forward;
+                            agentForward.y = 0f;
+                            agentForward.Normalize();
+                            //clap the angle so we can't wrap around
+                            float maxDistanceLerp = 0f;
+                            float lookAngle = Mathf.Clamp(Vector3.Angle(agentForward, itemDirection), 0f, MaxDownwardLookAngle) - MinDownwardLookAngle;
+                            maxDistanceLerp = lookAngle / MaxDownwardLookAngle;
+                            maxDistance = Mathf.Lerp(maxDistance, maxDistance * DownwardViewDistance, maxDistanceLerp);
+
+
+                            //down extension stuff ends
+
 							//sweep test from agent's hand to each Interaction point
                             RaycastHit hit;
                             if (HandRB.SweepTest(ip.position - AgentHand.transform.position, out hit, maxDistance))
@@ -245,15 +280,33 @@ namespace UnityStandardAssets.Characters.FirstPerson
             float ViewPointRangeHigh = 1.0f;
             float ViewPointRangeLow = 0.0f;
             
-            if (viewPoint.z > 0 && viewPoint.z < maxDistance //is in front of camera and within range of visibility sphere
+			if (viewPoint.z > 0 //&& viewPoint.z < maxDistance * DownwardViewDistance //is in front of camera and within range of visibility sphere
                 && viewPoint.x < ViewPointRangeHigh && viewPoint.x > ViewPointRangeLow//within x bounds of viewport
                 && viewPoint.y < ViewPointRangeHigh && viewPoint.y > ViewPointRangeLow)//within y bounds of viewport
             {
+
+                ///////downard max distance extension here
+				float MaxDownwardLookAngle = 60f;
+				float MinDownwardLookAngle = 15f;
+
+				Vector3 itemDirection = Vector3.zero;
+                         //do a raycast in the direction of the item
+				itemDirection = (point.position - agentCamera.transform.position).normalized;
+                Vector3 agentForward = agentCamera.transform.forward;
+                agentForward.y = 0f;
+                agentForward.Normalize();
+                //clap the angle so we can't wrap around
+                float maxDistanceLerp = 0f;
+                float lookAngle = Mathf.Clamp(Vector3.Angle(agentForward, itemDirection), 0f, MaxDownwardLookAngle) - MinDownwardLookAngle;
+                maxDistanceLerp = lookAngle / MaxDownwardLookAngle;
+				maxDistance = Mathf.Lerp(maxDistance, maxDistance * DownwardViewDistance, maxDistanceLerp);
+
+                ///////end downward max distance stuff
                 
 				//now cast a ray out toward the point, if anything occludes this point, that point is not visible
 				RaycastHit hit;
 				if(Physics.Raycast(agentCamera.transform.position, point.position - agentCamera.transform.position, out hit, 
-                   Vector3.Distance(point.position,agentCamera.transform.position), 1<<8))//layer mask automatically excludes Agent from this check
+                   maxDistance /*Vector3.Distance(point.position,agentCamera.transform.position)*/, 1<<8))//layer mask automatically excludes Agent from this check
 				{
 					//print(hit.transform.name);
                     if(hit.transform.name != sop.name)

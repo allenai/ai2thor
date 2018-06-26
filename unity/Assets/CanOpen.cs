@@ -71,6 +71,11 @@ public class CanOpen : MonoBehaviour
 			return 0.0f;
 	}
 
+    public bool GetisOpen()
+	{
+		return isOpen;
+	}
+
     //trigger enter/exit functions reset the animation if the Agent is hit by the object opening
 	public void OnTriggerEnter(Collider other)
 	{
