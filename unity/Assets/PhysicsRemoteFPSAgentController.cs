@@ -1125,7 +1125,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 				RotateRLPivots[i].transform.localRotation = Quaternion.Euler(Vector3.zero);
 			}
 
-            //set the size of all RotateRL trigger boxes to the Rotation Collider's dimesnions
+            //set the size of all RotateRL trigger boxes to the Rotate Agent Collider's dimesnions
 			for (int i = 0 ; i < RotateRLTriggerBoxes.Length; i++)
 			{
 				RotateRLTriggerBoxes[i].transform.position = HeldItemBox.transform.position;
