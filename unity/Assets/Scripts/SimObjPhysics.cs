@@ -4,16 +4,16 @@ using UnityEngine;
 
 public class SimObjPhysics : MonoBehaviour
 {
-    
+
 	[SerializeField]
 	public string UniqueID = string.Empty;
 
 	[SerializeField]
-    public SimObjType Type = SimObjType.Undefined;
+	public SimObjType Type = SimObjType.Undefined;
 
 	[SerializeField]
 	public SimObjPrimaryProperty PrimaryProperty;
-    
+
 	[SerializeField]
 	public SimObjSecondaryProperty[] SecondaryProperties;
 
@@ -31,8 +31,11 @@ public class SimObjPhysics : MonoBehaviour
 	public GameObject[] MyColliders = null;
 
 	[SerializeField]
-    public GameObject[] MyTriggerColliders = null;
-   
+	public GameObject[] MyTriggerColliders = null;
+
+	[SerializeField]
+	public GameObject ReceptacleTriggerBox = null;
+
 	public bool isVisible = false;
 	public bool isInteractable = false;
 	public bool isColliding = false;
@@ -47,30 +50,75 @@ public class SimObjPhysics : MonoBehaviour
 		//Generate_UniqueID();
 		//startPosition = transform.position;
 
-        //maybe we can set these up more efficiently here....
+		//maybe we can set these up more efficiently here....
 
 
 	}
-   
+
 	// Update is called once per frame
 	void Update()
 	{
-  		//this is overriden by the Agent when doing the Visibility Sphere test
+		//this is overriden by the Agent when doing the Visibility Sphere test
 		isVisible = false;
 		isInteractable = false;
+
+		//if (Input.GetKeyDown(KeyCode.E))
+        //{
+        //    Contains();
+        //}
 	}
 
 	private void FixedUpdate()
 	{
 		isColliding = false;
-        
+
 	}
-    
+
 	public void ApplyForce(ServerAction action)
 	{
 		Vector3 dir = new Vector3(action.x, action.y, action.z);
 		Rigidbody myrb = gameObject.GetComponent<Rigidbody>();
 		myrb.AddForce(dir * action.moveMagnitude);
+	}
+
+    //if this is a receptacle object, check what is inside the Receptacle
+    //make sure to return array of strings so that this info can be put into MetaData
+	public List<string> Contains()
+	{
+		List<SimObjSecondaryProperty> sspList = new List<SimObjSecondaryProperty>(SecondaryProperties);
+
+        List<string> objs = new List<string>();
+
+        //is this object a receptacle?
+		if(sspList.Contains(SimObjSecondaryProperty.Receptacle))
+		{
+			if (ReceptacleTriggerBox != null)
+            {
+                objs = ReceptacleTriggerBox.GetComponent<Contains>().CurrentlyContainedUniqueIDs();
+
+				#if UNITY_EDITOR
+                //print the objs for now just to check in editor
+                foreach(string s in objs)
+				{
+					print(s);
+				}
+				#endif
+
+                return objs;
+            }
+
+            else
+            {
+                Debug.Log("No Receptacle Trigger Box!");
+                return objs;
+            }
+		}
+
+		else
+        {
+            Debug.Log("No Receptacle Trigger Box!");
+            return objs;
+        }
 	}
 
 	//private void Generate_UniqueID()
@@ -85,21 +133,26 @@ public class SimObjPhysics : MonoBehaviour
 	public void OnTriggerStay(Collider other)
 	{
 		//make sure nothing is dropped while inside the agent (the agent will try to "push(?)" it out and it will fall in unpredictable ways
-		if(other.tag == "Player" && other.name == "FPSController")
+		if (other.tag == "Player" && other.name == "FPSController")
 		{
 			isColliding = true;
 		}
 
-        //ignore the trigger boxes the agent is using to check rotation, otherwise the object is colliding
+		//ignore the trigger boxes the agent is using to check rotation, otherwise the object is colliding
 		if (other.tag != "Player")
 		{
 			isColliding = true;
 			//print(this.name +" is touching " + other.name);
 		}
+
+        if(other.tag == "Receptacle")
+		{
+			isColliding = false;
+		}
 		//print(transform.name + "aaaah");
 	}
 
-    #if UNITY_EDITOR
+#if UNITY_EDITOR
 	void OnDrawGizmos()
 	{
 		Gizmos.color = Color.white;
@@ -118,14 +171,87 @@ public class SimObjPhysics : MonoBehaviour
 			Gizmos.color = Color.magenta;
 			Gizmos.DrawWireMesh(mf.sharedMesh, -1, mf.transform.position, mf.transform.rotation, mf.transform.lossyScale);
 		}
-      
+
 	}
-    #endif
+#endif
 
-    //CONTEXT MENU STUFF FOR SETTING UP SIM OBJECTS
-    //RIGHT CLICK this script in the inspector to reveal these options
+	//CONTEXT MENU STUFF FOR SETTING UP SIM OBJECTS
+	//RIGHT CLICK this script in the inspector to reveal these options
+	[ContextMenu("Set Up SimObjPhysics")]
+    void ContextSetUpSimObjPhysics()
+	{
+		//set up this object ot have the right tag and layer
+		gameObject.tag = "SimObjPhysics";
+		gameObject.layer = 8;
 
-	[ContextMenu("Set Up Colliders")]
+		if (!gameObject.GetComponent<Rigidbody>())
+			gameObject.AddComponent<Rigidbody>();
+        
+		if(!gameObject.transform.Find("Colliders"))
+		{
+			GameObject c = new GameObject("Colliders");
+            c.transform.position = gameObject.transform.position;
+            c.transform.SetParent(gameObject.transform);
+
+			GameObject cc = new GameObject("Col");
+			cc.transform.position = c.transform.position;
+			cc.transform.SetParent(c.transform);
+		}
+
+		if (!gameObject.transform.Find("TriggerColliders"))
+		{
+			//empty to hold all Trigger Colliders
+			GameObject tc = new GameObject("TriggerColliders");
+			tc.transform.position = gameObject.transform.position;
+			tc.transform.SetParent(gameObject.transform);
+
+            //create first trigger collider to work with
+			GameObject tcc = new GameObject("tCol");
+			tcc.transform.position = tc.transform.position;
+			tcc.transform.SetParent(tc.transform);
+   		}
+
+		if (!gameObject.transform.Find("VisibilityPoints"))
+		{
+			//empty to hold all visibility points
+			GameObject vp = new GameObject("VisibilityPoints");
+			vp.transform.position = gameObject.transform.position;
+			vp.transform.SetParent(gameObject.transform);
+
+            //create first Visibility Point to work with
+			GameObject vpc = new GameObject("vPoint");
+			vpc.transform.position = vp.transform.position;
+			vpc.transform.SetParent(vp.transform);
+		}
+
+		if (!gameObject.transform.Find("InteractionPoints"))
+		{
+			//empty to hold all interaction points
+			GameObject ip = new GameObject("InteractionPoints");
+			ip.transform.position = gameObject.transform.position;
+			ip.transform.SetParent(gameObject.transform);
+
+            //create the first Interaction Point to work with
+			GameObject ipc = new GameObject("iPoint");
+			ipc.transform.position = ip.transform.position;
+			ipc.transform.SetParent(ip.transform);
+		}
+
+		if (!gameObject.transform.Find("RotateAgentCollider"))
+		{         
+			GameObject rac = new GameObject("RotateAgentCollider");
+			rac.transform.position = gameObject.transform.position;
+			rac.transform.SetParent(gameObject.transform);
+		}
+      
+		ContextSetUpColliders();
+		ContextSetUpTriggerColliders();
+		ContextSetUpVisibilityPoints();
+		ContextSetUpInteractionPoints();
+		ContextSetUpRotateAgentCollider();
+	}
+
+	//[ContextMenu("Set Up Colliders")]
     void ContextSetUpColliders()
     {
         if (transform.Find("Colliders"))
@@ -138,13 +264,25 @@ public class SimObjPhysics : MonoBehaviour
             {
                 //list.toarray
                 listColliders.Add(child.gameObject);
+
+				//set correct tag and layer for each object
+                //also ensure all colliders are NOT trigger
+                child.gameObject.tag = "SimObjPhysics";
+                child.gameObject.layer = 8;
+
+				if(child.GetComponent<Collider>())
+				{
+					child.GetComponent<Collider>().enabled = true;
+                    child.GetComponent<Collider>().isTrigger = false;
+				}
+
             }
 
             MyColliders = listColliders.ToArray();
         }
     }
 
-    [ContextMenu("Set Up TriggerColliders")]
+    //[ContextMenu("Set Up TriggerColliders")]
     void ContextSetUpTriggerColliders()
     {
         if (transform.Find("TriggerColliders"))
@@ -157,13 +295,25 @@ public class SimObjPhysics : MonoBehaviour
             {
                 //list.toarray
                 listtc.Add(child.gameObject);
+
+				//set correct tag and layer for each object
+                //also ensure all colliders are set to trigger
+                child.gameObject.tag = "SimObjPhysics";
+                child.gameObject.layer = 8;
+
+				if(child.GetComponent<Collider>())
+				{
+					child.GetComponent<Collider>().enabled = true;
+                    child.GetComponent<Collider>().isTrigger = true;
+				}
+
             }
 
             MyTriggerColliders = listtc.ToArray();
         }
     }
 
-    [ContextMenu("Set Up VisibilityPoints")]
+   // [ContextMenu("Set Up VisibilityPoints")]
     void ContextSetUpVisibilityPoints()
     {
         if (transform.Find("VisibilityPoints"))
@@ -175,13 +325,17 @@ public class SimObjPhysics : MonoBehaviour
             foreach (Transform child in vp)
             {
                 vplist.Add(child);
+
+				//set correct tag and layer for each object
+                child.gameObject.tag = "Untagged";
+                child.gameObject.layer = 8;
             }
 
             VisibilityPoints = vplist.ToArray();
         }
     }
 
-    [ContextMenu("Set Up Interaction Points")]
+    //[ContextMenu("Set Up Interaction Points")]
     void ContextSetUpInteractionPoints()
     {
         if (transform.Find("InteractionPoints"))
@@ -193,18 +347,32 @@ public class SimObjPhysics : MonoBehaviour
             foreach (Transform child in ip)
             {
                 iplist.Add(child);
+
+                //set correct tag and layer for each object
+				child.gameObject.tag = "Untagged";
+				child.gameObject.layer = 8;
             }
 
             InteractionPoints = iplist.ToArray();
         }
     }
 
-    [ContextMenu("Set Up Rotate Agent Collider")]
+    //[ContextMenu("Set Up Rotate Agent Collider")]
     void ContextSetUpRotateAgentCollider()
     {
         if (transform.Find("RotateAgentCollider"))
         {
             RotateAgentCollider = transform.Find("RotateAgentCollider").gameObject;
+
+            //This collider is used as a size reference for the Agent's Rotation checking boxes, so it does not need
+            //to be enabled. To ensure this doesn't interact with anything else, set the Tag to Untagged, the layer to 
+            //SimObjInvisible, and disable this component. Component values can still be accessed if the component itself
+            //is not enabled.
+			RotateAgentCollider.tag = "Untagged";
+			RotateAgentCollider.layer = 9;//layer 9 - SimObjInvisible
+
+			if(RotateAgentCollider.GetComponent<BoxCollider>())
+			RotateAgentCollider.GetComponent<BoxCollider>().enabled = false;
         }
     }
 

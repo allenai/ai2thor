@@ -14,8 +14,8 @@ class CreatePrefabFromSelected
 		GameObject obj = Selection.activeGameObject;
 		string name = obj.name;
 
-		Object prefab = EditorUtility.CreateEmptyPrefab("Assets/" + name + ".prefab");
-		EditorUtility.ReplacePrefab(obj, prefab);
+		Object prefab = PrefabUtility.CreateEmptyPrefab("Assets/" + name + ".prefab"); //EditorUtility.CreateEmptyPrefab("Assets/" + name + ".prefab");
+		PrefabUtility.ReplacePrefab(obj, prefab); //EditorUtility.ReplacePrefab(obj, prefab);
 		AssetDatabase.Refresh();
 	}
 
