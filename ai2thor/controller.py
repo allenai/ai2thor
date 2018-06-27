@@ -638,8 +638,13 @@ class Controller(object):
 
     def check_x_display(self, x_display):
         with open(os.devnull, "w") as dn:
+            # copying the environment so that we pickup
+            # XAUTHORITY values
+            env = os.environ.copy()
+            env['DISPLAY'] = x_display
+
             if subprocess.call(['which', 'xdpyinfo'], stdout=dn) == 0:
-                assert subprocess.call("xdpyinfo", stdout=dn, env=dict(DISPLAY=x_display), shell=True) == 0, \
+                assert subprocess.call("xdpyinfo", stdout=dn, env=env, shell=True) == 0, \
                     ("Invalid DISPLAY %s - cannot find X server with xdpyinfo" % x_display)
 
     def _start_server_thread(self):
