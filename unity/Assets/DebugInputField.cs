@@ -215,7 +215,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 						}
 
 						else
-						    action.moveMagnitude = 0.25f;
+						    action.moveMagnitude = 0.1f;
 						
 						action.x = 0f;
 						action.y = 0f;
@@ -239,7 +239,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         }
 
                         else
-                            action.moveMagnitude = 0.25f;
+                            action.moveMagnitude = 0.1f;
 						
                         action.x = 0f;
                         action.y = 0f;
@@ -261,7 +261,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         }
 
                         else
-                            action.moveMagnitude = 0.25f;
+                            action.moveMagnitude = 0.1f;
 						
                         action.x = -1f;
                         action.y = 0f;
@@ -283,7 +283,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         }
 
                         else
-                            action.moveMagnitude = 0.25f;
+                            action.moveMagnitude = 0.1f;
 						
                         action.x = 1f;
                         action.y = 0f;
@@ -305,7 +305,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         }
 
                         else
-                            action.moveMagnitude = 0.25f;
+                            action.moveMagnitude = 0.1f;
 						
                         action.x = 0f;
                         action.y = 1f;
@@ -320,14 +320,14 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     {
 						ServerAction action = new ServerAction();
                         action.action = "MoveHandMagnitude";
-
+                        
                         if (splitcommand.Length > 1)
                         {
                             action.moveMagnitude = float.Parse(splitcommand[1]);
                         }
 
                         else
-                            action.moveMagnitude = 0.25f;
+                            action.moveMagnitude = 0.1f;
 						
                         action.x = 0f;
                         action.y = -1f;

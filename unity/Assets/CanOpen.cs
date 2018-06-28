@@ -14,7 +14,7 @@ public class CanOpen : MonoBehaviour
 	//[SerializeField] TriggerColliderCheck CabinetTrigger = null;      private enum MovementType { Slide, Rotate } ;      [SerializeField] private MovementType movementType;      void Start ()      {
 		iTween.Init(gameObject);//init itween cuase the documentation said so?
          iTweenArgs = iTween.Hash();         iTweenArgs.Add("position", openPosition);         iTweenArgs.Add("time", animationTime);         iTweenArgs.Add("islocal", true);         
-        //if we want to start in open position, initialize here?         if(isOpen)         {             iTweenArgs["position"] = openPosition;             iTweenArgs["time"] = 0f;             iTween.MoveTo(gameObject, iTweenArgs);             iTweenArgs["time"] = animationTime;          }     }      // Update is called once per frame     void Update ()      {         if(Input.GetKeyDown(KeyCode.E))         { 			//Interact();         }     }
+        //if we want to start in open position, initialize here?         if(isOpen)         {             iTweenArgs["position"] = openPosition;             iTweenArgs["time"] = 0f;             iTween.MoveTo(gameObject, iTweenArgs);             iTweenArgs["time"] = animationTime;          }     }      // Update is called once per frame     void Update ()      {         if(Input.GetKeyDown(KeyCode.E))         { 			Interact();         }     }
 
     public void SetOpenPercent(float val)
 	{
@@ -40,7 +40,7 @@ public class CanOpen : MonoBehaviour
 			iTweenArgs["position"] = openPosition * openPercentage;
 			iTweenArgs["rotation"] = openPosition * openPercentage;
                      
-			Debug.Log("the " + gameObject.GetComponent<SimObjPhysics>().UniqueID + " is open " + openPercentage * 100 + "%");
+			//Debug.Log("the " + gameObject.GetComponent<SimObjPhysics>().UniqueID + " is open " + openPercentage * 100 + "%");
         }
         
 
@@ -71,9 +71,17 @@ public class CanOpen : MonoBehaviour
 			return 0.0f;
 	}
 
+    public bool GetisOpen()
+	{
+		return isOpen;
+	}
+
     //trigger enter/exit functions reset the animation if the Agent is hit by the object opening
 	public void OnTriggerEnter(Collider other)
 	{
+		//if(other.GetComponentInParent<SimObjPhysics>())
+		//print(other.name);
+		
 		if (other.name == "FPSController" && canReset == true)
 		{
 			//print("AAAAAH");
