@@ -29,10 +29,6 @@ public class ImageSynthesis : MonoBehaviour {
 
 		//new CapturePass() { name = "_normals"},
 		//new CapturePass() { name = "_flow", supportsAntialiasing = false, needsRescale = true }, // (see issue with Motion Vectors in @KNOWN ISSUES)
-
-
-		//new CapturePass() { name = "_position" },
-
 	};
 
 	struct CapturePass {
@@ -85,11 +81,10 @@ public class ImageSynthesis : MonoBehaviour {
 		if (!opticalFlowShader)
 			opticalFlowShader = Shader.Find("Hidden/OpticalFlow");
 
-		if (!depthShader)
-			depthShader = Shader.Find("Hidden/Depths");
-
-		if (!positionShader)
-			positionShader = Shader.Find("Hidden/World");
+		depthShader = Shader.Find("Hidden/Depth");
+		#if UNITY_EDITOR
+		depthShader = Shader.Find("Hidden/DepthBW");
+		#endif
 		
 		opticalFlowSensitivity = 50.0f;
 
