@@ -30,9 +30,6 @@ public class ImageSynthesis : MonoBehaviour {
 		//new CapturePass() { name = "_normals"},
 		//new CapturePass() { name = "_flow", supportsAntialiasing = false, needsRescale = true }, // (see issue with Motion Vectors in @KNOWN ISSUES)
 
-
-		//new CapturePass() { name = "_position" },
-
 	};
 
 	struct CapturePass {
@@ -58,7 +55,6 @@ public class ImageSynthesis : MonoBehaviour {
 	public Shader uberReplacementShader;
 	public Shader opticalFlowShader;
 	public Shader depthShader;
-	public Shader positionShader;
 
 
 	public Dictionary<Color, string> colorIds;
@@ -85,11 +81,10 @@ public class ImageSynthesis : MonoBehaviour {
 		if (!opticalFlowShader)
 			opticalFlowShader = Shader.Find("Hidden/OpticalFlow");
 
-		if (!depthShader)
-			depthShader = Shader.Find("Hidden/Depths");
-
-		if (!positionShader)
-			positionShader = Shader.Find("Hidden/World");
+		depthShader = Shader.Find("Hidden/Depth");
+		#if UNITY_EDITOR 
+		depthShader = Shader.Find("Hidden/DepthBW");
+		#endif
 		
 		opticalFlowSensitivity = 50.0f;
 
@@ -206,13 +201,6 @@ public class ImageSynthesis : MonoBehaviour {
 		//SetupCameraWithReplacementShader(capturePasses[4].camera, uberReplacementShader, ReplacelementModes.Normals);
 		//SetupCameraWithPostShader(capturePasses[5].camera, opticalFlowMaterial, DepthTextureMode.Depth | DepthTextureMode.MotionVectors);
 
-
-		/*
-		SetupCameraWithReplacementShader(capturePasses[2].camera, uberReplacementShader, ReplacelementModes.Normals);
-		SetupCameraWithPostShader(capturePasses[3].camera, opticalFlowMaterial, DepthTextureMode.Depth | DepthTextureMode.MotionVectors);
-
-		SetupCameraWithReplacementShader(capturePasses[6].camera, positionShader);
-		*/
 
 	}
 

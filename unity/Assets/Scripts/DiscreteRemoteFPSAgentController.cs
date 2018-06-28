@@ -33,7 +33,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		private Dictionary<string, SimObj> inventory = new Dictionary<string, SimObj>();
 
         protected DebugFPSAgentController DebugComponent = null;
-		public ImageSynthesis imageSynthesis;
         protected Canvas DebugCanvas = null;
 
 		// Initialize parameters from environment variables
@@ -108,11 +107,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
 				gridSize = action.gridSize;
 				StartCoroutine(checkInitializeAgentLocationAction());
 			}
-		}
-
-		private void enableImageSynthesis() {
-			imageSynthesis = this.gameObject.GetComponentInChildren<ImageSynthesis> () as ImageSynthesis;
-			imageSynthesis.enabled = true;			
 		}
 
 		public override MetadataWrapper generateMetadataWrapper() {
