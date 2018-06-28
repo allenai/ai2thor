@@ -120,7 +120,6 @@ class Event(object):
 
     def process_colors(self):
         for color_data in self.metadata['colors']:
-            name = ''.join([x for x in color_data['name'] if x.isalpha()])  # Keep only alpha chars
             name = color_data['name']
             c_key = tuple(color_data['color'])
             self.color_to_object_id[c_key] = name
