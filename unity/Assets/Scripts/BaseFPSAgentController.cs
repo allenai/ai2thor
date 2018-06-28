@@ -69,6 +69,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		protected string errorMessage;
 		protected ServerActionErrorCode errorCode;
 		public bool actionComplete;
+		public ImageSynthesis imageSynthesis;
+
 
 
 		// Vector3 m_OriginalCameraPosition;
@@ -139,8 +141,15 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			// record initial positions and rotations
 			init_position = transform.position;
 			init_rotation = transform.rotation;
-
+			#if UNITY_EDITOR
+			this.enableImageSynthesis();
+			#endif
 			//allowNodes = false;
+		}
+
+		protected void enableImageSynthesis() {
+			imageSynthesis = this.gameObject.GetComponentInChildren<ImageSynthesis> () as ImageSynthesis;
+			imageSynthesis.enabled = true;			
 		}
 
 
