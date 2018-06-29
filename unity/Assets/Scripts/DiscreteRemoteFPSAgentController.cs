@@ -84,7 +84,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 			this.continuousMode = action.continuous;
 
-			if (action.renderDepthImage || action.renderClassImage || action.renderObjectImage) {
+			if (action.renderDepthImage || action.renderClassImage || action.renderObjectImage || action.renderNormalsImage) {
 				this.enableImageSynthesis ();
 			}
 
