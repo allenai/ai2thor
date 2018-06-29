@@ -698,6 +698,26 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 result = false;
                 return result;
             }
+            
+			//check that no objects are blocking sight of the target position (egg in cabinet check)
+			//RaycastHit hit;
+			//if (Physics.Raycast(agentCamera.transform.position, point.position - agentCamera.transform.position, out hit,
+			//maxDistance /*Vector3.Distance(point.position,agentCamera.transform.position)*/, 1 << 8))
+
+			//raycast out to the target position, and see if it reached there? If anything blocked it... hmm. compare magnitude?
+            //
+			RaycastHit test;
+			if(Physics.Raycast(m_Camera.transform.position, targetPosition - m_Camera.transform.position, out test,
+			                   Vector3.Distance(targetPosition, m_Camera.transform.position), 1<<8))
+			{
+				//print(test.collider.name);
+				//print("ICANSEEYOU");
+			}
+			else
+			{
+				//print("WHEREAREYOU");
+			}
+
 
             //ok now actually check if the Agent Hand holding ItemInHand can move to the target position without
             //being obstructed by anything
