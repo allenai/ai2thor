@@ -678,9 +678,11 @@ namespace UnityStandardAssets.Characters.FirstPerson
             }
 
 			Vector3 targetPosition = new Vector3(action.x, action.y, action.z);
-           
+
+            //XXX might need to extend this range to reach down into low drawers/cabinets?
+			//print(Vector3.Distance(gameObject.transform.position, targetPosition));
 			//now check if the target position is within bounds of the Agent's forward (z) view
-			if (Vector3.Distance(gameObject.transform.position, targetPosition) > maxVisibleDistance)// + 0.3)
+			if (Vector3.Distance(m_Camera.transform.position, targetPosition) > maxVisibleDistance)// + 0.3)
             {
                 Debug.Log("The target position is out of range");
                 result = false;
@@ -697,27 +699,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 Debug.Log("The target position is not in the Agent's Viewport!");
                 result = false;
                 return result;
-            }
-            
-			//check that no objects are blocking sight of the target position (egg in cabinet check)
-			//RaycastHit hit;
-			//if (Physics.Raycast(agentCamera.transform.position, point.position - agentCamera.transform.position, out hit,
-			//maxDistance /*Vector3.Distance(point.position,agentCamera.transform.position)*/, 1 << 8))
-
-			//raycast out to the target position, and see if it reached there? If anything blocked it... hmm. compare magnitude?
-            //
-			RaycastHit test;
-			if(Physics.Raycast(m_Camera.transform.position, targetPosition - m_Camera.transform.position, out test,
-			                   Vector3.Distance(targetPosition, m_Camera.transform.position), 1<<8))
-			{
-				//print(test.collider.name);
-				//print("ICANSEEYOU");
-			}
-			else
-			{
-				//print("WHEREAREYOU");
-			}
-
+            }         
 
             //ok now actually check if the Agent Hand holding ItemInHand can move to the target position without
             //being obstructed by anything
