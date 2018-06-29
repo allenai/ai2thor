@@ -92,6 +92,7 @@ class Event(object):
 
         self.frame = None
         self.depth_frame = None
+        self.normals_frame = None
 
         self.color_to_object_id = {}
         self.object_id_to_color = {}
@@ -176,6 +177,9 @@ class Event(object):
         image_depth_out *= 10.0 / 256.0 * 1000  # converts to meters then to mm
         image_depth_out[image_depth_out > MAX_DEPTH] = MAX_DEPTH
         self.depth_frame = image_depth_out.astype(np.float32)
+
+    def add_image_normals(self, image_normals_data):
+        self.normals_frame = read_buffer_image(image_normals_data, self.screen_width, self.screen_height)
 
     def add_image(self, image_data):
         self.frame = read_buffer_image(image_data, self.screen_width, self.screen_height)
@@ -336,8 +340,10 @@ class Server(object):
                     image=e.add_image,
                     image_depth=e.add_image_depth,
                     image_ids=e.add_image_ids,
-                    image_classes=e.add_image_classes
+                    image_classes=e.add_image_classes,
+                    image_normals=e.add_image_normals
                 )
+
                 for key in image_mapping.keys():
                     if key in form.files:
                         image_mapping[key](form.files[key][i])

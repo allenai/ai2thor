@@ -27,7 +27,7 @@ public class ImageSynthesis : MonoBehaviour {
 		new CapturePass() { name = "_id", supportsAntialiasing = false },
 		new CapturePass() { name = "_class", supportsAntialiasing = false },
 
-		//new CapturePass() { name = "_normals"},
+		new CapturePass() { name = "_normals"},
 		//new CapturePass() { name = "_flow", supportsAntialiasing = false, needsRescale = true }, // (see issue with Motion Vectors in @KNOWN ISSUES)
 
 
@@ -203,14 +203,11 @@ public class ImageSynthesis : MonoBehaviour {
 		SetupCameraWithReplacementShader(capturePasses[3].camera, uberReplacementShader, ReplacelementModes.CatergoryId);
 
 
-		//SetupCameraWithReplacementShader(capturePasses[4].camera, uberReplacementShader, ReplacelementModes.Normals);
+		SetupCameraWithReplacementShader(capturePasses[4].camera, uberReplacementShader, ReplacelementModes.Normals);
 		//SetupCameraWithPostShader(capturePasses[5].camera, opticalFlowMaterial, DepthTextureMode.Depth | DepthTextureMode.MotionVectors);
 
 
 		/*
-		SetupCameraWithReplacementShader(capturePasses[2].camera, uberReplacementShader, ReplacelementModes.Normals);
-		SetupCameraWithPostShader(capturePasses[3].camera, opticalFlowMaterial, DepthTextureMode.Depth | DepthTextureMode.MotionVectors);
-
 		SetupCameraWithReplacementShader(capturePasses[6].camera, positionShader);
 		*/
 

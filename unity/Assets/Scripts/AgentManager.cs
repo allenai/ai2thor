@@ -23,6 +23,7 @@ public class AgentManager : MonoBehaviour
 	private bool renderDepthImage;
 	private bool renderClassImage;
 	private bool renderObjectImage;
+	private bool renderNormalsImage;
 	
 
 	private bool readyToEmit;
@@ -74,6 +75,7 @@ public class AgentManager : MonoBehaviour
 		this.renderImage = action.renderImage;
 		this.renderClassImage = action.renderClassImage;
 		this.renderDepthImage = action.renderDepthImage;
+		this.renderNormalsImage = action.renderNormalsImage;
 		this.renderObjectImage = action.renderObjectImage;
 
 
@@ -205,17 +207,6 @@ public class AgentManager : MonoBehaviour
 		}
 	}
 
-	private void addDepthImageForm(WWWForm form, DiscreteRemoteFPSAgentController agent) {
-		if (this.renderDepthImage) {
-			if (!agent.imageSynthesis.hasCapturePass ("_depth")) {
-				Debug.LogError ("Depth image not available - returning empty image");
-			}
-
-			byte[] bytes = agent.imageSynthesis.Encode ("_depth");
-			form.AddBinaryData ("image_depth", bytes);
-		}
-	}
-
 	private void addObjectImageForm(WWWForm form, DiscreteRemoteFPSAgentController agent, ref MetadataWrapper metadata) {
 		if (this.renderObjectImage) {
 			if (!agent.imageSynthesis.hasCapturePass("_id")) {
@@ -278,15 +269,17 @@ public class AgentManager : MonoBehaviour
 		}
 	}
 
-	private void addClassImageForm (WWWForm form, DiscreteRemoteFPSAgentController agent) {
-		if (this.renderClassImage) {
-			if (!agent.imageSynthesis.hasCapturePass ("_class")) {
-				Debug.LogError ("class image not available - sending empty image");
+	private void addImageSynthesisImageForm(WWWForm form, DiscreteRemoteFPSAgentController agent, bool flag, string captureName, string fieldName)
+	{
+		if (flag) {
+			if (!agent.imageSynthesis.hasCapturePass (captureName)) {
+				Debug.LogError (captureName + " not available - sending empty image");
 			}
-			byte[] bytes = agent.imageSynthesis.Encode ("_class");
-			form.AddBinaryData ("image_classes", bytes);
-		}
+			byte[] bytes = agent.imageSynthesis.Encode (captureName);
+			form.AddBinaryData (fieldName, bytes);
 
+
+		}
 	}
 
 	private IEnumerator EmitFrame() {
@@ -313,9 +306,10 @@ public class AgentManager : MonoBehaviour
 			metadata.agentId = i;
 			// we don't need to render the agent's camera for the first agent
 			addImageForm (form, agent, i > 0);
-			addDepthImageForm (form, agent);
+			addImageSynthesisImageForm(form, agent, this.renderDepthImage, "_depth", "image_depth");
+			addImageSynthesisImageForm(form, agent, this.renderNormalsImage, "_normals", "image_normals");
 			addObjectImageForm (form, agent, ref metadata);
-			addClassImageForm (form, agent);
+			addImageSynthesisImageForm(form, agent, this.renderClassImage, "_class", "image_classes");
 			multiMeta.agents [i] = metadata;
 		}
 
@@ -507,6 +501,7 @@ public class ServerAction
 	public bool renderDepthImage;
 	public bool renderClassImage;
 	public bool renderObjectImage;
+	public bool renderNormalsImage;
 	public float cameraY;
 
 	public SimObjType ReceptableSimObjType()
