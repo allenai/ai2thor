@@ -1057,78 +1057,160 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			go.GetComponent<SimObjPhysics>().ApplyForce(apply);         
 		}
 
-        //isOpen is true if trying to Close object, False if trying to open object
-        public void OpenOrCloseObject(ServerAction action, bool open)
-		{
-			//pass name of object in from action.objectID
-            //check if that object is in the viewport
-            //also check to make sure that target object is interactable
-			if(action.objectId == null)
-			{
-				Debug.Log("Hey, actually give me an object ID to pick up, yeah?");
-				return;
-			}
+  //      //isOpen is true if trying to Close object, False if trying to open object
+  //      public void OpenOrCloseObject(ServerAction action, bool open)
+		//{
+		//	//pass name of object in from action.objectID
+  //          //check if that object is in the viewport
+  //          //also check to make sure that target object is interactable
+		//	if(action.objectId == null)
+		//	{
+		//		Debug.Log("Hey, actually give me an object ID to pick up, yeah?");
+		//		return;
+		//	}
 				
-			SimObjPhysics target = null;
+		//	SimObjPhysics target = null;
 
-            foreach (SimObjPhysics sop in VisibleSimObjPhysics)
-            {
-				//print("why not?");
-				//check for object in current visible objects, and also check that it's interactable
-				if (action.objectId == sop.UniqueID && sop.GetComponent<CanOpen>())
-				{
-					//print("wobbuffet");
-					target = sop;
-				}
+  //          foreach (SimObjPhysics sop in VisibleSimObjPhysics)
+  //          {
+		//		//print("why not?");
+		//		//check for object in current visible objects, and also check that it's interactable
+		//		if (action.objectId == sop.UniqueID && sop.GetComponent<CanOpen>())
+		//		{
+		//			//print("wobbuffet");
+		//			target = sop;
+		//		}
 	
-            }
+  //          }
 
-            if(target)
-			{
-				CanOpen co = target.GetComponent<CanOpen>();
+  //          if(target)
+		//	{
+		//		CanOpen co = target.GetComponent<CanOpen>();
 
-                //trying to close object
-				if(open == true)
-				{
-					if (co.isOpen == true)
-					{                  
-						co.Interact();
-					}
+  //              //trying to close object
+		//		if(open == true)
+		//		{
+		//			if (co.isOpen == true)
+		//			{                  
+		//				co.Interact();
+		//			}
                   
-					else
-						Debug.Log("can't close object if it's already closed");
-				}
+		//			else
+		//				Debug.Log("can't close object if it's already closed");
+		//		}
 
-                //trying to open object
-                else if(open == false)
-				{
-					if (co.isOpen == false)
-					{
-						if (action.moveMagnitude > 0.0f)
-                        {
-                            co.SetOpenPercent(action.moveMagnitude);
-                        }
+  //              //trying to open object
+  //              else if(open == false)
+		//		{
+		//			if (co.isOpen == false)
+		//			{
+		//				if (action.moveMagnitude > 0.0f)
+  //                      {
+  //                          co.SetOpenPercent(action.moveMagnitude);
+  //                      }
 
-						co.Interact();		
-					}
+		//				co.Interact();		
+		//			}
 
-					else
-                        Debug.Log("can't open object if it's already open");
-				}
-				//print("i have a target");
-				//target.GetComponent<CanOpen>().Interact();
-			}
+		//			else
+  //                      Debug.Log("can't open object if it's already open");
+		//		}
+		//		//print("i have a target");
+		//		//target.GetComponent<CanOpen>().Interact();
+		//	}
             
-		}
+		//}
 
         public void CloseObject(ServerAction action)
 		{
-			OpenOrCloseObject(action, true);
+			//OpenOrCloseObject(action, true);
+
+			//pass name of object in from action.objectID
+            //check if that object is in the viewport
+            //also check to make sure that target object is interactable
+            if (action.objectId == null)
+            {
+                Debug.Log("Hey, actually give me an object ID to pick up, yeah?");
+                return;
+            }
+
+            SimObjPhysics target = null;
+
+            foreach (SimObjPhysics sop in VisibleSimObjPhysics)
+            {
+                //print("why not?");
+                //check for object in current visible objects, and also check that it's interactable
+                if (action.objectId == sop.UniqueID && sop.GetComponent<CanOpen>())
+                {
+                    //print("wobbuffet");
+                    target = sop;
+                }
+
+            }
+            
+            if (target)
+            {
+                CanOpen co = target.GetComponent<CanOpen>();
+                
+                //if object is open, close it
+                if (co.isOpen == true)
+                {
+                    co.Interact();
+                }
+
+                else
+                    Debug.Log("can't close object if it's already closed");
+            }
 		}
 
         public void OpenObject(ServerAction action)
 		{
-			OpenOrCloseObject(action, false);
+			//OpenOrCloseObject(action, false);
+
+			//pass name of object in from action.objectID
+            //check if that object is in the viewport
+            //also check to make sure that target object is interactable
+            if (action.objectId == null)
+            {
+                Debug.Log("Hey, actually give me an object ID to pick up, yeah?");
+                return;
+            }
+
+            SimObjPhysics target = null;
+
+            foreach (SimObjPhysics sop in VisibleSimObjPhysics)
+            {
+                //print("why not?");
+                //check for object in current visible objects, and also check that it's interactable
+                if (action.objectId == sop.UniqueID && sop.GetComponent<CanOpen>())
+                {
+                    //print("wobbuffet");
+                    target = sop;
+                }
+
+            }
+
+			if (target)
+			{
+				CanOpen co = target.GetComponent<CanOpen>();
+
+                //check to make sure object is closed
+				if (co.isOpen == false)
+                {
+					//pass in percentage open if desired
+                    if (action.moveMagnitude > 0.0f)
+                    {
+                        co.SetOpenPercent(action.moveMagnitude);
+                    }
+
+                    co.Interact();
+                }
+
+                else
+                    Debug.Log("can't open object if it's already open");
+			}
+
+
 		}
 
         public void SetUpRotationBoxChecks()
