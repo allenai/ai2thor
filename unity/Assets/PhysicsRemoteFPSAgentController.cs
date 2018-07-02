@@ -341,9 +341,13 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			}
 
 			int down = -1;
+            
+			if(CheckIfAgentCanLook(targetHorizon, down)) 
+			{
+				DefaultAgentHand(response);
+				base.LookDown(response);
+			}
 
-			if(CheckIfAgentCanLook(targetHorizon, down))            
-			base.LookDown(response);
 			SetUpRotationBoxChecks();
 		}
 
@@ -358,8 +362,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 			int up = 1;
 
-			if(CheckIfAgentCanLook(targetHorizon, up))                        
-			base.LookUp(controlCommand);
+			if(CheckIfAgentCanLook(targetHorizon, up)) 
+			{
+				DefaultAgentHand(controlCommand);
+				base.LookUp(controlCommand);
+			}
+
 			SetUpRotationBoxChecks();
 		}
 
@@ -409,13 +417,21 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		public override void RotateRight(ServerAction controlCommand)
 		{
 			if(CheckIfAgentCanTurn(90))
-			base.RotateRight(controlCommand);
+			{
+				DefaultAgentHand(controlCommand);
+				base.RotateRight(controlCommand);
+			}
+
 		}
 
 		public override void RotateLeft(ServerAction controlCommand)
 		{
 			if(CheckIfAgentCanTurn(-90))
-			base.RotateLeft(controlCommand);
+			{
+				DefaultAgentHand(controlCommand);
+				base.RotateLeft(controlCommand);
+
+			}
 		}
 
         //checks if agent is clear to rotate left/right without object in hand hitting anything
@@ -468,26 +484,37 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		public override void MoveLeft(ServerAction action)
 		{
 			if(CheckIfItemBlocksAgentMovement(action.moveMagnitude, 270) && CheckIfAgentCanMove(action.moveMagnitude, 270))
-			base.MoveLeft(action);
+			{
+				DefaultAgentHand(action);
+				base.MoveLeft(action);
+			}
 		}
 
 		public override void MoveRight(ServerAction action)
 		{
-			if (CheckIfItemBlocksAgentMovement(action.moveMagnitude, 90) && CheckIfAgentCanMove(action.moveMagnitude, 90))            
-			base.MoveRight(action);
+			if (CheckIfItemBlocksAgentMovement(action.moveMagnitude, 90) && CheckIfAgentCanMove(action.moveMagnitude, 90)) 
+			{
+				DefaultAgentHand(action);
+				base.MoveRight(action);
+			}
 		}
 
 		public override void MoveAhead(ServerAction action)
 		{
 			if (CheckIfItemBlocksAgentMovement(action.moveMagnitude, 0) && CheckIfAgentCanMove(action.moveMagnitude, 0))
-			base.MoveAhead(action);
-			
+			{
+				DefaultAgentHand(action);
+				base.MoveAhead(action);            
+			}
 		}
         
 		public override void MoveBack(ServerAction action)
 		{
 			if (CheckIfItemBlocksAgentMovement(action.moveMagnitude, 180) && CheckIfAgentCanMove(action.moveMagnitude, 180))
-			base.MoveBack(action);
+			{
+				DefaultAgentHand(action);
+				base.MoveBack(action);
+    		}
 		}
 
 		//Sweeptest to see if the object Agent is holding will prohibit movement
@@ -678,9 +705,11 @@ namespace UnityStandardAssets.Characters.FirstPerson
             }
 
 			Vector3 targetPosition = new Vector3(action.x, action.y, action.z);
-           
+
+            //XXX might need to extend this range to reach down into low drawers/cabinets?
+			//print(Vector3.Distance(gameObject.transform.position, targetPosition));
 			//now check if the target position is within bounds of the Agent's forward (z) view
-			if (Vector3.Distance(gameObject.transform.position, targetPosition) > maxVisibleDistance)// + 0.3)
+			if (Vector3.Distance(m_Camera.transform.position, targetPosition) > maxVisibleDistance)// + 0.3)
             {
                 Debug.Log("The target position is out of range");
                 result = false;
@@ -697,7 +726,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 Debug.Log("The target position is not in the Agent's Viewport!");
                 result = false;
                 return result;
-            }
+            }         
 
             //ok now actually check if the Agent Hand holding ItemInHand can move to the target position without
             //being obstructed by anything
