@@ -180,6 +180,11 @@ public class SimObjPhysics : MonoBehaviour
 	[ContextMenu("Set Up SimObjPhysics")]
     void ContextSetUpSimObjPhysics()
 	{
+		if(this.Type == SimObjType.Undefined || this.PrimaryProperty == SimObjPrimaryProperty.Undefined)
+		{
+			Debug.Log("Type / Primary Property is missing");
+			return;
+		}
 		//set up this object ot have the right tag and layer
 		gameObject.tag = "SimObjPhysics";
 		gameObject.layer = 8;
@@ -198,7 +203,7 @@ public class SimObjPhysics : MonoBehaviour
 			cc.transform.SetParent(c.transform);
 		}
 
-		if (!gameObject.transform.Find("TriggerColliders"))
+		if (!gameObject.transform.Find("TriggerColliders") && this.PrimaryProperty != SimObjPrimaryProperty.Static)//static sim objets don't need trigger collider
 		{
 			//empty to hold all Trigger Colliders
 			GameObject tc = new GameObject("TriggerColliders");
@@ -237,7 +242,7 @@ public class SimObjPhysics : MonoBehaviour
 			ipc.transform.SetParent(ip.transform);
 		}
 
-		if (!gameObject.transform.Find("RotateAgentCollider"))
+		if (!gameObject.transform.Find("RotateAgentCollider") && this.PrimaryProperty != SimObjPrimaryProperty.Static)
 		{         
 			GameObject rac = new GameObject("RotateAgentCollider");
 			rac.transform.position = gameObject.transform.position;

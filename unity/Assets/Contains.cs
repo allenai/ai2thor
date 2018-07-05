@@ -5,7 +5,7 @@ using UnityEngine;
 public class Contains : MonoBehaviour 
 {
 	//used to not add the door/drawer/etc of the object itself to the list of currently contained objects
-    [SerializeField] protected GameObject MyObject = null; 
+    [SerializeField] protected List<GameObject> MyDoorsOrDrawer = null; 
 
 	[SerializeField] protected List<SimObjPhysics> CurrentlyContains = new List<SimObjPhysics>();
    
@@ -33,7 +33,8 @@ public class Contains : MonoBehaviour
 		{
 			SimObjPhysics sop = other.GetComponentInParent<SimObjPhysics>();
 
-			if (!CurrentlyContains.Contains(sop) && sop.transform != MyObject.transform)
+            //check each "other" object, see if it is currently in the CurrentlyContains list, and make sure it is NOT one of this object's doors/drawer
+			if (!CurrentlyContains.Contains(sop) && !MyDoorsOrDrawer.Contains(sop.transform.gameObject))
             {
 				CurrentlyContains.Add(sop);
             }         

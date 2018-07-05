@@ -7,6 +7,8 @@ public class CanOpen : MonoBehaviour
 	[SerializeField] protected Vector3 openPosition; 	[SerializeField] protected Vector3 closedPosition;      	[SerializeField] protected float animationTime = 1.0f;
 
 	[SerializeField] protected float openPercentage = 1.0f; //0.0 to 1.0 - percent of openPosition the object opens. 
+
+	//[SerializeField] protected Contains MyInterior;//this is the ReceptacleTriggerBox that reports what is inside this receptacle
      // drawer starts open?     public bool isOpen = false;     private Hashtable iTweenArgs;
 
 	public bool canReset = true;
@@ -14,7 +16,16 @@ public class CanOpen : MonoBehaviour
 	//[SerializeField] TriggerColliderCheck CabinetTrigger = null;      private enum MovementType { Slide, Rotate } ;      [SerializeField] private MovementType movementType;      void Start ()      {
 		iTween.Init(gameObject);//init itween cuase the documentation said so?
          iTweenArgs = iTween.Hash();         iTweenArgs.Add("position", openPosition);         iTweenArgs.Add("time", animationTime);         iTweenArgs.Add("islocal", true);         
-        //if we want to start in open position, initialize here?         if(isOpen)         {             iTweenArgs["position"] = openPosition;             iTweenArgs["time"] = 0f;             iTween.MoveTo(gameObject, iTweenArgs);             iTweenArgs["time"] = animationTime;          }     }      // Update is called once per frame     void Update ()      {         if(Input.GetKeyDown(KeyCode.Alpha1))         { 			Interact();         }     }
+        //if we want to start in open position, initialize here?         if(isOpen)         {             iTweenArgs["position"] = openPosition;             iTweenArgs["time"] = 0f;             iTween.MoveTo(gameObject, iTweenArgs);             iTweenArgs["time"] = animationTime;          }     }      // Update is called once per frame     void Update ()      {
+		//test if it can open without Agent Command - Debug Purposes
+		#if UNITY_EDITOR         if(Input.GetKeyDown(KeyCode.Alpha1))         { 			Interact();         }
+		#endif     }
+
+ //   //return anything currently inside this receptacle
+	//public List<string> Contains()
+	//{
+	//	return MyInterior.CurrentlyContainedUniqueIDs();
+	//}
 
     public void SetOpenPercent(float val)
 	{
