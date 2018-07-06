@@ -96,12 +96,16 @@ public class SimObjPhysics : MonoBehaviour
             {
                 objs = ReceptacleTriggerBox.GetComponent<Contains>().CurrentlyContainedUniqueIDs();
 
-				#if UNITY_EDITOR
-                //print the objs for now just to check in editor
+                #if UNITY_EDITOR
+				//print the objs for now just to check in editor
+				string result = UniqueID + " contains: ";
+
                 foreach(string s in objs)
 				{
-					print(s);
+					result += s + ", ";
 				}
+
+				Debug.Log(result);
 				#endif
 
                 return objs;
@@ -116,7 +120,7 @@ public class SimObjPhysics : MonoBehaviour
 
 		else
         {
-            Debug.Log("No Receptacle Trigger Box!");
+            Debug.Log("this object is not a Receptacle!");
             return objs;
         }
 	}

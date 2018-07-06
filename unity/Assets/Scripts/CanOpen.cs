@@ -96,6 +96,7 @@ public class CanOpen : MonoBehaviour
 		if (other.name == "FPSController" && canReset == true)
 		{
 			//print("AAAAAH");
+			Debug.Log(gameObject.name + " hit the Agent! Resetting position");
 			canReset = false;
 			Reset();
 		}
