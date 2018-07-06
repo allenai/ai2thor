@@ -1208,9 +1208,43 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
                 else
                     Debug.Log("can't open object if it's already open");
+			}         
+		}
+
+        public void Contains(ServerAction action)
+		{
+			if (action.objectId == null)
+            {
+                Debug.Log("Hey, actually give me an object ID to pick up, yeah?");
+                return;
+            }
+
+			SimObjPhysics target = null;
+
+            foreach (SimObjPhysics sop in VisibleSimObjPhysics)
+            {
+                //check for object in current visible objects, and also check that it's interactable
+                if (action.objectId == sop.UniqueID)
+                {
+                    //print("wobbuffet");
+                    target = sop;
+                }
+
+            }
+
+			if (target)
+			{
+				//the sim object receptacle target returns list of unique sim object IDs as strings
+                //XXX It looks like this goes right into the MetaData, so I'll need help figuring out how to pass whatever
+				//is handling Metadata exporting this info. For now uh....the Contains() function on the sim object will print it in the log
+                //if in editor
+				target.Contains();
 			}
 
-
+			else
+			{
+				Debug.Log("Target object not in sight");
+			}
 		}
 
         public void SetUpRotationBoxChecks()

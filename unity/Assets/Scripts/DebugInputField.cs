@@ -14,6 +14,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
         void Start()
         {
 			//UnityEngine.EventSystems.EventSystem.current.SetSelectedGameObject(gameObject);
+			Agent = GameObject.Find("FPSController");
 			PhysicsController = Agent.GetComponent<PhysicsRemoteFPSAgentController>();
 			PivotController = Agent.GetComponent<DiscreteRemoteFPSAgentController>();
         }
@@ -395,6 +396,20 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         break;
                     }
                    
+				case "contains":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "Contains";
+
+                        if (splitcommand.Length > 1)
+                        {
+                            action.objectId = splitcommand[1];
+                        }
+
+                        PhysicsController.ProcessControlCommand(action);
+
+                        break;
+                    }
 
 				default:
                     {                  
