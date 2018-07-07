@@ -195,7 +195,7 @@ public class SimObjPhysics : MonoBehaviour
 
 		if (!gameObject.GetComponent<Rigidbody>())
 			gameObject.AddComponent<Rigidbody>();
-        
+            
 		if(!gameObject.transform.Find("Colliders"))
 		{
 			GameObject c = new GameObject("Colliders");
