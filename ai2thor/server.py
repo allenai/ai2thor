@@ -49,8 +49,14 @@ class MultiAgentEvent(object):
         self._active_event = events[active_agent_id]
         self.cv2image = self._active_event.cv2image
         self.metadata = self._active_event.metadata
+        self.screen_width = self._active_event.screen_width
+        self.screen_height = self._active_event.screen_height
         self.events = events
+        self.third_party_camera_frames = []
         # XXX add methods for depth,sem_seg
+
+    def add_third_party_camera_image(self, third_party_image_data):
+        self.third_party_camera_frames.append(read_buffer_image(third_party_image_data, self.screen_width, self.screen_height))
 
 def read_buffer_image(buf, width, height):
 
@@ -108,6 +114,7 @@ class Event(object):
 
         self.process_colors()
         self.process_visible_bounds2D()
+        self.third_party_camera_frames = []
 
     @property
     def image_data(self):
@@ -180,6 +187,9 @@ class Event(object):
 
     def add_image_normals(self, image_normals_data):
         self.normals_frame = read_buffer_image(image_normals_data, self.screen_width, self.screen_height)
+
+    def add_third_party_camera_image(self, third_party_image_data):
+        self.third_party_camera_frames.append(read_buffer_image(third_party_image_data, self.screen_width, self.screen_height))
 
     def add_image(self, image_data):
         self.frame = read_buffer_image(image_data, self.screen_width, self.screen_height)
@@ -354,6 +364,9 @@ class Server(object):
                 self.last_event = event = MultiAgentEvent(metadata['activeAgentId'], events)
             else:
                 self.last_event = event = events[0]
+
+            for img in form.files.get('image-thirdParty-camera', []):
+                self.last_event.add_third_party_camera_image(img)
 
             request_queue.put_nowait(event)
 

@@ -571,6 +571,11 @@ class Controller(object):
             if object_type not in RECEPTACLE_OBJECTS[receptacle_type]:
                 should_fail = True
 
+        rotation = action.get('rotation')
+        if rotation is not None and type(rotation) != dict:
+            action['rotation'] = {}
+            action['rotation']['y'] = rotation
+
         if should_fail:
             new_event = copy.deepcopy(self.last_event)
             new_event.metadata['lastActionSuccess'] = False
