@@ -96,12 +96,16 @@ public class SimObjPhysics : MonoBehaviour
             {
                 objs = ReceptacleTriggerBox.GetComponent<Contains>().CurrentlyContainedUniqueIDs();
 
-				#if UNITY_EDITOR
-                //print the objs for now just to check in editor
+                #if UNITY_EDITOR
+				//print the objs for now just to check in editor
+				string result = UniqueID + " contains: ";
+
                 foreach(string s in objs)
 				{
-					print(s);
+					result += s + ", ";
 				}
+
+				Debug.Log(result);
 				#endif
 
                 return objs;
@@ -116,7 +120,7 @@ public class SimObjPhysics : MonoBehaviour
 
 		else
         {
-            Debug.Log("No Receptacle Trigger Box!");
+            Debug.Log("this object is not a Receptacle!");
             return objs;
         }
 	}
@@ -180,13 +184,18 @@ public class SimObjPhysics : MonoBehaviour
 	[ContextMenu("Set Up SimObjPhysics")]
     void ContextSetUpSimObjPhysics()
 	{
+		if(this.Type == SimObjType.Undefined || this.PrimaryProperty == SimObjPrimaryProperty.Undefined)
+		{
+			Debug.Log("Type / Primary Property is missing");
+			return;
+		}
 		//set up this object ot have the right tag and layer
 		gameObject.tag = "SimObjPhysics";
 		gameObject.layer = 8;
 
 		if (!gameObject.GetComponent<Rigidbody>())
 			gameObject.AddComponent<Rigidbody>();
-        
+            
 		if(!gameObject.transform.Find("Colliders"))
 		{
 			GameObject c = new GameObject("Colliders");
@@ -198,7 +207,7 @@ public class SimObjPhysics : MonoBehaviour
 			cc.transform.SetParent(c.transform);
 		}
 
-		if (!gameObject.transform.Find("TriggerColliders"))
+		if (!gameObject.transform.Find("TriggerColliders") && this.PrimaryProperty != SimObjPrimaryProperty.Static)//static sim objets don't need trigger collider
 		{
 			//empty to hold all Trigger Colliders
 			GameObject tc = new GameObject("TriggerColliders");
@@ -237,7 +246,7 @@ public class SimObjPhysics : MonoBehaviour
 			ipc.transform.SetParent(ip.transform);
 		}
 
-		if (!gameObject.transform.Find("RotateAgentCollider"))
+		if (!gameObject.transform.Find("RotateAgentCollider") && this.PrimaryProperty != SimObjPrimaryProperty.Static)
 		{         
 			GameObject rac = new GameObject("RotateAgentCollider");
 			rac.transform.position = gameObject.transform.position;

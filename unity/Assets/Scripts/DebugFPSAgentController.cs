@@ -74,6 +74,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			//Inventory_Text = GameObject.Find("DebugCanvas/InventoryText");
 			InputMode_Text = GameObject.Find("DebugCanvasPhysics/InputModeText");
 
+			InputFieldObj = GameObject.Find("DebugCanvasPhysics/InputField");
+
             //if this component is enabled, turn on the targeting reticle and target text
             if (this.isActiveAndEnabled)
             {
