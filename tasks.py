@@ -119,6 +119,14 @@ def fetch_source_textures(context):
     z.extractall(os.getcwd())
 
 @task
+def pre_test(context):
+    import ai2thor.controller
+    import shutil
+    c = ai2thor.controller.Controller()
+    os.makedirs('unity/builds/%s' % c.build_name())
+    shutil.move(os.path.join('unity', 'builds', c.build_name() + '.app'), 'unity/builds/%s' % c.build_name())
+
+@task
 def build(context, local=False):
     version = datetime.datetime.now().strftime('%Y%m%d%H%M')
     build_url_base = 'http://s3-us-west-2.amazonaws.com/%s/' % S3_BUCKET
