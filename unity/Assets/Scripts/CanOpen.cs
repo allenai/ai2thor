@@ -8,6 +8,11 @@ public class CanOpen : MonoBehaviour
 
 	[SerializeField] protected float openPercentage = 1.0f; //0.0 to 1.0 - percent of openPosition the object opens. 
 
+    //these are objects to ignore collision with. For example, two cabinets right next to each other
+    //might clip into themselves, so ignore the "reset" event in that case by putting the object to ignore
+    //here
+	[SerializeField] protected GameObject[] IgnoreTheseObjects;
+
 	//[SerializeField] protected Contains MyInterior;//this is the ReceptacleTriggerBox that reports what is inside this receptacle
      // drawer starts open?     public bool isOpen = false;     private Hashtable iTweenArgs;
 
@@ -87,29 +92,76 @@ public class CanOpen : MonoBehaviour
 		return isOpen;
 	}
 
+    //for use in OnTriggerEnter ignore check
+	public bool IsInIgnoreArray(Collider other, GameObject[] arrayOfCol)
+    {
+        for (int i = 0; i < arrayOfCol.Length; i++)
+        {
+            if (other == arrayOfCol[i].GetComponent<Collider>())
+                return true;
+        }
+        return false;
+    }
+
     //trigger enter/exit functions reset the animation if the Agent is hit by the object opening
 	public void OnTriggerEnter(Collider other)
 	{
-		//if(other.GetComponentInParent<SimObjPhysics>())
-		//print(other.name);
-		
+
+		//note: Normally rigidbodies set to Kinematic will never call the OnTriggerX events
+        //when colliding with another rigidbody that is kinematic. For some reason, if the other object
+        //has a trigger collider even though THIS object only has a kinematic rigidbody, this
+		//function is still called so we'll use that here:
+
+        //The Agent has a trigger Capsule collider, and other cabinets/drawers have
+        //a trigger collider, so this is used to reset the position if the agent or another
+        //cabinet or drawer is in the way of this object opening/closing
+
+        //if hitting the Agent, reset position and report failed action
 		if (other.name == "FPSController" && canReset == true)
 		{
 			//print("AAAAAH");
-			Debug.Log(gameObject.name + " hit the Agent! Resetting position");
+			Debug.Log(gameObject.name + " hit " + other.name + " Resetting position");
 			canReset = false;
 			Reset();
+		}
+
+        //if hitting another cabinet/drawer, do some checks 
+		if(other.GetComponentInParent<CanOpen>() && canReset == true)
+		{
+			//if(this.GetComponent<SimObjPhysics>().ReceptacleTriggerBox == other.transform)
+			//{
+			//	return;
+			//}
+
+			if (IsInIgnoreArray(other, IgnoreTheseObjects))
+			{
+				//don't reset, it's cool
+				return;
+			}
+
+            //oh it was something else RESET! DO IT!
+			else
+			{
+				Debug.Log(gameObject.name + " hit " + other.name + " Resetting position");
+                canReset = false;
+                Reset();
+			}
 		}
 	}
 
 	public void OnTriggerExit(Collider other)
 	{
-		if(other.name == "FPSController")
+		if(other.name == "FPSController" || other.GetComponentInParent<CanOpen>())
 		{
 			//print("HAAAAA");
 			canReset = true;
 		}
 	}
+
+	//public void OnCollisionEnter(Collision collision)
+	//{
+	//	print(collision.collider.name);
+	//}
 
 	public void Reset()
 	{

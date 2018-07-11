@@ -207,7 +207,7 @@ public class SimObjPhysics : MonoBehaviour
 			cc.transform.SetParent(c.transform);
 		}
 
-		if (!gameObject.transform.Find("TriggerColliders") && this.PrimaryProperty != SimObjPrimaryProperty.Static)//static sim objets don't need trigger collider
+		if (!gameObject.transform.Find("TriggerColliders"))//static sim objets still need trigger colliders
 		{
 			//empty to hold all Trigger Colliders
 			GameObject tc = new GameObject("TriggerColliders");
