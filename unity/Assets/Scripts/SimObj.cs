@@ -1,10 +1,12 @@
 // Copyright Allen Institute for Artificial Intelligence 2017
 using UnityEngine;
+using System;
 using System.Collections;
+using System.Collections.Generic;
 
 [ExecuteInEditMode]
 [RequireComponent(typeof(Rigidbody))]
-public class SimObj : MonoBehaviour 
+public class SimObj : MonoBehaviour, SimpleSimObj
 {
 
 	public string UniqueID 
@@ -20,13 +22,72 @@ public class SimObj : MonoBehaviour
 			uniqueID = value;
 		}
 	}
+
 	public SimObjType Type = SimObjType.Undefined;
 	public SimObjManipType Manipulation = SimObjManipType.Inventory;
+	public static SimObjType[] OpenableTypes = new SimObjType[] { SimObjType.Fridge, SimObjType.Cabinet, SimObjType.Microwave, SimObjType.LightSwitch, SimObjType.Blinds, SimObjType.Book, SimObjType.Toilet };
+	public static SimObjType[] ImmobileTypes = new SimObjType[] { SimObjType.Chair, SimObjType.Toaster, SimObjType.CoffeeMachine, SimObjType.Television, SimObjType.StoveKnob };
+	private static Dictionary<SimObjType, Dictionary<string, int>> OPEN_CLOSE_STATES = new Dictionary<SimObjType, Dictionary<string, int>>{
+		{SimObjType.Microwave, new Dictionary<string, int>{{"open", 2}, {"close", 1}}},
+		{SimObjType.Laptop, new Dictionary<string, int>{{"open", 2}, {"close", 1}}},
+		{SimObjType.Book, new Dictionary<string, int>{{"open", 1}, {"close", 2}}},
+		{SimObjType.Toilet, new Dictionary<string, int>{{"open", 2}, {"close", 3}}},
+		{SimObjType.Sink, new Dictionary<string, int>{{"open", 2}, {"close", 1}}}
+	};
 	public bool UseCustomBounds = false;
 	public bool UseWidthSearch = false;
 	public bool hasCollision = false;
 	public Transform BoundsTransform;
 	//stores the location of the simObj on startup
+
+	public SimObjType ObjType  {
+
+		get {
+			return Type;
+
+		}
+	}
+
+	public List<string> ReceptacleObjectIds {
+
+		get {
+			List<string> objectIds = new List<string>();
+			foreach (SimObj o in SimUtil.GetItemsFromReceptacle(this.Receptacle))
+			{
+				objectIds.Add(o.uniqueID);
+			}
+			return objectIds;
+		}
+	}
+
+	public List<PivotSimObj> PivotSimObjs {
+		get {
+
+			List<PivotSimObj> pivotSimObjs = new List<PivotSimObj>();
+			for (int i = 0; i < this.Receptacle.Pivots.Length; i++)
+			{
+				Transform t = this.Receptacle.Pivots[i];
+				if (t.childCount > 0)
+				{
+					SimObj psimobj = t.GetChild(0).GetComponent<SimObj>();
+					PivotSimObj pso = new PivotSimObj();
+					pso.objectId = psimobj.UniqueID;
+					pso.pivotId = i;
+					pivotSimObjs.Add(pso);
+				}
+			}
+			return pivotSimObjs;
+		}
+
+	}
+
+	public int ReceptacleCount {
+
+		get {
+			return this.Receptacle.Pivots.Length;
+		}
+	}
+
 	public Transform StartupTransform 
     {
 		get 
@@ -83,6 +144,65 @@ public class SimObj : MonoBehaviour
 			#endif
 			isAnimating = value;
 		}
+	}
+
+	private bool updateAnimState(Animator anim, int value)
+	{
+		AnimatorControllerParameter param = anim.parameters[0];
+
+		if (anim.GetInteger(param.name) == value)
+		{
+			return false;
+		}
+		else
+		{
+			anim.SetInteger(param.name, value);
+			return true;
+		}
+	}
+
+	private bool updateAnimState(Animator anim, bool value)
+	{
+		AnimatorControllerParameter param = anim.parameters[0];
+
+		if (anim.GetBool(param.name) == value)
+		{
+			return false;
+		}
+		else
+		{
+			anim.SetBool(param.name, value);
+			return true;
+		}
+	}
+
+	public bool Open() {
+		bool res = false;
+		if (OPEN_CLOSE_STATES.ContainsKey(this.Type))
+		{
+			res = updateAnimState(this.Animator, OPEN_CLOSE_STATES[this.Type]["open"]);
+
+		}
+		else if (this.IsAnimated)
+		{
+			res = updateAnimState(this.Animator, true);
+		}
+
+		return res;
+	}
+
+	public bool Close() {
+		bool res = false;
+		if (OPEN_CLOSE_STATES.ContainsKey(this.Type))
+		{
+			res = updateAnimState(this.Animator, OPEN_CLOSE_STATES[this.Type]["close"]);
+		}
+		else if (this.IsAnimated)
+		{
+			res = updateAnimState(this.Animator, false);
+		}
+
+		return res;
 	}
 
 	public bool VisibleToRaycasts 
@@ -179,6 +299,35 @@ public class SimObj : MonoBehaviour
 		transform.parent = null;
 		transform.localScale = startupScale;
 		transform.parent = tempParent;
+	}
+
+	public bool IsPickupable {
+		get {
+			return !this.IsOpenable && !this.IsReceptacle && !(Array.IndexOf(ImmobileTypes, this.Type) >= 0);
+		}
+
+	}
+
+	public bool IsOpen {
+		get {
+			Animator anim = this.Animator;
+			AnimatorControllerParameter param = anim.parameters[0];
+			if (OPEN_CLOSE_STATES.ContainsKey(this.Type))
+			{
+				return anim.GetInteger(param.name) == OPEN_CLOSE_STATES[this.Type]["open"];
+			}
+			else
+			{
+				return anim.GetBool(param.name);
+			}
+		}
+	}
+
+	public bool IsOpenable {
+		get {
+			return Array.IndexOf(OpenableTypes, this.Type) >= 0 && this.IsAnimated;
+		}
+
 	}
 
     public void RecalculatePoints () 
@@ -514,4 +663,20 @@ public class SimObj : MonoBehaviour
 		}
 	}
 	#endif
+}
+
+public interface SimpleSimObj {
+	Bounds Bounds { get; }
+	SimObjType ObjType { get; }
+	string UniqueID {get; set; }
+	List<string> ReceptacleObjectIds {get;}
+	int ReceptacleCount {get;}
+	bool IsReceptacle {get; }
+	bool IsOpen {get; }
+	bool IsPickupable {get; }
+	bool IsOpenable {get; }
+	bool Open(); 
+	bool Close();
+	List<PivotSimObj> PivotSimObjs {get;}
+	GameObject gameObject {get; }
 }

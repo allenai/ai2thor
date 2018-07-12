@@ -44,22 +44,15 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		//[SerializeField]
 		//private float m_StepInterval;
 
-		protected SimObjType[] OpenableTypes = new SimObjType[] { SimObjType.Fridge, SimObjType.Cabinet, SimObjType.Microwave, SimObjType.LightSwitch, SimObjType.Blinds, SimObjType.Book, SimObjType.Toilet };
-		protected SimObjType[] ImmobileTypes = new SimObjType[] { SimObjType.Chair, SimObjType.Toaster, SimObjType.CoffeeMachine, SimObjType.Television, SimObjType.StoveKnob };
 
 		protected float[] headingAngles = new float[] { 0.0f, 90.0f, 180.0f, 270.0f };
 		protected float[] horizonAngles = new float[] { 60.0f, 30.0f, 0.0f, 330.0f };
 
 		//allow agent to push sim objects that can move, for physics
 		protected bool PushMode = false;
+		protected int actionCounter;
+		protected Vector3 targetTeleport;
 
-		protected Dictionary<SimObjType, Dictionary<string, int>> OPEN_CLOSE_STATES = new Dictionary<SimObjType, Dictionary<string, int>>{
-			{SimObjType.Microwave, new Dictionary<string, int>{{"open", 2}, {"close", 1}}},
-			{SimObjType.Laptop, new Dictionary<string, int>{{"open", 2}, {"close", 1}}},
-			{SimObjType.Book, new Dictionary<string, int>{{"open", 1}, {"close", 2}}},
-			{SimObjType.Toilet, new Dictionary<string, int>{{"open", 2}, {"close", 3}}},
-			{SimObjType.Sink, new Dictionary<string, int>{{"open", 2}, {"close", 1}}}
-		};
 
 
 
@@ -147,6 +140,20 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			init_rotation = transform.rotation;
 
 			//allowNodes = false;
+		}
+
+		public void actionFinished(bool success) 
+		{
+			
+			if (actionComplete) 
+			{
+				Debug.LogError ("ActionFinished called with actionComplete already set to true");
+			}
+
+			lastActionSuccess = success;
+			this.actionComplete = true;
+			actionCounter = 0;
+			targetTeleport = Vector3.zero;
 		}
 
 		public void Initialize(ServerAction action)
@@ -259,105 +266,21 @@ namespace UnityStandardAssets.Characters.FirstPerson
             }
         }
 
-
-		protected virtual void actionFinished(bool success) { }
-
-
-		public bool IsOpen(SimObj simobj)
-		{
-			Animator anim = simobj.Animator;
-			AnimatorControllerParameter param = anim.parameters[0];
-			if (OPEN_CLOSE_STATES.ContainsKey(simobj.Type))
-			{
-				return anim.GetInteger(param.name) == OPEN_CLOSE_STATES[simobj.Type]["open"];
-			}
-			else
-			{
-				return anim.GetBool(param.name);
-			}
-
-		}
-
-		public bool IsOpenable(SimObj so)
-		{
-
-			return Array.IndexOf(OpenableTypes, so.Type) >= 0 && so.IsAnimated;
-		}
-
-
-		public bool IsPickupable(SimObj so)
-		{
-			return !IsOpenable(so) && !so.IsReceptacle && !(Array.IndexOf(ImmobileTypes, so.Type) >= 0);
-		}
-
-		public bool excludeObject(SimObj so)
+		public bool excludeObject(SimpleSimObj so)
 		{
 			return Array.IndexOf(this.excludeObjectIds, so.UniqueID) >= 0;
 		}
 
-
 		protected bool closeSimObj(SimObj so)
 		{
-			bool res = false;
-			if (OPEN_CLOSE_STATES.ContainsKey(so.Type))
-			{
-				res = updateAnimState(so.Animator, OPEN_CLOSE_STATES[so.Type]["close"]);
-			}
-			else if (so.IsAnimated)
-			{
-				res = updateAnimState(so.Animator, false);
-			}
-
-			return res;
+			return so.Close();
 		}
 
 		protected bool openSimObj(SimObj so)
 		{
-
-			bool res = false;
-			if (OPEN_CLOSE_STATES.ContainsKey(so.Type))
-			{
-				res = updateAnimState(so.Animator, OPEN_CLOSE_STATES[so.Type]["open"]);
-
-			}
-			else if (so.IsAnimated)
-			{
-				res = updateAnimState(so.Animator, true);
-			}
-
-			return res;
+			return so.Open();
 		}
 
-
-		private bool updateAnimState(Animator anim, int value)
-		{
-			AnimatorControllerParameter param = anim.parameters[0];
-
-			if (anim.GetInteger(param.name) == value)
-			{
-				return false;
-			}
-			else
-			{
-				anim.SetInteger(param.name, value);
-				return true;
-			}
-		}
-
-		private bool updateAnimState(Animator anim, bool value)
-		{
-			AnimatorControllerParameter param = anim.parameters[0];
-
-			if (anim.GetBool(param.name) == value)
-			{
-				return false;
-			}
-			else
-			{
-				anim.SetBool(param.name, value);
-				return true;
-			}
-		}
 
 		// rotate view with respect to mouse or server controls - I'm not sure when this is actually used
 		protected virtual void RotateView()
@@ -427,14 +350,18 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			return metaMessage;
 		}
 
+		virtual public SimpleSimObj[] VisibleSimObjs() {
+			return new SimObj[]{} as SimpleSimObj[];
+		}
+
 
 		private ObjectMetadata[] generateObjectMetadataForTag(string tag, bool isAnimated)
 		{
 			// Encode these in a json string and send it to the server
-			SimObj[] simObjects = GameObject.FindObjectsOfType(typeof(SimObj)) as SimObj[];
+			SimpleSimObj[] simObjects = GameObject.FindObjectsOfType(typeof(SimObj)) as SimpleSimObj[];
 
-			HashSet<SimObj> visibleObjectIds = new HashSet<SimObj>();
-			foreach (SimObj so in VisibleSimObjs())
+			HashSet<SimpleSimObj> visibleObjectIds = new HashSet<SimpleSimObj>();
+			foreach (SimpleSimObj so in VisibleSimObjs() as SimpleSimObj[])
 			{
 				visibleObjectIds.Add(so);
 			}
@@ -444,71 +371,28 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 			for (int k = 0; k < numObj; k++)
 			{
-				ObjectMetadata meta = new ObjectMetadata();
-				SimObj simObj = simObjects[k];
+				SimpleSimObj simObj = simObjects[k];
 				if (this.excludeObject(simObj))
 				{
 					continue;
 				}
-				GameObject o = simObj.gameObject;
-
-
-				meta.name = o.name;
-				meta.position = o.transform.position;
-				meta.rotation = o.transform.eulerAngles;
-
-				meta.objectType = Enum.GetName(typeof(SimObjType), simObj.Type);
-				meta.receptacle = simObj.IsReceptacle;
-				meta.openable = IsOpenable(simObj);
-				if (meta.openable)
-				{
-					meta.isopen = IsOpen(simObj);
-				}
-				meta.pickupable = IsPickupable(simObj);
+				ObjectMetadata meta = new ObjectMetadata(simObj);
 
 				if (meta.receptacle)
 				{
-					List<string> receptacleObjectIds = new List<string>();
-					foreach (SimObj cso in SimUtil.GetItemsFromReceptacle(simObj.Receptacle))
+					List<string> receptacleObjectIds = simObj.ReceptacleObjectIds;
+					foreach (string oid in receptacleObjectIds)
 					{
-						receptacleObjectIds.Add(cso.UniqueID);
-						parentReceptacles.Add (cso.UniqueID, simObj.UniqueID);
+						parentReceptacles.Add (oid, simObj.UniqueID);
 					}
 
-					List<PivotSimObj> pivotSimObjs = new List<PivotSimObj>();
-					for (int i = 0; i < simObj.Receptacle.Pivots.Length; i++)
-					{
-						Transform t = simObj.Receptacle.Pivots[i];
-						if (t.childCount > 0)
-						{
-							SimObj psimobj = t.GetChild(0).GetComponent<SimObj>();
-							PivotSimObj pso = new PivotSimObj();
-							pso.objectId = psimobj.UniqueID;
-							pso.pivotId = i;
-							pivotSimObjs.Add(pso);
-						}
-					}
-					meta.pivotSimObjs = pivotSimObjs.ToArray();
+					meta.pivotSimObjs = simObj.PivotSimObjs.ToArray();
 					meta.receptacleObjectIds = receptacleObjectIds.ToArray();
-					meta.receptacleCount = simObj.Receptacle.Pivots.Length;
+					meta.receptacleCount = simObj.ReceptacleCount;
 
 				}
-
-				meta.objectId = simObj.UniqueID;
-
-
 				meta.visible = (visibleObjectIds.Contains(simObj));
-				meta.distance = Vector3.Distance(transform.position, o.transform.position);
-				Bounds bounds = simObj.Bounds;
-				meta.bounds3D = new [] {
-					bounds.min.x,
-					bounds.min.y,
-					bounds.min.z,
-					bounds.max.x,
-					bounds.max.y,
-					bounds.max.z,
-				};
-
+				meta.distance = Vector3.Distance(transform.position, simObj.gameObject.transform.position);
 				metadata.Add(meta);
 			}
 
@@ -558,27 +442,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 				errorMessage += e.ToString();
 				actionFinished(false);
-			}
-		}
-
-
-
-		public SimObj[] VisibleSimObjs()
-		{
-			return SimUtil.GetAllVisibleSimObjs(m_Camera, maxVisibleDistance);
-		}
-
-
-		public SimObj[] VisibleSimObjs(bool forceVisible)
-		{
-			if (forceVisible)
-			{
-				return GameObject.FindObjectsOfType(typeof(SimObj)) as SimObj[];
-			}
-			else
-			{
-				return VisibleSimObjs();
-
 			}
 		}
 

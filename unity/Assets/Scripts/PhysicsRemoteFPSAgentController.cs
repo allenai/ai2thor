@@ -71,7 +71,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
         // Update is called once per frame
         void Update()
         {
-			
+
         }
 
 		private void LateUpdate()
@@ -1123,13 +1123,16 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
         public void CloseObject(ServerAction action)
 		{
-			//OpenOrCloseObject(action, true);
+            bool success = false;
 
 			//pass name of object in from action.objectID
             //check if that object is in the viewport
             //also check to make sure that target object is interactable
             if (action.objectId == null)
             {
+                Debug.Log("Hey, actually give me an object ID to pick up, yeah?");
+                errorMessage = "objectId required for OpenObject";
+                actionFinished(false);
                 Debug.Log("Hey, actually give me an object ID to pick up, yeah?");
                 return;
             }
@@ -1140,7 +1143,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             {
                 //print("why not?");
                 //check for object in current visible objects, and also check that it's interactable
-                if (action.objectId == sop.UniqueID && sop.GetComponent<CanOpen>())
+                if (sop.GetComponent<CanOpen>())
                 {
                     //print("wobbuffet");
                     target = sop;
@@ -1153,36 +1156,45 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 CanOpen co = target.GetComponent<CanOpen>();
                 
                 //if object is open, close it
-                if (co.isOpen == true)
+                if (co.isOpen)
                 {
                     co.Interact();
+                    actionFinished(true);
                 }
 
-                else
+                else {
                     Debug.Log("can't close object if it's already closed");
+                    actionFinished(false);
+                    errorMessage = "object already open: " + action.objectId;
+                }
+            } else {
+                actionFinished(false);
+                errorMessage = "object not found: " + action.objectId;
             }
 		}
 
         public void OpenObject(ServerAction action)
 		{
-			//OpenOrCloseObject(action, false);
-
+            bool success = false;
+            
 			//pass name of object in from action.objectID
             //check if that object is in the viewport
             //also check to make sure that target object is interactable
             if (action.objectId == null)
             {
                 Debug.Log("Hey, actually give me an object ID to pick up, yeah?");
+                errorMessage = "objectId required for OpenObject";
+                actionFinished(false);
                 return;
             }
 
             SimObjPhysics target = null;
 
-            foreach (SimObjPhysics sop in VisibleSimObjPhysics)
+            foreach (SimObjPhysics sop in VisibleSimObjs(action))
             {
                 //print("why not?");
                 //check for object in current visible objects, and also check that it's interactable
-                if (action.objectId == sop.UniqueID && sop.GetComponent<CanOpen>())
+                if (sop.GetComponent<CanOpen>())
                 {
                     //print("wobbuffet");
                     target = sop;
@@ -1195,20 +1207,25 @@ namespace UnityStandardAssets.Characters.FirstPerson
 				CanOpen co = target.GetComponent<CanOpen>();
 
                 //check to make sure object is closed
-				if (co.isOpen == false)
+				if (co.isOpen)
                 {
+                    Debug.Log("can't open object if it's already open");
+                    errorMessage = "object already open";
+                    actionFinished(false);
+                } else {
 					//pass in percentage open if desired
+                    // XXX should switch this to 
                     if (action.moveMagnitude > 0.0f)
                     {
                         co.SetOpenPercent(action.moveMagnitude);
                     }
 
                     co.Interact();
-                }
-
-                else
+                    // XXX need to add checkOpenAction to determine if agent got moved
+                    actionFinished(true);
                     Debug.Log("can't open object if it's already open");
-			}         
+                }
+			}
 		}
 
         public void Contains(ServerAction action)
@@ -1244,7 +1261,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			else
 			{
 				Debug.Log("Target object not in sight");
-			}
+                errorMessage = "object not found: " + action.objectId;
+                actionFinished(false);
+            }
 		}
 
         public void SetUpRotationBoxChecks()
@@ -1326,7 +1345,42 @@ namespace UnityStandardAssets.Characters.FirstPerson
 				//print(otherdeg);
 			}         
 		}
+		public SimObjPhysics[] VisibleSimObjs(bool forceVisible)
+		{
+			if (forceVisible)
+			{
+				return GameObject.FindObjectsOfType(typeof(SimObjPhysics)) as SimObjPhysics[];
+			}
+			else
+			{
+				return GetAllVisibleSimObjPhysics(m_Camera, maxVisibleDistance);
+			}
+		}
         
+		public SimObjPhysics[] VisibleSimObjs(ServerAction action) 
+		{
+			List<SimObjPhysics> simObjs = new List<SimObjPhysics> ();
+
+			foreach (SimObjPhysics so in VisibleSimObjs (action.forceVisible)) 
+			{
+
+				if (!string.IsNullOrEmpty(action.objectId) && action.objectId != so.UniqueID) 
+				{
+					continue;
+				}
+
+				if (!string.IsNullOrEmpty(action.objectType) && action.GetSimObjType() != so.Type) 
+				{
+					continue;
+				}
+
+				simObjs.Add (so);
+			}	
+
+
+			return simObjs.ToArray ();
+
+		}
         
        
 		#if UNITY_EDITOR
