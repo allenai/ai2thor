@@ -7,7 +7,7 @@ using UnityStandardAssets.Characters.FirstPerson;
 
 public class AgentManager : MonoBehaviour
 {
-	private List<DiscreteRemoteFPSAgentController> agents = new List<DiscreteRemoteFPSAgentController>();
+	private List<BaseFPSAgentController> agents = new List<BaseFPSAgentController>();
 
 	protected int frameCounter;
 	protected bool serverSideScreenshot;
@@ -31,7 +31,7 @@ public class AgentManager : MonoBehaviour
 
 	public int actionDuration = 3;
 
-	private DiscreteRemoteFPSAgentController primaryAgent;
+	private BaseFPSAgentController primaryAgent;
 
 	void Awake() {
 
@@ -59,13 +59,31 @@ public class AgentManager : MonoBehaviour
 	}
 
 	void Start() {
-		primaryAgent = GameObject.Find("FPSController").GetComponent<DiscreteRemoteFPSAgentController>();
+		initializePrimaryAgent();
         primaryAgent.actionDuration = this.actionDuration;
 		readyToEmit = true;
 
 		this.agents.Add (primaryAgent);
 	}
 
+	private void initializePrimaryAgent() {
+
+		GameObject fpsController = GameObject.Find("FPSController");
+		DiscreteRemoteFPSAgentController discreteAgent = fpsController.GetComponent<DiscreteRemoteFPSAgentController>();
+		PhysicsRemoteFPSAgentController physicsAgent = fpsController.GetComponent<PhysicsRemoteFPSAgentController>();
+		if (isPhysicsScene()) {
+			discreteAgent.enabled = false;
+			primaryAgent = physicsAgent;
+		} else {
+			physicsAgent.enabled = false;
+			primaryAgent = discreteAgent;
+		}
+		primaryAgent.enabled = true;
+	}
+	
+	private bool isPhysicsScene() {
+		return GameObject.Find("PhysicsSceneManager") != null;
+	}
 
 	public void Initialize(ServerAction action)
 	{
@@ -75,8 +93,6 @@ public class AgentManager : MonoBehaviour
 		this.renderClassImage = action.renderClassImage;
 		this.renderDepthImage = action.renderDepthImage;
 		this.renderObjectImage = action.renderObjectImage;
-
-
 	
 		StartCoroutine (addAgents (action));
 
@@ -101,7 +117,7 @@ public class AgentManager : MonoBehaviour
 			visCapsule.SetActive (true);
 
 
-			DiscreteRemoteFPSAgentController clone = UnityEngine.Object.Instantiate (primaryAgent);
+			BaseFPSAgentController clone = UnityEngine.Object.Instantiate (primaryAgent);
 			clone.actionDuration = this.actionDuration;
 			clone.m_Camera.targetDisplay = this.agents.Count;
 			clone.transform.position = clonePosition;
@@ -117,7 +133,7 @@ public class AgentManager : MonoBehaviour
 
 	}
 
-	private Vector3 agentStartPosition(DiscreteRemoteFPSAgentController agent) {
+	private Vector3 agentStartPosition(BaseFPSAgentController agent) {
 
 		Transform t = agent.transform;
 		Vector3[] castDirections = new Vector3[]{ t.forward, t.forward * -1, t.right, t.right * -1 };
@@ -148,7 +164,7 @@ public class AgentManager : MonoBehaviour
 		return Vector3.zero;
 	}
 
-	private void updateAgentColor(DiscreteRemoteFPSAgentController agent, Color color) {
+	private void updateAgentColor(BaseFPSAgentController agent, Color color) {
 		foreach (MeshRenderer r in agent.gameObject.GetComponentsInChildren<MeshRenderer> () as MeshRenderer[]) {
 			foreach (Material m in r.materials) {
 				m.color = color;
@@ -173,10 +189,10 @@ public class AgentManager : MonoBehaviour
 	private void LateUpdate() {
 
 		int completeCount = 0;
-		foreach (DiscreteRemoteFPSAgentController agent in this.agents) {
+		foreach (BaseFPSAgentController agent in this.agents) {
 			if (agent.actionComplete) {
 				completeCount++;
-			}
+			} 
 		}
 
 
@@ -194,7 +210,7 @@ public class AgentManager : MonoBehaviour
 	}
 
 
-	private void addImageForm(WWWForm form, DiscreteRemoteFPSAgentController agent, bool renderCamera) {
+	private void addImageForm(WWWForm form, BaseFPSAgentController agent, bool renderCamera) {
 		if (this.renderImage) {
 
 			if (renderCamera) {
@@ -205,7 +221,7 @@ public class AgentManager : MonoBehaviour
 		}
 	}
 
-	private void addDepthImageForm(WWWForm form, DiscreteRemoteFPSAgentController agent) {
+	private void addDepthImageForm(WWWForm form, BaseFPSAgentController agent) {
 		if (this.renderDepthImage) {
 			if (!agent.imageSynthesis.hasCapturePass ("_depth")) {
 				Debug.LogError ("Depth image not available - returning empty image");
@@ -216,7 +232,7 @@ public class AgentManager : MonoBehaviour
 		}
 	}
 
-	private void addObjectImageForm(WWWForm form, DiscreteRemoteFPSAgentController agent, ref MetadataWrapper metadata) {
+	private void addObjectImageForm(WWWForm form, BaseFPSAgentController agent, ref MetadataWrapper metadata) {
 		if (this.renderObjectImage) {
 			if (!agent.imageSynthesis.hasCapturePass("_id")) {
 				Debug.LogError("Object Image not available in imagesynthesis - returning empty image");
@@ -278,7 +294,7 @@ public class AgentManager : MonoBehaviour
 		}
 	}
 
-	private void addClassImageForm (WWWForm form, DiscreteRemoteFPSAgentController agent) {
+	private void addClassImageForm (WWWForm form, BaseFPSAgentController agent) {
 		if (this.renderClassImage) {
 			if (!agent.imageSynthesis.hasCapturePass ("_class")) {
 				Debug.LogError ("class image not available - sending empty image");
@@ -308,7 +324,7 @@ public class AgentManager : MonoBehaviour
 
 
 		for (int i = 0; i < this.agents.Count; i++) {
-			DiscreteRemoteFPSAgentController agent = this.agents.ToArray () [i];
+			BaseFPSAgentController agent = this.agents.ToArray () [i];
 			MetadataWrapper metadata = agent.generateMetadataWrapper ();
 			metadata.agentId = i;
 			// we don't need to render the agent's camera for the first agent
@@ -334,7 +350,7 @@ public class AgentManager : MonoBehaviour
 		}
 	}
 
-	private DiscreteRemoteFPSAgentController activeAgent() {
+	private BaseFPSAgentController activeAgent() {
 		return this.agents.ToArray () [activeAgentId];
 	}
 
@@ -417,6 +433,37 @@ public class ObjectMetadata
 	public string objectId;
 	public float[] bounds3D;
 	public string parentReceptacle;
+
+	public ObjectMetadata() { }
+
+	public ObjectMetadata(SimpleSimObj simObj) {
+		GameObject o = simObj.gameObject;
+		this.name = o.name;
+		this.position = o.transform.position;
+		this.rotation = o.transform.eulerAngles;
+
+		this.objectType = Enum.GetName(typeof(SimObjType), simObj.ObjType);
+		this.receptacle = simObj.IsReceptacle;
+		this.openable = simObj.IsOpenable;
+		if (this.openable)
+		{
+			this.isopen = simObj.IsOpen;
+		}
+		this.pickupable = simObj.IsPickupable;
+		this.objectId = simObj.UniqueID;
+
+
+
+		Bounds bounds = simObj.Bounds;
+		this.bounds3D = new [] {
+			bounds.min.x,
+			bounds.min.y,
+			bounds.min.z,
+			bounds.max.x,
+			bounds.max.y,
+			bounds.max.z,
+		};
+	}
 }
 
 [Serializable]

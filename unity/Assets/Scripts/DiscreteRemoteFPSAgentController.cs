@@ -17,8 +17,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 	public class DiscreteRemoteFPSAgentController : BaseFPSAgentController
 	{
-		protected int actionCounter;
-		protected Vector3 targetTeleport;
 		protected Vector3 startingHandPosition;
 		private Dictionary<int, Material[]> currentMaskMaterials;
 		private SimObj currentMaskObj;
@@ -45,19 +43,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
             //DebugComponent.enabled = false;
 		}
 
-		protected override void actionFinished(bool success) 
-		{
-			
-			if (actionComplete) 
-			{
-				Debug.LogError ("ActionFinished called with actionComplete already set to true");
-			}
-
-			lastActionSuccess = success;
-			this.actionComplete = true;
-			actionCounter = 0;
-			targetTeleport = Vector3.zero;
-		}
 
 		protected override void Start() 
 		{
@@ -294,14 +279,14 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			int pickupableCount = 0;
 			for (int i = 0; i < simObjects.Length; i++) {
 				SimObj so = simObjects [i];
-				if (IsPickupable (so)) {
+				if (so.IsPickupable) {
 					pickupableCount++;
 					SimUtil.TakeItem (so);
 
 				}
 
 
-				if (IsOpenable (so) && response.randomizeOpen) {
+				if (so.IsOpenable && response.randomizeOpen) {
 					if (rnd.NextDouble () < 0.5) {
 						openSimObj (so);	
 					} else {
@@ -327,7 +312,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			for (int i = 0; i < simObjects.Length; i++) {
 				SimObj so = simObjects [i];
 
-				if (IsPickupable(so) && pickupable.Contains (so.Type)) {
+				if (so.IsPickupable && pickupable.Contains (so.Type)) {
 					double val = rnd.NextDouble ();
 	
 
@@ -381,7 +366,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 								continue;
 							}
 
-							if (IsPickupable (simObjects [j]) &&
+							if (simObjects [j].IsPickupable &&
 								receptacleObjects.ContainsKey (so.Type) &&
 								receptacleObjects [so.Type].Contains (simObjects [j].Type) &&
 								(!response.uniquePickupableObjectTypes || !seenObjTypes.Contains (simObjects [j].Type)) &&
@@ -535,11 +520,31 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		   StartCoroutine(checkWaitAction(success));
 		}
 
-		public SimObj[] VisibleSimObjs(ServerAction action) 
+		override public SimpleSimObj[] VisibleSimObjs()
 		{
-			List<SimObj> simObjs = new List<SimObj> ();
+			return SimUtil.GetAllVisibleSimObjs(m_Camera, maxVisibleDistance) as SimpleSimObj[];
+		}
 
-			foreach (SimObj so in VisibleSimObjs (action.forceVisible)) 
+
+		public SimpleSimObj[] VisibleSimObjs(bool forceVisible)
+		{
+			if (forceVisible)
+			{
+				return GameObject.FindObjectsOfType(typeof(SimObj)) as SimpleSimObj[];
+			}
+			else
+			{
+				return VisibleSimObjs();
+
+			}
+		}
+
+
+		public SimpleSimObj[] VisibleSimObjs(ServerAction action) 
+		{
+			List<SimpleSimObj> simObjs = new List<SimpleSimObj> ();
+
+			foreach (SimpleSimObj so in VisibleSimObjs (action.forceVisible)) 
 			{
 
 				if (!string.IsNullOrEmpty(action.objectId) && action.objectId != so.UniqueID) 
@@ -547,7 +552,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 					continue;
 				}
 
-				if (!string.IsNullOrEmpty(action.objectType) && action.GetSimObjType() != so.Type) 
+				if (!string.IsNullOrEmpty(action.objectType) && action.GetSimObjType() != so.ObjType) 
 				{
 					continue;
 				}
@@ -642,15 +647,15 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		{
 			GameObject hand = getHand ();
 			bool success = false;
-			foreach (SimObj so in VisibleSimObjs(action)) 
+			foreach (SimObj so in VisibleSimObjs(action) as SimObj[]) 
 			{
 				// XXX CHECK IF OPEN
-				if (!so.IsReceptacle && !IsOpenable (so)) 
+				if (!so.IsReceptacle && !so.IsOpenable) 
 				{
 					if (inventory.Count == 0) 
 					{
 						
-						addObjectInventory (so);
+						addObjectInventory(so);
 						currentHandSimObj = so;
 
 						Rigidbody rb = so.GetComponentInChildren (typeof(Rigidbody)) as Rigidbody;
@@ -682,7 +687,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			{
 				objectVisible = true;
 				Debug.Log(" got sim object: " + so.UniqueID);
-				if (!so.IsReceptacle && (!IsOpenable(so) || so.Manipulation == SimObjManipType.Inventory))
+				if (!so.IsReceptacle && (!so.IsOpenable || so.Manipulation == SimObjManipType.Inventory))
 				{
 					if (inventory.Count == 0)
 					{
@@ -764,7 +769,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 					{
 						receptacleVisible = true;
 						SimObj so = removeObjectInventory(response.objectId);
-						if (!IsOpenable(rso) || IsOpen(rso))
+						if (!rso.IsOpenable || rso.IsOpen)
 						{
 							Transform emptyPivot = null;
 							if (!SimUtil.GetFirstEmptyReceptaclePivot(rso.Receptacle, out emptyPivot))
@@ -827,7 +832,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			}
             StartCoroutine(checkWaitAction(success));
 		}
-
 
 
 		public void TeleportObject(ServerAction response) 
