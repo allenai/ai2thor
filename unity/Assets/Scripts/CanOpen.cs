@@ -72,6 +72,7 @@ public class CanOpen : MonoBehaviour
         }
 
 		isOpen = !isOpen;
+		//canReset = true;
 	}
 
     public float GetOpenPercent()
@@ -97,7 +98,8 @@ public class CanOpen : MonoBehaviour
     {
         for (int i = 0; i < arrayOfCol.Length; i++)
         {
-            if (other == arrayOfCol[i].GetComponent<Collider>())
+			if (other.GetComponentInParent<CanOpen>().transform.name == 
+			    arrayOfCol[i].GetComponentInParent<CanOpen>().transform.name)
                 return true;
         }
         return false;
@@ -135,6 +137,7 @@ public class CanOpen : MonoBehaviour
 
 			if (IsInIgnoreArray(other, IgnoreTheseObjects))
 			{
+				print("please ignore");
 				//don't reset, it's cool
 				return;
 			}
@@ -142,9 +145,21 @@ public class CanOpen : MonoBehaviour
             //oh it was something else RESET! DO IT!
 			else
 			{
-				Debug.Log(gameObject.name + " hit " + other.name + " Resetting position");
-                canReset = false;
-                Reset();
+				//if the other CanOpen object hit is not animating
+				//this returns count of tween objects, if 0 it is not moving
+				//print(iTween.Count(other.transform.gameObject));
+				//print(iTween.Count(this.transform.gameObject));
+
+
+                //check the collider hit's parent for itween instances
+				if(iTween.Count(other.transform.GetComponentInParent<CanOpen>().transform.gameObject) == 0)
+				{
+					//print(other.GetComponentInParent<CanOpen>().transform.name);
+                    Debug.Log(gameObject.name + " hit " + other.name + " Resetting position");
+                    canReset = false;
+                    Reset();
+				}
+
 			}
 		}
 	}
