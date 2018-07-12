@@ -98,13 +98,18 @@ public class CanOpen : MonoBehaviour
     {
         for (int i = 0; i < arrayOfCol.Length; i++)
         {
-			if (other.GetComponentInParent<CanOpen>().transform.name == 
-			    arrayOfCol[i].GetComponentInParent<CanOpen>().transform.name)
+			if (other.GetComponentInParent<CanOpen>().transform == 
+			    arrayOfCol[i].GetComponentInParent<CanOpen>().transform)
                 return true;
         }
         return false;
     }
 
+    public int GetiTweenCount()
+	{
+		//the number of iTween instances running on this object
+		return iTween.Count(this.transform.gameObject);
+	}
     //trigger enter/exit functions reset the animation if the Agent is hit by the object opening
 	public void OnTriggerEnter(Collider other)
 	{
@@ -134,10 +139,10 @@ public class CanOpen : MonoBehaviour
 			//{
 			//	return;
 			//}
-
+			print("hitting another CanOpen");
 			if (IsInIgnoreArray(other, IgnoreTheseObjects))
 			{
-				print("please ignore");
+				print("ignoring");
 				//don't reset, it's cool
 				return;
 			}
@@ -145,14 +150,11 @@ public class CanOpen : MonoBehaviour
             //oh it was something else RESET! DO IT!
 			else
 			{
-				//if the other CanOpen object hit is not animating
-				//this returns count of tween objects, if 0 it is not moving
-				//print(iTween.Count(other.transform.gameObject));
-				//print(iTween.Count(this.transform.gameObject));
-
-
                 //check the collider hit's parent for itween instances
-				if(iTween.Count(other.transform.GetComponentInParent<CanOpen>().transform.gameObject) == 0)
+                //if 0, then it is not actively animating so check against it. This is needed so CanOpen objects don't reset unless they are the active
+                //object moving. Otherwise, an open cabinet hit by a drawer would cause the Drawer AND the cabinet to try and reset.
+                //this should be fine since only one cabinet/drawer will be moving at a time given the Agent's action only opening on object at a time
+				if(other.transform.GetComponentInParent<CanOpen>().GetiTweenCount() == 0)//iTween.Count(other.transform.GetComponentInParent<CanOpen>().transform.gameObject) == 0)
 				{
 					//print(other.GetComponentInParent<CanOpen>().transform.name);
                     Debug.Log(gameObject.name + " hit " + other.name + " Resetting position");
