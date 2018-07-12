@@ -1123,8 +1123,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
         public void CloseObject(ServerAction action)
 		{
-            bool success = false;
-
 			//pass name of object in from action.objectID
             //check if that object is in the viewport
             //also check to make sure that target object is interactable
@@ -1139,7 +1137,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
             SimObjPhysics target = null;
 
-            foreach (SimObjPhysics sop in VisibleSimObjPhysics)
+            foreach (SimObjPhysics sop in VisibleSimObjs(action))
             {
                 //print("why not?");
                 //check for object in current visible objects, and also check that it's interactable
@@ -1175,8 +1173,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
         public void OpenObject(ServerAction action)
 		{
-            bool success = false;
-            
 			//pass name of object in from action.objectID
             //check if that object is in the viewport
             //also check to make sure that target object is interactable
@@ -1223,7 +1219,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     co.Interact();
                     // XXX need to add checkOpenAction to determine if agent got moved
                     actionFinished(true);
-                    Debug.Log("can't open object if it's already open");
                 }
 			}
 		}
