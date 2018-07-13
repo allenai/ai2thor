@@ -12,7 +12,11 @@ public class Contains : MonoBehaviour
 	// Use this for initialization
 	void Start () 
 	{
-		
+		//XXX debug for setting up scenes, delete or comment out when done setting up scenes
+		if(MyObjects == null)
+		{
+			Debug.Log(this.name + " Missing MyObjects List");
+		}
 	}
 	
 	// Update is called once per frame

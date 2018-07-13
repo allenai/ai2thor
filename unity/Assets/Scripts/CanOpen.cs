@@ -24,10 +24,11 @@ public class CanOpen : MonoBehaviour
 	public bool isOpen = false;
 	private Hashtable iTweenArgs;
 	public bool canReset = true;
-	private enum MovementType { Slide, Rotate } ;
+	protected enum MovementType { Slide, Rotate } ;
 
 	[SerializeField]
-	private MovementType movementType;
+	protected MovementType movementType;
+
 	void Start (){
 		iTween.Init(gameObject);//init itween cuase the documentation said so
  		iTweenArgs = iTween.Hash();
@@ -42,6 +43,19 @@ public class CanOpen : MonoBehaviour
 		}
 		#endif
 	}
+    
+    //Helper functions for setting up scenes, only for use in Editor
+	#if UNITY_EDITOR
+	public void SetMovementToSlide()
+	{
+		movementType = MovementType.Slide;
+	}
+
+    public void SetMovementToRotate()
+	{
+		movementType = MovementType.Rotate;      
+	}
+	#endif
    
     public void SetOpenPercent(float val)
 	{

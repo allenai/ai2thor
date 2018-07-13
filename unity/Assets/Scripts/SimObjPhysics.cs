@@ -39,20 +39,20 @@ public class SimObjPhysics : MonoBehaviour
 	public bool isVisible = false;
 	public bool isInteractable = false;
 	public bool isColliding = false;
-
-
-	//initial position object spawned in in case we want to reset the scene
-	//private Vector3 startPosition;   
-
+       
 	// Use this for initialization
 	void Start()
 	{
-		//Generate_UniqueID();
-		//startPosition = transform.position;
-
-		//maybe we can set these up more efficiently here....
-
-
+		//XXX For Debug setting up scene, comment out or delete when done settig up scenes
+		List<SimObjSecondaryProperty> temp = new List<SimObjSecondaryProperty>(SecondaryProperties);
+		if(temp.Contains(SimObjSecondaryProperty.Receptacle))
+		{
+			if(ReceptacleTriggerBox ==null)
+			{
+				Debug.Log(this.name + " is missing ReceptacleTriggerBox");
+			}
+		}
+        //end debug setup stuff
 	}
 
 	// Update is called once per frame
@@ -181,6 +181,46 @@ public class SimObjPhysics : MonoBehaviour
 
 	//CONTEXT MENU STUFF FOR SETTING UP SIM OBJECTS
 	//RIGHT CLICK this script in the inspector to reveal these options
+	[ContextMenu("Cabinet")]
+    void SetUpCabinet()
+	{
+		Type = SimObjType.Cabinet;
+		PrimaryProperty = SimObjPrimaryProperty.Static;
+        
+		SecondaryProperties = new SimObjSecondaryProperty[2];
+		SecondaryProperties[0] = SimObjSecondaryProperty.CanOpen;
+		SecondaryProperties[1] = SimObjSecondaryProperty.Receptacle;
+
+		if (!gameObject.GetComponent<Rigidbody>())
+            gameObject.AddComponent<Rigidbody>();
+		
+		this.GetComponent<Rigidbody>().isKinematic = true;
+
+		if(!gameObject.GetComponent<CanOpen>())
+			gameObject.AddComponent<CanOpen>();
+
+		this.GetComponent<CanOpen>().SetMovementToRotate();
+	}
+
+	[ContextMenu("Drawer")]
+	void SetUpDrawer()
+	{
+		Type = SimObjType.Drawer;
+		PrimaryProperty = SimObjPrimaryProperty.Static;
+
+		SecondaryProperties = new SimObjSecondaryProperty[2];
+        SecondaryProperties[0] = SimObjSecondaryProperty.CanOpen;
+        SecondaryProperties[1] = SimObjSecondaryProperty.Receptacle;
+
+		if (!gameObject.GetComponent<Rigidbody>())
+            gameObject.AddComponent<Rigidbody>();
+		
+        this.GetComponent<Rigidbody>().isKinematic = true;
+
+		if (!gameObject.GetComponent<CanOpen>())
+            gameObject.AddComponent<CanOpen>();
+	}
+
 	[ContextMenu("Set Up SimObjPhysics")]
     void ContextSetUpSimObjPhysics()
 	{
