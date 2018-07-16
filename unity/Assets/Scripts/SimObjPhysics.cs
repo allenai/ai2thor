@@ -219,6 +219,8 @@ public class SimObjPhysics : MonoBehaviour
 
 		if (!gameObject.GetComponent<CanOpen>())
             gameObject.AddComponent<CanOpen>();
+
+		gameObject.GetComponent<CanOpen>().SetClosedPosition();
 	}
 
 	[ContextMenu("Set Up SimObjPhysics")]
