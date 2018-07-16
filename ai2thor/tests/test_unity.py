@@ -24,6 +24,16 @@ def assert_near(point1, point2):
     for k in point1.keys():
         assert round(point1[k], 3) == round(point2[k], 3)
 
+def test_rectangle_aspect():
+    controller = ai2thor.controller.Controller()
+    controller.releases_dir = releases_dir.__get__(controller, ai2thor.controller.Controller)
+    print("trying to start unity")
+    controller.start(player_screen_width=600, player_screen_height=300)
+    print("started")
+    controller.reset('FloorPlan28')
+    event = controller.step(dict(action='Initialize', gridSize=0.25))
+    assert event.frame.shape == (300, 600, 3)
+
 def test_lookdown():
 
     e = controller.step(dict(action='RotateLook', rotation=0, horizon=0))
