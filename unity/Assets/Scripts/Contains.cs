@@ -5,18 +5,23 @@ using UnityEngine;
 public class Contains : MonoBehaviour 
 {
 	//used to not add the door/drawer/etc of the object itself to the list of currently contained objects
-	[SerializeField] protected List<GameObject> MyObjects = null; //use this for any colliders that should be ignored (each cabinet should ignore it's own door, etc)
-
+    //XXX Can probably delete this, the new PropertiesToIgnore should catch these edge cases, leaving here for now just in case
+	//[SerializeField] protected List<GameObject> MyObjects = null; //use this for any colliders that should be ignored (each cabinet should ignore it's own door, etc)
+    
 	[SerializeField] protected List<SimObjPhysics> CurrentlyContains = new List<SimObjPhysics>();
+
+    //if the sim object is one of these properties, do not add it to the Currently Contains list.
+	private List<SimObjPrimaryProperty> PropertiesToIgnore = new List<SimObjPrimaryProperty>(new SimObjPrimaryProperty[] {SimObjPrimaryProperty.Wall,
+		SimObjPrimaryProperty.Floor, SimObjPrimaryProperty.Static, SimObjPrimaryProperty.Ceiling, SimObjPrimaryProperty.Moveable});
    
 	// Use this for initialization
 	void Start () 
 	{
 		//XXX debug for setting up scenes, delete or comment out when done setting up scenes
-		if(MyObjects == null)
-		{
-			Debug.Log(this.name + " Missing MyObjects List");
-		}
+		//if(MyObjects == null)
+		//{
+		//	Debug.Log(this.name + " Missing MyObjects List");
+		//}
 	}
 	
 	// Update is called once per frame
@@ -36,9 +41,15 @@ public class Contains : MonoBehaviour
 		if(other.GetComponentInParent<SimObjPhysics>())
 		{
 			SimObjPhysics sop = other.GetComponentInParent<SimObjPhysics>();
-
+            
+            //ignore any sim objects that shouldn't be added to the CurrentlyContains list
+			if(PropertiesToIgnore.Contains(sop.PrimaryProperty))
+			{
+				return;
+			}
+			   
             //check each "other" object, see if it is currently in the CurrentlyContains list, and make sure it is NOT one of this object's doors/drawer
-			if (!CurrentlyContains.Contains(sop) && !MyObjects.Contains(sop.transform.gameObject))
+			else if (!CurrentlyContains.Contains(sop))//&& !MyObjects.Contains(sop.transform.gameObject))
             {
 				CurrentlyContains.Add(sop);
             }         

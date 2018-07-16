@@ -55,6 +55,11 @@ public class CanOpen : MonoBehaviour
 	{
 		movementType = MovementType.Rotate;      
 	}
+
+    public void SetClosedPosition()
+	{
+		closedPosition = transform.position;
+	}
 	#endif
    
     public void SetOpenPercent(float val)
