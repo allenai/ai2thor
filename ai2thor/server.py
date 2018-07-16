@@ -63,9 +63,9 @@ def read_buffer_image(buf, width, height):
     if sys.version_info.major < 3:
         # support for Python 2.7 - can't handle memoryview in Python2.7 and Numpy frombuffer
         return np.flip(np.frombuffer(
-            buf.tobytes(), dtype=np.uint8).reshape(width, height, -1), axis=0)
+            buf.tobytes(), dtype=np.uint8).reshape(height, width, -1), axis=0)
     else:
-        return np.flip(np.frombuffer(buf, dtype=np.uint8).reshape(width, height, -1), axis=0)
+        return np.flip(np.frombuffer(buf, dtype=np.uint8).reshape(height, width, -1), axis=0)
 
 def unique_rows(arr, return_index=False, return_inverse=False):
     arr = np.ascontiguousarray(arr).copy()

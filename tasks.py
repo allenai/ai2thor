@@ -69,7 +69,8 @@ def generate_quality_settings(ctx):
         f.write("QUALITY_SETTINGS = " + pprint.pformat(quality_settings))
 
 
-def increment_version():
+@task
+def increment_version(context):
     import ai2thor._version
 
     major, minor, subv = ai2thor._version.__version__.split('.')
@@ -167,7 +168,7 @@ def build(context, local=False):
         fi.write("VERSION = '%s'\n" % version)
         fi.write("BUILDS = " + pprint.pformat(builds))
 
-    increment_version()
+    increment_version(context)
     build_docker(version)
     build_pip(context)
 
