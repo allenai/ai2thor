@@ -42,6 +42,12 @@ def queue_get(que):
             pass
     return res
 
+class NumpyAwareEncoder(json.JSONEncoder):
+
+    def default(self, obj):
+        if isinstance(obj, np.generic):
+            return np.asscalar(obj)
+        return super(NumpyAwareEncoder, self).default(obj)
 
 class MultiAgentEvent(object):
 
@@ -379,7 +385,7 @@ class Server(object):
             else:
                 self.sequence_id = next_action['sequenceId']
 
-            resp = make_response(json.dumps(next_action))
+            resp = make_response(json.dumps(next_action, cls=NumpyAwareEncoder))
 
             return resp
 
