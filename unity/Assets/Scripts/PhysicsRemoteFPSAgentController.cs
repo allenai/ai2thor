@@ -308,8 +308,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 				if(Physics.Raycast(agentCamera.transform.position, point.position - agentCamera.transform.position, out hit, 
                    maxDistance /*Vector3.Distance(point.position,agentCamera.transform.position)*/, 1<<8))//layer mask automatically excludes Agent from this check
 				{
-					//print(hit.transform.name);
-                    if(hit.transform.name != sop.name)
+                    if(hit.transform != sop.transform)
 					{
 						result = false;
 					}
