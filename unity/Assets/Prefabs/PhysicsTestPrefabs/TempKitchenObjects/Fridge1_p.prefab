@@ -22,7 +22,7 @@ GameObject:
   - component: {fileID: 33967905802113298}
   - component: {fileID: 23753488459217280}
   - component: {fileID: 64255515780881106}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: FridgeShelf1 (2)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -40,8 +40,7 @@ GameObject:
   - component: {fileID: 33073011368594258}
   - component: {fileID: 23236228442915282}
   - component: {fileID: 64730551262187598}
-  - component: {fileID: 64953976886576490}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: FridgeInteriorMesh
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -150,7 +149,8 @@ GameObject:
   - component: {fileID: 4046170901203836}
   - component: {fileID: 33501360784349010}
   - component: {fileID: 23010691778094014}
-  m_Layer: 0
+  - component: {fileID: 64630114067874192}
+  m_Layer: 8
   m_Name: FreezerInteriorMesh
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -183,6 +183,7 @@ GameObject:
   - component: {fileID: 33828809015491238}
   - component: {fileID: 23458122857705960}
   - component: {fileID: 64167106881552568}
+  - component: {fileID: 54021864593790154}
   m_Layer: 8
   m_Name: FridgeFrameMesh
   m_TagString: SimObj
@@ -201,7 +202,7 @@ GameObject:
   - component: {fileID: 33727590594548444}
   - component: {fileID: 23398244399246570}
   - component: {fileID: 64740459412490852}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: FridgeShelf1 (3)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -266,7 +267,7 @@ GameObject:
   - component: {fileID: 33358808745102410}
   - component: {fileID: 23279429850421358}
   - component: {fileID: 64533618294483020}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: FridgeBottomShelf1B (2)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -468,7 +469,7 @@ GameObject:
   - component: {fileID: 33105224843880464}
   - component: {fileID: 23708442343383934}
   - component: {fileID: 64188666107994520}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: FridgeBottomShelf1A
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -724,7 +725,7 @@ GameObject:
   - component: {fileID: 33119226968181836}
   - component: {fileID: 23850213678278254}
   - component: {fileID: 64867465624583694}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: FridgeShelf1
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -742,7 +743,7 @@ GameObject:
   - component: {fileID: 33714145071135946}
   - component: {fileID: 23728409925573494}
   - component: {fileID: 64335991274075374}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: FridgeBottomShelf1A (2)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -793,7 +794,7 @@ GameObject:
   - component: {fileID: 33981361156629022}
   - component: {fileID: 23550260495353232}
   - component: {fileID: 64514093029720952}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: FridgeShelfShort1
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -954,7 +955,7 @@ GameObject:
   - component: {fileID: 33830293410907244}
   - component: {fileID: 23253338162591018}
   - component: {fileID: 64409052213727604}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: FridgeBottomShelf1B
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1590,8 +1591,8 @@ Transform:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 1038530123604432}
-  m_LocalRotation: {x: -0, y: -0.7071068, z: -0, w: 0.7071068}
-  m_LocalPosition: {x: 1.545, y: 0.031, z: -0.495}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -2.736, y: 0, z: -1.526}
   m_LocalScale: {x: 1.0000005, y: 1, z: 1.0000005}
   m_Children:
   - {fileID: 4288341314696196}
@@ -1601,7 +1602,7 @@ Transform:
   - {fileID: 4533059811506362}
   m_Father: {fileID: 0}
   m_RootOrder: 0
-  m_LocalEulerAnglesHint: {x: 0, y: -90, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!4 &4685100249696314
 Transform:
   m_ObjectHideFlags: 1
@@ -2644,6 +2645,21 @@ MeshFilter:
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 1850158645516734}
   m_Mesh: {fileID: 4300018, guid: a50e9db479f4946c68048b6070e7a005, type: 3}
+--- !u!54 &54021864593790154
+Rigidbody:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1144635800948294}
+  serializedVersion: 2
+  m_Mass: 1
+  m_Drag: 0
+  m_AngularDrag: 0.05
+  m_UseGravity: 1
+  m_IsKinematic: 1
+  m_Interpolate: 0
+  m_Constraints: 0
+  m_CollisionDetection: 0
 --- !u!54 &54220621130649014
 Rigidbody:
   m_ObjectHideFlags: 1
@@ -2772,6 +2788,20 @@ MeshCollider:
   m_CookingOptions: 14
   m_SkinWidth: 0.01
   m_Mesh: {fileID: 4300022, guid: a50e9db479f4946c68048b6070e7a005, type: 3}
+--- !u!64 &64630114067874192
+MeshCollider:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1084230767277062}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Convex: 0
+  m_CookingOptions: 14
+  m_SkinWidth: 0.01
+  m_Mesh: {fileID: 4300012, guid: a50e9db479f4946c68048b6070e7a005, type: 3}
 --- !u!64 &64730551262187598
 MeshCollider:
   m_ObjectHideFlags: 1
@@ -2814,20 +2844,6 @@ MeshCollider:
   m_CookingOptions: 14
   m_SkinWidth: 0.01
   m_Mesh: {fileID: 4300016, guid: a50e9db479f4946c68048b6070e7a005, type: 3}
---- !u!64 &64953976886576490
-MeshCollider:
-  m_ObjectHideFlags: 1
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 100100000}
-  m_GameObject: {fileID: 1030749992283452}
-  m_Material: {fileID: 0}
-  m_IsTrigger: 0
-  m_Enabled: 1
-  serializedVersion: 3
-  m_Convex: 0
-  m_CookingOptions: 14
-  m_SkinWidth: 0.01
-  m_Mesh: {fileID: 4300014, guid: a50e9db479f4946c68048b6070e7a005, type: 3}
 --- !u!65 &65202780105959396
 BoxCollider:
   m_ObjectHideFlags: 1
@@ -2923,7 +2939,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f443cc0f5915a47c3aefd8b4aeb5fb17, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  openPosition: {x: 0, y: -90, z: 0}
+  openPosition: {x: 0, y: -80, z: 0}
   closedPosition: {x: 0, y: 0, z: 0}
   animationTime: 1
   openPercentage: 1
@@ -2942,7 +2958,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b439f6e4ef5714ee2a3643acf37b7a9d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  UniqueID: Fridge|+01.47|+01.55|-00.94
+  UniqueID: Fridge|-03.18|+01.52|-01.45
   Type: 18
   PrimaryProperty: 1
   SecondaryProperties: 0700000008000000
@@ -2978,7 +2994,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f443cc0f5915a47c3aefd8b4aeb5fb17, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  openPosition: {x: 0, y: -90, z: 0}
+  openPosition: {x: 0, y: -80, z: 0}
   closedPosition: {x: 0, y: 0, z: 0}
   animationTime: 1
   openPercentage: 1
@@ -2997,7 +3013,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b439f6e4ef5714ee2a3643acf37b7a9d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  UniqueID: Fridge|+01.48|+00.64|-00.94
+  UniqueID: Fridge|-03.18|+00.61|-01.47
   Type: 18
   PrimaryProperty: 1
   SecondaryProperties: 0800000007000000
