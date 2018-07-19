@@ -69,7 +69,8 @@ def generate_quality_settings(ctx):
         f.write("QUALITY_SETTINGS = " + pprint.pformat(quality_settings))
 
 
-def increment_version():
+@task
+def increment_version(context):
     import ai2thor._version
 
     major, minor, subv = ai2thor._version.__version__.split('.')
@@ -119,6 +120,14 @@ def fetch_source_textures(context):
     z.extractall(os.getcwd())
 
 @task
+def pre_test(context):
+    import ai2thor.controller
+    import shutil
+    c = ai2thor.controller.Controller()
+    os.makedirs('unity/builds/%s' % c.build_name())
+    shutil.move(os.path.join('unity', 'builds', c.build_name() + '.app'), 'unity/builds/%s' % c.build_name())
+
+@task
 def build(context, local=False):
     version = datetime.datetime.now().strftime('%Y%m%d%H%M')
     build_url_base = 'http://s3-us-west-2.amazonaws.com/%s/' % S3_BUCKET
@@ -159,7 +168,7 @@ def build(context, local=False):
         fi.write("VERSION = '%s'\n" % version)
         fi.write("BUILDS = " + pprint.pformat(builds))
 
-    increment_version()
+    increment_version(context)
     build_docker(version)
     build_pip(context)
 

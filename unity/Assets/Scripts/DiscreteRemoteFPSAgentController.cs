@@ -84,7 +84,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 			this.continuousMode = action.continuous;
 
-			if (action.renderDepthImage || action.renderClassImage || action.renderObjectImage) {
+			if (action.renderDepthImage || action.renderClassImage || action.renderObjectImage || action.renderNormalsImage) {
 				this.enableImageSynthesis ();
 			}
 
@@ -1037,14 +1037,14 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		}
 
 		public void RotateLook(ServerAction response) {
-			transform.rotation = Quaternion.Euler(new Vector3(0.0f,response.rotation,0.0f));
+			transform.rotation = Quaternion.Euler(new Vector3(0.0f,response.rotation.y,0.0f));
 			m_Camera.transform.localEulerAngles = new Vector3 (response.horizon, 0.0f, 0.0f);
 			actionFinished(true);
 
 		}
 
 		public void Rotate(ServerAction response) {
-			transform.rotation = Quaternion.Euler(new Vector3(0.0f,response.rotation,0.0f));
+			transform.rotation = Quaternion.Euler(new Vector3(0.0f,response.rotation.y,0.0f));
 			actionFinished(true);
 		}
 
@@ -1102,7 +1102,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 			targetTeleport = new Vector3 (response.x, response.y, response.z);
 			m_CharacterController.transform.position = targetTeleport;
-			transform.rotation = Quaternion.Euler(new Vector3(0.0f,response.rotation,0.0f));
+			transform.rotation = Quaternion.Euler(new Vector3(0.0f,response.rotation.y,0.0f));
 			m_Camera.transform.localEulerAngles = new Vector3 (response.horizon, 0.0f, 0.0f);
 
 			Vector3 m = new Vector3 ();
@@ -1116,7 +1116,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			targetTeleport = new Vector3 (response.x, response.y, response.z);
 			m_CharacterController.transform.position = targetTeleport;
 			if (response.rotateOnTeleport) {
-				transform.rotation = Quaternion.Euler(new Vector3(0.0f,response.rotation,0.0f));
+				transform.rotation = Quaternion.Euler(new Vector3(0.0f,response.rotation.y,0.0f));
 			}
 
 			Vector3 m = new Vector3 ();

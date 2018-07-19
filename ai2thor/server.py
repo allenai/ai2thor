@@ -42,6 +42,12 @@ def queue_get(que):
             pass
     return res
 
+class NumpyAwareEncoder(json.JSONEncoder):
+
+    def default(self, obj):
+        if isinstance(obj, np.generic):
+            return np.asscalar(obj)
+        return super(NumpyAwareEncoder, self).default(obj)
 
 class MultiAgentEvent(object):
 
@@ -49,17 +55,23 @@ class MultiAgentEvent(object):
         self._active_event = events[active_agent_id]
         self.cv2image = self._active_event.cv2image
         self.metadata = self._active_event.metadata
+        self.screen_width = self._active_event.screen_width
+        self.screen_height = self._active_event.screen_height
         self.events = events
+        self.third_party_camera_frames = []
         # XXX add methods for depth,sem_seg
+
+    def add_third_party_camera_image(self, third_party_image_data):
+        self.third_party_camera_frames.append(read_buffer_image(third_party_image_data, self.screen_width, self.screen_height))
 
 def read_buffer_image(buf, width, height):
 
     if sys.version_info.major < 3:
         # support for Python 2.7 - can't handle memoryview in Python2.7 and Numpy frombuffer
         return np.flip(np.frombuffer(
-            buf.tobytes(), dtype=np.uint8).reshape(width, height, -1), axis=0)
+            buf.tobytes(), dtype=np.uint8).reshape(height, width, -1), axis=0)
     else:
-        return np.flip(np.frombuffer(buf, dtype=np.uint8).reshape(width, height, -1), axis=0)
+        return np.flip(np.frombuffer(buf, dtype=np.uint8).reshape(height, width, -1), axis=0)
 
 def unique_rows(arr, return_index=False, return_inverse=False):
     arr = np.ascontiguousarray(arr).copy()
@@ -92,6 +104,7 @@ class Event(object):
 
         self.frame = None
         self.depth_frame = None
+        self.normals_frame = None
 
         self.color_to_object_id = {}
         self.object_id_to_color = {}
@@ -107,6 +120,7 @@ class Event(object):
 
         self.process_colors()
         self.process_visible_bounds2D()
+        self.third_party_camera_frames = []
 
     @property
     def image_data(self):
@@ -120,7 +134,6 @@ class Event(object):
 
     def process_colors(self):
         for color_data in self.metadata['colors']:
-            name = ''.join([x for x in color_data['name'] if x.isalpha()])  # Keep only alpha chars
             name = color_data['name']
             c_key = tuple(color_data['color'])
             self.color_to_object_id[c_key] = name
@@ -178,11 +191,18 @@ class Event(object):
         image_depth_out[image_depth_out > MAX_DEPTH] = MAX_DEPTH
         self.depth_frame = image_depth_out.astype(np.float32)
 
+    def add_image_normals(self, image_normals_data):
+        self.normals_frame = read_buffer_image(image_normals_data, self.screen_width, self.screen_height)
+
+    def add_third_party_camera_image(self, third_party_image_data):
+        self.third_party_camera_frames.append(read_buffer_image(third_party_image_data, self.screen_width, self.screen_height))
+
     def add_image(self, image_data):
         self.frame = read_buffer_image(image_data, self.screen_width, self.screen_height)
 
     def add_image_ids(self, image_ids_data):
         self.instance_segmentation_frame = read_buffer_image(image_ids_data, self.screen_width, self.screen_height)
+        self.process_colors_ids()
 
     def add_image_classes(self, image_classes_data):
         self.class_segmentation_frame = read_buffer_image(image_classes_data, self.screen_width, self.screen_height)
@@ -308,51 +328,54 @@ class Server(object):
 
             if request.headers['Content-Type'].split(';')[0] == 'multipart/form-data':
                 form = MultipartFormParser(request.get_data(), MultipartFormParser.get_boundary(request.headers))
+                metadata = json.loads(form.form['metadata'][0])
+                token = form.form['token'][0]
             else:
                 form = request
+                metadata = json.loads(form.form['metadata'])
+                token = form.form['token']
 
-            if self.client_token:
-                token = form.form['token'][0]
-                if token is None or token != self.client_token:
-                    abort(403)
+            if self.client_token and token != self.client_token:
+                abort(403)
 
             if self.frame_counter % self.debug_frames_per_interval == 0:
                 now = time.time()
                 # rate = self.debug_frames_per_interval / float(now - self.last_rate_timestamp)
-                # print("%s %s/s" % (datetime.datetime.now().isoformat(), rate))
                 self.last_rate_timestamp = now
-
-            metadata = json.loads(form.form['metadata'][0])
-
-            if len(metadata['agents']) > 1:
-                events = []
-                for a in metadata['agents']:
-                    events.append(Event(a, form.files['image'][len(events)]))
-
-                self.last_event = event = MultiAgentEvent(metadata['activeAgentId'], events)
-            else:
-                self.last_event = event = Event(metadata['agents'][0])
+                # import datetime
+                # print("%s %s/s" % (datetime.datetime.now().isoformat(), rate))
 
             if metadata['sequenceId'] != self.sequence_id:
-                raise Exception("Sequence id mismatch: %s vs %s" % (
+                raise ValueError("Sequence id mismatch: %s vs %s" % (
                     metadata['sequenceId'], self.sequence_id))
 
-            #print(list(form.files.keys()))
+            events = []
+            for i, a in enumerate(metadata['agents']):
+                e = Event(a)
+                image_mapping = dict(
+                    image=e.add_image,
+                    image_depth=e.add_image_depth,
+                    image_ids=e.add_image_ids,
+                    image_classes=e.add_image_classes,
+                    image_normals=e.add_image_normals
+                )
 
-            image_mapping = dict(
-                image=event.add_image,
-                image_depth=event.add_image_depth,
-                image_ids=event.add_image_ids,
-                image_classes=event.add_image_classes
-            )
+                for key in image_mapping.keys():
+                    if key in form.files:
+                        image_mapping[key](form.files[key][i])
 
-            for key in image_mapping.keys():
-                if key in form.files:
-                    image_mapping[key](form.files[key][0])
+                events.append(e)
 
-            event.process_colors_ids()
+            if len(events) > 1:
+                self.last_event = event = MultiAgentEvent(metadata['activeAgentId'], events)
+            else:
+                self.last_event = event = events[0]
+
+            for img in form.files.get('image-thirdParty-camera', []):
+                self.last_event.add_third_party_camera_image(img)
 
             request_queue.put_nowait(event)
+
             self.frame_counter += 1
 
             next_action = queue_get(response_queue)
@@ -362,7 +385,7 @@ class Server(object):
             else:
                 self.sequence_id = next_action['sequenceId']
 
-            resp = make_response(json.dumps(next_action))
+            resp = make_response(json.dumps(next_action, cls=NumpyAwareEncoder))
 
             return resp
 

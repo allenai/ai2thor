@@ -379,7 +379,7 @@ def key_for_point(x, z):
 
 class Controller(object):
 
-    def __init__(self, quality=DEFAULT_QUALITY):
+    def __init__(self, quality=DEFAULT_QUALITY, fullscreen=False):
         self.request_queue = Queue(maxsize=1)
         self.response_queue = Queue(maxsize=1)
         self.receptacle_nearest_pivot_points = {}
@@ -393,6 +393,7 @@ class Controller(object):
         self.killing_unity = False
         self.quality = quality
         self.lock_file = None
+        self.fullscreen = fullscreen
 
     def reset(self, scene_name=None):
         self.response_queue.put_nowait(dict(action='Reset', sceneName=scene_name, sequenceId=0))
@@ -590,6 +591,11 @@ class Controller(object):
             if object_type not in RECEPTACLE_OBJECTS[receptacle_type]:
                 should_fail = True
 
+        rotation = action.get('rotation')
+        if rotation is not None and type(rotation) != dict:
+            action['rotation'] = {}
+            action['rotation']['y'] = rotation
+
         if should_fail:
             new_event = copy.deepcopy(self.last_event)
             new_event.metadata['lastActionSuccess'] = False
@@ -597,15 +603,6 @@ class Controller(object):
             return new_event
 
         assert self.request_queue.empty()
-
-        # Converts numpy scalars to python scalars so they can be encoded in
-        # JSON.
-        action_filtered = {}
-        for k,v in action.items():
-            if isinstance(v, np.generic):
-                v = np.asscalar(v)
-            action_filtered[k] = v
-        action = action_filtered
 
         self.response_queue.put_nowait(action)
         self.last_event = queue_get(self.request_queue)
@@ -621,7 +618,8 @@ class Controller(object):
     def unity_command(self, width, height):
 
         command = self.executable_path()
-        command += " -screen-quality %s -screen-width %s -screen-height %s" % (QUALITY_SETTINGS[self.quality], width, height)
+        fullscreen = 1 if self.fullscreen else 0
+        command += " -screen-fullscreen %s -screen-quality %s -screen-width %s -screen-height %s" % (fullscreen, QUALITY_SETTINGS[self.quality], width, height)
         return shlex.split(command)
 
     def _start_unity_thread(self, env, width, height, host, port, image_name):
@@ -656,8 +654,13 @@ class Controller(object):
 
     def check_x_display(self, x_display):
         with open(os.devnull, "w") as dn:
+            # copying the environment so that we pickup
+            # XAUTHORITY values
+            env = os.environ.copy()
+            env['DISPLAY'] = x_display
+
             if subprocess.call(['which', 'xdpyinfo'], stdout=dn) == 0:
-                assert subprocess.call("xdpyinfo", stdout=dn, env=dict(DISPLAY=x_display), shell=True) == 0, \
+                assert subprocess.call("xdpyinfo", stdout=dn, env=env, shell=True) == 0, \
                     ("Invalid DISPLAY %s - cannot find X server with xdpyinfo" % x_display)
 
     def _start_server_thread(self):
