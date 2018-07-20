@@ -38,7 +38,8 @@ public class Contains : MonoBehaviour
 	public void OnTriggerStay(Collider other)
     {
 		//from the collider, see if the thing hit is a sim object physics
-		if(other.GetComponentInParent<SimObjPhysics>())
+        //don't detect other trigger colliders to prevent nested objects from containing each other
+		if(other.GetComponentInParent<SimObjPhysics>() && !other.isTrigger)
 		{
 			SimObjPhysics sop = other.GetComponentInParent<SimObjPhysics>();
             
