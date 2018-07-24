@@ -7,7 +7,12 @@ using System.Collections.Generic;
 public class Build
 {
     static void OSXIntel64() {
-		build(GetBuildName(), BuildTarget.StandaloneOSX); //was BuildTarget.StandaloneOSXIntel64
+#if UNITY_2017_3_OR_NEWER
+		var buildTarget  = BuildTarget.StandaloneOSX;
+#else
+		var buildTarget = BuildTarget.StandaloneOSXIntel64;
+#endif
+		build(GetBuildName(), buildTarget);
     }
 
     static string GetBuildName() {
