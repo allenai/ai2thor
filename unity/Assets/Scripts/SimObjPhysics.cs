@@ -34,25 +34,27 @@ public class SimObjPhysics : MonoBehaviour
 	public GameObject[] MyTriggerColliders = null;
 
 	[SerializeField]
-	public GameObject ReceptacleTriggerBox = null;
+	public GameObject[] ReceptacleTriggerBoxes = null;
 
 	public bool isVisible = false;
 	public bool isInteractable = false;
 	public bool isColliding = false;
-       
+
 	// Use this for initialization
 	void Start()
 	{
 		//XXX For Debug setting up scene, comment out or delete when done settig up scenes
+        #if UNITY_EDITOR
 		List<SimObjSecondaryProperty> temp = new List<SimObjSecondaryProperty>(SecondaryProperties);
-		if(temp.Contains(SimObjSecondaryProperty.Receptacle))
+		if (temp.Contains(SimObjSecondaryProperty.Receptacle))
 		{
-			if(ReceptacleTriggerBox ==null)
+			if (ReceptacleTriggerBoxes.Length == 0)
 			{
-				Debug.Log(this.name + " is missing ReceptacleTriggerBox");
+				Debug.Log(this.name + " is missing ReceptacleTriggerBoxes please hook them up");
 			}
 		}
-        //end debug setup stuff
+        #endif
+		//end debug setup stuff
 	}
 
 	// Update is called once per frame
@@ -85,6 +87,7 @@ public class SimObjPhysics : MonoBehaviour
     //make sure to return array of strings so that this info can be put into MetaData
 	public List<string> Contains()
 	{
+		//grab a list of all secondary properties of this object
 		List<SimObjSecondaryProperty> sspList = new List<SimObjSecondaryProperty>(SecondaryProperties);
 
         List<string> objs = new List<string>();
@@ -92,23 +95,38 @@ public class SimObjPhysics : MonoBehaviour
         //is this object a receptacle?
 		if(sspList.Contains(SimObjSecondaryProperty.Receptacle))
 		{
-			if (ReceptacleTriggerBox != null)
+			//this is a receptacle, now populate objs list of contained objets to return below
+			if (ReceptacleTriggerBoxes != null)
             {
-                objs = ReceptacleTriggerBox.GetComponent<Contains>().CurrentlyContainedUniqueIDs();
-
-                #if UNITY_EDITOR
-				//print the objs for now just to check in editor
-				string result = UniqueID + " contains: ";
-
-                foreach(string s in objs)
+				//do this once per ReceptacleTriggerBox referenced by this object
+				foreach(GameObject rtb in ReceptacleTriggerBoxes)
 				{
-					result += s + ", ";
+					//now go through every object each ReceptacleTriggerBox is keeping track of and add their string UniqueID to objs
+					foreach(string id in rtb.GetComponent<Contains>().CurrentlyContainedUniqueIDs())
+					{
+						//don't add repeats
+						if(!objs.Contains(id))
+						objs.Add(id);
+					}
+					//objs.Add(rtb.GetComponent<Contains>().CurrentlyContainedUniqueIDs());
+
+                    #if UNITY_EDITOR
+                    //print the objs for now just to check in editor
+                    string result = UniqueID + " contains: ";
+
+                    foreach (string s in objs)
+                    {
+                        result += s + ", ";
+                    }
+
+                    Debug.Log(result);
+                    #endif               
+                    
 				}
 
-				Debug.Log(result);
-				#endif
+                //return list of Unique ID strings
+				return objs;
 
-                return objs;
             }
 
             else
