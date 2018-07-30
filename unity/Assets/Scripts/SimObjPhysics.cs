@@ -108,21 +108,20 @@ public class SimObjPhysics : MonoBehaviour
 						if(!objs.Contains(id))
 						objs.Add(id);
 					}
-					//objs.Add(rtb.GetComponent<Contains>().CurrentlyContainedUniqueIDs());
-
-                    #if UNITY_EDITOR
-                    //print the objs for now just to check in editor
-                    string result = UniqueID + " contains: ";
-
-                    foreach (string s in objs)
-                    {
-                        result += s + ", ";
-                    }
-
-                    Debug.Log(result);
-                    #endif               
-                    
+					//objs.Add(rtb.GetComponent<Contains>().CurrentlyContainedUniqueIDs()); 
 				}
+
+				#if UNITY_EDITOR
+                //print the objs for now just to check in editor
+                string result = UniqueID + " contains: ";
+
+                foreach (string s in objs)
+                {
+                    result += s + ", ";
+                }
+
+                Debug.Log(result);
+                #endif
 
                 //return list of Unique ID strings
 				return objs;
