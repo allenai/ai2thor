@@ -49,6 +49,12 @@ def test_lookdown():
     e = controller.step(dict(action='LookDown'))
     assert round(e.metadata['agent']['cameraHorizon']) == 60
 
+def test_no_leak_params():
+
+    action = dict(action='RotateLook', rotation=0, horizon=0)
+    e = controller.step(action)
+    assert 'sequenceId' not in action
+
 def test_lookup():
 
     e = controller.step(dict(action='RotateLook', rotation=0, horizon=0))
