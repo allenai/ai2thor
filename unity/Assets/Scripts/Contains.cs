@@ -11,8 +11,8 @@ public class Contains : MonoBehaviour
 	[SerializeField] protected List<SimObjPhysics> CurrentlyContains = new List<SimObjPhysics>();
 
     //if the sim object is one of these properties, do not add it to the Currently Contains list.
-	//private List<SimObjPrimaryProperty> PropertiesToIgnore = new List<SimObjPrimaryProperty>(new SimObjPrimaryProperty[] {SimObjPrimaryProperty.Wall,
-		//SimObjPrimaryProperty.Floor, SimObjPrimaryProperty.Static, SimObjPrimaryProperty.Ceiling, SimObjPrimaryProperty.Moveable});
+	private List<SimObjPrimaryProperty> PropertiesToIgnore = new List<SimObjPrimaryProperty>(new SimObjPrimaryProperty[] {SimObjPrimaryProperty.Wall,
+		SimObjPrimaryProperty.Floor, SimObjPrimaryProperty.Static, SimObjPrimaryProperty.Ceiling, SimObjPrimaryProperty.Moveable});
    
 	// Use this for initialization
 	void Start () 
@@ -43,11 +43,11 @@ public class Contains : MonoBehaviour
 		{
 			SimObjPhysics sop = other.GetComponentInParent<SimObjPhysics>();
             
-   //         //ignore any sim objects that shouldn't be added to the CurrentlyContains list
-			//if(PropertiesToIgnore.Contains(sop.PrimaryProperty))
-			//{
-			//	return;
-			//}
+            //ignore any sim objects that shouldn't be added to the CurrentlyContains list
+			if(PropertiesToIgnore.Contains(sop.PrimaryProperty))
+			{
+				return;
+			}
 			   
             //check each "other" object, see if it is currently in the CurrentlyContains list, and make sure it is NOT one of this object's doors/drawer
 			if (!CurrentlyContains.Contains(sop))//&& !MyObjects.Contains(sop.transform.gameObject))
