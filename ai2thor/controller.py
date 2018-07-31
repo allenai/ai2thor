@@ -1018,7 +1018,7 @@ class BFSController(Controller):
         self.enqueue_points(event.metadata['agent']['position'])
         while self.queue:
             self.queue_step()
-            self.visualize_points(scene_name)
+            # self.visualize_points(scene_name)
 
     def start_search(
             self,
