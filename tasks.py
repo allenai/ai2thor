@@ -185,9 +185,11 @@ def interact(ctx, scene):
 
 @task
 def release(ctx):
-    x = subprocess.check_output("git status --porcelain | grep -v '??'", shell=True)
-    if len(x) > 0:
-        print(x.decode('utf-8'))
+    x = subprocess.check_output("git status --porcelain", shell=True).decode('ASCII')
+    for line in x.split('\n'):
+        if line.strip().startswith('??'):
+            continue
+        print(x)
         raise Exception("Found locally modified changes from 'git status' - please commit and push or revert")
 
     import ai2thor._version
