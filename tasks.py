@@ -184,6 +184,22 @@ def interact(ctx, scene):
     env.stop()
 
 @task
+def release(ctx):
+    x = subprocess.check_output("git status --porcelain | grep -v '??'", shell=True)
+    if len(x) > 0:
+        print(x.decode('utf-8'))
+        raise Exception("Found locally modified changes from 'git status' - please commit and push or revert")
+
+    import ai2thor._version
+
+    tag = "v" + ai2thor._version.__version__
+    subprocess.check_call('git tag -a %s -m "release  %s"' % (tag, tag), shell=True)
+    subprocess.check_call('git push origin --tags', shell=True)
+    subprocess.check_call('twine upload dist/ai2thor-{ver}-* dist/ai2thor-{ver}.*'.format(ver=ai2thor._version.__version__), shell=True)
+
+
+
+@task
 def check_visible_objects_closed_receptacles(ctx, start_scene, end_scene):
     from itertools import product
 
