@@ -187,9 +187,8 @@ def interact(ctx, scene):
 def release(ctx):
     x = subprocess.check_output("git status --porcelain", shell=True).decode('ASCII')
     for line in x.split('\n'):
-        if line.strip().startswith('??'):
+        if line.strip().startswith('??') or len(line.strip()) == 0:
             continue
-        print(x)
         raise Exception("Found locally modified changes from 'git status' - please commit and push or revert")
 
     import ai2thor._version
@@ -197,7 +196,7 @@ def release(ctx):
     tag = "v" + ai2thor._version.__version__
     subprocess.check_call('git tag -a %s -m "release  %s"' % (tag, tag), shell=True)
     subprocess.check_call('git push origin --tags', shell=True)
-    subprocess.check_call('twine upload dist/ai2thor-{ver}-* dist/ai2thor-{ver}.*'.format(ver=ai2thor._version.__version__), shell=True)
+    subprocess.check_call('twine upload -u ai2thor dist/ai2thor-{ver}-* dist/ai2thor-{ver}.*'.format(ver=ai2thor._version.__version__), shell=True)
 
 
 
