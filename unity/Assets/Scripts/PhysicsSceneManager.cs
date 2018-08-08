@@ -8,14 +8,19 @@ public class PhysicsSceneManager : MonoBehaviour
 {
 	public List<SimObjPhysics> PhysObjectsInScene = new List<SimObjPhysics>();
 
+	public List<string> UniqueIDsInScene = new List<string>();
+
 	private void OnEnable()
 	{
+		//clear this on start so that the CheckForDuplicates function doesn't check pre-existing lists
+        UniqueIDsInScene.Clear();
+
 		GatherSimObjPhysInScene();
 	}
 	// Use this for initialization
 	void Start () 
 	{
-		
+
 	}
 	
 	// Update is called once per frame
@@ -34,6 +39,14 @@ public class PhysicsSceneManager : MonoBehaviour
 		foreach(SimObjPhysics o in PhysObjectsInScene)
 		{
 			Generate_UniqueID(o);
+
+			//check against any Unique IDs currently tracked in list if there is a duplicate
+			if (CheckForDuplicateUniqueIDs(o))
+				Debug.Log("Yo there are duplicate UniqueIDs! Check" + o.UniqueID);
+
+			else
+				UniqueIDsInScene.Add(o.UniqueID);
+
 		}
 	}
     
@@ -45,4 +58,13 @@ public class PhysicsSceneManager : MonoBehaviour
         string zPos = (pos.z >= 0 ? "+" : "") + pos.z.ToString("00.00");
         o.UniqueID = o.Type.ToString() + "|" + xPos + "|" + yPos + "|" + zPos;
     }
+    
+	private bool CheckForDuplicateUniqueIDs(SimObjPhysics sop)
+	{
+		if (UniqueIDsInScene.Contains(sop.UniqueID))
+			return true;
+
+		else
+			return false;
+	}
 }
