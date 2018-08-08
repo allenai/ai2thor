@@ -1140,6 +1140,13 @@ namespace UnityStandardAssets.Characters.FirstPerson
             {
                 //print("why not?");
                 //check for object in current visible objects, and also check that it's interactable
+				if (!sop.isInteractable)
+				{
+					Debug.Log(sop.UniqueID + " is not Interactable");
+					return;
+				}
+ 
+				
                 if (sop.GetComponent<CanOpen>())
                 {
                     //print("wobbuffet");
@@ -1187,8 +1194,14 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
             foreach (SimObjPhysics sop in VisibleSimObjs(action))
             {
-                //print("why not?");
-                //check for object in current visible objects, and also check that it's interactable
+				//print("why not?");
+				//check for object in current visible objects, and also check that it's interactable
+				if (!sop.isInteractable)
+                {
+                    Debug.Log(sop.UniqueID + " is not Interactable");
+                    return;
+                }
+				
                 if (sop.GetComponent<CanOpen>())
                 {
                     //print("wobbuffet");
