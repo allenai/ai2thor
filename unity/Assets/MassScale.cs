@@ -4,29 +4,32 @@ using UnityEngine;
 
 public class MassScale : MonoBehaviour 
 {
-
+	[Header("Scale Parts that Move")]
 	public GameObject Needle; 
 	public GameObject BaseArm;
 
 	public GameObject RightScale;
 	public GameObject LeftScale;
 
+	[Header("Lists of Objects in Each Scale")]
 	public List<SimObjPhysics> RightScaleObjects = new List<SimObjPhysics>();
 	private List<SimObjPhysics> RightScaleObjects_old = new List<SimObjPhysics>();
 
 	public List<SimObjPhysics> LeftScaleObjects = new List<SimObjPhysics>();
 	private List<SimObjPhysics> LeftScaleObjects_old = new List<SimObjPhysics>();
 
+	[Header("Number of Objects in Each Scale")]
 	public int RightCount = 0;
 	public int LeftCount = 0;
     
+	[Header("Total Mass of objects in Each Scale")]
 	public float RightTotalMass = 0.0f;
 	public float LeftTotalMass = 0.0f;
-
+    
     //maximum amount the arm of the scale can rotate in either the positive or negative axis direction
     //this is different thanthe cap for the needle, which by default is + or - 90 degrees
-	public float MaxAngleChangeAmount_BaseArm = 10;
-	public float MaxAngleChangeAmount_Needle = 90;  
+	private float MaxAngleChangeAmount_BaseArm = 10;
+	private float MaxAngleChangeAmount_Needle = 90;  
 
 	//private Hashtable iTweenArgs;
 

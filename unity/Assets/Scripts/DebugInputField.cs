@@ -411,6 +411,297 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         break;
                     }
 
+
+                //*****************************************************************************
+                //MASS SCALE ACTIONS HERE
+                //*****************************************************************************
+
+                    //get total mass in right scale of MassScale sim obj
+				case "rscalemass":
+					{
+						ServerAction action = new ServerAction();
+                        action.action = "MassInRightScale";
+                        
+						if (splitcommand.Length > 1)
+                        {
+                            action.objectId = splitcommand[1];
+                        }
+
+						PhysicsController.ProcessControlCommand(action);
+						break;
+					}
+
+                    //get total mass in left scale of MassScale sim obj
+				case "lscalemass":
+                    {
+						ServerAction action = new ServerAction();
+                        action.action = "MassInLeftScale";
+
+						if (splitcommand.Length > 1)
+                        {
+                            action.objectId = splitcommand[1];
+                        }
+
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
+                    //get total count of objects in right scale of MassScale sim obj
+				case "rscalecount":
+                    {
+						ServerAction action = new ServerAction();
+                        action.action = "CountInRightScale";
+
+						if (splitcommand.Length > 1)
+                        {
+                            action.objectId = splitcommand[1];
+                        }
+
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
+                    //get total count of objects in the left scale of MassScale sim obj
+				case "lscalecount":
+                    {
+						ServerAction action = new ServerAction();
+                        action.action = "CountInLeftScale";
+
+						if (splitcommand.Length > 1)
+                        {
+                            action.objectId = splitcommand[1];
+                        }
+
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
+                    //get list of all sim objects in the right scale of MassScale sim obj
+				case "rscaleobjs":
+                    {
+						ServerAction action = new ServerAction();
+                        action.action = "ObjectsInRightScale";
+
+						if (splitcommand.Length > 1)
+                        {
+                            action.objectId = splitcommand[1];
+                        }
+
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
+                    //get list of all sim objects in the Left scale of MassScale sim obj
+				case "lscaleobjs":
+                    {
+						ServerAction action = new ServerAction();
+                        action.action = "ObjectsInLeftScale";
+
+						if (splitcommand.Length > 1)
+                        {
+                            action.objectId = splitcommand[1];
+                        }
+
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
+                    //*****************************************************************************
+                    //START SPAWNER ACTIONS HERE
+					//*****************************************************************************
+
+                    //spawn a single object of a single type
+				case "spawner_ss":
+					{
+						//pass in a string name of the object you want to spawn from {bread, tomato, egg, potato, lettuce, apple}
+						ServerAction action = new ServerAction();
+						action.action = "SpawnerSS";
+
+                        
+						if(splitcommand.Length > 1)
+						{
+							//ID of spawner
+							action.objectId = splitcommand[1];
+
+							//type of object to spawn, selected from {bread, tomato, egg, potato, lettuce, apple}
+							action.objectType = splitcommand[2];
+						}
+
+						PhysicsController.ProcessControlCommand(action);
+						break;
+					}
+
+                    //spawn a single object of a random type
+				case "spawner_sor":
+                    {
+						
+						ServerAction action = new ServerAction();
+                        action.action = "SpawnerSOR";
+
+						if (splitcommand.Length > 1)
+						{
+							//ID of spawner
+							action.objectId = splitcommand[1];
+						}
+
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
+                    //spawn multiple objects, all of a single type
+				case "spawner_ms":
+                    {
+						ServerAction action = new ServerAction();
+                        action.action = "SpawnerMS";
+
+                        //need to pass in the count of objects, the type of object, and the delay 
+                        if (splitcommand.Length > 1)
+                        {
+							//ID of spawner
+                            action.objectId = splitcommand[1];
+
+							//count of objects to spawn in
+							action.maxNumRepeats = int.Parse(splitcommand[2]);
+
+							//type of object
+                            action.objectType = splitcommand[3];
+
+							//delay between spawns
+							action.moveMagnitude = float.Parse(splitcommand[4]);
+       
+                        }
+
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
+                    //spawn multiple objects, all of one random type
+				case "spawner_mor":
+                    {
+						ServerAction action = new ServerAction();
+						action.action = "SpawnerMOR";
+
+                        //need to pass in the count and the delay
+						if (splitcommand.Length > 1)
+						{
+							//ID of spawner
+                            action.objectId = splitcommand[1];
+							//count of objects to spawn
+							action.maxNumRepeats = int.Parse(splitcommand[2]);
+                            //delay between spawns
+							action.moveMagnitude = float.Parse(splitcommand[3]);
+
+						}
+
+						PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
+                    //spawn multiple obects, each of a random type
+				case "spawner_mer":
+                    {
+					
+                        ServerAction action = new ServerAction();
+                        action.action = "SpawnerMER";
+
+                        //need to pass in the count and the delay
+                        if (splitcommand.Length > 1)
+                        {
+							//ID of spawner
+                            action.objectId = splitcommand[1];
+                            
+                            //count of objects to spawn
+                            action.maxNumRepeats = int.Parse(splitcommand[2]);
+
+                            //delay between spawns
+                            action.moveMagnitude = float.Parse(splitcommand[3]);                     
+                        }
+
+						PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
+					//spawn a random number (range) of objects, all of a single type
+				case "spawner_rs":
+                    {
+						ServerAction action = new ServerAction();
+						action.action = "SpawnerRS";
+
+                        //pass in a min range, max range, object type, and delay
+						if (splitcommand.Length > 1)
+                        {
+							//ID of spawner
+                            action.objectId = splitcommand[1];
+
+							//minimum range of how many objects to spawn
+							action.agentCount = int.Parse(splitcommand[2]);
+
+                            //maximum range of how many bjects to spawn
+                            action.maxNumRepeats = int.Parse(splitcommand[3]);
+                            
+							//type of object
+                            action.objectType = splitcommand[4];
+
+                            //delay between spawns
+                            action.moveMagnitude = float.Parse(splitcommand[5]);
+                        }
+
+						PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
+					//spawn a random number (range) of objects, all of one random type
+				case "spawner_ror":
+                    {
+						ServerAction action = new ServerAction();
+                        action.action = "SpawnerROR";
+
+						//pass in a min range, max range, delay
+						if (splitcommand.Length > 1)
+						{
+							//ID of spawner
+                            action.objectId = splitcommand[1];
+
+							//minimum range of how many objects to spawn
+                            action.agentCount = int.Parse(splitcommand[2]);
+                            
+                            //maximum range of how many objects to spawn
+                            action.maxNumRepeats = int.Parse(splitcommand[3]);
+                            
+                            //delay between spawns
+                            action.moveMagnitude = float.Parse(splitcommand[4]);
+						}
+
+						PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
+					//spawn a random number (range) of objects, each of a random type
+				case "spawner_rer":
+                    {
+						ServerAction action = new ServerAction();
+                        action.action = "SpawnerRER";
+
+                        //pass in a min range, max range, delay
+                        if (splitcommand.Length > 1)
+                        {
+							//ID of spawner
+                            action.objectId = splitcommand[1];
+
+                            //minimum range of how many objects to spawn
+                            action.agentCount = int.Parse(splitcommand[2]);
+
+                            //maximum range of how many objects to spawn
+                            action.maxNumRepeats = int.Parse(splitcommand[3]);
+
+                            //delay between spawns
+                            action.moveMagnitude = float.Parse(splitcommand[4]);
+                        }
+
+						PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
 				default:
                     {                  
                         //Debug.Log("Invalid Command");

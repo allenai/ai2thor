@@ -1386,9 +1386,430 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 
 			return simObjs.ToArray ();
-
+            
 		}
+
+		public void MassInRightScale(ServerAction action)
+		{
+			if (action.objectId == null)
+			{
+				Debug.Log("Please give me a MassScale's UniqueID");
+				return;
+			}
+
+			SimObjPhysics target = null;
+
+			foreach (SimObjPhysics sop in VisibleSimObjPhysics)
+			{
+				//check for object in current visible objects, and also check that it's interactable
+				if (action.objectId == sop.UniqueID)
+				{
+					//print("wobbuffet");
+					target = sop;
+				}
+
+			}
+
+			if (target)
+			{
+				//XXX this is where the metadata would be exported, this info right here
+				Debug.Log("The Right Scale has:" + target.GetComponent<MassScale>().RightScale_TotalMass() + " kg in it");
+				//return target.GetComponent<MassScale>().RightScale_TotalMass();
+			}
+		}
+
+		public void MassInLeftScale(ServerAction action)
+        {
+            if (action.objectId == null)
+            {
+                Debug.Log("Please give me a MassScale's UniqueID");
+                return;
+            }
+
+            SimObjPhysics target = null;
+
+            foreach (SimObjPhysics sop in VisibleSimObjPhysics)
+            {
+                //check for object in current visible objects, and also check that it's interactable
+                if (action.objectId == sop.UniqueID)
+                {
+                    //print("wobbuffet");
+                    target = sop;
+                }
+                
+            }
+
+            if (target)
+            {
+                //XXX this is where the metadata would be exported, this info right here
+                Debug.Log("The Left Scale has:" + target.GetComponent<MassScale>().LeftScale_TotalMass() + " kg in it");
+                //return target.GetComponent<MassScale>().RightScale_TotalMass();
+            }
+        }
         
+		public void CountInRightScale(ServerAction action)
+        {
+            if (action.objectId == null)
+            {
+                Debug.Log("Please give me a MassScale's UniqueID");
+                return;
+            }
+
+            SimObjPhysics target = null;
+
+            foreach (SimObjPhysics sop in VisibleSimObjPhysics)
+            {
+                //check for object in current visible objects, and also check that it's interactable
+                if (action.objectId == sop.UniqueID)
+                {
+                    //print("wobbuffet");
+                    target = sop;
+                }
+
+            }
+
+            if (target)
+            {
+                //XXX this is where the metadata would be exported, this info right here
+				Debug.Log("The Right Scale has: " + target.GetComponent<MassScale>().RightScaleObjectCount() + " objects in it");
+                //return target.GetComponent<MassScale>().RightScale_TotalMass();
+            }
+        }
+
+		public void CountInLeftScale(ServerAction action)
+        {
+            if (action.objectId == null)
+            {
+                Debug.Log("Please give me a MassScale's UniqueID");
+                return;
+            }
+
+            SimObjPhysics target = null;
+
+            foreach (SimObjPhysics sop in VisibleSimObjPhysics)
+            {
+                //check for object in current visible objects, and also check that it's interactable
+                if (action.objectId == sop.UniqueID)
+                {
+                    //print("wobbuffet");
+                    target = sop;
+                }
+
+            }
+            
+            if (target)
+            {
+                //XXX this is where the metadata would be exported, this info right here
+                Debug.Log("The Left Scale has :" + target.GetComponent<MassScale>().LeftScaleObjectCount() + " objects in it");
+                //return target.GetComponent<MassScale>().RightScale_TotalMass();
+            }
+        }
+
+		public void ObjectsInRightScale(ServerAction action)
+        {
+            if (action.objectId == null)
+            {
+                Debug.Log("Please give me a MassScale's UniqueID");
+                return;
+            }
+
+            SimObjPhysics target = null;
+
+            foreach (SimObjPhysics sop in VisibleSimObjPhysics)
+            {
+                //check for object in current visible objects, and also check that it's interactable
+                if (action.objectId == sop.UniqueID)
+                {
+                    //print("wobbuffet");
+                    target = sop;
+                }
+
+            }
+
+            if (target)
+            {
+                //XXX this is where the metadata would be exported, this info right here
+				List<SimObjPhysics> ObjectsOnScale = new List<SimObjPhysics>(target.GetComponent<MassScale>().ObjectsInRightScale());
+
+				string result = "Right Scale Contains: ";
+
+				foreach(SimObjPhysics sop in ObjectsOnScale)
+				{
+					result += sop.name + ", ";
+				}
+
+				Debug.Log(result);
+            
+            }
+        }
+
+		public void ObjectsInLeftScale(ServerAction action)
+        {
+            if (action.objectId == null)
+            {
+                Debug.Log("Please give me a MassScale's UniqueID");
+                return;
+            }
+
+            SimObjPhysics target = null;
+
+            foreach (SimObjPhysics sop in VisibleSimObjPhysics)
+            {
+                //check for object in current visible objects, and also check that it's interactable
+                if (action.objectId == sop.UniqueID)
+                {
+                    //print("wobbuffet");
+                    target = sop;
+                }
+
+            }
+
+            if (target)
+            {
+                //XXX this is where the metadata would be exported, this info right here
+                List<SimObjPhysics> ObjectsOnScale = new List<SimObjPhysics>(target.GetComponent<MassScale>().ObjectsInLeftScale());
+
+                string result = "Left Scale Contains: ";
+
+                foreach (SimObjPhysics sop in ObjectsOnScale)
+                {
+                    result += sop.name + ", ";
+                }
+
+                Debug.Log(result);
+
+            }
+        }
+
+        //spawn a single object of a single type
+		public void SpawnerSS(ServerAction action)
+		{
+			//need string of object to spawn
+			if (action.objectId == null)
+            {
+                Debug.Log("Please give me a an Mass Object Spawner's UniqueID");
+                return;
+            }
+
+            SimObjPhysics target = null;
+
+            foreach (SimObjPhysics sop in VisibleSimObjPhysics)
+            {
+                //check for object in current visible objects, and also check that it's interactable
+                if (action.objectId == sop.UniqueID)
+                {
+                    target = sop;
+                }
+
+            }
+
+            if (target)
+            {
+				target.GetComponent<MassComparisonObjectSpawner>().SpawnSingle_SingleObjectType(action.objectType);            
+            }
+		}
+
+        //spawn a single object of a random type
+		public void SpawnerSOR(ServerAction action)
+        {
+            //need string of object to spawn
+            if (action.objectId == null)
+            {
+                Debug.Log("Please give me a an Mass Object Spawner's UniqueID");
+                return;
+            }
+
+            SimObjPhysics target = null;
+
+            foreach (SimObjPhysics sop in VisibleSimObjPhysics)
+            {
+                //check for object in current visible objects, and also check that it's interactable
+                if (action.objectId == sop.UniqueID)
+                {
+                    target = sop;
+                }
+
+            }
+
+            if (target)
+            {
+				target.GetComponent<MassComparisonObjectSpawner>().SpawnSingle_One_RandomObjectType();
+            }
+        }
+
+		//spawn multiple objects, all of a single type
+        public void SpawnerMS(ServerAction action)
+        {
+            //need string of object to spawn
+            if (action.objectId == null)
+            {
+                Debug.Log("Please give me a an Mass Object Spawner's UniqueID");
+                return;
+            }
+
+            SimObjPhysics target = null;
+
+            foreach (SimObjPhysics sop in VisibleSimObjPhysics)
+            {
+                //check for object in current visible objects, and also check that it's interactable
+                if (action.objectId == sop.UniqueID)
+                {
+                    target = sop;
+                }
+
+            }
+
+            if (target)
+            {
+				target.GetComponent<MassComparisonObjectSpawner>().
+				      SpawnMultiple_SingleObjectType(action.maxNumRepeats, action.objectType, action.moveMagnitude);
+            }
+        }
+
+		//spawn multiple objects, all of one random type
+        public void SpawnerMOR(ServerAction action)
+        {
+            //need string of object to spawn
+            if (action.objectId == null)
+            {
+                Debug.Log("Please give me a an Mass Object Spawner's UniqueID");
+                return;
+            }
+
+            SimObjPhysics target = null;
+
+            foreach (SimObjPhysics sop in VisibleSimObjPhysics)
+            {
+                //check for object in current visible objects, and also check that it's interactable
+                if (action.objectId == sop.UniqueID)
+                {
+                    target = sop;
+                }
+
+            }
+
+            if (target)
+            {
+				target.GetComponent<MassComparisonObjectSpawner>().
+				      SpawnMultiple_One_RandomObjectType(action.maxNumRepeats, action.moveMagnitude);
+            }
+        }
+
+		//spawn multiple objects, each of a random type
+        public void SpawnerMER(ServerAction action)
+        {
+            //need string of object to spawn
+            if (action.objectId == null)
+            {
+                Debug.Log("Please give me a an Mass Object Spawner's UniqueID");
+                return;
+            }
+
+            SimObjPhysics target = null;
+
+            foreach (SimObjPhysics sop in VisibleSimObjPhysics)
+            {
+                //check for object in current visible objects, and also check that it's interactable
+                if (action.objectId == sop.UniqueID)
+                {
+                    target = sop;
+                }
+
+            }
+
+            if (target)
+            {
+				target.GetComponent<MassComparisonObjectSpawner>().
+				      SpawnMultiple_Each_RandomObjectType(action.maxNumRepeats, action.moveMagnitude);
+            }
+        }
+
+		//spawn a random number (given a range) of objects, all of a single defined type
+		public void SpawnerRS(ServerAction action)
+        {
+            //need string of object to spawn
+            if (action.objectId == null)
+            {
+                Debug.Log("Please give me a an Mass Object Spawner's UniqueID");
+                return;
+            }
+
+            SimObjPhysics target = null;
+
+            foreach (SimObjPhysics sop in VisibleSimObjPhysics)
+            {
+                //check for object in current visible objects, and also check that it's interactable
+                if (action.objectId == sop.UniqueID)
+                {
+                    target = sop;
+                }
+
+            }
+
+            if (target)
+            {
+				target.GetComponent<MassComparisonObjectSpawner>().
+				      SpawnRandRange_SingleObjectType(action.agentCount, action.maxNumRepeats, action.objectType, action.moveMagnitude);
+            }
+        }
+
+		//spawn a random number (given a range) of objects, all of one random type
+        public void SpawnerROR(ServerAction action)
+        {
+            //need string of object to spawn
+            if (action.objectId == null)
+            {
+                Debug.Log("Please give me a an Mass Object Spawner's UniqueID");
+                return;
+            }
+
+            SimObjPhysics target = null;
+
+            foreach (SimObjPhysics sop in VisibleSimObjPhysics)
+            {
+                //check for object in current visible objects, and also check that it's interactable
+                if (action.objectId == sop.UniqueID)
+                {
+                    target = sop;
+                }
+
+            }
+
+            if (target)
+            {
+                target.GetComponent<MassComparisonObjectSpawner>().
+				      SpawnRandRange_One_RandomObjectType(action.agentCount, action.maxNumRepeats, action.moveMagnitude);
+            }
+        }
+
+		//spawn a random number (given a range) of objects, each of a random type
+        public void SpawnerRER(ServerAction action)
+        {
+            //need string of object to spawn
+            if (action.objectId == null)
+            {
+                Debug.Log("Please give me a an Mass Object Spawner's UniqueID");
+                return;
+            }
+
+            SimObjPhysics target = null;
+
+            foreach (SimObjPhysics sop in VisibleSimObjPhysics)
+            {
+                //check for object in current visible objects, and also check that it's interactable
+                if (action.objectId == sop.UniqueID)
+                {
+                    target = sop;
+                }
+
+            }
+
+            if (target)
+            {
+                target.GetComponent<MassComparisonObjectSpawner>().
+				      SpawnRandRange_Each_RandomObjectType(action.agentCount, action.maxNumRepeats, action.moveMagnitude);
+            }
+        }
        
 		#if UNITY_EDITOR
         //used to show what's currently visible on the top left of the screen
