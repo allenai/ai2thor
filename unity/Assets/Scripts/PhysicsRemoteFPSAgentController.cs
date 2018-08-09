@@ -43,8 +43,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
         {
 			base.Start();
 
-			ServerAction action = new ServerAction();
-			Initialize(action);
+			//ServerAction action = new ServerAction();
+			//Initialize(action);
 
 			//below, enable all the GameObjects on the Agent that Physics Mode requires
 
@@ -62,7 +62,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             movement.y = Physics.gravity.y * m_GravityMultiplier;
             m_CharacterController.Move(movement);
         }
-
+              
 		public GameObject WhatAmIHolding()
 		{
 			return ItemInHand;

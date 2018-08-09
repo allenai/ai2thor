@@ -28,7 +28,7 @@ public class MassScale : MonoBehaviour
 	public float MaxAngleChangeAmount_BaseArm = 10;
 	public float MaxAngleChangeAmount_Needle = 90;  
 
-	private Hashtable iTweenArgs;
+	//private Hashtable iTweenArgs;
 
 	// Use this for initialization
 	void Start () 
@@ -36,8 +36,8 @@ public class MassScale : MonoBehaviour
 		iTween.Init(Needle);//init itween cuase the documentation said so
 		iTween.Init(BaseArm);
 
-        iTweenArgs = iTween.Hash();
-        iTweenArgs.Add("islocal", true);
+        //iTweenArgs = iTween.Hash();
+        //iTweenArgs.Add("islocal", true);
 	}
 
     //*****************************************
@@ -118,11 +118,28 @@ public class MassScale : MonoBehaviour
 		SetNeedle();
 
 		SetArm();
+
+		WAKEMEUPINSIDE();
 	}
 
+    public void WAKEMEUPINSIDE()
+	{
+		foreach(SimObjPhysics sop in RightScaleObjects)
+		{
+			sop.GetComponent<Rigidbody>().WakeUp();
+		}
+
+		foreach(SimObjPhysics sop in LeftScaleObjects)
+		{
+			sop.GetComponent<Rigidbody>().WakeUp();
+
+		}
+	}
+    
 	public void SetNeedle()
 	{
-		iTween.RotateTo(Needle, new Vector3(0, 0, NeedleAngleChange()), 10.0f);
+		iTween.RotateTo(Needle, iTween.Hash("rotation", new Vector3(0, 0, NeedleAngleChange()), "islocal", true));
+		//iTween.RotateTo(Needle, new Vector3(0, 0, NeedleAngleChange()), 10.0f);
 	}
 
 	//the amount of change to the needle's angle (-90 to +90)
@@ -156,19 +173,19 @@ public class MassScale : MonoBehaviour
 
 			return angleChange;
 		}
-
+        
         //scale is perfectly balanced! good job!
 		else
 		{
 			return 0;
 		}
 	}
-
+    
     public void SetArm()
 	{
 		//BaseArm.GetComponent<Transform>().eulerAngles = new Vector3(0, 0, BaseArmAngleChange());
-
-		iTween.RotateTo(BaseArm, new Vector3(0, 0, BaseArmAngleChange()), 10.0f);
+		iTween.RotateTo(BaseArm, iTween.Hash("rotation", new Vector3(0, 0, BaseArmAngleChange()), "islocal", true));
+		//iTween.RotateTo(BaseArm, new Vector3(0,0, BaseArmAngleChange()), 10.0f);
 	}
 
 	public float BaseArmAngleChange()

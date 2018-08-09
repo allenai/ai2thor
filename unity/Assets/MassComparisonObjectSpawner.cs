@@ -6,6 +6,8 @@ public class MassComparisonObjectSpawner : MonoBehaviour
 {
 	public SimObjPhysics[] ObjectsToSpawn;
 	public GameObject SpawnPosition;
+
+	public bool KeyboardShortcutSpawn = false;
 	///private List<SimObjPhysics> ObjectsToSpawn_List;
 
 	// Use this for initialization
@@ -17,40 +19,44 @@ public class MassComparisonObjectSpawner : MonoBehaviour
 	// Update is called once per frame
 	void Update () 
 	{
-		if(Input.GetKeyDown(KeyCode.Alpha7))
+		if(KeyboardShortcutSpawn == true)
 		{
-			SpawnObject("bread");
+			if (Input.GetKeyDown(KeyCode.Alpha7))
+            {
+                SpawnObject("bread");
+            }
+
+            if (Input.GetKeyDown(KeyCode.Alpha2))
+            {
+                SpawnObject("tomato");
+
+            }
+
+            if (Input.GetKeyDown(KeyCode.Alpha3))
+            {
+                SpawnObject("egg");
+
+            }
+
+            if (Input.GetKeyDown(KeyCode.Alpha4))
+            {
+                SpawnObject("potato");
+
+            }
+
+            if (Input.GetKeyDown(KeyCode.Alpha5))
+            {
+                SpawnObject("lettuce");
+
+            }
+
+            if (Input.GetKeyDown(KeyCode.Alpha6))
+            {
+                SpawnObject("apple");
+
+            }
 		}
 
-		if (Input.GetKeyDown(KeyCode.Alpha2))
-        {
-			SpawnObject("tomato");
-
-        }
-
-		if (Input.GetKeyDown(KeyCode.Alpha3))
-        {
-			SpawnObject("egg");
-
-        }
-
-		if (Input.GetKeyDown(KeyCode.Alpha4))
-        {
-			SpawnObject("potato");
-
-        }
-        
-		if (Input.GetKeyDown(KeyCode.Alpha5))
-        {
-			SpawnObject("lettuce");
-
-        }
-
-		if (Input.GetKeyDown(KeyCode.Alpha6))
-        {
-			SpawnObject("apple");
-
-        }
 	}
 
 	public void SpawnObject(string whichobject)
