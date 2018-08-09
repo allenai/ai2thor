@@ -28,8 +28,8 @@ public class MassScale : MonoBehaviour
     
     //maximum amount the arm of the scale can rotate in either the positive or negative axis direction
     //this is different thanthe cap for the needle, which by default is + or - 90 degrees
-	private float MaxAngleChangeAmount_BaseArm = 10;
-	private float MaxAngleChangeAmount_Needle = 90;  
+	private float MaxAngleChangeAmount_BaseArm = 15;
+	private float MaxAngleChangeAmount_Needle = 15;  
 
 	//private Hashtable iTweenArgs;
 
