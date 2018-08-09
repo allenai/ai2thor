@@ -38,8 +38,10 @@ public class CanOpen : MonoBehaviour
         //if we want to start in open position, initialize here         if(isOpen)         {             iTweenArgs["position"] = openPosition;             iTweenArgs["time"] = 0f;             iTween.MoveTo(gameObject, iTweenArgs);             iTweenArgs["time"] = animationTime;          }     }      // Update is called once per frame     void Update ()      {
 		//test if it can open without Agent Command - Debug Purposes
 		#if UNITY_EDITOR
-		if(Input.GetKeyDown(KeyCode.Alpha1)){
-			Interact();
+		if(Input.GetKeyDown(KeyCode.Alpha1))
+		{
+			//disabled for Hackathon 2018
+			//Interact();
 		}
 		#endif
 	}
