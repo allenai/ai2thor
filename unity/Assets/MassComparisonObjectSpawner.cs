@@ -31,7 +31,7 @@ public class MassComparisonObjectSpawner : MonoBehaviour
 		{
 			if (Input.GetKeyDown(KeyCode.Alpha2))
             {
-				SpawnSingle_SingleObjectType("lettuce");
+				SpawnSingle_SingleObjectType("bread");
 
             }
 			if (Input.GetKeyDown(KeyCode.Alpha3))
