@@ -56,7 +56,7 @@ public class MassComparisonObjectSpawner : MonoBehaviour
 
             if (Input.GetKeyDown(KeyCode.Alpha5))
             {
-				SpawnMultiple_One_RandomObjectType(5, 0.2f);
+				SpawnMultiple_One_RandomObjectType(3, 0.2f);
 
             }
 
