@@ -44,6 +44,7 @@ public class MassComparisonObjectSpawner : MonoBehaviour
             }
 			if (Input.GetKeyDown(KeyCode.Alpha3))
             {
+				//SpawnMultiple_SingleObjectType(7, "bread", 0.2f);
 				//SpawnSingle_One_RandomObjectType();
 				SpawnMultiple_One_RandomObjectType(3, 0.2f);
             }
@@ -51,7 +52,7 @@ public class MassComparisonObjectSpawner : MonoBehaviour
             if (Input.GetKeyDown(KeyCode.Alpha4))
             {
 				SpawnRandRange_Each_RandomObjectType(1, 10, 0.2f);
-				//SpawnMultiple_SingleObjectType(3, "lettuce", 0.2f);
+				//SpawnMultiple_SingleObjectType(7, "bread", 0.2f);
             }
             
    //         if (Input.GetKeyDown(KeyCode.Alpha5))
