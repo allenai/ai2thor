@@ -45,39 +45,40 @@ public class MassComparisonObjectSpawner : MonoBehaviour
 			if (Input.GetKeyDown(KeyCode.Alpha3))
             {
 				SpawnSingle_One_RandomObjectType();
+
             }
 
             if (Input.GetKeyDown(KeyCode.Alpha4))
             {
-
-				SpawnMultiple_SingleObjectType(3, "lettuce", 0.5f);
+                
+				SpawnMultiple_SingleObjectType(3, "lettuce", 0.2f);
             }
 
             if (Input.GetKeyDown(KeyCode.Alpha5))
             {
-				SpawnMultiple_One_RandomObjectType(5, 0.5f);
+				SpawnMultiple_One_RandomObjectType(5, 0.2f);
 
             }
 
             if (Input.GetKeyDown(KeyCode.Alpha6))
             {
-				SpawnMultiple_Each_RandomObjectType(6, 0.5f);
+				SpawnMultiple_Each_RandomObjectType(6, 0.2f);
 
             }
          
 			if (Input.GetKeyDown(KeyCode.Alpha7))
             {
-				SpawnRandRange_SingleObjectType(1, 10, "lettuce", 0.5f);
+				SpawnRandRange_SingleObjectType(1, 10, "lettuce", 0.2f);
             }
-
+            
             if(Input.GetKeyDown(KeyCode.Alpha8))
 			{
-				SpawnRandRange_One_RandomObjectType(1, 10, 0.5f);
+				SpawnRandRange_One_RandomObjectType(1, 10, 0.2f);
 			}
 
             if(Input.GetKeyDown(KeyCode.Alpha9))
 			{
-				SpawnRandRange_Each_RandomObjectType(1, 10, 0.5f);
+				SpawnRandRange_Each_RandomObjectType(1, 10, 0.2f);
 			}
 		}
 	}
