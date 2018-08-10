@@ -55,11 +55,11 @@ public class MassComparisonObjectSpawner : MonoBehaviour
 				//SpawnMultiple_SingleObjectType(7, "bread", 0.2f);
             }
             
-   //         if (Input.GetKeyDown(KeyCode.Alpha5))
-   //         {
-			//	SpawnMultiple_One_RandomObjectType(3, 0.2f);
+    //        if (Input.GetKeyDown(KeyCode.Alpha5))
+    //        {
+				//SpawnMultiple_SingleObjectType(15, "bread", 0.1f);
 
-   //         }
+            //}
 
    //         if (Input.GetKeyDown(KeyCode.Alpha6))
    //         {
