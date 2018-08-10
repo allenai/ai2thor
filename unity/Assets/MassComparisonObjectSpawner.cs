@@ -13,7 +13,10 @@ public class MassComparisonObjectSpawner : MonoBehaviour
 	public bool RandomSpawnAngle = false;
 	///private List<SimObjPhysics> ObjectsToSpawn_List;
 
+	public bool PlayAnimation = false;
 	//public GameObject test;
+
+	private Animator MyAnim;
 
 	// Use this for initialization
 	void Start () 
@@ -22,6 +25,11 @@ public class MassComparisonObjectSpawner : MonoBehaviour
         //expand this functionality to even more objects, for the Hackathon 2018 demo we will just use these
         //6 food prefabs that are, for now, super hard coded in
 		//test = Resources.Load<GameObject>("MassPrefabs/Apple_mass");
+
+		if(PlayAnimation)
+		{
+			MyAnim = gameObject.GetComponent<Animator>();
+		}
 	}
 
 	// Update is called once per frame
@@ -93,10 +101,25 @@ public class MassComparisonObjectSpawner : MonoBehaviour
 		for (int i = 0; i < count; i++)
         {
 			if (RandomSpawnAngle)
-                Instantiate(ObjectsToSpawn[whichobject], SpawnPosition.transform.position,
-                            Quaternion.Euler(Random.Range(0.0f, 360.0f), Random.Range(0.0f, 360.0f), Random.Range(0.0f, 360.0f)));
+			{
+				if(PlayAnimation)
+				{
+					MyAnim.SetTrigger("Play");
+				}
+
+				Instantiate(ObjectsToSpawn[whichobject], SpawnPosition.transform.position,
+            Quaternion.Euler(Random.Range(0.0f, 360.0f), Random.Range(0.0f, 360.0f), Random.Range(0.0f, 360.0f)));
+			}
+
             else
-                Instantiate(ObjectsToSpawn[whichobject], SpawnPosition.transform);
+			{
+				if (PlayAnimation)
+                {
+                    MyAnim.SetTrigger("Play");
+                }
+				Instantiate(ObjectsToSpawn[whichobject], SpawnPosition.transform);
+			}
+
             yield return new WaitForSeconds(delay);
 
         }
@@ -106,6 +129,11 @@ public class MassComparisonObjectSpawner : MonoBehaviour
 	{
 		for (int i = 0; i < count; i++)
         {
+			if (PlayAnimation)
+            {
+                MyAnim.SetTrigger("Play");
+            }
+
             if (RandomSpawnAngle)
 				Instantiate(ObjectsToSpawn[Random.Range(0, ObjectsToSpawn.Length)], SpawnPosition.transform.position,
                             Quaternion.Euler(Random.Range(0.0f, 360.0f), Random.Range(0.0f, 360.0f), Random.Range(0.0f, 360.0f)));
@@ -132,6 +160,11 @@ public class MassComparisonObjectSpawner : MonoBehaviour
 
 		for (int i = 0; i < count; i ++)
 		{
+			if (PlayAnimation)
+            {
+                MyAnim.SetTrigger("Play");
+            }
+
 			if (RandomSpawnAngle)
 				Instantiate(ObjectsToSpawn[whichobject], SpawnPosition.transform.position,
                             Quaternion.Euler(Random.Range(0.0f, 360.0f), Random.Range(0.0f, 360.0f), Random.Range(0.0f, 360.0f)));
@@ -148,6 +181,11 @@ public class MassComparisonObjectSpawner : MonoBehaviour
 
         for (int i = 0; i < count; i++)
         {
+			if (PlayAnimation)
+            {
+                MyAnim.SetTrigger("Play");
+            }
+
             if (RandomSpawnAngle)
 				Instantiate(ObjectsToSpawn[Random.Range(0, ObjectsToSpawn.Length)], SpawnPosition.transform.position,
                             Quaternion.Euler(Random.Range(0.0f, 360.0f), Random.Range(0.0f, 360.0f), Random.Range(0.0f, 360.0f)));
@@ -161,6 +199,10 @@ public class MassComparisonObjectSpawner : MonoBehaviour
 	//ex: spawn 1 object of type {egg}
 	public void SpawnSingle_SingleObjectType(string whichobject)
 	{
+		if (PlayAnimation)
+        {
+            MyAnim.SetTrigger("Play");
+        }
 		switch(whichobject)
 		{
 			case "bread":
@@ -218,6 +260,11 @@ public class MassComparisonObjectSpawner : MonoBehaviour
 	//ex: spawn 1 object of type {bread, tomato, egg, potato, lettuce, apple}
     public void SpawnSingle_One_RandomObjectType()
     {
+		if (PlayAnimation)
+        {
+            MyAnim.SetTrigger("Play");
+        }
+
 		if (RandomSpawnAngle)
 			Instantiate(ObjectsToSpawn[Random.Range(0, 5)], SpawnPosition.transform.position,
 						Quaternion.Euler(Random.Range(0.0f, 360.0f), Random.Range(0.0f, 360.0f), Random.Range(0.0f, 360.0f)));
@@ -230,7 +277,6 @@ public class MassComparisonObjectSpawner : MonoBehaviour
 	//ex: spawn 5 objects of type {bread}
     public void SpawnMultiple_SingleObjectType(int count, string whichobject, float delay)
 	{
-
 		StartCoroutine(SpawnMultiple_Single_CR(count, whichobject, delay));
 	}
 
