@@ -4,6 +4,7 @@ using UnityEngine;
 
 public class CanOpen : MonoBehaviour 
 {
+	[Header("Animation Parameters")]
 	[SerializeField]
 	protected Vector3 openPosition;
 
@@ -16,11 +17,13 @@ public class CanOpen : MonoBehaviour
 	[SerializeField]
 	protected float openPercentage = 1.0f; //0.0 to 1.0 - percent of openPosition the object opens. 
 
+	[Header("Objects To Ignore Collision With - For Cabinets/Drawers with hinges too close together")]
     //these are objects to ignore collision with. For example, two cabinets right next to each other
     //might clip into themselves, so ignore the "reset" event in that case by putting the object to ignore in the below array
 	[SerializeField] 
 	protected GameObject[] IgnoreTheseObjects;
 
+	[Header("State information bools")]
 	public bool isOpen = false;
 	private Hashtable iTweenArgs;
 	public bool canReset = true;
