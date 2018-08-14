@@ -34,6 +34,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 		[SerializeField] protected bool IsHandDefault = true;
 
+        //set this to true to ignore interactable point checks. In this case, all actions only require an object to be Visible and
+        //will NOT require both visibility AND a path from the hand to the object's Interaction points.
+		[SerializeField] private bool IgnoreInteractableFlag = false;
 
         //change visibility check to use this distance when looking down
 		protected float DownwardViewDistance = 2.0f;
@@ -211,55 +214,58 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 
                             //down extension stuff ends
-
-							//sweep test from agent's hand to each Interaction point
-                            RaycastHit hit;
-                            if (HandRB.SweepTest(ip.position - AgentHand.transform.position, out hit, maxDistance))
-                            {
-                                //if the object only has one interaction point to check
-                                if (visibleSimObjP.InteractionPoints.Length == 1)
+							if(!IgnoreInteractableFlag)
+							{
+								//sweep test from agent's hand to each Interaction point
+                                RaycastHit hit;
+                                if (HandRB.SweepTest(ip.position - AgentHand.transform.position, out hit, maxDistance))
                                 {
-                                    if (hit.transform == visibleSimObjP.transform)
+                                    //if the object only has one interaction point to check
+                                    if (visibleSimObjP.InteractionPoints.Length == 1)
                                     {
-                                        #if UNITY_EDITOR
-                                        Debug.DrawLine(AgentHand.transform.position, ip.transform.position, Color.magenta);
-                                        #endif
+                                        if (hit.transform == visibleSimObjP.transform)
+                                        {
+                                            #if UNITY_EDITOR
+                                            Debug.DrawLine(AgentHand.transform.position, ip.transform.position, Color.magenta);
+                                            #endif
 
-                                        //print(hit.transform.name);
-                                        visibleSimObjP.isInteractable = true;
+                                            //print(hit.transform.name);
+                                            visibleSimObjP.isInteractable = true;
+                                        }
+
+                                        else
+                                            visibleSimObjP.isInteractable = false;
                                     }
 
-                                    else
-                                        visibleSimObjP.isInteractable = false;
+                                    //this object has 2 or more interaction points
+                                    //if any one of them can be accessed by the Agent's hand, this object is interactable
+                                    if (visibleSimObjP.InteractionPoints.Length > 1)
+                                    {
+
+                                        if (hit.transform == visibleSimObjP.transform)
+                                        {
+                                            #if UNITY_EDITOR
+                                            Debug.DrawLine(AgentHand.transform.position, ip.transform.position, Color.magenta);
+                                            #endif
+                                            ReachableInteractionPointCount++;
+                                        }
+
+                                        //check if at least one of the interaction points on this multi interaction point object
+                                        //is accessible to the agent Hand
+                                        if (ReachableInteractionPointCount > 0)
+                                        {
+                                            visibleSimObjP.isInteractable = true;
+                                        }
+
+                                        else
+                                            visibleSimObjP.isInteractable = false;
+                                    }
                                 }
 
-                                //this object has 2 or more interaction points
-                                //if any one of them can be accessed by the Agent's hand, this object is interactable
-                                if (visibleSimObjP.InteractionPoints.Length > 1)
-                                {
-
-                                    if (hit.transform == visibleSimObjP.transform)
-                                    {
-                                        #if UNITY_EDITOR
-                                        Debug.DrawLine(AgentHand.transform.position, ip.transform.position, Color.magenta);
-                                        #endif
-                                        ReachableInteractionPointCount++;
-                                    }
-
-                                    //check if at least one of the interaction points on this multi interaction point object
-                                    //is accessible to the agent Hand
-                                    if (ReachableInteractionPointCount > 0)
-                                    {
-                                        visibleSimObjP.isInteractable = true;
-                                    }
-
-                                    else
-                                        visibleSimObjP.isInteractable = false;
-                                }
-                            }
-
-							else
-                                visibleSimObjP.isInteractable = false;
+                                else
+                                    visibleSimObjP.isInteractable = false;
+							}
+						
 						}                    
                     }
                 }
@@ -972,12 +978,17 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     //return false;
                 }
 
-				if(target.isInteractable != true)
+                //only check interactability if flag is set, otherwise will only check visible
+				if(!IgnoreInteractableFlag)
 				{
-					Debug.Log("Target not in Interactable range of Agent Hand");
-                    actionFinished(false);
-                    return;
+					if (target.isInteractable != true)
+                    {
+                        Debug.Log("Target not in Interactable range of Agent Hand");
+                        actionFinished(false);
+                        return;
+                    }
 				}
+
                 
                 //move the object to the hand's default position.
                 target.GetComponent<Rigidbody>().isKinematic = true;
@@ -1140,13 +1151,15 @@ namespace UnityStandardAssets.Characters.FirstPerson
             {
                 //print("why not?");
                 //check for object in current visible objects, and also check that it's interactable
-				if (!sop.isInteractable)
+				if(!IgnoreInteractableFlag)
 				{
-					Debug.Log(sop.UniqueID + " is not Interactable");
-					return;
+					if (!sop.isInteractable)
+                    {
+                        Debug.Log(sop.UniqueID + " is not Interactable");
+                        return;
+                    }
 				}
- 
-				
+
                 if (sop.GetComponent<CanOpen>())
                 {
                     //print("wobbuffet");
@@ -1200,12 +1213,15 @@ namespace UnityStandardAssets.Characters.FirstPerson
             {
 				//print("why not?");
 				//check for object in current visible objects, and also check that it's interactable
-				if (!sop.isInteractable)
-                {
-                    Debug.Log(sop.UniqueID + " is not Interactable");
-                    return;
-                }
-				
+				if(!IgnoreInteractableFlag)
+				{
+					if (!sop.isInteractable)
+                    {
+                        Debug.Log(sop.UniqueID + " is not Interactable");
+                        return;
+                    }
+				}
+                
                 if (sop.GetComponent<CanOpen>())
                 {
                     //print("wobbuffet");
@@ -1447,10 +1463,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
             foreach (SimObjPhysics sop in VisibleSimObjPhysics)
             {
-                //check for object in current visible objects, and also check that it's interactable
                 if (action.objectId == sop.UniqueID)
                 {
-                    //print("wobbuffet");
                     target = sop;
                 }
 
@@ -1476,10 +1490,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
             foreach (SimObjPhysics sop in VisibleSimObjPhysics)
             {
-                //check for object in current visible objects, and also check that it's interactable
                 if (action.objectId == sop.UniqueID)
                 {
-                    //print("wobbuffet");
                     target = sop;
                 }
 
@@ -1505,10 +1517,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
             foreach (SimObjPhysics sop in VisibleSimObjPhysics)
             {
-                //check for object in current visible objects, and also check that it's interactable
                 if (action.objectId == sop.UniqueID)
                 {
-                    //print("wobbuffet");
                     target = sop;
                 }
 
@@ -1534,10 +1544,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
             foreach (SimObjPhysics sop in VisibleSimObjPhysics)
             {
-                //check for object in current visible objects, and also check that it's interactable
                 if (action.objectId == sop.UniqueID)
                 {
-                    //print("wobbuffet");
                     target = sop;
                 }
 
@@ -1572,10 +1580,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
             foreach (SimObjPhysics sop in VisibleSimObjPhysics)
             {
-                //check for object in current visible objects, and also check that it's interactable
                 if (action.objectId == sop.UniqueID)
                 {
-                    //print("wobbuffet");
                     target = sop;
                 }
 
@@ -1612,7 +1618,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
             foreach (SimObjPhysics sop in VisibleSimObjPhysics)
             {
-                //check for object in current visible objects, and also check that it's interactable
                 if (action.objectId == sop.UniqueID)
                 {
                     target = sop;
@@ -1640,7 +1645,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
             foreach (SimObjPhysics sop in VisibleSimObjPhysics)
             {
-                //check for object in current visible objects, and also check that it's interactable
+
                 if (action.objectId == sop.UniqueID)
                 {
                     target = sop;
@@ -1668,7 +1673,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
             foreach (SimObjPhysics sop in VisibleSimObjPhysics)
             {
-                //check for object in current visible objects, and also check that it's interactable
                 if (action.objectId == sop.UniqueID)
                 {
                     target = sop;
@@ -1697,7 +1701,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
             foreach (SimObjPhysics sop in VisibleSimObjPhysics)
             {
-                //check for object in current visible objects, and also check that it's interactable
                 if (action.objectId == sop.UniqueID)
                 {
                     target = sop;
@@ -1726,7 +1729,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
             foreach (SimObjPhysics sop in VisibleSimObjPhysics)
             {
-                //check for object in current visible objects, and also check that it's interactable
                 if (action.objectId == sop.UniqueID)
                 {
                     target = sop;
@@ -1755,7 +1757,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
             foreach (SimObjPhysics sop in VisibleSimObjPhysics)
             {
-                //check for object in current visible objects, and also check that it's interactable
                 if (action.objectId == sop.UniqueID)
                 {
                     target = sop;
@@ -1784,7 +1785,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
             foreach (SimObjPhysics sop in VisibleSimObjPhysics)
             {
-                //check for object in current visible objects, and also check that it's interactable
                 if (action.objectId == sop.UniqueID)
                 {
                     target = sop;
@@ -1813,7 +1813,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
             foreach (SimObjPhysics sop in VisibleSimObjPhysics)
             {
-                //check for object in current visible objects, and also check that it's interactable
                 if (action.objectId == sop.UniqueID)
                 {
                     target = sop;
@@ -1871,10 +1870,14 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
                             //else
                             //suffix += " VISIBLE";
-                            if (o.isInteractable == true)
-                            {
-                                suffix += " INTERACTABLE";
-                            }
+							if(!IgnoreInteractableFlag)
+							{
+								if (o.isInteractable == true)
+                                {
+                                    suffix += " INTERACTABLE";
+                                }
+							}
+
                         }
                   
                         GUILayout.Button(o.UniqueID + suffix, UnityEditor.EditorStyles.miniButton, GUILayout.MinWidth(100f));
