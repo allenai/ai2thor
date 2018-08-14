@@ -1171,7 +1171,11 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     actionFinished(false);
                     errorMessage = "object already open: " + action.objectId;
                 }
-            } else {
+            } 
+
+			else 
+			{
+				Debug.Log("Target object not in sight");
                 actionFinished(false);
                 errorMessage = "object not found: " + action.objectId;
             }
@@ -1220,7 +1224,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     Debug.Log("can't open object if it's already open");
                     errorMessage = "object already open";
                     actionFinished(false);
-                } else {
+                } 
+
+				else 
+				{
 					//pass in percentage open if desired
                     // XXX should switch this to 
                     if (action.moveMagnitude > 0.0f)
@@ -1233,6 +1240,14 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     actionFinished(true);
                 }
 			}
+
+            //target not found in currently visible objects, report not found
+			else
+            {
+				Debug.Log("Target object not in sight");
+                actionFinished(false);
+                errorMessage = "object not found: " + action.objectId;
+            }
 		}
 
         public void Contains(ServerAction action)
