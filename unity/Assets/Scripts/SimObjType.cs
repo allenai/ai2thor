@@ -217,7 +217,6 @@ public enum SimObjType : int
     Tissue = 120,
     Vase = 121,
     WallMirror = 122,
-
-   
-   
+	MassObjectSpawner = 123,
+    MassScale = 124,
 }
