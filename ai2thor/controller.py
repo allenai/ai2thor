@@ -488,6 +488,10 @@ class Controller(object):
             '\x1b[B': dict(action='MoveBack', moveMagnitude=0.25),
             '\x1b[1;2A': dict(action='LookUp'),
             '\x1b[1;2B': dict(action='LookDown'),
+            'i': dict(action='LookUp'),
+            'k': dict(action='LookDown'),
+            'l': dict(action='RotateRight'),
+            'j': dict(action='RotateLeft'),
             '\x1b[1;2C': dict(action='RotateRight'),
             '\x1b[1;2D': dict(action='RotateLeft')
         }
