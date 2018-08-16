@@ -195,7 +195,7 @@ def release(ctx):
 
     tag = "v" + ai2thor._version.__version__
     subprocess.check_call('git tag -a %s -m "release  %s"' % (tag, tag), shell=True)
-    subprocess.check_call('git push origin --tags', shell=True)
+    subprocess.check_call('git push origin master --tags', shell=True)
     subprocess.check_call('twine upload -u ai2thor dist/ai2thor-{ver}-* dist/ai2thor-{ver}.*'.format(ver=ai2thor._version.__version__), shell=True)
 
 
