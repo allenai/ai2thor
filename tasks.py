@@ -104,7 +104,7 @@ def build_docker(version):
 def build_pip(context):
     import shutil
     subprocess.check_call("python setup.py clean --all", shell=True)
-    shutil.rmtree("dist")
+    shutil.rmtree("dist", ignore_errors=True)
     subprocess.check_call("python setup.py sdist bdist_wheel --universal", shell=True)
 
 @task
