@@ -188,11 +188,14 @@ def build(context, local=False):
     build_pip(context)
 
 @task
-def interact(ctx, scene):
+def interact(ctx, scene, editor_mode=False):
     import ai2thor.controller
 
     env = ai2thor.controller.Controller()
-    env.start(player_screen_width=600, player_screen_height=600)
+    if editor_mode:
+        env.start(8200, False, player_screen_width=600, player_screen_height=600)
+    else:
+        env.start(player_screen_width=600, player_screen_height=600)
     env.reset(scene)
     env.step(dict(action='Initialize', gridSize=0.25))
     env.interact()
