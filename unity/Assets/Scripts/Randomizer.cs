@@ -30,7 +30,7 @@ public class Randomizer : MonoBehaviour {
 	public System.Random rand = null;
 
 	void OnEnable() {
-		Randomize ();
+		//Randomize ();
 	}
 
 	public void Randomize() {
@@ -151,14 +151,14 @@ public class Randomizer : MonoBehaviour {
 		return randomColor;
 	}
 
-	#if UNITY_EDITOR
-	void Update() {
-		if (Application.isPlaying)
-			return;
+	//#if UNITY_EDITOR
+	//void Update() {
+	//	if (Application.isPlaying)
+	//		return;
 
-		if (UnityEditor.Selection.activeGameObject == gameObject) {
-			Randomize ();
-		}
-	}
-	#endif
+	//	if (UnityEditor.Selection.activeGameObject == gameObject) {
+	//		Randomize ();
+	//	}
+	//}
+	//#endif
 }
