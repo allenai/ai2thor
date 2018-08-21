@@ -42,6 +42,12 @@ def queue_get(que):
             pass
     return res
 
+class NumpyAwareEncoder(json.JSONEncoder):
+
+    def default(self, obj):
+        if isinstance(obj, np.generic):
+            return np.asscalar(obj)
+        return super(NumpyAwareEncoder, self).default(obj)
 
 class MultiAgentEvent(object):
 
@@ -49,17 +55,23 @@ class MultiAgentEvent(object):
         self._active_event = events[active_agent_id]
         self.cv2image = self._active_event.cv2image
         self.metadata = self._active_event.metadata
+        self.screen_width = self._active_event.screen_width
+        self.screen_height = self._active_event.screen_height
         self.events = events
+        self.third_party_camera_frames = []
         # XXX add methods for depth,sem_seg
+
+    def add_third_party_camera_image(self, third_party_image_data):
+        self.third_party_camera_frames.append(read_buffer_image(third_party_image_data, self.screen_width, self.screen_height))
 
 def read_buffer_image(buf, width, height):
 
     if sys.version_info.major < 3:
         # support for Python 2.7 - can't handle memoryview in Python2.7 and Numpy frombuffer
         return np.flip(np.frombuffer(
-            buf.tobytes(), dtype=np.uint8).reshape(width, height, -1), axis=0)
+            buf.tobytes(), dtype=np.uint8).reshape(height, width, -1), axis=0)
     else:
-        return np.flip(np.frombuffer(buf, dtype=np.uint8).reshape(width, height, -1), axis=0)
+        return np.flip(np.frombuffer(buf, dtype=np.uint8).reshape(height, width, -1), axis=0)
 
 def unique_rows(arr, return_index=False, return_inverse=False):
     arr = np.ascontiguousarray(arr).copy()
@@ -92,6 +104,7 @@ class Event(object):
 
         self.frame = None
         self.depth_frame = None
+        self.normals_frame = None
 
         self.color_to_object_id = {}
         self.object_id_to_color = {}
@@ -107,6 +120,7 @@ class Event(object):
 
         self.process_colors()
         self.process_visible_bounds2D()
+        self.third_party_camera_frames = []
 
     @property
     def image_data(self):
@@ -120,7 +134,6 @@ class Event(object):
 
     def process_colors(self):
         for color_data in self.metadata['colors']:
-            name = ''.join([x for x in color_data['name'] if x.isalpha()])  # Keep only alpha chars
             name = color_data['name']
             c_key = tuple(color_data['color'])
             self.color_to_object_id[c_key] = name
@@ -177,6 +190,12 @@ class Event(object):
         image_depth_out *= 10.0 / 256.0 * 1000  # converts to meters then to mm
         image_depth_out[image_depth_out > MAX_DEPTH] = MAX_DEPTH
         self.depth_frame = image_depth_out.astype(np.float32)
+
+    def add_image_normals(self, image_normals_data):
+        self.normals_frame = read_buffer_image(image_normals_data, self.screen_width, self.screen_height)
+
+    def add_third_party_camera_image(self, third_party_image_data):
+        self.third_party_camera_frames.append(read_buffer_image(third_party_image_data, self.screen_width, self.screen_height))
 
     def add_image(self, image_data):
         self.frame = read_buffer_image(image_data, self.screen_width, self.screen_height)
@@ -337,8 +356,10 @@ class Server(object):
                     image=e.add_image,
                     image_depth=e.add_image_depth,
                     image_ids=e.add_image_ids,
-                    image_classes=e.add_image_classes
+                    image_classes=e.add_image_classes,
+                    image_normals=e.add_image_normals
                 )
+
                 for key in image_mapping.keys():
                     if key in form.files:
                         image_mapping[key](form.files[key][i])
@@ -349,6 +370,9 @@ class Server(object):
                 self.last_event = event = MultiAgentEvent(metadata['activeAgentId'], events)
             else:
                 self.last_event = event = events[0]
+
+            for img in form.files.get('image-thirdParty-camera', []):
+                self.last_event.add_third_party_camera_image(img)
 
             request_queue.put_nowait(event)
 
@@ -361,7 +385,7 @@ class Server(object):
             else:
                 self.sequence_id = next_action['sequenceId']
 
-            resp = make_response(json.dumps(next_action))
+            resp = make_response(json.dumps(next_action, cls=NumpyAwareEncoder))
 
             return resp
 

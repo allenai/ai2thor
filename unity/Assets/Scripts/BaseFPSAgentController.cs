@@ -165,9 +165,13 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 			this.continuousMode = action.continuous;
 
-			if (action.renderDepthImage || action.renderClassImage || action.renderObjectImage) 
+			if (action.renderDepthImage || action.renderClassImage || action.renderObjectImage || action.renderNormalsImage) 
             {
-				//this.enableImageSynthesis ();
+				this.enableImageSynthesis ();
+			}
+
+			if (action.visibilityDistance > 0.0f) {
+				this.maxVisibleDistance = action.visibilityDistance;
 			}
 
 			if (action.cameraY > 0.0) 
@@ -176,11 +180,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
 				m_Camera.transform.localPosition = new Vector3 (pos.x, action.cameraY, pos.z);
 			}
 
-
-            if (action.visibilityDistance > 0.0f)
-            {
-                this.maxVisibleDistance = action.visibilityDistance;
-            }
 
             if (action.gridSize <= 0 || action.gridSize > 5)
             {
@@ -695,14 +694,14 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		//free rotate, change forward facing of Agent
 		public void Rotate(ServerAction response)
 		{
-			transform.rotation = Quaternion.Euler(new Vector3(0.0f, response.rotation, 0.0f));
+			transform.rotation = Quaternion.Euler(new Vector3(0.0f, response.rotation.y, 0.0f));
 			actionFinished(true);
 		}
 
 		//looks like thisfree rotates AND free changes camera look angle?
 		public void RotateLook(ServerAction response)
 		{
-			transform.rotation = Quaternion.Euler(new Vector3(0.0f, response.rotation, 0.0f));
+			transform.rotation = Quaternion.Euler(new Vector3(0.0f, response.rotation.y, 0.0f));
 			m_Camera.transform.localEulerAngles = new Vector3(response.horizon, 0.0f, 0.0f);
 			actionFinished(true);
 

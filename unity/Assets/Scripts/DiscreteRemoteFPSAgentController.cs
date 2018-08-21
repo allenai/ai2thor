@@ -60,8 +60,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			Vector3 movement = Vector3.zero;
             movement.y = Physics.gravity.y * m_GravityMultiplier;
             m_CharacterController.Move(movement);
-
-		}
+        }
 
 
 		public override MetadataWrapper generateMetadataWrapper() 
@@ -853,7 +852,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 			targetTeleport = new Vector3 (response.x, response.y, response.z);
 			m_CharacterController.transform.position = targetTeleport;
-			transform.rotation = Quaternion.Euler(new Vector3(0.0f,response.rotation,0.0f));
+			transform.rotation = Quaternion.Euler(new Vector3(0.0f,response.rotation.y,0.0f));
 			m_Camera.transform.localEulerAngles = new Vector3 (response.horizon, 0.0f, 0.0f);
 
 			Vector3 m = new Vector3 ();
@@ -869,7 +868,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			m_CharacterController.transform.position = targetTeleport;
 			if (response.rotateOnTeleport) 
 			{
-				transform.rotation = Quaternion.Euler(new Vector3(0.0f,response.rotation,0.0f));
+				transform.rotation = Quaternion.Euler(new Vector3(0.0f,response.rotation.y,0.0f));
 			}
 
 			Vector3 m = new Vector3 ();

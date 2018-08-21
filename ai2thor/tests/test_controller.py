@@ -82,19 +82,6 @@ def test_fix_visibility_distance_env():
     del(os.environ['AI2THOR_VISIBILITY_DISTANCE'])
 
 
-def test_cast_numpy_generic():
-    fake_event = Event(dict(screenWidth=300, screenHeight=300, colors=[], lastActionSuccess=True))
-    c = ai2thor.controller.Controller()
-    c.last_event = fake_event
-    action1 = dict(action='MoveAhead', moveMagnitude=np.ones(1)[0])
-    c.request_queue = FakeQueue()
-    c.request_queue.put_nowait(fake_event)
-    c.step(action1)
-    filtered_action = c.response_queue.get()
-    print(filtered_action)
-    assert filtered_action == {'action': 'MoveAhead', 'moveMagnitude': 1.0}
-    assert type(filtered_action['moveMagnitude']) is float
-
 def test_raise_for_failure():
     fake_event = Event(dict(screenWidth=300, screenHeight=300, colors=[], lastActionSuccess=False, errorCode='NotOpen'))
     c = ai2thor.controller.Controller()

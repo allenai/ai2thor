@@ -28,6 +28,8 @@ public class Randomizer : MonoBehaviour {
 	public Color ColorRangeHigh = Color.white;
 	public float ColorSaturation = 1f;
 	public System.Random rand = null;
+	private int randomSeed;
+	private bool seedInitialized;
 
 	void OnEnable() {
 		Randomize ();
@@ -41,9 +43,12 @@ public class Randomizer : MonoBehaviour {
 			}
 		}
 
-		if (rand == null) {
-			rand = new System.Random (SceneNumber);
+		if (!seedInitialized) {
+			randomSeed = SceneNumber;
+			seedInitialized = true;
 		}
+
+		rand = new System.Random (randomSeed);
 
 		if (Application.isPlaying) {
 			StartCoroutine (StaggerRandomize ());
@@ -53,7 +58,8 @@ public class Randomizer : MonoBehaviour {
 	}
 
 	public void Randomize (int seed) {
-		rand = new System.Random (seed);
+		randomSeed = seed;
+		seedInitialized = true;
 		Randomize ();
 	}
 
