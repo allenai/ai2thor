@@ -71,7 +71,8 @@ def generate_quality_settings(ctx):
         f.write("QUALITY_SETTINGS = " + pprint.pformat(quality_settings))
 
 
-def increment_version():
+@task
+def increment_version(context):
     import ai2thor._version
 
     major, minor, subv = ai2thor._version.__version__.split('.')
@@ -136,6 +137,14 @@ def archive_push(build_path, build_dir, build_info):
     threading.current_thread().success = True
 
 @task
+def pre_test(context):
+    import ai2thor.controller
+    import shutil
+    c = ai2thor.controller.Controller()
+    os.makedirs('unity/builds/%s' % c.build_name())
+    shutil.move(os.path.join('unity', 'builds', c.build_name() + '.app'), 'unity/builds/%s' % c.build_name())
+
+@task
 def build(context, local=False):
     from multiprocessing import Process
     version = datetime.datetime.now().strftime('%Y%m%d%H%M')
@@ -184,7 +193,8 @@ def build(context, local=False):
         fi.write("VERSION = '%s'\n" % version)
         fi.write("BUILDS = " + pprint.pformat(builds))
 
-    increment_version()
+    increment_version(context)
+    build_docker(version)
     build_pip(context)
 
 @task
@@ -200,6 +210,23 @@ def interact(ctx, scene, editor_mode=False):
     env.step(dict(action='Initialize', gridSize=0.25))
     env.interact()
     env.stop()
+
+@task
+def release(ctx):
+    x = subprocess.check_output("git status --porcelain", shell=True).decode('ASCII')
+    for line in x.split('\n'):
+        if line.strip().startswith('??') or len(line.strip()) == 0:
+            continue
+        raise Exception("Found locally modified changes from 'git status' - please commit and push or revert")
+
+    import ai2thor._version
+
+    tag = "v" + ai2thor._version.__version__
+    subprocess.check_call('git tag -a %s -m "release  %s"' % (tag, tag), shell=True)
+    subprocess.check_call('git push origin master --tags', shell=True)
+    subprocess.check_call('twine upload -u ai2thor dist/ai2thor-{ver}-* dist/ai2thor-{ver}.*'.format(ver=ai2thor._version.__version__), shell=True)
+
+
 
 @task
 def check_visible_objects_closed_receptacles(ctx, start_scene, end_scene):

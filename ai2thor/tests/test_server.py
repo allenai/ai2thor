@@ -1,5 +1,6 @@
 import ai2thor.server
 import pytest
+import numpy as np
 import json
 from ai2thor.controller import Queue
 from ai2thor.tests.test_event import metadata_simple
@@ -59,6 +60,26 @@ def test_multi_agent_train():
         input_stream=BytesIO(generate_multi_agent_form(metadata_simple, s.sequence_id)))
     assert res.status_code == 200
 
+def test_train_numpy_action():
+    request_queue = Queue(maxsize=1)
+    response_queue = Queue(maxsize=1)
+
+    response_queue.put_nowait(dict(
+        action='Teleport', 
+        rotation=dict(y=np.array([24])[0]),
+        moveMagnitude=np.array([55.5])[0],
+    ))
+
+    s = ai2thor.server.Server(request_queue, response_queue, '127.0.0.1')
+    c = s.app.test_client()
+    res = c.post(
+        '/train', 
+        buffered=True,
+        content_type='multipart/form-data; boundary=OVCo05I3SVXLPeTvCgJjHl1EOleL4u9TDx5raRVt',
+        input_stream=BytesIO(generate_form(metadata_simple, s.sequence_id)))
+    j = json.loads(res.get_data())
+    assert j == {'action': 'Teleport', 'rotation': {'y': 24}, 'sequenceId': 1, 'moveMagnitude': 55.5}
+    assert res.status_code == 200
 
 def test_train():
     request_queue = Queue(maxsize=1)

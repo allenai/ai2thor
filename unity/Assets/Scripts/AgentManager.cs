@@ -23,6 +23,8 @@ public class AgentManager : MonoBehaviour
 	private bool renderDepthImage;
 	private bool renderClassImage;
 	private bool renderObjectImage;
+	private bool renderNormalsImage;
+	private List<Camera> thirdPartyCameras = new List<Camera>();
 	
 
 	private bool readyToEmit;
@@ -92,8 +94,8 @@ public class AgentManager : MonoBehaviour
 		this.renderImage = action.renderImage;
 		this.renderClassImage = action.renderClassImage;
 		this.renderDepthImage = action.renderDepthImage;
+		this.renderNormalsImage = action.renderNormalsImage;
 		this.renderObjectImage = action.renderObjectImage;
-	
 		StartCoroutine (addAgents (action));
 
 	}
@@ -107,9 +109,26 @@ public class AgentManager : MonoBehaviour
 		readyToEmit = true;
 	}
 
-	private void addAgent(ServerAction action) {
+	public void AddThirdPartyCamera(ServerAction action) {
+		GameObject gameObject = new GameObject("ThirdPartyCamera" + thirdPartyCameras.Count);
+		gameObject.AddComponent(typeof(Camera));
+		Camera camera = gameObject.GetComponentInChildren<Camera>();
+		this.thirdPartyCameras.Add(camera);
+		gameObject.transform.eulerAngles = action.rotation;
+		gameObject.transform.position = action.position;
+		readyToEmit = true;
+	}
 
-        
+	public void UpdateThirdPartyCamera(ServerAction action) {
+		if (action.thirdPartyCameraId <= thirdPartyCameras.Count) {
+			Camera thirdPartyCamera = thirdPartyCameras.ToArray()[action.thirdPartyCameraId];
+			thirdPartyCamera.gameObject.transform.eulerAngles = action.rotation;
+			thirdPartyCamera.gameObject.transform.position = action.position;
+		} 
+		readyToEmit = true;
+	}
+
+	private void addAgent(ServerAction action) {
 		Vector3 clonePosition = agentStartPosition (primaryAgent);
 
 		if (clonePosition.magnitude > 0) {
@@ -210,10 +229,16 @@ public class AgentManager : MonoBehaviour
 	}
 
 
-	private void addImageForm(WWWForm form, BaseFPSAgentController agent, bool renderCamera) {
+	private void addThirdPartyCameraImageForm(WWWForm form, Camera camera) {
+		RenderTexture.active = camera.activeTexture;
+		camera.Render ();
+		form.AddBinaryData("image-thirdParty-camera", captureScreen());
+	}
+
+	private void addImageForm(WWWForm form, BaseFPSAgentController agent) {
 		if (this.renderImage) {
 
-			if (renderCamera) {
+			if (this.agents.Count > 1 || this.thirdPartyCameras.Count > 0) {
 				RenderTexture.active = agent.m_Camera.activeTexture;
 				agent.m_Camera.Render ();
 			}
@@ -294,15 +319,17 @@ public class AgentManager : MonoBehaviour
 		}
 	}
 
-	private void addClassImageForm (WWWForm form, BaseFPSAgentController agent) {
-		if (this.renderClassImage) {
-			if (!agent.imageSynthesis.hasCapturePass ("_class")) {
-				Debug.LogError ("class image not available - sending empty image");
+	private void addImageSynthesisImageForm(WWWForm form, BaseFPSAgentController agent, bool flag, string captureName, string fieldName)
+	{
+		if (flag) {
+			if (!agent.imageSynthesis.hasCapturePass (captureName)) {
+				Debug.LogError (captureName + " not available - sending empty image");
 			}
-			byte[] bytes = agent.imageSynthesis.Encode ("_class");
-			form.AddBinaryData ("image_classes", bytes);
-		}
+			byte[] bytes = agent.imageSynthesis.Encode (captureName);
+			form.AddBinaryData (fieldName, bytes);
 
+
+		}
 	}
 
 	private IEnumerator EmitFrame() {
@@ -318,20 +345,32 @@ public class AgentManager : MonoBehaviour
 
 		MultiAgentMetadata multiMeta = new MultiAgentMetadata ();
 		multiMeta.agents = new MetadataWrapper[this.agents.Count];
+		ThirdPartyCameraMetadata[] cameraMetadata = new ThirdPartyCameraMetadata[this.thirdPartyCameras.Count];
 		multiMeta.activeAgentId = this.activeAgentId;
 		multiMeta.sequenceId = this.currentSequenceId;
 		RenderTexture currentTexture = RenderTexture.active;
 
+		for (int i = 0; i < this.thirdPartyCameras.Count; i++) {
+			ThirdPartyCameraMetadata cMetadata = new ThirdPartyCameraMetadata();
+			Camera camera = thirdPartyCameras.ToArray()[i];
+			cMetadata.thirdPartyCameraId = i;
+			cMetadata.position = camera.gameObject.transform.position;
+			cMetadata.rotation = camera.gameObject.transform.eulerAngles;
+			cameraMetadata[i] = cMetadata;
+			addThirdPartyCameraImageForm (form, camera);
+		}
 
 		for (int i = 0; i < this.agents.Count; i++) {
 			BaseFPSAgentController agent = this.agents.ToArray () [i];
 			MetadataWrapper metadata = agent.generateMetadataWrapper ();
 			metadata.agentId = i;
 			// we don't need to render the agent's camera for the first agent
-			addImageForm (form, agent, i > 0);
-			addDepthImageForm (form, agent);
+			addImageForm (form, agent);
+			addImageSynthesisImageForm(form, agent, this.renderDepthImage, "_depth", "image_depth");
+			addImageSynthesisImageForm(form, agent, this.renderNormalsImage, "_normals", "image_normals");
 			addObjectImageForm (form, agent, ref metadata);
-			addClassImageForm (form, agent);
+			addImageSynthesisImageForm(form, agent, this.renderClassImage, "_class", "image_classes");
+			metadata.thirdPartyCameras = cameraMetadata;
 			multiMeta.agents [i] = metadata;
 		}
 
@@ -366,6 +405,10 @@ public class AgentManager : MonoBehaviour
 			this.Reset (controlCommand);
 		} else if (controlCommand.action == "Initialize") {
 			this.Initialize(controlCommand);
+		} else if (controlCommand.action == "AddThirdPartyCamera") {
+			this.AddThirdPartyCamera(controlCommand);
+		} else if (controlCommand.action == "UpdateThirdPartyCamera") {
+			this.UpdateThirdPartyCamera(controlCommand);
 		} else {
 			this.activeAgent().ProcessControlCommand (controlCommand);
 			readyToEmit = true;
@@ -409,8 +452,17 @@ public class AgentManager : MonoBehaviour
 public class MultiAgentMetadata {
 
 	public MetadataWrapper[] agents;
+	public ThirdPartyCameraMetadata[] thirdPartyCameras;
 	public int activeAgentId;
 	public int sequenceId;
+}
+
+[Serializable]
+public class ThirdPartyCameraMetadata
+{
+	public int thirdPartyCameraId;
+	public Vector3 position;
+	public Vector3 rotation;
 }
 
 [Serializable]
@@ -498,6 +550,7 @@ public struct MetadataWrapper
 {
 	public ObjectMetadata[] objects;
 	public ObjectMetadata agent;
+	public ThirdPartyCameraMetadata[] thirdPartyCameras;
 	public bool collided;
 	public string[] collidedObjects;
 	public InventoryObject[] inventoryObjects;
@@ -527,17 +580,19 @@ public class ServerAction
 	public string[] excludeObjectIds;
 	public string objectId;
 	public int agentId;
+	public int thirdPartyCameraId;
 	public float y;
 	public float x;
 	public float z;
+	public int horizon;
+	public Vector3 rotation;
+	public Vector3 position;
 	public int sequenceId;
 	public bool snapToGrid = true;
 	public bool continuous;
 	public string sceneName;
 	public bool rotateOnTeleport;
 	public bool forceVisible;
-	public int rotation;
-	public int horizon;
 	public bool randomizeOpen;
 	public int pivot;
 	public int randomSeed;
@@ -554,6 +609,7 @@ public class ServerAction
 	public bool renderDepthImage;
 	public bool renderClassImage;
 	public bool renderObjectImage;
+	public bool renderNormalsImage;
 	public float cameraY;
 
 	public SimObjType ReceptableSimObjType()

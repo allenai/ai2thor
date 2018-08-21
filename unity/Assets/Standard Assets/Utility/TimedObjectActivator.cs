@@ -80,7 +80,8 @@ namespace UnityStandardAssets.Utility
         private IEnumerator ReloadLevel(Entry entry)
         {
             yield return new WaitForSeconds(entry.delay);
-            SceneManager.LoadScene(SceneManager.GetSceneAt(0).name);
+            UnityEngine.SceneManagement.SceneManager.LoadScene(
+                UnityEngine.SceneManagement.SceneManager.GetSceneAt(0).name);
         }
     }
 }
