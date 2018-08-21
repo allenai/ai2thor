@@ -30,7 +30,7 @@ public class Randomizer : MonoBehaviour {
 	public System.Random rand = null;
 
 	void OnEnable() {
-		//Randomize ();
+		Randomize ();
 	}
 
 	public void Randomize() {
