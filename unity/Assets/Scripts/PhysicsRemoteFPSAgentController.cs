@@ -36,7 +36,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
         //set this to true to ignore interactable point checks. In this case, all actions only require an object to be Visible and
         //will NOT require both visibility AND a path from the hand to the object's Interaction points.
-		[SerializeField] private bool IgnoreInteractableFlag = false;
+		//[SerializeField] private bool IgnoreInteractableFlag = false;
 
         //change visibility check to use this distance when looking down
 		protected float DownwardViewDistance = 2.0f;
@@ -83,21 +83,78 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			VisibleSimObjPhysics = GetAllVisibleSimObjPhysics(m_Camera, maxVisibleDistance);
    		}
 
-        public string UniqueIDOfClosestInteractableObject()
+  //      public string UniqueIDOfClosestInteractableObject()
+		//{
+		//	string objectID = null;
+
+		//	foreach (SimObjPhysics o in VisibleSimObjPhysics)
+		//	{
+		//		if(o.isInteractable == true && o.PrimaryProperty == SimObjPrimaryProperty.CanPickup)
+		//		{
+		//			objectID = o.UniqueID;
+		//		//	print(objectID);
+		//			break;
+		//		}
+		//	}
+
+		//	return objectID;
+		//}
+
+        //return ID of closest CanPickup object by distance
+        public string UniqueIDOfClosestVisibleObject()
+		{
+			  string objectID = null;
+
+              foreach (SimObjPhysics o in VisibleSimObjPhysics)
+              {
+                  if(o.PrimaryProperty == SimObjPrimaryProperty.CanPickup)
+                  {
+                      objectID = o.UniqueID;
+                  //  print(objectID);
+                      break;
+                  }
+              }
+
+              return objectID;
+		}
+
+        //return ID of closest CanOpen or CanOpen_Fridge object by distance
+        public string UniqueIDOfClosestVisibleOpenableObject()
 		{
 			string objectID = null;
-
-			foreach (SimObjPhysics o in VisibleSimObjPhysics)
-			{
-				if(o.isInteractable == true && o.PrimaryProperty == SimObjPrimaryProperty.CanPickup)
+            
+            foreach (SimObjPhysics o in VisibleSimObjPhysics)
+            {
+				if(o.GetComponent<CanOpen>())
 				{
 					objectID = o.UniqueID;
-				//	print(objectID);
 					break;
 				}
-			}
 
-			return objectID;
+				else if(o.GetComponent<CanOpen_Fridge>())
+				{
+					objectID = o.UniqueID;
+					break;
+				}
+				//if(o.SecondaryProperties.Length > 0)
+				//{
+				//	List<SimObjSecondaryProperty> temp = new List<SimObjSecondaryProperty>(o.SecondaryProperties);
+				//	if (temp.Contains(SimObjSecondaryProperty.CanOpen))
+				//	{
+						
+				//	}
+
+				//}
+
+				//if (o.SecondaryProperties == SimObjPrimaryProperty.CanOpen)
+                //{
+                //    objectID = o.UniqueID;
+                //    //  print(objectID);
+                //    break;
+                //}
+            }
+
+            return objectID;
 		}
 
 		protected SimObjPhysics[] GetAllVisibleSimObjPhysics(Camera agentCamera, float maxDistance)
@@ -181,93 +238,93 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 {
 
                     //get all interaction points on the visible sim object we are checking here
-                    Transform[] InteractionPoints = visibleSimObjP.InteractionPoints;
+                    //Transform[] InteractionPoints = visibleSimObjP.InteractionPoints;
 
-                    int ReachableInteractionPointCount = 0;
-                    foreach (Transform ip in InteractionPoints)
-                    {
-						Vector3 viewPoint = agentCamera.WorldToViewportPoint(ip.position);
+      //              int ReachableInteractionPointCount = 0;
+      //              foreach (Transform ip in InteractionPoints)
+      //              {
+						//Vector3 viewPoint = agentCamera.WorldToViewportPoint(ip.position);
 
-                        float ViewPointRangeHigh = 1.0f;
-                        float ViewPointRangeLow = 0.0f;
+      //                  float ViewPointRangeHigh = 1.0f;
+      //                  float ViewPointRangeLow = 0.0f;
 
-                        //check if the interaction point is within the viewport
-						if (viewPoint.z > 0 //&& viewPoint.z < maxDistance * DownwardViewDistance //is in front of camera and within range of visibility sphere
-                            && viewPoint.x < ViewPointRangeHigh && viewPoint.x > ViewPointRangeLow//within x bounds of viewport
-                            && viewPoint.y < ViewPointRangeHigh && viewPoint.y > ViewPointRangeLow)//within y bounds of viewport
-						{   
-                            ////down extension stuff
-							float MaxDownwardLookAngle = 60f;
-                            float MinDownwardLookAngle = 15f;
+      //                  //check if the interaction point is within the viewport
+						//if (viewPoint.z > 0 //&& viewPoint.z < maxDistance * DownwardViewDistance //is in front of camera and within range of visibility sphere
+      //                      && viewPoint.x < ViewPointRangeHigh && viewPoint.x > ViewPointRangeLow//within x bounds of viewport
+      //                      && viewPoint.y < ViewPointRangeHigh && viewPoint.y > ViewPointRangeLow)//within y bounds of viewport
+						//{   
+      //                      ////down extension stuff
+						//	float MaxDownwardLookAngle = 60f;
+      //                      float MinDownwardLookAngle = 15f;
                             
-                            Vector3 itemDirection = Vector3.zero;
-                            //do a raycast in the direction of the item
-                            itemDirection = (ip.position - agentCamera.transform.position).normalized;
-                            Vector3 agentForward = agentCamera.transform.forward;
-                            agentForward.y = 0f;
-                            agentForward.Normalize();
-                            //clap the angle so we can't wrap around
-                            float maxDistanceLerp = 0f;
-                            float lookAngle = Mathf.Clamp(Vector3.Angle(agentForward, itemDirection), 0f, MaxDownwardLookAngle) - MinDownwardLookAngle;
-                            maxDistanceLerp = lookAngle / MaxDownwardLookAngle;
-                            maxDistance = Mathf.Lerp(maxDistance, maxDistance * DownwardViewDistance, maxDistanceLerp);
+      //                      Vector3 itemDirection = Vector3.zero;
+      //                      //do a raycast in the direction of the item
+      //                      itemDirection = (ip.position - agentCamera.transform.position).normalized;
+      //                      Vector3 agentForward = agentCamera.transform.forward;
+      //                      agentForward.y = 0f;
+      //                      agentForward.Normalize();
+      //                      //clap the angle so we can't wrap around
+      //                      float maxDistanceLerp = 0f;
+      //                      float lookAngle = Mathf.Clamp(Vector3.Angle(agentForward, itemDirection), 0f, MaxDownwardLookAngle) - MinDownwardLookAngle;
+      //                      maxDistanceLerp = lookAngle / MaxDownwardLookAngle;
+      //                      maxDistance = Mathf.Lerp(maxDistance, maxDistance * DownwardViewDistance, maxDistanceLerp);
 
 
-                            //down extension stuff ends
-							if(!IgnoreInteractableFlag)
-							{
-								//sweep test from agent's hand to each Interaction point
-                                RaycastHit hit;
-                                if (HandRB.SweepTest(ip.position - AgentHand.transform.position, out hit, maxDistance))
-                                {
-                                    //if the object only has one interaction point to check
-                                    if (visibleSimObjP.InteractionPoints.Length == 1)
-                                    {
-                                        if (hit.transform == visibleSimObjP.transform)
-                                        {
-                                            #if UNITY_EDITOR
-                                            Debug.DrawLine(AgentHand.transform.position, ip.transform.position, Color.magenta);
-                                            #endif
+      // //                     //down extension stuff ends
+						//	//if(!IgnoreInteractableFlag)
+						//	//{
+						//	//	//sweep test from agent's hand to each Interaction point
+      // //                         RaycastHit hit;
+      // //                         if (HandRB.SweepTest(ip.position - AgentHand.transform.position, out hit, maxDistance))
+      // //                         {
+      // //                             //if the object only has one interaction point to check
+      // //                             if (visibleSimObjP.InteractionPoints.Length == 1)
+      // //                             {
+      // //                                 if (hit.transform == visibleSimObjP.transform)
+      // //                                 {
+      // //                                     #if UNITY_EDITOR
+      // //                                     Debug.DrawLine(AgentHand.transform.position, ip.transform.position, Color.magenta);
+      // //                                     #endif
 
-                                            //print(hit.transform.name);
-                                            visibleSimObjP.isInteractable = true;
-                                        }
+      // //                                     //print(hit.transform.name);
+      // //                                     visibleSimObjP.isInteractable = true;
+      // //                                 }
 
-                                        else
-                                            visibleSimObjP.isInteractable = false;
-                                    }
+      // //                                 else
+      // //                                     visibleSimObjP.isInteractable = false;
+      // //                             }
 
-                                    //this object has 2 or more interaction points
-                                    //if any one of them can be accessed by the Agent's hand, this object is interactable
-                                    if (visibleSimObjP.InteractionPoints.Length > 1)
-                                    {
+      // //                             //this object has 2 or more interaction points
+      // //                             //if any one of them can be accessed by the Agent's hand, this object is interactable
+      // //                             if (visibleSimObjP.InteractionPoints.Length > 1)
+      // //                             {
 
-                                        if (hit.transform == visibleSimObjP.transform)
-                                        {
-                                            #if UNITY_EDITOR
-                                            Debug.DrawLine(AgentHand.transform.position, ip.transform.position, Color.magenta);
-                                            #endif
-                                            ReachableInteractionPointCount++;
-                                        }
+      // //                                 if (hit.transform == visibleSimObjP.transform)
+      // //                                 {
+      // //                                     #if UNITY_EDITOR
+      // //                                     Debug.DrawLine(AgentHand.transform.position, ip.transform.position, Color.magenta);
+      // //                                     #endif
+      // //                                     ReachableInteractionPointCount++;
+      // //                                 }
 
-                                        //check if at least one of the interaction points on this multi interaction point object
-                                        //is accessible to the agent Hand
-                                        if (ReachableInteractionPointCount > 0)
-                                        {
-                                            visibleSimObjP.isInteractable = true;
-                                        }
+      // //                                 //check if at least one of the interaction points on this multi interaction point object
+      // //                                 //is accessible to the agent Hand
+      // //                                 if (ReachableInteractionPointCount > 0)
+      // //                                 {
+      // //                                     visibleSimObjP.isInteractable = true;
+      // //                                 }
 
-                                        else
-                                            visibleSimObjP.isInteractable = false;
-                                    }
-                                }
+      // //                                 else
+      // //                                     visibleSimObjP.isInteractable = false;
+      // //                             }
+      // //                         }
 
-                                else
-                                    visibleSimObjP.isInteractable = false;
-							}
+      // //                         else
+      // //                             visibleSimObjP.isInteractable = false;
+						//	//}
 						
-						}                    
-                    }
+						//}                    
+                    //}
                 }
             }
             
@@ -323,7 +380,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 					{
 						result = true;
                         #if UNITY_EDITOR
-                        Debug.DrawLine(agentCamera.transform.position, point.position, Color.yellow);
+                        Debug.DrawLine(agentCamera.transform.position, point.position, Color.cyan);
                         #endif
 					}               
 				}          
@@ -978,16 +1035,16 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     //return false;
                 }
 
-                //only check interactability if flag is set, otherwise will only check visible
-				if(!IgnoreInteractableFlag)
-				{
-					if (target.isInteractable != true)
-                    {
-                        Debug.Log("Target not in Interactable range of Agent Hand");
-                        actionFinished(false);
-                        return;
-                    }
-				}
+    //            //only check interactability if flag is set, otherwise will only check visible
+				//if(!IgnoreInteractableFlag)
+				//{
+				//	if (target.isInteractable != true)
+    //                {
+    //                    Debug.Log("Target not in Interactable range of Agent Hand");
+    //                    actionFinished(false);
+    //                    return;
+    //                }
+				//}
 
                 
                 //move the object to the hand's default position.
@@ -1149,16 +1206,16 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
             foreach (SimObjPhysics sop in VisibleSimObjs(action))
             {
-                //print("why not?");
-                //check for object in current visible objects, and also check that it's interactable
-				if(!IgnoreInteractableFlag)
-				{
-					if (!sop.isInteractable)
-                    {
-                        Debug.Log(sop.UniqueID + " is not Interactable");
-                        return;
-                    }
-				}
+    //            //print("why not?");
+    //            //check for object in current visible objects, and also check that it's interactable
+				//if(!IgnoreInteractableFlag)
+				//{
+				//	if (!sop.isInteractable)
+    //                {
+    //                    Debug.Log(sop.UniqueID + " is not Interactable");
+    //                    return;
+    //                }
+				//}
 
 				if (sop.GetComponent<CanOpen>()|| sop.GetComponent<CanOpen_Fridge>())
                 {
@@ -1235,16 +1292,16 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
             foreach (SimObjPhysics sop in VisibleSimObjs(action))
             {
-				//print("why not?");
-				//check for object in current visible objects, and also check that it's interactable
-				if(!IgnoreInteractableFlag)
-				{
-					if (!sop.isInteractable)
-                    {
-                        Debug.Log(sop.UniqueID + " is not Interactable");
-                        return;
-                    }
-				}
+				////print("why not?");
+				////check for object in current visible objects, and also check that it's interactable
+				//if(!IgnoreInteractableFlag)
+				//{
+				//	if (!sop.isInteractable)
+    //                {
+    //                    Debug.Log(sop.UniqueID + " is not Interactable");
+    //                    return;
+    //                }
+				//}
                 
                 //check for CanOpen drawers, cabinets or CanOpen_Fridge fridge objects
 				if (sop.GetComponent<CanOpen>() || sop.GetComponent<CanOpen_Fridge>())
@@ -1926,13 +1983,13 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
                             //else
                             //suffix += " VISIBLE";
-							if(!IgnoreInteractableFlag)
-							{
-								if (o.isInteractable == true)
-                                {
-                                    suffix += " INTERACTABLE";
-                                }
-							}
+							//if(!IgnoreInteractableFlag)
+							//{
+							//	if (o.isInteractable == true)
+       //                         {
+       //                             suffix += " INTERACTABLE";
+       //                         }
+							//}
 
                         }
                   

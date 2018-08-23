@@ -17,7 +17,7 @@ public class Fridge_Door : MonoBehaviour
 	{
 		
 	}
-
+       
 	public void OnTriggerEnter(Collider other)
     {
 

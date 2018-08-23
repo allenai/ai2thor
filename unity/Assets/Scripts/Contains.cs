@@ -90,7 +90,7 @@ public class Contains : MonoBehaviour
 	//BoxCollider, Trigger
 
     #if UNITY_EDITOR
-	void OnDrawGizmosSelected()
+	void OnDrawGizmos()
 	{
 		BoxCollider b = GetComponent<BoxCollider>();
         

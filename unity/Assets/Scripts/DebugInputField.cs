@@ -162,7 +162,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 						else
 						{
-							action.objectId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().UniqueIDOfClosestInteractableObject();
+							action.objectId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().UniqueIDOfClosestVisibleObject();
 						}
 
                         PhysicsController.ProcessControlCommand(action);
@@ -370,10 +370,15 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         }
 
 						//give the open percentage as 3rd param, from 0.0 to 1.0
-						if(splitcommand.Length > 2)
+						else if(splitcommand.Length > 2)
 						{
 							action.objectId = splitcommand[1];
 							action.moveMagnitude = float.Parse(splitcommand[2]);
+						}
+
+						else
+						{
+                           action.objectId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().UniqueIDOfClosestVisibleOpenableObject();
 						}
 
 						PhysicsController.ProcessControlCommand(action);                  
@@ -389,6 +394,11 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         if (splitcommand.Length > 1)
                         {
                             action.objectId = splitcommand[1];
+                        }
+                  
+                        else
+                        {
+                            action.objectId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().UniqueIDOfClosestVisibleOpenableObject();
                         }
 
                         PhysicsController.ProcessControlCommand(action);
