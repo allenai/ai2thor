@@ -22,16 +22,14 @@ public class CanOpen_Fridge : MonoBehaviour
     protected float openPercentage = 1.0f; //0.0 to 1.0 - percent of openPosition the object opens. 
 
 	[Header("Objects To Ignore Collision With - For Cabinets/Drawers with hinges too close together")]
-    //these are objects to ignore collision with. For example, two cabinets right next to each other
-    //might clip into themselves, so ignore the "reset" event in that case by putting the object to ignore in the below array
+    //these are objects to ignore collision with. This is in case the fridge doors touch each other or something that might
+    //prevent them from closing all the way. Probably not needed but it's here if there is an edge case
     [SerializeField]
     public GameObject[] IgnoreTheseObjects;
 
 	[Header("State information bools")]
 	[SerializeField]
     public bool isOpen = false;
-
-    //private Hashtable iTweenArgs;
 
 	[SerializeField]
     public bool canReset = true;
@@ -45,6 +43,10 @@ public class CanOpen_Fridge : MonoBehaviour
 			foreach (GameObject go in Doors)
             {
                 iTween.Init(go);
+
+				//check to make sure all doors have a Fridge_Door.cs script on them, if not throw a warning
+				//if (!go.GetComponent<Fridge_Door>())
+					//Debug.Log("Fridge Door is missing Fridge_Door.cs component! OH NO!");
             }
 		}
 
@@ -82,7 +84,7 @@ public class CanOpen_Fridge : MonoBehaviour
 			}
         }
 
-        //open it here
+        //oh it's closed? let's open it
         else
         {
 			for (int i = 0; i < Doors.Length; i++)
@@ -90,10 +92,8 @@ public class CanOpen_Fridge : MonoBehaviour
 				iTween.RotateTo(Doors[i], iTween.Hash("rotation", openPositions[i] * openPercentage, "islocal", true));            
 			}
         }
-       
-
+      
         isOpen = !isOpen;
-        //canReset = true;
     }
 
     public float GetOpenPercent()
@@ -136,67 +136,6 @@ public class CanOpen_Fridge : MonoBehaviour
 			count += iTween.Count(go);
         }
 		return count;//iTween.Count(this.transform.gameObject);
-    }
-
-
-    //need to move OnTriggerEnter function to the doors of this fridge....hmm
-
-    //trigger enter/exit functions reset the animation if the Agent is hit by the object opening
-    public void OnTriggerEnter(Collider other)
-    {
-
-        //note: Normally rigidbodies set to Kinematic will never call the OnTriggerX events
-        //when colliding with another rigidbody that is kinematic. For some reason, if the other object
-        //has a trigger collider even though THIS object only has a kinematic rigidbody, this
-        //function is still called so we'll use that here:
-
-        //The Agent has a trigger Capsule collider, and other cabinets/drawers have
-        //a trigger collider, so this is used to reset the position if the agent or another
-        //cabinet or drawer is in the way of this object opening/closing
-
-        //if hitting the Agent, reset position and report failed action
-        if (other.name == "FPSController" && canReset == true)
-        {
-            Debug.Log(gameObject.name + " hit " + other.name + " Resetting position");
-            canReset = false;
-            Reset();
-        }
-
-        //if hitting another cabinet/drawer, do some checks 
-        if (other.GetComponentInParent<CanOpen>() && canReset == true)
-        {
-            if (IsInIgnoreArray(other, IgnoreTheseObjects))
-            {
-                //don't reset, it's cool to ignore these since some cabinets literally clip into each other if they are double doors
-                return;
-            }
-
-            //oh it was something else RESET! DO IT!
-            else
-            {
-                //check the collider hit's parent for itween instances
-                //if 0, then it is not actively animating so check against it. This is needed so CanOpen objects don't reset unless they are the active
-                //object moving. Otherwise, an open cabinet hit by a drawer would cause the Drawer AND the cabinet to try and reset.
-                //this should be fine since only one cabinet/drawer will be moving at a time given the Agent's action only opening on object at a time
-                if (other.transform.GetComponentInParent<CanOpen>().GetiTweenCount() == 0)//iTween.Count(other.transform.GetComponentInParent<CanOpen>().transform.gameObject) == 0)
-                {
-                    //print(other.GetComponentInParent<CanOpen>().transform.name);
-                    Debug.Log(gameObject.name + " hit " + other.name + " Resetting position");
-                    canReset = false;
-                    Reset();
-                }
-
-            }
-        }
-    }
-
-    public void OnTriggerExit(Collider other)
-    {
-        if (other.name == "FPSController" || other.GetComponentInParent<CanOpen>())
-        {
-            //print("HAAAAA");
-            canReset = true;
-        }
     }
 
     public void Reset()
