@@ -76,6 +76,7 @@ public class SimObjPhysics : MonoBehaviour
 
 	}
 
+    //used for throwing the sim object, or anything that requires adding force for some reason
 	public void ApplyForce(ServerAction action)
 	{
 		Vector3 dir = new Vector3(action.x, action.y, action.z);
@@ -123,6 +124,7 @@ public class SimObjPhysics : MonoBehaviour
                 Debug.Log(result);
                 #endif
 
+                //XXX this is where we would export metadata for what is contained in this receptacle
                 //return list of Unique ID strings
 				return objs;
 
@@ -142,6 +144,7 @@ public class SimObjPhysics : MonoBehaviour
         }
 	}
 
+    //this has been moved to the scene manager
 	//private void Generate_UniqueID()
 	//{
 	//	Vector3 pos = this.transform.position;

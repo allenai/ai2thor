@@ -125,6 +125,7 @@ public class MassScale : MonoBehaviour
 		WAKEMEUPINSIDE();
 	}
 
+    //prevent rigidbody sleep for any objects inside scales
     public void WAKEMEUPINSIDE()
 	{
 		foreach(SimObjPhysics sop in RightScaleObjects)

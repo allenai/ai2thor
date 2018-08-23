@@ -1160,7 +1160,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     }
 				}
 
-                if (sop.GetComponent<CanOpen>())
+				if (sop.GetComponent<CanOpen>()|| sop.GetComponent<CanOpen_Fridge>())
                 {
                     //print("wobbuffet");
                     target = sop;
@@ -1170,20 +1170,44 @@ namespace UnityStandardAssets.Characters.FirstPerson
             
             if (target)
             {
-                CanOpen co = target.GetComponent<CanOpen>();
-                
-                //if object is open, close it
-                if (co.isOpen)
-                {
-                    co.Interact();
-                    actionFinished(true);
-                }
+				if(target.GetComponent<CanOpen>())
+				{
+					CanOpen co = target.GetComponent<CanOpen>();
 
-                else {
-                    Debug.Log("can't close object if it's already closed");
-                    actionFinished(false);
-                    errorMessage = "object already open: " + action.objectId;
-                }
+                    //if object is open, close it
+                    if (co.isOpen)
+                    {
+                        co.Interact();
+                        actionFinished(true);
+                    }
+
+                    else
+                    {
+                        Debug.Log("can't close object if it's already closed");
+                        actionFinished(false);
+                        errorMessage = "object already open: " + action.objectId;
+                    }
+				}
+
+				else if(target.GetComponent<CanOpen_Fridge>())
+				{
+					CanOpen_Fridge cof = target.GetComponent<CanOpen_Fridge>();
+
+                    //if object is open, close it
+                    if (cof.isOpen)
+                    {
+                        cof.Interact();
+                        actionFinished(true);
+                    }
+
+                    else
+                    {
+                        Debug.Log("can't close object if it's already closed");
+                        actionFinished(false);
+                        errorMessage = "object already open: " + action.objectId;
+                    }
+				}
+              
             } 
 
 			else 
@@ -1222,7 +1246,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     }
 				}
                 
-                if (sop.GetComponent<CanOpen>())
+                //check for CanOpen drawers, cabinets or CanOpen_Fridge fridge objects
+				if (sop.GetComponent<CanOpen>() || sop.GetComponent<CanOpen_Fridge>())
                 {
                     //print("wobbuffet");
                     target = sop;
@@ -1232,29 +1257,60 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 			if (target)
 			{
-				CanOpen co = target.GetComponent<CanOpen>();
-
-                //check to make sure object is closed
-				if (co.isOpen)
-                {
-                    Debug.Log("can't open object if it's already open");
-                    errorMessage = "object already open";
-                    actionFinished(false);
-                } 
-
-				else 
+				if(target.GetComponent<CanOpen>())
 				{
-					//pass in percentage open if desired
-                    // XXX should switch this to 
-                    if (action.moveMagnitude > 0.0f)
+					CanOpen co = target.GetComponent<CanOpen>();
+
+                    //check to make sure object is closed
+                    if (co.isOpen)
                     {
-                        co.SetOpenPercent(action.moveMagnitude);
+                        Debug.Log("can't open object if it's already open");
+                        errorMessage = "object already open";
+                        actionFinished(false);
                     }
 
-                    co.Interact();
-                    // XXX need to add checkOpenAction to determine if agent got moved
-                    actionFinished(true);
-                }
+                    else
+                    {
+                        //pass in percentage open if desired
+                        // XXX should switch this to 
+                        if (action.moveMagnitude > 0.0f)
+                        {
+                            co.SetOpenPercent(action.moveMagnitude);
+                        }
+
+                        co.Interact();
+                        // XXX need to add checkOpenAction to determine if agent got moved
+                        actionFinished(true);
+                    }
+				}
+                
+				else if(target.GetComponent<CanOpen_Fridge>())
+				{
+					CanOpen_Fridge cof = target.GetComponent<CanOpen_Fridge>();
+
+                    //check to make sure object is closed
+                    if (cof.isOpen)
+                    {
+                        Debug.Log("can't open object if it's already open");
+                        errorMessage = "object already open";
+                        actionFinished(false);
+                    }
+
+                    else
+                    {
+                        //pass in percentage open if desired
+                        // XXX should switch this to 
+                        if (action.moveMagnitude > 0.0f)
+                        {
+                            cof.SetOpenPercent(action.moveMagnitude);
+                        }
+
+                        cof.Interact();
+                        // XXX need to add checkOpenAction to determine if agent got moved
+                        actionFinished(true);
+                    }
+				}
+
 			}
 
             //target not found in currently visible objects, report not found

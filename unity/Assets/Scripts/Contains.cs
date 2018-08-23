@@ -94,7 +94,10 @@ public class Contains : MonoBehaviour
 	{
 		BoxCollider b = GetComponent<BoxCollider>();
         
-		//could try double passing it through transform points of parents? hmm..
+		//these are the 8 points making up the corner of the box. If ANY parents of this object have non uniform scales,
+        //these values will be off. Make sure that all parents in the heirarchy are at 1,1,1 scale and we can use these values
+        //as a "valid area" for spawning objects inside of receptacles.
+
 		Gizmos.color = Color.green;
 		Gizmos.DrawSphere(transform.TransformPoint(b.center + new Vector3(b.size.x, -b.size.y, b.size.z) * 0.5f), 0.01f);
 		Gizmos.DrawSphere(transform.TransformPoint(b.center + new Vector3(-b.size.x, -b.size.y, b.size.z) * 0.5f), 0.01f);
