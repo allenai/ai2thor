@@ -201,7 +201,7 @@ public class SimObjPhysics : MonoBehaviour
         //draw visibility points for editor
 		Gizmos.color = Color.yellow;
 
-		if(VisibilityPoints.Length>0)
+		if(VisibilityPoints.Length > 0)
 		{
 			foreach (Transform t in VisibilityPoints)
             {
@@ -267,6 +267,68 @@ public class SimObjPhysics : MonoBehaviour
 		gameObject.GetComponent<CanOpen>().SetClosedPosition();
 	}
 
+    [ContextMenu("FrameCollider")]
+    void ContextFrameColliderSetup()
+	{
+		//grab the FrameCollider prefab (find by component?)
+		//then make a copy of the trigger collider array, add the triggers to it, and reassign
+		//do the same for the visibility point array
+		if (transform.Find("TriggerColliders"))
+		{
+			Transform tc = transform.Find("TriggerColliders");
+
+			if(tc.Find("FrameCollider"))
+			{
+				Transform fc = tc.Find("FrameCollider");
+				//print(fc.name);
+
+				List<GameObject> frameColliders = new List<GameObject>(MyTriggerColliders);
+				List<Transform> framevPoints = new List<Transform>(VisibilityPoints);
+                
+                //we are at the FrameCollider level here, adding in each fCol
+				foreach (Transform child in fc)
+				{
+					//don't add duplicates
+					if(!frameColliders.Contains(child.gameObject))
+					frameColliders.Add(child.gameObject);
+
+					//now for each fCol, add the vispoint to the visibility point list to update
+					Transform vp = child.Find("vPoint");
+					framevPoints.Add(vp);
+				}
+
+				MyTriggerColliders = frameColliders.ToArray();
+				VisibilityPoints = framevPoints.ToArray();
+                
+			}
+		}
+
+		//Transform Colliders = transform.Find("Colliders");
+
+        //List<GameObject> listColliders = new List<GameObject>();
+
+        //foreach (Transform child in Colliders)
+        //{
+        //    //list.toarray
+        //    listColliders.Add(child.gameObject);
+
+        //    //set correct tag and layer for each object
+        //    //also ensure all colliders are NOT trigger
+        //    child.gameObject.tag = "SimObjPhysics";
+        //    child.gameObject.layer = 8;
+
+        //    if (child.GetComponent<Collider>())
+        //    {
+        //        child.GetComponent<Collider>().enabled = true;
+        //        child.GetComponent<Collider>().isTrigger = false;
+        //    }
+
+        //}
+
+        //MyColliders = listColliders.ToArray();
+	}
+		
+
 	[ContextMenu("Set Up SimObjPhysics")]
 	void ContextSetUpSimObjPhysics()
 	{
@@ -287,7 +349,7 @@ public class SimObjPhysics : MonoBehaviour
 			GameObject c = new GameObject("Colliders");
 			c.transform.position = gameObject.transform.position;
 			c.transform.SetParent(gameObject.transform);
-
+            
 			GameObject cc = new GameObject("Col");
 			cc.transform.position = c.transform.position;
 			cc.transform.SetParent(c.transform);

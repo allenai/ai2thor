@@ -33,7 +33,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			switch(splitcommand[0])
 			{            
 
-					//turn on all pivot things, disable all physics things
+					//turn off all pivot things, enable all physics things
                 case "init":
                     {
 						ServerAction action = new ServerAction();
@@ -406,6 +406,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         break;
                     }
                    
+                    //pass in object id of a receptacle, and this will report any other sim objects inside of it
+                    //this works for cabinets, drawers, countertops, tabletops, etc.
 				case "contains":
                     {
                         ServerAction action = new ServerAction();
