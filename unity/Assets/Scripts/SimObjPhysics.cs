@@ -199,13 +199,17 @@ public class SimObjPhysics : MonoBehaviour
 		//}
 
         //draw visibility points for editor
-		Gizmos.color = Color.cyan;
+		Gizmos.color = Color.yellow;
 
-        foreach (Transform t in VisibilityPoints)
-        {
-            Gizmos.DrawSphere(t.position, 0.01f);
+		if(VisibilityPoints.Length>0)
+		{
+			foreach (Transform t in VisibilityPoints)
+            {
+                Gizmos.DrawSphere(t.position, 0.01f);
 
-        }
+            }
+		}
+
 
         ////draw interaction points for editor
         //Gizmos.color = Color.magenta;
