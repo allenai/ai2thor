@@ -230,15 +230,17 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     }               
                 }
 
-                //now that we have a list of currently visible items, let's see which ones are interactable!
-                Rigidbody HandRB = AgentHand.GetComponent<Rigidbody>();
-                //RaycastHit hit = new RaycastHit();
+                //*****************Interactable Point Checks here
 
-                foreach (SimObjPhysics visibleSimObjP in currentlyVisibleItems)
-                {
+      //          //now that we have a list of currently visible items, let's see which ones are interactable!
+      //          Rigidbody HandRB = AgentHand.GetComponent<Rigidbody>();
+      //          //RaycastHit hit = new RaycastHit();
 
-                    //get all interaction points on the visible sim object we are checking here
-                    //Transform[] InteractionPoints = visibleSimObjP.InteractionPoints;
+      //          foreach (SimObjPhysics visibleSimObjP in currentlyVisibleItems)
+      //          {
+
+      //              //get all interaction points on the visible sim object we are checking here
+      //              //Transform[] InteractionPoints = visibleSimObjP.InteractionPoints;
 
       //              int ReachableInteractionPointCount = 0;
       //              foreach (Transform ip in InteractionPoints)
@@ -270,62 +272,64 @@ namespace UnityStandardAssets.Characters.FirstPerson
       //                      maxDistance = Mathf.Lerp(maxDistance, maxDistance * DownwardViewDistance, maxDistanceLerp);
 
 
-      // //                     //down extension stuff ends
-						//	//if(!IgnoreInteractableFlag)
-						//	//{
-						//	//	//sweep test from agent's hand to each Interaction point
-      // //                         RaycastHit hit;
-      // //                         if (HandRB.SweepTest(ip.position - AgentHand.transform.position, out hit, maxDistance))
-      // //                         {
-      // //                             //if the object only has one interaction point to check
-      // //                             if (visibleSimObjP.InteractionPoints.Length == 1)
-      // //                             {
-      // //                                 if (hit.transform == visibleSimObjP.transform)
-      // //                                 {
-      // //                                     #if UNITY_EDITOR
-      // //                                     Debug.DrawLine(AgentHand.transform.position, ip.transform.position, Color.magenta);
-      // //                                     #endif
+      //                      //down extension stuff ends
+						//	if(!IgnoreInteractableFlag)
+						//	{
+						//		//sweep test from agent's hand to each Interaction point
+      //                          RaycastHit hit;
+      //                          if (HandRB.SweepTest(ip.position - AgentHand.transform.position, out hit, maxDistance))
+      //                          {
+      //                              //if the object only has one interaction point to check
+      //                              if (visibleSimObjP.InteractionPoints.Length == 1)
+      //                              {
+      //                                  if (hit.transform == visibleSimObjP.transform)
+      //                                  {
+      //                                      #if UNITY_EDITOR
+      //                                      Debug.DrawLine(AgentHand.transform.position, ip.transform.position, Color.magenta);
+      //                                      #endif
 
-      // //                                     //print(hit.transform.name);
-      // //                                     visibleSimObjP.isInteractable = true;
-      // //                                 }
+      //                                      //print(hit.transform.name);
+      //                                      visibleSimObjP.isInteractable = true;
+      //                                  }
 
-      // //                                 else
-      // //                                     visibleSimObjP.isInteractable = false;
-      // //                             }
+      //                                  else
+      //                                      visibleSimObjP.isInteractable = false;
+      //                              }
 
-      // //                             //this object has 2 or more interaction points
-      // //                             //if any one of them can be accessed by the Agent's hand, this object is interactable
-      // //                             if (visibleSimObjP.InteractionPoints.Length > 1)
-      // //                             {
+      //                              //this object has 2 or more interaction points
+      //                              //if any one of them can be accessed by the Agent's hand, this object is interactable
+      //                              if (visibleSimObjP.InteractionPoints.Length > 1)
+      //                              {
 
-      // //                                 if (hit.transform == visibleSimObjP.transform)
-      // //                                 {
-      // //                                     #if UNITY_EDITOR
-      // //                                     Debug.DrawLine(AgentHand.transform.position, ip.transform.position, Color.magenta);
-      // //                                     #endif
-      // //                                     ReachableInteractionPointCount++;
-      // //                                 }
+      //                                  if (hit.transform == visibleSimObjP.transform)
+      //                                  {
+      //                                      #if UNITY_EDITOR
+      //                                      Debug.DrawLine(AgentHand.transform.position, ip.transform.position, Color.magenta);
+      //                                      #endif
+      //                                      ReachableInteractionPointCount++;
+      //                                  }
 
-      // //                                 //check if at least one of the interaction points on this multi interaction point object
-      // //                                 //is accessible to the agent Hand
-      // //                                 if (ReachableInteractionPointCount > 0)
-      // //                                 {
-      // //                                     visibleSimObjP.isInteractable = true;
-      // //                                 }
+      //                                  //check if at least one of the interaction points on this multi interaction point object
+      //                                  //is accessible to the agent Hand
+      //                                  if (ReachableInteractionPointCount > 0)
+      //                                  {
+      //                                      visibleSimObjP.isInteractable = true;
+      //                                  }
 
-      // //                                 else
-      // //                                     visibleSimObjP.isInteractable = false;
-      // //                             }
-      // //                         }
+      //                                  else
+      //                                      visibleSimObjP.isInteractable = false;
+      //                              }
+      //                          }
 
-      // //                         else
-      // //                             visibleSimObjP.isInteractable = false;
-						//	//}
+      //                          else
+      //                              visibleSimObjP.isInteractable = false;
+						//	}
 						
 						//}                    
                     //}
-                }
+                //}
+
+                //*****************End Interactable Point Checks
             }
             
             //populate array of visible items in order by distance
