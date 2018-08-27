@@ -276,11 +276,12 @@ public class SimObjPhysics : MonoBehaviour
 		if (transform.Find("TriggerColliders"))
 		{
 			Transform tc = transform.Find("TriggerColliders");
-
+         
 			if(tc.Find("FrameCollider"))
 			{
 				Transform fc = tc.Find("FrameCollider");
 				//print(fc.name);
+				fc.localEulerAngles = new Vector3(0, -transform.localEulerAngles.y, 0);
 
 				List<GameObject> frameColliders = new List<GameObject>(MyTriggerColliders);
 				List<Transform> framevPoints = new List<Transform>(VisibilityPoints);
@@ -293,7 +294,11 @@ public class SimObjPhysics : MonoBehaviour
 					frameColliders.Add(child.gameObject);
 
 					//now for each fCol, add the vispoint to the visibility point list to update
+				
 					Transform vp = child.Find("vPoint");
+
+                    //dont add duplicates
+					if (!framevPoints.Contains(vp))
 					framevPoints.Add(vp);
 				}
 
