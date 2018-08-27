@@ -208,10 +208,11 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
                                 foreach (Transform point in visPoints)
                                 {
+
                                     //if this particular point is in view...
                                     if (CheckIfVisibilityPointInViewport(sop, point, agentCamera, maxDistance))
                                     {
-                                        visPointCount++;
+                                        visPointCount++;                              
                                     }
                                 }
 
@@ -380,6 +381,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
 						result = false;
 					}
 
+                    //if this line is drawn, then this visibility point is in camera frame and not occluded
+                    //might want to use this for a targeting check as well at some point....
 					else
 					{
 						result = true;
@@ -786,10 +789,14 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			Vector3 vp = m_Camera.WorldToViewportPoint(targetPosition);
 
             //Note: Viewport normalizes to (0,0) bottom left, (1, 0) top right of screen
-            //now make sure the targetPosition is actually within the Camera Bounds       
+            //now make sure the targetPosition is actually within the Camera Bounds 
+
+            //XXX this does not check whether the object will still be visible when moving, so this will allow the agent to
+            //move an object behind a door, causing the object to no longer be visible. Not sure if we should have a check
+            //to restrict this yet, but about here is where that should go
             if (vp.z < 0 || vp.x > 1.0f || vp.x < 0.0f || vp.y > 1.0f || vp.y < 0.0f)
             {
-                Debug.Log("The target position is not in the Agent's Viewport!");
+                Debug.Log("The target position is not in the Are of the Agent's Viewport!");
                 result = false;
                 return result;
             }         
