@@ -2,6 +2,9 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+
+//controls opening doors on a fridge. Because the fridge base body and door should be considered a single
+//sim object, this has mimicked functionality from CanOpen.cs but specialized for a Fridge.
 public class CanOpen_Fridge : MonoBehaviour 
 {
 	[Header("Doors for this Fridge")]

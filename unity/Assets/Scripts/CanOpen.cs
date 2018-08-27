@@ -2,6 +2,14 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+//for use with Openable Objects that do not have the "body" mesh well defined.
+//Cabinets that each individual cabinet door sharing a large cabinet body for example.
+//see scripts like "CanOpen_Fridge" for opening objects that have a self contained base body mesh
+
+//please use the "FrameCollider" prefab on the TriggerColliders on this object in order to make sure this
+//object remains in view even when the door of the object is out of view. This allows isolating the sim object without
+//pairing it to the base body mesh, which wouldn't make sense for a large row of cabinets all sharing the same body.
+
 public class CanOpen : MonoBehaviour 
 {
 	[Header("Animation Parameters")]
