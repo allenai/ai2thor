@@ -2,6 +2,16 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+
+//Maintains rotation based on the myObject object, which is the door of the sim object. This ensures that for any given
+//cabinet shape, the cabinet can remain "visible" even when the door is out of frame. 
+
+//to use: Put this prefab in the "TriggerColliders" section of the cabinet 
+//rotate the CabinetDoor main sim object to an open position, and then rotate this object to that same position but opposite sign (ie:90, -90)
+
+//Move the four fCol objects so that the camera of the agent can raycast to them when the door is open and out of frame. These fCol objects should
+//frame the interior of the cabinet and since they are indivdual and isolated can be moved around to suite any shape or form interior space
+
 public class FrameCollider : MonoBehaviour 
 {
 	public Transform myObject;

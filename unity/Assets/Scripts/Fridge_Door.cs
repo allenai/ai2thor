@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+//this handles collision checks for the fridge door, resetting position to original open or closed state if it hits something in the way
 public class Fridge_Door : MonoBehaviour 
 {
 	public CanOpen_Fridge myFridge;
