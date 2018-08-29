@@ -14,10 +14,10 @@ public class CanOpen : MonoBehaviour
 {
 	[Header("Animation Parameters")]
 	[SerializeField]
-	protected Vector3 openPosition;
+	public Vector3 openPosition;
 
 	[SerializeField]
-	protected Vector3 closedPosition;
+	public Vector3 closedPosition;
 
 	[SerializeField] 
 	protected float animationTime = 1.0f;
@@ -172,7 +172,7 @@ public class CanOpen : MonoBehaviour
 			Reset();
 		}
 
-        //if hitting another cabinet/drawer, do some checks 
+        //if hitting another object that can open, do some checks 
 		if(other.GetComponentInParent<CanOpen>() && canReset == true)
 		{
 			if (IsInIgnoreArray(other, IgnoreTheseObjects))
@@ -198,11 +198,12 @@ public class CanOpen : MonoBehaviour
 
 			}
 		}
+      
 	}
 
 	public void OnTriggerExit(Collider other)
 	{
-		if(other.name == "FPSController" || other.GetComponentInParent<CanOpen>())
+		if(other.name == "FPSController" || other.GetComponentInParent<CanOpen>() || other.GetComponentInParent<CanOpen_Object>())
 		{
 			//print("HAAAAA");
 			canReset = true;

@@ -55,6 +55,15 @@ public class SimObjPhysics : MonoBehaviour
 		}
 #endif
 		//end debug setup stuff
+
+        //set up reference to this sim object in each Receptacle Trigger Box
+		if(ReceptacleTriggerBoxes.Length != 0)
+		{
+			foreach(GameObject rtb in ReceptacleTriggerBoxes)
+			{
+				rtb.GetComponent<Contains>().myObject = this.gameObject;
+			}
+		}
 	}
 
 	// Update is called once per frame
@@ -82,6 +91,36 @@ public class SimObjPhysics : MonoBehaviour
 		Vector3 dir = new Vector3(action.x, action.y, action.z);
 		Rigidbody myrb = gameObject.GetComponent<Rigidbody>();
 		myrb.AddForce(dir * action.moveMagnitude);
+	}
+
+    //returns a game object list of all sim objects contained by this object if it is a receptacle
+    public List<GameObject> Contains_GameObject()
+	{
+		List<SimObjSecondaryProperty> sspList = new List<SimObjSecondaryProperty>(SecondaryProperties);
+
+        List<GameObject> objs = new List<GameObject>();
+
+        //is this object a receptacle?
+        if (sspList.Contains(SimObjSecondaryProperty.Receptacle))
+		{
+			//this is a receptacle, now populate objs list of contained objets to return below
+			if (ReceptacleTriggerBoxes != null)
+			{
+				//do this once per ReceptacleTriggerBox referenced by this object
+				foreach (GameObject rtb in ReceptacleTriggerBoxes)
+				{
+					//now go through every object each ReceptacleTriggerBox is keeping track of and add their string UniqueID to objs
+					foreach (SimObjPhysics sop in rtb.GetComponent<Contains>().CurrentlyContainedObjects())
+					{
+						//don't add repeats
+						if (!objs.Contains(sop.gameObject))
+							objs.Add(sop.gameObject);
+					}
+				}
+			}
+		}
+
+		return objs;
 	}
 
 	//if this is a receptacle object, check what is inside the Receptacle
@@ -201,14 +240,17 @@ public class SimObjPhysics : MonoBehaviour
         //draw visibility points for editor
 		Gizmos.color = Color.yellow;
 
-		if(VisibilityPoints.Length > 0)
+		if (VisibilityPoints.Length > 0)
 		{
 			foreach (Transform t in VisibilityPoints)
-            {
-                Gizmos.DrawSphere(t.position, 0.01f);
+			{
+				Gizmos.DrawSphere(t.position, 0.01f);
 
-            }
+			}
 		}
+
+		else
+			return;
 
 
         ////draw interaction points for editor
@@ -237,34 +279,148 @@ public class SimObjPhysics : MonoBehaviour
 
 		if (!gameObject.GetComponent<Rigidbody>())
 			gameObject.AddComponent<Rigidbody>();
-
+        
 		this.GetComponent<Rigidbody>().isKinematic = true;
+        
+		if (!gameObject.GetComponent<CanOpen_Object>())
+		{
+			gameObject.AddComponent<CanOpen_Object>();
+			gameObject.GetComponent<CanOpen_Object>().SetMovementToRotate();
+		}
 
-		if (!gameObject.GetComponent<CanOpen>())
-			gameObject.AddComponent<CanOpen>();
 
-		this.GetComponent<CanOpen>().SetMovementToRotate();
+		if (!gameObject.GetComponent<MovingPart>())
+			gameObject.AddComponent<MovingPart>();
+            
+		List<GameObject> cols = new List<GameObject>();
+		List<GameObject> tcols = new List<GameObject>();
+		List<Transform> vpoints = new List<Transform>();
+		List<GameObject> recepboxes = new List<GameObject>();
+
+		List<GameObject> movparts = new List<GameObject>();
+
+		foreach(Transform child in gameObject.transform)
+		{
+			if(child.name == "StaticVisPoints")
+			{
+				foreach(Transform svp in child)
+				{
+					if(!vpoints.Contains(svp))
+					vpoints.Add(svp);               
+				}
+			}
+			
+			if(child.name == "ReceptacleTriggerBox")
+			{
+				//print("check");
+				if(!recepboxes.Contains(child.gameObject))
+				recepboxes.Add(child.gameObject);
+			}
+
+            //found the cabinet door, go into it and populate triggerboxes, colliders, t colliders, and vis points
+			if(child.name == "CabinetDoor")
+			{
+				if (child.GetComponent<Rigidbody>())
+					DestroyImmediate(child.GetComponent<Rigidbody>(), true);
+
+				if (child.GetComponent<SimObjPhysics>())
+					DestroyImmediate(child.GetComponent<SimObjPhysics>(), true);
+
+				if (child.GetComponent<CanOpen>())
+                    DestroyImmediate(child.GetComponent<CanOpen>(), true);
+				
+				if(!movparts.Contains(child.gameObject))
+				{
+					movparts.Add(child.gameObject);
+				}
+
+				foreach (Transform c in child)
+				{
+					if(c.name == "Colliders")
+					{
+						foreach(Transform col in c)
+						{
+							if (!cols.Contains(col.gameObject))
+								cols.Add(col.gameObject);
+						}
+					}
+
+                    if(c.name == "TriggerColliders")
+					{
+						foreach (Transform col in c)
+                        {
+                            if (!tcols.Contains(col.gameObject))
+                                tcols.Add(col.gameObject);
+                        }
+					}
+                    
+                    if(c.name == "VisibilityPoints")
+					{
+						foreach (Transform col in c)
+                        {
+                            if (!vpoints.Contains(col.transform))
+                               vpoints.Add(col.transform);
+                        }
+					}
+				}
+			}         
+   		}
+
+		VisibilityPoints = vpoints.ToArray();
+		MyColliders = cols.ToArray();
+		MyTriggerColliders = tcols.ToArray();
+		ReceptacleTriggerBoxes = recepboxes.ToArray();
+
+
+		gameObject.GetComponent<CanOpen_Object>().MovingParts = movparts.ToArray();
+		gameObject.GetComponent<CanOpen_Object>().openPositions = new Vector3[movparts.Count];
+		gameObject.GetComponent<CanOpen_Object>().closedPositions = new Vector3[movparts.Count];
+
+      
+
+		//this.GetComponent<CanOpen>().SetMovementToRotate();
 	}
 
 	[ContextMenu("Drawer")]
 	void SetUpDrawer()
 	{
-		Type = SimObjType.Drawer;
-		PrimaryProperty = SimObjPrimaryProperty.Static;
+		//Type = SimObjType.Drawer;
+		//PrimaryProperty = SimObjPrimaryProperty.Static;
 
-		SecondaryProperties = new SimObjSecondaryProperty[2];
-		SecondaryProperties[0] = SimObjSecondaryProperty.CanOpen;
-		SecondaryProperties[1] = SimObjSecondaryProperty.Receptacle;
+		//SecondaryProperties = new SimObjSecondaryProperty[2];
+		//SecondaryProperties[0] = SimObjSecondaryProperty.CanOpen;
+		//SecondaryProperties[1] = SimObjSecondaryProperty.Receptacle;
 
-		if (!gameObject.GetComponent<Rigidbody>())
-			gameObject.AddComponent<Rigidbody>();
+		//if (!gameObject.GetComponent<Rigidbody>())
+		//	gameObject.AddComponent<Rigidbody>();
 
-		this.GetComponent<Rigidbody>().isKinematic = true;
+		//this.GetComponent<Rigidbody>().isKinematic = true;
 
-		if (!gameObject.GetComponent<CanOpen>())
-			gameObject.AddComponent<CanOpen>();
+		//if (!gameObject.GetComponent<CanOpen>())
+		//	gameObject.AddComponent<CanOpen>();
 
-		gameObject.GetComponent<CanOpen>().SetClosedPosition();
+		//gameObject.GetComponent<CanOpen>().SetClosedPosition();
+
+		if(!gameObject.GetComponent<CanOpen_Object>())
+		{
+			gameObject.AddComponent<CanOpen_Object>();         
+		}
+
+		if(!gameObject.GetComponent<MovingPart>())
+		{
+			gameObject.AddComponent<MovingPart>();
+
+		}
+		GameObject[] myobject = new GameObject[] { gameObject };
+        gameObject.GetComponent<CanOpen_Object>().MovingParts = myobject;
+
+		Vector3[] array = new Vector3[] {gameObject.GetComponent<CanOpen>().closedPosition};
+		gameObject.GetComponent<CanOpen_Object>().closedPositions = array;
+
+		Vector3[] array2 = new Vector3[] { gameObject.GetComponent<CanOpen>().openPosition };
+		gameObject.GetComponent<CanOpen_Object>().openPositions = array2;
+
+
 	}
 
     [ContextMenu("FrameCollider")]

@@ -5,18 +5,18 @@ using UnityEngine;
 
 //controls opening doors on a fridge. Because the fridge base body and door should be considered a single
 //sim object, this has mimicked functionality from CanOpen.cs but specialized for a Fridge.
-public class CanOpen_Fridge : MonoBehaviour 
+public class CanOpen_Object : MonoBehaviour 
 {
-	[Header("Doors for this Fridge")]
+	[Header("Moving Parts for this Object")]
 	[SerializeField]
-	GameObject[] Doors;
+	public GameObject[] MovingParts;
     
 	[Header("Animation Parameters")]
 	[SerializeField]
-    protected Vector3[] openPositions;
+    public Vector3[] openPositions;
 
     [SerializeField]
-    protected Vector3[] closedPositions;
+    public Vector3[] closedPositions;
 
     [SerializeField]
     protected float animationTime = 1.0f;
@@ -36,14 +36,19 @@ public class CanOpen_Fridge : MonoBehaviour
 
 	[SerializeField]
     public bool canReset = true;
+
+	protected enum MovementType { Slide, Rotate };
+
+	[SerializeField]
+    protected MovementType movementType;
     
 	// Use this for initialization
 	void Start () 
 	{
 		//init Itween in all doors to prep for animation
-		if(Doors != null)
+		if(MovingParts != null)
 		{
-			foreach (GameObject go in Doors)
+			foreach (GameObject go in MovingParts)
             {
                 iTween.Init(go);
 
@@ -67,6 +72,20 @@ public class CanOpen_Fridge : MonoBehaviour
         #endif
 	}
 
+	//Helper functions for setting up scenes, only for use in Editor
+#if UNITY_EDITOR
+    public void SetMovementToSlide()
+    {
+        movementType = MovementType.Slide;
+    }
+
+    public void SetMovementToRotate()
+    {
+        movementType = MovementType.Rotate;
+    }
+    
+#endif
+
 	public void SetOpenPercent(float val)
     {
         if (val >= 0.0 && val <= 1.0)
@@ -81,18 +100,27 @@ public class CanOpen_Fridge : MonoBehaviour
         //it's open? close it
         if (isOpen)
         {
-			for (int i = 0; i < Doors.Length; i++)
+			for (int i = 0; i < MovingParts.Length; i++)
 			{
-				iTween.RotateTo(Doors[i],iTween.Hash("rotation", closedPositions[i], "islocal", true));
+				if(movementType == MovementType.Rotate)
+					iTween.RotateTo(MovingParts[i],iTween.Hash("rotation", closedPositions[i], "islocal", true, "time", animationTime));
+
+				if(movementType == MovementType.Slide)
+					iTween.MoveTo(MovingParts[i], iTween.Hash("position", closedPositions[i], "islocal", true, "time", animationTime));
+
 			}
         }
 
         //oh it's closed? let's open it
         else
         {
-			for (int i = 0; i < Doors.Length; i++)
+			for (int i = 0; i < MovingParts.Length; i++)
             {
-				iTween.RotateTo(Doors[i], iTween.Hash("rotation", openPositions[i] * openPercentage, "islocal", true));            
+				if (movementType == MovementType.Rotate)
+					iTween.RotateTo(MovingParts[i], iTween.Hash("rotation", openPositions[i] * openPercentage, "islocal", true, "time", animationTime)); 
+
+				if (movementType == MovementType.Slide)
+					iTween.MoveTo(MovingParts[i], iTween.Hash("position", openPositions[i] * openPercentage, "islocal", true, "time", animationTime));
 			}
         }
       
@@ -122,8 +150,8 @@ public class CanOpen_Fridge : MonoBehaviour
     {
         for (int i = 0; i < arrayOfCol.Length; i++)
         {
-            if (other.GetComponentInParent<CanOpen>().transform ==
-                arrayOfCol[i].GetComponentInParent<CanOpen>().transform)
+            if (other.GetComponentInParent<CanOpen_Object>().transform ==
+                arrayOfCol[i].GetComponentInParent<CanOpen_Object>().transform)
                 return true;
         }
         return false;
@@ -134,7 +162,7 @@ public class CanOpen_Fridge : MonoBehaviour
 		//the number of iTween instances running on all doors managed by this fridge
 		int count = 0;
 
-		foreach (GameObject go in Doors)
+		foreach (GameObject go in MovingParts)
         {
 			count += iTween.Count(go);
         }

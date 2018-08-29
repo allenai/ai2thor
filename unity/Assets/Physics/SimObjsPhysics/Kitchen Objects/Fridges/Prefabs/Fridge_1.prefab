@@ -1336,8 +1336,8 @@ Transform:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 1899982952897690}
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalRotation: {x: -0, y: 1, z: -0, w: 0.0000029504295}
+  m_LocalPosition: {x: -0.069, y: 0, z: 2.085}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 4793927104939836}
@@ -1345,7 +1345,7 @@ Transform:
   - {fileID: 4482738296198292}
   m_Father: {fileID: 0}
   m_RootOrder: 0
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 180.00002, z: 0}
 --- !u!4 &4573885575062848
 Transform:
   m_ObjectHideFlags: 1
@@ -2022,7 +2022,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b9f742cdae0124730b5b59765384368a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Doors:
+  MovingParts:
   - {fileID: 1190343126180532}
   - {fileID: 1393362684801530}
   openPositions:
@@ -2036,6 +2036,7 @@ MonoBehaviour:
   IgnoreTheseObjects: []
   isOpen: 0
   canReset: 1
+  movementType: 1
 --- !u!114 &114397715571650680
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -2047,7 +2048,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ee55907f2fef542dca870fa224f11d63, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  myFridge: {fileID: 0}
+  myObject: {fileID: 0}
 --- !u!114 &114666855184349406
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -2059,7 +2060,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b439f6e4ef5714ee2a3643acf37b7a9d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  UniqueID: Fridge|+07.23|+00.00|-10.80
+  UniqueID: Fridge|-00.07|+00.00|+02.09
   Type: 18
   PrimaryProperty: 1
   SecondaryProperties: 07000000
@@ -2134,6 +2135,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   CurrentlyContains: []
+  myObject: {fileID: 0}
 --- !u!114 &114863891651902250
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -2146,3 +2148,4 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   CurrentlyContains: []
+  myObject: {fileID: 0}

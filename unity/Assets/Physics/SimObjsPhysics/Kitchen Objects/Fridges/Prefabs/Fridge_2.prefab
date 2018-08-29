@@ -1362,7 +1362,7 @@ Transform:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 1498152979075440}
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: -0.47922325, y: 0.69954425, z: 0.27269864}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
@@ -1496,16 +1496,16 @@ Transform:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 1224566405962816}
-  m_LocalRotation: {x: 0, y: 0.7071068, z: 0, w: 0.7071068}
-  m_LocalPosition: {x: -1.764, y: 0, z: 0.014}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalRotation: {x: -0, y: 0.0000014603138, z: -0, w: 1}
+  m_LocalPosition: {x: 3.077, y: 0, z: -0.687}
+  m_LocalScale: {x: 0.7697808, y: 0.7697808, z: 0.7697808}
   m_Children:
   - {fileID: 4350384280122902}
   - {fileID: 4615065718405768}
   - {fileID: 4210216736068562}
   m_Father: {fileID: 0}
   m_RootOrder: 0
-  m_LocalEulerAnglesHint: {x: 0, y: 90, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!4 &4756343055325706
 Transform:
   m_ObjectHideFlags: 1
@@ -2030,6 +2030,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   CurrentlyContains: []
+  myObject: {fileID: 0}
 --- !u!114 &114455024051643658
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -2041,7 +2042,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b9f742cdae0124730b5b59765384368a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Doors:
+  MovingParts:
   - {fileID: 1252626310059374}
   - {fileID: 1498152979075440}
   openPositions:
@@ -2055,6 +2056,7 @@ MonoBehaviour:
   IgnoreTheseObjects: []
   isOpen: 0
   canReset: 1
+  movementType: 1
 --- !u!114 &114687398593909036
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -2066,7 +2068,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b439f6e4ef5714ee2a3643acf37b7a9d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  UniqueID: Fridge|-01.76|+00.00|+00.01
+  UniqueID: Fridge|+03.08|+00.00|-00.69
   Type: 18
   PrimaryProperty: 1
   SecondaryProperties: 07000000
@@ -2135,7 +2137,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ee55907f2fef542dca870fa224f11d63, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  myFridge: {fileID: 0}
+  myObject: {fileID: 0}
 --- !u!114 &114783727448765504
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -2148,3 +2150,4 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   CurrentlyContains: []
+  myObject: {fileID: 0}
