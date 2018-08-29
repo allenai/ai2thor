@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEditor;
 
 public class SimObjPhysics : MonoBehaviour
 {
@@ -40,6 +41,33 @@ public class SimObjPhysics : MonoBehaviour
 	//public bool isInteractable = false;
 	public bool isColliding = false;
 
+    //duplicate a non trigger collider, add a rigidbody to it and parant the duplicate to the original selection
+    //for use with cabinet/fridge doors that need a secondary rigidbody to allow physics on the door while animating
+	#if UNITY_EDITOR
+    [UnityEditor.MenuItem("SimObjectPhysics/Create RB Collider")]
+    public static void CreateRBCollider()
+	{
+		GameObject prefabRoot = Selection.activeGameObject;
+		//print(prefabRoot.name);
+
+		GameObject inst = Instantiate(prefabRoot, Selection.activeGameObject.transform, true);
+
+		//inst.transform.SetParent(Selection.activeGameObject.transform);
+
+		inst.name = "rbCol";
+		inst.gameObject.AddComponent<Rigidbody>();
+		inst.GetComponent<Rigidbody>().isKinematic = true;
+		inst.GetComponent<Rigidbody>().useGravity = true;
+
+        //default tag and layer so that nothing is raycast against this. The only thing this exists for is to make physics real
+		inst.tag = "Untagged";
+		inst.layer = 0;// default layer
+
+		//EditorUtility.GetPrefabParent(Selection.activeGameObject);
+        //PrefabUtility.InstantiatePrefab(prefabRoot);
+	}
+    #endif
+
 	// Use this for initialization
 	void Start()
 	{
@@ -56,14 +84,14 @@ public class SimObjPhysics : MonoBehaviour
 #endif
 		//end debug setup stuff
 
-        //set up reference to this sim object in each Receptacle Trigger Box
-		if(ReceptacleTriggerBoxes.Length != 0)
-		{
-			foreach(GameObject rtb in ReceptacleTriggerBoxes)
-			{
-				rtb.GetComponent<Contains>().myObject = this.gameObject;
-			}
-		}
+  //      //set up reference to this sim object in each Receptacle Trigger Box
+		//if(ReceptacleTriggerBoxes.Length != 0)
+		//{
+		//	foreach(GameObject rtb in ReceptacleTriggerBoxes)
+		//	{
+		//		rtb.GetComponent<Contains>().myObject = this.gameObject;
+		//	}
+		//}
 	}
 
 	// Update is called once per frame
@@ -195,6 +223,15 @@ public class SimObjPhysics : MonoBehaviour
 
 	public void OnTriggerStay(Collider other)
 	{
+
+		//ignore collision of ghosted receptacle trigger boxes
+        //because of this MAKE SURE ALL receptacle trigger boxes are tagged as "Receptacle," they should be by default
+        //do this flag first so that the check against non Player objects overrides it in the right order
+        if (other.tag == "Receptacle")
+        {
+            isColliding = false;
+        }
+
 		//make sure nothing is dropped while inside the agent (the agent will try to "push(?)" it out and it will fall in unpredictable ways
 		if (other.tag == "Player" && other.name == "FPSController")
 		{
@@ -208,10 +245,7 @@ public class SimObjPhysics : MonoBehaviour
 			//print(this.name +" is touching " + other.name);
 		}
 
-		if (other.tag == "Receptacle")
-		{
-			isColliding = false;
-		}
+
 		//print(transform.name + "aaaah");
 	}
 
