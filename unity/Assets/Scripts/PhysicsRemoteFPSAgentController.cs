@@ -131,7 +131,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 					break;
 				}
 
-				else if(o.GetComponent<CanOpen_Fridge>())
+				else if(o.GetComponent<CanOpen_Object>())
 				{
 					objectID = o.UniqueID;
 					break;
@@ -175,9 +175,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			//maxDistanceLerp = lookAngle / MaxDownwardLookAngle;
 			//maxDistance = Mathf.Lerp(maxDistance, maxDistance * DownwardRangeExtension, maxDistanceLerp);
 
-            //get all sim objects in range around us
+			//get all sim objects in range around us that have colliders in layer 8 (visible), ignoring objects in the SimObjInvisible layer
+            //this will make it so the receptacle trigger boxes don't occlude the objects within them.
 			Collider[] colliders_in_view = Physics.OverlapSphere(agentCameraPos, maxDistance * DownwardViewDistance,
-                                                         1 << 8, QueryTriggerInteraction.Collide); //layermask is 8
+                                                         1 << 8, QueryTriggerInteraction.Collide); //layermask is 8, ignores layer 9 which is SimObjInvisible
 
             if (colliders_in_view != null)
             {
@@ -199,9 +200,11 @@ namespace UnityStandardAssets.Characters.FirstPerson
                             sop = item.GetComponentInParent<SimObjPhysics>();
                         }
 
-						if(sop)
-						{
-							if (sop.VisibilityPoints.Length > 0)
+                        //now we have a reference to our sim object 
+                        if(sop)
+                        {
+                            //check against all visibility points, accumulate count. If at least one point is visible, set object to visible
+                            if (sop.VisibilityPoints.Length > 0)
                             {
                                 Transform[] visPoints = sop.VisibilityPoints;
                                 int visPointCount = 0;
@@ -210,7 +213,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                                 {
 
                                     //if this particular point is in view...
-                                    if (CheckIfVisibilityPointInViewport(sop, point, agentCamera, maxDistance))
+                                    if (CheckIfVisibilityPointInViewport(sop, point, agentCamera, maxDistance, false))
                                     {
                                         visPointCount++;                              
                                     }
@@ -227,110 +230,60 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
                             else
                                 Debug.Log("Error! Set at least 1 visibility point on SimObjPhysics prefab!");                     
-						}
+                        }
                     }               
                 }
+            }
+            
+            //check against anything in the invisible layers that we actually want to have occlude things in this round.
+            //normally receptacle trigger boxes must be ignored from the visibility check otherwise objects inside them will be occluded, but
+            //this additional check will allow us to see inside of receptacle objects like cabinets/fridges by checking for that interior
+            //receptacle trigger box. Oh boy!
+			Collider[] invisible_colliders_in_view = Physics.OverlapSphere(agentCameraPos, maxDistance * DownwardViewDistance,
+                                                         1 << 9, QueryTriggerInteraction.Collide);
+			if (invisible_colliders_in_view != null)
+            {
+                foreach (Collider item in invisible_colliders_in_view)
+                {
+                    if (item.tag == "Receptacle")
+                    {
+                        SimObjPhysics sop;
 
-                //*****************Interactable Point Checks here
+						sop = item.GetComponentInParent<SimObjPhysics>();
 
-      //          //now that we have a list of currently visible items, let's see which ones are interactable!
-      //          Rigidbody HandRB = AgentHand.GetComponent<Rigidbody>();
-      //          //RaycastHit hit = new RaycastHit();
+                        //now we have a reference to our sim object 
+                        if (sop)
+                        {
+                            //check against all visibility points, accumulate count. If at least one point is visible, set object to visible
+                            if (sop.VisibilityPoints.Length > 0)
+                            {
+                                Transform[] visPoints = sop.VisibilityPoints;
+                                int visPointCount = 0;
 
-      //          foreach (SimObjPhysics visibleSimObjP in currentlyVisibleItems)
-      //          {
+                                foreach (Transform point in visPoints)
+                                {
 
-      //              //get all interaction points on the visible sim object we are checking here
-      //              //Transform[] InteractionPoints = visibleSimObjP.InteractionPoints;
+                                    //if this particular point is in view...
+                                    if (CheckIfVisibilityPointInViewport(sop, point, agentCamera, maxDistance, true))
+                                    {
+                                        visPointCount++;
+                                    }
+                                }
 
-      //              int ReachableInteractionPointCount = 0;
-      //              foreach (Transform ip in InteractionPoints)
-      //              {
-						//Vector3 viewPoint = agentCamera.WorldToViewportPoint(ip.position);
+                                //if we see at least one vis point, the object is "visible"
+                                if (visPointCount > 0)
+                                {
+                                    sop.isVisible = true;
+                                    if (!currentlyVisibleItems.Contains(sop))
+                                        currentlyVisibleItems.Add(sop);
+                                }
+                            }
 
-      //                  float ViewPointRangeHigh = 1.0f;
-      //                  float ViewPointRangeLow = 0.0f;
-
-      //                  //check if the interaction point is within the viewport
-						//if (viewPoint.z > 0 //&& viewPoint.z < maxDistance * DownwardViewDistance //is in front of camera and within range of visibility sphere
-      //                      && viewPoint.x < ViewPointRangeHigh && viewPoint.x > ViewPointRangeLow//within x bounds of viewport
-      //                      && viewPoint.y < ViewPointRangeHigh && viewPoint.y > ViewPointRangeLow)//within y bounds of viewport
-						//{   
-      //                      ////down extension stuff
-						//	float MaxDownwardLookAngle = 60f;
-      //                      float MinDownwardLookAngle = 15f;
-                            
-      //                      Vector3 itemDirection = Vector3.zero;
-      //                      //do a raycast in the direction of the item
-      //                      itemDirection = (ip.position - agentCamera.transform.position).normalized;
-      //                      Vector3 agentForward = agentCamera.transform.forward;
-      //                      agentForward.y = 0f;
-      //                      agentForward.Normalize();
-      //                      //clap the angle so we can't wrap around
-      //                      float maxDistanceLerp = 0f;
-      //                      float lookAngle = Mathf.Clamp(Vector3.Angle(agentForward, itemDirection), 0f, MaxDownwardLookAngle) - MinDownwardLookAngle;
-      //                      maxDistanceLerp = lookAngle / MaxDownwardLookAngle;
-      //                      maxDistance = Mathf.Lerp(maxDistance, maxDistance * DownwardViewDistance, maxDistanceLerp);
-
-
-      //                      //down extension stuff ends
-						//	if(!IgnoreInteractableFlag)
-						//	{
-						//		//sweep test from agent's hand to each Interaction point
-      //                          RaycastHit hit;
-      //                          if (HandRB.SweepTest(ip.position - AgentHand.transform.position, out hit, maxDistance))
-      //                          {
-      //                              //if the object only has one interaction point to check
-      //                              if (visibleSimObjP.InteractionPoints.Length == 1)
-      //                              {
-      //                                  if (hit.transform == visibleSimObjP.transform)
-      //                                  {
-      //                                      #if UNITY_EDITOR
-      //                                      Debug.DrawLine(AgentHand.transform.position, ip.transform.position, Color.magenta);
-      //                                      #endif
-
-      //                                      //print(hit.transform.name);
-      //                                      visibleSimObjP.isInteractable = true;
-      //                                  }
-
-      //                                  else
-      //                                      visibleSimObjP.isInteractable = false;
-      //                              }
-
-      //                              //this object has 2 or more interaction points
-      //                              //if any one of them can be accessed by the Agent's hand, this object is interactable
-      //                              if (visibleSimObjP.InteractionPoints.Length > 1)
-      //                              {
-
-      //                                  if (hit.transform == visibleSimObjP.transform)
-      //                                  {
-      //                                      #if UNITY_EDITOR
-      //                                      Debug.DrawLine(AgentHand.transform.position, ip.transform.position, Color.magenta);
-      //                                      #endif
-      //                                      ReachableInteractionPointCount++;
-      //                                  }
-
-      //                                  //check if at least one of the interaction points on this multi interaction point object
-      //                                  //is accessible to the agent Hand
-      //                                  if (ReachableInteractionPointCount > 0)
-      //                                  {
-      //                                      visibleSimObjP.isInteractable = true;
-      //                                  }
-
-      //                                  else
-      //                                      visibleSimObjP.isInteractable = false;
-      //                              }
-      //                          }
-
-      //                          else
-      //                              visibleSimObjP.isInteractable = false;
-						//	}
-						
-						//}                    
-                    //}
-                //}
-
-                //*****************End Interactable Point Checks
+                            else
+                                Debug.Log("Error! Set at least 1 visibility point on SimObjPhysics prefab!");
+                        }
+                    }
+                }
             }
             
             //populate array of visible items in order by distance
@@ -339,7 +292,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
         }
 
         
-		protected bool CheckIfVisibilityPointInViewport(SimObjPhysics sop, Transform point, Camera agentCamera, float maxDistance)
+		protected bool CheckIfVisibilityPointInViewport(SimObjPhysics sop, Transform point, Camera agentCamera, float maxDistance, bool includeInvisible)
         {
             bool result = false;
 
@@ -373,24 +326,53 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 
 				//now cast a ray out toward the point, if anything occludes this point, that point is not visible
 				RaycastHit hit;
-				if(Physics.Raycast(agentCamera.transform.position, point.position - agentCamera.transform.position, out hit, 
-                   maxDistance /*Vector3.Distance(point.position,agentCamera.transform.position)*/, 1<<8))//layer mask automatically excludes Agent from this check
+
+                //check raycast against both visible and invisible layers
+				if(includeInvisible)
 				{
+					if(Physics.Raycast(agentCamera.transform.position, point.position - agentCamera.transform.position, out hit, 
+					                   maxDistance, (1 << 8 )| (1 << 9) ))//layer mask automatically excludes Agent from this check. bit shifts are weird
+                {
                     if(hit.transform != sop.transform)
-					{
-						result = false;
-					}
+                    {
+                        result = false;
+                    }
 
                     //if this line is drawn, then this visibility point is in camera frame and not occluded
                     //might want to use this for a targeting check as well at some point....
-					else
-					{
-						result = true;
+                    else
+                    {
+                        result = true;
                         #if UNITY_EDITOR
                         Debug.DrawLine(agentCamera.transform.position, point.position, Color.cyan);
                         #endif
-					}               
-				}          
+                    }               
+                }  
+				}
+
+				//only check against the visible layer, ignore the invisible layer
+				else
+				{
+					if(Physics.Raycast(agentCamera.transform.position, point.position - agentCamera.transform.position, out hit, 
+                   maxDistance , 1<<8 ))//layer mask automatically excludes Agent from this check
+                {
+                    if(hit.transform != sop.transform)
+                    {
+                        result = false;
+                    }
+
+                    //if this line is drawn, then this visibility point is in camera frame and not occluded
+                    //might want to use this for a targeting check as well at some point....
+                    else
+                    {
+                        result = true;
+                        #if UNITY_EDITOR
+							Debug.DrawLine(agentCamera.transform.position, point.position, Color.cyan);
+                        #endif
+                    }               
+                }  
+				}
+        
             }
 
             else
@@ -1228,7 +1210,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
     //                }
 				//}
 
-				if (sop.GetComponent<CanOpen>()|| sop.GetComponent<CanOpen_Fridge>())
+				if (sop.GetComponent<CanOpen>()|| sop.GetComponent<CanOpen_Object>())
                 {
                     //print("wobbuffet");
                     target = sop;
@@ -1257,14 +1239,14 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     }
 				}
 
-				else if(target.GetComponent<CanOpen_Fridge>())
+				else if(target.GetComponent<CanOpen_Object>())
 				{
-					CanOpen_Fridge cof = target.GetComponent<CanOpen_Fridge>();
+					CanOpen_Object codd = target.GetComponent<CanOpen_Object>();
 
                     //if object is open, close it
-                    if (cof.isOpen)
+                    if (codd.isOpen)
                     {
-                        cof.Interact();
+                        codd.Interact();
                         actionFinished(true);
                     }
 
@@ -1315,7 +1297,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 				//}
                 
                 //check for CanOpen drawers, cabinets or CanOpen_Fridge fridge objects
-				if (sop.GetComponent<CanOpen>() || sop.GetComponent<CanOpen_Fridge>())
+				if (sop.GetComponent<CanOpen>() || sop.GetComponent<CanOpen_Object>())
                 {
                     //print("wobbuffet");
                     target = sop;
@@ -1352,12 +1334,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     }
 				}
                 
-				else if(target.GetComponent<CanOpen_Fridge>())
+				else if(target.GetComponent<CanOpen_Object>())
 				{
-					CanOpen_Fridge cof = target.GetComponent<CanOpen_Fridge>();
+					CanOpen_Object codd = target.GetComponent<CanOpen_Object>();
 
                     //check to make sure object is closed
-                    if (cof.isOpen)
+                    if (codd.isOpen)
                     {
                         Debug.Log("can't open object if it's already open");
                         errorMessage = "object already open";
@@ -1370,10 +1352,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         // XXX should switch this to 
                         if (action.moveMagnitude > 0.0f)
                         {
-                            cof.SetOpenPercent(action.moveMagnitude);
+                            codd.SetOpenPercent(action.moveMagnitude);
                         }
 
-                        cof.Interact();
+                        codd.Interact();
                         // XXX need to add checkOpenAction to determine if agent got moved
                         actionFinished(true);
                     }
