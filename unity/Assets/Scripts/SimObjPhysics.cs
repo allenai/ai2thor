@@ -282,11 +282,7 @@ public class SimObjPhysics : MonoBehaviour
 
 			}
 		}
-
-		else
-			return;
-
-
+              
         ////draw interaction points for editor
         //Gizmos.color = Color.magenta;
 
@@ -333,6 +329,8 @@ public class SimObjPhysics : MonoBehaviour
 
 		List<GameObject> movparts = new List<GameObject>();
 
+		List<Vector3> openPositions = new List<Vector3>();
+
 		foreach(Transform child in gameObject.transform)
 		{
 			if(child.name == "StaticVisPoints")
@@ -361,8 +359,15 @@ public class SimObjPhysics : MonoBehaviour
 					DestroyImmediate(child.GetComponent<SimObjPhysics>(), true);
 
 				if (child.GetComponent<CanOpen>())
-                    DestroyImmediate(child.GetComponent<CanOpen>(), true);
-				
+				{
+					openPositions.Add(child.GetComponent<CanOpen>().openPosition);
+
+					child.transform.localEulerAngles = child.GetComponent<CanOpen>().openPosition;
+
+					DestroyImmediate(child.GetComponent<CanOpen>(), true);
+
+				}
+
 				if(!movparts.Contains(child.gameObject))
 				{
 					movparts.Add(child.gameObject);
@@ -376,6 +381,24 @@ public class SimObjPhysics : MonoBehaviour
 						{
 							if (!cols.Contains(col.gameObject))
 								cols.Add(col.gameObject);
+
+							if(col.childCount == 0)
+							{
+								GameObject prefabRoot = col.gameObject;
+
+								GameObject inst = Instantiate(prefabRoot, col.gameObject.transform, true);
+
+                                //inst.transform.SetParent(Selection.activeGameObject.transform);
+
+                                inst.name = "rbCol";
+                                inst.gameObject.AddComponent<Rigidbody>();
+                                inst.GetComponent<Rigidbody>().isKinematic = true;
+                                inst.GetComponent<Rigidbody>().useGravity = true;
+
+                                //default tag and layer so that nothing is raycast against this. The only thing this exists for is to make physics real
+                                inst.tag = "Untagged";
+                                inst.layer = 0;// default layer
+							}
 						}
 					}
 
@@ -409,7 +432,9 @@ public class SimObjPhysics : MonoBehaviour
 		gameObject.GetComponent<CanOpen_Object>().MovingParts = movparts.ToArray();
 		gameObject.GetComponent<CanOpen_Object>().openPositions = new Vector3[movparts.Count];
 		gameObject.GetComponent<CanOpen_Object>().closedPositions = new Vector3[movparts.Count];
-
+        
+		if(openPositions.Count != 0)
+		gameObject.GetComponent<CanOpen_Object>().openPositions = openPositions.ToArray();
       
 
 		//this.GetComponent<CanOpen>().SetMovementToRotate();
