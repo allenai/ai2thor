@@ -11,7 +11,7 @@ public class Contains : MonoBehaviour
 	[SerializeField] protected List<SimObjPhysics> CurrentlyContains = new List<SimObjPhysics>();
 
     //this is an object reference to the sim object that is linked to this receptacle box
-	public GameObject myObject = null;
+	//public GameObject myObject = null;
 
 	//if the sim object is one of these properties, do not add it to the Currently Contains list.
 	private List<SimObjPrimaryProperty> PropertiesToIgnore = new List<SimObjPrimaryProperty>(new SimObjPrimaryProperty[] {SimObjPrimaryProperty.Wall,
