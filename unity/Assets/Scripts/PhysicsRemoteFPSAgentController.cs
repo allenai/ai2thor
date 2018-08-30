@@ -331,46 +331,69 @@ namespace UnityStandardAssets.Characters.FirstPerson
 				if(includeInvisible)
 				{
 					if(Physics.Raycast(agentCamera.transform.position, point.position - agentCamera.transform.position, out hit, 
-					                   maxDistance, (1 << 8 )| (1 << 9) ))//layer mask automatically excludes Agent from this check. bit shifts are weird
-                {
-                    if(hit.transform != sop.transform)
+					                   maxDistance, (1 << 8 )| (1 << 9)))//layer mask automatically excludes Agent from this check. bit shifts are weird
                     {
-                        result = false;
-                    }
+                        if(hit.transform != sop.transform)
+                        {
+                            result = false;
+                        }
 
-                    //if this line is drawn, then this visibility point is in camera frame and not occluded
-                    //might want to use this for a targeting check as well at some point....
-                    else
-                    {
-                        result = true;
-                        #if UNITY_EDITOR
-                        Debug.DrawLine(agentCamera.transform.position, point.position, Color.cyan);
-                        #endif
-                    }               
-                }  
+                        //if this line is drawn, then this visibility point is in camera frame and not occluded
+                        //might want to use this for a targeting check as well at some point....
+                        else
+                        {
+                            result = true;
+
+							//check against transparancy to set interactable or not
+                            //all transparant objects should have rigidbody colliders on them that are untagged and on the default layer
+                            if (Physics.Raycast(agentCamera.transform.position, point.position - agentCamera.transform.position, out hit,
+							                    maxDistance, (1 << 0) | (1 << 8) | (1 << 9)))
+                            {
+                                if (hit.transform == sop.transform)
+                                    sop.isInteractable = true;
+
+                            }
+
+                            #if UNITY_EDITOR
+                            Debug.DrawLine(agentCamera.transform.position, point.position, Color.cyan);
+                            #endif
+                        }               
+                    }  
 				}
 
 				//only check against the visible layer, ignore the invisible layer
 				else
 				{
-					if(Physics.Raycast(agentCamera.transform.position, point.position - agentCamera.transform.position, out hit, 
-                   maxDistance , 1<<8 ))//layer mask automatically excludes Agent from this check
-                {
-                    if(hit.transform != sop.transform)
+        			if(Physics.Raycast(agentCamera.transform.position, point.position - agentCamera.transform.position, out hit, 
+        				                   maxDistance , 1<<8 ))//layer mask automatically excludes Agent from this check
                     {
-                        result = false;
-                    }
+                        if(hit.transform != sop.transform)
+                        {
+                            result = false;
+                        }
 
-                    //if this line is drawn, then this visibility point is in camera frame and not occluded
-                    //might want to use this for a targeting check as well at some point....
-                    else
-                    {
-                        result = true;
-                        #if UNITY_EDITOR
-							Debug.DrawLine(agentCamera.transform.position, point.position, Color.cyan);
-                        #endif
-                    }               
-                }  
+                        //if this line is drawn, then this visibility point is in camera frame and not occluded
+                        //might want to use this for a targeting check as well at some point....
+                        else
+                        {
+                            result = true;
+
+                            //check against transparancy to set interactable or not
+							//all transparant objects should have rigidbody colliders on them that are untagged and on the default layer
+							if (Physics.Raycast(agentCamera.transform.position, point.position - agentCamera.transform.position, out hit,
+							                    maxDistance, (1 << 0) | (1 << 8) ))
+							{
+								if(hit.transform == sop.transform)
+								sop.isInteractable = true;
+
+							}
+
+
+                            #if UNITY_EDITOR
+        						Debug.DrawLine(agentCamera.transform.position, point.position, Color.cyan);
+                            #endif
+                        }               
+                    }  
 				}
         
             }
@@ -692,7 +715,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     //nothing in our hand, so nothing to ignore
                     if (ItemInHand == null)
                     {
-						if (res.transform.GetComponent<SimObjPhysics>() || res.transform.tag == "Structure")
+						//including "Untagged" tag here so that the agent can't move through objects that are transparent
+						if (res.transform.GetComponent<SimObjPhysics>() || res.transform.tag == "Structure" || res.transform.tag == "Untagged")
                         {
                             result = false;
                             Debug.Log(res.transform.name + " is blocking the Agent from moving " + orientation);
@@ -1028,6 +1052,13 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     //return false;
                 }
 
+				if(target.isInteractable == false)
+				{
+					Debug.Log("Target is not interactable and is probably occluded by something!");
+
+					return;
+				}
+
     //            //only check interactability if flag is set, otherwise will only check visible
 				//if(!IgnoreInteractableFlag)
 				//{
@@ -1220,6 +1251,13 @@ namespace UnityStandardAssets.Characters.FirstPerson
             
             if (target)
             {
+				if(target.isInteractable == false)
+				{
+					Debug.Log("can't close object if it's already closed");
+                    actionFinished(false);
+                    errorMessage = "object is visible but occluded by something: " + action.objectId;
+				}
+
 				if(target.GetComponent<CanOpen>())
 				{
 					CanOpen co = target.GetComponent<CanOpen>();
@@ -1307,6 +1345,13 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 			if (target)
 			{
+				if (target.isInteractable == false)
+                {
+                    Debug.Log("can't close object if it's already closed");
+                    actionFinished(false);
+                    errorMessage = "object is visible but occluded by something: " + action.objectId;
+                }
+
 				if(target.GetComponent<CanOpen>())
 				{
 					CanOpen co = target.GetComponent<CanOpen>();
