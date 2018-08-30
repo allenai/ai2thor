@@ -38,7 +38,7 @@ public class SimObjPhysics : MonoBehaviour
 	public GameObject[] ReceptacleTriggerBoxes = null;
 
 	public bool isVisible = false;
-	//public bool isInteractable = false;
+	public bool isInteractable = false;
 	public bool isColliding = false;
 
     //duplicate a non trigger collider, add a rigidbody to it and parant the duplicate to the original selection
@@ -99,7 +99,7 @@ public class SimObjPhysics : MonoBehaviour
 	{
 		//this is overriden by the Agent when doing the Visibility Sphere test
 		isVisible = false;
-		//isInteractable = false;
+		isInteractable = false;
 
 		//if (Input.GetKeyDown(KeyCode.E))
 		//{
