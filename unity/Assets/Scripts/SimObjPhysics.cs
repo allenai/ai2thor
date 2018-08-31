@@ -97,9 +97,14 @@ public class SimObjPhysics : MonoBehaviour
 	// Update is called once per frame
 	void Update()
 	{
+
 		//this is overriden by the Agent when doing the Visibility Sphere test
+		if(isVisible)
 		isVisible = false;
+
+		if(isInteractable)
 		isInteractable = false;
+
 
 		//if (Input.GetKeyDown(KeyCode.E))
 		//{
@@ -109,6 +114,7 @@ public class SimObjPhysics : MonoBehaviour
 
 	private void FixedUpdate()
 	{
+
 		isColliding = false;
 
 	}
@@ -263,13 +269,13 @@ public class SimObjPhysics : MonoBehaviour
 			Gizmos.DrawWireMesh(mf.sharedMesh, -1, mf.transform.position, mf.transform.rotation, mf.transform.lossyScale);
 		}
 
-  //      //interactable drawn in magenta
-		//if (isInteractable == true)
-		//{
-		//	MeshFilter mf = gameObject.GetComponentInChildren<MeshFilter>(false);
-		//	Gizmos.color = Color.magenta;
-		//	Gizmos.DrawWireMesh(mf.sharedMesh, -1, mf.transform.position, mf.transform.rotation, mf.transform.lossyScale);
-		//}
+        //interactable drawn in magenta
+		if (isInteractable == true)
+		{
+			MeshFilter mf = gameObject.GetComponentInChildren<MeshFilter>(false);
+			Gizmos.color = Color.magenta;
+			Gizmos.DrawWireMesh(mf.sharedMesh, -1, mf.transform.position, mf.transform.rotation, mf.transform.lossyScale);
+		}
 
         //draw visibility points for editor
 		Gizmos.color = Color.yellow;

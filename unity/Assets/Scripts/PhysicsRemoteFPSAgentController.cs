@@ -343,11 +343,11 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         else
                         {
                             result = true;
-
+                            
 							//check against transparancy to set interactable or not
                             //all transparant objects should have rigidbody colliders on them that are untagged and on the default layer
                             if (Physics.Raycast(agentCamera.transform.position, point.position - agentCamera.transform.position, out hit,
-							                    maxDistance, (1 << 0) | (1 << 8) | (1 << 9)))
+							                    maxDistance, (1 << 11) | (1 << 8) | (1 << 9)))
                             {
                                 if (hit.transform == sop.transform)
                                     sop.isInteractable = true;
@@ -381,7 +381,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                             //check against transparancy to set interactable or not
 							//all transparant objects should have rigidbody colliders on them that are untagged and on the default layer
 							if (Physics.Raycast(agentCamera.transform.position, point.position - agentCamera.transform.position, out hit,
-							                    maxDistance, (1 << 0) | (1 << 8) ))
+							                    maxDistance, (1 << 11) | (1 << 8) ))
 							{
 								if(hit.transform == sop.transform)
 								sop.isInteractable = true;
