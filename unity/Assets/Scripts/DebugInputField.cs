@@ -37,6 +37,16 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 case "init":
                     {
 						ServerAction action = new ServerAction();
+
+                        //if you want to use smaller grid size step increments, initialize with a smaller/larger gridsize here
+                        //by default the gridsize is 0.25, so only moving in increments of .25 will work
+                        //so the MoveAhead action will only take, by default, 0.25, .5, .75 etc magnitude with the default
+                        //grid size!
+						if (splitcommand.Length > 1)
+                        {
+							action.gridSize = float.Parse(splitcommand[1]);
+                        }
+
       			        PhysicsController.Initialize(action);
                         break;
                     }
