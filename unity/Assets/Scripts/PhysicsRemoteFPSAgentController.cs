@@ -46,8 +46,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
         {
 			base.Start();
 
-			ServerAction action = new ServerAction();
-			Initialize(action);
+			//ServerAction action = new ServerAction();
+			//Initialize(action);
 
 			//below, enable all the GameObjects on the Agent that Physics Mode requires
 
