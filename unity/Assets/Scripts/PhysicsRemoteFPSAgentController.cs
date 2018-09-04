@@ -16,8 +16,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 	public class PhysicsRemoteFPSAgentController : BaseFPSAgentController
     {
 		[SerializeField] protected GameObject[] ToSetActive = null;
-
-		//[SerializeField] protected float MaxViewDistancePhysics = 1.7f; //change MaxVisibleDistance of BaseAgent to this value to account for Physics
+        
 		[SerializeField] protected float PhysicsAgentSkinWidth = 0.04f; //change agent's skin width so that it collides directly with ground - otherwise sweeptests will fail for flat objects on floor
 
 		[SerializeField] protected GameObject AgentHand = null;
@@ -33,10 +32,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		[SerializeField] protected SimObjPhysics[] VisibleSimObjPhysics; //all SimObjPhysics that are within camera viewport and range dictated by MaxViewDistancePhysics
 
 		[SerializeField] protected bool IsHandDefault = true;
-
-        //set this to true to ignore interactable point checks. In this case, all actions only require an object to be Visible and
-        //will NOT require both visibility AND a path from the hand to the object's Interaction points.
-		//[SerializeField] private bool IgnoreInteractableFlag = false;
 
         //change visibility check to use this distance when looking down
 		protected float DownwardViewDistance = 2.0f;
@@ -82,24 +77,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			//make sure this happens in late update so all physics related checks are done ahead of time
 			VisibleSimObjPhysics = GetAllVisibleSimObjPhysics(m_Camera, maxVisibleDistance);
    		}
-
-  //      public string UniqueIDOfClosestInteractableObject()
-		//{
-		//	string objectID = null;
-
-		//	foreach (SimObjPhysics o in VisibleSimObjPhysics)
-		//	{
-		//		if(o.isInteractable == true && o.PrimaryProperty == SimObjPrimaryProperty.CanPickup)
-		//		{
-		//			objectID = o.UniqueID;
-		//		//	print(objectID);
-		//			break;
-		//		}
-		//	}
-
-		//	return objectID;
-		//}
-
+      
         //return ID of closest CanPickup object by distance
         public string UniqueIDOfClosestVisibleObject()
 		{
@@ -136,22 +114,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
 					objectID = o.UniqueID;
 					break;
 				}
-				//if(o.SecondaryProperties.Length > 0)
-				//{
-				//	List<SimObjSecondaryProperty> temp = new List<SimObjSecondaryProperty>(o.SecondaryProperties);
-				//	if (temp.Contains(SimObjSecondaryProperty.CanOpen))
-				//	{
-						
-				//	}
-
-				//}
-
-				//if (o.SecondaryProperties == SimObjPrimaryProperty.CanOpen)
-                //{
-                //    objectID = o.UniqueID;
-                //    //  print(objectID);
-                //    break;
-                //}
             }
 
             return objectID;
@@ -162,18 +124,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
             List<SimObjPhysics> currentlyVisibleItems = new List<SimObjPhysics>();
 
             Vector3 agentCameraPos = agentCamera.transform.position;
-
-			//Vector3 itemDirection = Vector3.zero;
-			//         //do a raycast in the direction of the item
-			//         itemDirection = (itemTargetPoint - agentCameraPos).normalized;
-			//Vector3 agentForward = agentCamera.transform.forward;
-			//agentForward.y = 0f;
-			//agentForward.Normalize();
-			////clap the angle so we can't wrap around
-			//float maxDistanceLerp = 0f;
-			//float lookAngle = Mathf.Clamp(Vector3.Angle(agentForward, itemDirection), 0f, MaxDownwardLookAngle) - MinDownwardLooKangle;
-			//maxDistanceLerp = lookAngle / MaxDownwardLookAngle;
-			//maxDistance = Mathf.Lerp(maxDistance, maxDistance * DownwardRangeExtension, maxDistanceLerp);
 
 			//get all sim objects in range around us that have colliders in layer 8 (visible), ignoring objects in the SimObjInvisible layer
             //this will make it so the receptacle trigger boxes don't occlude the objects within them.
@@ -203,6 +153,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         //now we have a reference to our sim object 
                         if(sop)
                         {
+
                             //check against all visibility points, accumulate count. If at least one point is visible, set object to visible
                             if (sop.VisibilityPoints.Length > 0)
                             {
@@ -229,7 +180,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
                             }
 
                             else
-                                Debug.Log("Error! Set at least 1 visibility point on SimObjPhysics prefab!");                     
+                                Debug.Log("Error! Set at least 1 visibility point on SimObjPhysics prefab!");
+                                 
                         }
                     }               
                 }
@@ -290,7 +242,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
             currentlyVisibleItems.Sort((x, y) => Vector3.Distance(x.transform.position, agentCameraPos).CompareTo(Vector3.Distance(y.transform.position, agentCameraPos)));
             return currentlyVisibleItems.ToArray();
         }
-
         
 		protected bool CheckIfVisibilityPointInViewport(SimObjPhysics sop, Transform point, Camera agentCamera, float maxDistance, bool includeInvisible)
         {
@@ -327,7 +278,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
 				//now cast a ray out toward the point, if anything occludes this point, that point is not visible
 				RaycastHit hit;
 
-                //check raycast against both visible and invisible layers
+                //check raycast against both visible and invisible layers, to check against ReceptacleTriggerBoxes which are normally
+                //ignored by the other raycast
 				if(includeInvisible)
 				{
 					if(Physics.Raycast(agentCamera.transform.position, point.position - agentCamera.transform.position, out hit, 
@@ -335,7 +287,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     {
                         if(hit.transform != sop.transform)
                         {
-                            result = false;
+							result = false;
                         }
 
                         //if this line is drawn, then this visibility point is in camera frame and not occluded
@@ -343,16 +295,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         else
                         {
                             result = true;
-                            
-							//check against transparancy to set interactable or not
-                            //all transparant objects should have rigidbody colliders on them that are untagged and on the default layer
-                            if (Physics.Raycast(agentCamera.transform.position, point.position - agentCamera.transform.position, out hit,
-							                    maxDistance, (1 << 11) | (1 << 8) | (1 << 9)))
-                            {
-                                if (hit.transform == sop.transform)
-                                    sop.isInteractable = true;
-
-                            }
+							sop.isInteractable = true;
 
                             #if UNITY_EDITOR
                             Debug.DrawLine(agentCamera.transform.position, point.position, Color.cyan);
@@ -362,48 +305,157 @@ namespace UnityStandardAssets.Characters.FirstPerson
 				}
 
 				//only check against the visible layer, ignore the invisible layer
+                //so if an object ONLY has colliders on it that are not on layer 8, this raycast will go through them 
 				else
 				{
         			if(Physics.Raycast(agentCamera.transform.position, point.position - agentCamera.transform.position, out hit, 
         				                   maxDistance , 1<<8 ))//layer mask automatically excludes Agent from this check
                     {
+                        
+                        //we didnt' directly hit the sop we are checking for with this cast, 
+						//check if it's because we hit something see-through
                         if(hit.transform != sop.transform)
                         {
-                            result = false;
-                        }
+							if(hit.transform.GetComponent<SimObjPhysics>())
+							{
+								if (hit.transform.GetComponent<SimObjPhysics>().
+                                    DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanSeeThrough))
+                                {
+                                    Transform firstseethroughhit = hit.transform;
 
-                        //if this line is drawn, then this visibility point is in camera frame and not occluded
+                                    //we hit something see through, so now find all objects in the path between
+                                    //the sop and the camera
+                                    RaycastHit[] hits;
+                                    hits = Physics.RaycastAll(agentCamera.transform.position, point.position - agentCamera.transform.position,
+                                                              maxDistance, (1 << 8), QueryTriggerInteraction.Ignore);
+
+                                    //now we need to check every object hit to see if it is the object we are looking for
+                                    foreach (RaycastHit h in hits)
+                                    {
+										//found the object we are looking for, great!
+                                        if (h.transform == sop.transform)
+                                        {
+											//do a raycast originating from the found object to the camera
+                                            if (Physics.Raycast(point.position, agentCamera.transform.position - point.position, out hit,
+                                                                maxDistance, 1 << 8))
+                                            {
+            								    //see if you hit the see through object between this object and the camera
+												//if you didn't hit the see-through object, it means something else must be occluding
+												//the object we are checking for, so don't change the result it's still false
+												if (hit.transform.GetComponent<SimObjPhysics>())
+												{
+													if (hit.transform.GetComponent<SimObjPhysics>().
+                                                    DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanSeeThrough))
+                                                    {
+                                                        if (hit.transform == firstseethroughhit.transform)
+                                                            result = true;
+
+														///XXX THE ELSE BELOW SHOULD BE REPLACED BY A RECURSIVE FUNCTION THAT ENDS WHEN THE OUTERMOST
+														/// TRANSLUCENT OBJECT IS HIT. I'M BAD AT RECURSION SO THIS IS SUPER TEMPORARY
+														/// right now this check only goes a few layers deep so it might leave some edge cases.
+
+														//else
+                                                        //result = TranslucentCheck(hit.point, sop, agentCamera, maxDistance, firstseethroughhit);
+
+                                                        else
+                                                        {
+                                                            //result = TranslucentCheck(hit, sop, agentCamera, maxDistance, firstseethroughhit);
+
+                                                            //do another raycast from hit.point to agent camera,
+                                                            if (Physics.Raycast(hit.point, agentCamera.transform.position - hit.point, out hit,
+                                                                                maxDistance, 1 << 8))
+                                                            {
+																if (hit.transform.GetComponent<SimObjPhysics>())
+																{
+																	if (hit.transform.GetComponent<SimObjPhysics>().
+                                                                    DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanSeeThrough))
+                                                                    {
+                                                                        if (hit.transform == firstseethroughhit.transform)
+                                                                            result = true;
+
+                                                                        else
+                                                                        {                                                         
+                                                                            //do another raycast from hit.point to agent camera,
+                                                                            if (Physics.Raycast(hit.point, agentCamera.transform.position - hit.point, out hit,
+                                                                                                maxDistance, 1 << 8))
+                                                                            {
+																				if (hit.transform.GetComponent<SimObjPhysics>())
+																				{
+																					if (hit.transform.GetComponent<SimObjPhysics>().
+                                                                                    DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanSeeThrough))
+                                                                                    {
+                                                                                        if (hit.transform == firstseethroughhit.transform)
+                                                                                            result = true;                                                                  
+                                                                                    }
+																				}
+
+                                                                            }
+                                                                        }
+                                                                    }
+																}                                                
+                                                            }
+                                                        }
+                                                    }
+												}
+                                            }
+                                        }
+                                    }
+                                }
+							}                     
+						}
+                        //i'm so sorry the above is so ugly we'll fix it later i promise
+
+						//if this line is drawn, then this visibility point is in camera frame and not occluded
                         //might want to use this for a targeting check as well at some point....
                         else
                         {
                             result = true;
-
-                            //check against transparancy to set interactable or not
-							//all transparant objects should have rigidbody colliders on them that are untagged and on the default layer
-							if (Physics.Raycast(agentCamera.transform.position, point.position - agentCamera.transform.position, out hit,
-							                    maxDistance, (1 << 11) | (1 << 8) ))
-							{
-								if(hit.transform == sop.transform)
-								sop.isInteractable = true;
-
-							}
-
-
-                            #if UNITY_EDITOR
-        						Debug.DrawLine(agentCamera.transform.position, point.position, Color.cyan);
-                            #endif
-                        }               
-                    }  
-				}
-        
-            }
-
+							sop.isInteractable = true;
+                        }                   
+                    }
+                }  
+			}
+         
+            //the point is not even in the viewport so it's
             else
                 result = false;
+
+			#if UNITY_EDITOR
+            if(result==true)
+			{            
+                Debug.DrawLine(agentCamera.transform.position, point.position, Color.cyan);
+			}
+			#endif
 
             return result;
 
         }
+        
+        //XXX please help me i'm bad at recursion - Winson
+		public bool TranslucentCheck(Vector3 hitpoint, SimObjPhysics sop, Camera agentCamera, float maxDistance, Transform firstseethroughhit)
+		{
+			RaycastHit hit;
+			//bool result = false;
+			//Transform lastThingHit = hit.transform;
+			//do another raycast from hit.point to agent camera,
+            if (Physics.Raycast(hitpoint, agentCamera.transform.position - hitpoint, out hit,
+                                maxDistance, 1 << 8))
+            {
+				if(hit.transform.GetComponent<SimObjPhysics>())
+				{
+					if (hit.transform.GetComponent<SimObjPhysics>().
+                    DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanSeeThrough))
+                    {
+                        if (hit.transform == firstseethroughhit.transform)
+						{
+							return true;
+                        }                  
+                    }
+				}            
+            }
+
+            return TranslucentCheck(hit.point, sop, agentCamera, maxDistance, firstseethroughhit);;
+   		}
       
 		public override void LookDown(ServerAction response)
 		{
@@ -1326,21 +1378,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
             foreach (SimObjPhysics sop in VisibleSimObjs(action))
             {
-				////print("why not?");
-				////check for object in current visible objects, and also check that it's interactable
-				//if(!IgnoreInteractableFlag)
-				//{
-				//	if (!sop.isInteractable)
-    //                {
-    //                    Debug.Log(sop.UniqueID + " is not Interactable");
-    //                    return;
-    //                }
-				//}
-                
                 //check for CanOpen drawers, cabinets or CanOpen_Fridge fridge objects
 				if (sop.GetComponent<CanOpen>() || sop.GetComponent<CanOpen_Object>())
                 {
-                    //print("wobbuffet");
                     target = sop;
                 }
 
@@ -1370,14 +1410,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     else
                     {
                         //pass in percentage open if desired
-                        // XXX should switch this to 
                         if (action.moveMagnitude > 0.0f)
                         {
                             co.SetOpenPercent(action.moveMagnitude);
                         }
 
                         co.Interact();
-                        // XXX need to add checkOpenAction to determine if agent got moved
                         actionFinished(true);
                     }
 				}
@@ -1397,14 +1435,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     else
                     {
                         //pass in percentage open if desired
-                        // XXX should switch this to 
                         if (action.moveMagnitude > 0.0f)
                         {
                             codd.SetOpenPercent(action.moveMagnitude);
                         }
 
                         codd.Interact();
-                        // XXX need to add checkOpenAction to determine if agent got moved
                         actionFinished(true);
                     }
 				}
@@ -1420,6 +1456,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             }
 		}
 
+        //
         public void Contains(ServerAction action)
 		{
 			if (action.objectId == null)
@@ -1444,9 +1481,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			if (target)
 			{
 				//the sim object receptacle target returns list of unique sim object IDs as strings
-                //XXX It looks like this goes right into the MetaData, so I'll need help figuring out how to pass whatever
-				//is handling Metadata exporting this info. For now uh....the Contains() function on the sim object will print it in the log
-                //if in editor
+                //XXX It looks like this goes right into the MetaData, so basically this just returns a list of strings
+				//that are the unique ID's of every object that is contained by the target object
 				target.Contains();
 			}
 
@@ -2026,10 +2062,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
                             //suffix += " VISIBLE";
 							//if(!IgnoreInteractableFlag)
 							//{
-							//	if (o.isInteractable == true)
-       //                         {
-       //                             suffix += " INTERACTABLE";
-       //                         }
+								if (o.isInteractable == true)
+                                {
+                                    suffix += " INTERACTABLE";
+                                }
 							//}
 
                         }
