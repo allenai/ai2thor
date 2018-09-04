@@ -84,7 +84,8 @@ public enum SimObjSecondaryProperty : int //EACH SimObjPhysics can have any numb
     CanBeMountedMedium = 47,
     CanBeMountedLarge = 48,
     CanBeLitOnFire = 49,
-    CanLightOnFire = 50   
+    CanLightOnFire = 50,
+    CanSeeThrough = 51
 }
 
 [Serializable]
