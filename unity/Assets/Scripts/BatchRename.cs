@@ -1,6 +1,6 @@
 ﻿// Unity Editor extension that allows batch renaming for GameObjects in Hierarchy
 // Via Alan Thorn (TW: @thorn_alan)
-
+#if UNITY_EDITOR
 using UnityEngine;
 using UnityEditor;
 using System.Collections;
@@ -72,3 +72,4 @@ public class BatchRename : ScriptableWizard {
 		}
 	}
 }
+#endif

@@ -265,9 +265,14 @@ namespace UnityStandardAssets.Characters.FirstPerson
             }
         }
 
+		public bool excludeObject(string uniqueId)
+		{
+			return Array.IndexOf(this.excludeObjectIds, uniqueId) >= 0;
+		}
+
 		public bool excludeObject(SimpleSimObj so)
 		{
-			return Array.IndexOf(this.excludeObjectIds, so.UniqueID) >= 0;
+			return excludeObject(so.UniqueID);
 		}
 
 		protected bool closeSimObj(SimObj so)

@@ -36,8 +36,7 @@ def _build(context, arch, build_dir, build_name):
     return context.run(command, warn=True, env=dict(UNITY_BUILD_NAME=target_path))
 
 @task
-def local_build(context, prefix='local'):
-    arch = 'OSXIntel64'
+def local_build(context, prefix='local', arch='OSXIntel64'):
     build_name = "thor-%s-%s" % (prefix, arch)
     fetch_source_textures(context)
     if _build(context, arch, "builds", build_name):

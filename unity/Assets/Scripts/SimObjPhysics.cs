@@ -1,7 +1,9 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+#if UNITY_EDITOR
 using UnityEditor;
+#endif
 
 public class SimObjPhysics : MonoBehaviour
 {
@@ -40,6 +42,24 @@ public class SimObjPhysics : MonoBehaviour
 	public bool isVisible = false;
 	public bool isInteractable = false;
 	public bool isColliding = false;
+
+	public bool IsOpenable {
+		get { return this.GetComponent<CanOpen>() || this.GetComponent<CanOpen_Object>(); }
+	}
+
+	public bool IsOpen {
+		get {
+			CanOpen co = this.GetComponent<CanOpen>();
+			CanOpen_Object coo = this.GetComponent<CanOpen_Object>();
+			if (co != null) {
+				return co.isOpen;
+			} else if (coo != null) {
+				return coo.isOpen;
+			} else {
+				return false;
+			}
+		}
+	}
 
     //duplicate a non trigger collider, add a rigidbody to it and parant the duplicate to the original selection
     //for use with cabinet/fridge doors that need a secondary rigidbody to allow physics on the door while animating
@@ -299,7 +319,6 @@ public class SimObjPhysics : MonoBehaviour
         //}
 
 	}
-#endif
 
 	//CONTEXT MENU STUFF FOR SETTING UP SIM OBJECTS
 	//RIGHT CLICK this script in the inspector to reveal these options
@@ -758,6 +777,7 @@ public class SimObjPhysics : MonoBehaviour
 				RotateAgentCollider.GetComponent<BoxCollider>().enabled = false;
 		}
 	}
+	#endif
 
     
 }
