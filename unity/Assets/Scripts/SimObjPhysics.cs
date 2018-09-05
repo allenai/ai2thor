@@ -130,12 +130,7 @@ public class SimObjPhysics : MonoBehaviour
 	void Update()
 	{
 
-		//this is overriden by the Agent when doing the Visibility Sphere test
-		if(isVisible)
-		isVisible = false;
 
-		if(isInteractable)
-		isInteractable = false;
 
 
 		//if (Input.GetKeyDown(KeyCode.E))
@@ -146,7 +141,13 @@ public class SimObjPhysics : MonoBehaviour
 
 	private void FixedUpdate()
 	{
+		//this is overriden by the Agent when doing the Visibility Sphere test
+        if (isVisible)
+            isVisible = false;
 
+        if (isInteractable)
+            isInteractable = false;
+		
 		isColliding = false;
 
 	}
@@ -219,14 +220,14 @@ public class SimObjPhysics : MonoBehaviour
 
 #if UNITY_EDITOR
 				//print the objs for now just to check in editor
-				string result = UniqueID + " contains: ";
+				//string result = UniqueID + " contains: ";
 
-				foreach (string s in objs)
-				{
-					result += s + ", ";
-				}
+				//foreach (string s in objs)
+				//{
+				//	result += s + ", ";
+				//}
 
-				Debug.Log(result);
+				//Debug.Log(result);
 #endif
 
 				//XXX this is where we would export metadata for what is contained in this receptacle
