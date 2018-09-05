@@ -1,5 +1,3 @@
-// Upgrade NOTE: replaced 'mul(UNITY_MATRIX_MVP,*)' with 'UnityObjectToClipPos(*)'
-
  /*
  	CAMERA MOTION BLUR IMAGE EFFECTS
 
@@ -72,9 +70,15 @@
 	float4 _CameraDepthTexture_TexelSize;
 	float4 _VelTex_TexelSize;
 	
+	half4 _MainTex_ST;
+	half4 _CameraDepthTexture_ST;
+	half4 _VelTex_ST;
+
 	float4x4 _InvViewProj;	// inverse view-projection matrix
 	float4x4 _PrevViewProj;	// previous view-projection matrix
 	float4x4 _ToPrevViewProjCombined; // combined
+	float4x4 _StereoToPrevViewProjCombined0; // combined stereo versions.
+	float4x4 _StereoToPrevViewProjCombined1; // combined stereo versions.
 
 	float _Jitter;
 	
@@ -92,8 +96,17 @@
 	{
 		v2f o;
 		o.pos = UnityObjectToClipPos(v.vertex);
-		o.uv = v.texcoord.xy;
+		o.uv = UnityStereoScreenSpaceUVAdjust(v.texcoord.xy, _MainTex_ST);
 		return o;
+	}
+
+	float4x4 GetPrevViewProjCombined()
+	{
+#ifdef UNITY_SINGLE_PASS_STEREO
+		return unity_StereoEyeIndex == 0 ? _StereoToPrevViewProjCombined0 : _StereoToPrevViewProjCombined1;
+#else
+		return _ToPrevViewProjCombined;
+#endif
 	}
 	
 	float4 CameraVelocity(v2f i) : SV_Target
@@ -112,7 +125,7 @@
 		float3 clipPos = float3(i.uv.x*2.0-1.0, (i.uv.y)*2.0-1.0, d);
 
 		// only 1 matrix mul:
-		float4 prevClipPos = mul(_ToPrevViewProjCombined, float4(clipPos, 1.0));
+		float4 prevClipPos = mul(GetPrevViewProjCombined(), float4(clipPos, 1.0));
 		prevClipPos.xyz /= prevClipPos.w;
 
 		/*

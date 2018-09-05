@@ -33,6 +33,7 @@ GameObject:
   - component: {fileID: 8100000}
   - component: {fileID: 12474086}
   - component: {fileID: 114317082596199212}
+  - component: {fileID: 114176532703538896}
   m_Layer: 10
   m_Name: FirstPersonCharacter
   m_TagString: MainCamera
@@ -46,8 +47,8 @@ Transform:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 100000}
-  m_LocalRotation: {x: 0, y: -0.7071068, z: 0, w: 0.7071068}
-  m_LocalPosition: {x: 0.055, y: 1, z: -1.78}
+  m_LocalRotation: {x: 0, y: 1, z: 0, w: 0}
+  m_LocalPosition: {x: -1.1843, y: 1, z: -0.32}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 400002}
@@ -56,7 +57,7 @@ Transform:
   - {fileID: 4405666214316280}
   m_Father: {fileID: 0}
   m_RootOrder: 0
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 180, z: 0}
 --- !u!4 &400002
 Transform:
   m_ObjectHideFlags: 1
@@ -2945,14 +2946,14 @@ MonoBehaviour:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 100000}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: aa964c401d7eb48dbbda56193f50c1f8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   m_IsWalking: 1
   m_WalkSpeed: 1
-  m_RunSpeed: 5
+  m_RunSpeed: 2
   m_GravityMultiplier: 2
   m_MouseLook:
     XSensitivity: 2
@@ -2973,7 +2974,7 @@ MonoBehaviour:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 100000}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 45eeae044512743b8b15a08eaa699216, type: 3}
   m_Name: 
@@ -3016,6 +3017,25 @@ MonoBehaviour:
   isColliding: 0
   ItemInHand: {fileID: 0}
   AgentRef: {fileID: 0}
+--- !u!114 &114176532703538896
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 100002}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 76b5ec6153a1d55438228df10fe66844, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  distanceFog: 1
+  excludeFarPixels: 1
+  useRadialDistance: 0
+  heightFog: 1
+  height: 1
+  heightDensity: 2
+  startDistance: 0
+  fogShader: {fileID: 4800000, guid: 70d8568987ac0499f952b54c7c13e265, type: 3}
 --- !u!114 &114183149086918778
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -3209,7 +3229,7 @@ MonoBehaviour:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 100000}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 2d22dfd375bd14529b5d465c7b493eb0, type: 3}
   m_Name: 
@@ -3230,7 +3250,6 @@ MonoBehaviour:
   - {fileID: 1762015268591634}
   - {fileID: 1890475479083370}
   - {fileID: 1673061887459306}
-  MaxViewDistancePhysics: 1.7
   PhysicsAgentSkinWidth: 0.04
   AgentHand: {fileID: 1340499340313870}
   DefaultHandPosition: {fileID: 1863262018947090}
@@ -3277,6 +3296,12 @@ MonoBehaviour:
   - {fileID: 1252970257981572}
   VisibleSimObjPhysics: []
   IsHandDefault: 1
+  objectIdsInBox: []
+  inTopLevelView: 0
+  lastLocalCameraPosition: {x: 0, y: 0, z: 0}
+  lastLocalCameraRotation: {x: 0, y: 0, z: 0, w: 0}
+  cameraOrthSize: 0
+  standingLocalCameraPosition: {x: 0, y: 0, z: 0}
 --- !u!114 &114777480541674802
 MonoBehaviour:
   m_ObjectHideFlags: 1
