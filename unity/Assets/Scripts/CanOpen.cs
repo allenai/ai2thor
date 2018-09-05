@@ -29,7 +29,7 @@ public class CanOpen : MonoBehaviour
     //these are objects to ignore collision with. For example, two cabinets right next to each other
     //might clip into themselves, so ignore the "reset" event in that case by putting the object to ignore in the below array
 	[SerializeField] 
-	protected GameObject[] IgnoreTheseObjects;
+	public GameObject[] IgnoreTheseObjects;
 
 	[Header("State information bools")]
 	public bool isOpen = false;
@@ -151,6 +151,17 @@ public class CanOpen : MonoBehaviour
 		//the number of iTween instances running on this object
 		return iTween.Count(this.transform.gameObject);
 	}
+
+	private bool hasAncestor(GameObject child, GameObject potentialAncestor) {
+        if (child == potentialAncestor) {
+            return true;
+        } else if (child.transform.parent != null) {
+            return hasAncestor(child.transform.parent.gameObject, potentialAncestor);
+        } else {
+            return false;
+        }
+    }
+
     //trigger enter/exit functions reset the animation if the Agent is hit by the object opening
 	public void OnTriggerEnter(Collider other)
 	{
@@ -171,6 +182,11 @@ public class CanOpen : MonoBehaviour
 			canReset = false;
 			Reset();
 		}
+
+		// If the thing your colliding with is one of your (grand)-children then don't worry about it
+        if (hasAncestor(other.transform.gameObject, gameObject)) {
+            return;
+        }
 
         //if hitting another object that can open, do some checks 
 		if(other.GetComponentInParent<CanOpen>() && canReset == true)

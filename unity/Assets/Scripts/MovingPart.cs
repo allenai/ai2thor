@@ -18,6 +18,16 @@ public class MovingPart : MonoBehaviour
 	{
 		
 	}
+
+    private bool hasAncestor(GameObject child, GameObject potentialAncestor) {
+        if (child == potentialAncestor) {
+            return true;
+        } else if (child.transform.parent != null) {
+            return hasAncestor(child.transform.parent.gameObject, potentialAncestor);
+        } else {
+            return false;
+        }
+    }
        
 	public void OnTriggerEnter(Collider other)
     {
@@ -38,8 +48,12 @@ public class MovingPart : MonoBehaviour
             myObject.canReset = false;
             myObject.Reset();
         }
-              
 
+        // If the thing your colliding with is one of your (grand)-children then don't worry about it
+        if (hasAncestor(other.transform.gameObject, gameObject)) {
+            return;
+        }
+              
         //if hitting another object that has double doors, do some checks 
 		if (other.GetComponentInParent<CanOpen_Object>() && myObject.canReset == true)
         {

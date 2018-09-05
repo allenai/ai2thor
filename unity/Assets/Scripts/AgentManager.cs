@@ -223,6 +223,11 @@ public class AgentManager : MonoBehaviour
 	}
 
 	private byte[] captureScreen() {
+		if (tex.height != UnityEngine.Screen.height || 
+			tex.width != UnityEngine.Screen.width) {
+			tex = new Texture2D(UnityEngine.Screen.width, UnityEngine.Screen.height, TextureFormat.RGB24, false);
+			readPixelsRect = new Rect(0, 0, UnityEngine.Screen.width, UnityEngine.Screen.height);
+		}
 		tex.ReadPixels(readPixelsRect, 0, 0);
 		tex.Apply();
 		return tex.GetRawTextureData ();
@@ -579,6 +584,7 @@ public struct MetadataWrapper
 	public ColorBounds[] colorBounds;
 
 	// Extras
+	public Vector3[] reachablePositions;
 	public float[] flatSurfacesOnGrid;
 	public float[] distances;
 	public float[] normals;
@@ -593,6 +599,8 @@ public class ServerAction
 {
 	public string action;
 	public int agentCount = 1;
+	public string quality;
+	public float timeScale;
 	public string objectType;
 	public string receptacleObjectType;
 	public string receptacleObjectId;
