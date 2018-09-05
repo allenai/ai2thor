@@ -485,6 +485,7 @@ public class ObjectMetadata
 	public string objectId;
 	public float[] bounds3D;
 	public string parentReceptacle;
+	public string[] parentReceptacles;
 
 	public ObjectMetadata() { }
 
@@ -544,12 +545,24 @@ public class ColorBounds {
 	public int[] bounds;
 }
 
+[Serializable]
+public class HandMetadata {
+	public Vector3 position;
+	public Vector3 rotation;
+	public Vector3 localPosition;
+	public Vector3 localRotation;
+}
 
 [Serializable]
 public struct MetadataWrapper
 {
 	public ObjectMetadata[] objects;
 	public ObjectMetadata agent;
+	public HandMetadata hand;
+	public float fov;
+	public bool isStanding;
+	public Vector3 cameraPosition;
+	public float cameraOrthSize;
 	public ThirdPartyCameraMetadata[] thirdPartyCameras;
 	public bool collided;
 	public string[] collidedObjects;
@@ -564,8 +577,15 @@ public struct MetadataWrapper
 	public int agentId;
 	public ColorId [] colors;
 	public ColorBounds[] colorBounds;
-}
 
+	// Extras
+	public float[] flatSurfacesOnGrid;
+	public float[] distances;
+	public float[] normals;
+	public bool[] isOpenableGrid;
+	public string[] segmentedObjectIds;
+	public string[] objectIdsInBox;
+}
 
 
 [Serializable]
@@ -587,6 +607,8 @@ public class ServerAction
 	public int horizon;
 	public Vector3 rotation;
 	public Vector3 position;
+	public float fov;
+	public bool forceAction;
 	public int sequenceId;
 	public bool snapToGrid = true;
 	public bool continuous;

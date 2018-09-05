@@ -41,6 +41,101 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         break;
                     }
 
+                case "csw":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "CoverSurfacesWith";
+                        action.x = 0.2f;
+                        action.z = 0.2f;
+                        action.objectId = "Tomato";
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
+                case "fov":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "ChangeFOV";
+                        action.fov = float.Parse(splitcommand[1]);
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
+                case "map":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "ToggleMapView";
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
+                // Force open object
+                case "foo":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "OpenObject";
+                        action.forceAction = true;
+                        action.objectId = splitcommand[1];
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
+                // Force close object
+                case "fco":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "CloseObject";
+                        action.forceAction = true;
+                        action.objectId = splitcommand[1];
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+                
+                // Close visible objects
+                case "cvo":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "CloseVisibleObjects";
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
+                // Force open object at location
+                case "oal":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "OpenObjectAtLocation";
+                        action.x = float.Parse(splitcommand[1]);
+                        action.y = float.Parse(splitcommand[2]);
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
+                // Force pickup object
+                case "fpu":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "PickupObject";
+                        action.objectId = splitcommand[1];
+                        action.forceAction = true;
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
+                // Get objects in box
+                case "oib":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "ObjectsInBox";
+                        action.x = float.Parse(splitcommand[1]);
+                        action.z = float.Parse(splitcommand[2]);
+                        PhysicsController.ProcessControlCommand(action);
+                        foreach (string s in PhysicsController.objectIdsInBox) {
+                            Debug.Log(s);
+                        }
+                        break;
+                    }
+
                     //move ahead
                 case "ma":
                     {
@@ -715,7 +810,16 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     }
 
 				default:
-                    {                  
+                    {   
+                        ServerAction action = new ServerAction();
+                        action.action = splitcommand[0];
+                        if (splitcommand.Length == 2) {
+                            action.objectId = splitcommand[1];
+                        } else if (splitcommand.Length == 3) {
+                            action.x = float.Parse(splitcommand[1]);
+                            action.z = float.Parse(splitcommand[2]);
+                        }
+                        PhysicsController.ProcessControlCommand(action);      
                         //Debug.Log("Invalid Command");
                         break;
                     }
