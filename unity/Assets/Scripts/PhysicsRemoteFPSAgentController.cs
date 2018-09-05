@@ -52,6 +52,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		protected string[] segmentedObjectIds = new string[0];
         [SerializeField] protected Vector3 standingLocalCameraPosition;
         protected HashSet<int> initiallyDisabledRenderers = new HashSet<int>();
+        protected Vector3[] reachablePositions = new Vector3[0];
 
         //change visibility check to use this distance when looking down
 		protected float DownwardViewDistance = 2.0f;
@@ -91,6 +92,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     initiallyDisabledRenderers.Add(r.GetInstanceID());
                 }
             }
+
+            actionFinished(true);
         }
 
 		public GameObject WhatAmIHolding()
@@ -266,6 +269,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			metaMessage.hand.localRotation = AgentHand.transform.localEulerAngles;
 
             // EXTRAS
+            metaMessage.reachablePositions = reachablePositions;
             metaMessage.flatSurfacesOnGrid = flatten3DimArray(flatSurfacesOnGrid);
 			metaMessage.distances = flatten2DimArray(distances);
 			metaMessage.normals = flatten3DimArray(normals);
@@ -273,6 +277,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             metaMessage.segmentedObjectIds = segmentedObjectIds;
             metaMessage.objectIdsInBox = objectIdsInBox;
             // Resetting things
+            reachablePositions = new Vector3[0];
 			flatSurfacesOnGrid = new float[0,0,0];
 			distances = new float[0,0];
 			normals = new float[0,0,0];
@@ -622,8 +627,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			}
          
             //the point is not even in the viewport so it's
-            else
+            else {
                 result = false;
+            }
 
 			#if UNITY_EDITOR
             if(result==true)
@@ -1027,7 +1033,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
         }
 
         //checks if agent hand can move to a target location. Returns false if any obstructions
-        public bool CheckIfAgentCanMoveHand(ServerAction action)
+        public bool CheckIfAgentCanMoveHand(Vector3 targetPosition)
 		{
 			bool result = false;
 
@@ -1038,8 +1044,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 result = false;
                 return result;
             }
-
-			Vector3 targetPosition = new Vector3(action.x, action.y, action.z);
 
             //XXX might need to extend this range to reach down into low drawers/cabinets?
 			//print(Vector3.Distance(gameObject.transform.position, targetPosition));
@@ -1111,19 +1115,34 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 
         //moves hand to the x, y, z coordinate, not constrained by any axis, if within range
-        public void MoveHand(ServerAction action) //uses server action.x,y,z to create target position
+        protected bool moveHandToXYZ(float x, float y, float z)
         {
-			if(CheckIfAgentCanMoveHand(action))
+            Vector3 targetPosition = new Vector3(x, y, z);
+			if (CheckIfAgentCanMoveHand(targetPosition))
 			{
-				Vector3 targetPosition = new Vector3(action.x, action.y, action.z);
-
 				//Debug.Log("Movement of Agent Hand holding " + ItemInHand.name + " succesful!");
                 AgentHand.transform.position = targetPosition;
 				SetUpRotationBoxChecks();
                 IsHandDefault = false;
-			}
-         
+                return true;
+			} else {
+                return false;
+            }
         }
+
+        // Moves hand relative the agent (but not relative the camera, i.e. up is up)
+        // x, y, z coordinates should specify how far to move in that direction, so
+        // x=.1, y=.1, z=0 will move the hand .1 in both the x and y coordinates.
+        public void MoveHand(ServerAction action)
+		{
+			//get new direction relative to Agent forward facing direction (not the camera)
+            Vector3 newPos = AgentHand.transform.position + 
+                                transform.forward * action.z + 
+			                    transform.right * action.x + 
+								transform.up * action.y;
+
+            actionFinished(moveHandToXYZ(newPos.x, newPos.y, newPos.z));
+		}
 
         //moves hand constrained to x, y, z axes a given magnitude
         //pass in x,y,z of 0 if no movement is desired on that axis
@@ -1164,12 +1183,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 				newPos = newPos + (-m_Camera.transform.forward * action.moveMagnitude);    
             }
 
-            ServerAction newAction = new ServerAction();
-            newAction.x = newPos.x;
-            newAction.y = newPos.y;
-            newAction.z = newPos.z;
-
-            MoveHand(newAction);
+            actionFinished(moveHandToXYZ(newPos.x, newPos.y, newPos.z));
 		}
 
 		public bool IsInArray(Collider collider, GameObject[] arrayOfCol)
@@ -1272,7 +1286,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			{
 				if (IsHandDefault == false)
                 {
-                    Debug.Log("Reset Hand to default position before attempting to Pick Up objects");
+                    errorMessage = "Reset Hand to default position before attempting to Pick Up objects";
+                    Debug.Log(errorMessage);
                     actionFinished(false);
                     //return false;
                 }
@@ -1283,12 +1298,16 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     action.forceVisible = true;
                 }
 
-                SimObjPhysics[] simObjPhysicsArray = null;
-                if (action.forceVisible) {
-                    simObjPhysicsArray = VisibleSimObjs(action);
-                } else {
-                    simObjPhysicsArray = VisibleSimObjPhysics;
-                }
+                SimObjPhysics[] simObjPhysicsArray = VisibleSimObjs(action);
+                // if (action.forceVisible) {
+                //     simObjPhysicsArray = VisibleSimObjs(action);
+                // }
+                // TODO: Seems smart to reuse computation here but doing
+                // so actually makes it impossible to see if an object is
+                // interactable or not.
+                // else {
+                //     simObjPhysicsArray = VisibleSimObjPhysics;
+                // }
                 
                 foreach (SimObjPhysics sop in simObjPhysicsArray)
                 {
@@ -1301,21 +1320,24 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 //GameObject target = GameObject.Find(action.objectId);
                 if (target == null)
                 {
-                    Debug.Log("No valid target to pickup");
+                    errorMessage = "No valid target to pickup";
+                    Debug.Log(errorMessage);
                     actionFinished(false);
                     return;
                 }
 
                 if (!target.GetComponent<SimObjPhysics>())
                 {
-                    Debug.Log("Target must be SimObjPhysics to pickup");
+                    errorMessage = "Target must be SimObjPhysics to pickup";
+                    Debug.Log(errorMessage);
                     actionFinished(false);
                     return;
                 }
 
                 if (target.PrimaryProperty != SimObjPrimaryProperty.CanPickup)
                 {
-                    Debug.Log("Only SimObjPhysics that have the property CanPickup can be picked up");
+                    errorMessage = "Only SimObjPhysics that have the property CanPickup can be picked up";
+                    Debug.Log(errorMessage);
                     actionFinished(false);
                     return;
                     //return false;
@@ -1323,8 +1345,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 				if(!action.forceAction && target.isInteractable == false)
 				{
-					Debug.Log("Target is not interactable and is probably occluded by something!");
-
+                    errorMessage = "Target is not interactable and is probably occluded by something!";
+					Debug.Log(errorMessage);
+                    actionFinished(false);
 					return;
 				}
                 
@@ -1351,30 +1374,33 @@ namespace UnityStandardAssets.Characters.FirstPerson
             //make sure something is actually in our hands
             if (ItemInHand != null)
             {
-                if (!action.forceAction && ItemInHand.GetComponent<SimObjPhysics>().isColliding)
-                {
-                    Debug.Log(ItemInHand.transform.name + " can't be dropped. It must be clear of all other objects first");
-					actionFinished(false);
-					return;
-                }
+                // TODO: The bellow check doesn't work because not all receptacle's are tagged as such
+                // and thus objects are reporting that they are colliding when they aren't. It doesn't
+                // seem clear to me that this check is really necessary though.
+                // if (!action.forceAction && ItemInHand.GetComponent<SimObjPhysics>().isColliding)
+                // {
+                //     errorMessage = ItemInHand.transform.name + " can't be dropped. It must be clear of all other objects first";
+                //     Debug.Log(errorMessage);
+				// 	actionFinished(false);
+				// 	return;
+                // } else 
+                // {
+                ItemInHand.GetComponent<Rigidbody>().isKinematic = false;
+                ItemInHand.transform.parent = null;
+                ItemInHand = null;
 
-                else
-                {
-                    ItemInHand.GetComponent<Rigidbody>().isKinematic = false;
-                    ItemInHand.transform.parent = null;
-                    ItemInHand = null;
+                ServerAction a = new ServerAction();
+                DefaultAgentHand(a);
 
-					ServerAction a = new ServerAction();
-					DefaultAgentHand(a);
-
-					actionFinished(true);
-					return;
-                }
+                actionFinished(true);
+                return;
+                // }
             }
 
             else
             {
-                Debug.Log("nothing in hand to drop!");
+                errorMessage = "nothing in hand to drop!";
+                Debug.Log(errorMessage);
 				actionFinished(false);
 				return;
             }         
@@ -1548,10 +1574,24 @@ namespace UnityStandardAssets.Characters.FirstPerson
         }
 
         public void CloseVisibleObjects(ServerAction action) {
+            List<CanOpen> cos = new List<CanOpen>();
+            List<CanOpen_Object> coos = new List<CanOpen_Object>();
 			foreach (SimObjPhysics so in GetAllVisibleSimObjPhysics(m_Camera, 10f)) {
-                closeObject(so);
+                CanOpen co = so.GetComponent<CanOpen>();
+                CanOpen_Object coo = so.GetComponent<CanOpen_Object>();
+                if (co) {
+                    //if object is open, add it to be closed.
+                    if (co.isOpen) {
+                        cos.Add(co);
+                    }
+                } else if (coo) {
+                    //if object is open, add it to be closed.
+                    if (coo.isOpen) {
+                        coos.Add(coo);
+                    }
+                }
             }
-			actionFinished(true);
+			StartCoroutine(InteractAndWait(cos, coos));
 		}
 
         public void CloseObject(ServerAction action)
@@ -1599,9 +1639,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
             {
 				if(!action.forceAction && target.isInteractable == false)
 				{
-					Debug.Log("can't close object if it's already closed");
-                    actionFinished(false);
                     errorMessage = "object is visible but occluded by something: " + action.objectId;
+					Debug.Log(errorMessage);
+                    actionFinished(false);
 				}
 
 				if(target.GetComponent<CanOpen>())
@@ -1611,8 +1651,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     //if object is open, close it
                     if (co.isOpen)
                     {
-                        co.Interact();
-                        actionFinished(true);
+                        // co.Interact();
+                        // actionFinished(true);
+                        StartCoroutine(InteractAndWait(co, null));
                     }
 
                     else
@@ -1630,8 +1671,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     //if object is open, close it
                     if (codd.isOpen)
                     {
-                        codd.Interact();
-                        actionFinished(true);
+                        // codd.Interact();
+                        // actionFinished(true);
+                        StartCoroutine(InteractAndWait(null, codd));
                     }
 
                     else
@@ -1709,6 +1751,122 @@ namespace UnityStandardAssets.Characters.FirstPerson
             return;
         }
 
+        protected IEnumerator InteractAndWait(CanOpen co, CanOpen_Object coo) {
+            bool ignoreAgentInTransition = true;
+
+            List<Collider> collidersDisabled = new List<Collider>();
+            if (ignoreAgentInTransition) {    
+                foreach(Collider c in this.GetComponentsInChildren<Collider>()) {
+                    if (c.enabled) {
+                        collidersDisabled.Add(c);
+                        c.enabled = false;
+                    }
+                }
+            }
+
+            bool success = false;
+            if (co != null) {
+                co.Interact();
+            }
+            if (coo != null) {
+                coo.Interact();
+            }
+            for (int i = 0; i < 1000; i++) {
+                if ((co != null && co.GetiTweenCount() == 0) || 
+                    (coo != null && coo.GetiTweenCount() == 0)) {
+                    success = true;
+                    break;
+                }
+                yield return null;
+            }
+
+            if (ignoreAgentInTransition) {
+                foreach(Collider c in collidersDisabled) {
+                    c.enabled = true;
+                }
+                for (int i = 0; i < 5; i++) {
+                    yield return null;
+                }
+
+                if ((co != null && co.GetiTweenCount() != 0) || 
+                    (coo != null && coo.GetiTweenCount() != 0)) {
+                    success = false;
+                    for (int i = 0; i < 1000; i++) {
+                        if ((co != null && co.GetiTweenCount() == 0) || 
+                            (coo != null && coo.GetiTweenCount() == 0)) {
+                            break;
+                        }
+                    }
+                    yield return null;
+                }
+            }
+
+            if (!success) {
+                errorMessage = "Object failed to open/close successfully.";
+                Debug.Log(errorMessage);
+            }
+            
+            actionFinished(success);
+        }
+
+
+        protected bool anyInteractionsStillRunning(List<CanOpen> cos, List<CanOpen_Object> coos) {
+            bool anyStillRunning = false;
+            foreach (CanOpen co in cos) {
+                if (co.GetiTweenCount() != 0) {
+                    anyStillRunning = true;
+                    break;
+                }
+            }
+            if (!anyStillRunning) {
+                foreach (CanOpen_Object coo in coos) {
+                    if (coo.GetiTweenCount() != 0) {
+                        anyStillRunning = true;
+                        break;
+                    }
+                }
+            }
+            return anyStillRunning;
+        }
+
+        protected IEnumerator InteractAndWait(List<CanOpen> cos, List<CanOpen_Object> coos) {
+            bool ignoreAgentInTransition = true;
+
+            List<Collider> collidersDisabled = new List<Collider>();
+            if (ignoreAgentInTransition) {    
+                foreach(Collider c in this.GetComponentsInChildren<Collider>()) {
+                    if (c.enabled) {
+                        collidersDisabled.Add(c);
+                        c.enabled = false;
+                    }
+                }
+            }
+
+            foreach (CanOpen co in cos) {
+                co.Interact();
+            }
+            foreach (CanOpen_Object coo in coos) {
+                coo.Interact();
+            }
+
+            for (int i = 0; anyInteractionsStillRunning(cos, coos) && i < 1000; i++) {
+                yield return null;
+            }
+
+            if (ignoreAgentInTransition) {
+                foreach (Collider c in collidersDisabled) {
+                    c.enabled = true;
+                }
+                yield return null;
+
+                for (int i = 0; anyInteractionsStillRunning(cos, coos) && i < 1000; i++) {
+                    yield return null;
+                }
+            }
+
+            actionFinished(true);
+        }
+
         public void OpenObject(ServerAction action)
 		{
 			//pass name of object in from action.objectID
@@ -1745,6 +1903,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     Debug.Log("can't close object if it's already closed");
                     actionFinished(false);
                     errorMessage = "object is visible but occluded by something: " + action.objectId;
+                    return;
                 }
 
 				if(target.GetComponent<CanOpen>())
@@ -1767,8 +1926,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
                             co.SetOpenPercent(action.moveMagnitude);
                         }
 
-                        co.Interact();
-                        actionFinished(true);
+                        // co.Interact();
+                        StartCoroutine(InteractAndWait(co, null));
                     }
 				}
                 
@@ -1792,11 +1951,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
                             codd.SetOpenPercent(action.moveMagnitude);
                         }
 
-                        codd.Interact();
-                        actionFinished(true);
+                        // codd.Interact();
+                        StartCoroutine(InteractAndWait(null, codd));
                     }
 				}
 
+                print("Happens");
 			}
 
             //target not found in currently visible objects, report not found
@@ -2321,12 +2481,40 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		// 	actionFinished(true);
 		// }
 
+        public IEnumerator WaitOnResolutionChange(int width, int height) {
+			while (Screen.width != width || Screen.height != height) {
+				yield return null;
+			}
+			actionFinished(true);
+		}
+
         public void ChangeResolution(ServerAction action) {
 			int height = Convert.ToInt32(action.y);
 			int width = Convert.ToInt32(action.x);
 			Screen.SetResolution(width, height, false);
-            actionFinished(true);
-			// StartCoroutine(WaitOnResolutionChange(width, height));
+			StartCoroutine(WaitOnResolutionChange(width, height));
+		}
+
+		public void ChangeQuality(ServerAction action) {
+			string[] names = QualitySettings.names;
+			for(int i = 0; i < names.Length; i++) {
+				if (names[i] == action.quality) {
+					QualitySettings.SetQualityLevel(i, true);
+					break;
+				}
+			}
+			actionFinished(true);
+		}
+
+        public void ChangeTimeScale(ServerAction action) {
+            if (action.timeScale > 0) {
+                Time.timeScale = action.timeScale;
+                actionFinished(true);
+            } else {
+                errorMessage = "Time scale must be >0";
+                Debug.Log(errorMessage);
+                actionFinished(false);
+            }
 		}
 
         ///////////////////////////////////
@@ -2383,9 +2571,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 }
             }
 
-            foreach (Vector3 p in goodPoints) {
-                Debug.Log(p);
-            }
+            reachablePositions = new Vector3[goodPoints.Count];
+            goodPoints.CopyTo(reachablePositions);
 
             actionFinished(true);
         }

@@ -103,10 +103,18 @@ public class CanOpen_Object : MonoBehaviour
 			for (int i = 0; i < MovingParts.Length; i++)
 			{
 				if(movementType == MovementType.Rotate)
-					iTween.RotateTo(MovingParts[i],iTween.Hash("rotation", closedPositions[i], "islocal", true, "time", animationTime));
+					iTween.RotateTo(MovingParts[i],iTween.Hash(
+                        "rotation", closedPositions[i],
+                        "islocal", true, 
+                        "time", animationTime,
+                        "easetype", "linear"));
 
 				if(movementType == MovementType.Slide)
-					iTween.MoveTo(MovingParts[i], iTween.Hash("position", closedPositions[i], "islocal", true, "time", animationTime));
+					iTween.MoveTo(MovingParts[i], iTween.Hash(
+                        "position", closedPositions[i],
+                        "islocal", true,
+                        "time", animationTime,
+                        "easetype", "linear"));
 
 			}
         }
@@ -117,10 +125,18 @@ public class CanOpen_Object : MonoBehaviour
 			for (int i = 0; i < MovingParts.Length; i++)
             {
 				if (movementType == MovementType.Rotate)
-					iTween.RotateTo(MovingParts[i], iTween.Hash("rotation", openPositions[i] * openPercentage, "islocal", true, "time", animationTime)); 
+					iTween.RotateTo(MovingParts[i], iTween.Hash(
+                        "rotation", openPositions[i] * openPercentage,
+                        "islocal", true,
+                        "time", animationTime,
+                        "easetype", "linear")); 
 
 				if (movementType == MovementType.Slide)
-					iTween.MoveTo(MovingParts[i], iTween.Hash("position", openPositions[i] * openPercentage, "islocal", true, "time", animationTime));
+					iTween.MoveTo(MovingParts[i], iTween.Hash("position",
+                    openPositions[i] * openPercentage,
+                    "islocal", true,
+                    "time", animationTime,
+                    "easetype", "linear"));
 			}
         }
       
