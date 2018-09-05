@@ -1,7 +1,9 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+#if UNITY_EDITOR
 using UnityEditor;
+#endif
 
 public class SimObjPhysics : MonoBehaviour
 {
@@ -17,7 +19,7 @@ public class SimObjPhysics : MonoBehaviour
 
 	[SerializeField]
 	public SimObjSecondaryProperty[] SecondaryProperties;
-
+    
 	public GameObject RotateAgentCollider = null;
 
 	//public GameObject RotateAgentHandCollider = null;
@@ -311,7 +313,7 @@ public class SimObjPhysics : MonoBehaviour
         //}
 
 	}
-#endif
+
 
 	//CONTEXT MENU STUFF FOR SETTING UP SIM OBJECTS
 	//RIGHT CLICK this script in the inspector to reveal these options
@@ -770,6 +772,7 @@ public class SimObjPhysics : MonoBehaviour
 				RotateAgentCollider.GetComponent<BoxCollider>().enabled = false;
 		}
 	}
+	#endif
 
     
 }
