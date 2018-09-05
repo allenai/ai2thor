@@ -131,7 +131,12 @@ public class SimObjPhysics : MonoBehaviour
 	{
 
 
+		//this is overriden by the Agent when doing the Visibility Sphere test
+        if (isVisible)
+            isVisible = false;
 
+        if (isInteractable)
+            isInteractable = false;
 
 		//if (Input.GetKeyDown(KeyCode.E))
 		//{
@@ -141,12 +146,7 @@ public class SimObjPhysics : MonoBehaviour
 
 	private void FixedUpdate()
 	{
-		//this is overriden by the Agent when doing the Visibility Sphere test
-        if (isVisible)
-            isVisible = false;
 
-        if (isInteractable)
-            isInteractable = false;
 		
 		isColliding = false;
 
