@@ -1,5 +1,3 @@
-// Upgrade NOTE: replaced 'mul(UNITY_MATRIX_MVP,*)' with 'UnityObjectToClipPos(*)'
-
 Shader "Hidden/Blend" {
 	Properties {
 		_MainTex ("Screen Blended", 2D) = "" {}

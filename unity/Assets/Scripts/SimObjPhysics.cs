@@ -19,7 +19,7 @@ public class SimObjPhysics : MonoBehaviour
 
 	[SerializeField]
 	public SimObjSecondaryProperty[] SecondaryProperties;
-
+    
 	public GameObject RotateAgentCollider = null;
 
 	//public GameObject RotateAgentHandCollider = null;
@@ -113,7 +113,19 @@ public class SimObjPhysics : MonoBehaviour
 		//	}
 		//}
 	}
+    
+	public bool DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty prop)
+	{
+		bool result = false;
+        List<SimObjSecondaryProperty> temp = new List<SimObjSecondaryProperty>(SecondaryProperties);
 
+		if (temp.Contains(prop))
+		{
+			result = true;
+		}
+
+		return result;
+	}
 	// Update is called once per frame
 	void Update()
 	{
