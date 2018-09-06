@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using System;
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
@@ -58,6 +59,13 @@ public class SimObjPhysics : MonoBehaviour
 			} else {
 				return false;
 			}
+		}
+	}
+
+	public bool IsReceptacle {
+		get {
+			return Array.IndexOf(SecondaryProperties, SimObjSecondaryProperty.Receptacle) > -1 &&
+			 ReceptacleTriggerBoxes != null;
 		}
 	}
 
@@ -132,11 +140,13 @@ public class SimObjPhysics : MonoBehaviour
 
 
 		//this is overriden by the Agent when doing the Visibility Sphere test
-        if (isVisible)
+        if (isVisible) {
             isVisible = false;
+		}
 
-        if (isInteractable)
+        if (isInteractable) {
             isInteractable = false;
+		}
 
 		//if (Input.GetKeyDown(KeyCode.E))
 		//{
@@ -146,10 +156,7 @@ public class SimObjPhysics : MonoBehaviour
 
 	private void FixedUpdate()
 	{
-
-		
 		isColliding = false;
-
 	}
 
 	//used for throwing the sim object, or anything that requires adding force for some reason

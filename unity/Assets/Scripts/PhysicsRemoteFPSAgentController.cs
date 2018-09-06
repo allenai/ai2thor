@@ -21,7 +21,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
     {
 		[SerializeField] protected GameObject[] ToSetActive = null;
         
-		[SerializeField] protected float PhysicsAgentSkinWidth = 0.04f; //change agent's skin width so that it collides directly with ground - otherwise sweeptests will fail for flat objects on floor
+		[SerializeField] protected float PhysicsAgentSkinWidth = -1f; //change agent's skin width so that it collides directly with ground - otherwise sweeptests will fail for flat objects on floor
 
 		[SerializeField] protected GameObject AgentHand = null;
 		[SerializeField] protected GameObject DefaultHandPosition = null;
@@ -52,6 +52,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		protected string[] segmentedObjectIds = new string[0];
         [SerializeField] protected Vector3 standingLocalCameraPosition;
         protected HashSet<int> initiallyDisabledRenderers = new HashSet<int>();
+        protected Vector3[] initiallyReachablePositions = new Vector3[0];
         protected Vector3[] reachablePositions = new Vector3[0];
 
         //change visibility check to use this distance when looking down
@@ -69,7 +70,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
             //physics requires max distance to be extended to be able to see objects on ground
 			//maxVisibleDistance = MaxViewDistancePhysics;//default maxVisibleDistance is 1.0f
-			gameObject.GetComponent<CharacterController>().skinWidth = PhysicsAgentSkinWidth;
+
+            if (PhysicsAgentSkinWidth < 0.0f) {
+                Debug.LogError("Agent skin width must be > 0.0f, please set it in the editor. Forcing it to equal 0.01f for now.");
+                PhysicsAgentSkinWidth = 0.01f;
+            }
+			m_CharacterController.skinWidth = PhysicsAgentSkinWidth;
 
 			foreach (GameObject go in ToSetActive)
 			{
@@ -93,7 +99,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 }
             }
 
-            actionFinished(true);
+            initiallyReachablePositions = getReachablePositions();
+            base.actionComplete = true;
         }
 
 		public GameObject WhatAmIHolding()
@@ -122,7 +129,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             objMeta.rotation = o.transform.eulerAngles;
 
             objMeta.objectType = Enum.GetName(typeof(SimObjType), simObj.Type);
-            objMeta.receptacle = simObj.ReceptacleTriggerBoxes != null && simObj.ReceptacleTriggerBoxes.Length != 0;
+            objMeta.receptacle = simObj.IsReceptacle;
             objMeta.openable = simObj.IsOpenable;
             if (objMeta.openable) {
                 objMeta.isopen = simObj.IsOpen;
@@ -817,6 +824,35 @@ namespace UnityStandardAssets.Characters.FirstPerson
             return result;
         }
 
+        public void TeleportFull(ServerAction action) {
+			targetTeleport = new Vector3 (action.x, action.y, action.z);
+            bool isGoodPosition = false;
+            foreach (Vector3 vec in initiallyReachablePositions) {
+                if (Vector3.Distance(vec, targetTeleport) < 0.0001f) {
+                    isGoodPosition = true;
+                }
+            }
+
+            Debug.Log(initiallyReachablePositions.Length);
+
+            if (!isGoodPosition) {
+                actionFinished(false);
+                return;
+
+            }
+			m_CharacterController.transform.position = targetTeleport;
+			transform.rotation = Quaternion.Euler(new Vector3(0.0f, action.rotation.y, 0.0f));
+			m_Camera.transform.localEulerAngles = new Vector3 (action.horizon, 0.0f, 0.0f);
+		}
+
+		public void Teleport(ServerAction action) {
+            action.horizon = Convert.ToInt32(m_Camera.transform.localEulerAngles.x);
+			if (!action.rotateOnTeleport) {
+				action.rotation = transform.eulerAngles;
+			}
+			TeleportFull(action);
+		}
+
         //for all translational movement, check if the item the player is holding will hit anything, or if the agent will hit anything
 		public override void MoveLeft(ServerAction action)
 		{
@@ -977,7 +1013,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             if (sweepResults.Length > 0)
             {
                 foreach (RaycastHit res in sweepResults)
-                {               
+                {
                     //nothing in our hand, so nothing to ignore
                     if (ItemInHand == null)
                     {
@@ -1005,7 +1041,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             //if the array is empty, nothing was hit by the sweeptest so we are clear to move
             else
             {
-                //Debug.Log("Agent Body can move " + orientation);
+                // Debug.Log("Agent Body can move " + orientation);
                 result = true;
             }
 
@@ -1955,8 +1991,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         StartCoroutine(InteractAndWait(null, codd));
                     }
 				}
-
-                print("Happens");
 			}
 
             //target not found in currently visible objects, report not found
@@ -1973,7 +2007,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		{
 			if (action.objectId == null)
             {
-                Debug.Log("Hey, actually give me an object ID to pick up, yeah?");
+                errorMessage = "Hey, actually give me an object ID check containment for, yeah?";
+                Debug.Log(errorMessage);
                 return;
             }
 
@@ -2521,12 +2556,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
         ///// DATA GENERATION HELPERS /////
         ///////////////////////////////////
 
-        public void GetReachablePositions(ServerAction action) {
+        protected Vector3[] getReachablePositions() {
             CapsuleCollider cc = GetComponent<CapsuleCollider>();
 
             Vector3 center = transform.position;
-            float fudgeFactor = 0.05f;
-            float radius = cc.radius;
+            float floorFudgeFactor = 0.0001f;
+            float radius = cc.radius + m_CharacterController.skinWidth;
             float innerHeight = center.y - radius;
 
             Queue<Vector3> pointsQueue = new Queue<Vector3>();
@@ -2546,14 +2581,14 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 if (!goodPoints.Contains(p)) {
                     goodPoints.Add(p);
                     Vector3 point1 = new Vector3(p.x, center.y + innerHeight, p.z);
-                    Vector3 point2 = new Vector3(p.x, center.y - innerHeight, p.z);
+                    Vector3 point2 = new Vector3(p.x, center.y - innerHeight + floorFudgeFactor, p.z);
                     foreach (Vector3 d in directions) {    
                         RaycastHit[] hits = Physics.CapsuleCastAll(
                             point1,
                             point2,
                             radius,
                             d,
-                            gridSize + fudgeFactor,
+                            gridSize,
                             layerMask,
                             QueryTriggerInteraction.Ignore
                         );
@@ -2571,9 +2606,13 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 }
             }
 
-            reachablePositions = new Vector3[goodPoints.Count];
-            goodPoints.CopyTo(reachablePositions);
+            Vector3[] reachablePos = new Vector3[goodPoints.Count];
+            goodPoints.CopyTo(reachablePos);
+            return reachablePos;
+        }
 
+        public void GetReachablePositions(ServerAction action) {
+            reachablePositions = getReachablePositions();
             actionFinished(true);
         }
 
@@ -2622,6 +2661,65 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			actionFinished(true);
 		}
 
+        public void CreateObject(ServerAction action) {
+            if (uniqueIdToSimObjPhysics.ContainsKey(action.objectId)) {
+                errorMessage = "An object with that ID already exists, cannot create a new one.";
+                Debug.Log(errorMessage);
+                actionFinished(false);
+				return;
+            }
+            if (ItemInHand != null) {
+                errorMessage = "Already have an object in hand, can't create a new one to put there.";
+                Debug.Log(errorMessage);
+                actionFinished(false);
+				return;
+            }
+			string[] split = action.objectId.Split('|');
+			string prefab = split[0];
+			InstantiatePrefabTest script = GameObject.Find("PhysicsSceneManager").GetComponent<InstantiatePrefabTest>();
+			SimObjPhysics so = script.Spawn(prefab, action.objectId, m_Camera.transform.position);
+			if (so == null) {
+                errorMessage = "Failed to create object, are you sure it can be spawned?";
+                Debug.Log(errorMessage);
+				actionFinished(false);
+				return;
+			} else {
+				uniqueIdToSimObjPhysics[so.UniqueID] = so;
+			}
+            action.forceAction = true;
+			PickupObject(action);
+		}
+
+		public void CreateObjectAtLocation(ServerAction action) {
+            if (uniqueIdToSimObjPhysics.ContainsKey(action.objectId)) {
+                errorMessage = "An object with that ID already exists, cannot create a new one.";
+                Debug.Log(errorMessage);
+                actionFinished(false);
+				return;
+            }
+			string[] split = action.objectId.Split('|');
+			string prefab = split[0];
+			InstantiatePrefabTest script = GameObject.Find("PhysicsSceneManager").GetComponent<InstantiatePrefabTest>();
+			SimObjPhysics so = script.Spawn(prefab, action.objectId, new Vector3(action.x, action.y, action.z));
+			if (so == null) {
+				actionFinished(false);
+				return;
+			} else {
+				uniqueIdToSimObjPhysics[so.UniqueID] = so;
+			}
+			actionFinished(true);
+		}
+
+		public void DisableAllObjectsOfType(ServerAction action) {
+			string type = action.objectId;
+			foreach (SimObjPhysics so in GameObject.FindObjectsOfType<SimObjPhysics>()) {
+				if (so.name.StartsWith(type)) {
+					so.gameObject.SetActive(false);
+				}
+			}
+			actionFinished(true);
+		}
+
         private IEnumerator CoverSurfacesWithHelper(int n, List<SimObjPhysics> newObjects) {
 			Vector3[] initialPositions = new Vector3[newObjects.Count];
 			int k = 0;
@@ -2646,15 +2744,40 @@ namespace UnityStandardAssets.Characters.FirstPerson
 				yield return null;
 			}
 
+            HashSet<string> objectIdsContained = new HashSet<string>();
+            foreach (SimObjPhysics so in uniqueIdToSimObjPhysics.Values) {
+                if (so.ReceptacleTriggerBoxes != null && 
+                    so.ReceptacleTriggerBoxes.Length != 0 &&
+                    !so.UniqueID.Contains("Top") && // Don't include table tops, counter tops, etc.
+                    !so.UniqueID.Contains("Burner") &&
+                    !so.UniqueID.Contains("Sink")
+                ) {
+                    foreach (string id in so.Contains()) {
+                        objectIdsContained.Add(id);
+                    }
+                }
+            }
+
+            Material redMaterial = (Material) Resources.Load("RED", typeof(Material));
+            Material greenMaterial = (Material) Resources.Load("GREEN", typeof(Material));
 			Collider[] fpsControllerColliders = GameObject.Find("FPSController").GetComponentsInChildren<Collider>();
+            k = 0;
 			foreach (SimObjPhysics so in newObjects) {
-				so.GetComponentInChildren<Rigidbody>().isKinematic = true;
-				foreach(Collider c1 in so.GetComponentsInChildren<Collider>()) {
-					foreach(Collider c in fpsControllerColliders) {
-						Physics.IgnoreCollision(c, c1);
-					}
-				}
-                uniqueIdToSimObjPhysics[so.UniqueID] = so;
+                if (!deleted[k]) {
+                    so.GetComponentInChildren<Rigidbody>().isKinematic = true;
+                    foreach(Collider c1 in so.GetComponentsInChildren<Collider>()) {
+                        foreach(Collider c in fpsControllerColliders) {
+                            Physics.IgnoreCollision(c, c1);
+                        }
+                    }
+                    if (objectIdsContained.Contains(so.UniqueID)) {
+                        MaskSimObj(so, greenMaterial);
+                    } else {
+                        MaskSimObj(so, redMaterial);
+                    }
+                    uniqueIdToSimObjPhysics[so.UniqueID] = so;
+                }
+                k++;
 			}
 
 			actionFinished(true);
@@ -2823,7 +2946,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			int numZSteps = (int) (zRoomSize / zStepSize);
             // float xTmp = -0.153f;
             // float zTmp = -3f;
-			Material redMaterial = (Material) Resources.Load("RED", typeof(Material));
 			List<SimObjPhysics> newObjects = new List<SimObjPhysics>();
 
             var xsToTry = new List<float>();
@@ -2875,7 +2997,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
                             k++;
                             string id = Convert.ToString(i) + "|" + Convert.ToString(k);
                             SimObjPhysics newObj = script.Spawn(prefab, action.objectId + "|" + id, center - objCenterRelPos);
-                            MaskSimObj(newObj, redMaterial);
                             newObjects.Add(newObj);
                         } 
                         // else {
