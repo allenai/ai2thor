@@ -226,15 +226,20 @@ public class SimObjPhysics : MonoBehaviour
 				}
 
 #if UNITY_EDITOR
-				//print the objs for now just to check in editor
-				//string result = UniqueID + " contains: ";
 
-				//foreach (string s in objs)
-				//{
-				//	result += s + ", ";
-				//}
+				if(objs.Count != 0)
+				{
+					//print the objs for now just to check in editor
+                    string result = UniqueID + " contains: ";
 
-				//Debug.Log(result);
+                    foreach (string s in objs)
+                    {
+                        result += s + ", ";
+                    }
+
+                    Debug.Log(result);
+				}
+
 #endif
 
 				//XXX this is where we would export metadata for what is contained in this receptacle
@@ -252,7 +257,7 @@ public class SimObjPhysics : MonoBehaviour
 
 		else
 		{
-			Debug.Log("this object is not a Receptacle!");
+			Debug.Log(gameObject.name + " is not a Receptacle!");
 			return objs;
 		}
 	}

@@ -331,7 +331,7 @@ GameObject:
   - component: {fileID: 16982256}
   m_Layer: 9
   m_Name: ReceptacleTriggerBox (3)
-  m_TagString: SimObjPhysics
+  m_TagString: Receptacle
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -349,7 +349,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   CurrentlyContains: []
-  myObject: {fileID: 0}
 --- !u!65 &16982257
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -629,7 +628,7 @@ GameObject:
   - component: {fileID: 36197139}
   m_Layer: 9
   m_Name: ReceptacleTriggerBox (2)
-  m_TagString: SimObjPhysics
+  m_TagString: Receptacle
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -647,7 +646,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   CurrentlyContains: []
-  myObject: {fileID: 0}
 --- !u!65 &36197140
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -776,7 +774,7 @@ Prefab:
     m_Modifications:
     - target: {fileID: 400000, guid: 5e9e851c0e142814dac026a256ba2ac0, type: 2}
       propertyPath: m_LocalPosition.x
-      value: -2.94
+      value: -3
       objectReference: {fileID: 0}
     - target: {fileID: 400000, guid: 5e9e851c0e142814dac026a256ba2ac0, type: 2}
       propertyPath: m_LocalPosition.y
@@ -784,7 +782,7 @@ Prefab:
       objectReference: {fileID: 0}
     - target: {fileID: 400000, guid: 5e9e851c0e142814dac026a256ba2ac0, type: 2}
       propertyPath: m_LocalPosition.z
-      value: -0.362
+      value: -0.5
       objectReference: {fileID: 0}
     - target: {fileID: 400000, guid: 5e9e851c0e142814dac026a256ba2ac0, type: 2}
       propertyPath: m_LocalRotation.x
@@ -805,35 +803,6 @@ Prefab:
     - target: {fileID: 400000, guid: 5e9e851c0e142814dac026a256ba2ac0, type: 2}
       propertyPath: m_RootOrder
       value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 114000010621761404, guid: 5e9e851c0e142814dac026a256ba2ac0,
-        type: 2}
-      propertyPath: m_Enabled
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 114000011054666674, guid: 5e9e851c0e142814dac026a256ba2ac0,
-        type: 2}
-      propertyPath: m_Enabled
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 114000010621761404, guid: 5e9e851c0e142814dac026a256ba2ac0,
-        type: 2}
-      propertyPath: m_WalkSpeed
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 114000010621761404, guid: 5e9e851c0e142814dac026a256ba2ac0,
-        type: 2}
-      propertyPath: rotateMouseLook
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 114749714472260818, guid: 5e9e851c0e142814dac026a256ba2ac0,
-        type: 2}
-      propertyPath: m_Enabled
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 400000, guid: 5e9e851c0e142814dac026a256ba2ac0, type: 2}
-      propertyPath: m_LocalEulerAnglesHint.y
-      value: -90
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: 5e9e851c0e142814dac026a256ba2ac0, type: 2}
@@ -1918,7 +1887,6 @@ MonoBehaviour:
   - {x: 0, y: 90, z: 0}
   closedPositions:
   - {x: 0, y: 0, z: 0}
-  animationTime: 1
   openPercentage: 1
   IgnoreTheseObjects: []
   isOpen: 0
@@ -1973,6 +1941,7 @@ MonoBehaviour:
   ReceptacleTriggerBoxes:
   - {fileID: 1508325021}
   isVisible: 0
+  isInteractable: 0
   isColliding: 0
 --- !u!1 &173053256
 GameObject:
@@ -3911,6 +3880,7 @@ MonoBehaviour:
   ReceptacleTriggerBoxes:
   - {fileID: 583397929}
   isVisible: 0
+  isInteractable: 0
   isColliding: 0
 --- !u!54 &344255197
 Rigidbody:
@@ -3995,6 +3965,7 @@ MonoBehaviour:
   ReceptacleTriggerBoxes:
   - {fileID: 472234081}
   isVisible: 0
+  isInteractable: 0
   isColliding: 0
 --- !u!54 &354481785
 Rigidbody:
@@ -4401,6 +4372,7 @@ MonoBehaviour:
   ReceptacleTriggerBoxes:
   - {fileID: 1896836019}
   isVisible: 0
+  isInteractable: 0
   isColliding: 0
 --- !u!54 &385680047
 Rigidbody:
@@ -5079,6 +5051,7 @@ MonoBehaviour:
   ReceptacleTriggerBoxes:
   - {fileID: 1990170195}
   isVisible: 0
+  isInteractable: 0
   isColliding: 0
 --- !u!114 &422639070
 MonoBehaviour:
@@ -5097,7 +5070,6 @@ MonoBehaviour:
   - {x: -0.7492366, y: 0.7795613, z: -3.319}
   closedPositions:
   - {x: -0.74923664, y: 0.7795613, z: -3.5513384}
-  animationTime: 1
   openPercentage: 1
   IgnoreTheseObjects: []
   isOpen: 0
@@ -5164,6 +5136,7 @@ MonoBehaviour:
   - {fileID: 1887816998}
   ReceptacleTriggerBoxes: []
   isVisible: 0
+  isInteractable: 0
   isColliding: 0
 --- !u!1 &428852321
 GameObject:
@@ -6098,6 +6071,7 @@ MonoBehaviour:
   - {fileID: 36197138}
   - {fileID: 16982255}
   isVisible: 0
+  isInteractable: 0
   isColliding: 0
 --- !u!4 &514160040
 Transform:
@@ -8130,7 +8104,6 @@ MonoBehaviour:
   - {x: 0, y: 90, z: 0}
   closedPositions:
   - {x: 0, y: 0, z: 0}
-  animationTime: 1
   openPercentage: 1
   IgnoreTheseObjects: []
   isOpen: 0
@@ -8185,6 +8158,7 @@ MonoBehaviour:
   ReceptacleTriggerBoxes:
   - {fileID: 468453114}
   isVisible: 0
+  isInteractable: 0
   isColliding: 0
 --- !u!1 &637697739
 GameObject:
@@ -8378,7 +8352,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   CurrentlyContains: []
-  myObject: {fileID: 0}
 --- !u!65 &638999479
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -8698,6 +8671,7 @@ MonoBehaviour:
   ReceptacleTriggerBoxes:
   - {fileID: 1448439290}
   isVisible: 0
+  isInteractable: 0
   isColliding: 0
 --- !u!4 &656659712
 Transform:
@@ -8825,7 +8799,6 @@ MonoBehaviour:
   - {x: 0, y: 90, z: 0}
   closedPositions:
   - {x: 0, y: 0, z: 0}
-  animationTime: 1
   openPercentage: 1
   IgnoreTheseObjects: []
   isOpen: 0
@@ -8880,6 +8853,7 @@ MonoBehaviour:
   ReceptacleTriggerBoxes:
   - {fileID: 1465615017}
   isVisible: 0
+  isInteractable: 0
   isColliding: 0
 --- !u!1 &672047185
 GameObject:
@@ -11430,6 +11404,7 @@ MonoBehaviour:
   ReceptacleTriggerBoxes:
   - {fileID: 1383038078}
   isVisible: 0
+  isInteractable: 0
   isColliding: 0
 --- !u!1 &876354284
 GameObject:
@@ -13967,7 +13942,6 @@ MonoBehaviour:
   - {x: 0, y: -90, z: 0}
   closedPositions:
   - {x: 0, y: 0, z: 0}
-  animationTime: 1
   openPercentage: 1
   IgnoreTheseObjects: []
   isOpen: 0
@@ -14022,6 +13996,7 @@ MonoBehaviour:
   ReceptacleTriggerBoxes:
   - {fileID: 1024165565}
   isVisible: 0
+  isInteractable: 0
   isColliding: 0
 --- !u!1 &1075084831
 GameObject:
@@ -14573,6 +14548,7 @@ MonoBehaviour:
   ReceptacleTriggerBoxes:
   - {fileID: 1738633483}
   isVisible: 0
+  isInteractable: 0
   isColliding: 0
 --- !u!1001 &1111411948
 Prefab:
@@ -14858,7 +14834,6 @@ MonoBehaviour:
   - {x: 0, y: -90, z: 0}
   closedPositions:
   - {x: 0, y: 0, z: 0}
-  animationTime: 1
   openPercentage: 1
   IgnoreTheseObjects: []
   isOpen: 0
@@ -14913,6 +14888,7 @@ MonoBehaviour:
   ReceptacleTriggerBoxes:
   - {fileID: 83415822}
   isVisible: 0
+  isInteractable: 0
   isColliding: 0
 --- !u!1 &1126578271
 GameObject:
@@ -15952,6 +15928,7 @@ MonoBehaviour:
   - {fileID: 773791386}
   ReceptacleTriggerBoxes: []
   isVisible: 0
+  isInteractable: 0
   isColliding: 0
 --- !u!1001 &1234659504
 Prefab:
@@ -16445,7 +16422,7 @@ GameObject:
   - component: {fileID: 1268058838}
   m_Layer: 9
   m_Name: ReceptacleTriggerBox (1)
-  m_TagString: SimObjPhysics
+  m_TagString: Receptacle
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -16463,7 +16440,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   CurrentlyContains: []
-  myObject: {fileID: 0}
 --- !u!65 &1268058839
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -17844,7 +17820,6 @@ MonoBehaviour:
   - {x: 0, y: -90, z: 0}
   closedPositions:
   - {x: 0, y: 0, z: 0}
-  animationTime: 1
   openPercentage: 1
   IgnoreTheseObjects: []
   isOpen: 0
@@ -17899,6 +17874,7 @@ MonoBehaviour:
   ReceptacleTriggerBoxes:
   - {fileID: 1841629879}
   isVisible: 0
+  isInteractable: 0
   isColliding: 0
 --- !u!1 &1362829638
 GameObject:
@@ -18207,7 +18183,6 @@ MonoBehaviour:
   - {x: 0, y: -90, z: 0}
   closedPositions:
   - {x: 0, y: 0, z: 0}
-  animationTime: 1
   openPercentage: 1
   IgnoreTheseObjects: []
   isOpen: 0
@@ -18262,6 +18237,7 @@ MonoBehaviour:
   ReceptacleTriggerBoxes:
   - {fileID: 1468738901}
   isVisible: 0
+  isInteractable: 0
   isColliding: 0
 --- !u!1 &1401340634
 GameObject:
@@ -19652,7 +19628,6 @@ MonoBehaviour:
   - {x: 0, y: 90, z: 0}
   closedPositions:
   - {x: 0, y: 0, z: 0}
-  animationTime: 1
   openPercentage: 1
   IgnoreTheseObjects: []
   isOpen: 0
@@ -19707,6 +19682,7 @@ MonoBehaviour:
   ReceptacleTriggerBoxes:
   - {fileID: 808399290}
   isVisible: 0
+  isInteractable: 0
   isColliding: 0
 --- !u!1 &1500043880
 GameObject:
@@ -19914,7 +19890,6 @@ MonoBehaviour:
   - {x: 0, y: -90, z: 0}
   closedPositions:
   - {x: 0, y: 0, z: 0}
-  animationTime: 1
   openPercentage: 1
   IgnoreTheseObjects: []
   isOpen: 0
@@ -19969,6 +19944,7 @@ MonoBehaviour:
   ReceptacleTriggerBoxes:
   - {fileID: 581099159}
   isVisible: 0
+  isInteractable: 0
   isColliding: 0
 --- !u!1 &1524556598
 GameObject:
@@ -20111,6 +20087,7 @@ MonoBehaviour:
   ReceptacleTriggerBoxes:
   - {fileID: 638999476}
   isVisible: 0
+  isInteractable: 0
   isColliding: 0
 --- !u!1 &1533278776
 GameObject:
@@ -20526,7 +20503,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   CurrentlyContains: []
-  myObject: {fileID: 0}
 --- !u!65 &1567122236
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -21589,6 +21565,7 @@ MonoBehaviour:
   ReceptacleTriggerBoxes:
   - {fileID: 1567122233}
   isVisible: 0
+  isInteractable: 0
   isColliding: 0
 --- !u!1 &1678543852
 GameObject:
@@ -21754,6 +21731,7 @@ MonoBehaviour:
   - {fileID: 1424797960}
   ReceptacleTriggerBoxes: []
   isVisible: 0
+  isInteractable: 0
   isColliding: 0
 --- !u!1 &1685458108
 GameObject:
@@ -22419,7 +22397,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   CurrentlyContains: []
-  myObject: {fileID: 0}
 --- !u!65 &1738633486
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -22653,6 +22630,7 @@ MonoBehaviour:
   ReceptacleTriggerBoxes:
   - {fileID: 869455382}
   isVisible: 0
+  isInteractable: 0
   isColliding: 0
 --- !u!54 &1761016090
 Rigidbody:
@@ -24133,6 +24111,7 @@ MonoBehaviour:
   ReceptacleTriggerBoxes:
   - {fileID: 1624962665}
   isVisible: 0
+  isInteractable: 0
   isColliding: 0
 --- !u!114 &1901924955
 MonoBehaviour:
@@ -24151,7 +24130,6 @@ MonoBehaviour:
   - {x: -0.7058, y: 0.7795613, z: -3.268292}
   closedPositions:
   - {x: -0.4549862, y: 0.7795613, z: -3.268292}
-  animationTime: 1
   openPercentage: 1
   IgnoreTheseObjects: []
   isOpen: 0
@@ -25318,6 +25296,7 @@ MonoBehaviour:
   - {fileID: 866447438}
   ReceptacleTriggerBoxes: []
   isVisible: 0
+  isInteractable: 0
   isColliding: 0
 --- !u!1 &1985922969
 GameObject:
@@ -25948,6 +25927,7 @@ MonoBehaviour:
   - {fileID: 1003894861}
   ReceptacleTriggerBoxes: []
   isVisible: 0
+  isInteractable: 0
   isColliding: 0
 --- !u!1 &2051608126
 GameObject:
@@ -26450,7 +26430,6 @@ MonoBehaviour:
   closedPositions:
   - {x: 0, y: 0, z: 0}
   - {x: 0, y: 0, z: 0}
-  animationTime: 1
   openPercentage: 1
   IgnoreTheseObjects: []
   isOpen: 0
@@ -26512,6 +26491,7 @@ MonoBehaviour:
   ReceptacleTriggerBoxes:
   - {fileID: 1765011438}
   isVisible: 0
+  isInteractable: 0
   isColliding: 0
 --- !u!1 &2089719826
 GameObject:
@@ -27057,7 +27037,7 @@ GameObject:
   - component: {fileID: 2124957280}
   m_Layer: 9
   m_Name: ReceptacleTriggerBox
-  m_TagString: SimObjPhysics
+  m_TagString: Receptacle
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -27075,7 +27055,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   CurrentlyContains: []
-  myObject: {fileID: 0}
 --- !u!65 &2124957281
 BoxCollider:
   m_ObjectHideFlags: 0

@@ -47,7 +47,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
 							action.gridSize = float.Parse(splitcommand[1]);
                         }
 
-                        PhysicsController.actionComplete = false;
+
+						PhysicsController.actionComplete = false;
       			        PhysicsController.Initialize(action);
                         break;
                     }

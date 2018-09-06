@@ -18,8 +18,8 @@ public class CanOpen_Object : MonoBehaviour
     [SerializeField]
     public Vector3[] closedPositions;
 
-    [SerializeField]
-    protected float animationTime = 1.0f;
+    //[SerializeField]
+    protected float animationTime = 0.2f;
 
     [SerializeField]
     protected float openPercentage = 1.0f; //0.0 to 1.0 - percent of openPosition the object opens. 
@@ -103,19 +103,45 @@ public class CanOpen_Object : MonoBehaviour
 			for (int i = 0; i < MovingParts.Length; i++)
 			{
 				if(movementType == MovementType.Rotate)
-					iTween.RotateTo(MovingParts[i],iTween.Hash(
+				{
+					//we are on the last loop here
+					if(i == MovingParts.Length - 1)
+					{
+						iTween.RotateTo(MovingParts[i], iTween.Hash(
                         "rotation", closedPositions[i],
-                        "islocal", true, 
+                        "islocal", true,
                         "time", animationTime,
-                        "easetype", "linear"));
+						"easetype", "linear", "onComplete", "setisOpen", "onCompleteTarget", gameObject));
+					}
+
+					else
+					iTween.RotateTo(MovingParts[i], iTween.Hash(
+                    "rotation", closedPositions[i],
+                    "islocal", true,
+                    "time", animationTime,
+                    "easetype", "linear"));
+				}
+                
 
 				if(movementType == MovementType.Slide)
-					iTween.MoveTo(MovingParts[i], iTween.Hash(
+				{
+					//we are on the last loop here
+                    if (i == MovingParts.Length - 1)
+                    {
+                        iTween.MoveTo(MovingParts[i], iTween.Hash(
                         "position", closedPositions[i],
                         "islocal", true,
                         "time", animationTime,
-                        "easetype", "linear"));
+                        "easetype", "linear", "onComplete", "setisOpen", "onCompleteTarget", gameObject));
+                    }
 
+                    else
+					iTween.MoveTo(MovingParts[i], iTween.Hash(
+                    "position", closedPositions[i],
+                    "islocal", true,
+                    "time", animationTime,
+                    "easetype", "linear"));
+				}
 			}
         }
 
@@ -125,23 +151,60 @@ public class CanOpen_Object : MonoBehaviour
 			for (int i = 0; i < MovingParts.Length; i++)
             {
 				if (movementType == MovementType.Rotate)
-					iTween.RotateTo(MovingParts[i], iTween.Hash(
+				{
+					if(i == MovingParts.Length -1)
+					{
+						iTween.RotateTo(MovingParts[i], iTween.Hash(
                         "rotation", openPositions[i] * openPercentage,
                         "islocal", true,
                         "time", animationTime,
-                        "easetype", "linear")); 
+						"easetype", "linear", "onComplete", "setisOpen", "onCompleteTarget", gameObject));
+					}
 
+					else
+					iTween.RotateTo(MovingParts[i], iTween.Hash(
+                    "rotation", openPositions[i] * openPercentage,
+                    "islocal", true,
+                    "time", animationTime,
+                    "easetype", "linear")); 
+				}
+
+                
 				if (movementType == MovementType.Slide)
-					iTween.MoveTo(MovingParts[i], iTween.Hash("position",
-                    openPositions[i] * openPercentage,
+				{
+					if (i == MovingParts.Length - 1)
+                    {
+                        iTween.MoveTo(MovingParts[i], iTween.Hash(
+                        "position", openPositions[i] * openPercentage,
+                        "islocal", true,
+                        "time", animationTime,
+                        "easetype", "linear", "onComplete", "setisOpen", "onCompleteTarget", gameObject));
+                    }
+
+                    else
+					iTween.MoveTo(MovingParts[i], iTween.Hash(
+					"position", openPositions[i] * openPercentage,
                     "islocal", true,
                     "time", animationTime,
                     "easetype", "linear"));
+				}
+
 			}
         }
-      
-        isOpen = !isOpen;
     }
+                              
+ //   IEnumerator SetisOpen()
+	//{
+	//	yield return new WaitForSeconds(animationTime);
+	//	isOpen = !isOpen;
+
+	//}
+
+    private void setisOpen()
+	{
+		isOpen = !isOpen;
+
+	}
 
     public float GetOpenPercent()
     {
@@ -188,6 +251,64 @@ public class CanOpen_Object : MonoBehaviour
     public void Reset()
     {
         if (!canReset)
-            Interact();
+		{
+			//Interact();
+
+            //we are still open, trying to close, but hit something - reset to open
+			if(isOpen)
+			{
+				for (int i = 0; i < MovingParts.Length; i++)
+                {
+                    if (movementType == MovementType.Rotate)
+                    {
+						iTween.RotateTo(MovingParts[i], iTween.Hash(
+                        "rotation", openPositions[i] * openPercentage,
+                        "islocal", true,
+                        "time", animationTime,
+                        "easetype", "linear"));
+
+                    }
+
+
+                    if (movementType == MovementType.Slide)
+                    {
+						iTween.MoveTo(MovingParts[i], iTween.Hash(
+                        "position", openPositions[i] * openPercentage,
+                        "islocal", true,
+                        "time", animationTime,
+                        "easetype", "linear"));
+
+                    }
+
+                }
+			}
+
+			else
+			{
+				for (int i = 0; i < MovingParts.Length; i++)
+                {
+                    if (movementType == MovementType.Rotate)
+                    {
+						iTween.RotateTo(MovingParts[i], iTween.Hash(
+                        "rotation", closedPositions[i],
+                        "islocal", true,
+                        "time", animationTime,
+                        "easetype", "linear"));
+
+                    }
+
+
+                    if (movementType == MovementType.Slide)
+                    {
+						iTween.MoveTo(MovingParts[i], iTween.Hash(
+                        "position", closedPositions[i],
+                        "islocal", true,
+                        "time", animationTime,
+                        "easetype", "linear"));
+
+                    }
+                }
+			}
+		}
     }
 }

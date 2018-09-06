@@ -97,7 +97,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 if (!r.enabled) {
                     initiallyDisabledRenderers.Add(r.GetInstanceID());
                 }
-            }
+            }            
 
             initiallyReachablePositions = getReachablePositions();
             base.actionComplete = true;
@@ -117,7 +117,11 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		private void LateUpdate()
 		{
 			//make sure this happens in late update so all physics related checks are done ahead of time
-			VisibleSimObjPhysics = GetAllVisibleSimObjPhysics(m_Camera, maxVisibleDistance);
+			//this is also mostly for in editor, the array of visible sim objects is found via server actions
+			//using VisibleSimObjs(action), so be aware of that
+
+			ServerAction action = new ServerAction();
+			VisibleSimObjPhysics = VisibleSimObjs(action);//GetAllVisibleSimObjPhysics(m_Camera, maxVisibleDistance);
    		}
 
         private ObjectMetadata ObjectMetadataFromSimObjPhysics(SimObjPhysics simObj) {
@@ -1413,24 +1417,29 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 // TODO: The bellow check doesn't work because not all receptacle's are tagged as such
                 // and thus objects are reporting that they are colliding when they aren't. It doesn't
                 // seem clear to me that this check is really necessary though.
-                // if (!action.forceAction && ItemInHand.GetComponent<SimObjPhysics>().isColliding)
-                // {
-                //     errorMessage = ItemInHand.transform.name + " can't be dropped. It must be clear of all other objects first";
-                //     Debug.Log(errorMessage);
-				// 	actionFinished(false);
-				// 	return;
-                // } else 
-                // {
-                ItemInHand.GetComponent<Rigidbody>().isKinematic = false;
-                ItemInHand.transform.parent = null;
-                ItemInHand = null;
 
-                ServerAction a = new ServerAction();
-                DefaultAgentHand(a);
+                //we do need this to check if the item is currently colliding with the agent, otherwise
+                //dropping an object while it is inside the agent will cause it to shoot out weirdly
+                if (!action.forceAction && ItemInHand.GetComponent<SimObjPhysics>().isColliding)
+                {
+                    errorMessage = ItemInHand.transform.name + " can't be dropped. It must be clear of all other objects first";
+                    Debug.Log(errorMessage);
+				 	actionFinished(false);
+				 	return;
+                } 
 
-                actionFinished(true);
-                return;
-                // }
+				else 
+                {
+                    ItemInHand.GetComponent<Rigidbody>().isKinematic = false;
+                    ItemInHand.transform.parent = null;
+                    ItemInHand = null;
+
+                    ServerAction a = new ServerAction();
+                    DefaultAgentHand(a);
+
+                    actionFinished(true);
+                    return;
+                }
             }
 
             else
@@ -1466,71 +1475,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 			go.GetComponent<SimObjPhysics>().ApplyForce(apply);         
 		}
-
-  //      //isOpen is true if trying to Close object, False if trying to open object
-  //      public void OpenOrCloseObject(ServerAction action, bool open)
-		//{
-		//	//pass name of object in from action.objectID
-  //          //check if that object is in the viewport
-  //          //also check to make sure that target object is interactable
-		//	if(action.objectId == null)
-		//	{
-		//		Debug.Log("Hey, actually give me an object ID to pick up, yeah?");
-		//		return;
-		//	}
-				
-		//	SimObjPhysics target = null;
-
-  //          foreach (SimObjPhysics sop in VisibleSimObjPhysics)
-  //          {
-		//		//print("why not?");
-		//		//check for object in current visible objects, and also check that it's interactable
-		//		if (action.objectId == sop.UniqueID && sop.GetComponent<CanOpen>())
-		//		{
-		//			//print("wobbuffet");
-		//			target = sop;
-		//		}
-	
-  //          }
-
-  //          if(target)
-		//	{
-		//		CanOpen co = target.GetComponent<CanOpen>();
-
-  //              //trying to close object
-		//		if(open == true)
-		//		{
-		//			if (co.isOpen == true)
-		//			{                  
-		//				co.Interact();
-		//			}
-                  
-		//			else
-		//				Debug.Log("can't close object if it's already closed");
-		//		}
-
-  //              //trying to open object
-  //              else if(open == false)
-		//		{
-		//			if (co.isOpen == false)
-		//			{
-		//				if (action.moveMagnitude > 0.0f)
-  //                      {
-  //                          co.SetOpenPercent(action.moveMagnitude);
-  //                      }
-
-		//				co.Interact();		
-		//			}
-
-		//			else
-  //                      Debug.Log("can't open object if it's already open");
-		//		}
-		//		//print("i have a target");
-		//		//target.GetComponent<CanOpen>().Interact();
-		//	}
-            
-		//}
-
+      
         public void ObjectsInBox(ServerAction action) {
 			HashSet<string> objectIds = new HashSet<string>();
 
@@ -1936,7 +1881,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			{
 				if (!action.forceAction && target.isInteractable == false)
                 {
-                    Debug.Log("can't close object if it's already closed");
+                    //Debug.Log("can't close object if it's already closed");
                     actionFinished(false);
                     errorMessage = "object is visible but occluded by something: " + action.objectId;
                     return;
@@ -1991,14 +1936,16 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         StartCoroutine(InteractAndWait(null, codd));
                     }
 				}
+
 			}
 
             //target not found in currently visible objects, report not found
 			else
             {
-				Debug.Log("Target object not in sight");
+				
                 actionFinished(false);
                 errorMessage = "object not found: " + action.objectId;
+				Debug.Log(errorMessage);
             }
 		}
 
@@ -2014,12 +1961,11 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 			SimObjPhysics target = null;
 
-            foreach (SimObjPhysics sop in VisibleSimObjPhysics)
+			foreach (SimObjPhysics sop in VisibleSimObjs(action))
             {
                 //check for object in current visible objects, and also check that it's interactable
                 if (action.objectId == sop.UniqueID)
                 {
-                    //print("wobbuffet");
                     target = sop;
                 }
 
@@ -2035,8 +1981,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 			else
 			{
-				Debug.Log("Target object not in sight");
                 errorMessage = "object not found: " + action.objectId;
+				Debug.Log(errorMessage);
                 actionFinished(false);
             }
 		}
