@@ -110,7 +110,11 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		private void LateUpdate()
 		{
 			//make sure this happens in late update so all physics related checks are done ahead of time
-			VisibleSimObjPhysics = GetAllVisibleSimObjPhysics(m_Camera, maxVisibleDistance);
+			//this is also mostly for in editor, the array of visible sim objects is found via server actions
+			//using VisibleSimObjs(action), so be aware of that
+
+			ServerAction action = new ServerAction();
+			VisibleSimObjPhysics = VisibleSimObjs(action);//GetAllVisibleSimObjPhysics(m_Camera, maxVisibleDistance);
    		}
 
         private ObjectMetadata ObjectMetadataFromSimObjPhysics(SimObjPhysics simObj) {
