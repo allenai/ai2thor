@@ -220,14 +220,14 @@ public class SimObjPhysics : MonoBehaviour
 
 #if UNITY_EDITOR
 				//print the objs for now just to check in editor
-				//string result = UniqueID + " contains: ";
+				string result = UniqueID + " contains: ";
 
-				//foreach (string s in objs)
-				//{
-				//	result += s + ", ";
-				//}
+				foreach (string s in objs)
+				{
+					result += s + ", ";
+				}
 
-				//Debug.Log(result);
+				Debug.Log(result);
 #endif
 
 				//XXX this is where we would export metadata for what is contained in this receptacle
