@@ -49,7 +49,7 @@ public class MovingPart : MonoBehaviour
             myObject.Reset();
         }
 
-        // If the thing your colliding with is one of your (grand)-children then don't worry about it
+        //// If the thing your colliding with is one of your (grand)-children then don't worry about it
         if (hasAncestor(other.transform.gameObject, gameObject)) {
             return;
         }
