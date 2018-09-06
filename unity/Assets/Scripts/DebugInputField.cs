@@ -53,6 +53,15 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         break;
                     }
 
+                case "grp":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "GetReachablePositions";
+                        PhysicsController.ProcessControlCommand(action);
+                        Debug.Log(PhysicsController.reachablePositions.Length);
+                        break;
+                    }
+
                 case "csw":
                     {
                         ServerAction action = new ServerAction();
