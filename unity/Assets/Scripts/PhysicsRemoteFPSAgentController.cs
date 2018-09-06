@@ -53,7 +53,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
         [SerializeField] protected Vector3 standingLocalCameraPosition;
         protected HashSet<int> initiallyDisabledRenderers = new HashSet<int>();
         protected Vector3[] initiallyReachablePositions = new Vector3[0];
-        protected Vector3[] reachablePositions = new Vector3[0];
+        public Vector3[] reachablePositions = new Vector3[0];
 
         //change visibility check to use this distance when looking down
 		protected float DownwardViewDistance = 2.0f;
