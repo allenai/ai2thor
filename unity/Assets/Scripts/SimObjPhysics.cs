@@ -284,13 +284,13 @@ public class SimObjPhysics : MonoBehaviour
         }
 
 		//make sure nothing is dropped while inside the agent (the agent will try to "push(?)" it out and it will fall in unpredictable ways
-		if (other.tag == "Player" && other.name == "FPSController")
+		else if (other.tag == "Player" && other.name == "FPSController")
 		{
 			isColliding = true;
 		}
 
 		//ignore the trigger boxes the agent is using to check rotation, otherwise the object is colliding
-		if (other.tag != "Player")
+		else if (other.tag != "Player")
 		{
 			isColliding = true;
 			//print(this.name +" is touching " + other.name);
