@@ -1203,9 +1203,13 @@ namespace UnityStandardAssets.Characters.FirstPerson
             //XXX might need to extend this range to reach down into low drawers/cabinets?
 			//print(Vector3.Distance(gameObject.transform.position, targetPosition));
 			//now check if the target position is within bounds of the Agent's forward (z) view
-			if (Vector3.Distance(m_Camera.transform.position, targetPosition) > maxVisibleDistance)// + 0.3)
+            Vector3 tmp = m_Camera.transform.position;
+            tmp.y = targetPosition.y
+            // TODO: What's the best way to determine the reach here?
+			if (Vector3.Distance(tmp, targetPosition) > maxVisibleDistance)// + 0.3)
             {
-                Debug.Log("The target position is out of range");
+                errorMessage = "The target position is out of range.";
+                Debug.Log(errorMessage);
                 result = false;
                 return result;
             }
@@ -2576,6 +2580,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     0.0f,
                     standingLocalCameraPosition.z
                 );
+                SetUpRotationBoxChecks();
 				actionFinished(true);
 			}
 		}
@@ -2588,6 +2593,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 actionFinished(false);
             } else {
 				m_Camera.transform.localPosition = standingLocalCameraPosition;
+                SetUpRotationBoxChecks();
 				actionFinished(true);
 			}
 		}
