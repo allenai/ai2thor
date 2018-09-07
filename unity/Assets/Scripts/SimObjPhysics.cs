@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using System;
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
@@ -58,6 +59,13 @@ public class SimObjPhysics : MonoBehaviour
 			} else {
 				return false;
 			}
+		}
+	}
+
+	public bool IsReceptacle {
+		get {
+			return Array.IndexOf(SecondaryProperties, SimObjSecondaryProperty.Receptacle) > -1 &&
+			 ReceptacleTriggerBoxes != null;
 		}
 	}
 
@@ -132,11 +140,13 @@ public class SimObjPhysics : MonoBehaviour
 
 
 		//this is overriden by the Agent when doing the Visibility Sphere test
-        if (isVisible)
+        if (isVisible) {
             isVisible = false;
+		}
 
-        if (isInteractable)
+        if (isInteractable) {
             isInteractable = false;
+		}
 
 		//if (Input.GetKeyDown(KeyCode.E))
 		//{
@@ -146,10 +156,7 @@ public class SimObjPhysics : MonoBehaviour
 
 	private void FixedUpdate()
 	{
-
-		
 		isColliding = false;
-
 	}
 
 	//used for throwing the sim object, or anything that requires adding force for some reason
@@ -219,15 +226,20 @@ public class SimObjPhysics : MonoBehaviour
 				}
 
 #if UNITY_EDITOR
-				//print the objs for now just to check in editor
-				//string result = UniqueID + " contains: ";
 
-				//foreach (string s in objs)
-				//{
-				//	result += s + ", ";
-				//}
+				if(objs.Count != 0)
+				{
+					//print the objs for now just to check in editor
+                    string result = UniqueID + " contains: ";
 
-				//Debug.Log(result);
+                    foreach (string s in objs)
+                    {
+                        result += s + ", ";
+                    }
+
+                    Debug.Log(result);
+				}
+
 #endif
 
 				//XXX this is where we would export metadata for what is contained in this receptacle
@@ -245,7 +257,7 @@ public class SimObjPhysics : MonoBehaviour
 
 		else
 		{
-			Debug.Log("this object is not a Receptacle!");
+			Debug.Log(gameObject.name + " is not a Receptacle!");
 			return objs;
 		}
 	}

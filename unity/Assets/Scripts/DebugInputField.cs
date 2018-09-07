@@ -47,7 +47,18 @@ namespace UnityStandardAssets.Characters.FirstPerson
 							action.gridSize = float.Parse(splitcommand[1]);
                         }
 
+
+						PhysicsController.actionComplete = false;
       			        PhysicsController.Initialize(action);
+                        break;
+                    }
+
+                case "grp":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "GetReachablePositions";
+                        PhysicsController.ProcessControlCommand(action);
+                        Debug.Log(PhysicsController.reachablePositions.Length);
                         break;
                     }
 
@@ -828,6 +839,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         } else if (splitcommand.Length == 3) {
                             action.x = float.Parse(splitcommand[1]);
                             action.z = float.Parse(splitcommand[2]);
+                        } else if (splitcommand.Length == 4) {
+                            action.x = float.Parse(splitcommand[1]);
+                            action.y = float.Parse(splitcommand[2]);
+                            action.z = float.Parse(splitcommand[3]);
                         }
                         PhysicsController.ProcessControlCommand(action);      
                         //Debug.Log("Invalid Command");
