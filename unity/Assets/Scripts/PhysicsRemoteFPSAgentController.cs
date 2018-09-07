@@ -1204,7 +1204,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			//print(Vector3.Distance(gameObject.transform.position, targetPosition));
 			//now check if the target position is within bounds of the Agent's forward (z) view
             Vector3 tmp = m_Camera.transform.position;
-            tmp.y = targetPosition.y
+            tmp.y = targetPosition.y;
             // TODO: What's the best way to determine the reach here?
 			if (Vector3.Distance(tmp, targetPosition) > maxVisibleDistance)// + 0.3)
             {
