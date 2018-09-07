@@ -615,6 +615,7 @@ public class ServerAction
 	public int horizon;
 	public Vector3 rotation;
 	public Vector3 position;
+	public bool standing = true;
 	public float fov;
 	public bool forceAction;
 	public int sequenceId;
