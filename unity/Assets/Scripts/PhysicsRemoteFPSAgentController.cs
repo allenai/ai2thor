@@ -51,9 +51,13 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		protected bool[,] isOpenableGrid = new bool[0,0];
 		protected string[] segmentedObjectIds = new string[0];
         [SerializeField] protected Vector3 standingLocalCameraPosition;
+        [SerializeField] protected Vector3 crouchingLocalCameraPosition;
         protected HashSet<int> initiallyDisabledRenderers = new HashSet<int>();
-        protected Vector3[] initiallyReachablePositions = new Vector3[0];
         public Vector3[] reachablePositions = new Vector3[0];
+        public Bounds sceneBounds = new Bounds(
+            new Vector3(float.PositiveInfinity, float.PositiveInfinity, float.PositiveInfinity),
+            new Vector3(-float.PositiveInfinity, -float.PositiveInfinity, -float.PositiveInfinity)
+        );
 
         //change visibility check to use this distance when looking down
 		protected float DownwardViewDistance = 2.0f;
@@ -88,18 +92,21 @@ namespace UnityStandardAssets.Characters.FirstPerson
             m_CharacterController.Move(movement);
 
             standingLocalCameraPosition = m_Camera.transform.localPosition;
+            crouchingLocalCameraPosition = m_Camera.transform.localPosition;
+            crouchingLocalCameraPosition.y = 0.0f;
 
             foreach (SimObjPhysics so in GameObject.FindObjectsOfType<SimObjPhysics>()) {
                 uniqueIdToSimObjPhysics[so.UniqueID] = so;
             }
 
+            // Recordining initially disabled renderers and scene bounds 
             foreach (Renderer r in GameObject.FindObjectsOfType<Renderer>()) {
                 if (!r.enabled) {
                     initiallyDisabledRenderers.Add(r.GetInstanceID());
+                } else {
+                    sceneBounds.Encapsulate(r.bounds);
                 }
-            }            
-
-            initiallyReachablePositions = getReachablePositions();
+            }
             base.actionComplete = true;
         }
 
@@ -830,27 +837,75 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
         public void TeleportFull(ServerAction action) {
 			targetTeleport = new Vector3 (action.x, action.y, action.z);
-            bool isGoodPosition = false;
-            foreach (Vector3 vec in initiallyReachablePositions) {
-                if (Vector3.Distance(vec, targetTeleport) < 0.0001f) {
-                    isGoodPosition = true;
+
+            if (action.forceAction) {
+                DefaultAgentHand(action);
+                transform.position = targetTeleport;
+                transform.rotation = Quaternion.Euler(new Vector3(0.0f, action.rotation.y, 0.0f));
+                if (action.standing) {
+                    m_Camera.transform.localPosition = standingLocalCameraPosition;
+                } else {
+                    m_Camera.transform.localPosition = crouchingLocalCameraPosition;
+                }
+                m_Camera.transform.localEulerAngles = new Vector3 (action.horizon, 0.0f, 0.0f);
+            } else {
+                if (!sceneBounds.Contains(targetTeleport)) {
+                    errorMessage = "Teleport target out of scene bounds.";
+                    actionFinished(false);
+                    return;
+                }
+
+                Vector3 oldPosition = transform.position;
+                Quaternion oldRotation = transform.rotation;
+                Vector3 oldLocalHandPosition = new Vector3();
+                Quaternion oldLocalHandRotation = new Quaternion();
+                if (ItemInHand != null) {
+                    oldLocalHandPosition = ItemInHand.transform.localPosition;
+                    oldLocalHandRotation = ItemInHand.transform.localRotation;
+                }
+                Vector3 oldCameraLocalEulerAngle = m_Camera.transform.localEulerAngles;
+                Vector3 oldCameraLocalPosition = m_Camera.transform.localPosition;
+
+                DefaultAgentHand(action);
+                transform.position = targetTeleport;
+                transform.rotation = Quaternion.Euler(new Vector3(0.0f, action.rotation.y, 0.0f));
+                if (action.standing) {
+                    m_Camera.transform.localPosition = standingLocalCameraPosition;
+                } else {
+                    m_Camera.transform.localPosition = crouchingLocalCameraPosition;
+                }
+                m_Camera.transform.localEulerAngles = new Vector3 (action.horizon, 0.0f, 0.0f);
+
+                bool agentCollides = isAgentCapsuleColliding();
+                bool handObjectCollides = isHandObjectColliding();
+
+                if (agentCollides) {
+                    errorMessage = "Cannot teleport due to agent collision.";
+                    Debug.Log(errorMessage);
+                } else if (handObjectCollides) {
+                    errorMessage = "Cannot teleport due to hand object collision.";
+                    Debug.Log(errorMessage);
+                }
+
+                if (agentCollides || handObjectCollides) {
+                    if (ItemInHand != null) {
+                        ItemInHand.transform.localPosition = oldLocalHandPosition;
+                        ItemInHand.transform.localRotation = oldLocalHandRotation;
+                    }
+                    transform.position = oldPosition;
+                    transform.rotation = oldRotation;
+                    m_Camera.transform.localPosition = oldCameraLocalPosition;
+                    m_Camera.transform.localEulerAngles = oldCameraLocalEulerAngle;
+                    actionFinished(false);
+                    return;
                 }
             }
-
-            Debug.Log(initiallyReachablePositions.Length);
-
-            if (!isGoodPosition) {
-                actionFinished(false);
-                return;
-
-            }
-			m_CharacterController.transform.position = targetTeleport;
-			transform.rotation = Quaternion.Euler(new Vector3(0.0f, action.rotation.y, 0.0f));
-			m_Camera.transform.localEulerAngles = new Vector3 (action.horizon, 0.0f, 0.0f);
+            actionFinished(true);
 		}
 
 		public void Teleport(ServerAction action) {
             action.horizon = Convert.ToInt32(m_Camera.transform.localEulerAngles.x);
+            action.standing = isStanding();
 			if (!action.rotateOnTeleport) {
 				action.rotation = transform.eulerAngles;
 			}
@@ -969,6 +1024,66 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 else
                 {
                     //Debug.Log("Agent Body can move " + orientation);
+                    result = true;
+                }
+
+                return result;
+            }
+        }
+
+        //Sweeptest to see if the object Agent is holding will prohibit movement
+        public bool CheckIfItemBlocksAgentStandOrCrouch()
+        {
+            bool result = false;
+
+            //if there is nothing in our hand, we are good, return!
+            if (ItemInHand == null)
+            {
+                result = true;
+                return result;
+            }
+
+            //otherwise we are holding an object and need to do a sweep using that object's rb
+            else
+            {
+                Vector3 dir = new Vector3();
+
+                if (isStanding()) {
+                    dir = new Vector3(0.0f, -1f, 0.0f);
+                } else {
+                    dir = new Vector3(0.0f, 1f, 0.0f);
+                }
+
+                Rigidbody rb = ItemInHand.GetComponent<Rigidbody>();
+
+				RaycastHit[] sweepResults = rb.SweepTestAll(dir, standingLocalCameraPosition.y, QueryTriggerInteraction.Ignore);
+				if(sweepResults.Length > 0)
+				{
+					foreach (RaycastHit res in sweepResults)
+					{
+                        //did the item in the hand touch the agent? if so, ignore it's fine
+                        //also ignore Untagged because the Transparent_RB of transparent objects need to be ignored for movement
+                        //the actual rigidbody of the SimObjPhysics parent object of the transparent_rb should block correctly by having the
+						//checkMoveAction() in the BaseFPSAgentController fail when the agent collides and gets shoved back
+						if (res.transform.tag == "Player" || res.transform.tag == "Untagged")
+                        {
+                            result = true;
+                            break;
+                        }
+
+						else
+						{
+                            errorMessage = res.transform.name + " is blocking the Agent from moving " + dir + " with " + ItemInHand.name;
+							result = false;
+							Debug.Log(errorMessage);
+							return result;
+						}
+                                          
+					}
+				}
+				//if the array is empty, nothing was hit by the sweeptest so we are clear to move
+                else
+                {
                     result = true;
                 }
 
@@ -1409,6 +1524,29 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			}      
         }
 
+        private IEnumerator checkDropHandObjectAction(SimObjPhysics currentHandSimObj) {
+			// float oldFixedDeltaTime = Time.fixedDeltaTime;
+			// float oldTimeScale = Time.timeScale;
+			// Time.timeScale = 10;
+			yield return null; // wait for two frames to pass
+			yield return null;
+			for (int i = 0; i < 50; i++) {
+				Rigidbody rb = currentHandSimObj.GetComponentInChildren<Rigidbody>();
+				if (Math.Abs (rb.angularVelocity.sqrMagnitude + rb.velocity.sqrMagnitude) < 0.00001) {
+					// Debug.Log ("object is now at rest");
+					break;
+				} else {
+					// Debug.Log ("object is still moving");
+					yield return null;
+				}
+			}
+			// Time.fixedDeltaTime = oldFixedDeltaTime;
+			// Time.timeScale = oldTimeScale;
+
+            DefaultAgentHand(new ServerAction());
+			actionFinished (true);
+		}
+
 		public void DropHandObject(ServerAction action)
         {
             //make sure something is actually in our hands
@@ -1430,14 +1568,20 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 				else 
                 {
-                    ItemInHand.GetComponent<Rigidbody>().isKinematic = false;
-                    ItemInHand.transform.parent = null;
+                    Rigidbody rb = ItemInHand.GetComponent<Rigidbody>();
+                    rb.isKinematic = false;
+                    rb.constraints = RigidbodyConstraints.None;
+				    rb.useGravity = true;
+
+                    GameObject topObject = GameObject.Find("Objects");
+                    if (topObject != null) {
+                        ItemInHand.transform.parent = topObject.transform;
+                    } else {
+                        ItemInHand.transform.parent = null;
+                    }
+
+                    StartCoroutine (checkDropHandObjectAction (ItemInHand.GetComponent<SimObjPhysics>()));
                     ItemInHand = null;
-
-                    ServerAction a = new ServerAction();
-                    DefaultAgentHand(a);
-
-                    actionFinished(true);
                     return;
                 }
             }
@@ -1517,10 +1661,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 				lastLocalCameraPosition = m_Camera.transform.localPosition;
 				lastLocalCameraRotation = m_Camera.transform.localRotation;
 				
-				Bounds b = new Bounds(Vector3.zero, Vector3.zero);
-				foreach (Renderer r in GameObject.FindObjectsOfType<Renderer>()) {
-					b.Encapsulate(r.bounds);
-				}
+				Bounds b = sceneBounds;
 				float midX = (b.max.x + b.min.x) / 2.0f;
 				float midZ = (b.max.z + b.min.z) / 2.0f;
 				m_Camera.transform.rotation = Quaternion.Euler(90.0f, 0.0f, 0.0f);
@@ -2419,11 +2560,17 @@ namespace UnityStandardAssets.Characters.FirstPerson
         ///// Crouch and Stand /////
         ////////////////////////////
 
+        protected bool isStanding() {
+            return standingLocalCameraPosition == m_Camera.transform.localPosition;
+        }
+
         public void Crouch(ServerAction action) {
-			if (m_Camera.transform.localPosition.y == 0.0f) {
+			if (!isStanding()) {
 				errorMessage = "Already crouching.";
 				actionFinished(false);
-			} else {
+			} else if (!CheckIfItemBlocksAgentStandOrCrouch()) {
+                actionFinished(false);
+            } else {
 				m_Camera.transform.localPosition = new Vector3(
                     standingLocalCameraPosition.x, 
                     0.0f,
@@ -2434,10 +2581,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		}
 
 		public void Stand(ServerAction action) {
-			if ((m_Camera.transform.localPosition - standingLocalCameraPosition).magnitude < 0.1f) {
+			if (isStanding()) {
 				errorMessage = "Already standing.";
 				actionFinished(false);
-			} else {
+			} else if (!CheckIfItemBlocksAgentStandOrCrouch()) {
+                actionFinished(false);
+            } else {
 				m_Camera.transform.localPosition = standingLocalCameraPosition;
 				actionFinished(true);
 			}
@@ -2502,11 +2651,132 @@ namespace UnityStandardAssets.Characters.FirstPerson
         ///// DATA GENERATION HELPERS /////
         ///////////////////////////////////
 
+        protected Collider[] overlapCollider(BoxCollider box, Vector3 newCenter, float rotateBy, int layerMask) {
+            Vector3 center, halfExtents;
+            Quaternion orientation;
+            box.ToWorldSpaceBox(out center, out halfExtents, out orientation);
+            orientation = Quaternion.Euler(0f, rotateBy, 0f) * orientation;
+
+            return Physics.OverlapBox(newCenter, halfExtents, orientation, layerMask, QueryTriggerInteraction.Ignore);
+        }
+        protected Collider[] overlapCollider(SphereCollider sphere, Vector3 newCenter, int layerMask) {
+            Vector3 center;
+            float radius;
+            sphere.ToWorldSpaceSphere(out center, out radius);
+            return Physics.OverlapSphere(newCenter, radius, layerMask, QueryTriggerInteraction.Ignore);
+        }
+        protected Collider[] overlapCollider(CapsuleCollider capsule, Vector3 newCenter, float rotateBy, int layerMask) {
+            Vector3 point0, point1;
+            float radius;
+            capsule.ToWorldSpaceCapsule(out point0, out point1, out radius);
+
+            // Normalizing
+            Vector3 oldCenter = (point0 + point1) / 2.0f;
+            point0 = point0 - oldCenter;
+            point1 = point1 - oldCenter;
+            
+            // Rotating and recentering
+            var rotator = Quaternion.Euler(0f, rotateBy, 0f);
+            point0 = rotator * point0 + newCenter;
+            point1 = rotator * point1 + newCenter;
+
+            return Physics.OverlapCapsule(point0, point1, radius, layerMask, QueryTriggerInteraction.Ignore);
+        }
+
+        protected bool isAgentCapsuleColliding() {
+            int layerMask = 1 << 8;
+            foreach (Collider c in PhysicsExtensions.OverlapCapsule(GetComponent<CapsuleCollider>(), layerMask, QueryTriggerInteraction.Ignore)) {
+                if (!hasAncestor(c.transform.gameObject, gameObject)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        protected bool isHandObjectColliding() {
+            if (ItemInHand == null) {
+                return false;
+            }
+            int layerMask = 1 << 8;
+            foreach (CapsuleCollider cc in ItemInHand.GetComponentsInChildren<CapsuleCollider>()) {
+                foreach (Collider c in PhysicsExtensions.OverlapCapsule(cc, layerMask, QueryTriggerInteraction.Ignore)) {
+                    if (!hasAncestor(c.transform.gameObject, gameObject)) {
+                        return true;
+                    }
+                }
+            }
+            foreach (BoxCollider bc in ItemInHand.GetComponentsInChildren<BoxCollider>()) {
+                foreach (Collider c in PhysicsExtensions.OverlapBox(bc, layerMask, QueryTriggerInteraction.Ignore)) {
+                    if (!hasAncestor(c.transform.gameObject, gameObject)) {
+                        return true;
+                    }
+                }
+            }
+            foreach (SphereCollider sc in ItemInHand.GetComponentsInChildren<SphereCollider>()) {
+                foreach (Collider c in PhysicsExtensions.OverlapSphere(sc, layerMask, QueryTriggerInteraction.Ignore)) {
+                    if (!hasAncestor(c.transform.gameObject, gameObject)) {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+
+        private bool hasAncestor(GameObject child, GameObject potentialAncestor) {
+            if (child == potentialAncestor) {
+                return true;
+            } else if (child.transform.parent != null) {
+                return hasAncestor(child.transform.parent.gameObject, potentialAncestor);
+            } else {
+                return false;
+            }
+        }
+
+        protected bool handObjectCanFitInPosition(Vector3 newAgentPosition, float rotation) {
+            if (ItemInHand == null) {
+                return true;
+            }
+
+            SimObjPhysics soInHand = ItemInHand.GetComponent<SimObjPhysics>();
+
+            Vector3 handObjPosRelAgent = 
+                Quaternion.Euler(0, rotation - transform.rotation.y, 0) * 
+                (transform.position - ItemInHand.transform.position);
+            
+            Vector3 newHandPosition = handObjPosRelAgent + newAgentPosition;
+
+            int layerMask = 1 << 8;
+            foreach (CapsuleCollider cc in soInHand.GetComponentsInChildren<CapsuleCollider>()) {
+                foreach (Collider c in overlapCollider(cc, newHandPosition, rotation, layerMask)) {
+                    if (!hasAncestor(c.transform.gameObject, gameObject)) {
+                        return false;
+                    }
+                }
+            }
+            foreach (BoxCollider bc in soInHand.GetComponentsInChildren<BoxCollider>()) {
+                foreach (Collider c in overlapCollider(bc, newHandPosition, rotation, layerMask)) {
+                    if (!hasAncestor(c.transform.gameObject, gameObject)) {
+                        return false;
+                    }
+                }
+            }
+            foreach (SphereCollider sc in soInHand.GetComponentsInChildren<SphereCollider>()) {
+                foreach (Collider c in overlapCollider(sc, newHandPosition, layerMask)) {
+                    if (!hasAncestor(c.transform.gameObject, gameObject)) {
+                        return false;
+                    }
+                }
+            }
+
+            return true;
+        }
+
         protected Vector3[] getReachablePositions() {
             CapsuleCollider cc = GetComponent<CapsuleCollider>();
 
             Vector3 center = transform.position;
-            float floorFudgeFactor = 0.0001f;
+            float floorFudgeFactor = 0.0001f; // Small constant added to make sure the capsule
+                                              // cast below doesn't collide with the ground.
             float radius = cc.radius + m_CharacterController.skinWidth;
             float innerHeight = center.y - radius;
 
@@ -2522,7 +2792,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
             HashSet<Vector3> goodPoints = new HashSet<Vector3>();
             int layerMask = 1 << 8;
+            int stepsTaken = 0;
             while (pointsQueue.Count != 0) {
+                stepsTaken += 1;
                 Vector3 p = pointsQueue.Dequeue();
                 if (!goodPoints.Contains(p)) {
                     goodPoints.Add(p);
@@ -2545,15 +2817,28 @@ namespace UnityStandardAssets.Characters.FirstPerson
                                 break;
                             }
                         }
+                        Vector3 newPosition = p + d * gridSize;
+
+                        shouldEnqueue = shouldEnqueue && (
+                                        handObjectCanFitInPosition(newPosition, 0.0f) ||
+                                        handObjectCanFitInPosition(newPosition, 90.0f) ||
+                                        handObjectCanFitInPosition(newPosition, 180.0f) || 
+                                        handObjectCanFitInPosition(newPosition, 270.0f)
+                        );
                         if (shouldEnqueue) {
-                            pointsQueue.Enqueue(p + d * gridSize);
+                            pointsQueue.Enqueue(newPosition);
                         }
                     }
+                }
+                if (stepsTaken > 10000) {
+                    Debug.LogError("Too many steps taken in getReachablePoints.");
+                    break;
                 }
             }
 
             Vector3[] reachablePos = new Vector3[goodPoints.Count];
             goodPoints.CopyTo(reachablePos);
+            Debug.Log(reachablePos.Length);
             return reachablePos;
         }
 
@@ -2665,6 +2950,27 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			}
 			actionFinished(true);
 		}
+
+        public void DisableObject(ServerAction action) {
+			string objectId = action.objectId;
+			if (uniqueIdToSimObjPhysics.ContainsKey(objectId)) {
+                uniqueIdToSimObjPhysics[objectId].gameObject.SetActive(false);
+                actionFinished(true);
+            } else {
+                actionFinished(false);
+            }
+		}
+
+        public void EnableObject(ServerAction action) {
+			string objectId = action.objectId;
+			if (uniqueIdToSimObjPhysics.ContainsKey(objectId)) {
+                uniqueIdToSimObjPhysics[objectId].gameObject.SetActive(true);
+                actionFinished(true);
+            } else {
+                actionFinished(false);
+            }
+		}
+
 
         private IEnumerator CoverSurfacesWithHelper(int n, List<SimObjPhysics> newObjects) {
 			Vector3[] initialPositions = new Vector3[newObjects.Count];
@@ -2843,13 +3149,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		public void CoverSurfacesWith(ServerAction action) {
 			string prefab = action.objectId.Split('|')[0];
 			
-			Bounds b = new Bounds(
-                new Vector3(float.PositiveInfinity, float.PositiveInfinity, float.PositiveInfinity),
-                new Vector3(-float.PositiveInfinity, -float.PositiveInfinity, -float.PositiveInfinity)
-            );
-			foreach (Renderer r in GameObject.FindObjectsOfType<Renderer>()) {
-				b.Encapsulate(r.bounds);
-			}
+			Bounds b = sceneBounds;
 			b.min = new Vector3(
 				Math.Max(b.min.x, transform.position.x - 7),
 				Math.Max(b.min.y, transform.position.y - 1.3f),
@@ -2952,7 +3252,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     }
                 }
 			}
-            actionFinished(true);
 			StartCoroutine(CoverSurfacesWithHelper(100, newObjects));
 		}
 
