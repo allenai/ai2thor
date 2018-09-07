@@ -106,20 +106,11 @@ public class SimObjPhysics : MonoBehaviour
 		{
 			if (ReceptacleTriggerBoxes.Length == 0)
 			{
-				Debug.Log(this.name + " is missing ReceptacleTriggerBoxes please hook them up");
+				Debug.LogError(this.name + " is missing ReceptacleTriggerBoxes please hook them up");
 			}
 		}
 #endif
 		//end debug setup stuff
-
-  //      //set up reference to this sim object in each Receptacle Trigger Box
-		//if(ReceptacleTriggerBoxes.Length != 0)
-		//{
-		//	foreach(GameObject rtb in ReceptacleTriggerBoxes)
-		//	{
-		//		rtb.GetComponent<Contains>().myObject = this.gameObject;
-		//	}
-		//}
 	}
     
 	public bool DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty prop)
@@ -137,21 +128,18 @@ public class SimObjPhysics : MonoBehaviour
 	// Update is called once per frame
 	void Update()
 	{
-
-
+      
 		//this is overriden by the Agent when doing the Visibility Sphere test
-        if (isVisible) {
+        if (isVisible) 
+		{
             isVisible = false;
 		}
 
-        if (isInteractable) {
+        if (isInteractable) 
+		{
             isInteractable = false;
 		}
 
-		//if (Input.GetKeyDown(KeyCode.E))
-		//{
-		//    Contains();
-		//}
 	}
 
 	private void FixedUpdate()
@@ -241,11 +229,7 @@ public class SimObjPhysics : MonoBehaviour
 				}
 
 #endif
-
-				//XXX this is where we would export metadata for what is contained in this receptacle
-				//return list of Unique ID strings
-				return objs;
-
+				return objs;            
 			}
 
 			else
@@ -262,16 +246,6 @@ public class SimObjPhysics : MonoBehaviour
 		}
 	}
 
-	//this has been moved to the scene manager
-	//private void Generate_UniqueID()
-	//{
-	//	Vector3 pos = this.transform.position;
-	//	string xPos = (pos.x >= 0 ? "+" : "") + pos.x.ToString("00.00");
-	//	string yPos = (pos.y >= 0 ? "+" : "") + pos.y.ToString("00.00");
-	//	string zPos = (pos.z >= 0 ? "+" : "") + pos.z.ToString("00.00");
-	//	this.UniqueID = this.Type.ToString() + "|" + xPos + "|" + yPos + "|" + zPos;
-	//}
-
 	public void OnTriggerStay(Collider other)
 	{
 
@@ -281,23 +255,23 @@ public class SimObjPhysics : MonoBehaviour
         if (other.tag == "Receptacle")
         {
             isColliding = false;
+			return;
         }
 
 		//make sure nothing is dropped while inside the agent (the agent will try to "push(?)" it out and it will fall in unpredictable ways
 		else if (other.tag == "Player" && other.name == "FPSController")
 		{
 			isColliding = true;
+			return;
 		}
 
-		//ignore the trigger boxes the agent is using to check rotation, otherwise the object is colliding
+		//this is hitting something else so it must be colliding at this point!
 		else if (other.tag != "Player")
 		{
 			isColliding = true;
-			//print(this.name +" is touching " + other.name);
+			return;
 		}
-
-
-		//print(transform.name + "aaaah");
+        
 	}
 
 #if UNITY_EDITOR
