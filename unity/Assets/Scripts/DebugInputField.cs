@@ -53,6 +53,16 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         break;
                     }
 
+                case "cts":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "ChangeTimeScale";
+                        action.timeScale = float.Parse(splitcommand[1]);
+                        PhysicsController.ProcessControlCommand(action);
+                        Debug.Log(PhysicsController.reachablePositions.Length);
+                        break;
+                    }
+
                 case "grp":
                     {
                         ServerAction action = new ServerAction();

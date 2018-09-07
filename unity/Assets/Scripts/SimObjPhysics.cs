@@ -259,14 +259,14 @@ public class SimObjPhysics : MonoBehaviour
         }
 
 		//make sure nothing is dropped while inside the agent (the agent will try to "push(?)" it out and it will fall in unpredictable ways
-		if (other.tag == "Player" && other.name == "FPSController")
+		else if (other.tag == "Player" && other.name == "FPSController")
 		{
 			isColliding = true;
 			return;
 		}
 
 		//this is hitting something else so it must be colliding at this point!
-		if (other.tag != "Player")
+		else if (other.tag != "Player")
 		{
 			isColliding = true;
 			return;
