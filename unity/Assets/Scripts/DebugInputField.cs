@@ -861,12 +861,25 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     }
 			}
 
-            if (!PhysicsController.actionComplete) {
-                Debug.LogError("Physics controller does not have actionComplete set to true after :" + splitcommand[0]);
-            }
-
+			StartCoroutine(CheckIfactionCompleteWasSetToTrueAfterWatingALittleBit(splitcommand[0]));
+			//if (!PhysicsController.actionComplete)
+            //{
+            //    Debug.LogError("Physics controller does not have actionComplete set to true after :" + splitcommand[0]);
+            //}
 
         }
+
+		IEnumerator CheckIfactionCompleteWasSetToTrueAfterWatingALittleBit(string s)
+		{
+			yield return new WaitForSeconds(0.05f);
+			if (!PhysicsController.actionComplete)
+            {
+                Debug.LogError("Physics controller does not have actionComplete set to true after :" + s);
+				yield return null;
+            }
+		}
+
+
     }
 }
 
