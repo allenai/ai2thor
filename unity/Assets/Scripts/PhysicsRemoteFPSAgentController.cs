@@ -1962,23 +1962,30 @@ namespace UnityStandardAssets.Characters.FirstPerson
             }
 
             if (ignoreAgentInTransition) {
-                foreach(Collider c in collidersDisabled) {
-                    c.enabled = true;
+                GameObject openedObject = null;
+                if (co != null) {
+                    openedObject = co.GetComponentInParent<SimObjPhysics>().gameObject;
+                } else {
+                    openedObject = coo.GetComponentInParent<SimObjPhysics>().gameObject;
                 }
-                for (int i = 0; i < 5; i++) {
-                    yield return null;
-                }
-
-                if ((co != null && co.GetiTweenCount() != 0) || 
-                    (coo != null && coo.GetiTweenCount() != 0)) {
+                if (isAgentCapsuleCollidingWith(openedObject) || isHandObjectCollidingWith(openedObject)) {
                     success = false;
+                    if (co != null) {
+                        co.Interact();
+                    }
+                    if (coo != null) {
+                        coo.Interact();
+                    }
                     for (int i = 0; i < 1000; i++) {
                         if ((co != null && co.GetiTweenCount() == 0) || 
                             (coo != null && coo.GetiTweenCount() == 0)) {
                             break;
                         }
+                        yield return null;
                     }
-                    yield return null;
+                }
+                foreach(Collider c in collidersDisabled) {
+                    c.enabled = true;
                 }
             }
 
@@ -2035,13 +2042,25 @@ namespace UnityStandardAssets.Characters.FirstPerson
             }
 
             if (ignoreAgentInTransition) {
-                foreach (Collider c in collidersDisabled) {
-                    c.enabled = true;
+                foreach (CanOpen co in cos) {
+                    GameObject openedObject = co.GetComponentInParent<SimObjPhysics>().gameObject;
+                    if (isAgentCapsuleCollidingWith(openedObject) || isHandObjectCollidingWith(openedObject)) {
+                        co.Interact();
+                    }
                 }
-                yield return null;
+                foreach (CanOpen_Object coo in coos) {
+                    GameObject openedObject = coo.GetComponentInParent<SimObjPhysics>().gameObject;
+                    if (isAgentCapsuleCollidingWith(openedObject) || isHandObjectCollidingWith(openedObject)) {
+                        coo.Interact();
+                    }
+                }
 
                 for (int i = 0; anyInteractionsStillRunning(cos, coos) && i < 1000; i++) {
                     yield return null;
+                }
+                
+                foreach (Collider c in collidersDisabled) {
+                    c.enabled = true;
                 }
             }
 
@@ -2776,6 +2795,45 @@ namespace UnityStandardAssets.Characters.FirstPerson
             foreach (SphereCollider sc in ItemInHand.GetComponentsInChildren<SphereCollider>()) {
                 foreach (Collider c in PhysicsExtensions.OverlapSphere(sc, layerMask, QueryTriggerInteraction.Ignore)) {
                     if (!hasAncestor(c.transform.gameObject, gameObject)) {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+
+        protected bool isAgentCapsuleCollidingWith(GameObject otherGameObject) {
+            int layerMask = 1 << 8;
+            foreach (Collider c in PhysicsExtensions.OverlapCapsule(GetComponent<CapsuleCollider>(), layerMask, QueryTriggerInteraction.Ignore)) {
+                if (hasAncestor(c.transform.gameObject, otherGameObject)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        protected bool isHandObjectCollidingWith(GameObject otherGameObject) {
+            if (ItemInHand == null) {
+                return false;
+            }
+            int layerMask = 1 << 8;
+            foreach (CapsuleCollider cc in ItemInHand.GetComponentsInChildren<CapsuleCollider>()) {
+                foreach (Collider c in PhysicsExtensions.OverlapCapsule(cc, layerMask, QueryTriggerInteraction.Ignore)) {
+                    if (hasAncestor(c.transform.gameObject, otherGameObject)) {
+                        return true;
+                    }
+                }
+            }
+            foreach (BoxCollider bc in ItemInHand.GetComponentsInChildren<BoxCollider>()) {
+                foreach (Collider c in PhysicsExtensions.OverlapBox(bc, layerMask, QueryTriggerInteraction.Ignore)) {
+                    if (!hasAncestor(c.transform.gameObject, otherGameObject)) {
+                        return true;
+                    }
+                }
+            }
+            foreach (SphereCollider sc in ItemInHand.GetComponentsInChildren<SphereCollider>()) {
+                foreach (Collider c in PhysicsExtensions.OverlapSphere(sc, layerMask, QueryTriggerInteraction.Ignore)) {
+                    if (!hasAncestor(c.transform.gameObject, otherGameObject)) {
                         return true;
                     }
                 }
