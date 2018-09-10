@@ -552,12 +552,15 @@ namespace UnityStandardAssets.Characters.FirstPerson
 				else
 				{
         			if (Physics.Raycast(agentCamera.transform.position, point.position - agentCamera.transform.position, out hit, 
-        				                   raycastDistance, 1<<8)) { //layer mask automatically excludes Agent from this check
-                        if (hit.transform != sop.transform) {
+        				                   raycastDistance, 1<<8)) 
+					{ //layer mask automatically excludes Agent from this check
+                        if (hit.transform != sop.transform) 
+						{
                             //we didn't directly hit the sop we are checking for with this cast, 
 						    //check if it's because we hit something see-through
                             SimObjPhysics hitSop = hit.transform.GetComponent<SimObjPhysics>();
-                            if (hitSop != null && hitSop.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanSeeThrough)) {
+                            if (hitSop != null && hitSop.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanSeeThrough)) 
+							{
                                 //we hit something see through, so now find all objects in the path between
                                 //the sop and the camera
                                 RaycastHit[] hits;
@@ -565,29 +568,40 @@ namespace UnityStandardAssets.Characters.FirstPerson
                                                             raycastDistance, (1 << 8), QueryTriggerInteraction.Ignore);
 
                                 float[] hitDistances = new float[hits.Length];
-                                for (int i = 0; i < hitDistances.Length; i++) {
-                                    hitDistances[i] = Vector3.Distance(hits[i].transform.position, m_Camera.transform.position);
+                                for (int i = 0; i < hitDistances.Length; i++) 
+								{
+									hitDistances[i] = hits[i].distance;//Vector3.Distance(hits[i].transform.position, m_Camera.transform.position);
                                 }
+
                                 Array.Sort(hitDistances, hits);
 
-                                //now we need to check every object hit to see if it is the object we are looking for
-                                foreach (RaycastHit h in hits) {
-                                    if (h.transform == sop.transform) {
+                                foreach (RaycastHit h in hits) 
+								{
+
+                                    if (h.transform == sop.transform) 
+									{
                                         //found the object we are looking for, great!
                                         result = true;
                                         break;
-                                    } else {
-                                        // Didn't find it, continue on only if the hit object was translucent
-                                        SimObjPhysics sopHitOnPath = hit.transform.GetComponent<SimObjPhysics>();
+                                    } 
+									else 
+									{
+										// Didn't find it, continue on only if the hit object was translucent
+										SimObjPhysics sopHitOnPath = null;
+                                        sopHitOnPath = h.transform.GetComponentInParent<SimObjPhysics>();
                                         if (sopHitOnPath == null || 
-                                            !sopHitOnPath.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanSeeThrough)) {
+                                            !sopHitOnPath.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanSeeThrough)) 
+										{
+											//print("this is blocking: " + sopHitOnPath.name);
                                             break;
                                         }
                                     }
-                                    
                                 }
                             }              
-						} else {
+						}
+
+						else 
+						{
                             //if this line is drawn, then this visibility point is in camera frame and not occluded
                             //might want to use this for a targeting check as well at some point....
                             result = true;
@@ -607,32 +621,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
             return result;
 
         }
-        
-        //XXX please help me i'm bad at recursion - Winson
-		public bool TranslucentCheck(Vector3 hitpoint, SimObjPhysics sop, Camera agentCamera, float maxDistance, Transform firstseethroughhit)
-		{
-			RaycastHit hit;
-			//bool result = false;
-			//Transform lastThingHit = hit.transform;
-			//do another raycast from hit.point to agent camera,
-            if (Physics.Raycast(hitpoint, agentCamera.transform.position - hitpoint, out hit,
-                                maxDistance, 1 << 8))
-            {
-				if(hit.transform.GetComponent<SimObjPhysics>())
-				{
-					if (hit.transform.GetComponent<SimObjPhysics>().
-                    DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanSeeThrough))
-                    {
-                        if (hit.transform == firstseethroughhit.transform)
-						{
-							return true;
-                        }                  
-                    }
-				}            
-            }
-
-            return TranslucentCheck(hit.point, sop, agentCamera, maxDistance, firstseethroughhit);;
-   		}
       
 		public override void LookDown(ServerAction response)
 		{
