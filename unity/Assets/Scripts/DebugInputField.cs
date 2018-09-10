@@ -233,8 +233,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
                             action.moveMagnitude = float.Parse(splitcommand[1]);
                         }
 
-						else
-                        action.moveMagnitude = 0.25f;
+						else {
+                            action.moveMagnitude = 0.25f;
+                        }
 						
                         PhysicsController.ProcessControlCommand(action);
                         break;
@@ -859,6 +860,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         break;
                     }
 			}
+
+            if (!PhysicsController.actionComplete) {
+                Debug.LogError("Physics controller does not have actionComplete set to true after :" + splitcommand[0]);
+            }
 
 
         }

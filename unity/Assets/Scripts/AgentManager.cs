@@ -600,7 +600,7 @@ public class ServerAction
 	public string action;
 	public int agentCount = 1;
 	public string quality;
-	public float timeScale;
+	public float timeScale = 1.0f;
 	public string objectType;
 	public string receptacleObjectType;
 	public string receptacleObjectId;
@@ -616,7 +616,7 @@ public class ServerAction
 	public Vector3 rotation;
 	public Vector3 position;
 	public bool standing = true;
-	public float fov;
+	public float fov = 60.0f;
 	public bool forceAction;
 	public int sequenceId;
 	public bool snapToGrid = true;

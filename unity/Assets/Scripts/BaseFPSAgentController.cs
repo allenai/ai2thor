@@ -163,6 +163,26 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 action.gridSize = 0.25f;
             }
 
+			if (action.fov > 0 && action.fov < 180) {
+				if (m_Camera.fieldOfView != action.fov) {
+					m_Camera.fieldOfView = action.fov;
+				}
+			} else {
+				errorMessage = "fov must be in (0, 180) noninclusive.";
+                Debug.Log(errorMessage);
+                actionFinished(false);
+			}
+
+			if (action.timeScale > 0) {
+				if (Time.timeScale != action.timeScale) {
+                	Time.timeScale = action.timeScale;
+				}
+            } else {
+                errorMessage = "Time scale must be >0";
+                Debug.Log(errorMessage);
+                actionFinished(false);
+            }
+
 			this.continuousMode = action.continuous;
 
 			if (action.renderDepthImage || action.renderClassImage || action.renderObjectImage || action.renderNormalsImage) 
