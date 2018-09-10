@@ -15,7 +15,7 @@ public class Contains : MonoBehaviour
 
 	//if the sim object is one of these properties, do not add it to the Currently Contains list.
 	private List<SimObjPrimaryProperty> PropertiesToIgnore = new List<SimObjPrimaryProperty>(new SimObjPrimaryProperty[] {SimObjPrimaryProperty.Wall,
-		SimObjPrimaryProperty.Floor, SimObjPrimaryProperty.Static, SimObjPrimaryProperty.Ceiling, SimObjPrimaryProperty.Moveable});
+		SimObjPrimaryProperty.Floor, SimObjPrimaryProperty.Ceiling, SimObjPrimaryProperty.Moveable}); //should we ignore SimObjPrimaryProperty.Static?
 
 	// Use this for initialization
 	void Start()
@@ -44,7 +44,14 @@ public class Contains : MonoBehaviour
 		//don't detect other trigger colliders to prevent nested objects from containing each other
 		if (other.GetComponentInParent<SimObjPhysics>() && !other.isTrigger)
 		{
+			
 			SimObjPhysics sop = other.GetComponentInParent<SimObjPhysics>();
+
+			if(sop.transform == gameObject.GetComponentInParent<SimObjPhysics>().transform)
+			{
+				//don't add myself
+				return;
+			}
 
 			//ignore any sim objects that shouldn't be added to the CurrentlyContains list
 			if (PropertiesToIgnore.Contains(sop.PrimaryProperty))
