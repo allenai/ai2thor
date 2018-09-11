@@ -127,42 +127,43 @@ def test_rotate_right():
 def test_teleport():
     controller.step(dict(action='Teleport', x=-1.5, z=-1.5, y=1.0), raise_for_failure=True)
     position = controller.last_event.metadata['agent']['position']
-    assert position == dict(x=-1.5, z=-1.5, y=0.9799992442131042)
+
+    assert position == dict(x=-1.5, z=-1.5, y=0.9399992227554321)
 
     controller.step(dict(action='Teleport', x=-2.0, z=-2.5, y=1.0), raise_for_failure=True)
     position = controller.last_event.metadata['agent']['position']
-    assert position == dict(x=-2.0, z=-2.5, y=0.9799990057945251)
+    assert position == dict(x=-2.0, z=-2.5, y=0.9399990439414978)
 
 def test_moveahead():
     controller.step(dict(action='Teleport', x=-1.5, z=-1.5, y=1.0), raise_for_failure=True)
     controller.step(dict(action='MoveAhead'), raise_for_failure=True)
     position = controller.last_event.metadata['agent']['position']
-    assert position == dict(x=-1.25, z=-1.5, y=0.9799989461898804)
+    assert position == dict(x=-1.25, z=-1.5, y=0.9399989247322083)
 
 def test_moveback():
     controller.step(dict(action='Teleport', x=-1.5, z=-1.5, y=1.0), raise_for_failure=True)
     controller.step(dict(action='MoveBack'), raise_for_failure=True)
     position = controller.last_event.metadata['agent']['position']
-    assert position == dict(x=-1.75, z=-1.5, y=0.9799989461898804)
+    assert position == dict(x=-1.75, z=-1.5, y=0.9399989247322083)
 
 def test_moveleft():
     controller.step(dict(action='Teleport', x=-1.5, z=-1.5, y=1.0), raise_for_failure=True)
     controller.step(dict(action='MoveLeft'), raise_for_failure=True)
     position = controller.last_event.metadata['agent']['position']
-    assert_near(position, dict(x=-1.5, z=-1.25, y=0.98))
+    assert_near(position, dict(x=-1.5, z=-1.25, y=0.94))
 
 def test_moveright():
     controller.step(dict(action='Teleport', x=-1.5, z=-1.5, y=1.0), raise_for_failure=True)
     controller.step(dict(action='MoveRight'), raise_for_failure=True)
     position = controller.last_event.metadata['agent']['position']
-    assert_near(position, dict(x=-1.5, z=-1.75, y=0.98))
+    assert_near(position, dict(x=-1.5, z=-1.75, y=0.94))
 
 
 def test_moveahead_mag():
     controller.step(dict(action='Teleport', x=-1.5, z=-1.5, y=1.0), raise_for_failure=True)
     controller.step(dict(action='MoveAhead', moveMagnitude=0.5), raise_for_failure=True)
     position = controller.last_event.metadata['agent']['position']
-    assert position == dict(x=-1.0, z=-1.5, y=0.9799989461898804)
+    assert position == dict(x=-1.0, z=-1.5, y=0.9399989247322083)
 
 def test_moveahead_fail():
     controller.step(dict(action='Teleport', x=-1.5, z=-1.5, y=1.0), raise_for_failure=True)
