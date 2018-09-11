@@ -485,7 +485,6 @@ GameObject:
   - component: {fileID: 30110552}
   - component: {fileID: 30110551}
   - component: {fileID: 30110553}
-  - component: {fileID: 30110550}
   m_Layer: 8
   m_Name: Drawer
   m_TagString: SimObjPhysics
@@ -511,18 +510,6 @@ Transform:
   m_Father: {fileID: 286859817}
   m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &30110550
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 30110548}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ee55907f2fef542dca870fa224f11d63, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  myObject: {fileID: 0}
 --- !u!54 &30110551
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -3490,7 +3477,6 @@ GameObject:
   - component: {fileID: 293988159}
   - component: {fileID: 293988158}
   - component: {fileID: 293988157}
-  - component: {fileID: 293988156}
   m_Layer: 8
   m_Name: Cabinet (1)
   m_TagString: SimObj
@@ -3514,18 +3500,6 @@ Transform:
   m_Father: {fileID: 286859817}
   m_RootOrder: 5
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &293988156
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 293988154}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ee55907f2fef542dca870fa224f11d63, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  myObject: {fileID: 0}
 --- !u!114 &293988157
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -16197,7 +16171,6 @@ GameObject:
   - component: {fileID: 1301971650}
   - component: {fileID: 1301971649}
   - component: {fileID: 1301971648}
-  - component: {fileID: 1301971647}
   m_Layer: 8
   m_Name: Cabinet
   m_TagString: SimObj
@@ -16216,7 +16189,6 @@ GameObject:
   - component: {fileID: 1301971646}
   - component: {fileID: 1301971645}
   - component: {fileID: 1301971636}
-  - component: {fileID: 1301971635}
   m_Layer: 8
   m_Name: Cabinet
   m_TagString: SimObj
@@ -16224,18 +16196,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &1301971635
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 1301971634}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ee55907f2fef542dca870fa224f11d63, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  myObject: {fileID: 0}
 --- !u!114 &1301971636
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -16269,7 +16229,6 @@ GameObject:
   - component: {fileID: 1301971644}
   - component: {fileID: 1301971643}
   - component: {fileID: 1301971641}
-  - component: {fileID: 1301971640}
   m_Layer: 8
   m_Name: Cabinet
   m_TagString: SimObj
@@ -16309,18 +16268,6 @@ Transform:
   m_Father: {fileID: 286859817}
   m_RootOrder: 3
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1301971640
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 1301971637}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ee55907f2fef542dca870fa224f11d63, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  myObject: {fileID: 0}
 --- !u!114 &1301971641
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -16462,18 +16409,6 @@ MonoBehaviour:
   isVisible: 0
   isInteractable: 0
   isColliding: 0
---- !u!114 &1301971647
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 1301971633}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ee55907f2fef542dca870fa224f11d63, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  myObject: {fileID: 0}
 --- !u!114 &1301971648
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -23742,7 +23677,8 @@ Prefab:
       propertyPath: m_LocalScale.z
       value: 1
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    m_RemovedComponents:
+    - {fileID: 114233124619227806, guid: abeed10c4bca242eda131f57294e8876, type: 2}
   m_ParentPrefab: {fileID: 100100000, guid: abeed10c4bca242eda131f57294e8876, type: 2}
   m_IsPrefabParent: 0
 --- !u!1 &1922317335
@@ -25594,7 +25530,7 @@ Transform:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 76567719}
   m_LocalRotation: {x: -0, y: 0.5233263, z: -0, w: -0.85213244}
-  m_LocalPosition: {x: 0.6970791, y: 0.87260306, z: -0.085686326}
+  m_LocalPosition: {x: 0.869, y: 0.87260306, z: -0.319}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 1522432488}
