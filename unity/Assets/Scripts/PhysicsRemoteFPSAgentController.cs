@@ -633,6 +633,11 @@ namespace UnityStandardAssets.Characters.FirstPerson
 				base.LookDown(response);
 			}
 
+			else
+			{
+				actionFinished(false);
+			}
+
 			SetUpRotationBoxChecks();
 		}
 
@@ -651,6 +656,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			{
 				DefaultAgentHand(controlCommand);
 				base.LookUp(controlCommand);
+			}
+			else
+			{
+				actionFinished(false);
 			}
 
 			SetUpRotationBoxChecks();
@@ -707,6 +716,11 @@ namespace UnityStandardAssets.Characters.FirstPerson
 				base.RotateRight(controlCommand);
 			}
 
+			else
+			{
+				actionFinished(false);
+			}
+
 		}
 
 		public override void RotateLeft(ServerAction controlCommand)
@@ -716,6 +730,11 @@ namespace UnityStandardAssets.Characters.FirstPerson
 				DefaultAgentHand(controlCommand);
 				base.RotateLeft(controlCommand);
 
+			}
+
+			else
+			{
+				actionFinished(false);
 			}
 		}
 
@@ -1451,7 +1470,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 AgentHand.transform.localRotation = Quaternion.Euler(vec);
 				SetUpRotationBoxChecks();
                 actionFinished(true);
-			}         
+			}
+
+			else
+			{
+				actionFinished(false);
+			}
         }
         
 		public void PickupObject(ServerAction action)//use serveraction objectid
