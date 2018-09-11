@@ -45,16 +45,14 @@ public class SimObjPhysics : MonoBehaviour
 	public bool isColliding = false;
 
 	public bool IsOpenable {
-		get { return this.GetComponent<CanOpen>() || this.GetComponent<CanOpen_Object>(); }
+		get { return this.GetComponent<CanOpen_Object>(); }
 	}
 
 	public bool IsOpen {
 		get {
-			CanOpen co = this.GetComponent<CanOpen>();
 			CanOpen_Object coo = this.GetComponent<CanOpen_Object>();
-			if (co != null) {
-				return co.isOpen;
-			} else if (coo != null) {
+
+			if (coo != null) {
 				return coo.isOpen;
 			} else {
 				return false;
@@ -381,17 +379,7 @@ public class SimObjPhysics : MonoBehaviour
 
 				if (child.GetComponent<SimObjPhysics>())
 					DestroyImmediate(child.GetComponent<SimObjPhysics>(), true);
-
-				if (child.GetComponent<CanOpen>())
-				{
-					openPositions.Add(child.GetComponent<CanOpen>().openPosition);
-
-					child.transform.localEulerAngles = child.GetComponent<CanOpen>().openPosition;
-
-					DestroyImmediate(child.GetComponent<CanOpen>(), true);
-
-				}
-
+            
 				if(!movparts.Contains(child.gameObject))
 				{
 					movparts.Add(child.gameObject);
@@ -496,14 +484,7 @@ public class SimObjPhysics : MonoBehaviour
 		}
 		GameObject[] myobject = new GameObject[] { gameObject };
         gameObject.GetComponent<CanOpen_Object>().MovingParts = myobject;
-
-		Vector3[] array = new Vector3[] {gameObject.GetComponent<CanOpen>().closedPosition};
-		gameObject.GetComponent<CanOpen_Object>().closedPositions = array;
-
-		Vector3[] array2 = new Vector3[] { gameObject.GetComponent<CanOpen>().openPosition };
-		gameObject.GetComponent<CanOpen_Object>().openPositions = array2;
-
-
+      
 	}
 
     [ContextMenu("FrameCollider")]
