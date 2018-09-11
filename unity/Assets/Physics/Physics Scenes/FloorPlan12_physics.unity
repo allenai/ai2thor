@@ -1147,7 +1147,6 @@ GameObject:
   - component: {fileID: 77056114}
   - component: {fileID: 77056113}
   - component: {fileID: 77056115}
-  - component: {fileID: 77056112}
   m_Layer: 8
   m_Name: Drawer (2)
   m_TagString: SimObjPhysics
@@ -1173,18 +1172,6 @@ Transform:
   m_Father: {fileID: 1456889492}
   m_RootOrder: 29
   m_LocalEulerAnglesHint: {x: 0, y: 180, z: 0}
---- !u!114 &77056112
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 77056110}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ee55907f2fef542dca870fa224f11d63, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  myObject: {fileID: 0}
 --- !u!54 &77056113
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -2780,7 +2767,6 @@ GameObject:
   - component: {fileID: 153168124}
   - component: {fileID: 153168123}
   - component: {fileID: 153168125}
-  - component: {fileID: 153168122}
   m_Layer: 8
   m_Name: Drawer
   m_TagString: SimObjPhysics
@@ -2806,18 +2792,6 @@ Transform:
   m_Father: {fileID: 1456889492}
   m_RootOrder: 25
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &153168122
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 153168120}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ee55907f2fef542dca870fa224f11d63, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  myObject: {fileID: 0}
 --- !u!54 &153168123
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -6029,7 +6003,8 @@ Prefab:
       propertyPath: m_Materials.Array.data[0]
       value: 
       objectReference: {fileID: 2100000, guid: 05e6f9a9eb423ff4e80efa86de98249f, type: 2}
-    m_RemovedComponents: []
+    m_RemovedComponents:
+    - {fileID: 114808079667831378, guid: 3dbf9a60ac8924ac8af0e2431562f011, type: 2}
   m_ParentPrefab: {fileID: 100100000, guid: 3dbf9a60ac8924ac8af0e2431562f011, type: 2}
   m_IsPrefabParent: 0
 --- !u!1 &356542257
@@ -9947,7 +9922,6 @@ GameObject:
   - component: {fileID: 621790034}
   - component: {fileID: 621790033}
   - component: {fileID: 621790032}
-  - component: {fileID: 621790031}
   m_Layer: 8
   m_Name: Cabinet
   m_TagString: SimObj
@@ -9966,7 +9940,6 @@ GameObject:
   - component: {fileID: 621790000}
   - component: {fileID: 621789995}
   - component: {fileID: 621789994}
-  - component: {fileID: 621789993}
   m_Layer: 8
   m_Name: Cabinet
   m_TagString: SimObj
@@ -9985,7 +9958,6 @@ GameObject:
   - component: {fileID: 621790024}
   - component: {fileID: 621790023}
   - component: {fileID: 621790018}
-  - component: {fileID: 621790017}
   m_Layer: 8
   m_Name: Cabinet
   m_TagString: SimObj
@@ -10004,7 +9976,6 @@ GameObject:
   - component: {fileID: 621790046}
   - component: {fileID: 621790045}
   - component: {fileID: 621790044}
-  - component: {fileID: 621790043}
   m_Layer: 8
   m_Name: Cabinet
   m_TagString: SimObj
@@ -10023,7 +9994,6 @@ GameObject:
   - component: {fileID: 621790050}
   - component: {fileID: 621790049}
   - component: {fileID: 621790048}
-  - component: {fileID: 621790047}
   m_Layer: 8
   m_Name: Cabinet
   m_TagString: SimObj
@@ -10042,7 +10012,6 @@ GameObject:
   - component: {fileID: 621790074}
   - component: {fileID: 621790073}
   - component: {fileID: 621790072}
-  - component: {fileID: 621790071}
   m_Layer: 8
   m_Name: Cabinet
   m_TagString: SimObj
@@ -10061,7 +10030,6 @@ GameObject:
   - component: {fileID: 621790070}
   - component: {fileID: 621790069}
   - component: {fileID: 621790068}
-  - component: {fileID: 621790067}
   m_Layer: 8
   m_Name: Cabinet
   m_TagString: SimObj
@@ -10080,7 +10048,6 @@ GameObject:
   - component: {fileID: 621790066}
   - component: {fileID: 621790065}
   - component: {fileID: 621790064}
-  - component: {fileID: 621790063}
   m_Layer: 8
   m_Name: Cabinet
   m_TagString: SimObj
@@ -10099,7 +10066,6 @@ GameObject:
   - component: {fileID: 621790016}
   - component: {fileID: 621790004}
   - component: {fileID: 621790003}
-  - component: {fileID: 621790001}
   m_Layer: 8
   m_Name: Cabinet
   m_TagString: SimObj
@@ -10118,7 +10084,6 @@ GameObject:
   - component: {fileID: 621790062}
   - component: {fileID: 621790061}
   - component: {fileID: 621790060}
-  - component: {fileID: 621790059}
   m_Layer: 8
   m_Name: Cabinet
   m_TagString: SimObj
@@ -10126,18 +10091,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &621789993
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 621789984}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ee55907f2fef542dca870fa224f11d63, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  myObject: {fileID: 0}
 --- !u!114 &621789994
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -10186,7 +10139,6 @@ GameObject:
   - component: {fileID: 621790030}
   - component: {fileID: 621790029}
   - component: {fileID: 621790027}
-  - component: {fileID: 621790026}
   m_Layer: 8
   m_Name: Cabinet
   m_TagString: SimObj
@@ -10205,7 +10157,6 @@ GameObject:
   - component: {fileID: 621790054}
   - component: {fileID: 621790053}
   - component: {fileID: 621790052}
-  - component: {fileID: 621790051}
   m_Layer: 8
   m_Name: Cabinet
   m_TagString: SimObj
@@ -10224,7 +10175,6 @@ GameObject:
   - component: {fileID: 621790038}
   - component: {fileID: 621790037}
   - component: {fileID: 621790036}
-  - component: {fileID: 621790035}
   m_Layer: 8
   m_Name: Cabinet
   m_TagString: SimObj
@@ -10243,7 +10193,6 @@ GameObject:
   - component: {fileID: 621790058}
   - component: {fileID: 621790057}
   - component: {fileID: 621790056}
-  - component: {fileID: 621790055}
   m_Layer: 8
   m_Name: Cabinet
   m_TagString: SimObj
@@ -10287,18 +10236,6 @@ MonoBehaviour:
   isVisible: 0
   isInteractable: 0
   isColliding: 0
---- !u!114 &621790001
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 621789991}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ee55907f2fef542dca870fa224f11d63, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  myObject: {fileID: 0}
 --- !u!1 &621790002
 GameObject:
   m_ObjectHideFlags: 0
@@ -10310,7 +10247,6 @@ GameObject:
   - component: {fileID: 621790078}
   - component: {fileID: 621790077}
   - component: {fileID: 621790076}
-  - component: {fileID: 621790075}
   m_Layer: 8
   m_Name: Cabinet
   m_TagString: SimObj
@@ -10366,7 +10302,6 @@ GameObject:
   - component: {fileID: 621790042}
   - component: {fileID: 621790041}
   - component: {fileID: 621790040}
-  - component: {fileID: 621790039}
   m_Layer: 8
   m_Name: Cabinet
   m_TagString: SimObj
@@ -10570,18 +10505,6 @@ MonoBehaviour:
   isVisible: 0
   isInteractable: 0
   isColliding: 0
---- !u!114 &621790017
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 621789985}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ee55907f2fef542dca870fa224f11d63, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  myObject: {fileID: 0}
 --- !u!114 &621790018
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -10735,18 +10658,6 @@ Transform:
   m_Father: {fileID: 1456889492}
   m_RootOrder: 6
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &621790026
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 621789996}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ee55907f2fef542dca870fa224f11d63, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  myObject: {fileID: 0}
 --- !u!114 &621790027
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -10836,18 +10747,6 @@ MonoBehaviour:
   isVisible: 0
   isInteractable: 0
   isColliding: 0
---- !u!114 &621790031
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 621789983}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ee55907f2fef542dca870fa224f11d63, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  myObject: {fileID: 0}
 --- !u!114 &621790032
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -10921,18 +10820,6 @@ MonoBehaviour:
   isVisible: 0
   isInteractable: 0
   isColliding: 0
---- !u!114 &621790035
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 621789998}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ee55907f2fef542dca870fa224f11d63, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  myObject: {fileID: 0}
 --- !u!114 &621790036
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -11006,18 +10893,6 @@ MonoBehaviour:
   isVisible: 0
   isInteractable: 0
   isColliding: 0
---- !u!114 &621790039
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 621790005}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ee55907f2fef542dca870fa224f11d63, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  myObject: {fileID: 0}
 --- !u!114 &621790040
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -11091,18 +10966,6 @@ MonoBehaviour:
   isVisible: 0
   isInteractable: 0
   isColliding: 0
---- !u!114 &621790043
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 621789986}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ee55907f2fef542dca870fa224f11d63, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  myObject: {fileID: 0}
 --- !u!114 &621790044
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -11176,18 +11039,6 @@ MonoBehaviour:
   isVisible: 0
   isInteractable: 0
   isColliding: 0
---- !u!114 &621790047
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 621789987}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ee55907f2fef542dca870fa224f11d63, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  myObject: {fileID: 0}
 --- !u!114 &621790048
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -11261,18 +11112,6 @@ MonoBehaviour:
   isVisible: 0
   isInteractable: 0
   isColliding: 0
---- !u!114 &621790051
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 621789997}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ee55907f2fef542dca870fa224f11d63, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  myObject: {fileID: 0}
 --- !u!114 &621790052
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -11346,18 +11185,6 @@ MonoBehaviour:
   isVisible: 0
   isInteractable: 0
   isColliding: 0
---- !u!114 &621790055
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 621789999}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ee55907f2fef542dca870fa224f11d63, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  myObject: {fileID: 0}
 --- !u!114 &621790056
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -11431,18 +11258,6 @@ MonoBehaviour:
   isVisible: 0
   isInteractable: 0
   isColliding: 0
---- !u!114 &621790059
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 621789992}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ee55907f2fef542dca870fa224f11d63, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  myObject: {fileID: 0}
 --- !u!114 &621790060
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -11516,18 +11331,6 @@ MonoBehaviour:
   isVisible: 0
   isInteractable: 0
   isColliding: 0
---- !u!114 &621790063
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 621789990}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ee55907f2fef542dca870fa224f11d63, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  myObject: {fileID: 0}
 --- !u!114 &621790064
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -11601,18 +11404,6 @@ MonoBehaviour:
   isVisible: 0
   isInteractable: 0
   isColliding: 0
---- !u!114 &621790067
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 621789989}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ee55907f2fef542dca870fa224f11d63, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  myObject: {fileID: 0}
 --- !u!114 &621790068
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -11686,18 +11477,6 @@ MonoBehaviour:
   isVisible: 0
   isInteractable: 0
   isColliding: 0
---- !u!114 &621790071
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 621789988}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ee55907f2fef542dca870fa224f11d63, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  myObject: {fileID: 0}
 --- !u!114 &621790072
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -11771,18 +11550,6 @@ MonoBehaviour:
   isVisible: 0
   isInteractable: 0
   isColliding: 0
---- !u!114 &621790075
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 621790002}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ee55907f2fef542dca870fa224f11d63, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  myObject: {fileID: 0}
 --- !u!114 &621790076
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -20675,7 +20442,6 @@ GameObject:
   - component: {fileID: 1151265594}
   - component: {fileID: 1151265593}
   - component: {fileID: 1151265592}
-  - component: {fileID: 1151265591}
   m_Layer: 8
   m_Name: Cabinet (2)
   m_TagString: SimObj
@@ -20699,18 +20465,6 @@ Transform:
   m_Father: {fileID: 1456889492}
   m_RootOrder: 23
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1151265591
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 1151265589}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ee55907f2fef542dca870fa224f11d63, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  myObject: {fileID: 0}
 --- !u!114 &1151265592
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -23885,7 +23639,6 @@ GameObject:
   - component: {fileID: 1341160676}
   - component: {fileID: 1341160675}
   - component: {fileID: 1341160677}
-  - component: {fileID: 1341160674}
   m_Layer: 8
   m_Name: Drawer (3)
   m_TagString: SimObjPhysics
@@ -23911,18 +23664,6 @@ Transform:
   m_Father: {fileID: 1456889492}
   m_RootOrder: 30
   m_LocalEulerAnglesHint: {x: 0, y: 180, z: 0}
---- !u!114 &1341160674
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 1341160672}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ee55907f2fef542dca870fa224f11d63, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  myObject: {fileID: 0}
 --- !u!54 &1341160675
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -27897,7 +27638,6 @@ GameObject:
   - component: {fileID: 1511707647}
   - component: {fileID: 1511707646}
   - component: {fileID: 1511707645}
-  - component: {fileID: 1511707644}
   m_Layer: 8
   m_Name: Cabinet (1)
   m_TagString: SimObj
@@ -27921,18 +27661,6 @@ Transform:
   m_Father: {fileID: 1456889492}
   m_RootOrder: 22
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1511707644
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 1511707642}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ee55907f2fef542dca870fa224f11d63, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  myObject: {fileID: 0}
 --- !u!114 &1511707645
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -30586,7 +30314,7 @@ Prefab:
     m_Modifications:
     - target: {fileID: 4537070316666730, guid: 28f76e04de332459e81f1814b505d6ca, type: 2}
       propertyPath: m_LocalPosition.x
-      value: -0.921
+      value: -0.896
       objectReference: {fileID: 0}
     - target: {fileID: 4537070316666730, guid: 28f76e04de332459e81f1814b505d6ca, type: 2}
       propertyPath: m_LocalPosition.y
@@ -32625,7 +32353,6 @@ GameObject:
   - component: {fileID: 1784855974}
   - component: {fileID: 1784855973}
   - component: {fileID: 1784855975}
-  - component: {fileID: 1784855972}
   m_Layer: 8
   m_Name: Drawer (1)
   m_TagString: SimObjPhysics
@@ -32651,18 +32378,6 @@ Transform:
   m_Father: {fileID: 1456889492}
   m_RootOrder: 28
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1784855972
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 1784855970}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ee55907f2fef542dca870fa224f11d63, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  myObject: {fileID: 0}
 --- !u!54 &1784855973
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -36093,7 +35808,6 @@ GameObject:
   - component: {fileID: 1981223453}
   - component: {fileID: 1981223452}
   - component: {fileID: 1981223451}
-  - component: {fileID: 1981223450}
   m_Layer: 8
   m_Name: Cabinet (3)
   m_TagString: SimObj
@@ -36117,18 +35831,6 @@ Transform:
   m_Father: {fileID: 1456889492}
   m_RootOrder: 24
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1981223450
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 1981223448}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ee55907f2fef542dca870fa224f11d63, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  myObject: {fileID: 0}
 --- !u!114 &1981223451
 MonoBehaviour:
   m_ObjectHideFlags: 0
