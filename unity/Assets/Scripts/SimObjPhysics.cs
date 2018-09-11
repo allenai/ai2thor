@@ -161,6 +161,18 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		//EditorUtility.GetPrefabParent(Selection.activeGameObject);
         //PrefabUtility.InstantiatePrefab(prefabRoot);
 	}
+
+	//[UnityEditor.MenuItem("SimObjectPhysics/Delete MovingPart Script")]
+ //   public static void DeleteMovingPartScript()
+	//{
+	//	MovingPart[] objects = FindObjectsOfType<MovingPart>();
+
+	//	foreach(MovingPart mp in objects)
+	//	{
+	//		//print(mp.name);
+	//		DestroyImmediate(mp.GetComponent<MovingPart>());
+	//	}
+	//}
     #endif
 
 	// Use this for initialization
@@ -410,8 +422,8 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		}
 
 
-		if (!gameObject.GetComponent<MovingPart>())
-			gameObject.AddComponent<MovingPart>();
+		//if (!gameObject.GetComponent<MovingPart>())
+			//gameObject.AddComponent<MovingPart>();
             
 		List<GameObject> cols = new List<GameObject>();
 		List<GameObject> tcols = new List<GameObject>();
@@ -546,11 +558,11 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 			gameObject.AddComponent<CanOpen_Object>();         
 		}
 
-		if(!gameObject.GetComponent<MovingPart>())
-		{
-			gameObject.AddComponent<MovingPart>();
+		//if(!gameObject.GetComponent<MovingPart>())
+		//{
+		//	gameObject.AddComponent<MovingPart>();
 
-		}
+		//}
 		GameObject[] myobject = new GameObject[] { gameObject };
         gameObject.GetComponent<CanOpen_Object>().MovingParts = myobject;
       
