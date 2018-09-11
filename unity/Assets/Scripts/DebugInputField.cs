@@ -867,7 +867,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 		IEnumerator CheckIfactionCompleteWasSetToTrueAfterWaitingALittleBit(string s)
 		{
-			yield return new WaitForSeconds(0.05f);
+			yield return new WaitForSeconds(2.0f);
 			if (!PhysicsController.actionComplete)
             {
                 Debug.LogError("Physics controller does not have actionComplete set to true after :" + s);

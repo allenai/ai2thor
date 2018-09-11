@@ -331,13 +331,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             
             foreach (SimObjPhysics o in VisibleSimObjPhysics)
             {
-				if(o.GetComponent<CanOpen>())
-				{
-					objectID = o.UniqueID;
-					break;
-				}
-
-				else if(o.GetComponent<CanOpen_Object>())
+                if(o.GetComponent<CanOpen_Object>())
 				{
 					objectID = o.UniqueID;
 					break;
@@ -1710,15 +1704,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		}
 
         private bool closeObject(SimObjPhysics target) {
-            CanOpen co = target.GetComponent<CanOpen>();
             CanOpen_Object codd = target.GetComponent<CanOpen_Object>();
-            if (co) {
-                //if object is open, close it
-                if (co.isOpen) {
-                    co.Interact();
-                    return true;
-                }
-			} else if (codd) {
+
+			if (codd) {
                 //if object is open, close it
                 if (codd.isOpen) {
                     codd.Interact();
@@ -1729,24 +1717,17 @@ namespace UnityStandardAssets.Characters.FirstPerson
         }
 
         public void CloseVisibleObjects(ServerAction action) {
-            List<CanOpen> cos = new List<CanOpen>();
             List<CanOpen_Object> coos = new List<CanOpen_Object>();
 			foreach (SimObjPhysics so in GetAllVisibleSimObjPhysics(m_Camera, 10f)) {
-                CanOpen co = so.GetComponent<CanOpen>();
                 CanOpen_Object coo = so.GetComponent<CanOpen_Object>();
-                if (co) {
-                    //if object is open, add it to be closed.
-                    if (co.isOpen) {
-                        cos.Add(co);
-                    }
-                } else if (coo) {
+                    if (coo) {
                     //if object is open, add it to be closed.
                     if (coo.isOpen) {
                         coos.Add(coo);
                     }
                 }
             }
-			StartCoroutine(InteractAndWait(cos, coos));
+			StartCoroutine(InteractAndWait(coos));
 		}
 
         public void CloseObject(ServerAction action)
@@ -1782,7 +1763,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
     //                }
 				//}
 
-				if (sop.GetComponent<CanOpen>()|| sop.GetComponent<CanOpen_Object>())
+				if (sop.GetComponent<CanOpen_Object>())
                 {
                     //print("wobbuffet");
                     target = sop;
@@ -1798,28 +1779,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
 					Debug.Log(errorMessage);
                     actionFinished(false);
 				}
+                
 
-				if(target.GetComponent<CanOpen>())
-				{
-					CanOpen co = target.GetComponent<CanOpen>();
-
-                    //if object is open, close it
-                    if (co.isOpen)
-                    {
-                        // co.Interact();
-                        // actionFinished(true);
-                        StartCoroutine(InteractAndWait(co, null));
-                    }
-
-                    else
-                    {
-                        Debug.Log("can't close object if it's already closed");
-                        actionFinished(false);
-                        errorMessage = "object already open: " + action.objectId;
-                    }
-				}
-
-				else if(target.GetComponent<CanOpen_Object>())
+				if(target.GetComponent<CanOpen_Object>())
 				{
 					CanOpen_Object codd = target.GetComponent<CanOpen_Object>();
 
@@ -1828,7 +1790,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     {
                         // codd.Interact();
                         // actionFinished(true);
-                        StartCoroutine(InteractAndWait(null, codd));
+                        StartCoroutine(InteractAndWait(codd));
                     }
 
                     else
@@ -1920,7 +1882,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             return;
         }
 
-        protected IEnumerator InteractAndWait(CanOpen co, CanOpen_Object coo) {
+        protected IEnumerator InteractAndWait(CanOpen_Object coo) {
             bool ignoreAgentInTransition = true;
 
             List<Collider> collidersDisabled = new List<Collider>();
@@ -1934,15 +1896,11 @@ namespace UnityStandardAssets.Characters.FirstPerson
             }
 
             bool success = false;
-            if (co != null) {
-                co.Interact();
-            }
             if (coo != null) {
                 coo.Interact();
             }
             for (int i = 0; i < 1000; i++) {
-                if ((co != null && co.GetiTweenCount() == 0) || 
-                    (coo != null && coo.GetiTweenCount() == 0)) {
+                if (coo != null && coo.GetiTweenCount() == 0) {
                     success = true;
                     break;
                 }
@@ -1951,22 +1909,16 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
             if (ignoreAgentInTransition) {
                 GameObject openedObject = null;
-                if (co != null) {
-                    openedObject = co.GetComponentInParent<SimObjPhysics>().gameObject;
-                } else {
-                    openedObject = coo.GetComponentInParent<SimObjPhysics>().gameObject;
-                }
+                openedObject = coo.GetComponentInParent<SimObjPhysics>().gameObject;
+                
                 if (isAgentCapsuleCollidingWith(openedObject) || isHandObjectCollidingWith(openedObject)) {
                     success = false;
-                    if (co != null) {
-                        co.Interact();
-                    }
+
                     if (coo != null) {
                         coo.Interact();
                     }
                     for (int i = 0; i < 1000; i++) {
-                        if ((co != null && co.GetiTweenCount() == 0) || 
-                            (coo != null && coo.GetiTweenCount() == 0)) {
+                        if (coo != null && coo.GetiTweenCount() == 0) {
                             break;
                         }
                         yield return null;
@@ -1986,14 +1938,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
         }
 
 
-        protected bool anyInteractionsStillRunning(List<CanOpen> cos, List<CanOpen_Object> coos) {
+        protected bool anyInteractionsStillRunning(List<CanOpen_Object> coos) {
             bool anyStillRunning = false;
-            foreach (CanOpen co in cos) {
-                if (co.GetiTweenCount() != 0) {
-                    anyStillRunning = true;
-                    break;
-                }
-            }
             if (!anyStillRunning) {
                 foreach (CanOpen_Object coo in coos) {
                     if (coo.GetiTweenCount() != 0) {
@@ -2005,7 +1951,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             return anyStillRunning;
         }
 
-        protected IEnumerator InteractAndWait(List<CanOpen> cos, List<CanOpen_Object> coos) {
+        protected IEnumerator InteractAndWait(List<CanOpen_Object> coos) {
             bool ignoreAgentInTransition = true;
 
             List<Collider> collidersDisabled = new List<Collider>();
@@ -2017,25 +1963,15 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     }
                 }
             }
-
-            foreach (CanOpen co in cos) {
-                co.Interact();
-            }
             foreach (CanOpen_Object coo in coos) {
                 coo.Interact();
             }
 
-            for (int i = 0; anyInteractionsStillRunning(cos, coos) && i < 1000; i++) {
+            for (int i = 0; anyInteractionsStillRunning(coos) && i < 1000; i++) {
                 yield return null;
             }
 
             if (ignoreAgentInTransition) {
-                foreach (CanOpen co in cos) {
-                    GameObject openedObject = co.GetComponentInParent<SimObjPhysics>().gameObject;
-                    if (isAgentCapsuleCollidingWith(openedObject) || isHandObjectCollidingWith(openedObject)) {
-                        co.Interact();
-                    }
-                }
                 foreach (CanOpen_Object coo in coos) {
                     GameObject openedObject = coo.GetComponentInParent<SimObjPhysics>().gameObject;
                     if (isAgentCapsuleCollidingWith(openedObject) || isHandObjectCollidingWith(openedObject)) {
@@ -2043,7 +1979,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     }
                 }
 
-                for (int i = 0; anyInteractionsStillRunning(cos, coos) && i < 1000; i++) {
+                for (int i = 0; anyInteractionsStillRunning(coos) && i < 1000; i++) {
                     yield return null;
                 }
                 
@@ -2077,7 +2013,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             foreach (SimObjPhysics sop in VisibleSimObjs(action))
             {
                 //check for CanOpen drawers, cabinets or CanOpen_Fridge fridge objects
-				if (sop.GetComponent<CanOpen>() || sop.GetComponent<CanOpen_Object>())
+				if (sop.GetComponent<CanOpen_Object>())
                 {
                     target = sop;
                 }
@@ -2094,32 +2030,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     return;
                 }
 
-				if(target.GetComponent<CanOpen>())
-				{
-					CanOpen co = target.GetComponent<CanOpen>();
-
-                    //check to make sure object is closed
-                    if (co.isOpen)
-                    {
-                        Debug.Log("can't open object if it's already open");
-                        errorMessage = "object already open";
-                        actionFinished(false);
-                    }
-
-                    else
-                    {
-                        //pass in percentage open if desired
-                        if (action.moveMagnitude > 0.0f)
-                        {
-                            co.SetOpenPercent(action.moveMagnitude);
-                        }
-
-                        // co.Interact();
-                        StartCoroutine(InteractAndWait(co, null));
-                    }
-				}
-                
-				else if(target.GetComponent<CanOpen_Object>())
+                if(target.GetComponent<CanOpen_Object>())
 				{
 					CanOpen_Object codd = target.GetComponent<CanOpen_Object>();
 
@@ -2140,7 +2051,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         }
 
                         // codd.Interact();
-                        StartCoroutine(InteractAndWait(null, codd));
+                        StartCoroutine(InteractAndWait(codd));
                     }
 				}
 
@@ -2580,8 +2491,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 						normals[1, i, j] = Vector3.Dot(transform.up, hit.normal);
 						normals[2, i, j] = Vector3.Dot(transform.forward, hit.normal);
 						SimObjPhysics so = hit.transform.gameObject.GetComponent<SimObjPhysics>();
-						isOpenableGrid[i, j] = so != null && (
-                            so.GetComponent<CanOpen>() || so.GetComponent<CanOpen_Object>()
+						isOpenableGrid[i, j] = so != null && (so.GetComponent<CanOpen_Object>()
                         );
 					} else {
 						distances[i, j] = float.PositiveInfinity;
