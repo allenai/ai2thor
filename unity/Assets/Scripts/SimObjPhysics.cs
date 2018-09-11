@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using System;
@@ -6,11 +7,11 @@ using System;
 using UnityEditor;
 #endif
 
-public class SimObjPhysics : MonoBehaviour
+public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 {
 
 	[SerializeField]
-	public string UniqueID = string.Empty;
+	public string uniqueID = string.Empty;
 
 	[SerializeField]
 	public SimObjType Type = SimObjType.Undefined;
@@ -43,6 +44,74 @@ public class SimObjPhysics : MonoBehaviour
 	public bool isVisible = false;
 	public bool isInteractable = false;
 	public bool isColliding = false;
+	private Bounds bounds;
+
+
+	//initial position object spawned in in case we want to reset the scene
+	//private Vector3 startPosition;   
+
+	public string UniqueID 
+	{
+		get 
+		{
+			return uniqueID;
+		} 
+
+		set 
+		{
+			uniqueID = value;
+		}
+	}
+
+	public Bounds Bounds {
+		get {
+			// XXX must define how to get the bounds of the simobj
+			return bounds;
+		}
+	}
+
+
+	public bool IsPickupable {
+		get {
+			return this.PrimaryProperty == SimObjPrimaryProperty.CanPickup;
+		}
+	}
+
+
+	public SimObjType ObjType {
+		get {
+			return Type;
+		}
+	}
+
+	public int ReceptacleCount {
+		get {
+			return 0;
+		}
+	}
+
+	public List<string> ReceptacleObjectIds {
+		// XXX need to implement 
+		get {
+			return this.Contains();
+		}
+	}
+
+	public List<PivotSimObj> PivotSimObjs {
+		get {
+			return new List<PivotSimObj>();
+		}
+	}
+
+	public bool Open() {
+		// XXX need to implement
+		return false;
+	}
+
+	public bool Close() {
+		// XXX need to implement
+		return false;
+	}
 
 	public bool IsOpenable {
 		get { return this.GetComponent<CanOpen_Object>(); }
@@ -92,6 +161,18 @@ public class SimObjPhysics : MonoBehaviour
 		//EditorUtility.GetPrefabParent(Selection.activeGameObject);
         //PrefabUtility.InstantiatePrefab(prefabRoot);
 	}
+
+	//[UnityEditor.MenuItem("SimObjectPhysics/Delete MovingPart Script")]
+ //   public static void DeleteMovingPartScript()
+	//{
+	//	MovingPart[] objects = FindObjectsOfType<MovingPart>();
+
+	//	foreach(MovingPart mp in objects)
+	//	{
+	//		//print(mp.name);
+	//		DestroyImmediate(mp.GetComponent<MovingPart>());
+	//	}
+	//}
     #endif
 
 	// Use this for initialization
@@ -341,8 +422,8 @@ public class SimObjPhysics : MonoBehaviour
 		}
 
 
-		if (!gameObject.GetComponent<MovingPart>())
-			gameObject.AddComponent<MovingPart>();
+		//if (!gameObject.GetComponent<MovingPart>())
+			//gameObject.AddComponent<MovingPart>();
             
 		List<GameObject> cols = new List<GameObject>();
 		List<GameObject> tcols = new List<GameObject>();
@@ -477,11 +558,11 @@ public class SimObjPhysics : MonoBehaviour
 			gameObject.AddComponent<CanOpen_Object>();         
 		}
 
-		if(!gameObject.GetComponent<MovingPart>())
-		{
-			gameObject.AddComponent<MovingPart>();
+		//if(!gameObject.GetComponent<MovingPart>())
+		//{
+		//	gameObject.AddComponent<MovingPart>();
 
-		}
+		//}
 		GameObject[] myobject = new GameObject[] { gameObject };
         gameObject.GetComponent<CanOpen_Object>().MovingParts = myobject;
       

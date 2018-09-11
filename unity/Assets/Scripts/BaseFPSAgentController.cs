@@ -295,12 +295,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			return excludeObject(so.UniqueID);
 		}
 
-		protected bool closeSimObj(SimObj so)
+		protected bool closeSimObj(SimpleSimObj so)
 		{
 			return so.Close();
 		}
 
-		protected bool openSimObj(SimObj so)
+		protected bool openSimObj(SimpleSimObj so)
 		{
 			return so.Open();
 		}
@@ -430,6 +430,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			return metadata.ToArray();
 
 		}
+
 
 		private void enableImageSynthesis() {
 			imageSynthesis = this.gameObject.GetComponentInChildren<ImageSynthesis> () as ImageSynthesis;
