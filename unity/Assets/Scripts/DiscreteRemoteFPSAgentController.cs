@@ -121,8 +121,27 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			return "x=" + pos.x.ToString("F3") + " y=" + pos.y.ToString("F3") + " z=" + pos.z.ToString("F3");
 		}
 
+		public void OpenObject(ServerAction action) 
+        {
+			bool success = false;
+			SimpleSimObj openedSimObj = null;
+			foreach (SimpleSimObj so in VisibleSimObjs(action)) 
+            {
 
-		virtual protected IEnumerator checkOpenAction(SimObj so) {
+				success = so.Open();
+				openedSimObj = so;
+				break;
+			}
+
+            actionFinished(success);
+			if (success) {
+				StartCoroutine (checkOpenAction (openedSimObj));
+			} else {
+	      		StartCoroutine(checkWaitAction(success));
+			}
+		}
+
+		virtual protected IEnumerator checkOpenAction(SimpleSimObj so) {
 			yield return null;
 
 			bool result = false;
@@ -489,29 +508,11 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			return false;
 		}
       
-		public void OpenObject(ServerAction action) 
-        {
-			bool success = false;
-			SimObj openedSimObj = null;
-			foreach (SimObj so in VisibleSimObjs(action)) 
-            {
-
-				success = openSimObj(so);
-				openedSimObj = so;
-				break;
-			}
-
-			if (success) {
-				StartCoroutine (checkOpenAction (openedSimObj));
-			} else {
-				StartCoroutine(checkWaitAction(success));
-			}
-		}
 
 		public void CloseObject(ServerAction action) 
 		{
 			bool success = false;
-			foreach (SimObj so in VisibleSimObjs(action)) 
+			foreach (SimpleSimObj so in VisibleSimObjs(action)) 
 			{
 				success = closeSimObj (so);
 				break;
