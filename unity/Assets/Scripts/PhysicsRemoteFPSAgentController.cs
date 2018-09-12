@@ -1410,32 +1410,59 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
                 //all colliders hit by overlapsphere
                 Collider[] hitColliders = Physics.OverlapSphere(AgentHand.transform.position,
-                                                                overlapRadius);
+				                                                overlapRadius, 1<< 8, QueryTriggerInteraction.Ignore);
 
                 //did we even hit enything?
 				if(hitColliders.Length > 0)
 				{
-					GameObject[] ItemInHandColliders = ItemInHand.GetComponent<SimObjPhysics>().MyColliders;
-                    GameObject[] ItemInHandTriggerColliders = ItemInHand.GetComponent<SimObjPhysics>().MyTriggerColliders;
+					//GameObject[] ItemInHandColliders = ItemInHand.GetComponent<SimObjPhysics>().MyColliders;
+                    //GameObject[] ItemInHandTriggerColliders = ItemInHand.GetComponent<SimObjPhysics>().MyTriggerColliders;
 
 					foreach (Collider col in hitColliders)
                     {
-						//check each collider hit
-
-                        //if it's the player, ignore it
-                        if(col.tag != "Player")
+						//is this a sim object?
+						if(col.GetComponentInParent<SimObjPhysics>())
 						{
-							if(IsInArray(col, ItemInHandColliders) || IsInArray(col, ItemInHandTriggerColliders))
+							//is it not the item we are holding? then it's blocking
+							if (col.GetComponentInParent<SimObjPhysics>().transform != ItemInHand.transform)
 							{
-								result = true;
+								result = false;
+								return result;
 							}
 
+                            //oh it is the item we are holding, it's fine
 							else
-							{
-								Debug.Log(col.name + "  is blocking hand from rotating");
-								result = false;
-							}
+								result = true;
 						}
+
+                        //ok it's not a sim obj and it's not the player, so it must be a structure or something else that would block
+                        else if(col.tag != "Player")
+						{
+							result = false;
+							return result;
+						}
+						////check each collider hit
+
+      //                  //if it's the player, ignore it
+						//if(col.tag != "Player" && col.GetComponentInParent<SimObjPhysics>().transform != ItemInHand.transform)
+						//{
+						//	result = false;
+						//	//if(IsInArray(col, ItemInHandColliders) || IsInArray(col, ItemInHandTriggerColliders))
+						//	//{
+						//	//	result = true;
+						//	//}
+
+						//	//else
+						//	//{
+						//	//	Debug.Log(col.name + "  is blocking hand from rotating");
+						//	//	result = false;
+						//	//}
+						//}
+
+						//else 
+						//{
+						//	result = true;
+						//}
                     }
 				}
 
@@ -1474,6 +1501,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 			else
 			{
+				Debug.Log("Something is blocking the object from rotating freely");
+
 				actionFinished(false);
 			}
         }
