@@ -28,10 +28,11 @@ def push_build(build_archive_name):
     print("pushed build %s to %s" % (S3_BUCKET, build_archive_name))
 
 
-def _build(context, arch, build_dir, build_name):
-    project_path = os.path.join(os.getcwd(), 'unity')
+def _build(context, unity_path, arch, build_dir, build_name):
+    project_path = os.path.join(os.getcwd(), unity_path)
     command = "/Applications/Unity-2017.3.1f1/Unity.app/Contents/MacOS/Unity -quit -batchmode -logFile build.log -projectpath %s -executeMethod Build.%s" % (project_path, arch)
     target_path = os.path.join(build_dir, build_name)
+    print(target_path)
 
     return context.run(command, warn=True, env=dict(UNITY_BUILD_NAME=target_path))
 
@@ -39,7 +40,7 @@ def _build(context, arch, build_dir, build_name):
 def local_build(context, prefix='local', arch='OSXIntel64'):
     build_name = "thor-%s-%s" % (prefix, arch)
     fetch_source_textures(context)
-    if _build(context, arch, "builds", build_name):
+    if _build(context, 'unity', arch, "builds", build_name):
         print("Build Successful")
     else:
         print("Build Failure")
@@ -123,11 +124,11 @@ def fetch_source_textures(context):
     z = zipfile.ZipFile(io.BytesIO(zip_data))
     z.extractall(os.getcwd())
 
-def archive_push(build_path, build_dir, build_info):
+def archive_push(unity_path, build_path, build_dir, build_info):
     threading.current_thread().success = False
-    archive_name = os.path.join('unity', build_path)
+    archive_name = os.path.join(unity_path, build_path)
     zipf = zipfile.ZipFile(archive_name, 'w', zipfile.ZIP_STORED)
-    add_files(zipf, os.path.join('unity', build_dir))
+    add_files(zipf, os.path.join(unity_path, build_dir))
     zipf.close()
 
     build_info['sha256'] = build_sha256(archive_name)
@@ -159,6 +160,7 @@ def build(context, local=False):
     platform_map = dict(Linux64="Linux", OSXIntel64="Darwin")
 
     for arch in platform_map.keys():
+        unity_path = 'unity'
         build_name = "thor-%s-%s" % (version, arch)
         build_dir = os.path.join('builds', build_name)
         build_path = build_dir + ".zip"
@@ -166,10 +168,10 @@ def build(context, local=False):
 
         build_info['url'] = build_url_base + build_path
 
-        x = _build(context, arch, build_dir, build_name)
+        x = _build(context, unity_path, arch, build_dir, build_name)
 
         if x:
-            t = threading.Thread(target=archive_push, args=(build_path, build_dir, build_info))
+            t = threading.Thread(target=archive_push, args=(unity_path, build_path, build_dir, build_info))
             t.start()
             threads.append(t)
         else:
@@ -193,7 +195,6 @@ def build(context, local=False):
         fi.write("BUILDS = " + pprint.pformat(builds))
 
     increment_version(context)
-    build_docker(version)
     build_pip(context)
 
 @task
@@ -224,8 +225,6 @@ def release(ctx):
     subprocess.check_call('git tag -a %s -m "release  %s"' % (tag, tag), shell=True)
     subprocess.check_call('git push origin master --tags', shell=True)
     subprocess.check_call('twine upload -u ai2thor dist/ai2thor-{ver}-* dist/ai2thor-{ver}.*'.format(ver=ai2thor._version.__version__), shell=True)
-
-
 
 @task
 def check_visible_objects_closed_receptacles(ctx, start_scene, end_scene):
