@@ -1652,23 +1652,31 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 			go.GetComponent<SimObjPhysics>().ApplyForce(apply);         
 		}
-      
-        public void ObjectsInBox(ServerAction action) {
-			HashSet<string> objectIds = new HashSet<string>();
 
-			Collider[] colliders = Physics.OverlapBox(
-				new Vector3(action.x, 0f, action.z),
+        protected HashSet<SimObjPhysics> objectsInBox(float x, float z) {
+            Collider[] colliders = Physics.OverlapBox(
+				new Vector3(x, 0f, z),
 				new Vector3(0.125f, 10f, 0.125f),
 				Quaternion.identity
 			);
+            HashSet<SimObjPhysics> toReturn = new HashSet<SimObjPhysics>();
 			foreach (Collider c in colliders) {
 				SimObjPhysics so = ancestorSimObjPhysics(c.transform.gameObject);
 				if (so != null) {
-					objectIds.Add(so.UniqueID);
+					toReturn.Add(so);
 				}
 			}
-			objectIdsInBox = new string[objectIds.Count];
-			objectIds.CopyTo(objectIdsInBox);
+            return toReturn;
+        }
+      
+        public void ObjectsInBox(ServerAction action) {
+            HashSet<SimObjPhysics> objects = objectsInBox(action.x, action.z);
+			objectIdsInBox = new string[objects.Count];
+            int i = 0;
+            foreach (SimObjPhysics so in objects) {
+                objectIdsInBox[i] = so.UniqueID;
+                i++;
+            }
 			actionFinished(true);
 		}
 
@@ -2046,7 +2054,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 for (int i = 0; anyInteractionsStillRunning(cos, coos) && i < 1000; i++) {
                     yield return null;
                 }
-                
+
                 foreach (Collider c in collidersDisabled) {
                     c.enabled = true;
                 }
@@ -2335,6 +2343,15 @@ namespace UnityStandardAssets.Characters.FirstPerson
             }
 			actionFinished(true);
 		}
+
+        public void HideTranslucentObjects(ServerAction action) {
+            foreach (SimObjPhysics sop in GameObject.FindObjectsOfType<SimObjPhysics>()) {
+                if (sop.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanSeeThrough)) {
+                    UpdateDisplayGameObject(sop.gameObject, false);
+                }
+            }
+            actionFinished(true);
+        }
 
 		public void HideObject(ServerAction action) {
 			if (uniqueIdToSimObjPhysics.ContainsKey(action.objectId)) {
@@ -3080,6 +3097,41 @@ namespace UnityStandardAssets.Characters.FirstPerson
             }
 		}
 
+        public void RandomizeHideSeekObjects(ServerAction action) {
+            GameObject topLevelObject = GameObject.Find("HideAndSeek");
+            SimObjPhysics[] hideSeekObjects = topLevelObject.GetComponentsInChildren<SimObjPhysics>();
+
+            System.Random rnd = new System.Random(action.randomSeed);
+            HashSet<string> seenBooks = new HashSet<string>();
+            foreach (SimObjPhysics sop in hideSeekObjects) {
+                HashSet<SimObjPhysics> group = new HashSet<SimObjPhysics>();
+                if (sop.UniqueID.StartsWith("Book|")) {
+                    if (!seenBooks.Contains(sop.UniqueID)) {
+                        HashSet<SimObjPhysics> objectsNearBook = objectsInBox(
+                            sop.transform.position.x, sop.transform.position.z);
+                        group.Add(sop);
+                        seenBooks.Add(sop.UniqueID);
+                        foreach (SimObjPhysics possibleBook in objectsNearBook) {
+                            if (possibleBook.UniqueID.StartsWith("Book|") && 
+                                !seenBooks.Contains(possibleBook.UniqueID)) {
+                                group.Add(possibleBook);
+                                seenBooks.Add(possibleBook.UniqueID);
+                            }
+                        }
+                    }
+                } else {
+                    group.Add(sop);
+                }
+
+                if (group.Count != 0 && rnd.NextDouble() <= action.removeProb) {
+                    foreach (SimObjPhysics toRemove in group) {
+                        toRemove.gameObject.SetActive(false);
+                    }
+                }
+            }
+            actionFinished(true);
+        }
+
 
         private IEnumerator CoverSurfacesWithHelper(int n, List<SimObjPhysics> newObjects) {
 			Vector3[] initialPositions = new Vector3[newObjects.Count];
@@ -3110,8 +3162,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 if (so.ReceptacleTriggerBoxes != null && 
                     so.ReceptacleTriggerBoxes.Length != 0 &&
                     !so.UniqueID.Contains("Top") && // Don't include table tops, counter tops, etc.
-                    !so.UniqueID.Contains("Burner") &&
-                    !so.UniqueID.Contains("Sink")
+                    !so.UniqueID.Contains("Burner")
                 ) {
                     foreach (string id in so.Contains()) {
                         objectIdsContained.Add(id);
