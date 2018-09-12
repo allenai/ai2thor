@@ -16,6 +16,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			//UnityEngine.EventSystems.EventSystem.current.SetSelectedGameObject(gameObject);
 			Agent = GameObject.Find("FPSController");
 			PhysicsController = Agent.GetComponent<PhysicsRemoteFPSAgentController>();
+            #if UNITY_EDITOR
+            PhysicsController.GetComponent<DebugFPSAgentController>().enabled = true;
+            #endif
 			PivotController = Agent.GetComponent<DiscreteRemoteFPSAgentController>();
         }
 
@@ -50,6 +53,16 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 						PhysicsController.actionComplete = false;
       			        PhysicsController.Initialize(action);
+                        break;
+                    }
+
+                case "rhs":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "RandomizeHideSeekObjects";
+                        action.removeProb = float.Parse(splitcommand[1]);
+                        action.randomSeed = int.Parse(splitcommand[2]);
+                        PhysicsController.ProcessControlCommand(action);
                         break;
                     }
 
