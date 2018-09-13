@@ -959,10 +959,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 					foreach (RaycastHit res in sweepResults)
 					{
                         //did the item in the hand touch the agent? if so, ignore it's fine
-                        //also ignore Untagged because the Transparent_RB of transparent objects need to be ignored for movement
-                        //the actual rigidbody of the SimObjPhysics parent object of the transparent_rb should block correctly by having the
-						//checkMoveAction() in the BaseFPSAgentController fail when the agent collides and gets shoved back
-						if (res.transform.tag == "Player" || res.transform.tag == "Untagged")
+						if (res.transform.tag == "Player")
                         {
                             result = true;
                             break;
