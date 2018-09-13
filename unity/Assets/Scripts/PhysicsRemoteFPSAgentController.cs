@@ -1583,14 +1583,13 @@ namespace UnityStandardAssets.Characters.FirstPerson
 					return;
 				}
                 
-                //move the object to the hand's default position.
+                //move the object to the hand's default position. Make it Kinematic
+                //then set parant and ItemInHand
+
                 target.GetComponent<Rigidbody>().isKinematic = true;
-                //target.GetComponent<Rigidbody>().constraints = RigidbodyConstraints.FreezeRotation;
                 target.transform.position = AgentHand.transform.position;
-                //AgentHand.transform.parent = target;
+				target.transform.rotation = AgentHand.transform.rotation;
                 target.transform.SetParent(AgentHand.transform);
-                //target.parent = AgentHand.transform;
-                //update "inventory"            
                 ItemInHand = target.gameObject;
 
 				SetUpRotationBoxChecks();
