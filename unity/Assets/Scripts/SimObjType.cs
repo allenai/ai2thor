@@ -220,4 +220,5 @@ public enum SimObjType : int
     WallMirror = 122,
 	MassObjectSpawner = 123,
     MassScale = 124,
+    Footstool = 125,
 }
