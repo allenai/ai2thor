@@ -76,7 +76,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
        {
                get
                {
-                       return IsVisible;;
+                       return isVisible;
                }
 
                set {

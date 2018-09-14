@@ -27,7 +27,7 @@ public class SimObj : MonoBehaviour, SimpleSimObj
 	{
 		get 
 		{
-			return IsVisible;;
+			return isVisible;
 		} 
 
 		set {
