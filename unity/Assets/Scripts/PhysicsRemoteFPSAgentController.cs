@@ -3004,18 +3004,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 return;
 			}
 
+            //spawn the object at the agent's hand position
 			InstantiatePrefabTest script = GameObject.Find("PhysicsSceneManager").GetComponent<InstantiatePrefabTest>();
 			SimObjPhysics so = script.SpawnObject(action.objectType, action.randomizeObjectAppearance, action.sequenceId, 
 			                                AgentHand.transform.position);
-
-			//string[] split = action.objectId.Split('|');
-			//string prefab = split[0];
-
-			//string objectToSpawn = action.objectType;
-
-			//InstantiatePrefabTest script = GameObject.Find("PhysicsSceneManager").GetComponent<InstantiatePrefabTest>();
-
-			//SimObjPhysics so = script.Spawn(prefab, action.objectId, m_Camera.transform.position);
             
 			if (so == null) 
 			{
@@ -3043,27 +3035,44 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 		public void CreateObjectAtLocation(ServerAction action) 
 		{
-            if (uniqueIdToSimObjPhysics.ContainsKey(action.objectId)) 
+			Vector3 targetPosition = new Vector3(action.x, action.y, action.z);
+
+			if(!sceneBounds.Contains(targetPosition))
 			{
-                errorMessage = "An object with that ID already exists, cannot create a new one.";
+				errorMessage = "Target position is out of bounds!";
                 Debug.Log(errorMessage);
                 actionFinished(false);
-				return;
+                return;
+			}
+
+			if (action.objectType == null)
+            {
+                errorMessage = "Please give valid Object Type from SimObjType enum list";
+                Debug.Log(errorMessage);
+                actionFinished(false);
+                return;
             }
-
-			string[] split = action.objectId.Split('|');
-			string prefab = split[0];
-			InstantiatePrefabTest script = GameObject.Find("PhysicsSceneManager").GetComponent<InstantiatePrefabTest>();
-			SimObjPhysics so = script.Spawn(prefab, action.objectId, new Vector3(action.x, action.y, action.z));
-
+         
+			//spawn the object at the agent's hand position
+            InstantiatePrefabTest script = GameObject.Find("PhysicsSceneManager").GetComponent<InstantiatePrefabTest>();
+            SimObjPhysics so = script.SpawnObject(action.objectType, action.randomizeObjectAppearance, action.sequenceId,
+                                            targetPosition);
+			
 			if (so == null) 
 			{
+				errorMessage = "Failed to create object, are you sure it can be spawned?";
+                Debug.Log(errorMessage);
 				actionFinished(false);
 				return;
 			} 
+
 			else 
 			{
 				uniqueIdToSimObjPhysics[so.UniqueID] = so;
+				//also update the PHysics Scene Manager with this new object
+                PhysicsSceneManager physicsSceneManager = GameObject.Find("PhysicsSceneManager").GetComponent<PhysicsSceneManager>();
+                physicsSceneManager.AddToIDsInScene(so);
+                physicsSceneManager.AddToObjectsInScene(so);
 			}
 
 			actionFinished(true);
