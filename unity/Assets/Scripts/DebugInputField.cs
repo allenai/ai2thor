@@ -145,9 +145,23 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     {
                         ServerAction action = new ServerAction();
                         action.action = "CoverSurfacesWith";
+                        int sequenceId = 1;
+						if (splitcommand.Length == 2)
+                        {
+							action.objectType = splitcommand[1];
+                        }
+                        else if (splitcommand.Length == 3)
+                        {
+							action.objectType = splitcommand[1];
+                            action.sequenceId = int.Parse(splitcommand[2]);
+                        }
+						else
+						{
+							action.objectType = "Tomato"; //default to spawn debug tomato
+
+						}
                         action.x = 0.3f;
                         action.z = 0.3f;
-                        action.objectId = "Cup";
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }
