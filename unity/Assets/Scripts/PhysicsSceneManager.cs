@@ -67,4 +67,15 @@ public class PhysicsSceneManager : MonoBehaviour
 		else
 			return false;
 	}
+
+	public void AddToObjectsInScene(SimObjPhysics sop)
+	{
+		PhysObjectsInScene.Add(sop);
+	}
+
+	public void AddToIDsInScene(SimObjPhysics sop)
+	{
+		UniqueIDsInScene.Add(sop.uniqueID);
+	}
+		
 }
