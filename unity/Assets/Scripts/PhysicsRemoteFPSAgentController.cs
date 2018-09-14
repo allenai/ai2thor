@@ -2977,52 +2977,87 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			actionFinished(true);
 		}
 
-        public void CreateObject(ServerAction action) {
-            if (uniqueIdToSimObjPhysics.ContainsKey(action.objectId)) {
-                errorMessage = "An object with that ID already exists, cannot create a new one.";
-                Debug.Log(errorMessage);
-                actionFinished(false);
-				return;
-            }
-            if (ItemInHand != null) {
+        public void CreateObject(ServerAction action) 
+		{
+   //         if (uniqueIdToSimObjPhysics.ContainsKey(action.objectId)) 
+			//{
+    //            errorMessage = "An object with that ID already exists, cannot create a new one.";
+    //            Debug.Log(errorMessage);
+    //            actionFinished(false);
+				//return;
+            //}
+
+            if (ItemInHand != null) 
+			{
                 errorMessage = "Already have an object in hand, can't create a new one to put there.";
                 Debug.Log(errorMessage);
                 actionFinished(false);
 				return;
             }
-			string[] split = action.objectId.Split('|');
-			string prefab = split[0];
+            
+			if(action.objectType == null)
+			{
+				errorMessage = "Please give valid Object Type from SimObjType enum list";
+                Debug.Log(errorMessage);
+                actionFinished(false);
+                return;
+			}
+
 			InstantiatePrefabTest script = GameObject.Find("PhysicsSceneManager").GetComponent<InstantiatePrefabTest>();
-			SimObjPhysics so = script.Spawn(prefab, action.objectId, m_Camera.transform.position);
-			if (so == null) {
+			SimObjPhysics so = script.SpawnObject(action.objectType, action.randomizeObjectAppearance, action.sequenceId, 
+			                                AgentHand.transform.position);
+
+			//string[] split = action.objectId.Split('|');
+			//string prefab = split[0];
+
+			//string objectToSpawn = action.objectType;
+
+			//InstantiatePrefabTest script = GameObject.Find("PhysicsSceneManager").GetComponent<InstantiatePrefabTest>();
+
+			//SimObjPhysics so = script.Spawn(prefab, action.objectId, m_Camera.transform.position);
+            
+			if (so == null) 
+			{
                 errorMessage = "Failed to create object, are you sure it can be spawned?";
                 Debug.Log(errorMessage);
 				actionFinished(false);
 				return;
-			} else {
+			} 
+
+			else 
+			{
 				uniqueIdToSimObjPhysics[so.UniqueID] = so;
 			}
+
             action.forceAction = true;
 			PickupObject(action);
 		}
 
-		public void CreateObjectAtLocation(ServerAction action) {
-            if (uniqueIdToSimObjPhysics.ContainsKey(action.objectId)) {
+		public void CreateObjectAtLocation(ServerAction action) 
+		{
+            if (uniqueIdToSimObjPhysics.ContainsKey(action.objectId)) 
+			{
                 errorMessage = "An object with that ID already exists, cannot create a new one.";
                 Debug.Log(errorMessage);
                 actionFinished(false);
 				return;
             }
+
 			string[] split = action.objectId.Split('|');
 			string prefab = split[0];
 			InstantiatePrefabTest script = GameObject.Find("PhysicsSceneManager").GetComponent<InstantiatePrefabTest>();
 			SimObjPhysics so = script.Spawn(prefab, action.objectId, new Vector3(action.x, action.y, action.z));
-			if (so == null) {
+
+			if (so == null) 
+			{
 				actionFinished(false);
 				return;
-			} else {
+			} 
+			else 
+			{
 				uniqueIdToSimObjPhysics[so.UniqueID] = so;
 			}
+
 			actionFinished(true);
 		}
 
