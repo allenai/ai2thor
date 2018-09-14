@@ -60,8 +60,17 @@ namespace UnityStandardAssets.Characters.FirstPerson
 					{
 						ServerAction action = new ServerAction();
 
+						if (splitcommand.Length > 1)
+                        {
+							action.objectType = splitcommand[1];
+                        }
+
+						else
+						{
+							action.objectType = "Tomato";//default to spawn debug tomato
+
+						}
 						action.action = "CreateObject";
-                        action.objectType = "Footstool";//what type of object?
                         action.randomizeObjectAppearance = false;//pick randomly from available or not?
                         action.x = 0;//spawn pos x
                         action.y = 0;//spawn pos y

@@ -2977,6 +2977,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			actionFinished(true);
 		}
 
+        //spawns object in agent's hand
         public void CreateObject(ServerAction action) 
 		{
    //         if (uniqueIdToSimObjPhysics.ContainsKey(action.objectId)) 
@@ -3026,7 +3027,14 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 			else 
 			{
+				//put new object created in dictionary and assign its uniqueID to the action
 				uniqueIdToSimObjPhysics[so.UniqueID] = so;
+				action.objectId = so.uniqueID;
+
+                //also update the PHysics Scene Manager with this new object
+				PhysicsSceneManager physicsSceneManager = GameObject.Find("PhysicsSceneManager").GetComponent<PhysicsSceneManager>();
+				physicsSceneManager.AddToIDsInScene(so);
+				physicsSceneManager.AddToObjectsInScene(so);
 			}
 
             action.forceAction = true;
