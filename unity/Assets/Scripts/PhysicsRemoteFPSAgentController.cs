@@ -3319,7 +3319,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		}
 
 		public void CoverSurfacesWith(ServerAction action) {
-			string prefab = action.objectId.Split('|')[0];
+			string prefab = action.objectType;
+            int sequenceId = action.sequenceId;
 			
 			Bounds b = sceneBounds;
 			b.min = new Vector3(
@@ -3338,7 +3339,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			float xRoomSize = b.max.x - b.min.x;
 			float zRoomSize = b.max.z - b.min.z;
 			InstantiatePrefabTest script = GameObject.Find("PhysicsSceneManager").GetComponent<InstantiatePrefabTest>();
-			SimObjPhysics objForBounds = script.Spawn(prefab, prefab + "|ToDestroy", new Vector3(0.0f, b.max.y + 10.0f, 0.0f));
+			SimObjPhysics objForBounds = script.SpawnObject(prefab, false, sequenceId, new Vector3(0.0f, b.max.y + 10.0f, 0.0f), true);
 
 			Bounds objBounds = new Bounds(
                 new Vector3(float.PositiveInfinity, float.PositiveInfinity, float.PositiveInfinity),
@@ -3417,8 +3418,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                             Collider[] colliders = Physics.OverlapBox(center, halfExtents, Quaternion.identity, layerMask);
                             if (colliders.Length == 0) {
                                 k++;
-                                string id = Convert.ToString(i) + "|" + Convert.ToString(k);
-                                SimObjPhysics newObj = script.Spawn(prefab, action.objectId + "|" + id, center - objCenterRelPos);
+                                SimObjPhysics newObj = script.SpawnObject(prefab, false, sequenceId, center - objCenterRelPos, true);
                                 newObjects.Add(newObj);
                             } 
                         }

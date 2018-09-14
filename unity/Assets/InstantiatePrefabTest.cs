@@ -55,7 +55,15 @@ public class InstantiatePrefabTest : MonoBehaviour
 	//randomize - should the spawner randomly pick an object to spawn
 	//variation - which specific version of the object (1, 2, 3), set to 0 if no specific variation is wanted
 	//position - where spawn?
-	public SimObjPhysics SpawnObject(string objectType, bool randomize, int variation, Vector3 position)
+	public SimObjPhysics SpawnObject(string objectType, bool randomize, int variation, Vector3 position){
+		return SpawnObject(objectType, randomize, variation, position, false);
+	}
+
+	//object type - from SimObjType which object to spawn
+	//randomize - should the spawner randomly pick an object to spawn
+	//variation - which specific version of the object (1, 2, 3), set to 0 if no specific variation is wanted
+	//position - where spawn?
+	public SimObjPhysics SpawnObject(string objectType, bool randomize, int variation, Vector3 position, bool ignoreChecks)
 	{
 
 		//print(Enum.Parse(typeof(SimObjType), objectType));
@@ -76,60 +84,25 @@ public class InstantiatePrefabTest : MonoBehaviour
 		//ok time to spawn a sim object!
 		SimObjPhysics simObj = null;
 
-		//randomly pick from one of the eligible candidates to spawn
+		// Figure out which variation to use
 		if (randomize)
 		{
-			int whichone = UnityEngine.Random.Range(0, candidates.Count);
+			variation = UnityEngine.Random.Range(0, candidates.Count);
+		}
+		else if (variation != 0) {
+			variation -= 1;
+		}
+		Debug.Log(variation);
 
-			GameObject prefab = Instantiate(candidates[whichone], position, Quaternion.identity) as GameObject;
+		if (ignoreChecks || CheckSpawnArea(candidates[variation].GetComponent<SimObjPhysics>(), position))
+		{
+			GameObject prefab = Instantiate(candidates[variation], position, Quaternion.identity) as GameObject;
 			prefab.transform.SetParent(topObject.transform);
-
 			simObj = prefab.GetComponent<SimObjPhysics>();
 			spawnCount++;
 		}
-
-		else
-		{
-			if (variation < 0 || variation > candidates.Count)
-			{
-				Debug.LogError("There aren't that many varations of " + objectType +
-							   " there are only " + candidates.Count + " variations.");
-				return null;
-			}
-
-			//specify which variation you would like to spawn
-			if (variation != 0)
-			{
-				if (CheckSpawnArea(candidates[variation - 1].GetComponent<SimObjPhysics>(), position))
-				{
-					GameObject prefab = Instantiate(candidates[variation - 1], position, Quaternion.identity) as GameObject;
-					prefab.transform.SetParent(topObject.transform);
-
-					simObj = prefab.GetComponent<SimObjPhysics>();
-					spawnCount++;
-				}
-
-				else
-					return null;
-			}
-
-			//or spawn default 1st found prefab of the objectType
-			else
-			{
-				if (CheckSpawnArea(candidates[variation].GetComponent<SimObjPhysics>(), position))
-				{
-					GameObject prefab = Instantiate(candidates[variation], position, Quaternion.identity) as GameObject;
-					prefab.transform.SetParent(topObject.transform);
-
-					simObj = prefab.GetComponent<SimObjPhysics>();
-					spawnCount++;
-				}
-
-				else
-					return null;
-			}
-
-
+		else {
+			return null;
 		}
 
 		//ok make sure we did actually spawn something now, and give it an Id number
