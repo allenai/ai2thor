@@ -72,6 +72,18 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		}
 	}
 
+       public bool IsVisible
+       {
+               get
+               {
+                       return IsVisible;;
+               }
+
+               set {
+                       isVisible = value;
+               }
+       }
+
 	public Bounds Bounds
 	{
 		get
