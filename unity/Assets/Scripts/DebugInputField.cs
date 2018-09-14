@@ -56,6 +56,23 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         break;
                     }
 
+				case "spawn":
+					{
+						ServerAction action = new ServerAction();
+
+						action.action = "CreateObject";
+                        action.objectType = "Footstool";//what type of object?
+                        action.randomizeObjectAppearance = false;//pick randomly from available or not?
+                        action.x = 0;//spawn pos x
+                        action.y = 0;//spawn pos y
+                        action.z = 0;//spawn pos z
+                        action.sequenceId = 1;//if random false, which version of the object to spawn? (there are only 3 of each type atm)
+
+						PhysicsController.ProcessControlCommand(action);
+
+						break;
+					}
+
                 case "rhs":
                     {
                         ServerAction action = new ServerAction();
