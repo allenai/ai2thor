@@ -59,10 +59,15 @@ namespace UnityStandardAssets.Characters.FirstPerson
 				case "spawn":
 					{
 						ServerAction action = new ServerAction();
-
-						if (splitcommand.Length > 1)
+                        int sequenceId = 1;
+						if (splitcommand.Length == 2)
                         {
 							action.objectType = splitcommand[1];
+                        }
+                        else if (splitcommand.Length == 3)
+                        {
+							action.objectType = splitcommand[1];
+                            sequenceId = int.Parse(splitcommand[2]);
                         }
 
 						else
@@ -75,7 +80,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         action.x = 0;//spawn pos x
                         action.y = 0;//spawn pos y
                         action.z = 0;//spawn pos z
-                        action.sequenceId = 1;//if random false, which version of the object to spawn? (there are only 3 of each type atm)
+                        action.sequenceId = sequenceId;//if random false, which version of the object to spawn? (there are only 3 of each type atm)
 
 						PhysicsController.ProcessControlCommand(action);
 
@@ -115,9 +120,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     {
                         ServerAction action = new ServerAction();
                         action.action = "CoverSurfacesWith";
-                        action.x = 0.2f;
-                        action.z = 0.2f;
-                        action.objectId = "Tomato";
+                        action.x = 0.3f;
+                        action.z = 0.3f;
+                        action.objectId = "Cup";
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }

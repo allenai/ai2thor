@@ -1588,7 +1588,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
                 target.GetComponent<Rigidbody>().isKinematic = true;
                 target.transform.position = AgentHand.transform.position;
-				target.transform.rotation = AgentHand.transform.rotation;
+				// target.transform.rotation = AgentHand.transform.rotation;
+                target.transform.rotation = Quaternion.identity;
                 target.transform.SetParent(AgentHand.transform);
                 ItemInHand = target.gameObject;
 
@@ -3358,6 +3359,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
             var xsToTry = new List<float>();
             var zsToTry = new List<float>();
+            // xsToTry.Add(-0.1253266f);
+            // zsToTry.Add(1.159979f);
             foreach (GameObject go in Resources.FindObjectsOfTypeAll<GameObject>()) {
                 if (go.name == "ReceptacleTriggerBox") {
                 Vector3 receptCenter = go.transform.position;
@@ -3398,15 +3401,18 @@ namespace UnityStandardAssets.Characters.FirstPerson
                             layerMask,
                             hit.collider.transform.gameObject)
                         ) {
-                        Vector3 halfExtents = new Vector3(xExtent / 2.1f, yExtent / 2.1f, zExtent / 2.1f);
-                        Vector3 center = hit.point + objCenterRelPos + yOffset;
-                        Collider[] colliders = Physics.OverlapBox(center, halfExtents, Quaternion.identity, layerMask);
-                        if (colliders.Length == 0) {
-                            k++;
-                            string id = Convert.ToString(i) + "|" + Convert.ToString(k);
-                            SimObjPhysics newObj = script.Spawn(prefab, action.objectId + "|" + id, center - objCenterRelPos);
-                            newObjects.Add(newObj);
-                        } 
+                        SimObjPhysics hitSimObj = hit.transform.gameObject.GetComponent<SimObjPhysics>();
+                        if (hitSimObj == null || hitSimObj.UniqueID.Split('|')[0] != prefab) {
+                            Vector3 halfExtents = new Vector3(xExtent / 2.1f, yExtent / 2.1f, zExtent / 2.1f);
+                            Vector3 center = hit.point + objCenterRelPos + yOffset;
+                            Collider[] colliders = Physics.OverlapBox(center, halfExtents, Quaternion.identity, layerMask);
+                            if (colliders.Length == 0) {
+                                k++;
+                                string id = Convert.ToString(i) + "|" + Convert.ToString(k);
+                                SimObjPhysics newObj = script.Spawn(prefab, action.objectId + "|" + id, center - objCenterRelPos);
+                                newObjects.Add(newObj);
+                            } 
+                        }
                         // else {
                         //     Debug.Log("Intersects collider:");
                         //     Debug.Log(colliders[0]);
