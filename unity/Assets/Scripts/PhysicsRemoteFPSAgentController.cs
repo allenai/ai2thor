@@ -2973,7 +2973,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 		public void CreateObjectAtLocation(ServerAction action) 
 		{
-			Vector3 targetPosition = new Vector3(action.x, action.y, action.z);
+			Vector3 targetPosition = action.position; //new Vector3(action.x, action.y, action.z);
 
 			if(!sceneBounds.Contains(targetPosition))
 			{
