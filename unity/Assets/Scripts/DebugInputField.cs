@@ -87,6 +87,31 @@ namespace UnityStandardAssets.Characters.FirstPerson
 						break;
 					}
 
+				case "spawnat":
+					{
+						ServerAction action = new ServerAction();
+
+                        if (splitcommand.Length > 1)
+                        {
+                            action.objectType = splitcommand[1];
+                        }
+
+                        else
+                        {
+                            action.objectType = "Tomato";//default to spawn debug tomato
+
+                        }
+                        action.action = "CreateObjectAtLocation";
+                        action.randomizeObjectAppearance = false;//pick randomly from available or not?
+                        action.x = 0;//spawn pos x
+                        action.y = 10;//spawn pos y
+                        action.z = 0;//spawn pos z
+                        action.sequenceId = 1;//if random false, which version of the object to spawn? (there are only 3 of each type atm)
+
+                        PhysicsController.ProcessControlCommand(action);
+						break;
+					}
+
                 case "rhs":
                     {
                         ServerAction action = new ServerAction();
