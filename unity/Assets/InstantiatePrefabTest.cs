@@ -52,9 +52,9 @@ public class InstantiatePrefabTest : MonoBehaviour
 		return null;
 	}
 
-	public SimObjPhysics SpawnObject(string objectType, bool randomize, int variation, Vector3 position, Vector3 rotation)
+	public SimObjPhysics SpawnObject(string objectType, bool randomize, int variation, Vector3 position, Vector3 rotation, bool spawningInHand)
     {
-        return SpawnObject(objectType, randomize, variation, position, rotation, false);
+        return SpawnObject(objectType, randomize, variation, position, rotation, spawningInHand, false);
     }
 
 	//object type - from SimObjType which object to spawn
@@ -63,7 +63,7 @@ public class InstantiatePrefabTest : MonoBehaviour
     //position - where spawn?
     //rotation - orientation when spawned?
     //ignoreChecks - bool to ignore checks and spawn anyway
-    public SimObjPhysics SpawnObject(string objectType, bool randomize, int variation, Vector3 position, Vector3 rotation, bool ignoreChecks)
+    public SimObjPhysics SpawnObject(string objectType, bool randomize, int variation, Vector3 position, Vector3 rotation, bool spawningInHand, bool ignoreChecks)
     {
 
         //print(Enum.Parse(typeof(SimObjType), objectType));
@@ -97,7 +97,7 @@ public class InstantiatePrefabTest : MonoBehaviour
         //Debug.Log(variation);
         Quaternion quat = Quaternion.Euler(rotation);
 
-        if (ignoreChecks || CheckSpawnArea(candidates[variation].GetComponent<SimObjPhysics>(), position, quat))
+		if (ignoreChecks || CheckSpawnArea(candidates[variation].GetComponent<SimObjPhysics>(), position, quat, spawningInHand))
         {
             GameObject prefab = Instantiate(candidates[variation], position, quat) as GameObject;
             prefab.transform.SetParent(topObject.transform);
@@ -124,7 +124,7 @@ public class InstantiatePrefabTest : MonoBehaviour
     //All adjustments to the Rotate agent collider box must be done on the collider only using the
     //"Edit Collider" button
     //this assumes that the RotateAgentCollider transform is zeroed out according to the root transform of the prefab
-    private bool CheckSpawnArea(SimObjPhysics simObj, Vector3 position, Quaternion rotation)
+    private bool CheckSpawnArea(SimObjPhysics simObj, Vector3 position, Quaternion rotation, bool spawningInHand)
     {
         //create a dummy gameobject that is instantiated then rotated to get the actual
         //location and orientation of the spawn area
@@ -138,11 +138,26 @@ public class InstantiatePrefabTest : MonoBehaviour
         //rotate it after creating the offset so that the offset's local position is maintained
         placeholderPosition.transform.rotation = rotation;
 
-        //first do a check to see if the area is clear
-        //make sure we don't hit anything on SimObjectVisible or we don't spawn inside the Agent
+
+		int layermask;
+
+		//first do a check to see if the area is clear
+
+        //if spawning in the agent's hand, ignore collisions with the Agent
+		if(spawningInHand)
+		{
+			layermask = 1 << 8;
+		}
+
+        //oh we are spawning it somehwere in the environment, we do need to make sure not to spawn inside the agent here
+		else
+		{
+			layermask = (1 << 8) | (1 << 10);
+		}
+
         Collider[] hitColliders = Physics.OverlapBox(inst.transform.position,
                                                      simObj.RotateAgentCollider.GetComponent<BoxCollider>().size / 2, rotation,
-                                                     (1 << 8) | (1 << 10), QueryTriggerInteraction.Ignore);
+                                                     layermask, QueryTriggerInteraction.Ignore);
         
 #if UNITY_EDITOR
 		m_Started = true;      
