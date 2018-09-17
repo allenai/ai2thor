@@ -4,22 +4,22 @@ using UnityEngine;
 
 namespace UnityStandardAssets.Characters.FirstPerson
 {
-	public class DebugInputField : MonoBehaviour
+    public class DebugInputField : MonoBehaviour
     {
-		public GameObject Agent = null;
-		public PhysicsRemoteFPSAgentController PhysicsController = null;
-		public DiscreteRemoteFPSAgentController PivotController = null;
+        public GameObject Agent = null;
+        public PhysicsRemoteFPSAgentController PhysicsController = null;
+        public DiscreteRemoteFPSAgentController PivotController = null;
 
         // Use this for initialization
         void Start()
         {
-			//UnityEngine.EventSystems.EventSystem.current.SetSelectedGameObject(gameObject);
-			Agent = GameObject.Find("FPSController");
-			PhysicsController = Agent.GetComponent<PhysicsRemoteFPSAgentController>();
-            #if UNITY_EDITOR
+            //UnityEngine.EventSystems.EventSystem.current.SetSelectedGameObject(gameObject);
+            Agent = GameObject.Find("FPSController");
+            PhysicsController = Agent.GetComponent<PhysicsRemoteFPSAgentController>();
+#if UNITY_EDITOR
             PhysicsController.GetComponent<DebugFPSAgentController>().enabled = true;
-            #endif
-			PivotController = Agent.GetComponent<DiscreteRemoteFPSAgentController>();
+#endif
+            PivotController = Agent.GetComponent<DiscreteRemoteFPSAgentController>();
         }
 
         // Update is called once per frame
@@ -31,75 +31,87 @@ namespace UnityStandardAssets.Characters.FirstPerson
         public void Execute(string command)
         {
             //pass in multiple parameters separated by spaces
-			string[] splitcommand = command.Split(new string[] { " " }, System.StringSplitOptions.None);
+            string[] splitcommand = command.Split(new string[] { " " }, System.StringSplitOptions.None);
 
-			switch(splitcommand[0])
-			{            
+            switch (splitcommand[0])
+            {
 
-					//turn off all pivot things, enable all physics things
+                //turn off all pivot things, enable all physics things
                 case "init":
                     {
-						ServerAction action = new ServerAction();
+                        ServerAction action = new ServerAction();
 
                         //if you want to use smaller grid size step increments, initialize with a smaller/larger gridsize here
                         //by default the gridsize is 0.25, so only moving in increments of .25 will work
                         //so the MoveAhead action will only take, by default, 0.25, .5, .75 etc magnitude with the default
                         //grid size!
-						if (splitcommand.Length > 1)
+                        if (splitcommand.Length > 1)
                         {
-							action.gridSize = float.Parse(splitcommand[1]);
+                            action.gridSize = float.Parse(splitcommand[1]);
                         }
 
 
-						PhysicsController.actionComplete = false;
-      			        PhysicsController.Initialize(action);
+                        PhysicsController.actionComplete = false;
+                        PhysicsController.Initialize(action);
                         break;
                     }
 
-				case "spawn":
-					{
-						ServerAction action = new ServerAction();
+                case "spawn":
+                    {
+                        ServerAction action = new ServerAction();
                         int sequenceId = 1;
-						if (splitcommand.Length == 2)
+                        if (splitcommand.Length == 2)
                         {
-							action.objectType = splitcommand[1];
+                            action.objectType = splitcommand[1];
                         }
                         else if (splitcommand.Length == 3)
                         {
-							action.objectType = splitcommand[1];
-                            sequenceId = int.Parse(splitcommand[2]);
-                        }
-
-						else
-						{
-							action.objectType = "Tomato";//default to spawn debug tomato
-
-						}
-						action.action = "CreateObject";
-                        action.randomizeObjectAppearance = false;//pick randomly from available or not?
-                        action.x = 0;//spawn pos x
-                        action.y = 0;//spawn pos y
-                        action.z = 0;//spawn pos z
-                        action.sequenceId = sequenceId;//if random false, which version of the object to spawn? (there are only 3 of each type atm)
-
-						PhysicsController.ProcessControlCommand(action);
-
-						break;
-					}
-
-				case "spawnat":
-					{
-						ServerAction action = new ServerAction();
-
-                        if (splitcommand.Length > 1)
-                        {
                             action.objectType = splitcommand[1];
+                            sequenceId = int.Parse(splitcommand[2]);
                         }
 
                         else
                         {
                             action.objectType = "Tomato";//default to spawn debug tomato
 
+                        }
+                        action.action = "CreateObject";
+                        action.randomizeObjectAppearance = false;//pick randomly from available or not?
+                        action.x = 0;//spawn pos x
+                        action.y = 0;//spawn pos y
+                        action.z = 0;//spawn pos z
+                        action.sequenceId = sequenceId;//if random false, which version of the object to spawn? (there are only 3 of each type atm)
+
+                        PhysicsController.ProcessControlCommand(action);
+
+                        break;
+                    }
+
+                case "spawnat":
+                    {
+                        ServerAction action = new ServerAction();
+
+                        if (splitcommand.Length > 1)
+                        {
+                            action.objectType = splitcommand[1];
+<<<<<<< HEAD
+=======
+                            action.position = new Vector3(float.Parse(splitcommand[2]), float.Parse(splitcommand[3]), float.Parse(splitcommand[4]));
+                            action.rotation = new Vector3(float.Parse(splitcommand[5]), float.Parse(splitcommand[6]), float.Parse(splitcommand[7]));
+                            //action.rotation?
+>>>>>>> e4a58a132484eea69875bcbcf5ac72c1e093cc70
+                        }
+
+                        //default to zeroed out rotation tomato
+                        else
+                        {
+                            action.objectType = "Tomato";//default to spawn debug tomato
+<<<<<<< HEAD
+
+=======
+                            action.position = Vector3.zero;
+                            action.rotation = Vector3.zero;
+>>>>>>> e4a58a132484eea69875bcbcf5ac72c1e093cc70
                         }
                         action.action = "CreateObjectAtLocation";
                         action.randomizeObjectAppearance = false;//pick randomly from available or not?
@@ -109,8 +121,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         action.sequenceId = 1;//if random false, which version of the object to spawn? (there are only 3 of each type atm)
 
                         PhysicsController.ProcessControlCommand(action);
-						break;
-					}
+                        break;
+                    }
 
                 case "rhs":
                     {
@@ -146,20 +158,21 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         ServerAction action = new ServerAction();
                         action.action = "CoverSurfacesWith";
                         int sequenceId = 1;
-						if (splitcommand.Length == 2)
+                        action.sequenceId = sequenceId;
+                        if (splitcommand.Length == 2)
                         {
-							action.objectType = splitcommand[1];
+                            action.objectType = splitcommand[1];
                         }
                         else if (splitcommand.Length == 3)
                         {
-							action.objectType = splitcommand[1];
+                            action.objectType = splitcommand[1];
                             action.sequenceId = int.Parse(splitcommand[2]);
                         }
-						else
-						{
-							action.objectType = "Tomato"; //default to spawn debug tomato
+                        else
+                        {
+                            action.objectType = "Tomato"; //default to spawn debug tomato
 
-						}
+                        }
                         action.x = 0.3f;
                         action.z = 0.3f;
                         PhysicsController.ProcessControlCommand(action);
@@ -204,7 +217,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }
-                
+
                 // Close visible objects
                 case "cvo":
                     {
@@ -244,50 +257,51 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         action.x = float.Parse(splitcommand[1]);
                         action.z = float.Parse(splitcommand[2]);
                         PhysicsController.ProcessControlCommand(action);
-                        foreach (string s in PhysicsController.objectIdsInBox) {
+                        foreach (string s in PhysicsController.objectIdsInBox)
+                        {
                             Debug.Log(s);
                         }
                         break;
                     }
 
-                    //move ahead
+                //move ahead
                 case "ma":
                     {
                         ServerAction action = new ServerAction();
                         action.action = "MoveAhead";
 
-						if (splitcommand.Length > 1)
-						{
-							action.moveMagnitude = float.Parse(splitcommand[1]);
-						}
-						else
-                        action.moveMagnitude = 0.25f;
-						
+                        if (splitcommand.Length > 1)
+                        {
+                            action.moveMagnitude = float.Parse(splitcommand[1]);
+                        }
+                        else
+                            action.moveMagnitude = 0.25f;
+
                         PhysicsController.ProcessControlCommand(action);
 
                         //PhysicsController.CheckIfAgentCanMove(5.0f, 0);
                         break;
                     }
 
-                    //move backward
+                //move backward
                 case "mb":
                     {
                         ServerAction action = new ServerAction();
-                        action.action = "MoveBack";     
+                        action.action = "MoveBack";
 
                         if (splitcommand.Length > 1)
                         {
                             action.moveMagnitude = float.Parse(splitcommand[1]);
                         }
 
-						else
-                        action.moveMagnitude = 0.25f;
-						
+                        else
+                            action.moveMagnitude = 0.25f;
+
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }
 
-                    //move left
+                //move left
                 case "ml":
                     {
                         ServerAction action = new ServerAction();
@@ -298,14 +312,14 @@ namespace UnityStandardAssets.Characters.FirstPerson
                             action.moveMagnitude = float.Parse(splitcommand[1]);
                         }
 
-						else
-                        action.moveMagnitude = 0.25f;
-						
+                        else
+                            action.moveMagnitude = 0.25f;
+
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }
 
-                    //move right
+                //move right
                 case "mr":
                     {
                         ServerAction action = new ServerAction();
@@ -316,15 +330,16 @@ namespace UnityStandardAssets.Characters.FirstPerson
                             action.moveMagnitude = float.Parse(splitcommand[1]);
                         }
 
-						else {
+                        else
+                        {
                             action.moveMagnitude = 0.25f;
                         }
-						
+
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }
 
-                    //look up
+                //look up
                 case "lu":
                     {
                         ServerAction action = new ServerAction();
@@ -333,7 +348,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         break;
                     }
 
-                    //look down
+                //look down
                 case "ld":
                     {
                         ServerAction action = new ServerAction();
@@ -342,7 +357,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         break;
                     }
 
-                    //rotate left
+                //rotate left
                 case "rl":
                     {
                         ServerAction action = new ServerAction();
@@ -350,97 +365,97 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }
-                
-                    //rotate right
+
+                //rotate right
                 case "rr":
                     {
                         ServerAction action = new ServerAction();
                         action.action = "RotateRight";
                         PhysicsController.ProcessControlCommand(action);
                         break;
-                    }   
+                    }
 
-                    //pickup object, if no specific object passed in, it will pick up the closest interactable simobj in the agent's viewport
-				case "pu":
+                //pickup object, if no specific object passed in, it will pick up the closest interactable simobj in the agent's viewport
+                case "pu":
                     {
                         ServerAction action = new ServerAction();
                         action.action = "PickupObject";
-						if(splitcommand.Length > 1)
-						{
-							action.objectId = splitcommand[1];
-						}
+                        if (splitcommand.Length > 1)
+                        {
+                            action.objectId = splitcommand[1];
+                        }
 
-						else
-						{
-							action.objectId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().UniqueIDOfClosestVisibleObject();
-						}
+                        else
+                        {
+                            action.objectId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().UniqueIDOfClosestVisibleObject();
+                        }
 
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }
-                    
-                    //drop object
-				case "dr":
+
+                //drop object
+                case "dr":
                     {
                         ServerAction action = new ServerAction();
-						action.action = "DropHandObject";
+                        action.action = "DropHandObject";
                         PhysicsController.ProcessControlCommand(action);
                         break;
-                    }   
+                    }
 
-                    //rotate object in hand, pass in desired x/y/z rotation
-				case "ro":
+                //rotate object in hand, pass in desired x/y/z rotation
+                case "ro":
                     {
                         ServerAction action = new ServerAction();
                         action.action = "RotateHand";
-						if(splitcommand.Length > 1)
-						{
-							action.x = float.Parse(splitcommand[1]);
+                        if (splitcommand.Length > 1)
+                        {
+                            action.x = float.Parse(splitcommand[1]);
                             action.y = float.Parse(splitcommand[2]);
                             action.z = float.Parse(splitcommand[3]);
                             PhysicsController.ProcessControlCommand(action);
-						}
+                        }
 
                         break;
-                    }  
+                    }
 
-                    //default the Hand's position and rotation to the starting position and rotation
-				case "dh": 
+                //default the Hand's position and rotation to the starting position and rotation
+                case "dh":
                     {
                         ServerAction action = new ServerAction();
                         action.action = "DefaultAgentHand";
                         PhysicsController.ProcessControlCommand(action);
                         break;
-                    }   
+                    }
 
-                    //move hand ahead, forward relative to agent's facing
-                    //pass in move magnitude or default is 0.25 units
-				case "mha":
+                //move hand ahead, forward relative to agent's facing
+                //pass in move magnitude or default is 0.25 units
+                case "mha":
                     {
                         ServerAction action = new ServerAction();
                         action.action = "MoveHandMagnitude";
 
-						if(splitcommand.Length > 1)
-						{
-							action.moveMagnitude = float.Parse(splitcommand[1]);
-						}
+                        if (splitcommand.Length > 1)
+                        {
+                            action.moveMagnitude = float.Parse(splitcommand[1]);
+                        }
 
-						else
-						    action.moveMagnitude = 0.1f;
-						
-						action.x = 0f;
-						action.y = 0f;
-						action.z = 1f;
+                        else
+                            action.moveMagnitude = 0.1f;
+
+                        action.x = 0f;
+                        action.y = 0f;
+                        action.z = 1f;
 
                         PhysicsController.ProcessControlCommand(action);
                         break;
-                    } 
+                    }
 
-					//move hand backward. relative to agent's facing
-					//pass in move magnitude or default is 0.25 units               
+                //move hand backward. relative to agent's facing
+                //pass in move magnitude or default is 0.25 units               
                 case "mhb":
                     {
-						ServerAction action = new ServerAction();
+                        ServerAction action = new ServerAction();
                         action.action = "MoveHandMagnitude";
 
 
@@ -451,20 +466,20 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
                         else
                             action.moveMagnitude = 0.1f;
-						
+
                         action.x = 0f;
                         action.y = 0f;
                         action.z = -1f;
                         PhysicsController.ProcessControlCommand(action);
                         break;
-                    }  
+                    }
 
-					//move hand left, relative to agent's facing
-					//pass in move magnitude or default is 0.25 units
+                //move hand left, relative to agent's facing
+                //pass in move magnitude or default is 0.25 units
                 case "mhl":
                     {
-						ServerAction action = new ServerAction();
-                        action.action = "MoveHandMagnitude";                  
+                        ServerAction action = new ServerAction();
+                        action.action = "MoveHandMagnitude";
 
                         if (splitcommand.Length > 1)
                         {
@@ -473,19 +488,19 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
                         else
                             action.moveMagnitude = 0.1f;
-						
+
                         action.x = -1f;
                         action.y = 0f;
                         action.z = 0f;
                         PhysicsController.ProcessControlCommand(action);
                         break;
-                    }  
+                    }
 
-					//move hand right, relative to agent's facing
-					//pass in move magnitude or default is 0.25 units
+                //move hand right, relative to agent's facing
+                //pass in move magnitude or default is 0.25 units
                 case "mhr":
                     {
-						ServerAction action = new ServerAction();
+                        ServerAction action = new ServerAction();
                         action.action = "MoveHandMagnitude";
 
                         if (splitcommand.Length > 1)
@@ -495,19 +510,19 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
                         else
                             action.moveMagnitude = 0.1f;
-						
+
                         action.x = 1f;
                         action.y = 0f;
                         action.z = 0f;
                         PhysicsController.ProcessControlCommand(action);
                         break;
-                    }  
+                    }
 
-					//move hand up, relative to agent's facing
-					//pass in move magnitude or default is 0.25 units
+                //move hand up, relative to agent's facing
+                //pass in move magnitude or default is 0.25 units
                 case "mhu":
                     {
-						ServerAction action = new ServerAction();
+                        ServerAction action = new ServerAction();
                         action.action = "MoveHandMagnitude";
 
                         if (splitcommand.Length > 1)
@@ -517,21 +532,21 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
                         else
                             action.moveMagnitude = 0.1f;
-						
+
                         action.x = 0f;
                         action.y = 1f;
                         action.z = 0f;
                         PhysicsController.ProcessControlCommand(action);
                         break;
-                    }  
+                    }
 
-					//move hand down, relative to agent's facing
-					//pass in move magnitude or default is 0.25 units
+                //move hand down, relative to agent's facing
+                //pass in move magnitude or default is 0.25 units
                 case "mhd":
                     {
-						ServerAction action = new ServerAction();
+                        ServerAction action = new ServerAction();
                         action.action = "MoveHandMagnitude";
-                        
+
                         if (splitcommand.Length > 1)
                         {
                             action.moveMagnitude = float.Parse(splitcommand[1]);
@@ -539,73 +554,53 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
                         else
                             action.moveMagnitude = 0.1f;
-						
+
                         action.x = 0f;
                         action.y = -1f;
                         action.z = 0f;
                         PhysicsController.ProcessControlCommand(action);
                         break;
-                    }  
-                    
-                    //throw object by dropping it and applying force.
-                    //default is with strength of 120, can pass in custom magnitude of throw force
+                    }
+
+                //throw object by dropping it and applying force.
+                //default is with strength of 120, can pass in custom magnitude of throw force
                 case "throw":
-					{
-						ServerAction action = new ServerAction();
-						action.action = "ThrowObject";
-
-						if (splitcommand.Length > 1)
-						{
-							action.moveMagnitude = float.Parse(splitcommand[1]);
-						}
-
-						else
-							action.moveMagnitude = 120f;
-
-						PhysicsController.ProcessControlCommand(action);                  
-						break;
-					}
-
-                    //opens given object the given percent, default is 100% open
-                    //open <object ID> percent
-				case "open":
-					{
-						ServerAction action = new ServerAction();
-						action.action = "OpenObject";
-
-                        //default open 100%
-						if (splitcommand.Length > 1 && splitcommand.Length < 3)
-                        {
-                            action.objectId = splitcommand[1];
-                        }
-
-						//give the open percentage as 3rd param, from 0.0 to 1.0
-						else if(splitcommand.Length > 2)
-						{
-							action.objectId = splitcommand[1];
-							action.moveMagnitude = float.Parse(splitcommand[2]);
-						}
-
-						else
-						{
-                           action.objectId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().UniqueIDOfClosestVisibleOpenableObject();
-						}
-
-						PhysicsController.ProcessControlCommand(action);                  
-
-						break;
-					}
-
-				case "close":
                     {
                         ServerAction action = new ServerAction();
-                        action.action = "CloseObject";
+                        action.action = "ThrowObject";
 
                         if (splitcommand.Length > 1)
                         {
+                            action.moveMagnitude = float.Parse(splitcommand[1]);
+                        }
+
+                        else
+                            action.moveMagnitude = 120f;
+
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
+                //opens given object the given percent, default is 100% open
+                //open <object ID> percent
+                case "open":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "OpenObject";
+
+                        //default open 100%
+                        if (splitcommand.Length > 1 && splitcommand.Length < 3)
+                        {
                             action.objectId = splitcommand[1];
                         }
-                  
+
+                        //give the open percentage as 3rd param, from 0.0 to 1.0
+                        else if (splitcommand.Length > 2)
+                        {
+                            action.objectId = splitcommand[1];
+                            action.moveMagnitude = float.Parse(splitcommand[2]);
+                        }
+
                         else
                         {
                             action.objectId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().UniqueIDOfClosestVisibleOpenableObject();
@@ -615,10 +610,30 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
                         break;
                     }
-                   
-                    //pass in object id of a receptacle, and this will report any other sim objects inside of it
-                    //this works for cabinets, drawers, countertops, tabletops, etc.
-				case "contains":
+
+                case "close":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "CloseObject";
+
+                        if (splitcommand.Length > 1)
+                        {
+                            action.objectId = splitcommand[1];
+                        }
+
+                        else
+                        {
+                            action.objectId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().UniqueIDOfClosestVisibleOpenableObject();
+                        }
+
+                        PhysicsController.ProcessControlCommand(action);
+
+                        break;
+                    }
+
+                //pass in object id of a receptacle, and this will report any other sim objects inside of it
+                //this works for cabinets, drawers, countertops, tabletops, etc.
+                case "contains":
                     {
                         ServerAction action = new ServerAction();
                         action.action = "Contains";
@@ -924,39 +939,44 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         break;
                     }
 
-				default:
-                    {   
+                default:
+                    {
                         ServerAction action = new ServerAction();
                         action.action = splitcommand[0];
-                        if (splitcommand.Length == 2) {
+                        if (splitcommand.Length == 2)
+                        {
                             action.objectId = splitcommand[1];
-                        } else if (splitcommand.Length == 3) {
+                        }
+                        else if (splitcommand.Length == 3)
+                        {
                             action.x = float.Parse(splitcommand[1]);
                             action.z = float.Parse(splitcommand[2]);
-                        } else if (splitcommand.Length == 4) {
+                        }
+                        else if (splitcommand.Length == 4)
+                        {
                             action.x = float.Parse(splitcommand[1]);
                             action.y = float.Parse(splitcommand[2]);
                             action.z = float.Parse(splitcommand[3]);
                         }
-                        PhysicsController.ProcessControlCommand(action);      
+                        PhysicsController.ProcessControlCommand(action);
                         //Debug.Log("Invalid Command");
                         break;
                     }
-			}
+            }
 
-			StartCoroutine(CheckIfactionCompleteWasSetToTrueAfterWaitingALittleBit(splitcommand[0]));
+            StartCoroutine(CheckIfactionCompleteWasSetToTrueAfterWaitingALittleBit(splitcommand[0]));
 
         }
 
-		IEnumerator CheckIfactionCompleteWasSetToTrueAfterWaitingALittleBit(string s)
-		{
-			yield return new WaitForSeconds(0.5f);
-			if (!PhysicsController.actionComplete)
+        IEnumerator CheckIfactionCompleteWasSetToTrueAfterWaitingALittleBit(string s)
+        {
+            yield return new WaitForSeconds(0.5f);
+            if (!PhysicsController.actionComplete)
             {
                 Debug.LogError("Physics controller does not have actionComplete set to true after :" + s);
-				yield return null;
+                yield return null;
             }
-		}
+        }
 
 
     }
