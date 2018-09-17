@@ -139,9 +139,10 @@ public class InstantiatePrefabTest : MonoBehaviour
         placeholderPosition.transform.rotation = rotation;
 
         //first do a check to see if the area is clear
+        //make sure we don't hit anything on SimObjectVisible or we don't spawn inside the Agent
         Collider[] hitColliders = Physics.OverlapBox(inst.transform.position,
-                      simObj.RotateAgentCollider.GetComponent<BoxCollider>().size / 2, rotation,
-                      1 << 8, QueryTriggerInteraction.Ignore);
+                                                     simObj.RotateAgentCollider.GetComponent<BoxCollider>().size / 2, rotation,
+                                                     (1 << 8) | (1 << 10), QueryTriggerInteraction.Ignore);
         
 #if UNITY_EDITOR
 		m_Started = true;      
