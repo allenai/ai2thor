@@ -1520,7 +1520,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 target.GetComponent<Rigidbody>().isKinematic = true;
                 target.transform.position = AgentHand.transform.position;
 				// target.transform.rotation = AgentHand.transform.rotation;
-                target.transform.rotation = Quaternion.identity;
+				target.transform.rotation = AgentHand.transform.rotation;
                 target.transform.SetParent(AgentHand.transform);
                 ItemInHand = target.gameObject;
 
@@ -2918,14 +2918,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
         //spawns object in agent's hand
         public void CreateObject(ServerAction action) 
 		{
-   //         if (uniqueIdToSimObjPhysics.ContainsKey(action.objectId)) 
-			//{
-    //            errorMessage = "An object with that ID already exists, cannot create a new one.";
-    //            Debug.Log(errorMessage);
-    //            actionFinished(false);
-				//return;
-            //}
-
             if (ItemInHand != null) 
 			{
                 errorMessage = "Already have an object in hand, can't create a new one to put there.";
@@ -2945,7 +2937,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             //spawn the object at the agent's hand position
 			InstantiatePrefabTest script = GameObject.Find("PhysicsSceneManager").GetComponent<InstantiatePrefabTest>();
 			SimObjPhysics so = script.SpawnObject(action.objectType, action.randomizeObjectAppearance, action.sequenceId, 
-			                                AgentHand.transform.position);
+			                                      AgentHand.transform.position, AgentHand.transform.rotation.eulerAngles);
             
 			if (so == null) 
 			{
@@ -2973,7 +2965,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 		public void CreateObjectAtLocation(ServerAction action) 
 		{
-			Vector3 targetPosition = new Vector3(action.x, action.y, action.z);
+			Vector3 targetPosition = action.position;
+			Vector3 targetRotation = action.rotation;
 
 			if(!sceneBounds.Contains(targetPosition))
 			{
@@ -2994,7 +2987,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			//spawn the object at the agent's hand position
             InstantiatePrefabTest script = GameObject.Find("PhysicsSceneManager").GetComponent<InstantiatePrefabTest>();
             SimObjPhysics so = script.SpawnObject(action.objectType, action.randomizeObjectAppearance, action.sequenceId,
-                                            targetPosition);
+			                                      targetPosition, targetRotation);
 			
 			if (so == null) 
 			{
@@ -3276,7 +3269,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			float xRoomSize = b.max.x - b.min.x;
 			float zRoomSize = b.max.z - b.min.z;
 			InstantiatePrefabTest script = GameObject.Find("PhysicsSceneManager").GetComponent<InstantiatePrefabTest>();
-			SimObjPhysics objForBounds = script.SpawnObject(prefab, false, sequenceId, new Vector3(0.0f, b.max.y + 10.0f, 0.0f), true);
+			SimObjPhysics objForBounds = script.SpawnObject(prefab, false, sequenceId, new Vector3(0.0f, b.max.y + 10.0f, 0.0f), Vector3.zero, true);
 
 			Bounds objBounds = new Bounds(
                 new Vector3(float.PositiveInfinity, float.PositiveInfinity, float.PositiveInfinity),
@@ -3355,7 +3348,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                             Collider[] colliders = Physics.OverlapBox(center, halfExtents, Quaternion.identity, layerMask);
                             if (colliders.Length == 0) {
                                 k++;
-                                SimObjPhysics newObj = script.SpawnObject(prefab, false, sequenceId, center - objCenterRelPos, true);
+                                SimObjPhysics newObj = script.SpawnObject(prefab, false, sequenceId, center - objCenterRelPos, Vector3.zero, true);
                                 newObjects.Add(newObj);
                             } 
                         }
