@@ -62,6 +62,7 @@ public class InstantiatePrefabTest : MonoBehaviour
     //variation - which specific version of the object (1, 2, 3), set to 0 if no specific variation is wanted
     //position - where spawn?
     //rotation - orientation when spawned?
+    //spawningInHand - adjusts layermask depending on if the object is going to spawn directly in the agent's hand vs spawning in the environment
     //ignoreChecks - bool to ignore checks and spawn anyway
     public SimObjPhysics SpawnObject(string objectType, bool randomize, int variation, Vector3 position, Vector3 rotation, bool spawningInHand, bool ignoreChecks)
     {
@@ -149,7 +150,7 @@ public class InstantiatePrefabTest : MonoBehaviour
 			layermask = 1 << 8;
 		}
 
-        //oh we are spawning it somehwere in the environment, we do need to make sure not to spawn inside the agent here
+        //oh we are spawning it somehwere in the environment, we do need to make sure not to spawn inside the agent or the environment
 		else
 		{
 			layermask = (1 << 8) | (1 << 10);
