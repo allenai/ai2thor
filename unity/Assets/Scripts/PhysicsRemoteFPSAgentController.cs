@@ -422,25 +422,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 && viewPoint.x < ViewPointRangeHigh && viewPoint.x > ViewPointRangeLow//within x bounds of viewport
                 && viewPoint.y < ViewPointRangeHigh && viewPoint.y > ViewPointRangeLow)//within y bounds of viewport
             {
-
-                ///////downard max distance extension here
-				// float MaxDownwardLookAngle = 60f;
-				// float MinDownwardLookAngle = 15f;
-
-				// Vector3 itemDirection = Vector3.zero;
-                //          //do a raycast in the direction of the item
-				// itemDirection = (point.position - agentCamera.transform.position).normalized;
-                // Vector3 agentForward = agentCamera.transform.forward;
-                // agentForward.y = 0f;
-                // agentForward.Normalize();
-                // //clap the angle so we can't wrap around
-                // float maxDistanceLerp = 0f;
-                // float lookAngle = Mathf.Clamp(Vector3.Angle(agentForward, itemDirection), 0f, MaxDownwardLookAngle) - MinDownwardLookAngle;
-                // maxDistanceLerp = lookAngle / MaxDownwardLookAngle;
-				// maxDistance = Mathf.Lerp(maxDistance, maxDistance * DownwardViewDistance, maxDistanceLerp);
-
-                ///////end downward max distance stuff
-                
 				//now cast a ray out toward the point, if anything occludes this point, that point is not visible
 				RaycastHit hit;
 
@@ -2915,7 +2896,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			actionFinished(true);
 		}
 
-        //spawns object in agent's hand
+        //spawns object in agent's hand with the same orientation as the agent's hand
         public void CreateObject(ServerAction action) 
 		{
             if (ItemInHand != null) 
@@ -2937,7 +2918,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             //spawn the object at the agent's hand position
 			InstantiatePrefabTest script = GameObject.Find("PhysicsSceneManager").GetComponent<InstantiatePrefabTest>();
 			SimObjPhysics so = script.SpawnObject(action.objectType, action.randomizeObjectAppearance, action.sequenceId, 
-			                                      AgentHand.transform.position, AgentHand.transform.rotation.eulerAngles);
+			                                      AgentHand.transform.position, AgentHand.transform.rotation.eulerAngles, true);
             
 			if (so == null) 
 			{
@@ -2987,7 +2968,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			//spawn the object at the agent's hand position
             InstantiatePrefabTest script = GameObject.Find("PhysicsSceneManager").GetComponent<InstantiatePrefabTest>();
             SimObjPhysics so = script.SpawnObject(action.objectType, action.randomizeObjectAppearance, action.sequenceId,
-			                                      targetPosition, targetRotation);
+			                                      targetPosition, targetRotation, false);
 			
 			if (so == null) 
 			{
@@ -3269,7 +3250,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			float xRoomSize = b.max.x - b.min.x;
 			float zRoomSize = b.max.z - b.min.z;
 			InstantiatePrefabTest script = GameObject.Find("PhysicsSceneManager").GetComponent<InstantiatePrefabTest>();
-			SimObjPhysics objForBounds = script.SpawnObject(prefab, false, sequenceId, new Vector3(0.0f, b.max.y + 10.0f, 0.0f), Vector3.zero, true);
+			SimObjPhysics objForBounds = script.SpawnObject(prefab, false, sequenceId, new Vector3(0.0f, b.max.y + 10.0f, 0.0f), Vector3.zero, false, true);
 
 			Bounds objBounds = new Bounds(
                 new Vector3(float.PositiveInfinity, float.PositiveInfinity, float.PositiveInfinity),
@@ -3348,7 +3329,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                             Collider[] colliders = Physics.OverlapBox(center, halfExtents, Quaternion.identity, layerMask);
                             if (colliders.Length == 0) {
                                 k++;
-                                SimObjPhysics newObj = script.SpawnObject(prefab, false, sequenceId, center - objCenterRelPos, Vector3.zero, true);
+                                SimObjPhysics newObj = script.SpawnObject(prefab, false, sequenceId, center - objCenterRelPos, Vector3.zero, false, true);
                                 newObjects.Add(newObj);
                             } 
                         }
