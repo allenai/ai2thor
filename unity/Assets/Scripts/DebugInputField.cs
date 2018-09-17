@@ -57,43 +57,17 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     }
 
 				case "spawn":
-					{
-						ServerAction action = new ServerAction();
+                    {
+                        ServerAction action = new ServerAction();
                         int sequenceId = 1;
-						if (splitcommand.Length == 2)
+                        if (splitcommand.Length == 2)
                         {
-							action.objectType = splitcommand[1];
+                            action.objectType = splitcommand[1];
                         }
                         else if (splitcommand.Length == 3)
                         {
-							action.objectType = splitcommand[1];
-                            sequenceId = int.Parse(splitcommand[2]);
-                        }
-
-						else
-						{
-							action.objectType = "Tomato";//default to spawn debug tomato
-
-						}
-						action.action = "CreateObject";
-                        action.randomizeObjectAppearance = false;//pick randomly from available or not?
-                        action.x = 0;//spawn pos x
-                        action.y = 0;//spawn pos y
-                        action.z = 0;//spawn pos z
-                        action.sequenceId = sequenceId;//if random false, which version of the object to spawn? (there are only 3 of each type atm)
-
-						PhysicsController.ProcessControlCommand(action);
-
-						break;
-					}
-
-				case "spawnat":
-					{
-						ServerAction action = new ServerAction();
-
-                        if (splitcommand.Length > 1)
-                        {
                             action.objectType = splitcommand[1];
+                            sequenceId = int.Parse(splitcommand[2]);
                         }
 
                         else
@@ -101,16 +75,42 @@ namespace UnityStandardAssets.Characters.FirstPerson
                             action.objectType = "Tomato";//default to spawn debug tomato
 
                         }
-                        action.action = "CreateObjectAtLocation";
+                        action.action = "CreateObject";
                         action.randomizeObjectAppearance = false;//pick randomly from available or not?
-                        action.x = 0;//spawn pos x
-                        action.y = 10;//spawn pos y
-                        action.z = 0;//spawn pos z
+                        action.sequenceId = sequenceId;//if random false, which version of the object to spawn? (there are only 3 of each type atm)
+
+                        PhysicsController.ProcessControlCommand(action);
+
+                        break;
+                    }
+
+                case "spawnat":
+                    {
+                        ServerAction action = new ServerAction();
+
+                        if (splitcommand.Length > 1)
+                        {
+                            action.objectType = splitcommand[1];
+                            action.position = new Vector3(float.Parse(splitcommand[2]), float.Parse(splitcommand[3]), float.Parse(splitcommand[4]));
+                            action.rotation = new Vector3(float.Parse(splitcommand[5]), float.Parse(splitcommand[6]), float.Parse(splitcommand[7]));
+                            //action.rotation?
+                        }
+
+                        //default to zeroed out rotation tomato
+                        else
+                        {
+                            action.objectType = "Tomato";//default to spawn debug tomato
+                            action.position = Vector3.zero;
+                            action.rotation = Vector3.zero;
+                        }
+                        action.action = "CreateObjectAtLocation";
+
+                        action.randomizeObjectAppearance = false;//pick randomly from available or not?                  
                         action.sequenceId = 1;//if random false, which version of the object to spawn? (there are only 3 of each type atm)
 
                         PhysicsController.ProcessControlCommand(action);
-						break;
-					}
+                        break;
+                    }
 
                 case "rhs":
                     {
