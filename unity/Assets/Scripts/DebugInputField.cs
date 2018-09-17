@@ -146,6 +146,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         ServerAction action = new ServerAction();
                         action.action = "CoverSurfacesWith";
                         int sequenceId = 1;
+						action.sequenceId = sequenceId;
+
 						if (splitcommand.Length == 2)
                         {
 							action.objectType = splitcommand[1];
