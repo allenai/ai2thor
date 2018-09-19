@@ -205,17 +205,6 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		//PrefabUtility.InstantiatePrefab(prefabRoot);
 	}
 
-	//[UnityEditor.MenuItem("SimObjectPhysics/Delete MovingPart Script")]
-	//   public static void DeleteMovingPartScript()
-	//{
-	//	MovingPart[] objects = FindObjectsOfType<MovingPart>();
-
-	//	foreach(MovingPart mp in objects)
-	//	{
-	//		//print(mp.name);
-	//		DestroyImmediate(mp.GetComponent<MovingPart>());
-	//	}
-	//}
 #endif
 
 	// Use this for initialization
@@ -595,81 +584,11 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 			gameObject.AddComponent<CanOpen_Object>();
 		}
 
-		//if(!gameObject.GetComponent<MovingPart>())
-		//{
-		//	gameObject.AddComponent<MovingPart>();
-
-		//}
 		GameObject[] myobject = new GameObject[] { gameObject };
 		gameObject.GetComponent<CanOpen_Object>().MovingParts = myobject;
 
 	}
 
-	//   [ContextMenu("FrameCollider")]
-	//   void ContextFrameColliderSetup()
-	//{
-	//	//grab the FrameCollider prefab (find by component?)
-	//	//then make a copy of the trigger collider array, add the triggers to it, and reassign
-	//	//do the same for the visibility point array
-	//	if (transform.Find("TriggerColliders"))
-	//	{
-	//		Transform tc = transform.Find("TriggerColliders");
-
-	//		if(tc.Find("FrameCollider"))
-	//		{
-	//			Transform fc = tc.Find("FrameCollider");
-	//			//print(fc.name);
-	//			fc.localEulerAngles = new Vector3(0, -transform.localEulerAngles.y, 0);
-
-	//			List<GameObject> frameColliders = new List<GameObject>(MyTriggerColliders);
-	//			List<Transform> framevPoints = new List<Transform>(VisibilityPoints);
-
-	//               //we are at the FrameCollider level here, adding in each fCol
-	//			foreach (Transform child in fc)
-	//			{
-	//				//don't add duplicates
-	//				if(!frameColliders.Contains(child.gameObject))
-	//				frameColliders.Add(child.gameObject);
-
-	//				//now for each fCol, add the vispoint to the visibility point list to update
-
-	//				Transform vp = child.Find("vPoint");
-
-	//                   //dont add duplicates
-	//				if (!framevPoints.Contains(vp))
-	//				framevPoints.Add(vp);
-	//			}
-
-	//			MyTriggerColliders = frameColliders.ToArray();
-	//			VisibilityPoints = framevPoints.ToArray();
-
-	//		}
-	//	}
-
-	//	//Transform Colliders = transform.Find("Colliders");
-
-	//       //List<GameObject> listColliders = new List<GameObject>();
-
-	//       //foreach (Transform child in Colliders)
-	//       //{
-	//       //    //list.toarray
-	//       //    listColliders.Add(child.gameObject);
-
-	//       //    //set correct tag and layer for each object
-	//       //    //also ensure all colliders are NOT trigger
-	//       //    child.gameObject.tag = "SimObjPhysics";
-	//       //    child.gameObject.layer = 8;
-
-	//       //    if (child.GetComponent<Collider>())
-	//       //    {
-	//       //        child.GetComponent<Collider>().enabled = true;
-	//       //        child.GetComponent<Collider>().isTrigger = false;
-	//       //    }
-
-	//       //}
-
-	//       //MyColliders = listColliders.ToArray();
-	//}
 	[ContextMenu("Set Up Microwave")]
 	void ContextSetUpMicrowave()
 	{
@@ -733,19 +652,6 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 			vpc.transform.position = vp.transform.position;
 			vpc.transform.SetParent(vp.transform);
 		}
-
-		//if (!gameObject.transform.Find("InteractionPoints"))
-		//{
-		//	//empty to hold all interaction points
-		//	GameObject ip = new GameObject("InteractionPoints");
-		//	ip.transform.position = gameObject.transform.position;
-		//	ip.transform.SetParent(gameObject.transform);
-
-		//	//create the first Interaction Point to work with
-		//	GameObject ipc = new GameObject("iPoint");
-		//	ipc.transform.position = ip.transform.position;
-		//	ipc.transform.SetParent(ip.transform);
-		//}
 
 		if (!gameObject.transform.Find("RotateAgentCollider") && this.PrimaryProperty != SimObjPrimaryProperty.Static)
 		{
@@ -844,28 +750,6 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 			VisibilityPoints = vplist.ToArray();
 		}
 	}
-
-	////[ContextMenu("Set Up Interaction Points")]
-	//void ContextSetUpInteractionPoints()
-	//{
-	//	if (transform.Find("InteractionPoints"))
-	//	{
-	//		Transform ip = transform.Find("InteractionPoints");
-
-	//		List<Transform> iplist = new List<Transform>();
-
-	//		foreach (Transform child in ip)
-	//		{
-	//			iplist.Add(child);
-
-	//			//set correct tag and layer for each object
-	//			child.gameObject.tag = "Untagged";
-	//			child.gameObject.layer = 8;
-	//		}
-
-	//		InteractionPoints = iplist.ToArray();
-	//	}
-	//}
 
 	//[ContextMenu("Set Up Rotate Agent Collider")]
 	void ContextSetUpRotateAgentCollider()
