@@ -1323,10 +1323,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
                 //did we even hit enything?
 				if(hitColliders.Length > 0)
-				{
-					//GameObject[] ItemInHandColliders = ItemInHand.GetComponent<SimObjPhysics>().MyColliders;
-                    //GameObject[] ItemInHandTriggerColliders = ItemInHand.GetComponent<SimObjPhysics>().MyTriggerColliders;
-
+				{               
 					foreach (Collider col in hitColliders)
                     {
 						//is this a sim object?
@@ -1350,28 +1347,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
 							result = false;
 							return result;
 						}
-						////check each collider hit
-
-      //                  //if it's the player, ignore it
-						//if(col.tag != "Player" && col.GetComponentInParent<SimObjPhysics>().transform != ItemInHand.transform)
-						//{
-						//	result = false;
-						//	//if(IsInArray(col, ItemInHandColliders) || IsInArray(col, ItemInHandTriggerColliders))
-						//	//{
-						//	//	result = true;
-						//	//}
-
-						//	//else
-						//	//{
-						//	//	Debug.Log(col.name + "  is blocking hand from rotating");
-						//	//	result = false;
-						//	//}
-						//}
-
-						//else 
-						//{
-						//	result = true;
-						//}
                     }
 				}
 
@@ -1443,15 +1418,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 }
 
                 SimObjPhysics[] simObjPhysicsArray = VisibleSimObjs(action);
-                // if (action.forceVisible) {
-                //     simObjPhysicsArray = VisibleSimObjs(action);
-                // }
-                // TODO: Seems smart to reuse computation here but doing
-                // so actually makes it impossible to see if an object is
-                // interactable or not.
-                // else {
-                //     simObjPhysicsArray = VisibleSimObjPhysics;
-                // }
                 
                 foreach (SimObjPhysics sop in simObjPhysicsArray)
                 {
@@ -1540,11 +1506,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
         {
             //make sure something is actually in our hands
             if (ItemInHand != null)
-            {
-                // TODO: The bellow check doesn't work because not all receptacle's are tagged as such
-                // and thus objects are reporting that they are colliding when they aren't. It doesn't
-                // seem clear to me that this check is really necessary though.
-
+            {            
                 //we do need this to check if the item is currently colliding with the agent, otherwise
                 //dropping an object while it is inside the agent will cause it to shoot out weirdly
                 if (!action.forceAction && ItemInHand.GetComponent<SimObjPhysics>().isColliding)
@@ -1721,24 +1683,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
             }
 
             foreach (SimObjPhysics sop in VisibleSimObjs(action))
-            {
-    //            //print("why not?");
-    //            //check for object in current visible objects, and also check that it's interactable
-				//if(!IgnoreInteractableFlag)
-				//{
-				//	if (!sop.isInteractable)
-    //                {
-    //                    Debug.Log(sop.UniqueID + " is not Interactable");
-    //                    return;
-    //                }
-				//}
-
+            {            
 				if (sop.GetComponent<CanOpen_Object>())
                 {
                     //print("wobbuffet");
                     target = sop;
-                }
-
+                }            
             }
             
             if (target)
