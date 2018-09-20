@@ -117,7 +117,7 @@ GameObject:
   - component: {fileID: 4678508317723986}
   - component: {fileID: 65227533649980584}
   m_Layer: 9
-  m_Name: RotateAgentCollider
+  m_Name: BoundingBox
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -771,7 +771,7 @@ Transform:
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 1306051721960950}
   m_LocalRotation: {x: 0.3804824, y: 0.5960144, z: 0.5960144, w: -0.38048244}
-  m_LocalPosition: {x: 0.776, y: 0.732, z: -0.531}
+  m_LocalPosition: {x: 0.637, y: 0.732, z: -0.509}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 4631589494814752}
@@ -1511,12 +1511,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b439f6e4ef5714ee2a3643acf37b7a9d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  UniqueID: Chair|+00.78|+00.73|-00.53
+  uniqueID: Chair|+00.64|+00.73|-00.51
   Type: 21
   PrimaryProperty: 1
   SecondaryProperties: 
-  RotateAgentCollider: {fileID: 1088822358428548}
-  InteractionPoints: []
+  BoundingBox: {fileID: 1088822358428548}
   VisibilityPoints:
   - {fileID: 4876595216255702}
   - {fileID: 4270471693029806}
@@ -1529,31 +1528,7 @@ MonoBehaviour:
   - {fileID: 4810873645700102}
   - {fileID: 4011878963558456}
   - {fileID: 4279415485749586}
-  MyColliders:
-  - {fileID: 1728582819624786}
-  - {fileID: 1351114458611480}
-  - {fileID: 1906681536970468}
-  - {fileID: 1552772381391116}
-  - {fileID: 1328551580806224}
-  - {fileID: 1110097747503144}
-  - {fileID: 1007070961729328}
-  - {fileID: 1313589777761648}
-  - {fileID: 1374361367819770}
-  - {fileID: 1029518512247184}
-  - {fileID: 1169318846711660}
-  MyTriggerColliders:
-  - {fileID: 1725563244927186}
-  - {fileID: 1416141223635724}
-  - {fileID: 1031690502013984}
-  - {fileID: 1417498828684816}
-  - {fileID: 1994180431923278}
-  - {fileID: 1147408923088210}
-  - {fileID: 1375833625667714}
-  - {fileID: 1737452256971410}
-  - {fileID: 1172472536880854}
-  - {fileID: 1052502076108074}
-  - {fileID: 1834346863827830}
-  ReceptacleTriggerBox: {fileID: 0}
+  ReceptacleTriggerBoxes: []
   isVisible: 0
   isInteractable: 0
   isColliding: 0

@@ -332,6 +332,22 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
+--- !u!1 &1270871987097344
+GameObject:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  serializedVersion: 5
+  m_Component:
+  - component: {fileID: 4360392836364538}
+  - component: {fileID: 65956142878390616}
+  m_Layer: 8
+  m_Name: BoundingBox
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
 --- !u!1 &1300474272823428
 GameObject:
   m_ObjectHideFlags: 1
@@ -1301,6 +1317,7 @@ Transform:
   - {fileID: 4119592748397490}
   - {fileID: 4846402323797960}
   - {fileID: 4879421881906024}
+  - {fileID: 4360392836364538}
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -1525,6 +1542,19 @@ Transform:
   m_Children: []
   m_Father: {fileID: 4480338947262096}
   m_RootOrder: 15
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!4 &4360392836364538
+Transform:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1270871987097344}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 4159390144654516}
+  m_RootOrder: 3
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!4 &4367837960991316
 Transform:
@@ -2544,6 +2574,18 @@ BoxCollider:
   serializedVersion: 2
   m_Size: {x: 1, y: 1, z: 1}
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!65 &65956142878390616
+BoxCollider:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1270871987097344}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_Enabled: 0
+  serializedVersion: 2
+  m_Size: {x: 1.116669, y: 1.9439735, z: 1.006863}
+  m_Center: {x: -0.042320788, y: 0.95919895, z: 0.010294139}
 --- !u!114 &114245786442760180
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -2559,7 +2601,7 @@ MonoBehaviour:
   Type: 18
   PrimaryProperty: 1
   SecondaryProperties: 0700000008000000
-  RotateAgentCollider: {fileID: 0}
+  BoundingBox: {fileID: 1270871987097344}
   VisibilityPoints:
   - {fileID: 4070865919367606}
   - {fileID: 4254605283336968}
@@ -2614,13 +2656,6 @@ MonoBehaviour:
   - {fileID: 4057239468912646}
   - {fileID: 4086751563751554}
   - {fileID: 4028678869320338}
-  MyColliders:
-  - {fileID: 1717120519050778}
-  - {fileID: 1469744576177080}
-  - {fileID: 1256631931922548}
-  MyTriggerColliders:
-  - {fileID: 1850952687381066}
-  - {fileID: 1720623685334058}
   ReceptacleTriggerBoxes:
   - {fileID: 1038271934587474}
   - {fileID: 1938491253306536}

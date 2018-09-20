@@ -335,6 +335,22 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
+--- !u!1 &1407560235340942
+GameObject:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  serializedVersion: 5
+  m_Component:
+  - component: {fileID: 4706228727982498}
+  - component: {fileID: 65545016431431550}
+  m_Layer: 8
+  m_Name: BoundingBox
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
 --- !u!1 &1448399234824330
 GameObject:
   m_ObjectHideFlags: 1
@@ -1177,15 +1193,16 @@ Transform:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 1214746551522454}
-  m_LocalRotation: {x: -0, y: 0.7071058, z: -0, w: 0.7071078}
+  m_LocalRotation: {x: -0, y: 1, z: -0, w: 0.0000014305114}
   m_LocalPosition: {x: -2.643, y: -0, z: 2.134}
-  m_LocalScale: {x: 0.7495761, y: 0.74957603, z: 0.74957603}
+  m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 4537845112260516}
   - {fileID: 4297313416439110}
+  - {fileID: 4706228727982498}
   m_Father: {fileID: 0}
   m_RootOrder: 0
-  m_LocalEulerAnglesHint: {x: 0, y: 90.00001, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 180.00002, z: 0}
 --- !u!4 &4259667633757736
 Transform:
   m_ObjectHideFlags: 1
@@ -1244,9 +1261,9 @@ Transform:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 1632764648717812}
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalRotation: {x: -0, y: -0.70710576, z: -0, w: 0.7071079}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 0.7765634, y: 0.79642373, z: 0.875}
   m_Children:
   - {fileID: 4267934497049834}
   - {fileID: 4056238360021446}
@@ -1499,9 +1516,9 @@ Transform:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 1159687690752152}
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 1.191, z: 0.06500006}
-  m_LocalScale: {x: 0.975, y: 2.024376, z: 0.5312501}
+  m_LocalRotation: {x: -0, y: -0.70710576, z: -0, w: 0.7071079}
+  m_LocalPosition: {x: -0.06500006, y: 0.892745, z: 0}
+  m_LocalScale: {x: 0.75715005, y: 1.6122609, z: 0.4648443}
   m_Children: []
   m_Father: {fileID: 4257014518167448}
   m_RootOrder: 0
@@ -1627,6 +1644,19 @@ Transform:
   m_Children: []
   m_Father: {fileID: 4460132151535468}
   m_RootOrder: 10
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!4 &4706228727982498
+Transform:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1407560235340942}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 4257014518167448}
+  m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!4 &4729454257781528
 Transform:
@@ -2146,6 +2176,18 @@ BoxCollider:
   serializedVersion: 2
   m_Size: {x: 1, y: 1, z: 1}
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!65 &65545016431431550
+BoxCollider:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1407560235340942}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_Enabled: 0
+  serializedVersion: 2
+  m_Size: {x: 0.8945925, y: 1.692065, z: 0.8042202}
+  m_Center: {x: -0.028387606, y: 0.84438777, z: 6.50833e-16}
 --- !u!65 &65601076102953306
 BoxCollider:
   m_ObjectHideFlags: 1
@@ -2193,11 +2235,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b439f6e4ef5714ee2a3643acf37b7a9d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  uniqueID: Fridge|-02.64|00.00|+02.13
+  uniqueID: Fridge|-00.28|+00.00|-00.82
   Type: 18
   PrimaryProperty: 1
   SecondaryProperties: 0700000008000000
-  RotateAgentCollider: {fileID: 0}
+  BoundingBox: {fileID: 1407560235340942}
   VisibilityPoints:
   - {fileID: 4670292841554816}
   - {fileID: 4062072558903920}
@@ -2241,13 +2283,6 @@ MonoBehaviour:
   - {fileID: 4120531445907292}
   - {fileID: 4896954779341218}
   - {fileID: 4158475566594774}
-  MyColliders:
-  - {fileID: 1632764648717812}
-  - {fileID: 1490008220635824}
-  - {fileID: 1101104734390510}
-  MyTriggerColliders:
-  - {fileID: 1745009972495206}
-  - {fileID: 1244693969399542}
   ReceptacleTriggerBoxes:
   - {fileID: 1159687690752152}
   isVisible: 0
