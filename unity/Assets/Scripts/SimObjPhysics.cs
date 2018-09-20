@@ -25,23 +25,17 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 	[SerializeField]
 	public SimObjSecondaryProperty[] SecondaryProperties;
 
-	[Header("Used for CanRotate check")]
+	[Header("non Axis-Aligned Box enclosing all colliders of this object")]
+	//This can be used to get the "bounds" of the object, but needs to be created manually
+	//we should look into a programatic way to figure this out so we don't have to set it up for EVERY object
+	//for now, only CanPickup objects have a RotateAgentCollider, although maybe every sim object needs one for
+	//spawning eventually? For now make sure the Box Collider component is disabled on this, because it's literally
+	//just holding values for the center and size of the box.
 	public GameObject RotateAgentCollider = null;
-
-	//public GameObject RotateAgentHandCollider = null;
-
-	//[SerializeField]
-	//public Transform[] InteractionPoints = null;
 
 	[Header("Raycast to these points to determine Visible/Interactable")]
 	[SerializeField]
 	public Transform[] VisibilityPoints = null;
-
-	//[SerializeField]
-	//public GameObject[] MyColliders = null;
-
-	//[SerializeField]
-	//public GameObject[] MyTriggerColliders = null
 
     [Header("If this object is a Receptacle, put all trigger boxes here")]
 	[SerializeField]
@@ -51,7 +45,6 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 	public bool isVisible = false;
 	public bool isInteractable = false;
 	public bool isColliding = false;
-
 
 	private Bounds bounds;
 
@@ -598,6 +591,93 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		this.SecondaryProperties = new SimObjSecondaryProperty[2];
 		this.SecondaryProperties[0] = SimObjSecondaryProperty.Receptacle;
 		this.SecondaryProperties[1] = SimObjSecondaryProperty.CanOpen;
+
+		if(!gameObject.GetComponent<CanOpen_Object>())
+		{
+			gameObject.AddComponent<CanOpen_Object>();
+		}
+
+		List<Transform> vplist = new List<Transform>();
+
+		if(!gameObject.transform.Find("StaticVisPoints"))
+		{
+			GameObject svp = new GameObject("StaticVisPoints");
+			svp.transform.position = gameObject.transform.position;
+			svp.transform.SetParent(gameObject.transform);
+
+			GameObject vp = new GameObject("vPoint");
+			vp.transform.position = svp.transform.position;
+			vp.transform.SetParent(svp.transform);
+		}
+
+		else
+		{
+			Transform vp = gameObject.transform.Find("StaticVisPoints");
+			foreach (Transform child in vp)
+			{
+				vplist.Add(child);
+
+				//set correct tag and layer for each object
+				child.gameObject.tag = "Untagged";
+				child.gameObject.layer = 8;
+			}
+		}
+
+		Transform door = gameObject.transform.Find("Door");
+		if(!door.Find("Col"))
+		{
+			GameObject col = new GameObject("Col");
+			col.transform.position = door.transform.position;
+			col.transform.SetParent(door.transform);
+
+			col.AddComponent<BoxCollider>();
+
+			col.transform.tag = "SimObjPhysics";
+			col.layer = 8;
+
+		}
+
+		if(!door.Find("VisPoints"))
+		{
+						//empty to hold all visibility points
+			GameObject vp = new GameObject("VisPoints");
+			vp.transform.position = door.transform.position;
+			vp.transform.SetParent(door.transform);
+
+			//create first Visibility Point to work with
+			GameObject vpc = new GameObject("vPoint");
+			vpc.transform.position = vp.transform.position;
+			vpc.transform.SetParent(vp.transform);
+		}
+
+		else
+		{
+			Transform vp = door.Find("VisPoints");
+			foreach (Transform child in vp)
+			{
+				vplist.Add(child);
+
+				//set correct tag and layer for each object
+				child.gameObject.tag = "Untagged";
+				child.gameObject.layer = 8;
+			}
+		}
+
+		VisibilityPoints = vplist.ToArray();
+
+		CanOpen_Object coo = gameObject.GetComponent<CanOpen_Object>();
+		coo.MovingParts = new GameObject[] {door.transform.gameObject};
+		coo.openPositions = new Vector3[] {new Vector3(0, 90, 0)};
+		coo.closedPositions = new Vector3[] {Vector3.zero};
+		coo.SetMovementToRotate();
+
+		if(gameObject.transform.Find("ReceptacleTriggerBox"))
+		{
+			GameObject[] rtb = new GameObject[] {gameObject.transform.Find("ReceptacleTriggerBox").transform.gameObject};
+			ReceptacleTriggerBoxes = rtb;
+		}
+
+
 
 	}
 
