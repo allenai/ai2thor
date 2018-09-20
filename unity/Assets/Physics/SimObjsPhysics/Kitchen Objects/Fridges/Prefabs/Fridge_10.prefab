@@ -11,6 +11,22 @@ Prefab:
   m_ParentPrefab: {fileID: 0}
   m_RootGameObject: {fileID: 1453128776292966}
   m_IsPrefabParent: 1
+--- !u!1 &1059671519160628
+GameObject:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  serializedVersion: 5
+  m_Component:
+  - component: {fileID: 4080356226496910}
+  - component: {fileID: 65635241198199764}
+  m_Layer: 8
+  m_Name: BoundingBox
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
 --- !u!1 &1071030117005110
 GameObject:
   m_ObjectHideFlags: 1
@@ -814,6 +830,19 @@ Transform:
   m_Father: {fileID: 4052648452045362}
   m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!4 &4080356226496910
+Transform:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1059671519160628}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 4447829538841834}
+  m_RootOrder: 2
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!4 &4081171545803500
 Transform:
   m_ObjectHideFlags: 1
@@ -833,9 +862,9 @@ Transform:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 1784755188364190}
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalRotation: {x: -0, y: -0.7071068, z: -0, w: 0.7071068}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 0.8141396, y: 0.84585786, z: 0.8458593}
   m_Children:
   - {fileID: 4052648452045362}
   - {fileID: 4127873135592680}
@@ -993,15 +1022,16 @@ Transform:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 1453128776292966}
-  m_LocalRotation: {x: 0, y: -0.7071068, z: 0, w: 0.7071068}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0.966, y: 0, z: 1.254}
-  m_LocalScale: {x: 0.8141382, y: 0.84585786, z: 0.84585786}
+  m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 4722652250014814}
   - {fileID: 4122393883254478}
+  - {fileID: 4080356226496910}
   m_Father: {fileID: 0}
   m_RootOrder: 0
-  m_LocalEulerAnglesHint: {x: 0, y: -90, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!4 &4474595678525760
 Transform:
   m_ObjectHideFlags: 1
@@ -1165,9 +1195,9 @@ Transform:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 1133122614698460}
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 1.193, z: 0}
-  m_LocalScale: {x: 0.93749994, y: 2.0118747, z: 0.57499975}
+  m_LocalRotation: {x: -0, y: -0.7071068, z: -0, w: 0.7071068}
+  m_LocalPosition: {x: 0, y: 1.0091084, z: 0}
+  m_LocalScale: {x: 0.7632559, y: 1.70176, z: 0.4863688}
   m_Children: []
   m_Father: {fileID: 4447829538841834}
   m_RootOrder: 0
@@ -1607,6 +1637,18 @@ BoxCollider:
   serializedVersion: 2
   m_Size: {x: 1, y: 1, z: 1}
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!65 &65635241198199764
+BoxCollider:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1059671519160628}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_Enabled: 0
+  serializedVersion: 2
+  m_Size: {x: 0.76319253, y: 2.321627, z: 0.87615764}
+  m_Center: {x: -0.07304835, y: 1.1594473, z: 0.0050386786}
 --- !u!65 &65646009641911962
 BoxCollider:
   m_ObjectHideFlags: 1
@@ -1670,7 +1712,7 @@ MonoBehaviour:
   Type: 18
   PrimaryProperty: 1
   SecondaryProperties: 0700000008000000
-  RotateAgentCollider: {fileID: 0}
+  BoundingBox: {fileID: 1059671519160628}
   VisibilityPoints:
   - {fileID: 4931001248537798}
   - {fileID: 4616628258252570}
@@ -1705,11 +1747,6 @@ MonoBehaviour:
   - {fileID: 4405231933557708}
   - {fileID: 4333942730587052}
   - {fileID: 4062347860394786}
-  MyColliders:
-  - {fileID: 1812197582984322}
-  - {fileID: 1784755188364190}
-  MyTriggerColliders:
-  - {fileID: 1119407172912222}
   ReceptacleTriggerBoxes:
   - {fileID: 1133122614698460}
   isVisible: 0

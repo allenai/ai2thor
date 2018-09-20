@@ -28,10 +28,10 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 	[Header("non Axis-Aligned Box enclosing all colliders of this object")]
 	//This can be used to get the "bounds" of the object, but needs to be created manually
 	//we should look into a programatic way to figure this out so we don't have to set it up for EVERY object
-	//for now, only CanPickup objects have a RotateAgentCollider, although maybe every sim object needs one for
+	//for now, only CanPickup objects have a BoundingBox, although maybe every sim object needs one for
 	//spawning eventually? For now make sure the Box Collider component is disabled on this, because it's literally
 	//just holding values for the center and size of the box.
-	public GameObject RotateAgentCollider = null;
+	public GameObject BoundingBox = null;
 
 	[Header("Raycast to these points to determine Visible/Interactable")]
 	[SerializeField]
@@ -419,7 +419,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 
 	//CONTEXT MENU STUFF FOR SETTING UP SIM OBJECTS
 	//RIGHT CLICK this script in the inspector to reveal these options
-	[ContextMenu("Cabinet")]
+	//[ContextMenu("Cabinet")]
 	void SetUpCabinet()
 	{
 		Type = SimObjType.Cabinet;
@@ -552,7 +552,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		//this.GetComponent<CanOpen>().SetMovementToRotate();
 	}
 
-	[ContextMenu("Drawer")]
+	//[ContextMenu("Drawer")]
 	void SetUpDrawer()
 	{
 		//Type = SimObjType.Drawer;
@@ -579,6 +579,13 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 
 		GameObject[] myobject = new GameObject[] { gameObject };
 		gameObject.GetComponent<CanOpen_Object>().MovingParts = myobject;
+
+	}
+
+	[ContextMenu("Find BoundingBox")]
+	void ContextFindBoundingBox()
+	{
+		BoundingBox = gameObject.transform.Find("BoundingBox").gameObject;
 
 	}
 
@@ -733,9 +740,9 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 			vpc.transform.SetParent(vp.transform);
 		}
 
-		if (!gameObject.transform.Find("RotateAgentCollider") && this.PrimaryProperty != SimObjPrimaryProperty.Static)
+		if (!gameObject.transform.Find("BoundingBox") && this.PrimaryProperty != SimObjPrimaryProperty.Static)
 		{
-			GameObject rac = new GameObject("RotateAgentCollider");
+			GameObject rac = new GameObject("BoundingBox");
 			rac.transform.position = gameObject.transform.position;
 			rac.transform.SetParent(gameObject.transform);
 		}
@@ -744,7 +751,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		ContextSetUpTriggerColliders();
 		ContextSetUpVisibilityPoints();
 		//ContextSetUpInteractionPoints();
-		ContextSetUpRotateAgentCollider();
+		ContextSetUpBoundingBox();
 	}
 
 	//[ContextMenu("Set Up Colliders")]
@@ -832,21 +839,21 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 	}
 
 	//[ContextMenu("Set Up Rotate Agent Collider")]
-	void ContextSetUpRotateAgentCollider()
+	void ContextSetUpBoundingBox()
 	{
-		if (transform.Find("RotateAgentCollider"))
+		if (transform.Find("BoundingBox"))
 		{
-			RotateAgentCollider = transform.Find("RotateAgentCollider").gameObject;
+			BoundingBox = transform.Find("BoundingBox").gameObject;
 
 			//This collider is used as a size reference for the Agent's Rotation checking boxes, so it does not need
 			//to be enabled. To ensure this doesn't interact with anything else, set the Tag to Untagged, the layer to 
 			//SimObjInvisible, and disable this component. Component values can still be accessed if the component itself
 			//is not enabled.
-			RotateAgentCollider.tag = "Untagged";
-			RotateAgentCollider.layer = 9;//layer 9 - SimObjInvisible
+			BoundingBox.tag = "Untagged";
+			BoundingBox.layer = 9;//layer 9 - SimObjInvisible
 
-			if (RotateAgentCollider.GetComponent<BoxCollider>())
-				RotateAgentCollider.GetComponent<BoxCollider>().enabled = false;
+			if (BoundingBox.GetComponent<BoxCollider>())
+				BoundingBox.GetComponent<BoxCollider>().enabled = false;
 		}
 	}
 	#endif

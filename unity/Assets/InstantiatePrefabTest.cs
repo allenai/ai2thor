@@ -124,7 +124,7 @@ public class InstantiatePrefabTest : MonoBehaviour
     //The prefab MUST have a rotate agent collider with zeroed out transform, rotation, and 1, 1, 1 scale
     //All adjustments to the Rotate agent collider box must be done on the collider only using the
     //"Edit Collider" button
-    //this assumes that the RotateAgentCollider transform is zeroed out according to the root transform of the prefab
+    //this assumes that the BoundingBox transform is zeroed out according to the root transform of the prefab
     private bool CheckSpawnArea(SimObjPhysics simObj, Vector3 position, Quaternion rotation, bool spawningInHand)
     {
         //create a dummy gameobject that is instantiated then rotated to get the actual
@@ -134,7 +134,7 @@ public class InstantiatePrefabTest : MonoBehaviour
         placeholderPosition.transform.position = position;
 
         GameObject inst = Instantiate(placeholderPosition.gameObject, placeholderPosition, false);
-        inst.transform.localPosition = simObj.RotateAgentCollider.GetComponent<BoxCollider>().center;
+        inst.transform.localPosition = simObj.BoundingBox.GetComponent<BoxCollider>().center;
 
         //rotate it after creating the offset so that the offset's local position is maintained
         placeholderPosition.transform.rotation = rotation;
@@ -157,13 +157,13 @@ public class InstantiatePrefabTest : MonoBehaviour
 		}
 
         Collider[] hitColliders = Physics.OverlapBox(inst.transform.position,
-                                                     simObj.RotateAgentCollider.GetComponent<BoxCollider>().size / 2, rotation,
+                                                     simObj.BoundingBox.GetComponent<BoxCollider>().size / 2, rotation,
                                                      layermask, QueryTriggerInteraction.Ignore);
         
 #if UNITY_EDITOR
 		m_Started = true;      
         gizmopos = inst.transform.position;
-        gizmoscale = simObj.RotateAgentCollider.GetComponent<BoxCollider>().size;
+        gizmoscale = simObj.BoundingBox.GetComponent<BoxCollider>().size;
         gizmoquaternion = rotation;
 #endif
         //destroy the dummy object, we don't need it anymore

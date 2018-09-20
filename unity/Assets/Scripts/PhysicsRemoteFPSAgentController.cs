@@ -1311,10 +1311,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			bool result = false;
                      
             //make sure there is a box collider
-			if (ItemInHand.GetComponent<SimObjPhysics>().RotateAgentCollider.GetComponent<BoxCollider>())
+			if (ItemInHand.GetComponent<SimObjPhysics>().BoundingBox.GetComponent<BoxCollider>())
 			{
 				//print("yes yes yes");
-				Vector3 sizeOfBox = ItemInHand.GetComponent<SimObjPhysics>().RotateAgentCollider.GetComponent<BoxCollider>().size;
+				Vector3 sizeOfBox = ItemInHand.GetComponent<SimObjPhysics>().BoundingBox.GetComponent<BoxCollider>().size;
 				float overlapRadius = Math.Max(Math.Max(sizeOfBox.x, sizeOfBox.y), sizeOfBox.z);
 
                 //all colliders hit by overlapsphere
@@ -2034,7 +2034,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 			}
          
-			BoxCollider HeldItemBox = ItemInHand.GetComponent<SimObjPhysics>().RotateAgentCollider.GetComponent<BoxCollider>();
+			BoxCollider HeldItemBox = ItemInHand.GetComponent<SimObjPhysics>().BoundingBox.GetComponent<BoxCollider>();
          
             //rotate all pivots to 0, move all box colliders to the position of the box collider of item in hand
             //change each box collider's size and center

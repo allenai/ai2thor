@@ -1008,6 +1008,22 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
+--- !u!1 &1989696342142396
+GameObject:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  serializedVersion: 5
+  m_Component:
+  - component: {fileID: 4834568999299308}
+  - component: {fileID: 65156489221862610}
+  m_Layer: 8
+  m_Name: BoundingBox
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
 --- !u!4 &4001596629550230
 Transform:
   m_ObjectHideFlags: 1
@@ -1359,9 +1375,9 @@ Transform:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 1063840805269616}
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalRotation: {x: -0, y: 0.7071068, z: -0, w: 0.7071068}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 0.91250104, y: 1, z: 1}
   m_Children:
   - {fileID: 4390756370274404}
   - {fileID: 4903347923261456}
@@ -1414,9 +1430,9 @@ Transform:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 1562386773122726}
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -0.005, y: 0.641, z: 0.052}
-  m_LocalScale: {x: 0.76875, y: 0.84375083, z: 0.40203133}
+  m_LocalRotation: {x: -0, y: 0.7071068, z: -0, w: 0.7071068}
+  m_LocalPosition: {x: 0.052000046, y: 0.641, z: 0.004562497}
+  m_LocalScale: {x: 0.701485, y: 0.84375083, z: 0.4020318}
   m_Children: []
   m_Father: {fileID: 4560411950611896}
   m_RootOrder: 1
@@ -1453,13 +1469,14 @@ Transform:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 1899982952897690}
-  m_LocalRotation: {x: -0, y: 0.7071068, z: -0, w: 0.7071068}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: -2.097, y: 0, z: 1.088}
-  m_LocalScale: {x: 0.9125001, y: 1, z: 1}
+  m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 4793927104939836}
   - {fileID: 4543226825135552}
   - {fileID: 4482738296198292}
+  - {fileID: 4834568999299308}
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -1652,9 +1669,9 @@ Transform:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 1226644795073202}
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -0.0050001144, y: 1.4940003, z: 0.052000046}
-  m_LocalScale: {x: 0.76874995, y: 0.4002542, z: 0.40203}
+  m_LocalRotation: {x: -0, y: 0.7071068, z: -0, w: 0.7071068}
+  m_LocalPosition: {x: 0.052000046, y: 1.4940003, z: 0.0045626163}
+  m_LocalScale: {x: 0.7014849, y: 0.4002542, z: 0.40203047}
   m_Children: []
   m_Father: {fileID: 4560411950611896}
   m_RootOrder: 0
@@ -1671,6 +1688,19 @@ Transform:
   m_Children: []
   m_Father: {fileID: 4911899437119408}
   m_RootOrder: 7
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!4 &4834568999299308
+Transform:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1989696342142396}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 4560411950611896}
+  m_RootOrder: 3
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!4 &4842090729830466
 Transform:
@@ -2129,6 +2159,18 @@ BoxCollider:
   serializedVersion: 2
   m_Size: {x: 1, y: 1, z: 1}
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!65 &65156489221862610
+BoxCollider:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1989696342142396}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_Enabled: 0
+  serializedVersion: 2
+  m_Size: {x: 0.73065543, y: 1.97168, z: 0.92746866}
+  m_Center: {x: 0.0845145, y: 0.98323137, z: 0.008594573}
 --- !u!65 &65208841948338544
 BoxCollider:
   m_ObjectHideFlags: 1
@@ -2253,7 +2295,7 @@ MonoBehaviour:
   Type: 18
   PrimaryProperty: 1
   SecondaryProperties: 0700000008000000
-  RotateAgentCollider: {fileID: 0}
+  BoundingBox: {fileID: 1989696342142396}
   VisibilityPoints:
   - {fileID: 4261442300096190}
   - {fileID: 4932053272681894}
@@ -2303,13 +2345,6 @@ MonoBehaviour:
   - {fileID: 4975754929234022}
   - {fileID: 4029346691266428}
   - {fileID: 4188691933534280}
-  MyColliders:
-  - {fileID: 1063840805269616}
-  - {fileID: 1765543321364290}
-  - {fileID: 1664416540708194}
-  MyTriggerColliders:
-  - {fileID: 1981505737320922}
-  - {fileID: 1481105746053374}
   ReceptacleTriggerBoxes:
   - {fileID: 1226644795073202}
   - {fileID: 1562386773122726}
