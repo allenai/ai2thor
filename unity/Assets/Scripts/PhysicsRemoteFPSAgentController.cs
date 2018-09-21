@@ -2012,6 +2012,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             {
                 errorMessage = "Hey, actually give me an object ID check containment for, yeah?";
                 Debug.Log(errorMessage);
+                actionFinished(false);
                 return;
             }
 
