@@ -509,6 +509,7 @@ public class ObjectMetadata
 		}
 		this.pickupable = simObj.IsPickupable;
 		this.objectId = simObj.UniqueID;
+		this.visible = simObj.IsVisible;
 
 
 

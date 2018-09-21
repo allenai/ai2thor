@@ -351,6 +351,61 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			return collisionsInAction.Count > 0;
 		}
 
+        public virtual SimpleSimObj[] allSceneObjects() {
+			return GameObject.FindObjectsOfType<SimObj>();
+        }
+
+        public virtual ObjectMetadata[] generateObjectMetadata()
+		{
+			// Encode these in a json string and send it to the server
+			SimpleSimObj[] simObjects = this.allSceneObjects();
+
+			int numObj = simObjects.Length;
+			List<ObjectMetadata> metadata = new List<ObjectMetadata>();
+			Dictionary<string, List<string>> parentReceptacles = new Dictionary<string, List<string>> ();
+
+			HashSet<string> visibleObjectIds = new HashSet<string>();
+
+			foreach (SimpleSimObj so in VisibleSimObjs() as SimpleSimObj[])
+			{
+				visibleObjectIds.Add(so.UniqueID);
+			}
+
+
+			for (int k = 0; k < numObj; k++) {
+				SimpleSimObj simObj = simObjects[k];
+				if (this.excludeObject(simObj.UniqueID)) {
+					continue;
+				}
+				ObjectMetadata meta = new ObjectMetadata(simObj);
+
+				if (meta.receptacle)
+				{
+					List<string> receptacleObjectIds = simObj.ReceptacleObjectIds;
+					foreach (string oid in receptacleObjectIds)
+					{
+                        if (!parentReceptacles.ContainsKey(oid)) {
+                            parentReceptacles[oid] = new List<string>();
+                        }
+                        parentReceptacles[oid].Add(simObj.UniqueID);
+					}
+
+					meta.receptacleObjectIds = receptacleObjectIds.ToArray();
+					meta.receptacleCount = simObj.ReceptacleCount; // may want to change this to the number of objects for physics?
+				}
+				meta.distance = Vector3.Distance(transform.position, simObj.gameObject.transform.position);
+				meta.visible = visibleObjectIds.Contains(simObj.UniqueID);
+				metadata.Add(meta);
+			}
+
+			foreach (ObjectMetadata meta in metadata) {
+				if (parentReceptacles.ContainsKey (meta.objectId)) {
+					meta.parentReceptacles = parentReceptacles[meta.objectId].ToArray();
+				}
+			}
+			return metadata.ToArray();
+		}
+
 		public virtual MetadataWrapper generateMetadataWrapper()
 		{
 			ObjectMetadata agentMeta = new ObjectMetadata();
@@ -358,23 +413,34 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			agentMeta.position = transform.position;
 			agentMeta.rotation = transform.eulerAngles;
 			agentMeta.cameraHorizon = m_Camera.transform.rotation.eulerAngles.x;
+
 			if (agentMeta.cameraHorizon > 180) {
 				agentMeta.cameraHorizon -= 360;
 			}
 
 			MetadataWrapper metaMessage = new MetadataWrapper();
+
 			metaMessage.agent = agentMeta;
 			metaMessage.sceneName = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
-			metaMessage.objects = generateObjectMetadataForTag("SimObj", false);
+			metaMessage.objects = generateObjectMetadata();
 			metaMessage.collided = collidedObjects.Length > 0;
 			metaMessage.collidedObjects = collidedObjects;
 			metaMessage.screenWidth = Screen.width;
 			metaMessage.screenHeight = Screen.height;
+			metaMessage.lastAction = lastAction;
+			metaMessage.lastActionSuccess = lastActionSuccess;
+			metaMessage.errorMessage = errorMessage;
+
+			if (errorCode != ServerActionErrorCode.Undefined) 
+			{
+				metaMessage.errorCode = Enum.GetName(typeof(ServerActionErrorCode), errorCode);
+			}
+
 
 			return metaMessage;
 		}
 
-		virtual public SimpleSimObj[] VisibleSimObjs() {
+		public virtual SimpleSimObj[] VisibleSimObjs() {
 			return new SimObj[]{} as SimpleSimObj[];
 		}
 

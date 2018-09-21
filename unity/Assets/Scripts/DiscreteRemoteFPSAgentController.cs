@@ -68,14 +68,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 
 			MetadataWrapper metaMessage = base.generateMetadataWrapper ();
-			metaMessage.lastAction = lastAction;
-			metaMessage.lastActionSuccess = lastActionSuccess;
-			metaMessage.errorMessage = errorMessage;
-
-			if (errorCode != ServerActionErrorCode.Undefined) 
-			{
-				metaMessage.errorCode = Enum.GetName(typeof(ServerActionErrorCode), errorCode);
-			}
 
 			List<InventoryObject> ios = new List<InventoryObject>();
 
