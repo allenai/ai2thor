@@ -2034,6 +2034,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 //XXX It looks like this goes right into the MetaData, so basically this just returns a list of strings
 				//that are the unique ID's of every object that is contained by the target object
 				target.Contains();
+                actionFinished(true);
 			}
 
 			else
