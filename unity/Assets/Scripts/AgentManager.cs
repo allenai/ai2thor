@@ -603,6 +603,7 @@ public class ServerAction
 	public string quality;
 	public float timeScale = 1.0f;
 	public string objectType;
+	public int objectVariation;
 	public string receptacleObjectType;
 	public string receptacleObjectId;
 	public float gridSize;
