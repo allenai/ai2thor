@@ -2696,6 +2696,13 @@ namespace UnityStandardAssets.Characters.FirstPerson
         ///// DATA GENERATION HELPERS /////
         ///////////////////////////////////
 
+        public void GetSceneBounds(ServerAction action) {
+            reachablePositions = new Vector3[2];
+            reachablePositions[0] = sceneBounds.min;
+            reachablePositions[1] = sceneBounds.max;
+            actionFinished(true);
+        }
+
         protected Collider[] overlapCollider(BoxCollider box, Vector3 newCenter, float rotateBy, int layerMask) {
             Vector3 center, halfExtents;
             Quaternion orientation;
@@ -3007,7 +3014,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
             //spawn the object at the agent's hand position
 			InstantiatePrefabTest script = GameObject.Find("PhysicsSceneManager").GetComponent<InstantiatePrefabTest>();
-			SimObjPhysics so = script.SpawnObject(action.objectType, action.randomizeObjectAppearance, action.sequenceId, 
+			SimObjPhysics so = script.SpawnObject(
+                action.objectType, action.randomizeObjectAppearance, action.sequenceId, 
 			                                AgentHand.transform.position);
             
 			if (so == null) 

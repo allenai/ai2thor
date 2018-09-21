@@ -87,9 +87,10 @@ public class InstantiatePrefabTest : MonoBehaviour
 		// Figure out which variation to use
 		if (randomize)
 		{
-			variation = UnityEngine.Random.Range(0, candidates.Count);
+			variation = UnityEngine.Random.Range(1, candidates.Count);
 		}
-		else if (variation != 0) {
+		
+		if (variation != 0) {
 			variation -= 1;
 		}
 		Debug.Log(variation);
