@@ -36,7 +36,7 @@ GameObject:
   - component: {fileID: 4133140721335088}
   - component: {fileID: 65640890804208746}
   m_Layer: 9
-  m_Name: RotateAgentCollider
+  m_Name: BoundingBox
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -466,7 +466,7 @@ Transform:
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 1942024364422282}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: 0, y: -0.414, z: 0}
   m_LocalScale: {x: 1, y: 0.5569962, z: 1}
   m_Children:
   - {fileID: 4787490897956176}
@@ -614,8 +614,8 @@ Transform:
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 1894769542871814}
   m_LocalRotation: {x: -0.7069125, y: 0.016578045, z: 0.016578045, w: 0.7069124}
-  m_LocalPosition: {x: 0, y: 0.40382224, z: 0}
-  m_LocalScale: {x: 51.679596, y: 51.679596, z: 28.785345}
+  m_LocalPosition: {x: 0, y: -0.010177758, z: 0}
+  m_LocalScale: {x: 51.679596, y: 51.67964, z: 28.785376}
   m_Children: []
   m_Father: {fileID: 4644964165621934}
   m_RootOrder: 0
@@ -640,7 +640,7 @@ Transform:
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 1714080911461760}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: 0, y: -0.414, z: 0}
   m_LocalScale: {x: 1, y: 0.5569962, z: 1}
   m_Children:
   - {fileID: 4587654346785440}
@@ -684,7 +684,7 @@ Transform:
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 1540347436680004}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 2.954, y: -0.354, z: 0.392}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 4406042114145688}
@@ -806,7 +806,7 @@ Transform:
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 1921893977006810}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: 0, y: -0.414, z: 0}
   m_LocalScale: {x: 1, y: 0.5569962, z: 1}
   m_Children:
   - {fileID: 4668311051353560}
@@ -975,8 +975,8 @@ BoxCollider:
   m_IsTrigger: 0
   m_Enabled: 0
   serializedVersion: 2
-  m_Size: {x: 0.30674, y: 0.42009708, z: 0.30426118}
-  m_Center: {x: 0, y: 0.20590748, z: 0}
+  m_Size: {x: 0.30674, y: 0.42655826, z: 0.30426118}
+  m_Center: {x: 0, y: -0.21244287, z: 0}
 --- !u!65 &65671537347378866
 BoxCollider:
   m_ObjectHideFlags: 1
@@ -1036,11 +1036,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b439f6e4ef5714ee2a3643acf37b7a9d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  uniqueID: Footstool|+02.95|-00.35|+00.39
+  uniqueID: Footstool|+02.95|+00.06|+00.39
   Type: 125
   PrimaryProperty: 3
   SecondaryProperties: 
-  RotateAgentCollider: {fileID: 1125413749540584}
+  BoundingBox: {fileID: 1125413749540584}
   VisibilityPoints:
   - {fileID: 4668311051353560}
   - {fileID: 4047074398952914}

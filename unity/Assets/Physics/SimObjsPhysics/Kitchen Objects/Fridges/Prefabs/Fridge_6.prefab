@@ -572,6 +572,22 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
+--- !u!1 &1744341680986138
+GameObject:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  serializedVersion: 5
+  m_Component:
+  - component: {fileID: 4781291203501738}
+  - component: {fileID: 65404821837605174}
+  m_Layer: 8
+  m_Name: BoundingBox
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
 --- !u!1 &1778240530888970
 GameObject:
   m_ObjectHideFlags: 1
@@ -1485,6 +1501,7 @@ Transform:
   m_Children:
   - {fileID: 4503723662571278}
   - {fileID: 4249391013138106}
+  - {fileID: 4781291203501738}
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 90, z: 0}
@@ -1595,6 +1612,19 @@ Transform:
   m_Children: []
   m_Father: {fileID: 4975840314097666}
   m_RootOrder: 13
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!4 &4781291203501738
+Transform:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1744341680986138}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 4608115308067604}
+  m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!4 &4807974900814968
 Transform:
@@ -1965,6 +1995,18 @@ BoxCollider:
   serializedVersion: 2
   m_Size: {x: 1, y: 1, z: 1}
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!65 &65404821837605174
+BoxCollider:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1744341680986138}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_Enabled: 0
+  serializedVersion: 2
+  m_Size: {x: 1, y: 1.8000112, z: 0.7326287}
+  m_Center: {x: 2.5728435e-16, y: 0.9009471, z: 0.08060476}
 --- !u!65 &65565198580728830
 BoxCollider:
   m_ObjectHideFlags: 1
@@ -2040,7 +2082,7 @@ MonoBehaviour:
   Type: 18
   PrimaryProperty: 1
   SecondaryProperties: 0700000008000000
-  RotateAgentCollider: {fileID: 0}
+  BoundingBox: {fileID: 1744341680986138}
   VisibilityPoints:
   - {fileID: 4115251295403926}
   - {fileID: 4344187902550468}
@@ -2085,13 +2127,6 @@ MonoBehaviour:
   - {fileID: 4557082888494634}
   - {fileID: 4429290026415298}
   - {fileID: 4133580847193474}
-  MyColliders:
-  - {fileID: 1950856334965830}
-  - {fileID: 1281051919661144}
-  - {fileID: 1993959534244832}
-  MyTriggerColliders:
-  - {fileID: 1272138884626116}
-  - {fileID: 1922260961852504}
   ReceptacleTriggerBoxes:
   - {fileID: 1854537496342756}
   isVisible: 0

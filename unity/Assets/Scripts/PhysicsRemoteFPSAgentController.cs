@@ -131,79 +131,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			VisibleSimObjPhysics = VisibleSimObjs(action);//GetAllVisibleSimObjPhysics(m_Camera, maxVisibleDistance);
    		}
 
-        private ObjectMetadata ObjectMetadataFromSimObjPhysics(SimObjPhysics simObj) {
-            ObjectMetadata objMeta = new ObjectMetadata();
 
-            GameObject o = simObj.gameObject;
-            objMeta.name = o.name;
-            objMeta.position = o.transform.position;
-            objMeta.rotation = o.transform.eulerAngles;
 
-            objMeta.objectType = Enum.GetName(typeof(SimObjType), simObj.Type);
-            objMeta.receptacle = simObj.IsReceptacle;
-            objMeta.openable = simObj.IsOpenable;
-            if (objMeta.openable) {
-                objMeta.isopen = simObj.IsOpen;
-            }
-            objMeta.pickupable = simObj.PrimaryProperty == SimObjPrimaryProperty.CanPickup;
-            objMeta.objectId = simObj.UniqueID;
-            objMeta.visible = simObj.isVisible;
 
-            // TODO: bounds necessary?
-            // Bounds bounds = simObj.Bounds;
-            // this.bounds3D = new [] {
-            //     bounds.min.x,
-            //     bounds.min.y,
-            //     bounds.min.z,
-            //     bounds.max.x,
-            //     bounds.max.y,
-            //     bounds.max.z,
-            // };
 
-            return objMeta;
-        }
-
-        private ObjectMetadata[] generateObjectMetadata()
-		{
-			// Encode these in a json string and send it to the server
-			SimObjPhysics[] simObjects = GameObject.FindObjectsOfType<SimObjPhysics>();
-
-			int numObj = simObjects.Length;
-			List<ObjectMetadata> metadata = new List<ObjectMetadata>();
-			Dictionary<string, List<string>> parentReceptacles = new Dictionary<string, List<string>> ();
-
-			for (int k = 0; k < numObj; k++) {
-				SimObjPhysics simObj = simObjects[k];
-				if (this.excludeObject(simObj.UniqueID)) {
-					continue;
-				}
-				ObjectMetadata meta = ObjectMetadataFromSimObjPhysics(simObj);
-
-				if (meta.receptacle)
-				{
-					List<string> receptacleObjectIds = simObj.Contains();
-					foreach (string oid in receptacleObjectIds)
-					{
-                        if (!parentReceptacles.ContainsKey(oid)) {
-                            parentReceptacles[oid] = new List<string>();
-                        }
-                        parentReceptacles[oid].Add(simObj.UniqueID);
-					}
-
-					meta.receptacleObjectIds = receptacleObjectIds.ToArray();
-					meta.receptacleCount = meta.receptacleObjectIds.Length;
-				}
-				meta.distance = Vector3.Distance(transform.position, simObj.gameObject.transform.position);
-				metadata.Add(meta);
-			}
-
-			foreach (ObjectMetadata meta in metadata) {
-				if (parentReceptacles.ContainsKey (meta.objectId)) {
-					meta.parentReceptacles = parentReceptacles[meta.objectId].ToArray();
-				}
-			}
-			return metadata.ToArray();
-		}
 
 		private T[] flatten2DimArray<T>(T[,] array) {
 			int nrow = array.GetLength(0);
@@ -248,7 +179,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             MetadataWrapper metaMessage = new MetadataWrapper();
 			metaMessage.agent = agentMeta;
 			metaMessage.sceneName = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
-			metaMessage.objects = generateObjectMetadata();
+			metaMessage.objects = this.generateObjectMetadata();
 			metaMessage.collided = collidedObjects.Length > 0;
 			metaMessage.collidedObjects = collidedObjects;
 			metaMessage.screenWidth = Screen.width;
@@ -491,25 +422,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 && viewPoint.x < ViewPointRangeHigh && viewPoint.x > ViewPointRangeLow//within x bounds of viewport
                 && viewPoint.y < ViewPointRangeHigh && viewPoint.y > ViewPointRangeLow)//within y bounds of viewport
             {
-
-                ///////downard max distance extension here
-				// float MaxDownwardLookAngle = 60f;
-				// float MinDownwardLookAngle = 15f;
-
-				// Vector3 itemDirection = Vector3.zero;
-                //          //do a raycast in the direction of the item
-				// itemDirection = (point.position - agentCamera.transform.position).normalized;
-                // Vector3 agentForward = agentCamera.transform.forward;
-                // agentForward.y = 0f;
-                // agentForward.Normalize();
-                // //clap the angle so we can't wrap around
-                // float maxDistanceLerp = 0f;
-                // float lookAngle = Mathf.Clamp(Vector3.Angle(agentForward, itemDirection), 0f, MaxDownwardLookAngle) - MinDownwardLookAngle;
-                // maxDistanceLerp = lookAngle / MaxDownwardLookAngle;
-				// maxDistance = Mathf.Lerp(maxDistance, maxDistance * DownwardViewDistance, maxDistanceLerp);
-
-                ///////end downward max distance stuff
-                
 				//now cast a ray out toward the point, if anything occludes this point, that point is not visible
 				RaycastHit hit;
 
@@ -1399,10 +1311,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			bool result = false;
                      
             //make sure there is a box collider
-			if (ItemInHand.GetComponent<SimObjPhysics>().RotateAgentCollider.GetComponent<BoxCollider>())
+			if (ItemInHand.GetComponent<SimObjPhysics>().BoundingBox.GetComponent<BoxCollider>())
 			{
 				//print("yes yes yes");
-				Vector3 sizeOfBox = ItemInHand.GetComponent<SimObjPhysics>().RotateAgentCollider.GetComponent<BoxCollider>().size;
+				Vector3 sizeOfBox = ItemInHand.GetComponent<SimObjPhysics>().BoundingBox.GetComponent<BoxCollider>().size;
 				float overlapRadius = Math.Max(Math.Max(sizeOfBox.x, sizeOfBox.y), sizeOfBox.z);
 
                 //all colliders hit by overlapsphere
@@ -1411,10 +1323,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
                 //did we even hit enything?
 				if(hitColliders.Length > 0)
-				{
-					//GameObject[] ItemInHandColliders = ItemInHand.GetComponent<SimObjPhysics>().MyColliders;
-                    //GameObject[] ItemInHandTriggerColliders = ItemInHand.GetComponent<SimObjPhysics>().MyTriggerColliders;
-
+				{               
 					foreach (Collider col in hitColliders)
                     {
 						//is this a sim object?
@@ -1438,28 +1347,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
 							result = false;
 							return result;
 						}
-						////check each collider hit
-
-      //                  //if it's the player, ignore it
-						//if(col.tag != "Player" && col.GetComponentInParent<SimObjPhysics>().transform != ItemInHand.transform)
-						//{
-						//	result = false;
-						//	//if(IsInArray(col, ItemInHandColliders) || IsInArray(col, ItemInHandTriggerColliders))
-						//	//{
-						//	//	result = true;
-						//	//}
-
-						//	//else
-						//	//{
-						//	//	Debug.Log(col.name + "  is blocking hand from rotating");
-						//	//	result = false;
-						//	//}
-						//}
-
-						//else 
-						//{
-						//	result = true;
-						//}
                     }
 				}
 
@@ -1531,15 +1418,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 }
 
                 SimObjPhysics[] simObjPhysicsArray = VisibleSimObjs(action);
-                // if (action.forceVisible) {
-                //     simObjPhysicsArray = VisibleSimObjs(action);
-                // }
-                // TODO: Seems smart to reuse computation here but doing
-                // so actually makes it impossible to see if an object is
-                // interactable or not.
-                // else {
-                //     simObjPhysicsArray = VisibleSimObjPhysics;
-                // }
                 
                 foreach (SimObjPhysics sop in simObjPhysicsArray)
                 {
@@ -1585,13 +1463,31 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 
                 //move the object to the hand's default position. Make it Kinematic
                 //then set parant and ItemInHand
+                
+                Vector3 savedPos = target.transform.position;
+                Quaternion savedRot = target.transform.rotation;
+                Transform savedParent = target.transform.parent;
+                bool wasKinematic = target.GetComponent<Rigidbody>().isKinematic;
 
                 target.GetComponent<Rigidbody>().isKinematic = true;
                 target.transform.position = AgentHand.transform.position;
 				// target.transform.rotation = AgentHand.transform.rotation;
-                target.transform.rotation = Quaternion.identity;
+				target.transform.rotation = Quaternion.identity; //AgentHand.transform.rotation;
                 target.transform.SetParent(AgentHand.transform);
                 ItemInHand = target.gameObject;
+
+                if (!action.forceAction && isHandObjectColliding()) {
+                    // Undo picking up the object if the object is colliding with something after picking it up
+                    target.GetComponent<Rigidbody>().isKinematic = wasKinematic;
+                    target.transform.position = savedPos;
+                    target.transform.rotation = savedRot;
+                    target.transform.SetParent(savedParent);
+                    ItemInHand = null;
+                    errorMessage = "Picking up object would cause it to collide.";
+                    Debug.Log(errorMessage);
+                    actionFinished(true);
+                    return;
+                }
 
 				SetUpRotationBoxChecks();
 
@@ -1628,11 +1524,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
         {
             //make sure something is actually in our hands
             if (ItemInHand != null)
-            {
-                // TODO: The bellow check doesn't work because not all receptacle's are tagged as such
-                // and thus objects are reporting that they are colliding when they aren't. It doesn't
-                // seem clear to me that this check is really necessary though.
-
+            {            
                 //we do need this to check if the item is currently colliding with the agent, otherwise
                 //dropping an object while it is inside the agent will cause it to shoot out weirdly
                 if (!action.forceAction && ItemInHand.GetComponent<SimObjPhysics>().isColliding)
@@ -1809,24 +1701,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
             }
 
             foreach (SimObjPhysics sop in VisibleSimObjs(action))
-            {
-    //            //print("why not?");
-    //            //check for object in current visible objects, and also check that it's interactable
-				//if(!IgnoreInteractableFlag)
-				//{
-				//	if (!sop.isInteractable)
-    //                {
-    //                    Debug.Log(sop.UniqueID + " is not Interactable");
-    //                    return;
-    //                }
-				//}
-
+            {            
 				if (sop.GetComponent<CanOpen_Object>())
                 {
                     //print("wobbuffet");
                     target = sop;
-                }
-
+                }            
             }
             
             if (target)
@@ -2172,7 +2052,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 			}
          
-			BoxCollider HeldItemBox = ItemInHand.GetComponent<SimObjPhysics>().RotateAgentCollider.GetComponent<BoxCollider>();
+			BoxCollider HeldItemBox = ItemInHand.GetComponent<SimObjPhysics>().BoundingBox.GetComponent<BoxCollider>();
          
             //rotate all pivots to 0, move all box colliders to the position of the box collider of item in hand
             //change each box collider's size and center
@@ -2253,6 +2133,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
 				return GetAllVisibleSimObjPhysics(m_Camera, maxVisibleDistance);
 			}
 		}
+        
+
+        public override SimpleSimObj[] VisibleSimObjs()
+        {
+            return GetAllVisibleSimObjPhysics(m_Camera, maxVisibleDistance);
+        }
         
 		public SimObjPhysics[] VisibleSimObjs(ServerAction action) 
 		{
@@ -2985,17 +2871,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			actionFinished(true);
 		}
 
-        //spawns object in agent's hand
+        //spawns object in agent's hand with the same orientation as the agent's hand
         public void CreateObject(ServerAction action) 
 		{
-   //         if (uniqueIdToSimObjPhysics.ContainsKey(action.objectId)) 
-			//{
-    //            errorMessage = "An object with that ID already exists, cannot create a new one.";
-    //            Debug.Log(errorMessage);
-    //            actionFinished(false);
-				//return;
-            //}
-
             if (ItemInHand != null) 
 			{
                 errorMessage = "Already have an object in hand, can't create a new one to put there.";
@@ -3014,9 +2892,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
             //spawn the object at the agent's hand position
 			InstantiatePrefabTest script = GameObject.Find("PhysicsSceneManager").GetComponent<InstantiatePrefabTest>();
-			SimObjPhysics so = script.SpawnObject(
-                action.objectType, action.randomizeObjectAppearance, action.sequenceId, 
-			                                AgentHand.transform.position);
+			SimObjPhysics so = script.SpawnObject(action.objectType, action.randomizeObjectAppearance, action.sequenceId, 
+			                                      AgentHand.transform.position, AgentHand.transform.rotation.eulerAngles, true);
             
 			if (so == null) 
 			{
@@ -3044,7 +2921,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 		public void CreateObjectAtLocation(ServerAction action) 
 		{
-			Vector3 targetPosition = new Vector3(action.x, action.y, action.z);
+			Vector3 targetPosition = action.position;
+			Vector3 targetRotation = action.rotation;
 
 			if(!sceneBounds.Contains(targetPosition))
 			{
@@ -3065,7 +2943,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			//spawn the object at the agent's hand position
             InstantiatePrefabTest script = GameObject.Find("PhysicsSceneManager").GetComponent<InstantiatePrefabTest>();
             SimObjPhysics so = script.SpawnObject(action.objectType, action.randomizeObjectAppearance, action.sequenceId,
-                                            targetPosition);
+			                                      targetPosition, targetRotation, false);
 			
 			if (so == null) 
 			{
@@ -3347,7 +3225,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			float xRoomSize = b.max.x - b.min.x;
 			float zRoomSize = b.max.z - b.min.z;
 			InstantiatePrefabTest script = GameObject.Find("PhysicsSceneManager").GetComponent<InstantiatePrefabTest>();
-			SimObjPhysics objForBounds = script.SpawnObject(prefab, false, sequenceId, new Vector3(0.0f, b.max.y + 10.0f, 0.0f), true);
+			SimObjPhysics objForBounds = script.SpawnObject(prefab, false, sequenceId, new Vector3(0.0f, b.max.y + 10.0f, 0.0f), Vector3.zero, false, true);
 
 			Bounds objBounds = new Bounds(
                 new Vector3(float.PositiveInfinity, float.PositiveInfinity, float.PositiveInfinity),
@@ -3426,7 +3304,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                             Collider[] colliders = Physics.OverlapBox(center, halfExtents, Quaternion.identity, layerMask);
                             if (colliders.Length == 0) {
                                 k++;
-                                SimObjPhysics newObj = script.SpawnObject(prefab, false, sequenceId, center - objCenterRelPos, true);
+                                SimObjPhysics newObj = script.SpawnObject(prefab, false, sequenceId, center - objCenterRelPos, Vector3.zero, false, true);
                                 newObjects.Add(newObj);
                             } 
                         }

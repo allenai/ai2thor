@@ -23,6 +23,19 @@ public class SimObj : MonoBehaviour, SimpleSimObj
 		}
 	}
 
+	public bool IsVisible 
+	{
+		get 
+		{
+			return IsVisible;;
+		} 
+
+		set {
+			isVisible = value;
+		}
+	}
+
+
 	public SimObjType Type = SimObjType.Undefined;
 	public SimObjManipType Manipulation = SimObjManipType.Inventory;
 	public static SimObjType[] OpenableTypes = new SimObjType[] { SimObjType.Fridge, SimObjType.Cabinet, SimObjType.Microwave, SimObjType.LightSwitch, SimObjType.Blinds, SimObjType.Book, SimObjType.Toilet };
@@ -35,6 +48,7 @@ public class SimObj : MonoBehaviour, SimpleSimObj
 		{SimObjType.Sink, new Dictionary<string, int>{{"open", 2}, {"close", 1}}}
 	};
 	public bool UseCustomBounds = false;
+	public bool isVisible = false;
 	public bool UseWidthSearch = false;
 	public bool hasCollision = false;
 	public Transform BoundsTransform;
@@ -675,6 +689,7 @@ public interface SimpleSimObj {
 	bool IsOpen {get; }
 	bool IsPickupable {get; }
 	bool IsOpenable {get; }
+	bool IsVisible {get; set;}
 	bool Open(); 
 	bool Close();
 	List<PivotSimObj> PivotSimObjs {get;}

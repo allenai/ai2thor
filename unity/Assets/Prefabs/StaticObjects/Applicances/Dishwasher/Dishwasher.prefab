@@ -16,14 +16,15 @@ GameObject:
   m_ObjectHideFlags: 0
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 100100000}
-  serializedVersion: 4
+  serializedVersion: 5
   m_Component:
-  - 4: {fileID: 4000013319250734}
-  - 33: {fileID: 33000010139465780}
-  - 23: {fileID: 23000013211537578}
-  m_Layer: 0
+  - component: {fileID: 4000013319250734}
+  - component: {fileID: 33000010139465780}
+  - component: {fileID: 23000013211537578}
+  - component: {fileID: 65113955406952398}
+  m_Layer: 8
   m_Name: Dishwasher
-  m_TagString: Untagged
+  m_TagString: Structure
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -37,10 +38,10 @@ Transform:
   m_LocalRotation: {x: -0.50000083, y: 0.49999925, z: 0.4999993, w: 0.5000007}
   m_LocalPosition: {x: 0.94440454, y: -72.044174, z: 14.124052}
   m_LocalScale: {x: 100, y: 100, z: 100}
-  m_LocalEulerAnglesHint: {x: -89.981, y: 0, z: 90.00001}
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 0
+  m_LocalEulerAnglesHint: {x: -89.981, y: 0, z: 90.00001}
 --- !u!23 &23000013211537578
 MeshRenderer:
   m_ObjectHideFlags: 1
@@ -50,6 +51,7 @@ MeshRenderer:
   m_Enabled: 1
   m_CastShadows: 1
   m_ReceiveShadows: 1
+  m_DynamicOccludee: 1
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
@@ -57,7 +59,9 @@ MeshRenderer:
   - {fileID: 2100000, guid: 05e6f9a9eb423ff4e80efa86de98249f, type: 2}
   - {fileID: 2100000, guid: 26b3f55a481d821439647b25056f0bdb, type: 2}
   - {fileID: 2100000, guid: be9d13bb687dd684b816ed574384806e, type: 2}
-  m_SubsetIndices: 
+  m_StaticBatchInfo:
+    firstSubMesh: 0
+    subMeshCount: 0
   m_StaticBatchRoot: {fileID: 0}
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
@@ -65,12 +69,14 @@ MeshRenderer:
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
-  m_SelectedWireframeHidden: 0
+  m_StitchLightmapSeams: 0
+  m_SelectedEditorRenderState: 3
   m_MinimumChartSize: 4
   m_AutoUVMaxDistance: 0.5
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_SortingLayerID: 0
+  m_SortingLayer: 0
   m_SortingOrder: 0
 --- !u!33 &33000010139465780
 MeshFilter:
@@ -79,3 +85,15 @@ MeshFilter:
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 1000012420042506}
   m_Mesh: {fileID: 4300000, guid: c3730ea47e2f74536ac6dbce5675fe39, type: 3}
+--- !u!65 &65113955406952398
+BoxCollider:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1000012420042506}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Size: {x: 0.0062958775, y: 0.008000002, z: 0.009080918}
+  m_Center: {x: -0.0024100533, y: -2.8730177e-10, z: -4.3095005e-10}

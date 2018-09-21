@@ -566,6 +566,22 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
+--- !u!1 &1787613431113480
+GameObject:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  serializedVersion: 5
+  m_Component:
+  - component: {fileID: 4378970546178772}
+  - component: {fileID: 65315534136777772}
+  m_Layer: 8
+  m_Name: BoundingBox
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
 --- !u!1 &1837718379592844
 GameObject:
   m_ObjectHideFlags: 0
@@ -871,6 +887,19 @@ Transform:
   m_Father: {fileID: 4446590365970322}
   m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!4 &4378970546178772
+Transform:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1787613431113480}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 4614145737612350}
+  m_RootOrder: 2
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!4 &4390209872944706
 Transform:
   m_ObjectHideFlags: 1
@@ -992,9 +1021,9 @@ Transform:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 1778356235554618}
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalRotation: {x: -0, y: 0.70710576, z: -0, w: 0.70710784}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 0.77932596, y: 0.9618266, z: 0.7993084}
   m_Children:
   - {fileID: 4788036437211988}
   - {fileID: 4596514399630118}
@@ -1022,15 +1051,16 @@ Transform:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 1233714950478522}
-  m_LocalRotation: {x: -0, y: 0.70710576, z: -0, w: 0.70710784}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: -1.4955621, y: 0, z: -0.703}
-  m_LocalScale: {x: 0.77932596, y: 0.9618266, z: 0.7993084}
+  m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 4933029193831602}
   - {fileID: 4591712979417592}
+  - {fileID: 4378970546178772}
   m_Father: {fileID: 0}
   m_RootOrder: 0
-  m_LocalEulerAnglesHint: {x: 0, y: 90.00001, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!4 &4643542586815504
 Transform:
   m_ObjectHideFlags: 1
@@ -1224,9 +1254,9 @@ Transform:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 1837718379592844}
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 1.054, z: 0}
-  m_LocalScale: {x: 1.0625, y: 1.7926577, z: 0.5749999}
+  m_LocalRotation: {x: -0, y: 0.70710576, z: -0, w: 0.70710784}
+  m_LocalPosition: {x: 0, y: 1.0137653, z: 0}
+  m_LocalScale: {x: 0.8280338, y: 1.7242259, z: 0.4596023}
   m_Children: []
   m_Father: {fileID: 4614145737612350}
   m_RootOrder: 0
@@ -1549,6 +1579,18 @@ BoxCollider:
   serializedVersion: 2
   m_Size: {x: 1, y: 1, z: 1}
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!65 &65315534136777772
+BoxCollider:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1787613431113480}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_Enabled: 0
+  serializedVersion: 2
+  m_Size: {x: 0.7214869, y: 1.9619, z: 0.9300271}
+  m_Center: {x: 0.06836504, y: 0.991254, z: 0}
 --- !u!65 &65319644726537240
 BoxCollider:
   m_ObjectHideFlags: 1
@@ -1612,7 +1654,7 @@ MonoBehaviour:
   Type: 18
   PrimaryProperty: 1
   SecondaryProperties: 0700000008000000
-  RotateAgentCollider: {fileID: 0}
+  BoundingBox: {fileID: 1787613431113480}
   VisibilityPoints:
   - {fileID: 4709031386800190}
   - {fileID: 4461753759915306}
@@ -1645,11 +1687,6 @@ MonoBehaviour:
   - {fileID: 4100493355763602}
   - {fileID: 4034603002853600}
   - {fileID: 4820588468321702}
-  MyColliders:
-  - {fileID: 1778356235554618}
-  - {fileID: 1235754513739068}
-  MyTriggerColliders:
-  - {fileID: 1972715619580122}
   ReceptacleTriggerBoxes:
   - {fileID: 1837718379592844}
   isVisible: 0
