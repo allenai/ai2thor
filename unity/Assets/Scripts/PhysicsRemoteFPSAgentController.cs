@@ -1472,7 +1472,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 target.GetComponent<Rigidbody>().isKinematic = true;
                 target.transform.position = AgentHand.transform.position;
 				// target.transform.rotation = AgentHand.transform.rotation;
-				target.transform.rotation = Quaternion.identity; //AgentHand.transform.rotation;
+				target.transform.rotation = AgentHand.transform.rotation;
                 target.transform.SetParent(AgentHand.transform);
                 ItemInHand = target.gameObject;
 
