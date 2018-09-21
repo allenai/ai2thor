@@ -582,7 +582,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 
 	}
 
-	[ContextMenu("Find BoundingBox")]
+	//[ContextMenu("Find BoundingBox")]
 	void ContextFindBoundingBox()
 	{
 		BoundingBox = gameObject.transform.Find("BoundingBox").gameObject;
@@ -598,6 +598,24 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		this.SecondaryProperties = new SimObjSecondaryProperty[2];
 		this.SecondaryProperties[0] = SimObjSecondaryProperty.Receptacle;
 		this.SecondaryProperties[1] = SimObjSecondaryProperty.CanOpen;
+
+		if(!gameObject.transform.Find("BoundingBox"))
+		{
+			GameObject bb = new GameObject("BoundingBox");
+			bb.transform.position = gameObject.transform.position;
+			bb.transform.SetParent(gameObject.transform);
+			bb.AddComponent<BoxCollider>();
+			bb.GetComponent<BoxCollider>().enabled = false;
+			bb.tag = "Untagged";
+			bb.layer = 0;
+
+			BoundingBox = bb;
+		}
+
+		else
+		{
+			BoundingBox = gameObject.transform.Find("BoundingBox").gameObject;
+		}
 
 		if(!gameObject.GetComponent<CanOpen_Object>())
 		{
@@ -688,7 +706,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 
 	}
 
-	[ContextMenu("Set Up SimObjPhysics")]
+	//[ContextMenu("Set Up SimObjPhysics")]
 	void ContextSetUpSimObjPhysics()
 	{
 		if (this.Type == SimObjType.Undefined || this.PrimaryProperty == SimObjPrimaryProperty.Undefined)

@@ -153,6 +153,22 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
+--- !u!1 &1157482035760500
+GameObject:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  serializedVersion: 5
+  m_Component:
+  - component: {fileID: 4403232649200682}
+  - component: {fileID: 65443985958018072}
+  m_Layer: 0
+  m_Name: BoundingBox
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
 --- !u!1 &1160273677263342
 GameObject:
   m_ObjectHideFlags: 1
@@ -628,6 +644,7 @@ Transform:
   - {fileID: 4331770946446878}
   - {fileID: 4858590232344750}
   - {fileID: 4281529367293554}
+  - {fileID: 4403232649200682}
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -795,6 +812,19 @@ Transform:
   m_Children: []
   m_Father: {fileID: 4331770946446878}
   m_RootOrder: 11
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!4 &4403232649200682
+Transform:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1157482035760500}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 4047456435191800}
+  m_RootOrder: 4
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!4 &4404156718406396
 Transform:
@@ -1564,6 +1594,18 @@ BoxCollider:
   serializedVersion: 2
   m_Size: {x: 0.54561484, y: 0.03515057, z: 0.07270678}
   m_Center: {x: 0.029891005, y: 0.03515054, z: -0.14302415}
+--- !u!65 &65443985958018072
+BoxCollider:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1157482035760500}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_Enabled: 0
+  serializedVersion: 2
+  m_Size: {x: 0.62841445, y: 0.36619008, z: 0.37709722}
+  m_Center: {x: 0, y: 0.18309504, z: 0}
 --- !u!65 &65454386949488922
 BoxCollider:
   m_ObjectHideFlags: 1
@@ -2093,7 +2135,7 @@ MonoBehaviour:
   Type: 16
   PrimaryProperty: 1
   SecondaryProperties: 0700000008000000
-  RotateAgentCollider: {fileID: 0}
+  BoundingBox: {fileID: 1157482035760500}
   VisibilityPoints:
   - {fileID: 4558502806554206}
   - {fileID: 4974529100640840}
