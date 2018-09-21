@@ -1472,7 +1472,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 target.GetComponent<Rigidbody>().isKinematic = true;
                 target.transform.position = AgentHand.transform.position;
 				// target.transform.rotation = AgentHand.transform.rotation;
-				target.transform.rotation = Quaternion.identity; //AgentHand.transform.rotation;
+				target.transform.rotation = transform.rotation; //AgentHand.transform.rotation;
                 target.transform.SetParent(AgentHand.transform);
                 ItemInHand = target.gameObject;
 
@@ -2892,7 +2892,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
             //spawn the object at the agent's hand position
 			InstantiatePrefabTest script = GameObject.Find("PhysicsSceneManager").GetComponent<InstantiatePrefabTest>();
-			SimObjPhysics so = script.SpawnObject(action.objectType, action.randomizeObjectAppearance, action.sequenceId, 
+			SimObjPhysics so = script.SpawnObject(action.objectType, action.randomizeObjectAppearance, action.objectVariation, 
 			                                      AgentHand.transform.position, AgentHand.transform.rotation.eulerAngles, true);
             
 			if (so == null) 
@@ -2942,7 +2942,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
          
 			//spawn the object at the agent's hand position
             InstantiatePrefabTest script = GameObject.Find("PhysicsSceneManager").GetComponent<InstantiatePrefabTest>();
-            SimObjPhysics so = script.SpawnObject(action.objectType, action.randomizeObjectAppearance, action.sequenceId,
+            SimObjPhysics so = script.SpawnObject(action.objectType, action.randomizeObjectAppearance, action.objectVariation,
 			                                      targetPosition, targetRotation, false);
 			
 			if (so == null) 
@@ -3206,7 +3206,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 		public void CoverSurfacesWith(ServerAction action) {
 			string prefab = action.objectType;
-            int sequenceId = action.sequenceId;
+            int objectVariation = action.objectVariation;
 			
 			Bounds b = sceneBounds;
 			b.min = new Vector3(
@@ -3225,7 +3225,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			float xRoomSize = b.max.x - b.min.x;
 			float zRoomSize = b.max.z - b.min.z;
 			InstantiatePrefabTest script = GameObject.Find("PhysicsSceneManager").GetComponent<InstantiatePrefabTest>();
-			SimObjPhysics objForBounds = script.SpawnObject(prefab, false, sequenceId, new Vector3(0.0f, b.max.y + 10.0f, 0.0f), Vector3.zero, false, true);
+			SimObjPhysics objForBounds = script.SpawnObject(prefab, false, objectVariation, new Vector3(0.0f, b.max.y + 10.0f, 0.0f), transform.eulerAngles, false, true);
 
 			Bounds objBounds = new Bounds(
                 new Vector3(float.PositiveInfinity, float.PositiveInfinity, float.PositiveInfinity),
@@ -3304,7 +3304,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                             Collider[] colliders = Physics.OverlapBox(center, halfExtents, Quaternion.identity, layerMask);
                             if (colliders.Length == 0) {
                                 k++;
-                                SimObjPhysics newObj = script.SpawnObject(prefab, false, sequenceId, center - objCenterRelPos, Vector3.zero, false, true);
+                                SimObjPhysics newObj = script.SpawnObject(prefab, false, objectVariation, center - objCenterRelPos, transform.eulerAngles, false, true);
                                 newObjects.Add(newObj);
                             } 
                         }

@@ -59,7 +59,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
 				case "spawn":
                     {
                         ServerAction action = new ServerAction();
-                        int sequenceId = 0;
+                        Debug.Log(action.objectVariation);
+                        int objectVariation = 0;
                         if (splitcommand.Length == 2)
                         {
                             action.objectType = splitcommand[1];
@@ -67,7 +68,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         else if (splitcommand.Length == 3)
                         {
                             action.objectType = splitcommand[1];
-                            sequenceId = int.Parse(splitcommand[2]);
+                            objectVariation = int.Parse(splitcommand[2]);
                         }
 
                         else
@@ -77,7 +78,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         }
                         action.action = "CreateObject";
                         action.randomizeObjectAppearance = false;//pick randomly from available or not?
-                        action.sequenceId = sequenceId;//if random false, which version of the object to spawn? (there are only 3 of each type atm)
+                        action.objectVariation = objectVariation;//if random false, which version of the object to spawn? (there are only 3 of each type atm)
 
                         PhysicsController.ProcessControlCommand(action);
 
@@ -106,7 +107,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         action.action = "CreateObjectAtLocation";
 
                         action.randomizeObjectAppearance = false;//pick randomly from available or not?                  
-                        action.sequenceId = 1;//if random false, which version of the object to spawn? (there are only 3 of each type atm)
+                        action.objectVariation = 1;//if random false, which version of the object to spawn? (there are only 3 of each type atm)
 
                         PhysicsController.ProcessControlCommand(action);
                         break;
@@ -145,8 +146,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     {
                         ServerAction action = new ServerAction();
                         action.action = "CoverSurfacesWith";
-                        int sequenceId = 1;
-						action.sequenceId = sequenceId;
+                        // int objectVariation = 1;
+						// action.objectVariation = objectVariation;
 
 						if (splitcommand.Length == 2)
                         {
@@ -155,7 +156,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         else if (splitcommand.Length == 3)
                         {
 							action.objectType = splitcommand[1];
-                            action.sequenceId = int.Parse(splitcommand[2]);
+                            action.objectVariation = int.Parse(splitcommand[2]);
                         }
 						else
 						{
