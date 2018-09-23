@@ -1847,7 +1847,7 @@ Transform:
   - {fileID: 1321442679}
   - {fileID: 1243727793}
   m_Father: {fileID: 0}
-  m_RootOrder: 10
+  m_RootOrder: 8
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &206892443
 GameObject:
@@ -2444,7 +2444,7 @@ Transform:
   - {fileID: 277992721}
   - {fileID: 1360288148}
   m_Father: {fileID: 0}
-  m_RootOrder: 13
+  m_RootOrder: 11
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &261412428
 GameObject:
@@ -2535,7 +2535,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &269025874
 Transform:
   m_ObjectHideFlags: 0
@@ -2567,12 +2567,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b439f6e4ef5714ee2a3643acf37b7a9d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  UniqueID: StoveBurner|-00.24|+01.33|-03.30
+  uniqueID: StoveBurner|-00.24|+01.33|-03.30
   Type: 17
   PrimaryProperty: 1
   SecondaryProperties: 07000000
-  RotateAgentCollider: {fileID: 0}
-  InteractionPoints: []
+  BoundingBox: {fileID: 0}
   VisibilityPoints:
   - {fileID: 1115334316}
   - {fileID: 1122600330}
@@ -2582,10 +2581,6 @@ MonoBehaviour:
   - {fileID: 841340854}
   - {fileID: 1486583602}
   - {fileID: 372794907}
-  MyColliders:
-  - {fileID: 1450599931}
-  MyTriggerColliders:
-  - {fileID: 1340464435}
   ReceptacleTriggerBoxes:
   - {fileID: 1966471345}
   isVisible: 0
@@ -3592,7 +3587,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &427913182
 Transform:
   m_ObjectHideFlags: 0
@@ -4110,7 +4105,11 @@ Prefab:
       objectReference: {fileID: 0}
     - target: {fileID: 4577749612293094, guid: a234a027272a844fa835ce3c5703d0ad, type: 2}
       propertyPath: m_RootOrder
-      value: 5
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 1899131834469988, guid: a234a027272a844fa835ce3c5703d0ad, type: 2}
+      propertyPath: m_IsActive
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: a234a027272a844fa835ce3c5703d0ad, type: 2}
@@ -4337,7 +4336,7 @@ Prefab:
       objectReference: {fileID: 0}
     - target: {fileID: 1640176557916810, guid: b18673dc5d4f14842a68d4dc9a891f3a, type: 2}
       propertyPath: m_IsActive
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 4322996899280170, guid: b18673dc5d4f14842a68d4dc9a891f3a, type: 2}
       propertyPath: m_LocalScale.x
@@ -4797,14 +4796,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f443cc0f5915a47c3aefd8b4aeb5fb17, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  openPosition: {x: 0, y: -90, z: 0}
-  closedPosition: {x: 0, y: 0, z: 0}
-  animationTime: 1
-  openPercentage: 1
-  IgnoreTheseObjects: []
-  isOpen: 0
-  canReset: 1
-  movementType: 1
 --- !u!54 &548599652
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -4831,25 +4822,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b439f6e4ef5714ee2a3643acf37b7a9d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  UniqueID: Cabinet|-01.47|+00.78|+01.58
+  uniqueID: Cabinet|-01.47|+00.78|+01.58
   Type: 19
   PrimaryProperty: 1
   SecondaryProperties: 0700000008000000
-  RotateAgentCollider: {fileID: 0}
-  InteractionPoints:
-  - {fileID: 1796619676}
-  - {fileID: 1973806846}
-  - {fileID: 1298646228}
+  BoundingBox: {fileID: 0}
   VisibilityPoints:
   - {fileID: 691196416}
   - {fileID: 305121814}
   - {fileID: 1253488581}
   - {fileID: 278309545}
   - {fileID: 1247690513}
-  MyColliders:
-  - {fileID: 1931703106}
-  MyTriggerColliders:
-  - {fileID: 1329230384}
   ReceptacleTriggerBoxes:
   - {fileID: 1609050283}
   isVisible: 0
@@ -4872,7 +4855,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &555613699
 Transform:
   m_ObjectHideFlags: 0
@@ -4904,12 +4887,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b439f6e4ef5714ee2a3643acf37b7a9d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  UniqueID: StoveBurner|-00.63|+01.33|-03.30
+  uniqueID: StoveBurner|-00.63|+01.33|-03.30
   Type: 17
   PrimaryProperty: 1
   SecondaryProperties: 07000000
-  RotateAgentCollider: {fileID: 0}
-  InteractionPoints: []
+  BoundingBox: {fileID: 0}
   VisibilityPoints:
   - {fileID: 2009656316}
   - {fileID: 78985621}
@@ -4919,10 +4901,6 @@ MonoBehaviour:
   - {fileID: 660810654}
   - {fileID: 2142763787}
   - {fileID: 1443892945}
-  MyColliders:
-  - {fileID: 1425380707}
-  MyTriggerColliders:
-  - {fileID: 1225184268}
   ReceptacleTriggerBoxes:
   - {fileID: 1497052875}
   isVisible: 0
@@ -7592,7 +7570,7 @@ Prefab:
       objectReference: {fileID: 0}
     - target: {fileID: 4004017426591700, guid: 05cd41fde92bb458fbf9bccd1ebc1aec, type: 2}
       propertyPath: m_RootOrder
-      value: 15
+      value: 13
       objectReference: {fileID: 0}
     - target: {fileID: 1524342663133274, guid: 05cd41fde92bb458fbf9bccd1ebc1aec, type: 2}
       propertyPath: m_Name
@@ -7707,6 +7685,10 @@ Prefab:
     - target: {fileID: 4004017426591700, guid: 05cd41fde92bb458fbf9bccd1ebc1aec, type: 2}
       propertyPath: m_LocalEulerAnglesHint.y
       value: 121.35801
+      objectReference: {fileID: 0}
+    - target: {fileID: 1524342663133274, guid: 05cd41fde92bb458fbf9bccd1ebc1aec, type: 2}
+      propertyPath: m_IsActive
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: 05cd41fde92bb458fbf9bccd1ebc1aec, type: 2}
@@ -8773,6 +8755,10 @@ Prefab:
       propertyPath: m_StaticEditorFlags
       value: 12
       objectReference: {fileID: 0}
+    - target: {fileID: 1640176557916810, guid: b18673dc5d4f14842a68d4dc9a891f3a, type: 2}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents:
     - {fileID: 114000012838626064, guid: b18673dc5d4f14842a68d4dc9a891f3a, type: 2}
     - {fileID: 95000013073990602, guid: b18673dc5d4f14842a68d4dc9a891f3a, type: 2}
@@ -9435,7 +9421,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &1040655854
 Transform:
   m_ObjectHideFlags: 0
@@ -10669,6 +10655,10 @@ Prefab:
       propertyPath: InteractionPoints.Array.data[0]
       value: 
       objectReference: {fileID: 1260354159}
+    - target: {fileID: 1690023406665980, guid: a89262cd509e6443dbaec52397b96b97, type: 2}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: a89262cd509e6443dbaec52397b96b97, type: 2}
   m_IsPrefabParent: 0
@@ -10746,48 +10736,6 @@ MeshFilter:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 1145777106}
   m_Mesh: {fileID: 4300298, guid: bbe55e9be025f4c638f456252b5e2954, type: 3}
---- !u!1001 &1151070294
-Prefab:
-  m_ObjectHideFlags: 0
-  serializedVersion: 2
-  m_Modification:
-    m_TransformParent: {fileID: 0}
-    m_Modifications:
-    - target: {fileID: 4781071159685512, guid: 4a69da34477194fb29b3f4778ff225e8, type: 2}
-      propertyPath: m_LocalPosition.x
-      value: 0.093
-      objectReference: {fileID: 0}
-    - target: {fileID: 4781071159685512, guid: 4a69da34477194fb29b3f4778ff225e8, type: 2}
-      propertyPath: m_LocalPosition.y
-      value: 1.222
-      objectReference: {fileID: 0}
-    - target: {fileID: 4781071159685512, guid: 4a69da34477194fb29b3f4778ff225e8, type: 2}
-      propertyPath: m_LocalPosition.z
-      value: 0.369
-      objectReference: {fileID: 0}
-    - target: {fileID: 4781071159685512, guid: 4a69da34477194fb29b3f4778ff225e8, type: 2}
-      propertyPath: m_LocalRotation.x
-      value: -0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4781071159685512, guid: 4a69da34477194fb29b3f4778ff225e8, type: 2}
-      propertyPath: m_LocalRotation.y
-      value: -0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4781071159685512, guid: 4a69da34477194fb29b3f4778ff225e8, type: 2}
-      propertyPath: m_LocalRotation.z
-      value: -0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4781071159685512, guid: 4a69da34477194fb29b3f4778ff225e8, type: 2}
-      propertyPath: m_LocalRotation.w
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 4781071159685512, guid: 4a69da34477194fb29b3f4778ff225e8, type: 2}
-      propertyPath: m_RootOrder
-      value: 3
-      objectReference: {fileID: 0}
-    m_RemovedComponents: []
-  m_ParentPrefab: {fileID: 100100000, guid: 4a69da34477194fb29b3f4778ff225e8, type: 2}
-  m_IsPrefabParent: 0
 --- !u!1 &1154701617
 GameObject:
   m_ObjectHideFlags: 0
@@ -11241,48 +11189,6 @@ BoxCollider:
   serializedVersion: 2
   m_Size: {x: 0.0005174406, y: 0.0008051314, z: 0.000012816221}
   m_Center: {x: 0, y: 8.731149e-11, z: -0.0000009045816}
---- !u!1001 &1232346592
-Prefab:
-  m_ObjectHideFlags: 0
-  serializedVersion: 2
-  m_Modification:
-    m_TransformParent: {fileID: 0}
-    m_Modifications:
-    - target: {fileID: 4211546760538252, guid: 2b4e10b38019f4a1186a925bd9faaf3e, type: 2}
-      propertyPath: m_LocalPosition.x
-      value: 0.61
-      objectReference: {fileID: 0}
-    - target: {fileID: 4211546760538252, guid: 2b4e10b38019f4a1186a925bd9faaf3e, type: 2}
-      propertyPath: m_LocalPosition.y
-      value: 0.927
-      objectReference: {fileID: 0}
-    - target: {fileID: 4211546760538252, guid: 2b4e10b38019f4a1186a925bd9faaf3e, type: 2}
-      propertyPath: m_LocalPosition.z
-      value: -1.155
-      objectReference: {fileID: 0}
-    - target: {fileID: 4211546760538252, guid: 2b4e10b38019f4a1186a925bd9faaf3e, type: 2}
-      propertyPath: m_LocalRotation.x
-      value: -0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4211546760538252, guid: 2b4e10b38019f4a1186a925bd9faaf3e, type: 2}
-      propertyPath: m_LocalRotation.y
-      value: -0.6402293
-      objectReference: {fileID: 0}
-    - target: {fileID: 4211546760538252, guid: 2b4e10b38019f4a1186a925bd9faaf3e, type: 2}
-      propertyPath: m_LocalRotation.z
-      value: -0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4211546760538252, guid: 2b4e10b38019f4a1186a925bd9faaf3e, type: 2}
-      propertyPath: m_LocalRotation.w
-      value: 0.76818395
-      objectReference: {fileID: 0}
-    - target: {fileID: 4211546760538252, guid: 2b4e10b38019f4a1186a925bd9faaf3e, type: 2}
-      propertyPath: m_RootOrder
-      value: 1
-      objectReference: {fileID: 0}
-    m_RemovedComponents: []
-  m_ParentPrefab: {fileID: 100100000, guid: 2b4e10b38019f4a1186a925bd9faaf3e, type: 2}
-  m_IsPrefabParent: 0
 --- !u!1 &1234152748
 GameObject:
   m_ObjectHideFlags: 0
@@ -11370,7 +11276,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &1243727793
 Transform:
   m_ObjectHideFlags: 0
@@ -11403,7 +11309,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!54 &1246979409
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -11432,12 +11338,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b439f6e4ef5714ee2a3643acf37b7a9d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  UniqueID: CounterTop|-01.81|+01.36|+01.18
+  uniqueID: CounterTop|-01.81|+01.36|+01.18
   Type: 27
   PrimaryProperty: 1
   SecondaryProperties: 07000000
-  RotateAgentCollider: {fileID: 0}
-  InteractionPoints: []
+  BoundingBox: {fileID: 0}
   VisibilityPoints:
   - {fileID: 1225128994}
   - {fileID: 1108334649}
@@ -11473,12 +11378,6 @@ MonoBehaviour:
   - {fileID: 252765286}
   - {fileID: 187091486}
   - {fileID: 1199999259}
-  MyColliders: []
-  MyTriggerColliders:
-  - {fileID: 1361384576}
-  - {fileID: 261412428}
-  - {fileID: 243746902}
-  - {fileID: 588233746}
   ReceptacleTriggerBoxes:
   - {fileID: 1690084823}
   - {fileID: 774518594}
@@ -11674,7 +11573,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
-  m_RootOrder: 14
+  m_RootOrder: 12
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &1277749595
 Prefab:
@@ -11734,6 +11633,16 @@ Prefab:
         type: 2}
       propertyPath: PhysObjectsInScene.Array.data[2]
       value: 
+      objectReference: {fileID: 0}
+    - target: {fileID: 114699917896503758, guid: 3a963756b61df410c91df72a73d4efde,
+        type: 2}
+      propertyPath: m_Enabled
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 114125549759153004, guid: 3a963756b61df410c91df72a73d4efde,
+        type: 2}
+      propertyPath: m_Enabled
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: 3a963756b61df410c91df72a73d4efde, type: 2}
@@ -12280,14 +12189,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f443cc0f5915a47c3aefd8b4aeb5fb17, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  openPosition: {x: 0, y: 90, z: 0}
-  closedPosition: {x: 0, y: 0, z: 0}
-  animationTime: 1
-  openPercentage: 1
-  IgnoreTheseObjects: []
-  isOpen: 0
-  canReset: 1
-  movementType: 1
 --- !u!54 &1311372021
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -12314,25 +12215,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b439f6e4ef5714ee2a3643acf37b7a9d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  UniqueID: Cabinet|-01.47|+00.78|-02.32
+  uniqueID: Cabinet|-01.47|+00.78|-02.32
   Type: 19
   PrimaryProperty: 1
   SecondaryProperties: 0700000008000000
-  RotateAgentCollider: {fileID: 0}
-  InteractionPoints:
-  - {fileID: 1043809400}
-  - {fileID: 262918365}
-  - {fileID: 756203749}
+  BoundingBox: {fileID: 0}
   VisibilityPoints:
   - {fileID: 251566469}
   - {fileID: 1063308024}
   - {fileID: 1117266989}
   - {fileID: 1174983783}
   - {fileID: 393534309}
-  MyColliders:
-  - {fileID: 233782123}
-  MyTriggerColliders:
-  - {fileID: 408525197}
   ReceptacleTriggerBoxes:
   - {fileID: 1851957233}
   isVisible: 0
@@ -12557,7 +12450,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &1321442679
 Transform:
   m_ObjectHideFlags: 0
@@ -13350,14 +13243,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f443cc0f5915a47c3aefd8b4aeb5fb17, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  openPosition: {x: 0, y: -90, z: 0}
-  closedPosition: {x: 0, y: 0, z: 0}
-  animationTime: 1
-  openPercentage: 1
-  IgnoreTheseObjects: []
-  isOpen: 0
-  canReset: 1
-  movementType: 1
 --- !u!54 &1377410912
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -13384,25 +13269,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b439f6e4ef5714ee2a3643acf37b7a9d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  UniqueID: Cabinet|+00.58|+00.78|-02.32
+  uniqueID: Cabinet|+00.58|+00.78|-02.32
   Type: 19
   PrimaryProperty: 1
   SecondaryProperties: 0700000008000000
-  RotateAgentCollider: {fileID: 0}
-  InteractionPoints:
-  - {fileID: 1401918555}
-  - {fileID: 943073238}
-  - {fileID: 667377698}
+  BoundingBox: {fileID: 0}
   VisibilityPoints:
   - {fileID: 1685588135}
   - {fileID: 81715012}
   - {fileID: 764319260}
   - {fileID: 34402117}
   - {fileID: 193816944}
-  MyColliders:
-  - {fileID: 1485626826}
-  MyTriggerColliders:
-  - {fileID: 1775171306}
   ReceptacleTriggerBoxes:
   - {fileID: 1738645104}
   isVisible: 0
@@ -14763,7 +14640,7 @@ Prefab:
       objectReference: {fileID: 0}
     - target: {fileID: 1640176557916810, guid: b18673dc5d4f14842a68d4dc9a891f3a, type: 2}
       propertyPath: m_IsActive
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 4322996899280170, guid: b18673dc5d4f14842a68d4dc9a891f3a, type: 2}
       propertyPath: m_LocalScale.x
@@ -14886,7 +14763,7 @@ Transform:
   - {fileID: 1299111309}
   - {fileID: 215385632}
   m_Father: {fileID: 0}
-  m_RootOrder: 12
+  m_RootOrder: 10
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1543830951
 GameObject:
@@ -15836,7 +15713,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!54 &1612380046
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -15864,12 +15741,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b439f6e4ef5714ee2a3643acf37b7a9d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  UniqueID: StoveBurner|-00.75|+01.33|-02.97
+  uniqueID: StoveBurner|-00.75|+01.33|-02.97
   Type: 17
   PrimaryProperty: 1
   SecondaryProperties: 07000000
-  RotateAgentCollider: {fileID: 0}
-  InteractionPoints: []
+  BoundingBox: {fileID: 0}
   VisibilityPoints:
   - {fileID: 1383942807}
   - {fileID: 1028000831}
@@ -15879,10 +15755,6 @@ MonoBehaviour:
   - {fileID: 876505886}
   - {fileID: 1762046218}
   - {fileID: 686066853}
-  MyColliders:
-  - {fileID: 683821610}
-  MyTriggerColliders:
-  - {fileID: 502879025}
   ReceptacleTriggerBoxes:
   - {fileID: 1196672556}
   isVisible: 0
@@ -16101,7 +15973,7 @@ Prefab:
       objectReference: {fileID: 0}
     - target: {fileID: 4883582790559170, guid: cfd4bb87492fc4ada84d6dcf7a3a2603, type: 2}
       propertyPath: m_RootOrder
-      value: 6
+      value: 4
       objectReference: {fileID: 0}
     - target: {fileID: 4883582790559170, guid: cfd4bb87492fc4ada84d6dcf7a3a2603, type: 2}
       propertyPath: m_LocalEulerAnglesHint.y
@@ -16193,14 +16065,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f443cc0f5915a47c3aefd8b4aeb5fb17, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  openPosition: {x: 0, y: 90, z: 0}
-  closedPosition: {x: 0, y: 0, z: 0}
-  animationTime: 1
-  openPercentage: 1
-  IgnoreTheseObjects: []
-  isOpen: 0
-  canReset: 1
-  movementType: 1
 --- !u!54 &1650077053
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -16227,25 +16091,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b439f6e4ef5714ee2a3643acf37b7a9d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  UniqueID: Cabinet|-01.47|+00.78|+00.15
+  uniqueID: Cabinet|-01.47|+00.78|+00.15
   Type: 19
   PrimaryProperty: 1
   SecondaryProperties: 0700000008000000
-  RotateAgentCollider: {fileID: 0}
-  InteractionPoints:
-  - {fileID: 979083838}
-  - {fileID: 410961350}
-  - {fileID: 1116292124}
+  BoundingBox: {fileID: 0}
   VisibilityPoints:
   - {fileID: 1031248842}
   - {fileID: 657442650}
   - {fileID: 1019626088}
   - {fileID: 1533761918}
   - {fileID: 903209712}
-  MyColliders:
-  - {fileID: 848115004}
-  MyTriggerColliders:
-  - {fileID: 105667094}
   ReceptacleTriggerBoxes:
   - {fileID: 958775512}
   isVisible: 0
@@ -16525,6 +16381,10 @@ Prefab:
       propertyPath: m_StaticEditorFlags
       value: 12
       objectReference: {fileID: 0}
+    - target: {fileID: 1640176557916810, guid: b18673dc5d4f14842a68d4dc9a891f3a, type: 2}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents:
     - {fileID: 114000012838626064, guid: b18673dc5d4f14842a68d4dc9a891f3a, type: 2}
     - {fileID: 95000013073990602, guid: b18673dc5d4f14842a68d4dc9a891f3a, type: 2}
@@ -16637,7 +16497,7 @@ Transform:
   - {fileID: 607990673}
   - {fileID: 1430829625}
   m_Father: {fileID: 0}
-  m_RootOrder: 2
+  m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1727265184
 GameObject:
@@ -18222,7 +18082,7 @@ Prefab:
     - target: {fileID: 224778784152956280, guid: 5b3a2f458d83e4af9a41ecf71b1f80f8,
         type: 2}
       propertyPath: m_RootOrder
-      value: 8
+      value: 6
       objectReference: {fileID: 0}
     - target: {fileID: 224778784152956280, guid: 5b3a2f458d83e4af9a41ecf71b1f80f8,
         type: 2}
@@ -18431,7 +18291,7 @@ Prefab:
       objectReference: {fileID: 0}
     - target: {fileID: 400000, guid: 5e9e851c0e142814dac026a256ba2ac0, type: 2}
       propertyPath: m_RootOrder
-      value: 9
+      value: 7
       objectReference: {fileID: 0}
     - target: {fileID: 400000, guid: 5e9e851c0e142814dac026a256ba2ac0, type: 2}
       propertyPath: m_LocalEulerAnglesHint.y
@@ -18739,7 +18599,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
-  m_RootOrder: 11
+  m_RootOrder: 9
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1972298610
 GameObject:
@@ -19358,7 +19218,7 @@ Prefab:
       objectReference: {fileID: 0}
     - target: {fileID: 4000010571346612, guid: e90710ba5fd0ebb4b92d218258182836, type: 2}
       propertyPath: m_RootOrder
-      value: 7
+      value: 5
       objectReference: {fileID: 0}
     - target: {fileID: 4000013125059310, guid: e90710ba5fd0ebb4b92d218258182836, type: 2}
       propertyPath: m_LocalPosition.x
@@ -19570,7 +19430,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &2021681938
 Transform:
   m_ObjectHideFlags: 0
@@ -19616,23 +19476,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b439f6e4ef5714ee2a3643acf37b7a9d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  UniqueID: Sink|-01.99|+01.14|-00.98
+  uniqueID: Sink|-01.99|+01.14|-00.98
   Type: 7
   PrimaryProperty: 1
   SecondaryProperties: 07000000
-  RotateAgentCollider: {fileID: 0}
-  InteractionPoints:
-  - {fileID: 1022512707}
-  - {fileID: 2071242934}
-  - {fileID: 470012681}
-  - {fileID: 1972298611}
-  - {fileID: 1119924258}
-  - {fileID: 1972523078}
-  - {fileID: 1878053522}
-  - {fileID: 1412201146}
-  - {fileID: 1224733518}
-  - {fileID: 235052894}
-  - {fileID: 1540101497}
+  BoundingBox: {fileID: 0}
   VisibilityPoints:
   - {fileID: 1581837429}
   - {fileID: 194565087}
@@ -19645,13 +19493,6 @@ MonoBehaviour:
   - {fileID: 1645446833}
   - {fileID: 1014800523}
   - {fileID: 1046851550}
-  MyColliders:
-  - {fileID: 487290390}
-  MyTriggerColliders:
-  - {fileID: 1389645695}
-  - {fileID: 1181090131}
-  - {fileID: 1599372673}
-  - {fileID: 980155501}
   ReceptacleTriggerBoxes:
   - {fileID: 407485016}
   isVisible: 0
@@ -19674,7 +19515,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &2021995270
 Transform:
   m_ObjectHideFlags: 0
@@ -19706,12 +19547,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b439f6e4ef5714ee2a3643acf37b7a9d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  UniqueID: StoveBurner|-00.13|+01.33|-02.97
+  uniqueID: StoveBurner|-00.13|+01.33|-02.97
   Type: 17
   PrimaryProperty: 1
   SecondaryProperties: 07000000
-  RotateAgentCollider: {fileID: 0}
-  InteractionPoints: []
+  BoundingBox: {fileID: 0}
   VisibilityPoints:
   - {fileID: 1826140564}
   - {fileID: 238794118}
@@ -19721,10 +19561,6 @@ MonoBehaviour:
   - {fileID: 1587406742}
   - {fileID: 435077576}
   - {fileID: 1093490746}
-  MyColliders:
-  - {fileID: 23103477}
-  MyTriggerColliders:
-  - {fileID: 2077878847}
   ReceptacleTriggerBoxes:
   - {fileID: 2103401588}
   isVisible: 0
@@ -20553,7 +20389,7 @@ Prefab:
       objectReference: {fileID: 0}
     - target: {fileID: 4004017426591700, guid: 05cd41fde92bb458fbf9bccd1ebc1aec, type: 2}
       propertyPath: m_RootOrder
-      value: 4
+      value: 2
       objectReference: {fileID: 0}
     - target: {fileID: 1524342663133274, guid: 05cd41fde92bb458fbf9bccd1ebc1aec, type: 2}
       propertyPath: m_Name
@@ -20665,6 +20501,10 @@ Prefab:
       propertyPath: m_Materials.Array.data[0]
       value: 
       objectReference: {fileID: 2100000, guid: 3800bcd30118e4bc986bbe0f233232df, type: 2}
+    - target: {fileID: 1524342663133274, guid: 05cd41fde92bb458fbf9bccd1ebc1aec, type: 2}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: 05cd41fde92bb458fbf9bccd1ebc1aec, type: 2}
   m_IsPrefabParent: 0
