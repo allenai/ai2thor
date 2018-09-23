@@ -163,6 +163,70 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			return flat;
 		}
 
+        private ObjectMetadata ObjectMetadataFromSimObjPhysics(SimObjPhysics simObj) {
+            ObjectMetadata objMeta = new ObjectMetadata();
+            GameObject o = simObj.gameObject;
+            objMeta.name = o.name;
+            objMeta.position = o.transform.position;
+            objMeta.rotation = o.transform.eulerAngles;
+            objMeta.objectType = Enum.GetName(typeof(SimObjType), simObj.Type);
+            objMeta.receptacle = simObj.IsReceptacle;
+            objMeta.openable = simObj.IsOpenable;
+            if (objMeta.openable) {
+                objMeta.isopen = simObj.IsOpen;
+            }
+            objMeta.pickupable = simObj.PrimaryProperty == SimObjPrimaryProperty.CanPickup;
+            objMeta.objectId = simObj.UniqueID;
+            objMeta.visible = simObj.isVisible;
+            // TODO: bounds necessary?
+            // Bounds bounds = simObj.Bounds;
+            // this.bounds3D = new [] {
+            //     bounds.min.x,
+            //     bounds.min.y,
+            //     bounds.min.z,
+            //     bounds.max.x,
+            //     bounds.max.y,
+            //     bounds.max.z,
+            // };
+            return objMeta;
+        }
+        private ObjectMetadata[] generateObjectMetadata()
+		{
+			// Encode these in a json string and send it to the server
+			SimObjPhysics[] simObjects = GameObject.FindObjectsOfType<SimObjPhysics>();
+			int numObj = simObjects.Length;
+			List<ObjectMetadata> metadata = new List<ObjectMetadata>();
+			Dictionary<string, List<string>> parentReceptacles = new Dictionary<string, List<string>> ();
+			for (int k = 0; k < numObj; k++) {
+				SimObjPhysics simObj = simObjects[k];
+				if (this.excludeObject(simObj.UniqueID)) {
+					continue;
+				}
+				ObjectMetadata meta = ObjectMetadataFromSimObjPhysics(simObj);
+				if (meta.receptacle)
+				{
+					List<string> receptacleObjectIds = simObj.Contains();
+					foreach (string oid in receptacleObjectIds)
+					{
+                        if (!parentReceptacles.ContainsKey(oid)) {
+                            parentReceptacles[oid] = new List<string>();
+                        }
+                        parentReceptacles[oid].Add(simObj.UniqueID);
+					}
+					meta.receptacleObjectIds = receptacleObjectIds.ToArray();
+					meta.receptacleCount = meta.receptacleObjectIds.Length;
+				}
+				meta.distance = Vector3.Distance(transform.position, simObj.gameObject.transform.position);
+				metadata.Add(meta);
+			}
+			foreach (ObjectMetadata meta in metadata) {
+				if (parentReceptacles.ContainsKey (meta.objectId)) {
+					meta.parentReceptacles = parentReceptacles[meta.objectId].ToArray();
+				}
+			}
+			return metadata.ToArray();
+		}
+
         public override MetadataWrapper generateMetadataWrapper() 
         {
             // AGENT METADATA
