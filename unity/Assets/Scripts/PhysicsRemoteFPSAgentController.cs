@@ -3836,10 +3836,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
                             //suffix += " VISIBLE";
 							//if(!IgnoreInteractableFlag)
 							//{
-								if (o.isInteractable == true)
-                                {
-                                    suffix += " INTERACTABLE";
-                                }
+								// if (o.isInteractable == true)
+                                // {
+                                //     suffix += " INTERACTABLE";
+                                // }
 							//}
 
                         }
