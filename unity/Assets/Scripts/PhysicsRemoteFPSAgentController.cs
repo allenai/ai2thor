@@ -1535,8 +1535,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
                 target.GetComponent<Rigidbody>().isKinematic = true;
                 target.transform.position = AgentHand.transform.position;
-				// target.transform.rotation = AgentHand.transform.rotation;
-				target.transform.rotation = transform.rotation; //AgentHand.transform.rotation;
+				target.transform.rotation = AgentHand.transform.rotation;
+				//target.transform.rotation = transform.rotation; //this allow consistent spawns relative to the camera and agent rotation, instead set to AgentHand's rotation
                 target.transform.SetParent(AgentHand.transform);
                 ItemInHand = target.gameObject;
 
