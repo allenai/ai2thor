@@ -221,4 +221,5 @@ public enum SimObjType : int
 	MassObjectSpawner = 123,
     MassScale = 124,
     Footstool = 125,
+	Shelf = 126,
 }
