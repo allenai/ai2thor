@@ -222,4 +222,5 @@ public enum SimObjType : int
     MassScale = 124,
     Footstool = 125,
 	Shelf = 126,
+	Dresser = 127,
 }
