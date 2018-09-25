@@ -327,6 +327,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 				}
 
 #endif
+				
 				return objs;
 			}
 
@@ -551,34 +552,103 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 
 		//this.GetComponent<CanOpen>().SetMovementToRotate();
 	}
+	[ContextMenu("Table")]
+	void SetUpTable()
+	{
+		ContextSetUpSimObjPhysics();
 
-	//[ContextMenu("Drawer")]
+		// GameObject inst = Instantiate(new GameObject(), gameObject.transform, true);
+		// inst.AddComponent<BoxCollider>();
+		if(!gameObject.transform.Find("BoundingBox"))
+		{
+			GameObject bb = new GameObject("BoundingBox");
+			bb.transform.position = gameObject.transform.position;
+			bb.transform.SetParent(gameObject.transform);
+			bb.AddComponent<BoxCollider>();
+			bb.GetComponent<BoxCollider>().enabled = false;
+			bb.tag = "Untagged";
+			bb.layer = 0;
+
+			BoundingBox = bb;
+		}
+
+		List<GameObject> recepboxes = new List<GameObject>();
+
+		foreach(Transform t in gameObject.transform)
+		{
+			if(t.name == "ReceptacleTriggerBox")
+			{
+				if(!recepboxes.Contains(t.gameObject))
+				{
+					recepboxes.Add(t.gameObject);
+				}
+			}
+		}
+
+		ReceptacleTriggerBoxes = recepboxes.ToArray();
+
+
+	}
+	[ContextMenu("Drawer")]
 	void SetUpDrawer()
 	{
-		//Type = SimObjType.Drawer;
-		//PrimaryProperty = SimObjPrimaryProperty.Static;
-
-		//SecondaryProperties = new SimObjSecondaryProperty[2];
-		//SecondaryProperties[0] = SimObjSecondaryProperty.CanOpen;
-		//SecondaryProperties[1] = SimObjSecondaryProperty.Receptacle;
-
-		//if (!gameObject.GetComponent<Rigidbody>())
-		//	gameObject.AddComponent<Rigidbody>();
-
-		//this.GetComponent<Rigidbody>().isKinematic = true;
-
-		//if (!gameObject.GetComponent<CanOpen>())
-		//	gameObject.AddComponent<CanOpen>();
-
-		//gameObject.GetComponent<CanOpen>().SetClosedPosition();
+		ContextSetUpSimObjPhysics();
 
 		if (!gameObject.GetComponent<CanOpen_Object>())
 		{
 			gameObject.AddComponent<CanOpen_Object>();
 		}
+		CanOpen_Object coo = gameObject.GetComponent<CanOpen_Object>();
 
 		GameObject[] myobject = new GameObject[] { gameObject };
-		gameObject.GetComponent<CanOpen_Object>().MovingParts = myobject;
+		coo.MovingParts = myobject;
+		coo.closedPositions = new Vector3[coo.MovingParts.Length];
+		coo.openPositions = new Vector3[coo.MovingParts.Length];
+
+		coo.closedPositions[0] = gameObject.transform.localPosition;
+
+		List<GameObject> recepboxes = new List<GameObject>();
+
+		foreach(Transform t in gameObject.transform)
+		{
+			if(t.name == "ReceptacleTriggerBox")
+			{
+				if(!recepboxes.Contains(t.gameObject))
+				{
+					recepboxes.Add(t.gameObject);
+				}
+			}
+
+			if(t.name == "Colliders")
+			{
+				if(!gameObject.transform.Find("TriggerColliders"))
+				{
+					GameObject inst = Instantiate(t.gameObject, gameObject.transform, true);
+					inst.name = "TriggerColliders";
+					foreach(Transform yes in inst.transform)
+					{
+						yes.GetComponent<BoxCollider>().isTrigger = true;
+					}
+				}
+
+				else
+				{
+					DestroyImmediate(gameObject.transform.Find("TriggerColliders").gameObject);
+					GameObject inst = Instantiate(t.gameObject, gameObject.transform, true);
+					inst.name = "TriggerColliders";
+					foreach(Transform yes in inst.transform)
+					{
+						yes.GetComponent<BoxCollider>().isTrigger = true;
+					}
+				}
+
+			}
+		}
+
+		ReceptacleTriggerBoxes = recepboxes.ToArray();
+
+		//make trigger colliders, if there is "Colliders" already, duplicate them, parant to this object
+		//then go through and set them all to istrigger.
 
 	}
 
@@ -589,7 +659,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 
 	}
 
-	[ContextMenu("Set Up Microwave")]
+	//[ContextMenu("Set Up Microwave")]
 	void ContextSetUpMicrowave()
 	{
 		this.Type = SimObjType.Microwave;
@@ -706,7 +776,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 
 	}
 
-	//[ContextMenu("Set Up SimObjPhysics")]
+	[ContextMenu("Kinematic SimObjPhysics")]
 	void ContextSetUpSimObjPhysics()
 	{
 		if (this.Type == SimObjType.Undefined || this.PrimaryProperty == SimObjPrimaryProperty.Undefined)
@@ -721,6 +791,8 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		if (!gameObject.GetComponent<Rigidbody>())
 			gameObject.AddComponent<Rigidbody>();
 
+		gameObject.GetComponent<Rigidbody>().isKinematic = true;
+
 		if (!gameObject.transform.Find("Colliders"))
 		{
 			GameObject c = new GameObject("Colliders");
@@ -730,19 +802,9 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 			GameObject cc = new GameObject("Col");
 			cc.transform.position = c.transform.position;
 			cc.transform.SetParent(c.transform);
-		}
-
-		if (!gameObject.transform.Find("TriggerColliders"))//static sim objets still need trigger colliders
-		{
-			//empty to hold all Trigger Colliders
-			GameObject tc = new GameObject("TriggerColliders");
-			tc.transform.position = gameObject.transform.position;
-			tc.transform.SetParent(gameObject.transform);
-
-			//create first trigger collider to work with
-			GameObject tcc = new GameObject("tCol");
-			tcc.transform.position = tc.transform.position;
-			tcc.transform.SetParent(tc.transform);
+			cc.AddComponent<BoxCollider>();
+			cc.tag = "SimObjPhysics";
+			cc.layer = 8;
 		}
 
 		if (!gameObject.transform.Find("VisibilityPoints"))
@@ -763,10 +825,12 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 			GameObject rac = new GameObject("BoundingBox");
 			rac.transform.position = gameObject.transform.position;
 			rac.transform.SetParent(gameObject.transform);
+			rac.AddComponent<BoxCollider>();
+			rac.GetComponent<BoxCollider>().enabled = false;
 		}
 
 		ContextSetUpColliders();
-		ContextSetUpTriggerColliders();
+		//ContextSetUpTriggerColliders();
 		ContextSetUpVisibilityPoints();
 		//ContextSetUpInteractionPoints();
 		ContextSetUpBoundingBox();
