@@ -576,12 +576,9 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 
 		foreach(Transform t in gameObject.transform)
 		{
-			if(t.name == "ReceptacleTriggerBox")
+			if(t.GetComponent<Contains>())
 			{
-				if(!recepboxes.Contains(t.gameObject))
-				{
-					recepboxes.Add(t.gameObject);
-				}
+				recepboxes.Add(t.gameObject);
 			}
 		}
 
@@ -776,7 +773,76 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 
 	}
 
-	[ContextMenu("Kinematic SimObjPhysics")]
+	[ContextMenu("Static Mesh Collider with Receptacle")]
+	void SetUpSimObjWithStaticMeshCollider()
+	{
+		if (this.Type == SimObjType.Undefined || this.PrimaryProperty == SimObjPrimaryProperty.Undefined)
+		{
+			Debug.Log("Type / Primary Property is missing");
+			return;
+		}
+		//set up this object ot have the right tag and layer
+		gameObject.tag = "SimObjPhysics";
+		gameObject.layer = 8;
+
+		if (!gameObject.GetComponent<Rigidbody>())
+			gameObject.AddComponent<Rigidbody>();
+
+		gameObject.GetComponent<Rigidbody>().isKinematic = true;
+			if (!gameObject.transform.Find("VisibilityPoints"))
+		{
+			//empty to hold all visibility points
+			GameObject vp = new GameObject("VisibilityPoints");
+			vp.transform.position = gameObject.transform.position;
+			vp.transform.SetParent(gameObject.transform);
+
+			//create first Visibility Point to work with
+			GameObject vpc = new GameObject("vPoint");
+			vpc.transform.position = vp.transform.position;
+			vpc.transform.SetParent(vp.transform);
+		}
+
+		if (!gameObject.transform.Find("BoundingBox"))
+		{
+			GameObject rac = new GameObject("BoundingBox");
+			rac.transform.position = gameObject.transform.position;
+			rac.transform.SetParent(gameObject.transform);
+			rac.AddComponent<BoxCollider>();
+			rac.GetComponent<BoxCollider>().enabled = false;
+		}
+
+		List <GameObject> rtbList = new List <GameObject>();
+
+		foreach (Transform t in gameObject.transform)
+		{
+			if(t.GetComponent<MeshCollider>())
+			{
+				t.gameObject.tag = "SimObjPhysics";
+				t.gameObject.layer = 8;
+
+				//now check if it has pillows or something?
+				foreach(Transform yes in t)
+				{
+					if(yes.GetComponent<MeshCollider>())
+					{
+						yes.gameObject.tag = "SimObjPhysics";
+						yes.gameObject.layer = 8;
+					}
+				}
+			}
+
+			if(t.GetComponent<Contains>())
+			{
+				rtbList.Add(t.gameObject);
+			}
+		}
+
+		ReceptacleTriggerBoxes = rtbList.ToArray();
+
+		ContextSetUpVisibilityPoints();
+		ContextSetUpBoundingBox();
+	}
+	//[ContextMenu("Kinematic SimObjPhysics")]
 	void ContextSetUpSimObjPhysics()
 	{
 		if (this.Type == SimObjType.Undefined || this.PrimaryProperty == SimObjPrimaryProperty.Undefined)
@@ -820,7 +886,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 			vpc.transform.SetParent(vp.transform);
 		}
 
-		if (!gameObject.transform.Find("BoundingBox") && this.PrimaryProperty != SimObjPrimaryProperty.Static)
+		if (!gameObject.transform.Find("BoundingBox"))
 		{
 			GameObject rac = new GameObject("BoundingBox");
 			rac.transform.position = gameObject.transform.position;
