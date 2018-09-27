@@ -19,7 +19,7 @@ public class CanOpen_Object : MonoBehaviour
     public Vector3[] closedPositions;
 
     //[SerializeField]
-    protected float animationTime = 0.2f;
+    public float animationTime = 0.2f;
 
     [SerializeField]
     protected float openPercentage = 1.0f; //0.0 to 1.0 - percent of openPosition the object opens. 
