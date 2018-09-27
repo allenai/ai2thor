@@ -1304,6 +1304,13 @@ namespace UnityStandardAssets.Characters.FirstPerson
             }
         }
 
+        protected IEnumerator waitForNFramesAndReturn(int n, bool actionSuccess) {
+            for (int i = 0; i < n; i++) {
+                yield return null;
+            }
+            actionFinished(actionSuccess);
+        }
+
         // Moves hand relative the agent (but not relative the camera, i.e. up is up)
         // x, y, z coordinates should specify how far to move in that direction, so
         // x=.1, y=.1, z=0 will move the hand .1 in both the x and y coordinates.
@@ -1314,8 +1321,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                                 transform.forward * action.z + 
 			                    transform.right * action.x + 
 								transform.up * action.y;
-
-            actionFinished(moveHandToXYZ(newPos.x, newPos.y, newPos.z));
+            StartCoroutine(waitForNFramesAndReturn(1, moveHandToXYZ(newPos.x, newPos.y, newPos.z)));
 		}
 
         //moves hand constrained to x, y, z axes a given magnitude
@@ -1562,9 +1568,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
         }
 
         private IEnumerator checkDropHandObjectAction(SimObjPhysics currentHandSimObj) {
-			// float oldFixedDeltaTime = Time.fixedDeltaTime;
-			// float oldTimeScale = Time.timeScale;
-			// Time.timeScale = 10;
 			yield return null; // wait for two frames to pass
 			yield return null;
 			for (int i = 0; i < 50; i++) {
@@ -1577,8 +1580,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
 					yield return null;
 				}
 			}
-			// Time.fixedDeltaTime = oldFixedDeltaTime;
-			// Time.timeScale = oldTimeScale;
 
             DefaultAgentHand(new ServerAction());
 			actionFinished (true);
@@ -2647,6 +2648,19 @@ namespace UnityStandardAssets.Characters.FirstPerson
         ///////////////////////////////////
         ///// DATA GENERATION HELPERS /////
         ///////////////////////////////////
+        
+
+        public void TogglePhysics(ServerAction action) {
+            Physics.autoSimulation = !Physics.autoSimulation;
+            actionFinished(true);
+        }
+
+        public void ChangeOpenSpeed(ServerAction action) {
+            foreach (CanOpen_Object coo in GameObject.FindObjectsOfType<CanOpen_Object>()) {
+                coo.animationTime = action.x;
+            }
+            actionFinished(true);
+        }
 
         public void GetSceneBounds(ServerAction action) {
             reachablePositions = new Vector3[2];
@@ -3371,6 +3385,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
                             if (colliders.Length == 0) {
                                 k++;
                                 SimObjPhysics newObj = script.SpawnObject(prefab, false, objectVariation, center - objCenterRelPos, transform.eulerAngles, false, true);
+                                if (prefab == "Cup") {
+                                    foreach (Collider c in newObj.GetComponentsInChildren<Collider>()) {
+                                        c.enabled = false;
+                                    }
+                                    newObj.GetComponentInChildren<Renderer>().gameObject.AddComponent<BoxCollider>();
+                                }
                                 newObjects.Add(newObj);
                             } 
                         }
