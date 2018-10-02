@@ -592,6 +592,10 @@ public struct MetadataWrapper
 	public bool[] isOpenableGrid;
 	public string[] segmentedObjectIds;
 	public string[] objectIdsInBox;
+
+	public int actionIntReturn;
+	public float actionFloatReturn;
+	public bool actionBoolReturn;
 }
 
 
