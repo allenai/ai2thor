@@ -92,6 +92,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
 				this.maxVisibleDistance = action.visibilityDistance;
 			}
 
+			m_Camera.fieldOfView = action.fieldOfView;
+
 			if (action.cameraY > 0.0) {
 				Vector3 pos = m_Camera.transform.localPosition;
 				m_Camera.transform.localPosition = new Vector3 (pos.x, action.cameraY, pos.z);
