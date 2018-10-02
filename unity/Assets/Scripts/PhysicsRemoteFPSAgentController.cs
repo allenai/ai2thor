@@ -13,6 +13,8 @@ using UnityEngine;
 using UnityEngine.Rendering;
 using UnityStandardAssets.ImageEffects;
 
+using Priority_Queue;
+
 
 namespace UnityStandardAssets.Characters.FirstPerson
 {
@@ -50,6 +52,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		protected float[,,] normals = new float[0,0,0];
 		protected bool[,] isOpenableGrid = new bool[0,0];
 		protected string[] segmentedObjectIds = new string[0];
+        protected int actionIntReturn;
+        protected float actionFloatReturn;
+        protected bool actionBoolReturn;
         [SerializeField] protected Vector3 standingLocalCameraPosition;
         [SerializeField] protected Vector3 crouchingLocalCameraPosition;
         protected HashSet<int> initiallyDisabledRenderers = new HashSet<int>();
@@ -289,6 +294,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			metaMessage.isOpenableGrid = flatten2DimArray(isOpenableGrid);
             metaMessage.segmentedObjectIds = segmentedObjectIds;
             metaMessage.objectIdsInBox = objectIdsInBox;
+            metaMessage.actionIntReturn = actionIntReturn;
+            metaMessage.actionFloatReturn = actionFloatReturn;
+            metaMessage.actionBoolReturn = actionBoolReturn;
             // Resetting things
             reachablePositions = new Vector3[0];
 			flatSurfacesOnGrid = new float[0,0,0];
@@ -297,6 +305,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			isOpenableGrid = new bool[0,0];
             segmentedObjectIds = new string[0];
 			objectIdsInBox = new string[0];
+            actionIntReturn = 0;
+            actionFloatReturn = 0.0f;
+            actionBoolReturn = false;
 			
 			return metaMessage;
 		}
@@ -335,6 +346,20 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
             return objectID;
 		}
+
+
+        protected Collider[] collidersWithinCapsuleCastOfAgent(float maxDistance) {
+            CapsuleCollider agentCapsuleCollider = GetComponent<CapsuleCollider>();
+            Vector3 point0, point1;
+            float radius;
+            agentCapsuleCollider.ToWorldSpaceCapsule(out point0, out point1, out radius);
+            if (point0.y <= point1.y) {
+                point1.y += maxDistance;
+            } else {
+                point0.y += maxDistance;
+            }
+			return Physics.OverlapCapsule(point0, point1, maxDistance, 1 << 8, QueryTriggerInteraction.Collide);
+        }
 
 		protected SimObjPhysics[] GetAllVisibleSimObjPhysics(Camera agentCamera, float maxDistance)
         {
@@ -1541,8 +1566,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
                 target.GetComponent<Rigidbody>().isKinematic = true;
                 target.transform.position = AgentHand.transform.position;
-				target.transform.rotation = AgentHand.transform.rotation;
-				//target.transform.rotation = transform.rotation; //this allow consistent spawns relative to the camera and agent rotation, instead set to AgentHand's rotation
+				// target.transform.rotation = AgentHand.transform.rotation;
+				target.transform.rotation = transform.rotation;
                 target.transform.SetParent(AgentHand.transform);
                 ItemInHand = target.gameObject;
 
@@ -1724,6 +1749,19 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			if (codd) {
                 //if object is open, close it
                 if (codd.isOpen) {
+                    codd.Interact();
+                    return true;
+                }
+			}
+            return false;
+        }
+
+        private bool openObject(SimObjPhysics target) {
+            CanOpen_Object codd = target.GetComponent<CanOpen_Object>();
+
+			if (codd) {
+                //if object is open, close it
+                if (!codd.isOpen) {
                     codd.Interact();
                     return true;
                 }
@@ -2098,7 +2136,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
 				//the sim object receptacle target returns list of unique sim object IDs as strings
                 //XXX It looks like this goes right into the MetaData, so basically this just returns a list of strings
 				//that are the unique ID's of every object that is contained by the target object
-				target.Contains();
+                target.Contains();
+				// foreach(string s in target.Contains()) {
+                //     Debug.Log(s);
+                // }
                 actionFinished(true);
 			}
 
@@ -2560,6 +2601,20 @@ namespace UnityStandardAssets.Characters.FirstPerson
             return standingLocalCameraPosition == m_Camera.transform.localPosition;
         }
 
+        protected void crouch() {
+            m_Camera.transform.localPosition = new Vector3(
+                standingLocalCameraPosition.x, 
+                0.0f,
+                standingLocalCameraPosition.z
+            );
+            SetUpRotationBoxChecks();
+        }
+
+        protected void stand() {
+            m_Camera.transform.localPosition = standingLocalCameraPosition;
+            SetUpRotationBoxChecks();
+        }
+
         public void Crouch(ServerAction action) {
 			if (!isStanding()) {
 				errorMessage = "Already crouching.";
@@ -2648,7 +2703,202 @@ namespace UnityStandardAssets.Characters.FirstPerson
         ///////////////////////////////////
         ///// DATA GENERATION HELPERS /////
         ///////////////////////////////////
+
+        protected bool objectIsCurrentlyVisible(SimObjPhysics sop) {
+            if (sop.VisibilityPoints.Length > 0) {
+                Transform[] visPoints = sop.VisibilityPoints;
+
+                foreach (Transform point in visPoints) {
+                    //if this particular point is in view...
+                    if (CheckIfVisibilityPointInViewport(sop, point, m_Camera, false)) {
+                        return true;
+                    }
+                }
+            } else {
+                Debug.Log("Error! Set at least 1 visibility point on SimObjPhysics prefab!");
+            }
+            return false;
+        }
         
+
+        protected static void Shuffle<T> (System.Random rng, T[] array)
+        {
+            // Taken from https://stackoverflow.com/questions/108819/best-way-to-randomize-an-array-with-net
+            int n = array.Length;
+            while (n > 1) 
+            {
+                int k = rng.Next(n--);
+                T temp = array[n];
+                array[n] = array[k];
+                array[k] = temp;
+            }
+        }
+
+        protected int xzManhattanDistance(Vector3 p0, Vector3 p1, float gridSize) {
+            return (Math.Abs(Convert.ToInt32((p0.x - p1.x) / gridSize)) +
+                Math.Abs(Convert.ToInt32((p0.z - p1.z) / gridSize)));
+        }
+
+        public void ExhaustiveSearchForItem(ServerAction action) {
+            if (!uniqueIdToSimObjPhysics.ContainsKey(action.objectId)) {
+                errorMessage = "Object ID appears to be invalid.";
+                Debug.Log(errorMessage);
+                actionFinished(false);
+                return;
+            }
+            SimObjPhysics theObject = uniqueIdToSimObjPhysics[action.objectId];
+
+            Vector3[] positions = getReachablePositions();
+            bool wasStanding = isStanding();
+            Vector3 oldPosition = transform.position;
+            Quaternion oldRotation = transform.rotation;
+            if (ItemInHand != null) {
+                ItemInHand.gameObject.SetActive(true);
+            }
+
+            Shuffle(new System.Random(action.randomSeed), positions);
+
+            SimplePriorityQueue<Vector3> pq = new SimplePriorityQueue<Vector3>();
+            Vector3 agentPos = transform.position;
+            foreach (Vector3 p in positions) {
+                pq.Enqueue(p, xzManhattanDistance(p, agentPos, gridSize));
+            }
+
+            Vector3 visiblePosition = new Vector3(0.0f, 0.0f, 0.0f);
+            bool objectSeen = false;
+            int positionsTried = 0;
+            while (pq.Count != 0 && !objectSeen) {
+                positionsTried += 1;
+                Vector3 p = pq.Dequeue();
+                transform.position = p;
+                Collider[] colliders = collidersWithinCapsuleCastOfAgent(maxVisibleDistance);
+
+                HashSet<SimObjPhysics> openableObjectsNearby = new HashSet<SimObjPhysics>();
+                foreach (Collider c in colliders) {
+                    SimObjPhysics sop = ancestorSimObjPhysics(c.gameObject);
+                    if (sop != null && sop.GetComponent<CanOpen_Object>() != null) {
+                        openableObjectsNearby.Add(sop);
+                    }
+                }
+
+                foreach (SimObjPhysics openable in openableObjectsNearby) {
+                    foreach (GameObject go in openable.GetComponent<CanOpen_Object>().MovingParts) {
+                        go.SetActive(false);
+                    }
+                }
+
+                for (int j = 0; j < 2; j++) { // Standing / Crouching
+                    if (j == 0) {
+                        stand();
+                    } else {
+                        crouch();
+                    }
+                    for (int i = 0; i < 4; i++) { // 4 rotations
+                        transform.rotation = Quaternion.Euler(new Vector3(0.0f, 90.0f * i, 0.0f));
+                        if (objectIsCurrentlyVisible(theObject)) {
+                            // for (int k = 0; k < 100; k++) {
+                            //     yield return null;
+                            // }
+                            objectSeen = true;
+                            visiblePosition = p;
+                            break;
+                        }
+                    }
+                    if (objectSeen) {
+                        break;
+                    }
+                }
+
+                foreach (SimObjPhysics openable in openableObjectsNearby) {
+                    foreach (GameObject go in openable.GetComponent<CanOpen_Object>().MovingParts) {
+                        go.SetActive(true);
+                    }
+                }
+            }
+
+            #if UNITY_EDITOR
+            if (objectSeen) {
+                Debug.Log("Object found.");
+                Debug.Log("Manhattan distance:");
+                Debug.Log(xzManhattanDistance(visiblePosition, oldPosition, gridSize));
+            } else {
+                Debug.Log("Object not found.");
+            }
+            Debug.Log("BFS steps taken:");
+            Debug.Log(positionsTried);
+            #endif
+
+            actionBoolReturn = objectSeen;
+            actionIntReturn = positionsTried;
+
+            if (wasStanding) {
+                stand();
+            } else {
+                crouch();
+            }
+            transform.position = oldPosition;
+            transform.rotation = oldRotation;
+            if (ItemInHand != null) {
+                ItemInHand.gameObject.SetActive(true);
+            }
+            actionFinished(true);
+        }
+        
+        public void NumberOfPositionsFromWhichItemIsVisible(ServerAction action) {
+            Vector3[] positions = getReachablePositions();
+            bool wasStanding = isStanding();
+            Vector3 oldPosition = transform.position;
+            Quaternion oldRotation = transform.rotation;
+            if (ItemInHand != null) {
+                ItemInHand.gameObject.SetActive(true);
+            }
+
+            if (!uniqueIdToSimObjPhysics.ContainsKey(action.objectId)) {
+                errorMessage = "Object ID appears to be invalid.";
+                Debug.Log(errorMessage);
+                actionFinished(false);
+                return;
+            }
+            SimObjPhysics theObject = uniqueIdToSimObjPhysics[action.objectId];
+
+            int numTimesVisible = 0;
+            for (int j = 0; j < 2; j++) { // Standing / Crouching
+                if (j == 0) {
+                    stand();
+                } else {
+                    crouch();
+                }
+                for (int i = 0; i < 4; i++) { // 4 rotations
+                    transform.rotation = Quaternion.Euler(new Vector3(0.0f, 90.0f * i, 0.0f));
+                    foreach (Vector3 p in positions) {
+                        transform.position = p;
+
+                        if (objectIsCurrentlyVisible(theObject)) {
+                            numTimesVisible += 1;
+                        }
+                    }
+                }
+            }          
+
+            if (wasStanding) {
+                stand();
+            } else {
+                crouch();
+            }
+            transform.position = oldPosition;
+            transform.rotation = oldRotation;
+            if (ItemInHand != null) {
+                ItemInHand.gameObject.SetActive(true);
+            }
+
+            #if UNITY_EDITOR
+            Debug.Log(4 * 2 * positions.Length);
+            Debug.Log(numTimesVisible);
+            #endif
+
+            actionIntReturn = numTimesVisible;
+            actionFinished(true);
+        }
 
         public void TogglePhysics(ServerAction action) {
             Physics.autoSimulation = !Physics.autoSimulation;
@@ -2871,7 +3121,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         foreach (RaycastHit hit in hits) {
                             if (hit.transform.gameObject.name != "Floor" &&
                                 !ancestorHasName(hit.transform.gameObject, "FPSController")) {
-                                Debug.Log(hit.transform.gameObject);
                                 shouldEnqueue = false;
                                 break;
                             }
