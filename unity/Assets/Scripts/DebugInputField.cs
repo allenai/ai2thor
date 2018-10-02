@@ -55,6 +55,20 @@ namespace UnityStandardAssets.Characters.FirstPerson
       			        PhysicsController.Initialize(action);
                         break;
                     }
+                case "crouch":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "Crouch";
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+                case "stand":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "Stand";
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
 
 				case "spawn":
                     {
