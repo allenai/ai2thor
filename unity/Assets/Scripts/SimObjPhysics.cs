@@ -555,6 +555,10 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 	[ContextMenu("Table")]
 	void SetUpTable()
 	{
+		this.Type = SimObjType.TableTop;
+		this.PrimaryProperty = SimObjPrimaryProperty.Static;
+		this.SecondaryProperties = new SimObjSecondaryProperty[] {SimObjSecondaryProperty.Receptacle};
+		
 		ContextSetUpSimObjPhysics();
 
 		// GameObject inst = Instantiate(new GameObject(), gameObject.transform, true);
@@ -589,6 +593,10 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 	[ContextMenu("Drawer")]
 	void SetUpDrawer()
 	{
+		this.Type = SimObjType.Drawer;
+		this.PrimaryProperty = SimObjPrimaryProperty.Static;
+		this.SecondaryProperties = new SimObjSecondaryProperty[] {SimObjSecondaryProperty.Receptacle, SimObjSecondaryProperty.CanOpen};
+
 		ContextSetUpSimObjPhysics();
 
 		if (!gameObject.GetComponent<CanOpen_Object>())
