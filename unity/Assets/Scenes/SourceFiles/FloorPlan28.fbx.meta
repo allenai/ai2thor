@@ -3,7 +3,7 @@ guid: 46a480c354d39412787493ee2cc1fc27
 timeCreated: 1485305395
 licenseType: Pro
 ModelImporter:
-  serializedVersion: 19
+  serializedVersion: 22
   fileIDToRecycleName:
     100000: Baseboard.020
     100002: Ceiling
@@ -67,6 +67,10 @@ ModelImporter:
     100118: Sphere.012
     100120: Cylinder.028
     100122: TurkeyPan.006
+    100124: Blinds
+    100126: Door
+    100128: DoorFrame
+    100130: Window
     400000: Baseboard.020
     400002: Ceiling
     400004: Cube.075
@@ -129,6 +133,10 @@ ModelImporter:
     400118: Sphere.012
     400120: Cylinder.028
     400122: TurkeyPan.006
+    400124: Blinds
+    400126: Door
+    400128: DoorFrame
+    400130: Window
     2300000: Baseboard.020
     2300002: Ceiling
     2300004: Cube.075
@@ -190,6 +198,10 @@ ModelImporter:
     2300116: Sphere.012
     2300118: Cylinder.028
     2300120: TurkeyPan.006
+    2300122: Blinds
+    2300124: Door
+    2300126: DoorFrame
+    2300128: Window
     3300000: Baseboard.020
     3300002: Ceiling
     3300004: Cube.075
@@ -251,6 +263,10 @@ ModelImporter:
     3300116: Sphere.012
     3300118: Cylinder.028
     3300120: TurkeyPan.006
+    3300122: Blinds
+    3300124: Door
+    3300126: DoorFrame
+    3300128: Window
     4300000: Cube.108
     4300002: Cube.107
     4300004: Cube.106
@@ -312,26 +328,171 @@ ModelImporter:
     4300116: Sphere.012
     4300118: TurkeyPan.006
     4300120: Cylinder.028
+    4300122: Window
+    4300124: DoorFrame
+    4300126: Door
+    4300128: Blinds
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Black
+    second: {fileID: 2100000, guid: 095a4e6155a7043939b026a6042f7263, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Black.001
+    second: {fileID: 2100000, guid: b83bed5d6e25b49b5852a5bfd24cb408, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Brass
+    second: {fileID: 2100000, guid: 9d4fe46b39db1419e8e2e5ecb4a3c483, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Countertop
+    second: {fileID: 2100000, guid: a182d68d2d91540f0ae7f20400411e41, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Dark
+    second: {fileID: 2100000, guid: a1c44c3c4cf5745168103de53351c6c5, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Drywall
+    second: {fileID: 2100000, guid: 200eaae263e0c459eaa988e5272b0994, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: FloorPlan28
+    second: {fileID: 2100000, guid: c88a5df317fc84282b3e3de326631805, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: GLASS
+    second: {fileID: 2100000, guid: 8b823d9af6b0a4a9fb52b05ca2101ede, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: GOLD
+    second: {fileID: 2100000, guid: 7ca07b4b27db44d989ba4130bdda9e33, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Glass.001
+    second: {fileID: 2100000, guid: 6ee8c50b5115c4748b60522c4a6d859d, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Glass.002
+    second: {fileID: 2100000, guid: c6f95418fa4064dadbc3a5ec88eab2ee, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: LABEL
+    second: {fileID: 2100000, guid: 7100d9f64956b46d3977615a3fef78eb, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Light
+    second: {fileID: 2100000, guid: 39cae9f0467004e1c8f3aec3de36d6e2, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: METAL
+    second: {fileID: 2100000, guid: 77440c77257244d57aad31c4aec2ce17, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Marble
+    second: {fileID: 2100000, guid: f919f2c6fbae146cc8433cbd3fe726a4, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Material.002
+    second: {fileID: 2100000, guid: 9328a1140167746a9919e7f1b62faeba, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Material.003
+    second: {fileID: 2100000, guid: 2cf643cb20a694bfdaf975ca91846434, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Metal.001
+    second: {fileID: 2100000, guid: 4bc171c4c347a4e349fca051f15bb4a3, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: No Name SourceFiles
+    second: {fileID: 2100000, guid: 9bd3d8838705a4bf9b1faf4e7d8f366e, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: PVC
+    second: {fileID: 2100000, guid: 540b67497ba8f45a5be4e60d50de7031, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Plastic
+    second: {fileID: 2100000, guid: cb62e41752da046ccb81f14aaf60297b, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: WOOD
+    second: {fileID: 2100000, guid: c5f8136e8615b43349393f363053c314, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: WOODTRIM
+    second: {fileID: 2100000, guid: 3ca0194537c4f45f7b297fabf8909be4, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Walls
+    second: {fileID: 2100000, guid: 80ac04b53dac745b4bfade1f96dfff1f, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: White
+    second: {fileID: 2100000, guid: 8650ce2e8a56e4597beaa04ded95e49f, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: White.001
+    second: {fileID: 2100000, guid: 700c91417143b4cfcb78c5eac75d23b8, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Yellow
+    second: {fileID: 2100000, guid: d0bb5f1bd3b22462a97048e27427f051, type: 2}
   materials:
     importMaterials: 1
     materialName: 0
     materialSearch: 1
+    materialLocation: 0
   animations:
     legacyGenerateAnimations: 4
     bakeSimulation: 0
     resampleCurves: 1
     optimizeGameObjects: 0
     motionNodeName: 
+    rigImportErrors: 
+    rigImportWarnings: 
     animationImportErrors: 
     animationImportWarnings: 
     animationRetargetingWarnings: 
     animationDoRetargetingWarnings: 0
+    importAnimatedCustomProperties: 0
     animationCompression: 1
     animationRotationError: 0.5
     animationPositionError: 0.5
     animationScaleError: 0.5
     animationWrapMode: 0
     extraExposedTransformPaths: []
+    extraUserProperties: []
     clipAnimations: []
     isReadable: 1
   meshes:
@@ -339,13 +500,18 @@ ModelImporter:
     globalScale: 1
     meshCompression: 0
     addColliders: 0
+    importVisibility: 0
     importBlendShapes: 1
+    importCameras: 0
+    importLights: 0
     swapUVChannels: 0
     generateSecondaryUV: 0
     useFileUnits: 1
     optimizeMeshForGPU: 1
     keepQuads: 0
     weldVertices: 1
+    preserveHierarchy: 0
+    indexFormat: 1
     secondaryUVAngleDistortion: 8
     secondaryUVAreaDistortion: 15.000001
     secondaryUVHardAngle: 88
@@ -355,9 +521,11 @@ ModelImporter:
     normalSmoothAngle: 60
     normalImportMode: 0
     tangentImportMode: 3
+    normalCalculationMode: 0
   importAnimation: 1
   copyAvatar: 0
   humanDescription:
+    serializedVersion: 2
     human: []
     skeleton: []
     armTwist: 0.5
@@ -368,7 +536,10 @@ ModelImporter:
     legStretch: 0.05
     feetSpacing: 0
     rootMotionBoneName: 
+    rootMotionBoneRotation: {x: 0, y: 0, z: 0, w: 1}
     hasTranslationDoF: 0
+    hasExtraRoot: 0
+    skeletonHasParents: 0
   lastHumanDescriptionAvatarSource: {instanceID: 0}
   animationType: 0
   humanoidOversampling: 1

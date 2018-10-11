@@ -3,7 +3,7 @@ guid: 8640627d651564916bcef0651c1fdc73
 timeCreated: 1485218271
 licenseType: Pro
 ModelImporter:
-  serializedVersion: 19
+  serializedVersion: 22
   fileIDToRecycleName:
     100000: Cube.015
     100002: Cube.017
@@ -241,6 +241,8 @@ ModelImporter:
     100466: WineGlassFull
     100468: Camera
     100470: Directional Light
+    100472: Door
+    100474: DoorFrame
     400000: Cube.015
     400002: Cube.017
     400004: Cube.028
@@ -477,6 +479,8 @@ ModelImporter:
     400466: WineGlassFull
     400468: Camera
     400470: Directional Light
+    400472: Door
+    400474: DoorFrame
     2300000: Cube.015
     2300002: Cube.017
     2300004: Cube.028
@@ -710,6 +714,8 @@ ModelImporter:
     2300460: WineGlasses.004
     2300462: WineGlasses2
     2300464: WineGlassFull
+    2300466: Door
+    2300468: DoorFrame
     3300000: Cube.015
     3300002: Cube.017
     3300004: Cube.028
@@ -943,6 +949,8 @@ ModelImporter:
     3300460: WineGlasses.004
     3300462: WineGlasses2
     3300464: WineGlassFull
+    3300466: Door
+    3300468: DoorFrame
     4300000: Cube.074
     4300002: Cube.073
     4300004: Cube.072
@@ -1176,26 +1184,104 @@ ModelImporter:
     4300460: Cube.001
     4300462: Cube
     4300464: Baseboard
+    4300466: Door
+    4300468: DoorFrame
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Black
+    second: {fileID: 2100000, guid: 095a4e6155a7043939b026a6042f7263, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: BrownMetal
+    second: {fileID: 2100000, guid: b6f869e3fbd784a5eb6cfd7471f3ad49, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Countertop
+    second: {fileID: 2100000, guid: a182d68d2d91540f0ae7f20400411e41, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Dark
+    second: {fileID: 2100000, guid: a1c44c3c4cf5745168103de53351c6c5, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Default
+    second: {fileID: 2100000, guid: df87be1b5d2c246d5b61327d749cea4d, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Drywall
+    second: {fileID: 2100000, guid: 200eaae263e0c459eaa988e5272b0994, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: GLASS
+    second: {fileID: 2100000, guid: 8b823d9af6b0a4a9fb52b05ca2101ede, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Light
+    second: {fileID: 2100000, guid: 39cae9f0467004e1c8f3aec3de36d6e2, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: LitGlass
+    second: {fileID: 2100000, guid: 6b1c21a76788b4860a80705cdc6801be, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: METAL
+    second: {fileID: 2100000, guid: 77440c77257244d57aad31c4aec2ce17, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Trim.001
+    second: {fileID: 2100000, guid: 00c37756732f746b4b2763de5675a3dd, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: WOOD
+    second: {fileID: 2100000, guid: c5f8136e8615b43349393f363053c314, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: WhiteWood
+    second: {fileID: 2100000, guid: 82d43926c826643aa8f8096601990209, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: WoodFloor
+    second: {fileID: 2100000, guid: a4695d33a4b784703b33787a741c11d1, type: 2}
   materials:
     importMaterials: 1
     materialName: 0
     materialSearch: 1
+    materialLocation: 0
   animations:
     legacyGenerateAnimations: 4
     bakeSimulation: 0
     resampleCurves: 1
     optimizeGameObjects: 0
     motionNodeName: 
+    rigImportErrors: 
+    rigImportWarnings: 
     animationImportErrors: 
     animationImportWarnings: 
     animationRetargetingWarnings: 
     animationDoRetargetingWarnings: 0
+    importAnimatedCustomProperties: 0
     animationCompression: 1
     animationRotationError: 0.5
     animationPositionError: 0.5
     animationScaleError: 0.5
     animationWrapMode: 0
     extraExposedTransformPaths: []
+    extraUserProperties: []
     clipAnimations: []
     isReadable: 1
   meshes:
@@ -1203,13 +1289,18 @@ ModelImporter:
     globalScale: 1
     meshCompression: 0
     addColliders: 0
+    importVisibility: 0
     importBlendShapes: 1
+    importCameras: 0
+    importLights: 0
     swapUVChannels: 0
     generateSecondaryUV: 0
     useFileUnits: 1
     optimizeMeshForGPU: 1
     keepQuads: 0
     weldVertices: 1
+    preserveHierarchy: 0
+    indexFormat: 1
     secondaryUVAngleDistortion: 8
     secondaryUVAreaDistortion: 15.000001
     secondaryUVHardAngle: 88
@@ -1219,9 +1310,11 @@ ModelImporter:
     normalSmoothAngle: 60
     normalImportMode: 0
     tangentImportMode: 3
+    normalCalculationMode: 0
   importAnimation: 1
   copyAvatar: 0
   humanDescription:
+    serializedVersion: 2
     human: []
     skeleton: []
     armTwist: 0.5
@@ -1232,7 +1325,10 @@ ModelImporter:
     legStretch: 0.05
     feetSpacing: 0
     rootMotionBoneName: 
+    rootMotionBoneRotation: {x: 0, y: 0, z: 0, w: 1}
     hasTranslationDoF: 0
+    hasExtraRoot: 0
+    skeletonHasParents: 0
   lastHumanDescriptionAvatarSource: {instanceID: 0}
   animationType: 0
   humanoidOversampling: 1
