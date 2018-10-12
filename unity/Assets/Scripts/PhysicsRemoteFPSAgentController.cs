@@ -3399,8 +3399,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 if (so.ReceptacleTriggerBoxes != null && 
                     so.ReceptacleTriggerBoxes.Length != 0 &&
                     !so.UniqueID.Contains("Top") && // Don't include table tops, counter tops, etc.
-                    !so.UniqueID.Contains("Burner")
-                ) {
+                    !so.UniqueID.Contains("Burner") &&
+                    !so.UniqueID.Contains("Chair") &&
+                    !so.UniqueID.Contains("Sofa") &&
+                    !so.UniqueID.Contains("Shelf")) {
                     foreach (string id in so.Contains()) {
                         objectIdsContained.Add(id);
                     }
@@ -3509,13 +3511,28 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		}
 
         public void SetAllObjectsToBlue(ServerAction action) {
+            GameObject go = GameObject.Find("Lighting");
+            if (go != null) {
+                go.SetActive(false);
+            }
             foreach(Renderer r in GameObject.FindObjectsOfType<Renderer>()) {
-				Material newMaterial = (Material) Resources.Load("BLUE", typeof(Material));
-				Material[] newMaterials = new Material[r.materials.Length];
-				for (int i = 0; i < newMaterials.Length; i++) {
-					newMaterials[i] = newMaterial;
-				}
-				r.materials = newMaterials;
+                bool disableRenderer = false;
+                foreach (Material m in r.materials) {
+                    if (m.name.Contains("LightRay")) {
+                        disableRenderer = true;
+                        break;
+                    }
+                }
+                if (disableRenderer) {
+                    r.enabled = false;
+                } else {
+                    Material newMaterial = (Material) Resources.Load("BLUE", typeof(Material));
+                    Material[] newMaterials = new Material[r.materials.Length];
+                    for (int i = 0; i < newMaterials.Length; i++) {
+                        newMaterials[i] = newMaterial;
+                    }
+                    r.materials = newMaterials;
+                }
 			}
 			foreach (Light l in GameObject.FindObjectsOfType<Light>()) {
 				l.enabled = false;
