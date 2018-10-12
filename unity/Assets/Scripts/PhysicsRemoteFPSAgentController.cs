@@ -1771,7 +1771,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
         public void CloseVisibleObjects(ServerAction action) {
             List<CanOpen_Object> coos = new List<CanOpen_Object>();
-			foreach (SimObjPhysics so in GetAllVisibleSimObjPhysics(m_Camera, 10f)) {
+			foreach (SimObjPhysics so in GetAllVisibleSimObjPhysics(m_Camera, maxVisibleDistance)) {
                 CanOpen_Object coo = so.GetComponent<CanOpen_Object>();
                     if (coo) {
                     //if object is open, add it to be closed.
@@ -1903,8 +1903,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     CloseObject(action);
                 }
             } else if (so == null) {
-                Debug.Log("Object at location is not interactable.");
                 errorMessage = "Object at location is not interactable.";
+                Debug.Log(errorMessage);
                 actionFinished(false);
             } else {
                 Debug.Log("Object at location is too far away.");
@@ -2951,6 +2951,11 @@ namespace UnityStandardAssets.Characters.FirstPerson
             return Physics.OverlapCapsule(point0, point1, radius, layerMask, QueryTriggerInteraction.Ignore);
         }
 
+        protected Collider[] objectsCollidingWithAgent() {
+            int layerMask = 1 << 8;
+            return PhysicsExtensions.OverlapCapsule(GetComponent<CapsuleCollider>(), layerMask, QueryTriggerInteraction.Ignore);
+        }
+
         protected bool isAgentCapsuleColliding() {
             int layerMask = 1 << 8;
             foreach (Collider c in PhysicsExtensions.OverlapCapsule(GetComponent<CapsuleCollider>(), layerMask, QueryTriggerInteraction.Ignore)) {
@@ -3107,7 +3112,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     goodPoints.Add(p);
                     Vector3 point1 = new Vector3(p.x, center.y + innerHeight, p.z);
                     Vector3 point2 = new Vector3(p.x, center.y - innerHeight + floorFudgeFactor, p.z);
-                    foreach (Vector3 d in directions) {    
+                    HashSet<Collider> objectsAlreadyColliding = new HashSet<Collider>(objectsCollidingWithAgent());
+                    foreach (Vector3 d in directions) {
                         RaycastHit[] hits = Physics.CapsuleCastAll(
                             point1,
                             point2,
@@ -3120,7 +3126,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         bool shouldEnqueue = true;
                         foreach (RaycastHit hit in hits) {
                             if (hit.transform.gameObject.name != "Floor" &&
-                                !ancestorHasName(hit.transform.gameObject, "FPSController")) {
+                                !ancestorHasName(hit.transform.gameObject, "FPSController") &&
+                                !objectsAlreadyColliding.Contains(hit.collider)
+                                ) {
                                 shouldEnqueue = false;
                                 break;
                             }
@@ -3146,7 +3154,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
             Vector3[] reachablePos = new Vector3[goodPoints.Count];
             goodPoints.CopyTo(reachablePos);
+            #if UNITY_EDITOR
             Debug.Log(reachablePos.Length);
+            #endif
             return reachablePos;
         }
 
