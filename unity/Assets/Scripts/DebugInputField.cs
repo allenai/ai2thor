@@ -405,6 +405,16 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         break;
                     }   
 
+                // force drop object
+				case "fdr":
+                    {
+                        ServerAction action = new ServerAction();
+						action.action = "DropHandObject";
+                        action.forceAction = true;
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }   
+
                     //rotate object in hand, pass in desired x/y/z rotation
 				case "ro":
                     {
