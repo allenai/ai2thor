@@ -850,7 +850,177 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		ContextSetUpVisibilityPoints();
 		ContextSetUpBoundingBox();
 	}
-	//[ContextMenu("Kinematic SimObjPhysics")]
+
+	[UnityEditor.MenuItem("SimObjectPhysics/AppleSlice")]
+	public static void ContextSetupAppleSlice()
+	{
+		GameObject prefabRoot = Selection.activeGameObject;
+		GameObject c = new GameObject("AppleSlice");
+		c.transform.position = prefabRoot.transform.position;
+		//prefabRoot.transform.position = c.transform.position;
+		prefabRoot.transform.SetParent(c.transform);
+		prefabRoot.name = "Mesh";
+
+		if(!c.GetComponent<SimObjPhysics>())
+		{
+			c.AddComponent<SimObjPhysics>();
+		}
+
+		if(c.GetComponent<SimObjPhysics>())
+		{
+			SimObjPhysics sop = c.GetComponent<SimObjPhysics>();
+			sop.PrimaryProperty = SimObjPrimaryProperty.CanPickup;
+			sop.Type = SimObjType.AppleSliced;
+			//sop.SecondaryProperties = new SimObjSecondaryProperty[] {SimObjSecondaryProperty};
+		}
+		c.tag = "SimObjPhysics";
+		c.layer = 8;
+
+		if (!c.GetComponent<Rigidbody>())
+			c.AddComponent<Rigidbody>();
+
+		if (!c.transform.Find("Colliders"))
+		{
+			GameObject col = new GameObject("Colliders");
+			col.transform.position = c.transform.position;
+			col.transform.SetParent(c.transform);
+            
+			GameObject cc = new GameObject("Col");
+			cc.transform.position = col.transform.position;
+			cc.transform.SetParent(col.transform);
+			cc.AddComponent<BoxCollider>();
+			cc.tag = "SimObjPhysics";
+			cc.layer = 8;
+		}
+
+		if (!c.transform.Find("VisibilityPoints"))
+		{
+			//empty to hold all visibility points
+			GameObject vp = new GameObject("VisibilityPoints");
+			vp.transform.position = c.transform.position;
+			vp.transform.SetParent(c.transform);
+
+			//create first Visibility Point to work with
+			GameObject vpc = new GameObject("vPoint");
+			vpc.transform.position = vp.transform.position;
+			vpc.transform.SetParent(vp.transform);
+		}
+
+		if (!c.transform.Find("BoundingBox"))
+		{
+			GameObject rac = new GameObject("BoundingBox");
+			rac.transform.position = c.transform.position;
+			rac.transform.SetParent(c.transform);
+			rac.AddComponent<BoxCollider>();
+			rac.GetComponent<BoxCollider>().enabled = false;
+		}
+		
+		c.GetComponent<SimObjPhysics>().AppleSetupReferences();
+	}
+
+	[UnityEditor.MenuItem("SimObjectPhysics/Apple")]
+	public static void ContextSetupApple()
+	{
+		GameObject prefabRoot = Selection.activeGameObject;
+		GameObject c = new GameObject("Apple");
+		c.transform.position = prefabRoot.transform.position;
+		//prefabRoot.transform.position = c.transform.position;
+		prefabRoot.transform.SetParent(c.transform);
+		prefabRoot.name = "Mesh";
+
+		if(!c.GetComponent<SimObjPhysics>())
+		{
+			c.AddComponent<SimObjPhysics>();
+		}
+
+		if(c.GetComponent<SimObjPhysics>())
+		{
+			SimObjPhysics sop = c.GetComponent<SimObjPhysics>();
+			sop.PrimaryProperty = SimObjPrimaryProperty.CanPickup;
+			sop.Type = SimObjType.Apple;
+			sop.SecondaryProperties = new SimObjSecondaryProperty[] {SimObjSecondaryProperty.CanBeSliced};
+		}
+
+		c.tag = "SimObjPhysics";
+		c.layer = 8;
+
+		if (!c.GetComponent<Rigidbody>())
+			c.AddComponent<Rigidbody>();
+
+		if (!c.transform.Find("Colliders"))
+		{
+			GameObject col = new GameObject("Colliders");
+			col.transform.position = c.transform.position;
+			col.transform.SetParent(c.transform);
+            
+			GameObject cc = new GameObject("Col");
+			cc.transform.position = col.transform.position;
+			cc.transform.SetParent(col.transform);
+			cc.AddComponent<CapsuleCollider>();
+			cc.tag = "SimObjPhysics";
+			cc.layer = 8;
+		}
+
+		if (!c.transform.Find("VisibilityPoints"))
+		{
+			//empty to hold all visibility points
+			GameObject vp = new GameObject("VisibilityPoints");
+			vp.transform.position = c.transform.position;
+			vp.transform.SetParent(c.transform);
+
+			//create first Visibility Point to work with
+			GameObject vpc = new GameObject("vPoint");
+			vpc.transform.position = vp.transform.position;
+			vpc.transform.SetParent(vp.transform);
+		}
+
+		if (!c.transform.Find("BoundingBox"))
+		{
+			GameObject rac = new GameObject("BoundingBox");
+			rac.transform.position = c.transform.position;
+			rac.transform.SetParent(c.transform);
+			rac.AddComponent<BoxCollider>();
+			rac.GetComponent<BoxCollider>().enabled = false;
+		}
+
+		c.GetComponent<SimObjPhysics>().AppleSetupReferences();
+	}
+
+	[ContextMenu("Apple Setup References")]
+	void AppleSetupReferences()
+	{
+		ContextSetUpColliders();
+		ContextSetUpVisibilityPoints();
+		ContextSetUpBoundingBox();
+
+		foreach(Transform t in gameObject.transform)
+		{
+			if(t.name == "Colliders")
+			{
+				if(!gameObject.transform.Find("TriggerColliders"))
+				{
+					GameObject inst = Instantiate(t.gameObject, gameObject.transform, true);
+					inst.name = "TriggerColliders";
+					foreach(Transform yes in inst.transform)
+					{
+						yes.GetComponent<Collider>().isTrigger = true;
+					}
+				}
+				else
+				{
+					DestroyImmediate(gameObject.transform.Find("TriggerColliders").gameObject);
+					GameObject inst = Instantiate(t.gameObject, gameObject.transform, true);
+					inst.name = "TriggerColliders";
+					foreach(Transform yes in inst.transform)
+					{
+						yes.GetComponent<Collider>().isTrigger = true;
+					}
+				}
+			}
+		}
+	}
+
+	//[ContextMenu("Setup Pickupable")]
 	void ContextSetUpSimObjPhysics()
 	{
 		if (this.Type == SimObjType.Undefined || this.PrimaryProperty == SimObjPrimaryProperty.Undefined)
@@ -876,6 +1046,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 			GameObject cc = new GameObject("Col");
 			cc.transform.position = c.transform.position;
 			cc.transform.SetParent(c.transform);
+			//cc.AddComponent<CapsuleCollider>();
 			cc.AddComponent<BoxCollider>();
 			cc.tag = "SimObjPhysics";
 			cc.layer = 8;
@@ -909,6 +1080,8 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		//ContextSetUpInteractionPoints();
 		ContextSetUpBoundingBox();
 	}
+
+	
 
 	//[ContextMenu("Set Up Colliders")]
 	void ContextSetUpColliders()
