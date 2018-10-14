@@ -863,11 +863,22 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			TeleportFull(action);
 		}
 
+        protected bool checkIfSceneBoundsContainTargetPosition(Vector3 position) {
+            if (!sceneBounds.Contains(position)) {
+                errorMessage = "Scene bounds do not contain target position.";
+                return false;
+            } else {
+                return true;
+            }
+        }
+
         //for all translational movement, check if the item the player is holding will hit anything, or if the agent will hit anything
 		public override void MoveLeft(ServerAction action)
 		{
-			if(CheckIfItemBlocksAgentMovement(action.moveMagnitude, 270) && CheckIfAgentCanMove(action.moveMagnitude, 270))
-			{
+            Vector3 targetPosition = transform.position + -1 * transform.right * gridSize;
+			if(checkIfSceneBoundsContainTargetPosition(targetPosition) &&
+                CheckIfItemBlocksAgentMovement(action.moveMagnitude, 270) &&
+                CheckIfAgentCanMove(action.moveMagnitude, 270)) {
 				DefaultAgentHand(action);
 				base.MoveLeft(action);
 			} else {
@@ -877,8 +888,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 		public override void MoveRight(ServerAction action)
 		{
-			if (CheckIfItemBlocksAgentMovement(action.moveMagnitude, 90) && CheckIfAgentCanMove(action.moveMagnitude, 90)) 
-			{
+            Vector3 targetPosition = transform.position + transform.right * gridSize;
+			if(checkIfSceneBoundsContainTargetPosition(targetPosition) &&
+                CheckIfItemBlocksAgentMovement(action.moveMagnitude, 90) &&
+                CheckIfAgentCanMove(action.moveMagnitude, 90))  {
 				DefaultAgentHand(action);
 				base.MoveRight(action);
 			} else {
@@ -888,8 +901,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 		public override void MoveAhead(ServerAction action)
 		{
-			if (CheckIfItemBlocksAgentMovement(action.moveMagnitude, 0) && CheckIfAgentCanMove(action.moveMagnitude, 0))
-			{
+            Vector3 targetPosition = transform.position + transform.forward * gridSize;
+            if (checkIfSceneBoundsContainTargetPosition(targetPosition) &&
+                CheckIfItemBlocksAgentMovement(action.moveMagnitude, 0) && 
+                CheckIfAgentCanMove(action.moveMagnitude, 0)) {
 				DefaultAgentHand(action);
 				base.MoveAhead(action);            
 			} else {
@@ -899,8 +914,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
         
 		public override void MoveBack(ServerAction action)
 		{
-			if (CheckIfItemBlocksAgentMovement(action.moveMagnitude, 180) && CheckIfAgentCanMove(action.moveMagnitude, 180))
-			{
+			Vector3 targetPosition = transform.position + -1 * transform.forward * gridSize;
+            if (checkIfSceneBoundsContainTargetPosition(targetPosition) &&
+                CheckIfItemBlocksAgentMovement(action.moveMagnitude, 180) &&
+                CheckIfAgentCanMove(action.moveMagnitude, 180)) {
 				DefaultAgentHand(action);
 				base.MoveBack(action);
     		} else {
@@ -3134,8 +3151,16 @@ namespace UnityStandardAssets.Characters.FirstPerson
                             }
                         }
                         Vector3 newPosition = p + d * gridSize;
+                        bool inBounds = sceneBounds.Contains(newPosition);
+                        if (errorMessage == "" && !sceneBounds.Contains(newPosition)) {
+                            errorMessage = "In " + 
+                            UnityEngine.SceneManagement.SceneManager.GetActiveScene().name + 
+                            ", position " + newPosition.ToString() +
+                             " can be reached via capsule cast but is beyond the scene bounds.";
+                             Debug.Log(errorMessage);
+                        }                        
 
-                        shouldEnqueue = shouldEnqueue && (
+                        shouldEnqueue = shouldEnqueue && inBounds && (
                                         handObjectCanFitInPosition(newPosition, 0.0f) ||
                                         handObjectCanFitInPosition(newPosition, 90.0f) ||
                                         handObjectCanFitInPosition(newPosition, 180.0f) || 
@@ -3143,6 +3168,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         );
                         if (shouldEnqueue) {
                             pointsQueue.Enqueue(newPosition);
+                            #if UNITY_EDITOR
+                            Debug.DrawLine(p, newPosition, Color.cyan, 100000f);
+                            #endif
                         }
                     }
                 }
@@ -3162,7 +3190,11 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
         public void GetReachablePositions(ServerAction action) {
             reachablePositions = getReachablePositions();
-            actionFinished(true);
+            if (errorMessage != "") {
+                actionFinished(false);
+            } else {
+                actionFinished(true);
+            }
         }
 
         private bool ancestorHasName(GameObject go, string name) {
