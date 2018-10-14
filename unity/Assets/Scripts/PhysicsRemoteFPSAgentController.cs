@@ -2981,6 +2981,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
             int layerMask = 1 << 8;
             foreach (Collider c in PhysicsExtensions.OverlapCapsule(GetComponent<CapsuleCollider>(), layerMask, QueryTriggerInteraction.Ignore)) {
                 if (!hasAncestor(c.transform.gameObject, gameObject)) {
+                    #if UNITY_EDITOR
+                    Debug.Log("Collided with: ");
+                    Debug.Log(c);
+                    #endif
                     return true;
                 }
             }
