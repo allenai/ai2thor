@@ -2933,6 +2933,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
             reachablePositions = new Vector3[2];
             reachablePositions[0] = sceneBounds.min;
             reachablePositions[1] = sceneBounds.max;
+            #if UNITY_EDITOR
+            Debug.Log(reachablePositions[0]);
+            Debug.Log(reachablePositions[1]);
+            #endif
             actionFinished(true);
         }
 
