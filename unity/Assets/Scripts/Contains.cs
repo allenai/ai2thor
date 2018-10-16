@@ -25,6 +25,15 @@ public class Contains : MonoBehaviour
 		//{
 		//	Debug.Log(this.name + " Missing MyObjects List");
 		//}
+
+		//check that all objects with receptacles components have the correct Receptacle secondary property
+		#if UNITY_EDITOR
+		SimObjPhysics go = gameObject.GetComponentInParent<SimObjPhysics>();
+		if(!go.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.Receptacle))
+		{
+			Debug.LogError(go.transform.name + " is missing ReceptacleTriggerBoxes please hook them up");
+		}
+		#endif
 	}
 
 	// Update is called once per frame
