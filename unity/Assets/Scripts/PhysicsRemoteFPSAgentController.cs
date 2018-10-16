@@ -3112,9 +3112,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
             CapsuleCollider cc = GetComponent<CapsuleCollider>();
 
             Vector3 center = transform.position;
-            float floorFudgeFactor = 0.0001f; // Small constant added to make sure the capsule
-                                              // cast below doesn't collide with the ground.
-            float radius = cc.radius + m_CharacterController.skinWidth;
+            float floorFudgeFactor = m_CharacterController.skinWidth; // Small constant added to make sure the capsule
+                                                                      // cast below doesn't collide with the ground.
+            float radius = cc.radius;
             float innerHeight = cc.height / 2.0f - radius;
 
             Queue<Vector3> pointsQueue = new Queue<Vector3>();
@@ -3160,7 +3160,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         }
                         Vector3 newPosition = p + d * gridSize;
                         bool inBounds = sceneBounds.Contains(newPosition);
-                        if (errorMessage == "" && !sceneBounds.Contains(newPosition)) {
+                        if (errorMessage == "" && !inBounds) {
                             errorMessage = "In " + 
                             UnityEngine.SceneManagement.SceneManager.GetActiveScene().name + 
                             ", position " + newPosition.ToString() +
@@ -3183,7 +3183,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     }
                 }
                 if (stepsTaken > 10000) {
-                    Debug.LogError("Too many steps taken in getReachablePoints.");
+                    errorMessage = "Too many steps taken in getReachablePoints.";
+                    Debug.Log(errorMessage);
                     break;
                 }
             }
@@ -3442,7 +3443,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     !so.UniqueID.Contains("Burner") &&
                     !so.UniqueID.Contains("Chair") &&
                     !so.UniqueID.Contains("Sofa") &&
-                    !so.UniqueID.Contains("Shelf")) {
+                    !so.UniqueID.Contains("Shelf") &&
+                    !so.UniqueID.Contains("Ottoman")) {
                     foreach (string id in so.Contains()) {
                         objectIdsContained.Add(id);
                     }
