@@ -1649,6 +1649,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     rb.constraints = RigidbodyConstraints.None;
 				    rb.useGravity = true;
 
+                    //change collision detection mode while falling so that obejcts don't phase through colliders.
+                    //this is reset to discrete on SimObjPhysics.cs's update 
+                    rb.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
+
                     GameObject topObject = GameObject.Find("Objects");
                     if (topObject != null) {
                         ItemInHand.transform.parent = topObject.transform;

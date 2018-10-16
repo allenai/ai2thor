@@ -238,6 +238,12 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		isVisible = false;
 		isInteractable = false;
 
+		//if this object has come to rest, reset it's collision detection mode to discrete
+		Rigidbody rb = gameObject.GetComponent<Rigidbody>();
+		if((rb.IsSleeping() == true) && (rb.collisionDetectionMode == CollisionDetectionMode.ContinuousDynamic))
+		{
+			rb.collisionDetectionMode = CollisionDetectionMode.Discrete;
+		}
 	}
 
 	private void FixedUpdate()
