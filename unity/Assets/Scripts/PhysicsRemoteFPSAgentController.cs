@@ -1114,7 +1114,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         {
                             result = false;
                             Debug.Log(res.transform.name + " is blocking the Agent from moving " + orientation);
-                            break;
+                            //the moment we find a result that is blocking, return false here
+                            return result;
                         }
 
                     }
@@ -1125,6 +1126,15 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         {
                             result = true;
                             break;
+                        }
+
+                        //including "Untagged" tag here so that the agent can't move through objects that are transparent
+						if (res.transform.GetComponent<SimObjPhysics>() || res.transform.tag == "Structure" || res.transform.tag == "Untagged")
+                        {
+                            result = false;
+                            Debug.Log(res.transform.name + " is blocking the Agent from moving " + orientation);
+                            //the moment we find a result that is blocking, return false here
+                            return result;
                         }
                     }      
                 }
