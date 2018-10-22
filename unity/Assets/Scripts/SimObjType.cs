@@ -225,4 +225,5 @@ public enum SimObjType : int
 	Dresser = 127,
 	Desk = 128,
 	NightStand = 129,
+	Pillow = 130,
 }
