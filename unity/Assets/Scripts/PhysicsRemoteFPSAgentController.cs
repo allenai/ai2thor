@@ -3141,11 +3141,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
             Queue<Vector3> pointsQueue = new Queue<Vector3>();
             pointsQueue.Enqueue(center);
 
+            float dirSkinWidthMultiplier = 1.0f + sw;
             Vector3[] directions = {
-                new Vector3((1.0f + sw), 0.0f, 0.0f),
-                new Vector3(0.0f, 0.0f, -(1.0f + sw)),
-                new Vector3(-(1.0f + sw), 0.0f, 0.0f),
-                new Vector3(0.0f, 0.0f, (1.0f + sw))
+                new Vector3(1.0f, 0.0f, 0.0f),
+                new Vector3(0.0f, 0.0f, 1.0f),
+                new Vector3(-1.0f, 0.0f, 0.0f),
+                new Vector3(0.0f, 0.0f, -1.0f)
             };
 
             HashSet<Vector3> goodPoints = new HashSet<Vector3>();
@@ -3164,7 +3165,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                             point1,
                             point2,
                             radius,
-                            d,
+                            d * dirSkinWidthMultiplier,
                             gridSize,
                             layerMask,
                             QueryTriggerInteraction.Ignore
@@ -3621,7 +3622,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 float y = 0f;
                 for (int i = -1; i <= 1; i++) {
                     for (int j = -1; j <= 1; j++) {
-                        Vector3 offset = new Vector3(i * 0.4f * gridSize, 0f, i * 0.4f * gridSize);
+                        Vector3 offset = new Vector3(i * 0.41f * gridSize, 0f, i * 0.41f * gridSize);
                         if (Physics.Raycast(p + offset, -transform.up, out hit, 10f, layerMask)) {
                             if (!somethingHit) {
                                 y = hit.point.y;
