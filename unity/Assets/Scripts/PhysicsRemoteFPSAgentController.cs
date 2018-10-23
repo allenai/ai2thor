@@ -1096,10 +1096,11 @@ namespace UnityStandardAssets.Characters.FirstPerson
             }
 
             Rigidbody rb = gameObject.GetComponent<Rigidbody>();
-			//print(rb.name);
-			//print(dir);
-            //might need to sweep test all, check for static..... want to be able to try and move through sim objects that can pickup and move yes
-            RaycastHit[] sweepResults = rb.SweepTestAll(dir, moveMagnitude, QueryTriggerInteraction.Ignore);
+            //sweep a bit further to account for thickness of agent skin. This should create more accurate movement without having the CheckMoveAction coroutine 
+            //being required to reset positions in edge cases where collision happens literally by skin width differences
+            float SkinOffsetMagnitude = moveMagnitude + m_CharacterController.skinWidth;
+
+            RaycastHit[] sweepResults = rb.SweepTestAll(dir, SkinOffsetMagnitude, QueryTriggerInteraction.Ignore);
 			//print(sweepResults[0]);
             //check if we hit an environmental structure or a sim object that we aren't actively holding. If so we can't move
             if (sweepResults.Length > 0)
