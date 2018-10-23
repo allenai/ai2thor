@@ -3132,19 +3132,20 @@ namespace UnityStandardAssets.Characters.FirstPerson
             CapsuleCollider cc = GetComponent<CapsuleCollider>();
 
             Vector3 center = transform.position;
-            float floorFudgeFactor = 2 * m_CharacterController.skinWidth; // Small constant added to make sure the capsule
+            float sw = m_CharacterController.skinWidth;
+            float floorFudgeFactor = sw; // Small constant added to make sure the capsule
                                                                       // cast below doesn't collide with the ground.
-            float radius = cc.radius + m_CharacterController.skinWidth;
+            float radius = cc.radius;
             float innerHeight = cc.height / 2.0f - radius;
 
             Queue<Vector3> pointsQueue = new Queue<Vector3>();
             pointsQueue.Enqueue(center);
 
             Vector3[] directions = {
-                new Vector3(1.0f, 0.0f, 0.0f),
-                new Vector3(0.0f, 0.0f, -1.0f),
-                new Vector3(-1.0f, 0.0f, 0.0f),
-                new Vector3(0.0f, 0.0f, 1.0f)
+                new Vector3((1.0f + sw), 0.0f, 0.0f),
+                new Vector3(0.0f, 0.0f, -(1.0f + sw)),
+                new Vector3(-(1.0f + sw), 0.0f, 0.0f),
+                new Vector3(0.0f, 0.0f, (1.0f + sw))
             };
 
             HashSet<Vector3> goodPoints = new HashSet<Vector3>();
@@ -3596,9 +3597,22 @@ namespace UnityStandardAssets.Characters.FirstPerson
             }
         }
 
-        public void ColorWalkable(ServerAction action) {
+        public void ToggleColorWalkable(ServerAction action) {
+            GameObject go = GameObject.Find("WalkablePlanes");
+            if (go != null) {
+                foreach (Renderer r in go.GetComponentsInChildren<Renderer>()) {
+                    r.enabled = !r.enabled;
+                }
+                actionFinished(true);
+                return;
+            }
             Vector3[] reachablePositions = getReachablePositions();
-            GameObject parent = GameObject.Find("Objects");
+            GameObject walkableParent = new GameObject();
+            walkableParent.name = "WalkablePlanes";
+            GameObject topLevelObject = GameObject.Find("Objects");
+            if (topLevelObject != null) {
+                walkableParent.transform.parent = topLevelObject.transform;
+            }
 
             int layerMask = 1 << 8;
             foreach (Vector3 p in reachablePositions) {
@@ -3625,9 +3639,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         new Vector3(p.x, y, p.z),
                         Quaternion.identity
                     ) as GameObject;
-                    if (parent != null) {
-                        plane.transform.parent = parent.transform;
-                    }
+                    plane.name = "WalkablePlane";
+                    plane.transform.parent = walkableParent.transform;
                     plane.transform.localScale = new Vector3(gridSize * 0.1f, 0.1f, gridSize * 0.1f);
                 }
             }
