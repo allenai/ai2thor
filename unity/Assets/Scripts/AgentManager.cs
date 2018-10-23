@@ -616,6 +616,7 @@ public class ServerAction
 	public int agentId;
 	public int thirdPartyCameraId;
 	public float y;
+	public float fieldOfView = 60f;
 	public float x;
 	public float z;
 	public int horizon;
