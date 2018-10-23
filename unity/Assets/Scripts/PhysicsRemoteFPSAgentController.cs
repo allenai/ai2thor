@@ -15,7 +15,6 @@ using UnityStandardAssets.ImageEffects;
 
 using Priority_Queue;
 
-
 namespace UnityStandardAssets.Characters.FirstPerson
 {
 	[RequireComponent(typeof (CharacterController))]   
@@ -55,6 +54,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
         protected int actionIntReturn;
         protected float actionFloatReturn;
         protected bool actionBoolReturn;
+        protected float[] actionFloatsReturn;
+        protected string[] actionStringsReturn;
         [SerializeField] protected Vector3 standingLocalCameraPosition;
         [SerializeField] protected Vector3 crouchingLocalCameraPosition;
         protected HashSet<int> initiallyDisabledRenderers = new HashSet<int>();
@@ -297,6 +298,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
             metaMessage.actionIntReturn = actionIntReturn;
             metaMessage.actionFloatReturn = actionFloatReturn;
             metaMessage.actionBoolReturn = actionBoolReturn;
+            metaMessage.actionFloatsReturn = actionFloatsReturn;
+            metaMessage.actionStringsReturn = actionStringsReturn;
+
             // Resetting things
             reachablePositions = new Vector3[0];
 			flatSurfacesOnGrid = new float[0,0,0];
@@ -308,6 +312,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
             actionIntReturn = 0;
             actionFloatReturn = 0.0f;
             actionBoolReturn = false;
+            actionFloatsReturn = new float[0];
+            actionStringsReturn = new string[0];
 			
 			return metaMessage;
 		}
@@ -2735,7 +2741,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
         ///////////////////////////////////
         ///// DATA GENERATION HELPERS /////
         ///////////////////////////////////
-
         protected bool objectIsCurrentlyVisible(SimObjPhysics sop) {
             if (sop.VisibilityPoints.Length > 0) {
                 Transform[] visPoints = sop.VisibilityPoints;
@@ -3422,9 +3427,212 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     }
                 }
             }
+            snapToGrid(); // This snapping seems necessary for some reason, really doesn't make any sense.
             actionFinished(true);
         }
 
+        // Following code for calculating the volume of a mesh taken from
+        // https://answers.unity.com/questions/52664/how-would-one-calculate-a-3d-mesh-volume-in-unity.html
+        // and https://answers.unity.com/questions/52664/how-would-one-calculate-a-3d-mesh-volume-in-unity.html
+        //  protected float SignedVolumeOfTriangle(Vector3 p1, Vector3 p2, Vector3 p3) {
+        //     float v321 = p3.x * p2.y * p1.z;
+        //     float v231 = p2.x * p3.y * p1.z;
+        //     float v312 = p3.x * p1.y * p2.z;
+        //     float v132 = p1.x * p3.y * p2.z;
+        //     float v213 = p2.x * p1.y * p3.z;
+        //     float v123 = p1.x * p2.y * p3.z;
+        //     return (1.0f / 6.0f) * (-v321 + v231 + v312 - v132 - v213 + v123);
+        // }
+        // protected float VolumeOfMesh(Mesh mesh) {
+        //     float volume = 0;
+        //     Vector3[] vertices = mesh.vertices;
+        //     int[] triangles = mesh.triangles;
+        //     Debug.Log(vertices);
+        //     Debug.Log(triangles);
+        //     for (int i = 0; i < mesh.triangles.Length; i += 3)
+        //     {
+        //         Vector3 p1 = vertices[triangles[i + 0]];
+        //         Vector3 p2 = vertices[triangles[i + 1]];
+        //         Vector3 p3 = vertices[triangles[i + 2]];
+        //         volume += SignedVolumeOfTriangle(p1, p2, p3);
+        //     }
+        //     return Mathf.Abs(volume);
+        // }
+
+        // public void VolumeOfObject(ServerAction action) {
+        //     SimObjPhysics so = uniqueIdToSimObjPhysics[action.objectId];
+        //     foreach (MeshFilter meshFilter in so.GetComponentsInChildren<MeshFilter>()) {
+        //         Mesh mesh = meshFilter.sharedMesh;
+        //         float volume = VolumeOfMesh(mesh);
+        //         string msg = "The volume of the mesh is " + volume + " cube units.";
+        //         Debug.Log(msg);
+        //     }
+        // }
+        
+        // End code for calculating the volume of a mesh
+
+		public void RandomlyOpenCloseObjects(ServerAction action) {
+			System.Random rnd = new System.Random (action.randomSeed);
+			List<CanOpen_Object> toInteractWith = new List<CanOpen_Object>();
+			foreach (SimObjPhysics so in GameObject.FindObjectsOfType<SimObjPhysics>()) {
+                CanOpen_Object coo = so.GetComponent<CanOpen_Object>();
+                if (coo != null) {
+                    if (rnd.NextDouble() < 0.5) {
+                        if (!coo.isOpen) {
+                            toInteractWith.Add(coo);
+                        }
+                        
+                    } else if (coo.isOpen) {
+                        toInteractWith.Add(coo);
+                    }
+                }
+			}
+			StartCoroutine (InteractAndWait (toInteractWith));
+		}
+
+        public void GetApproximateVolume(ServerAction action) {
+            if (uniqueIdToSimObjPhysics.ContainsKey(action.objectId)) {
+                SimObjPhysics so = uniqueIdToSimObjPhysics[action.objectId];
+                Quaternion oldRotation = so.transform.rotation;
+                so.transform.rotation = Quaternion.identity;
+                Bounds objBounds = new Bounds(
+                    new Vector3(float.PositiveInfinity, float.PositiveInfinity, float.PositiveInfinity),
+                    new Vector3(-float.PositiveInfinity, -float.PositiveInfinity, -float.PositiveInfinity)
+                );
+                foreach (Renderer r in so.GetComponentsInChildren<Renderer>()) {
+                    objBounds.Encapsulate(r.bounds);
+                }
+                so.transform.rotation = oldRotation;
+                Vector3 diffs = objBounds.max - objBounds.min;
+                #if UnityEditor
+                Debug.Log("Volume is" + );
+                #endif
+                actionFloatReturn = diffs.x * diffs.y * diffs.z;
+                actionFinished(true);
+
+            } else {
+                errorMessage = "Invalid objectId " + action.objectId;
+                Debug.Log(errorMessage);
+                actionFinished(false);
+            }
+        }
+
+        public void GetVolumeOfAllObjects(ServerAction action) {
+            List<string> objectIds = new List<string>();
+            List<float> volumes = new List<float>();
+            foreach (SimObjPhysics so in FindObjectsOfType<SimObjPhysics>()) {
+                Quaternion oldRotation = so.transform.rotation;
+                so.transform.rotation = Quaternion.identity;
+                Bounds objBounds = new Bounds(
+                    new Vector3(float.PositiveInfinity, float.PositiveInfinity, float.PositiveInfinity),
+                    new Vector3(-float.PositiveInfinity, -float.PositiveInfinity, -float.PositiveInfinity)
+                );
+                foreach (Renderer r in so.GetComponentsInChildren<Renderer>()) {
+                    objBounds.Encapsulate(r.bounds);
+                }
+                so.transform.rotation = oldRotation;
+                Vector3 diffs = objBounds.max - objBounds.min;
+                
+                objectIds.Add(so.UniqueID);
+                volumes.Add(diffs.x * diffs.y * diffs.z);
+            }
+            actionStringsReturn = objectIds.ToArray();
+            actionFloatsReturn = volumes.ToArray();
+            actionFinished(true);
+        }
+
+        protected void changeObjectBlendMode(SimObjPhysics so, StandardShaderUtils.BlendMode bm, float alpha) {
+            HashSet<MeshRenderer> renderersToSkip = new HashSet<MeshRenderer>();
+            foreach (SimObjPhysics childSo in so.GetComponentsInChildren<SimObjPhysics>()) {
+                if (so.UniqueID != childSo.UniqueID) {
+                    foreach (MeshRenderer mr in childSo.GetComponentsInChildren<MeshRenderer>()) {
+                        renderersToSkip.Add(mr);
+                    }
+                }
+            }
+            
+            foreach (MeshRenderer r in so.gameObject.GetComponentsInChildren<MeshRenderer>() as MeshRenderer[]) {
+                if (!renderersToSkip.Contains(r)) {
+                    Material[] newMaterials = new Material[r.materials.Length];
+                    for (int i = 0; i < newMaterials.Length; i++) {
+                        newMaterials[i] = new Material(r.materials[i]);
+                        StandardShaderUtils.ChangeRenderMode(newMaterials[i], bm);
+                        Color color = newMaterials[i].color;
+                        color.a = alpha;
+                        newMaterials[i].color = color;
+                    }
+                    r.materials = newMaterials;
+                }
+            }
+        }
+
+        public void MakeObjectTransparent(ServerAction action) {
+            if (uniqueIdToSimObjPhysics.ContainsKey(action.objectId)) {
+                changeObjectBlendMode(
+                    uniqueIdToSimObjPhysics[action.objectId], 
+                    StandardShaderUtils.BlendMode.Transparent, 
+                    0.5f
+                );
+                actionFinished(true);
+            } else {
+                errorMessage = "Invalid objectId " + action.objectId;
+                Debug.Log(errorMessage);
+                actionFinished(false);
+            }
+        }
+
+        public void MakeObjectOpaque(ServerAction action) {
+            if (uniqueIdToSimObjPhysics.ContainsKey(action.objectId)) {
+                changeObjectBlendMode(
+                    uniqueIdToSimObjPhysics[action.objectId], 
+                    StandardShaderUtils.BlendMode.Opaque, 
+                    1.0f
+                );
+                actionFinished(true);
+            } else {
+                errorMessage = "Invalid objectId " + action.objectId;
+                Debug.Log(errorMessage);
+                actionFinished(false);
+            }
+        }
+
+        public void ColorWalkable(ServerAction action) {
+            Vector3[] reachablePositions = getReachablePositions();
+            GameObject parent = GameObject.Find("Objects");
+
+            int layerMask = 1 << 8;
+            foreach (Vector3 p in reachablePositions) {
+                RaycastHit hit;
+                bool somethingHit = false;
+                float y = 0f;
+                for (int i = -1; i <= 1; i++) {
+                    for (int j = -1; j <= 1; j++) {
+                        Vector3 offset = new Vector3(i * 0.4f * gridSize, 0f, i * 0.4f * gridSize);
+                        if (Physics.Raycast(p + offset, -transform.up, out hit, 10f, layerMask)) {
+                            if (!somethingHit) {
+                                y = hit.point.y;
+                            } else {
+                                y = Math.Max(y, hit.point.y);
+                            }
+                            somethingHit = true;
+                        }
+                    }
+                }
+                if (somethingHit) {
+                    y += 0.01f;
+                    GameObject plane = Instantiate(
+                        Resources.Load("BluePlane") as GameObject,
+                        new Vector3(p.x, y, p.z),
+                        Quaternion.identity
+                    ) as GameObject;
+                    if (parent != null) {
+                        plane.transform.parent = parent.transform;
+                    }
+                    plane.transform.localScale = new Vector3(gridSize * 0.1f, 0.1f, gridSize * 0.1f);
+                }
+            }
+            actionFinished(true);
+        }
 
         private IEnumerator CoverSurfacesWithHelper(int n, List<SimObjPhysics> newObjects) {
 			Vector3[] initialPositions = new Vector3[newObjects.Count];
@@ -4145,6 +4353,16 @@ namespace UnityStandardAssets.Characters.FirstPerson
         }
        
 		#if UNITY_EDITOR
+
+        // Taken from https://answers.unity.com/questions/1144378/copy-to-clipboard-with-a-button-unity-53-solution.html
+        public static void CopyToClipboard(string s)
+        {
+            TextEditor te = new TextEditor();
+            te.text = s;
+            te.SelectAll();
+            te.Copy();
+        }
+        
         //used to show what's currently visible on the top left of the screen
         void OnGUI()
         {
@@ -4163,7 +4381,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                             GUILayout.BeginHorizontal();
                             horzIndex = 0;
                         }
-                        GUILayout.Button(o.UniqueID, UnityEditor.EditorStyles.miniButton, GUILayout.MaxWidth(200f));
+                        var b = GUILayout.Button(o.UniqueID, UnityEditor.EditorStyles.miniButton, GUILayout.MaxWidth(200f));
                     }
 
                     GUILayout.EndHorizontal();
@@ -4197,7 +4415,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
                         }
                   
-                        GUILayout.Button(o.UniqueID + suffix, UnityEditor.EditorStyles.miniButton, GUILayout.MinWidth(100f));
+                        if (GUILayout.Button(o.UniqueID + suffix, UnityEditor.EditorStyles.miniButton, GUILayout.MinWidth(100f))) {
+                            CopyToClipboard(o.UniqueID);
+                        }
                     }
                 }
             }
