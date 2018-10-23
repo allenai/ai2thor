@@ -163,10 +163,14 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 action.gridSize = 0.25f;
             }
 
-			if (action.fov > 0 && action.fov < 180) {
-				if (m_Camera.fieldOfView != action.fov) {
-					m_Camera.fieldOfView = action.fov;
-				}
+
+			// make fov backwards compatible
+			if (action.fov != 60f && action.fieldOfView == 60f) {
+				action.fieldOfView = action.fov;
+			}
+
+			if (action.fieldOfView > 0 && action.fieldOfView < 180) {
+				m_Camera.fieldOfView = action.fieldOfView;
 			} else {
 				errorMessage = "fov must be in (0, 180) noninclusive.";
                 Debug.Log(errorMessage);
