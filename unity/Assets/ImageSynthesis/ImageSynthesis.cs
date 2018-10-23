@@ -253,39 +253,45 @@ public class ImageSynthesis : MonoBehaviour {
 
 		foreach (var r in renderers)
 		{
-			var layer = r.gameObject.layer;
-			var tag = r.gameObject.tag;
-			SimObj simObj = r.gameObject.GetComponent<SimObj> ();
-			if (simObj == null) {
-				simObj = r.gameObject.GetComponentInParent<SimObj> ();
+			// var layer = r.gameObject.layer;
+			// var tag = r.gameObject.tag;
+
+			string classTag = r.name;
+			string objTag = getUniqueId(r.gameObject);
+
+			SimObj so = r.gameObject.GetComponent<SimObj> ();
+			if (so == null) {
+				so = r.gameObject.GetComponentInParent<SimObj> ();
+			}
+			SimObjPhysics sop = r.gameObject.GetComponent<SimObjPhysics> ();
+			if (sop == null) {
+				sop = r.gameObject.GetComponentInParent<SimObjPhysics> ();
 			}
 
+			if (so != null) {
+				classTag = "" + so.Type;
+				objTag = so.UniqueID;
+			} else if (sop != null) {
+				classTag = "" + sop.Type;
+				objTag = sop.UniqueID;
+			}
 
 			Color classColor;
 			Color objColor;
-			if (simObj == null) {
-				classColor = ColorEncoding.EncodeTagAsColor ("" + r.name);
-				objColor = ColorEncoding.EncodeTagAsColor(getUniqueId(r.gameObject));
-			} else {
-				classColor = ColorEncoding.EncodeTagAsColor ("" + simObj.Type);
-				objColor = ColorEncoding.EncodeTagAsColor ("" + simObj.UniqueID);
-				//Debug.Log ("renderer type " + simObj.Type + " " + simObj.name + " " + simObj.UniqueID + " " + MD5Hash(simObj.UniqueID) + " " + MD5Hash(simObj.UniqueID).GetHashCode());
-			}
+			classColor = ColorEncoding.EncodeTagAsColor (classTag);
+			objColor = ColorEncoding.EncodeTagAsColor(objTag);
 
 			capturePasses [0].camera.WorldToScreenPoint (r.bounds.center);
 
 			//mpb.SetVector ("_Scale", scaleVector);
 			//mpb.SetVector ("_Shift", shiftVector);
 			// Make transparent if light ray.
-			if (simObj != null) {
-				colorIds [objColor] = "" + simObj.UniqueID;
-				colorIds [classColor] = "" + simObj.name;
-				Debug.Log ("colored " + simObj.UniqueID);
+			if (so != null || sop != null) {
+				colorIds [objColor] = objTag;
+				colorIds [classColor] = classTag;
+				// Debug.Log ("colored " + simObj.UniqueID);
 			} else {
 				colorIds [objColor] = r.gameObject.name;
-				if (r.gameObject.name == "Cube.100") {
-					Debug.Log (r.gameObject.name);
-				}
 			}
 
 //			if (r.material.name.ToLower().Contains ("lightray")) {
