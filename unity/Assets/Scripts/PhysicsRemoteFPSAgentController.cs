@@ -3131,9 +3131,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
             CapsuleCollider cc = GetComponent<CapsuleCollider>();
 
             Vector3 center = transform.position;
-            float floorFudgeFactor = m_CharacterController.skinWidth; // Small constant added to make sure the capsule
+            float floorFudgeFactor = 2 * m_CharacterController.skinWidth; // Small constant added to make sure the capsule
                                                                       // cast below doesn't collide with the ground.
-            float radius = cc.radius;
+            float radius = cc.radius + m_CharacterController.skinWidth;
             float innerHeight = cc.height / 2.0f - radius;
 
             Queue<Vector3> pointsQueue = new Queue<Vector3>();
