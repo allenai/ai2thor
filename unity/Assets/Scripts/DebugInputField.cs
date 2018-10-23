@@ -50,9 +50,21 @@ namespace UnityStandardAssets.Characters.FirstPerson
 							action.gridSize = float.Parse(splitcommand[1]);
                         }
 
+                        action.renderNormalsImage = true;
+                        action.renderDepthImage = true;
+                        action.renderClassImage = true;
+                        action.renderObjectImage = true;
 
 						PhysicsController.actionComplete = false;
       			        PhysicsController.Initialize(action);
+                        break;
+                    }
+                case "roco":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "RandomlyOpenCloseObjects";
+                        action.randomSeed = (new System.Random()).Next(1, 1000000);
+                        PhysicsController.ProcessControlCommand(action);
                         break;
                     }
                 case "crouch":
