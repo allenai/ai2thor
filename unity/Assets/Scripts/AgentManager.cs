@@ -596,6 +596,9 @@ public struct MetadataWrapper
 	public int actionIntReturn;
 	public float actionFloatReturn;
 	public bool actionBoolReturn;
+	public string[] actionStringsReturn;
+
+	public float[] actionFloatsReturn;
 }
 
 
