@@ -3135,7 +3135,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             float sw = m_CharacterController.skinWidth;
             float floorFudgeFactor = sw; // Small constant added to make sure the capsule
                                                                       // cast below doesn't collide with the ground.
-            float radius = cc.radius;
+            float radius = cc.radius + sw;
             float innerHeight = cc.height / 2.0f - radius;
 
             Queue<Vector3> pointsQueue = new Queue<Vector3>();
