@@ -3141,7 +3141,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             Queue<Vector3> pointsQueue = new Queue<Vector3>();
             pointsQueue.Enqueue(center);
 
-            float dirSkinWidthMultiplier = 1.0f + sw;
+            //float dirSkinWidthMultiplier = 1.0f + sw;
             Vector3[] directions = {
                 new Vector3(1.0f, 0.0f, 0.0f),
                 new Vector3(0.0f, 0.0f, 1.0f),
@@ -3165,8 +3165,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
                             point1,
                             point2,
                             radius,
-                            d * dirSkinWidthMultiplier,
-                            gridSize,
+                            d,// * dirSkinWidthMultiplier, - multiplying direction doesn't increase distance cast
+                            gridSize + sw, //offset should be here, this mimics the additional distance check of MoveAgent()
                             layerMask,
                             QueryTriggerInteraction.Ignore
                         );
