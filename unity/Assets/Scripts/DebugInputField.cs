@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace UnityStandardAssets.Characters.FirstPerson
 {
@@ -9,6 +10,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		public GameObject Agent = null;
 		public PhysicsRemoteFPSAgentController PhysicsController = null;
 		public DiscreteRemoteFPSAgentController PivotController = null;
+
+        private InputField debugfield;
+        private DebugFPSAgentController dfac;
 
         // Use this for initialization
         void Start()
@@ -20,12 +24,75 @@ namespace UnityStandardAssets.Characters.FirstPerson
             PhysicsController.GetComponent<DebugFPSAgentController>().enabled = true;
             #endif
 			PivotController = Agent.GetComponent<DiscreteRemoteFPSAgentController>();
+            debugfield = gameObject.GetComponent<InputField>();
+            dfac = Agent.GetComponent<DebugFPSAgentController>();
         }
 
         // Update is called once per frame
         void Update()
         {
+            if(!debugfield.isFocused && dfac.TextInputMode)
+            {
+                if(Input.GetKeyDown(KeyCode.W))
+                {
+                    ServerAction action = new ServerAction();
+                    action.action = "MoveAhead";
+                    action.moveMagnitude = 0.25f;		
+                    PhysicsController.ProcessControlCommand(action);
+                }
 
+                if(Input.GetKeyDown(KeyCode.S))
+                {
+                    ServerAction action = new ServerAction();
+                    action.action = "MoveBack";
+                    action.moveMagnitude = 0.25f;		
+                    PhysicsController.ProcessControlCommand(action);  
+                }
+
+                if(Input.GetKeyDown(KeyCode.A))
+                {
+                    ServerAction action = new ServerAction();
+                    action.action = "MoveLeft";
+                    action.moveMagnitude = 0.25f;		
+                    PhysicsController.ProcessControlCommand(action);  
+                }
+
+                if(Input.GetKeyDown(KeyCode.D))
+                {
+                    ServerAction action = new ServerAction();
+                    action.action = "MoveRight";
+                    action.moveMagnitude = 0.25f;		
+                    PhysicsController.ProcessControlCommand(action);  
+                }
+
+                if(Input.GetKeyDown(KeyCode.UpArrow))
+                {
+                    ServerAction action = new ServerAction();
+                    action.action = "LookUp";
+                    PhysicsController.ProcessControlCommand(action); 
+                }
+
+                if(Input.GetKeyDown(KeyCode.DownArrow))
+                {
+                    ServerAction action = new ServerAction();
+                    action.action = "LookDown";
+                    PhysicsController.ProcessControlCommand(action); 
+                }
+
+                if(Input.GetKeyDown(KeyCode.LeftArrow))
+                {
+                    ServerAction action = new ServerAction();
+                    action.action = "RotateLeft";
+                    PhysicsController.ProcessControlCommand(action); 
+                }
+
+                if(Input.GetKeyDown(KeyCode.RightArrow))
+                {
+                    ServerAction action = new ServerAction();
+                    action.action = "RotateRight";
+                    PhysicsController.ProcessControlCommand(action); 
+                }
+            }
         }
 
         public void Execute(string command)
