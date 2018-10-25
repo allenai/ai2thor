@@ -1692,13 +1692,15 @@ namespace UnityStandardAssets.Characters.FirstPerson
             }         
         }  
 
-        //x, y, z direction of throw
-        //moveMagnitude, strength of throw
+        //by default will throw in the forward direction relative to the Agent's Camera
+        //moveMagnitude, strength of throw, good values for an average throw are around 150-250
         public void ThrowObject(ServerAction action)
 		{
 			if(ItemInHand == null)
 			{
-				Debug.Log("can't throw nothing!");            
+                errorMessage = "Nothing in Hand to Throw!";
+				Debug.Log(errorMessage);
+                actionFinished(false);            
 				return;
 			}
 
