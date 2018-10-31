@@ -1063,6 +1063,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 {               
 					InputMode_Text.GetComponent<Text>().text = "Free Mode";
                     TextInputMode = false;
+                    Cursor.visible = false;
+                    Cursor.lockState = CursorLockMode.Locked;
                     return;
                 }
 
@@ -1071,6 +1073,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
             //allow actions only via text input
             if (TextInputMode == true)
             {
+                Cursor.visible = true;
+                Cursor.lockState = CursorLockMode.None;
+
                 //if we press enter, select the input field
                 if (Input.GetKeyDown(KeyCode.Return))
                 {
@@ -1195,7 +1200,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             //by default we can only use enter to execute commands in the text field
 			if(TextInputMode == true)
 			{
-				
+
 			}
 	
 		}
@@ -1224,6 +1229,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			}
             
 		}
+
+        public MouseLook GetMouseLook() {
+            return m_MouseLook;
+        }
 
 		private void MouseRotateView()
 		{

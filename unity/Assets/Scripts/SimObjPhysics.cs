@@ -47,7 +47,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 	public bool isColliding = false;
 
 	private Bounds bounds;
-
+	public Dictionary<Collider, ContactPoint[]> contactPointsDictionary = new Dictionary<Collider, ContactPoint[]>();
 
 	//initial position object spawned in in case we want to reset the scene
 	//private Vector3 startPosition;   
@@ -170,6 +170,19 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 			return Array.IndexOf(SecondaryProperties, SimObjSecondaryProperty.Receptacle) > -1 &&
 			 ReceptacleTriggerBoxes != null;
 		}
+	}
+
+	public void ResetContactPointsDictionary() {
+		contactPointsDictionary.Clear();
+	}
+
+	void OnCollisionEnter (Collision col)	
+    {
+		contactPointsDictionary[col.collider] = col.contacts;
+	}
+	void OnCollisionExit (Collision col)	
+    {
+		contactPointsDictionary.Remove(col.collider);
 	}
 
 	//duplicate a non trigger collider, add a rigidbody to it and parant the duplicate to the original selection
