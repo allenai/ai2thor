@@ -1159,6 +1159,159 @@ namespace UnityStandardAssets.Characters.FirstPerson
       
         /////AGENT HAND STUFF////
 
+        protected IEnumerator moveHandToTowardsXYZWithForce(float x, float y, float z, float maxDistance)
+        {
+            if (ItemInHand == null)
+            {
+                Debug.Log("Agent can only move hand if holding an item");
+                actionFinished(false);
+                yield break;
+            }
+            SimObjPhysics simObjInHand = ItemInHand.GetComponent<SimObjPhysics>();
+            simObjInHand.ResetContactPointsDictionary();
+            Rigidbody rb = ItemInHand.GetComponent<Rigidbody>();
+            rb.isKinematic = false;
+            rb.useGravity = false;
+
+            Vector3 targetPosition = new Vector3(x, y, z);
+            
+            Vector3 initialPosition = rb.transform.position;
+            Quaternion initialRotation = rb.transform.rotation;
+            Vector3 forceDirection = targetPosition - rb.transform.position;
+            forceDirection.Normalize();
+
+            Vector3 lastPosition = initialPosition;
+            Quaternion lastRotation = initialRotation;
+            bool hitMaxDistance = false;
+            bool beyondVisibleDistance = false;
+            bool leavingViewport = false;
+            float oldTimeScale = Time.timeScale;
+            Time.timeScale = 5.0f;
+            rb.AddForce(forceDirection, ForceMode.VelocityChange);
+            float oldAngularDrag = rb.angularDrag;
+            rb.angularDrag = 0.999f;
+            List<Vector3> positions = new List<Vector3>();
+            List<Quaternion> rotations = new List<Quaternion>();
+            positions.Add(initialPosition);
+            rotations.Add(initialRotation);
+            for (int i = 0; i < 20; i++) {
+                yield return null;
+                float a = Vector3.Dot(rb.velocity, forceDirection);
+                float aPos = Math.Max(0.0f, a);
+                float aNeg = Math.Min(0.0f, a);
+                rb.velocity = (aPos + 0.5f * aNeg) * forceDirection + 0.5f * (rb.velocity - a * forceDirection);
+
+                if (rb.velocity.magnitude <= 0.001f &&
+                    rb.angularVelocity.magnitude < 0.001f) {
+                    break;
+                }
+                
+                hitMaxDistance = beyondVisibleDistance = leavingViewport = false;
+
+                Vector3 newPosition = rb.transform.position;
+                Vector3 delta = newPosition - initialPosition;
+                Vector3 forceDir = Vector3.Project(newPosition - initialPosition, forceDirection);
+                Vector3 perpDir = delta - forceDir;
+                float perpNorm = perpDir.magnitude;
+                if (perpNorm > 0.1f * maxDistance) {
+                    newPosition = initialPosition + forceDir + (0.1f * maxDistance) * perpDir / perpNorm;
+                    rb.transform.position = newPosition;
+                }
+
+                Vector3 tmpForCamera = newPosition;
+                tmpForCamera.y = m_Camera.transform.position.y;
+                Vector3 vp = m_Camera.WorldToViewportPoint(newPosition);
+
+                hitMaxDistance = Vector3.Distance(initialPosition, newPosition) > maxDistance;
+                beyondVisibleDistance = Vector3.Distance(m_Camera.transform.position, tmpForCamera) > maxVisibleDistance;
+                leavingViewport = (vp.z < 0 || vp.x > 1.0f || vp.x < 0.0f || vp.y > 1.0f || vp.y < 0.0f);
+
+                if (hitMaxDistance || beyondVisibleDistance || leavingViewport) {
+                    break;
+                } else {
+                    positions.Add(rb.transform.position);
+                    rotations.Add(rb.transform.rotation);
+                    lastPosition = rb.transform.position;
+                    lastRotation = rb.transform.rotation;
+                }
+            }
+            Time.timeScale = oldTimeScale;
+
+            Vector3 normalSum = new Vector3(0.0f, 0.0f, 0.0f);
+            Vector3 aveCollisionsNormal = new Vector3(0.0f, 0.0f, 0.0f);
+            int count = 0;
+            foreach (KeyValuePair<Collider, ContactPoint[]> pair in simObjInHand.contactPointsDictionary) {
+                foreach (ContactPoint cp in pair.Value) {
+                    normalSum += cp.normal;
+                    count += 1;
+                }
+            }
+            if (count != 0) {
+                aveCollisionsNormal = normalSum / count;
+                aveCollisionsNormal.Normalize();
+                Debug.Log(aveCollisionsNormal);
+            }
+
+            rb.angularDrag = oldAngularDrag;
+            AgentHand.transform.position = lastPosition;
+            rb.transform.localPosition = new Vector3(0f, 0f, 0f);
+            rb.transform.rotation = lastRotation;
+
+            SetUpRotationBoxChecks();
+            IsHandDefault = false;
+
+            bool handObjectIsColliding = count != 0;
+            if (handObjectIsColliding) {
+                Debug.Log(aveCollisionsNormal);
+                AgentHand.transform.position = AgentHand.transform.position + 0.05f * aveCollisionsNormal;
+                yield return null;
+                handObjectIsColliding = simObjInHand.contactPointsDictionary.Count != 0;
+            }
+            // This has to be after the above as the contactPointsDictionary is only
+            // updated while rb is not kinematic.
+            rb.isKinematic = true;
+
+            if (handObjectIsColliding) {
+                AgentHand.transform.position = initialPosition;
+                rb.transform.rotation = initialRotation;
+                errorMessage = "Hand object was colliding with another object after movement.";
+                Debug.Log(errorMessage);
+                actionFinished(false);
+            } else if (Vector3.Distance(initialPosition, lastPosition) < 0.001f &&
+                Quaternion.Angle(initialRotation, lastRotation) < 0.001f) {
+                if (beyondVisibleDistance) {
+                    errorMessage = "Hand already at max distance.";
+                } else if (leavingViewport) {
+                    errorMessage = "Hand at viewport constraints.";
+                } else {
+                    errorMessage = "Hand object did not move, perhaps its being blocked.";
+                }
+                Debug.Log(errorMessage);
+                actionFinished(false);
+            } else {
+                actionFinished(true);
+            }
+        }
+
+        public void MoveHandForce(ServerAction action) {
+            Vector3 direction = transform.forward * action.z + 
+			                    transform.right * action.x + 
+								transform.up * action.y;
+            Vector3 target = AgentHand.transform.position + 
+                                direction;
+            if (ItemInHand == null) {
+                Debug.Log("Agent can only move hand if holding an item");
+                actionFinished(false);
+            } else if (moveHandToXYZ(target.x, target.y, target.z)) {
+                actionFinished(true);
+            } else {
+                errorMessage = "";
+                StartCoroutine(
+                    moveHandToTowardsXYZWithForce(target.x, target.y, target.z, direction.magnitude)
+                );
+            }
+        }
+
 		public void ResetAgentHandPosition(ServerAction action)
         {
             AgentHand.transform.position = DefaultHandPosition.transform.position;
@@ -1676,6 +1829,11 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     } else {
                         ItemInHand.transform.parent = null;
                     }
+
+                    // Add some random rotational momentum to the dropped object to make things
+                    // less deterministic.
+                    // TODO: Need a parameter to control how much randomness we introduce.
+                    rb.angularVelocity = UnityEngine.Random.insideUnitSphere;
 
                     StartCoroutine (checkDropHandObjectAction (ItemInHand.GetComponent<SimObjPhysics>()));
                     ItemInHand = null;
@@ -3397,6 +3555,78 @@ namespace UnityStandardAssets.Characters.FirstPerson
             }
 		}
 
+        public void StackBooks(ServerAction action) {
+            GameObject topLevelObject = GameObject.Find("HideAndSeek");
+            SimObjPhysics[] hideSeekObjects = topLevelObject.GetComponentsInChildren<SimObjPhysics>();
+
+            HashSet<string> seenBooks = new HashSet<string>();
+            List<HashSet<SimObjPhysics>> groups = new List<HashSet<SimObjPhysics>>();
+            foreach (SimObjPhysics sop in hideSeekObjects) {
+                HashSet<SimObjPhysics> group = new HashSet<SimObjPhysics>();
+                if (sop.UniqueID.StartsWith("Book|")) {
+                    if (!seenBooks.Contains(sop.UniqueID)) {
+                        HashSet<SimObjPhysics> objectsNearBook = objectsInBox(
+                            sop.transform.position.x, sop.transform.position.z);
+                        group.Add(sop);
+                        seenBooks.Add(sop.UniqueID);
+                        foreach (SimObjPhysics possibleBook in objectsNearBook) {
+                            if (possibleBook.UniqueID.StartsWith("Book|") && 
+                                !seenBooks.Contains(possibleBook.UniqueID)) {
+                                group.Add(possibleBook);
+                                seenBooks.Add(possibleBook.UniqueID);
+                            }
+                        }
+                        groups.Add(group);
+                    }
+                }
+            }
+
+            foreach (HashSet<SimObjPhysics> group in groups) {
+                SimObjPhysics topBook = null;
+                GameObject topMesh = null;
+                GameObject topColliders = null;
+                GameObject topTrigColliders = null;
+                GameObject topVisPoints = null;
+                foreach(SimObjPhysics so in group) {
+                    if (topBook == null) {
+                        topBook = so;  
+                        topMesh = so.gameObject.transform.Find("mesh").gameObject;
+                        topColliders = so.gameObject.transform.Find("Colliders").gameObject;
+                        topTrigColliders = so.gameObject.transform.Find("TriggerColliders").gameObject;
+                        topVisPoints = so.gameObject.transform.Find("VisibilityPoints").gameObject;
+                    } else {
+                        GameObject mesh = so.gameObject.transform.Find("mesh").gameObject;
+                        mesh.transform.parent = topMesh.transform;
+
+                        GameObject colliders = so.gameObject.transform.Find("Colliders").gameObject;
+                        foreach (Transform t in colliders.GetComponentsInChildren<Transform>()) {
+                            if (t != colliders.transform) {
+                                t.parent = topColliders.transform;
+                            }
+                        }
+
+                        GameObject trigColliders = so.gameObject.transform.Find("TriggerColliders").gameObject;
+                        foreach (Transform t in trigColliders.GetComponentsInChildren<Transform>()) {
+                            if (t != colliders.transform) {
+                                t.parent = topTrigColliders.transform;
+                            }
+                        }
+
+                        GameObject visPoints = so.gameObject.transform.Find("VisibilityPoints").gameObject;
+                        foreach (Transform t in visPoints.GetComponentsInChildren<Transform>()) {
+                            if (t != visPoints.transform) {
+                                t.parent = topVisPoints.transform;
+                            }
+                        }
+
+                        uniqueIdToSimObjPhysics.Remove(so.UniqueID);
+                        so.gameObject.SetActive(false);
+                    }
+                }
+            }
+            actionFinished(true);
+        }
+
         public void RandomizeHideSeekObjects(ServerAction action) {
             GameObject topLevelObject = GameObject.Find("HideAndSeek");
             SimObjPhysics[] hideSeekObjects = topLevelObject.GetComponentsInChildren<SimObjPhysics>();
@@ -3501,17 +3731,26 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     new Vector3(float.PositiveInfinity, float.PositiveInfinity, float.PositiveInfinity),
                     new Vector3(-float.PositiveInfinity, -float.PositiveInfinity, -float.PositiveInfinity)
                 );
+                bool hasActiveRenderer = false;
                 foreach (Renderer r in so.GetComponentsInChildren<Renderer>()) {
-                    objBounds.Encapsulate(r.bounds);
+                    if (r.enabled) {
+                        hasActiveRenderer = true;
+                        objBounds.Encapsulate(r.bounds);
+                    }
+                }
+                if (!hasActiveRenderer) {
+                    errorMessage = "Cannot get bounds for " + action.objectId + " as it has no attached (and active) renderers.";
+                    Debug.Log(errorMessage);
+                    actionFinished(false);
+                    return;
                 }
                 so.transform.rotation = oldRotation;
                 Vector3 diffs = objBounds.max - objBounds.min;
-                #if UnityEditor
-                Debug.Log("Volume is" + );
-                #endif
                 actionFloatReturn = diffs.x * diffs.y * diffs.z;
+                #if UNITY_EDITOR
+                Debug.Log("Volume is " + actionFloatReturn);
+                #endif
                 actionFinished(true);
-
             } else {
                 errorMessage = "Invalid objectId " + action.objectId;
                 Debug.Log(errorMessage);
@@ -3529,8 +3768,15 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     new Vector3(float.PositiveInfinity, float.PositiveInfinity, float.PositiveInfinity),
                     new Vector3(-float.PositiveInfinity, -float.PositiveInfinity, -float.PositiveInfinity)
                 );
+                bool hasActiveRenderer = false;
                 foreach (Renderer r in so.GetComponentsInChildren<Renderer>()) {
-                    objBounds.Encapsulate(r.bounds);
+                    if (r.enabled) {
+                        hasActiveRenderer = true;
+                        objBounds.Encapsulate(r.bounds);
+                    }
+                }
+                if (!hasActiveRenderer) {
+                    continue;
                 }
                 so.transform.rotation = oldRotation;
                 Vector3 diffs = objBounds.max - objBounds.min;
@@ -3546,7 +3792,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
         protected void changeObjectBlendMode(SimObjPhysics so, StandardShaderUtils.BlendMode bm, float alpha) {
             HashSet<MeshRenderer> renderersToSkip = new HashSet<MeshRenderer>();
             foreach (SimObjPhysics childSo in so.GetComponentsInChildren<SimObjPhysics>()) {
-                if (so.UniqueID != childSo.UniqueID) {
+                if (!childSo.UniqueID.StartsWith("Drawer") && 
+                    !childSo.UniqueID.Split('|')[0].EndsWith("Door") && 
+                    so.UniqueID != childSo.UniqueID) {
                     foreach (MeshRenderer mr in childSo.GetComponentsInChildren<MeshRenderer>()) {
                         renderersToSkip.Add(mr);
                     }
@@ -3572,8 +3820,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
             if (uniqueIdToSimObjPhysics.ContainsKey(action.objectId)) {
                 changeObjectBlendMode(
                     uniqueIdToSimObjPhysics[action.objectId], 
-                    StandardShaderUtils.BlendMode.Transparent, 
-                    0.5f
+                    StandardShaderUtils.BlendMode.Fade, 
+                    0.4f
                 );
                 actionFinished(true);
             } else {
