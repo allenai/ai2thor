@@ -1850,13 +1850,15 @@ namespace UnityStandardAssets.Characters.FirstPerson
             }         
         }  
 
-        //x, y, z direction of throw
-        //moveMagnitude, strength of throw
+        //by default will throw in the forward direction relative to the Agent's Camera
+        //moveMagnitude, strength of throw, good values for an average throw are around 150-250
         public void ThrowObject(ServerAction action)
 		{
 			if(ItemInHand == null)
 			{
-				Debug.Log("can't throw nothing!");            
+                errorMessage = "Nothing in Hand to Throw!";
+				Debug.Log(errorMessage);
+                actionFinished(false);            
 				return;
 			}
 
@@ -3293,13 +3295,13 @@ namespace UnityStandardAssets.Characters.FirstPerson
             float sw = m_CharacterController.skinWidth;
             float floorFudgeFactor = sw; // Small constant added to make sure the capsule
                                                                       // cast below doesn't collide with the ground.
-            float radius = cc.radius;
+            float radius = cc.radius + sw;
             float innerHeight = cc.height / 2.0f - radius;
 
             Queue<Vector3> pointsQueue = new Queue<Vector3>();
             pointsQueue.Enqueue(center);
 
-            float dirSkinWidthMultiplier = 1.0f + sw;
+            //float dirSkinWidthMultiplier = 1.0f + sw;
             Vector3[] directions = {
                 new Vector3(1.0f, 0.0f, 0.0f),
                 new Vector3(0.0f, 0.0f, 1.0f),
@@ -3323,8 +3325,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
                             point1,
                             point2,
                             radius,
-                            d * dirSkinWidthMultiplier,
-                            gridSize,
+                            d,// * dirSkinWidthMultiplier, - multiplying direction doesn't increase distance cast
+                            gridSize + sw, //offset should be here, this mimics the additional distance check of MoveAgent()
                             layerMask,
                             QueryTriggerInteraction.Ignore
                         );
