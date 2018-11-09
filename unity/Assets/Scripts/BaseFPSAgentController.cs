@@ -31,6 +31,22 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		protected bool continuousMode;
 		public ImageSynthesis imageSynthesis;
 
+		public int AgentId = 0;
+        private bool isVisible = true;
+        public bool IsVisible
+        {
+                get { return isVisible; }
+                set {
+                    GameObject visCapsule = this.transform.Find ("VisibilityCapsule").gameObject;
+                    foreach (Renderer r in visCapsule.GetComponentsInChildren<Renderer>()) {
+                        r.enabled = value;
+                    }
+                    isVisible = value;
+                }
+        }
+
+		public BaseFPSAgentController[] Agents;
+
 		//[SerializeField]
 		//protected bool m_UseFovKick;
 		//[SerializeField]
@@ -139,6 +155,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			init_position = transform.position;
 			init_rotation = transform.rotation;
 
+			// Initializing the Agents array
+			if (Agents == null || Agents.Length == 0) {
+				Agents = new BaseFPSAgentController[1];
+				Agents[0] = this;
+			}
+			
 			//allowNodes = false;
 		}
 

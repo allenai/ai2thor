@@ -90,6 +90,9 @@ public class AgentManager : MonoBehaviour
 	public void Initialize(ServerAction action)
 	{
 		primaryAgent.ProcessControlCommand (action);
+		primaryAgent.IsVisible = action.makeAgentsVisible;
+		primaryAgent.Agents = new BaseFPSAgentController[1];
+		primaryAgent.Agents[0] = primaryAgent;
 		this.renderImage = action.renderImage;
 		this.renderClassImage = action.renderClassImage;
 		this.renderDepthImage = action.renderDepthImage;
@@ -108,6 +111,13 @@ public class AgentManager : MonoBehaviour
 			action.z = reachablePositions[i + 1].z;
 			addAgent (action);
 			yield return null; // must do this so we wait a frame so that when we CapsuleCast we see the most recently added agent
+		}
+		for (int i = 0; i < this.agents.Count; i++) {
+			this.agents[i].AgentId = i;
+			this.agents[i].Agents = this.agents.ToArray();
+			if (i != 0) {
+				this.agents[i].m_Camera.enabled = false;
+			}
 		}
 		readyToEmit = true;
 	}
@@ -135,12 +145,10 @@ public class AgentManager : MonoBehaviour
 		Vector3 clonePosition = new Vector3(action.x, action.y, action.z);
 		
 		GameObject visCapsule = primaryAgent.transform.Find ("VisibilityCapsule").gameObject;
-		visCapsule.SetActive (true);
-		foreach (Renderer r in visCapsule.GetComponentsInChildren<Renderer>()) {
-			r.enabled = action.makeAgentsVisible;
-		}
+		visCapsule.SetActive(true);
 
 		BaseFPSAgentController clone = UnityEngine.Object.Instantiate (primaryAgent);
+		clone.IsVisible = action.makeAgentsVisible;
 		clone.actionDuration = this.actionDuration;
 		// clone.m_Camera.targetDisplay = this.agents.Count;
 		clone.transform.position = clonePosition;

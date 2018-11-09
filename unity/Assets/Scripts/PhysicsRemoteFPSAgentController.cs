@@ -117,6 +117,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     sceneBounds.Encapsulate(r.bounds);
                 }
             }
+
             base.actionComplete = true;
         }
 
@@ -383,6 +384,20 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			return Physics.OverlapCapsule(point0, point1, maxDistance, 1 << 8, QueryTriggerInteraction.Collide);
         }
 
+        protected void updateOwnAndInvisibleAgentColliders(bool enable) {
+            foreach (BaseFPSAgentController agent in Agents) {
+                PhysicsRemoteFPSAgentController phyAgent = (PhysicsRemoteFPSAgentController) agent;
+                if (phyAgent.AgentId == AgentId || !phyAgent.IsVisible) {
+                    foreach (Collider c in phyAgent.GetComponentsInChildren<Collider>()) {
+                        c.enabled = enable;
+                    }
+                    foreach (Collider c in phyAgent.AgentHand.GetComponentsInChildren<Collider>()) {
+                        c.enabled = true;
+                    }
+                }
+            }
+        }
+
 		protected SimObjPhysics[] GetAllVisibleSimObjPhysics(Camera agentCamera, float maxDistance)
         {
             foreach (KeyValuePair<string, SimObjPhysics> pair in uniqueIdToSimObjPhysics) {
@@ -404,6 +419,11 @@ namespace UnityStandardAssets.Characters.FirstPerson
             } else {
                 point0.y += maxDistance;
             }
+
+            // Turn off the colliders corresponding to this agent
+            // and any invisible agents.
+            updateOwnAndInvisibleAgentColliders(false);
+            
 			Collider[] colliders_in_view = Physics.OverlapCapsule(point0, point1, maxDistance, 1 << 8, QueryTriggerInteraction.Collide);
             
             if (colliders_in_view != null)
@@ -442,7 +462,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
                                     //if this particular point is in view...
                                     if (CheckIfVisibilityPointInViewport(sop, point, agentCamera, false))
                                     {
-                                        visPointCount++;                              
+                                        visPointCount++;
+                                        #if !UNITY_EDITOR
+                                        // If we're in the unity editor then don't break on finding a visible
+                                        // point as we want to draw lines to each visible point.
+                                        break;
+                                        #endif
                                     }
                                 }
 
@@ -515,6 +540,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     }
                 }
             }
+
+            // Turn back on the colliders corresponding to this agent
+            // and any invisible agents.
+            updateOwnAndInvisibleAgentColliders(true);
             
             //populate array of visible items in order by distance
             currentlyVisibleItems.Sort((x, y) => Vector3.Distance(x.transform.position, agentCameraPos).CompareTo(Vector3.Distance(y.transform.position, agentCameraPos)));
@@ -544,7 +573,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 				if(includeInvisible)
 				{
 					if(Physics.Raycast(agentCamera.transform.position, point.position - agentCamera.transform.position, out hit, 
-					                   100f, (1 << 8 )| (1 << 9)))//layer mask automatically excludes Agent from this check. bit shifts are weird
+					                   100f, (1 << 8 )| (1 << 9) | (1 << 10)))
                     {
                         if(hit.transform != sop.transform)
                         {
@@ -570,7 +599,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 				else
 				{
         			if (Physics.Raycast(agentCamera.transform.position, point.position - agentCamera.transform.position, out hit, 
-        				                   raycastDistance, 1<<8)) 
+        				                   raycastDistance, (1 << 8) | (1 << 10)))
 					{ //layer mask automatically excludes Agent from this check
                         if (hit.transform != sop.transform) 
 						{
@@ -2725,12 +2754,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
             GameObject toIgnore) {
 			Vector3 up = new Vector3(0.0f, 1.0f, 0.0f);
 			RaycastHit[] hits = Physics.RaycastAll(position, up, distance, layerMask);
-            // Debug.Log("");
-            // Debug.Log(toIgnore);
             foreach (RaycastHit hit in hits) {
-                // Debug.Log(hit.collider);
                 if (hit.collider.transform.gameObject != toIgnore) {
-                    // Debug.Log("happens");
                     return true;
                 }
             }
@@ -2979,7 +3004,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
         protected bool objectIsCurrentlyVisible(SimObjPhysics sop, float maxDistance) {
             if (sop.VisibilityPoints.Length > 0) {
                 Transform[] visPoints = sop.VisibilityPoints;
-
+                updateOwnAndInvisibleAgentColliders(false);
                 foreach (Transform point in visPoints) {
                     Vector3 tmp = point.position;
                     tmp.y = transform.position.y;
@@ -2987,6 +3012,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     if (Vector3.Distance(tmp, transform.position) < maxDistance) {
                         //if this particular point is in view...
                         if (CheckIfVisibilityPointInViewport(sop, point, m_Camera, false)) {
+                            updateOwnAndInvisibleAgentColliders(true);
                             return true;
                         }
                     }
@@ -2994,6 +3020,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             } else {
                 Debug.Log("Error! Set at least 1 visibility point on SimObjPhysics prefab!");
             }
+            updateOwnAndInvisibleAgentColliders(true);
             return false;
         }
         
