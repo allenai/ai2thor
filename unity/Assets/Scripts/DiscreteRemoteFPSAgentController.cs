@@ -86,7 +86,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			return metaMessage;
 		}
 
-
+		override public Vector3[] getReachablePositions() {
+			throw new NotImplementedException();
+			return new Vector3[0];
+		}
 
 
 		// Check if agent is moving

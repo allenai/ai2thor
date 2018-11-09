@@ -13,7 +13,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 {
 	[RequireComponent(typeof(CharacterController))]
 
-	public class BaseFPSAgentController : MonoBehaviour
+	abstract public class BaseFPSAgentController : MonoBehaviour
 	{
 		// first person controller parameters
 		[SerializeField]
@@ -155,6 +155,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			actionCounter = 0;
 			targetTeleport = Vector3.zero;
 		}
+
+		abstract public Vector3[] getReachablePositions();
 
 		public void Initialize(ServerAction action)
         {
@@ -635,7 +637,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 			m.y = Physics.gravity.y * this.m_GravityMultiplier;
 			m_CharacterController.Move(m);
-			StartCoroutine(checkMoveAction(action));
+			actionFinished(true);
+			// StartCoroutine(checkMoveAction(action));
 
 		}
 
@@ -652,6 +655,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 			bool result = false;
 
+			errorMessage = "Agent did not settle during move.";
 			for (int i = 0; i < actionDuration; i++)
 			{
 				Vector3 currentPosition = this.transform.position;
@@ -702,14 +706,17 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 			if (Math.Abs((this.transform.position - lastPosition).y) > 0.2)
 			{
+				errorMessage = "Move resulted in too large a change in y coordinate.";
 				result = false;
 			}
 
 
 			if (!result)
 			{
-				Debug.Log("check move failed");
+				Debug.Log(errorMessage);
 				transform.position = lastPosition;
+			} else {
+				errorMessage = "";
 			}
 
 			actionFinished(result);
