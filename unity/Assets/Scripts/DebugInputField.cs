@@ -9,6 +9,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
     {
 		public GameObject Agent = null;
 		public PhysicsRemoteFPSAgentController PhysicsController = null;
+        public AgentManager AManager = null;
 		public DiscreteRemoteFPSAgentController PivotController = null;
 
         private InputField debugfield;
@@ -20,6 +21,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			//UnityEngine.EventSystems.EventSystem.current.SetSelectedGameObject(gameObject);
 			Agent = GameObject.Find("FPSController");
 			PhysicsController = Agent.GetComponent<PhysicsRemoteFPSAgentController>();
+            AManager = GameObject.Find("PhysicsSceneManager").GetComponentInChildren<AgentManager>();
             #if UNITY_EDITOR
             PhysicsController.GetComponent<DebugFPSAgentController>().enabled = true;
             #endif
@@ -112,9 +114,17 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         //by default the gridsize is 0.25, so only moving in increments of .25 will work
                         //so the MoveAhead action will only take, by default, 0.25, .5, .75 etc magnitude with the default
                         //grid size!
-						if (splitcommand.Length > 1)
+						if (splitcommand.Length == 2 )
                         {
 							action.gridSize = float.Parse(splitcommand[1]);
+                        } else if (splitcommand.Length == 3)
+                        {
+							action.gridSize = float.Parse(splitcommand[1]);
+                            action.agentCount = int.Parse(splitcommand[2]);
+                        } else if (splitcommand.Length == 3) {
+                            action.gridSize = float.Parse(splitcommand[1]);
+                            action.agentCount = int.Parse(splitcommand[2]);
+                            action.makeAgentsVisible = int.Parse(splitcommand[3]) == 0;
                         }
 
                         action.renderNormalsImage = true;
@@ -123,7 +133,33 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         action.renderObjectImage = true;
 
 						PhysicsController.actionComplete = false;
-      			        PhysicsController.Initialize(action);
+                        action.action = "Initialize";
+                        AManager.Initialize(action);
+                        // AgentManager am = PhysicsController.gameObject.FindObjectsOfType<AgentManager>()[0];
+                        // Debug.Log("Physics scene manager = ...");
+                        // Debug.Log(physicsSceneManager);
+                        // AgentManager am = physicsSceneManager.GetComponent<AgentManager>();
+                        // Debug.Log(am);
+      			        // am.Initialize(action);
+                        break;
+                    }
+                case "to":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "TeleportObject";
+                        action.objectId = splitcommand[1];
+                        action.x = float.Parse(splitcommand[2]);
+                        action.y = float.Parse(splitcommand[3]);
+                        action.z = float.Parse(splitcommand[4]);
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+                case "daoot":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "DisableAllObjectsOfType";
+                        action.objectId = splitcommand[1];
+                        PhysicsController.ProcessControlCommand(action);
                         break;
                     }
                 case "roco":
@@ -200,8 +236,29 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         action.action = "CreateObjectAtLocation";
 
                         action.randomizeObjectAppearance = false;//pick randomly from available or not?                  
-                        action.objectVariation = 1;//if random false, which version of the object to spawn? (there are only 3 of each type atm)
+                        action.objectVariation = 1; //if random false, which version of the object to spawn? (there are only 3 of each type atm)
 
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+                case "rspawnfloor": 
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "RandomlyCreateAndPlaceObjectOnFloor";
+                        action.objectType = splitcommand[1];
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+                case "spawnfloor": 
+                    {
+                        ServerAction action = new ServerAction();
+                        int objectVariation = 1;
+                        action.objectType = splitcommand[1];
+                        action.x = float.Parse(splitcommand[2]);
+                        action.z = float.Parse(splitcommand[3]);
+                        
+                        action.action = "CreateObjectOnFloor";
+                        action.objectVariation = objectVariation;
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }
