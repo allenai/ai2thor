@@ -57,6 +57,28 @@ public class InstantiatePrefabTest : MonoBehaviour
         return SpawnObject(objectType, randomize, variation, position, rotation, spawningInHand, false);
     }
 
+    public Bounds BoundsOfObject(string objectType, int variation)
+    {
+        GameObject topObject = GameObject.Find("Objects");
+        List<GameObject> candidates = new List<GameObject>();
+        foreach (GameObject go in prefabs) {
+            if (go.GetComponent<SimObjPhysics>().Type == (SimObjType)Enum.Parse(typeof(SimObjType), objectType)) {
+                candidates.Add(go);
+            }
+        }
+
+        Bounds objBounds = new Bounds(
+            new Vector3(float.PositiveInfinity, float.PositiveInfinity, float.PositiveInfinity),
+            new Vector3(-float.PositiveInfinity, -float.PositiveInfinity, -float.PositiveInfinity)
+        );
+        foreach(Renderer r in candidates[variation - 1].GetComponentsInChildren<Renderer>()) {
+            if (r.enabled) {
+                objBounds.Encapsulate(r.bounds);
+            }
+        }
+        return objBounds;
+    }
+
 	//object type - from SimObjType which object to spawn
     //randomize - should the spawner randomly pick an object to spawn
     //variation - which specific version of the object (1, 2, 3), set to 0 if no specific variation is wanted
