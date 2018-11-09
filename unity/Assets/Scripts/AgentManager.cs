@@ -89,7 +89,6 @@ public class AgentManager : MonoBehaviour
 
 	public void Initialize(ServerAction action)
 	{
-		
 		primaryAgent.ProcessControlCommand (action);
 		this.renderImage = action.renderImage;
 		this.renderClassImage = action.renderClassImage;
@@ -101,8 +100,12 @@ public class AgentManager : MonoBehaviour
 	}
 
 	private IEnumerator addAgents(ServerAction action) {
-
+		yield return null;
+		Vector3[] reachablePositions = primaryAgent.getReachablePositions();
 		for (int i = 1; i < action.agentCount && this.agents.Count < Math.Min(agentColors.Length, action.agentCount); i++) {
+			action.x = reachablePositions[i + 1].x;
+			action.y = reachablePositions[i + 1].y;
+			action.z = reachablePositions[i + 1].z;
 			addAgent (action);
 			yield return null; // must do this so we wait a frame so that when we CapsuleCast we see the most recently added agent
 		}
@@ -129,27 +132,21 @@ public class AgentManager : MonoBehaviour
 	}
 
 	private void addAgent(ServerAction action) {
-		Vector3 clonePosition = agentStartPosition (primaryAgent);
-
-		if (clonePosition.magnitude > 0) {
-			GameObject visCapsule = primaryAgent.transform.Find ("VisibilityCapsule").gameObject;
-			visCapsule.SetActive (true);
-
-
-			BaseFPSAgentController clone = UnityEngine.Object.Instantiate (primaryAgent);
-			clone.actionDuration = this.actionDuration;
-			clone.m_Camera.targetDisplay = this.agents.Count;
-			clone.transform.position = clonePosition;
-			updateAgentColor(clone, agentColors[this.agents.Count]);
-			clone.ProcessControlCommand (action);
-			this.agents.Add (clone);
-		} else {
-			Debug.LogError ("couldn't find a valid start position for a new agent");
+		Vector3 clonePosition = new Vector3(action.x, action.y, action.z);
+		
+		GameObject visCapsule = primaryAgent.transform.Find ("VisibilityCapsule").gameObject;
+		visCapsule.SetActive (true);
+		foreach (Renderer r in visCapsule.GetComponentsInChildren<Renderer>()) {
+			r.enabled = action.makeAgentsVisible;
 		}
 
-
-
-
+		BaseFPSAgentController clone = UnityEngine.Object.Instantiate (primaryAgent);
+		clone.actionDuration = this.actionDuration;
+		// clone.m_Camera.targetDisplay = this.agents.Count;
+		clone.transform.position = clonePosition;
+		updateAgentColor(clone, agentColors[this.agents.Count]);
+		clone.ProcessControlCommand (action);
+		this.agents.Add (clone);
 	}
 
 	private Vector3 agentStartPosition(BaseFPSAgentController agent) {
@@ -367,6 +364,11 @@ public class AgentManager : MonoBehaviour
 
 		for (int i = 0; i < this.agents.Count; i++) {
 			BaseFPSAgentController agent = this.agents.ToArray () [i];
+			if (i > 0) {
+				this.agents.ToArray () [i - 1].m_Camera.enabled = false;
+			}
+			agent.m_Camera.enabled = true;
+			yield return new WaitForEndOfFrame();
 			MetadataWrapper metadata = agent.generateMetadataWrapper ();
 			metadata.agentId = i;
 			// we don't need to render the agent's camera for the first agent
@@ -378,6 +380,10 @@ public class AgentManager : MonoBehaviour
 			metadata.thirdPartyCameras = cameraMetadata;
 			multiMeta.agents [i] = metadata;
 		}
+		if (this.agents.Count != 1) {
+			this.agents.ToArray()[this.agents.Count - 1].m_Camera.enabled = false;
+		}
+		this.agents.ToArray()[0].m_Camera.enabled = true;
 
 		RenderTexture.active = currentTexture;
 
@@ -599,6 +605,7 @@ public struct MetadataWrapper
 	public string[] actionStringsReturn;
 
 	public float[] actionFloatsReturn;
+	public Vector3[] actionVector3sReturn;
 }
 
 
@@ -608,6 +615,7 @@ public class ServerAction
 	public string action;
 	public int agentCount = 1;
 	public string quality;
+	public bool makeAgentsVisible = true;
 	public float timeScale = 1.0f;
 	public string objectType;
 	public int objectVariation;

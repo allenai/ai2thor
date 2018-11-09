@@ -15,6 +15,8 @@ using UnityStandardAssets.ImageEffects;
 
 using Priority_Queue;
 
+using System.Linq;
+
 namespace UnityStandardAssets.Characters.FirstPerson
 {
 	[RequireComponent(typeof (CharacterController))]   
@@ -55,6 +57,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
         protected float actionFloatReturn;
         protected bool actionBoolReturn;
         protected float[] actionFloatsReturn;
+
+        protected Vector3[] actionVector3sReturn;
         protected string[] actionStringsReturn;
         [SerializeField] protected Vector3 standingLocalCameraPosition;
         [SerializeField] protected Vector3 crouchingLocalCameraPosition;
@@ -169,7 +173,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			return flat;
 		}
 
-        private ObjectMetadata ObjectMetadataFromSimObjPhysics(SimObjPhysics simObj) {
+        private ObjectMetadata ObjectMetadataFromSimObjPhysics(SimObjPhysics simObj, bool isVisible) {
             ObjectMetadata objMeta = new ObjectMetadata();
             GameObject o = simObj.gameObject;
             objMeta.name = o.name;
@@ -183,7 +187,11 @@ namespace UnityStandardAssets.Characters.FirstPerson
             }
             objMeta.pickupable = simObj.PrimaryProperty == SimObjPrimaryProperty.CanPickup;
             objMeta.objectId = simObj.UniqueID;
-            objMeta.visible = simObj.isVisible;
+
+            // TODO: using the isVisible flag on the object causes weird problems
+            // in the multiagent setting, explicitly giving this information for now.
+            objMeta.visible = isVisible; //simObj.isVisible;
+
             // TODO: bounds necessary?
             // Bounds bounds = simObj.Bounds;
             // this.bounds3D = new [] {
@@ -198,6 +206,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
         }
         private ObjectMetadata[] generateObjectMetadata()
 		{
+            SimObjPhysics[] visibleSimObjs = VisibleSimObjs(false); // Update visibility for all sim objects for this agent
+            HashSet<SimObjPhysics> visibleSimObjsHash = new HashSet<SimObjPhysics>();
+            foreach (SimObjPhysics sop in visibleSimObjs) {
+                visibleSimObjsHash.Add(sop);
+            }
+
 			// Encode these in a json string and send it to the server
 			SimObjPhysics[] simObjects = GameObject.FindObjectsOfType<SimObjPhysics>();
 			int numObj = simObjects.Length;
@@ -208,7 +222,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 				if (this.excludeObject(simObj.UniqueID)) {
 					continue;
 				}
-				ObjectMetadata meta = ObjectMetadataFromSimObjPhysics(simObj);
+				ObjectMetadata meta = ObjectMetadataFromSimObjPhysics(simObj, visibleSimObjsHash.Contains(simObj));
 				if (meta.receptacle)
 				{
 					List<string> receptacleObjectIds = simObj.Contains();
@@ -300,6 +314,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             metaMessage.actionBoolReturn = actionBoolReturn;
             metaMessage.actionFloatsReturn = actionFloatsReturn;
             metaMessage.actionStringsReturn = actionStringsReturn;
+            metaMessage.actionVector3sReturn = actionVector3sReturn;
 
             // Resetting things
             reachablePositions = new Vector3[0];
@@ -314,6 +329,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             actionBoolReturn = false;
             actionFloatsReturn = new float[0];
             actionStringsReturn = new string[0];
+            actionVector3sReturn = new Vector3[0];
 			
 			return metaMessage;
 		}
@@ -369,6 +385,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 		protected SimObjPhysics[] GetAllVisibleSimObjPhysics(Camera agentCamera, float maxDistance)
         {
+            foreach (KeyValuePair<string, SimObjPhysics> pair in uniqueIdToSimObjPhysics) {
+                // Set all objects to not be visible
+                pair.Value.isVisible = false;
+            }
             List<SimObjPhysics> currentlyVisibleItems = new List<SimObjPhysics>();
 
             Vector3 agentCameraPos = agentCamera.transform.position;
@@ -386,9 +406,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
             }
 			Collider[] colliders_in_view = Physics.OverlapCapsule(point0, point1, maxDistance, 1 << 8, QueryTriggerInteraction.Collide);
             
-            // Physics.OverlapSphere(agentCameraPos, maxDistance * DownwardViewDistance,
-            //                                              1 << 8, QueryTriggerInteraction.Collide); //layermask is 8, ignores layer 9 which is SimObjInvisible
-
             if (colliders_in_view != null)
             {
                 foreach (Collider item in colliders_in_view)
@@ -791,6 +808,70 @@ namespace UnityStandardAssets.Characters.FirstPerson
             return result;
         }
 
+        public void TeleportObject(ServerAction action) {
+            if (!uniqueIdToSimObjPhysics.ContainsKey(action.objectId)) {
+                errorMessage = "Cannot find object with id " + action.objectId;
+                Debug.Log(errorMessage);
+                actionFinished(false);
+                return;
+            } else {
+                SimObjPhysics sop = uniqueIdToSimObjPhysics[action.objectId];
+                if (ItemInHand != null && sop == ItemInHand.GetComponent<SimObjPhysics>()) {
+                    errorMessage = "Cannot teleport object in hand.";
+                    Debug.Log(errorMessage);
+                    actionFinished(false);
+                    return;
+                }
+                sop.transform.position = new Vector3(action.x, action.y, action.z);
+                sop.transform.rotation = Quaternion.Euler(action.rotation);
+                actionFinished(true);
+            }
+        }
+
+        public void TeleportObjectToFloor(ServerAction action) 
+		{
+            if (!uniqueIdToSimObjPhysics.ContainsKey(action.objectId)) {
+                errorMessage = "Cannot find object with id " + action.objectId;
+                Debug.Log(errorMessage);
+                actionFinished(false);
+                return;
+            } else {
+                SimObjPhysics sop = uniqueIdToSimObjPhysics[action.objectId];
+                if (ItemInHand != null && sop == ItemInHand.GetComponent<SimObjPhysics>()) {
+                    errorMessage = "Cannot teleport object in hand.";
+                    Debug.Log(errorMessage);
+                    actionFinished(false);
+                    return;
+                }
+                Bounds objBounds = new Bounds(
+                    new Vector3(float.PositiveInfinity, float.PositiveInfinity, float.PositiveInfinity),
+                    new Vector3(-float.PositiveInfinity, -float.PositiveInfinity, -float.PositiveInfinity)
+                );
+                foreach (Renderer r in sop.GetComponentsInChildren<Renderer>()) {
+                    if (r.enabled) {
+                        objBounds.Encapsulate(r.bounds);
+                    }
+                }
+                if (objBounds.min.x == float.PositiveInfinity) {
+                    errorMessage = "Could not get bounds of " + action.objectId + ".";
+                    actionFinished(false);
+                    return;
+                }
+                float y = getFloorY(action.x, action.z);
+                if (errorMessage != "") {
+                    actionFinished(false);
+                    return;
+                }
+                sop.transform.position = new Vector3(
+                    action.x, 
+                    objBounds.extents.y + y + 0.1f, 
+                    action.z
+                );
+                sop.transform.rotation = Quaternion.Euler(action.rotation);
+                actionFinished(true);
+            }
+		}
+
         public void TeleportFull(ServerAction action) {
 			targetTeleport = new Vector3 (action.x, action.y, action.z);
 
@@ -881,12 +962,16 @@ namespace UnityStandardAssets.Characters.FirstPerson
         //for all translational movement, check if the item the player is holding will hit anything, or if the agent will hit anything
 		public override void MoveLeft(ServerAction action)
 		{
-            Vector3 targetPosition = transform.position + -1 * transform.right * gridSize;
+            action.moveMagnitude = action.moveMagnitude > 0 ? action.moveMagnitude : gridSize;
+            Vector3 targetPosition = transform.position + -1 * transform.right * action.moveMagnitude;
 			if(checkIfSceneBoundsContainTargetPosition(targetPosition) &&
                 CheckIfItemBlocksAgentMovement(action.moveMagnitude, 270) &&
                 CheckIfAgentCanMove(action.moveMagnitude, 270)) {
 				DefaultAgentHand(action);
-				base.MoveLeft(action);
+                transform.position = targetPosition;
+                this.snapToGrid();
+                actionFinished(true);
+				// base.MoveLeft(action);
 			} else {
                 actionFinished(false);
             }
@@ -894,12 +979,16 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 		public override void MoveRight(ServerAction action)
 		{
-            Vector3 targetPosition = transform.position + transform.right * gridSize;
+            action.moveMagnitude = action.moveMagnitude > 0 ? action.moveMagnitude : gridSize;
+            Vector3 targetPosition = transform.position + transform.right * action.moveMagnitude;
 			if(checkIfSceneBoundsContainTargetPosition(targetPosition) &&
                 CheckIfItemBlocksAgentMovement(action.moveMagnitude, 90) &&
                 CheckIfAgentCanMove(action.moveMagnitude, 90))  {
 				DefaultAgentHand(action);
-				base.MoveRight(action);
+                transform.position = targetPosition;
+                this.snapToGrid();
+                actionFinished(true);
+				// base.MoveRight(action);
 			} else {
                 actionFinished(false);
             }
@@ -907,12 +996,16 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 		public override void MoveAhead(ServerAction action)
 		{
-            Vector3 targetPosition = transform.position + transform.forward * gridSize;
+            action.moveMagnitude = action.moveMagnitude > 0 ? action.moveMagnitude : gridSize;
+            Vector3 targetPosition = transform.position + transform.forward * action.moveMagnitude;
             if (checkIfSceneBoundsContainTargetPosition(targetPosition) &&
                 CheckIfItemBlocksAgentMovement(action.moveMagnitude, 0) && 
                 CheckIfAgentCanMove(action.moveMagnitude, 0)) {
 				DefaultAgentHand(action);
-				base.MoveAhead(action);            
+                transform.position = targetPosition;
+                this.snapToGrid();
+                actionFinished(true);
+				// base.MoveAhead(action);            
 			} else {
                 actionFinished(false);
             }
@@ -920,12 +1013,16 @@ namespace UnityStandardAssets.Characters.FirstPerson
         
 		public override void MoveBack(ServerAction action)
 		{
-			Vector3 targetPosition = transform.position + -1 * transform.forward * gridSize;
+            action.moveMagnitude = action.moveMagnitude > 0 ? action.moveMagnitude : gridSize;
+			Vector3 targetPosition = transform.position + -1 * transform.forward * action.moveMagnitude;
             if (checkIfSceneBoundsContainTargetPosition(targetPosition) &&
                 CheckIfItemBlocksAgentMovement(action.moveMagnitude, 180) &&
                 CheckIfAgentCanMove(action.moveMagnitude, 180)) {
 				DefaultAgentHand(action);
-				base.MoveBack(action);
+                transform.position = targetPosition;
+                this.snapToGrid();
+                actionFinished(true);
+				// base.MoveBack(action);
     		} else {
                 actionFinished(false);
             }
@@ -991,8 +1088,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 						else
 						{
+                            errorMessage = res.transform.name + " is blocking the Agent from moving " + orientation + " with " + ItemInHand.name;
 							result = false;
-							Debug.Log(res.transform.name + " is blocking the Agent from moving " + orientation + " with " + ItemInHand.name);
+							Debug.Log(errorMessage);
 							return result;
 						}
                                           
@@ -1073,9 +1171,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
         //
         public bool CheckIfAgentCanMove(float moveMagnitude, int orientation)
         {
-            bool result = false;
-            //RaycastHit hit;
-
             Vector3 dir = new Vector3();
 
             switch (orientation)
@@ -1113,52 +1208,25 @@ namespace UnityStandardAssets.Characters.FirstPerson
             {
                 foreach (RaycastHit res in sweepResults)
                 {
-                    //nothing in our hand, so nothing to ignore
-                    if (ItemInHand == null)
-                    {
-						//including "Untagged" tag here so that the agent can't move through objects that are transparent
-						if (res.transform.GetComponent<SimObjPhysics>() || res.transform.tag == "Structure" || res.transform.tag == "Untagged")
-                        {
-                            result = false;
-                            Debug.Log(res.transform.name + " is blocking the Agent from moving " + orientation);
-                            //the moment we find a result that is blocking, return false here
-                            return result;
-                        }
-
+                    // Don't worry if we hit something thats in our hand.
+                    if (ItemInHand != null && ItemInHand.transform == res.transform) {
+                        continue;
                     }
-                    //oh if there is something in our hand, ignore it if that is what we hit
-                    if (ItemInHand != null)
+               
+                    //including "Untagged" tag here so that the agent can't move through objects that are transparent
+                    if (res.transform.GetComponent<SimObjPhysics>() || res.transform.tag == "Structure" || res.transform.tag == "Untagged")
                     {
-                        if (ItemInHand.transform == res.transform)
-                        {
-                            result = true;
-                            break;
-                        }
-
-                        //including "Untagged" tag here so that the agent can't move through objects that are transparent
-						if (res.transform.GetComponent<SimObjPhysics>() || res.transform.tag == "Structure" || res.transform.tag == "Untagged")
-                        {
-                            result = false;
-                            Debug.Log(res.transform.name + " is blocking the Agent from moving " + orientation);
-                            //the moment we find a result that is blocking, return false here
-                            return result;
-                        }
-                    }      
+                        errorMessage = res.transform.name + " is blocking the Agent from moving " + orientation;
+                        Debug.Log(errorMessage);
+                        //the moment we find a result that is blocking, return false here
+                        return false;
+                    } 
                 }
             }
-         
-            //if the array is empty, nothing was hit by the sweeptest so we are clear to move
-            else
-            {
-                // Debug.Log("Agent Body can move " + orientation);
-                result = true;
-            }
-
-            return result;
+            return true;
         }
       
         /////AGENT HAND STUFF////
-
         protected IEnumerator moveHandToTowardsXYZWithForce(float x, float y, float z, float maxDistance)
         {
             if (ItemInHand == null)
@@ -1220,11 +1288,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
                 Vector3 tmpForCamera = newPosition;
                 tmpForCamera.y = m_Camera.transform.position.y;
-                Vector3 vp = m_Camera.WorldToViewportPoint(newPosition);
 
                 hitMaxDistance = Vector3.Distance(initialPosition, newPosition) > maxDistance;
                 beyondVisibleDistance = Vector3.Distance(m_Camera.transform.position, tmpForCamera) > maxVisibleDistance;
-                leavingViewport = (vp.z < 0 || vp.x > 1.0f || vp.x < 0.0f || vp.y > 1.0f || vp.y < 0.0f);
+                leavingViewport = !objectIsCurrentlyVisible(simObjInHand, 1000f);
 
                 if (hitMaxDistance || beyondVisibleDistance || leavingViewport) {
                     break;
@@ -1366,12 +1433,16 @@ namespace UnityStandardAssets.Characters.FirstPerson
             //XXX this does not check whether the object will still be visible when moving, so this will allow the agent to
             //move an object behind a door, causing the object to no longer be visible. Not sure if we should have a check
             //to restrict this yet, but about here is where that should go
-            if (vp.z < 0 || vp.x > 1.0f || vp.x < 0.0f || vp.y > 1.0f || vp.y < 0.0f)
+            Vector3 lastPosition = AgentHand.transform.position;
+            AgentHand.transform.position = targetPosition;
+            if (!objectIsCurrentlyVisible(ItemInHand.GetComponent<SimObjPhysics>(), 1000f))
             {
                 Debug.Log("The target position is not in the Are of the Agent's Viewport!");
                 result = false;
+                AgentHand.transform.position = lastPosition;
                 return result;
-            }         
+            }
+            AgentHand.transform.position = lastPosition;
 
             //ok now actually check if the Agent Hand holding ItemInHand can move to the target position without
             //being obstructed by anything
@@ -2901,14 +2972,23 @@ namespace UnityStandardAssets.Characters.FirstPerson
         ///////////////////////////////////
         ///// DATA GENERATION HELPERS /////
         ///////////////////////////////////
-        protected bool objectIsCurrentlyVisible(SimObjPhysics sop) {
+
+        public void Pass(ServerAction action) {
+            actionFinished(true);
+        }
+        protected bool objectIsCurrentlyVisible(SimObjPhysics sop, float maxDistance) {
             if (sop.VisibilityPoints.Length > 0) {
                 Transform[] visPoints = sop.VisibilityPoints;
 
                 foreach (Transform point in visPoints) {
-                    //if this particular point is in view...
-                    if (CheckIfVisibilityPointInViewport(sop, point, m_Camera, false)) {
-                        return true;
+                    Vector3 tmp = point.position;
+                    tmp.y = transform.position.y;
+                    // Debug.Log(Vector3.Distance(tmp, transform.position));
+                    if (Vector3.Distance(tmp, transform.position) < maxDistance) {
+                        //if this particular point is in view...
+                        if (CheckIfVisibilityPointInViewport(sop, point, m_Camera, false)) {
+                            return true;
+                        }
                     }
                 }
             } else {
@@ -2992,7 +3072,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     }
                     for (int i = 0; i < 4; i++) { // 4 rotations
                         transform.rotation = Quaternion.Euler(new Vector3(0.0f, 90.0f * i, 0.0f));
-                        if (objectIsCurrentlyVisible(theObject)) {
+                        if (objectIsCurrentlyVisible(theObject, 1000f)) {
                             // for (int k = 0; k < 100; k++) {
                             //     yield return null;
                             // }
@@ -3070,7 +3150,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     foreach (Vector3 p in positions) {
                         transform.position = p;
 
-                        if (objectIsCurrentlyVisible(theObject)) {
+                        if (objectIsCurrentlyVisible(theObject, 1000f)) {
                             numTimesVisible += 1;
                         }
                     }
@@ -3288,7 +3368,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             return true;
         }
 
-        protected Vector3[] getReachablePositions() {
+        override public Vector3[] getReachablePositions() {
             CapsuleCollider cc = GetComponent<CapsuleCollider>();
 
             Vector3 center = transform.position;
@@ -3527,10 +3607,176 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			actionFinished(true);
 		}
 
+        public bool createObjectAtLocation(string objectType, Vector3 targetPosition, Vector3 targetRotation, int objectVariation = 1) 
+		{
+			if(!sceneBounds.Contains(targetPosition))
+			{
+				errorMessage = "Target position is out of bounds!";
+                Debug.Log(errorMessage);
+                return false;
+			}
+
+			if (objectType == null)
+            {
+                errorMessage = "Please give valid Object Type from SimObjType enum list";
+                return false;
+            }
+         
+			//spawn the object at the agent's hand position
+            InstantiatePrefabTest script = GameObject.Find("PhysicsSceneManager").GetComponent<InstantiatePrefabTest>();
+            SimObjPhysics so = script.SpawnObject(objectType, false, objectVariation,
+			                                      targetPosition, targetRotation, false);
+			
+			if (so == null) 
+			{
+				errorMessage = "Failed to create object, are you sure it can be spawned?";
+                return false;
+			} 
+
+			else 
+			{
+				uniqueIdToSimObjPhysics[so.UniqueID] = so;
+				//also update the PHysics Scene Manager with this new object
+                PhysicsSceneManager physicsSceneManager = GameObject.Find("PhysicsSceneManager").GetComponent<PhysicsSceneManager>();
+                physicsSceneManager.AddToIDsInScene(so);
+                physicsSceneManager.AddToObjectsInScene(so);
+			}
+
+			return true;
+		}
+
+        protected float getFloorY(float x, float z) {
+			int layerMask = ~(1 << 10);
+			
+            Ray ray = new Ray(transform.position, -transform.up);
+			RaycastHit hit;
+			if (!Physics.Raycast(ray, out hit, 10f, layerMask)) {
+                errorMessage = "Could not find the floor";
+				return float.NegativeInfinity;
+			}
+
+            float y = hit.point.y;
+
+            ray = new Ray(new Vector3(x, y + 0.5f, z), -transform.up);
+			if (!Physics.Raycast(ray, out hit, 10f, layerMask)) {
+                errorMessage = "Could not find the floor";
+				return float.NegativeInfinity;
+			}
+
+			return hit.point.y;
+		}
+
+        public void CreateObjectOnFloor(ServerAction action) 
+		{
+            InstantiatePrefabTest script = GameObject.Find("PhysicsSceneManager").GetComponent<InstantiatePrefabTest>();
+			Bounds b = script.BoundsOfObject(action.objectType, 1);
+            if (b.min.x == float.PositiveInfinity) {
+                errorMessage = "Could not get bounds for the object to be created on the floor";
+                Debug.Log(errorMessage);
+                actionFinished(false);
+            } else {
+                action.y = b.extents.y + getFloorY(action.x, action.z) + 0.1f;
+                action.position = new Vector3(action.x, action.y, action.z);
+                CreateObjectAtLocation(action);
+            }
+		}
+
+        public void RandomlyCreateAndPlaceObjectOnFloor(ServerAction action) {
+            InstantiatePrefabTest script = GameObject.Find("PhysicsSceneManager").GetComponent<InstantiatePrefabTest>();
+			Bounds b = script.BoundsOfObject(action.objectType, 1);
+            if (b.min.x != float.PositiveInfinity) {
+                errorMessage = "Could not get bounds of object with type " + action.objectType;
+            }
+
+            System.Random rnd = new System.Random();
+            Vector3[] shuffledCurrentlyReachable = getReachablePositions().OrderBy(x => rnd.Next()).ToArray(); 
+            float[] rotations = {0f, 90f, 180f, 270f};
+            float[] shuffledRotations = rotations.OrderBy(x => rnd.Next()).ToArray(); 
+            bool objectCreated = false;
+            foreach (Vector3 position in shuffledCurrentlyReachable) {
+                float y = b.extents.y + getFloorY(position.x, position.z) + 0.1f;
+                foreach (float r in shuffledRotations) {
+                    objectCreated = createObjectAtLocation(
+                        action.objectType, 
+                        new Vector3(position.x, y, position.z), 
+                        new Vector3(0.0f, r, 0.0f),
+                        action.objectVariation);
+                    if (objectCreated) {
+                        break;
+                    }
+                }
+                if (objectCreated) {
+                    break;
+                }
+            }
+            if (!objectCreated) {
+                errorMessage = "Failed to randomly create object";
+                actionFinished(false);
+            } else {
+                errorMessage = "";
+                actionFinished(true);
+            }
+        }
+
+        public void GetPositionsObjectVisibleFrom(ServerAction action) {
+            if (!uniqueIdToSimObjPhysics.ContainsKey(action.objectId)) {
+                errorMessage = "Object " + action.objectId + " does not seem to exist.";
+                actionFinished(false);
+                return;
+            }
+
+            SimObjPhysics sop = uniqueIdToSimObjPhysics[action.objectId];
+
+            GameObject[] visibilityCapsules = Resources.FindObjectsOfTypeAll<GameObject>().Where(
+                obj => obj.name == "VisibilityCapsule"
+            ).ToArray();
+            foreach (GameObject go in visibilityCapsules) {
+                go.SetActive(false);
+            }
+
+            Vector3 savedPosition = transform.position;
+            Quaternion savedRotation = transform.rotation;
+            float[] rotations = {0f, 90f, 180f, 270f};
+
+            List<Vector3> goodPositions = new List<Vector3>();
+            List<float> goodRotations = new List<float>();
+
+            foreach (Vector3 position in getReachablePositions()) {
+                Vector3 tmp = position;
+                tmp.y = sop.transform.position.y;
+                if (Vector3.Distance(tmp, sop.transform.position) <= 2 * maxVisibleDistance) {
+                    foreach (float r in rotations) {
+                        transform.position = position;
+                        transform.rotation = Quaternion.Euler(new Vector3(0f, r, 0f));
+                        if (objectIsCurrentlyVisible(sop, maxVisibleDistance)) {
+                            #if UNITY_EDITOR
+                            Debug.Log(position);
+                            Debug.Log(r);
+                            #endif
+                            goodPositions.Add(position);
+                            goodRotations.Add(r);
+                        }
+                    }
+                }
+            }
+
+            actionVector3sReturn = goodPositions.ToArray();
+            actionFloatsReturn = goodRotations.ToArray();
+
+            foreach (GameObject go in visibilityCapsules) {
+                go.SetActive(true);
+            }
+
+            transform.position = savedPosition;
+            transform.rotation = savedRotation;
+
+            actionFinished(true);
+        }
+
 		public void DisableAllObjectsOfType(ServerAction action) {
 			string type = action.objectId;
 			foreach (SimObjPhysics so in GameObject.FindObjectsOfType<SimObjPhysics>()) {
-				if (so.name.StartsWith(type)) {
+				if (Enum.GetName(typeof(SimObjType), so.Type) == type) {
 					so.gameObject.SetActive(false);
 				}
 			}
