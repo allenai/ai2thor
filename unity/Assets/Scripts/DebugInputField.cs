@@ -121,10 +121,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         {
 							action.gridSize = float.Parse(splitcommand[1]);
                             action.agentCount = int.Parse(splitcommand[2]);
-                        } else if (splitcommand.Length == 3) {
+                        } else if (splitcommand.Length == 4) {
                             action.gridSize = float.Parse(splitcommand[1]);
                             action.agentCount = int.Parse(splitcommand[2]);
-                            action.makeAgentsVisible = int.Parse(splitcommand[3]) == 0;
+                            action.makeAgentsVisible = int.Parse(splitcommand[3]) == 1;
                         }
 
                         action.renderNormalsImage = true;
