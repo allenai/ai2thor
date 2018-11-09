@@ -449,9 +449,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         //now we have a reference to our sim object 
                         if(sop)
                         {
-
                             //check against all visibility points, accumulate count. If at least one point is visible, set object to visible
-                            if (sop.VisibilityPoints.Length > 0)
+                            if (sop.VisibilityPoints == null || sop.VisibilityPoints.Length > 0)
                             {
                                 Transform[] visPoints = sop.VisibilityPoints;
                                 int visPointCount = 0;
@@ -479,9 +478,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
                                         currentlyVisibleItems.Add(sop);
                                 }
                             }
-
-                            else
-                                Debug.Log("Error! Set at least 1 visibility point on SimObjPhysics prefab!");
+                            else {
+                                Debug.Log("Error! Set at least 1 visibility point on SimObjPhysics " + sop + ".");
+                            }
                                  
                         }
                     }               
