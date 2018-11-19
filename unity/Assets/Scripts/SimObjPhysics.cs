@@ -439,7 +439,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 
 	//CONTEXT MENU STUFF FOR SETTING UP SIM OBJECTS
 	//RIGHT CLICK this script in the inspector to reveal these options
-	//[ContextMenu("Cabinet")]
+	[ContextMenu("Cabinet")]
 	void SetUpCabinet()
 	{
 		Type = SimObjType.Cabinet;
@@ -448,6 +448,9 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		SecondaryProperties = new SimObjSecondaryProperty[2];
 		SecondaryProperties[0] = SimObjSecondaryProperty.CanOpen;
 		SecondaryProperties[1] = SimObjSecondaryProperty.Receptacle;
+
+		gameObject.transform.tag = "SimObjPhysics";
+		gameObject.layer = 8;
 
 		if (!gameObject.GetComponent<Rigidbody>())
 			gameObject.AddComponent<Rigidbody>();
@@ -460,18 +463,68 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 			gameObject.GetComponent<CanOpen_Object>().SetMovementToRotate();
 		}
 
-
 		//if (!gameObject.GetComponent<MovingPart>())
 		//gameObject.AddComponent<MovingPart>();
 
 		List<GameObject> cols = new List<GameObject>();
-		List<GameObject> tcols = new List<GameObject>();
+		//List<GameObject> tcols = new List<GameObject>();
 		List<Transform> vpoints = new List<Transform>();
 		List<GameObject> recepboxes = new List<GameObject>();
 
 		List<GameObject> movparts = new List<GameObject>();
 
 		List<Vector3> openPositions = new List<Vector3>();
+
+		Transform door = transform.Find("CabinetDoor");
+
+
+		if(!gameObject.transform.Find("StaticVisPoints"))
+		{
+			GameObject svp = new GameObject("StaticVisPoints");
+			svp.transform.position = gameObject.transform.position;
+			svp.transform.SetParent(gameObject.transform);
+
+			GameObject vp = new GameObject("vPoint");
+			vp.transform.position = svp.transform.position;
+			vp.transform.SetParent(svp.transform);
+		}
+
+		if(!door.Find("Colliders"))
+		{
+			GameObject col = new GameObject("Colliders");
+			col.transform.position = door.position;
+			col.transform.SetParent(door);
+
+			GameObject coll = new GameObject("Col");
+			coll.AddComponent<BoxCollider>();
+			coll.transform.tag = "SimObjPhysics";
+			col.layer = 8;
+			coll.transform.position = col.transform.position;
+			coll.transform.SetParent(col.transform);
+		}
+
+		if(!door.Find("VisibilityPoints"))
+		{
+			GameObject VisPoints = new GameObject("VisibilityPoints");
+			VisPoints.transform.position = door.position;
+			VisPoints.transform.SetParent(door);
+
+			GameObject vp = new GameObject("VisPoint");
+			vp.transform.position = VisPoints.transform.position;
+			vp.transform.SetParent(VisPoints.transform);
+		}
+
+		else
+		{
+			Transform VisPoints = door.Find("VisibilityPoints");
+			foreach (Transform child in VisPoints)
+			{
+				vpoints.Add(child);
+				child.gameObject.tag = "Untagged";
+				child.gameObject.layer = 8;
+			}
+		}
+		////////////////////////
 
 		foreach (Transform child in gameObject.transform)
 		{
@@ -534,14 +587,14 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 						}
 					}
 
-					if (c.name == "TriggerColliders")
-					{
-						foreach (Transform col in c)
-						{
-							if (!tcols.Contains(col.gameObject))
-								tcols.Add(col.gameObject);
-						}
-					}
+					// if (c.name == "TriggerColliders")
+					// {
+					// 	foreach (Transform col in c)
+					// 	{
+					// 		if (!tcols.Contains(col.gameObject))
+					// 			tcols.Add(col.gameObject);
+					// 	}
+					// }
 
 					if (c.name == "VisibilityPoints")
 					{
@@ -606,9 +659,61 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		}
 
 		ReceptacleTriggerBoxes = recepboxes.ToArray();
-
-
 	}
+
+		[ContextMenu("Bed")]
+	void SetUpBed()
+	{
+		this.Type = SimObjType.Bed;
+		this.PrimaryProperty = SimObjPrimaryProperty.Static;
+		this.SecondaryProperties = new SimObjSecondaryProperty[] {SimObjSecondaryProperty.Receptacle};
+		
+		ContextSetUpSimObjPhysics();
+
+		// GameObject inst = Instantiate(new GameObject(), gameObject.transform, true);
+		// inst.AddComponent<BoxCollider>();
+		if(!gameObject.transform.Find("BoundingBox"))
+		{
+			GameObject bb = new GameObject("BoundingBox");
+			bb.transform.position = gameObject.transform.position;
+			bb.transform.SetParent(gameObject.transform);
+			bb.AddComponent<BoxCollider>();
+			bb.GetComponent<BoxCollider>().enabled = false;
+			bb.tag = "Untagged";
+			bb.layer = 0;
+
+			BoundingBox = bb;
+		}
+
+		List<GameObject> recepboxes = new List<GameObject>();
+
+		foreach(Transform t in gameObject.transform)
+		{
+			if(t.GetComponent<Contains>())
+			{
+				recepboxes.Add(t.gameObject);
+			}
+		}
+
+		ReceptacleTriggerBoxes = recepboxes.ToArray();
+
+		List<Transform> vpoints = new List<Transform>();
+
+		foreach(Transform child in gameObject.transform)
+		{
+			if (child.name == "VisibilityPoints")
+			{
+				foreach (Transform col in child)
+				{
+					if (!vpoints.Contains(col.transform))
+						vpoints.Add(col.transform);
+				}
+			}
+		}
+
+		VisibilityPoints = vpoints.ToArray();
+	}
+
 	[ContextMenu("Drawer")]
 	void SetUpDrawer()
 	{
@@ -795,9 +900,6 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 			GameObject[] rtb = new GameObject[] {gameObject.transform.Find("ReceptacleTriggerBox").transform.gameObject};
 			ReceptacleTriggerBoxes = rtb;
 		}
-
-
-
 	}
 
 	[ContextMenu("Static Mesh Collider with Receptacle")]
@@ -816,7 +918,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 			gameObject.AddComponent<Rigidbody>();
 
 		gameObject.GetComponent<Rigidbody>().isKinematic = true;
-			if (!gameObject.transform.Find("VisibilityPoints"))
+		if (!gameObject.transform.Find("VisibilityPoints"))
 		{
 			//empty to hold all visibility points
 			GameObject vp = new GameObject("VisibilityPoints");
