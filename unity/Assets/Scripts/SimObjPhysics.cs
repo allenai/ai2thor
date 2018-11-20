@@ -723,6 +723,9 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 
 		ContextSetUpSimObjPhysics();
 
+		//delete the trigger colliders and bounding box here
+		//also probably edit ContextSetupSimObjPhysics to not create trigger colliders anymore
+
 		if (!gameObject.GetComponent<CanOpen_Object>())
 		{
 			gameObject.AddComponent<CanOpen_Object>();
@@ -740,6 +743,12 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 
 		foreach(Transform t in gameObject.transform)
 		{
+			if(t.name == "BoundingBox")
+			{
+				DestroyImmediate(t.gameObject, true);
+				break;
+			}
+			
 			if(t.name == "ReceptacleTriggerBox")
 			{
 				if(!recepboxes.Contains(t.gameObject))
@@ -748,30 +757,30 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 				}
 			}
 
-			if(t.name == "Colliders")
-			{
-				if(!gameObject.transform.Find("TriggerColliders"))
-				{
-					GameObject inst = Instantiate(t.gameObject, gameObject.transform, true);
-					inst.name = "TriggerColliders";
-					foreach(Transform yes in inst.transform)
-					{
-						yes.GetComponent<BoxCollider>().isTrigger = true;
-					}
-				}
+			// if(t.name == "Colliders")
+			// {
+			// 	if(!gameObject.transform.Find("TriggerColliders"))
+			// 	{
+			// 		GameObject inst = Instantiate(t.gameObject, gameObject.transform, true);
+			// 		inst.name = "TriggerColliders";
+			// 		foreach(Transform yes in inst.transform)
+			// 		{
+			// 			yes.GetComponent<BoxCollider>().isTrigger = true;
+			// 		}
+			// 	}
 
-				else
-				{
-					DestroyImmediate(gameObject.transform.Find("TriggerColliders").gameObject);
-					GameObject inst = Instantiate(t.gameObject, gameObject.transform, true);
-					inst.name = "TriggerColliders";
-					foreach(Transform yes in inst.transform)
-					{
-						yes.GetComponent<BoxCollider>().isTrigger = true;
-					}
-				}
+			// 	else
+			// 	{
+			// 		DestroyImmediate(gameObject.transform.Find("TriggerColliders").gameObject);
+			// 		GameObject inst = Instantiate(t.gameObject, gameObject.transform, true);
+			// 		inst.name = "TriggerColliders";
+			// 		foreach(Transform yes in inst.transform)
+			// 		{
+			// 			yes.GetComponent<BoxCollider>().isTrigger = true;
+			// 		}
+			// 	}
 
-			}
+			// }
 		}
 
 		ReceptacleTriggerBoxes = recepboxes.ToArray();
