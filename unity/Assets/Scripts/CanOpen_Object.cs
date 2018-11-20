@@ -309,6 +309,8 @@ public class CanOpen_Object : MonoBehaviour
                     }
                 }
 			}
+
+            StartCoroutine("CanResetToggle");
 		}
     }
 
@@ -382,11 +384,28 @@ public class CanOpen_Object : MonoBehaviour
 		}
 	}
 
-	public void OnTriggerExit(Collider other)
+	// public void OnTriggerExit(Collider other)
+    // {
+    //     if (other.name == "FPSController" || other.GetComponentInParent<CanOpen_Object>() || other.GetComponentInParent<SimObjPhysics>())
+    //     {
+    //         canReset = true;
+    //         print("TRIGGER EXIT-" + "hit " + other.name);
+    //     }
+    // }
+
+    // resets the CanReset boolean once the reset tween is done. This checks for iTween instanes, once there are none this object can be used again
+    IEnumerator CanResetToggle()
     {
-        if (other.name == "FPSController" || other.GetComponentInParent<CanOpen_Object>() || other.GetComponentInParent<SimObjPhysics>())
+        while(true)
         {
-            canReset = true;
+            if(GetiTweenCount() != 0)
+            yield return new WaitForEndOfFrame();
+
+            else
+            {
+                canReset = true;
+                yield break;
+            }
         }
     }
 
