@@ -1858,7 +1858,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
                 target.GetComponent<Rigidbody>().isKinematic = true;
                 target.transform.position = AgentHand.transform.position;
-				// target.transform.rotation = AgentHand.transform.rotation;
+				// target.transform.rotation = AgentHand.transform.rotation; - keep this line if we ever want to change the pickup position to be constant relative to the Agent Hand and Agent Camera rather than aligned by world axis
 				target.transform.rotation = transform.rotation;
                 target.transform.SetParent(AgentHand.transform);
                 ItemInHand = target.gameObject;
