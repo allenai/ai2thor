@@ -138,14 +138,13 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			//this is also mostly for in editor, the array of visible sim objects is found via server actions
 			//using VisibleSimObjs(action), so be aware of that
 
-			ServerAction action = new ServerAction();
-			VisibleSimObjPhysics = VisibleSimObjs(action);//GetAllVisibleSimObjPhysics(m_Camera, maxVisibleDistance);
+            #if UNITY_EDITOR
+            if (this.actionComplete) {
+                ServerAction action = new ServerAction();
+                VisibleSimObjPhysics = VisibleSimObjs(action);//GetAllVisibleSimObjPhysics(m_Camera, maxVisibleDistance);
+            }
+            #endif
    		}
-
-
-
-
-
 
 		private T[] flatten2DimArray<T>(T[,] array) {
 			int nrow = array.GetLength(0);
@@ -384,12 +383,17 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			return Physics.OverlapCapsule(point0, point1, maxDistance, 1 << 8, QueryTriggerInteraction.Collide);
         }
 
-        protected void updateOwnAndInvisibleAgentColliders(bool enable) {
+        // This function should be called before and after doing a visibility check (before with 
+        // enableColliders == false and after with it equaling true). It, in particular, will
+        // turn off/on all the colliders on agents which should not block visibility for the current agent
+        // (invisible agents for example). 
+        protected void updateAllAgentCollidersForVisibilityCheck(bool enableColliders) {
             foreach (BaseFPSAgentController agent in Agents) {
                 PhysicsRemoteFPSAgentController phyAgent = (PhysicsRemoteFPSAgentController) agent;
-                if (phyAgent.AgentId == AgentId || !phyAgent.IsVisible) {
+                bool overlapping = (transform.position - phyAgent.transform.position).magnitude < 0.001f;
+                if (overlapping || phyAgent.AgentId == AgentId || !phyAgent.IsVisible) {
                     foreach (Collider c in phyAgent.GetComponentsInChildren<Collider>()) {
-                        c.enabled = enable;
+                        c.enabled = enableColliders;
                     }
                     foreach (Collider c in phyAgent.AgentHand.GetComponentsInChildren<Collider>()) {
                         c.enabled = true;
@@ -422,7 +426,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
             // Turn off the colliders corresponding to this agent
             // and any invisible agents.
-            updateOwnAndInvisibleAgentColliders(false);
+            updateAllAgentCollidersForVisibilityCheck(false);
             
 			Collider[] colliders_in_view = Physics.OverlapCapsule(point0, point1, maxDistance, 1 << 8, QueryTriggerInteraction.Collide);
             
@@ -542,7 +546,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
             // Turn back on the colliders corresponding to this agent
             // and any invisible agents.
-            updateOwnAndInvisibleAgentColliders(true);
+            updateAllAgentCollidersForVisibilityCheck(true);
             
             //populate array of visible items in order by distance
             currentlyVisibleItems.Sort((x, y) => Vector3.Distance(x.transform.position, agentCameraPos).CompareTo(Vector3.Distance(y.transform.position, agentCameraPos)));
@@ -757,8 +761,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
          
             return result;
         }
-        
-        //
 
 		public override void RotateRight(ServerAction controlCommand)
 		{
@@ -1344,7 +1346,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
             if (count != 0) {
                 aveCollisionsNormal = normalSum / count;
                 aveCollisionsNormal.Normalize();
-                Debug.Log(aveCollisionsNormal);
             }
 
             rb.angularDrag = oldAngularDrag;
@@ -1357,7 +1358,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
             bool handObjectIsColliding = count != 0;
             if (handObjectIsColliding) {
-                Debug.Log(aveCollisionsNormal);
                 AgentHand.transform.position = AgentHand.transform.position + 0.05f * aveCollisionsNormal;
                 yield return null;
                 handObjectIsColliding = simObjInHand.contactPointsDictionary.Count != 0;
@@ -3003,7 +3003,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
         protected bool objectIsCurrentlyVisible(SimObjPhysics sop, float maxDistance) {
             if (sop.VisibilityPoints.Length > 0) {
                 Transform[] visPoints = sop.VisibilityPoints;
-                updateOwnAndInvisibleAgentColliders(false);
+                updateAllAgentCollidersForVisibilityCheck(false);
                 foreach (Transform point in visPoints) {
                     Vector3 tmp = point.position;
                     tmp.y = transform.position.y;
@@ -3011,7 +3011,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     if (Vector3.Distance(tmp, transform.position) < maxDistance) {
                         //if this particular point is in view...
                         if (CheckIfVisibilityPointInViewport(sop, point, m_Camera, false)) {
-                            updateOwnAndInvisibleAgentColliders(true);
+                            updateAllAgentCollidersForVisibilityCheck(true);
                             return true;
                         }
                     }
@@ -3019,7 +3019,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             } else {
                 Debug.Log("Error! Set at least 1 visibility point on SimObjPhysics prefab!");
             }
-            updateOwnAndInvisibleAgentColliders(true);
+            updateAllAgentCollidersForVisibilityCheck(true);
             return false;
         }
         
