@@ -216,9 +216,13 @@ public class AgentManager : MonoBehaviour
 		foreach (BaseFPSAgentController agent in this.agents) {
 			if (agent.actionComplete) {
 				completeCount++;
-			} 
+			}
 		}
-
+		// if (completeCount == agents.Count) {
+		// 	Physics.autoSimulation = false;
+		// } else {
+		// 	Physics.Simulate(0.02f);
+		// }
 
 		if (completeCount == agents.Count && completeCount > 0 && readyToEmit) {
 			readyToEmit = false;
