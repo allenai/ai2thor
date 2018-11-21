@@ -99,6 +99,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
         public void Execute(string command)
         {
+            if (!PhysicsController.actionComplete) {
+                Debug.Log("Cannot execute command while last action has not completed.");
+            }
+
             //pass in multiple parameters separated by spaces
 			string[] splitcommand = command.Split(new string[] { " " }, System.StringSplitOptions.None);
 
