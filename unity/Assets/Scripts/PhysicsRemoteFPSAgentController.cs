@@ -138,14 +138,13 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			//this is also mostly for in editor, the array of visible sim objects is found via server actions
 			//using VisibleSimObjs(action), so be aware of that
 
-			ServerAction action = new ServerAction();
-			VisibleSimObjPhysics = VisibleSimObjs(action);//GetAllVisibleSimObjPhysics(m_Camera, maxVisibleDistance);
+            #if UNITY_EDITOR
+            if (this.actionComplete) {
+                ServerAction action = new ServerAction();
+                VisibleSimObjPhysics = VisibleSimObjs(action);//GetAllVisibleSimObjPhysics(m_Camera, maxVisibleDistance);
+            }
+            #endif
    		}
-
-
-
-
-
 
 		private T[] flatten2DimArray<T>(T[,] array) {
 			int nrow = array.GetLength(0);
@@ -389,7 +388,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
         // turn off/on all the colliders on agents which should not block visibility for the current agent
         // (invisible agents for example). 
         protected void updateAllAgentCollidersForVisibilityCheck(bool enableColliders) {
-            Debug.Log("HAPPENS");
             foreach (BaseFPSAgentController agent in Agents) {
                 PhysicsRemoteFPSAgentController phyAgent = (PhysicsRemoteFPSAgentController) agent;
                 bool overlapping = (transform.position - phyAgent.transform.position).magnitude < 0.001f;
@@ -763,8 +761,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
          
             return result;
         }
-        
-        //
 
 		public override void RotateRight(ServerAction controlCommand)
 		{
@@ -1350,7 +1346,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
             if (count != 0) {
                 aveCollisionsNormal = normalSum / count;
                 aveCollisionsNormal.Normalize();
-                Debug.Log(aveCollisionsNormal);
             }
 
             rb.angularDrag = oldAngularDrag;
@@ -1363,7 +1358,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
             bool handObjectIsColliding = count != 0;
             if (handObjectIsColliding) {
-                Debug.Log(aveCollisionsNormal);
                 AgentHand.transform.position = AgentHand.transform.position + 0.05f * aveCollisionsNormal;
                 yield return null;
                 handObjectIsColliding = simObjInHand.contactPointsDictionary.Count != 0;
