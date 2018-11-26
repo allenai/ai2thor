@@ -324,6 +324,7 @@ RECEPTACLE_OBJECTS = {
     'ToiletPaperHanger': {'ToiletPaper'},
     'TowelHolder': {'Cloth'}}
 
+
 def get_term_character():
     fd = sys.stdin.fileno()
     old_settings = termios.tcgetattr(fd)
@@ -548,6 +549,9 @@ class Controller(object):
 
     def step(self, action, raise_for_failure=False):
 
+        # prevent changes to the action from leaking
+        action = copy.deepcopy(action)
+
         # XXX should be able to get rid of this with some sort of deprecation warning
         if 'AI2THOR_VISIBILITY_DISTANCE' in os.environ:
             action['visibilityDistance'] = float(os.environ['AI2THOR_VISIBILITY_DISTANCE'])
@@ -571,6 +575,11 @@ class Controller(object):
             if object_type not in RECEPTACLE_OBJECTS[receptacle_type]:
                 should_fail = True
 
+        rotation = action.get('rotation')
+        if rotation is not None and type(rotation) != dict:
+            action['rotation'] = {}
+            action['rotation']['y'] = rotation
+
         if should_fail:
             new_event = copy.deepcopy(self.last_event)
             new_event.metadata['lastActionSuccess'] = False
@@ -578,15 +587,6 @@ class Controller(object):
             return new_event
 
         assert self.request_queue.empty()
-
-        # Converts numpy scalars to python scalars so they can be encoded in
-        # JSON.
-        action_filtered = {}
-        for k,v in action.items():
-            if isinstance(v, np.generic):
-                v = np.asscalar(v)
-            action_filtered[k] = v
-        action = action_filtered
 
         self.response_queue.put_nowait(action)
         self.last_event = queue_get(self.request_queue)
@@ -820,8 +820,11 @@ class BFSController(Controller):
         self.allow_enqueue = True
         self.queue = deque()
         self.seen_points = []
+        self.visited_seen_points = []
         self.grid_points = []
         self.grid_size = grid_size
+        self._check_visited = False
+        self.distance_threshold = self.grid_size / 5.0
 
     def visualize_points(self, scene_name, wait_key=10):
         import cv2
@@ -988,24 +991,27 @@ class BFSController(Controller):
     def enqueue_point(self, point):
 
         # ensure there are no points near the new point
-        threshold = self.grid_size / 5.0
-        if not any(map(lambda p: distance(p, point.target_point()) < threshold, self.seen_points)):
+        if self._check_visited or not any(map(lambda p: distance(p, point.target_point()) < self.distance_threshold, self.seen_points)):
             self.seen_points.append(point.target_point())
             self.queue.append(point)
 
     def enqueue_points(self, agent_position):
+
         if not self.allow_enqueue:
             return
 
-        self.enqueue_point(BFSSearchPoint(agent_position, dict(x=-1 * self.grid_size)))
-        self.enqueue_point(BFSSearchPoint(agent_position, dict(x=self.grid_size)))
-        self.enqueue_point(BFSSearchPoint(agent_position, dict(z=-1 * self.grid_size)))
-        self.enqueue_point(BFSSearchPoint(agent_position, dict(z=1 * self.grid_size)))
+        if not self._check_visited or not any(map(lambda p: distance(p, agent_position) < self.distance_threshold, self.visited_seen_points)):
+            self.enqueue_point(BFSSearchPoint(agent_position, dict(x=-1 * self.grid_size)))
+            self.enqueue_point(BFSSearchPoint(agent_position, dict(x=self.grid_size)))
+            self.enqueue_point(BFSSearchPoint(agent_position, dict(z=-1 * self.grid_size)))
+            self.enqueue_point(BFSSearchPoint(agent_position, dict(z=1 * self.grid_size)))
+            self.visited_seen_points.append(agent_position)
 
     def search_all_closed(self, scene_name):
         self.allow_enqueue = True
         self.queue = deque()
         self.seen_points = []
+        self.visited_seen_points = []
         self.grid_points = []
         event = self.reset(scene_name)
         event = self.step(dict(action='Initialize', gridSize=self.grid_size))
@@ -1023,6 +1029,7 @@ class BFSController(Controller):
             randomize=True):
 
         self.seen_points = []
+        self.visited_seen_points = []
         self.queue = deque()
         self.grid_points = []
 
@@ -1281,6 +1288,8 @@ class BFSController(Controller):
                 raise Exception("**** got big point ")
 
             self.enqueue_points(event.metadata['agent']['position'])
-            self.grid_points.append(event.metadata['agent']['position'])
+
+            if not any(map(lambda p: distance(p, event.metadata['agent']['position']) < self.distance_threshold, self.grid_points)):
+                self.grid_points.append(event.metadata['agent']['position'])
 
         return event

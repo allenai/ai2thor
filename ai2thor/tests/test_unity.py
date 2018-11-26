@@ -9,7 +9,9 @@ def releases_dir(self):
 
 controller = ai2thor.controller.Controller()
 controller.releases_dir = releases_dir.__get__(controller, ai2thor.controller.Controller)
+print("trying to start unity")
 controller.start()
+print("started")
 controller.reset('FloorPlan28')
 controller.step(dict(action='Initialize', gridSize=0.25))
 
@@ -21,6 +23,16 @@ def assert_near(point1, point2):
     assert point1.keys() == point2.keys()
     for k in point1.keys():
         assert round(point1[k], 3) == round(point2[k], 3)
+
+def test_rectangle_aspect():
+    controller = ai2thor.controller.Controller()
+    controller.releases_dir = releases_dir.__get__(controller, ai2thor.controller.Controller)
+    print("trying to start unity")
+    controller.start(player_screen_width=600, player_screen_height=300)
+    print("started")
+    controller.reset('FloorPlan28')
+    event = controller.step(dict(action='Initialize', gridSize=0.25))
+    assert event.frame.shape == (300, 600, 3)
 
 def test_lookdown():
 
@@ -36,6 +48,12 @@ def test_lookdown():
     assert round(e.metadata['agent']['cameraHorizon']) == 60
     e = controller.step(dict(action='LookDown'))
     assert round(e.metadata['agent']['cameraHorizon']) == 60
+
+def test_no_leak_params():
+
+    action = dict(action='RotateLook', rotation=0, horizon=0)
+    e = controller.step(action)
+    assert 'sequenceId' not in action
 
 def test_lookup():
 
@@ -61,6 +79,32 @@ def test_rotate_left():
     assert e.metadata['agent']['position'] == position
     assert e.metadata['agent']['cameraHorizon'] == horizon
     assert e.metadata['agent']['rotation']['y'] == 270.0
+    assert e.metadata['agent']['rotation']['x'] == 0.0
+    assert e.metadata['agent']['rotation']['z'] == 0.0
+
+def test_add_third_party_camera():
+
+    assert len(controller.last_event.metadata['thirdPartyCameras']) == 0
+    e = controller.step(dict(action='AddThirdPartyCamera', position=dict(x=1.2, y=2.3, z=3.4), rotation=dict(x=30, y=40,z=50)))
+    assert len(e.metadata['thirdPartyCameras']) == 1
+    assert_near(e.metadata['thirdPartyCameras'][0]['position'], dict(x=1.2, y=2.3, z=3.4))
+    assert_near(e.metadata['thirdPartyCameras'][0]['rotation'], dict(x=30, y=40, z=50))
+    assert len(e.third_party_camera_frames) == 1
+    assert e.third_party_camera_frames[0].shape == (300,300,3)
+    e = controller.step(dict(action='UpdateThirdPartyCamera', thirdPartyCameraId=0, position=dict(x=2.2, y=3.3, z=4.4), rotation=dict(x=10, y=20,z=30)))
+    assert_near(e.metadata['thirdPartyCameras'][0]['position'], dict(x=2.2, y=3.3, z=4.4))
+    assert_near(e.metadata['thirdPartyCameras'][0]['rotation'], dict(x=10, y=20, z=30))
+
+def test_rotate_look():
+
+    e = controller.step(dict(action='RotateLook', rotation=0, horizon=0))
+    position = controller.last_event.metadata['agent']['position']
+    rotation = controller.last_event.metadata['agent']['rotation']
+    assert rotation == dict(x=0, y=0, z=0)
+    e = controller.step(dict(action='RotateLook', rotation=90, horizon=31))
+    assert e.metadata['agent']['position'] == position
+    assert int(e.metadata['agent']['cameraHorizon']) == 31
+    assert e.metadata['agent']['rotation']['y'] == 90.0
     assert e.metadata['agent']['rotation']['x'] == 0.0
     assert e.metadata['agent']['rotation']['z'] == 0.0
 
