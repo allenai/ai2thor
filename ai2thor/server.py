@@ -117,6 +117,7 @@ class Event(object):
         self.class_segmentation_frame = None
 
         self.class_detections2D = {}
+        self.class_masks_individual = {}
 
         self.process_colors()
         self.process_visible_bounds2D()
@@ -165,6 +166,15 @@ class Event(object):
             bb = np.array(color_bounds['bounds'])
             bb[[1,3]] = self.metadata['screenHeight'] - bb[[3,1]]
             if not((bb[2] - bb[0]) < MIN_DETECTION_LEN or (bb[3] - bb[1]) < MIN_DETECTION_LEN):
+
+                obj = self.get_object(color_name)
+                if obj is not None:
+                    if 'parentReceptacle' in obj and len(obj['parentReceptacle']) > 0:
+                        parent = self.get_object(obj['parentReceptacle'])
+                        if parent['openable'] and not parent['isopen']:
+                            # Object is visible through closed receptacle, it should be ignored.
+                            continue
+
                 if cls not in self.class_detections2D:
                     self.class_detections2D[cls] = []
 
@@ -178,8 +188,10 @@ class Event(object):
 
                 if cls not in self.class_masks:
                     self.class_masks[cls] = unique_masks[color_ind, ...]
+                    self.class_masks_individual[cls] = []
                 else:
                     self.class_masks[cls] = np.logical_or(self.class_masks[cls], unique_masks[color_ind, ...])
+                self.class_masks_individual[cls].append(unique_masks[color_ind, ...])
 
     def add_image_depth(self, image_depth_data):
 

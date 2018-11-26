@@ -570,10 +570,13 @@ class Controller(object):
                 should_fail = True
 
         elif action['action'] == 'PutObject':
-            receptacle_type = action['receptacleObjectId'].split('|')[0]
-            object_type = action['objectId'].split('|')[0]
-            if object_type not in RECEPTACLE_OBJECTS[receptacle_type]:
+            if not ('receptacleObjectId' in action and 'objectId' in action):
                 should_fail = True
+            else:
+                receptacle_type = action['receptacleObjectId'].split('|')[0]
+                object_type = action['objectId'].split('|')[0]
+                if receptacle_type not in RECEPTACLE_OBJECTS or object_type not in RECEPTACLE_OBJECTS[receptacle_type]:
+                    should_fail = True
 
         rotation = action.get('rotation')
         if rotation is not None and type(rotation) != dict:
