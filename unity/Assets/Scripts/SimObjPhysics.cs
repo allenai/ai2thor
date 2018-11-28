@@ -1072,9 +1072,13 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 
 		c.tag = "SimObjPhysics";
 		c.layer = 8;
+		c.isStatic = true;
 
 		if (!c.GetComponent<Rigidbody>())
-			c.AddComponent<Rigidbody>();
+		{
+			Rigidbody rb = c.AddComponent<Rigidbody>();
+			rb.isKinematic = true;
+		}
 
 		if (!c.transform.Find("Colliders"))
 		{
@@ -1104,6 +1108,32 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		}
 
 		c.GetComponent<SimObjPhysics>().SetupCollidersVisPoints();
+		
+		//add the CanToggleOnOff component and set it up with correct values
+		if(!c.GetComponent<CanToggleOnOff>())
+		{	
+			CanToggleOnOff ctoo = c.AddComponent<CanToggleOnOff>();
+
+			List<GameObject> childmeshes = new List<GameObject>();
+			List<Vector3> childRotations = new List<Vector3>();
+
+			foreach(Transform t in c.transform)
+			{
+				if(t.name == "Mesh")
+				{
+					foreach(Transform tt in t)
+					{
+						childmeshes.Add(tt.gameObject);
+						childRotations.Add(tt.transform.localEulerAngles);
+					}
+				}
+			}
+
+			ctoo.MovingParts = childmeshes.ToArray();
+			ctoo.OnPositions = childRotations.ToArray();
+			ctoo.OffPositions = new Vector3[ctoo.MovingParts.Length];
+			ctoo.SetMovementToRotate();
+		}
 	}
 
 

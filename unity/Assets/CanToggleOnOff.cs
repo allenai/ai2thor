@@ -38,6 +38,19 @@ public class CanToggleOnOff : MonoBehaviour
 	{
 		return isOn;
 	}
+	//Helper functions for setting up scenes, only for use in Editor
+#if UNITY_EDITOR
+    public void SetMovementToSlide()
+    {
+        movementType = MovementType.Slide;
+    }
+
+    public void SetMovementToRotate()
+    {
+        movementType = MovementType.Rotate;
+    }
+    
+#endif
 
 	// Use this for initialization
 	void Start () 
@@ -56,7 +69,7 @@ public class CanToggleOnOff : MonoBehaviour
 	{
 		//test if it can open without Agent Command - Debug Purposes
         #if UNITY_EDITOR
-		if (Input.GetKeyDown(KeyCode.Equals))
+		if (Input.GetKeyDown(KeyCode.Minus))
         {
             Toggle();
         }
@@ -97,7 +110,7 @@ public class CanToggleOnOff : MonoBehaviour
 						if(i == MovingParts.Length -1)
 						{
 							iTween.MoveTo(MovingParts[i], iTween.Hash(
-							"rotation", OffPositions[i],
+							"position", OffPositions[i],
 							"islocal", true,
 							"time", animationTime,
 							"easetype", "linear", "onComplete", "setisOn", "onCompleteTarget", gameObject));
@@ -105,7 +118,7 @@ public class CanToggleOnOff : MonoBehaviour
 
 						else
 						iTween.MoveTo(MovingParts[i], iTween.Hash(
-						"rotation", OffPositions[i],
+						"position", OffPositions[i],
 						"islocal", true,
 						"time", animationTime,
 						"easetype", "linear")); 
@@ -144,7 +157,7 @@ public class CanToggleOnOff : MonoBehaviour
 						if(i == MovingParts.Length -1)
 						{
 							iTween.MoveTo(MovingParts[i], iTween.Hash(
-							"rotation", OnPositions[i],
+							"position", OnPositions[i],
 							"islocal", true,
 							"time", animationTime,
 							"easetype", "linear", "onComplete", "setisOn", "onCompleteTarget", gameObject));
@@ -152,7 +165,7 @@ public class CanToggleOnOff : MonoBehaviour
 
 						else
 						iTween.MoveTo(MovingParts[i], iTween.Hash(
-						"rotation", OnPositions[i],
+						"position", OnPositions[i],
 						"islocal", true,
 						"time", animationTime,
 						"easetype", "linear")); 
@@ -187,7 +200,6 @@ public class CanToggleOnOff : MonoBehaviour
 				for(int i = 0; i < LightSources.Length; i++)
 				{
 					LightSources[i].SetActive(true);
-					print("turn the lights on?");
 				}
 			}
 			isOn = true;
