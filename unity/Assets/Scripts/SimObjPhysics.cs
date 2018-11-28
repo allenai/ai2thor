@@ -1048,6 +1048,72 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		c.GetComponent<SimObjPhysics>().AppleSetupReferences();
 	}
 
+	[UnityEditor.MenuItem("SimObjectPhysics/LightSwitch")]
+	public static void ContextSetupLightSwitch()
+	{
+		GameObject prefabRoot = Selection.activeGameObject;
+		GameObject c = new GameObject("LightSwitch");
+		c.transform.position = prefabRoot.transform.position;
+		prefabRoot.transform.SetParent(c.transform);
+		prefabRoot.name = "Mesh";
+
+		if(!c.GetComponent<SimObjPhysics>())
+		{
+			c.AddComponent<SimObjPhysics>();
+		}
+
+		if(c.GetComponent<SimObjPhysics>())
+		{
+			SimObjPhysics sop = c.GetComponent<SimObjPhysics>();
+			sop.PrimaryProperty = SimObjPrimaryProperty.Static;
+			sop.Type = SimObjType.LightSwitch;
+			sop.SecondaryProperties = new SimObjSecondaryProperty[] {SimObjSecondaryProperty.CanToggleOnOff};
+		}
+
+		c.tag = "SimObjPhysics";
+		c.layer = 8;
+
+		if (!c.GetComponent<Rigidbody>())
+			c.AddComponent<Rigidbody>();
+
+		if (!c.transform.Find("Colliders"))
+		{
+			GameObject col = new GameObject("Colliders");
+			col.transform.position = c.transform.position;
+			col.transform.SetParent(c.transform);
+            
+			GameObject cc = new GameObject("Col");
+			cc.transform.position = col.transform.position;
+			cc.transform.SetParent(col.transform);
+			cc.AddComponent<BoxCollider>();
+			cc.tag = "SimObjPhysics";
+			cc.layer = 8;
+		}
+
+		if (!c.transform.Find("VisibilityPoints"))
+		{
+			//empty to hold all visibility points
+			GameObject vp = new GameObject("VisibilityPoints");
+			vp.transform.position = c.transform.position;
+			vp.transform.SetParent(c.transform);
+
+			//create first Visibility Point to work with
+			GameObject vpc = new GameObject("vPoint");
+			vpc.transform.position = vp.transform.position;
+			vpc.transform.SetParent(vp.transform);
+		}
+
+		c.GetComponent<SimObjPhysics>().SetupCollidersVisPoints();
+	}
+
+
+	[ContextMenu("Setup Colliders And VisPoints")]
+	void SetupCollidersVisPoints()
+	{
+		ContextSetUpColliders();
+		ContextSetUpVisibilityPoints();
+	}
+
 	[UnityEditor.MenuItem("SimObjectPhysics/Apple")]
 	public static void ContextSetupApple()
 	{
@@ -1214,7 +1280,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 	
 
 	//[ContextMenu("Set Up Colliders")]
-	void ContextSetUpColliders()
+	public void ContextSetUpColliders()
 	{
 		if (transform.Find("Colliders"))
 		{
