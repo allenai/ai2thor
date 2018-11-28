@@ -2,6 +2,23 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+[System.Serializable]
+public class SwapObjList
+{
+	[Header("Object That Needs Mat Swaps")]
+	[SerializeField]
+	public GameObject MyObject;
+
+	[Header("Materials for On state")]
+	[SerializeField]
+	public Material[] OnMaterials;
+
+	//swap to this array of materials when off
+	[Header("Materials for Off state")]
+	[SerializeField]
+	public Material[] OffMaterials;
+
+}
 public class CanToggleOnOff : MonoBehaviour 
 {
 	//the array of moving parts and lightsources will correspond with each other based on their 
@@ -10,7 +27,12 @@ public class CanToggleOnOff : MonoBehaviour
 	[SerializeField]
 	public GameObject[] MovingParts;
 
-	[Header("Light Sources")]
+	[Header("Objects that need Mat Swaps")]
+	[SerializeField]
+	public SwapObjList[] MaterialSwapObjects;
+
+	//toggle these on and off based on isOn
+	[Header("Light Source Objects")]
 	[SerializeField]
 	public GameObject[] LightSources;
 
@@ -189,6 +211,16 @@ public class CanToggleOnOff : MonoBehaviour
 					LightSources[i].SetActive(false);
 				}
 			}
+
+			if(MaterialSwapObjects.Length > 0)
+			{
+				for(int i = 0; i < MaterialSwapObjects.Length; i++)
+				{
+					MaterialSwapObjects[i].MyObject.GetComponent<MeshRenderer>().materials =
+					MaterialSwapObjects[i].OffMaterials;
+				}
+			}
+
 			isOn = false;
 		}
 
@@ -202,6 +234,16 @@ public class CanToggleOnOff : MonoBehaviour
 					LightSources[i].SetActive(true);
 				}
 			}
+
+			if(MaterialSwapObjects.Length > 0)
+			{
+				for(int i = 0; i < MaterialSwapObjects.Length; i++)
+				{
+					MaterialSwapObjects[i].MyObject.GetComponent<MeshRenderer>().materials =
+					MaterialSwapObjects[i].OnMaterials;
+				}
+			}
+
 			isOn = true;
 		}
 	}
