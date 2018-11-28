@@ -733,6 +733,43 @@ namespace UnityStandardAssets.Characters.FirstPerson
 						break;
 					}
 
+                case "toggleon":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "ToggleObjectOn";
+                        if (splitcommand.Length > 1)
+                        {
+                            action.objectId = splitcommand[1];
+                        }
+
+                        else
+                        {
+                            action.objectId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().UniqueIDOfClosestToggleObject();
+                        }
+
+                        PhysicsController.ProcessControlCommand(action);
+
+                        break;
+                    }
+
+                case "toggleoff":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "ToggleObjectOff";
+                        if (splitcommand.Length > 1)
+                        {
+                            action.objectId = splitcommand[1];
+                        }
+                        else
+                        {
+                            action.objectId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().UniqueIDOfClosestToggleObject();
+                        }
+
+                        PhysicsController.ProcessControlCommand(action);
+
+                        break;
+                    }
+
                     //opens given object the given percent, default is 100% open
                     //open <object ID> percent
 				case "open":

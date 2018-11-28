@@ -369,6 +369,23 @@ namespace UnityStandardAssets.Characters.FirstPerson
             return objectID;
 		}
 
+        //return ID of closes toggleable object by distance
+        public string UniqueIDOfClosestToggleObject()
+        {
+            string objectID = null;
+            
+            foreach (SimObjPhysics o in VisibleSimObjPhysics)
+            {
+                if(o.GetComponent<CanToggleOnOff>())
+				{
+					objectID = o.UniqueID;
+					break;
+				}
+            }
+
+            return objectID;
+        }
+
 
         protected Collider[] collidersWithinCapsuleCastOfAgent(float maxDistance) {
             CapsuleCollider agentCapsuleCollider = GetComponent<CapsuleCollider>();
@@ -2329,6 +2346,123 @@ namespace UnityStandardAssets.Characters.FirstPerson
             actionFinished(true);
         }
 
+        public void ToggleObjectOn(ServerAction action)
+        {
+            if (action.objectId == null)
+            {
+                Debug.Log("Hey, actually give me an object ID to Toggle, yeah?");
+                errorMessage = "objectId required for ToggleObject";
+                actionFinished(false);
+                return;
+            }
+
+            SimObjPhysics target = null;
+            foreach (SimObjPhysics sop in VisibleSimObjs(action))
+            {
+                //check for CanOpen drawers, cabinets or CanOpen_Fridge fridge objects
+				if (sop.GetComponent<CanToggleOnOff>())
+                {
+                    target = sop;
+                }
+            }
+
+            if (target)
+            {
+                if (!action.forceAction && target.isInteractable == false)
+                {
+                    //Debug.Log("can't close object if it's already closed");
+                    actionFinished(false);
+                    errorMessage = "object is visible but occluded by something: " + action.objectId;
+                    return;
+                }
+
+                if(target.GetComponent<CanToggleOnOff>())
+                {
+                    CanToggleOnOff ctof = target.GetComponent<CanToggleOnOff>();
+
+                    //check to make sure object is off
+                    if (ctof.isOn)
+                    {
+                        Debug.Log("can't toggle object on if it's already on!");
+                        errorMessage = "can't toggle object on if it's already on!";
+                        actionFinished(false);
+                    }
+
+                    else
+                    {
+                        ctof.Toggle();
+                        actionFinished(true);
+                    }
+                }
+            }
+
+            //target not found in currently visible objects, report not found
+            else
+            {
+                actionFinished(false);
+                errorMessage = "object not found: " + action.objectId;
+                Debug.Log(errorMessage);
+            }
+        }
+
+        public void ToggleObjectOff(ServerAction action)
+        {
+            if (action.objectId == null)
+            {
+                Debug.Log("Hey, actually give me an object ID to Toggle, yeah?");
+                errorMessage = "objectId required for ToggleObject";
+                actionFinished(false);
+                return;
+            }
+
+            SimObjPhysics target = null;
+            foreach (SimObjPhysics sop in VisibleSimObjs(action))
+            {
+                //check for CanOpen drawers, cabinets or CanOpen_Fridge fridge objects
+                if (sop.GetComponent<CanToggleOnOff>())
+                {
+                    target = sop;
+                }
+            }
+
+            if (target)
+            {
+                if (!action.forceAction && target.isInteractable == false)
+                {
+                    //Debug.Log("can't close object if it's already closed");
+                    actionFinished(false);
+                    errorMessage = "object is visible but occluded by something: " + action.objectId;
+                    return;
+                }
+
+                if(target.GetComponent<CanToggleOnOff>())
+                {
+                    CanToggleOnOff ctof = target.GetComponent<CanToggleOnOff>();
+
+                    //check to make sure object is on
+                    if (!ctof.isOn)
+                    {
+                        Debug.Log("can't toggle object off if it's already off!");
+                        errorMessage = "can't toggle object off if it's already off!";
+                        actionFinished(false);
+                    }
+
+                    else
+                    {
+                        ctof.Toggle();
+                        actionFinished(true);
+                    }
+                }
+            }
+
+            //target not found in currently visible objects, report not found
+            else
+            {
+                actionFinished(false);
+                errorMessage = "object not found: " + action.objectId;
+                Debug.Log(errorMessage);
+            }
+        }
         public void OpenObject(ServerAction action)
 		{
 			//pass name of object in from action.objectID
@@ -2336,7 +2470,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             //also check to make sure that target object is interactable
             if (action.objectId == null)
             {
-                Debug.Log("Hey, actually give me an object ID to pick up, yeah?");
+                Debug.Log("Hey, actually give me an object ID to open, yeah?");
                 errorMessage = "objectId required for OpenObject";
                 actionFinished(false);
                 return;
@@ -2355,7 +2489,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 {
                     target = sop;
                 }
-
             }
 
 			if (target)
