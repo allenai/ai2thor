@@ -2,7 +2,7 @@
 using System;
 
 [Serializable]
-public enum SimObjManipType : int {
+public enum SimObjManipType : int { //We aren't using these manip types for the Physics Implementation, they are being replaced with the SimObjPrimaryProperty below
 	Inventory = 0,
 	Static = 1,
 	Rearrangeable = 2,
@@ -20,7 +20,8 @@ public enum SimObjPrimaryProperty : int // EACH SimObjPhysics MUST HAVE 1 Primar
     Moveable = 2,
     CanPickup = 3,
 
-    //these are to identify walls, floor, ceiling
+    //these are to identify walls, floor, ceiling - these are not currently being used but might be in the future once
+	//all scenes have their walls/floor/ceiling meshes split apart correctly (thanks Eli!)
     Wall = 4,
     Floor = 5,
     Ceiling = 6
