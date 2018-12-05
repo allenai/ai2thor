@@ -434,7 +434,6 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		//    Gizmos.DrawSphere(t.position, 0.01f);
 
 		//}
-
 	}
 
 	//CONTEXT MENU STUFF FOR SETTING UP SIM OBJECTS
@@ -1412,6 +1411,4 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		}
 	}
 	#endif
-
-    
 }

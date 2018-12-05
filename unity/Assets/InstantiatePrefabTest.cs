@@ -142,9 +142,9 @@ public class InstantiatePrefabTest : MonoBehaviour
     }
 
 	//IMPORTANT INFO!//
-    //The prefab MUST have a rotate agent collider with zeroed out transform, rotation, and 1, 1, 1 scale
-    //All adjustments to the Rotate agent collider box must be done on the collider only using the
-    //"Edit Collider" button
+    //The prefab MUST have a Bounding Box with zeroed out transform, rotation, and 1, 1, 1 scale
+    //All adjustments to the Bounding Box must be done on the collider only using the
+    //"Edit Collider" button if you need to change the size
     //this assumes that the BoundingBox transform is zeroed out according to the root transform of the prefab
     private bool CheckSpawnArea(SimObjPhysics simObj, Vector3 position, Quaternion rotation, bool spawningInHand)
     {
