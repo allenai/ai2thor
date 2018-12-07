@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+//we need to grab the FPSController for some checks
+using UnityStandardAssets.Characters.FirstPerson;
 public class Contains : MonoBehaviour
 {
 	//used to not add the door/drawer/etc of the object itself to the list of currently contained objects
@@ -17,7 +19,7 @@ public class Contains : MonoBehaviour
 	private List<SimObjPrimaryProperty> PropertiesToIgnore = new List<SimObjPrimaryProperty>(new SimObjPrimaryProperty[] {SimObjPrimaryProperty.Wall,
 		SimObjPrimaryProperty.Floor, SimObjPrimaryProperty.Ceiling, SimObjPrimaryProperty.Moveable}); //should we ignore SimObjPrimaryProperty.Static?
 
-	public Vector3[] gridVisual;
+	public Vector3[] gridVisual = new Vector3[0];
 	public List<Vector3> validpointlist = new List<Vector3>();
 	// Use this for initialization
 	void Start()
@@ -41,13 +43,12 @@ public class Contains : MonoBehaviour
 		if(gameObject.GetComponentInParent<SimObjPhysics>().transform.gameObject)
 		myParent = gameObject.GetComponentInParent<SimObjPhysics>().transform.gameObject;
 
-		GetValidSpawnPoints();
 	}
 
 	// Update is called once per frame
 	void Update()
 	{
-
+		GetValidSpawnPoints();
 	}
 
 	private void FixedUpdate()
@@ -173,46 +174,66 @@ public class Contains : MonoBehaviour
 			}
 		}
 		
-		//debug draw the grid points as gizmos
+		//****** */debug draw the grid points as gizmos
 		gridVisual = gridpoints.ToArray();
 
 		foreach(Vector3 point in gridpoints)
 		{
-			#if UNITY_EDITOR
-			Debug.DrawLine(point, point + -(ydir * ydist), Color.red, 100f);
-			#endif
+			// #if UNITY_EDITOR
+			// Debug.DrawLine(point, point + -(ydir * ydist), Color.red, 100f);
+			// #endif
 
+			//quick test to see if this point on the grid is blocked by anything
 			RaycastHit hit;
 			if(Physics.Raycast(point, -ydir, out hit, ydist, 1 << 8, QueryTriggerInteraction.Ignore))
 			{
 				//if this hits anything except the parent object, this spot is blocked by something
 				if(hit.transform == myParent.transform)
 				{
+					//************* */additional checks here
+					if(NarrowDownValidSpawnPoints(hit.point))
 					PossibleSpawnPoints.Add(hit.point);
 				}
 			}
 
 			//didn't hit anything that could obstruct, so this point is good to go
+			//do additional checks here tos ee if the point is valid
 			else
-			{
+			{		
+				//*************** */additional checks here
+				if(NarrowDownValidSpawnPoints(point + -(ydir * ydist)))
 				PossibleSpawnPoints.Add(point + -(ydir * ydist));
 			}
 		}
 
-
-		//cast a ray down, using this object's Vector3.down as a direction
-		//use layermask sim obj visible
-		//record all the hitpoints to find the actual "floor"
-
-		//check if the thing that was hit was a sim object that is not this object or the sim object that might
-		//be our direct parent (bowls, tables, propogate up to sim object)
-
+		//****** */debug draw the spawn points as well
 		validpointlist = PossibleSpawnPoints;
 
+
+		//********** */sort the possible spawn points by distance to the Agent before returning
+		//use this: Gizmos.DrawCube(b.ClosestPoint(GameObject.Find("FPSController").transform.position), new Vector3 (0.1f, 0.1f, 0.1f));
 		return PossibleSpawnPoints;
 	}
 
+	//additional checks if the point is valid. Return true if it's valid
+	public bool NarrowDownValidSpawnPoints(Vector3 point)
+	{
+		//check if the point is in range of the agent at all
+		GameObject agent = GameObject.Find("FPSController");
+		float maxvisdist = agent.GetComponent<PhysicsRemoteFPSAgentController>().WhatIsAgentsMaxVisibleDistance();
+
+		if(Vector3.Distance(point, agent.transform.position)>= maxvisdist)
+		return false;
+
+		//ok cool, it's within distance to the agent, now let's check 
+		//if the point is within the viewport of the agent as well
+		
+
+		return true;
+	}
+
 	//used to check if a given Vector3 is inside this receptacle box in world space
+	//use this to check if a SimObjectPhysics's bottom four corners are contained within this receptacle, if not then it doesn't fit
 	public bool CheckIfPointIsInsideReceptacleTriggerBox(Vector3 point)
 	{
 		BoxCollider myBox = gameObject.GetComponent<BoxCollider>();
@@ -238,19 +259,6 @@ public class Contains : MonoBehaviour
 		//these are the 8 points making up the corner of the box. If ANY parents of this object have non uniform scales,
         //these values will be off. Make sure that all parents in the heirarchy are at 1,1,1 scale and we can use these values
         //as a "valid area" for spawning objects inside of receptacles.
-
-		//Gizmos.color = Color.green;
-		//Gizmos.DrawSphere(transform.TransformPoint(b.center + new Vector3(b.size.x, -b.size.y, b.size.z) * 0.5f), 0.01f);
-		//Gizmos.DrawSphere(transform.TransformPoint(b.center + new Vector3(-b.size.x, -b.size.y, b.size.z) * 0.5f), 0.01f);
-		//Gizmos.DrawSphere(transform.TransformPoint(b.center + new Vector3(-b.size.x, -b.size.y, -b.size.z) * 0.5f), 0.01f);
-		//Gizmos.DrawSphere(transform.TransformPoint(b.center + new Vector3(b.size.x, -b.size.y, -b.size.z) * 0.5f), 0.01f);
-
-		//Gizmos.DrawSphere(transform.TransformPoint(b.center + new Vector3(b.size.x, b.size.y, b.size.z) * 0.5f), 0.01f);
-		//Gizmos.DrawSphere(transform.TransformPoint(b.center + new Vector3(-b.size.x, b.size.y, b.size.z) * 0.5f), 0.01f);
-		//Gizmos.DrawSphere(transform.TransformPoint(b.center + new Vector3(-b.size.x, b.size.y, -b.size.z) * 0.5f), 0.01f);
-		//Gizmos.DrawSphere(transform.TransformPoint(b.center + new Vector3(b.size.x, b.size.y, -b.size.z) * 0.5f), 0.01f);
-        
-        //ok i made them cubes because they look more better as cubes
 		Gizmos.color = Color.green;
         Gizmos.DrawCube(transform.TransformPoint(b.center + new Vector3(b.size.x, -b.size.y, b.size.z) * 0.5f), new Vector3(0.01f, 0.01f, 0.01f));
 		Gizmos.DrawCube(transform.TransformPoint(b.center + new Vector3(-b.size.x, -b.size.y, b.size.z) * 0.5f), new Vector3(0.01f, 0.01f, 0.01f));
@@ -263,7 +271,8 @@ public class Contains : MonoBehaviour
 		Gizmos.DrawCube(transform.TransformPoint(b.center + new Vector3(b.size.x, b.size.y, -b.size.z) * 0.5f), new Vector3(0.01f, 0.01f, 0.01f));
 
 		Gizmos.color = Color.magenta;
-		Gizmos.DrawCube(b.ClosestPoint(GameObject.Find("FPSController").transform.position), new Vector3 (0.1f, 0.1f, 0.1f));
+		//Gizmos.DrawCube(b.ClosestPoint(GameObject.Find("FPSController").transform.position), new Vector3 (0.1f, 0.1f, 0.1f));
+
 		if(gridVisual.Length > 0)
 		{
 			foreach (Vector3 yes in gridVisual)
@@ -272,7 +281,7 @@ public class Contains : MonoBehaviour
 			}
 		}
 
-		Gizmos.color = Color.red;
+		Gizmos.color = Color.green;
 		if(validpointlist.Count > 0)
 		{
 			foreach(Vector3 yes in validpointlist)

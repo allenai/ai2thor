@@ -121,6 +121,11 @@ namespace UnityStandardAssets.Characters.FirstPerson
             base.actionComplete = true;
         }
 
+        public float WhatIsAgentsMaxVisibleDistance()
+        {
+            return maxVisibleDistance;
+        }
+
 		public GameObject WhatAmIHolding()
 		{
 			return ItemInHand;
