@@ -14,6 +14,9 @@ public class InstantiatePrefabTest : MonoBehaviour
 	Vector3 gizmoscale;
 	Quaternion gizmoquaternion;
 
+    public GameObject TestPlaceObject;
+    public Vector3 TestPosition;
+    public Contains Testreceptbox;
 
 	// Use this for initialization
 	void Start()
@@ -24,7 +27,12 @@ public class InstantiatePrefabTest : MonoBehaviour
 	// Update is called once per frame
 	void Update()
 	{
+        if(Input.GetKeyDown(KeyCode.Space))
+        {
+            TestPosition = Testreceptbox.validpointlist[0];
 
+            PlaceObject(TestPlaceObject.GetComponent<SimObjPhysics>(), TestPosition, Testreceptbox);
+        }
 	}
 
 	public SimObjPhysics Spawn(string prefabType, string objectId, Vector3 position)
@@ -140,6 +148,40 @@ public class InstantiatePrefabTest : MonoBehaviour
 
         return null;
     }
+
+
+    //Place a Game Object on/inside a Receptacle box.
+	public void PlaceObject(SimObjPhysics sop, Vector3 position, Contains receptbox)
+	{
+        //zero out rotation to match the target receptacle's rotation
+        sop.transform.rotation = receptbox.transform.rotation;
+
+        BoxCollider oabb = sop.BoundingBox.GetComponent<BoxCollider>();
+
+        //get position of the sim object's transform.
+        Vector3 p1 = sop.transform.position;
+        //get the vector going down (local space) starting at p1 and going down toward the bottom of the bounding box
+        Vector3 p1downvector = p1 + -sop.transform.up;
+        //now get the point directly below p1 that is on the bottom of the bounding box.
+
+            #if UNITY_EDITOR
+			Debug.DrawLine(p1, p1downvector, Color.magenta, 100f);
+			#endif
+
+        //Vector3 BottomOfBoxPoint = oabb.transform.TransformPoint(oabb.center + new Vector3(oabb.center.x, -oabb.size.y * 0.5f, oabb.center.z));
+
+        Plane BottomOfBox = new Plane(sop.transform.up, oabb.transform.TransformPoint(oabb.center + new Vector3(oabb.center.x, -oabb.size.y * 0.5f, oabb.center.z)));
+
+        float DistanceFromBottomOfBoxToTransform = BottomOfBox.GetDistanceToPoint(p1) + 0.001f; //adding .01 buffer cause physics be damned
+        //Debug.DrawLine(Vector3.zero, BottomOfBoxPoint, Color.blue, 100f);
+
+        if(CheckSpawnArea(sop, position + sop.transform.up * DistanceFromBottomOfBoxToTransform, sop.transform.rotation, false))
+        {
+            GameObject topObject = GameObject.Find("Objects");
+            sop.transform.SetParent(topObject.transform);
+            sop.transform.position = position + sop.transform.up * DistanceFromBottomOfBoxToTransform;
+        }
+	}
 
 	//IMPORTANT INFO!//
     //The prefab MUST have a Bounding Box with zeroed out transform, rotation, and 1, 1, 1 scale
