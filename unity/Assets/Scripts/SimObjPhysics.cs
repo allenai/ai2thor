@@ -425,11 +425,6 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 
 			}
 		}
-
-		//debug draw for center of the object's bounding box if it has one
-		Gizmos.color = Color.blue;
-		if(BoundingBox != null)
-		Gizmos.DrawSphere(transform.TransformPoint(BoundingBox.GetComponent<BoxCollider>().center), 0.02f);
 	}
 
 	//CONTEXT MENU STUFF FOR SETTING UP SIM OBJECTS

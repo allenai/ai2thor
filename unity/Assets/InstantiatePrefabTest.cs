@@ -29,9 +29,15 @@ public class InstantiatePrefabTest : MonoBehaviour
 	{
         if(Input.GetKeyDown(KeyCode.Space))
         {
-            TestPosition = Testreceptbox.validpointlist[0];
+            if(Testreceptbox.validpointlist.Count >0)
+            {
+                TestPosition = Testreceptbox.validpointlist[0];
+                PlaceObject(TestPlaceObject.GetComponent<SimObjPhysics>(), TestPosition, Testreceptbox);
+            }
 
-            PlaceObject(TestPlaceObject.GetComponent<SimObjPhysics>(), TestPosition, Testreceptbox);
+            else
+            Debug.Log("No valid points right now!");
+
         }
 	}
 
@@ -150,7 +156,7 @@ public class InstantiatePrefabTest : MonoBehaviour
     }
 
 
-    //Place a Game Object on/inside a Receptacle box.
+    //Place a Game Object on/inside a Receptacle box. This is to replicate pivot behavior
 	public void PlaceObject(SimObjPhysics sop, Vector3 position, Contains receptbox)
 	{
         //zero out rotation to match the target receptacle's rotation
