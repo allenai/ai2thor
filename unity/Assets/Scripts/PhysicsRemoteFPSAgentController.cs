@@ -70,7 +70,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
         );
 
         //change visibility check to use this distance when looking down
-		protected float DownwardViewDistance = 2.0f;
+		//protected float DownwardViewDistance = 2.0f;
     
         // Use this for initialization
         protected override void Start()
@@ -391,6 +391,38 @@ namespace UnityStandardAssets.Characters.FirstPerson
             return objectID;
         }
 
+        public string UniqueIDOfClosestReceptacleObject()
+        {
+            string objectID = null;
+
+            foreach(SimObjPhysics o in VisibleSimObjPhysics)
+            {
+                if(o.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.Receptacle))
+                {
+                    objectID = o.UniqueID;
+                    break;
+                }
+            }
+            return objectID;
+        }
+
+        //return a reference to a SimObj that is Visible (in the VisibleSimObjPhysics array) and
+        //matches the passe din objectID
+        public GameObject FindObjectInVisibleSimObjPhysics(string objectID)
+        {
+            GameObject target = null;
+
+            foreach(SimObjPhysics o in VisibleSimObjPhysics)
+            {
+                if(o.uniqueID == objectID)
+                {
+                    target = o.gameObject;
+                }
+            }
+
+            return target;
+        }
+
 
         protected Collider[] collidersWithinCapsuleCastOfAgent(float maxDistance) {
             CapsuleCollider agentCapsuleCollider = GetComponent<CapsuleCollider>();
@@ -405,6 +437,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			return Physics.OverlapCapsule(point0, point1, maxDistance, 1 << 8, QueryTriggerInteraction.Collide);
         }
 
+        //*** Maybe make this better */
         // This function should be called before and after doing a visibility check (before with 
         // enableColliders == false and after with it equaling true). It, in particular, will
         // turn off/on all the colliders on agents which should not block visibility for the current agent
@@ -574,7 +607,42 @@ namespace UnityStandardAssets.Characters.FirstPerson
             currentlyVisibleItems.Sort((x, y) => Vector3.Distance(x.transform.position, agentCameraPos).CompareTo(Vector3.Distance(y.transform.position, agentCameraPos)));
             return currentlyVisibleItems.ToArray();
         }
+
+        //use this to check if any given Vector3 coordinate is within the agent's viewport and also not obstructed
+        public bool CheckIfPointIsInViewport(Vector3 point)
+        {
+            Vector3 viewPoint = m_Camera.WorldToViewportPoint(point);
+
+            float ViewPointRangeHigh = 1.0f;
+            float ViewPointRangeLow = 0.0f;
+
+            if (viewPoint.z > 0 //&& viewPoint.z < maxDistance * DownwardViewDistance //is in front of camera and within range of visibility sphere
+            && viewPoint.x < ViewPointRangeHigh && viewPoint.x > ViewPointRangeLow//within x bounds of viewport
+            && viewPoint.y < ViewPointRangeHigh && viewPoint.y > ViewPointRangeLow)//within y bounds of viewport
+            {
+                RaycastHit hit;
+
+                updateAllAgentCollidersForVisibilityCheck(false);
+
+                if(Physics.Raycast(m_Camera.transform.position, point - m_Camera.transform.position, out hit,
+                Vector3.Distance(m_Camera.transform.position, point) - 0.01f, (1 << 8 )|(1 << 10))) //reduce distance by slight offset
+                {
+                    updateAllAgentCollidersForVisibilityCheck(true);
+                    return false;
+                }
+
+                else
+                {
+                    updateAllAgentCollidersForVisibilityCheck(true);
+                    return true;
+                }
+            }
+
+            return false;
+        }
         
+        //check if the visibility point on a sim object, sop, is within the viewport
+        //has a inclueInvisible bool to check against triggerboxes as well, to check for visibility with things like Cabinets/Drawers
 		protected bool CheckIfVisibilityPointInViewport(SimObjPhysics sop, Transform point, Camera agentCamera, bool includeInvisible)
         {
             bool result = false;
@@ -598,8 +666,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
 				if(includeInvisible)
 				{
 					if(Physics.Raycast(agentCamera.transform.position, point.position - agentCamera.transform.position, out hit, 
-					                   100f, (1 << 8 )| (1 << 9) | (1 << 10)))
+					                   raycastDistance, (1 << 8 )| (1 << 9) | (1 << 10)))
                     {
+                        //print(hit.transform.name);
                         if(hit.transform != sop.transform)
                         {
 							result = false;
@@ -674,8 +743,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 						else 
 						{
-                            //if this line is drawn, then this visibility point is in camera frame and not occluded
-                            //might want to use this for a targeting check as well at some point....
                             result = true;
 							sop.isInteractable = true;
                         }                
@@ -1792,6 +1859,22 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 				actionFinished(false);
 			}
+        }
+
+        //if you are holding an object, place it on/in a valid Receptacle
+        //this should use the PlaceObject() function on InstantiatePrefabTest to do most of the work
+        public void PlaceObjectFromHand(ServerAction action)
+        {
+            //check if we are even holding anything
+            if(ItemInHand == null)
+            {
+                errorMessage = "Can't place an object if Agent isn't holding anything";
+                Debug.Log(errorMessage);
+                actionFinished(false);
+                return;
+            }
+
+            //ok we are holding something, time to try and place it
         }
         
 		public void PickupObject(ServerAction action)//use serveraction objectid
