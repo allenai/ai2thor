@@ -426,14 +426,10 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 			}
 		}
 
-		////draw interaction points for editor
-		//Gizmos.color = Color.magenta;
-
-		//foreach (Transform t in InteractionPoints)
-		//{
-		//    Gizmos.DrawSphere(t.position, 0.01f);
-
-		//}
+		//debug draw for center of the object's bounding box if it has one
+		Gizmos.color = Color.blue;
+		if(BoundingBox != null)
+		Gizmos.DrawSphere(transform.TransformPoint(BoundingBox.GetComponent<BoxCollider>().center), 0.02f);
 	}
 
 	//CONTEXT MENU STUFF FOR SETTING UP SIM OBJECTS
