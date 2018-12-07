@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System;
+using UnityStandardAssets.Characters.FirstPerson;
 
 public class InstantiatePrefabTest : MonoBehaviour
 {
@@ -29,6 +30,13 @@ public class InstantiatePrefabTest : MonoBehaviour
 	{
         if(Input.GetKeyDown(KeyCode.Space))
         {
+            if(!TestPlaceObject)
+            return;
+            //PhysicsRemoteFPSAgentController agent = GameObject.Find("FPSController").GetComponent<PhysicsRemoteFPSAgentController>();
+
+            //string TargetReceptacle = agent.UniqueIDOfClosestReceptacleObject();
+
+            //Testreceptbox = agent.FindObjectInVisibleSimObjPhysics(TargetReceptacle);
             if(Testreceptbox.validpointlist.Count >0)
             {
                 TestPosition = Testreceptbox.validpointlist[0];
@@ -155,8 +163,17 @@ public class InstantiatePrefabTest : MonoBehaviour
         return null;
     }
 
+    public void RandomPlaceObjects()
+    {
 
-    //Place a Game Object on/inside a Receptacle box. This is to replicate pivot behavior
+    }
+
+    public void PlaceObjectInReceptacle()
+    {
+        
+    }
+
+    //Place Sim Object (sop) at the given (position) inside/on the receptbox relative to the rotation of the receptacle
 	public void PlaceObject(SimObjPhysics sop, Vector3 position, Contains receptbox)
 	{
         //zero out rotation to match the target receptacle's rotation
@@ -167,12 +184,12 @@ public class InstantiatePrefabTest : MonoBehaviour
         //get position of the sim object's transform.
         Vector3 p1 = sop.transform.position;
         //get the vector going down (local space) starting at p1 and going down toward the bottom of the bounding box
-        Vector3 p1downvector = p1 + -sop.transform.up;
+        //Vector3 p1downvector = p1 + -sop.transform.up;
         //now get the point directly below p1 that is on the bottom of the bounding box.
 
-            #if UNITY_EDITOR
-			Debug.DrawLine(p1, p1downvector, Color.magenta, 100f);
-			#endif
+            // #if UNITY_EDITOR
+			// Debug.DrawLine(p1, p1downvector, Color.magenta, 100f);
+			// #endif
 
         //Vector3 BottomOfBoxPoint = oabb.transform.TransformPoint(oabb.center + new Vector3(oabb.center.x, -oabb.size.y * 0.5f, oabb.center.z));
 

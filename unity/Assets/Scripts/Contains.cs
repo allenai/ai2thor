@@ -179,6 +179,7 @@ public class Contains : MonoBehaviour
 
 		foreach(Vector3 point in gridpoints)
 		{
+			//debug draw the gridpoints if you wanna see em
 			// #if UNITY_EDITOR
 			// Debug.DrawLine(point, point + -(ydir * ydist), Color.red, 100f);
 			// #endif
@@ -190,17 +191,15 @@ public class Contains : MonoBehaviour
 				//if this hits anything except the parent object, this spot is blocked by something
 				if(hit.transform == myParent.transform)
 				{
-					//************* */additional checks here
 					if(NarrowDownValidSpawnPoints(hit.point))
 					PossibleSpawnPoints.Add(hit.point);
 				}
 			}
-
+			
 			//didn't hit anything that could obstruct, so this point is good to go
 			//do additional checks here tos ee if the point is valid
 			else
 			{		
-				//*************** */additional checks here
 				if(NarrowDownValidSpawnPoints(point + -(ydir * ydist)))
 				PossibleSpawnPoints.Add(point + -(ydir * ydist));
 			}
@@ -209,9 +208,14 @@ public class Contains : MonoBehaviour
 		//****** */debug draw the spawn points as well
 		validpointlist = PossibleSpawnPoints;
 
+		GameObject agent = GameObject.Find("FPSController");
 
-		//********** */sort the possible spawn points by distance to the Agent before returning
-		//use this: Gizmos.DrawCube(b.ClosestPoint(GameObject.Find("FPSController").transform.position), new Vector3 (0.1f, 0.1f, 0.1f));
+		//sort the possible spawn points by distance to the Agent before returning
+		PossibleSpawnPoints.Sort(delegate(Vector3 one, Vector3 two)
+		{
+			return Vector3.Distance(agent.transform.position, one).CompareTo(Vector3.Distance(agent.transform.position, two));
+		});
+
 		return PossibleSpawnPoints;
 	}
 
@@ -220,16 +224,18 @@ public class Contains : MonoBehaviour
 	{
 		//check if the point is in range of the agent at all
 		GameObject agent = GameObject.Find("FPSController");
-		float maxvisdist = agent.GetComponent<PhysicsRemoteFPSAgentController>().WhatIsAgentsMaxVisibleDistance();
+		PhysicsRemoteFPSAgentController agentController = agent.GetComponent<PhysicsRemoteFPSAgentController>();
+		float maxvisdist = agentController.WhatIsAgentsMaxVisibleDistance();
 
-		if(Vector3.Distance(point, agent.transform.position)>= maxvisdist)
+		if(Vector3.Distance(point, agent.transform.position) >= maxvisdist)
 		return false;
 
 		//ok cool, it's within distance to the agent, now let's check 
 		//if the point is within the viewport of the agent as well
-		
-
+		if(agentController.CheckIfPointIsInViewport(point))
 		return true;
+
+		return false;
 	}
 
 	//used to check if a given Vector3 is inside this receptacle box in world space
@@ -270,18 +276,18 @@ public class Contains : MonoBehaviour
 		Gizmos.DrawCube(transform.TransformPoint(b.center + new Vector3(-b.size.x, b.size.y, -b.size.z) * 0.5f), new Vector3(0.01f, 0.01f, 0.01f));
 		Gizmos.DrawCube(transform.TransformPoint(b.center + new Vector3(b.size.x, b.size.y, -b.size.z) * 0.5f), new Vector3(0.01f, 0.01f, 0.01f));
 
+		// Gizmos.color = Color.blue;
+		// //Gizmos.DrawCube(b.ClosestPoint(GameObject.Find("FPSController").transform.position), new Vector3 (0.1f, 0.1f, 0.1f));
+
+		// if(gridVisual.Length > 0)
+		// {
+		// 	foreach (Vector3 yes in gridVisual)
+		// 	{
+		// 		Gizmos.DrawCube(yes, new Vector3(0.01f, 0.01f, 0.01f));
+		// 	}
+		// }
+
 		Gizmos.color = Color.magenta;
-		//Gizmos.DrawCube(b.ClosestPoint(GameObject.Find("FPSController").transform.position), new Vector3 (0.1f, 0.1f, 0.1f));
-
-		if(gridVisual.Length > 0)
-		{
-			foreach (Vector3 yes in gridVisual)
-			{
-				Gizmos.DrawCube(yes, new Vector3(0.01f, 0.01f, 0.01f));
-			}
-		}
-
-		Gizmos.color = Color.green;
 		if(validpointlist.Count > 0)
 		{
 			foreach(Vector3 yes in validpointlist)
