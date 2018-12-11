@@ -223,9 +223,19 @@ public class InstantiatePrefabTest : MonoBehaviour
             Debug.Log("Can't place object inside itself!");
             return false;
         }
+        
+        //remember the original rotation of the sim object if we need to reset it
+        Quaternion originalRot = sop.transform.rotation;
+
         //zero out rotation to match the target receptacle's rotation
         sop.transform.rotation = rsp.ReceptacleBox.transform.rotation;
         sop.GetComponent<Rigidbody>().velocity = Vector3.zero;
+
+        //create a temporary object, match sop's rot, pos, and then make it a child
+        Transform placeholderPosition = new GameObject("placeholderPosition").transform;
+        placeholderPosition.transform.rotation = sop.transform.rotation;
+        placeholderPosition.transform.position = sop.transform.position;
+        placeholderPosition.SetParent(sop.transform);
 
         BoxCollider oabb = sop.BoundingBox.GetComponent<BoxCollider>();
 
@@ -237,48 +247,81 @@ public class InstantiatePrefabTest : MonoBehaviour
 
         //distance from created plate
         float DistanceFromBottomOfBoxToTransform = BottomOfBox.GetDistanceToPoint(p1) + 0.01f; //adding .01 buffer cause physics be damned
-        //might have to adjust this offset as we test against uneven surfaces like sinks, other meshess
-        //Debug.DrawLine(Vector3.zero, BottomOfBoxPoint, Color.blue, 100f);
 
-        //if spawn area is clear, spawn it and return true that we spawned it
-        if(CheckSpawnArea(sop, rsp.Point + sop.transform.up * DistanceFromBottomOfBoxToTransform, sop.transform.rotation, false))
+        //check spawn area using 4 different rotations, +45 on local y axis each time to see if it'll fit?
+        //we can probably add a thing to make this check more rotations later...
+        int degreeIncrement = 45;
+        Quaternion[] RotationsToCheck = new Quaternion[360 / degreeIncrement]; //we'll check 8 rotations for now, replace the 45 later if we want to adjust the amount of checks
+
+        for(int i = 0; i < RotationsToCheck.Length; i++)
         {
-            //now to do a check to make sure the sim object is contained within the Receptacle box, and doesn't have
-            //bits of it hanging out
-
-            //Check the ReceptacleBox's Sim Object component to see what Type it is. Then check to
-            //see if the type is the kind where the Object placed must be completely contained or just the bottom 4 corners contained
-            int HowManyCornersToCheck = 0;
-            if(OnReceptacles.Contains(rsp.ParentSimObjPhys.ObjType))
+            if(i > 0)
             {
-                //check that only the bottom 4 corners are in bounds
-                HowManyCornersToCheck = 4;
+                placeholderPosition.transform.Rotate(new Vector3(0, degreeIncrement, 0), Space.Self);
+                RotationsToCheck[i] = placeholderPosition.transform.rotation;
             }
 
-            if(InReceptacles.Contains(rsp.ParentSimObjPhys.ObjType))
+            else
             {
-                //check that all 8 corners are within bounds
-                HowManyCornersToCheck = 8;
+                RotationsToCheck[i] = placeholderPosition.transform.rotation;
             }
-
-            for(int i = 1; i < HowManyCornersToCheck; i++)
-            {
-                //print("Checking " + (i-1));
-                if(!rsp.Script.CheckIfPointIsInsideReceptacleTriggerBox(SpawnCorners[i - 1]))
-                return false;
-            }
-
-            GameObject topObject = GameObject.Find("Objects");
-            sop.transform.SetParent(topObject.transform);
-            sop.transform.position = rsp.Point + sop.transform.up * DistanceFromBottomOfBoxToTransform;
-
-            //set true if we want objects to be stationary when placed. (if placed on uneven surface, object remains stationary)
-            //if falce, once placed the object will resolve with physics (if placed on uneven surface object might slide or roll)
-            if(PlaceStationary)
-            sop.GetComponent<Rigidbody>().isKinematic = true;
-
-            return true;
+            
         }
+
+        foreach(Quaternion quat in RotationsToCheck)
+        {
+            //if spawn area is clear, spawn it and return true that we spawned it
+            if(CheckSpawnArea(sop, rsp.Point + sop.transform.up * DistanceFromBottomOfBoxToTransform, quat, false))
+            {
+                //now to do a check to make sure the sim object is contained within the Receptacle box, and doesn't have
+                //bits of it hanging out
+
+                //Check the ReceptacleBox's Sim Object component to see what Type it is. Then check to
+                //see if the type is the kind where the Object placed must be completely contained or just the bottom 4 corners contained
+                int HowManyCornersToCheck = 0;
+                if(OnReceptacles.Contains(rsp.ParentSimObjPhys.ObjType))
+                {
+                    //check that only the bottom 4 corners are in bounds
+                    HowManyCornersToCheck = 4;
+                }
+
+                if(InReceptacles.Contains(rsp.ParentSimObjPhys.ObjType))
+                {
+                    //check that all 8 corners are within bounds
+                    HowManyCornersToCheck = 8;
+                }
+
+                for(int i = 1; i < HowManyCornersToCheck; i++)
+                {
+                    //print("Checking " + (i-1));
+                    if(!rsp.Script.CheckIfPointIsInsideReceptacleTriggerBox(SpawnCorners[i - 1]))
+                    {
+                        sop.transform.rotation = originalRot;
+                        Destroy(placeholderPosition.gameObject);
+                        return false;
+                    }
+                }
+
+                //we passed all the checks! Place the object now!
+                GameObject topObject = GameObject.Find("Objects");
+                sop.transform.SetParent(topObject.transform);
+                sop.transform.position = rsp.Point + sop.transform.up * DistanceFromBottomOfBoxToTransform;
+                sop.transform.rotation = quat;
+
+                //set true if we want objects to be stationary when placed. (if placed on uneven surface, object remains stationary)
+                //if falce, once placed the object will resolve with physics (if placed on uneven surface object might slide or roll)
+                if(PlaceStationary)
+                sop.GetComponent<Rigidbody>().isKinematic = true;
+
+                Destroy(placeholderPosition.gameObject);
+
+                return true;
+            }
+        }
+       
+
+        sop.transform.rotation = originalRot;
+        Destroy(placeholderPosition.gameObject);
 
         //oh now we couldn't spawn it
         return false;
