@@ -189,6 +189,24 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         break;
                     }
 
+                case "placeon":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "PlaceHeldObject";
+                        
+                        if(splitcommand.Length == 2)
+                        {
+                            action.objectId = splitcommand[1];
+                        }
+
+                        else
+                            action.objectId = PhysicsController.UniqueIDOfClosestReceptacleObject();
+                            
+                        action.placeStationary = true; //set this to false if we want to place it and let physics resolve
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }  
+
 				case "spawn":
                     {
                         ServerAction action = new ServerAction();
@@ -1148,7 +1166,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     }
 			}
 
-			StartCoroutine(CheckIfactionCompleteWasSetToTrueAfterWaitingALittleBit(splitcommand[0]));
+			//StartCoroutine(CheckIfactionCompleteWasSetToTrueAfterWaitingALittleBit(splitcommand[0]));
 
         }
 
