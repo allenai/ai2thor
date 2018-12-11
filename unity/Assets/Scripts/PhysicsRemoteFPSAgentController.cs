@@ -1861,9 +1861,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			}
         }
 
-        //if you are holding an object, place it on/in a valid Receptacle
-        //this should use the PlaceObject() function on InstantiatePrefabTest to do most of the work
-        public void PlaceObjectFromHand(ServerAction action)
+        //if you are holding an object, place it on a valid Receptacle 
+        //used for placing objects on receptacles without enclosed restrictions (drawers, cabinets, etc)
+        //only checks if the object can be placed on top of the target receptacle
+        public void PlaceHeldObject(ServerAction action)
         {
             //check if we are even holding anything
             if(ItemInHand == null)
@@ -1873,9 +1874,86 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 actionFinished(false);
                 return;
             }
+            
+            //get the target receptacle based on the action object ID
+            SimObjPhysics targetReceptacle = null;
+
+            SimObjPhysics[] simObjPhysicsArray = VisibleSimObjs(action);
+            
+            foreach (SimObjPhysics sop in simObjPhysicsArray)
+            {
+                if (action.objectId == sop.UniqueID)
+                {
+                    targetReceptacle = sop;
+                }
+            }
+
+            if (targetReceptacle == null)
+            {
+                errorMessage = "No valid Receptacle found";
+                Debug.Log(errorMessage);
+                actionFinished(false);
+                return;
+            }
 
             //ok we are holding something, time to try and place it
+            InstantiatePrefabTest script = GameObject.Find("PhysicsSceneManager").GetComponent<InstantiatePrefabTest>();
+            if(script.PlaceObjectReceptacle(targetReceptacle.ReturnMySpawnPoints(), ItemInHand.GetComponent<SimObjPhysics>(), action.placeStationary))
+            {
+                ItemInHand = null;
+                actionFinished(true);
+            }
+
+            else
+            {
+                errorMessage = "No valid points to place object found";
+                Debug.Log(errorMessage);
+                actionFinished(false);
+            }
         }
+
+        //if you are holding an object, place it INSIDE of a valid receptacle.
+        //checks that the entirety of the object is enclosed within the receptacle's bounds
+        // public void PlaceHeldObjectIn(ServerAction action)
+        // {
+        //     //check if we are even holding anything
+        //     if(ItemInHand == null)
+        //     {
+        //         errorMessage = "Can't place an object if Agent isn't holding anything";
+        //         Debug.Log(errorMessage);
+        //         actionFinished(false);
+        //         return;
+        //     }
+            
+        //     //get the target receptacle based on the action object ID
+        //     SimObjPhysics targetReceptacle = null;
+
+        //     SimObjPhysics[] simObjPhysicsArray = VisibleSimObjs(action);
+            
+        //     foreach (SimObjPhysics sop in simObjPhysicsArray)
+        //     {
+        //         if (action.objectId == sop.UniqueID)
+        //         {
+        //             targetReceptacle = sop;
+        //         }
+        //     }
+
+        //     if (targetReceptacle == null)
+        //     {
+        //         errorMessage = "No valid Receptacle found";
+        //         Debug.Log(errorMessage);
+        //         actionFinished(false);
+        //         return;
+        //     }
+
+        //     //ok we are holding something, time to try and place it
+        //     InstantiatePrefabTest script = GameObject.Find("PhysicsSceneManager").GetComponent<InstantiatePrefabTest>();
+        //     if(script.PlaceObjectReceptacle(targetReceptacle.ReturnMySpawnPoints(), ItemInHand.GetComponent<SimObjPhysics>(), true))
+        //     {
+        //         ItemInHand = null;
+        //         actionFinished(true);
+        //     }
+        // }
         
 		public void PickupObject(ServerAction action)//use serveraction objectid
         {
@@ -1913,7 +1991,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     }
                 }
 
-                //GameObject target = GameObject.Find(action.objectId);
                 if (target == null)
                 {
                     errorMessage = "No valid target to pickup";

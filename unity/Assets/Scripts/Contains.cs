@@ -4,12 +4,30 @@ using UnityEngine;
 
 //we need to grab the FPSController for some checks
 using UnityStandardAssets.Characters.FirstPerson;
+
+//Class that holds info for a Vector3 object spawn point and the BoxCollider that the Point resides in
+//this will be used for a comparison test later to make sure the spawned object is within bounds
+//of the Receptacle Trigger Box, which gets confusing if an Object has multiple ReceptacleTriggerBoxes
+//with multiple Contains.cs scripts
+public class ReceptacleSpawnPoint
+{
+	public BoxCollider ReceptacleBox; //the box the point is in
+	public Vector3 Point; //Vector3 coordinate in world space, possible spawn location
+
+	public Contains Script;
+	public SimObjPhysics ParentSimObjPhys;
+
+	public ReceptacleSpawnPoint(Vector3 p, BoxCollider box, Contains c, SimObjPhysics parentsop)
+	{
+		ReceptacleBox = box;
+		Point = p;
+		Script = c;
+		ParentSimObjPhys = parentsop;
+	}
+}
+
 public class Contains : MonoBehaviour
 {
-	//used to not add the door/drawer/etc of the object itself to the list of currently contained objects
-	//XXX Can probably delete this, the new PropertiesToIgnore should catch these edge cases, leaving here for now just in case
-	//[SerializeField] protected List<GameObject> MyObjects = null; //use this for any colliders that should be ignored (each cabinet should ignore it's own door, etc)
-
 	[SerializeField] protected List<SimObjPhysics> CurrentlyContains = new List<SimObjPhysics>();
 
     //this is an object reference to the sim object that is linked to this receptacle box
@@ -19,8 +37,15 @@ public class Contains : MonoBehaviour
 	private List<SimObjPrimaryProperty> PropertiesToIgnore = new List<SimObjPrimaryProperty>(new SimObjPrimaryProperty[] {SimObjPrimaryProperty.Wall,
 		SimObjPrimaryProperty.Floor, SimObjPrimaryProperty.Ceiling, SimObjPrimaryProperty.Moveable}); //should we ignore SimObjPrimaryProperty.Static?
 
-	public Vector3[] gridVisual = new Vector3[0];
-	public List<Vector3> validpointlist = new List<Vector3>();
+	//used for debug draw of grid
+	private Vector3[] gridVisual = new Vector3[0];
+
+	//list of valid spawn points for placing/spawning SimObjects inside this Receptacle Box
+	public List<ReceptacleSpawnPoint> validpointlist = new List<ReceptacleSpawnPoint>();
+
+	//world coordinates of the Corners of this object's receptacles in case we need it for something
+	public List<Vector3> Corners = new List<Vector3>();
+
 	// Use this for initialization
 	void Start()
 	{
@@ -113,13 +138,39 @@ public class Contains : MonoBehaviour
 		return ids;
 	}
 
-	public List<Vector3> GetValidSpawnPoints()
+	public List<ReceptacleSpawnPoint> GetValidSpawnPoints()
 	{
-		List<Vector3> PossibleSpawnPoints = new List<Vector3>();
+		List<ReceptacleSpawnPoint> PossibleSpawnPoints = new List<ReceptacleSpawnPoint>();
 
 		Vector3 p1, p2, p3, p4, p5, p6, p7, p8;
 
 		BoxCollider b = GetComponent<BoxCollider>();
+
+		// Vector3 pos = b.transform.position;
+		// Vector3 f = b.transform.forward;
+		// Vector3 r = b.transform.right;
+		// Vector3 u = b.transform.up;
+
+		// Vector3 min = b.transform.TransformPoint(b.center - b.size * 0.5f) - pos;
+		// Vector3 max = b.transform.TransformPoint(b.center + b.size * 0.5f) - pos;
+
+		// //top forward right
+		// p1 = pos + r * max.x + u * max.y + f * max.z;
+		// //top forward left
+		// p2 = pos + r * min.x + u * max.y + f * max.z;
+		// //top back left
+		// p3 = pos + r * min.x + u * max.y + f * min.z;
+		// //top back right
+		// p4 = pos + r * max.x + u * max.y + f * min.z;
+
+		// //bottom forward right
+		// p5 = pos + r * max.x + u * min.y + f * max.z;
+		// //bottom forward left
+		// p6 = pos + r * min.x + u * min.y + f * max.z;
+		// //bottom back left
+		// p7 = pos + r * min.x + u * min.y + f * min.z;
+		// //bottom back right
+		// p8 = pos + r * max.x + u * min.y + f * min.z;
 
 		//get all the corners of the box and convert to world coordinates
 		//top forward right
@@ -139,6 +190,9 @@ public class Contains : MonoBehaviour
 		p7 = transform.TransformPoint(b.center + new Vector3(-b.size.x, -b.size.y, -b.size.z) * 0.5f);
 		//bottom back right
 		p8 = transform.TransformPoint(b.center + new Vector3(b.size.x, -b.size.y, -b.size.z) * 0.5f);
+
+		List<Vector3> crn = new List<Vector3>() {p1, p2, p3, p4, p5, p6, p7, p8};
+		Corners = crn;
 
 		//divide it up into a grid, put all grid points in a list i guess
 		//when t = 0, we are at first point, when t = 1, we are at second point
@@ -192,16 +246,18 @@ public class Contains : MonoBehaviour
 				if(hit.transform == myParent.transform)
 				{
 					if(NarrowDownValidSpawnPoints(hit.point))
-					PossibleSpawnPoints.Add(hit.point);
+					{
+						PossibleSpawnPoints.Add(new ReceptacleSpawnPoint(hit.point, b, this, myParent.GetComponent<SimObjPhysics>()));
+					}
 				}
 			}
-			
+
 			//didn't hit anything that could obstruct, so this point is good to go
 			//do additional checks here tos ee if the point is valid
 			else
 			{		
 				if(NarrowDownValidSpawnPoints(point + -(ydir * ydist)))
-				PossibleSpawnPoints.Add(point + -(ydir * ydist));
+				PossibleSpawnPoints.Add(new ReceptacleSpawnPoint(point + -(ydir * ydist), b, this, myParent.GetComponent<SimObjPhysics>()));
 			}
 		}
 
@@ -211,9 +267,9 @@ public class Contains : MonoBehaviour
 		GameObject agent = GameObject.Find("FPSController");
 
 		//sort the possible spawn points by distance to the Agent before returning
-		PossibleSpawnPoints.Sort(delegate(Vector3 one, Vector3 two)
+		PossibleSpawnPoints.Sort(delegate(ReceptacleSpawnPoint one, ReceptacleSpawnPoint two)
 		{
-			return Vector3.Distance(agent.transform.position, one).CompareTo(Vector3.Distance(agent.transform.position, two));
+			return Vector3.Distance(agent.transform.position, one.Point).CompareTo(Vector3.Distance(agent.transform.position, two.Point));
 		});
 
 		return PossibleSpawnPoints;
@@ -225,9 +281,16 @@ public class Contains : MonoBehaviour
 		//check if the point is in range of the agent at all
 		GameObject agent = GameObject.Find("FPSController");
 		PhysicsRemoteFPSAgentController agentController = agent.GetComponent<PhysicsRemoteFPSAgentController>();
+
+		//get agent's camera point, get point to check, find the distance from agent camera point to point to check
+
 		float maxvisdist = agentController.WhatIsAgentsMaxVisibleDistance();
 
-		if(Vector3.Distance(point, agent.transform.position) >= maxvisdist)
+		//set the distance so that it is within the radius maxvisdist from the agent
+		Vector3 tmpForCamera =  agent.GetComponent<PhysicsRemoteFPSAgentController>().m_Camera.transform.position;
+		tmpForCamera.y = point.y;
+
+		if(Vector3.Distance(point, tmpForCamera) >= maxvisdist)
 		return false;
 
 		//ok cool, it's within distance to the agent, now let's check 
@@ -265,17 +328,21 @@ public class Contains : MonoBehaviour
 		//these are the 8 points making up the corner of the box. If ANY parents of this object have non uniform scales,
         //these values will be off. Make sure that all parents in the heirarchy are at 1,1,1 scale and we can use these values
         //as a "valid area" for spawning objects inside of receptacles.
-		Gizmos.color = Color.green;
-        Gizmos.DrawCube(transform.TransformPoint(b.center + new Vector3(b.size.x, -b.size.y, b.size.z) * 0.5f), new Vector3(0.01f, 0.01f, 0.01f));
-		Gizmos.DrawCube(transform.TransformPoint(b.center + new Vector3(-b.size.x, -b.size.y, b.size.z) * 0.5f), new Vector3(0.01f, 0.01f, 0.01f));
-		Gizmos.DrawCube(transform.TransformPoint(b.center + new Vector3(-b.size.x, -b.size.y, -b.size.z) * 0.5f), new Vector3(0.01f, 0.01f, 0.01f));
-		Gizmos.DrawCube(transform.TransformPoint(b.center + new Vector3(b.size.x, -b.size.y, -b.size.z) * 0.5f), new Vector3(0.01f, 0.01f, 0.01f));
+		// Gizmos.color = Color.green;
+        // Gizmos.DrawCube(transform.TransformPoint(b.center + new Vector3(b.size.x, -b.size.y, b.size.z) * 0.5f), new Vector3(0.01f, 0.01f, 0.01f));
+		// Gizmos.DrawCube(transform.TransformPoint(b.center + new Vector3(-b.size.x, -b.size.y, b.size.z) * 0.5f), new Vector3(0.01f, 0.01f, 0.01f));
+		// Gizmos.DrawCube(transform.TransformPoint(b.center + new Vector3(-b.size.x, -b.size.y, -b.size.z) * 0.5f), new Vector3(0.01f, 0.01f, 0.01f));
+		// Gizmos.DrawCube(transform.TransformPoint(b.center + new Vector3(b.size.x, -b.size.y, -b.size.z) * 0.5f), new Vector3(0.01f, 0.01f, 0.01f));
 
-		Gizmos.DrawCube(transform.TransformPoint(b.center + new Vector3(b.size.x, b.size.y, b.size.z) * 0.5f), new Vector3(0.01f, 0.01f, 0.01f));
-		Gizmos.DrawCube(transform.TransformPoint(b.center + new Vector3(-b.size.x, b.size.y, b.size.z) * 0.5f), new Vector3(0.01f, 0.01f, 0.01f));
-		Gizmos.DrawCube(transform.TransformPoint(b.center + new Vector3(-b.size.x, b.size.y, -b.size.z) * 0.5f), new Vector3(0.01f, 0.01f, 0.01f));
-		Gizmos.DrawCube(transform.TransformPoint(b.center + new Vector3(b.size.x, b.size.y, -b.size.z) * 0.5f), new Vector3(0.01f, 0.01f, 0.01f));
+		// Gizmos.DrawCube(transform.TransformPoint(b.center + new Vector3(b.size.x, b.size.y, b.size.z) * 0.5f), new Vector3(0.01f, 0.01f, 0.01f));
+		// Gizmos.DrawCube(transform.TransformPoint(b.center + new Vector3(-b.size.x, b.size.y, b.size.z) * 0.5f), new Vector3(0.01f, 0.01f, 0.01f));
+		// Gizmos.DrawCube(transform.TransformPoint(b.center + new Vector3(-b.size.x, b.size.y, -b.size.z) * 0.5f), new Vector3(0.01f, 0.01f, 0.01f));
+		// Gizmos.DrawCube(transform.TransformPoint(b.center + new Vector3(b.size.x, b.size.y, -b.size.z) * 0.5f), new Vector3(0.01f, 0.01f, 0.01f));
 
+		foreach(Vector3 v in Corners)
+		{
+			Gizmos.DrawCube(v, new Vector3(0.01f, 0.01f, 0.01f));
+		}
 		// Gizmos.color = Color.blue;
 		// //Gizmos.DrawCube(b.ClosestPoint(GameObject.Find("FPSController").transform.position), new Vector3 (0.1f, 0.1f, 0.1f));
 
@@ -290,9 +357,9 @@ public class Contains : MonoBehaviour
 		Gizmos.color = Color.magenta;
 		if(validpointlist.Count > 0)
 		{
-			foreach(Vector3 yes in validpointlist)
+			foreach(ReceptacleSpawnPoint yes in validpointlist)
 			{
-				Gizmos.DrawCube(yes, new Vector3(0.01f, 0.01f, 0.01f));
+				Gizmos.DrawCube(yes.Point, new Vector3(0.01f, 0.01f, 0.01f));
 			}
 		}
 
