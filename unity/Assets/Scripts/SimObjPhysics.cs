@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityStandardAssets.Characters.FirstPerson;
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -210,12 +211,19 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		
 		//this is to enable kinematics if this object hits another object that isKinematic but needs to activate
 		//physics uppon being touched/collided
+
+		//add a check for if this is the handheld object, in which case dont't do this!
 		if(col.transform.GetComponentInParent<SimObjPhysics>())
 		{
-			SimObjPhysics colsop = col.transform.GetComponentInParent<SimObjPhysics>();
+			GameObject agent = GameObject.Find("FPSController");
+			if(!agent.transform.GetComponent<PhysicsRemoteFPSAgentController>().WhatAmIHolding() == this.transform)
+			{
+				SimObjPhysics colsop = col.transform.GetComponentInParent<SimObjPhysics>();
 
-			if(colsop.PrimaryProperty == SimObjPrimaryProperty.CanPickup)
-			colsop.transform.GetComponent<Rigidbody>().isKinematic = false;
+				if(colsop.PrimaryProperty == SimObjPrimaryProperty.CanPickup)
+				colsop.transform.GetComponent<Rigidbody>().isKinematic = false;
+			}
+
 		}
 	}
 	void OnCollisionExit (Collision col)	
