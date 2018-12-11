@@ -49,6 +49,9 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 	private Bounds bounds;
 	public Dictionary<Collider, ContactPoint[]> contactPointsDictionary = new Dictionary<Collider, ContactPoint[]>();
 
+	//if this object is a receptacle, get all valid spawn points from any child ReceptacleTriggerBoxes and sort them by distance to Agent
+	private List<ReceptacleSpawnPoint> MySpawnPoints = new List<ReceptacleSpawnPoint>();
+
 	//initial position object spawned in in case we want to reset the scene
 	//private Vector3 startPosition;   
 
@@ -114,7 +117,6 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 
 	public List<string> ReceptacleObjectIds
 	{
-		// XXX need to implement 
 		get
 		{
 			return this.Contains();
@@ -171,6 +173,32 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 			 ReceptacleTriggerBoxes != null;
 		}
 	}
+	
+	private void FindMySpawnPoints()
+	{
+		List<ReceptacleSpawnPoint> temp = new List<ReceptacleSpawnPoint>();
+
+		foreach(GameObject rtb in ReceptacleTriggerBoxes)
+		{
+			Contains containsScript = rtb.GetComponent<Contains>();
+			temp.AddRange(containsScript.GetValidSpawnPoints());
+		}
+
+		GameObject agent = GameObject.Find("FPSController");
+
+		temp.Sort(delegate(ReceptacleSpawnPoint one, ReceptacleSpawnPoint two)
+		{
+			return Vector3.Distance(agent.transform.position, one.Point).CompareTo(Vector3.Distance(agent.transform.position, two.Point));
+		});
+
+		MySpawnPoints = temp;
+	}
+
+	public List<ReceptacleSpawnPoint> ReturnMySpawnPoints()
+	{
+		FindMySpawnPoints();
+		return MySpawnPoints;
+	}
 
 	public void ResetContactPointsDictionary() {
 		contactPointsDictionary.Clear();
@@ -179,6 +207,16 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 	void OnCollisionEnter (Collision col)	
     {
 		contactPointsDictionary[col.collider] = col.contacts;
+		
+		//this is to enable kinematics if this object hits another object that isKinematic but needs to activate
+		//physics uppon being touched/collided
+		if(col.transform.GetComponentInParent<SimObjPhysics>())
+		{
+			SimObjPhysics colsop = col.transform.GetComponentInParent<SimObjPhysics>();
+
+			if(colsop.PrimaryProperty == SimObjPrimaryProperty.CanPickup)
+			colsop.transform.GetComponent<Rigidbody>().isKinematic = false;
+		}
 	}
 	void OnCollisionExit (Collision col)	
     {
