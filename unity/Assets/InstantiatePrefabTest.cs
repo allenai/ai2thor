@@ -277,7 +277,7 @@ public class InstantiatePrefabTest : MonoBehaviour
         int degreeIncrement = 45;
 
         //*** change this back after debugging */
-        int HowManyRotationsToCheck = 1;//360/degreeIncrement;
+        int HowManyRotationsToCheck = 360/degreeIncrement;
 
         List<RotationAndDistanceValues> ToCheck = new List<RotationAndDistanceValues>(); //we'll check 8 rotations for now, replace the 45 later if we want to adjust the amount of checks
 
@@ -304,7 +304,7 @@ public class InstantiatePrefabTest : MonoBehaviour
 
                     Offset = oabb.ClosestPoint(oabb.center + -Vector3.up * 10);
                     BoxBottom = new Plane(rsp.ReceptacleBox.transform.up, Offset);
-                    DistanceFromBoxBottomTosop = Math.Abs(BoxBottom.GetDistanceToPoint(sop.transform.position));
+                    DistanceFromBoxBottomTosop = Math.Abs(BoxBottom.GetDistanceToPoint(sop.transform.position)+ 0.01f);
 
                     ToCheck.Add(new RotationAndDistanceValues(DistanceFromBoxBottomTosop, sop.transform.rotation));
                 }
@@ -333,7 +333,7 @@ public class InstantiatePrefabTest : MonoBehaviour
 
                 Vector3 Offset = oabb.ClosestPoint(oabb.center + -Vector3.up * 10); //was using rsp.point
                 Plane BoxBottom = new Plane(rsp.ReceptacleBox.transform.up, Offset);
-                float DistanceFromBoxBottomTosop = Math.Abs(BoxBottom.GetDistanceToPoint(sop.transform.position) + 0.01f);
+                float DistanceFromBoxBottomTosop = Math.Abs(BoxBottom.GetDistanceToPoint(sop.transform.position));
 
                 ToCheck.Add(new RotationAndDistanceValues(DistanceFromBoxBottomTosop, sop.transform.rotation));
                 //ToCheck[i] = new RotationAndDistanceValues(DistanceFromBoxBottomTosop, sop.transform.rotation);
@@ -345,9 +345,9 @@ public class InstantiatePrefabTest : MonoBehaviour
         {
             //if spawn area is clear, spawn it and return true that we spawned it
             //origin point we are checking + sim object's upward vector * distance from bottom of box to the transform will give the center of the CheckSpawnArea box
-            if(CheckSpawnArea(sop, rsp.Point + rsp.ParentSimObjPhys.transform.up * quat.distance, quat.rotation, false))
+            if(CheckSpawnArea(sop, rsp.Point + rsp.ParentSimObjPhys.transform.up * (quat.distance + 0.01f), quat.rotation, false))
             {
-                print(quat.distance);
+                //print(quat.distance);
                 //now to do a check to make sure the sim object is contained within the Receptacle box, and doesn't have
                 //bits of it hanging out
 
@@ -378,9 +378,9 @@ public class InstantiatePrefabTest : MonoBehaviour
                 //sort corners so that first four corners are the corners closest to the spawn point we are checking against
                 SpawnCorners.Sort(delegate(Vector3 p1, Vector3 p2)
                 {
-                    
-                    return Vector3.Distance(new Vector3(0, p1.y, 0), new Vector3(0, rsp.Point.y, 0)).CompareTo(
-                    Vector3.Distance(new Vector3(0, p2.y, 0), new Vector3(0, rsp.Point.y, 0)));
+                    return Vector3.Distance(p1, rsp.Point).CompareTo(Vector3.Distance(p2, rsp.Point));
+                    // return Vector3.Distance(new Vector3(0, p1.y, 0), new Vector3(0, rsp.Point.y, 0)).CompareTo(
+                    // Vector3.Distance(new Vector3(0, p2.y, 0), new Vector3(0, rsp.Point.y, 0)));
 
                 });
 
@@ -410,7 +410,7 @@ public class InstantiatePrefabTest : MonoBehaviour
                 //parent to the Objects transform
                 sop.transform.SetParent(topObject.transform);
                 //translate position of the target sim object to the rsp.Point and offset in local y up
-                sop.transform.position = rsp.Point + rsp.ReceptacleBox.transform.up * quat.distance;//rsp.Point + sop.transform.up * DistanceFromBottomOfBoxToTransform;
+                sop.transform.position = rsp.Point + rsp.ReceptacleBox.transform.up * (quat.distance + 0.01f);//rsp.Point + sop.transform.up * DistanceFromBottomOfBoxToTransform;
                 sop.transform.rotation = quat.rotation;
 
                 //set true if we want objects to be stationary when placed. (if placed on uneven surface, object remains stationary)
@@ -423,7 +423,7 @@ public class InstantiatePrefabTest : MonoBehaviour
                     sop.GetComponent<Rigidbody>().isKinematic = false;
                 }
 
-                //Destroy(placeholderPosition.gameObject);
+                
                 #if UNITY_EDITOR
                 Debug.Log(sop.name + " succesfully spawned in " +rsp.ParentSimObjPhys.name + " at coordinate " + rsp.Point);
                 #endif
@@ -432,9 +432,9 @@ public class InstantiatePrefabTest : MonoBehaviour
             }
         }
        
-       //reset rotation if no valid spawns found
+        //reset rotation if no valid spawns found
         sop.transform.rotation = originalRot;
-       // Destroy(placeholderPosition.gameObject);
+        
 
         //oh now we couldn't spawn it, all the spawn areas were not clear
         Debug.Log("Spawn Area not clear at" + rsp.Point + ", failed to spawn");
@@ -464,14 +464,22 @@ public class InstantiatePrefabTest : MonoBehaviour
         //location and orientation of the spawn area
         Transform placeholderPosition = new GameObject("placeholderPosition").transform;
 
+        //this is now in the exact position the object will spawn at
         placeholderPosition.transform.position = position;
 
-        GameObject inst = Instantiate(placeholderPosition.gameObject, placeholderPosition, false);
-        inst.transform.localPosition = simObj.BoundingBox.GetComponent<BoxCollider>().center;
+        //get how much and in what direction the bounding box might be offset from its parent sim object
+        //Vector3 OffsetPos = simObj.BoundingBox.transform.position - simObj.transform.position;
 
-        BoxCollider instantbox = inst.AddComponent<BoxCollider>();
-        instantbox.isTrigger = true;
-        instantbox.size = simObj.BoundingBox.GetComponent<BoxCollider>().size;
+        GameObject placeBox = Instantiate(simObj.BoundingBox, position /*+ OffsetPos*/, placeholderPosition.transform.rotation);
+        placeBox.transform.SetParent(placeholderPosition);
+        placeBox.transform.localPosition = simObj.BoundingBox.transform.localPosition;
+
+        // GameObject inst = Instantiate(placeholderPosition.gameObject, placeholderPosition, false);
+        // inst.transform.localPosition = simObj.BoundingBox.GetComponent<BoxCollider>().center;
+
+        // BoxCollider instantbox = inst.AddComponent<BoxCollider>();
+        // instantbox.isTrigger = true;
+        // instantbox.size = simObj.BoundingBox.GetComponent<BoxCollider>().size;
 
         //rotate it after creating the offset so that the offset's local position is maintained
         placeholderPosition.transform.rotation = rotation;
@@ -493,46 +501,79 @@ public class InstantiatePrefabTest : MonoBehaviour
 			layermask = (1 << 8) | (1 << 10);
 		}
 
-        //BoxCollider sobb = simObj.BoundingBox.GetComponent<BoxCollider>();
+        //print("extents:" + placeBox.GetComponent<BoxCollider>().size);
 
-        Collider[] hitColliders = Physics.OverlapBox(inst.transform.position,
-                                                     instantbox.size / 2, rotation,
+        Collider[] hitColliders = Physics.OverlapBox(placeBox.transform.position,
+                                                     placeBox.GetComponent<BoxCollider>().size / 2.0f, placeholderPosition.transform.rotation,
                                                      layermask, QueryTriggerInteraction.Ignore);
+
+        BoxCollider pbbc = placeBox.GetComponent<BoxCollider>();
+
+        // Collider[] hitColliders = Physics.OverlapBox(inst.transform.position,
+        //                                              instantbox.size / 2, rotation,
+        //                                              layermask, QueryTriggerInteraction.Ignore);
         
         //keep track of all 8 corners of the OverlapBox
         List<Vector3> corners = new List<Vector3>();
         //bottom forward right
-        corners.Add(inst.transform.TransformPoint(instantbox.center + new Vector3(instantbox.size.x, -instantbox.size.y, instantbox.size.z) * 0.5f));
+        corners.Add(placeBox.transform.TransformPoint(pbbc.center + new Vector3(pbbc.size.x, -pbbc.size.y, pbbc.size.z) * 0.5f));
         //bottom forward left
-        corners.Add(inst.transform.TransformPoint(instantbox.center + new Vector3(-instantbox.size.x, -instantbox.size.y, instantbox.size.z) * 0.5f));
+        corners.Add(placeBox.transform.TransformPoint(pbbc.center + new Vector3(-pbbc.size.x, -pbbc.size.y, pbbc.size.z) * 0.5f));
         //bottom back left
-        corners.Add(inst.transform.TransformPoint(instantbox.center + new Vector3(-instantbox.size.x, -instantbox.size.y, -instantbox.size.z) * 0.5f));
+        corners.Add(placeBox.transform.TransformPoint(pbbc.center + new Vector3(-pbbc.size.x, -pbbc.size.y, -pbbc.size.z) * 0.5f));
         //bottom back right
-        corners.Add(inst.transform.TransformPoint(instantbox.center+ new Vector3(instantbox.size.x, -instantbox.size.y, -instantbox.size.z) * 0.5f));
+        corners.Add(placeBox.transform.TransformPoint(pbbc.center+ new Vector3(pbbc.size.x, -pbbc.size.y, -pbbc.size.z) * 0.5f));
 
         //top forward right
-        corners.Add(inst.transform.TransformPoint(instantbox.center + new Vector3(instantbox.size.x, instantbox.size.y, instantbox.size.z) * 0.5f));
+        corners.Add(placeBox.transform.TransformPoint(pbbc.center + new Vector3(pbbc.size.x, pbbc.size.y, pbbc.size.z) * 0.5f));
         //top forward left
-        corners.Add(inst.transform.TransformPoint(instantbox.center + new Vector3(-instantbox.size.x, instantbox.size.y, instantbox.size.z) * 0.5f));
+        corners.Add(placeBox.transform.TransformPoint(pbbc.center + new Vector3(-pbbc.size.x, pbbc.size.y, pbbc.size.z) * 0.5f));
         //top back left
-        corners.Add(inst.transform.TransformPoint(instantbox.center + new Vector3(-instantbox.size.x, instantbox.size.y, -instantbox.size.z) * 0.5f));
+        corners.Add(placeBox.transform.TransformPoint(pbbc.center + new Vector3(-pbbc.size.x, pbbc.size.y, -pbbc.size.z) * 0.5f));
         //top back right
-        corners.Add(inst.transform.TransformPoint(instantbox.center+ new Vector3(instantbox.size.x, instantbox.size.y, -instantbox.size.z) * 0.5f));
+        corners.Add(placeBox.transform.TransformPoint(pbbc.center+ new Vector3(pbbc.size.x, pbbc.size.y, -pbbc.size.z) * 0.5f));
+
+        // //bottom forward right
+        // corners.Add(inst.transform.TransformPoint(instantbox.center + new Vector3(instantbox.size.x, -instantbox.size.y, instantbox.size.z) * 0.5f));
+        // //bottom forward left
+        // corners.Add(inst.transform.TransformPoint(instantbox.center + new Vector3(-instantbox.size.x, -instantbox.size.y, instantbox.size.z) * 0.5f));
+        // //bottom back left
+        // corners.Add(inst.transform.TransformPoint(instantbox.center + new Vector3(-instantbox.size.x, -instantbox.size.y, -instantbox.size.z) * 0.5f));
+        // //bottom back right
+        // corners.Add(inst.transform.TransformPoint(instantbox.center+ new Vector3(instantbox.size.x, -instantbox.size.y, -instantbox.size.z) * 0.5f));
+
+        // //top forward right
+        // corners.Add(inst.transform.TransformPoint(instantbox.center + new Vector3(instantbox.size.x, instantbox.size.y, instantbox.size.z) * 0.5f));
+        // //top forward left
+        // corners.Add(inst.transform.TransformPoint(instantbox.center + new Vector3(-instantbox.size.x, instantbox.size.y, instantbox.size.z) * 0.5f));
+        // //top back left
+        // corners.Add(inst.transform.TransformPoint(instantbox.center + new Vector3(-instantbox.size.x, instantbox.size.y, -instantbox.size.z) * 0.5f));
+        // //top back right
+        // corners.Add(inst.transform.TransformPoint(instantbox.center+ new Vector3(instantbox.size.x, instantbox.size.y, -instantbox.size.z) * 0.5f));
         
         SpawnCorners = corners;
 
         #if UNITY_EDITOR
-		m_Started = true;      
-        gizmopos = inst.transform.position;
-        gizmoscale = simObj.BoundingBox.GetComponent<BoxCollider>().size;
-        gizmoquaternion = rotation;
+		m_Started = true;     
+        gizmopos = placeBox.transform.TransformPoint(pbbc.center); 
+        //gizmopos = inst.transform.position;
+        gizmoscale = pbbc.size;
+        //gizmoscale = simObj.BoundingBox.GetComponent<BoxCollider>().size;
+        gizmoquaternion = placeholderPosition.transform.rotation;
         #endif
+
         //destroy the dummy object, we don't need it anymore
         Destroy(placeholderPosition.gameObject);
 
         //if a collider was hit, then the space is not clear to spawn
 		if (hitColliders.Length > 0)
 		{
+            // print(hitColliders.Length);
+            // foreach(Collider c in hitColliders)
+            // {
+            //     print(c.name);
+            //     print(c.transform.position);
+            // }
 			return false;
 		}
 
