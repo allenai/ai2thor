@@ -121,8 +121,8 @@ public enum SimObjType : int
 	Potato = 23,
 	Mug = 24,
 	Plate = 25,
-	TableTop = 26,//not used in physics(?)
-	CounterTop = 27, //not used in physics (?)
+	TableTop = 26,
+	CounterTop = 27,
 	GarbageCan = 28,
 	Omelette = 29,
 	EggShell = 30,
@@ -178,11 +178,11 @@ public enum SimObjType : int
 	Pen = 80,
 	Pencil = 81,
 	Blinds = 82,
-	Mirror = 83, //kinda not used in physics
+	Mirror = 83, //kinda not used in physics? maybe multiple types - Small Mirror, Full Length Mirror etc.
 	TowelHolder = 84,
 	Towel = 85,
 	Watch = 86,
-	MiscTableObject = 87,
+	MiscTableObject = 87,//not sure what this is, not used for physics
 
     ArmChair = 88,
     BaseballBat = 89,

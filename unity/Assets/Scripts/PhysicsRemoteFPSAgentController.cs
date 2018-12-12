@@ -1870,7 +1870,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
             if(ItemInHand == null)
             {
                 errorMessage = "Can't place an object if Agent isn't holding anything";
+                #if UNITY_EDITOR
                 Debug.Log(errorMessage);
+                #endif
                 actionFinished(false);
                 return;
             }
@@ -1906,8 +1908,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
             else
             {
-                errorMessage = "No valid points to place object found";
+                errorMessage = "No valid positions to place object found";
+                #if UNITY_EDITOR
                 Debug.Log(errorMessage);
+                #endif
                 actionFinished(false);
             }
         }
