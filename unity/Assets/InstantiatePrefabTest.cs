@@ -24,14 +24,14 @@ public class InstantiatePrefabTest : MonoBehaviour
     //uses the PlaceIn action
     //The object placed must have the entirety of it's object oriented bounding box (all 8 corners) enclosed within the Receptacle's Box
     private List<SimObjType> InReceptacles = new List<SimObjType>() 
-    {SimObjType.Drawer, SimObjType.Cabinet, SimObjType.Closet, SimObjType.Fridge};
+    {SimObjType.Drawer, SimObjType.Cabinet, SimObjType.Closet, SimObjType.Fridge, SimObjType.Microwave};
 
     //uses the PlaceOn action
     //the object placed only needs the bottom most 4 corners within the Receptacle Box to be placed validly, this allows
     //things like a tall cup to have the top half of it sticking out of the receptacle box when placed on a table
     private List<SimObjType> OnReceptacles = new List <SimObjType>()
     {SimObjType.TableTop, SimObjType.Dresser, SimObjType.CounterTop, SimObjType.Shelf, SimObjType.ArmChair,
-     SimObjType.Sofa, SimObjType.Ottoman};
+     SimObjType.Sofa, SimObjType.Ottoman, SimObjType.StoveBurner};
 
     //Uses the PlaceIn action
     //while these receptacles have things placed "in" them, they use the logic of OnReceptacles - Only the bottom 4 corners must be within the
@@ -501,13 +501,13 @@ public class InstantiatePrefabTest : MonoBehaviour
 			layermask = (1 << 8) | (1 << 10);
 		}
 
+        BoxCollider pbbc = placeBox.GetComponent<BoxCollider>();
         //print("extents:" + placeBox.GetComponent<BoxCollider>().size);
 
-        Collider[] hitColliders = Physics.OverlapBox(placeBox.transform.position,
+        Collider[] hitColliders = Physics.OverlapBox(placeBox.transform.TransformPoint(pbbc.center)/* placeBox.transform.position*/,
                                                      placeBox.GetComponent<BoxCollider>().size / 2.0f, placeholderPosition.transform.rotation,
                                                      layermask, QueryTriggerInteraction.Ignore);
 
-        BoxCollider pbbc = placeBox.GetComponent<BoxCollider>();
 
         // Collider[] hitColliders = Physics.OverlapBox(inst.transform.position,
         //                                              instantbox.size / 2, rotation,
@@ -568,12 +568,13 @@ public class InstantiatePrefabTest : MonoBehaviour
         //if a collider was hit, then the space is not clear to spawn
 		if (hitColliders.Length > 0)
 		{
+            
             // print(hitColliders.Length);
-            // foreach(Collider c in hitColliders)
-            // {
-            //     print(c.name);
-            //     print(c.transform.position);
-            // }
+            foreach(Collider c in hitColliders)
+            {
+                print(c.name);
+                print(c.transform.position);
+            }
 			return false;
 		}
 
