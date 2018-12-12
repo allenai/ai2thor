@@ -212,9 +212,9 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		//this is to enable kinematics if this object hits another object that isKinematic but needs to activate
 		//physics uppon being touched/collided
 
-		//add a check for if this is the handheld object, in which case dont't do this!
 		if(col.transform.GetComponentInParent<SimObjPhysics>())
 		{
+			//add a check for if this is the handheld object, in which case dont't do this!
 			GameObject agent = GameObject.Find("FPSController");
 			if(!agent.transform.GetComponent<PhysicsRemoteFPSAgentController>().WhatAmIHolding() == this.transform)
 			{

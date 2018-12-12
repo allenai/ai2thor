@@ -189,7 +189,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         break;
                     }
 
-                case "placeon":
+                case "place":
                     {
                         ServerAction action = new ServerAction();
                         action.action = "PlaceHeldObject";
@@ -210,7 +210,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 				case "spawn":
                     {
                         ServerAction action = new ServerAction();
-                        Debug.Log(action.objectVariation);
+                        //Debug.Log(action.objectVariation);
                         int objectVariation = 0;
                         if (splitcommand.Length == 2)
                         {

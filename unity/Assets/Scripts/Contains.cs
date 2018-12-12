@@ -60,7 +60,7 @@ public class Contains : MonoBehaviour
 		SimObjPhysics go = gameObject.GetComponentInParent<SimObjPhysics>();
 		if(!go.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.Receptacle))
 		{
-			Debug.LogError(go.transform.name + " is missing ReceptacleTriggerBoxes please hook them up");
+			Debug.LogError(go.transform.name + " is missing Receptacle Secondary Property! please hook them up");
 		}
 		#endif
 
@@ -73,7 +73,8 @@ public class Contains : MonoBehaviour
 	// Update is called once per frame
 	void Update()
 	{
-		GetValidSpawnPoints();
+		//turn this on for debugging spawnpoints in editor
+		//GetValidSpawnPoints();
 	}
 
 	private void FixedUpdate()
@@ -146,32 +147,6 @@ public class Contains : MonoBehaviour
 
 		BoxCollider b = GetComponent<BoxCollider>();
 
-		// Vector3 pos = b.transform.position;
-		// Vector3 f = b.transform.forward;
-		// Vector3 r = b.transform.right;
-		// Vector3 u = b.transform.up;
-
-		// Vector3 min = b.transform.TransformPoint(b.center - b.size * 0.5f) - pos;
-		// Vector3 max = b.transform.TransformPoint(b.center + b.size * 0.5f) - pos;
-
-		// //top forward right
-		// p1 = pos + r * max.x + u * max.y + f * max.z;
-		// //top forward left
-		// p2 = pos + r * min.x + u * max.y + f * max.z;
-		// //top back left
-		// p3 = pos + r * min.x + u * max.y + f * min.z;
-		// //top back right
-		// p4 = pos + r * max.x + u * max.y + f * min.z;
-
-		// //bottom forward right
-		// p5 = pos + r * max.x + u * min.y + f * max.z;
-		// //bottom forward left
-		// p6 = pos + r * min.x + u * min.y + f * max.z;
-		// //bottom back left
-		// p7 = pos + r * min.x + u * min.y + f * min.z;
-		// //bottom back right
-		// p8 = pos + r * max.x + u * min.y + f * min.z;
-
 		//get all the corners of the box and convert to world coordinates
 		//top forward right
 		p1 = transform.TransformPoint(b.center + new Vector3(b.size.x, b.size.y, b.size.z) * 0.5f);
@@ -199,7 +174,7 @@ public class Contains : MonoBehaviour
 		//so we need to figure out how to dividke up t to get the grid we want
 
 		//so first divide up the distance from p1 to p2 into lets say 5 sections, so t increments by 0.2
-		int gridsize = 5; //number of grid boxes we want
+		int gridsize = 10; //number of grid boxes we want
 		int linepoints = gridsize + 1; //number of points on the line we need to make the number of grid boxes
 		float lineincrement =  1.0f / gridsize; //increment on the line to distribute the gridpoints
 
@@ -299,6 +274,7 @@ public class Contains : MonoBehaviour
 		return true;
 
 		return false;
+		
 	}
 
 	//used to check if a given Vector3 is inside this receptacle box in world space
@@ -328,32 +304,24 @@ public class Contains : MonoBehaviour
 		//these are the 8 points making up the corner of the box. If ANY parents of this object have non uniform scales,
         //these values will be off. Make sure that all parents in the heirarchy are at 1,1,1 scale and we can use these values
         //as a "valid area" for spawning objects inside of receptacles.
-		// Gizmos.color = Color.green;
-        // Gizmos.DrawCube(transform.TransformPoint(b.center + new Vector3(b.size.x, -b.size.y, b.size.z) * 0.5f), new Vector3(0.01f, 0.01f, 0.01f));
-		// Gizmos.DrawCube(transform.TransformPoint(b.center + new Vector3(-b.size.x, -b.size.y, b.size.z) * 0.5f), new Vector3(0.01f, 0.01f, 0.01f));
-		// Gizmos.DrawCube(transform.TransformPoint(b.center + new Vector3(-b.size.x, -b.size.y, -b.size.z) * 0.5f), new Vector3(0.01f, 0.01f, 0.01f));
-		// Gizmos.DrawCube(transform.TransformPoint(b.center + new Vector3(b.size.x, -b.size.y, -b.size.z) * 0.5f), new Vector3(0.01f, 0.01f, 0.01f));
+		Gizmos.color = Color.green;
+        Gizmos.DrawCube(transform.TransformPoint(b.center + new Vector3(b.size.x, -b.size.y, b.size.z) * 0.5f), new Vector3(0.01f, 0.01f, 0.01f));
+		Gizmos.DrawCube(transform.TransformPoint(b.center + new Vector3(-b.size.x, -b.size.y, b.size.z) * 0.5f), new Vector3(0.01f, 0.01f, 0.01f));
+		Gizmos.DrawCube(transform.TransformPoint(b.center + new Vector3(-b.size.x, -b.size.y, -b.size.z) * 0.5f), new Vector3(0.01f, 0.01f, 0.01f));
+		Gizmos.DrawCube(transform.TransformPoint(b.center + new Vector3(b.size.x, -b.size.y, -b.size.z) * 0.5f), new Vector3(0.01f, 0.01f, 0.01f));
 
-		// Gizmos.DrawCube(transform.TransformPoint(b.center + new Vector3(b.size.x, b.size.y, b.size.z) * 0.5f), new Vector3(0.01f, 0.01f, 0.01f));
-		// Gizmos.DrawCube(transform.TransformPoint(b.center + new Vector3(-b.size.x, b.size.y, b.size.z) * 0.5f), new Vector3(0.01f, 0.01f, 0.01f));
-		// Gizmos.DrawCube(transform.TransformPoint(b.center + new Vector3(-b.size.x, b.size.y, -b.size.z) * 0.5f), new Vector3(0.01f, 0.01f, 0.01f));
-		// Gizmos.DrawCube(transform.TransformPoint(b.center + new Vector3(b.size.x, b.size.y, -b.size.z) * 0.5f), new Vector3(0.01f, 0.01f, 0.01f));
+		Gizmos.DrawCube(transform.TransformPoint(b.center + new Vector3(b.size.x, b.size.y, b.size.z) * 0.5f), new Vector3(0.01f, 0.01f, 0.01f));
+		Gizmos.DrawCube(transform.TransformPoint(b.center + new Vector3(-b.size.x, b.size.y, b.size.z) * 0.5f), new Vector3(0.01f, 0.01f, 0.01f));
+		Gizmos.DrawCube(transform.TransformPoint(b.center + new Vector3(-b.size.x, b.size.y, -b.size.z) * 0.5f), new Vector3(0.01f, 0.01f, 0.01f));
+		Gizmos.DrawCube(transform.TransformPoint(b.center + new Vector3(b.size.x, b.size.y, -b.size.z) * 0.5f), new Vector3(0.01f, 0.01f, 0.01f));
 
-		foreach(Vector3 v in Corners)
-		{
-			Gizmos.DrawCube(v, new Vector3(0.01f, 0.01f, 0.01f));
-		}
-		// Gizmos.color = Color.blue;
-		// //Gizmos.DrawCube(b.ClosestPoint(GameObject.Find("FPSController").transform.position), new Vector3 (0.1f, 0.1f, 0.1f));
-
-		// if(gridVisual.Length > 0)
+		// foreach(Vector3 v in Corners)
 		// {
-		// 	foreach (Vector3 yes in gridVisual)
-		// 	{
-		// 		Gizmos.DrawCube(yes, new Vector3(0.01f, 0.01f, 0.01f));
-		// 	}
+		// 	Gizmos.DrawCube(v, new Vector3(0.01f, 0.01f, 0.01f));
 		// }
 
+		// Gizmos.color = Color.blue;
+		// //Gizmos.DrawCube(b.ClosestPoint(GameObject.Find("FPSController").transform.position), new Vector3 (0.1f, 0.1f, 0.1f));
 		Gizmos.color = Color.magenta;
 		if(validpointlist.Count > 0)
 		{
