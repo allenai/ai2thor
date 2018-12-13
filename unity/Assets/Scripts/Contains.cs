@@ -139,6 +139,7 @@ public class Contains : MonoBehaviour
 		return ids;
 	}
 
+	//generate a grid of potential spawn points
 	public List<ReceptacleSpawnPoint> GetValidSpawnPoints()
 	{
 		List<ReceptacleSpawnPoint> PossibleSpawnPoints = new List<ReceptacleSpawnPoint>();
@@ -169,17 +170,15 @@ public class Contains : MonoBehaviour
 		List<Vector3> crn = new List<Vector3>() {p1, p2, p3, p4, p5, p6, p7, p8};
 		Corners = crn;
 
-		//divide it up into a grid, put all grid points in a list i guess
-		//when t = 0, we are at first point, when t = 1, we are at second point
-		//so we need to figure out how to dividke up t to get the grid we want
 
-		//so first divide up the distance from p1 to p2 into lets say 5 sections, so t increments by 0.2
+		//so lets make a grid, we can parametize the gridsize value later, for now we'll adjust it here
 		int gridsize = 10; //number of grid boxes we want
 		int linepoints = gridsize + 1; //number of points on the line we need to make the number of grid boxes
 		float lineincrement =  1.0f / gridsize; //increment on the line to distribute the gridpoints
 
 		Vector3[] PointsOnLineXdir = new Vector3[linepoints];
 
+		//these are all the points on the grid on the top of the receptacle box in local space
 		List<Vector3> gridpoints = new List<Vector3>();
 
 		Vector3 zdir = (p4 - p1).normalized; //direction in the -z direction to finish drawing grid
@@ -204,7 +203,9 @@ public class Contains : MonoBehaviour
 		}
 		
 		//****** */debug draw the grid points as gizmos
-		gridVisual = gridpoints.ToArray();
+		// #if UNITY_EDITOR
+		// gridVisual = gridpoints.ToArray();
+		// #endif
 
 		foreach(Vector3 point in gridpoints)
 		{
@@ -213,7 +214,8 @@ public class Contains : MonoBehaviour
 			// Debug.DrawLine(point, point + -(ydir * ydist), Color.red, 100f);
 			// #endif
 
-			//quick test to see if this point on the grid is blocked by anything
+			//quick test to see if this point on the grid is blocked by anything by raycasting down
+			//toward it
 			RaycastHit hit;
 			if(Physics.Raycast(point, -ydir, out hit, ydist, 1 << 8, QueryTriggerInteraction.Ignore))
 			{
@@ -227,25 +229,28 @@ public class Contains : MonoBehaviour
 				}
 			}
 
+			Vector3 BottomPoint = point + -(ydir * ydist);
 			//didn't hit anything that could obstruct, so this point is good to go
 			//do additional checks here tos ee if the point is valid
-			else
-			{		
-				if(NarrowDownValidSpawnPoints(point + -(ydir * ydist)))
-				PossibleSpawnPoints.Add(new ReceptacleSpawnPoint(point + -(ydir * ydist), b, this, myParent.GetComponent<SimObjPhysics>()));
-			}
+			// else
+			// {		
+				if(NarrowDownValidSpawnPoints(BottomPoint))
+				PossibleSpawnPoints.Add(new ReceptacleSpawnPoint(BottomPoint, b, this, myParent.GetComponent<SimObjPhysics>()));
+			//}
 		}
 
 		//****** */debug draw the spawn points as well
+		#if UNITY_EDITOR
 		validpointlist = PossibleSpawnPoints;
+		#endif
 
 		GameObject agent = GameObject.Find("FPSController");
 
 		//sort the possible spawn points by distance to the Agent before returning
-		PossibleSpawnPoints.Sort(delegate(ReceptacleSpawnPoint one, ReceptacleSpawnPoint two)
-		{
-			return Vector3.Distance(agent.transform.position, one.Point).CompareTo(Vector3.Distance(agent.transform.position, two.Point));
-		});
+		// PossibleSpawnPoints.Sort(delegate(ReceptacleSpawnPoint one, ReceptacleSpawnPoint two)
+		// {
+		// 	return Vector3.Distance(agent.transform.position, one.Point).CompareTo(Vector3.Distance(agent.transform.position, two.Point));
+		// });
 
 		return PossibleSpawnPoints;
 	}
@@ -265,20 +270,40 @@ public class Contains : MonoBehaviour
 		Vector3 tmpForCamera =  agent.GetComponent<PhysicsRemoteFPSAgentController>().m_Camera.transform.position;
 		tmpForCamera.y = point.y;
 
+		//automatically rule out a point if it's beyond our max distance of visibility
 		if(Vector3.Distance(point, tmpForCamera) >= maxvisdist)
 		return false;
 
 		//ok cool, it's within distance to the agent, now let's check 
 		//if the point is within the viewport of the agent as well
-		if(agentController.CheckIfPointIsInViewport(point))
-		return true;
+
+		Camera agentCam = agent.GetComponent<PhysicsRemoteFPSAgentController>().m_Camera;
+		if(point.y < agentCam.transform.position.y)
+		{
+			//do this check if the point's y value is below the camera's y value
+			//this check will be a raycast vision check from the camera to the point exactly
+			if(agentController.CheckIfPointIsInViewport(point))
+			return true;
+		}
+		
+		else
+		{
+			//do this check if the point's y value is above the agent camera. This means we are
+			//trying to place an object on a shelf or something high up that we can't quite reach
+			//in this case, modify the point that is checked for visibility by adding a little bit to the y
+
+			//might want to adjust this offset amount, or even move this check to ensure object visibility after the
+			//checkspawnarea corners are generated?
+			if(agentController.CheckIfPointIsInViewport(point + new Vector3(0, 0.05f, 0)))
+			return true;
+		}
 
 		return false;
 		
 	}
 
 	//used to check if a given Vector3 is inside this receptacle box in world space
-	//use this to check if a SimObjectPhysics's bottom four corners are contained within this receptacle, if not then it doesn't fit
+	//use this to check if a SimObjectPhysics's corners are contained within this receptacle, if not then it doesn't fit
 	public bool CheckIfPointIsInsideReceptacleTriggerBox(Vector3 point)
 	{
 		BoxCollider myBox = gameObject.GetComponent<BoxCollider>();
