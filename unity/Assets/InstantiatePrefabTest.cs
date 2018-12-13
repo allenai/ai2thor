@@ -21,23 +21,23 @@ public class InstantiatePrefabTest : MonoBehaviour
 
     private List<Vector3> SpawnCorners = new List<Vector3>();
 
-    //uses the PlaceIn action
-    //The object placed must have the entirety of it's object oriented bounding box (all 8 corners) enclosed within the Receptacle's Box
-    private List<SimObjType> InReceptacles = new List<SimObjType>() 
-    {SimObjType.Drawer, SimObjType.Cabinet, SimObjType.Closet, SimObjType.Fridge, SimObjType.Microwave};
+    // //uses the PlaceIn action
+    // //The object placed must have the entirety of it's object oriented bounding box (all 8 corners) enclosed within the Receptacle's Box
+    // private List<SimObjType> InReceptacles = new List<SimObjType>() 
+    // {SimObjType.Drawer, SimObjType.Cabinet, SimObjType.Closet, SimObjType.Fridge, SimObjType.Microwave};
 
-    //uses the PlaceOn action
-    //the object placed only needs the bottom most 4 corners within the Receptacle Box to be placed validly, this allows
-    //things like a tall cup to have the top half of it sticking out of the receptacle box when placed on a table
-    private List<SimObjType> OnReceptacles = new List <SimObjType>()
-    {SimObjType.TableTop, SimObjType.Dresser, SimObjType.CounterTop, SimObjType.Shelf, SimObjType.ArmChair,
-     SimObjType.Sofa, SimObjType.Ottoman, SimObjType.StoveBurner};
+    // //uses the PlaceOn action
+    // //the object placed only needs the bottom most 4 corners within the Receptacle Box to be placed validly, this allows
+    // //things like a tall cup to have the top half of it sticking out of the receptacle box when placed on a table
+    // private List<SimObjType> OnReceptacles = new List <SimObjType>()
+    // {SimObjType.TableTop, SimObjType.Dresser, SimObjType.CounterTop, SimObjType.Shelf, SimObjType.ArmChair,
+    //  SimObjType.Sofa, SimObjType.Ottoman, SimObjType.StoveBurner};
 
-    //Uses the PlaceIn action
-    //while these receptacles have things placed "in" them, they use the logic of OnReceptacles - Only the bottom 4 corners must be within the
-    //receptacle box for the placement to be valid. This means we can have a Spoon placed IN a cup, but the top half of the spoon is still allowed to stick out
-    private List<SimObjType> InReceptaclesThatOnlyCheckBottomFourCorners = new List <SimObjType>()
-    { SimObjType.Cup, SimObjType.Bowl, SimObjType.GarbageCan, SimObjType.Box, SimObjType.Sink,};
+    // //Uses the PlaceIn action
+    // //while these receptacles have things placed "in" them, they use the logic of OnReceptacles - Only the bottom 4 corners must be within the
+    // //receptacle box for the placement to be valid. This means we can have a Spoon placed IN a cup, but the top half of the spoon is still allowed to stick out
+    // private List<SimObjType> InReceptaclesThatOnlyCheckBottomFourCorners = new List <SimObjType>()
+    // { SimObjType.Cup, SimObjType.Bowl, SimObjType.GarbageCan, SimObjType.Box, SimObjType.Sink,};
 
 	// Use this for initialization
 	void Start()
@@ -194,11 +194,6 @@ public class InstantiatePrefabTest : MonoBehaviour
         return null;
     }
 
-    public void RandomPlaceObjects()
-    {
-
-    }
-
     //call PlaceObject for all points in the passed in ReceptacleSpawnPoint list
     //The list should be sorted by distance to the Agent, so closer points will be checked first.
     public bool PlaceObjectReceptacle(List<ReceptacleSpawnPoint> rsp, SimObjPhysics sop, bool PlaceStationary)
@@ -260,23 +255,10 @@ public class InstantiatePrefabTest : MonoBehaviour
         sop.transform.rotation = rsp.ReceptacleBox.transform.rotation;
         sop.GetComponent<Rigidbody>().velocity = Vector3.zero;
 
-        // //create a temporary object, match sop's rot, pos, and then make it a child
-        // Transform placeholderPosition = new GameObject("placeholderPosition").transform;
-        // placeholderPosition.transform.rotation = sop.transform.rotation;
-        // placeholderPosition.transform.position = sop.transform.position;
-
-        // // BoxCollider pbox = placeholderPosition.transform.gameObject.AddComponent<BoxCollider>();
-        // // pbox.size = oabb.size;
-        // // pbox.center = oabb.center;
-        // // pbox.isTrigger = true;
-
-        // placeholderPosition.SetParent(sop.transform);
-
-        //check spawn area using 4 different rotations, +45 on local y axis each time to see if it'll fit?
+        //degree increment the object will be checked on in each x, y, z local axis
         //we can probably add a thing to make this check more rotations later...
         int degreeIncrement = 45;
 
-        //*** change this back after debugging */
         int HowManyRotationsToCheck = 360/degreeIncrement;
 
         List<RotationAndDistanceValues> ToCheck = new List<RotationAndDistanceValues>(); //we'll check 8 rotations for now, replace the 45 later if we want to adjust the amount of checks
@@ -354,19 +336,19 @@ public class InstantiatePrefabTest : MonoBehaviour
                 //Check the ReceptacleBox's Sim Object component to see what Type it is. Then check to
                 //see if the type is the kind where the Object placed must be completely contained or just the bottom 4 corners contained
                 int HowManyCornersToCheck = 0;
-                if(OnReceptacles.Contains(rsp.ParentSimObjPhys.ObjType))
+                if(ReceptacleRestrictions.OnReceptacles.Contains(rsp.ParentSimObjPhys.ObjType))
                 {
                     //check that only the bottom 4 corners are in bounds
                     HowManyCornersToCheck = 4;
                 }
 
-                if(InReceptacles.Contains(rsp.ParentSimObjPhys.ObjType))
+                if(ReceptacleRestrictions.InReceptacles.Contains(rsp.ParentSimObjPhys.ObjType))
                 {
                     //check that all 8 corners are within bounds
                     HowManyCornersToCheck = 8;
                 }
 
-                if(InReceptaclesThatOnlyCheckBottomFourCorners.Contains(rsp.ParentSimObjPhys.ObjType))
+                if(ReceptacleRestrictions.InReceptaclesThatOnlyCheckBottomFourCorners.Contains(rsp.ParentSimObjPhys.ObjType))
                 {
                     //only check bottom 4 corners even though the action is PlaceIn
                     HowManyCornersToCheck = 4;
@@ -374,11 +356,17 @@ public class InstantiatePrefabTest : MonoBehaviour
 
                 int CornerCount = 0;
 
+                //Plane rspPlane = new Plane(rsp.Point, rsp.ParentSimObjPhys.transform.up);
+
                 //now check the corner count for either the 4 lowest corners, or all 8 corners depending on Corner Count
                 //sort corners so that first four corners are the corners closest to the spawn point we are checking against
                 SpawnCorners.Sort(delegate(Vector3 p1, Vector3 p2)
                 {
+                    //sort by making a plane where rsp.point is, find the four corners closest to that point
+                    //return rspPlane.GetDistanceToPoint(p1).CompareTo(rspPlane.GetDistanceToPoint(p2));
+
                     return Vector3.Distance(p1, rsp.Point).CompareTo(Vector3.Distance(p2, rsp.Point));
+
                     // return Vector3.Distance(new Vector3(0, p1.y, 0), new Vector3(0, rsp.Point.y, 0)).CompareTo(
                     // Vector3.Distance(new Vector3(0, p2.y, 0), new Vector3(0, rsp.Point.y, 0)));
 
@@ -398,9 +386,9 @@ public class InstantiatePrefabTest : MonoBehaviour
                 {
                     sop.transform.rotation = originalRot;
                     //Destroy(placeholderPosition.gameObject);
-                    #if UNITY_EDITOR
-                    Debug.Log(sop.name + " cannot fit in target receptacle: " + rsp.ParentSimObjPhys.name + " at coordinate " + rsp.Point);
-                    #endif
+                    // #if UNITY_EDITOR
+                    // Debug.Log(sop.name + " cannot fit in target receptacle: " + rsp.ParentSimObjPhys.name + " at coordinate " + rsp.Point);
+                    // #endif
                     
                     return false;
                 }
@@ -437,7 +425,7 @@ public class InstantiatePrefabTest : MonoBehaviour
         
 
         //oh now we couldn't spawn it, all the spawn areas were not clear
-        Debug.Log("Spawn Area not clear at" + rsp.Point + ", failed to spawn");
+        //Debug.Log("Spawn Area not clear at" + rsp.Point + ", failed to spawn");
         return false;
 	}
 
@@ -448,18 +436,6 @@ public class InstantiatePrefabTest : MonoBehaviour
     //this assumes that the BoundingBox transform is zeroed out according to the root transform of the prefab
     private bool CheckSpawnArea(SimObjPhysics simObj, Vector3 position, Quaternion rotation, bool spawningInHand)
     {
-        // Transform placeHolderSOP = new GameObject("placeHolderSOP").transform;
-        // placeHolderSOP.position = position;
-        
-        // //ok make a copy of the bounding box, and offset it by the local position of the bounding box on the simObj
-        // Transform placeHolder = Instantiate(simObj.BoundingBox.transform, position, rotation);
-        // placeHolder.transform.SetParent(placeHolderSOP);
-        // placeHolder.transform.localPosition = simObj.BoundingBox.transform.localPosition;
-
-        // placeHolderSOP.rotation = rotation;
-        
-
-        //-------------------------------------------------------------
         //create a dummy gameobject that is instantiated then rotated to get the actual
         //location and orientation of the spawn area
         Transform placeholderPosition = new GameObject("placeholderPosition").transform;
@@ -473,13 +449,6 @@ public class InstantiatePrefabTest : MonoBehaviour
         GameObject placeBox = Instantiate(simObj.BoundingBox, position /*+ OffsetPos*/, placeholderPosition.transform.rotation);
         placeBox.transform.SetParent(placeholderPosition);
         placeBox.transform.localPosition = simObj.BoundingBox.transform.localPosition;
-
-        // GameObject inst = Instantiate(placeholderPosition.gameObject, placeholderPosition, false);
-        // inst.transform.localPosition = simObj.BoundingBox.GetComponent<BoxCollider>().center;
-
-        // BoxCollider instantbox = inst.AddComponent<BoxCollider>();
-        // instantbox.isTrigger = true;
-        // instantbox.size = simObj.BoundingBox.GetComponent<BoxCollider>().size;
 
         //rotate it after creating the offset so that the offset's local position is maintained
         placeholderPosition.transform.rotation = rotation;
@@ -533,24 +502,6 @@ public class InstantiatePrefabTest : MonoBehaviour
         //top back right
         corners.Add(placeBox.transform.TransformPoint(pbbc.center+ new Vector3(pbbc.size.x, pbbc.size.y, -pbbc.size.z) * 0.5f));
 
-        // //bottom forward right
-        // corners.Add(inst.transform.TransformPoint(instantbox.center + new Vector3(instantbox.size.x, -instantbox.size.y, instantbox.size.z) * 0.5f));
-        // //bottom forward left
-        // corners.Add(inst.transform.TransformPoint(instantbox.center + new Vector3(-instantbox.size.x, -instantbox.size.y, instantbox.size.z) * 0.5f));
-        // //bottom back left
-        // corners.Add(inst.transform.TransformPoint(instantbox.center + new Vector3(-instantbox.size.x, -instantbox.size.y, -instantbox.size.z) * 0.5f));
-        // //bottom back right
-        // corners.Add(inst.transform.TransformPoint(instantbox.center+ new Vector3(instantbox.size.x, -instantbox.size.y, -instantbox.size.z) * 0.5f));
-
-        // //top forward right
-        // corners.Add(inst.transform.TransformPoint(instantbox.center + new Vector3(instantbox.size.x, instantbox.size.y, instantbox.size.z) * 0.5f));
-        // //top forward left
-        // corners.Add(inst.transform.TransformPoint(instantbox.center + new Vector3(-instantbox.size.x, instantbox.size.y, instantbox.size.z) * 0.5f));
-        // //top back left
-        // corners.Add(inst.transform.TransformPoint(instantbox.center + new Vector3(-instantbox.size.x, instantbox.size.y, -instantbox.size.z) * 0.5f));
-        // //top back right
-        // corners.Add(inst.transform.TransformPoint(instantbox.center+ new Vector3(instantbox.size.x, instantbox.size.y, -instantbox.size.z) * 0.5f));
-        
         SpawnCorners = corners;
 
         #if UNITY_EDITOR
@@ -569,12 +520,12 @@ public class InstantiatePrefabTest : MonoBehaviour
 		if (hitColliders.Length > 0)
 		{
             
-            // print(hitColliders.Length);
-            foreach(Collider c in hitColliders)
-            {
-                print(c.name);
-                print(c.transform.position);
-            }
+            // // print(hitColliders.Length);
+            // foreach(Collider c in hitColliders)
+            // {
+            //     print(c.name);
+            //     print(c.transform.position);
+            // }
 			return false;
 		}
 
@@ -613,147 +564,3 @@ public class InstantiatePrefabTest : MonoBehaviour
 #endif
 
 }
-
-    //Place Sim Object (sop) at the given (position) inside/on the receptbox relative to the rotation of the receptacle
-    //this is used for initial spawning/randomization of objects in a scene, and for Placing an Object onto a valid
-    //receptacle without using just physics to resolve
-	// public bool PlaceObject(SimObjPhysics sop, ReceptacleSpawnPoint rsp, bool PlaceStationary)
-	// {
-    //     if(rsp.ParentSimObjPhys == sop)
-    //     {
-    //         Debug.Log("Can't place object inside itself!");
-    //         return false;
-    //     }
-        
-    //     //remember the original rotation of the sim object if we need to reset it
-    //     Quaternion originalRot = sop.transform.rotation;
-
-    //     //get the bounding box of the sim object we are trying to place
-    //     BoxCollider oabb = sop.BoundingBox.GetComponent<BoxCollider>();
-        
-    //     //zero out rotation to match the target receptacle's rotation
-    //     sop.transform.rotation = rsp.ReceptacleBox.transform.rotation;
-    //     sop.GetComponent<Rigidbody>().velocity = Vector3.zero;
-
-    //     //create a temporary object, match sop's rot, pos, and then make it a child
-    //     Transform placeholderPosition = new GameObject("placeholderPosition").transform;
-    //     placeholderPosition.transform.rotation = sop.transform.rotation;
-    //     placeholderPosition.transform.position = sop.transform.position;
-
-    //     // BoxCollider pbox = placeholderPosition.transform.gameObject.AddComponent<BoxCollider>();
-    //     // pbox.size = oabb.size;
-    //     // pbox.center = oabb.center;
-    //     // pbox.isTrigger = true;
-
-    //     placeholderPosition.SetParent(sop.transform);
-
-    //     //check spawn area using 4 different rotations, +45 on local y axis each time to see if it'll fit?
-    //     //we can probably add a thing to make this check more rotations later...
-    //     int degreeIncrement = 45;
-    //     Quaternion[] RotationsToCheck = new Quaternion[360 / degreeIncrement]; //we'll check 8 rotations for now, replace the 45 later if we want to adjust the amount of checks
-
-    //     for(int i = 0; i < RotationsToCheck.Length; i++)
-    //     {
-    //         if(i > 0)
-    //         {
-    //             placeholderPosition.transform.Rotate(new Vector3(0, degreeIncrement, 0), Space.Self);
-    //             RotationsToCheck[i] = placeholderPosition.transform.rotation;
-    //         }
-
-    //         else
-    //         {
-    //             RotationsToCheck[i] = placeholderPosition.transform.rotation;
-    //         }
-            
-    //     }
-
-
-    //     //get position of the sim object's transform.
-    //     Vector3 p1 = sop.transform.position;
-
-    //     //get the distance from the spawn point to the closest point on the bounding box of the sim object we are placing
-    //     Vector3 SpawnOffset = oabb.ClosestPoint(rsp.Point);
-    //     //Vector3 SpawnOffset = oabb.transform.TransformPoint(oabb.center + new Vector3(oabb.center.x, -oabb.size.y * 0.5f, oabb.center.z);
-
-    //     //ceate a plane to represent the bottom-most point of the sim object with a normal the same as the receptacle we are trying to place it in
-    //     //this uses a point on the plane-just grabbing the bottom right forward corner, and a normal to the plane to create it
-    //     Plane BottomOfBox = new Plane(rsp.ReceptacleBox.transform.up, SpawnOffset);
-
-    //     //distance from created plate to the sim object's transform
-    //     float DistanceFromBottomOfBoxToTransform = BottomOfBox.GetDistanceToPoint(p1) + 0.01f; //adding .01 buffer cause physics be damned
-
-    //     foreach(Quaternion quat in RotationsToCheck)
-    //     {
-    //         //if spawn area is clear, spawn it and return true that we spawned it
-    //         //origin point we are checking + sim object's upward vector * distance from bottom of box to the transform will give the center of the CheckSpawnArea box
-    //         if(CheckSpawnArea(sop, rsp.Point + rsp.ReceptacleBox.transform.up * DistanceFromBottomOfBoxToTransform, quat, false))
-    //         {
-    //             //now to do a check to make sure the sim object is contained within the Receptacle box, and doesn't have
-    //             //bits of it hanging out
-
-    //             //Check the ReceptacleBox's Sim Object component to see what Type it is. Then check to
-    //             //see if the type is the kind where the Object placed must be completely contained or just the bottom 4 corners contained
-    //             int HowManyCornersToCheck = 0;
-    //             if(OnReceptacles.Contains(rsp.ParentSimObjPhys.ObjType))
-    //             {
-    //                 //check that only the bottom 4 corners are in bounds
-    //                 HowManyCornersToCheck = 4;
-    //             }
-
-    //             if(InReceptacles.Contains(rsp.ParentSimObjPhys.ObjType))
-    //             {
-    //                 //check that all 8 corners are within bounds
-    //                 HowManyCornersToCheck = 8;
-    //             }
-
-    //             if(InReceptaclesThatOnlyCheckBottomFourCorners.Contains(rsp.ParentSimObjPhys.ObjType))
-    //             {
-    //                 //only check bottom 4 corners even though the action is PlaceIn
-    //                 HowManyCornersToCheck = 4;
-    //             }
-
-    //             for(int i = 1; i < HowManyCornersToCheck; i++)
-    //             {
-    //                 //print("Checking " + (i-1));
-    //                 if(!rsp.Script.CheckIfPointIsInsideReceptacleTriggerBox(SpawnCorners[i - 1]))
-    //                 {
-    //                     sop.transform.rotation = originalRot;
-    //                     Destroy(placeholderPosition.gameObject);
-    //                     Debug.Log(sop.name + " cannot fit in target receptacle: " + rsp.ParentSimObjPhys.name + " at coordinate " + rsp.Point);
-    //                     return false;
-    //                 }
-    //             }
-
-    //             //we passed all the checks! Place the object now!
-    //             GameObject topObject = GameObject.Find("Objects");
-    //             //parent to the Objects transform
-    //             sop.transform.SetParent(topObject.transform);
-    //             //translate position of the target sim object to the rsp.Point and offset in local y up
-    //             sop.transform.position = rsp.Point + sop.transform.up * DistanceFromBottomOfBoxToTransform;
-    //             sop.transform.rotation = quat;
-
-    //             //set true if we want objects to be stationary when placed. (if placed on uneven surface, object remains stationary)
-    //             //if falce, once placed the object will resolve with physics (if placed on uneven surface object might slide or roll)
-    //             if(PlaceStationary == true)
-    //             sop.GetComponent<Rigidbody>().isKinematic = true;
-
-    //             else
-    //             {
-    //                 sop.GetComponent<Rigidbody>().isKinematic = false;
-    //             }
-
-    //             Destroy(placeholderPosition.gameObject);
-
-    //             Debug.Log(sop.name + " succesfully spawned in " +rsp.ParentSimObjPhys.name + " at coordinate " + rsp.Point);
-    //             return true;
-    //         }
-    //     }
-       
-
-    //     sop.transform.rotation = originalRot;
-    //     Destroy(placeholderPosition.gameObject);
-
-    //     //oh now we couldn't spawn it, all the spawn areas were not clear
-    //     Debug.Log("Spawn Area not clear at" + rsp.Point + ", failed to spawn");
-    //     return false;
-	// }

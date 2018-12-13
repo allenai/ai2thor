@@ -1,4 +1,7 @@
 // Copyright Allen Institute for Artificial Intelligence 2017
+using UnityEngine;
+using System.Collections;
+using System.Collections.Generic;
 using System;
 
 [Serializable]
@@ -230,3 +233,66 @@ public enum SimObjType : int
 	Bench = 131,
 	Closet = 132,
 }
+
+public static class ReceptacleRestrictions
+{
+    //uses the PlaceIn action
+    //The object placed must have the entirety of it's object oriented bounding box (all 8 corners) enclosed within the Receptacle's Box
+    public static List<SimObjType> InReceptacles = new List<SimObjType>() 
+    {SimObjType.Drawer, SimObjType.Cabinet, SimObjType.Closet, SimObjType.Fridge, SimObjType.Microwave};
+
+    //uses the PlaceOn action
+    //the object placed only needs the bottom most 4 corners within the Receptacle Box to be placed validly, this allows
+    //things like a tall cup to have the top half of it sticking out of the receptacle box when placed on a table
+    public static List<SimObjType> OnReceptacles = new List <SimObjType>()
+    {SimObjType.TableTop, SimObjType.Dresser, SimObjType.CounterTop, SimObjType.Shelf, SimObjType.ArmChair,
+     SimObjType.Sofa, SimObjType.Ottoman, SimObjType.StoveBurner};
+
+    //Uses the PlaceIn action
+    //while these receptacles have things placed "in" them, they use the logic of OnReceptacles - Only the bottom 4 corners must be within the
+    //receptacle box for the placement to be valid. This means we can have a Spoon placed IN a cup, but the top half of the spoon is still allowed to stick out
+    public static List<SimObjType> InReceptaclesThatOnlyCheckBottomFourCorners = new List <SimObjType>()
+    { SimObjType.Cup, SimObjType.Bowl, SimObjType.GarbageCan, SimObjType.Box, SimObjType.Sink,};
+
+	//Each sim object type keeps track of what sort of Receptacles it can be placed in
+	//add to this as more pickupable sim objects are created
+	public static Dictionary<SimObjType, List<SimObjType>> PlacementRestrictions = new Dictionary<SimObjType, List<SimObjType>>()
+	{
+		//APPLE
+		{SimObjType.Apple, new List<SimObjType>()
+		{SimObjType.TableTop, SimObjType.CounterTop, SimObjType.Sink, SimObjType.Pot,
+		 SimObjType.Bowl, SimObjType.Fridge, SimObjType.GarbageCan, SimObjType.Pan}},
+
+		{SimObjType.AppleSliced, new List<SimObjType>()
+		{SimObjType.TableTop, SimObjType.CounterTop, SimObjType.Sink, SimObjType.Pot,
+		 SimObjType.Bowl, SimObjType.Fridge, SimObjType.GarbageCan, SimObjType.Pan}},
+
+		//TOMATO
+		{SimObjType.Tomato, new List<SimObjType>()
+		{SimObjType.TableTop, SimObjType.CounterTop, SimObjType.Sink, SimObjType.Pot,
+		 SimObjType.Bowl, SimObjType.Fridge, SimObjType.GarbageCan, SimObjType.Pan}},
+		
+		{SimObjType.TomatoSliced, new List<SimObjType>()
+		{SimObjType.TableTop, SimObjType.CounterTop, SimObjType.Sink, SimObjType.Pot,
+		 SimObjType.Bowl, SimObjType.Fridge, SimObjType.GarbageCan, SimObjType.Pan}},
+
+		//BREAD
+		{SimObjType.Bread, new List<SimObjType>()
+		{SimObjType.TableTop, SimObjType.CounterTop, SimObjType.Sink, SimObjType.Fridge, SimObjType.GarbageCan}},
+
+		{SimObjType.BreadSliced, new List<SimObjType>()
+		{SimObjType.TableTop, SimObjType.CounterTop, SimObjType.Sink, SimObjType.Fridge, SimObjType.GarbageCan}},
+
+		//KNIFE
+		{SimObjType.Knife, new List<SimObjType>()
+		{SimObjType.TableTop, SimObjType.CounterTop, SimObjType.Sink, SimObjType.Pot, SimObjType.Pan,
+		SimObjType.Bowl, SimObjType.GarbageCan, SimObjType.Drawer}},
+
+		//CUP
+		{SimObjType.Cup, new List<SimObjType>()
+		{SimObjType.TableTop, SimObjType.CounterTop, SimObjType.Sink, SimObjType.GarbageCan, SimObjType.Cabinet,}},
+
+	};
+
+}
+
