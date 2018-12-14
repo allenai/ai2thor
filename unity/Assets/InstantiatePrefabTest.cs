@@ -239,6 +239,8 @@ public class InstantiatePrefabTest : MonoBehaviour
 
         List<RotationAndDistanceValues> ToCheck = new List<RotationAndDistanceValues>(); //we'll check 8 rotations for now, replace the 45 later if we want to adjust the amount of checks
 
+        //get rotations and distance values for 360/increment number of rotations around just the Y axis
+        //we want to check all of these first so that the object is prioritized to be placed "upright"
         for(int i = 0; i < HowManyRotationsToCheck; i++)
         {
             oabb.enabled = true;
@@ -253,32 +255,55 @@ public class InstantiatePrefabTest : MonoBehaviour
                 float DistanceFromBoxBottomTosop = Math.Abs(BoxBottom.GetDistanceToPoint(sop.transform.position));
 
                 ToCheck.Add(new RotationAndDistanceValues(DistanceFromBoxBottomTosop, sop.transform.rotation));
-                //ToCheck[i] = new RotationAndDistanceValues(DistanceFromBoxBottomTosop, sop.transform.rotation);
+            }
 
+            else
+            {
+                //no rotate change just yet, check the first position
+
+                Vector3 Offset = oabb.ClosestPoint(oabb.transform.TransformPoint(oabb.center) + -rsp.ReceptacleBox.transform.up * 10); //was using rsp.point
+                Plane BoxBottom = new Plane(rsp.ReceptacleBox.transform.up, Offset);
+                float DistanceFromBoxBottomTosop = BoxBottom.GetDistanceToPoint(sop.transform.position);
+
+                ToCheck.Add(new RotationAndDistanceValues(DistanceFromBoxBottomTosop, sop.transform.rotation));
+            }
+
+            oabb.enabled = false;
+        }
+
+        //ok now try if the X and Z local axis are rotated if it'll fit
+        //these values can cause the object to be placed at crazy angles, so we'll check these last
+        for(int i = 0; i < HowManyRotationsToCheck; i++)
+        {
+            oabb.enabled = true;
+
+            if(i > 0)
+            {
+                sop.transform.Rotate(new Vector3(0, degreeIncrement, 0), Space.Self);
                 Quaternion oldRotation = sop.transform.rotation;
 
-                //now add more points by rotating the x axis at this given y axis
+                //now add more points by rotating the x axis at this current y rotation
                 for(int j = 0; j < HowManyRotationsToCheck; j++)
                 {
                     sop.transform.Rotate(new Vector3(degreeIncrement, 0, 0), Space.Self);
 
-                    Offset = oabb.ClosestPoint(oabb.transform.TransformPoint(oabb.center) + -rsp.ReceptacleBox.transform.up * 10);
-                    BoxBottom = new Plane(rsp.ReceptacleBox.transform.up, Offset);
-                    DistanceFromBoxBottomTosop = Math.Abs(BoxBottom.GetDistanceToPoint(sop.transform.position));
+                    Vector3 Offset = oabb.ClosestPoint(oabb.transform.TransformPoint(oabb.center) + -rsp.ReceptacleBox.transform.up * 10);
+                    Plane BoxBottom = new Plane(rsp.ReceptacleBox.transform.up, Offset);
+                    float DistanceFromBoxBottomTosop = Math.Abs(BoxBottom.GetDistanceToPoint(sop.transform.position));
 
                     ToCheck.Add(new RotationAndDistanceValues(DistanceFromBoxBottomTosop, sop.transform.rotation));
                 }
 
                 sop.transform.rotation = oldRotation;
 
-                //now add EVEN more points by rotating the z axis at this given y axis
+                //now add EVEN more points by rotating the z axis at this current y rotation
                 for(int j = 0; j < HowManyRotationsToCheck; j++)
                 {
                     sop.transform.Rotate(new Vector3(0, 0, degreeIncrement), Space.Self);
 
-                    Offset = oabb.ClosestPoint(oabb.transform.TransformPoint(oabb.center) + -rsp.ReceptacleBox.transform.up * 10);
-                    BoxBottom = new Plane(rsp.ReceptacleBox.transform.up, Offset);
-                    DistanceFromBoxBottomTosop = Math.Abs(BoxBottom.GetDistanceToPoint(sop.transform.position));
+                    Vector3 Offset = oabb.ClosestPoint(oabb.transform.TransformPoint(oabb.center) + -rsp.ReceptacleBox.transform.up * 10);
+                    Plane BoxBottom = new Plane(rsp.ReceptacleBox.transform.up, Offset);
+                    float DistanceFromBoxBottomTosop = Math.Abs(BoxBottom.GetDistanceToPoint(sop.transform.position));
 
                     ToCheck.Add(new RotationAndDistanceValues(DistanceFromBoxBottomTosop, sop.transform.rotation));
                 }
@@ -287,42 +312,70 @@ public class InstantiatePrefabTest : MonoBehaviour
 
             }
 
-            else
-            {
-                
-                // oabb.enabled = false;
-                //Starting orientation, default at prefab's 0, 0, 0
-                //print ("center "+ oabb.transform.TransformPoint(oabb.center));
-
-                Vector3 Offset = oabb.ClosestPoint(oabb.transform.TransformPoint(oabb.center) + -rsp.ReceptacleBox.transform.up * 10); //was using rsp.point
-
-                Plane BoxBottom = new Plane(rsp.ReceptacleBox.transform.up, Offset);
-
-                //print(BoxBottom);
-
-                //print("offset " +Offset);
-
-                float DistanceFromBoxBottomTosop = BoxBottom.GetDistanceToPoint(sop.transform.position);
-
-                //print("distance from plane to sop " + DistanceFromBoxBottomTosop);
-
-                ToCheck.Add(new RotationAndDistanceValues(DistanceFromBoxBottomTosop, sop.transform.rotation));
-                //ToCheck[i] = new RotationAndDistanceValues(DistanceFromBoxBottomTosop, sop.transform.rotation)
-                
-
-            }
-            
             oabb.enabled = false;
+
+            //-----------Initial version of this snippet
+            // if(i > 0)
+            // {
+            //     sop.transform.Rotate(new Vector3(0, degreeIncrement, 0), Space.Self);
+            //     //ToCheck[i].rotation = sop.transform.rotation;
+                
+            //     Vector3 Offset = oabb.ClosestPoint(oabb.transform.TransformPoint(oabb.center) + -rsp.ReceptacleBox.transform.up * 10);
+            //     Plane BoxBottom = new Plane(rsp.ReceptacleBox.transform.up, Offset);
+            //     float DistanceFromBoxBottomTosop = Math.Abs(BoxBottom.GetDistanceToPoint(sop.transform.position));
+
+            //     ToCheck.Add(new RotationAndDistanceValues(DistanceFromBoxBottomTosop, sop.transform.rotation));
+            //     //ToCheck[i] = new RotationAndDistanceValues(DistanceFromBoxBottomTosop, sop.transform.rotation);
+
+            //     Quaternion oldRotation = sop.transform.rotation;
+
+            //     //now add more points by rotating the x axis at this current y rotation
+            //     for(int j = 0; j < HowManyRotationsToCheck; j++)
+            //     {
+            //         sop.transform.Rotate(new Vector3(degreeIncrement, 0, 0), Space.Self);
+
+            //         Offset = oabb.ClosestPoint(oabb.transform.TransformPoint(oabb.center) + -rsp.ReceptacleBox.transform.up * 10);
+            //         BoxBottom = new Plane(rsp.ReceptacleBox.transform.up, Offset);
+            //         DistanceFromBoxBottomTosop = Math.Abs(BoxBottom.GetDistanceToPoint(sop.transform.position));
+
+            //         ToCheck.Add(new RotationAndDistanceValues(DistanceFromBoxBottomTosop, sop.transform.rotation));
+            //     }
+
+            //     sop.transform.rotation = oldRotation;
+
+            //     //now add EVEN more points by rotating the z axis at this current y rotation
+            //     for(int j = 0; j < HowManyRotationsToCheck; j++)
+            //     {
+            //         sop.transform.Rotate(new Vector3(0, 0, degreeIncrement), Space.Self);
+
+            //         Offset = oabb.ClosestPoint(oabb.transform.TransformPoint(oabb.center) + -rsp.ReceptacleBox.transform.up * 10);
+            //         BoxBottom = new Plane(rsp.ReceptacleBox.transform.up, Offset);
+            //         DistanceFromBoxBottomTosop = Math.Abs(BoxBottom.GetDistanceToPoint(sop.transform.position));
+
+            //         ToCheck.Add(new RotationAndDistanceValues(DistanceFromBoxBottomTosop, sop.transform.rotation));
+            //     }
+                         
+            //    sop.transform.rotation = oldRotation;
+
+            // }
+
+            // else
+            // {
+            //     //no rotate change just yet, check the first position
+
+            //     Vector3 Offset = oabb.ClosestPoint(oabb.transform.TransformPoint(oabb.center) + -rsp.ReceptacleBox.transform.up * 10); //was using rsp.point
+            //     Plane BoxBottom = new Plane(rsp.ReceptacleBox.transform.up, Offset);
+            //     float DistanceFromBoxBottomTosop = BoxBottom.GetDistanceToPoint(sop.transform.position);
+
+            //     ToCheck.Add(new RotationAndDistanceValues(DistanceFromBoxBottomTosop, sop.transform.rotation));
+            // }
         }
 
         foreach(RotationAndDistanceValues quat in ToCheck)
         {
             //if spawn area is clear, spawn it and return true that we spawned it
-            //origin point we are checking + sim object's upward vector * distance from bottom of box to the transform will give the center of the CheckSpawnArea box
-            //print(quat.distance);
             if(CheckSpawnArea(sop, rsp.Point + rsp.ParentSimObjPhys.transform.up * (quat.distance + 0.01f), quat.rotation, false))
             {
-                //print(quat.distance);
                 //now to do a check to make sure the sim object is contained within the Receptacle box, and doesn't have
                 //bits of it hanging out
 
