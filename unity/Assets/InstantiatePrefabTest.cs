@@ -48,31 +48,7 @@ public class InstantiatePrefabTest : MonoBehaviour
 	// Update is called once per frame
 	void Update()
 	{
-        if(Input.GetKeyDown(KeyCode.Space))
-        {
-            
-            // if(!TestPlaceObject)
-            // return;
-            // //PhysicsRemoteFPSAgentController agent = GameObject.Find("FPSController").GetComponent<PhysicsRemoteFPSAgentController>();
 
-            // //string TargetReceptacle = agent.UniqueIDOfClosestReceptacleObject();
-
-            // //Testreceptbox = agent.FindObjectInVisibleSimObjPhysics(TargetReceptacle);
-            // GameObject agent = GameObject.Find("FPSController");
-            // string receptID;
-
-            // receptID = agent.GetComponent<PhysicsRemoteFPSAgentController>().UniqueIDOfClosestReceptacleObject();
-
-            // if(Testreceptbox.validpointlist.Count > 0)
-            // {
-            //     //PlaceObject(TestPlaceObject.GetComponent<SimObjPhysics>(), Testreceptbox.validpointlist[0], true);
-            //     PlaceObjectReceptacle(Testreceptbox.validpointlist,TestPlaceObject.GetComponent<SimObjPhysics>(), false);
-            // }
-
-            // else
-            // Debug.Log("No valid points right now!");
-
-        }
 	}
 
     //spawn an object from the Array of prefabs. Used to spawn from a specific set of Prefabs
@@ -265,12 +241,14 @@ public class InstantiatePrefabTest : MonoBehaviour
 
         for(int i = 0; i < HowManyRotationsToCheck; i++)
         {
+            oabb.enabled = true;
+
             if(i > 0)
             {
                 sop.transform.Rotate(new Vector3(0, degreeIncrement, 0), Space.Self);
                 //ToCheck[i].rotation = sop.transform.rotation;
                 
-                Vector3 Offset = oabb.ClosestPoint(oabb.center + -Vector3.up * 10);
+                Vector3 Offset = oabb.ClosestPoint(oabb.transform.TransformPoint(oabb.center) + -rsp.ReceptacleBox.transform.up * 10);
                 Plane BoxBottom = new Plane(rsp.ReceptacleBox.transform.up, Offset);
                 float DistanceFromBoxBottomTosop = Math.Abs(BoxBottom.GetDistanceToPoint(sop.transform.position));
 
@@ -284,9 +262,9 @@ public class InstantiatePrefabTest : MonoBehaviour
                 {
                     sop.transform.Rotate(new Vector3(degreeIncrement, 0, 0), Space.Self);
 
-                    Offset = oabb.ClosestPoint(oabb.center + -Vector3.up * 10);
+                    Offset = oabb.ClosestPoint(oabb.transform.TransformPoint(oabb.center) + -rsp.ReceptacleBox.transform.up * 10);
                     BoxBottom = new Plane(rsp.ReceptacleBox.transform.up, Offset);
-                    DistanceFromBoxBottomTosop = Math.Abs(BoxBottom.GetDistanceToPoint(sop.transform.position)+ 0.01f);
+                    DistanceFromBoxBottomTosop = Math.Abs(BoxBottom.GetDistanceToPoint(sop.transform.position));
 
                     ToCheck.Add(new RotationAndDistanceValues(DistanceFromBoxBottomTosop, sop.transform.rotation));
                 }
@@ -298,7 +276,7 @@ public class InstantiatePrefabTest : MonoBehaviour
                 {
                     sop.transform.Rotate(new Vector3(0, 0, degreeIncrement), Space.Self);
 
-                    Offset = oabb.ClosestPoint(oabb.center + -Vector3.up * 10);
+                    Offset = oabb.ClosestPoint(oabb.transform.TransformPoint(oabb.center) + -rsp.ReceptacleBox.transform.up * 10);
                     BoxBottom = new Plane(rsp.ReceptacleBox.transform.up, Offset);
                     DistanceFromBoxBottomTosop = Math.Abs(BoxBottom.GetDistanceToPoint(sop.transform.position));
 
@@ -311,22 +289,37 @@ public class InstantiatePrefabTest : MonoBehaviour
 
             else
             {
+                
+                // oabb.enabled = false;
                 //Starting orientation, default at prefab's 0, 0, 0
+                //print ("center "+ oabb.transform.TransformPoint(oabb.center));
 
-                Vector3 Offset = oabb.ClosestPoint(oabb.center + -Vector3.up * 10); //was using rsp.point
+                Vector3 Offset = oabb.ClosestPoint(oabb.transform.TransformPoint(oabb.center) + -rsp.ReceptacleBox.transform.up * 10); //was using rsp.point
+
                 Plane BoxBottom = new Plane(rsp.ReceptacleBox.transform.up, Offset);
-                float DistanceFromBoxBottomTosop = Math.Abs(BoxBottom.GetDistanceToPoint(sop.transform.position));
+
+                //print(BoxBottom);
+
+                //print("offset " +Offset);
+
+                float DistanceFromBoxBottomTosop = BoxBottom.GetDistanceToPoint(sop.transform.position);
+
+                //print("distance from plane to sop " + DistanceFromBoxBottomTosop);
 
                 ToCheck.Add(new RotationAndDistanceValues(DistanceFromBoxBottomTosop, sop.transform.rotation));
-                //ToCheck[i] = new RotationAndDistanceValues(DistanceFromBoxBottomTosop, sop.transform.rotation);
+                //ToCheck[i] = new RotationAndDistanceValues(DistanceFromBoxBottomTosop, sop.transform.rotation)
+                
 
             }
+            
+            oabb.enabled = false;
         }
 
         foreach(RotationAndDistanceValues quat in ToCheck)
         {
             //if spawn area is clear, spawn it and return true that we spawned it
             //origin point we are checking + sim object's upward vector * distance from bottom of box to the transform will give the center of the CheckSpawnArea box
+            //print(quat.distance);
             if(CheckSpawnArea(sop, rsp.Point + rsp.ParentSimObjPhys.transform.up * (quat.distance + 0.01f), quat.rotation, false))
             {
                 //print(quat.distance);
@@ -385,7 +378,6 @@ public class InstantiatePrefabTest : MonoBehaviour
                 if(CornerCount < HowManyCornersToCheck)
                 {
                     sop.transform.rotation = originalRot;
-                    //Destroy(placeholderPosition.gameObject);
                     // #if UNITY_EDITOR
                     // Debug.Log(sop.name + " cannot fit in target receptacle: " + rsp.ParentSimObjPhys.name + " at coordinate " + rsp.Point);
                     // #endif
@@ -471,6 +463,7 @@ public class InstantiatePrefabTest : MonoBehaviour
 		}
 
         BoxCollider pbbc = placeBox.GetComponent<BoxCollider>();
+        pbbc.isTrigger = true;
         //print("extents:" + placeBox.GetComponent<BoxCollider>().size);
 
         Collider[] hitColliders = Physics.OverlapBox(placeBox.transform.TransformPoint(pbbc.center)/* placeBox.transform.position*/,

@@ -9,6 +9,7 @@ using UnityStandardAssets.Characters.FirstPerson;
 //this will be used for a comparison test later to make sure the spawned object is within bounds
 //of the Receptacle Trigger Box, which gets confusing if an Object has multiple ReceptacleTriggerBoxes
 //with multiple Contains.cs scripts
+[System.Serializable]
 public class ReceptacleSpawnPoint
 {
 	public BoxCollider ReceptacleBox; //the box the point is in
@@ -41,12 +42,23 @@ public class Contains : MonoBehaviour
 	private Vector3[] gridVisual = new Vector3[0];
 
 	//list of valid spawn points for placing/spawning SimObjects inside this Receptacle Box
-	public List<ReceptacleSpawnPoint> validpointlist = new List<ReceptacleSpawnPoint>();
+	private List<ReceptacleSpawnPoint> validpointlist = new List<ReceptacleSpawnPoint>();
 
 	//world coordinates of the Corners of this object's receptacles in case we need it for something
 	public List<Vector3> Corners = new List<Vector3>();
 
 	// Use this for initialization
+
+	void OnEnable()
+	{
+		//if the parent of this object has a SimObjPhysics component, grab a reference to it
+		if(myParent == null)
+		{
+			if(gameObject.GetComponentInParent<SimObjPhysics>().transform.gameObject)
+			myParent = gameObject.GetComponentInParent<SimObjPhysics>().transform.gameObject;
+		}
+
+	}
 	void Start()
 	{
 		//XXX debug for setting up scenes, delete or comment out when done setting up scenes
@@ -64,9 +76,7 @@ public class Contains : MonoBehaviour
 		}
 		#endif
 
-		//if the parent of this object has a SimObjPhysics component, grab a reference to it
-		if(gameObject.GetComponentInParent<SimObjPhysics>().transform.gameObject)
-		myParent = gameObject.GetComponentInParent<SimObjPhysics>().transform.gameObject;
+
 
 	}
 
@@ -74,7 +84,7 @@ public class Contains : MonoBehaviour
 	void Update()
 	{
 		//turn this on for debugging spawnpoints in editor
-		//GetValidSpawnPoints();
+		//GetValidSpawnPoints(true);
 	}
 
 	private void FixedUpdate()
@@ -139,8 +149,10 @@ public class Contains : MonoBehaviour
 		return ids;
 	}
 
-	//generate a grid of potential spawn points
-	public List<ReceptacleSpawnPoint> GetValidSpawnPoints()
+	//generate a grid of potential spawn points, set ReturnPointsClosestToAgent to true if
+	//the list of points should be filtered closest to agent, if false
+	//it will return all points on the receptacle regardless of agent proximity
+	public List<ReceptacleSpawnPoint> GetValidSpawnPoints(bool ReturnPointsCloseToAgent)
 	{
 		List<ReceptacleSpawnPoint> PossibleSpawnPoints = new List<ReceptacleSpawnPoint>();
 
@@ -222,7 +234,12 @@ public class Contains : MonoBehaviour
 				//if this hits anything except the parent object, this spot is blocked by something
 				if(hit.transform == myParent.transform)
 				{
-					if(NarrowDownValidSpawnPoints(hit.point))
+					if(!ReturnPointsCloseToAgent)
+					{
+						PossibleSpawnPoints.Add(new ReceptacleSpawnPoint(hit.point, b, this, myParent.GetComponent<SimObjPhysics>()));
+					}
+
+					else if(NarrowDownValidSpawnPoints(hit.point))
 					{
 						PossibleSpawnPoints.Add(new ReceptacleSpawnPoint(hit.point, b, this, myParent.GetComponent<SimObjPhysics>()));
 					}
@@ -233,8 +250,13 @@ public class Contains : MonoBehaviour
 			//didn't hit anything that could obstruct, so this point is good to go
 			//do additional checks here tos ee if the point is valid
 			// else
-			// {		
-				if(NarrowDownValidSpawnPoints(BottomPoint))
+			// 
+			if(!ReturnPointsCloseToAgent)
+			{
+				PossibleSpawnPoints.Add(new ReceptacleSpawnPoint(BottomPoint, b, this, myParent.GetComponent<SimObjPhysics>()));
+			}
+
+			else if(NarrowDownValidSpawnPoints(BottomPoint))
 				PossibleSpawnPoints.Add(new ReceptacleSpawnPoint(BottomPoint, b, this, myParent.GetComponent<SimObjPhysics>()));
 			//}
 		}

@@ -51,7 +51,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 	public Dictionary<Collider, ContactPoint[]> contactPointsDictionary = new Dictionary<Collider, ContactPoint[]>();
 
 	//if this object is a receptacle, get all valid spawn points from any child ReceptacleTriggerBoxes and sort them by distance to Agent
-	private List<ReceptacleSpawnPoint> MySpawnPoints = new List<ReceptacleSpawnPoint>();
+	public List<ReceptacleSpawnPoint> MySpawnPoints = new List<ReceptacleSpawnPoint>();
 
 	//initial position object spawned in in case we want to reset the scene
 	//private Vector3 startPosition;   
@@ -175,29 +175,34 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		}
 	}
 	
-	private void FindMySpawnPoints()
+	private void FindMySpawnPoints(bool ReturnPointsCloseToAgent)
 	{
 		List<ReceptacleSpawnPoint> temp = new List<ReceptacleSpawnPoint>();
 
 		foreach(GameObject rtb in ReceptacleTriggerBoxes)
 		{
 			Contains containsScript = rtb.GetComponent<Contains>();
-			temp.AddRange(containsScript.GetValidSpawnPoints());
+			temp.AddRange(containsScript.GetValidSpawnPoints(ReturnPointsCloseToAgent));
 		}
 
-		GameObject agent = GameObject.Find("FPSController");
-
-		temp.Sort(delegate(ReceptacleSpawnPoint one, ReceptacleSpawnPoint two)
+		if(ReturnPointsCloseToAgent)
 		{
-			return Vector3.Distance(agent.transform.position, one.Point).CompareTo(Vector3.Distance(agent.transform.position, two.Point));
-		});
+			GameObject agent = GameObject.Find("FPSController");
+
+			temp.Sort(delegate(ReceptacleSpawnPoint one, ReceptacleSpawnPoint two)
+			{
+				return Vector3.Distance(agent.transform.position, one.Point).CompareTo(Vector3.Distance(agent.transform.position, two.Point));
+			});
+		}
 
 		MySpawnPoints = temp;
 	}
 
-	public List<ReceptacleSpawnPoint> ReturnMySpawnPoints()
+	//set ReturnPointsCloseToAgent to true if only points near the agent are wanted
+	//set to false if all potential points on the object are wanted
+	public List<ReceptacleSpawnPoint> ReturnMySpawnPoints(bool ReturnPointsCloseToAgent)
 	{
-		FindMySpawnPoints();
+		FindMySpawnPoints(ReturnPointsCloseToAgent);
 		return MySpawnPoints;
 	}
 

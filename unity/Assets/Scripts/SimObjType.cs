@@ -261,20 +261,20 @@ public static class ReceptacleRestrictions
 		//APPLE
 		{SimObjType.Apple, new List<SimObjType>()
 		{SimObjType.TableTop, SimObjType.CounterTop, SimObjType.Sink, SimObjType.Pot,
-		 SimObjType.Bowl, SimObjType.Fridge, SimObjType.GarbageCan, SimObjType.Pan}},
+		 SimObjType.Bowl, SimObjType.Fridge, SimObjType.GarbageCan, SimObjType.Pan, SimObjType.Microwave}},
 
 		{SimObjType.AppleSliced, new List<SimObjType>()
 		{SimObjType.TableTop, SimObjType.CounterTop, SimObjType.Sink, SimObjType.Pot,
-		 SimObjType.Bowl, SimObjType.Fridge, SimObjType.GarbageCan, SimObjType.Pan}},
+		 SimObjType.Bowl, SimObjType.Fridge, SimObjType.GarbageCan, SimObjType.Pan, SimObjType.Microwave}},
 
 		//TOMATO
 		{SimObjType.Tomato, new List<SimObjType>()
 		{SimObjType.TableTop, SimObjType.CounterTop, SimObjType.Sink, SimObjType.Pot,
-		 SimObjType.Bowl, SimObjType.Fridge, SimObjType.GarbageCan, SimObjType.Pan}},
+		 SimObjType.Bowl, SimObjType.Fridge, SimObjType.GarbageCan, SimObjType.Pan, SimObjType.Microwave}},
 		
 		{SimObjType.TomatoSliced, new List<SimObjType>()
 		{SimObjType.TableTop, SimObjType.CounterTop, SimObjType.Sink, SimObjType.Pot,
-		 SimObjType.Bowl, SimObjType.Fridge, SimObjType.GarbageCan, SimObjType.Pan}},
+		 SimObjType.Bowl, SimObjType.Fridge, SimObjType.GarbageCan, SimObjType.Pan, SimObjType.Microwave}},
 
 		//BREAD
 		{SimObjType.Bread, new List<SimObjType>()
@@ -290,7 +290,7 @@ public static class ReceptacleRestrictions
 
 		//CUP
 		{SimObjType.Cup, new List<SimObjType>()
-		{SimObjType.TableTop, SimObjType.CounterTop, SimObjType.Sink, SimObjType.GarbageCan, SimObjType.Cabinet,}},
+		{SimObjType.TableTop, SimObjType.CounterTop, SimObjType.Sink, SimObjType.GarbageCan, SimObjType.Cabinet, SimObjType.Microwave}},
 
 	};
 

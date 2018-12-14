@@ -203,7 +203,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                             action.objectId = PhysicsController.UniqueIDOfClosestReceptacleObject();
                             
                         //set this to false if we want to place it and let physics resolve
-                        action.placeStationary = false; 
+                        action.placeStationary = true; 
                         //set this true to ignore Placement Restrictions
                         action.forceAction = true;
 
