@@ -37,7 +37,13 @@ public class PhysicsSceneManager : MonoBehaviour
 	void Update () 
 	{
 		if(Input.GetKeyDown(KeyCode.K))
-		RandomSpawnRequiredSceneObjects(0);
+		RandomSpawnRequiredSceneObjects(1, true);
+
+		if(Input.GetKeyDown(KeyCode.J))
+		RandomSpawnRequiredSceneObjects(1, false);
+
+		if(Input.GetKeyDown(KeyCode.L))
+		RandomSpawnRequiredSceneObjects();
 	}
 
     public void GatherSimObjPhysInScene()
@@ -106,15 +112,15 @@ public class PhysicsSceneManager : MonoBehaviour
 		UniqueIDsInScene.Add(sop.uniqueID);
 	}
 
-	//default random seed to 0 if not using anything?
+	//if no values passed in, default to system random
 	public void RandomSpawnRequiredSceneObjects()
 	{
-		RandomSpawnRequiredSceneObjects(0);
+		RandomSpawnRequiredSceneObjects(System.Environment.TickCount, false);
 	}
 
 	//place each object in the array of objects that should appear in this scene randomly in valid receptacles
 	//a seed of 0 is the default positions placed by hand(?)
-	public void RandomSpawnRequiredSceneObjects(int seed)
+	public void RandomSpawnRequiredSceneObjects(int seed, bool SpawnOnlyOutside)
 	{
 		Random.InitState(seed);
 
@@ -141,9 +147,20 @@ public class PhysicsSceneManager : MonoBehaviour
 							//if the potential valid object type matches one of the ReceptacleinScene's object types
 							if(sot == sop.ObjType)
 							{
-								//print("here");
-								typefoundindictionary = true;
-								AllowedToSpawnInAndExistsInScene.Add(sop);
+								if(!SpawnOnlyOutside)
+								{
+									typefoundindictionary = true;
+									AllowedToSpawnInAndExistsInScene.Add(sop);
+								}
+
+								else
+								{
+									if(ReceptacleRestrictions.SpawnOnlyOutsideReceptacles.Contains(sot))
+									{
+										typefoundindictionary = true;
+										AllowedToSpawnInAndExistsInScene.Add(sop);
+									}
+								}
 							}
 						}
 					}
@@ -156,11 +173,19 @@ public class PhysicsSceneManager : MonoBehaviour
 				break;
 			}
 
+			//if this is true, only use Receptacles that are in plain view, so no objects will spawn hidden
+			if(SpawnOnlyOutside)
+			{
+
+			}
+
 			LookAtThisList = AllowedToSpawnInAndExistsInScene;
+
+			ShuffleSimObjPhysicsList(AllowedToSpawnInAndExistsInScene);
 			//print("also here?");
 
-			// //now we have an updated list of SimObjPhys of receptacles in the scene that are also in the list
-			// //of valid receptacles for this given game object "go" that we are currently checking this loop
+			// // //now we have an updated list of SimObjPhys of receptacles in the scene that are also in the list
+			// // //of valid receptacles for this given game object "go" that we are currently checking this loop
 			if(AllowedToSpawnInAndExistsInScene.Count > 0)
 			{
 				SimObjPhysics targetReceptacle;
@@ -168,7 +193,7 @@ public class PhysicsSceneManager : MonoBehaviour
 				List<ReceptacleSpawnPoint> targetReceptacleSpawnPoints;
 
 				//RAAANDOM!
-				AllowedToSpawnInAndExistsInScene = ShuffleSimObjPhysicsList(AllowedToSpawnInAndExistsInScene, seed);
+				ShuffleSimObjPhysicsList(AllowedToSpawnInAndExistsInScene);
 				bool diditspawn = false;
 
 				foreach(SimObjPhysics sop in AllowedToSpawnInAndExistsInScene)
@@ -182,7 +207,7 @@ public class PhysicsSceneManager : MonoBehaviour
 					temp.transform.position = new Vector3(0, 100, 0);//GameObject.Find("FPSController").GetComponent<PhysicsRemoteFPSAgentController>().AgentHandLocation();
 
 					//first shuffle the list so it's raaaandom
-					targetReceptacleSpawnPoints = ShuffleReceptacleSpawnPointList(targetReceptacleSpawnPoints, seed);
+					ShuffleReceptacleSpawnPointList(targetReceptacleSpawnPoints);
 					
 					//try to spawn it, and if it succeeds great! if not uhhh...
 					if(spawner.PlaceObjectReceptacle(targetReceptacleSpawnPoints, temp.GetComponent<SimObjPhysics>(), true))
@@ -199,55 +224,28 @@ public class PhysicsSceneManager : MonoBehaviour
 				}
 			}
 		}
-
-		//now that we have a list of valid object types, start a list of
-		//any Receptacles in the scene that match those object types
-
-		//ok now we have an updated list of valid receptacles, now randomly pick one of those
-
-		//ok now get all valid spawn points on that receptacle, randomly pick one of them and
-		//see if it's a valid spawn, do this until you spawn succesfully, if not, go back out and
-		//find another valid receptacle
 	}
 
-	public List<ReceptacleSpawnPoint> ShuffleReceptacleSpawnPointList (List<ReceptacleSpawnPoint> list, int seed)
+	public void ShuffleReceptacleSpawnPointList (List<ReceptacleSpawnPoint> list)
 	{
-		Random.InitState(seed);
-		System.Random rand = new System.Random(seed);
-
-		ReceptacleSpawnPoint receptacleSpawn;
-
-		int n = list.Count;
-
-		for(int i = 0; i < n; i++)
+		for(int i = 0; i < list.Count; i++)
 		{
-			int r = i + (int)rand.NextDouble() * (n - i);
-			receptacleSpawn = list[r];
-			list[r] = list[i];
-			list[i] = receptacleSpawn;
+			ReceptacleSpawnPoint rsp = list[i];
+			int r = Random.Range(i,list.Count);
+			list[i] = list[r];
+			list[r] = rsp;
 		}
-
-		return list;
 	}
 
-	public List<SimObjPhysics> ShuffleSimObjPhysicsList (List<SimObjPhysics> list, int seed)
+	public void ShuffleSimObjPhysicsList (List<SimObjPhysics> list)
 	{
-	    Random.InitState(seed);
-		System.Random rand = new System.Random(seed);
-
-		SimObjPhysics sop;
-
-		int n = list.Count;
-
-		for(int i = 0; i < n; i++)
+		for(int i = 0; i < list.Count; i++)
 		{
-			int r = i + (int)rand.NextDouble() * (n - i);
-			sop = list[r];
-			list[r] = list[i];
-			list[i] = sop;
+			SimObjPhysics sop = list[i];
+			int r = Random.Range(i,list.Count);
+			list[i] = list[r];
+			list[r] = sop;
 		}
-
-		return list;
 	}
 
 

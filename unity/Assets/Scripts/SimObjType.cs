@@ -254,6 +254,13 @@ public static class ReceptacleRestrictions
     public static List<SimObjType> InReceptaclesThatOnlyCheckBottomFourCorners = new List <SimObjType>()
     { SimObjType.Cup, SimObjType.Bowl, SimObjType.GarbageCan, SimObjType.Box, SimObjType.Sink,};
 
+
+	public static List<SimObjType> SpawnOnlyOutsideReceptacles = new List <SimObjType>()
+	{
+		SimObjType.TableTop, SimObjType.Dresser, SimObjType.CounterTop, SimObjType.Sofa, SimObjType.Bench, SimObjType.Bed,
+		SimObjType.Ottoman, SimObjType.Desk, SimObjType.StoveBurner,
+	};
+
 	//Each sim object type keeps track of what sort of Receptacles it can be placed in
 	//add to this as more pickupable sim objects are created
 	public static Dictionary<SimObjType, List<SimObjType>> PlacementRestrictions = new Dictionary<SimObjType, List<SimObjType>>()
