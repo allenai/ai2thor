@@ -187,7 +187,7 @@ public class InstantiatePrefabTest : MonoBehaviour
             }
             //couldn't find valid places to spawn
             #if UNITY_EDITOR
-            Debug.Log("PlaceObject checks failed");
+            //Debug.Log("PlaceObject checks failed");
             #endif
             return false;
         }
