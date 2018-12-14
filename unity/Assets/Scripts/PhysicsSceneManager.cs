@@ -14,18 +14,21 @@ public class PhysicsSceneManager : MonoBehaviour
 
 	public List<SimObjPhysics> ReceptaclesInScene = new List<SimObjPhysics>();
 
-	public List<SimObjPhysics> LookAtThisList = new List<SimObjPhysics>();
+	//public List<SimObjPhysics> LookAtThisList = new List<SimObjPhysics>();
 
 	private void OnEnable()
 	{
 		//clear this on start so that the CheckForDuplicates function doesn't check pre-existing lists
+		SetupScene();
+
+	}
+
+	private void SetupScene()
+	{
         UniqueIDsInScene.Clear();
 		ReceptaclesInScene.Clear();
-
 		GatherSimObjPhysInScene();
-
 		GatherAllReceptaclesInScene();
-
 	}
 	// Use this for initialization
 	void Start () 
@@ -153,6 +156,9 @@ public class PhysicsSceneManager : MonoBehaviour
 		//to spawn in by checking the PlacementRestrictions dictionary
 		foreach(GameObject go in RequiredObjects)
 		{
+			TypesOfObjectsPrefabIsAllowedToSpawnIn.Clear();
+			AllowedToSpawnInAndExistsInScene.Clear();
+
 			bool typefoundindictionary = false;
 			foreach(KeyValuePair<SimObjType, List<SimObjType>> res in ReceptacleRestrictions.PlacementRestrictions)
 			{
@@ -160,7 +166,7 @@ public class PhysicsSceneManager : MonoBehaviour
 				if(go.GetComponent<SimObjPhysics>().ObjType == res.Key)
 				{
 					//copy the list of receptacles this object is allowed to spawn in for further use below
-					TypesOfObjectsPrefabIsAllowedToSpawnIn = res.Value;
+					TypesOfObjectsPrefabIsAllowedToSpawnIn = new List<SimObjType>(res.Value);
 
 					foreach(SimObjType sot in TypesOfObjectsPrefabIsAllowedToSpawnIn)
 					{
@@ -195,7 +201,7 @@ public class PhysicsSceneManager : MonoBehaviour
 				break;
 			}
 
-			LookAtThisList = AllowedToSpawnInAndExistsInScene;
+			//LookAtThisList = AllowedToSpawnInAndExistsInScene;
 
 			ShuffleSimObjPhysicsList(AllowedToSpawnInAndExistsInScene);
 			//print("also here?");
@@ -226,7 +232,7 @@ public class PhysicsSceneManager : MonoBehaviour
 					ShuffleReceptacleSpawnPointList(targetReceptacleSpawnPoints);
 					
 					//try to spawn it, and if it succeeds great! if not uhhh...
-					if(spawner.PlaceObjectReceptacle(targetReceptacleSpawnPoints, temp.GetComponent<SimObjPhysics>(), true))
+					if(spawner.PlaceObjectReceptacle(targetReceptacleSpawnPoints, temp.GetComponent<SimObjPhysics>(), true)) //we spawn them stationary so things don't fall off of ledges
 					{
 						Debug.Log(go.name + " succesfully spawned");
 						diditspawn = true;
@@ -249,6 +255,7 @@ public class PhysicsSceneManager : MonoBehaviour
 		}
 
 		Debug.Log("Iteration through Required Objects finished");
+		SetupScene();
 		return true;
 	}
 
