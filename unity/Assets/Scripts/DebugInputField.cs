@@ -209,6 +209,40 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
                         PhysicsController.ProcessControlCommand(action);
                         break;
+                    }
+
+                case "irs":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "InitialRandomSpawn";
+
+                        //give me a seed
+                        if(splitcommand.Length == 2)
+                        {
+                            action.randomSeed = int.Parse(splitcommand[1]);
+                        }
+
+                        //should objects be spawned only in immediately visible areas?
+                        else if(splitcommand.Length == 3)
+                        {
+                            action.randomSeed = int.Parse(splitcommand[1]);
+
+                            if(splitcommand[2] == "t") 
+                            action.forceVisible = true;
+
+                            if(splitcommand[2] == "f") 
+                            action.forceVisible = false;
+                        }
+
+                        else
+                        {
+                            action.randomSeed = 1;
+                            action.forceVisible = false;
+                        }
+
+                        PhysicsController.ProcessControlCommand(action);
+
+                        break;
                     }  
 
 				case "spawn":

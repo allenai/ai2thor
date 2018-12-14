@@ -36,14 +36,17 @@ public class PhysicsSceneManager : MonoBehaviour
 	// Update is called once per frame
 	void Update () 
 	{
-		if(Input.GetKeyDown(KeyCode.K))
-		RandomSpawnRequiredSceneObjects(1, true);
+		// //test spawning only in visible spots outside, with seed
+		// if(Input.GetKeyDown(KeyCode.K))
+		// RandomSpawnRequiredSceneObjects(1, true);
 
-		if(Input.GetKeyDown(KeyCode.J))
-		RandomSpawnRequiredSceneObjects(1, false);
+		// //test spawning anywhere, with seed
+		// if(Input.GetKeyDown(KeyCode.J))
+		// RandomSpawnRequiredSceneObjects(1, false);
 
-		if(Input.GetKeyDown(KeyCode.L))
-		RandomSpawnRequiredSceneObjects();
+		// //test default, no seed
+		// if(Input.GetKeyDown(KeyCode.L))
+		// RandomSpawnRequiredSceneObjects();
 	}
 
     public void GatherSimObjPhysInScene()
@@ -112,7 +115,21 @@ public class PhysicsSceneManager : MonoBehaviour
 		UniqueIDsInScene.Add(sop.uniqueID);
 	}
 
-	//if no values passed in, default to system random
+	//use action.randomseed for seed, use action.forceVisible for if objects shoudld ONLY spawn outside and not inside anything
+	//set forceVisible to true for if you want objects to only spawn in immediately visible receptacles.
+	public bool RandomSpawnRequiredSceneObjects(ServerAction action)
+	{
+		
+		if(RandomSpawnRequiredSceneObjects(action.randomSeed, action.forceVisible))
+		{
+			return true;
+		}
+		
+		else
+		return false;
+	}
+
+	//if no values passed in, default to system random based on ticks
 	public void RandomSpawnRequiredSceneObjects()
 	{
 		RandomSpawnRequiredSceneObjects(System.Environment.TickCount, false);
@@ -120,8 +137,13 @@ public class PhysicsSceneManager : MonoBehaviour
 
 	//place each object in the array of objects that should appear in this scene randomly in valid receptacles
 	//a seed of 0 is the default positions placed by hand(?)
-	public void RandomSpawnRequiredSceneObjects(int seed, bool SpawnOnlyOutside)
+	public bool RandomSpawnRequiredSceneObjects(int seed, bool SpawnOnlyOutside)
 	{
+		if(RequiredObjects.Count == 0)
+		{
+			Debug.Log("No objects in Required Objects array, please add them in editor");
+			return false;
+		}
 		Random.InitState(seed);
 
 		List<SimObjType> TypesOfObjectsPrefabIsAllowedToSpawnIn = new List<SimObjType>();
@@ -173,12 +195,6 @@ public class PhysicsSceneManager : MonoBehaviour
 				break;
 			}
 
-			//if this is true, only use Receptacles that are in plain view, so no objects will spawn hidden
-			if(SpawnOnlyOutside)
-			{
-
-			}
-
 			LookAtThisList = AllowedToSpawnInAndExistsInScene;
 
 			ShuffleSimObjPhysicsList(AllowedToSpawnInAndExistsInScene);
@@ -216,14 +232,24 @@ public class PhysicsSceneManager : MonoBehaviour
 						diditspawn = true;
 						break;
 					}
+
+					//object failed to spawn, destroy it and try again 
+					else
+					{
+						Destroy(temp);
+					}
 				}
 
 				if(!diditspawn)
 				{
 					Debug.Log("None of the receptacles in the scene could spawn " + go.name);
+					return false;
 				}
 			}
 		}
+
+		Debug.Log("Iteration through Required Objects finished");
+		return true;
 	}
 
 	public void ShuffleReceptacleSpawnPointList (List<ReceptacleSpawnPoint> list)
