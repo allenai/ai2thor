@@ -116,12 +116,23 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		}
 	}
 
+	//get all the UniqueID strings of all objects contained by this receptacle object
 	public List<string> ReceptacleObjectIds
 	{
 		get
 		{
 			return this.Contains();
 		}
+	}
+
+	//get all objects contained by this receptacle object as a list of SimObjPhysics
+	public List<SimObjPhysics> ReceptacleObjects
+	{
+		get
+		{
+			return this.ContainsGameObject();
+		}
+
 	}
 
 	public List<PivotSimObj> PivotSimObjs
@@ -281,6 +292,22 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		//end debug setup stuff
 	}
 
+	private bool hasAncestor(GameObject child, GameObject potentialAncestor)
+    {
+        if (child == potentialAncestor)
+        {
+            return true;
+        }
+        else if (child.transform.parent != null)
+        {
+            return hasAncestor(child.transform.parent.gameObject, potentialAncestor);
+        }
+        else
+        {
+            return false;
+        }
+    }
+
 	public bool DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty prop)
 	{
 		bool result = false;
@@ -353,6 +380,31 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		return objs;
 	}
 
+	//if this is a receptacle object, return list of references to all objects currently contained
+	public List<SimObjPhysics> ContainsGameObject()
+	{
+		List<SimObjPhysics> objs = new List<SimObjPhysics>();
+
+		if(DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.Receptacle))
+		{
+			if(ReceptacleTriggerBoxes != null)
+			{
+				foreach (GameObject go in ReceptacleTriggerBoxes)
+				{
+					foreach(SimObjPhysics sop in go.GetComponent<Contains>().CurrentlyContainedObjects())
+					{
+						if(!objs.Contains(sop))
+						{
+							objs.Add(sop);
+						}
+					}
+				}
+			}
+		}
+
+		return objs;
+	}
+
 	//if this is a receptacle object, check what is inside the Receptacle
 	//make sure to return array of strings so that this info can be put into MetaData
 	public List<string> Contains()
@@ -381,7 +433,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 					//objs.Add(rtb.GetComponent<Contains>().CurrentlyContainedUniqueIDs()); 
 				}
 
-#if UNITY_EDITOR
+				#if UNITY_EDITOR
 
 				if (objs.Count != 0)
 				{
@@ -395,8 +447,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 
 					Debug.Log(result);
 				}
-
-#endif
+				#endif
 				
 				return objs;
 			}
@@ -427,6 +478,14 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 			return;
 		}
 
+		//don't collide if the object is a child of this object, specifically for picked up receptacles that contain things
+		else if(hasAncestor(other.transform.gameObject, gameObject))
+		{
+			//print("please ignore!");
+			isColliding = false;
+			return;
+		}
+
 		//make sure nothing is dropped while inside the agent (the agent will try to "push(?)" it out and it will fall in unpredictable ways
 		else if (other.tag == "Player" && other.name == "FPSController")
 		{
@@ -440,6 +499,8 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 			isColliding = true;
 			return;
 		}
+
+
 
 	}
 

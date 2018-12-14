@@ -273,7 +273,6 @@ GameObject:
   - component: {fileID: 4857017987631702}
   - component: {fileID: 33154213569497432}
   - component: {fileID: 23049138440478714}
-  - component: {fileID: 65140109719809086}
   m_Layer: 8
   m_Name: mesh
   m_TagString: SimObj
@@ -1073,18 +1072,6 @@ BoxCollider:
   serializedVersion: 2
   m_Size: {x: 0.06444818, y: 0.0061045885, z: 0.0634346}
   m_Center: {x: -0.0040597618, y: 0.003858745, z: -0.0011920929}
---- !u!65 &65140109719809086
-BoxCollider:
-  m_ObjectHideFlags: 1
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 100100000}
-  m_GameObject: {fileID: 1497258711207644}
-  m_Material: {fileID: 0}
-  m_IsTrigger: 0
-  m_Enabled: 1
-  serializedVersion: 2
-  m_Size: {x: 0.00074954506, y: 0.00074954506, z: 0.0011410881}
-  m_Center: {x: 0, y: 0, z: -0.00000043056207}
 --- !u!65 &65379839681819242
 BoxCollider:
   m_ObjectHideFlags: 1
@@ -1331,6 +1318,7 @@ MonoBehaviour:
   isVisible: 0
   isInteractable: 0
   isColliding: 0
+  MySpawnPoints: []
 --- !u!114 &114649757999666168
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -1343,3 +1331,5 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   CurrentlyContains: []
+  myParent: {fileID: 0}
+  Corners: []
