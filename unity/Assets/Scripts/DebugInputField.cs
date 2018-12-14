@@ -236,8 +236,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
                         else
                         {
-                            action.randomSeed = 1;
-                            action.forceVisible = false;
+                            action.randomSeed = 0;
+                            action.forceVisible = true;
                         }
 
                         PhysicsController.ProcessControlCommand(action);

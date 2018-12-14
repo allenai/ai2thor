@@ -381,8 +381,16 @@ public class InstantiatePrefabTest : MonoBehaviour
                     // #if UNITY_EDITOR
                     // Debug.Log(sop.name + " cannot fit in target receptacle: " + rsp.ParentSimObjPhys.name + " at coordinate " + rsp.Point);
                     // #endif
-                    
                     return false;
+                }
+
+                //one final check, make sure all corners of object are "above" the receptacle box in question
+                foreach (Vector3 v in SpawnCorners)
+                {
+                    if(!rsp.Script.CheckIfPointIsAboveReceptacleTriggerBox(v))
+                    {
+                        return false;
+                    }
                 }
 
                 //we passed all the checks! Place the object now!
