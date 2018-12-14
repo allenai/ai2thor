@@ -154,6 +154,8 @@ public class PhysicsSceneManager : MonoBehaviour
 		List<SimObjType> TypesOfObjectsPrefabIsAllowedToSpawnIn = new List<SimObjType>();
 		List<SimObjPhysics> AllowedToSpawnInAndExistsInScene = new List<SimObjPhysics>();
 
+		int HowManyCouldntSpawn = 0;
+
 		//for each object in RequiredObjects, start a list of what objects it's allowed 
 		//to spawn in by checking the PlacementRestrictions dictionary
 		foreach(GameObject go in RequiredObjects)
@@ -253,11 +255,17 @@ public class PhysicsSceneManager : MonoBehaviour
 				if(!diditspawn)
 				{
 					Debug.Log("None of the receptacles in the scene could spawn " + go.name);
-					return false;
+					//return false;
+					HowManyCouldntSpawn++;
+					//break;
 				}
 			}
 		}
 
+		if(HowManyCouldntSpawn > 0)
+		{
+			Debug.Log(HowManyCouldntSpawn + " objects could not be spawned into the scene!");
+		}
 		//Debug.Log("Iteration through Required Objects finished");
 		SetupScene();
 		return true;
