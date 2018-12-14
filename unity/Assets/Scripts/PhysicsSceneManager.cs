@@ -23,10 +23,11 @@ public class PhysicsSceneManager : MonoBehaviour
 
 	}
 
-	private void SetupScene()
+	public void SetupScene()
 	{
         UniqueIDsInScene.Clear();
 		ReceptaclesInScene.Clear();
+		PhysObjectsInScene.Clear();
 		GatherSimObjPhysInScene();
 		GatherAllReceptaclesInScene();
 	}
@@ -54,6 +55,7 @@ public class PhysicsSceneManager : MonoBehaviour
 
     public void GatherSimObjPhysInScene()
 	{
+		PhysObjectsInScene.Clear();
 		PhysObjectsInScene = new List<SimObjPhysics>();
 
 		PhysObjectsInScene.AddRange(FindObjectsOfType<SimObjPhysics>());
@@ -223,6 +225,7 @@ public class PhysicsSceneManager : MonoBehaviour
 					targetReceptacle = sop;
 					targetReceptacleSpawnPoints = targetReceptacle.ReturnMySpawnPoints(false);
 
+					//print("create object");
 					GameObject temp = PrefabUtility.InstantiatePrefab(go as GameObject) as GameObject;
 					temp.GetComponent<Rigidbody>().isKinematic = true;
 					//spawn it waaaay outside of the scene and then we will try and move it in a moment here, hold your horses
@@ -242,7 +245,8 @@ public class PhysicsSceneManager : MonoBehaviour
 					//object failed to spawn, destroy it and try again 
 					else
 					{
-						Destroy(temp);
+						Debug.Log(sop.name + " couldn't fit " + go.name);
+						DestroyImmediate(temp);//apparently using Destroy() waits until the END of this frame, so we need it to be gone LITERALLY NOW RIGHT NOW IM NOT KIDDING, otherwise SetupScene will be wrong
 					}
 				}
 

@@ -386,14 +386,15 @@ public class Contains : MonoBehaviour
 
 		// Gizmos.color = Color.blue;
 		// //Gizmos.DrawCube(b.ClosestPoint(GameObject.Find("FPSController").transform.position), new Vector3 (0.1f, 0.1f, 0.1f));
-		Gizmos.color = Color.magenta;
-		if(validpointlist.Count > 0)
-		{
-			foreach(ReceptacleSpawnPoint yes in validpointlist)
-			{
-				Gizmos.DrawCube(yes.Point, new Vector3(0.01f, 0.01f, 0.01f));
-			}
-		}
+		
+		// Gizmos.color = Color.magenta;
+		// if(validpointlist.Count > 0)
+		// {
+		// 	foreach(ReceptacleSpawnPoint yes in validpointlist)
+		// 	{
+		// 		Gizmos.DrawCube(yes.Point, new Vector3(0.01f, 0.01f, 0.01f));
+		// 	}
+		// }
 
 	}
     #endif

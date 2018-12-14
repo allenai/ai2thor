@@ -1871,6 +1871,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
             if(script.RandomSpawnRequiredSceneObjects(action.randomSeed, action.forceVisible))
             {
+                //script.SetupScene();
                 actionFinished(true);
                 return;
             }
