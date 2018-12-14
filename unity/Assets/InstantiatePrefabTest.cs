@@ -403,6 +403,13 @@ public class InstantiatePrefabTest : MonoBehaviour
                     sop.GetComponent<Rigidbody>().isKinematic = false;
                 }
 
+
+                if(sop.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.Receptacle))
+                {
+                    PhysicsRemoteFPSAgentController agent = GameObject.Find("FPSController").GetComponent<PhysicsRemoteFPSAgentController>();
+                    agent.DropContainedObjects(sop);
+                }
+
                 
                 #if UNITY_EDITOR
                 Debug.Log(sop.name + " succesfully spawned in " +rsp.ParentSimObjPhys.name + " at coordinate " + rsp.Point);

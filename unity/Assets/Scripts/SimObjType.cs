@@ -297,7 +297,7 @@ public static class ReceptacleRestrictions
 
 		//CUP
 		{SimObjType.Cup, new List<SimObjType>()
-		{SimObjType.TableTop, SimObjType.CounterTop, SimObjType.Sink, SimObjType.GarbageCan, SimObjType.Cabinet, SimObjType.Microwave}},
+		{SimObjType.TableTop, SimObjType.CounterTop, SimObjType.Sink, SimObjType.GarbageCan, SimObjType.Cabinet, SimObjType.Microwave, SimObjType.Pot}},
 
 	};
 

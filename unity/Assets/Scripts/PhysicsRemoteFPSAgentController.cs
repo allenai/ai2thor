@@ -2042,6 +2042,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 bool wasKinematic = target.GetComponent<Rigidbody>().isKinematic;
 
                 target.GetComponent<Rigidbody>().isKinematic = true;
+
+                PickupContainedObjects(target);
+
                 target.transform.position = AgentHand.transform.position;
 				target.transform.rotation = AgentHand.transform.rotation; //- keep this line if we ever want to change the pickup position to be constant relative to the Agent Hand and Agent Camera rather than aligned by world axis
 				//target.transform.rotation = transform.rotation;
@@ -2055,6 +2058,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     target.transform.rotation = savedRot;
                     target.transform.SetParent(savedParent);
                     ItemInHand = null;
+
+                    DropContainedObjects(target);
+
                     errorMessage = "Picking up object would cause it to collide.";
                     Debug.Log(errorMessage);
                     actionFinished(true);
@@ -2067,6 +2073,38 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 actionFinished(true);
                 return;
 			}      
+        }
+
+        public void PickupContainedObjects(SimObjPhysics target)
+        {
+            if(target.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.Receptacle))
+            {
+                foreach(SimObjPhysics sop in target.ReceptacleObjects)
+                {
+                    //for every object that is contained by this object...
+                    //turn off the colliders, leaving Trigger Colliders active (this is important to maintain visibility!)
+                    sop.transform.Find("Colliders").gameObject.SetActive(false);
+                    sop.GetComponent<Rigidbody>().isKinematic = true;
+                    sop.transform.SetParent(target.transform);
+                }
+            }
+        }
+
+        public void DropContainedObjects(SimObjPhysics target)
+        {
+            if(target.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.Receptacle))
+            {
+                GameObject topObject = GameObject.Find("Objects");
+
+                foreach(SimObjPhysics sop in target.ReceptacleObjects)
+                {
+                    //for every object that is contained by this object...
+                    //turn off the colliders, leaving Trigger Colliders active (this is important to maintain visibility!)
+                    sop.transform.Find("Colliders").gameObject.SetActive(true);
+                    sop.GetComponent<Rigidbody>().isKinematic = false;
+                    sop.transform.SetParent(topObject.transform);
+                }
+            }
         }
 
         private IEnumerator checkDropHandObjectAction(SimObjPhysics currentHandSimObj) {
@@ -2082,6 +2120,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
 					yield return null;
 				}
 			}
+
+            //DropContainedObjects(currentHandSimObj);
 
             DefaultAgentHand(new ServerAction());
 			actionFinished (true);
@@ -2125,6 +2165,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     // TODO: Need a parameter to control how much randomness we introduce.
                     rb.angularVelocity = UnityEngine.Random.insideUnitSphere;
 
+                    DropContainedObjects(ItemInHand.GetComponent<SimObjPhysics>());
                     StartCoroutine (checkDropHandObjectAction (ItemInHand.GetComponent<SimObjPhysics>()));
                     ItemInHand = null;
                     return;
