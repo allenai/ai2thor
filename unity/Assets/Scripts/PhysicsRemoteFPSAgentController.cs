@@ -121,6 +121,11 @@ namespace UnityStandardAssets.Characters.FirstPerson
             base.actionComplete = true;
         }
 
+        public Vector3 AgentHandLocation()
+        {
+            return AgentHand.transform.position;
+        }
+
         public float WhatIsAgentsMaxVisibleDistance()
         {
             return maxVisibleDistance;
@@ -448,14 +453,13 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 bool overlapping = (transform.position - phyAgent.transform.position).magnitude < 0.001f;
                 if (overlapping || phyAgent.AgentId == AgentId || !phyAgent.IsVisible) {
                     foreach (Collider c in phyAgent.GetComponentsInChildren<Collider>()) {
-                        c.enabled = enableColliders;
-                    }
-                    foreach (Collider c in phyAgent.AgentHand.GetComponentsInChildren<Collider>()) {
-                        c.enabled = true;
+                        if (ItemInHand == null || !hasAncestor(c.transform.gameObject, ItemInHand)) {
+                            c.enabled = enableColliders;
+                        }  
                     }
                 }
             }
-        }
+}
 
 		protected SimObjPhysics[] GetAllVisibleSimObjPhysics(Camera agentCamera, float maxDistance)
         {
@@ -1922,14 +1926,14 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 if(!HandObjectFoundInList)
                 {
                     #if UNITY_EDITOR
-                    Debug.Log("Object Type not found in PlacementRestrictions dictionary");
+                    Debug.Log("Object Type:" + ItemInHand.GetComponent<SimObjPhysics>().ObjType + " not found in PlacementRestrictions dictionary");
                     #endif
                 }
             }
 
             //ok we are holding something, time to try and place it
             InstantiatePrefabTest script = GameObject.Find("PhysicsSceneManager").GetComponent<InstantiatePrefabTest>();
-            if(script.PlaceObjectReceptacle(targetReceptacle.ReturnMySpawnPoints(), ItemInHand.GetComponent<SimObjPhysics>(), action.placeStationary))
+            if(script.PlaceObjectReceptacle(targetReceptacle.ReturnMySpawnPoints(true), ItemInHand.GetComponent<SimObjPhysics>(), action.placeStationary))
             {
                 ItemInHand = null;
                 actionFinished(true);
