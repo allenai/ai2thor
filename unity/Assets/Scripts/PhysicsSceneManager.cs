@@ -67,7 +67,11 @@ public class PhysicsSceneManager : MonoBehaviour
 
 			//check against any Unique IDs currently tracked in list if there is a duplicate
 			if (CheckForDuplicateUniqueIDs(o))
+			{
+				#if UNITY_EDITOR
 				Debug.Log("Yo there are duplicate UniqueIDs! Check" + o.UniqueID);
+				#endif
+			}
 
 			else
 				UniqueIDsInScene.Add(o.UniqueID);
@@ -146,7 +150,10 @@ public class PhysicsSceneManager : MonoBehaviour
 	{
 		if(RequiredObjects.Count == 0)
 		{
+			#if UNITY_EDITOR
 			Debug.Log("No objects in Required Objects array, please add them in editor");
+			#endif
+			
 			return false;
 		}
 		Random.InitState(seed);
@@ -201,8 +208,12 @@ public class PhysicsSceneManager : MonoBehaviour
 
 			if(!typefoundindictionary)
 			{
+				#if UNITY_EDITOR
 				Debug.Log(go.name +"'s Type is not in the ReceptacleRestrictions dictionary!");
+				#endif
+
 				break;
+				
 			}
 
 			//LookAtThisList = AllowedToSpawnInAndExistsInScene;
@@ -254,7 +265,9 @@ public class PhysicsSceneManager : MonoBehaviour
 
 				if(!diditspawn)
 				{
+					#if UNITY_EDITOR
 					Debug.Log("None of the receptacles in the scene could spawn " + go.name);
+					#endif
 					//return false;
 					HowManyCouldntSpawn++;
 					//break;
@@ -262,10 +275,15 @@ public class PhysicsSceneManager : MonoBehaviour
 			}
 		}
 
+		//we can use this to report back any failed spawns if we want that info at some point ?
+
+		#if UNITY_EDITOR
 		if(HowManyCouldntSpawn > 0)
 		{
 			Debug.Log(HowManyCouldntSpawn + " objects could not be spawned into the scene!");
 		}
+		#endif
+
 		//Debug.Log("Iteration through Required Objects finished");
 		SetupScene();
 		return true;
