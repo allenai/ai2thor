@@ -117,9 +117,6 @@ public class InstantiatePrefabTest : MonoBehaviour
     //--
     public SimObjPhysics SpawnObject(string objectType, bool randomize, int variation, Vector3 position, Vector3 rotation, bool spawningInHand, bool ignoreChecks)
     {
-
-        //print(Enum.Parse(typeof(SimObjType), objectType));
-
         GameObject topObject = GameObject.Find("Objects");
 
         List<GameObject> candidates = new List<GameObject>();
@@ -145,7 +142,6 @@ public class InstantiatePrefabTest : MonoBehaviour
 			variation -= 1;
 		}
 
-        //Debug.Log(variation);
         Quaternion quat = Quaternion.Euler(rotation);
 
 		if (ignoreChecks || CheckSpawnArea(candidates[variation].GetComponent<SimObjPhysics>(), position, quat, spawningInHand))
@@ -186,14 +182,12 @@ public class InstantiatePrefabTest : MonoBehaviour
                 }
             }
             //couldn't find valid places to spawn
-            #if UNITY_EDITOR
-            //Debug.Log("PlaceObject checks failed");
-            #endif
             return false;
         }
         #if UNITY_EDITOR
         Debug.Log("Null list of points to check, please pass in populated list of <ReceptacleSpawnPoint>?");
         #endif
+
         //uh, there was nothing in the List for some reason, so failed to spawn
         return false;
     }
@@ -421,7 +415,6 @@ public class InstantiatePrefabTest : MonoBehaviour
                 //now the SpawnCorners list is sorted with the four corners closest in y-position difference to the spawn point first
                 for(int i = 0; i < HowManyCornersToCheck; i++)
                 {
-                    //print("Checking " + (i-1));
                     if(rsp.Script.CheckIfPointIsInsideReceptacleTriggerBox(SpawnCorners[i]))
                     {
                         CornerCount++;
@@ -431,9 +424,6 @@ public class InstantiatePrefabTest : MonoBehaviour
                 if(CornerCount < HowManyCornersToCheck)
                 {
                     sop.transform.rotation = originalRot;
-                    // #if UNITY_EDITOR
-                    // Debug.Log(sop.name + " cannot fit in target receptacle: " + rsp.ParentSimObjPhys.name + " at coordinate " + rsp.Point);
-                    // #endif
                     return false;
                 }
 
@@ -482,10 +472,7 @@ public class InstantiatePrefabTest : MonoBehaviour
        
         //reset rotation if no valid spawns found
         sop.transform.rotation = originalRot;
-        
-
         //oh now we couldn't spawn it, all the spawn areas were not clear
-        //Debug.Log("Spawn Area not clear at" + rsp.Point + ", failed to spawn");
         return false;
 	}
 
@@ -532,17 +519,11 @@ public class InstantiatePrefabTest : MonoBehaviour
 
         BoxCollider pbbc = placeBox.GetComponent<BoxCollider>();
         pbbc.isTrigger = true;
-        //print("extents:" + placeBox.GetComponent<BoxCollider>().size);
 
         Collider[] hitColliders = Physics.OverlapBox(placeBox.transform.TransformPoint(pbbc.center)/* placeBox.transform.position*/,
                                                      placeBox.GetComponent<BoxCollider>().size / 2.0f, placeholderPosition.transform.rotation,
                                                      layermask, QueryTriggerInteraction.Ignore);
 
-
-        // Collider[] hitColliders = Physics.OverlapBox(inst.transform.position,
-        //                                              instantbox.size / 2, rotation,
-        //                                              layermask, QueryTriggerInteraction.Ignore);
-        
         //keep track of all 8 corners of the OverlapBox
         List<Vector3> corners = new List<Vector3>();
         //bottom forward right
@@ -580,13 +561,6 @@ public class InstantiatePrefabTest : MonoBehaviour
         //if a collider was hit, then the space is not clear to spawn
 		if (hitColliders.Length > 0)
 		{
-            
-            // // print(hitColliders.Length);
-            // foreach(Collider c in hitColliders)
-            // {
-            //     print(c.name);
-            //     print(c.transform.position);
-            // }
 			return false;
 		}
 
