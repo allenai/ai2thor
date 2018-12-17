@@ -73,9 +73,10 @@ public class PhysicsSceneManager : MonoBehaviour
 				Debug.Log("Yo there are duplicate UniqueIDs! Check" + o.UniqueID);
 				
 			}
-			#endif
+
 
 			else
+			#endif
 				UniqueIDsInScene.Add(o.UniqueID);
 
 		}
