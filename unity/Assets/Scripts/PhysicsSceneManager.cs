@@ -1,7 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEditor;
+//using UnityEditor;
 using UnityStandardAssets.Characters.FirstPerson;
 
 [ExecuteInEditMode]
@@ -55,25 +55,28 @@ public class PhysicsSceneManager : MonoBehaviour
 
     public void GatherSimObjPhysInScene()
 	{
-		PhysObjectsInScene.Clear();
+		//PhysObjectsInScene.Clear();
 		PhysObjectsInScene = new List<SimObjPhysics>();
 
 		PhysObjectsInScene.AddRange(FindObjectsOfType<SimObjPhysics>());
-		PhysObjectsInScene.Sort((x, y) => (x.Type.ToString().CompareTo(y.Type.ToString())));
+		//PhysObjectsInScene.Sort((x, y) => (x.Type.ToString().CompareTo(y.Type.ToString())));
 
 		foreach(SimObjPhysics o in PhysObjectsInScene)
 		{
 			Generate_UniqueID(o);
 
-			//check against any Unique IDs currently tracked in list if there is a duplicate
+			///debug in editor, make sure no two object share ids for some reason
+			#if UNITY_EDITOR
 			if (CheckForDuplicateUniqueIDs(o))
 			{
-				#if UNITY_EDITOR
+				
 				Debug.Log("Yo there are duplicate UniqueIDs! Check" + o.UniqueID);
-				#endif
+				
 			}
 
+
 			else
+			#endif
 				UniqueIDsInScene.Add(o.UniqueID);
 
 		}
@@ -238,8 +241,11 @@ public class PhysicsSceneManager : MonoBehaviour
 					targetReceptacle = sop;
 					targetReceptacleSpawnPoints = targetReceptacle.ReturnMySpawnPoints(false);
 
+					GameObject temp = Instantiate(go, new Vector3(0, 100, 0), Quaternion.identity);
+					temp.transform.name = go.name;
+
 					//print("create object");
-					GameObject temp = PrefabUtility.InstantiatePrefab(go as GameObject) as GameObject;
+					//GameObject temp = PrefabUtility.InstantiatePrefab(go as GameObject) as GameObject;
 					temp.GetComponent<Rigidbody>().isKinematic = true;
 					//spawn it waaaay outside of the scene and then we will try and move it in a moment here, hold your horses
 					temp.transform.position = new Vector3(0, 100, 0);//GameObject.Find("FPSController").GetComponent<PhysicsRemoteFPSAgentController>().AgentHandLocation();
