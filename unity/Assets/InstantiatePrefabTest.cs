@@ -307,62 +307,6 @@ public class InstantiatePrefabTest : MonoBehaviour
             }
 
             oabb.enabled = false;
-
-            //-----------Initial version of this snippet
-            // if(i > 0)
-            // {
-            //     sop.transform.Rotate(new Vector3(0, degreeIncrement, 0), Space.Self);
-            //     //ToCheck[i].rotation = sop.transform.rotation;
-                
-            //     Vector3 Offset = oabb.ClosestPoint(oabb.transform.TransformPoint(oabb.center) + -rsp.ReceptacleBox.transform.up * 10);
-            //     Plane BoxBottom = new Plane(rsp.ReceptacleBox.transform.up, Offset);
-            //     float DistanceFromBoxBottomTosop = Math.Abs(BoxBottom.GetDistanceToPoint(sop.transform.position));
-
-            //     ToCheck.Add(new RotationAndDistanceValues(DistanceFromBoxBottomTosop, sop.transform.rotation));
-            //     //ToCheck[i] = new RotationAndDistanceValues(DistanceFromBoxBottomTosop, sop.transform.rotation);
-
-            //     Quaternion oldRotation = sop.transform.rotation;
-
-            //     //now add more points by rotating the x axis at this current y rotation
-            //     for(int j = 0; j < HowManyRotationsToCheck; j++)
-            //     {
-            //         sop.transform.Rotate(new Vector3(degreeIncrement, 0, 0), Space.Self);
-
-            //         Offset = oabb.ClosestPoint(oabb.transform.TransformPoint(oabb.center) + -rsp.ReceptacleBox.transform.up * 10);
-            //         BoxBottom = new Plane(rsp.ReceptacleBox.transform.up, Offset);
-            //         DistanceFromBoxBottomTosop = Math.Abs(BoxBottom.GetDistanceToPoint(sop.transform.position));
-
-            //         ToCheck.Add(new RotationAndDistanceValues(DistanceFromBoxBottomTosop, sop.transform.rotation));
-            //     }
-
-            //     sop.transform.rotation = oldRotation;
-
-            //     //now add EVEN more points by rotating the z axis at this current y rotation
-            //     for(int j = 0; j < HowManyRotationsToCheck; j++)
-            //     {
-            //         sop.transform.Rotate(new Vector3(0, 0, degreeIncrement), Space.Self);
-
-            //         Offset = oabb.ClosestPoint(oabb.transform.TransformPoint(oabb.center) + -rsp.ReceptacleBox.transform.up * 10);
-            //         BoxBottom = new Plane(rsp.ReceptacleBox.transform.up, Offset);
-            //         DistanceFromBoxBottomTosop = Math.Abs(BoxBottom.GetDistanceToPoint(sop.transform.position));
-
-            //         ToCheck.Add(new RotationAndDistanceValues(DistanceFromBoxBottomTosop, sop.transform.rotation));
-            //     }
-                         
-            //    sop.transform.rotation = oldRotation;
-
-            // }
-
-            // else
-            // {
-            //     //no rotate change just yet, check the first position
-
-            //     Vector3 Offset = oabb.ClosestPoint(oabb.transform.TransformPoint(oabb.center) + -rsp.ReceptacleBox.transform.up * 10); //was using rsp.point
-            //     Plane BoxBottom = new Plane(rsp.ReceptacleBox.transform.up, Offset);
-            //     float DistanceFromBoxBottomTosop = BoxBottom.GetDistanceToPoint(sop.transform.position);
-
-            //     ToCheck.Add(new RotationAndDistanceValues(DistanceFromBoxBottomTosop, sop.transform.rotation));
-            // }
         }
 
         foreach(RotationAndDistanceValues quat in ToCheck)
@@ -421,17 +365,21 @@ public class InstantiatePrefabTest : MonoBehaviour
                     }
                 }
 
+                //if not enough corners are inside the receptacle, abort
                 if(CornerCount < HowManyCornersToCheck)
                 {
                     sop.transform.rotation = originalRot;
                     return false;
                 }
 
-                //one final check, make sure all corners of object are "above" the receptacle box in question
+                //one final check, make sure all corners of object are "above" the receptacle box in question, so we
+                //dont spawn stuff half on a table and it falls over
                 foreach (Vector3 v in SpawnCorners)
                 {
                     if(!rsp.Script.CheckIfPointIsAboveReceptacleTriggerBox(v))
                     {
+                                //reset rotation if no valid spawns found
+                        sop.transform.rotation = originalRot;
                         return false;
                     }
                 }
@@ -461,7 +409,6 @@ public class InstantiatePrefabTest : MonoBehaviour
                     agent.DropContainedObjects(sop);
                 }
 
-                
                 #if UNITY_EDITOR
                 Debug.Log(sop.name + " succesfully spawned in " +rsp.ParentSimObjPhys.name + " at coordinate " + rsp.Point);
                 #endif
@@ -483,24 +430,6 @@ public class InstantiatePrefabTest : MonoBehaviour
     //this assumes that the BoundingBox transform is zeroed out according to the root transform of the prefab
     private bool CheckSpawnArea(SimObjPhysics simObj, Vector3 position, Quaternion rotation, bool spawningInHand)
     {
-        //create a dummy gameobject that is instantiated then rotated to get the actual
-        //location and orientation of the spawn area
-        Transform placeholderPosition = new GameObject("placeholderPosition").transform;
-
-        //this is now in the exact position the object will spawn at
-        placeholderPosition.transform.position = position;
-
-        //get how much and in what direction the bounding box might be offset from its parent sim object
-        //Vector3 OffsetPos = simObj.BoundingBox.transform.position - simObj.transform.position;
-
-        GameObject placeBox = Instantiate(simObj.BoundingBox, position /*+ OffsetPos*/, placeholderPosition.transform.rotation);
-        placeBox.transform.SetParent(placeholderPosition);
-        placeBox.transform.localPosition = simObj.BoundingBox.transform.localPosition;
-
-        //rotate it after creating the offset so that the offset's local position is maintained
-        placeholderPosition.transform.rotation = rotation;
-
-
 		int layermask;
 
 		//first do a check to see if the area is clear
@@ -517,53 +446,71 @@ public class InstantiatePrefabTest : MonoBehaviour
 			layermask = (1 << 8) | (1 << 10);
 		}
 
-        BoxCollider pbbc = placeBox.GetComponent<BoxCollider>();
-        pbbc.isTrigger = true;
+        simObj.transform.Find("Colliders").gameObject.SetActive(false);
 
-        Collider[] hitColliders = Physics.OverlapBox(placeBox.transform.TransformPoint(pbbc.center)/* placeBox.transform.position*/,
-                                                     placeBox.GetComponent<BoxCollider>().size / 2.0f, placeholderPosition.transform.rotation,
+        //let's move the simObj to the position we are trying, and then change it's rotation to the rotation we are trying
+        Vector3 originalPos = simObj.transform.position;
+
+        simObj.transform.position = position;
+        simObj.transform.rotation = rotation;
+
+        //now let's get the BoundingBox of the simObj as reference cause we need it to create the overlapbox
+        GameObject bb = simObj.BoundingBox.transform.gameObject;
+        BoxCollider bbcol = bb.GetComponent<BoxCollider>();
+
+        //we need the center of the box collider in world space, we need the box collider size/2, we need the rotation to set the box at, layermask, querytrigger
+        Collider[] hitColliders = Physics.OverlapBox(bb.transform.TransformPoint(bbcol.center),
+                                                     bbcol.size / 2.0f, simObj.transform.rotation, 
                                                      layermask, QueryTriggerInteraction.Ignore);
+
+
 
         //keep track of all 8 corners of the OverlapBox
         List<Vector3> corners = new List<Vector3>();
         //bottom forward right
-        corners.Add(placeBox.transform.TransformPoint(pbbc.center + new Vector3(pbbc.size.x, -pbbc.size.y, pbbc.size.z) * 0.5f));
+        corners.Add(bb.transform.TransformPoint(bbcol.center + new Vector3(bbcol.size.x, -bbcol.size.y, bbcol.size.z) * 0.5f));
         //bottom forward left
-        corners.Add(placeBox.transform.TransformPoint(pbbc.center + new Vector3(-pbbc.size.x, -pbbc.size.y, pbbc.size.z) * 0.5f));
+        corners.Add(bb.transform.TransformPoint(bbcol.center + new Vector3(-bbcol.size.x, -bbcol.size.y, bbcol.size.z) * 0.5f));
         //bottom back left
-        corners.Add(placeBox.transform.TransformPoint(pbbc.center + new Vector3(-pbbc.size.x, -pbbc.size.y, -pbbc.size.z) * 0.5f));
+        corners.Add(bb.transform.TransformPoint(bbcol.center + new Vector3(-bbcol.size.x, -bbcol.size.y, -bbcol.size.z) * 0.5f));
         //bottom back right
-        corners.Add(placeBox.transform.TransformPoint(pbbc.center+ new Vector3(pbbc.size.x, -pbbc.size.y, -pbbc.size.z) * 0.5f));
+        corners.Add(bb.transform.TransformPoint(bbcol.center+ new Vector3(bbcol.size.x, -bbcol.size.y, -bbcol.size.z) * 0.5f));
 
         //top forward right
-        corners.Add(placeBox.transform.TransformPoint(pbbc.center + new Vector3(pbbc.size.x, pbbc.size.y, pbbc.size.z) * 0.5f));
+        corners.Add(bb.transform.TransformPoint(bbcol.center + new Vector3(bbcol.size.x, bbcol.size.y, bbcol.size.z) * 0.5f));
         //top forward left
-        corners.Add(placeBox.transform.TransformPoint(pbbc.center + new Vector3(-pbbc.size.x, pbbc.size.y, pbbc.size.z) * 0.5f));
+        corners.Add(bb.transform.TransformPoint(bbcol.center + new Vector3(-bbcol.size.x, bbcol.size.y, bbcol.size.z) * 0.5f));
         //top back left
-        corners.Add(placeBox.transform.TransformPoint(pbbc.center + new Vector3(-pbbc.size.x, pbbc.size.y, -pbbc.size.z) * 0.5f));
+        corners.Add(bb.transform.TransformPoint(bbcol.center + new Vector3(-bbcol.size.x, bbcol.size.y, -bbcol.size.z) * 0.5f));
         //top back right
-        corners.Add(placeBox.transform.TransformPoint(pbbc.center+ new Vector3(pbbc.size.x, pbbc.size.y, -pbbc.size.z) * 0.5f));
+        corners.Add(bb.transform.TransformPoint(bbcol.center+ new Vector3(bbcol.size.x, bbcol.size.y, -bbcol.size.z) * 0.5f));
 
         SpawnCorners = corners;
 
         #if UNITY_EDITOR
 		m_Started = true;     
-        gizmopos = placeBox.transform.TransformPoint(pbbc.center); 
+        gizmopos = bb.transform.TransformPoint(bbcol.center); 
         //gizmopos = inst.transform.position;
-        gizmoscale = pbbc.size;
+        gizmoscale = bbcol.size;
         //gizmoscale = simObj.BoundingBox.GetComponent<BoxCollider>().size;
-        gizmoquaternion = placeholderPosition.transform.rotation;
+        gizmoquaternion = rotation;
         #endif
 
         //destroy the dummy object, we don't need it anymore
-        Destroy(placeholderPosition.gameObject);
+        //Destroy(placeholderPosition.gameObject);
 
         //if a collider was hit, then the space is not clear to spawn
 		if (hitColliders.Length > 0)
 		{
+            simObj.transform.position = originalPos;
+            simObj.transform.Find("Colliders").gameObject.SetActive(true);
+            //print("checkspawnarea failed");
 			return false;
 		}
 
+        simObj.transform.position = originalPos;
+        simObj.transform.Find("Colliders").gameObject.SetActive(true);
+        //print("checkspawn true?");
 		return true;
 	}
 
@@ -597,5 +544,89 @@ public class InstantiatePrefabTest : MonoBehaviour
         }
     }
 #endif
+
+
+    // private bool CheckSpawnAreaOLD(SimObjPhysics simObj, Vector3 position, Quaternion rotation, bool spawningInHand)
+    // {
+    //     //create a dummy gameobject that is instantiated then rotated to get the actual
+    //     //location and orientation of the spawn area
+    //     Transform placeholderPosition = new GameObject("placeholderPosition").transform;
+
+    //     //this is now in the exact position the object will spawn at
+    //     placeholderPosition.transform.position = position;
+
+    //     GameObject placeBox = Instantiate(simObj.BoundingBox, position /*+ OffsetPos*/, placeholderPosition.transform.rotation);
+    //     placeBox.transform.SetParent(placeholderPosition);
+    //     placeBox.transform.localPosition = simObj.BoundingBox.transform.localPosition;
+
+    //     //rotate it after creating the offset so that the offset's local position is maintained
+    //     placeholderPosition.transform.rotation = rotation;
+
+
+	// 	int layermask;
+
+	// 	//first do a check to see if the area is clear
+
+    //     //if spawning in the agent's hand, ignore collisions with the Agent
+	// 	if(spawningInHand)
+	// 	{
+	// 		layermask = 1 << 8;
+	// 	}
+
+    //     //oh we are spawning it somehwere in the environment, we do need to make sure not to spawn inside the agent or the environment
+	// 	else
+	// 	{
+	// 		layermask = (1 << 8) | (1 << 10);
+	// 	}
+
+    //     BoxCollider pbbc = placeBox.GetComponent<BoxCollider>();
+    //     pbbc.isTrigger = true;
+
+    //     Collider[] hitColliders = Physics.OverlapBox(placeBox.transform.TransformPoint(pbbc.center)/* placeBox.transform.position*/,
+    //                                                  placeBox.GetComponent<BoxCollider>().size / 2.0f, placeholderPosition.transform.rotation,
+    //                                                  layermask, QueryTriggerInteraction.Ignore);
+
+    //     //keep track of all 8 corners of the OverlapBox
+    //     List<Vector3> corners = new List<Vector3>();
+    //     //bottom forward right
+    //     corners.Add(placeBox.transform.TransformPoint(pbbc.center + new Vector3(pbbc.size.x, -pbbc.size.y, pbbc.size.z) * 0.5f));
+    //     //bottom forward left
+    //     corners.Add(placeBox.transform.TransformPoint(pbbc.center + new Vector3(-pbbc.size.x, -pbbc.size.y, pbbc.size.z) * 0.5f));
+    //     //bottom back left
+    //     corners.Add(placeBox.transform.TransformPoint(pbbc.center + new Vector3(-pbbc.size.x, -pbbc.size.y, -pbbc.size.z) * 0.5f));
+    //     //bottom back right
+    //     corners.Add(placeBox.transform.TransformPoint(pbbc.center+ new Vector3(pbbc.size.x, -pbbc.size.y, -pbbc.size.z) * 0.5f));
+
+    //     //top forward right
+    //     corners.Add(placeBox.transform.TransformPoint(pbbc.center + new Vector3(pbbc.size.x, pbbc.size.y, pbbc.size.z) * 0.5f));
+    //     //top forward left
+    //     corners.Add(placeBox.transform.TransformPoint(pbbc.center + new Vector3(-pbbc.size.x, pbbc.size.y, pbbc.size.z) * 0.5f));
+    //     //top back left
+    //     corners.Add(placeBox.transform.TransformPoint(pbbc.center + new Vector3(-pbbc.size.x, pbbc.size.y, -pbbc.size.z) * 0.5f));
+    //     //top back right
+    //     corners.Add(placeBox.transform.TransformPoint(pbbc.center+ new Vector3(pbbc.size.x, pbbc.size.y, -pbbc.size.z) * 0.5f));
+
+    //     SpawnCorners = corners;
+
+    //     #if UNITY_EDITOR
+	// 	m_Started = true;     
+    //     gizmopos = placeBox.transform.TransformPoint(pbbc.center); 
+    //     //gizmopos = inst.transform.position;
+    //     gizmoscale = pbbc.size;
+    //     //gizmoscale = simObj.BoundingBox.GetComponent<BoxCollider>().size;
+    //     gizmoquaternion = placeholderPosition.transform.rotation;
+    //     #endif
+
+    //     //destroy the dummy object, we don't need it anymore
+    //     Destroy(placeholderPosition.gameObject);
+
+    //     //if a collider was hit, then the space is not clear to spawn
+	// 	if (hitColliders.Length > 0)
+	// 	{
+	// 		return false;
+	// 	}
+
+	// 	return true;
+	// }
 
 }
