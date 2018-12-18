@@ -220,6 +220,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         if(splitcommand.Length == 2)
                         {
                             action.randomSeed = int.Parse(splitcommand[1]);
+                            action.forceVisible = true;
                         }
 
                         //should objects be spawned only in immediately visible areas?

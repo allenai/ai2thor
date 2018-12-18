@@ -170,6 +170,10 @@ public class InstantiatePrefabTest : MonoBehaviour
     //The list should be sorted by distance to the Agent, so closer points will be checked first.
     public bool PlaceObjectReceptacle(List<ReceptacleSpawnPoint> rsp, SimObjPhysics sop, bool PlaceStationary)
     {
+
+        int maxcount = 5;
+        int count = 0;
+
         if(rsp != null)
         {
             foreach (ReceptacleSpawnPoint p in rsp)
@@ -179,6 +183,16 @@ public class InstantiatePrefabTest : MonoBehaviour
                     //found a place to spawn! neato, return success
                     return true;
                     //break;
+                }
+
+                if(count> maxcount)
+                {
+                    break;
+                }
+
+                else
+                {
+                    count++;
                 }
             }
             //couldn't find valid places to spawn
@@ -227,7 +241,7 @@ public class InstantiatePrefabTest : MonoBehaviour
 
         //degree increment the object will be checked on in each x, y, z local axis
         //we can probably add a thing to make this check more rotations later...
-        int degreeIncrement = 45;
+        int degreeIncrement = 360;
 
         int HowManyRotationsToCheck = 360/degreeIncrement;
 
