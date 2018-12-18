@@ -1869,8 +1869,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
         {
             PhysicsSceneManager script = GameObject.Find("PhysicsSceneManager").GetComponent<PhysicsSceneManager>();
 
-            if(script.RandomSpawnRequiredSceneObjects(action.randomSeed, action.forceVisible))
+            if(script.RandomSpawnRequiredSceneObjects(action.randomSeed, action.forceVisible)) //action.maxnumrepeats
             {
+                
                 //script.SetupScene();
                 actionFinished(true);
                 return;
@@ -1886,6 +1887,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
         //only checks if the object can be placed on top of the target receptacle
         public void PlaceHeldObject(ServerAction action)
         {
+            var watch = System.Diagnostics.Stopwatch.StartNew();
+
             //check if we are even holding anything
             if(ItemInHand == null)
             {
@@ -1963,6 +1966,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 #endif
                 actionFinished(false);
             }
+
+            watch.Stop();
+            var elapsed = watch.ElapsedMilliseconds;
+            print("place object: " + elapsed);
         }
         
 		public void PickupObject(ServerAction action)//use serveraction objectid

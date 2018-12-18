@@ -2,19 +2,26 @@
 using System.Collections.Generic;
 using UnityEngine;
 //using UnityEditor;
+//using System.Linq;
 using UnityStandardAssets.Characters.FirstPerson;
+
 
 [ExecuteInEditMode]
 public class PhysicsSceneManager : MonoBehaviour 
 {
+	//public Dictionary<SimObjPhysics, List<ReceptacleSpawnPoint>> SceneSpawnPoints =  new Dictionary<SimObjPhysics, List<ReceptacleSpawnPoint>>();
+
 	public List<GameObject> RequiredObjects = new List<GameObject>();
+
+	//get references to the spawned Required objects after spawning them for the first time.
+	public List<GameObject> SpawnedObjects = new List<GameObject>();
 	public List<SimObjPhysics> PhysObjectsInScene = new List<SimObjPhysics>();
 
 	public List<string> UniqueIDsInScene = new List<string>();
 
 	public List<SimObjPhysics> ReceptaclesInScene = new List<SimObjPhysics>();
 
-	//public List<SimObjPhysics> LookAtThisList = new List<SimObjPhysics>();
+    //public List<SimObjPhysics> LookAtThisList = new List<SimObjPhysics>();
 
 	private void OnEnable()
 	{
@@ -151,6 +158,8 @@ public class PhysicsSceneManager : MonoBehaviour
 	//a seed of 0 is the default positions placed by hand(?)
 	public bool RandomSpawnRequiredSceneObjects(int seed, bool SpawnOnlyOutside)
 	{
+		var Masterwatch = System.Diagnostics.Stopwatch.StartNew();
+
 		if(RequiredObjects.Count == 0)
 		{
 			#if UNITY_EDITOR
@@ -159,127 +168,242 @@ public class PhysicsSceneManager : MonoBehaviour
 			
 			return false;
 		}
+
 		Random.InitState(seed);
 
 		List<SimObjType> TypesOfObjectsPrefabIsAllowedToSpawnIn = new List<SimObjType>();
 		List<SimObjPhysics> AllowedToSpawnInAndExistsInScene = new List<SimObjPhysics>();
 
+		List<GameObject> TargetList = new List<GameObject>();
+
 		int HowManyCouldntSpawn = 0;
 
-		//for each object in RequiredObjects, start a list of what objects it's allowed 
-		//to spawn in by checking the PlacementRestrictions dictionary
-		foreach(GameObject go in RequiredObjects)
+		//if we already spawned objects, lets just move them around
+		if(SpawnedObjects.Count > 0)
 		{
-			TypesOfObjectsPrefabIsAllowedToSpawnIn.Clear();
-			AllowedToSpawnInAndExistsInScene.Clear();
-
-			bool typefoundindictionary = false;
-			foreach(KeyValuePair<SimObjType, List<SimObjType>> res in ReceptacleRestrictions.PlacementRestrictions)
+			//for each object in RequiredObjects, start a list of what objects it's allowed 
+			//to spawn in by checking the PlacementRestrictions dictionary
+			foreach(GameObject go in SpawnedObjects)
 			{
-				//find the game object's type in the ReceptacleRestrictions dictionary
-				if(go.GetComponent<SimObjPhysics>().ObjType == res.Key)
+				TypesOfObjectsPrefabIsAllowedToSpawnIn.Clear();
+				AllowedToSpawnInAndExistsInScene.Clear();
+
+				SimObjType goObjType = go.GetComponent<SimObjPhysics>().ObjType;
+
+				bool typefoundindictionary = ReceptacleRestrictions.PlacementRestrictions.ContainsKey(goObjType);
+				if(typefoundindictionary)
 				{
-					//copy the list of receptacles this object is allowed to spawn in for further use below
-					TypesOfObjectsPrefabIsAllowedToSpawnIn = new List<SimObjType>(res.Value);
+					TypesOfObjectsPrefabIsAllowedToSpawnIn = new List<SimObjType>(ReceptacleRestrictions.PlacementRestrictions[goObjType]);
 
-					foreach(SimObjType sot in TypesOfObjectsPrefabIsAllowedToSpawnIn)
+					//remove from list if receptacle isn't in this scene
+					//compare to receptacles that exist in scene, get the ones that are the same
+					
+					foreach(SimObjPhysics sop in ReceptaclesInScene)
 					{
-						foreach(SimObjPhysics sop in ReceptaclesInScene)
+						if(SpawnOnlyOutside)
 						{
-							//if the potential valid object type matches one of the ReceptacleinScene's object types
-							if(sot == sop.ObjType)
+							if(ReceptacleRestrictions.SpawnOnlyOutsideReceptacles.Contains(sop.ObjType) && TypesOfObjectsPrefabIsAllowedToSpawnIn.Contains(sop.ObjType))
 							{
-								if(!SpawnOnlyOutside)
-								{
-									typefoundindictionary = true;
-									AllowedToSpawnInAndExistsInScene.Add(sop);
-								}
-
-								else
-								{
-									if(ReceptacleRestrictions.SpawnOnlyOutsideReceptacles.Contains(sot))
-									{
-										typefoundindictionary = true;
-										AllowedToSpawnInAndExistsInScene.Add(sop);
-									}
-								}
+								AllowedToSpawnInAndExistsInScene.Add(sop);
 							}
+						}
+
+						else if(TypesOfObjectsPrefabIsAllowedToSpawnIn.Contains(sop.ObjType))
+						{
+							//updated list of valid receptacles in scene
+							AllowedToSpawnInAndExistsInScene.Add(sop);
 						}
 					}
 				}
-			}
 
-			if(!typefoundindictionary)
-			{
-				#if UNITY_EDITOR
-				Debug.Log(go.name +"'s Type is not in the ReceptacleRestrictions dictionary!");
-				#endif
-
-				break;
-				
-			}
-
-			//LookAtThisList = AllowedToSpawnInAndExistsInScene;
-
-			ShuffleSimObjPhysicsList(AllowedToSpawnInAndExistsInScene);
-			//print("also here?");
-
-			// // //now we have an updated list of SimObjPhys of receptacles in the scene that are also in the list
-			// // //of valid receptacles for this given game object "go" that we are currently checking this loop
-			if(AllowedToSpawnInAndExistsInScene.Count > 0)
-			{
-				SimObjPhysics targetReceptacle;
-				InstantiatePrefabTest spawner = gameObject.GetComponent<InstantiatePrefabTest>();
-				List<ReceptacleSpawnPoint> targetReceptacleSpawnPoints;
-
-				//RAAANDOM!
-				ShuffleSimObjPhysicsList(AllowedToSpawnInAndExistsInScene);
-				bool diditspawn = false;
-
-				foreach(SimObjPhysics sop in AllowedToSpawnInAndExistsInScene)
+				else
 				{
-					targetReceptacle = sop;
-					targetReceptacleSpawnPoints = targetReceptacle.ReturnMySpawnPoints(false);
+					#if UNITY_EDITOR
+					Debug.Log(go.name +"'s Type is not in the ReceptacleRestrictions dictionary!");
+					#endif
+
+					break;
+				}
+
+				// // //now we have an updated list of SimObjPhys of receptacles in the scene that are also in the list
+				// // //of valid receptacles for this given game object "go" that we are currently checking this loop
+				if(AllowedToSpawnInAndExistsInScene.Count > 0)
+				{
+					SimObjPhysics targetReceptacle;
+					InstantiatePrefabTest spawner = gameObject.GetComponent<InstantiatePrefabTest>();
+					List<ReceptacleSpawnPoint> targetReceptacleSpawnPoints;
+
+					//RAAANDOM!
+					ShuffleSimObjPhysicsList(AllowedToSpawnInAndExistsInScene);
+					bool diditspawn = false;
+			
+
+					// GameObject temp = Instantiate(go, new Vector3(0, 100, 0), Quaternion.identity);
+					// temp.transform.name = go.name;
+					// //print("create object");
+					// //GameObject temp = PrefabUtility.InstantiatePrefab(go as GameObject) as GameObject;
+					// temp.GetComponent<Rigidbody>().isKinematic = true;
+					// //spawn it waaaay outside of the scene and then we will try and move it in a moment here, hold your horses
+					// temp.transform.position = new Vector3(0, 100, 0);//GameObject.Find("FPSController").GetComponent<PhysicsRemoteFPSAgentController>().AgentHandLocation();
+
+					foreach(SimObjPhysics sop in AllowedToSpawnInAndExistsInScene)
+					{
+						targetReceptacle = sop;
+
+						targetReceptacleSpawnPoints = targetReceptacle.ReturnMySpawnPoints(false);
+
+						//first shuffle the list so it's raaaandom
+						ShuffleReceptacleSpawnPointList(targetReceptacleSpawnPoints);
+						
+						//try to spawn it, and if it succeeds great! if not uhhh...
+
+						var watch = System.Diagnostics.Stopwatch.StartNew();
+						if(spawner.PlaceObjectReceptacle(targetReceptacleSpawnPoints, go.GetComponent<SimObjPhysics>(), true)) //we spawn them stationary so things don't fall off of ledges
+						{
+							//Debug.Log(go.name + " succesfully spawned");
+							diditspawn = true;
+							break;
+						}
+
+						watch.Stop();
+						var elapsedMs = watch.ElapsedMilliseconds;
+						print("time for PlacfeObject: " + elapsedMs);
+
+						//object failed to spawn, destroy it and try again 
+						// else
+						// {
+						// 	//Debug.Log(sop.name + " couldn't fit " + go.name);
+						// 	//DestroyImmediate(temp);//apparently using Destroy() waits until the END of this frame, so we need it to be gone LITERALLY NOW RIGHT NOW IM NOT KIDDING, otherwise SetupScene will be wrong
+						// }
+					}
+
+					if(!diditspawn)
+					{
+						#if UNITY_EDITOR
+						Debug.Log("None of the receptacles in the scene could spawn " + go.name);
+						#endif
+						//return false;
+						HowManyCouldntSpawn++;
+						//break;
+					}
+				}
+			}
+		}
+
+		else
+		{
+			//for each object in RequiredObjects, start a list of what objects it's allowed 
+			//to spawn in by checking the PlacementRestrictions dictionary
+			foreach(GameObject go in RequiredObjects)
+			{
+				TypesOfObjectsPrefabIsAllowedToSpawnIn.Clear();
+				AllowedToSpawnInAndExistsInScene.Clear();
+
+				SimObjType goObjType = go.GetComponent<SimObjPhysics>().ObjType;
+
+				bool typefoundindictionary = ReceptacleRestrictions.PlacementRestrictions.ContainsKey(goObjType);
+				if(typefoundindictionary)
+				{
+					TypesOfObjectsPrefabIsAllowedToSpawnIn = new List<SimObjType>(ReceptacleRestrictions.PlacementRestrictions[goObjType]);
+
+					//remove from list if receptacle isn't in this scene
+					//compare to receptacles that exist in scene, get the ones that are the same
+					
+					foreach(SimObjPhysics sop in ReceptaclesInScene)
+					{
+						if(SpawnOnlyOutside)
+						{
+							if(ReceptacleRestrictions.SpawnOnlyOutsideReceptacles.Contains(sop.ObjType) && TypesOfObjectsPrefabIsAllowedToSpawnIn.Contains(sop.ObjType))
+							{
+								AllowedToSpawnInAndExistsInScene.Add(sop);
+							}
+						}
+
+						else if(TypesOfObjectsPrefabIsAllowedToSpawnIn.Contains(sop.ObjType))
+						{
+							//updated list of valid receptacles in scene
+							AllowedToSpawnInAndExistsInScene.Add(sop);
+						}
+					}
+				}
+
+				else
+				{
+					#if UNITY_EDITOR
+					Debug.Log(go.name +"'s Type is not in the ReceptacleRestrictions dictionary!");
+					#endif
+
+					break;
+				}
+
+				// // //now we have an updated list of SimObjPhys of receptacles in the scene that are also in the list
+				// // //of valid receptacles for this given game object "go" that we are currently checking this loop
+				if(AllowedToSpawnInAndExistsInScene.Count > 0)
+				{
+					SimObjPhysics targetReceptacle;
+					InstantiatePrefabTest spawner = gameObject.GetComponent<InstantiatePrefabTest>();
+					List<ReceptacleSpawnPoint> targetReceptacleSpawnPoints;
+
+					//RAAANDOM!
+					ShuffleSimObjPhysicsList(AllowedToSpawnInAndExistsInScene);
+					bool diditspawn = false;
+
 
 					GameObject temp = Instantiate(go, new Vector3(0, 100, 0), Quaternion.identity);
 					temp.transform.name = go.name;
-
 					//print("create object");
 					//GameObject temp = PrefabUtility.InstantiatePrefab(go as GameObject) as GameObject;
 					temp.GetComponent<Rigidbody>().isKinematic = true;
 					//spawn it waaaay outside of the scene and then we will try and move it in a moment here, hold your horses
 					temp.transform.position = new Vector3(0, 100, 0);//GameObject.Find("FPSController").GetComponent<PhysicsRemoteFPSAgentController>().AgentHandLocation();
 
-					//first shuffle the list so it's raaaandom
-					ShuffleReceptacleSpawnPointList(targetReceptacleSpawnPoints);
-					
-					//try to spawn it, and if it succeeds great! if not uhhh...
-					if(spawner.PlaceObjectReceptacle(targetReceptacleSpawnPoints, temp.GetComponent<SimObjPhysics>(), true)) //we spawn them stationary so things don't fall off of ledges
+					foreach(SimObjPhysics sop in AllowedToSpawnInAndExistsInScene)
 					{
-						//Debug.Log(go.name + " succesfully spawned");
-						diditspawn = true;
-						break;
+						targetReceptacle = sop;
+
+						targetReceptacleSpawnPoints = targetReceptacle.ReturnMySpawnPoints(false);
+
+						//first shuffle the list so it's raaaandom
+						ShuffleReceptacleSpawnPointList(targetReceptacleSpawnPoints);
+						
+						//try to spawn it, and if it succeeds great! if not uhhh...
+
+						var watch = System.Diagnostics.Stopwatch.StartNew();
+						if(spawner.PlaceObjectReceptacle(targetReceptacleSpawnPoints, temp.GetComponent<SimObjPhysics>(), true)) //we spawn them stationary so things don't fall off of ledges
+						{
+							//Debug.Log(go.name + " succesfully spawned");
+							diditspawn = true;
+							SpawnedObjects.Add(temp);
+							break;
+						}
+
+						watch.Stop();
+						var elapsedMs = watch.ElapsedMilliseconds;
+						print("time for PlacfeObject: " + elapsedMs);
+
+						//object failed to spawn, destroy it and try again 
+						// else
+						// {
+						// 	//Debug.Log(sop.name + " couldn't fit " + go.name);
+						// 	//DestroyImmediate(temp);//apparently using Destroy() waits until the END of this frame, so we need it to be gone LITERALLY NOW RIGHT NOW IM NOT KIDDING, otherwise SetupScene will be wrong
+						// }
 					}
 
-					//object failed to spawn, destroy it and try again 
-					else
+					if(!diditspawn)
 					{
-						//Debug.Log(sop.name + " couldn't fit " + go.name);
-						DestroyImmediate(temp);//apparently using Destroy() waits until the END of this frame, so we need it to be gone LITERALLY NOW RIGHT NOW IM NOT KIDDING, otherwise SetupScene will be wrong
+						DestroyImmediate(temp);
+						#if UNITY_EDITOR
+						Debug.Log("None of the receptacles in the scene could spawn " + go.name);
+						#endif
+						//return false;
+						HowManyCouldntSpawn++;
+						//break;
 					}
 				}
-
-				if(!diditspawn)
-				{
-					#if UNITY_EDITOR
-					Debug.Log("None of the receptacles in the scene could spawn " + go.name);
-					#endif
-					//return false;
-					HowManyCouldntSpawn++;
-					//break;
-				}
-			}
+			}			
 		}
+
+
 
 		//we can use this to report back any failed spawns if we want that info at some point ?
 
@@ -289,6 +413,11 @@ public class PhysicsSceneManager : MonoBehaviour
 			Debug.Log(HowManyCouldntSpawn + " objects could not be spawned into the scene!");
 		}
 		#endif
+		
+
+		Masterwatch.Stop();
+		var elapsed = Masterwatch.ElapsedMilliseconds;
+		print("total time: " + elapsed);
 
 		//Debug.Log("Iteration through Required Objects finished");
 		SetupScene();
@@ -316,7 +445,5 @@ public class PhysicsSceneManager : MonoBehaviour
 			list[r] = sop;
 		}
 	}
-
-
 		
 }
