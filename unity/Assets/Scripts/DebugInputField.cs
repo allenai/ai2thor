@@ -221,6 +221,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         {
                             action.randomSeed = int.Parse(splitcommand[1]);
                             action.forceVisible = true;
+                            action.maxNumRepeats = 5;
                         }
 
                         //should objects be spawned only in immediately visible areas?
@@ -235,10 +236,24 @@ namespace UnityStandardAssets.Characters.FirstPerson
                             action.forceVisible = false;
                         }
 
+                        else if(splitcommand.Length == 4)
+                        {
+                            action.randomSeed = int.Parse(splitcommand[1]);
+
+                            if(splitcommand[2] == "t") 
+                            action.forceVisible = true;
+
+                            if(splitcommand[2] == "f") 
+                            action.forceVisible = false;
+
+                            action.maxNumRepeats = int.Parse(splitcommand[3]);
+                        }
+
                         else
                         {
                             action.randomSeed = 0;
                             action.forceVisible = true;
+                            action.maxNumRepeats = 10;
                         }
 
                         PhysicsController.ProcessControlCommand(action);
@@ -272,6 +287,29 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
                         PhysicsController.ProcessControlCommand(action);
 
+                        break;
+                    }
+
+                case "thas":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "ToggleHideAndSeekObjects";
+
+                        if(splitcommand.Length == 2)
+                        {
+                            if(splitcommand[1] == "t") 
+                            action.forceVisible = true;
+
+                            if(splitcommand[1] == "f") 
+                            action.forceVisible = false;
+                        }
+
+                        else
+                        {
+                            action.forceVisible = false;
+                        }
+
+                        PhysicsController.ProcessControlCommand(action);
                         break;
                     }
 

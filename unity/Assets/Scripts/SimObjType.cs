@@ -261,6 +261,20 @@ public static class ReceptacleRestrictions
 		SimObjType.Ottoman, SimObjType.Desk, SimObjType.StoveBurner,
 	};
 
+	//objects in this list should always return all spawn points inside of it when trying to place an object from the hand into the object
+	//this elminiates the need for visibly seeing the bottommost point on the object (hopefully)
+	public static List<SimObjType> ReturnAllPoints = new List<SimObjType>()
+	{
+		SimObjType.Pot, SimObjType.Pan, SimObjType.Bowl, SimObjType.GarbageCan, SimObjType.Plate,
+	};
+
+	//these objects should always be placed upright and not in weird angles. For example, you wouldn't place a pot sideways, you would always place
+	//it with the opening facing up!
+	public static List<SimObjType> AlwaysPlaceUpright = new List<SimObjType>()
+	{
+		SimObjType.Pot, SimObjType.Pan, SimObjType.Bowl, SimObjType.Plate, SimObjType.Bread,
+	};
+
 	//Each sim object type keeps track of what sort of Receptacles it can be placed in
 	//add to this as more pickupable sim objects are created
 	public static Dictionary<SimObjType, List<SimObjType>> PlacementRestrictions = new Dictionary<SimObjType, List<SimObjType>>()
@@ -299,10 +313,13 @@ public static class ReceptacleRestrictions
 		{SimObjType.Cup, new List<SimObjType>()
 		{SimObjType.TableTop, SimObjType.CounterTop, SimObjType.Sink, SimObjType.GarbageCan, SimObjType.Cabinet, SimObjType.Microwave, SimObjType.Pot}},
 
+		//POT
 		{SimObjType.Pot, new List<SimObjType>()
-		{
-			SimObjType.TableTop, SimObjType.CounterTop, SimObjType.Sink, SimObjType.Cabinet, SimObjType.StoveBurner,
-		}},
+		{SimObjType.TableTop, SimObjType.CounterTop, SimObjType.Sink, SimObjType.Cabinet, SimObjType.StoveBurner,}},
+
+		//BOWL
+		{SimObjType.Bowl, new List<SimObjType>()
+		{SimObjType.TableTop, SimObjType.CounterTop, SimObjType.Sink, SimObjType.Cabinet, SimObjType.StoveBurner,}},
 
 	};
 

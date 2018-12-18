@@ -21,13 +21,14 @@ public class PhysicsSceneManager : MonoBehaviour
 
 	public List<SimObjPhysics> ReceptaclesInScene = new List<SimObjPhysics>();
 
+	public GameObject HideAndSeek;
+
     //public List<SimObjPhysics> LookAtThisList = new List<SimObjPhysics>();
 
 	private void OnEnable()
 	{
 		//clear this on start so that the CheckForDuplicates function doesn't check pre-existing lists
 		SetupScene();
-
 	}
 
 	public void SetupScene()
@@ -41,23 +42,31 @@ public class PhysicsSceneManager : MonoBehaviour
 	// Use this for initialization
 	void Start () 
 	{
-		//RandomSpawnRequiredSceneObjects();
+
 	}
 	
-	// Update is called once per frame
 	void Update () 
 	{
-		// //test spawning only in visible spots outside, with seed
-		// if(Input.GetKeyDown(KeyCode.K))
-		// RandomSpawnRequiredSceneObjects(1, true);
 
-		// //test spawning anywhere, with seed
-		// if(Input.GetKeyDown(KeyCode.J))
-		// RandomSpawnRequiredSceneObjects(1, false);
+	}
+	public bool ToggleHideAndSeek(bool hide)
+	{
+		if(HideAndSeek)
+		{
+			HideAndSeek.SetActive(hide);
+			return true;
+		}
 
-		// //test default, no seed
-		// if(Input.GetKeyDown(KeyCode.L))
-		// RandomSpawnRequiredSceneObjects();
+		else
+		{
+			#if UNITY_EDITOR
+			Debug.Log("Hide and Seek object reference not set!");
+			#endif
+
+			return false;
+		}
+
+
 	}
 
     public void GatherSimObjPhysInScene()
@@ -139,7 +148,7 @@ public class PhysicsSceneManager : MonoBehaviour
 	public bool RandomSpawnRequiredSceneObjects(ServerAction action)
 	{
 		
-		if(RandomSpawnRequiredSceneObjects(action.randomSeed, action.forceVisible))
+		if(RandomSpawnRequiredSceneObjects(action.randomSeed, action.forceVisible, action.maxNumRepeats))
 		{
 			return true;
 		}
@@ -151,14 +160,16 @@ public class PhysicsSceneManager : MonoBehaviour
 	//if no values passed in, default to system random based on ticks
 	public void RandomSpawnRequiredSceneObjects()
 	{
-		RandomSpawnRequiredSceneObjects(System.Environment.TickCount, false);
+		RandomSpawnRequiredSceneObjects(System.Environment.TickCount, false, 50);
 	}
 
 	//place each object in the array of objects that should appear in this scene randomly in valid receptacles
 	//a seed of 0 is the default positions placed by hand(?)
-	public bool RandomSpawnRequiredSceneObjects(int seed, bool SpawnOnlyOutside)
+	public bool RandomSpawnRequiredSceneObjects(int seed, bool SpawnOnlyOutside, int maxcount)
 	{
+		#if UNITY_EDITOR
 		var Masterwatch = System.Diagnostics.Stopwatch.StartNew();
+		#endif
 
 		if(RequiredObjects.Count == 0)
 		{
@@ -237,15 +248,6 @@ public class PhysicsSceneManager : MonoBehaviour
 					ShuffleSimObjPhysicsList(AllowedToSpawnInAndExistsInScene);
 					bool diditspawn = false;
 			
-
-					// GameObject temp = Instantiate(go, new Vector3(0, 100, 0), Quaternion.identity);
-					// temp.transform.name = go.name;
-					// //print("create object");
-					// //GameObject temp = PrefabUtility.InstantiatePrefab(go as GameObject) as GameObject;
-					// temp.GetComponent<Rigidbody>().isKinematic = true;
-					// //spawn it waaaay outside of the scene and then we will try and move it in a moment here, hold your horses
-					// temp.transform.position = new Vector3(0, 100, 0);//GameObject.Find("FPSController").GetComponent<PhysicsRemoteFPSAgentController>().AgentHandLocation();
-
 					foreach(SimObjPhysics sop in AllowedToSpawnInAndExistsInScene)
 					{
 						targetReceptacle = sop;
@@ -257,24 +259,23 @@ public class PhysicsSceneManager : MonoBehaviour
 						
 						//try to spawn it, and if it succeeds great! if not uhhh...
 
+						#if UNITY_EDITOR
 						var watch = System.Diagnostics.Stopwatch.StartNew();
-						if(spawner.PlaceObjectReceptacle(targetReceptacleSpawnPoints, go.GetComponent<SimObjPhysics>(), true)) //we spawn them stationary so things don't fall off of ledges
+						#endif
+
+						if(spawner.PlaceObjectReceptacle(targetReceptacleSpawnPoints, go.GetComponent<SimObjPhysics>(), true, maxcount, 360, true)) //we spawn them stationary so things don't fall off of ledges
 						{
 							//Debug.Log(go.name + " succesfully spawned");
 							diditspawn = true;
 							break;
 						}
 
+						#if UNITY_EDITOR
 						watch.Stop();
 						var elapsedMs = watch.ElapsedMilliseconds;
 						print("time for PlacfeObject: " + elapsedMs);
+						#endif
 
-						//object failed to spawn, destroy it and try again 
-						// else
-						// {
-						// 	//Debug.Log(sop.name + " couldn't fit " + go.name);
-						// 	//DestroyImmediate(temp);//apparently using Destroy() waits until the END of this frame, so we need it to be gone LITERALLY NOW RIGHT NOW IM NOT KIDDING, otherwise SetupScene will be wrong
-						// }
 					}
 
 					if(!diditspawn)
@@ -282,9 +283,7 @@ public class PhysicsSceneManager : MonoBehaviour
 						#if UNITY_EDITOR
 						Debug.Log("None of the receptacles in the scene could spawn " + go.name);
 						#endif
-						//return false;
 						HowManyCouldntSpawn++;
-						//break;
 					}
 				}
 			}
@@ -368,8 +367,11 @@ public class PhysicsSceneManager : MonoBehaviour
 						
 						//try to spawn it, and if it succeeds great! if not uhhh...
 
+						#if UNITY_EDITOR
 						var watch = System.Diagnostics.Stopwatch.StartNew();
-						if(spawner.PlaceObjectReceptacle(targetReceptacleSpawnPoints, temp.GetComponent<SimObjPhysics>(), true)) //we spawn them stationary so things don't fall off of ledges
+						#endif
+
+						if(spawner.PlaceObjectReceptacle(targetReceptacleSpawnPoints, temp.GetComponent<SimObjPhysics>(), true, maxcount, 360, true)) //we spawn them stationary so things don't fall off of ledges
 						{
 							//Debug.Log(go.name + " succesfully spawned");
 							diditspawn = true;
@@ -377,16 +379,12 @@ public class PhysicsSceneManager : MonoBehaviour
 							break;
 						}
 
+						#if UNITY_EDITOR
 						watch.Stop();
 						var elapsedMs = watch.ElapsedMilliseconds;
 						print("time for PlacfeObject: " + elapsedMs);
+						#endif
 
-						//object failed to spawn, destroy it and try again 
-						// else
-						// {
-						// 	//Debug.Log(sop.name + " couldn't fit " + go.name);
-						// 	//DestroyImmediate(temp);//apparently using Destroy() waits until the END of this frame, so we need it to be gone LITERALLY NOW RIGHT NOW IM NOT KIDDING, otherwise SetupScene will be wrong
-						// }
 					}
 
 					if(!diditspawn)
@@ -412,12 +410,11 @@ public class PhysicsSceneManager : MonoBehaviour
 		{
 			Debug.Log(HowManyCouldntSpawn + " objects could not be spawned into the scene!");
 		}
-		#endif
-		
 
 		Masterwatch.Stop();
 		var elapsed = Masterwatch.ElapsedMilliseconds;
 		print("total time: " + elapsed);
+		#endif
 
 		//Debug.Log("Iteration through Required Objects finished");
 		SetupScene();

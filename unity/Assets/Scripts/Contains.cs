@@ -184,7 +184,7 @@ public class Contains : MonoBehaviour
 
 
 		//so lets make a grid, we can parametize the gridsize value later, for now we'll adjust it here
-		int gridsize = 10; //number of grid boxes we want
+		int gridsize = 8; //number of grid boxes we want, reduce this to SPEED THINGS UP but also GET WAY MORE INACCURATE
 		int linepoints = gridsize + 1; //number of points on the line we need to make the number of grid boxes
 		float lineincrement =  1.0f / gridsize; //increment on the line to distribute the gridpoints
 
@@ -300,6 +300,8 @@ public class Contains : MonoBehaviour
 		//if the point is within the viewport of the agent as well
 
 		Camera agentCam = agent.GetComponent<PhysicsRemoteFPSAgentController>().m_Camera;
+
+		//no offset if the object is below us
 		if(point.y < agentCam.transform.position.y)
 		{
 			//do this check if the point's y value is below the camera's y value
