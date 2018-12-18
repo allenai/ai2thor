@@ -272,7 +272,7 @@ public static class ReceptacleRestrictions
 	//it with the opening facing up!
 	public static List<SimObjType> AlwaysPlaceUpright = new List<SimObjType>()
 	{
-		SimObjType.Pot, SimObjType.Pan, SimObjType.Bowl, SimObjType.Plate, SimObjType.Bread,
+		SimObjType.Pot, SimObjType.Pan, SimObjType.Bowl, SimObjType.Plate, SimObjType.Bread, SimObjType.Cup,
 	};
 
 	//Each sim object type keeps track of what sort of Receptacles it can be placed in
