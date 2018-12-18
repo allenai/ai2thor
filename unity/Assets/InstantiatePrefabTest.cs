@@ -167,18 +167,23 @@ public class InstantiatePrefabTest : MonoBehaviour
     }
 
     //call PlaceObject for all points in the passed in ReceptacleSpawnPoint list
-    //The list should be sorted by distance to the Agent, so closer points will be checked first.
-    public bool PlaceObjectReceptacle(List<ReceptacleSpawnPoint> rsp, SimObjPhysics sop, bool PlaceStationary)
+    //The ReceptacleSpawnPoint list should be sorted based on what we are doing. If placing from the agent's hand, the list
+    //should be sorted by distance to agent so the closest points are checked first. If used for Random Initial Spawn, it should
+    //be randomized so that the random spawn is... random
+    public bool PlaceObjectReceptacle(List<ReceptacleSpawnPoint> rsp, SimObjPhysics sop, bool PlaceStationary, int maxcount, int degreeIncrement, bool AlwaysPlaceUpright)
     {
+        //-maxcount parameter:
+        //Max number of times this receptacle will try to place the object
+        //se this to a high number (100 max at the moment) for more consistancy and accuracy, but slower performance
+        //set this to a low number to only try a few positions on the recpetacle, it will be fast but more likely to fail prematurely
 
-        int maxcount = 5;
         int count = 0;
 
         if(rsp != null)
         {
             foreach (ReceptacleSpawnPoint p in rsp)
             {
-                if(PlaceObject(sop, p, PlaceStationary))
+                if(PlaceObject(sop, p, PlaceStationary, degreeIncrement, AlwaysPlaceUpright))
                 {
                     //found a place to spawn! neato, return success
                     return true;
@@ -219,7 +224,7 @@ public class InstantiatePrefabTest : MonoBehaviour
         }
     }
 
-    public bool PlaceObject(SimObjPhysics sop, ReceptacleSpawnPoint rsp, bool PlaceStationary)
+    public bool PlaceObject(SimObjPhysics sop, ReceptacleSpawnPoint rsp, bool PlaceStationary, int degreeIncrement, bool AlwaysPlaceUpright)
 	{
         if(rsp.ParentSimObjPhys == sop)
         {
@@ -239,10 +244,9 @@ public class InstantiatePrefabTest : MonoBehaviour
         sop.transform.rotation = rsp.ReceptacleBox.transform.rotation;
         sop.GetComponent<Rigidbody>().velocity = Vector3.zero;
 
-        //degree increment the object will be checked on in each x, y, z local axis
-        //we can probably add a thing to make this check more rotations later...
-        int degreeIncrement = 360;
+        //int degreeIncrement = 90;
 
+        //set 360 degree increment to only check one angle, set smaller increments to check more angles when trying to place (warning THIS WILL GET SLOWER)
         int HowManyRotationsToCheck = 360/degreeIncrement;
 
         List<RotationAndDistanceValues> ToCheck = new List<RotationAndDistanceValues>(); //we'll check 8 rotations for now, replace the 45 later if we want to adjust the amount of checks
@@ -279,49 +283,53 @@ public class InstantiatePrefabTest : MonoBehaviour
             oabb.enabled = false;
         }
 
-        //ok now try if the X and Z local axis are rotated if it'll fit
-        //these values can cause the object to be placed at crazy angles, so we'll check these last
-        for(int i = 0; i < HowManyRotationsToCheck; i++)
+        if(!AlwaysPlaceUpright)
         {
-            oabb.enabled = true;
-
-            if(i > 0)
+            //ok now try if the X and Z local axis are rotated if it'll fit
+            //these values can cause the object to be placed at crazy angles, so we'll check these last
+            for(int i = 0; i < HowManyRotationsToCheck; i++)
             {
-                sop.transform.Rotate(new Vector3(0, degreeIncrement, 0), Space.Self);
-                Quaternion oldRotation = sop.transform.rotation;
+                oabb.enabled = true;
 
-                //now add more points by rotating the x axis at this current y rotation
-                for(int j = 0; j < HowManyRotationsToCheck; j++)
+                if(i > 0)
                 {
-                    sop.transform.Rotate(new Vector3(degreeIncrement, 0, 0), Space.Self);
+                    sop.transform.Rotate(new Vector3(0, degreeIncrement, 0), Space.Self);
+                    Quaternion oldRotation = sop.transform.rotation;
 
-                    Vector3 Offset = oabb.ClosestPoint(oabb.transform.TransformPoint(oabb.center) + -rsp.ReceptacleBox.transform.up * 10);
-                    Plane BoxBottom = new Plane(rsp.ReceptacleBox.transform.up, Offset);
-                    float DistanceFromBoxBottomTosop = Math.Abs(BoxBottom.GetDistanceToPoint(sop.transform.position));
+                    //now add more points by rotating the x axis at this current y rotation
+                    for(int j = 0; j < HowManyRotationsToCheck; j++)
+                    {
+                        sop.transform.Rotate(new Vector3(degreeIncrement, 0, 0), Space.Self);
 
-                    ToCheck.Add(new RotationAndDistanceValues(DistanceFromBoxBottomTosop, sop.transform.rotation));
-                }
+                        Vector3 Offset = oabb.ClosestPoint(oabb.transform.TransformPoint(oabb.center) + -rsp.ReceptacleBox.transform.up * 10);
+                        Plane BoxBottom = new Plane(rsp.ReceptacleBox.transform.up, Offset);
+                        float DistanceFromBoxBottomTosop = Math.Abs(BoxBottom.GetDistanceToPoint(sop.transform.position));
 
+                        ToCheck.Add(new RotationAndDistanceValues(DistanceFromBoxBottomTosop, sop.transform.rotation));
+                    }
+
+                    sop.transform.rotation = oldRotation;
+
+                    //now add EVEN more points by rotating the z axis at this current y rotation
+                    for(int j = 0; j < HowManyRotationsToCheck; j++)
+                    {
+                        sop.transform.Rotate(new Vector3(0, 0, degreeIncrement), Space.Self);
+
+                        Vector3 Offset = oabb.ClosestPoint(oabb.transform.TransformPoint(oabb.center) + -rsp.ReceptacleBox.transform.up * 10);
+                        Plane BoxBottom = new Plane(rsp.ReceptacleBox.transform.up, Offset);
+                        float DistanceFromBoxBottomTosop = Math.Abs(BoxBottom.GetDistanceToPoint(sop.transform.position));
+
+                        ToCheck.Add(new RotationAndDistanceValues(DistanceFromBoxBottomTosop, sop.transform.rotation));
+                    }
+                            
                 sop.transform.rotation = oldRotation;
 
-                //now add EVEN more points by rotating the z axis at this current y rotation
-                for(int j = 0; j < HowManyRotationsToCheck; j++)
-                {
-                    sop.transform.Rotate(new Vector3(0, 0, degreeIncrement), Space.Self);
-
-                    Vector3 Offset = oabb.ClosestPoint(oabb.transform.TransformPoint(oabb.center) + -rsp.ReceptacleBox.transform.up * 10);
-                    Plane BoxBottom = new Plane(rsp.ReceptacleBox.transform.up, Offset);
-                    float DistanceFromBoxBottomTosop = Math.Abs(BoxBottom.GetDistanceToPoint(sop.transform.position));
-
-                    ToCheck.Add(new RotationAndDistanceValues(DistanceFromBoxBottomTosop, sop.transform.rotation));
                 }
-                         
-               sop.transform.rotation = oldRotation;
 
+                oabb.enabled = false;
             }
-
-            oabb.enabled = false;
         }
+
 
         foreach(RotationAndDistanceValues quat in ToCheck)
         {
@@ -416,7 +424,7 @@ public class InstantiatePrefabTest : MonoBehaviour
                     sop.GetComponent<Rigidbody>().isKinematic = false;
                 }
 
-
+                //if this object is a receptacle and it has other objects inside it, drop them all together
                 if(sop.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.Receptacle))
                 {
                     PhysicsRemoteFPSAgentController agent = GameObject.Find("FPSController").GetComponent<PhysicsRemoteFPSAgentController>();

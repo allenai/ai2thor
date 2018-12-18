@@ -77,14 +77,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
         {
 			base.Start();
 
-			//ServerAction action = new ServerAction();
-			//Initialize(action);
-
 			//below, enable all the GameObjects on the Agent that Physics Mode requires
-
-            //physics requires max distance to be extended to be able to see objects on ground
-			//maxVisibleDistance = MaxViewDistancePhysics;//default maxVisibleDistance is 1.0f
-
             if (PhysicsAgentSkinWidth < 0.0f) {
                 Debug.LogError("Agent skin width must be > 0.0f, please set it in the editor. Forcing it to equal 0.01f for now.");
                 PhysicsAgentSkinWidth = 0.01f;
@@ -119,6 +112,25 @@ namespace UnityStandardAssets.Characters.FirstPerson
             }
 
             base.actionComplete = true;
+        }
+
+        //forceVisible is true to activate, false to deactivate
+        public void ToggleHideAndSeekObjects(ServerAction action)
+        {
+            PhysicsSceneManager script = GameObject.Find("PhysicsSceneManager").GetComponent<PhysicsSceneManager>();
+            if(script.ToggleHideAndSeek(action.forceVisible))
+            {
+                actionFinished(true);
+            }
+
+            else
+            {
+                errorMessage = "No HideAndSeek object found";
+                #if UNITY_EDITOR
+                Debug.Log(errorMessage);
+                #endif
+                actionFinished(false);
+            }
         }
 
         public Vector3 AgentHandLocation()
@@ -1607,91 +1619,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			return result;
 		}
 
-        // protected bool moveHandInDirection(Vector3 dir, float minDistance, float maxDistance)
-		// {
-		// 	bool result = false;
-
-        //     //first check if we have anything in our hand, if not then no reason to move hand
-		// 	if (ItemInHand == null)
-        //     {
-        //         errorMessage = "Agent can only move hand if holding an item";
-        //         Debug.Log(errorMessage);
-        //         result = false;
-        //         return result;
-        //     }
-
-        //     // Check if the Agent Hand holding ItemInHand can move to the target position without
-        //     // being obstructed by anything
-		// 	Rigidbody ItemRB = ItemInHand.GetComponent<Rigidbody>();
-        //     RaycastHit hit;
-		// 	ItemRB.SweepTest(
-        //         targetPosition - AgentHand.transform.position, 
-        //         out hit,
-        //         maxDistance,
-        //         QueryTriggerInteraction.Ignore
-        //     );
-
-        //     Vector3 tmp = m_Camera.transform.position;
-        //     tmp.y = targetPosition.y;
-		// 	if (Vector3.Distance(tmp, targetPosition) > maxVisibleDistance)
-        //     {
-        //         errorMessage = "The target position is out of range.";
-        //         Debug.Log(errorMessage);
-        //         result = false;
-        //         return result;
-        //     }
-
-        //     //now make sure that the targetPosition is within the Agent's x/y view, restricted by camera
-		// 	Vector3 vp = m_Camera.WorldToViewportPoint(targetPosition);
-
-        //     //Note: Viewport normalizes to (0,0) bottom left, (1, 0) top right of screen
-        //     //now make sure the targetPosition is actually within the Camera Bounds 
-
-        //     //XXX this does not check whether the object will still be visible when moving, so this will allow the agent to
-        //     //move an object behind a door, causing the object to no longer be visible. Not sure if we should have a check
-        //     //to restrict this yet, but about here is where that should go
-        //     if (vp.z < 0 || vp.x > 1.0f || vp.x < 0.0f || vp.y > 1.0f || vp.y < 0.0f)
-        //     {
-        //         Debug.Log("The target position is not in the Are of the Agent's Viewport!");
-        //         result = false;
-        //         return result;
-        //     }         
-
-
-        //     //did we hit anything?
-		// 	if (sweepResults.Length > 0)
-		// 	{
-
-		// 		foreach (RaycastHit hit in sweepResults)
-		// 		{
-		// 			//hit the player? it's cool, no problem
-		// 			if (hit.transform.tag == "Player")
-        //             {
-        //                 result = true;
-		// 				break;
-        //             }
-
-        //             //oh we hit something else? oh boy, that's blocking!
-        //             else
-        //             {
-        //                 //  print("sweep didn't hit anything?");
-        //                 Debug.Log(hit.transform.name + " is in Object In Hand's Path! Can't Move Hand holding " + ItemInHand.name);
-        //                 result = false;
-		// 				return result;
-        //             }
-		// 		}
-
-		// 	}
-
-        //     //didnt hit anything in sweep, we are good to go
-		// 	else
-		// 	{
-		// 		result = true;
-		// 	}
-
-		// 	return result;
-		// }
-
         //moves hand to the x, y, z coordinate, not constrained by any axis, if within range
         protected bool moveHandToXYZ(float x, float y, float z)
         {
@@ -1869,7 +1796,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
         {
             PhysicsSceneManager script = GameObject.Find("PhysicsSceneManager").GetComponent<PhysicsSceneManager>();
 
-            if(script.RandomSpawnRequiredSceneObjects(action.randomSeed, action.forceVisible)) //action.maxnumrepeats
+            if(script.RandomSpawnRequiredSceneObjects(action.randomSeed, action.forceVisible, action.maxNumRepeats)) //action.maxnumrepeats
             {
                 
                 //script.SetupScene();
@@ -1887,7 +1814,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
         //only checks if the object can be placed on top of the target receptacle
         public void PlaceHeldObject(ServerAction action)
         {
+            #if UNITY_EDITOR
             var watch = System.Diagnostics.Stopwatch.StartNew();
+            #endif
 
             //check if we are even holding anything
             if(ItemInHand == null)
@@ -1921,14 +1850,16 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 return;
             }
 
-            if(action.forceAction)
+            SimObjPhysics handSOP = ItemInHand.GetComponent<SimObjPhysics>();
+
+            if(!action.forceAction)
             {
                 bool HandObjectFoundInList = false;
                 //check if the item we are holding can even be placed in the action.UniqueID target at all
                 foreach(KeyValuePair<SimObjType, List<SimObjType>> res in ReceptacleRestrictions.PlacementRestrictions)
                 {
                     //find the Object Type in the PlacementRestrictions dictionary
-                    if(res.Key == ItemInHand.GetComponent<SimObjPhysics>().ObjType)
+                    if(res.Key == handSOP.ObjType)
                     {
                         if(!res.Value.Contains(targetReceptacle.ObjType))
                         {
@@ -1945,14 +1876,28 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 if(!HandObjectFoundInList)
                 {
                     #if UNITY_EDITOR
-                    Debug.Log("Object Type:" + ItemInHand.GetComponent<SimObjPhysics>().ObjType + " not found in PlacementRestrictions dictionary");
+                    Debug.Log("Object Type:" + handSOP.ObjType + " not found in PlacementRestrictions dictionary");
                     #endif
                 }
             }
 
+            bool onlyPointsCloseToAgent = true;
+
+            if(ReceptacleRestrictions.ReturnAllPoints.Contains(targetReceptacle.ObjType))
+            {
+                onlyPointsCloseToAgent = false;
+            }
+
+            bool placeUpright = false;
+            if(ReceptacleRestrictions.AlwaysPlaceUpright.Contains(handSOP.ObjType))
+            {
+                placeUpright = true;
+            }
+
             //ok we are holding something, time to try and place it
             InstantiatePrefabTest script = GameObject.Find("PhysicsSceneManager").GetComponent<InstantiatePrefabTest>();
-            if(script.PlaceObjectReceptacle(targetReceptacle.ReturnMySpawnPoints(true), ItemInHand.GetComponent<SimObjPhysics>(), action.placeStationary))
+            //set degreeIncrement to 90 for placing held objects to check for vertical angles
+            if(script.PlaceObjectReceptacle(targetReceptacle.ReturnMySpawnPoints(onlyPointsCloseToAgent), ItemInHand.GetComponent<SimObjPhysics>(), action.placeStationary, 100, 90, placeUpright))
             {
                 ItemInHand = null;
                 actionFinished(true);
@@ -1967,9 +1912,11 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 actionFinished(false);
             }
 
+            #if UNITY_EDITOR
             watch.Stop();
             var elapsed = watch.ElapsedMilliseconds;
             print("place object: " + elapsed);
+            #endif
         }
         
 		public void PickupObject(ServerAction action)//use serveraction objectid
