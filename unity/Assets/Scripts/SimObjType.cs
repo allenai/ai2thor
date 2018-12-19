@@ -319,7 +319,8 @@ public static class ReceptacleRestrictions
 
 		//BOWL
 		{SimObjType.Bowl, new List<SimObjType>()
-		{SimObjType.TableTop, SimObjType.CounterTop, SimObjType.Sink, SimObjType.Cabinet,}},
+		{SimObjType.TableTop, SimObjType.CounterTop, SimObjType.Sink, SimObjType.Cabinet,SimObjType.Desk, SimObjType.NightStand, SimObjType.Dresser,
+		}},
 
 	};
 
