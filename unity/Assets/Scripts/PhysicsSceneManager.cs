@@ -190,11 +190,14 @@ public class PhysicsSceneManager : MonoBehaviour
 
 		List<GameObject> TargetList = new List<GameObject>();
 
-		int HowManyCouldntSpawn = 0;
+		int HowManyCouldntSpawn = RequiredObjects.Count;
 
 		//if we already spawned objects, lets just move them around
 		if(SpawnedObjects.Count > 0)
 		{
+			HowManyCouldntSpawn = SpawnedObjects.Count;
+			//bool diditspawn = false;
+
 			//for each object in RequiredObjects, start a list of what objects it's allowed 
 			//to spawn in by checking the PlacementRestrictions dictionary
 			foreach(GameObject go in SpawnedObjects)
@@ -230,12 +233,12 @@ public class PhysicsSceneManager : MonoBehaviour
 					}
 				}
 
+				//not found indictionary!
 				else
 				{
 					#if UNITY_EDITOR
 					Debug.Log(go.name +"'s Type is not in the ReceptacleRestrictions dictionary!");
 					#endif
-
 					break;
 				}
 
@@ -249,7 +252,7 @@ public class PhysicsSceneManager : MonoBehaviour
 
 					//RAAANDOM!
 					ShuffleSimObjPhysicsList(AllowedToSpawnInAndExistsInScene);
-					bool diditspawn = false;
+					//bool diditspawn = false;
 			
 					foreach(SimObjPhysics sop in AllowedToSpawnInAndExistsInScene)
 					{
@@ -269,7 +272,8 @@ public class PhysicsSceneManager : MonoBehaviour
 						if(spawner.PlaceObjectReceptacle(targetReceptacleSpawnPoints, go.GetComponent<SimObjPhysics>(), true, maxcount, 360, true)) //we spawn them stationary so things don't fall off of ledges
 						{
 							//Debug.Log(go.name + " succesfully spawned");
-							diditspawn = true;
+							//diditspawn = true;
+							HowManyCouldntSpawn--;
 							break;
 						}
 
@@ -280,18 +284,11 @@ public class PhysicsSceneManager : MonoBehaviour
 						#endif
 
 					}
-
-					if(!diditspawn)
-					{
-						#if UNITY_EDITOR
-						Debug.Log("None of the receptacles in the scene could spawn " + go.name);
-						#endif
-						HowManyCouldntSpawn++;
-					}
 				}
 			}
 		}
 
+		//we have not spawned objects, so instantiate them here first
 		else
 		{
 			//for each object in RequiredObjects, start a list of what objects it's allowed 
@@ -348,7 +345,7 @@ public class PhysicsSceneManager : MonoBehaviour
 
 					//RAAANDOM!
 					ShuffleSimObjPhysicsList(AllowedToSpawnInAndExistsInScene);
-					bool diditspawn = false;
+					//bool diditspawn = false;
 
 
 					GameObject temp = Instantiate(go, new Vector3(0, 100, 0), Quaternion.identity);
@@ -377,7 +374,8 @@ public class PhysicsSceneManager : MonoBehaviour
 						if(spawner.PlaceObjectReceptacle(targetReceptacleSpawnPoints, temp.GetComponent<SimObjPhysics>(), true, maxcount, 360, true)) //we spawn them stationary so things don't fall off of ledges
 						{
 							//Debug.Log(go.name + " succesfully spawned");
-							diditspawn = true;
+							//diditspawn = true;
+							HowManyCouldntSpawn--;
 							SpawnedObjects.Add(temp);
 							break;
 						}
@@ -389,29 +387,16 @@ public class PhysicsSceneManager : MonoBehaviour
 						#endif
 
 					}
-
-					if(!diditspawn)
-					{
-						DestroyImmediate(temp);
-						#if UNITY_EDITOR
-						Debug.Log("None of the receptacles in the scene could spawn " + go.name);
-						#endif
-						//return false;
-						HowManyCouldntSpawn++;
-						//break;
-					}
 				}
 			}			
 		}
-
-
 
 		//we can use this to report back any failed spawns if we want that info at some point ?
 
 		#if UNITY_EDITOR
 		if(HowManyCouldntSpawn > 0)
 		{
-			Debug.Log(HowManyCouldntSpawn + " objects could not be spawned into the scene!");
+			Debug.Log(HowManyCouldntSpawn + " object(s) could not be spawned into the scene!");
 		}
 
 		Masterwatch.Stop();
