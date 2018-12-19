@@ -30,6 +30,7 @@ public class PhysicsSceneManager : MonoBehaviour
 		//clear this on start so that the CheckForDuplicates function doesn't check pre-existing lists
 		SetupScene();
 
+		if(GameObject.Find("HideAndSeek"))
 		HideAndSeek = GameObject.Find("HideAndSeek");
 	}
 
