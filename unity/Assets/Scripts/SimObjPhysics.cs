@@ -51,7 +51,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 	public Dictionary<Collider, ContactPoint[]> contactPointsDictionary = new Dictionary<Collider, ContactPoint[]>();
 
 	//if this object is a receptacle, get all valid spawn points from any child ReceptacleTriggerBoxes and sort them by distance to Agent
-	public List<ReceptacleSpawnPoint> MySpawnPoints = new List<ReceptacleSpawnPoint>();
+	List<ReceptacleSpawnPoint> MySpawnPoints = new List<ReceptacleSpawnPoint>();
 
 	//initial position object spawned in in case we want to reset the scene
 	//private Vector3 startPosition;   
@@ -1348,7 +1348,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		}
 	}
 
-	//[ContextMenu("Setup Pickupable")]
+	[ContextMenu("Setup")]
 	void ContextSetUpSimObjPhysics()
 	{
 		if (this.Type == SimObjType.Undefined || this.PrimaryProperty == SimObjPrimaryProperty.Undefined)
