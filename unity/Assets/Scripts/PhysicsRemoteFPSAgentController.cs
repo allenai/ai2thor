@@ -1883,12 +1883,15 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
             bool onlyPointsCloseToAgent = true;
 
+            //if the target is something like a pot or bowl on a table, return all valid points instead of ONLY visible points since
+            //the Agent can't see the bottom of the receptacle if it's placed too high on a table
             if(ReceptacleRestrictions.ReturnAllPoints.Contains(targetReceptacle.ObjType))
             {
                 onlyPointsCloseToAgent = false;
             }
 
             bool placeUpright = false;
+            //check if the object should be forced to only check upright placement angles (this prevents things like Pots being placed sideways)
             if(ReceptacleRestrictions.AlwaysPlaceUpright.Contains(handSOP.ObjType))
             {
                 placeUpright = true;

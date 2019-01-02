@@ -29,8 +29,12 @@ public class EditorSetupSimObjPhysics : MonoBehaviour
 
 	public void Setup(SimObjType type, SimObjPrimaryProperty primaryProperty, SimObjSecondaryProperty[] secondaryProperties, string tag, int layer)
 	{
-		//SimObjPhysics sop = gameObject.GetCompn
-		//get SimObjPhysics component
-		//setup type, primary and secondary properties, tag, and layer for the object
+		SimObjPhysics sop = gameObject.GetComponent<SimObjPhysics>();
+
+		sop.Type = type;
+		sop.PrimaryProperty = primaryProperty;
+		sop.SecondaryProperties = secondaryProperties;
+		sop.gameObject.tag = tag;
+		//sop.layer = layer;
 	}
 }

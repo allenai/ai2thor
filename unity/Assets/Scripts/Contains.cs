@@ -45,7 +45,7 @@ public class Contains : MonoBehaviour
 	private List<ReceptacleSpawnPoint> validpointlist = new List<ReceptacleSpawnPoint>();
 
 	//world coordinates of the Corners of this object's receptacles in case we need it for something
-	public List<Vector3> Corners = new List<Vector3>();
+	//public List<Vector3> Corners = new List<Vector3>();
 
 	// Use this for initialization
 
@@ -179,8 +179,8 @@ public class Contains : MonoBehaviour
 		//bottom back right
 		p8 = transform.TransformPoint(b.center + new Vector3(b.size.x, -b.size.y, -b.size.z) * 0.5f);
 
-		List<Vector3> crn = new List<Vector3>() {p1, p2, p3, p4, p5, p6, p7, p8};
-		Corners = crn;
+		// List<Vector3> crn = new List<Vector3>() {p1, p2, p3, p4, p5, p6, p7, p8};
+		// Corners = crn;
 
 
 		//so lets make a grid, we can parametize the gridsize value later, for now we'll adjust it here
@@ -301,8 +301,8 @@ public class Contains : MonoBehaviour
 
 		Camera agentCam = agent.GetComponent<PhysicsRemoteFPSAgentController>().m_Camera;
 
-		//no offset if the object is below us
-		if(point.y < agentCam.transform.position.y)
+		//no offset if the object is below the camera position - a slight offset to account for objects equal in y distance to the camera
+		if(point.y < agentCam.transform.position.y - 0.05f)
 		{
 			//do this check if the point's y value is below the camera's y value
 			//this check will be a raycast vision check from the camera to the point exactly
