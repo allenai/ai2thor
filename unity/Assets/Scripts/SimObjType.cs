@@ -233,6 +233,7 @@ public enum SimObjType : int
 	Bench = 131,
 	Closet = 132,
 	Cart = 133,
+	ShowerGlass = 134,
 }
 
 public static class ReceptacleRestrictions
