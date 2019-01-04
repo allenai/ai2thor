@@ -190,7 +190,7 @@ public enum SimObjType : int
     ArmChair = 88,
     BaseballBat = 89,
     BasketBall = 90,
-    BathtubFaucet = 91,
+    Faucet = 91,
     Boots = 92,
     Glassbottle = 93,
     DishSponge = 94,
@@ -213,7 +213,7 @@ public enum SimObjType : int
     PotLid = 111,
     SaltShaker = 112,
     Safe = 113,
-    SmallMirror = 114,
+    SmallMirror = 114,//maybe don't use this, use just 'Mirror' instead
     Sofa = 115,
     SoapContainer = 116,
     Spatula = 117,
@@ -221,7 +221,7 @@ public enum SimObjType : int
     TennisRacket = 119,
     Tissue = 120,
     Vase = 121,
-    WallMirror = 122,
+    WallMirror = 122, //maybe don't use this, just use 'Mirror' instead?
 	MassObjectSpawner = 123,
     MassScale = 124,
     Footstool = 125,
@@ -231,9 +231,8 @@ public enum SimObjType : int
 	NightStand = 129,
 	Pillow = 130,
 	Bench = 131,
-	Closet = 132,
-	Cart = 133,
-	ShowerGlass = 134,
+	Cart = 132, //bathroom cart on wheels
+	ShowerGlass = 133,
 }
 
 public static class ReceptacleRestrictions
@@ -241,7 +240,7 @@ public static class ReceptacleRestrictions
     //uses the PlaceIn action
     //The object placed must have the entirety of it's object oriented bounding box (all 8 corners) enclosed within the Receptacle's Box
     public static List<SimObjType> InReceptacles = new List<SimObjType>() 
-    {SimObjType.Drawer, SimObjType.Cabinet, SimObjType.Closet, SimObjType.Fridge, SimObjType.Microwave};
+    {SimObjType.Drawer, SimObjType.Cabinet, SimObjType.Fridge, SimObjType.Microwave};
 
     //uses the PlaceOn action
     //the object placed only needs the bottom most 4 corners within the Receptacle Box to be placed validly, this allows
