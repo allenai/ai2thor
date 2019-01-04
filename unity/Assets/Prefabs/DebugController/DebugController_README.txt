@@ -1,3 +1,5 @@
+WARNING: All below debug functionality has been depricated, this document remains for reference if needed in the future!!!!
+
 Debug FPX Agent Controller
 
 Debug Controller Notes:
