@@ -1413,6 +1413,29 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 					recepboxes.Add(t.gameObject);
 				}
 			}
+
+			if(t.name == "Colliders")
+			{
+				if(!gameObject.transform.Find("TriggerColliders"))
+				{
+					GameObject inst = Instantiate(t.gameObject, gameObject.transform, true);
+					inst.name = "TriggerColliders";
+					foreach(Transform yes in inst.transform)
+					{
+						yes.GetComponent<Collider>().isTrigger = true;
+					}
+				}
+				else
+				{
+					DestroyImmediate(gameObject.transform.Find("TriggerColliders").gameObject);
+					GameObject inst = Instantiate(t.gameObject, gameObject.transform, true);
+					inst.name = "TriggerColliders";
+					foreach(Transform yes in inst.transform)
+					{
+						yes.GetComponent<Collider>().isTrigger = true;
+					}
+				}
+			}
 		}
 
 		ReceptacleTriggerBoxes = recepboxes.ToArray();
