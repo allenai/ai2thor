@@ -1402,6 +1402,21 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 			rac.GetComponent<BoxCollider>().enabled = false;
 		}
 
+		List<GameObject> recepboxes = new List<GameObject>();
+
+		foreach(Transform t in gameObject.transform)
+		{
+			if(t.GetComponent<Contains>())
+			{
+				if(!recepboxes.Contains(t.gameObject))
+				{
+					recepboxes.Add(t.gameObject);
+				}
+			}
+		}
+
+		ReceptacleTriggerBoxes = recepboxes.ToArray();
+
 		ContextSetUpColliders();
 		//ContextSetUpTriggerColliders();
 		ContextSetUpVisibilityPoints();
