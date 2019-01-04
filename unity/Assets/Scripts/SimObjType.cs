@@ -172,7 +172,7 @@ public enum SimObjType : int
 	SprayBottle = 71,
 	ScrubBrush = 72,
 	ToiletPaperRoll = 73,
-	Lamp = 74,
+	Lamp = 74, //don't use this, use either FloorLamp or DeskLamp
 	LightSwitch = 75,
 	Bed = 76,
 	Book = 77,
@@ -181,7 +181,7 @@ public enum SimObjType : int
 	Pen = 80,
 	Pencil = 81,
 	Blinds = 82,
-	Mirror = 83, //kinda not used in physics? maybe multiple types - Small Mirror, Full Length Mirror etc.
+	Mirror = 83, 
 	TowelHolder = 84,
 	Towel = 85,
 	Watch = 86,
@@ -233,6 +233,7 @@ public enum SimObjType : int
 	Bench = 131,
 	Cart = 132, //bathroom cart on wheels
 	ShowerGlass = 133,
+	DeskLamp = 134,
 }
 
 public static class ReceptacleRestrictions
