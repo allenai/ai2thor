@@ -121,6 +121,24 @@ public class PhysicsSceneManager : MonoBehaviour
     
 	private void Generate_UniqueID(SimObjPhysics o)
     {
+		//check if this object require's it's parent simObj's UniqueID as a prefix
+		if(ReceptacleRestrictions.UseParentUniqueIDasPrefix.Contains(o.Type))
+		{
+			SimObjPhysics parent = o.transform.parent.GetComponent<SimObjPhysics>();
+			if(parent.UniqueID == null)
+			{
+				Vector3 ppos = parent.transform.position;
+				string xpPos = (ppos.x >= 0 ? "+" : "") + ppos.x.ToString("00.00");
+				string ypPos = (ppos.y >= 0 ? "+" : "") + ppos.y.ToString("00.00");
+				string zpPos = (ppos.z >= 0 ? "+" : "") + ppos.z.ToString("00.00");
+				parent.UniqueID = parent.Type.ToString() + "|" + xpPos + "|" + ypPos + "|" + zpPos;
+			}
+
+			o.UniqueID = parent.UniqueID + "|" + o.Type.ToString();
+			return;
+
+		}
+
         Vector3 pos = o.transform.position;
         string xPos = (pos.x >= 0 ? "+" : "") + pos.x.ToString("00.00");
         string yPos = (pos.y >= 0 ? "+" : "") + pos.y.ToString("00.00");
