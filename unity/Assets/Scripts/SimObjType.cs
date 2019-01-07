@@ -235,10 +235,20 @@ public enum SimObjType : int
 	ShowerGlass = 133,
 	DeskLamp = 134,
 	Window = 135,
+	BathtubBasin = 136,
+	SinkBasin = 137,
+	
 }
 
 public static class ReceptacleRestrictions
 {
+
+	//these objects generate UniqueIDs based on their parent object to show that they are related. ie: "Bathtub|1|1|1|" has a child sim object BathtubBasin with the ID "Bathtub|1|1|1|BathtubBasin"
+	//this is specifically used for objects that have distinct zones that should be individually interactable (outer part vs inner part) but share the same geometry, like a bathtub.
+	//Objets like a Coffeetable with inset Drawers should NOT be on this list because those objects do not share geometry (table vs drawer)
+	public static List<SimObjType> UseParentUniqueIDasPrefix = new List<SimObjType>()
+	{SimObjType.BathtubBasin,SimObjType.SinkBasin};
+
     //uses the PlaceIn action
     //The object placed must have the entirety of it's object oriented bounding box (all 8 corners) enclosed within the Receptacle's Box
     public static List<SimObjType> InReceptacles = new List<SimObjType>() 
@@ -249,26 +259,26 @@ public static class ReceptacleRestrictions
     //things like a tall cup to have the top half of it sticking out of the receptacle box when placed on a table
     public static List<SimObjType> OnReceptacles = new List <SimObjType>()
     {SimObjType.TableTop, SimObjType.Dresser, SimObjType.CounterTop, SimObjType.Shelf, SimObjType.ArmChair,
-     SimObjType.Sofa, SimObjType.Ottoman, SimObjType.StoveBurner};
+     SimObjType.Sofa, SimObjType.Ottoman, SimObjType.StoveBurner,SimObjType.Bathtub};
 
     //Uses the PlaceIn action
     //while these receptacles have things placed "in" them, they use the logic of OnReceptacles - Only the bottom 4 corners must be within the
     //receptacle box for the placement to be valid. This means we can have a Spoon placed IN a cup, but the top half of the spoon is still allowed to stick out
     public static List<SimObjType> InReceptaclesThatOnlyCheckBottomFourCorners = new List <SimObjType>()
-    { SimObjType.Cup, SimObjType.Bowl, SimObjType.GarbageCan, SimObjType.Box, SimObjType.Sink,};
+    { SimObjType.Cup, SimObjType.Bowl, SimObjType.GarbageCan, SimObjType.Box, SimObjType.Sink,SimObjType.BathtubBasin};
 
 
 	public static List<SimObjType> SpawnOnlyOutsideReceptacles = new List <SimObjType>()
 	{
 		SimObjType.TableTop, SimObjType.Dresser, SimObjType.CounterTop, SimObjType.Sofa, SimObjType.Bench, SimObjType.Bed,
-		SimObjType.Ottoman, SimObjType.Desk, SimObjType.StoveBurner,
+		SimObjType.Ottoman, SimObjType.Desk, SimObjType.StoveBurner, SimObjType.Shelf, SimObjType.Bathtub, SimObjType.Sink, SimObjType.BathtubBasin, SimObjType.SinkBasin
 	};
 
 	//objects in this list should always return all spawn points inside of it when trying to place an object from the hand into the object
 	//this elminiates the need for visibly seeing the bottommost point on the object (hopefully)
 	public static List<SimObjType> ReturnAllPoints = new List<SimObjType>()
 	{
-		SimObjType.Pot, SimObjType.Pan, SimObjType.Bowl, SimObjType.GarbageCan, SimObjType.Plate,
+		SimObjType.Pot, SimObjType.Pan, SimObjType.Bowl, SimObjType.GarbageCan, SimObjType.Plate, SimObjType.Box
 	};
 
 	//these objects should always be placed upright and not in weird angles. For example, you wouldn't place a pot sideways, you would always place

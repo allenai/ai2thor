@@ -113,6 +113,12 @@ public class Contains : MonoBehaviour
 				return;
 			}
 
+			//don't add any parent objects in case this is a child sim object
+			if(sop.transform == myParent.transform)
+			{
+				return;
+			}
+
 			//check each "other" object, see if it is currently in the CurrentlyContains list, and make sure it is NOT one of this object's doors/drawer
 			if (!CurrentlyContains.Contains(sop))//&& !MyObjects.Contains(sop.transform.gameObject))
 			{
@@ -226,12 +232,15 @@ public class Contains : MonoBehaviour
 			// Debug.DrawLine(point, point + -(ydir * ydist), Color.red, 100f);
 			// #endif
 
-			//quick test to see if this point on the grid is blocked by anything by raycasting down
-			//toward it
+			// //quick test to see if this point on the grid is blocked by anything by raycasting down
+			// //toward it
 			RaycastHit hit;
 			if(Physics.Raycast(point, -ydir, out hit, ydist, 1 << 8, QueryTriggerInteraction.Ignore))
 			{
 				//if this hits anything except the parent object, this spot is blocked by something
+
+				//IMPORTANT NOTE: For objects like Sinks and Bathtubs where the interior simobject (SinkBasin, BathtubBasin) are children, make sure the interior Contains scripts have their 'myParent' field
+				//set to the PARENT object of the sim object, not the sim object itself ie: SinkBasin's myParent = Sink
 				if(hit.transform == myParent.transform)
 				{
 					if(!ReturnPointsCloseToAgent)
