@@ -600,7 +600,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 			GameObject coll = new GameObject("Col");
 			coll.AddComponent<BoxCollider>();
 			coll.transform.tag = "SimObjPhysics";
-			col.layer = 8;
+			coll.layer = 8;
 			coll.transform.position = col.transform.position;
 			coll.transform.SetParent(col.transform);
 		}
