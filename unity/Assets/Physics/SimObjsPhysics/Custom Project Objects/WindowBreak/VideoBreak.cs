@@ -31,6 +31,10 @@ public class VideoBreak : MonoBehaviour
 
 	void OnCollisionEnter(Collision collision)
 	{
+		//print(collision.transform.name);
+		if(collision.transform.name == "TeddyBear")
+		return;
+		
 		Destroy(gameObject);
 		Instantiate(brokenWindow, transform.position, transform.rotation);
 
@@ -41,7 +45,7 @@ public class VideoBreak : MonoBehaviour
 		{
 			if(col.GetComponent<Rigidbody>())
 			{
-				col.GetComponent<Rigidbody>().AddExplosionForce(power * collision.relativeVelocity.magnitude,explosionPos, explosionRadius);
+				col.GetComponent<Rigidbody>().AddExplosionForce(power * collision.relativeVelocity.magnitude,explosionPos, explosionRadius, 1.0f);
 			}
 		}
 
