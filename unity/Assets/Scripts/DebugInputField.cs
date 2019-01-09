@@ -18,21 +18,57 @@ namespace UnityStandardAssets.Characters.FirstPerson
         // Use this for initialization
         void Start()
         {
+             #if UNITY_EDITOR
+
 			//UnityEngine.EventSystems.EventSystem.current.SetSelectedGameObject(gameObject);
 			Agent = GameObject.Find("FPSController");
 			PhysicsController = Agent.GetComponent<PhysicsRemoteFPSAgentController>();
             AManager = GameObject.Find("PhysicsSceneManager").GetComponentInChildren<AgentManager>();
-            #if UNITY_EDITOR
+           
             PhysicsController.GetComponent<DebugFPSAgentController>().enabled = true;
-            #endif
+            
 			PivotController = Agent.GetComponent<DiscreteRemoteFPSAgentController>();
             debugfield = gameObject.GetComponent<InputField>();
             dfac = Agent.GetComponent<DebugFPSAgentController>();
+
+            #endif
         }
 
         // Update is called once per frame
         void Update()
         {
+            if(Input.GetKeyDown(KeyCode.P))
+            {
+               // print("pickup");
+                ServerAction action = new ServerAction();
+                action.action = "PickupObject";
+                action.objectId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().UniqueIDOfClosestVisibleObject();
+                PhysicsController.ProcessControlCommand(action);
+                        
+            }
+
+            if(Input.GetKeyDown(KeyCode.T))
+            {
+                ServerAction action = new ServerAction();
+                action.action = "ThrowObject";
+                action.moveMagnitude = 600f;
+                PhysicsController.ProcessControlCommand(action);   
+            }
+
+            if(Input.GetKeyDown(KeyCode.U))
+            {
+                ServerAction action = new ServerAction();
+                action.action = "MoveHandMagnitude";
+
+                action.moveMagnitude = 0.1f;
+                
+                action.x = 0f;
+                action.y = 1f;
+                action.z = 0f;
+                PhysicsController.ProcessControlCommand(action);
+            }
+
+
             if(!debugfield.isFocused && dfac.TextInputMode)
             {
                 if(Input.GetKeyDown(KeyCode.W))
