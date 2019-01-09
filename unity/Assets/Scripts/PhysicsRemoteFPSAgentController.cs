@@ -5194,7 +5194,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             }
         }
        
-       /* 
+       
 		#if UNITY_EDITOR
 
         // Taken from https://answers.unity.com/questions/1144378/copy-to-clipboard-with-a-button-unity-53-solution.html
@@ -5266,7 +5266,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             }
         }
         #endif
-        */
+        
 	}
 
 }
