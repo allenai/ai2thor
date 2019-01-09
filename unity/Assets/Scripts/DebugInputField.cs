@@ -37,36 +37,37 @@ namespace UnityStandardAssets.Characters.FirstPerson
         // Update is called once per frame
         void Update()
         {
-            if(Input.GetKeyDown(KeyCode.P))
-            {
-               // print("pickup");
-                ServerAction action = new ServerAction();
-                action.action = "PickupObject";
-                action.objectId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().UniqueIDOfClosestVisibleObject();
-                PhysicsController.ProcessControlCommand(action);
+            //use these for the Breakable Window demo video
+            // if(Input.GetKeyDown(KeyCode.P))
+            // {
+            //    // print("pickup");
+            //     ServerAction action = new ServerAction();
+            //     action.action = "PickupObject";
+            //     action.objectId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().UniqueIDOfClosestVisibleObject();
+            //     PhysicsController.ProcessControlCommand(action);
                         
-            }
+            // }
 
-            if(Input.GetKeyDown(KeyCode.T))
-            {
-                ServerAction action = new ServerAction();
-                action.action = "ThrowObject";
-                action.moveMagnitude = 600f;
-                PhysicsController.ProcessControlCommand(action);   
-            }
+            // if(Input.GetKeyDown(KeyCode.T))
+            // {
+            //     ServerAction action = new ServerAction();
+            //     action.action = "ThrowObject";
+            //     action.moveMagnitude = 600f;
+            //     PhysicsController.ProcessControlCommand(action);   
+            // }
 
-            if(Input.GetKeyDown(KeyCode.U))
-            {
-                ServerAction action = new ServerAction();
-                action.action = "MoveHandMagnitude";
+            // if(Input.GetKeyDown(KeyCode.U))
+            // {
+            //     ServerAction action = new ServerAction();
+            //     action.action = "MoveHandMagnitude";
 
-                action.moveMagnitude = 0.1f;
+            //     action.moveMagnitude = 0.1f;
                 
-                action.x = 0f;
-                action.y = 1f;
-                action.z = 0f;
-                PhysicsController.ProcessControlCommand(action);
-            }
+            //     action.x = 0f;
+            //     action.y = 1f;
+            //     action.z = 0f;
+            //     PhysicsController.ProcessControlCommand(action);
+            // }
 
 
             if(!debugfield.isFocused && dfac.TextInputMode)

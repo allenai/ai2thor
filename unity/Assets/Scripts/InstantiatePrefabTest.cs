@@ -415,9 +415,13 @@ public class InstantiatePrefabTest : MonoBehaviour
                 sop.transform.rotation = quat.rotation;
 
                 //set true if we want objects to be stationary when placed. (if placed on uneven surface, object remains stationary)
-                //if falce, once placed the object will resolve with physics (if placed on uneven surface object might slide or roll)
+                //if false, once placed the object will resolve with physics (if placed on uneven surface object might slide or roll)
                 if(PlaceStationary == true)
-                sop.GetComponent<Rigidbody>().isKinematic = true;
+                {
+                    //if place stationary make sure to set this object as a child of the parent receptacle in case it moves (like a drawer)
+                    sop.GetComponent<Rigidbody>().isKinematic = true;
+                    sop.transform.SetParent(rsp.ParentSimObjPhys.transform);
+                }
 
                 else
                 {
