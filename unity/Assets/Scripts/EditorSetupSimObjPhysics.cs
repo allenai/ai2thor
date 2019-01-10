@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+//THIS IS WINSON EXPERIMENTING WITH SETUP FUNCTIONS< DO NOT USE RIGHT NOW
 public class EditorSetupSimObjPhysics : MonoBehaviour 
 {
 	public SimObjType Type;

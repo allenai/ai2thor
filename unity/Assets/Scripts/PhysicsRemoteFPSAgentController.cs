@@ -1850,6 +1850,14 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 return;
             }
 
+            if(!targetReceptacle.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.Receptacle))
+            {
+                errorMessage = "This target object is NOT a receptacle!";
+                Debug.Log(errorMessage);
+                actionFinished(false);
+                return;
+            }
+
             SimObjPhysics handSOP = ItemInHand.GetComponent<SimObjPhysics>();
 
             if(!action.forceAction)
