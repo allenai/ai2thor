@@ -1083,7 +1083,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		ContextSetUpBoundingBox();
 	}
 
-	[UnityEditor.MenuItem("SimObjectPhysics/AppleSlice")]
+	//[UnityEditor.MenuItem("SimObjectPhysics/AppleSlice")]
 	public static void ContextSetupAppleSlice()
 	{
 		GameObject prefabRoot = Selection.activeGameObject;
@@ -1147,10 +1147,10 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 			rac.GetComponent<BoxCollider>().enabled = false;
 		}
 		
-		c.GetComponent<SimObjPhysics>().AppleSetupReferences();
+		//c.GetComponent<SimObjPhysics>().AppleSetupReferences();
 	}
 
-	[UnityEditor.MenuItem("SimObjectPhysics/LightSwitch")]
+	//[UnityEditor.MenuItem("SimObjectPhysics/LightSwitch")]
 	public static void ContextSetupLightSwitch()
 	{
 		GameObject prefabRoot = Selection.activeGameObject;
@@ -1246,11 +1246,11 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		ContextSetUpVisibilityPoints();
 	}
 
-	[UnityEditor.MenuItem("SimObjectPhysics/Apple")]
-	public static void ContextSetupApple()
+	[UnityEditor.MenuItem("SimObjectPhysics/Toaster")]
+	public static void ContextSetupToaster()
 	{
 		GameObject prefabRoot = Selection.activeGameObject;
-		GameObject c = new GameObject("Apple");
+		GameObject c = new GameObject("Toaster_");
 		c.transform.position = prefabRoot.transform.position;
 		//prefabRoot.transform.position = c.transform.position;
 		prefabRoot.transform.SetParent(c.transform);
@@ -1264,9 +1264,9 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		if(c.GetComponent<SimObjPhysics>())
 		{
 			SimObjPhysics sop = c.GetComponent<SimObjPhysics>();
-			sop.PrimaryProperty = SimObjPrimaryProperty.CanPickup;
-			sop.Type = SimObjType.Apple;
-			sop.SecondaryProperties = new SimObjSecondaryProperty[] {SimObjSecondaryProperty.CanBeSliced};
+			sop.PrimaryProperty = SimObjPrimaryProperty.Static;
+			sop.Type = SimObjType.Toaster;
+			//sop.SecondaryProperties = new SimObjSecondaryProperty[] {SimObjSecondaryProperty.CanBeSliced};
 		}
 
 		c.tag = "SimObjPhysics";
@@ -1284,7 +1284,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 			GameObject cc = new GameObject("Col");
 			cc.transform.position = col.transform.position;
 			cc.transform.SetParent(col.transform);
-			cc.AddComponent<CapsuleCollider>();
+			cc.AddComponent<BoxCollider>();
 			cc.tag = "SimObjPhysics";
 			cc.layer = 8;
 		}
@@ -1311,11 +1311,11 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 			rac.GetComponent<BoxCollider>().enabled = false;
 		}
 
-		c.GetComponent<SimObjPhysics>().AppleSetupReferences();
+		c.GetComponent<SimObjPhysics>().ToasterSetupReferences();
 	}
 
-	[ContextMenu("Apple Setup References")]
-	void AppleSetupReferences()
+	[ContextMenu("Toaster Setup References")]
+	void ToasterSetupReferences()
 	{
 		ContextSetUpColliders();
 		ContextSetUpVisibilityPoints();
