@@ -420,6 +420,9 @@ public class InstantiatePrefabTest : MonoBehaviour
                 {
                     //if place stationary make sure to set this object as a child of the parent receptacle in case it moves (like a drawer)
                     sop.GetComponent<Rigidbody>().isKinematic = true;
+
+                    //check if the parent sim object is one that moves like a drawer - and would require this to be parented
+                    //if(rsp.ParentSimObjPhys.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanOpen))
                     sop.transform.SetParent(rsp.ParentSimObjPhys.transform);
                 }
 

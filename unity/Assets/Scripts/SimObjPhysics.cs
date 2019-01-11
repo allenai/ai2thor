@@ -273,6 +273,36 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		//PrefabUtility.InstantiatePrefab(prefabRoot);
 	}
 
+	[UnityEditor.MenuItem("SimObjectPhysics/Set Transform Scale to 1 #e")]
+	public static void ResetTransformScale()
+	{
+		GameObject selected = Selection.activeGameObject;
+
+		List <Transform> selectedchildren = new List <Transform>();
+
+		foreach(Transform t in selected.transform)
+		{
+			//print(t.name);
+			selectedchildren.Add(t);
+			//t.SetParent(null);
+		}
+
+		foreach(Transform yes in selectedchildren)
+		{
+			yes.SetParent(null);
+		}
+
+		selected.transform.localScale = new Vector3 (1, 1, 1);
+
+		foreach(Transform t in selectedchildren)
+		{
+			t.SetParent(selected.transform);
+		}
+
+
+	}
+
+
 #endif
 
 	// Use this for initialization
@@ -1246,7 +1276,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		ContextSetUpVisibilityPoints();
 	}
 
-	[UnityEditor.MenuItem("SimObjectPhysics/Toaster")]
+	//[UnityEditor.MenuItem("SimObjectPhysics/Toaster")]
 	public static void ContextSetupToaster()
 	{
 		GameObject prefabRoot = Selection.activeGameObject;
