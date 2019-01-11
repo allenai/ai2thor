@@ -1344,7 +1344,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		c.GetComponent<SimObjPhysics>().ToasterSetupReferences();
 	}
 
-	[ContextMenu("Toaster Setup References")]
+	//[ContextMenu("Toaster Setup References")]
 	void ToasterSetupReferences()
 	{
 		ContextSetUpColliders();
