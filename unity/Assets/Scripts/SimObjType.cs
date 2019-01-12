@@ -278,7 +278,7 @@ public static class ReceptacleRestrictions
 	//this elminiates the need for visibly seeing the bottommost point on the object (hopefully)
 	public static List<SimObjType> ReturnAllPoints = new List<SimObjType>()
 	{
-		SimObjType.Pot, SimObjType.Pan, SimObjType.Bowl, SimObjType.GarbageCan, SimObjType.Plate, SimObjType.Box
+		SimObjType.Pot, SimObjType.Pan, SimObjType.Bowl, SimObjType.GarbageCan, SimObjType.Plate, SimObjType.Box, SimObjType.Drawer
 	};
 
 	//these objects should always be placed upright and not in weird angles. For example, you wouldn't place a pot sideways, you would always place
