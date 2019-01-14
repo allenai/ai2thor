@@ -251,21 +251,24 @@ public class CanToggleOnOff : MonoBehaviour
 		}
 	}
 
-	[ContextMenu("Get On-Off Materials")]
-	void ContextOnOffMaterials()
-	{
-		foreach (SwapObjList swap in MaterialSwapObjects)
-		{
-			//print(swap.MyObject.name);
-			Material[] objectMats = swap.MyObject.GetComponent<MeshRenderer>().materials;
+	// [ContextMenu("Get On-Off Materials")]
+	// void ContextOnOffMaterials()
+	// {
+	// 	foreach (SwapObjList swap in MaterialSwapObjects)
+	// 	{
+	// 		List<Material> list = 
+	// 		new List<Material>(swap.MyObject.GetComponent<MeshRenderer>().sharedMaterials);
 
-			// foreach (Material m in objectMats)
-			// {
-			// 	//print(m.name);
-			// }
+	// 		//print(swap.MyObject.name);
+	// 		Material[] objectMats = list.ToArray();//swap.MyObject.GetComponent<MeshRenderer>().sharedMaterials;
 
-			swap.OnMaterials = objectMats;
-			swap.OffMaterials = objectMats;
-		}
-	}
+	// 		// foreach (Material m in objectMats)
+	// 		// {
+	// 		// 	//print(m.name);
+	// 		// }
+
+	// 		swap.OnMaterials = objectMats;
+	// 		swap.OffMaterials = objectMats;
+	// 	}
+	// }
 }
