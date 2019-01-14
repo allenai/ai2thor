@@ -22,6 +22,7 @@ public class SwapObjList
 	public Material[] OffMaterials;
 
 }
+
 public class CanToggleOnOff : MonoBehaviour 
 {
 	//the array of moving parts and lightsources will correspond with each other based on their 
@@ -247,6 +248,24 @@ public class CanToggleOnOff : MonoBehaviour
 			}
 
 			isOn = true;
+		}
+	}
+
+	[ContextMenu("Get On-Off Materials")]
+	void ContextOnOffMaterials()
+	{
+		foreach (SwapObjList swap in MaterialSwapObjects)
+		{
+			//print(swap.MyObject.name);
+			Material[] objectMats = swap.MyObject.GetComponent<MeshRenderer>().materials;
+
+			// foreach (Material m in objectMats)
+			// {
+			// 	//print(m.name);
+			// }
+
+			swap.OnMaterials = objectMats;
+			swap.OffMaterials = objectMats;
 		}
 	}
 }
