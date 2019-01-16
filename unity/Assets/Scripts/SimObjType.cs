@@ -237,6 +237,7 @@ public enum SimObjType : int
 	Window = 135,
 	BathtubBasin = 136,
 	SinkBasin = 137,
+	CD = 138
 	
 }
 
