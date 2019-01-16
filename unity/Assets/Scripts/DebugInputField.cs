@@ -257,7 +257,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         if(splitcommand.Length == 2)
                         {
                             action.randomSeed = int.Parse(splitcommand[1]);
-                            action.forceVisible = true;
+                            action.forceVisible = false;
                             action.maxNumRepeats = 5;
                         }
 
@@ -289,7 +289,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         else
                         {
                             action.randomSeed = 0;
-                            action.forceVisible = true;
+                            action.forceVisible = false;//true;
                             action.maxNumRepeats = 10;
                         }
 
