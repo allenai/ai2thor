@@ -32,6 +32,11 @@ public class PhysicsSceneManager : MonoBehaviour
 
 		if(GameObject.Find("HideAndSeek"))
 		HideAndSeek = GameObject.Find("HideAndSeek");
+
+		if(!GameObject.Find("Objects"))
+		{
+			GameObject c = new GameObject("Objects");
+		}
 	}
 
 	public void SetupScene()

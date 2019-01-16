@@ -16,8 +16,8 @@ public class InstantiatePrefabTest : MonoBehaviour
 	Vector3 gizmoscale;
 	Quaternion gizmoquaternion;
 
-    public GameObject TestPlaceObject;
-    public Contains Testreceptbox;
+    // public GameObject TestPlaceObject;
+    // public Contains Testreceptbox;
 
     private List<Vector3> SpawnCorners = new List<Vector3>();
 
