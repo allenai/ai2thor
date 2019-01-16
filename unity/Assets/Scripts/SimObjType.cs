@@ -266,7 +266,7 @@ public static class ReceptacleRestrictions
     //while these receptacles have things placed "in" them, they use the logic of OnReceptacles - Only the bottom 4 corners must be within the
     //receptacle box for the placement to be valid. This means we can have a Spoon placed IN a cup, but the top half of the spoon is still allowed to stick out
     public static List<SimObjType> InReceptaclesThatOnlyCheckBottomFourCorners = new List <SimObjType>()
-    { SimObjType.Cup, SimObjType.Bowl, SimObjType.GarbageCan, SimObjType.Box, SimObjType.Sink,SimObjType.BathtubBasin};
+    { SimObjType.Cup, SimObjType.Bowl, SimObjType.GarbageCan, SimObjType.Box, SimObjType.Sink, SimObjType.BathtubBasin};
 
 
 	public static List<SimObjType> SpawnOnlyOutsideReceptacles = new List <SimObjType>()
