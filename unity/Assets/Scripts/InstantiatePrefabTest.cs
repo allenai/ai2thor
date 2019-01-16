@@ -479,7 +479,9 @@ public class InstantiatePrefabTest : MonoBehaviour
 
         //let's move the simObj to the position we are trying, and then change it's rotation to the rotation we are trying
         Vector3 originalPos = simObj.transform.position;
+        Quaternion originalRot = simObj.transform.rotation;
 
+        //keep track of both starting position and rotation to reset the object after performing the check!
         simObj.transform.position = position;
         simObj.transform.rotation = rotation;
 
@@ -532,12 +534,14 @@ public class InstantiatePrefabTest : MonoBehaviour
 		if (hitColliders.Length > 0)
 		{
             simObj.transform.position = originalPos;
+            simObj.transform.rotation = originalRot;
             simObj.transform.Find("Colliders").gameObject.SetActive(true);
             //print("checkspawnarea failed");
 			return false;
 		}
 
         simObj.transform.position = originalPos;
+        simObj.transform.rotation = originalRot;
         simObj.transform.Find("Colliders").gameObject.SetActive(true);
         //print("checkspawn true?");
 		return true;
