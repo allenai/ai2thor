@@ -86,6 +86,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		get
 		{
 			// XXX must define how to get the bounds of the simobj
+			//We can use Bounds.Encapsulate to grow a bounding box to enclose all Visibility Points on this Sim Obj
 			return bounds;
 		}
 	}
@@ -870,6 +871,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		coo.openPositions = new Vector3[coo.MovingParts.Length];
 
 		coo.closedPositions[0] = gameObject.transform.localPosition;
+		coo.openPositions[0] = gameObject.transform.localPosition;
 
 		List<GameObject> recepboxes = new List<GameObject>();
 
