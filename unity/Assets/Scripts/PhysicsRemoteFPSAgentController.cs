@@ -1858,6 +1858,18 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 return;
             }
 
+            //if receptacle can open, check that it's open before placing. Can't place objects in something that is closed!
+            if(targetReceptacle.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanOpen))
+            {
+                if(!targetReceptacle.GetComponent<CanOpen_Object>().isOpen)
+                {
+                    errorMessage = "Target openable Receptacle is CLOSED, can't place if target is not open!";
+                    Debug.Log(errorMessage);
+                    actionFinished(false);
+                    return;
+                }
+            }
+
             SimObjPhysics handSOP = ItemInHand.GetComponent<SimObjPhysics>();
 
             if(!action.forceAction)

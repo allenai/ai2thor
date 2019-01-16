@@ -304,7 +304,7 @@ public static class ReceptacleRestrictions
 		//TOMATO
 		{SimObjType.Tomato, new List<SimObjType>()
 		{SimObjType.TableTop, SimObjType.CounterTop, SimObjType.Sink, SimObjType.Pot,
-		 SimObjType.Bowl, SimObjType.Fridge, SimObjType.GarbageCan, SimObjType.Pan, SimObjType.Microwave}},
+		 SimObjType.Bowl, SimObjType.Fridge, SimObjType.GarbageCan, SimObjType.Pan, SimObjType.Microwave, /*These should be removed after debugging -> SimObjType.Cabinet, SimObjType.Drawer, SimObjType.SinkBasin, SimObjType.Sink, SimObjType.Bathtub, SimObjType.BathtubBasin*/}},
 		
 		{SimObjType.TomatoSliced, new List<SimObjType>()
 		{SimObjType.TableTop, SimObjType.CounterTop, SimObjType.Sink, SimObjType.Pot,
