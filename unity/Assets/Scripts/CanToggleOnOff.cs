@@ -27,23 +27,29 @@ public class CanToggleOnOff : MonoBehaviour
 {
 	//the array of moving parts and lightsources will correspond with each other based on their 
 	//position in the array
-	[Header("Moving Parts for this Object")]
+
+	//these are any switches, dials, levers, etc that should change position or orientation when toggle on or off
+	[Header("Moving Parts (switches, dials, etc")]
 	[SerializeField]
 	public GameObject[] MovingParts;
 
+	//Meshes that require different materials when in on/off state
 	[Header("Objects that need Mat Swaps")]
 	[SerializeField]
 	public SwapObjList[] MaterialSwapObjects;
 
-	//toggle these on and off based on isOn
+	//Light emitting objects that must be toggled enabled/disabled
 	[Header("Light Source Objects")]
 	[SerializeField]
 	public GameObject[] LightSources;
 
 	[Header("Animation Parameters")]
+	
+	//rotations or translations for the MovingParts when On
 	[SerializeField]
     public Vector3[] OnPositions;
 
+	//rotations or translations for the MovingParts when off
     [SerializeField]
     public Vector3[] OffPositions;
 
