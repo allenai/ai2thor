@@ -248,9 +248,9 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		contactPointsDictionary.Remove(col.collider);
 	}
 
-	//duplicate a non trigger collider, add a rigidbody to it and parant the duplicate to the original selection
-	//for use with cabinet/fridge doors that need a secondary rigidbody to allow physics on the door while animating
 #if UNITY_EDITOR
+
+	
 	[UnityEditor.MenuItem("SimObjectPhysics/Create RB Collider")]
 	public static void CreateRBCollider()
 	{
@@ -274,6 +274,21 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		//PrefabUtility.InstantiatePrefab(prefabRoot);
 	}
 
+	[UnityEditor.MenuItem("SimObjectPhysics/Create Sim Obj from Mesh #r")]
+	public static void CreateFromMesh()
+	{
+		GameObject prefabRoot = Selection.activeGameObject;
+		GameObject top = new GameObject("changethisname");
+		top.transform.position = prefabRoot.transform.position;
+		top.transform.rotation = prefabRoot.transform.rotation;
+
+		prefabRoot.transform.SetParent(top.transform);
+
+		SimObjPhysics sop = top.AddComponent<SimObjPhysics>();
+
+		sop.ContextSetUpSimObjPhysics();
+	}
+	
 	[UnityEditor.MenuItem("SimObjectPhysics/Set Transform Scale to 1 #e")]
 	public static void ResetTransformScale()
 	{
@@ -317,6 +332,14 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 			if (ReceptacleTriggerBoxes.Length == 0)
 			{
 				Debug.LogError(this.name + " is missing ReceptacleTriggerBoxes please hook them up");
+			}
+		}
+
+		if(temp.Contains(SimObjSecondaryProperty.ObjectSpecificReceptacle))
+		{
+			if(!gameObject.GetComponent<ObjectSpecificReceptacle>())
+			{
+				Debug.LogError(this.name + " is missing the ObjectSpecificReceptacle component!");
 			}
 		}
 #endif
@@ -559,7 +582,6 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 
 		//draw visibility points for editor
 		Gizmos.color = Color.yellow;
-
 		if (VisibilityPoints.Length > 0)
 		{
 			foreach (Transform t in VisibilityPoints)

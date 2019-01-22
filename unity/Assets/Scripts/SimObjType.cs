@@ -89,7 +89,8 @@ public enum SimObjSecondaryProperty : int //EACH SimObjPhysics can have any numb
     CanBeMountedLarge = 48,
     CanBeLitOnFire = 49,
     CanLightOnFire = 50,
-    CanSeeThrough = 51
+    CanSeeThrough = 51,
+	ObjectSpecificReceptacle = 52,
 }
 
 [Serializable]
@@ -345,6 +346,16 @@ public static class ReceptacleRestrictions
 		//BOWL
 		{SimObjType.Bowl, new List<SimObjType>()
 		{SimObjType.TableTop, SimObjType.CounterTop, SimObjType.Sink, SimObjType.Cabinet,SimObjType.Desk, SimObjType.NightStand, SimObjType.Dresser,
+		}},
+
+		//TOILET PAPER
+		{SimObjType.ToiletPaper, new List <SimObjType>()
+		{SimObjType.TableTop, SimObjType.CounterTop, SimObjType.Cabinet, SimObjType.Drawer, SimObjType.Cart, SimObjType.ToiletPaperHanger,
+		}},
+
+		//TOILET PAPER ROLL - should be same as Toilet Paper's list
+		{SimObjType.ToiletPaperRoll, new List <SimObjType>()
+		{SimObjType.TableTop, SimObjType.CounterTop, SimObjType.Cabinet, SimObjType.Drawer, SimObjType.Cart, SimObjType.ToiletPaperHanger,
 		}},
 
 	};

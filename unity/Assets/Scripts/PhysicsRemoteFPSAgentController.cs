@@ -1873,6 +1873,29 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 }
             }
             
+            if(targetReceptacle.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.ObjectSpecificReceptacle))
+            {
+                ObjectSpecificReceptacle osr = targetReceptacle.GetComponent<ObjectSpecificReceptacle>();
+                if(osr.HasSpecificType(ItemInHand.GetComponent<SimObjPhysics>().ObjType) && osr.full == false)
+                {
+                    ItemInHand.transform.position = osr.attachPoint.position;
+                    ItemInHand.transform.SetParent(osr.attachPoint.transform);
+                    ItemInHand.transform.localRotation = Quaternion.identity;
+                    ItemInHand.GetComponent<Rigidbody>().isKinematic = true;
+
+                    ItemInHand = null;
+                    actionFinished(true);
+                    return;
+                }
+
+                else
+                {
+                    errorMessage = ItemInHand.name + " can not be placed in " + targetReceptacle.name;
+                    Debug.Log(errorMessage);
+                    actionFinished(false);
+                    return;
+                }
+            }
 
             SimObjPhysics handSOP = ItemInHand.GetComponent<SimObjPhysics>();
 
