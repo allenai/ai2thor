@@ -240,7 +240,7 @@ public enum SimObjType : int
 	CD = 138,
 	Curtains = 139,
 	Poster = 140,
-	
+
 	
 }
 
@@ -253,33 +253,35 @@ public static class ReceptacleRestrictions
 	public static List<SimObjType> UseParentUniqueIDasPrefix = new List<SimObjType>()
 	{SimObjType.BathtubBasin,SimObjType.SinkBasin};
 
-    //uses the PlaceIn action
+    //Objects are "placed into/placed in" these receptacles
     //The object placed must have the entirety of it's object oriented bounding box (all 8 corners) enclosed within the Receptacle's Box
     public static List<SimObjType> InReceptacles = new List<SimObjType>() 
     {SimObjType.Drawer, SimObjType.Cabinet, SimObjType.Fridge, SimObjType.Microwave};
 
-    //uses the PlaceOn action
+    //Objects are "placed on top of/placed on" these receptacles
     //the object placed only needs the bottom most 4 corners within the Receptacle Box to be placed validly, this allows
-    //things like a tall cup to have the top half of it sticking out of the receptacle box when placed on a table
+    //things like a tall cup to have the top half of it sticking out of the receptacle box when placed on a table without requiring the table's receptacle box to be gigantic and unweildy
     public static List<SimObjType> OnReceptacles = new List <SimObjType>()
     {SimObjType.TableTop, SimObjType.Dresser, SimObjType.CounterTop, SimObjType.Shelf, SimObjType.ArmChair,
-     SimObjType.Sofa, SimObjType.Ottoman, SimObjType.StoveBurner,SimObjType.Bathtub};
+     SimObjType.Sofa, SimObjType.Ottoman, SimObjType.StoveBurner,SimObjType.Bathtub, SimObjType.Plate};
 
-    //Uses the PlaceIn action
+    //Objects are "placed into/placed in" to these receptacles
     //while these receptacles have things placed "in" them, they use the logic of OnReceptacles - Only the bottom 4 corners must be within the
     //receptacle box for the placement to be valid. This means we can have a Spoon placed IN a cup, but the top half of the spoon is still allowed to stick out
+	//this distinction is made in case we ever want to do some sort of semantic tests with placing things in/on instead of a generic "place" as the action descriptor
     public static List<SimObjType> InReceptaclesThatOnlyCheckBottomFourCorners = new List <SimObjType>()
-    { SimObjType.Cup, SimObjType.Bowl, SimObjType.GarbageCan, SimObjType.Box, SimObjType.Sink, SimObjType.BathtubBasin};
+    { SimObjType.Cup, SimObjType.Bowl, SimObjType.GarbageCan, SimObjType.Box, SimObjType.Sink, SimObjType.BathtubBasin, SimObjType.Pan, SimObjType.Pot, };
 
 
 	public static List<SimObjType> SpawnOnlyOutsideReceptacles = new List <SimObjType>()
 	{
 		SimObjType.TableTop, SimObjType.Dresser, SimObjType.CounterTop, SimObjType.Sofa, SimObjType.Bench, SimObjType.Bed,
-		SimObjType.Ottoman, SimObjType.Desk, SimObjType.StoveBurner, SimObjType.Shelf, SimObjType.Bathtub, SimObjType.Sink, SimObjType.BathtubBasin, SimObjType.SinkBasin
+		SimObjType.Ottoman, SimObjType.Desk, SimObjType.StoveBurner, SimObjType.Shelf, SimObjType.Bathtub, SimObjType.Sink, SimObjType.BathtubBasin, SimObjType.SinkBasin,
+		SimObjType.NightStand,
 	};
 
 	//objects in this list should always return all spawn points inside of it when trying to place an object from the hand into the object
-	//this elminiates the need for visibly seeing the bottommost point on the object (hopefully)
+	//this elminiates the need for visibly seeing the bottommost point on the object, which would restrict the valid placement positions greatly due to these objects being viewed at extreme angles
 	public static List<SimObjType> ReturnAllPoints = new List<SimObjType>()
 	{
 		SimObjType.Pot, SimObjType.Pan, SimObjType.Bowl, SimObjType.GarbageCan, SimObjType.Plate, SimObjType.Box, SimObjType.Drawer
@@ -288,7 +290,7 @@ public static class ReceptacleRestrictions
 	//These receptacle sim objects MUST be in the open state before objects can be placed in them
 	public static List<SimObjType> MustBeOpenToPlaceObjectsIn = new List<SimObjType>()
 	{
-		SimObjType.Drawer, SimObjType.Cabinet, SimObjType.LaundryHamper, SimObjType.Microwave
+		SimObjType.Drawer, SimObjType.Cabinet, SimObjType.LaundryHamper, SimObjType.Microwave, SimObjType.Fridge //XXX add box to this once we have openable boxes
 	};
 
 	//these objects should always be placed upright and not in weird angles. For example, you wouldn't place a pot sideways, you would always place

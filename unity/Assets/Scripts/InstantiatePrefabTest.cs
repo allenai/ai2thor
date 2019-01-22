@@ -16,6 +16,8 @@ public class InstantiatePrefabTest : MonoBehaviour
 	Vector3 gizmoscale;
 	Quaternion gizmoquaternion;
 
+    private float yoffset = 0.005f; //y axis offset of placing objects, useful to allow objects to fall just a tiny bit to allow physics to resolve consistently
+
     // public GameObject TestPlaceObject;
     // public Contains Testreceptbox;
 
@@ -334,7 +336,7 @@ public class InstantiatePrefabTest : MonoBehaviour
         foreach(RotationAndDistanceValues quat in ToCheck)
         {
             //if spawn area is clear, spawn it and return true that we spawned it
-            if(CheckSpawnArea(sop, rsp.Point + rsp.ParentSimObjPhys.transform.up * (quat.distance + 0.01f), quat.rotation, false))
+            if(CheckSpawnArea(sop, rsp.Point + rsp.ParentSimObjPhys.transform.up * (quat.distance + yoffset), quat.rotation, false))
             {
                 //now to do a check to make sure the sim object is contained within the Receptacle box, and doesn't have
                 //bits of it hanging out
@@ -411,7 +413,7 @@ public class InstantiatePrefabTest : MonoBehaviour
                 //parent to the Objects transform
                 sop.transform.SetParent(topObject.transform);
                 //translate position of the target sim object to the rsp.Point and offset in local y up
-                sop.transform.position = rsp.Point + rsp.ReceptacleBox.transform.up * (quat.distance + 0.01f);//rsp.Point + sop.transform.up * DistanceFromBottomOfBoxToTransform;
+                sop.transform.position = rsp.Point + rsp.ReceptacleBox.transform.up * (quat.distance + yoffset);//rsp.Point + sop.transform.up * DistanceFromBottomOfBoxToTransform;
                 sop.transform.rotation = quat.rotation;
 
                 //set true if we want objects to be stationary when placed. (if placed on uneven surface, object remains stationary)

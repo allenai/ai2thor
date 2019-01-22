@@ -1942,7 +1942,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             #if UNITY_EDITOR
             watch.Stop();
             var elapsed = watch.ElapsedMilliseconds;
-            print("place object: " + elapsed);
+            print("place object took: " + elapsed +"ms");
             #endif
         }
         
