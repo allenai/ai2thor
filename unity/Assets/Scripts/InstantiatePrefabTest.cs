@@ -178,13 +178,21 @@ public class InstantiatePrefabTest : MonoBehaviour
         //Max number of times this receptacle will try to place the object
         //se this to a high number (100 max at the moment) for more consistancy and accuracy, but slower performance
         //set this to a low number to only try a few positions on the recpetacle, it will be fast but more likely to fail prematurely
-
         int count = 0;
 
         if(rsp != null)
         {
             foreach (ReceptacleSpawnPoint p in rsp)
             {
+                //if this is an Object Specific Receptacle, stop this check right now! I mean it!
+                //Placing objects in/on an Object Specific Receptacle uses different logic to place the
+                //object at the Attachemnet point rather than in the spawn area, so stop this right now!
+                if(p.ParentSimObjPhys.GetComponent<SimObjPhysics>().DoesThisObjectHaveThisSecondaryProperty
+                (SimObjSecondaryProperty.ObjectSpecificReceptacle))
+                {
+                    return false;
+                }
+
                 if(PlaceObject(sop, p, PlaceStationary, degreeIncrement, AlwaysPlaceUpright))
                 {
                     //found a place to spawn! neato, return success
