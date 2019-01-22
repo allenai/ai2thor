@@ -282,6 +282,21 @@ public class PhysicsSceneManager : MonoBehaviour
 					{
 						targetReceptacle = sop;
 
+						//check if the target Receptacle is an ObjectSpecificReceptacle
+						//if so, if this game object is compatible with the ObjectSpecific restrictions, place it!
+						if(targetReceptacle.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.ObjectSpecificReceptacle))
+						{
+							ObjectSpecificReceptacle osr = targetReceptacle.GetComponent<ObjectSpecificReceptacle>();
+							if(osr.HasSpecificType(go.GetComponent<SimObjPhysics>().ObjType) && osr.isFull() == false)
+							{
+								go.transform.position = osr.attachPoint.position;
+								go.transform.SetParent(osr.attachPoint.transform);
+								go.transform.localRotation = Quaternion.identity;
+								go.GetComponent<Rigidbody>().isKinematic = true;
+								break;
+							}
+						}
+
 						targetReceptacleSpawnPoints = targetReceptacle.ReturnMySpawnPoints(false);
 
 						//first shuffle the list so it's raaaandom
