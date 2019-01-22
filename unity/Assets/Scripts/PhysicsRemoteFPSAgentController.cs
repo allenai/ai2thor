@@ -1873,10 +1873,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 }
             }
             
+            //if this receptacle only receives specific objects, check that the ItemInHand is compatible and
+            //check if the receptacle is currently full with another valid object or not
             if(targetReceptacle.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.ObjectSpecificReceptacle))
             {
                 ObjectSpecificReceptacle osr = targetReceptacle.GetComponent<ObjectSpecificReceptacle>();
-                if(osr.HasSpecificType(ItemInHand.GetComponent<SimObjPhysics>().ObjType) && osr.full == false)
+                if(osr.HasSpecificType(ItemInHand.GetComponent<SimObjPhysics>().ObjType) && osr.isFull() == false)
                 {
                     ItemInHand.transform.position = osr.attachPoint.position;
                     ItemInHand.transform.SetParent(osr.attachPoint.transform);
@@ -1884,13 +1886,25 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     ItemInHand.GetComponent<Rigidbody>().isKinematic = true;
 
                     ItemInHand = null;
+
                     actionFinished(true);
                     return;
                 }
 
                 else
                 {
-                    errorMessage = ItemInHand.name + " can not be placed in " + targetReceptacle.name;
+                    //errorMessage = null;
+
+                    if(osr.full == true)
+                    {
+                        errorMessage = targetReceptacle.name + " is full right now";
+                    }
+
+                    else
+                    {
+                        errorMessage = ItemInHand.name + " is not a valid Object Type to be placed in " + targetReceptacle.name;
+                    }
+
                     Debug.Log(errorMessage);
                     actionFinished(false);
                     return;

@@ -27,6 +27,25 @@ public class ObjectSpecificReceptacle : MonoBehaviour
 
 		return result;
 	}
+
+	public bool isFull()
+	{
+		SimObjPhysics sop = gameObject.GetComponent<SimObjPhysics>();
+
+		List<string> containsList = new List<string>(sop.Contains());
+
+		//print(containsList.Count);
+		if(containsList.Count > 0)
+		{
+			full = true;
+		}
+
+		else
+		{
+			full = false;
+		}
+		return full;
+	}
 	
 	// Use this for initialization
 	void Start () 
@@ -42,6 +61,9 @@ public class ObjectSpecificReceptacle : MonoBehaviour
 	// Update is called once per frame
 	void Update () 
 	{
-		
+		if(Input.GetKeyDown(KeyCode.T))
+		{
+			isFull();
+		}
 	}
 }

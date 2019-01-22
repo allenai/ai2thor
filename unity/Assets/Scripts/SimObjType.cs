@@ -351,11 +351,13 @@ public static class ReceptacleRestrictions
 		//TOILET PAPER
 		{SimObjType.ToiletPaper, new List <SimObjType>()
 		{SimObjType.TableTop, SimObjType.CounterTop, SimObjType.Cabinet, SimObjType.Drawer, SimObjType.Cart, SimObjType.ToiletPaperHanger,
+		 SimObjType.GarbageCan, 
 		}},
 
 		//TOILET PAPER ROLL - should be same as Toilet Paper's list
 		{SimObjType.ToiletPaperRoll, new List <SimObjType>()
 		{SimObjType.TableTop, SimObjType.CounterTop, SimObjType.Cabinet, SimObjType.Drawer, SimObjType.Cart, SimObjType.ToiletPaperHanger,
+		 SimObjType.GarbageCan, 
 		}},
 
 	};

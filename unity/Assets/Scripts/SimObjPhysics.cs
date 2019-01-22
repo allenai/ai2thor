@@ -288,7 +288,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 
 		sop.ContextSetUpSimObjPhysics();
 	}
-	
+
 	[UnityEditor.MenuItem("SimObjectPhysics/Set Transform Scale to 1 #e")]
 	public static void ResetTransformScale()
 	{
@@ -816,46 +816,65 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		ReceptacleTriggerBoxes = recepboxes.ToArray();
 	}
 
-		[ContextMenu("Bed")]
-	void SetUpBed()
+	[ContextMenu("TP Hanger")]
+	void SetUpTPHanger()
 	{
-		this.Type = SimObjType.Bed;
+		this.Type = SimObjType.ToiletPaperHanger;
 		this.PrimaryProperty = SimObjPrimaryProperty.Static;
-		this.SecondaryProperties = new SimObjSecondaryProperty[] {SimObjSecondaryProperty.Receptacle};
+
+		this.SecondaryProperties = new SimObjSecondaryProperty[] 
+		{SimObjSecondaryProperty.Receptacle, SimObjSecondaryProperty.ObjectSpecificReceptacle};
+
+		if (!gameObject.GetComponent<Rigidbody>())
+			gameObject.AddComponent<Rigidbody>();
+
+		this.GetComponent<Rigidbody>().isKinematic = true;
 		
-		ContextSetUpSimObjPhysics();
-
-		// GameObject inst = Instantiate(new GameObject(), gameObject.transform, true);
-		// inst.AddComponent<BoxCollider>();
-		if(!gameObject.transform.Find("BoundingBox"))
-		{
-			GameObject bb = new GameObject("BoundingBox");
-			bb.transform.position = gameObject.transform.position;
-			bb.transform.SetParent(gameObject.transform);
-			bb.AddComponent<BoxCollider>();
-			bb.GetComponent<BoxCollider>().enabled = false;
-			bb.tag = "Untagged";
-			bb.layer = 0;
-
-			BoundingBox = bb;
-		}
-
-		List<GameObject> recepboxes = new List<GameObject>();
-
-		foreach(Transform t in gameObject.transform)
-		{
-			if(t.GetComponent<Contains>())
-			{
-				recepboxes.Add(t.gameObject);
-			}
-		}
-
-		ReceptacleTriggerBoxes = recepboxes.ToArray();
-
 		List<Transform> vpoints = new List<Transform>();
+
+		if (!gameObject.transform.Find("VisibilityPoints"))
+		{
+			//empty to hold all visibility points
+			GameObject vp = new GameObject("VisibilityPoints");
+			vp.transform.position = gameObject.transform.position;
+			vp.transform.SetParent(gameObject.transform);
+
+			//create first Visibility Point to work with
+			GameObject vpc = new GameObject("vPoint");
+			vpc.transform.position = vp.transform.position;
+			vpc.transform.SetParent(vp.transform);
+		}
+
+		if(!gameObject.transform.Find("AttachPoint"))
+		{
+			GameObject ap = new GameObject("AttachPoint");
+			ap.transform.position = gameObject.transform.position;
+			ap.transform.SetParent(gameObject.transform);
+			
+		}	
+				
+		ObjectSpecificReceptacle osr;
+		if(!gameObject.GetComponent<ObjectSpecificReceptacle>())
+		{
+			osr = gameObject.AddComponent<ObjectSpecificReceptacle>();
+			osr.SpecificTypes = new SimObjType[] {SimObjType.ToiletPaper, SimObjType.ToiletPaperRoll};
+		}
+
+		else
+		{
+			osr = gameObject.GetComponent<ObjectSpecificReceptacle>();
+		}
 
 		foreach(Transform child in gameObject.transform)
 		{
+
+			if(child.GetComponent<MeshRenderer>())
+			{
+				child.transform.gameObject.AddComponent<MeshCollider>();
+				child.transform.gameObject.tag = "SimObjPhysics";
+				child.transform.gameObject.layer = 8;
+			}
+
 			if (child.name == "VisibilityPoints")
 			{
 				foreach (Transform col in child)
@@ -864,9 +883,16 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 						vpoints.Add(col.transform);
 				}
 			}
+
+			if(child.name == "AttachPoint")
+			{
+				osr.attachPoint = child.transform;
+			}
 		}
 
 		VisibilityPoints = vpoints.ToArray();
+
+
 	}
 
 	[ContextMenu("Drawer")]
