@@ -98,6 +98,7 @@ GameObject:
   - component: {fileID: 4235181191994770}
   - component: {fileID: 114205364438553172}
   - component: {fileID: 54388414916198164}
+  - component: {fileID: 114201249089640464}
   m_Layer: 8
   m_Name: coffee_machine_3
   m_TagString: SimObjPhysics
@@ -149,6 +150,23 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 4294967295
+  m_IsActive: 1
+--- !u!1 &1343945846782078
+GameObject:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  serializedVersion: 5
+  m_Component:
+  - component: {fileID: 4810644404571658}
+  - component: {fileID: 65435262287214164}
+  - component: {fileID: 114607728818293400}
+  m_Layer: 9
+  m_Name: ReceptacleTriggerBox
+  m_TagString: Receptacle
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
   m_IsActive: 1
 --- !u!1 &1525550359082382
 GameObject:
@@ -214,6 +232,21 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 4294967295
   m_IsActive: 1
+--- !u!1 &1760518226344990
+GameObject:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  serializedVersion: 5
+  m_Component:
+  - component: {fileID: 4251131413358986}
+  m_Layer: 8
+  m_Name: AttachPoint
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
 --- !u!1 &1799840234090518
 GameObject:
   m_ObjectHideFlags: 1
@@ -270,7 +303,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 4235181191994770}
-  m_RootOrder: 0
+  m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!4 &4112209199301472
 Transform:
@@ -291,7 +324,7 @@ Transform:
   - {fileID: 4590075946571520}
   - {fileID: 4962444888657356}
   m_Father: {fileID: 4235181191994770}
-  m_RootOrder: 1
+  m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!4 &4172176941451524
 Transform:
@@ -326,15 +359,30 @@ Transform:
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 1199995026542412}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: 5.909, y: -0.3439953, z: 3.391}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
+  - {fileID: 4810644404571658}
   - {fileID: 4031602541231998}
   - {fileID: 4112209199301472}
   - {fileID: 4704529711922472}
   - {fileID: 4264879061717000}
+  - {fileID: 4251131413358986}
   m_Father: {fileID: 0}
   m_RootOrder: 0
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!4 &4251131413358986
+Transform:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1760518226344990}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0.0583, z: 0.2331}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 4235181191994770}
+  m_RootOrder: 5
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!4 &4264879061717000
 Transform:
@@ -350,7 +398,7 @@ Transform:
   - {fileID: 4806013285991066}
   - {fileID: 4870739569621622}
   m_Father: {fileID: 4235181191994770}
-  m_RootOrder: 3
+  m_RootOrder: 4
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!4 &4358980647024146
 Transform:
@@ -415,7 +463,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 4235181191994770}
-  m_RootOrder: 2
+  m_RootOrder: 3
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!4 &4748556478266836
 Transform:
@@ -455,6 +503,19 @@ Transform:
   m_Children: []
   m_Father: {fileID: 4264879061717000}
   m_RootOrder: 1
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!4 &4810644404571658
+Transform:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1343945846782078}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0.0569, z: 0.2346}
+  m_LocalScale: {x: 0.5, y: 0.5, z: 0.5}
+  m_Children: []
+  m_Father: {fileID: 4235181191994770}
+  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!4 &4870739569621622
 Transform:
@@ -568,6 +629,18 @@ BoxCollider:
   serializedVersion: 2
   m_Size: {x: 0.29468367, y: 0.057346225, z: 0.1842652}
   m_Center: {x: 0, y: 0.028673112, z: 0.23923758}
+--- !u!65 &65435262287214164
+BoxCollider:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1343945846782078}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 1
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Size: {x: 0.25663686, y: 0.1918602, z: 0.19063032}
+  m_Center: {x: 0, y: 0.0959301, z: 0.009004891}
 --- !u!65 &65814936508741826
 BoxCollider:
   m_ObjectHideFlags: 1
@@ -592,6 +665,20 @@ BoxCollider:
   serializedVersion: 2
   m_Size: {x: 0.08270715, y: 0.16668403, z: 0.10669458}
   m_Center: {x: 0, y: 0.2672953, z: 0.20045227}
+--- !u!114 &114201249089640464
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1199995026542412}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 79eff5a40665e46919a6afd7fe0b6d4f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  SpecificTypes: 18000000
+  attachPoint: {fileID: 4251131413358986}
+  full: 0
 --- !u!114 &114205364438553172
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -603,10 +690,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b439f6e4ef5714ee2a3643acf37b7a9d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  uniqueID: 
+  uniqueID: CoffeeMachine|+05.91|-00.34|+03.39
   Type: 15
   PrimaryProperty: 1
-  SecondaryProperties: 17000000
+  SecondaryProperties: 170000000700000034000000
   BoundingBox: {fileID: 1047298847164036}
   VisibilityPoints:
   - {fileID: 4777416818049084}
@@ -617,7 +704,21 @@ MonoBehaviour:
   - {fileID: 4538012529594072}
   - {fileID: 4590075946571520}
   - {fileID: 4962444888657356}
-  ReceptacleTriggerBoxes: []
+  ReceptacleTriggerBoxes:
+  - {fileID: 1343945846782078}
   isVisible: 0
   isInteractable: 0
   isColliding: 0
+--- !u!114 &114607728818293400
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1343945846782078}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5122b08936ec54929891d19a8fac4755, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  CurrentlyContains: []
+  myParent: {fileID: 1199995026542412}
