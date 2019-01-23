@@ -26,6 +26,21 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
+--- !u!1 &1084076845845488
+GameObject:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  serializedVersion: 5
+  m_Component:
+  - component: {fileID: 4952636259191786}
+  m_Layer: 8
+  m_Name: AttachPoint
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
 --- !u!1 &1089964214876766
 GameObject:
   m_ObjectHideFlags: 1
@@ -146,6 +161,7 @@ GameObject:
   - component: {fileID: 4360539769873112}
   - component: {fileID: 114094598822908232}
   - component: {fileID: 54428933830987820}
+  - component: {fileID: 114231051514362230}
   m_Layer: 8
   m_Name: BathTowelHolder1
   m_TagString: SimObjPhysics
@@ -232,6 +248,23 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
+--- !u!1 &1864097513383870
+GameObject:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  serializedVersion: 5
+  m_Component:
+  - component: {fileID: 4771638273420798}
+  - component: {fileID: 65480028414813840}
+  - component: {fileID: 114873425193988104}
+  m_Layer: 9
+  m_Name: ReceptacleTriggerBox
+  m_TagString: Receptacle
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
 --- !u!1 &1964918464531546
 GameObject:
   m_ObjectHideFlags: 1
@@ -262,7 +295,7 @@ Transform:
   - {fileID: 4988287138085346}
   - {fileID: 4354840823191694}
   m_Father: {fileID: 4360539769873112}
-  m_RootOrder: 2
+  m_RootOrder: 3
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!4 &4226109674559752
 Transform:
@@ -291,7 +324,7 @@ Transform:
   - {fileID: 4540534866223906}
   - {fileID: 4226109674559752}
   m_Father: {fileID: 4360539769873112}
-  m_RootOrder: 1
+  m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!4 &4354840823191694
 Transform:
@@ -313,14 +346,16 @@ Transform:
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 1382548673314272}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -1.429, y: 1.045096, z: -0.2905}
+  m_LocalPosition: {x: 3.667, y: 0.55, z: 4.586}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
+  - {fileID: 4771638273420798}
   - {fileID: 4517252598021322}
   - {fileID: 4296932973356070}
   - {fileID: 4059680047563988}
   - {fileID: 4574587099900726}
   - {fileID: 4998495279304494}
+  - {fileID: 4952636259191786}
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -361,7 +396,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 4360539769873112}
-  m_RootOrder: 0
+  m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!4 &4540534866223906
 Transform:
@@ -387,7 +422,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 4360539769873112}
-  m_RootOrder: 3
+  m_RootOrder: 4
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!4 &4591903518484262
 Transform:
@@ -428,6 +463,32 @@ Transform:
   m_Father: {fileID: 4998495279304494}
   m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 90.00001, z: 0}
+--- !u!4 &4771638273420798
+Transform:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1864097513383870}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 0.5, y: 0.5, z: 0.5}
+  m_Children: []
+  m_Father: {fileID: 4360539769873112}
+  m_RootOrder: 0
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!4 &4952636259191786
+Transform:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1084076845845488}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0.014, z: 0.1069}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 4360539769873112}
+  m_RootOrder: 6
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!4 &4988287138085346
 Transform:
   m_ObjectHideFlags: 1
@@ -455,7 +516,7 @@ Transform:
   - {fileID: 4420237373220582}
   - {fileID: 4769293349797680}
   m_Father: {fileID: 4360539769873112}
-  m_RootOrder: 4
+  m_RootOrder: 5
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!23 &23506855799475464
 MeshRenderer:
@@ -563,6 +624,18 @@ BoxCollider:
   serializedVersion: 2
   m_Size: {x: 0.6344845, y: 0.014294224, z: 0.015916651}
   m_Center: {x: 0, y: 0, z: -0.0030182032}
+--- !u!65 &65480028414813840
+BoxCollider:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1864097513383870}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 1
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Size: {x: 0.95261836, y: 0.25423133, z: 0.0863446}
+  m_Center: {x: 0, y: -0.06865376, z: 0.19605678}
 --- !u!65 &65530517604745650
 BoxCollider:
   m_ObjectHideFlags: 1
@@ -622,16 +695,44 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b439f6e4ef5714ee2a3643acf37b7a9d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  uniqueID: TowelHolder|-01.43|+01.05|-00.29
+  uniqueID: TowelHolder|+03.67|+00.55|+04.59
   Type: 84
   PrimaryProperty: 1
-  SecondaryProperties: 
+  SecondaryProperties: 3400000007000000
   BoundingBox: {fileID: 1299129374327476}
   VisibilityPoints:
   - {fileID: 4664887142773100}
   - {fileID: 4988287138085346}
   - {fileID: 4354840823191694}
-  ReceptacleTriggerBoxes: []
+  ReceptacleTriggerBoxes:
+  - {fileID: 1864097513383870}
   isVisible: 0
   isInteractable: 0
   isColliding: 0
+--- !u!114 &114231051514362230
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1382548673314272}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 79eff5a40665e46919a6afd7fe0b6d4f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  SpecificTypes: 55000000
+  attachPoint: {fileID: 4952636259191786}
+  full: 0
+--- !u!114 &114873425193988104
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1864097513383870}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5122b08936ec54929891d19a8fac4755, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  CurrentlyContains: []
+  myParent: {fileID: 1382548673314272}

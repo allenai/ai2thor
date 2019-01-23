@@ -241,6 +241,10 @@ public enum SimObjType : int
 	CD = 138,
 	Curtains = 139,
 	Poster = 140,
+	HandTowel = 141,
+
+	HandTowelHolder = 142,
+
 
 	
 }
@@ -359,6 +363,14 @@ public static class ReceptacleRestrictions
 		{SimObjType.TableTop, SimObjType.CounterTop, SimObjType.Cabinet, SimObjType.Drawer, SimObjType.Cart, SimObjType.ToiletPaperHanger,
 		 SimObjType.GarbageCan, SimObjType.Shelf, SimObjType.Dresser, SimObjType.NightStand, SimObjType.Toilet
 		}},
+
+		//TOWEL - large bath towel
+		{SimObjType.Towel, new List<SimObjType>()
+		{SimObjType.TowelHolder,}},
+
+		//HAND TOWEL- small hand towel
+		{SimObjType.HandTowel, new List<SimObjType>()
+		{SimObjType.HandTowelHolder,}},
 
 	};
 
