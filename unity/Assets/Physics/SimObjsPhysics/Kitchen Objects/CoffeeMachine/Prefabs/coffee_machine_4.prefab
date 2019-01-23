@@ -26,6 +26,21 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 4294967295
   m_IsActive: 1
+--- !u!1 &1053711777334434
+GameObject:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  serializedVersion: 5
+  m_Component:
+  - component: {fileID: 4320768682664860}
+  m_Layer: 8
+  m_Name: AttachPoint
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
 --- !u!1 &1170593434736094
 GameObject:
   m_ObjectHideFlags: 1
@@ -82,6 +97,7 @@ GameObject:
   - component: {fileID: 4091766420241118}
   - component: {fileID: 114172237650604880}
   - component: {fileID: 54231786847001646}
+  - component: {fileID: 114542164418378236}
   m_Layer: 8
   m_Name: coffee_machine_4
   m_TagString: SimObjPhysics
@@ -229,6 +245,23 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 4294967295
   m_IsActive: 1
+--- !u!1 &1967207120094180
+GameObject:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  serializedVersion: 5
+  m_Component:
+  - component: {fileID: 4707021619099250}
+  - component: {fileID: 65787846340164174}
+  - component: {fileID: 114496246256683754}
+  m_Layer: 9
+  m_Name: ReceptacleTriggerBox
+  m_TagString: Receptacle
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
 --- !u!1 &1977446649984088
 GameObject:
   m_ObjectHideFlags: 0
@@ -279,13 +312,15 @@ Transform:
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 1438769847575976}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: 5.741, y: -0.3439953, z: 3.359}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
+  - {fileID: 4707021619099250}
   - {fileID: 4483188958521888}
   - {fileID: 4819698034364106}
   - {fileID: 4484132813808320}
   - {fileID: 4418896027253380}
+  - {fileID: 4320768682664860}
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -328,6 +363,19 @@ Transform:
   m_Father: {fileID: 4819698034364106}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!4 &4320768682664860
+Transform:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1053711777334434}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0.0572, z: 0.2239}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 4091766420241118}
+  m_RootOrder: 5
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!4 &4369177596538158
 Transform:
   m_ObjectHideFlags: 1
@@ -355,7 +403,7 @@ Transform:
   - {fileID: 4589262816255092}
   - {fileID: 4905889469895386}
   m_Father: {fileID: 4091766420241118}
-  m_RootOrder: 3
+  m_RootOrder: 4
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!4 &4483188958521888
 Transform:
@@ -368,7 +416,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 4091766420241118}
-  m_RootOrder: 0
+  m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!4 &4484132813808320
 Transform:
@@ -381,7 +429,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 4091766420241118}
-  m_RootOrder: 2
+  m_RootOrder: 3
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!4 &4523420911910772
 Transform:
@@ -435,6 +483,19 @@ Transform:
   m_Father: {fileID: 4819698034364106}
   m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!4 &4707021619099250
+Transform:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1967207120094180}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0.0559, z: 0.2261}
+  m_LocalScale: {x: 0.5, y: 0.5, z: 0.5}
+  m_Children: []
+  m_Father: {fileID: 4091766420241118}
+  m_RootOrder: 0
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!4 &4802587945365334
 Transform:
   m_ObjectHideFlags: 1
@@ -467,7 +528,7 @@ Transform:
   - {fileID: 4802587945365334}
   - {fileID: 4022886111696302}
   m_Father: {fileID: 4091766420241118}
-  m_RootOrder: 1
+  m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!4 &4905889469895386
 Transform:
@@ -580,6 +641,18 @@ BoxCollider:
   serializedVersion: 2
   m_Size: {x: 0.29729122, y: 0.4434458, z: 0.48715663}
   m_Center: {x: 0, y: 0.2217229, z: 0.1025815}
+--- !u!65 &65787846340164174
+BoxCollider:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1967207120094180}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 1
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Size: {x: 0.2401001, y: 0.17686343, z: 0.17953835}
+  m_Center: {x: 0, y: 0.088431716, z: 0.009041972}
 --- !u!65 &65927683071295572
 BoxCollider:
   m_ObjectHideFlags: 1
@@ -603,10 +676,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b439f6e4ef5714ee2a3643acf37b7a9d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  uniqueID: 
+  uniqueID: CoffeeMachine|+05.74|-00.34|+03.36
   Type: 15
   PrimaryProperty: 1
-  SecondaryProperties: 17000000
+  SecondaryProperties: 170000000700000034000000
   BoundingBox: {fileID: 1398245951003100}
   VisibilityPoints:
   - {fileID: 4278501332721010}
@@ -617,7 +690,35 @@ MonoBehaviour:
   - {fileID: 4228555809841688}
   - {fileID: 4802587945365334}
   - {fileID: 4022886111696302}
-  ReceptacleTriggerBoxes: []
+  ReceptacleTriggerBoxes:
+  - {fileID: 1967207120094180}
   isVisible: 0
   isInteractable: 0
   isColliding: 0
+--- !u!114 &114496246256683754
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1967207120094180}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5122b08936ec54929891d19a8fac4755, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  CurrentlyContains: []
+  myParent: {fileID: 1438769847575976}
+--- !u!114 &114542164418378236
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1438769847575976}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 79eff5a40665e46919a6afd7fe0b6d4f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  SpecificTypes: 18000000
+  attachPoint: {fileID: 4320768682664860}
+  full: 0
