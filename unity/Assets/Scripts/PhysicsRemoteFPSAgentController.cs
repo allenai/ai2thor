@@ -2141,7 +2141,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			}
 
             //DropContainedObjects(currentHandSimObj);
-
             DefaultAgentHand(new ServerAction());
 			actionFinished (true);
 		}

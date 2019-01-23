@@ -274,7 +274,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		//PrefabUtility.InstantiatePrefab(prefabRoot);
 	}
 
-	[UnityEditor.MenuItem("SimObjectPhysics/Create Sim Obj from Mesh #r")]
+	[UnityEditor.MenuItem("SimObjectPhysics/Create Sim Obj from Mesh &r")]
 	public static void CreateFromMesh()
 	{
 		GameObject prefabRoot = Selection.activeGameObject;
@@ -289,7 +289,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		sop.ContextSetUpSimObjPhysics();
 	}
 
-	[UnityEditor.MenuItem("SimObjectPhysics/Set Transform Scale to 1 #e")]
+	[UnityEditor.MenuItem("SimObjectPhysics/Set Transform Scale to 1 &e")]
 	public static void ResetTransformScale()
 	{
 		GameObject selected = Selection.activeGameObject;
