@@ -816,14 +816,14 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		ReceptacleTriggerBoxes = recepboxes.ToArray();
 	}
 
-	[ContextMenu("TP Hanger")]
-	void SetUpTPHanger()
+	[ContextMenu("CoffeeMachine")]
+	void CoffeeMachine()
 	{
-		this.Type = SimObjType.ToiletPaperHanger;
+		this.Type = SimObjType.CoffeeMachine;
 		this.PrimaryProperty = SimObjPrimaryProperty.Static;
 
 		this.SecondaryProperties = new SimObjSecondaryProperty[] 
-		{SimObjSecondaryProperty.Receptacle, SimObjSecondaryProperty.ObjectSpecificReceptacle};
+		{SimObjSecondaryProperty.CanFillWithCoffee, SimObjSecondaryProperty.Receptacle, SimObjSecondaryProperty.ObjectSpecificReceptacle};
 
 		if (!gameObject.GetComponent<Rigidbody>())
 			gameObject.AddComponent<Rigidbody>();
@@ -832,18 +832,19 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		
 		List<Transform> vpoints = new List<Transform>();
 
-		if (!gameObject.transform.Find("VisibilityPoints"))
-		{
-			//empty to hold all visibility points
-			GameObject vp = new GameObject("VisibilityPoints");
-			vp.transform.position = gameObject.transform.position;
-			vp.transform.SetParent(gameObject.transform);
+		// if (!gameObject.transform.Find("VisibilityPoints"))
+		// {
+		// 	//empty to hold all visibility points
+		// 	GameObject vp = new GameObject("VisibilityPoints");
+		// 	vp.transform.position = gameObject.transform.position;
+		// 	vp.transform.SetParent(gameObject.transform);
 
-			//create first Visibility Point to work with
-			GameObject vpc = new GameObject("vPoint");
-			vpc.transform.position = vp.transform.position;
-			vpc.transform.SetParent(vp.transform);
-		}
+		// 	//create first Visibility Point to work with
+		// 	GameObject vpc = new GameObject("vPoint");
+		// 	vpc.transform.position = vp.transform.position;
+		// 	vpc.transform.SetParent(vp.transform);
+		// }
+		ContextSetUpSimObjPhysics();
 
 		if(!gameObject.transform.Find("AttachPoint"))
 		{
@@ -857,7 +858,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		if(!gameObject.GetComponent<ObjectSpecificReceptacle>())
 		{
 			osr = gameObject.AddComponent<ObjectSpecificReceptacle>();
-			osr.SpecificTypes = new SimObjType[] {SimObjType.ToiletPaper, SimObjType.ToiletPaperRoll};
+			osr.SpecificTypes = new SimObjType[] {SimObjType.Mug};
 		}
 
 		else
@@ -868,12 +869,12 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		foreach(Transform child in gameObject.transform)
 		{
 
-			if(child.GetComponent<MeshRenderer>())
-			{
-				child.transform.gameObject.AddComponent<MeshCollider>();
-				child.transform.gameObject.tag = "SimObjPhysics";
-				child.transform.gameObject.layer = 8;
-			}
+			// if(child.GetComponent<MeshRenderer>())
+			// {
+			// 	child.transform.gameObject.AddComponent<MeshCollider>();
+			// 	child.transform.gameObject.tag = "SimObjPhysics";
+			// 	child.transform.gameObject.layer = 8;
+			// }
 
 			if (child.name == "VisibilityPoints")
 			{

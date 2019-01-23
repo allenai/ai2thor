@@ -11,6 +11,23 @@ Prefab:
   m_ParentPrefab: {fileID: 0}
   m_RootGameObject: {fileID: 1529151837809676}
   m_IsPrefabParent: 1
+--- !u!1 &1066708042755862
+GameObject:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  serializedVersion: 5
+  m_Component:
+  - component: {fileID: 4691594210246882}
+  - component: {fileID: 65590793607052646}
+  - component: {fileID: 114017083366124916}
+  m_Layer: 9
+  m_Name: ReceptacleTriggerBox
+  m_TagString: Receptacle
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
 --- !u!1 &1193266514697878
 GameObject:
   m_ObjectHideFlags: 0
@@ -159,6 +176,7 @@ GameObject:
   - component: {fileID: 4946178927242962}
   - component: {fileID: 114910738916711834}
   - component: {fileID: 54841445821027046}
+  - component: {fileID: 114100151991889932}
   m_Layer: 8
   m_Name: coffee_machine_5
   m_TagString: SimObjPhysics
@@ -211,6 +229,21 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 4294967295
+  m_IsActive: 1
+--- !u!1 &1624001970881540
+GameObject:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  serializedVersion: 5
+  m_Component:
+  - component: {fileID: 4118511590439654}
+  m_Layer: 8
+  m_Name: AttachPoint
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
   m_IsActive: 1
 --- !u!1 &1682434914622030
 GameObject:
@@ -270,7 +303,20 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 4946178927242962}
-  m_RootOrder: 0
+  m_RootOrder: 1
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!4 &4118511590439654
+Transform:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1624001970881540}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0.0558, z: 0.2244}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 4946178927242962}
+  m_RootOrder: 5
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!4 &4249044749694692
 Transform:
@@ -310,6 +356,19 @@ Transform:
   m_Children: []
   m_Father: {fileID: 4765556637728198}
   m_RootOrder: 2
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!4 &4691594210246882
+Transform:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1066708042755862}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0.0547, z: 0.2237}
+  m_LocalScale: {x: 0.5, y: 0.5, z: 0.5}
+  m_Children: []
+  m_Father: {fileID: 4946178927242962}
+  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!4 &4709526744671766
 Transform:
@@ -369,7 +428,7 @@ Transform:
   - {fileID: 4810930098471860}
   - {fileID: 4709526744671766}
   m_Father: {fileID: 4946178927242962}
-  m_RootOrder: 1
+  m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!4 &4810930098471860
 Transform:
@@ -395,7 +454,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 4946178927242962}
-  m_RootOrder: 2
+  m_RootOrder: 3
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!4 &4852738726755224
 Transform:
@@ -463,7 +522,7 @@ Transform:
   - {fileID: 4870759809519008}
   - {fileID: 4469272422756428}
   m_Father: {fileID: 4946178927242962}
-  m_RootOrder: 3
+  m_RootOrder: 4
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!4 &4946178927242962
 Transform:
@@ -472,13 +531,15 @@ Transform:
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 1529151837809676}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: 4.443, y: -0.3439953, z: 1.302}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
+  - {fileID: 4691594210246882}
   - {fileID: 4088312305899286}
   - {fileID: 4765556637728198}
   - {fileID: 4834866644565908}
   - {fileID: 4936773617147492}
+  - {fileID: 4118511590439654}
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -568,6 +629,18 @@ BoxCollider:
   serializedVersion: 2
   m_Size: {x: 0.29468367, y: 0.056070566, z: 0.23242068}
   m_Center: {x: 0, y: 0.028035283, z: 0.23202944}
+--- !u!65 &65590793607052646
+BoxCollider:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1066708042755862}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 1
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Size: {x: 0.24422525, y: 0.17990923, z: 0.15883203}
+  m_Center: {x: 0, y: 0.089954615, z: 0.014644884}
 --- !u!65 &65715876187399708
 BoxCollider:
   m_ObjectHideFlags: 1
@@ -592,6 +665,33 @@ BoxCollider:
   serializedVersion: 2
   m_Size: {x: 0.29729122, y: 0.4434458, z: 0.4915322}
   m_Center: {x: 0, y: 0.2217229, z: 0.10476929}
+--- !u!114 &114017083366124916
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1066708042755862}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5122b08936ec54929891d19a8fac4755, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  CurrentlyContains: []
+  myParent: {fileID: 1529151837809676}
+--- !u!114 &114100151991889932
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1529151837809676}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 79eff5a40665e46919a6afd7fe0b6d4f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  SpecificTypes: 18000000
+  attachPoint: {fileID: 4118511590439654}
+  full: 0
 --- !u!114 &114910738916711834
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -603,10 +703,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b439f6e4ef5714ee2a3643acf37b7a9d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  uniqueID: 
+  uniqueID: CoffeeMachine|+05.79|-00.34|+03.41
   Type: 15
   PrimaryProperty: 1
-  SecondaryProperties: 17000000
+  SecondaryProperties: 170000000700000034000000
   BoundingBox: {fileID: 1193266514697878}
   VisibilityPoints:
   - {fileID: 4715248083128390}
@@ -617,7 +717,8 @@ MonoBehaviour:
   - {fileID: 4909295050136946}
   - {fileID: 4810930098471860}
   - {fileID: 4709526744671766}
-  ReceptacleTriggerBoxes: []
+  ReceptacleTriggerBoxes:
+  - {fileID: 1066708042755862}
   isVisible: 0
   isInteractable: 0
   isColliding: 0
