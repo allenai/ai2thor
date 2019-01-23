@@ -293,6 +293,12 @@ public class PhysicsSceneManager : MonoBehaviour
 								go.transform.SetParent(osr.attachPoint.transform);
 								go.transform.localRotation = Quaternion.identity;
 								go.GetComponent<Rigidbody>().isKinematic = true;
+								HowManyCouldntSpawn--;
+
+								#if UNITY_EDITOR
+                				Debug.Log(go.name + " succesfully placed in " +targetReceptacle.UniqueID);
+                				#endif
+
 								break;
 							}
 						}
