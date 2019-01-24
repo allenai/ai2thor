@@ -486,6 +486,13 @@ public class InstantiatePrefabTest : MonoBehaviour
 		}
 
         simObj.transform.Find("Colliders").gameObject.SetActive(false);
+        Collider[] objcols;
+        //make sure ALL colliders of the simobj are turned off for this check
+        objcols = simObj.transform.GetComponentsInChildren<Collider>();
+        foreach (Collider col in objcols)
+        {
+            col.enabled = false;
+        }
 
         //let's move the simObj to the position we are trying, and then change it's rotation to the rotation we are trying
         Vector3 originalPos = simObj.transform.position;
@@ -552,7 +559,13 @@ public class InstantiatePrefabTest : MonoBehaviour
 
         simObj.transform.position = originalPos;
         simObj.transform.rotation = originalRot;
+
+        //turn back on all the colliders now
         simObj.transform.Find("Colliders").gameObject.SetActive(true);
+        foreach (Collider col in objcols)
+        {
+            col.enabled = true;
+        }
         //print("checkspawn true?");
 		return true;
 	}

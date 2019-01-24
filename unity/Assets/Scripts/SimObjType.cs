@@ -303,7 +303,6 @@ public static class ReceptacleRestrictions
 	public static List<SimObjType> AlwaysPlaceUpright = new List<SimObjType>()
 	{
 		SimObjType.Pot, SimObjType.Pan, SimObjType.Bowl, SimObjType.Plate, SimObjType.Bread, SimObjType.Cup, SimObjType.Mug,
-		
 	};
 
 	//Each sim object type keeps track of what sort of Receptacles it can be placed in
@@ -378,6 +377,10 @@ public static class ReceptacleRestrictions
 		//HAND TOWEL- small hand towel
 		{SimObjType.HandTowel, new List<SimObjType>()
 		{SimObjType.HandTowelHolder,}},
+
+		//LAPTOP
+		{SimObjType.Laptop, new List<SimObjType>()
+		{SimObjType.TableTop, SimObjType.CounterTop, SimObjType.Desk, SimObjType.Dresser,}},
 
 	};
 
