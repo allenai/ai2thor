@@ -1,7 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-
+using UnityStandardAssets.Characters.FirstPerson;
 
 //controls opening doors on a fridge. Because the fridge base body and door should be considered a single
 //sim object, this has mimicked functionality from CanOpen.cs but specialized for a Fridge.
@@ -342,8 +342,9 @@ public class CanOpen_Object : MonoBehaviour
 		//a trigger collider, so this is used to reset the position if the agent or another
 		//cabinet or drawer is in the way of this object opening/closing
 
-		//if hitting the Agent, reset position and report failed action
-		if (other.name == "FPSController" && canReset == true)
+		//if hitting the Agent AND not being currently held by the Agent(so things like Laptops don't constantly reset if the agent is holding them)
+        //..., reset position and report failed action
+		if (other.name == "FPSController" && canReset == true && !gameObject.GetComponentInParent<PhysicsRemoteFPSAgentController>())
 		{
 			Debug.Log(gameObject.name + " hit " + other.name + " Resetting position");
 			canReset = false;
