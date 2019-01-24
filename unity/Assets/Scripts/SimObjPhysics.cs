@@ -816,14 +816,14 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		ReceptacleTriggerBoxes = recepboxes.ToArray();
 	}
 
-	[ContextMenu("CoffeeMachine")]
-	void CoffeeMachine()
+	[ContextMenu("Laptop")]
+	void LaptopSetupContext()
 	{
-		this.Type = SimObjType.CoffeeMachine;
-		this.PrimaryProperty = SimObjPrimaryProperty.Static;
+		this.Type = SimObjType.Laptop;
+		this.PrimaryProperty = SimObjPrimaryProperty.CanPickup;
 
 		this.SecondaryProperties = new SimObjSecondaryProperty[] 
-		{SimObjSecondaryProperty.CanFillWithCoffee, SimObjSecondaryProperty.Receptacle, SimObjSecondaryProperty.ObjectSpecificReceptacle};
+		{SimObjSecondaryProperty.CanOpen, SimObjSecondaryProperty.CanToggleOnOff};
 
 		if (!gameObject.GetComponent<Rigidbody>())
 			gameObject.AddComponent<Rigidbody>();
@@ -832,49 +832,40 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		
 		List<Transform> vpoints = new List<Transform>();
 
-		// if (!gameObject.transform.Find("VisibilityPoints"))
-		// {
-		// 	//empty to hold all visibility points
-		// 	GameObject vp = new GameObject("VisibilityPoints");
-		// 	vp.transform.position = gameObject.transform.position;
-		// 	vp.transform.SetParent(gameObject.transform);
-
-		// 	//create first Visibility Point to work with
-		// 	GameObject vpc = new GameObject("vPoint");
-		// 	vpc.transform.position = vp.transform.position;
-		// 	vpc.transform.SetParent(vp.transform);
-		// }
 		ContextSetUpSimObjPhysics();
 
-		if(!gameObject.transform.Find("AttachPoint"))
+		if(!gameObject.GetComponent<CanOpen_Object>())
 		{
-			GameObject ap = new GameObject("AttachPoint");
-			ap.transform.position = gameObject.transform.position;
-			ap.transform.SetParent(gameObject.transform);
+			CanOpen_Object coo = gameObject.AddComponent<CanOpen_Object>();
 			
-		}	
-				
-		ObjectSpecificReceptacle osr;
-		if(!gameObject.GetComponent<ObjectSpecificReceptacle>())
-		{
-			osr = gameObject.AddComponent<ObjectSpecificReceptacle>();
-			osr.SpecificTypes = new SimObjType[] {SimObjType.Mug};
 		}
 
-		else
+		if(!gameObject.GetComponent<CanToggleOnOff>())
 		{
-			osr = gameObject.GetComponent<ObjectSpecificReceptacle>();
+			CanToggleOnOff ctoo = gameObject.AddComponent<CanToggleOnOff>();
 		}
+		// if(!gameObject.transform.Find("AttachPoint"))
+		// {
+		// 	GameObject ap = new GameObject("AttachPoint");
+		// 	ap.transform.position = gameObject.transform.position;
+		// 	ap.transform.SetParent(gameObject.transform);
+			
+		// }	
+				
+		// ObjectSpecificReceptacle osr;
+		// if(!gameObject.GetComponent<ObjectSpecificReceptacle>())
+		// {
+		// 	osr = gameObject.AddComponent<ObjectSpecificReceptacle>();
+		// 	osr.SpecificTypes = new SimObjType[] {SimObjType.Mug};
+		// }
+
+		// else
+		// {
+		// 	osr = gameObject.GetComponent<ObjectSpecificReceptacle>();
+		// }
 
 		foreach(Transform child in gameObject.transform)
 		{
-
-			// if(child.GetComponent<MeshRenderer>())
-			// {
-			// 	child.transform.gameObject.AddComponent<MeshCollider>();
-			// 	child.transform.gameObject.tag = "SimObjPhysics";
-			// 	child.transform.gameObject.layer = 8;
-			// }
 
 			if (child.name == "VisibilityPoints")
 			{
@@ -885,15 +876,13 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 				}
 			}
 
-			if(child.name == "AttachPoint")
-			{
-				osr.attachPoint = child.transform;
-			}
+			// if(child.name == "AttachPoint")
+			// {
+			// 	osr.attachPoint = child.transform;
+			// }
 		}
 
 		VisibilityPoints = vpoints.ToArray();
-
-
 	}
 
 	[ContextMenu("Drawer")]
