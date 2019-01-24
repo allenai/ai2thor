@@ -157,6 +157,12 @@ public class CanToggleOnOff : MonoBehaviour
 					}
 				}
 			}
+
+			//if no moving parts, then only materials and lights need to be swapped
+			else
+			{
+				setisOn();
+			}
 		}
 
 		else
@@ -203,6 +209,12 @@ public class CanToggleOnOff : MonoBehaviour
 						"easetype", "linear")); 
 					}
 				}
+			}
+
+			//if no moving parts, then only materials and lights need to be toggled
+			else
+			{
+				setisOn();
 			}
 		}
 	}
