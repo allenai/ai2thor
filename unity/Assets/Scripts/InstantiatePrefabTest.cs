@@ -491,6 +491,7 @@ public class InstantiatePrefabTest : MonoBehaviour
         objcols = simObj.transform.GetComponentsInChildren<Collider>();
         foreach (Collider col in objcols)
         {
+            if(col.gameObject.name != "BoundingBox")
             col.enabled = false;
         }
 
@@ -564,6 +565,7 @@ public class InstantiatePrefabTest : MonoBehaviour
         simObj.transform.Find("Colliders").gameObject.SetActive(true);
         foreach (Collider col in objcols)
         {
+            if(col.gameObject.name != "BoundingBox")
             col.enabled = true;
         }
         //print("checkspawn true?");
