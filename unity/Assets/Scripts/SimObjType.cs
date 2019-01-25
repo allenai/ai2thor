@@ -322,7 +322,7 @@ public static class ReceptacleRestrictions
 		//TOMATO
 		{SimObjType.Tomato, new List<SimObjType>()
 		{SimObjType.TableTop, SimObjType.CounterTop, SimObjType.Sink, SimObjType.SinkBasin, SimObjType.Pot,
-		 SimObjType.Bowl, SimObjType.Fridge, SimObjType.GarbageCan, SimObjType.Pan, SimObjType.Microwave, /*These should be removed after debugging -> SimObjType.Cabinet, SimObjType.Drawer, SimObjType.SinkBasin, SimObjType.Sink, SimObjType.Bathtub, SimObjType.BathtubBasin*/}},
+		 SimObjType.Bowl, SimObjType.Fridge, SimObjType.GarbageCan, SimObjType.Pan, SimObjType.Microwave,/*These should be removed after debugging -> SimObjType.Cabinet, SimObjType.Drawer, SimObjType.SinkBasin, SimObjType.Sink, SimObjType.Bathtub, SimObjType.BathtubBasin*/}},
 		
 		{SimObjType.TomatoSliced, new List<SimObjType>()
 		{SimObjType.TableTop, SimObjType.CounterTop, SimObjType.Sink, SimObjType.SinkBasin, SimObjType.Pot,
@@ -390,6 +390,10 @@ public static class ReceptacleRestrictions
 
 		//ALARM CLOCK
 		{SimObjType.AlarmClock, new List<SimObjType>()
+		{SimObjType.Dresser, SimObjType.NightStand, SimObjType.Desk, SimObjType.Shelf, SimObjType.TableTop}},
+
+		//BOX
+		{SimObjType.Box, new List<SimObjType>()
 		{SimObjType.Dresser, SimObjType.NightStand, SimObjType.Desk, SimObjType.Shelf, SimObjType.TableTop}},
 
 	};

@@ -501,6 +501,11 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 
 					Debug.Log(result);
 				}
+
+				else
+				{
+					Debug.Log(UniqueID + " is empty");
+				}
 				#endif
 				
 				return objs;
