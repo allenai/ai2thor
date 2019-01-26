@@ -390,7 +390,7 @@ public static class ReceptacleRestrictions
 
 		//ALARM CLOCK
 		{SimObjType.AlarmClock, new List<SimObjType>()
-		{SimObjType.Dresser, SimObjType.NightStand, SimObjType.Desk, SimObjType.Shelf, SimObjType.TableTop}},
+		{SimObjType.Dresser, SimObjType.NightStand, SimObjType.Desk, SimObjType.Shelf, SimObjType.TableTop, SimObjType.Box}},
 
 		//BOX
 		{SimObjType.Box, new List<SimObjType>()
