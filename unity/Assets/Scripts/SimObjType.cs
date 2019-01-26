@@ -303,7 +303,7 @@ public static class ReceptacleRestrictions
 	public static List<SimObjType> AlwaysPlaceUpright = new List<SimObjType>()
 	{
 		SimObjType.Pot, SimObjType.Pan, SimObjType.Bowl, SimObjType.Plate, SimObjType.Bread, SimObjType.Cup, SimObjType.Mug, SimObjType.Laptop,
-		SimObjType.SaltShaker, SimObjType.PepperShaker, SimObjType.AlarmClock,
+		SimObjType.SaltShaker, SimObjType.PepperShaker, SimObjType.AlarmClock, SimObjType.Box,
 	};
 
 	//Each sim object type keeps track of what sort of Receptacles it can be placed in
@@ -394,7 +394,7 @@ public static class ReceptacleRestrictions
 
 		//BOX
 		{SimObjType.Box, new List<SimObjType>()
-		{SimObjType.Dresser, SimObjType.NightStand, SimObjType.Desk, SimObjType.Shelf, SimObjType.TableTop}},
+		{SimObjType.Dresser, SimObjType.NightStand, SimObjType.Desk, SimObjType.Shelf, SimObjType.TableTop,SimObjType.CounterTop, SimObjType.Bed, SimObjType.Sofa, SimObjType.ArmChair, SimObjType.Ottoman}},
 
 	};
 
