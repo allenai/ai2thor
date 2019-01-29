@@ -72,36 +72,100 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
             if(!debugfield.isFocused && dfac.TextInputMode)
             {
+                float FlyMagnitude = 1.0f;
+                float WalkMagnitude = 0.25f;
                 if(Input.GetKeyDown(KeyCode.W))
                 {
                     ServerAction action = new ServerAction();
-                    action.action = "MoveAhead";
-                    action.moveMagnitude = 0.25f;		
-                    PhysicsController.ProcessControlCommand(action);
+                    if(PhysicsController.FlightMode)
+                    {
+                        action.action = "FlyAhead";
+                        action.moveMagnitude = FlyMagnitude;
+                        PhysicsController.ProcessControlCommand(action);
+                    }
+
+                    else
+                    {
+                        action.action = "MoveAhead";
+                        action.moveMagnitude = WalkMagnitude;		
+                        PhysicsController.ProcessControlCommand(action);
+                    }
                 }
 
                 if(Input.GetKeyDown(KeyCode.S))
                 {
                     ServerAction action = new ServerAction();
-                    action.action = "MoveBack";
-                    action.moveMagnitude = 0.25f;		
-                    PhysicsController.ProcessControlCommand(action);  
+                    if(PhysicsController.FlightMode)
+                    {
+                        action.action = "FlyBack";
+                        action.moveMagnitude = FlyMagnitude;
+                        PhysicsController.ProcessControlCommand(action);
+                    }
+
+                    else
+                    {
+                        action.action = "MoveBack";
+                        action.moveMagnitude = WalkMagnitude;		
+                        PhysicsController.ProcessControlCommand(action);
+                    }
                 }
 
                 if(Input.GetKeyDown(KeyCode.A))
                 {
                     ServerAction action = new ServerAction();
-                    action.action = "MoveLeft";
-                    action.moveMagnitude = 0.25f;		
-                    PhysicsController.ProcessControlCommand(action);  
+                    if(PhysicsController.FlightMode)
+                    {
+                        action.action = "FlyLeft";
+                        action.moveMagnitude = FlyMagnitude;
+                        PhysicsController.ProcessControlCommand(action);
+                    }
+
+                    else
+                    {
+                        action.action = "MoveLeft";
+                        action.moveMagnitude = WalkMagnitude;		
+                        PhysicsController.ProcessControlCommand(action);
+                    }
                 }
 
                 if(Input.GetKeyDown(KeyCode.D))
                 {
                     ServerAction action = new ServerAction();
-                    action.action = "MoveRight";
-                    action.moveMagnitude = 0.25f;		
-                    PhysicsController.ProcessControlCommand(action);  
+                    if(PhysicsController.FlightMode)
+                    {
+                        action.action = "FlyRight";
+                        action.moveMagnitude = FlyMagnitude;
+                        PhysicsController.ProcessControlCommand(action);
+                    }
+
+                    else
+                    {
+                        action.action = "MoveRight";
+                        action.moveMagnitude = WalkMagnitude;		
+                        PhysicsController.ProcessControlCommand(action);
+                    }
+                }
+
+                if(Input.GetKeyDown(KeyCode.I))
+                {
+                    if(PhysicsController.FlightMode)
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "FlyUp";
+                        action.moveMagnitude = FlyMagnitude;
+                        PhysicsController.ProcessControlCommand(action);
+                    }
+                }
+
+                if(Input.GetKeyDown(KeyCode.K))
+                {
+                    if(PhysicsController.FlightMode)
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "FlyDown";
+                        action.moveMagnitude = FlyMagnitude;
+                        PhysicsController.ProcessControlCommand(action);
+                    }
                 }
 
                 if(Input.GetKeyDown(KeyCode.UpArrow))
@@ -118,18 +182,30 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     PhysicsController.ProcessControlCommand(action); 
                 }
 
-                if(Input.GetKeyDown(KeyCode.LeftArrow))
+                if(Input.GetKeyDown(KeyCode.LeftArrow) || Input.GetKeyDown(KeyCode.J))
                 {
                     ServerAction action = new ServerAction();
                     action.action = "RotateLeft";
                     PhysicsController.ProcessControlCommand(action); 
                 }
 
-                if(Input.GetKeyDown(KeyCode.RightArrow))
+                if(Input.GetKeyDown(KeyCode.RightArrow) || Input.GetKeyDown(KeyCode.L))
                 {
                     ServerAction action = new ServerAction();
                     action.action = "RotateRight";
                     PhysicsController.ProcessControlCommand(action); 
+                }
+
+                if(Input.GetKeyDown(KeyCode.Space))
+                {
+                    if(PhysicsController.FlightMode)
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "LaunchDroneObject";
+                        action.moveMagnitude = 200f;
+                        action.rotation = new Vector3(0, 1, 1);
+                        PhysicsController.ProcessControlCommand(action);
+                    }
                 }
             }
         }
@@ -172,6 +248,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         action.renderDepthImage = true;
                         action.renderClassImage = true;
                         action.renderObjectImage = true;
+
+                        action.continuous = true;//testing what continuous mode true does...
 
 						PhysicsController.actionComplete = false;
                         action.action = "Initialize";
@@ -610,6 +688,65 @@ namespace UnityStandardAssets.Characters.FirstPerson
                             action.moveMagnitude = 0.25f;
                         }
 						
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
+                case "fu":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "FlyUp";
+
+                        action.moveMagnitude = 2f;
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
+                case "fd":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "FlyDown";
+
+                        action.moveMagnitude = 2f;
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
+                case "fa":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "FlyAhead";
+
+                        action.moveMagnitude = 2f;
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+                case "fl":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "FlyLeft";
+
+                        action.moveMagnitude = 2f;
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
+                case "fr":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "FlyRight";
+
+                        action.moveMagnitude = 2f;
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
+                case "fb":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "FlyBack";
+
+                        action.moveMagnitude = 2f;
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }

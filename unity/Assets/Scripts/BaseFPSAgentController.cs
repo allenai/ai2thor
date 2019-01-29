@@ -661,7 +661,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			m_CharacterController.Move(m);
 			actionFinished(true);
 			// StartCoroutine(checkMoveAction(action));
-
 		}
 
 		virtual protected IEnumerator checkMoveAction(ServerAction action)

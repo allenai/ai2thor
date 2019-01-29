@@ -40,6 +40,11 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 		[SerializeField] protected bool IsHandDefault = true;
 
+        [SerializeField] public bool FlightMode = false;
+        protected Vector3 thrust;
+
+        [SerializeField] Camera[] FlightCameras;
+
         // Extra stuff
         private Dictionary<string, SimObjPhysics> uniqueIdToSimObjPhysics = new Dictionary<string, SimObjPhysics>();
         [SerializeField] public string[] objectIdsInBox = new string[0];
@@ -82,17 +87,27 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 Debug.LogError("Agent skin width must be > 0.0f, please set it in the editor. Forcing it to equal 0.01f for now.");
                 PhysicsAgentSkinWidth = 0.01f;
             }
+
 			m_CharacterController.skinWidth = PhysicsAgentSkinWidth;
 
-			foreach (GameObject go in ToSetActive)
-			{
-				go.SetActive(true);
-			}
+            //for normal, non-drone flight operation mode
+            if(!FlightMode)
+            {
+                foreach (GameObject go in ToSetActive)
+                {
+                    go.SetActive(true);
+                }
 
-			//On start, activate gravity
-            Vector3 movement = Vector3.zero;
-            movement.y = Physics.gravity.y * m_GravityMultiplier;
-            m_CharacterController.Move(movement);
+                //On start, activate gravity
+                Vector3 movement = Vector3.zero;
+                movement.y = Physics.gravity.y * m_GravityMultiplier;
+                m_CharacterController.Move(movement);
+            }
+
+            // else
+            // {
+            //     maxVisibleDistance = 3.0f;
+            // }
 
             standingLocalCameraPosition = m_Camera.transform.localPosition;
             crouchingLocalCameraPosition = m_Camera.transform.localPosition;
@@ -151,7 +166,15 @@ namespace UnityStandardAssets.Characters.FirstPerson
         // Update is called once per frame
         void Update()
         {
+            if(FlightMode)
+            {
+                if(thrust.magnitude > 0.1)
+                {
+                    m_CharacterController.Move(thrust * Time.deltaTime);
+                }
 
+                thrust = Vector3.Lerp(thrust, Vector3.zero, 5 * Time.deltaTime);
+            }
         }
 
 		private void LateUpdate()
@@ -161,9 +184,16 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			//using VisibleSimObjs(action), so be aware of that
 
             #if UNITY_EDITOR
-            if (this.actionComplete) {
+            if (this.actionComplete && !FlightMode) {
                 ServerAction action = new ServerAction();
                 VisibleSimObjPhysics = VisibleSimObjs(action);//GetAllVisibleSimObjPhysics(m_Camera, maxVisibleDistance);
+            }
+
+            //right now flight mode doesn't reset actionComplete so let's do this every update cuase why not
+            if(FlightMode)
+            {
+                ServerAction action = new ServerAction();
+                VisibleSimObjPhysics = VisibleSimObjs(action);
             }
             #endif
    		}
@@ -1095,6 +1125,11 @@ namespace UnityStandardAssets.Characters.FirstPerson
         }
 
         //for all translational movement, check if the item the player is holding will hit anything, or if the agent will hit anything
+        //NOTE: (XXX) All four movements below no longer use base character controller Move() due to doing initial collision blocking
+        //checks before actually moving. Previously we would moveCharacter() first and if we hit anything reset, but now to match
+        //Luca's movement grid and valid position generation, simple transform setting is used for movement instead.
+
+        //XXX revisit what movement means when we more clearly define what "continuous" movement is
 		public override void MoveLeft(ServerAction action)
 		{
             action.moveMagnitude = action.moveMagnitude > 0 ? action.moveMagnitude : gridSize;
@@ -1137,10 +1172,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 CheckIfItemBlocksAgentMovement(action.moveMagnitude, 0) && 
                 CheckIfAgentCanMove(action.moveMagnitude, 0)) {
 				DefaultAgentHand(action);
-                transform.position = targetPosition;
+                transform.position = targetPosition;//base.MoveAhead(action);            
                 this.snapToGrid();
                 actionFinished(true);
-				// base.MoveAhead(action);            
 			} else {
                 actionFinished(false);
             }
@@ -1162,6 +1196,109 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 actionFinished(false);
             }
 		}
+
+        public Vector3 GetFlyingOrientation(ServerAction action, int targetOrientation)
+        {
+            Vector3 m;
+			int currentRotation = (int)Math.Round(transform.rotation.eulerAngles.y, 0);
+			Dictionary<int, Vector3> actionOrientation = new Dictionary<int, Vector3>();
+			actionOrientation.Add(0, new Vector3(0f, 0f, 1.0f));
+			actionOrientation.Add(90, new Vector3(1.0f, 0.0f, 0.0f));
+			actionOrientation.Add(180, new Vector3(0f, 0f, -1.0f));
+			actionOrientation.Add(270, new Vector3(-1.0f, 0.0f, 0.0f));
+			int delta = (currentRotation + targetOrientation) % 360;
+
+			if (actionOrientation.ContainsKey(delta))
+			{
+				m = actionOrientation[delta];
+
+			}
+
+            else
+			{
+				actionOrientation = new Dictionary<int, Vector3>();
+				actionOrientation.Add(0, transform.forward);
+				actionOrientation.Add(90, transform.right);
+				actionOrientation.Add(180, transform.forward * -1);
+				actionOrientation.Add(270, transform.right * -1);
+				m = actionOrientation[targetOrientation];
+			}
+
+            m *= action.moveMagnitude;
+
+            return m;
+        }
+
+        public void FlyAhead(ServerAction action)
+        {
+            if(FlightMode)
+            {
+                thrust += GetFlyingOrientation(action, 0);
+                actionFinished(true);
+            }
+        }
+
+        public void FlyBack(ServerAction action)
+        {
+            if(FlightMode)
+            {
+                thrust += GetFlyingOrientation(action, 180);
+                actionFinished(true);
+
+            }
+        }
+
+        public void FlyLeft(ServerAction action)
+        {
+            if(FlightMode)
+            {
+                thrust += GetFlyingOrientation(action, 270);
+                actionFinished(true);
+
+            }  
+        }
+
+        public void FlyRight(ServerAction action)
+        {
+            if(FlightMode)
+            {
+                thrust += GetFlyingOrientation(action, 90);
+                actionFinished(true);
+
+            }
+        }
+
+        public void FlyUp(ServerAction action)
+        {
+            if(FlightMode)
+            {
+                //Vector3 targetPosition = transform.position + transform.up * action.moveMagnitude;
+                //transform.position = targetPosition;
+                thrust += new Vector3(0, action.moveMagnitude, 0);
+                //actionFinished(true);
+            }
+
+        }
+
+        public void FlyDown(ServerAction action)
+        {
+            if(FlightMode)
+            {
+                //Vector3 targetPosition = transform.position + -transform.up * action.moveMagnitude;
+                //transform.position = targetPosition;
+                thrust += new Vector3(0, -action.moveMagnitude, 0);
+                //actionFinished(true);
+            }
+
+        }
+
+        public void LaunchDroneObject(ServerAction action)
+        {
+            if(FlightMode)
+            {
+                this.GetComponent<FlyingDrone>().Launch(action);
+            }
+        }
 
 		//Sweeptest to see if the object Agent is holding will prohibit movement
         public bool CheckIfItemBlocksAgentMovement(float moveMagnitude, int orientation)
@@ -2901,14 +3038,40 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			}
 			else
 			{
+                if(!FlightMode)
 				return GetAllVisibleSimObjPhysics(m_Camera, maxVisibleDistance);
+
+                else
+                {
+                    List<SimObjPhysics> ObjVisToAllCameras = new List<SimObjPhysics>();
+                    //ObjVisToAllCameras.AddRange(GetAllVisibleSimObjPhysics(m_Camera, maxVisibleDistance));
+                    foreach(Camera c in FlightCameras)
+                    {
+                        ObjVisToAllCameras.AddRange(GetAllVisibleSimObjPhysics(c, maxVisibleDistance));
+                    }
+
+                    return ObjVisToAllCameras.ToArray();
+                }
 			}
 		}
         
 
         public override SimpleSimObj[] VisibleSimObjs()
         {
+            //if(FlightMode)
             return GetAllVisibleSimObjPhysics(m_Camera, maxVisibleDistance);
+
+            // else
+            // {
+            //     List<SimObjPhysics> ObjVisToAllCameras = new List<SimObjPhysics>();
+            //     ObjVisToAllCameras.AddRange(GetAllVisibleSimObjPhysics(m_Camera, maxVisibleDistance));
+            //     foreach(Camera c in FlightCameras)
+            //     {
+            //         ObjVisToAllCameras.AddRange(GetAllVisibleSimObjPhysics(c, maxVisibleDistance));
+            //     }
+
+            //     return ObjVisToAllCameras.ToArray();
+            // }
         }
         
 		public SimObjPhysics[] VisibleSimObjs(ServerAction action) 
@@ -2927,6 +3090,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
 				{
 					continue;
 				}
+
+                //don't add duplicates?
+                // if(!simObjs.Contains(so))
+                // {
+                //     continue;
+                // }
 
 				simObjs.Add (so);
 			}	

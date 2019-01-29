@@ -31,6 +31,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
 //        [SerializeField] private GameObject AgentHand = null;
 //        [SerializeField] private GameObject ItemInHand = null;
 
+		public bool FlightMode = false;
+
 		private Camera m_Camera;
 		//public bool rotateMouseLook;
 		private Vector2 m_Input;
@@ -61,6 +63,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 Cursor.visible = false;
                 Cursor.lockState = CursorLockMode.Locked;
             }
+
+			FlightMode = gameObject.GetComponent<PhysicsRemoteFPSAgentController>().FlightMode;
         }
 		public Vector3 ScreenPointMoveHand(float yOffset)
 		{
@@ -211,8 +215,11 @@ namespace UnityStandardAssets.Characters.FirstPerson
             desiredMove = Vector3.ProjectOnPlane(desiredMove, hitInfo.normal).normalized;
 
             m_MoveDir.x = desiredMove.x * speed;
-            m_MoveDir.z = desiredMove.z * speed;         
-            m_MoveDir += Physics.gravity * m_GravityMultiplier * Time.fixedDeltaTime;         
+            m_MoveDir.z = desiredMove.z * speed;    
+
+			if(!FlightMode)
+            m_MoveDir += Physics.gravity * m_GravityMultiplier * Time.fixedDeltaTime;   
+			      
             m_CharacterController.Move(m_MoveDir * Time.fixedDeltaTime);
 		}
 
