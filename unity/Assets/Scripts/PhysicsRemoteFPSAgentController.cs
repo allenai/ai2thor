@@ -1197,6 +1197,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             }
 		}
 
+        //Flying Drone Agent Controls
         public Vector3 GetFlyingOrientation(ServerAction action, int targetOrientation)
         {
             Vector3 m;
@@ -1229,6 +1230,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             return m;
         }
 
+        //Flying Drone Agent Controls
         public void FlyAhead(ServerAction action)
         {
             if(FlightMode)
@@ -1237,7 +1239,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 actionFinished(true);
             }
         }
-
+        
+        //Flying Drone Agent Controls
         public void FlyBack(ServerAction action)
         {
             if(FlightMode)
@@ -1248,6 +1251,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             }
         }
 
+        //Flying Drone Agent Controls
         public void FlyLeft(ServerAction action)
         {
             if(FlightMode)
@@ -1258,6 +1262,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             }  
         }
 
+        //Flying Drone Agent Controls
         public void FlyRight(ServerAction action)
         {
             if(FlightMode)
@@ -1268,6 +1273,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             }
         }
 
+        //Flying Drone Agent Controls
         public void FlyUp(ServerAction action)
         {
             if(FlightMode)
@@ -1280,6 +1286,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
         }
 
+        //Flying Drone Agent Controls
         public void FlyDown(ServerAction action)
         {
             if(FlightMode)
@@ -1292,12 +1299,104 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
         }
 
+        //for use with the Drone to be able to launch an object into the air
+        //Launch an object at a given Force (action.moveMagnitude), and angle (action.rotation)
         public void LaunchDroneObject(ServerAction action)
         {
             if(FlightMode)
             {
                 this.GetComponent<FlyingDrone>().Launch(action);
             }
+        }
+
+        public void CheckDroneCaught(ServerAction action)
+        {
+            if(FlightMode)
+            {
+                this.GetComponent<FlyingDrone>().DidICatchTheThing(action);
+            }
+        }
+
+        public void ApplyForceObject(ServerAction action)
+        {
+            SimObjPhysics target = null;
+
+            if (action.forceAction) 
+            {
+                action.forceVisible = true;
+            }
+
+            SimObjPhysics[] simObjPhysicsArray = VisibleSimObjs(action);
+            
+            foreach (SimObjPhysics sop in simObjPhysicsArray)
+            {
+                if (action.objectId == sop.UniqueID)
+                {
+                    target = sop;
+                }
+            }
+
+            if (target == null)
+            {
+                errorMessage = "No valid target to push";
+                Debug.Log(errorMessage);
+                actionFinished(false);
+                return;
+            }
+
+            if (!target.GetComponent<SimObjPhysics>())
+            {
+                errorMessage = "Target must be SimObjPhysics to push";
+                Debug.Log(errorMessage);
+                actionFinished(false);
+                return;
+            }
+
+            bool canbepushed = false;
+
+            if(target.PrimaryProperty == SimObjPrimaryProperty.CanPickup ||
+               target.PrimaryProperty == SimObjPrimaryProperty.Moveable)
+               canbepushed = true;
+
+            if (!canbepushed)
+            {
+                errorMessage = "Target Primary Property type can't be pushed";
+                Debug.Log(errorMessage);
+                actionFinished(false);
+                return;
+            }
+
+            if(!action.forceAction && target.isInteractable == false)
+            {
+                errorMessage = "Target is not interactable and is probably occluded by something!";
+                Debug.Log(errorMessage);
+                actionFinished(false);
+                return;
+            }
+
+            target.GetComponent<Rigidbody>().isKinematic = false;
+            
+			ServerAction apply = new ServerAction();
+			apply.moveMagnitude = action.moveMagnitude;
+
+            Vector3 dir = Vector3.zero;
+
+            if(action.rotation == new Vector3(0, 0, 1))
+            {
+                dir = gameObject.transform.forward;
+            }
+
+            if(action.rotation == new Vector3(0, 0, -1))
+            {
+                dir = -gameObject.transform.forward;
+            }
+			//Vector3 dir = gameObject.transform.forward;
+            //print(dir);
+			apply.x = dir.x;
+			apply.y = dir.y;
+			apply.z = dir.z;
+
+            target.GetComponent<SimObjPhysics>().ApplyForce(apply);
         }
 
 		//Sweeptest to see if the object Agent is holding will prohibit movement

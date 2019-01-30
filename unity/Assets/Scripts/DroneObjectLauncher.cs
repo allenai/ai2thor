@@ -23,8 +23,12 @@ public class DroneObjectLauncher : MonoBehaviour
 
 	public void Launch(float magnitude, Vector3 direction)
 	{
+
 		GameObject fireaway = Instantiate(prefabToLaunch, this.transform.position, this.transform.rotation);
-		fireaway.GetComponent<Rigidbody>().AddForce(direction * magnitude);
+		Rigidbody rb = fireaway.GetComponent<Rigidbody>();
+
+		rb.isKinematic = false;
+		rb.AddForce(direction * magnitude);
 
 	}
 }
