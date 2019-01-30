@@ -203,7 +203,20 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         ServerAction action = new ServerAction();
                         action.action = "LaunchDroneObject";
                         action.moveMagnitude = 200f;
-                        action.rotation = new Vector3(0, 1, 1);
+                        //action. = new Vector3(0, 1, -1);
+                        action.x = 0;
+                        action.y = 1;
+                        action.z = -1;
+                        PhysicsController.ProcessControlCommand(action);
+                    }
+                }
+
+                if(Input.GetKeyDown(KeyCode.O))
+                {
+                    if(PhysicsController.FlightMode)
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "CheckDroneCaught";
                         PhysicsController.ProcessControlCommand(action);
                     }
                 }
@@ -319,7 +332,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                             
                         //set this to false if we want to place it and let physics resolve by having it fall a short distance into position
                         //set true to place with kinematic = true so that it doesn't fall or roll in place - making placement more consistant and not physics engine reliant - this more closely mimics legacy pivot placement behavior
-                        action.placeStationary = true; 
+                        action.placeStationary = false; 
                         //set this true to ignore Placement Restrictions
                         action.forceAction = true;
 
@@ -999,6 +1012,48 @@ namespace UnityStandardAssets.Characters.FirstPerson
 						else
 							action.moveMagnitude = 120f;
 
+						PhysicsController.ProcessControlCommand(action);                  
+						break;
+					}
+
+                case "push":
+					{
+						ServerAction action = new ServerAction();
+						action.action = "ApplyForceObject";
+
+                        if (splitcommand.Length > 1)
+                        {
+                            action.objectId = splitcommand[1];
+                        }
+
+                        else
+                        {
+                            action.objectId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().UniqueIDOfClosestVisibleObject();
+                        }
+							
+                        action.moveMagnitude = 200f;//4000f;
+                        action.rotation = new Vector3(0, 0, 1);
+						PhysicsController.ProcessControlCommand(action);                  
+						break;
+					}
+
+                case "pull":
+					{
+						ServerAction action = new ServerAction();
+						action.action = "ApplyForceObject";
+
+                        if (splitcommand.Length > 1)
+                        {
+                            action.objectId = splitcommand[1];
+                        }
+
+                        else
+                        {
+                            action.objectId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().UniqueIDOfClosestVisibleObject();
+                        }
+							
+                        action.moveMagnitude = 200f;//4000f;
+                        action.rotation = new Vector3(0, 0, -1);
 						PhysicsController.ProcessControlCommand(action);                  
 						break;
 					}

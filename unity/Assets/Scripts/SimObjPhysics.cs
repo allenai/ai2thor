@@ -48,6 +48,22 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 	public bool isColliding = false;
 
 	private Bounds bounds;
+
+	[Header("Non - Trigger Colliders of this object")]
+	public Collider[] MyColliders = null;
+
+	[Header("High Friction physics values")]
+	public float HFdynamicfriction;
+	public float HFstaticfriction;
+	public float HFbounciness;
+	public float HFrbdrag;
+	public float HFrbangulardrag;
+
+	private float RBoriginalDrag;
+	private float RBoriginalAngularDrag;
+
+	private PhysicsMaterialValues[] OriginalPhysicsMaterialValuesForAllMyColliders = null;
+
 	public Dictionary<Collider, ContactPoint[]> contactPointsDictionary = new Dictionary<Collider, ContactPoint[]>();
 
 	//if this object is a receptacle, get all valid spawn points from any child ReceptacleTriggerBoxes and sort them by distance to Agent
@@ -55,6 +71,20 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 
 	//initial position object spawned in in case we want to reset the scene
 	//private Vector3 startPosition;   
+
+	public class PhysicsMaterialValues
+	{
+		public float DynamicFriction;
+		public float StaticFriction;
+		public float Bounciness;
+
+		public PhysicsMaterialValues (float dFriction, float sFriction, float b)
+		{
+			DynamicFriction = dFriction;
+			StaticFriction = sFriction;
+			Bounciness = b;
+		}
+	}
 
 	public string UniqueID
 	{
@@ -344,6 +374,20 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		}
 #endif
 		//end debug setup stuff
+
+		OriginalPhysicsMaterialValuesForAllMyColliders = new PhysicsMaterialValues[MyColliders.Length];
+
+
+		for(int i = 0; i < MyColliders.Length; i++)
+		{
+			OriginalPhysicsMaterialValuesForAllMyColliders[i] = 
+			new PhysicsMaterialValues(MyColliders[i].material.dynamicFriction, MyColliders[i].material.staticFriction, MyColliders[i].material.bounciness);
+		}
+
+		Rigidbody rb = gameObject.GetComponent<Rigidbody>();
+
+		RBoriginalAngularDrag = rb.angularDrag;
+		RBoriginalDrag = rb.drag;
 	}
 
 	private bool hasAncestor(GameObject child, GameObject potentialAncestor)
@@ -528,6 +572,23 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 	public void OnTriggerStay(Collider other)
 	{
 
+		if(other.gameObject.tag == "HighFriction")
+		{
+			Rigidbody rb = gameObject.GetComponent<Rigidbody>();
+
+			rb.drag = HFrbdrag;
+			rb.angularDrag = HFrbangulardrag;
+			
+			foreach (Collider col in MyColliders)
+			{
+				col.material.dynamicFriction = HFdynamicfriction;
+				col.material.staticFriction = HFstaticfriction;
+				col.material.bounciness = HFbounciness;
+
+				print("setting high friction");
+			}
+		}
+
 		//ignore collision of ghosted receptacle trigger boxes
 		//because of this MAKE SURE ALL receptacle trigger boxes are tagged as "Receptacle," they should be by default
 		//do this flag first so that the check against non Player objects overrides it in the right order
@@ -558,9 +619,26 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 			isColliding = true;
 			return;
 		}
+	}
 
+	public void OnTriggerExit(Collider other)
+	{
+		if(other.gameObject.tag == "HighFriction")
+		{
+			print( "resetting to default trigger exit");
 
+			Rigidbody rb = gameObject.GetComponent<Rigidbody>();
 
+			rb.drag = RBoriginalDrag;
+			rb.angularDrag = RBoriginalAngularDrag;
+			
+			for(int i = 0; i < MyColliders.Length; i++)
+			{
+				MyColliders[i].material.dynamicFriction = OriginalPhysicsMaterialValuesForAllMyColliders[i].DynamicFriction;
+				MyColliders[i].material.staticFriction = OriginalPhysicsMaterialValuesForAllMyColliders[i].StaticFriction;
+				MyColliders[i].material.bounciness = OriginalPhysicsMaterialValuesForAllMyColliders[i].Bounciness;
+			}
+		}
 	}
 
 #if UNITY_EDITOR

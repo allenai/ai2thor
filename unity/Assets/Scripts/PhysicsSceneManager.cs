@@ -314,7 +314,7 @@ public class PhysicsSceneManager : MonoBehaviour
 						var watch = System.Diagnostics.Stopwatch.StartNew();
 						#endif
 
-						if(spawner.PlaceObjectReceptacle(targetReceptacleSpawnPoints, go.GetComponent<SimObjPhysics>(), true, maxcount, 360, true)) //we spawn them stationary so things don't fall off of ledges
+						if(spawner.PlaceObjectReceptacle(targetReceptacleSpawnPoints, go.GetComponent<SimObjPhysics>(), false, maxcount, 360, true)) //we spawn them stationary so things don't fall off of ledges
 						{
 							//Debug.Log(go.name + " succesfully spawned");
 							//diditspawn = true;

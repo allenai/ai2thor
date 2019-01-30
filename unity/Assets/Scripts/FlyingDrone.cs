@@ -32,6 +32,13 @@ public class FlyingDrone : MonoBehaviour
 
 	public void Launch(ServerAction action)
 	{
-		DroneObjectLauncher.Launch(action.moveMagnitude, action.rotation);
+		Vector3 LaunchAngle = new Vector3(action.x, action.y, action.z);
+		DroneObjectLauncher.Launch(action.moveMagnitude, LaunchAngle);
+	}
+
+	public bool DidICatchTheThing(ServerAction action)
+	{
+		Debug.Log("Did The Drone catch something?- " + caught);
+		return isCaught();
 	}
 }
