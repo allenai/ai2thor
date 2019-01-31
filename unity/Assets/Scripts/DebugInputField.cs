@@ -1024,15 +1024,22 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         if (splitcommand.Length > 1)
                         {
                             action.objectId = splitcommand[1];
+                            action.moveMagnitude = 200f;//4000f;
+                        }
+
+                        if(splitcommand.Length > 2)
+                        {
+                            action.objectId = splitcommand[1];
+                            action.moveMagnitude = float.Parse(splitcommand[2]);
                         }
 
                         else
                         {
                             action.objectId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().UniqueIDOfClosestVisibleObject();
+                            action.moveMagnitude = 200f;//4000f;
                         }
 							
-                        action.moveMagnitude = 200f;//4000f;
-                        action.rotation = new Vector3(0, 0, 1);
+                        action.z = 1;
 						PhysicsController.ProcessControlCommand(action);                  
 						break;
 					}
@@ -1045,15 +1052,23 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         if (splitcommand.Length > 1)
                         {
                             action.objectId = splitcommand[1];
+                            action.moveMagnitude = 200f;//4000f;
+                        }
+
+                        if(splitcommand.Length > 2)
+                        {
+                            action.objectId = splitcommand[1];
+                            action.moveMagnitude = float.Parse(splitcommand[2]);
                         }
 
                         else
                         {
                             action.objectId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().UniqueIDOfClosestVisibleObject();
+                            action.moveMagnitude = 200f;//4000f;
                         }
 							
                         action.moveMagnitude = 200f;//4000f;
-                        action.rotation = new Vector3(0, 0, -1);
+                        action.z = -1;
 						PhysicsController.ProcessControlCommand(action);                  
 						break;
 					}

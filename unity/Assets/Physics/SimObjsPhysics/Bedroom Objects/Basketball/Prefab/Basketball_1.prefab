@@ -347,7 +347,7 @@ Transform:
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 1731066694227140}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: -1.0834417, y: -0.22485238, z: -5.525891}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 4087341138652078}
@@ -471,11 +471,11 @@ Rigidbody:
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 1731066694227140}
   serializedVersion: 2
-  m_Mass: 1
+  m_Mass: 0.6
   m_Drag: 0
-  m_AngularDrag: 0.05
+  m_AngularDrag: 1
   m_UseGravity: 1
-  m_IsKinematic: 1
+  m_IsKinematic: 0
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
@@ -502,7 +502,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b439f6e4ef5714ee2a3643acf37b7a9d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  uniqueID: 
+  uniqueID: BasketBall|-01.08|-00.22|-05.53
   Type: 90
   PrimaryProperty: 3
   SecondaryProperties: 
@@ -518,6 +518,13 @@ MonoBehaviour:
   isVisible: 0
   isInteractable: 0
   isColliding: 0
+  MyColliders:
+  - {fileID: 135533600219505542}
+  HFdynamicfriction: 0.9
+  HFstaticfriction: 0.9
+  HFbounciness: 0.5
+  HFrbdrag: 5
+  HFrbangulardrag: 5
 --- !u!135 &135004954542179878
 SphereCollider:
   m_ObjectHideFlags: 1
@@ -536,7 +543,7 @@ SphereCollider:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 1534873386219834}
-  m_Material: {fileID: 0}
+  m_Material: {fileID: 13400000, guid: d2da42e76bf2d4e55bd777b70cb771d9, type: 2}
   m_IsTrigger: 0
   m_Enabled: 1
   serializedVersion: 2
