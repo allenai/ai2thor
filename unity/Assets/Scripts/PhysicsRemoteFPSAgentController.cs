@@ -1281,7 +1281,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 //Vector3 targetPosition = transform.position + transform.up * action.moveMagnitude;
                 //transform.position = targetPosition;
                 thrust += new Vector3(0, action.moveMagnitude, 0);
-                //actionFinished(true);
+                actionFinished(true);
             }
 
         }
@@ -1294,7 +1294,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 //Vector3 targetPosition = transform.position + -transform.up * action.moveMagnitude;
                 //transform.position = targetPosition;
                 thrust += new Vector3(0, -action.moveMagnitude, 0);
-                //actionFinished(true);
+                actionFinished(true);
             }
 
         }
@@ -1306,6 +1306,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             if(FlightMode)
             {
                 this.GetComponent<FlyingDrone>().Launch(action);
+                actionFinished(true);
             }
         }
 
@@ -1314,6 +1315,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             if(FlightMode)
             {
                 this.GetComponent<FlyingDrone>().DidICatchTheThing(action);
+                actionFinished(true);
             }
         }
 
