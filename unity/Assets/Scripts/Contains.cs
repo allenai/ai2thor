@@ -89,7 +89,11 @@ public class Contains : MonoBehaviour
 
 	private void FixedUpdate()
 	{
-
+		//clear the currently contains list so that if things were Initial Random Spawned in, the receptacle
+		//trigger boxes correctly re-populate with the current objects via OnTriggerStay. We need this here
+		//because OnTriggerExit will miss correctly editing the list if objects are teleported around like with
+		//the Initial Random Spawn Function! 
+		CurrentlyContains.Clear();
 	}
 
 	public void OnTriggerStay(Collider other)
@@ -132,6 +136,7 @@ public class Contains : MonoBehaviour
 		//remove objects if they leave the ReceptacleTriggerBox
 		if (other.GetComponentInParent<SimObjPhysics>())
 		{
+			print(other.GetComponentInParent<SimObjPhysics>().transform.name);
 			CurrentlyContains.Remove(other.GetComponentInParent<SimObjPhysics>());
 		}
 	}
