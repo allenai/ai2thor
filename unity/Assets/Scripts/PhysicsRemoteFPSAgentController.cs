@@ -2134,7 +2134,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 {
                     //errorMessage = null;
 
-                    if(osr.full == true)
+                    if(osr.isFull())
                     {
                         errorMessage = targetReceptacle.name + " is full right now";
                     }
