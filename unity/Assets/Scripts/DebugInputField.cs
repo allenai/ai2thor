@@ -331,7 +331,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                             action.objectId = PhysicsController.UniqueIDOfClosestReceptacleObject();
                             
                         //set this to false if we want to place it and let physics resolve by having it fall a short distance into position
-                        
+
                         //set true to place with kinematic = true so that it doesn't fall or roll in place - making placement more consistant and not physics engine reliant - this more closely mimics legacy pivot placement behavior
                         action.placeStationary = true; 
 
@@ -1072,7 +1072,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                             action.moveMagnitude = 200f;//4000f;
                         }
 							
-                        action.moveMagnitude = 200f;//4000f;
+                        //action.moveMagnitude = 200f;//4000f;
                         action.z = -1;
 						PhysicsController.ProcessControlCommand(action);                  
 						break;

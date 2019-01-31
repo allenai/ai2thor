@@ -930,6 +930,7 @@ GameObject:
   - component: {fileID: 4987438495384490}
   - component: {fileID: 114268174892984876}
   - component: {fileID: 54851807709913312}
+  - component: {fileID: 114748406425199338}
   m_Layer: 8
   m_Name: Floor_Lamp_15
   m_TagString: SimObjPhysics
@@ -2916,7 +2917,7 @@ Rigidbody:
   m_Drag: 0
   m_AngularDrag: 0.05
   m_UseGravity: 1
-  m_IsKinematic: 0
+  m_IsKinematic: 1
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
@@ -3642,7 +3643,7 @@ MonoBehaviour:
   uniqueID: FloorLamp|+15.00|+15.00|+15.00
   Type: 96
   PrimaryProperty: 1
-  SecondaryProperties: 
+  SecondaryProperties: 1d000000
   BoundingBox: {fileID: 1472281883284166}
   VisibilityPoints:
   - {fileID: 4051523932414146}
@@ -3677,6 +3678,31 @@ MonoBehaviour:
   isVisible: 0
   isInteractable: 0
   isColliding: 0
+  MyColliders: []
+  HFdynamicfriction: 0
+  HFstaticfriction: 0
+  HFbounciness: 0
+  HFrbdrag: 0
+  HFrbangulardrag: 0
+--- !u!114 &114748406425199338
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1669183759439320}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4fd556226fd294b1c845aae4efb365a1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  MovingParts: []
+  MaterialSwapObjects: []
+  LightSources: []
+  OnPositions: []
+  OffPositions: []
+  animationTime: 0.05
+  isOn: 1
+  movementType: 0
 --- !u!136 &136041811135528414
 CapsuleCollider:
   m_ObjectHideFlags: 1

@@ -262,6 +262,22 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
+--- !u!1 &1146645284875244
+GameObject:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  serializedVersion: 5
+  m_Component:
+  - component: {fileID: 4415091632808718}
+  - component: {fileID: 108589671494881002}
+  m_Layer: 0
+  m_Name: Point light
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 0
 --- !u!1 &1152096921512866
 GameObject:
   m_ObjectHideFlags: 1
@@ -1253,6 +1269,7 @@ GameObject:
   - component: {fileID: 4122646916837956}
   - component: {fileID: 114007234204218770}
   - component: {fileID: 54451648419071984}
+  - component: {fileID: 114082932602037842}
   m_Layer: 8
   m_Name: Floor_Lamp_4
   m_TagString: SimObjPhysics
@@ -1543,9 +1560,10 @@ Transform:
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 1877528778833376}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: 0.392, y: 0.0013151318, z: 5.157}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
+  - {fileID: 4415091632808718}
   - {fileID: 4746391773530588}
   - {fileID: 4612352009965290}
   - {fileID: 4492326686285918}
@@ -1905,6 +1923,19 @@ Transform:
   m_Father: {fileID: 4688998835397766}
   m_RootOrder: 7
   m_LocalEulerAnglesHint: {x: 0, y: 180.00002, z: 0}
+--- !u!4 &4415091632808718
+Transform:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1146645284875244}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 1.953, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 4122646916837956}
+  m_RootOrder: 0
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!4 &4418813445155086
 Transform:
   m_ObjectHideFlags: 1
@@ -2007,7 +2038,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 4122646916837956}
-  m_RootOrder: 2
+  m_RootOrder: 3
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!4 &4518199106128494
 Transform:
@@ -2053,7 +2084,7 @@ Transform:
   - {fileID: 4754722794298564}
   - {fileID: 4137521593505678}
   m_Father: {fileID: 4122646916837956}
-  m_RootOrder: 4
+  m_RootOrder: 5
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!4 &4545877435503278
 Transform:
@@ -2157,7 +2188,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 4122646916837956}
-  m_RootOrder: 1
+  m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!4 &4616798240083746
 Transform:
@@ -2346,7 +2377,7 @@ Transform:
   - {fileID: 4174590192124596}
   - {fileID: 4354026198790172}
   m_Father: {fileID: 4122646916837956}
-  m_RootOrder: 3
+  m_RootOrder: 4
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!4 &4704915081748092
 Transform:
@@ -2455,7 +2486,7 @@ Transform:
   - {fileID: 4772427064765428}
   - {fileID: 4233400432893158}
   m_Father: {fileID: 4122646916837956}
-  m_RootOrder: 0
+  m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!4 &4754722794298564
 Transform:
@@ -2746,7 +2777,7 @@ Rigidbody:
   m_Drag: 0
   m_AngularDrag: 0.05
   m_UseGravity: 1
-  m_IsKinematic: 0
+  m_IsKinematic: 1
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
@@ -3482,6 +3513,42 @@ BoxCollider:
   serializedVersion: 2
   m_Size: {x: 0.027235022, y: 0.36166948, z: 0.06645387}
   m_Center: {x: 0, y: -0.0022132713, z: 0}
+--- !u!108 &108589671494881002
+Light:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1146645284875244}
+  m_Enabled: 1
+  serializedVersion: 8
+  m_Type: 2
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Intensity: 0.3
+  m_Range: 2.6605563
+  m_SpotAngle: 30
+  m_CookieSize: 10
+  m_Shadows:
+    m_Type: 0
+    m_Resolution: -1
+    m_CustomResolution: -1
+    m_Strength: 1
+    m_Bias: 0.05
+    m_NormalBias: 0.4
+    m_NearPlane: 0.2
+  m_Cookie: {fileID: 0}
+  m_DrawHalo: 0
+  m_Flare: {fileID: 0}
+  m_RenderMode: 0
+  m_CullingMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_Lightmapping: 4
+  m_AreaSize: {x: 1, y: 1}
+  m_BounceIntensity: 1
+  m_ColorTemperature: 6570
+  m_UseColorTemperature: 0
+  m_ShadowRadius: 0
+  m_ShadowAngle: 0
 --- !u!114 &114007234204218770
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -3493,10 +3560,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b439f6e4ef5714ee2a3643acf37b7a9d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  uniqueID: FloorLamp|+04.00|+04.00|+04.00
+  uniqueID: FloorLamp|+00.39|+00.00|+05.16
   Type: 96
   PrimaryProperty: 1
-  SecondaryProperties: 
+  SecondaryProperties: 1d000000
   BoundingBox: {fileID: 1672496228624838}
   VisibilityPoints:
   - {fileID: 4734861132087056}
@@ -3521,6 +3588,43 @@ MonoBehaviour:
   isVisible: 0
   isInteractable: 0
   isColliding: 0
+  MyColliders: []
+  HFdynamicfriction: 0
+  HFstaticfriction: 0
+  HFbounciness: 0
+  HFrbdrag: 0
+  HFrbangulardrag: 0
+--- !u!114 &114082932602037842
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1877528778833376}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4fd556226fd294b1c845aae4efb365a1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  MovingParts: []
+  MaterialSwapObjects:
+  - MyObject: {fileID: 1528995195892484}
+    OnMaterials:
+    - {fileID: 2100000, guid: 039166bea64905d4cbec925cb0275238, type: 2}
+    - {fileID: 2100000, guid: 17156705018f5a446b37733c9c3cfcf4, type: 2}
+    - {fileID: 2100000, guid: 8dea32d689b299740b9e9e4f9e1506b7, type: 2}
+    - {fileID: 2100000, guid: 33d953343dddb0b41aa2bf6ecc8ec882, type: 2}
+    OffMaterials:
+    - {fileID: 2100000, guid: 039166bea64905d4cbec925cb0275238, type: 2}
+    - {fileID: 2100000, guid: 17156705018f5a446b37733c9c3cfcf4, type: 2}
+    - {fileID: 2100000, guid: 777e480079c3676449d6d9329bc02713, type: 2}
+    - {fileID: 2100000, guid: 33d953343dddb0b41aa2bf6ecc8ec882, type: 2}
+  LightSources:
+  - {fileID: 1146645284875244}
+  OnPositions: []
+  OffPositions: []
+  animationTime: 0.05
+  isOn: 0
+  movementType: 0
 --- !u!136 &136383506804298944
 CapsuleCollider:
   m_ObjectHideFlags: 1
