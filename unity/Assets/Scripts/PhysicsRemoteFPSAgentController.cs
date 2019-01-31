@@ -1344,6 +1344,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 return;
             }
 
+            //print(target.name);
+
             if (!target.GetComponent<SimObjPhysics>())
             {
                 errorMessage = "Target must be SimObjPhysics to push";
@@ -1397,6 +1399,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			apply.z = dir.z;
 
             target.GetComponent<SimObjPhysics>().ApplyForce(apply);
+            actionFinished(true);
         }
 
 		//Sweeptest to see if the object Agent is holding will prohibit movement
@@ -2032,7 +2035,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
         {
             PhysicsSceneManager script = GameObject.Find("PhysicsSceneManager").GetComponent<PhysicsSceneManager>();
 
-            if(script.RandomSpawnRequiredSceneObjects(action.randomSeed, action.forceVisible, action.maxNumRepeats)) //action.maxnumrepeats
+            if(script.RandomSpawnRequiredSceneObjects(action.randomSeed, action.forceVisible, action.maxNumRepeats, action.forceAction)) //action.maxnumrepeats
             {
                 
                 //script.SetupScene();

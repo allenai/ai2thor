@@ -175,7 +175,7 @@ public class PhysicsSceneManager : MonoBehaviour
 	public bool RandomSpawnRequiredSceneObjects(ServerAction action)
 	{
 		
-		if(RandomSpawnRequiredSceneObjects(action.randomSeed, action.forceVisible, action.maxNumRepeats))
+		if(RandomSpawnRequiredSceneObjects(action.randomSeed, action.forceVisible, action.maxNumRepeats, action.forceAction))
 		{
 			return true;
 		}
@@ -187,12 +187,12 @@ public class PhysicsSceneManager : MonoBehaviour
 	//if no values passed in, default to system random based on ticks
 	public void RandomSpawnRequiredSceneObjects()
 	{
-		RandomSpawnRequiredSceneObjects(System.Environment.TickCount, false, 50);
+		RandomSpawnRequiredSceneObjects(System.Environment.TickCount, false, 50, false);
 	}
 
 	//place each object in the array of objects that should appear in this scene randomly in valid receptacles
 	//a seed of 0 is the default positions placed by hand(?)
-	public bool RandomSpawnRequiredSceneObjects(int seed, bool SpawnOnlyOutside, int maxcount)
+	public bool RandomSpawnRequiredSceneObjects(int seed, bool SpawnOnlyOutside, int maxcount, bool StaticPlacement)
 	{
 		#if UNITY_EDITOR
 		var Masterwatch = System.Diagnostics.Stopwatch.StartNew();
@@ -314,7 +314,7 @@ public class PhysicsSceneManager : MonoBehaviour
 						var watch = System.Diagnostics.Stopwatch.StartNew();
 						#endif
 
-						if(spawner.PlaceObjectReceptacle(targetReceptacleSpawnPoints, go.GetComponent<SimObjPhysics>(), false, maxcount, 360, true)) //we spawn them stationary so things don't fall off of ledges
+						if(spawner.PlaceObjectReceptacle(targetReceptacleSpawnPoints, go.GetComponent<SimObjPhysics>(), StaticPlacement, maxcount, 360, true)) //we spawn them stationary so things don't fall off of ledges
 						{
 							//Debug.Log(go.name + " succesfully spawned");
 							//diditspawn = true;

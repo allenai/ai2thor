@@ -340,6 +340,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         break;
                     }
 
+                //set forceVisible to true if you want objects to not spawn inside receptacles and only out in the open
+                //set forceAction to true to spawn with kinematic = true to more closely resemble pivot functionality
                 case "irs":
                     {
                         ServerAction action = new ServerAction();
@@ -383,6 +385,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                             action.randomSeed = 0;
                             action.forceVisible = false;//true;
                             action.maxNumRepeats = 10;
+                            action.forceAction = false;//set to false to spawn with kinematic = false
                         }
 
                         PhysicsController.ProcessControlCommand(action);
@@ -1021,13 +1024,13 @@ namespace UnityStandardAssets.Characters.FirstPerson
 						ServerAction action = new ServerAction();
 						action.action = "ApplyForceObject";
 
-                        if (splitcommand.Length > 1)
+                        if (splitcommand.Length > 1 && splitcommand.Length < 3)
                         {
                             action.objectId = splitcommand[1];
                             action.moveMagnitude = 200f;//4000f;
                         }
 
-                        if(splitcommand.Length > 2)
+                        else if(splitcommand.Length > 2)
                         {
                             action.objectId = splitcommand[1];
                             action.moveMagnitude = float.Parse(splitcommand[2]);
@@ -1049,13 +1052,13 @@ namespace UnityStandardAssets.Characters.FirstPerson
 						ServerAction action = new ServerAction();
 						action.action = "ApplyForceObject";
 
-                        if (splitcommand.Length > 1)
+                        if (splitcommand.Length > 1 && splitcommand.Length < 3)
                         {
                             action.objectId = splitcommand[1];
                             action.moveMagnitude = 200f;//4000f;
                         }
 
-                        if(splitcommand.Length > 2)
+                        else if(splitcommand.Length > 2)
                         {
                             action.objectId = splitcommand[1];
                             action.moveMagnitude = float.Parse(splitcommand[2]);
