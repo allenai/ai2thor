@@ -572,7 +572,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 	public void OnTriggerStay(Collider other)
 	{
 
-		if(other.gameObject.tag == "HighFriction")
+		if(other.gameObject.tag == "HighFriction" && (PrimaryProperty == SimObjPrimaryProperty.CanPickup || PrimaryProperty == SimObjPrimaryProperty.Moveable))
 		{
 			Rigidbody rb = gameObject.GetComponent<Rigidbody>();
 
@@ -622,7 +622,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 
 	public void OnTriggerExit(Collider other)
 	{
-		if(other.gameObject.tag == "HighFriction")
+		if(other.gameObject.tag == "HighFriction" && (PrimaryProperty == SimObjPrimaryProperty.CanPickup || PrimaryProperty == SimObjPrimaryProperty.Moveable))
 		{
 			print( "resetting to default trigger exit");
 

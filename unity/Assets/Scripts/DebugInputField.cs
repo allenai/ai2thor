@@ -331,8 +331,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
                             action.objectId = PhysicsController.UniqueIDOfClosestReceptacleObject();
                             
                         //set this to false if we want to place it and let physics resolve by having it fall a short distance into position
+                        
                         //set true to place with kinematic = true so that it doesn't fall or roll in place - making placement more consistant and not physics engine reliant - this more closely mimics legacy pivot placement behavior
-                        action.placeStationary = false; 
+                        action.placeStationary = true; 
+
                         //set this true to ignore Placement Restrictions
                         action.forceAction = true;
 
@@ -385,9 +387,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
                             action.randomSeed = 0;
                             action.forceVisible = false;//true;
                             action.maxNumRepeats = 10;
-                            action.forceAction = false;//set to false to spawn with kinematic = false
                         }
 
+                        action.placeStationary = true;//set to false to spawn with kinematic = false, set to true to spawn everything kinematic true and they won't roll around
                         PhysicsController.ProcessControlCommand(action);
 
                         break;
