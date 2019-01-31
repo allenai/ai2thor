@@ -330,9 +330,13 @@ public static class ReceptacleRestrictions
 
 		//BREAD
 		{SimObjType.Bread, new List<SimObjType>()
-		{SimObjType.TableTop, SimObjType.CounterTop, SimObjType.Sink, SimObjType.SinkBasin, SimObjType.Fridge, SimObjType.GarbageCan}},
+		{SimObjType.TableTop, SimObjType.CounterTop, SimObjType.Sink, SimObjType.Fridge, SimObjType.GarbageCan,}},
 
 		{SimObjType.BreadSliced, new List<SimObjType>()
+		{SimObjType.TableTop, SimObjType.CounterTop, SimObjType.Sink, SimObjType.SinkBasin, SimObjType.Fridge, SimObjType.GarbageCan}},
+
+		//LETTUCE
+		{SimObjType.Lettuce, new List<SimObjType>()
 		{SimObjType.TableTop, SimObjType.CounterTop, SimObjType.Sink, SimObjType.SinkBasin, SimObjType.Fridge, SimObjType.GarbageCan}},
 
 		//KNIFE
@@ -358,6 +362,14 @@ public static class ReceptacleRestrictions
 		{SimObjType.Bowl, new List<SimObjType>()
 		{SimObjType.TableTop, SimObjType.CounterTop, SimObjType.Sink, SimObjType.SinkBasin, SimObjType.Cabinet,SimObjType.Desk, SimObjType.NightStand, SimObjType.Dresser,
 		}},
+
+		//SALT SHAKER
+		{SimObjType.SaltShaker, new List<SimObjType>()
+		{SimObjType.TableTop, SimObjType.CounterTop, SimObjType.Drawer, SimObjType.Cabinet}},
+
+		//PEPPER SHAKER
+		{SimObjType.PepperShaker, new List<SimObjType>()
+		{SimObjType.TableTop, SimObjType.CounterTop, SimObjType.Drawer, SimObjType.Cabinet}},
 
 		//TOILET PAPER
 		{SimObjType.ToiletPaper, new List <SimObjType>()
@@ -398,7 +410,7 @@ public static class ReceptacleRestrictions
 		SimObjType.ArmChair, SimObjType.Ottoman
 		}},
 
-		//PILLOW
+		//BASKETBALL
 		{SimObjType.BasketBall, new List<SimObjType>()
 		{SimObjType.Sofa, SimObjType.ArmChair, SimObjType.Bed, SimObjType.Desk, SimObjType.TableTop, SimObjType.Box}},
 

@@ -647,8 +647,8 @@ Transform:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 1957311982279844}
-  m_LocalRotation: {x: -0, y: 0.34335715, z: -0, w: 0.93920493}
-  m_LocalPosition: {x: -1.63, y: 0.014, z: -0.492}
+  m_LocalRotation: {x: -0, y: -0.42815638, z: -0, w: 0.90370464}
+  m_LocalPosition: {x: -1.795, y: 0.014, z: -1.36}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 4545890817368692}
@@ -658,7 +658,7 @@ Transform:
   - {fileID: 4426521493943984}
   m_Father: {fileID: 0}
   m_RootOrder: 0
-  m_LocalEulerAnglesHint: {x: 0, y: 40.163002, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: -50.701004, z: 0}
 --- !u!4 &4593522770815660
 Transform:
   m_ObjectHideFlags: 1
@@ -890,7 +890,7 @@ Rigidbody:
   m_Drag: 0
   m_AngularDrag: 0.05
   m_UseGravity: 1
-  m_IsKinematic: 0
+  m_IsKinematic: 1
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
@@ -1049,12 +1049,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b439f6e4ef5714ee2a3643acf37b7a9d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  UniqueID: Chair|-01.63|+00.01|-00.49
+  uniqueID: Chair|-01.80|+00.01|-01.36
   Type: 21
   PrimaryProperty: 2
   SecondaryProperties: 
-  RotateAgentCollider: {fileID: 1085227022293098}
-  InteractionPoints: []
+  BoundingBox: {fileID: 0}
   VisibilityPoints:
   - {fileID: 4593522770815660}
   - {fileID: 4223017056509384}
@@ -1066,21 +1065,19 @@ MonoBehaviour:
   - {fileID: 4109342748433270}
   - {fileID: 4752013170604868}
   - {fileID: 4679336846520424}
-  MyColliders:
-  - {fileID: 1327042227740588}
-  - {fileID: 1783226615487508}
-  - {fileID: 1150583493850072}
-  - {fileID: 1526962108600302}
-  - {fileID: 1334736896609408}
-  - {fileID: 1706898119103496}
-  MyTriggerColliders:
-  - {fileID: 1982182301757196}
-  - {fileID: 1728450258794988}
-  - {fileID: 1613775766020798}
-  - {fileID: 1342805007269758}
-  - {fileID: 1419121457426254}
-  - {fileID: 1808960701711358}
-  ReceptacleTriggerBox: {fileID: 0}
+  ReceptacleTriggerBoxes: []
   isVisible: 0
   isInteractable: 0
   isColliding: 0
+  MyColliders:
+  - {fileID: 65581769301348842}
+  - {fileID: 65672496342980070}
+  - {fileID: 65651291599552848}
+  - {fileID: 65207778726217806}
+  - {fileID: 65248385132162388}
+  - {fileID: 65641136788791672}
+  HFdynamicfriction: 0
+  HFstaticfriction: 0
+  HFbounciness: 0
+  HFrbdrag: 0
+  HFrbangulardrag: 0

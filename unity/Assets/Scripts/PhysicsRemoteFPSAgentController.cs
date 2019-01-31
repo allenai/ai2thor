@@ -2035,7 +2035,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
         {
             PhysicsSceneManager script = GameObject.Find("PhysicsSceneManager").GetComponent<PhysicsSceneManager>();
 
-            if(script.RandomSpawnRequiredSceneObjects(action.randomSeed, action.forceVisible, action.maxNumRepeats, action.forceAction)) //action.maxnumrepeats
+            if(script.RandomSpawnRequiredSceneObjects(action.randomSeed, action.forceVisible, action.maxNumRepeats, action.placeStationary)) //action.maxnumrepeats
             {
                 
                 //script.SetupScene();

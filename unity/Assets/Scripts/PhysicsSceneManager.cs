@@ -175,7 +175,7 @@ public class PhysicsSceneManager : MonoBehaviour
 	public bool RandomSpawnRequiredSceneObjects(ServerAction action)
 	{
 		
-		if(RandomSpawnRequiredSceneObjects(action.randomSeed, action.forceVisible, action.maxNumRepeats, action.forceAction))
+		if(RandomSpawnRequiredSceneObjects(action.randomSeed, action.forceVisible, action.maxNumRepeats, action.placeStationary))
 		{
 			return true;
 		}

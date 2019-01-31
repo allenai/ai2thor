@@ -250,11 +250,12 @@ public class InstantiatePrefabTest : MonoBehaviour
         //get the bounding box of the sim object we are trying to place
         BoxCollider oabb = sop.BoundingBox.GetComponent<BoxCollider>();
         
-        //zero out rotation to match the target receptacle's rotation
+        //zero out rotation and velocity/angular velocity, then match the target receptacle's rotation
         sop.transform.rotation = rsp.ReceptacleBox.transform.rotation;
-        sop.GetComponent<Rigidbody>().velocity = Vector3.zero;
+        Rigidbody sopRB = sop.GetComponent<Rigidbody>();
+        sopRB.velocity = Vector3.zero;
+        sopRB.angularVelocity = Vector3.zero;
 
-        //int degreeIncrement = 90;
 
         //set 360 degree increment to only check one angle, set smaller increments to check more angles when trying to place (warning THIS WILL GET SLOWER)
         int HowManyRotationsToCheck = 360/degreeIncrement;
