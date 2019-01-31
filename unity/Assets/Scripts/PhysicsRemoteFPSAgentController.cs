@@ -1381,12 +1381,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
             Vector3 dir = Vector3.zero;
 
-            if(action.rotation == new Vector3(0, 0, 1))
+            if(action.z == 1)
             {
                 dir = gameObject.transform.forward;
             }
 
-            if(action.rotation == new Vector3(0, 0, -1))
+            if(action.z == -1)
             {
                 dir = -gameObject.transform.forward;
             }

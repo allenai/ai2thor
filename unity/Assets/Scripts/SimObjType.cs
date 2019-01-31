@@ -394,7 +394,13 @@ public static class ReceptacleRestrictions
 
 		//BOX
 		{SimObjType.Box, new List<SimObjType>()
-		{SimObjType.Dresser, SimObjType.NightStand, SimObjType.Desk, SimObjType.Shelf, SimObjType.TableTop,SimObjType.CounterTop, SimObjType.Bed, SimObjType.Sofa, SimObjType.ArmChair, SimObjType.Ottoman}},
+		{SimObjType.Dresser, SimObjType.NightStand, SimObjType.Desk, SimObjType.Shelf, SimObjType.TableTop,SimObjType.CounterTop, SimObjType.Bed, SimObjType.Sofa, 
+		SimObjType.ArmChair, SimObjType.Ottoman
+		}},
+
+		//PILLOW
+		{SimObjType.BasketBall, new List<SimObjType>()
+		{SimObjType.Sofa, SimObjType.ArmChair, SimObjType.Bed, SimObjType.Desk, SimObjType.TableTop, SimObjType.Box}},
 
 	};
 

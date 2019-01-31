@@ -576,6 +576,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		{
 			Rigidbody rb = gameObject.GetComponent<Rigidbody>();
 
+			//add something so that drag/angular drag isn't reset if we haven't set it on the object yet
 			rb.drag = HFrbdrag;
 			rb.angularDrag = HFrbangulardrag;
 			
@@ -584,8 +585,6 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 				col.material.dynamicFriction = HFdynamicfriction;
 				col.material.staticFriction = HFstaticfriction;
 				col.material.bounciness = HFbounciness;
-
-				print("setting high friction");
 			}
 		}
 
