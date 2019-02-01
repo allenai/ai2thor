@@ -986,6 +986,22 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
+--- !u!1 &1965037518200878
+GameObject:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  serializedVersion: 5
+  m_Component:
+  - component: {fileID: 4511321049990672}
+  - component: {fileID: 108252672600958818}
+  m_Layer: 8
+  m_Name: Point light
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
 --- !u!1 &1976256083772148
 GameObject:
   m_ObjectHideFlags: 0
@@ -1107,8 +1123,8 @@ Transform:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 1649692796493160}
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalRotation: {x: -0, y: -0.38268274, z: -0, w: 0.9238798}
+  m_LocalPosition: {x: -5.663, y: -0.007134944, z: 4.68}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 4391715162581870}
@@ -1116,9 +1132,10 @@ Transform:
   - {fileID: 4700474705613594}
   - {fileID: 4533534081863098}
   - {fileID: 4759615970919408}
+  - {fileID: 4511321049990672}
   m_Father: {fileID: 0}
   m_RootOrder: 0
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: -45.000004, z: 0}
 --- !u!4 &4047103002993466
 Transform:
   m_ObjectHideFlags: 1
@@ -1435,6 +1452,19 @@ Transform:
   m_Children: []
   m_Father: {fileID: 4759615970919408}
   m_RootOrder: 9
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!4 &4511321049990672
+Transform:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1965037518200878}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 1.656, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 4037708368793444}
+  m_RootOrder: 5
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!4 &4533534081863098
 Transform:
@@ -1988,7 +2018,7 @@ MeshRenderer:
   m_Materials:
   - {fileID: 2100000, guid: d1882e340bdb3ec40a5d0c13b380b456, type: 2}
   - {fileID: 2100000, guid: d57a502c803813b4b9c83487e410e191, type: 2}
-  - {fileID: 2100000, guid: ce644ed57edf1c44aa5ea784227e36ac, type: 2}
+  - {fileID: 2100000, guid: 33d953343dddb0b41aa2bf6ecc8ec882, type: 2}
   - {fileID: 2100000, guid: 33d953343dddb0b41aa2bf6ecc8ec882, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
@@ -2523,6 +2553,42 @@ BoxCollider:
   serializedVersion: 2
   m_Size: {x: 0.12107414, y: 2.799681, z: 0.10579754}
   m_Center: {x: -0.0000000048143476, y: 1.3890831, z: 0.36945227}
+--- !u!108 &108252672600958818
+Light:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1965037518200878}
+  m_Enabled: 1
+  serializedVersion: 8
+  m_Type: 2
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Intensity: 0.43
+  m_Range: 10
+  m_SpotAngle: 30
+  m_CookieSize: 10
+  m_Shadows:
+    m_Type: 0
+    m_Resolution: -1
+    m_CustomResolution: -1
+    m_Strength: 1
+    m_Bias: 0.05
+    m_NormalBias: 0.4
+    m_NearPlane: 0.2
+  m_Cookie: {fileID: 0}
+  m_DrawHalo: 0
+  m_Flare: {fileID: 0}
+  m_RenderMode: 0
+  m_CullingMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_Lightmapping: 4
+  m_AreaSize: {x: 1, y: 1}
+  m_BounceIntensity: 1
+  m_ColorTemperature: 6570
+  m_UseColorTemperature: 0
+  m_ShadowRadius: 0
+  m_ShadowAngle: 0
 --- !u!114 &114448501519634346
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -2534,7 +2600,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b439f6e4ef5714ee2a3643acf37b7a9d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  uniqueID: FloorLamp|+28.00|+28.00|+28.00
+  uniqueID: FloorLamp|-05.66|-00.01|+04.68
   Type: 96
   PrimaryProperty: 1
   SecondaryProperties: 1d000000
@@ -2580,8 +2646,20 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   MovingParts: []
-  MaterialSwapObjects: []
-  LightSources: []
+  MaterialSwapObjects:
+  - MyObject: {fileID: 1382768638393034}
+    OnMaterials:
+    - {fileID: 2100000, guid: d1882e340bdb3ec40a5d0c13b380b456, type: 2}
+    - {fileID: 2100000, guid: d57a502c803813b4b9c83487e410e191, type: 2}
+    - {fileID: 2100000, guid: 33d953343dddb0b41aa2bf6ecc8ec882, type: 2}
+    - {fileID: 2100000, guid: 33d953343dddb0b41aa2bf6ecc8ec882, type: 2}
+    OffMaterials:
+    - {fileID: 2100000, guid: d1882e340bdb3ec40a5d0c13b380b456, type: 2}
+    - {fileID: 2100000, guid: d57a502c803813b4b9c83487e410e191, type: 2}
+    - {fileID: 2100000, guid: ce644ed57edf1c44aa5ea784227e36ac, type: 2}
+    - {fileID: 2100000, guid: 33d953343dddb0b41aa2bf6ecc8ec882, type: 2}
+  LightSources:
+  - {fileID: 1965037518200878}
   OnPositions: []
   OffPositions: []
   animationTime: 0.05
