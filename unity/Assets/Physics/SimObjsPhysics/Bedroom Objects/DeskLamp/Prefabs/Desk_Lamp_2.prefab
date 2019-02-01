@@ -637,6 +637,22 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
+--- !u!1 &1511570023628846
+GameObject:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  serializedVersion: 5
+  m_Component:
+  - component: {fileID: 4021180078144076}
+  - component: {fileID: 108991750340822258}
+  m_Layer: 8
+  m_Name: Point light
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
 --- !u!1 &1524138291499560
 GameObject:
   m_ObjectHideFlags: 1
@@ -1145,6 +1161,7 @@ GameObject:
   - component: {fileID: 4702034120995844}
   - component: {fileID: 114678787731227600}
   - component: {fileID: 54007932270740190}
+  - component: {fileID: 114793311258633566}
   m_Layer: 8
   m_Name: Desk_Lamp_2
   m_TagString: SimObjPhysics
@@ -1324,6 +1341,19 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
+--- !u!4 &4021180078144076
+Transform:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1511570023628846}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0.697, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 4702034120995844}
+  m_RootOrder: 5
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!4 &4038955979512578
 Transform:
   m_ObjectHideFlags: 1
@@ -2191,7 +2221,7 @@ Transform:
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 1816472004085748}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: -2.76, y: 0.17, z: 2.8}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 4376689183645794}
@@ -2199,6 +2229,7 @@ Transform:
   - {fileID: 4725023331600084}
   - {fileID: 4665932315247474}
   - {fileID: 4864315500204084}
+  - {fileID: 4021180078144076}
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -2515,7 +2546,7 @@ MeshRenderer:
   m_Materials:
   - {fileID: 2100000, guid: 3763578abc49e9f46b18c3f828a133db, type: 2}
   - {fileID: 2100000, guid: 07fd794214926ea44b44c5dd697e952b, type: 2}
-  - {fileID: 2100000, guid: 71f7a4e8f260b8a4ab5cb0e1a3f132c9, type: 2}
+  - {fileID: 2100000, guid: 492f6bc6f23ca452a99456e6d82b3a33, type: 2}
   - {fileID: 2100000, guid: 33d953343dddb0b41aa2bf6ecc8ec882, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
@@ -3122,6 +3153,42 @@ BoxCollider:
   serializedVersion: 2
   m_Size: {x: 0.14292169, y: 0.12559691, z: 0.09999998}
   m_Center: {x: -0.000000003187321, y: -0.015863955, z: 0.00064417033}
+--- !u!108 &108991750340822258
+Light:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1511570023628846}
+  m_Enabled: 1
+  serializedVersion: 8
+  m_Type: 2
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Intensity: 0.4
+  m_Range: 10
+  m_SpotAngle: 30
+  m_CookieSize: 10
+  m_Shadows:
+    m_Type: 0
+    m_Resolution: -1
+    m_CustomResolution: -1
+    m_Strength: 1
+    m_Bias: 0.05
+    m_NormalBias: 0.4
+    m_NearPlane: 0.2
+  m_Cookie: {fileID: 0}
+  m_DrawHalo: 0
+  m_Flare: {fileID: 0}
+  m_RenderMode: 0
+  m_CullingMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_Lightmapping: 4
+  m_AreaSize: {x: 1, y: 1}
+  m_BounceIntensity: 1
+  m_ColorTemperature: 6570
+  m_UseColorTemperature: 0
+  m_ShadowRadius: 0
+  m_ShadowAngle: 0
 --- !u!114 &114678787731227600
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -3133,7 +3200,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b439f6e4ef5714ee2a3643acf37b7a9d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  uniqueID: 
+  uniqueID: DeskLamp|-02.76|+00.17|+02.80
   Type: 134
   PrimaryProperty: 1
   SecondaryProperties: 
@@ -3173,6 +3240,43 @@ MonoBehaviour:
   isVisible: 0
   isInteractable: 0
   isColliding: 0
+  MyColliders: []
+  HFdynamicfriction: 0
+  HFstaticfriction: 0
+  HFbounciness: 0
+  HFrbdrag: 0
+  HFrbangulardrag: 0
+--- !u!114 &114793311258633566
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1816472004085748}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4fd556226fd294b1c845aae4efb365a1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  MovingParts: []
+  MaterialSwapObjects:
+  - MyObject: {fileID: 1807944897596042}
+    OnMaterials:
+    - {fileID: 2100000, guid: 3763578abc49e9f46b18c3f828a133db, type: 2}
+    - {fileID: 2100000, guid: 07fd794214926ea44b44c5dd697e952b, type: 2}
+    - {fileID: 2100000, guid: 492f6bc6f23ca452a99456e6d82b3a33, type: 2}
+    - {fileID: 2100000, guid: 33d953343dddb0b41aa2bf6ecc8ec882, type: 2}
+    OffMaterials:
+    - {fileID: 2100000, guid: 3763578abc49e9f46b18c3f828a133db, type: 2}
+    - {fileID: 2100000, guid: 07fd794214926ea44b44c5dd697e952b, type: 2}
+    - {fileID: 2100000, guid: 71f7a4e8f260b8a4ab5cb0e1a3f132c9, type: 2}
+    - {fileID: 2100000, guid: 33d953343dddb0b41aa2bf6ecc8ec882, type: 2}
+  LightSources:
+  - {fileID: 1511570023628846}
+  OnPositions: []
+  OffPositions: []
+  animationTime: 0.05
+  isOn: 1
+  movementType: 0
 --- !u!136 &136405106101359562
 CapsuleCollider:
   m_ObjectHideFlags: 1
