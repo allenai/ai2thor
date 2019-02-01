@@ -104,6 +104,22 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
+--- !u!1 &1125742920169322
+GameObject:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  serializedVersion: 5
+  m_Component:
+  - component: {fileID: 4561008716357784}
+  - component: {fileID: 108421233065534300}
+  m_Layer: 0
+  m_Name: Bounce (1)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
 --- !u!1 &1128131580116180
 GameObject:
   m_ObjectHideFlags: 1
@@ -2021,6 +2037,19 @@ Transform:
   m_Father: {fileID: 4139110778699994}
   m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 45.000004, z: 0}
+--- !u!4 &4561008716357784
+Transform:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1125742920169322}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: -0.14206982, y: 1.611, z: 0.08326316}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 4794110373971800}
+  m_RootOrder: 5
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!4 &4584528527391672
 Transform:
   m_ObjectHideFlags: 1
@@ -2289,7 +2318,7 @@ Transform:
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 1887272105527378}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: -4.43193, y: 0, z: 1.0627369}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 4843753691005620}
@@ -2297,6 +2326,7 @@ Transform:
   - {fileID: 4417507384579214}
   - {fileID: 4139110778699994}
   - {fileID: 4742361524540762}
+  - {fileID: 4561008716357784}
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -3177,6 +3207,42 @@ BoxCollider:
   serializedVersion: 2
   m_Size: {x: 0.027235022, y: 0.36166948, z: 0.06645387}
   m_Center: {x: 0, y: -0.0022132713, z: 0}
+--- !u!108 &108421233065534300
+Light:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1125742920169322}
+  m_Enabled: 1
+  serializedVersion: 8
+  m_Type: 2
+  m_Color: {r: 1, g: 0.9873225, b: 0.8161765, a: 1}
+  m_Intensity: 1
+  m_Range: 3
+  m_SpotAngle: 30
+  m_CookieSize: 10
+  m_Shadows:
+    m_Type: 1
+    m_Resolution: -1
+    m_CustomResolution: -1
+    m_Strength: 1
+    m_Bias: 0.05
+    m_NormalBias: 0.4
+    m_NearPlane: 0.2
+  m_Cookie: {fileID: 0}
+  m_DrawHalo: 0
+  m_Flare: {fileID: 0}
+  m_RenderMode: 0
+  m_CullingMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_Lightmapping: 4
+  m_AreaSize: {x: 1, y: 1}
+  m_BounceIntensity: 1
+  m_ColorTemperature: 6570
+  m_UseColorTemperature: 0
+  m_ShadowRadius: 0
+  m_ShadowAngle: 0
 --- !u!114 &114527318033232844
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -3189,8 +3255,20 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   MovingParts: []
-  MaterialSwapObjects: []
-  LightSources: []
+  MaterialSwapObjects:
+  - MyObject: {fileID: 1596812225981094}
+    OnMaterials:
+    - {fileID: 2100000, guid: b60b5ea0416a363438d171aced316c06, type: 2}
+    - {fileID: 2100000, guid: aa4c1c4fe0614f44ab2267dba56ad292, type: 2}
+    - {fileID: 2100000, guid: ac3ebf17ddc7c4446bfbd2e23d062ba7, type: 2}
+    - {fileID: 2100000, guid: 33d953343dddb0b41aa2bf6ecc8ec882, type: 2}
+    OffMaterials:
+    - {fileID: 2100000, guid: b60b5ea0416a363438d171aced316c06, type: 2}
+    - {fileID: 2100000, guid: aa4c1c4fe0614f44ab2267dba56ad292, type: 2}
+    - {fileID: 2100000, guid: 9ac733798ec6c480aacba0dbaae49f81, type: 2}
+    - {fileID: 2100000, guid: d1882e340bdb3ec40a5d0c13b380b456, type: 2}
+  LightSources:
+  - {fileID: 1125742920169322}
   OnPositions: []
   OffPositions: []
   animationTime: 0.05
@@ -3207,7 +3285,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b439f6e4ef5714ee2a3643acf37b7a9d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  uniqueID: FloorLamp|+16.00|+16.00|+16.00
+  uniqueID: FloorLamp|-04.43|+00.00|+01.06
   Type: 96
   PrimaryProperty: 1
   SecondaryProperties: 1d000000
