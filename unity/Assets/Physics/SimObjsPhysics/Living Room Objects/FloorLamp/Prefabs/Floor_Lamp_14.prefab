@@ -750,6 +750,22 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
+--- !u!1 &1327631407275912
+GameObject:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  serializedVersion: 5
+  m_Component:
+  - component: {fileID: 4491929311096094}
+  - component: {fileID: 108290633134620698}
+  m_Layer: 8
+  m_Name: Point light
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
 --- !u!1 &1331618605659408
 GameObject:
   m_ObjectHideFlags: 1
@@ -3169,6 +3185,19 @@ Transform:
   m_Father: {fileID: 4134157829316180}
   m_RootOrder: 33
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!4 &4491929311096094
+Transform:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1327631407275912}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 1.955, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 4795710381626498}
+  m_RootOrder: 5
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!4 &4518784736742486
 Transform:
   m_ObjectHideFlags: 1
@@ -3696,7 +3725,7 @@ Transform:
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 1952846032362298}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: -4.514, y: 0.019441098, z: 0.664}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 4135939488918124}
@@ -3704,6 +3733,7 @@ Transform:
   - {fileID: 4354775931774878}
   - {fileID: 4617200417542558}
   - {fileID: 4134157829316180}
+  - {fileID: 4491929311096094}
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -4022,7 +4052,7 @@ MeshRenderer:
   m_Materials:
   - {fileID: 2100000, guid: 15b6bb9acfefda24081785e43ad8f65b, type: 2}
   - {fileID: 2100000, guid: a2bee0c08ad10ba42849a29add1470de, type: 2}
-  - {fileID: 2100000, guid: 206835a488f3dcd439ae5a53b821b272, type: 2}
+  - {fileID: 2100000, guid: 33d953343dddb0b41aa2bf6ecc8ec882, type: 2}
   - {fileID: 2100000, guid: 33d953343dddb0b41aa2bf6ecc8ec882, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
@@ -5277,6 +5307,42 @@ BoxCollider:
   serializedVersion: 2
   m_Size: {x: 0.14371718, y: 0.023458429, z: 0.11329116}
   m_Center: {x: 0.00080605916, y: 0.0006960367, z: -0.02475473}
+--- !u!108 &108290633134620698
+Light:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1327631407275912}
+  m_Enabled: 1
+  serializedVersion: 8
+  m_Type: 2
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Intensity: 0.48
+  m_Range: 10
+  m_SpotAngle: 30
+  m_CookieSize: 10
+  m_Shadows:
+    m_Type: 0
+    m_Resolution: -1
+    m_CustomResolution: -1
+    m_Strength: 1
+    m_Bias: 0.05
+    m_NormalBias: 0.4
+    m_NearPlane: 0.2
+  m_Cookie: {fileID: 0}
+  m_DrawHalo: 0
+  m_Flare: {fileID: 0}
+  m_RenderMode: 0
+  m_CullingMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_Lightmapping: 4
+  m_AreaSize: {x: 1, y: 1}
+  m_BounceIntensity: 1
+  m_ColorTemperature: 6570
+  m_UseColorTemperature: 0
+  m_ShadowRadius: 0
+  m_ShadowAngle: 0
 --- !u!114 &114336164049452060
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -5289,8 +5355,20 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   MovingParts: []
-  MaterialSwapObjects: []
-  LightSources: []
+  MaterialSwapObjects:
+  - MyObject: {fileID: 1457744174975354}
+    OnMaterials:
+    - {fileID: 2100000, guid: 15b6bb9acfefda24081785e43ad8f65b, type: 2}
+    - {fileID: 2100000, guid: a2bee0c08ad10ba42849a29add1470de, type: 2}
+    - {fileID: 2100000, guid: 33d953343dddb0b41aa2bf6ecc8ec882, type: 2}
+    - {fileID: 2100000, guid: 33d953343dddb0b41aa2bf6ecc8ec882, type: 2}
+    OffMaterials:
+    - {fileID: 2100000, guid: 15b6bb9acfefda24081785e43ad8f65b, type: 2}
+    - {fileID: 2100000, guid: a2bee0c08ad10ba42849a29add1470de, type: 2}
+    - {fileID: 2100000, guid: 206835a488f3dcd439ae5a53b821b272, type: 2}
+    - {fileID: 2100000, guid: 33d953343dddb0b41aa2bf6ecc8ec882, type: 2}
+  LightSources:
+  - {fileID: 1327631407275912}
   OnPositions: []
   OffPositions: []
   animationTime: 0.05
@@ -5307,7 +5385,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b439f6e4ef5714ee2a3643acf37b7a9d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  uniqueID: FloorLamp|+14.00|+14.00|+14.00
+  uniqueID: FloorLamp|-04.51|+00.02|+00.66
   Type: 96
   PrimaryProperty: 1
   SecondaryProperties: 1d000000
