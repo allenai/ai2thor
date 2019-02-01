@@ -1,6 +1,9 @@
-﻿using UnityEngine;
+﻿#if UNITY_EDITOR
+
+using UnityEngine;
 using System.Collections;
 using UnityEditor;
+
 
 public class CreatePrefab : MonoBehaviour
 {
@@ -15,3 +18,4 @@ public class CreatePrefab : MonoBehaviour
 		}
 	}
 }
+#endif
