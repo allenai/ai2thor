@@ -69,6 +69,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
         [SerializeField] protected Vector3 crouchingLocalCameraPosition;
         protected HashSet<int> initiallyDisabledRenderers = new HashSet<int>();
         public Vector3[] reachablePositions = new Vector3[0];
+
         public Bounds sceneBounds = new Bounds(
             new Vector3(float.PositiveInfinity, float.PositiveInfinity, float.PositiveInfinity),
             new Vector3(-float.PositiveInfinity, -float.PositiveInfinity, -float.PositiveInfinity)
@@ -368,6 +369,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
             metaMessage.actionStringsReturn = actionStringsReturn;
             metaMessage.actionVector3sReturn = actionVector3sReturn;
 
+            //test time
+            metaMessage.currentTime = TimeSinceStart();
+
             // Resetting things
             reachablePositions = new Vector3[0];
 			flatSurfacesOnGrid = new float[0,0,0];
@@ -385,6 +389,11 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			
 			return metaMessage;
 		}
+
+        public float TimeSinceStart()
+        {
+            return Time.time;
+        }
 
         //return ID of closest CanPickup object by distance
         public string UniqueIDOfClosestVisibleObject()
@@ -1314,7 +1323,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
         {
             if(FlightMode)
             {
-                this.GetComponent<FlyingDrone>().DidICatchTheThing(action);
+                actionBoolReturn = this.GetComponent<FlyingDrone>().DidICatchTheThing(action);
                 actionFinished(true);
             }
         }

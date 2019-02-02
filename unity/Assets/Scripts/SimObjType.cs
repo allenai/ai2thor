@@ -303,7 +303,7 @@ public static class ReceptacleRestrictions
 	public static List<SimObjType> AlwaysPlaceUpright = new List<SimObjType>()
 	{
 		SimObjType.Pot, SimObjType.Pan, SimObjType.Bowl, SimObjType.Plate, SimObjType.Bread, SimObjType.Cup, SimObjType.Mug, SimObjType.Laptop,
-		SimObjType.SaltShaker, SimObjType.PepperShaker, SimObjType.AlarmClock, SimObjType.Box,
+		SimObjType.SaltShaker, SimObjType.PepperShaker, SimObjType.AlarmClock, SimObjType.Box, SimObjType.SoapBottle, SimObjType.SoapBottleFilled,
 	};
 
 	//Each sim object type keeps track of what sort of Receptacles it can be placed in
@@ -375,7 +375,21 @@ public static class ReceptacleRestrictions
 		//TOILET PAPER
 		{SimObjType.ToiletPaper, new List <SimObjType>()
 		{SimObjType.TableTop, SimObjType.CounterTop, SimObjType.Cabinet, SimObjType.Drawer, SimObjType.Cart, SimObjType.ToiletPaperHanger,
-		 SimObjType.GarbageCan, SimObjType.Shelf, SimObjType.Dresser, SimObjType.NightStand, SimObjType.Toilet
+		 SimObjType.Shelf, SimObjType.Dresser, SimObjType.NightStand, SimObjType.Toilet
+		}},
+
+		//SOAP BOTTLE
+		{SimObjType.SoapBottle, new List <SimObjType>()
+		{SimObjType.TableTop, SimObjType.CounterTop, SimObjType.Cabinet, SimObjType.Drawer, SimObjType.Cart,
+		 SimObjType.Shelf, SimObjType.Dresser, SimObjType.NightStand, SimObjType.Toilet,
+		 SimObjType.Bathtub,
+		}},
+
+		//SOAP BOTTLE FILLED
+		{SimObjType.SoapBottleFilled, new List <SimObjType>()
+		{SimObjType.TableTop, SimObjType.CounterTop, SimObjType.Cabinet, SimObjType.Drawer, SimObjType.Cart,
+		 SimObjType.GarbageCan, SimObjType.Shelf, SimObjType.Dresser, SimObjType.NightStand, SimObjType.Toilet,
+		 SimObjType.Bathtub,
 		}},
 
 		//TOILET PAPER ROLL - should be same as Toilet Paper's list
