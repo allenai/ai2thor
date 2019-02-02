@@ -893,6 +893,12 @@ Transform:
   m_PrefabParentObject: {fileID: 4360539769873112, guid: f32ac8351674d497d85fcf5fa7247686,
     type: 2}
   m_PrefabInternal: {fileID: 132149839}
+--- !u!114 &132149841 stripped
+MonoBehaviour:
+  m_PrefabParentObject: {fileID: 114094598822908232, guid: f32ac8351674d497d85fcf5fa7247686,
+    type: 2}
+  m_PrefabInternal: {fileID: 132149839}
+  m_Script: {fileID: 11500000, guid: b439f6e4ef5714ee2a3643acf37b7a9d, type: 3}
 --- !u!1 &132995753
 GameObject:
   m_ObjectHideFlags: 0
@@ -1187,6 +1193,12 @@ MonoBehaviour:
   isVisible: 0
   isInteractable: 0
   isColliding: 0
+  MyColliders: []
+  HFdynamicfriction: 0
+  HFstaticfriction: 0
+  HFbounciness: 0
+  HFrbdrag: 0
+  HFrbangulardrag: 0
 --- !u!54 &167557318
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -1294,7 +1306,7 @@ Transform:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 176156484}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -0.484, y: 3.714, z: -2.606}
+  m_LocalPosition: {x: -0.484, y: 3.096, z: -2.606}
   m_LocalScale: {x: 0.9547974, y: 0.95479774, z: 0.95479774}
   m_Children: []
   m_Father: {fileID: 1781792447}
@@ -1467,6 +1479,12 @@ MonoBehaviour:
   isVisible: 0
   isInteractable: 0
   isColliding: 0
+  MyColliders: []
+  HFdynamicfriction: 0
+  HFstaticfriction: 0
+  HFbounciness: 0
+  HFrbdrag: 0
+  HFrbangulardrag: 0
 --- !u!1 &184818692
 GameObject:
   m_ObjectHideFlags: 0
@@ -1912,7 +1930,7 @@ Transform:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 248186729}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 2.448, y: 3.702, z: -0.37}
+  m_LocalPosition: {x: 2.448, y: 3.13, z: -0.37}
   m_LocalScale: {x: 0.9547974, y: 0.95479774, z: 0.95479774}
   m_Children: []
   m_Father: {fileID: 1781792447}
@@ -2258,6 +2276,12 @@ MonoBehaviour:
   isVisible: 0
   isInteractable: 0
   isColliding: 0
+  MyColliders: []
+  HFdynamicfriction: 0
+  HFstaticfriction: 0
+  HFbounciness: 0
+  HFrbdrag: 0
+  HFrbangulardrag: 0
 --- !u!1 &301179428
 GameObject:
   m_ObjectHideFlags: 0
@@ -3752,6 +3776,12 @@ MonoBehaviour:
   isVisible: 0
   isInteractable: 0
   isColliding: 0
+  MyColliders: []
+  HFdynamicfriction: 0
+  HFstaticfriction: 0
+  HFbounciness: 0
+  HFrbdrag: 0
+  HFrbangulardrag: 0
 --- !u!1 &473863830
 GameObject:
   m_ObjectHideFlags: 0
@@ -4382,6 +4412,12 @@ MonoBehaviour:
   isVisible: 0
   isInteractable: 0
   isColliding: 0
+  MyColliders: []
+  HFdynamicfriction: 0
+  HFstaticfriction: 0
+  HFbounciness: 0
+  HFrbdrag: 0
+  HFrbangulardrag: 0
 --- !u!1 &585247871 stripped
 GameObject:
   m_PrefabParentObject: {fileID: 1885319937763980, guid: f3c85a2888bde4483ad75ec2f8ec0a2a,
@@ -4600,6 +4636,12 @@ MonoBehaviour:
   isVisible: 0
   isInteractable: 0
   isColliding: 0
+  MyColliders: []
+  HFdynamicfriction: 0
+  HFstaticfriction: 0
+  HFbounciness: 0
+  HFrbdrag: 0
+  HFrbangulardrag: 0
 --- !u!1 &622028859
 GameObject:
   m_ObjectHideFlags: 0
@@ -4823,27 +4865,27 @@ Prefab:
     - target: {fileID: 114080650210219948, guid: 3a963756b61df410c91df72a73d4efde,
         type: 2}
       propertyPath: SpawnedObjects.Array.size
-      value: 4
+      value: 5
       objectReference: {fileID: 0}
     - target: {fileID: 114080650210219948, guid: 3a963756b61df410c91df72a73d4efde,
         type: 2}
       propertyPath: RequiredObjects.Array.size
-      value: 4
+      value: 5
       objectReference: {fileID: 0}
     - target: {fileID: 114080650210219948, guid: 3a963756b61df410c91df72a73d4efde,
         type: 2}
       propertyPath: UniqueIDsInScene.Array.size
-      value: 27
+      value: 29
       objectReference: {fileID: 0}
     - target: {fileID: 114080650210219948, guid: 3a963756b61df410c91df72a73d4efde,
         type: 2}
       propertyPath: PhysObjectsInScene.Array.size
-      value: 27
+      value: 29
       objectReference: {fileID: 0}
     - target: {fileID: 114080650210219948, guid: 3a963756b61df410c91df72a73d4efde,
         type: 2}
       propertyPath: ReceptaclesInScene.Array.size
-      value: 15
+      value: 17
       objectReference: {fileID: 0}
     - target: {fileID: 4523222967138746, guid: 3a963756b61df410c91df72a73d4efde, type: 2}
       propertyPath: m_LocalPosition.x
@@ -4891,72 +4933,72 @@ Prefab:
         type: 2}
       propertyPath: PhysObjectsInScene.Array.data[0]
       value: 
-      objectReference: {fileID: 1758489909}
+      objectReference: {fileID: 1983419296}
     - target: {fileID: 114080650210219948, guid: 3a963756b61df410c91df72a73d4efde,
         type: 2}
       propertyPath: PhysObjectsInScene.Array.data[1]
       value: 
-      objectReference: {fileID: 1367010272}
+      objectReference: {fileID: 132149841}
     - target: {fileID: 114080650210219948, guid: 3a963756b61df410c91df72a73d4efde,
         type: 2}
       propertyPath: PhysObjectsInScene.Array.data[2]
       value: 
-      objectReference: {fileID: 714682813}
+      objectReference: {fileID: 167557317}
     - target: {fileID: 114080650210219948, guid: 3a963756b61df410c91df72a73d4efde,
         type: 2}
       propertyPath: PhysObjectsInScene.Array.data[3]
       value: 
-      objectReference: {fileID: 167557317}
+      objectReference: {fileID: 179561292}
     - target: {fileID: 114080650210219948, guid: 3a963756b61df410c91df72a73d4efde,
         type: 2}
       propertyPath: PhysObjectsInScene.Array.data[4]
       value: 
-      objectReference: {fileID: 179561292}
+      objectReference: {fileID: 192445674}
     - target: {fileID: 114080650210219948, guid: 3a963756b61df410c91df72a73d4efde,
         type: 2}
       propertyPath: PhysObjectsInScene.Array.data[5]
       value: 
-      objectReference: {fileID: 192445674}
+      objectReference: {fileID: 216586597}
     - target: {fileID: 114080650210219948, guid: 3a963756b61df410c91df72a73d4efde,
         type: 2}
       propertyPath: PhysObjectsInScene.Array.data[6]
       value: 
-      objectReference: {fileID: 216586597}
+      objectReference: {fileID: 291035710}
     - target: {fileID: 114080650210219948, guid: 3a963756b61df410c91df72a73d4efde,
         type: 2}
       propertyPath: PhysObjectsInScene.Array.data[7]
       value: 
-      objectReference: {fileID: 291035710}
+      objectReference: {fileID: 293587309}
     - target: {fileID: 114080650210219948, guid: 3a963756b61df410c91df72a73d4efde,
         type: 2}
       propertyPath: PhysObjectsInScene.Array.data[8]
       value: 
-      objectReference: {fileID: 293587309}
+      objectReference: {fileID: 471891874}
     - target: {fileID: 114080650210219948, guid: 3a963756b61df410c91df72a73d4efde,
         type: 2}
       propertyPath: PhysObjectsInScene.Array.data[9]
       value: 
-      objectReference: {fileID: 471891874}
+      objectReference: {fileID: 516483852}
     - target: {fileID: 114080650210219948, guid: 3a963756b61df410c91df72a73d4efde,
         type: 2}
       propertyPath: PhysObjectsInScene.Array.data[10]
       value: 
-      objectReference: {fileID: 516483852}
+      objectReference: {fileID: 581989084}
     - target: {fileID: 114080650210219948, guid: 3a963756b61df410c91df72a73d4efde,
         type: 2}
       propertyPath: PhysObjectsInScene.Array.data[11]
       value: 
-      objectReference: {fileID: 581989084}
+      objectReference: {fileID: 612935668}
     - target: {fileID: 114080650210219948, guid: 3a963756b61df410c91df72a73d4efde,
         type: 2}
       propertyPath: PhysObjectsInScene.Array.data[12]
       value: 
-      objectReference: {fileID: 612935668}
+      objectReference: {fileID: 699394383}
     - target: {fileID: 114080650210219948, guid: 3a963756b61df410c91df72a73d4efde,
         type: 2}
       propertyPath: PhysObjectsInScene.Array.data[13]
       value: 
-      objectReference: {fileID: 699394383}
+      objectReference: {fileID: 714682813}
     - target: {fileID: 114080650210219948, guid: 3a963756b61df410c91df72a73d4efde,
         type: 2}
       propertyPath: PhysObjectsInScene.Array.data[14]
@@ -5001,81 +5043,81 @@ Prefab:
         type: 2}
       propertyPath: PhysObjectsInScene.Array.data[22]
       value: 
-      objectReference: {fileID: 1387410314}
+      objectReference: {fileID: 1367010272}
     - target: {fileID: 114080650210219948, guid: 3a963756b61df410c91df72a73d4efde,
         type: 2}
       propertyPath: PhysObjectsInScene.Array.data[23]
       value: 
-      objectReference: {fileID: 1402125700}
+      objectReference: {fileID: 1387410314}
     - target: {fileID: 114080650210219948, guid: 3a963756b61df410c91df72a73d4efde,
         type: 2}
       propertyPath: UniqueIDsInScene.Array.data[0]
-      value: ToiletPaperRoll|-01.98|+00.81|+01.70
+      value: HandTowelHolder|-03.73|+01.75|+01.29
       objectReference: {fileID: 0}
     - target: {fileID: 114080650210219948, guid: 3a963756b61df410c91df72a73d4efde,
         type: 2}
       propertyPath: UniqueIDsInScene.Array.data[1]
-      value: ToiletPaperHanger|-00.89|+00.89|+03.91
+      value: TowelHolder|-04.85|+01.51|+02.43
       objectReference: {fileID: 0}
     - target: {fileID: 114080650210219948, guid: 3a963756b61df410c91df72a73d4efde,
         type: 2}
       propertyPath: UniqueIDsInScene.Array.data[2]
-      value: ToiletPaper|-00.99|+01.04|+04.59
-      objectReference: {fileID: 0}
-    - target: {fileID: 114080650210219948, guid: 3a963756b61df410c91df72a73d4efde,
-        type: 2}
-      propertyPath: UniqueIDsInScene.Array.data[3]
       value: CounterTop|-02.18|+00.78|+01.89
       objectReference: {fileID: 0}
     - target: {fileID: 114080650210219948, guid: 3a963756b61df410c91df72a73d4efde,
         type: 2}
-      propertyPath: UniqueIDsInScene.Array.data[4]
+      propertyPath: UniqueIDsInScene.Array.data[3]
       value: Drawer|-01.31|+00.61|+01.89
       objectReference: {fileID: 0}
     - target: {fileID: 114080650210219948, guid: 3a963756b61df410c91df72a73d4efde,
         type: 2}
-      propertyPath: UniqueIDsInScene.Array.data[5]
+      propertyPath: UniqueIDsInScene.Array.data[4]
       value: LightSwitch|-02.17|+01.45|+04.97
       objectReference: {fileID: 0}
     - target: {fileID: 114080650210219948, guid: 3a963756b61df410c91df72a73d4efde,
         type: 2}
-      propertyPath: UniqueIDsInScene.Array.data[6]
+      propertyPath: UniqueIDsInScene.Array.data[5]
       value: Plunger|-01.06|00.00|+04.84
       objectReference: {fileID: 0}
     - target: {fileID: 114080650210219948, guid: 3a963756b61df410c91df72a73d4efde,
         type: 2}
-      propertyPath: UniqueIDsInScene.Array.data[7]
+      propertyPath: UniqueIDsInScene.Array.data[6]
       value: GarbageCan|-01.07|00.00|+03.71
       objectReference: {fileID: 0}
     - target: {fileID: 114080650210219948, guid: 3a963756b61df410c91df72a73d4efde,
         type: 2}
-      propertyPath: UniqueIDsInScene.Array.data[8]
+      propertyPath: UniqueIDsInScene.Array.data[7]
       value: Drawer|-01.31|+00.34|+01.89
       objectReference: {fileID: 0}
     - target: {fileID: 114080650210219948, guid: 3a963756b61df410c91df72a73d4efde,
         type: 2}
-      propertyPath: UniqueIDsInScene.Array.data[9]
+      propertyPath: UniqueIDsInScene.Array.data[8]
       value: ShowerDoor|-04.87|+01.24|+03.95
       objectReference: {fileID: 0}
     - target: {fileID: 114080650210219948, guid: 3a963756b61df410c91df72a73d4efde,
         type: 2}
-      propertyPath: UniqueIDsInScene.Array.data[10]
+      propertyPath: UniqueIDsInScene.Array.data[9]
       value: Sink|-01.42|+00.84|+01.78|SinkBasin
       objectReference: {fileID: 0}
     - target: {fileID: 114080650210219948, guid: 3a963756b61df410c91df72a73d4efde,
         type: 2}
-      propertyPath: UniqueIDsInScene.Array.data[11]
+      propertyPath: UniqueIDsInScene.Array.data[10]
       value: Drawer|-03.03|+00.34|+01.89
       objectReference: {fileID: 0}
     - target: {fileID: 114080650210219948, guid: 3a963756b61df410c91df72a73d4efde,
         type: 2}
-      propertyPath: UniqueIDsInScene.Array.data[12]
+      propertyPath: UniqueIDsInScene.Array.data[11]
       value: Drawer|-02.17|+00.61|+01.89
       objectReference: {fileID: 0}
     - target: {fileID: 114080650210219948, guid: 3a963756b61df410c91df72a73d4efde,
         type: 2}
-      propertyPath: UniqueIDsInScene.Array.data[13]
+      propertyPath: UniqueIDsInScene.Array.data[12]
       value: HandTowelHolder|-00.89|+01.69|+02.02
+      objectReference: {fileID: 0}
+    - target: {fileID: 114080650210219948, guid: 3a963756b61df410c91df72a73d4efde,
+        type: 2}
+      propertyPath: UniqueIDsInScene.Array.data[13]
+      value: ToiletPaper|-00.99|+01.04|+04.59
       objectReference: {fileID: 0}
     - target: {fileID: 114080650210219948, guid: 3a963756b61df410c91df72a73d4efde,
         type: 2}
@@ -5105,12 +5147,12 @@ Prefab:
     - target: {fileID: 114080650210219948, guid: 3a963756b61df410c91df72a73d4efde,
         type: 2}
       propertyPath: UniqueIDsInScene.Array.data[19]
-      value: Towel|-04.74|+01.52|+03.38
+      value: Towel|-04.74|+01.52|+03.36
       objectReference: {fileID: 0}
     - target: {fileID: 114080650210219948, guid: 3a963756b61df410c91df72a73d4efde,
         type: 2}
       propertyPath: UniqueIDsInScene.Array.data[20]
-      value: HandTowel|-00.92|+01.58|+02.02
+      value: HandTowel|-00.92|+01.59|+02.02
       objectReference: {fileID: 0}
     - target: {fileID: 114080650210219948, guid: 3a963756b61df410c91df72a73d4efde,
         type: 2}
@@ -5120,73 +5162,73 @@ Prefab:
     - target: {fileID: 114080650210219948, guid: 3a963756b61df410c91df72a73d4efde,
         type: 2}
       propertyPath: UniqueIDsInScene.Array.data[22]
-      value: ScrubBrush|-01.07|00.00|+04.05
+      value: ToiletPaperHanger|-00.89|+00.89|+03.91
       objectReference: {fileID: 0}
     - target: {fileID: 114080650210219948, guid: 3a963756b61df410c91df72a73d4efde,
         type: 2}
       propertyPath: UniqueIDsInScene.Array.data[23]
-      value: Toilet|-01.34|00.00|+04.46
+      value: ScrubBrush|-01.07|00.00|+04.05
       objectReference: {fileID: 0}
     - target: {fileID: 114080650210219948, guid: 3a963756b61df410c91df72a73d4efde,
         type: 2}
       propertyPath: ReceptaclesInScene.Array.data[0]
       value: 
-      objectReference: {fileID: 1367010272}
+      objectReference: {fileID: 1983419296}
     - target: {fileID: 114080650210219948, guid: 3a963756b61df410c91df72a73d4efde,
         type: 2}
       propertyPath: ReceptaclesInScene.Array.data[1]
       value: 
-      objectReference: {fileID: 167557317}
+      objectReference: {fileID: 132149841}
     - target: {fileID: 114080650210219948, guid: 3a963756b61df410c91df72a73d4efde,
         type: 2}
       propertyPath: ReceptaclesInScene.Array.data[2]
       value: 
-      objectReference: {fileID: 179561292}
+      objectReference: {fileID: 167557317}
     - target: {fileID: 114080650210219948, guid: 3a963756b61df410c91df72a73d4efde,
         type: 2}
       propertyPath: ReceptaclesInScene.Array.data[3]
       value: 
-      objectReference: {fileID: 291035710}
+      objectReference: {fileID: 179561292}
     - target: {fileID: 114080650210219948, guid: 3a963756b61df410c91df72a73d4efde,
         type: 2}
       propertyPath: ReceptaclesInScene.Array.data[4]
       value: 
-      objectReference: {fileID: 293587309}
+      objectReference: {fileID: 291035710}
     - target: {fileID: 114080650210219948, guid: 3a963756b61df410c91df72a73d4efde,
         type: 2}
       propertyPath: ReceptaclesInScene.Array.data[5]
       value: 
-      objectReference: {fileID: 516483852}
+      objectReference: {fileID: 293587309}
     - target: {fileID: 114080650210219948, guid: 3a963756b61df410c91df72a73d4efde,
         type: 2}
       propertyPath: ReceptaclesInScene.Array.data[6]
       value: 
-      objectReference: {fileID: 581989084}
+      objectReference: {fileID: 516483852}
     - target: {fileID: 114080650210219948, guid: 3a963756b61df410c91df72a73d4efde,
         type: 2}
       propertyPath: ReceptaclesInScene.Array.data[7]
       value: 
-      objectReference: {fileID: 612935668}
+      objectReference: {fileID: 581989084}
     - target: {fileID: 114080650210219948, guid: 3a963756b61df410c91df72a73d4efde,
         type: 2}
       propertyPath: ReceptaclesInScene.Array.data[8]
       value: 
-      objectReference: {fileID: 699394383}
+      objectReference: {fileID: 612935668}
     - target: {fileID: 114080650210219948, guid: 3a963756b61df410c91df72a73d4efde,
         type: 2}
       propertyPath: ReceptaclesInScene.Array.data[9]
       value: 
-      objectReference: {fileID: 718710225}
+      objectReference: {fileID: 699394383}
     - target: {fileID: 114080650210219948, guid: 3a963756b61df410c91df72a73d4efde,
         type: 2}
       propertyPath: ReceptaclesInScene.Array.data[10]
       value: 
-      objectReference: {fileID: 821639055}
+      objectReference: {fileID: 718710225}
     - target: {fileID: 114080650210219948, guid: 3a963756b61df410c91df72a73d4efde,
         type: 2}
       propertyPath: ReceptaclesInScene.Array.data[11]
       value: 
-      objectReference: {fileID: 1402125700}
+      objectReference: {fileID: 821639055}
     - target: {fileID: 114080650210219948, guid: 3a963756b61df410c91df72a73d4efde,
         type: 2}
       propertyPath: SpawnedObjects.Array.data[0]
@@ -5206,47 +5248,47 @@ Prefab:
         type: 2}
       propertyPath: PhysObjectsInScene.Array.data[24]
       value: 
-      objectReference: {fileID: 1504152442}
+      objectReference: {fileID: 1402125700}
     - target: {fileID: 114080650210219948, guid: 3a963756b61df410c91df72a73d4efde,
         type: 2}
       propertyPath: PhysObjectsInScene.Array.data[25]
       value: 
-      objectReference: {fileID: 1583008193}
+      objectReference: {fileID: 1504152442}
     - target: {fileID: 114080650210219948, guid: 3a963756b61df410c91df72a73d4efde,
         type: 2}
       propertyPath: PhysObjectsInScene.Array.data[26]
       value: 
-      objectReference: {fileID: 1808699687}
+      objectReference: {fileID: 1583008193}
     - target: {fileID: 114080650210219948, guid: 3a963756b61df410c91df72a73d4efde,
         type: 2}
       propertyPath: UniqueIDsInScene.Array.data[24]
-      value: TowelHolder|-04.85|+01.51|+03.36
+      value: Toilet|-01.34|00.00|+04.46
       objectReference: {fileID: 0}
     - target: {fileID: 114080650210219948, guid: 3a963756b61df410c91df72a73d4efde,
         type: 2}
       propertyPath: UniqueIDsInScene.Array.data[25]
-      value: Bathtub|-04.08|+00.30|+02.48|BathtubBasin
+      value: TowelHolder|-04.85|+01.51|+03.36
       objectReference: {fileID: 0}
     - target: {fileID: 114080650210219948, guid: 3a963756b61df410c91df72a73d4efde,
         type: 2}
       propertyPath: UniqueIDsInScene.Array.data[26]
-      value: Sink|-02.94|+00.84|+01.78|SinkBasin
+      value: Bathtub|-04.08|+00.30|+02.48|BathtubBasin
       objectReference: {fileID: 0}
     - target: {fileID: 114080650210219948, guid: 3a963756b61df410c91df72a73d4efde,
         type: 2}
       propertyPath: ReceptaclesInScene.Array.data[12]
       value: 
-      objectReference: {fileID: 1504152442}
+      objectReference: {fileID: 1367010272}
     - target: {fileID: 114080650210219948, guid: 3a963756b61df410c91df72a73d4efde,
         type: 2}
       propertyPath: ReceptaclesInScene.Array.data[13]
       value: 
-      objectReference: {fileID: 1583008193}
+      objectReference: {fileID: 1402125700}
     - target: {fileID: 114080650210219948, guid: 3a963756b61df410c91df72a73d4efde,
         type: 2}
       propertyPath: ReceptaclesInScene.Array.data[14]
       value: 
-      objectReference: {fileID: 1808699687}
+      objectReference: {fileID: 1504152442}
     - target: {fileID: 114080650210219948, guid: 3a963756b61df410c91df72a73d4efde,
         type: 2}
       propertyPath: SpawnedObjects.Array.data[2]
@@ -5262,6 +5304,46 @@ Prefab:
       propertyPath: SpawnedObjects.Array.data[3]
       value: 
       objectReference: {fileID: 461609623}
+    - target: {fileID: 114080650210219948, guid: 3a963756b61df410c91df72a73d4efde,
+        type: 2}
+      propertyPath: SpawnedObjects.Array.data[4]
+      value: 
+      objectReference: {fileID: 1946123857}
+    - target: {fileID: 114080650210219948, guid: 3a963756b61df410c91df72a73d4efde,
+        type: 2}
+      propertyPath: PhysObjectsInScene.Array.data[27]
+      value: 
+      objectReference: {fileID: 1758489909}
+    - target: {fileID: 114080650210219948, guid: 3a963756b61df410c91df72a73d4efde,
+        type: 2}
+      propertyPath: PhysObjectsInScene.Array.data[28]
+      value: 
+      objectReference: {fileID: 1808699687}
+    - target: {fileID: 114080650210219948, guid: 3a963756b61df410c91df72a73d4efde,
+        type: 2}
+      propertyPath: UniqueIDsInScene.Array.data[27]
+      value: ToiletPaperRoll|-01.98|+00.81|+01.70
+      objectReference: {fileID: 0}
+    - target: {fileID: 114080650210219948, guid: 3a963756b61df410c91df72a73d4efde,
+        type: 2}
+      propertyPath: UniqueIDsInScene.Array.data[28]
+      value: Sink|-02.94|+00.84|+01.78|SinkBasin
+      objectReference: {fileID: 0}
+    - target: {fileID: 114080650210219948, guid: 3a963756b61df410c91df72a73d4efde,
+        type: 2}
+      propertyPath: ReceptaclesInScene.Array.data[15]
+      value: 
+      objectReference: {fileID: 1583008193}
+    - target: {fileID: 114080650210219948, guid: 3a963756b61df410c91df72a73d4efde,
+        type: 2}
+      propertyPath: ReceptaclesInScene.Array.data[16]
+      value: 
+      objectReference: {fileID: 1808699687}
+    - target: {fileID: 114080650210219948, guid: 3a963756b61df410c91df72a73d4efde,
+        type: 2}
+      propertyPath: RequiredObjects.Array.data[4]
+      value: 
+      objectReference: {fileID: 1946123857}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: 3a963756b61df410c91df72a73d4efde, type: 2}
   m_IsPrefabParent: 0
@@ -5915,6 +5997,12 @@ MonoBehaviour:
   isVisible: 0
   isInteractable: 0
   isColliding: 0
+  MyColliders: []
+  HFdynamicfriction: 0
+  HFstaticfriction: 0
+  HFbounciness: 0
+  HFrbdrag: 0
+  HFrbangulardrag: 0
 --- !u!1 &727951476
 GameObject:
   m_ObjectHideFlags: 0
@@ -6195,6 +6283,12 @@ MonoBehaviour:
   isVisible: 0
   isInteractable: 0
   isColliding: 0
+  MyColliders: []
+  HFdynamicfriction: 0
+  HFstaticfriction: 0
+  HFbounciness: 0
+  HFrbdrag: 0
+  HFrbangulardrag: 0
 --- !u!1 &789167044
 GameObject:
   m_ObjectHideFlags: 0
@@ -6943,6 +7037,12 @@ MonoBehaviour:
   isVisible: 0
   isInteractable: 0
   isColliding: 0
+  MyColliders: []
+  HFdynamicfriction: 0
+  HFstaticfriction: 0
+  HFbounciness: 0
+  HFrbdrag: 0
+  HFrbangulardrag: 0
 --- !u!1 &824386522
 GameObject:
   m_ObjectHideFlags: 0
@@ -7504,6 +7604,12 @@ MonoBehaviour:
   isVisible: 0
   isInteractable: 0
   isColliding: 0
+  MyColliders: []
+  HFdynamicfriction: 0
+  HFstaticfriction: 0
+  HFbounciness: 0
+  HFrbdrag: 0
+  HFrbangulardrag: 0
 --- !u!1 &889125802
 GameObject:
   m_ObjectHideFlags: 0
@@ -8500,6 +8606,12 @@ MonoBehaviour:
   isVisible: 0
   isInteractable: 0
   isColliding: 0
+  MyColliders: []
+  HFdynamicfriction: 0
+  HFstaticfriction: 0
+  HFbounciness: 0
+  HFrbdrag: 0
+  HFrbangulardrag: 0
 --- !u!1 &1020859976
 GameObject:
   m_ObjectHideFlags: 0
@@ -10679,6 +10791,12 @@ MonoBehaviour:
   isVisible: 0
   isInteractable: 0
   isColliding: 0
+  MyColliders: []
+  HFdynamicfriction: 0
+  HFstaticfriction: 0
+  HFbounciness: 0
+  HFrbdrag: 0
+  HFrbangulardrag: 0
 --- !u!1001 &1367010270
 Prefab:
   m_ObjectHideFlags: 0
@@ -12275,6 +12393,7 @@ Transform:
   - {fileID: 1367010271}
   - {fileID: 132149840}
   - {fileID: 1983419295}
+  - {fileID: 1946123856}
   m_Father: {fileID: 0}
   m_RootOrder: 3
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -13524,7 +13643,7 @@ Transform:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 1909110885}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 2.49, y: 3.652, z: -2.197}
+  m_LocalPosition: {x: 2.49, y: 3.076, z: -2.545}
   m_LocalScale: {x: 0.9547974, y: 0.95479774, z: 0.95479774}
   m_Children: []
   m_Father: {fileID: 1781792447}
@@ -13817,6 +13936,62 @@ Transform:
   m_Father: {fileID: 759871843}
   m_RootOrder: 6
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1001 &1946123855
+Prefab:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    m_TransformParent: {fileID: 1742097842}
+    m_Modifications:
+    - target: {fileID: 4518222213306420, guid: 1ab461bfece7fad4688cd90f941bb2e5, type: 2}
+      propertyPath: m_LocalPosition.x
+      value: -2.3785357
+      objectReference: {fileID: 0}
+    - target: {fileID: 4518222213306420, guid: 1ab461bfece7fad4688cd90f941bb2e5, type: 2}
+      propertyPath: m_LocalPosition.y
+      value: 0.80759096
+      objectReference: {fileID: 0}
+    - target: {fileID: 4518222213306420, guid: 1ab461bfece7fad4688cd90f941bb2e5, type: 2}
+      propertyPath: m_LocalPosition.z
+      value: 1.5175538
+      objectReference: {fileID: 0}
+    - target: {fileID: 4518222213306420, guid: 1ab461bfece7fad4688cd90f941bb2e5, type: 2}
+      propertyPath: m_LocalRotation.x
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4518222213306420, guid: 1ab461bfece7fad4688cd90f941bb2e5, type: 2}
+      propertyPath: m_LocalRotation.y
+      value: -0.2588186
+      objectReference: {fileID: 0}
+    - target: {fileID: 4518222213306420, guid: 1ab461bfece7fad4688cd90f941bb2e5, type: 2}
+      propertyPath: m_LocalRotation.z
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4518222213306420, guid: 1ab461bfece7fad4688cd90f941bb2e5, type: 2}
+      propertyPath: m_LocalRotation.w
+      value: 0.965926
+      objectReference: {fileID: 0}
+    - target: {fileID: 4518222213306420, guid: 1ab461bfece7fad4688cd90f941bb2e5, type: 2}
+      propertyPath: m_RootOrder
+      value: 18
+      objectReference: {fileID: 0}
+    - target: {fileID: 4518222213306420, guid: 1ab461bfece7fad4688cd90f941bb2e5, type: 2}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: -30.000002
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+  m_ParentPrefab: {fileID: 100100000, guid: 1ab461bfece7fad4688cd90f941bb2e5, type: 2}
+  m_IsPrefabParent: 0
+--- !u!4 &1946123856 stripped
+Transform:
+  m_PrefabParentObject: {fileID: 4518222213306420, guid: 1ab461bfece7fad4688cd90f941bb2e5,
+    type: 2}
+  m_PrefabInternal: {fileID: 1946123855}
+--- !u!1 &1946123857 stripped
+GameObject:
+  m_PrefabParentObject: {fileID: 1438036950507478, guid: 1ab461bfece7fad4688cd90f941bb2e5,
+    type: 2}
+  m_PrefabInternal: {fileID: 1946123855}
 --- !u!1 &1967016954 stripped
 GameObject:
   m_PrefabParentObject: {fileID: 1385958837219524, guid: 62f8fabf487b643f495e78223dbbc769,
@@ -13895,6 +14070,12 @@ Transform:
   m_PrefabParentObject: {fileID: 4306003171049470, guid: 85e260d2e9b70417eb96e6777159293d,
     type: 2}
   m_PrefabInternal: {fileID: 1983419294}
+--- !u!114 &1983419296 stripped
+MonoBehaviour:
+  m_PrefabParentObject: {fileID: 114454421148220398, guid: 85e260d2e9b70417eb96e6777159293d,
+    type: 2}
+  m_PrefabInternal: {fileID: 1983419294}
+  m_Script: {fileID: 11500000, guid: b439f6e4ef5714ee2a3643acf37b7a9d, type: 3}
 --- !u!1 &1983767572
 GameObject:
   m_ObjectHideFlags: 0
@@ -14774,7 +14955,7 @@ Transform:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 2128187606}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -0.47, y: 3.705, z: -0.35}
+  m_LocalPosition: {x: -0.47, y: 3.0869997, z: -0.35}
   m_LocalScale: {x: 0.9547974, y: 0.95479774, z: 0.95479774}
   m_Children: []
   m_Father: {fileID: 1781792447}

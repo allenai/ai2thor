@@ -510,6 +510,8 @@ public class ObjectMetadata
 	public string parentReceptacle;
 	public string[] parentReceptacles;
 
+	public float currentTime;
+
 	public ObjectMetadata() { }
 
 	public ObjectMetadata(SimpleSimObj simObj) {
@@ -618,6 +620,8 @@ public struct MetadataWrapper
 
 	public float[] actionFloatsReturn;
 	public Vector3[] actionVector3sReturn;
+
+	public float currentTime;
 }
 
 
