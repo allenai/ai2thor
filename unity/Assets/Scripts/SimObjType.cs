@@ -246,7 +246,7 @@ public enum SimObjType : int
 	HandTowelHolder = 142,
 	Ladle = 143,
 	WineBottle = 144,
-	
+
 
 
 	
@@ -316,31 +316,32 @@ public static class ReceptacleRestrictions
 		//APPLE
 		{SimObjType.Apple, new List<SimObjType>()
 		{SimObjType.TableTop, SimObjType.CounterTop, SimObjType.Sink, SimObjType.SinkBasin, SimObjType.Pot,
-		 SimObjType.Bowl, SimObjType.Fridge, SimObjType.GarbageCan, SimObjType.Pan, SimObjType.Microwave}},
+		 SimObjType.Bowl, SimObjType.Fridge, SimObjType.GarbageCan, SimObjType.Pan, SimObjType.Microwave, SimObjType.Plate}},
 
 		{SimObjType.AppleSliced, new List<SimObjType>()
 		{SimObjType.TableTop, SimObjType.CounterTop, SimObjType.Sink, SimObjType.SinkBasin, SimObjType.Pot,
-		 SimObjType.Bowl, SimObjType.Fridge, SimObjType.GarbageCan, SimObjType.Pan, SimObjType.Microwave}},
+		 SimObjType.Bowl, SimObjType.Fridge, SimObjType.GarbageCan, SimObjType.Pan, SimObjType.Microwave, SimObjType.Plate}},
 
 		//TOMATO
 		{SimObjType.Tomato, new List<SimObjType>()
 		{SimObjType.TableTop, SimObjType.CounterTop, SimObjType.Sink, SimObjType.SinkBasin, SimObjType.Pot,
-		 SimObjType.Bowl, SimObjType.Fridge, SimObjType.GarbageCan,/*These should be removed after debugging -> SimObjType.Cabinet, SimObjType.Drawer, SimObjType.SinkBasin, SimObjType.Sink, SimObjType.Bathtub, SimObjType.BathtubBasin*/}},
-		
-		{SimObjType.TomatoSliced, new List<SimObjType>()
+		 SimObjType.Bowl, SimObjType.Fridge, SimObjType.GarbageCan, SimObjType.Plate}},
+
+		//EGG
+		{SimObjType.Egg, new List<SimObjType>()
 		{SimObjType.TableTop, SimObjType.CounterTop, SimObjType.Sink, SimObjType.SinkBasin, SimObjType.Pot,
-		 SimObjType.Bowl, SimObjType.Fridge, SimObjType.GarbageCan, SimObjType.Pan, SimObjType.Microwave}},
+		 SimObjType.Bowl, SimObjType.Fridge, SimObjType.GarbageCan, SimObjType.Plate}},
 
 		//BREAD
 		{SimObjType.Bread, new List<SimObjType>()
-		{SimObjType.TableTop, SimObjType.CounterTop, SimObjType.Sink, SimObjType.Fridge, SimObjType.GarbageCan,}},
+		{SimObjType.TableTop, SimObjType.CounterTop, SimObjType.Sink, SimObjType.Fridge, SimObjType.GarbageCan, SimObjType.Plate}},
 
 		{SimObjType.BreadSliced, new List<SimObjType>()
 		{SimObjType.TableTop, SimObjType.CounterTop, SimObjType.Sink, SimObjType.SinkBasin, SimObjType.Fridge, SimObjType.GarbageCan}},
 
 		//LETTUCE
 		{SimObjType.Lettuce, new List<SimObjType>()
-		{SimObjType.TableTop, SimObjType.CounterTop, SimObjType.Sink, SimObjType.SinkBasin, SimObjType.Fridge, SimObjType.GarbageCan}},
+		{SimObjType.TableTop, SimObjType.CounterTop, SimObjType.Sink, SimObjType.SinkBasin, SimObjType.Fridge, SimObjType.GarbageCan, SimObjType.Plate}},
 
 		//KNIFE
 		{SimObjType.Knife, new List<SimObjType>()
@@ -363,6 +364,12 @@ public static class ReceptacleRestrictions
 
 		//BOWL
 		{SimObjType.Bowl, new List<SimObjType>()
+		{SimObjType.TableTop, SimObjType.CounterTop, SimObjType.Sink, SimObjType.SinkBasin, SimObjType.Cabinet, SimObjType.Desk, SimObjType.NightStand, SimObjType.Dresser,
+		 //SimObjType.Fridge, - place bowl with fruit in it in fridge? maybe later
+		}},
+
+		//BOWL
+		{SimObjType.Plate, new List<SimObjType>()
 		{SimObjType.TableTop, SimObjType.CounterTop, SimObjType.Sink, SimObjType.SinkBasin, SimObjType.Cabinet, SimObjType.Desk, SimObjType.NightStand, SimObjType.Dresser,
 		 //SimObjType.Fridge, - place bowl with fruit in it in fridge? maybe later
 		}},
