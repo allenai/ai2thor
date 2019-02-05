@@ -998,7 +998,7 @@ Transform:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 1629771814610700}
-  m_LocalRotation: {x: -0, y: -0.7071066, z: -0, w: 0.70710707}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: -0.59229183, y: 1.630014, z: 0.25901031}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
@@ -1008,7 +1008,7 @@ Transform:
   - {fileID: 4425312385547170}
   m_Father: {fileID: 4962390108823862}
   m_RootOrder: 6
-  m_LocalEulerAnglesHint: {x: 0, y: -90.00001, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!4 &4035522757746940
 Transform:
   m_ObjectHideFlags: 1
@@ -1087,7 +1087,7 @@ Transform:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 1431800841390240}
-  m_LocalRotation: {x: -0, y: 0.70710707, z: -0, w: 0.7071066}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0.5973234, y: 1.630014, z: 0.25901031}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
@@ -1097,7 +1097,7 @@ Transform:
   - {fileID: 4542912402952968}
   m_Father: {fileID: 4962390108823862}
   m_RootOrder: 5
-  m_LocalEulerAnglesHint: {x: 0, y: 90.00001, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!4 &4094851805986986
 Transform:
   m_ObjectHideFlags: 1
@@ -2393,8 +2393,8 @@ BoxCollider:
   m_IsTrigger: 1
   m_Enabled: 1
   serializedVersion: 2
-  m_Size: {x: 0.5012302, y: 0.11423737, z: 0.789121}
-  m_Center: {x: -0.26251063, y: -0.047791377, z: -0.1054397}
+  m_Size: {x: 0.5012302, y: 0.1142373, z: 0.36431888}
+  m_Center: {x: -0.26251063, y: -0.047791343, z: 0.106961414}
 --- !u!65 &65719186205142376
 BoxCollider:
   m_ObjectHideFlags: 1
@@ -2441,8 +2441,8 @@ BoxCollider:
   m_IsTrigger: 1
   m_Enabled: 1
   serializedVersion: 2
-  m_Size: {x: 0.5012302, y: 0.19870779, z: 0.789121}
-  m_Center: {x: -0.26251063, y: -0.0055562076, z: -0.10543969}
+  m_Size: {x: 0.5012302, y: 0.19870779, z: 0.639982}
+  m_Center: {x: -0.26251063, y: -0.0055562076, z: -0.030870056}
 --- !u!114 &114031518464793698
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -2456,7 +2456,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   CurrentlyContains: []
   myParent: {fileID: 1805260879252122}
-  Corners: []
 --- !u!114 &114153673628695462
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -2496,7 +2495,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   CurrentlyContains: []
   myParent: {fileID: 1805260879252122}
-  Corners: []
 --- !u!114 &114370225592101474
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -2559,7 +2557,12 @@ MonoBehaviour:
   isVisible: 0
   isInteractable: 0
   isColliding: 0
-  MySpawnPoints: []
+  MyColliders: []
+  HFdynamicfriction: 0
+  HFstaticfriction: 0
+  HFbounciness: 0
+  HFrbdrag: 0
+  HFrbangulardrag: 0
 --- !u!114 &114463886523855222
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -2573,4 +2576,3 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   CurrentlyContains: []
   myParent: {fileID: 1805260879252122}
-  Corners: []
