@@ -306,7 +306,8 @@ public static class ReceptacleRestrictions
 	public static List<SimObjType> AlwaysPlaceUpright = new List<SimObjType>()
 	{
 		SimObjType.Pot, SimObjType.Pan, SimObjType.Bowl, SimObjType.Plate, SimObjType.Bread, SimObjType.Cup, SimObjType.Mug, SimObjType.Laptop,
-		SimObjType.SaltShaker, SimObjType.PepperShaker, SimObjType.AlarmClock, SimObjType.Box, SimObjType.SoapBottle, SimObjType.SoapBottleFilled,
+		SimObjType.SaltShaker, SimObjType.PepperShaker, SimObjType.AlarmClock, SimObjType.Box, SimObjType.SoapBottle, SimObjType.SoapBottleFilled, SimObjType.Kettle,
+		SimObjType.Glassbottle,
 	};
 
 	//Each sim object type keeps track of what sort of Receptacles it can be placed in
@@ -343,8 +344,13 @@ public static class ReceptacleRestrictions
 		{SimObjType.Lettuce, new List<SimObjType>()
 		{SimObjType.TableTop, SimObjType.CounterTop, SimObjType.Sink, SimObjType.SinkBasin, SimObjType.Fridge, SimObjType.GarbageCan, SimObjType.Plate}},
 
-		//KNIFE
+		//KNIFE - Big chef's knife
 		{SimObjType.Knife, new List<SimObjType>()
+		{SimObjType.TableTop, SimObjType.CounterTop, SimObjType.Sink, SimObjType.SinkBasin, SimObjType.Pot, SimObjType.Pan,
+		SimObjType.Bowl, SimObjType.Drawer}},
+
+		//BUTTER KNIFE
+		{SimObjType.ButterKnife, new List<SimObjType>()
 		{SimObjType.TableTop, SimObjType.CounterTop, SimObjType.Sink, SimObjType.SinkBasin, SimObjType.Pot, SimObjType.Pan,
 		SimObjType.Bowl, SimObjType.Drawer}},
 
@@ -355,6 +361,11 @@ public static class ReceptacleRestrictions
 
 		//SPATULA
 		{SimObjType.Spatula, new List<SimObjType>()
+		{SimObjType.TableTop, SimObjType.CounterTop, SimObjType.Sink, SimObjType.SinkBasin, SimObjType.Pot, SimObjType.Pan,
+		SimObjType.Bowl, SimObjType.Drawer}},
+
+		//LADLE
+		{SimObjType.Ladle, new List<SimObjType>()
 		{SimObjType.TableTop, SimObjType.CounterTop, SimObjType.Sink, SimObjType.SinkBasin, SimObjType.Pot, SimObjType.Pan,
 		SimObjType.Bowl, SimObjType.Drawer}},
 
@@ -377,17 +388,39 @@ public static class ReceptacleRestrictions
 		{SimObjType.Pot, new List<SimObjType>()
 		{SimObjType.TableTop, SimObjType.CounterTop, SimObjType.Sink, SimObjType.SinkBasin, SimObjType.Cabinet, SimObjType.StoveBurner,}},
 
+		//PAN
+		{SimObjType.Pan, new List<SimObjType>()
+		{SimObjType.TableTop, SimObjType.CounterTop, SimObjType.Sink, SimObjType.SinkBasin, SimObjType.Cabinet, SimObjType.StoveBurner,}},
+
+		//KETTLE
+		{SimObjType.Kettle, new List<SimObjType>()
+		{SimObjType.TableTop, SimObjType.CounterTop, SimObjType.Sink, SimObjType.SinkBasin, SimObjType.Cabinet, SimObjType.StoveBurner,}},
+
 		//BOWL
 		{SimObjType.Bowl, new List<SimObjType>()
 		{SimObjType.TableTop, SimObjType.CounterTop, SimObjType.Sink, SimObjType.SinkBasin, SimObjType.Cabinet, SimObjType.Desk, SimObjType.NightStand, SimObjType.Dresser,
-		 //SimObjType.Fridge, - place bowl with fruit in it in fridge? maybe later
+		 //SimObjType.Fridge, - to allow for something like place bowl with fruit in it in fridge? maybe later
 		}},
 
 		//BOWL
 		{SimObjType.Plate, new List<SimObjType>()
 		{SimObjType.TableTop, SimObjType.CounterTop, SimObjType.Sink, SimObjType.SinkBasin, SimObjType.Cabinet, SimObjType.Desk, SimObjType.NightStand, SimObjType.Dresser,
-		 //SimObjType.Fridge, - place bowl with fruit in it in fridge? maybe later
+		 //SimObjType.Fridge, - to allow for something like place plate with fruit in it in fridge? maybe later
 		}},
+
+		//BOTTLE (Glassbottle)
+		{SimObjType.Glassbottle, new List<SimObjType>()
+		{SimObjType.TableTop, SimObjType.CounterTop, SimObjType.Sink, SimObjType.SinkBasin, SimObjType.Cabinet, SimObjType.Desk, SimObjType.NightStand, SimObjType.Dresser, SimObjType.Shelf,
+		}},
+
+		//WINE BOTTLE
+		{SimObjType.WineBottle, new List<SimObjType>()
+		{SimObjType.TableTop, SimObjType.CounterTop, SimObjType.Cabinet, SimObjType.Desk, SimObjType.NightStand, SimObjType.Dresser, SimObjType.Shelf, SimObjType.Fridge,
+		}},
+
+		//PAPER TOWEL
+		{SimObjType.PaperTowelRoll, new List<SimObjType>()
+		{SimObjType.TableTop, SimObjType.CounterTop, SimObjType.Drawer, SimObjType.Cabinet}},
 
 		//SALT SHAKER
 		{SimObjType.SaltShaker, new List<SimObjType>()
@@ -430,6 +463,10 @@ public static class ReceptacleRestrictions
 		//HAND TOWEL- small hand towel
 		{SimObjType.HandTowel, new List<SimObjType>()
 		{SimObjType.HandTowelHolder,}},
+
+		//DISH SPONGE
+		{SimObjType.DishSponge, new List<SimObjType>()
+		{SimObjType.Sink, SimObjType.SinkBasin, SimObjType.CounterTop, SimObjType.Drawer, SimObjType.Cabinet}},
 
 		//LAPTOP
 		{SimObjType.Laptop, new List<SimObjType>()
