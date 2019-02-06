@@ -425,7 +425,7 @@ public static class ReceptacleRestrictions
 
 		//PAPER TOWEL
 		{SimObjType.PaperTowelRoll, new List<SimObjType>()
-		{SimObjType.TableTop, SimObjType.CounterTop, SimObjType.Drawer, SimObjType.Cabinet}},
+		{SimObjType.TableTop, SimObjType.CounterTop, SimObjType.Drawer, SimObjType.Cabinet, SimObjType.Shelf, SimObjType.Cart, SimObjType.Shelf, SimObjType.Toilet}},
 
 		//SALT SHAKER
 		{SimObjType.SaltShaker, new List<SimObjType>()
@@ -471,7 +471,7 @@ public static class ReceptacleRestrictions
 
 		//DISH SPONGE
 		{SimObjType.DishSponge, new List<SimObjType>()
-		{SimObjType.Sink, SimObjType.SinkBasin, SimObjType.CounterTop, SimObjType.Drawer, SimObjType.Cabinet}},
+		{SimObjType.Sink, SimObjType.SinkBasin, SimObjType.CounterTop, SimObjType.Drawer, SimObjType.Cabinet, SimObjType.Bathtub, SimObjType.Cart, SimObjType.Cabinet, SimObjType.Toilet}},
 
 		//LAPTOP
 		{SimObjType.Laptop, new List<SimObjType>()
