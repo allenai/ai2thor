@@ -328,6 +328,11 @@ public static class ReceptacleRestrictions
 		{SimObjType.TableTop, SimObjType.CounterTop, SimObjType.Sink, SimObjType.SinkBasin, SimObjType.Pot,
 		 SimObjType.Bowl, SimObjType.Fridge, SimObjType.GarbageCan, SimObjType.Plate}},
 
+		//POTATO
+		{SimObjType.Potato, new List<SimObjType>()
+		{SimObjType.TableTop, SimObjType.CounterTop, SimObjType.Sink, SimObjType.SinkBasin, SimObjType.Pot,
+		 SimObjType.Bowl, SimObjType.Fridge, SimObjType.GarbageCan, SimObjType.Plate}},
+
 		//EGG
 		{SimObjType.Egg, new List<SimObjType>()
 		{SimObjType.TableTop, SimObjType.CounterTop, SimObjType.Sink, SimObjType.SinkBasin, SimObjType.Pot,
@@ -521,7 +526,7 @@ public static class ReceptacleRestrictions
 
 		//BOOK - Need to alter this later so that Open Books are no longer their own prefabs, combine into one once we have state change
 		{SimObjType.Book, new List<SimObjType>()
-		{SimObjType.Sofa, SimObjType.ArmChair, SimObjType.Bed, SimObjType.Desk, SimObjType.TableTop, SimObjType.Box, SimObjType.Drawer, SimObjType.Ottoman, SimObjType.Shelf, SimObjType.NightStand}},
+		{SimObjType.Sofa, SimObjType.ArmChair, SimObjType.Bed, SimObjType.Desk, SimObjType.TableTop, SimObjType.CounterTop, SimObjType.Box, SimObjType.Drawer, SimObjType.Ottoman, SimObjType.Shelf, SimObjType.NightStand}},
 	};
 
 }
