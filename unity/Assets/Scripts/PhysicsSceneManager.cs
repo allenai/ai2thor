@@ -245,12 +245,14 @@ public class PhysicsSceneManager : MonoBehaviour
 						{
 							if(ReceptacleRestrictions.SpawnOnlyOutsideReceptacles.Contains(sop.ObjType) && TypesOfObjectsPrefabIsAllowedToSpawnIn.Contains(sop.ObjType))
 							{
+								if(sop.PrimaryProperty != SimObjPrimaryProperty.CanPickup) // don't random spawn in objects that are pickupable to prevent Egg spawning in Plate with the plate spawned in Cabinet....
 								AllowedToSpawnInAndExistsInScene.Add(sop);
 							}
 						}
 
 						else if(TypesOfObjectsPrefabIsAllowedToSpawnIn.Contains(sop.ObjType))
 						{
+							if(sop.PrimaryProperty != SimObjPrimaryProperty.CanPickup) // don't random spawn in objects that are pickupable to prevent Egg spawning in Plate with the plate spawned in Cabinet....
 							//updated list of valid receptacles in scene
 							AllowedToSpawnInAndExistsInScene.Add(sop);
 						}

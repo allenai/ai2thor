@@ -307,7 +307,7 @@ public static class ReceptacleRestrictions
 	{
 		SimObjType.Pot, SimObjType.Pan, SimObjType.Bowl, SimObjType.Plate, SimObjType.Bread, SimObjType.Cup, SimObjType.Mug, SimObjType.Laptop,
 		SimObjType.SaltShaker, SimObjType.PepperShaker, SimObjType.AlarmClock, SimObjType.Box, SimObjType.SoapBottle, SimObjType.SoapBottleFilled, SimObjType.Kettle,
-		SimObjType.Glassbottle,
+		SimObjType.Glassbottle, SimObjType.CreditCard, SimObjType.RemoteControl,
 	};
 
 	//Each sim object type keeps track of what sort of Receptacles it can be placed in
@@ -490,6 +490,14 @@ public static class ReceptacleRestrictions
 		//BASKETBALL
 		{SimObjType.BasketBall, new List<SimObjType>()
 		{SimObjType.Sofa, SimObjType.ArmChair, SimObjType.Bed, SimObjType.Desk, SimObjType.TableTop, SimObjType.Box}},
+
+		//REMOTE CONTROL
+		{SimObjType.RemoteControl, new List<SimObjType>()
+		{SimObjType.Sofa, SimObjType.ArmChair, SimObjType.Bed, SimObjType.Desk, SimObjType.TableTop, SimObjType.Box, SimObjType.Drawer, SimObjType.Ottoman}},
+
+		//CREDIT CARD
+		{SimObjType.CreditCard, new List<SimObjType>()
+		{SimObjType.Sofa, SimObjType.ArmChair, SimObjType.Bed, SimObjType.Desk, SimObjType.TableTop, SimObjType.Box, SimObjType.Drawer, SimObjType.Ottoman}},
 
 	};
 
