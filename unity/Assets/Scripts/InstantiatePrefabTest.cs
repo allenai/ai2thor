@@ -377,10 +377,15 @@ public class InstantiatePrefabTest : MonoBehaviour
 
                 //now check the corner count for either the 4 lowest corners, or all 8 corners depending on Corner Count
                 //sort corners so that first four corners are the corners closest to the spawn point we are checking against
+
+                //XXX - Found a bug for some Pots that makes the bottom four corners get sorted incorrectly... not sure why
+                //this leads to them being unplacable - It's strange, if we scale the pot down to smaller it totally works fine...
+                //probably because it becomes so long that the closest four points are no longer the only ones on the bottom?
                 SpawnCorners.Sort(delegate(Vector3 p1, Vector3 p2)
                 {
                     //sort by making a plane where rsp.point is, find the four corners closest to that point
                     //return rspPlane.GetDistanceToPoint(p1).CompareTo(rspPlane.GetDistanceToPoint(p2));
+                    //^ this ended up not working because if something is placed at an angle this no longer makes sense...
 
                     return Vector3.Distance(p1, rsp.Point).CompareTo(Vector3.Distance(p2, rsp.Point));
 

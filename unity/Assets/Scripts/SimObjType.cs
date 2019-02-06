@@ -346,7 +346,22 @@ public static class ReceptacleRestrictions
 		//KNIFE
 		{SimObjType.Knife, new List<SimObjType>()
 		{SimObjType.TableTop, SimObjType.CounterTop, SimObjType.Sink, SimObjType.SinkBasin, SimObjType.Pot, SimObjType.Pan,
-		SimObjType.Bowl, SimObjType.GarbageCan, SimObjType.Drawer}},
+		SimObjType.Bowl, SimObjType.Drawer}},
+
+		//FORK
+		{SimObjType.Fork, new List<SimObjType>()
+		{SimObjType.TableTop, SimObjType.CounterTop, SimObjType.Sink, SimObjType.SinkBasin, SimObjType.Pot, SimObjType.Pan,
+		SimObjType.Bowl, SimObjType.Drawer, SimObjType.Plate}},
+
+		//SPATULA
+		{SimObjType.Spatula, new List<SimObjType>()
+		{SimObjType.TableTop, SimObjType.CounterTop, SimObjType.Sink, SimObjType.SinkBasin, SimObjType.Pot, SimObjType.Pan,
+		SimObjType.Bowl, SimObjType.Drawer}},
+
+		//SPOON
+		{SimObjType.Spoon, new List<SimObjType>()
+		{SimObjType.TableTop, SimObjType.CounterTop, SimObjType.Sink, SimObjType.SinkBasin, SimObjType.Pot, SimObjType.Pan,
+		SimObjType.Bowl, SimObjType.Drawer, SimObjType.Plate}},
 
 		//CUP
 		{SimObjType.Cup, new List<SimObjType>()

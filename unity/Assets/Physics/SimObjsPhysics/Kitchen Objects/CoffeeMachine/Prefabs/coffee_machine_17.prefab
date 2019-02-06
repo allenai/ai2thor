@@ -385,6 +385,22 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
+--- !u!1 &1911690585022572
+GameObject:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  serializedVersion: 5
+  m_Component:
+  - component: {fileID: 4884062938374888}
+  - component: {fileID: 65535007583383598}
+  m_Layer: 8
+  m_Name: Col
+  m_TagString: SimObjPhysics
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
 --- !u!1 &1974858516850082
 GameObject:
   m_ObjectHideFlags: 1
@@ -411,7 +427,7 @@ GameObject:
   - component: {fileID: 4960561216877604}
   - component: {fileID: 65840958832251102}
   m_Layer: 8
-  m_Name: Col
+  m_Name: Col (4)
   m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -453,10 +469,11 @@ Transform:
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
-  - {fileID: 4960561216877604}
+  - {fileID: 4884062938374888}
   - {fileID: 4799517611597656}
   - {fileID: 4039812352679870}
   - {fileID: 4540285863539334}
+  - {fileID: 4960561216877604}
   m_Father: {fileID: 4853944538893706}
   m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -717,8 +734,8 @@ Transform:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 1690051367405634}
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 5.729, y: -0.344, z: 3.242}
+  m_LocalRotation: {x: -0, y: -0.33943978, z: -0, w: 0.9406278}
+  m_LocalPosition: {x: 1.305, y: 0.9, z: -0.741}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 4191796446995514}
@@ -730,7 +747,7 @@ Transform:
   - {fileID: 4728225207950236}
   m_Father: {fileID: 0}
   m_RootOrder: 0
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: -39.686, z: 0}
 --- !u!4 &4879371413427334
 Transform:
   m_ObjectHideFlags: 1
@@ -744,6 +761,19 @@ Transform:
   m_Father: {fileID: 4987696617297220}
   m_RootOrder: 7
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!4 &4884062938374888
+Transform:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1911690585022572}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 4174254267986444}
+  m_RootOrder: 0
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!4 &4960561216877604
 Transform:
   m_ObjectHideFlags: 1
@@ -755,7 +785,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 4174254267986444}
-  m_RootOrder: 0
+  m_RootOrder: 4
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!4 &4987696617297220
 Transform:
@@ -890,6 +920,18 @@ BoxCollider:
   serializedVersion: 2
   m_Size: {x: 0.24187754, y: 0.1305542, z: 0.22990054}
   m_Center: {x: 0, y: 0.37452483, z: -0.046909437}
+--- !u!65 &65535007583383598
+BoxCollider:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1911690585022572}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Size: {x: 0.39813083, y: 0.43980193, z: 0.22990054}
+  m_Center: {x: 0, y: 0.21990097, z: -0.04690942}
 --- !u!65 &65539293557008524
 BoxCollider:
   m_ObjectHideFlags: 1
@@ -948,8 +990,8 @@ BoxCollider:
   m_IsTrigger: 0
   m_Enabled: 1
   serializedVersion: 2
-  m_Size: {x: 0.39813083, y: 0.43980193, z: 0.22990054}
-  m_Center: {x: 0, y: 0.21990097, z: -0.04690942}
+  m_Size: {x: 0.28177592, y: 0.042058945, z: 0.32700673}
+  m_Center: {x: -0.00008396729, y: 0.021029472, z: 0.03904337}
 --- !u!65 &65957149654652244
 BoxCollider:
   m_ObjectHideFlags: 1
@@ -986,7 +1028,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b439f6e4ef5714ee2a3643acf37b7a9d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  uniqueID: CoffeeMachine|+05.73|-00.34|+03.24
+  uniqueID: CoffeeMachine|+01.31|+00.90|-00.74
   Type: 15
   PrimaryProperty: 1
   SecondaryProperties: 170000000700000034000000
@@ -1007,6 +1049,12 @@ MonoBehaviour:
   isVisible: 0
   isInteractable: 0
   isColliding: 0
+  MyColliders: []
+  HFdynamicfriction: 0
+  HFstaticfriction: 0
+  HFbounciness: 0
+  HFrbdrag: 0
+  HFrbangulardrag: 0
 --- !u!114 &114423177206428584
 MonoBehaviour:
   m_ObjectHideFlags: 1
