@@ -493,12 +493,35 @@ public static class ReceptacleRestrictions
 
 		//REMOTE CONTROL
 		{SimObjType.RemoteControl, new List<SimObjType>()
-		{SimObjType.Sofa, SimObjType.ArmChair, SimObjType.Bed, SimObjType.Desk, SimObjType.TableTop, SimObjType.Box, SimObjType.Drawer, SimObjType.Ottoman}},
+		{SimObjType.Sofa, SimObjType.ArmChair, SimObjType.Bed, SimObjType.Desk, SimObjType.TableTop, SimObjType.Box, SimObjType.Drawer, SimObjType.Ottoman, SimObjType.Dresser}},
 
 		//CREDIT CARD
 		{SimObjType.CreditCard, new List<SimObjType>()
-		{SimObjType.Sofa, SimObjType.ArmChair, SimObjType.Bed, SimObjType.Desk, SimObjType.TableTop, SimObjType.Box, SimObjType.Drawer, SimObjType.Ottoman}},
+		{SimObjType.Sofa, SimObjType.ArmChair, SimObjType.Bed, SimObjType.Desk, SimObjType.TableTop, SimObjType.Box, SimObjType.Drawer, SimObjType.Ottoman, SimObjType.Dresser, SimObjType.NightStand}},
 
+		//CD
+		{SimObjType.CD, new List<SimObjType>()
+		{SimObjType.Desk, SimObjType.TableTop, SimObjType.Box, SimObjType.Drawer,SimObjType.Shelf, SimObjType.Dresser}},
+
+		//CELL PHONE
+		{SimObjType.CellPhone, new List<SimObjType>()
+		{SimObjType.Sofa, SimObjType.ArmChair, SimObjType.Bed, SimObjType.Desk, SimObjType.TableTop, SimObjType.Box, SimObjType.Drawer, SimObjType.Ottoman, SimObjType.Shelf, SimObjType.Dresser, SimObjType.NightStand}},
+
+		//PEN
+		{SimObjType.Pen, new List<SimObjType>()
+		{SimObjType.Desk, SimObjType.TableTop, SimObjType.Box, SimObjType.Drawer, SimObjType.Shelf, SimObjType.Dresser, SimObjType.NightStand}},
+
+		//KEYCHAIN
+		{SimObjType.KeyChain, new List<SimObjType>()
+		{SimObjType.Desk, SimObjType.TableTop, SimObjType.Box, SimObjType.Drawer, SimObjType.Shelf, SimObjType.Dresser, SimObjType.NightStand}},
+
+		//PENCIL
+		{SimObjType.Pencil, new List<SimObjType>()
+		{SimObjType.Desk, SimObjType.TableTop, SimObjType.Box, SimObjType.Drawer, SimObjType.Shelf, SimObjType.Dresser, SimObjType.NightStand}},
+
+		//BOOK - Need to alter this later so that Open Books are no longer their own prefabs, combine into one once we have state change
+		{SimObjType.Book, new List<SimObjType>()
+		{SimObjType.Sofa, SimObjType.ArmChair, SimObjType.Bed, SimObjType.Desk, SimObjType.TableTop, SimObjType.Box, SimObjType.Drawer, SimObjType.Ottoman, SimObjType.Shelf, SimObjType.NightStand}},
 	};
 
 }
