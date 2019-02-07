@@ -518,7 +518,7 @@ public static class ReceptacleRestrictions
 
 		//KEYCHAIN
 		{SimObjType.KeyChain, new List<SimObjType>()
-		{SimObjType.Desk, SimObjType.TableTop, SimObjType.Box, SimObjType.Drawer, SimObjType.Shelf, SimObjType.Dresser, SimObjType.NightStand}},
+		{SimObjType.Desk, SimObjType.TableTop, SimObjType.Box, SimObjType.Drawer, SimObjType.Shelf, SimObjType.Dresser, SimObjType.NightStand, SimObjType.ArmChair, SimObjType.Sofa}},
 
 		//PENCIL
 		{SimObjType.Pencil, new List<SimObjType>()
