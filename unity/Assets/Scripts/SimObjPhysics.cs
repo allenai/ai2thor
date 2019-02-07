@@ -531,26 +531,27 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 					//objs.Add(rtb.GetComponent<Contains>().CurrentlyContainedUniqueIDs()); 
 				}
 
-				#if UNITY_EDITOR
+				/////UNCOMMENT BELOW if you want a list of what receptacles contian what objects on start
+				// #if UNITY_EDITOR
 
-				if (objs.Count != 0)
-				{
-					//print the objs for now just to check in editor
-					string result = UniqueID + " contains: ";
+				// if (objs.Count != 0)
+				// {
+				// 	//print the objs for now just to check in editor
+				// 	string result = UniqueID + " contains: ";
 
-					foreach (string s in objs)
-					{
-						result += s + ", ";
-					}
+				// 	foreach (string s in objs)
+				// 	{
+				// 		result += s + ", ";
+				// 	}
 
-					Debug.Log(result);
-				}
+				// 	Debug.Log(result);
+				// }
 
-				else
-				{
-					Debug.Log(UniqueID + " is empty");
-				}
-				#endif
+				// else
+				// {
+				// 	Debug.Log(UniqueID + " is empty");
+				// }
+				// #endif
 				
 				return objs;
 			}

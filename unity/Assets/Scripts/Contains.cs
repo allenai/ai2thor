@@ -136,7 +136,7 @@ public class Contains : MonoBehaviour
 		//remove objects if they leave the ReceptacleTriggerBox
 		if (other.GetComponentInParent<SimObjPhysics>())
 		{
-			print(other.GetComponentInParent<SimObjPhysics>().transform.name);
+			//print(other.GetComponentInParent<SimObjPhysics>().transform.name);
 			CurrentlyContains.Remove(other.GetComponentInParent<SimObjPhysics>());
 		}
 	}
