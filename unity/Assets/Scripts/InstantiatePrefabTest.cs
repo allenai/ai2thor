@@ -259,6 +259,8 @@ public class InstantiatePrefabTest : MonoBehaviour
 
         //set 360 degree increment to only check one angle, set smaller increments to check more angles when trying to place (warning THIS WILL GET SLOWER)
         int HowManyRotationsToCheck = 360/degreeIncrement;
+        Plane BoxBottom;
+        float DistanceFromBoxBottomTosop;
 
         List<RotationAndDistanceValues> ToCheck = new List<RotationAndDistanceValues>(); //we'll check 8 rotations for now, replace the 45 later if we want to adjust the amount of checks
 
@@ -274,8 +276,8 @@ public class InstantiatePrefabTest : MonoBehaviour
                 //ToCheck[i].rotation = sop.transform.rotation;
                 
                 Vector3 Offset = oabb.ClosestPoint(oabb.transform.TransformPoint(oabb.center) + -rsp.ReceptacleBox.transform.up * 10);
-                Plane BoxBottom = new Plane(rsp.ReceptacleBox.transform.up, Offset);
-                float DistanceFromBoxBottomTosop = Math.Abs(BoxBottom.GetDistanceToPoint(sop.transform.position));
+                BoxBottom = new Plane(rsp.ReceptacleBox.transform.up, Offset);
+                DistanceFromBoxBottomTosop = Math.Abs(BoxBottom.GetDistanceToPoint(sop.transform.position));
 
                 ToCheck.Add(new RotationAndDistanceValues(DistanceFromBoxBottomTosop, sop.transform.rotation));
             }
@@ -285,8 +287,8 @@ public class InstantiatePrefabTest : MonoBehaviour
                 //no rotate change just yet, check the first position
 
                 Vector3 Offset = oabb.ClosestPoint(oabb.transform.TransformPoint(oabb.center) + -rsp.ReceptacleBox.transform.up * 10); //was using rsp.point
-                Plane BoxBottom = new Plane(rsp.ReceptacleBox.transform.up, Offset);
-                float DistanceFromBoxBottomTosop = BoxBottom.GetDistanceToPoint(sop.transform.position);
+                BoxBottom = new Plane(rsp.ReceptacleBox.transform.up, Offset);
+                DistanceFromBoxBottomTosop = BoxBottom.GetDistanceToPoint(sop.transform.position);
 
                 ToCheck.Add(new RotationAndDistanceValues(DistanceFromBoxBottomTosop, sop.transform.rotation));
             }
@@ -314,8 +316,8 @@ public class InstantiatePrefabTest : MonoBehaviour
                         sop.transform.Rotate(new Vector3(degreeIncrement, 0, 0), Space.Self);
 
                         Vector3 Offset = oabb.ClosestPoint(oabb.transform.TransformPoint(oabb.center) + -rsp.ReceptacleBox.transform.up * 10);
-                        Plane BoxBottom = new Plane(rsp.ReceptacleBox.transform.up, Offset);
-                        float DistanceFromBoxBottomTosop = Math.Abs(BoxBottom.GetDistanceToPoint(sop.transform.position));
+                        BoxBottom = new Plane(rsp.ReceptacleBox.transform.up, Offset);
+                        DistanceFromBoxBottomTosop = Math.Abs(BoxBottom.GetDistanceToPoint(sop.transform.position));
 
                         ToCheck.Add(new RotationAndDistanceValues(DistanceFromBoxBottomTosop, sop.transform.rotation));
                     }
@@ -328,8 +330,8 @@ public class InstantiatePrefabTest : MonoBehaviour
                         sop.transform.Rotate(new Vector3(0, 0, degreeIncrement), Space.Self);
 
                         Vector3 Offset = oabb.ClosestPoint(oabb.transform.TransformPoint(oabb.center) + -rsp.ReceptacleBox.transform.up * 10);
-                        Plane BoxBottom = new Plane(rsp.ReceptacleBox.transform.up, Offset);
-                        float DistanceFromBoxBottomTosop = Math.Abs(BoxBottom.GetDistanceToPoint(sop.transform.position));
+                        BoxBottom = new Plane(rsp.ReceptacleBox.transform.up, Offset);
+                        DistanceFromBoxBottomTosop = Math.Abs(BoxBottom.GetDistanceToPoint(sop.transform.position));
 
                         ToCheck.Add(new RotationAndDistanceValues(DistanceFromBoxBottomTosop, sop.transform.rotation));
                     }
