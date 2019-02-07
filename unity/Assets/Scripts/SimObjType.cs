@@ -307,7 +307,7 @@ public static class ReceptacleRestrictions
 	{
 		SimObjType.Pot, SimObjType.Pan, SimObjType.Bowl, SimObjType.Plate, SimObjType.Bread, SimObjType.Cup, SimObjType.Mug, SimObjType.Laptop,
 		SimObjType.SaltShaker, SimObjType.PepperShaker, SimObjType.AlarmClock, SimObjType.Box, SimObjType.SoapBottle, SimObjType.SoapBottleFilled, SimObjType.Kettle,
-		SimObjType.Glassbottle, SimObjType.CreditCard, SimObjType.RemoteControl,
+		SimObjType.Glassbottle, SimObjType.CreditCard, SimObjType.RemoteControl, SimObjType.Candle, SimObjType.SprayBottle,
 	};
 
 	//Each sim object type keeps track of what sort of Receptacles it can be placed in
@@ -452,6 +452,27 @@ public static class ReceptacleRestrictions
 		{SimObjType.SoapBottleFilled, new List <SimObjType>()
 		{SimObjType.TableTop, SimObjType.CounterTop, SimObjType.Cabinet, SimObjType.Drawer, SimObjType.Cart,
 		 SimObjType.GarbageCan, SimObjType.Shelf, SimObjType.Dresser, SimObjType.NightStand, SimObjType.Toilet,
+		 SimObjType.Bathtub,
+		}},
+
+		//SOAP BAR
+		{SimObjType.SoapBar, new List <SimObjType>()
+		{SimObjType.TableTop, SimObjType.CounterTop, SimObjType.Drawer, SimObjType.Cart,
+		 SimObjType.Shelf, SimObjType.Dresser, SimObjType.NightStand, SimObjType.Toilet,
+		 SimObjType.Bathtub,
+		}},
+
+		//SPRAY BOTTLE
+		{SimObjType.SprayBottle, new List <SimObjType>()
+		{SimObjType.TableTop, SimObjType.CounterTop, SimObjType.Cabinet, SimObjType.Drawer, SimObjType.Cart,
+		 SimObjType.Shelf, SimObjType.Dresser, SimObjType.NightStand, SimObjType.Toilet,
+		 SimObjType.Bathtub,
+		}},
+
+		//CANDLE
+		{SimObjType.Candle, new List <SimObjType>()
+		{SimObjType.TableTop, SimObjType.CounterTop, SimObjType.Cabinet, SimObjType.Drawer, SimObjType.Cart,
+		 SimObjType.Shelf, SimObjType.Dresser, SimObjType.NightStand, SimObjType.Toilet,
 		 SimObjType.Bathtub,
 		}},
 
