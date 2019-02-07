@@ -582,6 +582,16 @@ public static class ReceptacleRestrictions
 		//BASEBALL BAT
 		{SimObjType.BaseballBat, new List<SimObjType>()
 		{SimObjType.TableTop, SimObjType.Bed}}, ///place on floor? 
+
+		//TISSUE BOX
+		{SimObjType.TissueBox, new List<SimObjType>()
+		{SimObjType.Desk, SimObjType.TableTop, SimObjType.Drawer, SimObjType.Shelf, SimObjType.Dresser, SimObjType.NightStand, SimObjType.CounterTop}},
+
+		//CLOTH
+		{SimObjType.Cloth, new List<SimObjType>()
+		{SimObjType.Desk, SimObjType.TableTop, SimObjType.Drawer, SimObjType.Shelf, SimObjType.Dresser, SimObjType.NightStand,SimObjType.Bed, SimObjType.Toilet,
+		 SimObjType.Bathtub, SimObjType.BathtubBasin, SimObjType.Cart, SimObjType.Cabinet}},
+
 	};
 
 }
