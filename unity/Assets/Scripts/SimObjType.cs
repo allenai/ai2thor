@@ -292,7 +292,7 @@ public static class ReceptacleRestrictions
 	//this elminiates the need for visibly seeing the bottommost point on the object, which would restrict the valid placement positions greatly due to these objects being viewed at extreme angles
 	public static List<SimObjType> ReturnAllPoints = new List<SimObjType>()
 	{
-		SimObjType.Pot, SimObjType.Pan, SimObjType.Bowl, SimObjType.GarbageCan, SimObjType.Plate, SimObjType.Box, SimObjType.Drawer
+		SimObjType.Pot, SimObjType.Pan, SimObjType.Bowl, SimObjType.GarbageCan, SimObjType.Plate, SimObjType.Box, SimObjType.Drawer, SimObjType.Mug, SimObjType.Cup,
 	};
 
 	//These receptacle sim objects MUST be in the open state before objects can be placed in them
@@ -514,15 +514,15 @@ public static class ReceptacleRestrictions
 
 		//PEN
 		{SimObjType.Pen, new List<SimObjType>()
-		{SimObjType.Desk, SimObjType.TableTop, SimObjType.Box, SimObjType.Drawer, SimObjType.Shelf, SimObjType.Dresser, SimObjType.NightStand}},
+		{SimObjType.Desk, SimObjType.TableTop, SimObjType.Box, SimObjType.Drawer, SimObjType.Shelf, SimObjType.Dresser, SimObjType.NightStand, SimObjType.Cup, SimObjType.Mug}},
+
+		//PENCIL
+		{SimObjType.Pencil, new List<SimObjType>()
+		{SimObjType.Desk, SimObjType.TableTop, SimObjType.Box, SimObjType.Drawer, SimObjType.Shelf, SimObjType.Dresser, SimObjType.NightStand, SimObjType.Cup, SimObjType.Mug}},
 
 		//KEYCHAIN
 		{SimObjType.KeyChain, new List<SimObjType>()
 		{SimObjType.Desk, SimObjType.TableTop, SimObjType.Box, SimObjType.Drawer, SimObjType.Shelf, SimObjType.Dresser, SimObjType.NightStand, SimObjType.ArmChair, SimObjType.Sofa}},
-
-		//PENCIL
-		{SimObjType.Pencil, new List<SimObjType>()
-		{SimObjType.Desk, SimObjType.TableTop, SimObjType.Box, SimObjType.Drawer, SimObjType.Shelf, SimObjType.Dresser, SimObjType.NightStand}},
 
 		//BOOK - Need to alter this later so that Open Books are no longer their own prefabs, combine into one once we have state change
 		{SimObjType.Book, new List<SimObjType>()
