@@ -294,6 +294,7 @@ public class InstantiatePrefabTest : MonoBehaviour
             oabb.enabled = false;
         }
 
+        //continue to check rotations about the X and Z axes if the object doesn't have to be placed upright
         if(!AlwaysPlaceUpright)
         {
             //ok now try if the X and Z local axis are rotated if it'll fit
@@ -491,9 +492,10 @@ public class InstantiatePrefabTest : MonoBehaviour
 			layermask = (1 << 8) | (1 << 10);
 		}
 
-        simObj.transform.Find("Colliders").gameObject.SetActive(false);
+        //simObj.transform.Find("Colliders").gameObject.SetActive(false);
         Collider[] objcols;
-        //make sure ALL colliders of the simobj are turned off for this check
+        //make sure ALL colliders of the simobj are turned off for this check - can't just turn off the Colliders child object because of objects like
+        //laptops which have multiple sets of colliders, with one part moving...
         objcols = simObj.transform.GetComponentsInChildren<Collider>();
         foreach (Collider col in objcols)
         {
@@ -559,8 +561,14 @@ public class InstantiatePrefabTest : MonoBehaviour
 		{
             simObj.transform.position = originalPos;
             simObj.transform.rotation = originalRot;
-            simObj.transform.Find("Colliders").gameObject.SetActive(true);
+            //simObj.transform.Find("Colliders").gameObject.SetActive(true);
             //print("checkspawnarea failed");
+            foreach (Collider col in objcols)
+            {
+                if(col.gameObject.name != "BoundingBox")
+                col.enabled = true;
+            }
+
 			return false;
 		}
 
@@ -568,7 +576,7 @@ public class InstantiatePrefabTest : MonoBehaviour
         simObj.transform.rotation = originalRot;
 
         //turn back on all the colliders now
-        simObj.transform.Find("Colliders").gameObject.SetActive(true);
+        //simObj.transform.Find("Colliders").gameObject.SetActive(true);
         foreach (Collider col in objcols)
         {
             if(col.gameObject.name != "BoundingBox")

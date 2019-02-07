@@ -307,7 +307,7 @@ public static class ReceptacleRestrictions
 	{
 		SimObjType.Pot, SimObjType.Pan, SimObjType.Bowl, SimObjType.Plate, SimObjType.Bread, SimObjType.Cup, SimObjType.Mug, SimObjType.Laptop,
 		SimObjType.SaltShaker, SimObjType.PepperShaker, SimObjType.AlarmClock, SimObjType.Box, SimObjType.SoapBottle, SimObjType.SoapBottleFilled, SimObjType.Kettle,
-		SimObjType.Glassbottle, SimObjType.CreditCard, SimObjType.RemoteControl, SimObjType.Candle, SimObjType.SprayBottle,
+		SimObjType.Glassbottle, SimObjType.CreditCard, SimObjType.RemoteControl, SimObjType.Candle, SimObjType.SprayBottle, SimObjType.Statue, SimObjType.Vase,
 	};
 
 	//Each sim object type keeps track of what sort of Receptacles it can be placed in
@@ -521,13 +521,23 @@ public static class ReceptacleRestrictions
 		{SimObjType.RemoteControl, new List<SimObjType>()
 		{SimObjType.Sofa, SimObjType.ArmChair, SimObjType.Bed, SimObjType.Desk, SimObjType.TableTop, SimObjType.Box, SimObjType.Drawer, SimObjType.Ottoman, SimObjType.Dresser}},
 
+		//NEWSPAPER
+		{SimObjType.Newspaper, new List<SimObjType>()
+		{SimObjType.Sofa, SimObjType.ArmChair, SimObjType.Bed, SimObjType.Desk, SimObjType.TableTop, SimObjType.Box, SimObjType.Drawer, SimObjType.Ottoman, SimObjType.Dresser, SimObjType.CounterTop,
+		 SimObjType.Shelf,
+		}},
+
 		//CREDIT CARD
 		{SimObjType.CreditCard, new List<SimObjType>()
 		{SimObjType.Sofa, SimObjType.ArmChair, SimObjType.Bed, SimObjType.Desk, SimObjType.TableTop, SimObjType.Box, SimObjType.Drawer, SimObjType.Ottoman, SimObjType.Dresser, SimObjType.NightStand}},
 
 		//CD
 		{SimObjType.CD, new List<SimObjType>()
-		{SimObjType.Desk, SimObjType.TableTop, SimObjType.Box, SimObjType.Drawer,SimObjType.Shelf, SimObjType.Dresser}},
+		{SimObjType.Desk, SimObjType.TableTop, SimObjType.Box, SimObjType.Drawer,SimObjType.Shelf, SimObjType.Dresser, SimObjType.NightStand, SimObjType.Drawer}},
+
+		//WATCH
+		{SimObjType.Watch, new List<SimObjType>()
+		{SimObjType.Desk, SimObjType.TableTop, SimObjType.Box, SimObjType.Drawer,SimObjType.Shelf, SimObjType.Dresser, SimObjType.NightStand, SimObjType.Drawer}},
 
 		//CELL PHONE
 		{SimObjType.CellPhone, new List<SimObjType>()
@@ -548,6 +558,19 @@ public static class ReceptacleRestrictions
 		//BOOK - Need to alter this later so that Open Books are no longer their own prefabs, combine into one once we have state change
 		{SimObjType.Book, new List<SimObjType>()
 		{SimObjType.Sofa, SimObjType.ArmChair, SimObjType.Bed, SimObjType.Desk, SimObjType.TableTop, SimObjType.CounterTop, SimObjType.Box, SimObjType.Drawer, SimObjType.Ottoman, SimObjType.Shelf, SimObjType.NightStand}},
+
+		//STATUE
+		{SimObjType.Statue, new List<SimObjType>()
+		{SimObjType.Desk, SimObjType.TableTop, SimObjType.Box, SimObjType.Shelf, SimObjType.Dresser, SimObjType.NightStand, SimObjType.TableTop}},
+
+		//VASE
+		{SimObjType.Vase, new List<SimObjType>()
+		{SimObjType.Desk, SimObjType.TableTop, SimObjType.Box, SimObjType.Shelf, SimObjType.Dresser, SimObjType.NightStand, SimObjType.TableTop}},
+
+		//WATERING CAN
+		{SimObjType.WateringCan, new List<SimObjType>()
+		{SimObjType.Desk, SimObjType.TableTop, SimObjType.Box, SimObjType.Shelf, SimObjType.Dresser, SimObjType.NightStand, SimObjType.TableTop}},
+
 	};
 
 }

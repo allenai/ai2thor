@@ -386,7 +386,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         {
                             action.randomSeed = 0;
                             action.forceVisible = false;//true;
-                            action.maxNumRepeats = 10;
+                            action.maxNumRepeats = 5;
                         }
 
                         action.placeStationary = true;//set to false to spawn with kinematic = false, set to true to spawn everything kinematic true and they won't roll around
