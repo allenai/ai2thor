@@ -88,7 +88,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 		override public Vector3[] getReachablePositions() {
 			throw new NotImplementedException();
-			return new Vector3[0];
 		}
 
 

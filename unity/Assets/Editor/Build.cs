@@ -26,7 +26,6 @@ public class Build
     static void build(string buildName, BuildTarget target)	{		
         List<string> files = new List<string>();
         List<string> scenes = new List<string>();
-        files.AddRange(Directory.GetFiles("Assets/Scenes/"));
         files.AddRange(Directory.GetFiles("Assets/Physics/Physics Scenes/"));
         foreach (string f in files) {
             if (f.EndsWith(".unity")) {
