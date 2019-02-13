@@ -2128,7 +2128,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             if(targetReceptacle.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.ObjectSpecificReceptacle))
             {
                 ObjectSpecificReceptacle osr = targetReceptacle.GetComponent<ObjectSpecificReceptacle>();
-                if(osr.HasSpecificType(ItemInHand.GetComponent<SimObjPhysics>().ObjType) && osr.isFull() == false)
+                if(osr.HasSpecificType(ItemInHand.GetComponent<SimObjPhysics>().ObjType) && !osr.isFull())
                 {
                     ItemInHand.transform.position = osr.attachPoint.position;
                     ItemInHand.transform.SetParent(osr.attachPoint.transform);
@@ -2143,9 +2143,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
                 else
                 {
-                    //errorMessage = null;
 
-                    if(osr.isFull())
+                    if(osr.attachPoint.transform.childCount > 0 || osr.isFull())
                     {
                         errorMessage = targetReceptacle.name + " is full right now";
                     }
@@ -2155,7 +2154,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         errorMessage = ItemInHand.name + " is not a valid Object Type to be placed in " + targetReceptacle.name;
                     }
 
+                    #if UNITY_EDITOR
                     Debug.Log(errorMessage);
+                    #endif
+
                     actionFinished(false);
                     return;
                 }
@@ -3050,9 +3052,13 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 //XXX It looks like this goes right into the MetaData, so basically this just returns a list of strings
 				//that are the unique ID's of every object that is contained by the target object
                 target.Contains();
-				// foreach(string s in target.Contains()) {
-                //     Debug.Log(s);
-                // }
+
+                #if UNITY_EDITOR
+				foreach(string s in target.Contains()) {
+                    Debug.Log(s);
+                }
+                #endif
+
                 actionFinished(true);
 			}
 
