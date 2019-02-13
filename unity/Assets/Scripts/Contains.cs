@@ -229,7 +229,6 @@ public class Contains : MonoBehaviour
 		Vector3 zdir = (p4 - p1).normalized; //direction in the -z direction to finish drawing grid
 		Vector3 xdir = (p2 - p1).normalized; //direction in the +x direction to finish drawing grid
 		Vector3 ydir = (p1 - p5).normalized;
-		float xdist = Vector3.Distance(p2, p1);
 		float zdist = Vector3.Distance(p4, p1);
 		float ydist = Vector3.Distance(p1, p5);
 
@@ -301,8 +300,6 @@ public class Contains : MonoBehaviour
 		#if UNITY_EDITOR
 		validpointlist = PossibleSpawnPoints;
 		#endif
-
-		GameObject agent = GameObject.Find("FPSController");
 
 		//sort the possible spawn points by distance to the Agent before returning
 		// PossibleSpawnPoints.Sort(delegate(ReceptacleSpawnPoint one, ReceptacleSpawnPoint two)
