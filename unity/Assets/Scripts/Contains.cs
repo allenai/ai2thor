@@ -44,6 +44,8 @@ public class Contains : MonoBehaviour
 	//list of valid spawn points for placing/spawning SimObjects inside this Receptacle Box
 	private List<ReceptacleSpawnPoint> validpointlist = new List<ReceptacleSpawnPoint>();
 
+	public bool occupied = false;
+
 	//world coordinates of the Corners of this object's receptacles in case we need it for something
 	//public List<Vector3> Corners = new List<Vector3>();
 
@@ -85,6 +87,17 @@ public class Contains : MonoBehaviour
 	{
 		//turn this on for debugging spawnpoints in editor
 		//GetValidSpawnPoints(true);
+
+		//set the bool if any objects are inside this
+		if(CurrentlyContains.Count > 0)
+		{
+			occupied = true;
+		}
+
+		else
+		{
+			occupied = false;
+		}
 	}
 
 	private void FixedUpdate()
@@ -136,8 +149,17 @@ public class Contains : MonoBehaviour
 		//remove objects if they leave the ReceptacleTriggerBox
 		if (other.GetComponentInParent<SimObjPhysics>())
 		{
+			SimObjPhysics sop = other.GetComponentInParent<SimObjPhysics>();
+
+			//if the object was removed from the receptacle by anything other than the Agent picking it up
+			if(!sop.transform.GetComponentInParent<PhysicsRemoteFPSAgentController>())
+			{
+				GameObject topObject = GameObject.Find("Objects");
+				sop.transform.SetParent(topObject.transform);
+			}
+
 			//print(other.GetComponentInParent<SimObjPhysics>().transform.name);
-			CurrentlyContains.Remove(other.GetComponentInParent<SimObjPhysics>());
+			CurrentlyContains.Remove(sop);
 		}
 	}
 

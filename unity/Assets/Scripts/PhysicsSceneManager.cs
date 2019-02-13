@@ -290,12 +290,26 @@ public class PhysicsSceneManager : MonoBehaviour
 						if(sop.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.ObjectSpecificReceptacle))
 						{
 							ObjectSpecificReceptacle osr = sop.GetComponent<ObjectSpecificReceptacle>();
-							if(osr.HasSpecificType(go.GetComponent<SimObjPhysics>().ObjType) && osr.isFull() == false)
+							if(osr.HasSpecificType(go.GetComponent<SimObjPhysics>().ObjType) && !osr.isFull())
 							{
+
+								//in the random spawn function, we need this additional check because there isn't a chance for
+								//the physics update loop to fully update osr.isFull() correctly, which can cause multiple objects
+								//to be placed on the same spot (ie: 2 pots on the same burner)
+								if(osr.attachPoint.transform.childCount > 0)
+								{
+									#if UNITY_EDITOR
+									Debug.Log(sop.UniqueID + " is full");
+									#endif
+
+									break;
+								}
+
 								go.transform.position = osr.attachPoint.position;
 								go.transform.SetParent(osr.attachPoint.transform);
 								go.transform.localRotation = Quaternion.identity;
 								go.GetComponent<Rigidbody>().isKinematic = true;
+
 								HowManyCouldntSpawn--;
 
 								#if UNITY_EDITOR
