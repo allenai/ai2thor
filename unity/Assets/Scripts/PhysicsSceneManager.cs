@@ -25,6 +25,11 @@ public class PhysicsSceneManager : MonoBehaviour
 
     //public List<SimObjPhysics> LookAtThisList = new List<SimObjPhysics>();
 
+	private bool m_Started = false;
+	private Vector3 gizmopos;
+	private Vector3 gizmoscale;
+	private Quaternion gizmoquaternion;
+
 	private void OnEnable()
 	{
 		//clear this on start so that the CheckForDuplicates function doesn't check pre-existing lists
@@ -290,34 +295,54 @@ public class PhysicsSceneManager : MonoBehaviour
 						if(sop.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.ObjectSpecificReceptacle))
 						{
 							ObjectSpecificReceptacle osr = sop.GetComponent<ObjectSpecificReceptacle>();
-							if(osr.HasSpecificType(go.GetComponent<SimObjPhysics>().ObjType) && !osr.isFull())
-							{
 
+							if(osr.HasSpecificType(go.GetComponent<SimObjPhysics>().ObjType))
+							{
 								//in the random spawn function, we need this additional check because there isn't a chance for
 								//the physics update loop to fully update osr.isFull() correctly, which can cause multiple objects
 								//to be placed on the same spot (ie: 2 pots on the same burner)
 								if(osr.attachPoint.transform.childCount > 0)
 								{
-									#if UNITY_EDITOR
-									Debug.Log(sop.UniqueID + " is full");
-									#endif
-
 									break;
 								}
 
-								go.transform.position = osr.attachPoint.position;
-								go.transform.SetParent(osr.attachPoint.transform);
-								go.transform.localRotation = Quaternion.identity;
-								go.GetComponent<Rigidbody>().isKinematic = true;
+								//perform additional checks if this is a Stove Burner! 
+								if(sop.GetComponent<SimObjPhysics>().Type == SimObjType.StoveBurner)
+								{
+									if(StoveTopCheckSpawnArea(go.GetComponent<SimObjPhysics>(), osr.attachPoint.transform.position,
+									osr.attachPoint.transform.rotation, false) == true)
+									{
+										//print("moving object now");
+										go.transform.position = osr.attachPoint.position;
+										go.transform.SetParent(osr.attachPoint.transform);
+										go.transform.localRotation = Quaternion.identity;
+										go.GetComponent<Rigidbody>().isKinematic = true;
 
-								HowManyCouldntSpawn--;
+										HowManyCouldntSpawn--;
 
-								#if UNITY_EDITOR
-                				Debug.Log(go.name + " succesfully placed in " +sop.UniqueID);
-                				#endif
+										// print(go.transform.name + " was spawned in " + sop.transform.name);
 
-								break;
+										// #if UNITY_EDITOR
+										// //Debug.Log(go.name + " succesfully placed in " +sop.UniqueID);
+										// #endif
+
+										break;
+									}
+								}
+
+								//for everything else (coffee maker, toilet paper holder, etc) just place it if there is nothing attached
+								else
+								{
+										go.transform.position = osr.attachPoint.position;
+										go.transform.SetParent(osr.attachPoint.transform);
+										go.transform.localRotation = Quaternion.identity;
+										go.GetComponent<Rigidbody>().isKinematic = true;
+
+										HowManyCouldntSpawn--;
+										break;
+								}
 							}
+
 						}
 
 						targetReceptacleSpawnPoints = sop.ReturnMySpawnPoints(false);
@@ -337,8 +362,8 @@ public class PhysicsSceneManager : MonoBehaviour
 
 							#if UNITY_EDITOR
 							watch.Stop();
-							var y = watch.ElapsedMilliseconds;
-							print("time for SUCCESFULLY placing " + go.transform.name+ " in " + sop.transform.name + ": " + y + " ms");
+							//var y = watch.ElapsedMilliseconds;
+							//print("time for SUCCESFULLY placing " + go.transform.name+ " in " + sop.transform.name + ": " + y + " ms");
 							#endif
 
 							break;
@@ -346,14 +371,15 @@ public class PhysicsSceneManager : MonoBehaviour
 
 						#if UNITY_EDITOR
 						watch.Stop();
-						var elapsedMs = watch.ElapsedMilliseconds;
-						print("time for trying, but FAILING, to place " + go.transform.name+ " in " + sop.transform.name + ": " + elapsedMs + " ms");
+						//var elapsedMs = watch.ElapsedMilliseconds;
+						//print("time for trying, but FAILING, to place " + go.transform.name+ " in " + sop.transform.name + ": " + elapsedMs + " ms");
 						#endif
 
 					}
 				}
 			}
 		}
+
 		///////////////KEEP THIS DEPRECATED STUFF - In case we want to spawn in objects that don't currently exist in the scene, that logic is below////////////////
 		// //we have not spawned objects, so instantiate them here first
 		// else
@@ -476,6 +502,96 @@ public class PhysicsSceneManager : MonoBehaviour
 		return true;
 	}
 
+
+	//a variation of the CheckSpawnArea logic from InstantiatePrefabTest.cs, but filter out things specifically for stove tops
+	//which are unique due to being placed close together, which can cause objects placed on them to overlap in super weird ways oh
+	//my god it took like 2 days to figure this out it should have been so simple
+	public bool StoveTopCheckSpawnArea(SimObjPhysics simObj, Vector3 position, Quaternion rotation, bool spawningInHand)
+	{
+		int layermask;
+
+		//first do a check to see if the area is clear
+
+        //if spawning in the agent's hand, ignore collisions with the Agent
+		if(spawningInHand)
+		{
+			layermask = 1 << 8;
+		}
+
+        //oh we are spawning it somehwere in the environment, we do need to make sure not to spawn inside the agent or the environment
+		else
+		{
+			layermask = (1 << 8) | (1 << 10);
+		}
+
+        //simObj.transform.Find("Colliders").gameObject.SetActive(false);
+        Collider[] objcols;
+        //make sure ALL colliders of the simobj are turned off for this check - can't just turn off the Colliders child object because of objects like
+        //laptops which have multiple sets of colliders, with one part moving...
+        objcols = simObj.transform.GetComponentsInChildren<Collider>();
+        foreach (Collider col in objcols)
+        {
+            if(col.gameObject.name != "BoundingBox")
+            col.enabled = false;
+        }
+
+        //let's move the simObj to the position we are trying, and then change it's rotation to the rotation we are trying
+        Vector3 originalPos = simObj.transform.position;
+        Quaternion originalRot = simObj.transform.rotation;
+
+        //keep track of both starting position and rotation to reset the object after performing the check!
+        simObj.transform.position = position;
+        simObj.transform.rotation = rotation;
+
+        //now let's get the BoundingBox of the simObj as reference cause we need it to create the overlapbox
+        GameObject bb = simObj.BoundingBox.transform.gameObject;
+        BoxCollider bbcol = bb.GetComponent<BoxCollider>();
+
+        #if UNITY_EDITOR
+		m_Started = true;     
+        gizmopos = bb.transform.TransformPoint(bbcol.center); 
+        //gizmopos = inst.transform.position;
+        gizmoscale = bbcol.size;
+        //gizmoscale = simObj.BoundingBox.GetComponent<BoxCollider>().size;
+        gizmoquaternion = rotation;
+        #endif
+
+        //we need the center of the box collider in world space, we need the box collider size/2, we need the rotation to set the box at, layermask, querytrigger
+        Collider[] hitColliders = Physics.OverlapBox(bb.transform.TransformPoint(bbcol.center),
+                                                     bbcol.size / 2.0f, simObj.transform.rotation, 
+                                                     layermask, QueryTriggerInteraction.Ignore);
+
+		//now check if any of the hit colliders were any object EXCEPT other stove top objects i guess
+		bool result= true;
+		foreach(Collider col in hitColliders)
+		{
+			//if anything is hit that is not a stove burner, then ABORT
+			if(col.GetComponentInParent<SimObjPhysics>().Type != SimObjType.StoveBurner)
+			{
+				result = false;
+				simObj.transform.position = originalPos;
+        		simObj.transform.rotation = originalRot;
+			
+				foreach (Collider yes in objcols)
+				{
+					if(col.gameObject.name != "BoundingBox")
+					col.enabled = true;
+				}
+
+				return result;
+			}
+		}
+         
+		foreach (Collider col in objcols)
+		{
+			if(col.gameObject.name != "BoundingBox")
+			col.enabled = true;
+		}
+		
+		simObj.transform.position = originalPos;
+		simObj.transform.rotation = originalRot;
+		return result;
+	}
 	public void ShuffleReceptacleSpawnPointList (List<ReceptacleSpawnPoint> list)
 	{
 		for(int i = 0; i < list.Count; i++)
@@ -497,5 +613,25 @@ public class PhysicsSceneManager : MonoBehaviour
 			list[r] = sop;
 		}
 	}
+
+#if UNITY_EDITOR
+	void OnDrawGizmos()
+    {
+        Gizmos.color = Color.magenta;
+        if (m_Started)
+        {
+            Matrix4x4 cubeTransform = Matrix4x4.TRS(gizmopos, gizmoquaternion, gizmoscale);
+            Matrix4x4 oldGizmosMatrix = Gizmos.matrix;
+
+            Gizmos.matrix *= cubeTransform;
+
+            Gizmos.DrawWireCube(Vector3.zero, Vector3.one);
+
+            Gizmos.matrix = oldGizmosMatrix;
+        }
+
+    }
+#endif
+
 		
 }
