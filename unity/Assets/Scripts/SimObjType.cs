@@ -510,7 +510,7 @@ public static class ReceptacleRestrictions
 		//BOX
 		{SimObjType.Box, new List<SimObjType>()
 		{SimObjType.Dresser, SimObjType.NightStand, SimObjType.Desk, SimObjType.Shelf, SimObjType.TableTop,SimObjType.CounterTop, SimObjType.Bed, SimObjType.Sofa, 
-		SimObjType.ArmChair, SimObjType.Ottoman
+		SimObjType.ArmChair, SimObjType.Ottoman, SimObjType.Cabinet,
 		}},
 
 		//BASKETBALL
@@ -524,7 +524,7 @@ public static class ReceptacleRestrictions
 		//NEWSPAPER
 		{SimObjType.Newspaper, new List<SimObjType>()
 		{SimObjType.Sofa, SimObjType.ArmChair, SimObjType.Bed, SimObjType.Desk, SimObjType.TableTop, SimObjType.Box, SimObjType.Drawer, SimObjType.Ottoman, SimObjType.Dresser, SimObjType.CounterTop,
-		 SimObjType.Shelf,
+		 SimObjType.Shelf,SimObjType.Cabinet,
 		}},
 
 		//CREDIT CARD
@@ -585,7 +585,7 @@ public static class ReceptacleRestrictions
 
 		//TISSUE BOX
 		{SimObjType.TissueBox, new List<SimObjType>()
-		{SimObjType.Desk, SimObjType.TableTop, SimObjType.Drawer, SimObjType.Shelf, SimObjType.Dresser, SimObjType.NightStand, SimObjType.CounterTop}},
+		{SimObjType.Desk, SimObjType.TableTop, SimObjType.Drawer, SimObjType.Shelf, SimObjType.Dresser, SimObjType.NightStand, SimObjType.CounterTop, SimObjType.Cabinet}},
 
 		//CLOTH
 		{SimObjType.Cloth, new List<SimObjType>()
