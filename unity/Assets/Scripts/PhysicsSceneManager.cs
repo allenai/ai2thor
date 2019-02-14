@@ -564,22 +564,30 @@ public class PhysicsSceneManager : MonoBehaviour
 
 		//now check if any of the hit colliders were any object EXCEPT other stove top objects i guess
 		bool result= true;
-		foreach(Collider col in hitColliders)
-		{
-			//if anything is hit that is not a stove burner, then ABORT
-			if(col.GetComponentInParent<SimObjPhysics>().Type != SimObjType.StoveBurner)
-			{
-				result = false;
-				simObj.transform.position = originalPos;
-        		simObj.transform.rotation = originalRot;
-			
-				foreach (Collider yes in objcols)
-				{
-					if(col.gameObject.name != "BoundingBox")
-					col.enabled = true;
-				}
 
-				return result;
+		if(hitColliders.Length > 0)
+		{
+			foreach(Collider col in hitColliders)
+			{
+				//if we hit some structure object like a stove top or countertop mesh, ignore it since we are snapping this to a specific position right here
+				if(!col.GetComponentInParent<SimObjPhysics>())
+				break;
+
+				//if any sim object is hit that is not a stove burner, then ABORT
+				if(col.GetComponentInParent<SimObjPhysics>().Type != SimObjType.StoveBurner)
+				{
+					result = false;
+					simObj.transform.position = originalPos;
+					simObj.transform.rotation = originalRot;
+				
+					foreach (Collider yes in objcols)
+					{
+						if(col.gameObject.name != "BoundingBox")
+						col.enabled = true;
+					}
+
+					return result;
+				}
 			}
 		}
          
@@ -591,7 +599,7 @@ public class PhysicsSceneManager : MonoBehaviour
 		
 		simObj.transform.position = originalPos;
 		simObj.transform.rotation = originalRot;
-		return result;
+		return result;//we are good to spawn, return true
 	}
 	public void ShuffleReceptacleSpawnPointList (List<ReceptacleSpawnPoint> list)
 	{

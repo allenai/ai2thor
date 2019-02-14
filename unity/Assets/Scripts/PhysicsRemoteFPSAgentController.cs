@@ -1553,7 +1553,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
             }
         }
 
-        //
         public bool CheckIfAgentCanMove(float moveMagnitude, int orientation)
         {
             Vector3 dir = new Vector3();
@@ -1793,8 +1792,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 return result;
             }
 
-            //XXX might need to extend this range to reach down into low drawers/cabinets?
-			//print(Vector3.Distance(gameObject.transform.position, targetPosition));
 			//now check if the target position is within bounds of the Agent's forward (z) view
             Vector3 tmp = m_Camera.transform.position;
             tmp.y = targetPosition.y;
@@ -2410,7 +2407,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
 				}
 			}
 
-            //DropContainedObjects(currentHandSimObj);
             DefaultAgentHand(new ServerAction());
 			actionFinished (true);
 		}
