@@ -36,6 +36,7 @@ public class ObjectSpecificReceptacle : MonoBehaviour
 		{
 			if(rtb.GetComponent<Contains>().occupied)
 			{
+				//print("osr is occupied, return true");
 				full = true;
 				return true;
 			}
