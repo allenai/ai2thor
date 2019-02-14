@@ -41,6 +41,7 @@ public class PhysicsSceneManager : MonoBehaviour
 		if(!GameObject.Find("Objects"))
 		{
 			GameObject c = new GameObject("Objects");
+			Debug.Log(c.transform.name + " was missing and is now added");
 		}
 	}
 
@@ -217,7 +218,7 @@ public class PhysicsSceneManager : MonoBehaviour
 		List<SimObjType> TypesOfObjectsPrefabIsAllowedToSpawnIn = new List<SimObjType>();
 		List<SimObjPhysics> AllowedToSpawnInAndExistsInScene = new List<SimObjPhysics>();
 
-		List<GameObject> TargetList = new List<GameObject>();
+		//List<GameObject> TargetList = new List<GameObject>();
 
 		int HowManyCouldntSpawn = RequiredObjects.Count;
 

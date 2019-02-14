@@ -38,12 +38,6 @@ public class Contains : MonoBehaviour
 	private List<SimObjPrimaryProperty> PropertiesToIgnore = new List<SimObjPrimaryProperty>(new SimObjPrimaryProperty[] {SimObjPrimaryProperty.Wall,
 		SimObjPrimaryProperty.Floor, SimObjPrimaryProperty.Ceiling, SimObjPrimaryProperty.Moveable}); //should we ignore SimObjPrimaryProperty.Static?
 
-	//used for debug draw of grid
-	private Vector3[] gridVisual = new Vector3[0];
-
-	//list of valid spawn points for placing/spawning SimObjects inside this Receptacle Box
-	private List<ReceptacleSpawnPoint> validpointlist = new List<ReceptacleSpawnPoint>();
-
 	public bool occupied = false;
 
 	//world coordinates of the Corners of this object's receptacles in case we need it for something
@@ -192,7 +186,7 @@ public class Contains : MonoBehaviour
 	{
 		List<ReceptacleSpawnPoint> PossibleSpawnPoints = new List<ReceptacleSpawnPoint>();
 
-		Vector3 p1, p2, p3, p4, p5, p6, p7, p8;
+		Vector3 p1, p2, /*p3,*/ p4, p5 /*p6, p7, p8*/; //in case we need all the corners later for something...
 
 		BoxCollider b = GetComponent<BoxCollider>();
 
@@ -202,18 +196,18 @@ public class Contains : MonoBehaviour
 		//top forward left
 		p2 = transform.TransformPoint(b.center + new Vector3(-b.size.x, b.size.y, b.size.z) * 0.5f);
 		//top back left
-		p3 = transform.TransformPoint(b.center + new Vector3(-b.size.x, b.size.y, -b.size.z) * 0.5f);
+		//p3 = transform.TransformPoint(b.center + new Vector3(-b.size.x, b.size.y, -b.size.z) * 0.5f);
 		//top back right
 		p4 = transform.TransformPoint(b.center + new Vector3(b.size.x, b.size.y, -b.size.z) * 0.5f);
 
 		//bottom forward right
 		p5 = transform.TransformPoint(b.center + new Vector3(b.size.x, -b.size.y, b.size.z) * 0.5f);
 		//bottom forward left
-		p6 = transform.TransformPoint(b.center + new Vector3(-b.size.x, -b.size.y, b.size.z) * 0.5f);
+		//p6 = transform.TransformPoint(b.center + new Vector3(-b.size.x, -b.size.y, b.size.z) * 0.5f);
 		//bottom back left
-		p7 = transform.TransformPoint(b.center + new Vector3(-b.size.x, -b.size.y, -b.size.z) * 0.5f);
+		//p7 = transform.TransformPoint(b.center + new Vector3(-b.size.x, -b.size.y, -b.size.z) * 0.5f);
 		//bottom back right
-		p8 = transform.TransformPoint(b.center + new Vector3(b.size.x, -b.size.y, -b.size.z) * 0.5f);
+		//p8 = transform.TransformPoint(b.center + new Vector3(b.size.x, -b.size.y, -b.size.z) * 0.5f);
 
 		// List<Vector3> crn = new List<Vector3>() {p1, p2, p3, p4, p5, p6, p7, p8};
 		// Corners = crn;
@@ -299,10 +293,10 @@ public class Contains : MonoBehaviour
 			//}
 		}
 
-		//****** */debug draw the spawn points as well
-		#if UNITY_EDITOR
-		validpointlist = PossibleSpawnPoints;
-		#endif
+		// //****** */debug draw the spawn points as well
+		// #if UNITY_EDITOR
+		// validpointlist = PossibleSpawnPoints;
+		// #endif
 
 		//sort the possible spawn points by distance to the Agent before returning
 		// PossibleSpawnPoints.Sort(delegate(ReceptacleSpawnPoint one, ReceptacleSpawnPoint two)
