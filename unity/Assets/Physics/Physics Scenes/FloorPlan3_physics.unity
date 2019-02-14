@@ -170,6 +170,34 @@ BoxCollider:
   serializedVersion: 2
   m_Size: {x: 0.3624085, y: 0.03015967, z: 0.31719804}
   m_Center: {x: 0.008444384, y: 0.00058375095, z: -0.0033422825}
+--- !u!1 &9242043
+GameObject:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  serializedVersion: 5
+  m_Component:
+  - component: {fileID: 9242044}
+  m_Layer: 8
+  m_Name: AttachPoint
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &9242044
+Transform:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 9242043}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0.006399989, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 2021995270}
+  m_RootOrder: 5
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &14034680
 GameObject:
   m_ObjectHideFlags: 0
@@ -3651,6 +3679,34 @@ Transform:
   m_Father: {fileID: 900336236}
   m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &242261171
+GameObject:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  serializedVersion: 5
+  m_Component:
+  - component: {fileID: 242261172}
+  m_Layer: 8
+  m_Name: AttachPoint
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &242261172
+Transform:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 242261171}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0.0064, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 1903548868}
+  m_RootOrder: 5
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &246514231
 GameObject:
   m_ObjectHideFlags: 0
@@ -4183,6 +4239,7 @@ GameObject:
   - component: {fileID: 269025874}
   - component: {fileID: 269025876}
   - component: {fileID: 269025875}
+  - component: {fileID: 269025877}
   m_Layer: 8
   m_Name: RangeStyle3_4 (2)
   m_TagString: SimObjPhysics
@@ -4197,7 +4254,7 @@ Transform:
     type: 2}
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 269025873}
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalRotation: {x: -0, y: 1, z: -0, w: 0.0000029504295}
   m_LocalPosition: {x: -0.2394, y: 1.326, z: -3.3019}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
@@ -4206,9 +4263,10 @@ Transform:
   - {fileID: 589657062}
   - {fileID: 1093586060}
   - {fileID: 2062678779}
+  - {fileID: 608195159}
   m_Father: {fileID: 206288970}
   m_RootOrder: 8
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 180.00002, z: 0}
 --- !u!114 &269025875
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4223,7 +4281,7 @@ MonoBehaviour:
   uniqueID: StoveBurner|-00.24|+01.33|-03.30
   Type: 17
   PrimaryProperty: 1
-  SecondaryProperties: 07000000
+  SecondaryProperties: 0700000034000000
   BoundingBox: {fileID: 0}
   VisibilityPoints:
   - {fileID: 1115334316}
@@ -4261,6 +4319,20 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
+--- !u!114 &269025877
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 269025873}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 79eff5a40665e46919a6afd7fe0b6d4f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  SpecificTypes: 090000000800000061000000
+  attachPoint: {fileID: 608195159}
+  full: 0
 --- !u!1 &273910604
 GameObject:
   m_ObjectHideFlags: 0
@@ -7769,6 +7841,7 @@ GameObject:
   - component: {fileID: 555613699}
   - component: {fileID: 555613701}
   - component: {fileID: 555613700}
+  - component: {fileID: 555613702}
   m_Layer: 8
   m_Name: RangeStyle3_4 (3)
   m_TagString: SimObjPhysics
@@ -7783,7 +7856,7 @@ Transform:
     type: 2}
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 555613698}
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalRotation: {x: -0, y: 1, z: -0, w: 0.0000029504295}
   m_LocalPosition: {x: -0.6309, y: 1.326, z: -3.3019}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
@@ -7792,9 +7865,10 @@ Transform:
   - {fileID: 1395402141}
   - {fileID: 1683107106}
   - {fileID: 1438276758}
+  - {fileID: 682353963}
   m_Father: {fileID: 206288970}
   m_RootOrder: 9
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 180.00002, z: 0}
 --- !u!114 &555613700
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -7809,7 +7883,7 @@ MonoBehaviour:
   uniqueID: StoveBurner|-00.63|+01.33|-03.30
   Type: 17
   PrimaryProperty: 1
-  SecondaryProperties: 07000000
+  SecondaryProperties: 0700000034000000
   BoundingBox: {fileID: 0}
   VisibilityPoints:
   - {fileID: 2009656316}
@@ -7847,6 +7921,20 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
+--- !u!114 &555613702
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 555613698}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 79eff5a40665e46919a6afd7fe0b6d4f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  SpecificTypes: 090000000800000061000000
+  attachPoint: {fileID: 682353963}
+  full: 0
 --- !u!1 &564375621
 GameObject:
   m_ObjectHideFlags: 0
@@ -8915,6 +9003,34 @@ MeshFilter:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 607263893}
   m_Mesh: {fileID: 4300232, guid: bbe55e9be025f4c638f456252b5e2954, type: 3}
+--- !u!1 &608195158
+GameObject:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  serializedVersion: 5
+  m_Component:
+  - component: {fileID: 608195159}
+  m_Layer: 8
+  m_Name: AttachPoint
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &608195159
+Transform:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 608195158}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0.005699992, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 269025874}
+  m_RootOrder: 5
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &611045093
 GameObject:
   m_ObjectHideFlags: 0
@@ -10008,6 +10124,34 @@ Transform:
   - {fileID: 2077878848}
   m_Father: {fileID: 2021995270}
   m_RootOrder: 3
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &682353962
+GameObject:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  serializedVersion: 5
+  m_Component:
+  - component: {fileID: 682353963}
+  m_Layer: 8
+  m_Name: AttachPoint
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &682353963
+Transform:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 682353962}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0.0057, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 555613699}
+  m_RootOrder: 5
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &683821610
 GameObject:
@@ -25312,6 +25456,7 @@ GameObject:
   - component: {fileID: 1903548868}
   - component: {fileID: 1612380046}
   - component: {fileID: 1612380047}
+  - component: {fileID: 1612380048}
   m_Layer: 8
   m_Name: RangeStyle3_4
   m_TagString: SimObjPhysics
@@ -25349,7 +25494,7 @@ MonoBehaviour:
   uniqueID: StoveBurner|-00.75|+01.33|-02.97
   Type: 17
   PrimaryProperty: 1
-  SecondaryProperties: 07000000
+  SecondaryProperties: 0700000034000000
   BoundingBox: {fileID: 0}
   VisibilityPoints:
   - {fileID: 1383942807}
@@ -25371,6 +25516,20 @@ MonoBehaviour:
   HFbounciness: 0
   HFrbdrag: 0
   HFrbangulardrag: 0
+--- !u!114 &1612380048
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 1612380045}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 79eff5a40665e46919a6afd7fe0b6d4f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  SpecificTypes: 090000000800000061000000
+  attachPoint: {fileID: 242261172}
+  full: 0
 --- !u!1 &1625085996
 GameObject:
   m_ObjectHideFlags: 0
@@ -29230,6 +29389,7 @@ Transform:
   - {fileID: 283406299}
   - {fileID: 273910605}
   - {fileID: 1491865175}
+  - {fileID: 242261172}
   m_Father: {fileID: 206288970}
   m_RootOrder: 6
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -31314,6 +31474,7 @@ GameObject:
   - component: {fileID: 2021995270}
   - component: {fileID: 2021995272}
   - component: {fileID: 2021995271}
+  - component: {fileID: 2021995273}
   m_Layer: 8
   m_Name: RangeStyle3_4 (1)
   m_TagString: SimObjPhysics
@@ -31337,6 +31498,7 @@ Transform:
   - {fileID: 239319182}
   - {fileID: 681443165}
   - {fileID: 510802904}
+  - {fileID: 9242044}
   m_Father: {fileID: 206288970}
   m_RootOrder: 7
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -31354,7 +31516,7 @@ MonoBehaviour:
   uniqueID: StoveBurner|-00.13|+01.33|-02.97
   Type: 17
   PrimaryProperty: 1
-  SecondaryProperties: 07000000
+  SecondaryProperties: 0700000034000000
   BoundingBox: {fileID: 0}
   VisibilityPoints:
   - {fileID: 1826140564}
@@ -31392,6 +31554,20 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
+--- !u!114 &2021995273
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 2021995269}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 79eff5a40665e46919a6afd7fe0b6d4f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  SpecificTypes: 090000000800000061000000
+  attachPoint: {fileID: 9242044}
+  full: 0
 --- !u!1 &2022777582
 GameObject:
   m_ObjectHideFlags: 0
@@ -33479,7 +33655,7 @@ Transform:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 2140664197}
   m_LocalRotation: {x: -0.7071068, y: 0, z: -0, w: 0.7071067}
-  m_LocalPosition: {x: 0.273, y: 1.0896587, z: -2.301}
+  m_LocalPosition: {x: 0.212, y: 1.007, z: -2.563}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 1991904972}
