@@ -1808,7 +1808,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             }
 
             //now make sure that the targetPosition is within the Agent's x/y view, restricted by camera
-			Vector3 vp = m_Camera.WorldToViewportPoint(targetPosition);
+			//Vector3 vp = m_Camera.WorldToViewportPoint(targetPosition);
 
             //Note: Viewport normalizes to (0,0) bottom left, (1, 0) top right of screen
             //now make sure the targetPosition is actually within the Camera Bounds 
@@ -2366,11 +2366,15 @@ namespace UnityStandardAssets.Characters.FirstPerson
             {
                 foreach(SimObjPhysics sop in target.ReceptacleObjects)
                 {
-                    //for every object that is contained by this object...
+                    //for every object that is contained by this object...first make sure it's pickupable so we don't like, grab a Chair if it happened to be in the receptacle box or something
                     //turn off the colliders, leaving Trigger Colliders active (this is important to maintain visibility!)
-                    sop.transform.Find("Colliders").gameObject.SetActive(false);
-                    sop.GetComponent<Rigidbody>().isKinematic = true;
-                    sop.transform.SetParent(target.transform);
+                    if(sop.PrimaryProperty == SimObjPrimaryProperty.CanPickup)
+                    {
+                        sop.transform.Find("Colliders").gameObject.SetActive(false);
+                        sop.GetComponent<Rigidbody>().isKinematic = true;
+                        sop.transform.SetParent(target.transform);
+                    }
+
                 }
             }
         }
@@ -5178,7 +5182,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
                             GUILayout.BeginHorizontal();
                             horzIndex = 0;
                         }
-                        var b = GUILayout.Button(o.UniqueID, UnityEditor.EditorStyles.miniButton, GUILayout.MaxWidth(200f));
+                        //var b = 
+                        GUILayout.Button(o.UniqueID, UnityEditor.EditorStyles.miniButton, GUILayout.MaxWidth(200f));
                     }
 
                     GUILayout.EndHorizontal();

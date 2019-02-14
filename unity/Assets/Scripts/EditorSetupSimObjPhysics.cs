@@ -24,18 +24,18 @@ public class EditorSetupSimObjPhysics : MonoBehaviour
 
 	public void Mirror()
 	{
-		SimObjSecondaryProperty[] MirrorSecondary = new SimObjSecondaryProperty[]{SimObjSecondaryProperty.CanBeCleanedGlass};
+		//SimObjSecondaryProperty[] MirrorSecondary = new SimObjSecondaryProperty[]{SimObjSecondaryProperty.CanBeCleanedGlass};
 		//Setup(SimObjType.Mirror, SimObjPrimaryProperty.Static, MirrorSecondary);
 	}
 
 	public void Setup(SimObjType type, SimObjPrimaryProperty primaryProperty, SimObjSecondaryProperty[] secondaryProperties, string tag, int layer)
 	{
-		SimObjPhysics sop = gameObject.GetComponent<SimObjPhysics>();
+		// SimObjPhysics sop = gameObject.GetComponent<SimObjPhysics>();
 
-		sop.Type = type;
-		sop.PrimaryProperty = primaryProperty;
-		sop.SecondaryProperties = secondaryProperties;
-		sop.gameObject.tag = tag;
+		// sop.Type = type;
+		// sop.PrimaryProperty = primaryProperty;
+		// sop.SecondaryProperties = secondaryProperties;
+		// sop.gameObject.tag = tag;
 		//sop.layer = layer;
 	}
 }

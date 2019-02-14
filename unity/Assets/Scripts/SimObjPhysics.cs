@@ -919,13 +919,15 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 
 		if(!gameObject.GetComponent<CanOpen_Object>())
 		{
-			CanOpen_Object coo = gameObject.AddComponent<CanOpen_Object>();
+			//CanOpen_Object coo = 
+			gameObject.AddComponent<CanOpen_Object>();
 			
 		}
 
 		if(!gameObject.GetComponent<CanToggleOnOff>())
 		{
-			CanToggleOnOff ctoo = gameObject.AddComponent<CanToggleOnOff>();
+			//CanToggleOnOff ctoo = 
+			gameObject.AddComponent<CanToggleOnOff>();
 		}
 		// if(!gameObject.transform.Find("AttachPoint"))
 		// {
