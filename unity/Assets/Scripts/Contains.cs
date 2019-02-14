@@ -89,15 +89,15 @@ public class Contains : MonoBehaviour
 		//GetValidSpawnPoints(true);
 
 		//set the bool if any objects are inside this
-		if(CurrentlyContains.Count > 0)
-		{
-			occupied = true;
-		}
+		// if(CurrentlyContains.Count > 0)
+		// {
+		// 	occupied = true;
+		// }
 
-		else
-		{
-			occupied = false;
-		}
+		// else
+		// {
+		// 	occupied = false;
+		// }
 	}
 
 	private void FixedUpdate()
@@ -107,6 +107,7 @@ public class Contains : MonoBehaviour
 		//because OnTriggerExit will miss correctly editing the list if objects are teleported around like with
 		//the Initial Random Spawn Function! 
 		CurrentlyContains.Clear();
+		occupied = false;
 	}
 
 	public void OnTriggerStay(Collider other)
@@ -139,6 +140,7 @@ public class Contains : MonoBehaviour
 			//check each "other" object, see if it is currently in the CurrentlyContains list, and make sure it is NOT one of this object's doors/drawer
 			if (!CurrentlyContains.Contains(sop))//&& !MyObjects.Contains(sop.transform.gameObject))
 			{
+				occupied = true;
 				CurrentlyContains.Add(sop);
 			}
 		}
@@ -158,6 +160,7 @@ public class Contains : MonoBehaviour
 				sop.transform.SetParent(topObject.transform);
 			}
 
+			occupied = false;
 			//print(other.GetComponentInParent<SimObjPhysics>().transform.name);
 			CurrentlyContains.Remove(sop);
 		}

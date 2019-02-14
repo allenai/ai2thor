@@ -2130,6 +2130,20 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 ObjectSpecificReceptacle osr = targetReceptacle.GetComponent<ObjectSpecificReceptacle>();
                 if(osr.HasSpecificType(ItemInHand.GetComponent<SimObjPhysics>().ObjType) && !osr.isFull())
                 {
+                    //check spawn area specifically if it's a stove top we are trying to place something in because
+                    //they are close together and can overlap and are weird
+                    if(osr.GetComponent<SimObjPhysics>().Type == SimObjType.StoveBurner)
+                    {
+                        PhysicsSceneManager psm = GameObject.Find("PhysicsSceneManager").GetComponent<PhysicsSceneManager>();
+                        if(psm.StoveTopCheckSpawnArea(ItemInHand.GetComponent<SimObjPhysics>(), osr.attachPoint.transform.position, 
+                                                      osr.attachPoint.transform.rotation, false) == false)
+                        {
+                            actionFinished(false);
+                            return;
+                        }
+
+                    }
+
                     ItemInHand.transform.position = osr.attachPoint.position;
                     ItemInHand.transform.SetParent(osr.attachPoint.transform);
                     ItemInHand.transform.localRotation = Quaternion.identity;
