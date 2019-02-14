@@ -1777,6 +1777,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   CurrentlyContains: []
   myParent: {fileID: 1599306455}
+  occupied: 0
 --- !u!65 &72115524
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -3714,12 +3715,13 @@ GameObject:
   - component: {fileID: 149229758}
   - component: {fileID: 149229757}
   - component: {fileID: 149229756}
+  - component: {fileID: 149229759}
   m_Layer: 8
   m_Name: GasBurner (3)
   m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
+  m_StaticEditorFlags: 4294967295
   m_IsActive: 1
 --- !u!54 &149229756
 Rigidbody:
@@ -3750,7 +3752,7 @@ MonoBehaviour:
   uniqueID: StoveBurner|+00.68|+00.92|+01.08
   Type: 17
   PrimaryProperty: 1
-  SecondaryProperties: 07000000
+  SecondaryProperties: 0700000034000000
   BoundingBox: {fileID: 0}
   VisibilityPoints:
   - {fileID: 254515561}
@@ -3786,9 +3788,24 @@ Transform:
   - {fileID: 988516998}
   - {fileID: 1398544708}
   - {fileID: 1574663644}
+  - {fileID: 455725389}
   m_Father: {fileID: 1705624521}
   m_RootOrder: 56
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &149229759
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 149229755}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 79eff5a40665e46919a6afd7fe0b6d4f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  SpecificTypes: 080000000900000061000000
+  attachPoint: {fileID: 455725389}
+  full: 0
 --- !u!1001 &149871176
 Prefab:
   m_ObjectHideFlags: 0
@@ -5023,6 +5040,34 @@ Transform:
   m_Father: {fileID: 203511029}
   m_RootOrder: 5
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &191225666
+GameObject:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  serializedVersion: 5
+  m_Component:
+  - component: {fileID: 191225667}
+  m_Layer: 8
+  m_Name: AttachPoint
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &191225667
+Transform:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 191225666}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0.04100001, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 1743832490}
+  m_RootOrder: 6
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &192361825
 GameObject:
   m_ObjectHideFlags: 0
@@ -5471,12 +5516,13 @@ GameObject:
   - component: {fileID: 205744259}
   - component: {fileID: 205744258}
   - component: {fileID: 205744257}
+  - component: {fileID: 205744260}
   m_Layer: 8
   m_Name: GasBurner
   m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
+  m_StaticEditorFlags: 4294967295
   m_IsActive: 1
 --- !u!54 &205744257
 Rigidbody:
@@ -5507,7 +5553,7 @@ MonoBehaviour:
   uniqueID: StoveBurner|+00.28|+00.92|+01.08
   Type: 17
   PrimaryProperty: 1
-  SecondaryProperties: 07000000
+  SecondaryProperties: 0700000034000000
   BoundingBox: {fileID: 0}
   VisibilityPoints:
   - {fileID: 1879501183}
@@ -5543,9 +5589,24 @@ Transform:
   - {fileID: 476530950}
   - {fileID: 873965281}
   - {fileID: 1850905607}
+  - {fileID: 1292909936}
   m_Father: {fileID: 1705624521}
   m_RootOrder: 53
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &205744260
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 205744256}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 79eff5a40665e46919a6afd7fe0b6d4f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  SpecificTypes: 080000000900000061000000
+  attachPoint: {fileID: 1292909936}
+  full: 0
 --- !u!1 &206702464 stripped
 GameObject:
   m_PrefabParentObject: {fileID: 1170333579371094, guid: 6877aba5a696347dbb6c01f851f2da28,
@@ -11999,6 +12060,34 @@ Transform:
   m_Father: {fileID: 1951676920}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &455725388
+GameObject:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  serializedVersion: 5
+  m_Component:
+  - component: {fileID: 455725389}
+  m_Layer: 8
+  m_Name: AttachPoint
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &455725389
+Transform:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 455725388}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0.04100001, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 149229758}
+  m_RootOrder: 6
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &456173201
 GameObject:
   m_ObjectHideFlags: 0
@@ -12447,6 +12536,34 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1197227991}
   m_RootOrder: 1
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &487111788
+GameObject:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  serializedVersion: 5
+  m_Component:
+  - component: {fileID: 487111789}
+  m_Layer: 8
+  m_Name: AttachPoint
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &487111789
+Transform:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 487111788}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0.04100001, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 598448706}
+  m_RootOrder: 6
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &491543834 stripped
 GameObject:
@@ -14542,12 +14659,13 @@ GameObject:
   - component: {fileID: 598448706}
   - component: {fileID: 598448705}
   - component: {fileID: 598448704}
+  - component: {fileID: 598448707}
   m_Layer: 8
   m_Name: GasBurner (1)
   m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
+  m_StaticEditorFlags: 4294967295
   m_IsActive: 1
 --- !u!54 &598448704
 Rigidbody:
@@ -14578,7 +14696,7 @@ MonoBehaviour:
   uniqueID: StoveBurner|+00.28|+00.92|+01.35
   Type: 17
   PrimaryProperty: 1
-  SecondaryProperties: 07000000
+  SecondaryProperties: 0700000034000000
   BoundingBox: {fileID: 0}
   VisibilityPoints:
   - {fileID: 1898446327}
@@ -14614,9 +14732,24 @@ Transform:
   - {fileID: 726005363}
   - {fileID: 440871453}
   - {fileID: 1161637740}
+  - {fileID: 487111789}
   m_Father: {fileID: 1705624521}
   m_RootOrder: 54
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &598448707
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 598448703}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 79eff5a40665e46919a6afd7fe0b6d4f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  SpecificTypes: 080000000900000061000000
+  attachPoint: {fileID: 487111789}
+  full: 0
 --- !u!1 &598683603 stripped
 GameObject:
   m_PrefabParentObject: {fileID: 1760328238190616, guid: 970e22398a755fe4d9facdb1f3b5c1e3,
@@ -23468,6 +23601,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   CurrentlyContains: []
   myParent: {fileID: 379973544}
+  occupied: 0
 --- !u!65 &964831856
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -31659,6 +31793,34 @@ Transform:
   m_PrefabParentObject: {fileID: 4423107061512528, guid: 9b3dd8906ac75425bb877550ef7cb3b4,
     type: 2}
   m_PrefabInternal: {fileID: 1292636770}
+--- !u!1 &1292909935
+GameObject:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  serializedVersion: 5
+  m_Component:
+  - component: {fileID: 1292909936}
+  m_Layer: 8
+  m_Name: AttachPoint
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1292909936
+Transform:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 1292909935}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0.041, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 205744259}
+  m_RootOrder: 6
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!4 &1294670910 stripped
 Transform:
   m_PrefabParentObject: {fileID: 4860476190766482, guid: cab77ca7323aa4f7aa962911ebcfbcb3,
@@ -35464,6 +35626,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   CurrentlyContains: []
   myParent: {fileID: 101631755}
+  occupied: 0
 --- !u!65 &1503664772
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -41868,12 +42031,13 @@ GameObject:
   - component: {fileID: 1743832490}
   - component: {fileID: 1743832489}
   - component: {fileID: 1743832488}
+  - component: {fileID: 1743832491}
   m_Layer: 8
   m_Name: GasBurner (2)
   m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
+  m_StaticEditorFlags: 4294967295
   m_IsActive: 1
 --- !u!54 &1743832488
 Rigidbody:
@@ -41904,7 +42068,7 @@ MonoBehaviour:
   uniqueID: StoveBurner|+00.68|+00.92|+01.35
   Type: 17
   PrimaryProperty: 1
-  SecondaryProperties: 07000000
+  SecondaryProperties: 0700000034000000
   BoundingBox: {fileID: 0}
   VisibilityPoints:
   - {fileID: 73803734}
@@ -41940,9 +42104,24 @@ Transform:
   - {fileID: 1423203631}
   - {fileID: 1242083143}
   - {fileID: 1049563273}
+  - {fileID: 191225667}
   m_Father: {fileID: 1705624521}
   m_RootOrder: 55
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1743832491
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 1743832487}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 79eff5a40665e46919a6afd7fe0b6d4f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  SpecificTypes: 080000000900000061000000
+  attachPoint: {fileID: 191225667}
+  full: 0
 --- !u!1 &1744454384
 GameObject:
   m_ObjectHideFlags: 0
@@ -43339,6 +43518,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   CurrentlyContains: []
   myParent: {fileID: 101631755}
+  occupied: 0
 --- !u!65 &1814914730
 BoxCollider:
   m_ObjectHideFlags: 0

@@ -1254,12 +1254,13 @@ GameObject:
   - component: {fileID: 77731347}
   - component: {fileID: 77731349}
   - component: {fileID: 77731348}
+  - component: {fileID: 77731350}
   m_Layer: 8
   m_Name: RangeStyle7_Range1 (1)
   m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
+  m_StaticEditorFlags: 4294967295
   m_IsActive: 1
 --- !u!4 &77731347
 Transform:
@@ -1277,6 +1278,7 @@ Transform:
   - {fileID: 111381908}
   - {fileID: 1023961505}
   - {fileID: 105705624}
+  - {fileID: 1090994824}
   m_Father: {fileID: 1456889492}
   m_RootOrder: 15
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -1294,7 +1296,7 @@ MonoBehaviour:
   uniqueID: StoveBurner|-01.11|+00.92|+01.47
   Type: 17
   PrimaryProperty: 1
-  SecondaryProperties: 07000000
+  SecondaryProperties: 0700000034000000
   BoundingBox: {fileID: 0}
   VisibilityPoints:
   - {fileID: 2099572636}
@@ -1332,6 +1334,20 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
+--- !u!114 &77731350
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 77731346}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 79eff5a40665e46919a6afd7fe0b6d4f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  SpecificTypes: 090000000800000061000000
+  attachPoint: {fileID: 1090994824}
+  full: 0
 --- !u!1 &77995351
 GameObject:
   m_ObjectHideFlags: 0
@@ -2911,7 +2927,7 @@ Light:
   serializedVersion: 8
   m_Type: 2
   m_Color: {r: 0.8235294, g: 0.6881315, b: 0.5873702, a: 1}
-  m_Intensity: 0.68
+  m_Intensity: 0.8
   m_Range: 10
   m_SpotAngle: 30
   m_CookieSize: 10
@@ -4265,6 +4281,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   CurrentlyContains: []
   myParent: {fileID: 576975332}
+  occupied: 0
 --- !u!65 &247901845
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -13562,6 +13579,34 @@ Transform:
   m_Father: {fileID: 1267526930}
   m_RootOrder: 7
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &887629483
+GameObject:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  serializedVersion: 5
+  m_Component:
+  - component: {fileID: 887629484}
+  m_Layer: 8
+  m_Name: AttachPoint
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &887629484
+Transform:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 887629483}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0.0079, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 1444607391}
+  m_RootOrder: 5
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &889722717
 GameObject:
   m_ObjectHideFlags: 0
@@ -14947,6 +14992,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   CurrentlyContains: []
   myParent: {fileID: 576975332}
+  occupied: 0
 --- !u!65 &974083277
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -16646,6 +16692,34 @@ BoxCollider:
   serializedVersion: 2
   m_Size: {x: 1, y: 1, z: 1}
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!1 &1090994823
+GameObject:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  serializedVersion: 5
+  m_Component:
+  - component: {fileID: 1090994824}
+  m_Layer: 8
+  m_Name: AttachPoint
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1090994824
+Transform:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 1090994823}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0.0079, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 77731347}
+  m_RootOrder: 5
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1107657057
 GameObject:
   m_ObjectHideFlags: 0
@@ -18102,6 +18176,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   CurrentlyContains: []
   myParent: {fileID: 576975332}
+  occupied: 0
 --- !u!65 &1185183307
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -20358,12 +20433,13 @@ GameObject:
   - component: {fileID: 1344412451}
   - component: {fileID: 1344412453}
   - component: {fileID: 1344412452}
+  - component: {fileID: 1344412454}
   m_Layer: 8
   m_Name: RangeStyle7_Range1 (2)
   m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
+  m_StaticEditorFlags: 4294967295
   m_IsActive: 1
 --- !u!4 &1344412451
 Transform:
@@ -20381,6 +20457,7 @@ Transform:
   - {fileID: 276487203}
   - {fileID: 554721284}
   - {fileID: 1267526930}
+  - {fileID: 1968795601}
   m_Father: {fileID: 1456889492}
   m_RootOrder: 16
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -20398,7 +20475,7 @@ MonoBehaviour:
   uniqueID: StoveBurner|-01.11|+00.92|+01.87
   Type: 17
   PrimaryProperty: 1
-  SecondaryProperties: 07000000
+  SecondaryProperties: 0700000034000000
   BoundingBox: {fileID: 0}
   VisibilityPoints:
   - {fileID: 959746401}
@@ -20436,6 +20513,20 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
+--- !u!114 &1344412454
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 1344412450}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 79eff5a40665e46919a6afd7fe0b6d4f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  SpecificTypes: 090000000800000061000000
+  attachPoint: {fileID: 1968795601}
+  full: 0
 --- !u!1 &1344443774
 GameObject:
   m_ObjectHideFlags: 0
@@ -23018,6 +23109,7 @@ Transform:
   - {fileID: 1047350884}
   - {fileID: 1543648276}
   - {fileID: 2135702923}
+  - {fileID: 887629484}
   m_Father: {fileID: 1456889492}
   m_RootOrder: 14
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -23993,6 +24085,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   CurrentlyContains: []
   myParent: {fileID: 1694544473}
+  occupied: 0
 --- !u!65 &1498923608
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -25447,12 +25540,13 @@ GameObject:
   - component: {fileID: 1610262618}
   - component: {fileID: 1610262620}
   - component: {fileID: 1610262619}
+  - component: {fileID: 1610262621}
   m_Layer: 8
   m_Name: RangeStyle7_Range1 (3)
   m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
+  m_StaticEditorFlags: 4294967295
   m_IsActive: 1
 --- !u!4 &1610262618
 Transform:
@@ -25470,6 +25564,7 @@ Transform:
   - {fileID: 1218663264}
   - {fileID: 49319867}
   - {fileID: 1995682903}
+  - {fileID: 1771500166}
   m_Father: {fileID: 1456889492}
   m_RootOrder: 17
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -25487,7 +25582,7 @@ MonoBehaviour:
   uniqueID: StoveBurner|-00.83|+00.92|+01.87
   Type: 17
   PrimaryProperty: 1
-  SecondaryProperties: 07000000
+  SecondaryProperties: 0700000034000000
   BoundingBox: {fileID: 0}
   VisibilityPoints:
   - {fileID: 279326160}
@@ -25525,6 +25620,20 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
+--- !u!114 &1610262621
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 1610262617}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 79eff5a40665e46919a6afd7fe0b6d4f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  SpecificTypes: 090000000800000061000000
+  attachPoint: {fileID: 1771500166}
+  full: 0
 --- !u!1001 &1615358787
 Prefab:
   m_ObjectHideFlags: 0
@@ -25666,6 +25775,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   CurrentlyContains: []
   myParent: {fileID: 576975332}
+  occupied: 0
 --- !u!65 &1617729770
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -26681,12 +26791,13 @@ GameObject:
   - component: {fileID: 1444607391}
   - component: {fileID: 1670782893}
   - component: {fileID: 1670782894}
+  - component: {fileID: 1670782895}
   m_Layer: 8
   m_Name: RangeStyle7_Range1
   m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
+  m_StaticEditorFlags: 4294967295
   m_IsActive: 1
 --- !u!54 &1670782893
 Rigidbody:
@@ -26718,7 +26829,7 @@ MonoBehaviour:
   uniqueID: StoveBurner|-00.83|+00.92|+01.47
   Type: 17
   PrimaryProperty: 1
-  SecondaryProperties: 07000000
+  SecondaryProperties: 0700000034000000
   BoundingBox: {fileID: 0}
   VisibilityPoints:
   - {fileID: 1384498457}
@@ -26740,6 +26851,20 @@ MonoBehaviour:
   HFbounciness: 0
   HFrbdrag: 0
   HFrbangulardrag: 0
+--- !u!114 &1670782895
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 1670782892}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 79eff5a40665e46919a6afd7fe0b6d4f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  SpecificTypes: 090000000800000061000000
+  attachPoint: {fileID: 887629484}
+  full: 0
 --- !u!1 &1674001372
 GameObject:
   m_ObjectHideFlags: 0
@@ -28193,6 +28318,34 @@ Transform:
   - {fileID: 1118245626}
   m_Father: {fileID: 2124725566}
   m_RootOrder: 2
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1771500165
+GameObject:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  serializedVersion: 5
+  m_Component:
+  - component: {fileID: 1771500166}
+  m_Layer: 8
+  m_Name: AttachPoint
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1771500166
+Transform:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 1771500165}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0.0079, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 1610262618}
+  m_RootOrder: 5
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &1773960845
 Prefab:
@@ -31380,6 +31533,34 @@ Transform:
   m_Father: {fileID: 1995682903}
   m_RootOrder: 7
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1968795600
+GameObject:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  serializedVersion: 5
+  m_Component:
+  - component: {fileID: 1968795601}
+  m_Layer: 8
+  m_Name: AttachPoint
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1968795601
+Transform:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 1968795600}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0.0079, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 1344412451}
+  m_RootOrder: 5
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1971200784
 GameObject:
   m_ObjectHideFlags: 0
@@ -32649,6 +32830,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   CurrentlyContains: []
   myParent: {fileID: 1450861167}
+  occupied: 0
 --- !u!65 &2121671445
 BoxCollider:
   m_ObjectHideFlags: 0
