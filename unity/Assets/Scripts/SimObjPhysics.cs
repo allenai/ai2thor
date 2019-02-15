@@ -304,6 +304,16 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		//PrefabUtility.InstantiatePrefab(prefabRoot);
 	}
 
+	[UnityEditor.MenuItem("SimObjectPhysics/Change All Lights to Soft")]
+	public static void AllOfTheLights()
+	{
+		Light[] lights = FindObjectsOfType(typeof(Light)) as Light[];
+		foreach(Light l in lights)
+		{
+			l.shadows = LightShadows.Soft;
+		}
+	}
+
 	[UnityEditor.MenuItem("SimObjectPhysics/Create Sim Obj from Mesh &r")]
 	public static void CreateFromMesh()
 	{
