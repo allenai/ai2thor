@@ -285,7 +285,7 @@ public static class ReceptacleRestrictions
 	{
 		SimObjType.TableTop, SimObjType.Dresser, SimObjType.CounterTop, SimObjType.Sofa, SimObjType.Bench, SimObjType.Bed,
 		SimObjType.Ottoman, SimObjType.Desk, SimObjType.StoveBurner, SimObjType.Shelf, SimObjType.Bathtub, SimObjType.Sink, SimObjType.BathtubBasin, SimObjType.SinkBasin,
-		SimObjType.NightStand,
+		SimObjType.NightStand, SimObjType.CoffeeMachine, SimObjType.ToiletPaperHanger, SimObjType.Toilet,
 	};
 
 	//objects in this list should always return all spawn points inside of it when trying to place an object from the hand into the object

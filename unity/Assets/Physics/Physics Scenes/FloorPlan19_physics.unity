@@ -3169,8 +3169,8 @@ BoxCollider:
   m_IsTrigger: 1
   m_Enabled: 1
   serializedVersion: 2
-  m_Size: {x: 1, y: 1, z: 2.2934525}
-  m_Center: {x: 0, y: 0, z: 0.6467259}
+  m_Size: {x: 1, y: 1, z: 0.86409926}
+  m_Center: {x: 0, y: 0, z: -0.067950845}
 --- !u!1 &43632739
 GameObject:
   m_ObjectHideFlags: 0
@@ -4769,7 +4769,7 @@ Transform:
   m_LocalScale: {x: 0.6482799, y: 0.04, z: 1.3045316}
   m_Children: []
   m_Father: {fileID: 1763943991}
-  m_RootOrder: 1
+  m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!23 &135021968
 MeshRenderer:
@@ -11923,7 +11923,7 @@ Transform:
   - {fileID: 667306935}
   - {fileID: 2023294548}
   m_Father: {fileID: 1763943991}
-  m_RootOrder: 2
+  m_RootOrder: 3
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &566731682
 GameObject:
@@ -13274,6 +13274,66 @@ Light:
   m_UseColorTemperature: 0
   m_ShadowRadius: 0
   m_ShadowAngle: 0
+--- !u!1 &630836508
+GameObject:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 1064019730757930, guid: a89262cd509e6443dbaec52397b96b97,
+    type: 2}
+  m_PrefabInternal: {fileID: 0}
+  serializedVersion: 5
+  m_Component:
+  - component: {fileID: 630836509}
+  - component: {fileID: 630836511}
+  - component: {fileID: 630836510}
+  m_Layer: 9
+  m_Name: ReceptacleTriggerBox (1)
+  m_TagString: Receptacle
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &630836509
+Transform:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 4758591527581302, guid: a89262cd509e6443dbaec52397b96b97,
+    type: 2}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 630836508}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0.01166904, y: 0.0059999824, z: 0.568}
+  m_LocalScale: {x: 0.64827996, y: 0.103, z: 0.56795996}
+  m_Children: []
+  m_Father: {fileID: 1763943991}
+  m_RootOrder: 1
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &630836510
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 114844849989703428, guid: a89262cd509e6443dbaec52397b96b97,
+    type: 2}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 630836508}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5122b08936ec54929891d19a8fac4755, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  CurrentlyContains: []
+  myParent: {fileID: 1125033704}
+  occupied: 0
+--- !u!65 &630836511
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 65273154982526084, guid: a89262cd509e6443dbaec52397b96b97,
+    type: 2}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 630836508}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 1
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Size: {x: 1, y: 1, z: 0.24336088}
+  m_Center: {x: 0, y: 0, z: 0.025097108}
 --- !u!1 &634452087
 GameObject:
   m_ObjectHideFlags: 0
@@ -22271,6 +22331,7 @@ MonoBehaviour:
   - {fileID: 2023294548}
   ReceptacleTriggerBoxes:
   - {fileID: 42855448}
+  - {fileID: 630836508}
   isVisible: 0
   isInteractable: 0
   isColliding: 0
@@ -33287,6 +33348,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 42855449}
+  - {fileID: 630836509}
   - {fileID: 135021967}
   - {fileID: 565064323}
   m_Father: {fileID: 837114046}
