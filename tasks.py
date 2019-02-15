@@ -8,6 +8,7 @@ import subprocess
 from invoke import task
 
 S3_BUCKET = 'ai2-thor'
+UNITY_VERSION = '2017.3.1f1'
 
 def add_files(zipf, start_dir):
     for root, dirs, files in os.walk(start_dir):
@@ -28,14 +29,22 @@ def push_build(build_archive_name):
     print("pushed build %s to %s" % (S3_BUCKET, build_archive_name))
 
 
+
 def _build(context, unity_path, arch, build_dir, build_name):
     project_path = os.path.join(os.getcwd(), unity_path)
-    command = "/Applications/Unity-2017.3.1f1/Unity.app/Contents/MacOS/Unity -quit -batchmode -logFile build.log -projectpath %s -executeMethod Build.%s" % (project_path, arch)
+    unity_hub_path = "/Applications/Unity/Hub/Editor/{}/Unity.app/Contents/MacOS/Unity".format(
+        UNITY_VERSION
+    )
+    standalone_path = "/Applications/Unity-{}/Unity.app/Contents/MacOS/Unity".format(UNITY_VERSION)
+    if os.path.exists(standalone_path):
+        unity_path = standalone_path
+    else:
+        unity_path = unity_hub_path
+    command = "%s -quit -batchmode -logFile build.log -projectpath %s -executeMethod Build.%s" % (unity_path, project_path, arch)
     target_path = os.path.join(build_dir, build_name)
     print(target_path)
 
     return context.run(command, warn=True, env=dict(UNITY_BUILD_NAME=target_path))
-
 @task
 def local_build(context, prefix='local', arch='OSXIntel64'):
     build_name = "thor-%s-%s" % (prefix, arch)
@@ -290,3 +299,94 @@ def check_visible_objects_closed_receptacles(ctx, start_scene, end_scene):
                                 action='PickupObject',
                                 objectId=visibility_object_id,
                                 forceVisible=True))
+
+
+@task
+def benchmark(ctx, screen_width=600, screen_height=600, editor_mode=False, out='banchmark.json',
+              verbose=False):
+    import ai2thor.controller
+    import random
+    import time
+    import json
+
+    move_actions = ['MoveAhead', 'MoveBack', 'MoveLeft', 'MoveRight']
+    rotate_actions = ['RotateRight', 'RotateLeft']
+    look_actions = ['LookUp', 'LookDown']
+    all_actions = move_actions + rotate_actions + look_actions
+
+    def test_routine(env, test_actions, n=100):
+        average_frame_time = 0
+        for i in range(n):
+            action = random.choice(test_actions)
+            start = time.time()
+            event = env.step(dict(action=action))
+            end = time.time()
+            frame_time = end - start
+            average_frame_time += frame_time
+
+        average_frame_time = average_frame_time / float(n)
+        return average_frame_time
+
+    def benchmark_actions(env, action_name, actions, n=100):
+        if verbose:
+            print("--- Actions {}".format(actions))
+        frame_time = test_routine(env, actions)
+        if verbose:
+            print("{} average: {}".format(action_name, 1 / frame_time))
+        return 1 / frame_time
+
+    env = ai2thor.controller.Controller()
+    if editor_mode:
+        env.start(8200, False, player_screen_width=screen_width,
+                  player_screen_height=screen_height)
+    else:
+        env.start(player_screen_width=screen_width, player_screen_height=screen_height)
+    # Kitchens:       FloorPlan1 - FloorPlan30
+    # Living rooms:   FloorPlan201 - FloorPlan230
+    # Bedrooms:       FloorPlan301 - FloorPlan330
+    # Bathrooms:      FloorPLan401 - FloorPlan430
+
+    # room_ranges = [(1, 30), (201, 230), (301, 330),  (401, 430)]
+
+    room_ranges = [(1, 30)]
+
+    benchmark_map = {'scenes': {}}
+    total_average_ft = 0
+    scene_count = 0
+    for room_range in room_ranges:
+        for i in range(room_range[0], room_range[1]):
+            scene = 'FloorPlan{}'.format(i)
+            scene_benchmark = {}
+            env.reset(scene)
+            env.step(dict(action='Initialize', gridSize=0.25))
+
+            if verbose:
+                print("------ {}".format(scene))
+
+            sample_number = 100
+            action_tuples = [
+                ('move', move_actions, sample_number),
+                ('rotate', rotate_actions, sample_number),
+                ('look', look_actions, sample_number),
+                ('all', all_actions, sample_number)
+            ]
+            scene_average_fr = 0
+            for action_name, actions, n in action_tuples:
+                ft = benchmark_actions(env, action_name, actions, n)
+                scene_benchmark[action_name] = ft
+                scene_average_fr += ft
+
+            scene_average_fr = scene_average_fr / float(len(action_tuples))
+            total_average_ft += scene_average_fr
+
+            if verbose:
+                print("Total average frametime: {}".format(scene_average_fr))
+
+            benchmark_map['scenes'][scene] = scene_benchmark
+            scene_count += 1
+
+    benchmark_map['average_framerate_seconds'] = total_average_ft / scene_count
+    with open(out, 'w') as f:
+        f.write(json.dumps(benchmark_map, indent=4, sort_keys=True))
+
+    env.stop()
