@@ -264,7 +264,7 @@ public static class ReceptacleRestrictions
     //Objects are "placed into/placed in" these receptacles
     //The object placed must have the entirety of it's object oriented bounding box (all 8 corners) enclosed within the Receptacle's Box
     public static List<SimObjType> InReceptacles = new List<SimObjType>() 
-    {SimObjType.Drawer, SimObjType.Cabinet, SimObjType.Fridge, SimObjType.Microwave};
+    {SimObjType.Drawer, SimObjType.Cabinet, SimObjType.Fridge, SimObjType.Microwave, SimObjType.LaundryHamper};
 
     //Objects are "placed on top of/placed on" these receptacles
     //the object placed only needs the bottom most 4 corners within the Receptacle Box to be placed validly, this allows
@@ -590,7 +590,7 @@ public static class ReceptacleRestrictions
 		//CLOTH
 		{SimObjType.Cloth, new List<SimObjType>()
 		{SimObjType.Desk, SimObjType.TableTop, SimObjType.Drawer, SimObjType.Shelf, SimObjType.Dresser, SimObjType.NightStand,SimObjType.Bed, SimObjType.Toilet,
-		 SimObjType.Bathtub, SimObjType.BathtubBasin, SimObjType.Cart, SimObjType.Cabinet}},
+		 SimObjType.Bathtub, SimObjType.BathtubBasin, SimObjType.Cart, SimObjType.Cabinet, SimObjType.LaundryHamper}},
 
 	};
 
