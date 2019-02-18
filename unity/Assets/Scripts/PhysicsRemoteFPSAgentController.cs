@@ -1944,6 +1944,76 @@ namespace UnityStandardAssets.Characters.FirstPerson
             actionFinished(moveHandToXYZ(newPos.x, newPos.y, newPos.z));
 		}
 
+        public void MoveHandLeft(ServerAction action)
+        {
+            ServerAction a = new ServerAction();
+            a.moveMagnitude = action.moveMagnitude;
+            a.x = -1f;
+            a.y = 0;
+            a.z = 0;
+
+            MoveHandMagnitude(a);
+        }
+
+        public void MoveHandRight(ServerAction action)
+        {
+            ServerAction a = new ServerAction();
+            a.moveMagnitude = action.moveMagnitude;
+            a.x = 1f;
+            a.y = 0;
+            a.z = 0;
+
+            MoveHandMagnitude(a);
+        }
+
+
+        public void MoveHandAhead(ServerAction action)
+        {
+            ServerAction a = new ServerAction();
+            a.moveMagnitude = action.moveMagnitude;
+            a.x = 0;
+            a.y = 0;
+            a.z = 1f;
+            
+            MoveHandMagnitude(a);  
+        }
+
+
+        public void MoveHandBack(ServerAction action)
+        {
+            ServerAction a = new ServerAction();
+            a.moveMagnitude = action.moveMagnitude;
+            a.x = 0;
+            a.y = 0;
+            a.z = -1f;
+            
+            MoveHandMagnitude(a);
+        }
+
+
+        public void MoveHandUp(ServerAction action)
+        {
+            ServerAction a = new ServerAction();
+            a.moveMagnitude = action.moveMagnitude;
+            a.x = 0;
+            a.y = 1f;
+            a.z = 0;
+            
+            MoveHandMagnitude(a);
+        }
+
+
+        public void MoveHandDown(ServerAction action)
+        {
+            ServerAction a = new ServerAction();
+            a.moveMagnitude = action.moveMagnitude;
+            a.x = 0;
+            a.y = -1f;
+            a.z = 0;
+            
+            MoveHandMagnitude(a);
+        }
+
 		public bool IsInArray(Collider collider, GameObject[] arrayOfCol)
 		{
 			for (int i = 0; i < arrayOfCol.Length; i++)
