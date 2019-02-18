@@ -29,6 +29,12 @@ def push_build(build_archive_name):
     print("pushed build %s to %s" % (S3_BUCKET, build_archive_name))
 
 
+def _local_build_path():
+    return os.path.join(
+        os.getcwd(),
+        'unity/builds/thor-local-OSXIntel64.app/Contents/MacOS/thor-local-OSXIntel64'
+    )
+
 
 def _build(context, unity_path, arch, build_dir, build_name):
     project_path = os.path.join(os.getcwd(), unity_path)
@@ -207,10 +213,12 @@ def build(context, local=False):
     build_pip(context)
 
 @task
-def interact(ctx, scene, editor_mode=False):
+def interact(ctx, scene, editor_mode=False, local_build=False):
     import ai2thor.controller
 
     env = ai2thor.controller.Controller()
+    if local_build:
+        env.local_executable_path = _local_build_path()
     if editor_mode:
         env.start(8200, False, player_screen_width=600, player_screen_height=600)
     else:
@@ -302,7 +310,7 @@ def check_visible_objects_closed_receptacles(ctx, start_scene, end_scene):
 
 
 @task
-def benchmark(ctx, screen_width=600, screen_height=600, editor_mode=False, out='banchmark.json',
+def benchmark(ctx, screen_width=600, screen_height=600, editor_mode=False, out='benchmark.json',
               verbose=False):
     import ai2thor.controller
     import random
@@ -336,6 +344,7 @@ def benchmark(ctx, screen_width=600, screen_height=600, editor_mode=False, out='
         return 1 / frame_time
 
     env = ai2thor.controller.Controller()
+    env.local_executable_path = _local_build_path()
     if editor_mode:
         env.start(8200, False, player_screen_width=screen_width,
                   player_screen_height=screen_height)
@@ -346,18 +355,19 @@ def benchmark(ctx, screen_width=600, screen_height=600, editor_mode=False, out='
     # Bedrooms:       FloorPlan301 - FloorPlan330
     # Bathrooms:      FloorPLan401 - FloorPlan430
 
-    # room_ranges = [(1, 30), (201, 230), (301, 330),  (401, 430)]
-
-    room_ranges = [(1, 30)]
+    room_ranges = [(1, 30), (201, 230), (301, 330),  (401, 430)]
 
     benchmark_map = {'scenes': {}}
     total_average_ft = 0
     scene_count = 0
+    print("Start loop")
     for room_range in room_ranges:
         for i in range(room_range[0], room_range[1]):
-            scene = 'FloorPlan{}'.format(i)
+            scene = 'FloorPlan{}_physics'.format(i)
             scene_benchmark = {}
-            env.reset(scene)
+            if verbose:
+                print("Loading scene {}".format(scene))
+            # env.reset(scene)
             env.step(dict(action='Initialize', gridSize=0.25))
 
             if verbose:
