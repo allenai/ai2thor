@@ -41,7 +41,17 @@ public class CanOpen_Object : MonoBehaviour
 
 	[SerializeField]
     protected MovementType movementType;
-    
+
+    #if UNITY_EDITOR
+    void OnEnable ()
+    {
+		//debug check for missing CanOpen property
+        if (!gameObject.GetComponent<SimObjPhysics>().DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanOpen))
+        {
+            Debug.LogError(gameObject.transform.name + " is missing the Secondary Property CanOpen!");
+        }
+    }
+    #endif
 	// Use this for initialization
 	void Start () 
 	{

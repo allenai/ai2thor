@@ -264,7 +264,7 @@ public static class ReceptacleRestrictions
     //Objects are "placed into/placed in" these receptacles
     //The object placed must have the entirety of it's object oriented bounding box (all 8 corners) enclosed within the Receptacle's Box
     public static List<SimObjType> InReceptacles = new List<SimObjType>() 
-    {SimObjType.Drawer, SimObjType.Cabinet, SimObjType.Fridge, SimObjType.Microwave};
+    {SimObjType.Drawer, SimObjType.Cabinet, SimObjType.Fridge, SimObjType.Microwave, SimObjType.LaundryHamper};
 
     //Objects are "placed on top of/placed on" these receptacles
     //the object placed only needs the bottom most 4 corners within the Receptacle Box to be placed validly, this allows
@@ -307,7 +307,8 @@ public static class ReceptacleRestrictions
 	{
 		SimObjType.Pot, SimObjType.Pan, SimObjType.Bowl, SimObjType.Plate, SimObjType.Bread, SimObjType.Cup, SimObjType.Mug, SimObjType.Laptop,
 		SimObjType.SaltShaker, SimObjType.PepperShaker, SimObjType.AlarmClock, SimObjType.Box, SimObjType.SoapBottle, SimObjType.SoapBottleFilled, SimObjType.Kettle,
-		SimObjType.Glassbottle, SimObjType.CreditCard, SimObjType.RemoteControl, SimObjType.Candle, SimObjType.SprayBottle, SimObjType.Statue, SimObjType.Vase,
+		SimObjType.Glassbottle, SimObjType.CreditCard, SimObjType.RemoteControl, SimObjType.Candle, SimObjType.SprayBottle, SimObjType.Statue, SimObjType.Vase, 
+		SimObjType.KeyChain, SimObjType.CD, 
 	};
 
 	//Each sim object type keeps track of what sort of Receptacles it can be placed in
@@ -524,36 +525,37 @@ public static class ReceptacleRestrictions
 		//NEWSPAPER
 		{SimObjType.Newspaper, new List<SimObjType>()
 		{SimObjType.Sofa, SimObjType.ArmChair, SimObjType.Bed, SimObjType.Desk, SimObjType.TableTop, SimObjType.Box, SimObjType.Drawer, SimObjType.Ottoman, SimObjType.Dresser, SimObjType.CounterTop,
-		 SimObjType.Shelf,SimObjType.Cabinet,
+		 SimObjType.Shelf,SimObjType.Cabinet, SimObjType.GarbageCan
 		}},
 
 		//CREDIT CARD
 		{SimObjType.CreditCard, new List<SimObjType>()
-		{SimObjType.Sofa, SimObjType.ArmChair, SimObjType.Bed, SimObjType.Desk, SimObjType.TableTop, SimObjType.Box, SimObjType.Drawer, SimObjType.Ottoman, SimObjType.Dresser, SimObjType.NightStand}},
+		{SimObjType.Sofa, SimObjType.ArmChair, SimObjType.Bed, SimObjType.Desk, SimObjType.TableTop, SimObjType.Box, SimObjType.Drawer, SimObjType.Ottoman, SimObjType.Dresser, SimObjType.NightStand,}},
 
 		//CD
 		{SimObjType.CD, new List<SimObjType>()
-		{SimObjType.Desk, SimObjType.TableTop, SimObjType.Box, SimObjType.Drawer,SimObjType.Shelf, SimObjType.Dresser, SimObjType.NightStand, SimObjType.Drawer}},
+		{SimObjType.Desk, SimObjType.TableTop, SimObjType.Box, SimObjType.Drawer,SimObjType.Shelf, SimObjType.Dresser, SimObjType.NightStand, SimObjType.Drawer, SimObjType.GarbageCan}},
 
 		//WATCH
 		{SimObjType.Watch, new List<SimObjType>()
-		{SimObjType.Desk, SimObjType.TableTop, SimObjType.Box, SimObjType.Drawer,SimObjType.Shelf, SimObjType.Dresser, SimObjType.NightStand, SimObjType.Drawer}},
+		{SimObjType.Desk, SimObjType.TableTop, SimObjType.Box, SimObjType.Drawer,SimObjType.Shelf, SimObjType.Dresser, SimObjType.NightStand, SimObjType.Drawer,}},
 
 		//CELL PHONE
 		{SimObjType.CellPhone, new List<SimObjType>()
-		{SimObjType.Sofa, SimObjType.ArmChair, SimObjType.Bed, SimObjType.Desk, SimObjType.TableTop, SimObjType.Box, SimObjType.Drawer, SimObjType.Ottoman, SimObjType.Shelf, SimObjType.Dresser, SimObjType.NightStand}},
+		{SimObjType.Sofa, SimObjType.ArmChair, SimObjType.Bed, SimObjType.Desk, SimObjType.TableTop, SimObjType.Box, SimObjType.Drawer, SimObjType.Ottoman, SimObjType.Shelf, SimObjType.Dresser, SimObjType.NightStand,
+		 }},
 
 		//PEN
 		{SimObjType.Pen, new List<SimObjType>()
-		{SimObjType.Desk, SimObjType.TableTop, SimObjType.Box, SimObjType.Drawer, SimObjType.Shelf, SimObjType.Dresser, SimObjType.NightStand, SimObjType.Cup, SimObjType.Mug}},
+		{SimObjType.Desk, SimObjType.TableTop, SimObjType.Box, SimObjType.Drawer, SimObjType.Shelf, SimObjType.Dresser, SimObjType.NightStand, SimObjType.Cup, SimObjType.Mug, SimObjType.GarbageCan}},
 
 		//PENCIL
 		{SimObjType.Pencil, new List<SimObjType>()
-		{SimObjType.Desk, SimObjType.TableTop, SimObjType.Box, SimObjType.Drawer, SimObjType.Shelf, SimObjType.Dresser, SimObjType.NightStand, SimObjType.Cup, SimObjType.Mug}},
+		{SimObjType.Desk, SimObjType.TableTop, SimObjType.Box, SimObjType.Drawer, SimObjType.Shelf, SimObjType.Dresser, SimObjType.NightStand, SimObjType.Cup, SimObjType.Mug, SimObjType.GarbageCan}},
 
 		//KEYCHAIN
 		{SimObjType.KeyChain, new List<SimObjType>()
-		{SimObjType.Desk, SimObjType.TableTop, SimObjType.Box, SimObjType.Drawer, SimObjType.Shelf, SimObjType.Dresser, SimObjType.NightStand, SimObjType.ArmChair, SimObjType.Sofa}},
+		{SimObjType.Desk, SimObjType.TableTop, SimObjType.Box, SimObjType.Drawer, SimObjType.Shelf, SimObjType.Dresser, SimObjType.NightStand, SimObjType.ArmChair, SimObjType.Sofa, SimObjType.GarbageCan}},
 
 		//BOOK - Need to alter this later so that Open Books are no longer their own prefabs, combine into one once we have state change
 		{SimObjType.Book, new List<SimObjType>()
@@ -590,7 +592,7 @@ public static class ReceptacleRestrictions
 		//CLOTH
 		{SimObjType.Cloth, new List<SimObjType>()
 		{SimObjType.Desk, SimObjType.TableTop, SimObjType.Drawer, SimObjType.Shelf, SimObjType.Dresser, SimObjType.NightStand,SimObjType.Bed, SimObjType.Toilet,
-		 SimObjType.Bathtub, SimObjType.BathtubBasin, SimObjType.Cart, SimObjType.Cabinet}},
+		 SimObjType.Bathtub, SimObjType.BathtubBasin, SimObjType.Cart, SimObjType.Cabinet, SimObjType.LaundryHamper, SimObjType.GarbageCan}},
 
 	};
 
