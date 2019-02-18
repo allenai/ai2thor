@@ -873,7 +873,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 				case "mha":
                     {
                         ServerAction action = new ServerAction();
-                        action.action = "MoveHandMagnitude";
+                        action.action = "MoveHandAhead";
 
 						if(splitcommand.Length > 1)
 						{
@@ -883,9 +883,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
 						else
 						    action.moveMagnitude = 0.1f;
 						
-						action.x = 0f;
-						action.y = 0f;
-						action.z = 1f;
+						// action.x = 0f;
+						// action.y = 0f;
+						// action.z = 1f;
 
                         PhysicsController.ProcessControlCommand(action);
                         break;
@@ -896,7 +896,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 case "mhb":
                     {
 						ServerAction action = new ServerAction();
-                        action.action = "MoveHandMagnitude";
+                        action.action = "MoveHandBack";
 
 
                         if (splitcommand.Length > 1)
@@ -907,9 +907,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         else
                             action.moveMagnitude = 0.1f;
 						
-                        action.x = 0f;
-                        action.y = 0f;
-                        action.z = -1f;
+                        // action.x = 0f;
+                        // action.y = 0f;
+                        // action.z = -1f;
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }  
@@ -919,7 +919,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 case "mhl":
                     {
 						ServerAction action = new ServerAction();
-                        action.action = "MoveHandMagnitude";                  
+                        action.action = "MoveHandLeft";                  
 
                         if (splitcommand.Length > 1)
                         {
@@ -929,9 +929,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         else
                             action.moveMagnitude = 0.1f;
 						
-                        action.x = -1f;
-                        action.y = 0f;
-                        action.z = 0f;
+                        // action.x = -1f;
+                        // action.y = 0f;
+                        // action.z = 0f;
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }  
@@ -941,7 +941,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 case "mhr":
                     {
 						ServerAction action = new ServerAction();
-                        action.action = "MoveHandMagnitude";
+                        action.action = "MoveHandRight";
 
                         if (splitcommand.Length > 1)
                         {
@@ -951,9 +951,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         else
                             action.moveMagnitude = 0.1f;
 						
-                        action.x = 1f;
-                        action.y = 0f;
-                        action.z = 0f;
+                        // action.x = 1f;
+                        // action.y = 0f;
+                        // action.z = 0f;
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }  
@@ -963,7 +963,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 case "mhu":
                     {
 						ServerAction action = new ServerAction();
-                        action.action = "MoveHandMagnitude";
+                        action.action = "MoveHandUp";
 
                         if (splitcommand.Length > 1)
                         {
@@ -973,9 +973,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         else
                             action.moveMagnitude = 0.1f;
 						
-                        action.x = 0f;
-                        action.y = 1f;
-                        action.z = 0f;
+                        // action.x = 0f;
+                        // action.y = 1f;
+                        // action.z = 0f;
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }  
@@ -985,7 +985,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 case "mhd":
                     {
 						ServerAction action = new ServerAction();
-                        action.action = "MoveHandMagnitude";
+                        action.action = "MoveHandDown";
                         
                         if (splitcommand.Length > 1)
                         {
@@ -995,9 +995,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         else
                             action.moveMagnitude = 0.1f;
 						
-                        action.x = 0f;
-                        action.y = -1f;
-                        action.z = 0f;
+                        // action.x = 0f;
+                        // action.y = -1f;
+                        // action.z = 0f;
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }  
