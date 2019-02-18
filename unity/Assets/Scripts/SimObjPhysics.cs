@@ -635,7 +635,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 	{
 		if(other.gameObject.tag == "HighFriction" && (PrimaryProperty == SimObjPrimaryProperty.CanPickup || PrimaryProperty == SimObjPrimaryProperty.Moveable))
 		{
-			print( "resetting to default trigger exit");
+			//print( "resetting to default trigger exit");
 
 			Rigidbody rb = gameObject.GetComponent<Rigidbody>();
 
