@@ -13,6 +13,7 @@ GameObject:
   - component: {fileID: 114000010621761404}
   - component: {fileID: 114000011054666674}
   - component: {fileID: 114749714472260818}
+  - component: {fileID: 114372750333748660}
   - component: {fileID: 136752831871764314}
   m_Layer: 10
   m_Name: FPSController
@@ -2966,6 +2967,7 @@ MonoBehaviour:
     lockCursor: 0
   Debug_Canvas: {fileID: 0}
   InputMode_Text: {fileID: 0}
+  FlightMode: 0
   TextInputMode: 1
   InputFieldObj: {fileID: 0}
 --- !u!114 &114000011054666674
@@ -2984,6 +2986,8 @@ MonoBehaviour:
   m_RunSpeed: 2
   m_GravityMultiplier: 2
   imageSynthesis: {fileID: 0}
+  AgentId: 0
+  Agents: []
   excludeObjectIds: []
   m_Camera: {fileID: 0}
   m_CharacterController: {fileID: 0}
@@ -3153,6 +3157,17 @@ MonoBehaviour:
   isColliding: 0
   ItemInHand: {fileID: 0}
   AgentRef: {fileID: 0}
+--- !u!114 &114372750333748660
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 100000}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7648e36607a724cf1be7601915600173, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!114 &114413063421415668
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -3239,6 +3254,8 @@ MonoBehaviour:
   m_RunSpeed: 0
   m_GravityMultiplier: 2
   imageSynthesis: {fileID: 0}
+  AgentId: 0
+  Agents: []
   excludeObjectIds: []
   m_Camera: {fileID: 0}
   m_CharacterController: {fileID: 0}
@@ -3296,6 +3313,8 @@ MonoBehaviour:
   - {fileID: 1252970257981572}
   VisibleSimObjPhysics: []
   IsHandDefault: 1
+  FlightMode: 0
+  FlightCameras: []
   objectIdsInBox: []
   inTopLevelView: 0
   lastLocalCameraPosition: {x: 0, y: 0, z: 0}

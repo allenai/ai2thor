@@ -35,9 +35,19 @@ public class AgentManager : MonoBehaviour
 
 	private BaseFPSAgentController primaryAgent;
 
+    private JavaScriptInterface jsInterface;
+
 	void Awake() {
 
-		tex = new Texture2D(UnityEngine.Screen.width, UnityEngine.Screen.height, TextureFormat.RGB24, false);
+        #if UNITY_WEBGL
+
+            Debug.Log("Webgl");
+            jsInterface = this.GetComponent<JavaScriptInterface>();
+            jsInterface.enabled = true;
+
+        #endif
+
+        tex = new Texture2D(UnityEngine.Screen.width, UnityEngine.Screen.height, TextureFormat.RGB24, false);
 		readPixelsRect = new Rect(0, 0, UnityEngine.Screen.width, UnityEngine.Screen.height);
 	
 		Application.targetFrameRate = 300;
