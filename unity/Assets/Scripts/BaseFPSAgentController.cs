@@ -114,6 +114,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 		private Quaternion targetRotation;
 
+        // Javascript communication
+        private JavaScriptInterface jsInterface;
+        private ServerAction currentServerAction;
+
 		public Quaternion TargetRotation
 		{
 			get { return targetRotation; }
@@ -122,9 +126,13 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		// Initialize parameters from environment variables
 		protected virtual void Awake()
 		{
-			// whether it's in training or test phase         
-			// character controller parameters
-			m_CharacterController = GetComponent<CharacterController>();
+            #if UNITY_WEBGL
+                this.jsInterface = this.GetComponent<JavaScriptInterface>();
+                this.jsInterface.enabled = true;
+            #endif
+            // whether it's in training or test phase         
+            // character controller parameters
+            m_CharacterController = GetComponent<CharacterController>();
 			//float radius = m_CharacterController.radius;
 			m_CharacterController.radius = 0.2f;
 			// using default for now to remain consistent with generated points
@@ -172,7 +180,13 @@ namespace UnityStandardAssets.Characters.FirstPerson
 				Debug.LogError ("ActionFinished called with actionComplete already set to true");
 			}
 
-			lastActionSuccess = success;
+            if (this.jsInterface)
+            {
+                // TODO: Check if the reflection method call was successfull add that to the sent event data
+                this.jsInterface.SendAction(currentServerAction);
+            }
+
+            lastActionSuccess = success;
 			this.actionComplete = true;
 			actionCounter = 0;
 			targetTeleport = Vector3.zero;
@@ -531,9 +545,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			imageSynthesis.enabled = true;			
 		}
 
-		public void ProcessControlCommand(ServerAction controlCommand)
-		{
-	        errorMessage = "";
+		public void ProcessControlCommand(ServerAction controlCommand) {
+            currentServerAction = controlCommand;
+            errorMessage = "";
 			errorCode = ServerActionErrorCode.Undefined;
 			collisionsInAction = new List<string>();
 
@@ -552,7 +566,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 					actionFinished(false);
 				} else {
 					method.Invoke(this, new object[] { controlCommand });
-				}
+                }
 			}
 			catch (Exception e)
 			{
@@ -562,7 +576,11 @@ namespace UnityStandardAssets.Characters.FirstPerson
 				errorMessage += e.ToString();
 				actionFinished(false);
 			}
-		}
+            //if (this.jsInterface) {
+            //    // TODO: Check if the reflection method call was successfull add that to the sent event data
+            //    this.jsInterface.SendAction(controlCommand);
+            //}
+        }
 
 		// Handle collisions - CharacterControllers don't apply physics innately, see "PushMode" check below
 		protected void OnControllerColliderHit(ControllerColliderHit hit)

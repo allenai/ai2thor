@@ -18,20 +18,33 @@ namespace UnityStandardAssets.Characters.FirstPerson
         // Use this for initialization
         void Start()
         {
-             #if UNITY_EDITOR
+            #if UNITY_EDITOR || UNITY_WEBGL
 
-			//UnityEngine.EventSystems.EventSystem.current.SetSelectedGameObject(gameObject);
-			Agent = GameObject.Find("FPSController");
-			PhysicsController = Agent.GetComponent<PhysicsRemoteFPSAgentController>();
+                Debug.Log("Unity editor");
+                this.InitializeUserControl();
+
+            #endif
+
+            #if UNITY_WEBGL
+
+                Debug.Log("Webgl");
+                PhysicsController.GetComponent<JavaScriptInterface>().enabled = true;
+
+            #endif
+        }
+
+        void InitializeUserControl()
+        {
+            Agent = GameObject.Find("FPSController");
+            PhysicsController = Agent.GetComponent<PhysicsRemoteFPSAgentController>();
             AManager = GameObject.Find("PhysicsSceneManager").GetComponentInChildren<AgentManager>();
-           
+
             PhysicsController.GetComponent<DebugFPSAgentController>().enabled = true;
-            
-			PivotController = Agent.GetComponent<DiscreteRemoteFPSAgentController>();
+
+            PivotController = Agent.GetComponent<DiscreteRemoteFPSAgentController>();
             debugfield = gameObject.GetComponent<InputField>();
             dfac = Agent.GetComponent<DebugFPSAgentController>();
 
-            #endif
         }
 
         // Update is called once per frame
