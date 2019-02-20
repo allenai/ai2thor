@@ -59,6 +59,7 @@ public class PhysicsSceneManager : MonoBehaviour
 
 	}
 	
+	// Update is called once per frame
 	void Update () 
 	{
 
@@ -90,7 +91,7 @@ public class PhysicsSceneManager : MonoBehaviour
 		PhysObjectsInScene = new List<SimObjPhysics>();
 
 		PhysObjectsInScene.AddRange(FindObjectsOfType<SimObjPhysics>());
-		//PhysObjectsInScene.Sort((x, y) => (x.Type.ToString().CompareTo(y.Type.ToString())));
+		PhysObjectsInScene.Sort((x, y) => (x.Type.ToString().CompareTo(y.Type.ToString())));
 
 		foreach(SimObjPhysics o in PhysObjectsInScene)
 		{

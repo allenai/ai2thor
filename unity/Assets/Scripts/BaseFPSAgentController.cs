@@ -531,8 +531,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			imageSynthesis.enabled = true;			
 		}
 
+		public abstract void PreprocessControlCommand(ServerAction controlCommand);
+
 		public void ProcessControlCommand(ServerAction controlCommand)
 		{
+			PreprocessControlCommand(controlCommand);
+			
 	        errorMessage = "";
 			errorCode = ServerActionErrorCode.Undefined;
 			collisionsInAction = new List<string>();
