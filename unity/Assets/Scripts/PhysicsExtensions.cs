@@ -71,11 +71,18 @@ public static class PhysicsExtensions
         return Physics.CheckBox(center, halfExtents, orientation, layerMask, queryTriggerInteraction);
     }
 
-    public static Collider[] OverlapBox(BoxCollider box, int layerMask = Physics.DefaultRaycastLayers, QueryTriggerInteraction queryTriggerInteraction = QueryTriggerInteraction.UseGlobal)
+    public static Collider[] OverlapBox(
+        BoxCollider box, 
+        int layerMask = Physics.DefaultRaycastLayers,
+        QueryTriggerInteraction queryTriggerInteraction = QueryTriggerInteraction.UseGlobal,
+        float expandBy = 0.0f)
     {
         Vector3 center, halfExtents;
         Quaternion orientation;
         box.ToWorldSpaceBox(out center, out halfExtents, out orientation);
+        if (expandBy != 0.0f) {
+            halfExtents = new Vector3(expandBy + halfExtents.x, expandBy + halfExtents.y, expandBy + halfExtents.z);
+        }
         return Physics.OverlapBox(center, halfExtents, orientation, layerMask, queryTriggerInteraction);
     }
 
@@ -132,11 +139,16 @@ public static class PhysicsExtensions
         return Physics.CheckSphere(center, radius, layerMask, queryTriggerInteraction);
     }
 
-    public static Collider[] OverlapSphere(SphereCollider sphere, int layerMask = Physics.DefaultRaycastLayers, QueryTriggerInteraction queryTriggerInteraction = QueryTriggerInteraction.UseGlobal)
+    public static Collider[] OverlapSphere
+    (SphereCollider sphere,
+    int layerMask = Physics.DefaultRaycastLayers,
+    QueryTriggerInteraction queryTriggerInteraction = QueryTriggerInteraction.UseGlobal,
+    float expandBy = 0.0f)
     {
         Vector3 center;
         float radius;
         sphere.ToWorldSpaceSphere(out center, out radius);
+        radius += expandBy;
         return Physics.OverlapSphere(center, radius, layerMask, queryTriggerInteraction);
     }
 
@@ -190,12 +202,16 @@ public static class PhysicsExtensions
         return Physics.CheckCapsule(point0, point1, radius, layerMask, queryTriggerInteraction);
     }
 
-    public static Collider[] OverlapCapsule(CapsuleCollider capsule, int layerMask = Physics.DefaultRaycastLayers, QueryTriggerInteraction queryTriggerInteraction = QueryTriggerInteraction.UseGlobal)
+    public static Collider[] OverlapCapsule(
+        CapsuleCollider capsule, 
+        int layerMask = Physics.DefaultRaycastLayers, 
+        QueryTriggerInteraction queryTriggerInteraction = QueryTriggerInteraction.UseGlobal,
+        float expandBy = 0.0f)
     {
         Vector3 point0, point1;
         float radius;
         capsule.ToWorldSpaceCapsule(out point0, out point1, out radius);
-        return Physics.OverlapCapsule(point0, point1, radius, layerMask, queryTriggerInteraction);
+        return Physics.OverlapCapsule(point0, point1, expandBy + radius, layerMask, queryTriggerInteraction);
     }
 
     public static int OverlapCapsuleNonAlloc(CapsuleCollider capsule, Collider[] results, int layerMask = Physics.DefaultRaycastLayers, QueryTriggerInteraction queryTriggerInteraction = QueryTriggerInteraction.UseGlobal)

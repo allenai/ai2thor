@@ -509,7 +509,7 @@ public class ObjectMetadata
 	public float[] bounds3D;
 	public string parentReceptacle;
 	public string[] parentReceptacles;
-
+	
 	public float currentTime;
 
 	public ObjectMetadata() { }
