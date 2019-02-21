@@ -115,6 +115,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 		private Quaternion targetRotation;
 
+        // Javascript communication
+        private JavaScriptInterface jsInterface;
+        private ServerAction currentServerAction;
+
 		public Quaternion TargetRotation
 		{
 			get { return targetRotation; }
@@ -123,9 +127,13 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		// Initialize parameters from environment variables
 		protected virtual void Awake()
 		{
-			// whether it's in training or test phase         
-			// character controller parameters
-			m_CharacterController = GetComponent<CharacterController>();
+            #if UNITY_WEBGL
+                this.jsInterface = this.GetComponent<JavaScriptInterface>();
+                this.jsInterface.enabled = true;
+            #endif
+            // whether it's in training or test phase         
+            // character controller parameters
+            m_CharacterController = GetComponent<CharacterController>();
 			//float radius = m_CharacterController.radius;
 			m_CharacterController.radius = 0.2f;
 			// using default for now to remain consistent with generated points
@@ -173,7 +181,13 @@ namespace UnityStandardAssets.Characters.FirstPerson
 				Debug.LogError ("ActionFinished called with actionComplete already set to true");
 			}
 
-			lastActionSuccess = success;
+            if (this.jsInterface)
+            {
+                // TODO: Check if the reflection method call was successfull add that to the sent event data
+                this.jsInterface.SendAction(currentServerAction);
+            }
+
+            lastActionSuccess = success;
 			this.actionComplete = true;
 			this.actionReturn = actionReturn;
 			actionCounter = 0;
@@ -537,6 +551,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 		public void ProcessControlCommand(ServerAction controlCommand)
 		{
+            currentServerAction = controlCommand;
 			PreprocessControlCommand(controlCommand);
 			
 	        errorMessage = "";

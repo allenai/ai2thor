@@ -80,7 +80,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
         private void DebugKeyboardControls()
 		{
 			//swap between text input and not
-			if (Input.GetKeyDown(KeyCode.BackQuote))
+			if (Input.GetKeyDown(KeyCode.BackQuote) || Input.GetKeyDown(KeyCode.Escape))
             {
 				//Switch to Text Mode
                 if (TextInputMode == false)
