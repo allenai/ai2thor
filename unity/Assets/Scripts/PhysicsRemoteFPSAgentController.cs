@@ -329,6 +329,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			metaMessage.lastAction = lastAction;
 			metaMessage.lastActionSuccess = lastActionSuccess;
 			metaMessage.errorMessage = errorMessage;
+            metaMessage.actionReturn = this.actionReturn;
 
 			if (errorCode != ServerActionErrorCode.Undefined) {
 				metaMessage.errorCode = Enum.GetName(typeof(ServerActionErrorCode), errorCode);
@@ -1952,6 +1953,49 @@ namespace UnityStandardAssets.Characters.FirstPerson
         //pass in x,y,z of 0 if no movement is desired on that axis
         //pass in x,y,z of 1 for positive movement along that axis
         //pass in x,y,z of -1 for negative movement along that axis
+        public void MoveHandAhead(ServerAction action)
+		{
+			Vector3 newPos = AgentHand.transform.position;
+            newPos = newPos + (m_Camera.transform.forward * action.moveMagnitude);    
+            actionFinished(moveHandToXYZ(newPos.x, newPos.y, newPos.z));
+        }
+
+        public void MoveHandLeft(ServerAction action)
+		{
+			Vector3 newPos = AgentHand.transform.position;
+            newPos = newPos + (-m_Camera.transform.right * action.moveMagnitude);
+            actionFinished(moveHandToXYZ(newPos.x, newPos.y, newPos.z));
+        }
+
+
+        public void MoveHandDown(ServerAction action)
+		{
+			Vector3 newPos = AgentHand.transform.position;
+            newPos = newPos + (-m_Camera.transform.up * action.moveMagnitude);    
+            actionFinished(moveHandToXYZ(newPos.x, newPos.y, newPos.z));
+        }
+
+        public void MoveHandUp(ServerAction action)
+		{
+			Vector3 newPos = AgentHand.transform.position;
+            newPos = newPos + (m_Camera.transform.up * action.moveMagnitude);
+            actionFinished(moveHandToXYZ(newPos.x, newPos.y, newPos.z));
+        }
+
+        public void MoveHandRight(ServerAction action)
+		{
+			Vector3 newPos = AgentHand.transform.position;
+            newPos = newPos + (m_Camera.transform.right * action.moveMagnitude);
+            actionFinished(moveHandToXYZ(newPos.x, newPos.y, newPos.z));
+        }
+
+        public void MoveHandBack(ServerAction action)
+		{
+			Vector3 newPos = AgentHand.transform.position;
+            newPos = newPos + (-m_Camera.transform.forward * action.moveMagnitude);
+            actionFinished(moveHandToXYZ(newPos.x, newPos.y, newPos.z));
+        }
+
         public void MoveHandMagnitude(ServerAction action)
 		{         
 			Vector3 newPos = AgentHand.transform.position;
@@ -1989,76 +2033,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
             actionFinished(moveHandToXYZ(newPos.x, newPos.y, newPos.z));
 		}
-
-        public void MoveHandLeft(ServerAction action)
-        {
-            ServerAction a = new ServerAction();
-            a.moveMagnitude = action.moveMagnitude;
-            a.x = -1f;
-            a.y = 0;
-            a.z = 0;
-
-            MoveHandMagnitude(a);
-        }
-
-        public void MoveHandRight(ServerAction action)
-        {
-            ServerAction a = new ServerAction();
-            a.moveMagnitude = action.moveMagnitude;
-            a.x = 1f;
-            a.y = 0;
-            a.z = 0;
-
-            MoveHandMagnitude(a);
-        }
-
-
-        public void MoveHandAhead(ServerAction action)
-        {
-            ServerAction a = new ServerAction();
-            a.moveMagnitude = action.moveMagnitude;
-            a.x = 0;
-            a.y = 0;
-            a.z = 1f;
-            
-            MoveHandMagnitude(a);  
-        }
-
-
-        public void MoveHandBack(ServerAction action)
-        {
-            ServerAction a = new ServerAction();
-            a.moveMagnitude = action.moveMagnitude;
-            a.x = 0;
-            a.y = 0;
-            a.z = -1f;
-            
-            MoveHandMagnitude(a);
-        }
-
-
-        public void MoveHandUp(ServerAction action)
-        {
-            ServerAction a = new ServerAction();
-            a.moveMagnitude = action.moveMagnitude;
-            a.x = 0;
-            a.y = 1f;
-            a.z = 0;
-            
-            MoveHandMagnitude(a);
-        }
-
-
-        public void MoveHandDown(ServerAction action)
-        {
-            ServerAction a = new ServerAction();
-            a.moveMagnitude = action.moveMagnitude;
-            a.x = 0;
-            a.y = -1f;
-            a.z = 0;
-            
-            MoveHandMagnitude(a);
-        }
 
 		public bool IsInArray(Collider collider, GameObject[] arrayOfCol)
 		{
@@ -4393,7 +4367,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             if (errorMessage != "") {
                 actionFinished(false);
             } else {
-                actionFinished(true);
+                actionFinished(true, reachablePositions);
             }
         }
 
