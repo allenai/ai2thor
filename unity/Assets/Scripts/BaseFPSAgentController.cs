@@ -89,6 +89,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		protected string errorMessage;
 		protected ServerActionErrorCode errorCode;
 		public bool actionComplete;
+		public System.Object actionReturn;
 
 
 		// Vector3 m_OriginalCameraPosition;
@@ -172,7 +173,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			//allowNodes = false;
 		}
 
-		public void actionFinished(bool success) 
+		public void actionFinished(bool success, System.Object actionReturn=null) 
 		{
 			
 			if (actionComplete) 
@@ -188,6 +189,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
             lastActionSuccess = success;
 			this.actionComplete = true;
+			this.actionReturn = actionReturn;
 			actionCounter = 0;
 			targetTeleport = Vector3.zero;
 		}
@@ -545,9 +547,14 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			imageSynthesis.enabled = true;			
 		}
 
-		public void ProcessControlCommand(ServerAction controlCommand) {
+		public abstract void PreprocessControlCommand(ServerAction controlCommand);
+
+		public void ProcessControlCommand(ServerAction controlCommand)
+		{
             currentServerAction = controlCommand;
-            errorMessage = "";
+			PreprocessControlCommand(controlCommand);
+			
+	        errorMessage = "";
 			errorCode = ServerActionErrorCode.Undefined;
 			collisionsInAction = new List<string>();
 
@@ -555,8 +562,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			lastActionSuccess = false;
 			lastPosition = new Vector3(transform.position.x, transform.position.y, transform.position.z);
 			System.Reflection.MethodInfo method = this.GetType().GetMethod(controlCommand.action);
+			
 			this.actionComplete = false;
-
 			try
 			{
 				if (method == null) {
@@ -566,7 +573,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 					actionFinished(false);
 				} else {
 					method.Invoke(this, new object[] { controlCommand });
-                }
+				}
 			}
 			catch (Exception e)
 			{
@@ -576,11 +583,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 				errorMessage += e.ToString();
 				actionFinished(false);
 			}
-            //if (this.jsInterface) {
-            //    // TODO: Check if the reflection method call was successfull add that to the sent event data
-            //    this.jsInterface.SendAction(controlCommand);
-            //}
-        }
+		}
 
 		// Handle collisions - CharacterControllers don't apply physics innately, see "PushMode" check below
 		protected void OnControllerColliderHit(ControllerColliderHit hit)
