@@ -46,7 +46,6 @@ def _build(context, unity_path, arch, build_dir, build_name, env={}):
         unity_path = standalone_path
     else:
         unity_path = unity_hub_path
-        # -buildTarget WebGL
     command = "%s -quit -batchmode -logFile build.log -projectpath %s -executeMethod Build.%s" % (unity_path, project_path, arch)
     target_path = os.path.join(build_dir, build_name)
     print(target_path)
