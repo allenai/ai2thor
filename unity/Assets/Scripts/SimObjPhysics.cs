@@ -387,7 +387,6 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 
 		OriginalPhysicsMaterialValuesForAllMyColliders = new PhysicsMaterialValues[MyColliders.Length];
 
-
 		for(int i = 0; i < MyColliders.Length; i++)
 		{
 			OriginalPhysicsMaterialValuesForAllMyColliders[i] = 
