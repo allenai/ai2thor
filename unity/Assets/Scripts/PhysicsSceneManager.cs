@@ -4,9 +4,11 @@ using UnityEngine;
 //using UnityEditor;
 //using System.Linq;
 using UnityStandardAssets.Characters.FirstPerson;
-
+using System;
+using System.Linq;
 
 [ExecuteInEditMode]
+
 public class PhysicsSceneManager : MonoBehaviour 
 {
 	//public Dictionary<SimObjPhysics, List<ReceptacleSpawnPoint>> SceneSpawnPoints =  new Dictionary<SimObjPhysics, List<ReceptacleSpawnPoint>>();
@@ -129,6 +131,7 @@ public class PhysicsSceneManager : MonoBehaviour
 				}
 			}
 		}
+		ReceptaclesInScene.Sort((r0, r1) => (r0.gameObject.GetInstanceID().CompareTo(r1.gameObject.GetInstanceID())));
 	}
     
 	private void Generate_UniqueID(SimObjPhysics o)
@@ -137,6 +140,13 @@ public class PhysicsSceneManager : MonoBehaviour
 		if(ReceptacleRestrictions.UseParentUniqueIDasPrefix.Contains(o.Type))
 		{
 			SimObjPhysics parent = o.transform.parent.GetComponent<SimObjPhysics>();
+			if (parent == null) {
+				Debug.LogWarning("Object " + o + " requires a SimObjPhysics " +
+				"parent to create its unique ID but none exists. Using 'None' instead.");
+				o.UniqueID = "None|" + o.Type.ToString();
+				return;
+			}
+
 			if(parent.UniqueID == null)
 			{
 				Vector3 ppos = parent.transform.position;
@@ -214,14 +224,25 @@ public class PhysicsSceneManager : MonoBehaviour
 			return false;
 		}
 
-		Random.InitState(seed);
+		UnityEngine.Random.InitState(seed);
 
 		List<SimObjType> TypesOfObjectsPrefabIsAllowedToSpawnIn = new List<SimObjType>();
-		List<SimObjPhysics> AllowedToSpawnInAndExistsInScene = new List<SimObjPhysics>();
+		Dictionary<SimObjType, List<SimObjPhysics>> AllowedToSpawnInAndExistsInScene = new Dictionary<SimObjType, List<SimObjPhysics>>();
 
 		//List<GameObject> TargetList = new List<GameObject>();
 
 		int HowManyCouldntSpawn = RequiredObjects.Count;
+
+		GameObject topLevelObject = GameObject.Find("Objects");
+		PhysicsRemoteFPSAgentController controller = GameObject.FindObjectsOfType<PhysicsRemoteFPSAgentController>()[0];
+		
+		foreach (GameObject go in SpawnedObjects) {
+			go.SetActive(true);
+			SimObjPhysics sop = go.GetComponent<SimObjPhysics>();
+			sop.transform.parent = topLevelObject.transform;
+			sop.transform.position = new Vector3(0.0f, controller.sceneBounds.min.y - 10f, 0.0f);
+			go.GetComponent<Rigidbody>().isKinematic = true;
+		}
 
 		//if we already spawned objects, lets just move them around
 		if(SpawnedObjects.Count > 0)
@@ -233,8 +254,7 @@ public class PhysicsSceneManager : MonoBehaviour
 			//to spawn in by checking the PlacementRestrictions dictionary
 			foreach(GameObject go in SpawnedObjects)
 			{
-				TypesOfObjectsPrefabIsAllowedToSpawnIn.Clear();
-				AllowedToSpawnInAndExistsInScene.Clear();
+				AllowedToSpawnInAndExistsInScene = new Dictionary<SimObjType, List<SimObjPhysics>>();
 
 				SimObjType goObjType = go.GetComponent<SimObjPhysics>().ObjType;
 
@@ -248,20 +268,26 @@ public class PhysicsSceneManager : MonoBehaviour
 					
 					foreach(SimObjPhysics sop in ReceptaclesInScene)
 					{
-						if(SpawnOnlyOutside)
-						{
-							if(ReceptacleRestrictions.SpawnOnlyOutsideReceptacles.Contains(sop.ObjType) && TypesOfObjectsPrefabIsAllowedToSpawnIn.Contains(sop.ObjType))
+						// don't random spawn in objects that are pickupable to prevent Egg spawning in Plate with the plate spawned in Cabinet....
+						bool allowed = false;
+						if (sop.PrimaryProperty != SimObjPrimaryProperty.CanPickup) { 
+							if(SpawnOnlyOutside)
 							{
-								if(sop.PrimaryProperty != SimObjPrimaryProperty.CanPickup) // don't random spawn in objects that are pickupable to prevent Egg spawning in Plate with the plate spawned in Cabinet....
-								AllowedToSpawnInAndExistsInScene.Add(sop);
+								if(ReceptacleRestrictions.SpawnOnlyOutsideReceptacles.Contains(sop.ObjType) && TypesOfObjectsPrefabIsAllowedToSpawnIn.Contains(sop.ObjType))
+								{
+									allowed = true;
+								}
+							}
+							else if(TypesOfObjectsPrefabIsAllowedToSpawnIn.Contains(sop.ObjType))
+							{
+								allowed = true;
 							}
 						}
-
-						else if(TypesOfObjectsPrefabIsAllowedToSpawnIn.Contains(sop.ObjType))
-						{
-							if(sop.PrimaryProperty != SimObjPrimaryProperty.CanPickup) // don't random spawn in objects that are pickupable to prevent Egg spawning in Plate with the plate spawned in Cabinet....
-							//updated list of valid receptacles in scene
-							AllowedToSpawnInAndExistsInScene.Add(sop);
+						if (allowed) {
+							if (!AllowedToSpawnInAndExistsInScene.ContainsKey(sop.ObjType)) {
+								AllowedToSpawnInAndExistsInScene[sop.ObjType] = new List<SimObjPhysics>();
+							}
+							AllowedToSpawnInAndExistsInScene[sop.ObjType].Add(sop);
 						}
 					}
 				}
@@ -275,19 +301,17 @@ public class PhysicsSceneManager : MonoBehaviour
 					break;
 				}
 
-				// // //now we have an updated list of receptacles in the scene that are also in the list
-				// // //of valid receptacles for this given game object "go" that we are currently checking this loop
+				// Now we have an updated list of receptacles in the scene that are also in the list
+				// of valid receptacles for this given game object "go" that we are currently checking this loop
 				if(AllowedToSpawnInAndExistsInScene.Count > 0)
 				{
 					//SimObjPhysics targetReceptacle;
 					InstantiatePrefabTest spawner = gameObject.GetComponent<InstantiatePrefabTest>();
 					List<ReceptacleSpawnPoint> targetReceptacleSpawnPoints;
-
-					//RAAANDOM!
-					ShuffleSimObjPhysicsList(AllowedToSpawnInAndExistsInScene);
 			
 					//each sop here is a valid receptacle
-					foreach(SimObjPhysics sop in AllowedToSpawnInAndExistsInScene)
+					bool spawned = false;
+					foreach(SimObjPhysics sop in ShuffleSimObjPhysicsDictList(AllowedToSpawnInAndExistsInScene))
 					{
 						//targetReceptacle = sop;
 
@@ -321,6 +345,7 @@ public class PhysicsSceneManager : MonoBehaviour
 										go.GetComponent<Rigidbody>().isKinematic = true;
 
 										HowManyCouldntSpawn--;
+										spawned = true;
 
 										// print(go.transform.name + " was spawned in " + sop.transform.name);
 
@@ -341,46 +366,62 @@ public class PhysicsSceneManager : MonoBehaviour
 										go.GetComponent<Rigidbody>().isKinematic = true;
 
 										HowManyCouldntSpawn--;
+										spawned = true;
 										break;
 								}
 							}
-
 						}
 
 						targetReceptacleSpawnPoints = sop.ReturnMySpawnPoints(false);
 
 						//first shuffle the list so it's raaaandom
-						ShuffleReceptacleSpawnPointList(targetReceptacleSpawnPoints);
+						targetReceptacleSpawnPoints.Shuffle();
 						
 						//try to spawn it, and if it succeeds great! if not uhhh...
 
 						#if UNITY_EDITOR
-						var watch = System.Diagnostics.Stopwatch.StartNew();
+						// var watch = System.Diagnostics.Stopwatch.StartNew();
 						#endif
 
 						if(spawner.PlaceObjectReceptacle(targetReceptacleSpawnPoints, go.GetComponent<SimObjPhysics>(), StaticPlacement, maxcount, 90, true)) //we spawn them stationary so things don't fall off of ledges
 						{
 							HowManyCouldntSpawn--;
+							spawned = true;
 
 							#if UNITY_EDITOR
-							watch.Stop();
-							//var y = watch.ElapsedMilliseconds;
-							//print("time for SUCCESFULLY placing " + go.transform.name+ " in " + sop.transform.name + ": " + y + " ms");
+							// watch.Stop();
+							// var y = watch.ElapsedMilliseconds;
+							// print("time for SUCCESFULLY placing " + go.transform.name+ " in " + sop.transform.name + ": " + y + " ms");
 							#endif
 
 							break;
-						}
+						} 
 
 						#if UNITY_EDITOR
-						watch.Stop();
-						//var elapsedMs = watch.ElapsedMilliseconds;
-						//print("time for trying, but FAILING, to place " + go.transform.name+ " in " + sop.transform.name + ": " + elapsedMs + " ms");
+						// watch.Stop();
+						// var elapsedMs = watch.ElapsedMilliseconds;
+						// print("time for trying, but FAILING, to place " + go.transform.name+ " in " + sop.transform.name + ": " + elapsedMs + " ms");
 						#endif
-
+					}
+					
+					if (!spawned) {
+						#if UNITY_EDITOR
+						Debug.Log(go.name + " could not be spawned.");
+						#endif
+						go.SetActive(false);
 					}
 				}
 			}
+		} else {
+			throw new NotImplementedException();
 		}
+
+		// Debug code to see where every object is spawning
+		// string s = "";
+		// foreach (GameObject sop in SpawnedObjects) {
+		// 	s += sop.name + ": " + sop.transform.parent.gameObject.name + ",\t";
+		// }
+		// Debug.Log(s);
 
 		///////////////KEEP THIS DEPRECATED STUFF - In case we want to spawn in objects that don't currently exist in the scene, that logic is below////////////////
 		// //we have not spawned objects, so instantiate them here first
@@ -602,26 +643,35 @@ public class PhysicsSceneManager : MonoBehaviour
 		simObj.transform.rotation = originalRot;
 		return result;//we are good to spawn, return true
 	}
-	public void ShuffleReceptacleSpawnPointList (List<ReceptacleSpawnPoint> list)
-	{
-		for(int i = 0; i < list.Count; i++)
-		{
-			ReceptacleSpawnPoint rsp = list[i];
-			int r = Random.Range(i,list.Count);
-			list[i] = list[r];
-			list[r] = rsp;
-		}
-	}
 
-	public void ShuffleSimObjPhysicsList (List<SimObjPhysics> list)
+	public List<SimObjPhysics> ShuffleSimObjPhysicsDictList(Dictionary<SimObjType, List<SimObjPhysics>> dict)
 	{
-		for(int i = 0; i < list.Count; i++)
-		{
-			SimObjPhysics sop = list[i];
-			int r = Random.Range(i,list.Count);
-			list[i] = list[r];
-			list[r] = sop;
+		List<SimObjType> types = new List<SimObjType>();
+		Dictionary<SimObjType, int> indDict = new Dictionary<SimObjType, int>();
+		foreach (KeyValuePair<SimObjType, List<SimObjPhysics>> pair in dict) {
+			types.Add(pair.Key);
+			indDict[pair.Key] = pair.Value.Count - 1;
 		}
+		types.Sort();
+		types.Shuffle();
+		foreach (SimObjType t in types) {
+			dict[t].Shuffle();
+		}
+
+		bool changed = true;
+		List<SimObjPhysics> shuffledSopList = new List<SimObjPhysics>();
+		while (changed) {
+			changed = false;
+			foreach (SimObjType type in types) {
+				int i = indDict[type];
+				if (i >= 0) {
+					changed = true;
+					shuffledSopList.Add(dict[type][i]);
+					indDict[type]--;
+				}
+			}
+		}
+		return shuffledSopList;
 	}
 
 #if UNITY_EDITOR

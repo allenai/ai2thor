@@ -172,53 +172,48 @@ public class InstantiatePrefabTest : MonoBehaviour
     //The ReceptacleSpawnPoint list should be sorted based on what we are doing. If placing from the agent's hand, the list
     //should be sorted by distance to agent so the closest points are checked first. If used for Random Initial Spawn, it should
     //be randomized so that the random spawn is... random
-    public bool PlaceObjectReceptacle(List<ReceptacleSpawnPoint> rsp, SimObjPhysics sop, bool PlaceStationary, int maxcount, int degreeIncrement, bool AlwaysPlaceUpright)
+    public bool PlaceObjectReceptacle(List<ReceptacleSpawnPoint> rsps, SimObjPhysics sop, bool PlaceStationary, int maxcount, int degreeIncrement, bool AlwaysPlaceUpright)
     {
-        //-maxcount parameter:
-        //Max number of times this receptacle will try to place the object
-        //se this to a high number (100 max at the moment) for more consistancy and accuracy, but slower performance
-        //set this to a low number to only try a few positions on the recpetacle, it will be fast but more likely to fail prematurely
-        int count = 0;
-
-        if(rsp != null)
+        
+        if(rsps == null)
         {
-            foreach (ReceptacleSpawnPoint p in rsp)
-            {
-                //if this is an Object Specific Receptacle, stop this check right now! I mean it!
-                //Placing objects in/on an Object Specific Receptacle uses different logic to place the
-                //object at the Attachemnet point rather than in the spawn area, so stop this right now!
-                if(p.ParentSimObjPhys.GetComponent<SimObjPhysics>().DoesThisObjectHaveThisSecondaryProperty
-                (SimObjSecondaryProperty.ObjectSpecificReceptacle))
-                {
-                    return false;
-                }
-
-                if(PlaceObject(sop, p, PlaceStationary, degreeIncrement, AlwaysPlaceUpright))
-                {
-                    //found a place to spawn! neato, return success
-                    return true;
-                    //break;
-                }
-
-                if(count> maxcount)
-                {
-                    break;
-                }
-
-                else
-                {
-                    count++;
-                }
+            #if UNITY_EDITOR
+            Debug.Log("Null list of points to check, please pass in populated list of <ReceptacleSpawnPoint>?");
+            #endif
+            return false; //uh, there was nothing in the List for some reason, so failed to spawn
+        }
+    
+        List<ReceptacleSpawnPoint> goodRsps = new List<ReceptacleSpawnPoint>();
+        foreach (ReceptacleSpawnPoint p in rsps) {
+            if(!p.ParentSimObjPhys.GetComponent<SimObjPhysics>().DoesThisObjectHaveThisSecondaryProperty
+                (SimObjSecondaryProperty.ObjectSpecificReceptacle)) {
+                goodRsps.Add(p);
             }
-            //couldn't find valid places to spawn
+            if (goodRsps.Count == maxcount) {
+                break;
+            }
+        }
+
+        if(rsps.Count == 0)
+        {
             return false;
         }
-        #if UNITY_EDITOR
-        Debug.Log("Null list of points to check, please pass in populated list of <ReceptacleSpawnPoint>?");
-        #endif
 
-        //uh, there was nothing in the List for some reason, so failed to spawn
+        foreach (ReceptacleSpawnPoint p in goodRsps)
+        {
+            //if this is an Object Specific Receptacle, stop this check right now! I mean it!
+            //Placing objects in/on an Object Specific Receptacle uses different logic to place the
+            //object at the Attachemnet point rather than in the spawn area, so stop this right now!
+
+            if(PlaceObject(sop, p, PlaceStationary, degreeIncrement, AlwaysPlaceUpright))
+            {
+                //found a place to spawn! neato, return success
+                return true;
+            }
+        }
+        //couldn't find valid places to spawn
         return false;
+       
     }
 
     //use this to keep track of a Rotation and Distance for use in PlaceObject
@@ -494,16 +489,6 @@ public class InstantiatePrefabTest : MonoBehaviour
 			layermask = (1 << 8) | (1 << 10);
 		}
 
-        //simObj.transform.Find("Colliders").gameObject.SetActive(false);
-        Collider[] objcols;
-        //make sure ALL colliders of the simobj are turned off for this check - can't just turn off the Colliders child object because of objects like
-        //laptops which have multiple sets of colliders, with one part moving...
-        objcols = simObj.transform.GetComponentsInChildren<Collider>();
-        foreach (Collider col in objcols)
-        {
-            if(col.gameObject.name != "BoundingBox")
-            col.enabled = false;
-        }
 
         //let's move the simObj to the position we are trying, and then change it's rotation to the rotation we are trying
         Vector3 originalPos = simObj.transform.position;
@@ -516,75 +501,55 @@ public class InstantiatePrefabTest : MonoBehaviour
         //now let's get the BoundingBox of the simObj as reference cause we need it to create the overlapbox
         GameObject bb = simObj.BoundingBox.transform.gameObject;
         BoxCollider bbcol = bb.GetComponent<BoxCollider>();
+        Vector3 bbCenter = bbcol.center;
+        Vector3 bbCenterTransformPoint = bb.transform.TransformPoint(bbCenter);
+        //keep track of all 8 corners of the OverlapBox
+        List<Vector3> corners = new List<Vector3>();
+        //bottom forward right
+        corners.Add(bb.transform.TransformPoint(bbCenter + new Vector3(bbcol.size.x, -bbcol.size.y, bbcol.size.z) * 0.5f));
+        //bottom forward left
+        corners.Add(bb.transform.TransformPoint(bbCenter + new Vector3(-bbcol.size.x, -bbcol.size.y, bbcol.size.z) * 0.5f));
+        //bottom back left
+        corners.Add(bb.transform.TransformPoint(bbCenter + new Vector3(-bbcol.size.x, -bbcol.size.y, -bbcol.size.z) * 0.5f));
+        //bottom back right
+        corners.Add(bb.transform.TransformPoint(bbCenter + new Vector3(bbcol.size.x, -bbcol.size.y, -bbcol.size.z) * 0.5f));
+
+        //top forward right
+        corners.Add(bb.transform.TransformPoint(bbCenter + new Vector3(bbcol.size.x, bbcol.size.y, bbcol.size.z) * 0.5f));
+        //top forward left
+        corners.Add(bb.transform.TransformPoint(bbCenter + new Vector3(-bbcol.size.x, bbcol.size.y, bbcol.size.z) * 0.5f));
+        //top back left
+        corners.Add(bb.transform.TransformPoint(bbCenter + new Vector3(-bbcol.size.x, bbcol.size.y, -bbcol.size.z) * 0.5f));
+        //top back right
+        corners.Add(bb.transform.TransformPoint(bbCenter+ new Vector3(bbcol.size.x, bbcol.size.y, -bbcol.size.z) * 0.5f));
+
+        SpawnCorners = corners;
+
+        simObj.transform.position = originalPos;
+        simObj.transform.rotation = originalRot;
 
         //we need the center of the box collider in world space, we need the box collider size/2, we need the rotation to set the box at, layermask, querytrigger
-        Collider[] hitColliders = Physics.OverlapBox(bb.transform.TransformPoint(bbcol.center),
+        Collider[] hitColliders = Physics.OverlapBox(bbCenterTransformPoint,
                                                      bbcol.size / 2.0f, simObj.transform.rotation, 
                                                      layermask, QueryTriggerInteraction.Ignore);
 
 
-
-        //keep track of all 8 corners of the OverlapBox
-        List<Vector3> corners = new List<Vector3>();
-        //bottom forward right
-        corners.Add(bb.transform.TransformPoint(bbcol.center + new Vector3(bbcol.size.x, -bbcol.size.y, bbcol.size.z) * 0.5f));
-        //bottom forward left
-        corners.Add(bb.transform.TransformPoint(bbcol.center + new Vector3(-bbcol.size.x, -bbcol.size.y, bbcol.size.z) * 0.5f));
-        //bottom back left
-        corners.Add(bb.transform.TransformPoint(bbcol.center + new Vector3(-bbcol.size.x, -bbcol.size.y, -bbcol.size.z) * 0.5f));
-        //bottom back right
-        corners.Add(bb.transform.TransformPoint(bbcol.center+ new Vector3(bbcol.size.x, -bbcol.size.y, -bbcol.size.z) * 0.5f));
-
-        //top forward right
-        corners.Add(bb.transform.TransformPoint(bbcol.center + new Vector3(bbcol.size.x, bbcol.size.y, bbcol.size.z) * 0.5f));
-        //top forward left
-        corners.Add(bb.transform.TransformPoint(bbcol.center + new Vector3(-bbcol.size.x, bbcol.size.y, bbcol.size.z) * 0.5f));
-        //top back left
-        corners.Add(bb.transform.TransformPoint(bbcol.center + new Vector3(-bbcol.size.x, bbcol.size.y, -bbcol.size.z) * 0.5f));
-        //top back right
-        corners.Add(bb.transform.TransformPoint(bbcol.center+ new Vector3(bbcol.size.x, bbcol.size.y, -bbcol.size.z) * 0.5f));
-
-        SpawnCorners = corners;
-
         #if UNITY_EDITOR
 		m_Started = true;     
-        gizmopos = bb.transform.TransformPoint(bbcol.center); 
+        gizmopos = bb.transform.TransformPoint(bbCenter); 
         //gizmopos = inst.transform.position;
         gizmoscale = bbcol.size;
         //gizmoscale = simObj.BoundingBox.GetComponent<BoxCollider>().size;
         gizmoquaternion = rotation;
         #endif
 
-        //destroy the dummy object, we don't need it anymore
-        //Destroy(placeholderPosition.gameObject);
 
         //if a collider was hit, then the space is not clear to spawn
 		if (hitColliders.Length > 0)
 		{
-            simObj.transform.position = originalPos;
-            simObj.transform.rotation = originalRot;
-            //simObj.transform.Find("Colliders").gameObject.SetActive(true);
-            //print("checkspawnarea failed");
-            foreach (Collider col in objcols)
-            {
-                if(col.gameObject.name != "BoundingBox")
-                col.enabled = true;
-            }
-
 			return false;
 		}
 
-        simObj.transform.position = originalPos;
-        simObj.transform.rotation = originalRot;
-
-        //turn back on all the colliders now
-        //simObj.transform.Find("Colliders").gameObject.SetActive(true);
-        foreach (Collider col in objcols)
-        {
-            if(col.gameObject.name != "BoundingBox")
-            col.enabled = true;
-        }
-        //print("checkspawn true?");
 		return true;
 	}
 
