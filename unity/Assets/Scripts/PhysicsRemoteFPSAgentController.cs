@@ -256,7 +256,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             // };
             return objMeta;
         }
-        private ObjectMetadata[] generateObjectMetadata()
+        new private ObjectMetadata[] generateObjectMetadata()
 		{
             SimObjPhysics[] visibleSimObjs = VisibleSimObjs(false); // Update visibility for all sim objects for this agent
             HashSet<SimObjPhysics> visibleSimObjsHash = new HashSet<SimObjPhysics>();
@@ -329,6 +329,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			metaMessage.lastAction = lastAction;
 			metaMessage.lastActionSuccess = lastActionSuccess;
 			metaMessage.errorMessage = errorMessage;
+            metaMessage.actionReturn = this.actionReturn;
 
 			if (errorCode != ServerActionErrorCode.Undefined) {
 				metaMessage.errorCode = Enum.GetName(typeof(ServerActionErrorCode), errorCode);
@@ -1952,6 +1953,49 @@ namespace UnityStandardAssets.Characters.FirstPerson
         //pass in x,y,z of 0 if no movement is desired on that axis
         //pass in x,y,z of 1 for positive movement along that axis
         //pass in x,y,z of -1 for negative movement along that axis
+        public void MoveHandAhead(ServerAction action)
+		{
+			Vector3 newPos = AgentHand.transform.position;
+            newPos = newPos + (m_Camera.transform.forward * action.moveMagnitude);    
+            actionFinished(moveHandToXYZ(newPos.x, newPos.y, newPos.z));
+        }
+
+        public void MoveHandLeft(ServerAction action)
+		{
+			Vector3 newPos = AgentHand.transform.position;
+            newPos = newPos + (-m_Camera.transform.right * action.moveMagnitude);
+            actionFinished(moveHandToXYZ(newPos.x, newPos.y, newPos.z));
+        }
+
+
+        public void MoveHandDown(ServerAction action)
+		{
+			Vector3 newPos = AgentHand.transform.position;
+            newPos = newPos + (-m_Camera.transform.up * action.moveMagnitude);    
+            actionFinished(moveHandToXYZ(newPos.x, newPos.y, newPos.z));
+        }
+
+        public void MoveHandUp(ServerAction action)
+		{
+			Vector3 newPos = AgentHand.transform.position;
+            newPos = newPos + (m_Camera.transform.up * action.moveMagnitude);
+            actionFinished(moveHandToXYZ(newPos.x, newPos.y, newPos.z));
+        }
+
+        public void MoveHandRight(ServerAction action)
+		{
+			Vector3 newPos = AgentHand.transform.position;
+            newPos = newPos + (m_Camera.transform.right * action.moveMagnitude);
+            actionFinished(moveHandToXYZ(newPos.x, newPos.y, newPos.z));
+        }
+
+        public void MoveHandBack(ServerAction action)
+		{
+			Vector3 newPos = AgentHand.transform.position;
+            newPos = newPos + (-m_Camera.transform.forward * action.moveMagnitude);
+            actionFinished(moveHandToXYZ(newPos.x, newPos.y, newPos.z));
+        }
+
         public void MoveHandMagnitude(ServerAction action)
 		{         
 			Vector3 newPos = AgentHand.transform.position;
@@ -1989,76 +2033,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
             actionFinished(moveHandToXYZ(newPos.x, newPos.y, newPos.z));
 		}
-
-        public void MoveHandLeft(ServerAction action)
-        {
-            ServerAction a = new ServerAction();
-            a.moveMagnitude = action.moveMagnitude;
-            a.x = -1f;
-            a.y = 0;
-            a.z = 0;
-
-            MoveHandMagnitude(a);
-        }
-
-        public void MoveHandRight(ServerAction action)
-        {
-            ServerAction a = new ServerAction();
-            a.moveMagnitude = action.moveMagnitude;
-            a.x = 1f;
-            a.y = 0;
-            a.z = 0;
-
-            MoveHandMagnitude(a);
-        }
-
-
-        public void MoveHandAhead(ServerAction action)
-        {
-            ServerAction a = new ServerAction();
-            a.moveMagnitude = action.moveMagnitude;
-            a.x = 0;
-            a.y = 0;
-            a.z = 1f;
-            
-            MoveHandMagnitude(a);  
-        }
-
-
-        public void MoveHandBack(ServerAction action)
-        {
-            ServerAction a = new ServerAction();
-            a.moveMagnitude = action.moveMagnitude;
-            a.x = 0;
-            a.y = 0;
-            a.z = -1f;
-            
-            MoveHandMagnitude(a);
-        }
-
-
-        public void MoveHandUp(ServerAction action)
-        {
-            ServerAction a = new ServerAction();
-            a.moveMagnitude = action.moveMagnitude;
-            a.x = 0;
-            a.y = 1f;
-            a.z = 0;
-            
-            MoveHandMagnitude(a);
-        }
-
-
-        public void MoveHandDown(ServerAction action)
-        {
-            ServerAction a = new ServerAction();
-            a.moveMagnitude = action.moveMagnitude;
-            a.x = 0;
-            a.y = -1f;
-            a.z = 0;
-            
-            MoveHandMagnitude(a);
-        }
 
 		public bool IsInArray(Collider collider, GameObject[] arrayOfCol)
 		{
@@ -3378,6 +3352,29 @@ namespace UnityStandardAssets.Characters.FirstPerson
         ////// HIDING AND MASKING OBJECTS //////
         ////////////////////////////////////////
 
+        private void irreversiblyMaskGameObject(GameObject go, Material mat) {
+            Dictionary<int, Material[]> dict = new Dictionary<int, Material[]>();
+            foreach (MeshRenderer r in go.GetComponentsInChildren<MeshRenderer>() as MeshRenderer[]) {
+                dict[r.GetInstanceID()] = r.materials;
+                Material[] newMaterials = new Material[r.materials.Length];
+                for (int i = 0; i < newMaterials.Length; i++) {
+                    newMaterials[i] = new Material(mat);
+                }
+                r.materials = newMaterials;
+            }
+        }
+
+        public void MaskMovingParts(ServerAction action) {
+            Material material = new Material(Shader.Find("Unlit/Color"));
+			material.color = Color.magenta;
+            foreach (CanOpen_Object coo in GameObject.FindObjectsOfType<CanOpen_Object>()) {
+                foreach (GameObject go in coo.MovingParts) {
+                    irreversiblyMaskGameObject(go, material);
+                }
+            }
+            actionFinished(true);
+        }
+
         private void HideAll() {
 			foreach (GameObject go in GameObject.FindObjectsOfType<GameObject>()) {
 				UpdateDisplayGameObject(go, false);
@@ -4370,7 +4367,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             if (errorMessage != "") {
                 actionFinished(false);
             } else {
-                actionFinished(true);
+                actionFinished(true, reachablePositions);
             }
         }
 
@@ -5031,7 +5028,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
             }
 
             int layerMask = 1 << 8;
-            float minY = getFloorY(transform.position.x, transform.position.z) + 0.05f;
             foreach (Vector3 p in reachablePositions) {
                 RaycastHit hit;
                 bool somethingHit = false;
@@ -5126,7 +5122,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
             HashSet<SimObjPhysics> visibleObjects = getAllItemsVisibleFromPositions(reachablePositions);
             foreach (SimObjPhysics so in newObjects) {
-                if (so.gameObject.active && !visibleObjects.Contains(so)) {
+                if (so.gameObject.activeSelf && !visibleObjects.Contains(so)) {
                     so.gameObject.SetActive(false);
                     uniqueIdToSimObjPhysics.Remove(so.UniqueID);
                 }
@@ -5410,7 +5406,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			actionFinished(true);
 		}
         public void SpamObjectsInRoom(ServerAction action) {
-            UnityEngine.Random.seed = action.randomSeed;
+            UnityEngine.Random.InitState(action.randomSeed);
 
             string[] objectTypes = {
                 "Bread", "Cup", "Footstool", "Knife", "Plunger", "Tomato",
@@ -5430,8 +5426,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			);
 
 			float yMax = b.max.y - 0.2f;
-			float xRoomSize = b.max.x - b.min.x;
-			float zRoomSize = b.max.z - b.min.z;
 			InstantiatePrefabTest script = GameObject.Find("PhysicsSceneManager").GetComponent<InstantiatePrefabTest>();
 
             List<Bounds> objsBounds = new List<Bounds>();
@@ -5491,11 +5485,11 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 zsToTry.Add((b.max.z - b.min.z) * UnityEngine.Random.value + b.min.z);
             }
             var xsToTryArray = xsToTry.ToArray();
-            var zsToTryArray = zsToTry.ToArray();
+            // var zsToTryArray = zsToTry.ToArray();
             
 			List<SimObjPhysics> newObjects = new List<SimObjPhysics>();
             int layerMask = 1 << 8;
-            int attempts = 0;
+            // int attempts = 0;
             for (int i = 0; i < xsToTryArray.Length; i++) {
                 if (newObjects.Count >= 100) {
                     break;
@@ -5512,7 +5506,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     10f,
                     layerMask
                 );
-                int k = -1;
+
                 foreach (RaycastHit hit in hits) {
                     Bounds ob = objsBounds[objectInd];
                     Vector3 randRotation = new Vector3(0.0f, 0.0f, 0.0f);
