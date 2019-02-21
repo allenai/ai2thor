@@ -229,26 +229,23 @@ public class PhysicsSceneManager : MonoBehaviour
 		List<SimObjType> TypesOfObjectsPrefabIsAllowedToSpawnIn = new List<SimObjType>();
 		Dictionary<SimObjType, List<SimObjPhysics>> AllowedToSpawnInAndExistsInScene = new Dictionary<SimObjType, List<SimObjPhysics>>();
 
-		//List<GameObject> TargetList = new List<GameObject>();
-
 		int HowManyCouldntSpawn = RequiredObjects.Count;
 
 		GameObject topLevelObject = GameObject.Find("Objects");
 		PhysicsRemoteFPSAgentController controller = GameObject.FindObjectsOfType<PhysicsRemoteFPSAgentController>()[0];
 		
-		foreach (GameObject go in SpawnedObjects) {
-			go.SetActive(true);
-			SimObjPhysics sop = go.GetComponent<SimObjPhysics>();
-			sop.transform.parent = topLevelObject.transform;
-			sop.transform.position = new Vector3(0.0f, controller.sceneBounds.min.y - 10f, 0.0f);
-			go.GetComponent<Rigidbody>().isKinematic = true;
-		}
+		// foreach (GameObject go in SpawnedObjects) {
+		// 	go.SetActive(true);
+		// 	SimObjPhysics sop = go.GetComponent<SimObjPhysics>();
+		// 	sop.transform.parent = topLevelObject.transform;
+		// 	sop.transform.position = new Vector3(0.0f, controller.sceneBounds.min.y - 10f, 0.0f);
+		// 	go.GetComponent<Rigidbody>().isKinematic = true;
+		// }
 
 		//if we already spawned objects, lets just move them around
 		if(SpawnedObjects.Count > 0)
 		{
 			HowManyCouldntSpawn = SpawnedObjects.Count;
-			//bool diditspawn = false;
 
 			//for each object in RequiredObjects, start a list of what objects it's allowed 
 			//to spawn in by checking the PlacementRestrictions dictionary
@@ -408,7 +405,7 @@ public class PhysicsSceneManager : MonoBehaviour
 						#if UNITY_EDITOR
 						Debug.Log(go.name + " could not be spawned.");
 						#endif
-						go.SetActive(false);
+						// go.SetActive(false);
 					}
 				}
 			}
