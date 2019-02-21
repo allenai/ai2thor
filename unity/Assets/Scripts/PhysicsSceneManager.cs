@@ -209,8 +209,12 @@ public class PhysicsSceneManager : MonoBehaviour
 
 	//place each object in the array of objects that should appear in this scene randomly in valid receptacles
 	//a seed of 0 is the default positions placed by hand(?)
-	public bool RandomSpawnRequiredSceneObjects(int seed, bool SpawnOnlyOutside, int maxcount, bool StaticPlacement)
-	{
+	public bool RandomSpawnRequiredSceneObjects(
+		int seed, 
+		bool SpawnOnlyOutside,
+		int maxcount,
+		bool StaticPlacement
+	) {
 		#if UNITY_EDITOR
 		var Masterwatch = System.Diagnostics.Stopwatch.StartNew();
 		#endif
@@ -231,8 +235,8 @@ public class PhysicsSceneManager : MonoBehaviour
 
 		int HowManyCouldntSpawn = RequiredObjects.Count;
 
-		GameObject topLevelObject = GameObject.Find("Objects");
-		PhysicsRemoteFPSAgentController controller = GameObject.FindObjectsOfType<PhysicsRemoteFPSAgentController>()[0];
+		// GameObject topLevelObject = GameObject.Find("Objects");
+		// PhysicsRemoteFPSAgentController controller = GameObject.FindObjectsOfType<PhysicsRemoteFPSAgentController>()[0];
 		
 		// foreach (GameObject go in SpawnedObjects) {
 		// 	go.SetActive(true);

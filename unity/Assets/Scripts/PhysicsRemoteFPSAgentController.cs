@@ -256,7 +256,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             // };
             return objMeta;
         }
-        private ObjectMetadata[] generateObjectMetadata()
+        new private ObjectMetadata[] generateObjectMetadata()
 		{
             SimObjPhysics[] visibleSimObjs = VisibleSimObjs(false); // Update visibility for all sim objects for this agent
             HashSet<SimObjPhysics> visibleSimObjsHash = new HashSet<SimObjPhysics>();
@@ -5028,7 +5028,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
             }
 
             int layerMask = 1 << 8;
-            float minY = getFloorY(transform.position.x, transform.position.z) + 0.05f;
             foreach (Vector3 p in reachablePositions) {
                 RaycastHit hit;
                 bool somethingHit = false;
@@ -5123,7 +5122,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
             HashSet<SimObjPhysics> visibleObjects = getAllItemsVisibleFromPositions(reachablePositions);
             foreach (SimObjPhysics so in newObjects) {
-                if (so.gameObject.active && !visibleObjects.Contains(so)) {
+                if (so.gameObject.activeSelf && !visibleObjects.Contains(so)) {
                     so.gameObject.SetActive(false);
                     uniqueIdToSimObjPhysics.Remove(so.UniqueID);
                 }
@@ -5407,7 +5406,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			actionFinished(true);
 		}
         public void SpamObjectsInRoom(ServerAction action) {
-            UnityEngine.Random.seed = action.randomSeed;
+            UnityEngine.Random.InitState(action.randomSeed);
 
             string[] objectTypes = {
                 "Bread", "Cup", "Footstool", "Knife", "Plunger", "Tomato",
@@ -5427,8 +5426,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			);
 
 			float yMax = b.max.y - 0.2f;
-			float xRoomSize = b.max.x - b.min.x;
-			float zRoomSize = b.max.z - b.min.z;
 			InstantiatePrefabTest script = GameObject.Find("PhysicsSceneManager").GetComponent<InstantiatePrefabTest>();
 
             List<Bounds> objsBounds = new List<Bounds>();
@@ -5488,11 +5485,11 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 zsToTry.Add((b.max.z - b.min.z) * UnityEngine.Random.value + b.min.z);
             }
             var xsToTryArray = xsToTry.ToArray();
-            var zsToTryArray = zsToTry.ToArray();
+            // var zsToTryArray = zsToTry.ToArray();
             
 			List<SimObjPhysics> newObjects = new List<SimObjPhysics>();
             int layerMask = 1 << 8;
-            int attempts = 0;
+            // int attempts = 0;
             for (int i = 0; i < xsToTryArray.Length; i++) {
                 if (newObjects.Count >= 100) {
                     break;
@@ -5509,7 +5506,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     10f,
                     layerMask
                 );
-                int k = -1;
+
                 foreach (RaycastHit hit in hits) {
                     Bounds ob = objsBounds[objectInd];
                     Vector3 randRotation = new Vector3(0.0f, 0.0f, 0.0f);
