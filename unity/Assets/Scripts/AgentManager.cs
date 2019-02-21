@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityStandardAssets.Characters.FirstPerson;
+using Newtonsoft.Json;
 
 
 public class AgentManager : MonoBehaviour
@@ -19,6 +20,7 @@ public class AgentManager : MonoBehaviour
 	private Rect readPixelsRect;
 	private int currentSequenceId;
 	private int activeAgentId;
+	private bool defaultRenderImage = true;
 	private bool renderImage = true;
 	private bool renderDepthImage;
 	private bool renderClassImage;
@@ -95,7 +97,7 @@ public class AgentManager : MonoBehaviour
 		primaryAgent.IsVisible = action.makeAgentsVisible;
 		primaryAgent.Agents = new BaseFPSAgentController[1];
 		primaryAgent.Agents[0] = primaryAgent;
-		this.renderImage = action.renderImage;
+		this.defaultRenderImage = action.renderImage;
 		this.renderClassImage = action.renderClassImage;
 		this.renderDepthImage = action.renderDepthImage;
 		this.renderNormalsImage = action.renderNormalsImage;
@@ -411,7 +413,8 @@ public class AgentManager : MonoBehaviour
 
 		RenderTexture.active = currentTexture;
 
-		form.AddField("metadata", JsonUtility.ToJson(multiMeta));
+		//form.AddField("metadata", JsonUtility.ToJson(multiMeta));
+		form.AddField("metadata", Newtonsoft.Json.JsonConvert.SerializeObject(multiMeta));
 		form.AddField("token", robosimsClientToken);
 		WWW w = new WWW ("http://" + robosimsHost + ":" + robosimsPort + "/train", form);
 		yield return w;
@@ -433,8 +436,13 @@ public class AgentManager : MonoBehaviour
 	{
 
 
-		ServerAction controlCommand = JsonUtility.FromJson<ServerAction>(msg);
+		ServerAction controlCommand = new ServerAction();
+		controlCommand.renderImage = this.defaultRenderImage;
+
+		JsonUtility.FromJsonOverwrite(msg, controlCommand);
+
 		this.currentSequenceId = controlCommand.sequenceId;
+		this.renderImage = controlCommand.renderImage;
 		activeAgentId = controlCommand.agentId;
 		if (controlCommand.action == "Reset") {
 			this.Reset (controlCommand);
@@ -521,7 +529,6 @@ public class ObjectMetadata
 	public float[] bounds3D;
 	public string parentReceptacle;
 	public string[] parentReceptacles;
-
 	public float currentTime;
 
 	public ObjectMetadata() { }
@@ -632,6 +639,7 @@ public struct MetadataWrapper
 
 	public float[] actionFloatsReturn;
 	public Vector3[] actionVector3sReturn;
+	public System.Object actionReturn;
 
 	public float currentTime;
 }

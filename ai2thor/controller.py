@@ -527,6 +527,13 @@ class Controller(object):
                         if o['receptacle'] and (not o['openable'] or o['isopen']):
                             inventoryObjectId = event.metadata['inventoryObjects'][0]['objectId']
                             add_command(command_counter, 'PutObject', objectId=inventoryObjectId, receptacleObjectId=o['objectId'])
+                            add_command(command_counter, 'MoveHandForward', moveMagnitude=0.1)
+                            add_command(command_counter, 'MoveHandBack', moveMagnitude=0.1)
+                            add_command(command_counter, 'MoveHandRight', moveMagnitude=0.1)
+                            add_command(command_counter, 'MoveHandLeft', moveMagnitude=0.1)
+                            add_command(command_counter, 'MoveHandUp', moveMagnitude=0.1)
+                            add_command(command_counter, 'MoveHandDown', moveMagnitude=0.1)
+                            add_command(command_counter, 'DropHandObject')
 
                     elif o['pickupable']:
                         add_command(command_counter, 'PickupObject', objectId=o['objectId'])

@@ -150,8 +150,14 @@ public class Contains : MonoBehaviour
 			//if the object was removed from the receptacle by anything other than the Agent picking it up
 			if(!sop.transform.GetComponentInParent<PhysicsRemoteFPSAgentController>())
 			{
-				GameObject topObject = GameObject.Find("Objects");
-				sop.transform.SetParent(topObject.transform);
+				//make sure to only remove and unparent stuff that is actually contained - prevent errors like the SinkBasin being unparanted when a mug is removed from it
+				if(CurrentlyContains.Contains(sop))
+				//if(sop.Type != SimObjType.SinkBasin && sop.Type != SimObjType.BathtubBasin)
+				{
+					GameObject topObject = GameObject.Find("Objects");
+					sop.transform.SetParent(topObject.transform);
+				}
+
 			}
 
 			occupied = false;
