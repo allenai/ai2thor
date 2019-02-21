@@ -39,14 +39,6 @@ public class AgentManager : MonoBehaviour
 
 	void Awake() {
 
-        #if UNITY_WEBGL
-
-            Debug.Log("Webgl");
-            jsInterface = this.GetComponent<JavaScriptInterface>();
-            jsInterface.enabled = true;
-
-        #endif
-
         tex = new Texture2D(UnityEngine.Screen.width, UnityEngine.Screen.height, TextureFormat.RGB24, false);
 		readPixelsRect = new Rect(0, 0, UnityEngine.Screen.width, UnityEngine.Screen.height);
 	
@@ -215,12 +207,22 @@ public class AgentManager : MonoBehaviour
 		}
 	}
 
-	// Decide whether agent has stopped actions
-	// And if we need to capture a new frame
+    public bool SwitchScene(string sceneName)
+    {
+        if (!string.IsNullOrEmpty(sceneName))
+        {
+            UnityEngine.SceneManagement.SceneManager.LoadScene(sceneName);
+            return true;
+        }
+        return false;
+    }
+
+    // Decide whether agent has stopped actions
+    // And if we need to capture a new frame
 
 
-	
-	private void LateUpdate() {
+
+    private void LateUpdate() {
 
 		int completeCount = 0;
 		foreach (BaseFPSAgentController agent in this.agents) {

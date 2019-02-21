@@ -5,27 +5,20 @@ using System.Runtime.InteropServices;
 public class JavaScriptInterface : MonoBehaviour {
 
     [DllImport("__Internal")]
-    private static extern void Hello();
+    private static extern void Init();
 
     [DllImport("__Internal")]
-    private static extern void HelloString(string str);
-
-    [DllImport("__Internal")]
-    private static extern void StoreData(string str);
+    private static extern void AddEvent(string str);
 
     public void SendAction(ServerAction action)
     {
-        StoreData(JsonUtility.ToJson(action));
+        AddEvent(JsonUtility.ToJson(action));
     }
 
     void Start()
     {
-        Hello();
-
-        HelloString("This is a string.");
+        Init();
 
         Debug.Log("Calling store data");
-
-        StoreData("test");
     }
 }
