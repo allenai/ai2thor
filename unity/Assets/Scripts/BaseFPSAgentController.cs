@@ -89,6 +89,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		protected string errorMessage;
 		protected ServerActionErrorCode errorCode;
 		public bool actionComplete;
+		public System.Object actionReturn;
 
 
 		// Vector3 m_OriginalCameraPosition;
@@ -164,7 +165,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			//allowNodes = false;
 		}
 
-		public void actionFinished(bool success) 
+		public void actionFinished(bool success, System.Object actionReturn=null) 
 		{
 			
 			if (actionComplete) 
@@ -174,6 +175,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 			lastActionSuccess = success;
 			this.actionComplete = true;
+			this.actionReturn = actionReturn;
 			actionCounter = 0;
 			targetTeleport = Vector3.zero;
 		}
@@ -545,8 +547,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			lastActionSuccess = false;
 			lastPosition = new Vector3(transform.position.x, transform.position.y, transform.position.z);
 			System.Reflection.MethodInfo method = this.GetType().GetMethod(controlCommand.action);
+			
 			this.actionComplete = false;
-
 			try
 			{
 				if (method == null) {
