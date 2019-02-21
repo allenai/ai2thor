@@ -36,7 +36,7 @@ def _local_build_path():
     )
 
 
-def _build(context, unity_path, arch, build_dir, build_name):
+def _build(context, unity_path, arch, build_dir, build_name, env={}):
     project_path = os.path.join(os.getcwd(), unity_path)
     unity_hub_path = "/Applications/Unity/Hub/Editor/{}/Unity.app/Contents/MacOS/Unity".format(
         UNITY_VERSION
@@ -50,12 +50,31 @@ def _build(context, unity_path, arch, build_dir, build_name):
     target_path = os.path.join(build_dir, build_name)
     print(target_path)
 
-    return context.run(command, warn=True, env=dict(UNITY_BUILD_NAME=target_path))
+    return context.run(command, warn=True, env=dict(UNITY_BUILD_NAME=target_path, **env))
+
 @task
 def local_build(context, prefix='local', arch='OSXIntel64'):
     build_name = "thor-%s-%s" % (prefix, arch)
     fetch_source_textures(context)
     if _build(context, 'unity', arch, "builds", build_name):
+        print("Build Successful")
+    else:
+        print("Build Failure")
+    generate_quality_settings(context)
+
+@task
+def webgl_build(context, scenes, prefix='local'):
+    """
+    Creates a WebGL build
+    :param context:
+    :param scenes: String of scenes to include in the build as a comma separated list
+    :param prefix: Prefix name for the build
+    :return:
+    """
+    arch = 'WebGL'
+    build_name = "thor-%s-%s" % (prefix, arch)
+    fetch_source_textures(context)
+    if _build(context, 'unity', arch, "builds", build_name, env=dict(SCENE=scenes)):
         print("Build Successful")
     else:
         print("Build Failure")
