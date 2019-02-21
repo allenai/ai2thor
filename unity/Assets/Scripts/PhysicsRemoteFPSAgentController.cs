@@ -3378,6 +3378,29 @@ namespace UnityStandardAssets.Characters.FirstPerson
         ////// HIDING AND MASKING OBJECTS //////
         ////////////////////////////////////////
 
+        private void irreversiblyMaskGameObject(GameObject go, Material mat) {
+            Dictionary<int, Material[]> dict = new Dictionary<int, Material[]>();
+            foreach (MeshRenderer r in go.GetComponentsInChildren<MeshRenderer>() as MeshRenderer[]) {
+                dict[r.GetInstanceID()] = r.materials;
+                Material[] newMaterials = new Material[r.materials.Length];
+                for (int i = 0; i < newMaterials.Length; i++) {
+                    newMaterials[i] = new Material(mat);
+                }
+                r.materials = newMaterials;
+            }
+        }
+
+        public void MaskMovingParts(ServerAction action) {
+            Material material = new Material(Shader.Find("Unlit/Color"));
+			material.color = Color.magenta;
+            foreach (CanOpen_Object coo in GameObject.FindObjectsOfType<CanOpen_Object>()) {
+                foreach (GameObject go in coo.MovingParts) {
+                    irreversiblyMaskGameObject(go, material);
+                }
+            }
+            actionFinished(true);
+        }
+
         private void HideAll() {
 			foreach (GameObject go in GameObject.FindObjectsOfType<GameObject>()) {
 				UpdateDisplayGameObject(go, false);
