@@ -7,7 +7,7 @@ using UnityStandardAssets.CrossPlatformInput;
 using UnityStandardAssets.Utility;
 using UnityEngine;
 using Random = UnityEngine.Random;
-
+using UnityStandardAssets.ImageEffects;
 
 namespace UnityStandardAssets.Characters.FirstPerson
 {
@@ -256,6 +256,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 gridSize = action.gridSize;
                 StartCoroutine(checkInitializeAgentLocationAction());
             }
+
+			//override default ssao settings when using init
+			m_Camera.GetComponent<ScreenSpaceAmbientOcclusion>().enabled = action.ssao;
+			
         }
 
         public IEnumerator checkInitializeAgentLocationAction()
