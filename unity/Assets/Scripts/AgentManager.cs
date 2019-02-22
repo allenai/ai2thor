@@ -320,10 +320,10 @@ public class AgentManager : MonoBehaviour
 			List<ColorBounds> boundsList = new List<ColorBounds> ();
 			foreach (Color key in colorBounds.Keys) {
 				ColorBounds bounds = new ColorBounds ();
-				bounds.color = new byte[] {
-					(byte)Math.Round (key.r * 255),
-					(byte)Math.Round (key.g * 255),
-					(byte)Math.Round (key.b * 255)
+				bounds.color = new ushort[] {
+					(ushort)Math.Round (key.r * 255),
+					(ushort)Math.Round (key.g * 255),
+					(ushort)Math.Round (key.b * 255)
 				};
 				bounds.bounds = colorBounds [key];
 				boundsList.Add (bounds);
@@ -333,10 +333,10 @@ public class AgentManager : MonoBehaviour
 			List<ColorId> colors = new List<ColorId> ();
 			foreach (Color key in agent.imageSynthesis.colorIds.Keys) {
 				ColorId cid = new ColorId ();
-				cid.color = new byte[] {
-					(byte)Math.Round (key.r * 255),
-					(byte)Math.Round (key.g * 255),
-					(byte)Math.Round (key.b * 255)
+				cid.color = new ushort[] {
+					(ushort)Math.Round (key.r * 255),
+					(ushort)Math.Round (key.g * 255),
+					(ushort)Math.Round (key.b * 255)
 				};
 
 				cid.name = agent.imageSynthesis.colorIds [key];
@@ -435,7 +435,6 @@ public class AgentManager : MonoBehaviour
 	private void ProcessControlCommand(string msg)
 	{
 
-
 		ServerAction controlCommand = new ServerAction();
 		controlCommand.renderImage = this.defaultRenderImage;
 
@@ -518,9 +517,11 @@ public class ObjectMetadata
 	public bool visible;
 	public bool receptacle;
 	public int receptacleCount;
+	public bool toggleable;
 	public bool openable;
 	public bool pickupable;
 	public bool isopen;
+	public bool istoggled;
 	public string[] receptacleObjectIds;
 	public PivotSimObj[] pivotSimObjs;
 	public float distance;
@@ -580,13 +581,13 @@ public class PivotSimObj
 
 [Serializable]
 public class ColorId {
-	public byte[] color;
+	public ushort[] color;
 	public string name;
 }
 
 [Serializable]
 public class ColorBounds {
-	public byte[] color;
+	public ushort[] color;
 	public int[] bounds;
 }
 
