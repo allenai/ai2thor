@@ -258,7 +258,16 @@ namespace UnityStandardAssets.Characters.FirstPerson
             }
 
 			//override default ssao settings when using init
-			m_Camera.GetComponent<ScreenSpaceAmbientOcclusion>().enabled = action.ssao;
+			string ssao = action.ssao.ToLower().Trim();
+			if (ssao == "on") {
+				m_Camera.GetComponent<ScreenSpaceAmbientOcclusion>().enabled = true;
+			} else if (ssao == "off") {
+				m_Camera.GetComponent<ScreenSpaceAmbientOcclusion>().enabled = false;
+			} else if (ssao == "default") {
+				// Do nothing
+			} else {
+				throw new NotImplementedException("ssao must be one of 'on', 'off' or 'default'.");
+			}			
 			
         }
 
