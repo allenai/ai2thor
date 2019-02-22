@@ -38,12 +38,11 @@ public class Build
         List<string> files = new List<string>();
         List<string> scenes = new List<string>();
         files.AddRange(Directory.GetFiles("Assets/Physics/Physics Scenes/"));
-        foreach (string f in files)
-        {
-            if (f.EndsWith(".unity"))
-            {
-                Debug.Log("Adding Scene " + f);
-                scenes.Add(f);
+
+        foreach (string f in files) {
+            if (f.EndsWith("FloorPlan1_physics.unity")) {
+                Debug.Log ("Adding Scene " + f);
+				scenes.Add (f);
             }
         }
         return scenes;

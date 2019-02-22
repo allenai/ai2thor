@@ -3352,10 +3352,14 @@ namespace UnityStandardAssets.Characters.FirstPerson
         ////// HIDING AND MASKING OBJECTS //////
         ////////////////////////////////////////
 
-        private void irreversiblyMaskGameObject(GameObject go, Material mat) {
-            Dictionary<int, Material[]> dict = new Dictionary<int, Material[]>();
+        private Dictionary<int, Material[]> maskedGameObjectDict = new Dictionary<int, Material[]>();
+        private void maskGameObject(GameObject go, Material mat) {
             foreach (MeshRenderer r in go.GetComponentsInChildren<MeshRenderer>() as MeshRenderer[]) {
-                dict[r.GetInstanceID()] = r.materials;
+                int id = r.GetInstanceID();
+                if (!maskedGameObjectDict.ContainsKey(id)) {
+                    maskedGameObjectDict[id] = r.materials;
+                }
+
                 Material[] newMaterials = new Material[r.materials.Length];
                 for (int i = 0; i < newMaterials.Length; i++) {
                     newMaterials[i] = new Material(mat);
@@ -3364,12 +3368,31 @@ namespace UnityStandardAssets.Characters.FirstPerson
             }
         }
 
+        private void unmaskGameObject(GameObject go) {
+            foreach (MeshRenderer r in go.GetComponentsInChildren<MeshRenderer>() as MeshRenderer[]) {
+                int id = r.GetInstanceID();
+                if (maskedGameObjectDict.ContainsKey(id)) {
+                    r.materials = maskedGameObjectDict[id];
+                    maskedGameObjectDict.Remove(id);
+                }
+            }
+        }
+
         public void MaskMovingParts(ServerAction action) {
             Material material = new Material(Shader.Find("Unlit/Color"));
 			material.color = Color.magenta;
             foreach (CanOpen_Object coo in GameObject.FindObjectsOfType<CanOpen_Object>()) {
                 foreach (GameObject go in coo.MovingParts) {
-                    irreversiblyMaskGameObject(go, material);
+                    maskGameObject(go, material);
+                }
+            }
+            actionFinished(true);
+        }
+
+        public void UnmaskMovingParts(ServerAction action) {
+            foreach (CanOpen_Object coo in GameObject.FindObjectsOfType<CanOpen_Object>()) {
+                foreach (GameObject go in coo.MovingParts) {
+                    unmaskGameObject(go);
                 }
             }
             actionFinished(true);
