@@ -142,8 +142,18 @@ public class PhysicsSceneManager : MonoBehaviour
 
 				foreach (GameObject go in sop.ReceptacleTriggerBoxes)
 				{
-					if(go.GetComponent<Contains>().myParent == null)
-					go.GetComponent<Contains>().myParent = sop.transform.gameObject;
+					if (go == null) {
+						Debug.LogWarning(sop.gameObject + " has non-empty receptacle trigger boxes but contains a null value.");
+						continue;
+					}
+					Contains c = go.GetComponent<Contains>();
+					if (c == null) {
+						Debug.LogWarning(sop.gameObject + " is missing a contains script on one of its receptacle boxes.");
+						continue;
+					}
+					if(go.GetComponent<Contains>().myParent == null) {
+						go.GetComponent<Contains>().myParent = sop.transform.gameObject;
+					}
 				}
 			}
 		}

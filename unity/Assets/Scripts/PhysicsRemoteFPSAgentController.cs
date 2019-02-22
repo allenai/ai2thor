@@ -3352,10 +3352,17 @@ namespace UnityStandardAssets.Characters.FirstPerson
         ////// HIDING AND MASKING OBJECTS //////
         ////////////////////////////////////////
 
-        private void irreversiblyMaskGameObject(GameObject go, Material mat) {
-            Dictionary<int, Material[]> dict = new Dictionary<int, Material[]>();
+        private Dictionary<int, Material[]> maskedGameObjectDict = new Dictionary<int, Material[]>();
+        private void maskGameObject(GameObject go, Material mat) {
+            if (go.name == "Objects" || go.name == "Structure") {
+                return;
+            }
             foreach (MeshRenderer r in go.GetComponentsInChildren<MeshRenderer>() as MeshRenderer[]) {
-                dict[r.GetInstanceID()] = r.materials;
+                int id = r.GetInstanceID();
+                if (!maskedGameObjectDict.ContainsKey(id)) {
+                    maskedGameObjectDict[id] = r.materials;
+                }
+
                 Material[] newMaterials = new Material[r.materials.Length];
                 for (int i = 0; i < newMaterials.Length; i++) {
                     newMaterials[i] = new Material(mat);
@@ -3364,14 +3371,51 @@ namespace UnityStandardAssets.Characters.FirstPerson
             }
         }
 
-        public void MaskMovingParts(ServerAction action) {
-            Material material = new Material(Shader.Find("Unlit/Color"));
-			material.color = Color.magenta;
-            foreach (CanOpen_Object coo in GameObject.FindObjectsOfType<CanOpen_Object>()) {
-                foreach (GameObject go in coo.MovingParts) {
-                    irreversiblyMaskGameObject(go, material);
+        private void unmaskGameObject(GameObject go) {
+            foreach (MeshRenderer r in go.GetComponentsInChildren<MeshRenderer>() as MeshRenderer[]) {
+                int id = r.GetInstanceID();
+                if (maskedGameObjectDict.ContainsKey(id)) {
+                    r.materials = maskedGameObjectDict[id];
+                    maskedGameObjectDict.Remove(id);
                 }
             }
+        }
+
+        public void MaskMovingParts(ServerAction action) {
+            Material openMaterial = new Material(Shader.Find("Unlit/Color"));
+			openMaterial.color = Color.magenta;
+            Material closedMaterial = new Material(Shader.Find("Unlit/Color"));
+            closedMaterial.color = Color.blue;
+            Material otherMaterial = new Material(Shader.Find("Unlit/Color"));
+            otherMaterial.color = Color.green;
+
+            foreach (GameObject go in GameObject.FindObjectsOfType<GameObject>()) {
+                maskGameObject(go, otherMaterial);
+            }
+            
+            foreach (CanOpen_Object coo in GameObject.FindObjectsOfType<CanOpen_Object>()) {
+                Material m;
+                if (coo.isOpen) {
+                    m = openMaterial;
+                } else {
+                    m = closedMaterial;
+                }
+                foreach (GameObject go in coo.MovingParts) {
+                        maskGameObject(go, m);
+                    }
+            }
+            actionFinished(true);
+        }
+
+        public void UnmaskMovingParts(ServerAction action) {
+            foreach (GameObject go in GameObject.FindObjectsOfType<GameObject>()) {
+                unmaskGameObject(go);
+            }
+            // foreach (CanOpen_Object coo in GameObject.FindObjectsOfType<CanOpen_Object>()) {
+            //     foreach (GameObject go in coo.MovingParts) {
+            //         unmaskGameObject(go);
+            //     }
+            // }
             actionFinished(true);
         }
 
@@ -3800,6 +3844,19 @@ namespace UnityStandardAssets.Characters.FirstPerson
 					break;
 				}
 			}
+            
+            ScreenSpaceAmbientOcclusion script = GameObject.Find("FirstPersonCharacter").GetComponent<ScreenSpaceAmbientOcclusion>();
+            if (action.quality == "Low" || action.quality == "Very Low") {
+                script.enabled = false;
+            } else {
+                script.enabled = true;
+            }
+			actionFinished(true);
+		}
+
+        public void DisableScreenSpaceAmbientOcclusion(ServerAction action) {
+            ScreenSpaceAmbientOcclusion script = GameObject.Find("FirstPersonCharacter").GetComponent<ScreenSpaceAmbientOcclusion>();
+            script.enabled = false;
 			actionFinished(true);
 		}
 
@@ -5010,17 +5067,40 @@ namespace UnityStandardAssets.Characters.FirstPerson
             }
         }
 
-        public void ToggleColorWalkable(ServerAction action) {
-            GameObject go = GameObject.Find("WalkablePlanes");
-            if (go != null) {
-                foreach (Renderer r in go.GetComponentsInChildren<Renderer>()) {
-                    r.enabled = !r.enabled;
+        public void UnmaskWalkable(ServerAction action) {
+            GameObject walkableParent = GameObject.Find("WalkablePlanes");
+            if (walkableParent != null) {
+                foreach (GameObject go in GameObject.FindObjectsOfType<GameObject>()) {
+                    unmaskGameObject(go);
+                }
+                foreach (Renderer r in walkableParent.GetComponentsInChildren<Renderer>()) {
+                    r.enabled = false;
+                }
+            }
+            actionFinished(true);
+        }
+
+        public void MaskWalkable(ServerAction action) {
+            Material backgroundMaterial = new Material(Shader.Find("Unlit/Color"));
+            backgroundMaterial.color = Color.green;
+
+            foreach (GameObject go in GameObject.FindObjectsOfType<GameObject>()) {
+                if (!ancestorHasName(go, "WalkablePlanes")) {
+                    maskGameObject(go, backgroundMaterial);
+                }
+            }
+
+            GameObject walkableParent = GameObject.Find("WalkablePlanes");
+            if (walkableParent != null) {
+                foreach (Renderer r in walkableParent.GetComponentsInChildren<Renderer>()) {
+                    r.enabled = true;
                 }
                 actionFinished(true);
                 return;
             }
+
             Vector3[] reachablePositions = getReachablePositions();
-            GameObject walkableParent = new GameObject();
+            walkableParent = new GameObject();
             walkableParent.name = "WalkablePlanes";
             GameObject topLevelObject = GameObject.Find("Objects");
             if (topLevelObject != null) {
