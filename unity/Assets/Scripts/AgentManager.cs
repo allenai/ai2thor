@@ -699,6 +699,8 @@ public class ServerAction
 	public float cameraY;
 	public bool placeStationary; //when placing/spawning an object, do we spawn it stationary (kinematic true) or spawn and let physics resolve final position
 
+	public bool ssao;
+
 	public SimObjType ReceptableSimObjType()
 	{
 		if (string.IsNullOrEmpty(receptacleObjectType))

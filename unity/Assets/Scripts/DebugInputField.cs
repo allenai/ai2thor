@@ -278,6 +278,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         action.continuous = true;//testing what continuous mode true does...
 
 						PhysicsController.actionComplete = false;
+                        action.ssao = true;
+
                         action.action = "Initialize";
                         AManager.Initialize(action);
                         // AgentManager am = PhysicsController.gameObject.FindObjectsOfType<AgentManager>()[0];
