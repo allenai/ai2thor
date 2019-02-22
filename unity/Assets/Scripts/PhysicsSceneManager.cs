@@ -6,6 +6,7 @@ using UnityEngine;
 using UnityStandardAssets.Characters.FirstPerson;
 using System;
 using System.Linq;
+using UnityStandardAssets.ImageEffects;
 
 [ExecuteInEditMode]
 
@@ -44,6 +45,21 @@ public class PhysicsSceneManager : MonoBehaviour
 		{
 			GameObject c = new GameObject("Objects");
 			Debug.Log(c.transform.name + " was missing and is now added");
+		}
+
+		//on enable, set the ssao on the camera according to the current quality setting. Disable on lower quality for performance
+		//need to adjust this value if the number of Quality Settings change
+		//right now only Very High and Ultra will have ssao on by default.
+		if(QualitySettings.GetQualityLevel() < 6)
+		{
+			GameObject.Find("FirstPersonCharacter").
+			GetComponent<ScreenSpaceAmbientOcclusion>().enabled = false;
+		}
+
+		else
+		{
+			GameObject.Find("FirstPersonCharacter").
+			GetComponent<ScreenSpaceAmbientOcclusion>().enabled = true;
 		}
 	}
 
