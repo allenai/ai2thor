@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityStandardAssets.Characters.FirstPerson;
 using Newtonsoft.Json;
+using UnityEngine.Networking;
 
 
 public class AgentManager : MonoBehaviour
@@ -368,7 +369,6 @@ public class AgentManager : MonoBehaviour
 		// we should only read the screen buffer after rendering is complete
 		yield return new WaitForEndOfFrame();
 
-
 		WWWForm form = new WWWForm();
 
 		MultiAgentMetadata multiMeta = new MultiAgentMetadata ();
@@ -416,15 +416,18 @@ public class AgentManager : MonoBehaviour
 		//form.AddField("metadata", JsonUtility.ToJson(multiMeta));
 		form.AddField("metadata", Newtonsoft.Json.JsonConvert.SerializeObject(multiMeta));
 		form.AddField("token", robosimsClientToken);
-		WWW w = new WWW ("http://" + robosimsHost + ":" + robosimsPort + "/train", form);
-		yield return w;
 
-		if (!string.IsNullOrEmpty (w.error)) {
-			Debug.Log ("Error: " + w.error);
-			yield break;
-		} else {
-			ProcessControlCommand (w.text);
-		}
+        using (var www = UnityWebRequest.Post("http://" + robosimsHost + ":" + robosimsPort + "/train", form))
+        {
+            yield return www.SendWebRequest();
+
+            if (www.isNetworkError || www.isHttpError)
+            {
+                Debug.Log("Error: " + www.error);
+                yield break;
+            }
+            ProcessControlCommand(www.downloadHandler.text);
+        }
 	}
 
 	private BaseFPSAgentController activeAgent() {

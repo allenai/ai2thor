@@ -8,7 +8,7 @@ import subprocess
 from invoke import task
 
 S3_BUCKET = 'ai2-thor'
-UNITY_VERSION = '2017.3.1f1'
+UNITY_VERSION = '2018.3.6f1'
 
 def add_files(zipf, start_dir):
     for root, dirs, files in os.walk(start_dir):

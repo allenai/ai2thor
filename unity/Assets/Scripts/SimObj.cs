@@ -457,7 +457,7 @@ public class SimObj : MonoBehaviour, SimpleSimObj
 		if (Type == SimObjType.Undefined) 
         {
 			//check our prefab just in case the enum has gotten disconnected
-			GameObject prefabParent = UnityEditor.PrefabUtility.GetPrefabParent (gameObject) as GameObject;
+			GameObject prefabParent = UnityEditor.PrefabUtility.GetCorrespondingObjectFromSource(gameObject) as GameObject;
 			if (prefabParent != null) 
             {
 				SimObj ps = prefabParent.GetComponent<SimObj> ();
