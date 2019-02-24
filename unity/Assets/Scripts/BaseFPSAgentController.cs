@@ -596,6 +596,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
 				errorMessage += e.ToString();
 				actionFinished(false);
 			}
+
+			#if UNITY_EDITOR
+			if (errorMessage != "") {
+				Debug.Log(errorMessage);
+			}
+			#endif
 		}
 
 		// Handle collisions - CharacterControllers don't apply physics innately, see "PushMode" check below

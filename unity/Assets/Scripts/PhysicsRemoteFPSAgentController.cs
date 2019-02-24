@@ -108,9 +108,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             crouchingLocalCameraPosition = m_Camera.transform.localPosition;
             crouchingLocalCameraPosition.y = 0.0f;
 
-            foreach (SimObjPhysics so in GameObject.FindObjectsOfType<SimObjPhysics>()) {
-                uniqueIdToSimObjPhysics[so.UniqueID] = so;
-            }
+            resetUniqueIdToSimObjPhysics();
 
             // Recordining initially disabled renderers and scene bounds 
             foreach (Renderer r in GameObject.FindObjectsOfType<Renderer>()) {
@@ -124,21 +122,22 @@ namespace UnityStandardAssets.Characters.FirstPerson
             base.actionComplete = true;
         }
 
+        private void resetUniqueIdToSimObjPhysics() {
+            uniqueIdToSimObjPhysics.Clear();
+            foreach (SimObjPhysics so in GameObject.FindObjectsOfType<SimObjPhysics>()) {
+                uniqueIdToSimObjPhysics[so.UniqueID] = so;
+            }
+        }
+
         //forceVisible is true to activate, false to deactivate
         public void ToggleHideAndSeekObjects(ServerAction action)
         {
             PhysicsSceneManager script = GameObject.Find("PhysicsSceneManager").GetComponent<PhysicsSceneManager>();
-            if(script.ToggleHideAndSeek(action.forceVisible))
-            {
+            if (script.ToggleHideAndSeek(action.forceVisible)) {
+                resetUniqueIdToSimObjPhysics();
                 actionFinished(true);
-            }
-
-            else
-            {
+            } else {
                 errorMessage = "No HideAndSeek object found";
-                #if UNITY_EDITOR
-                Debug.Log(errorMessage);
-                #endif
                 actionFinished(false);
             }
         }
@@ -1731,9 +1730,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     }
                 }
                 errorMessage += " object(s) after movement.";
-                #if UNITY_EDITOR
-                Debug.Log(errorMessage);
-                #endif
                 actionFinished(false);
             } else if (Vector3.Distance(initialPosition, lastPosition) < 0.001f &&
                 Quaternion.Angle(initialRotation, lastRotation) < 0.001f) {
@@ -1769,9 +1765,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
             if (!raycastDidHit) {
                 errorMessage = "No openable objects in direction.";
-                #if UNITY_EDITOR
-                Debug.Log(errorMessage);
-                #endif
                 actionFinished(false);
                 return;
             } 
@@ -1782,9 +1775,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 OpenObject(action);
             } else {
                 errorMessage = hit.transform.gameObject.name + " is not interactable.";
-                #if UNITY_EDITOR
-                Debug.Log(errorMessage);
-                #endif
                 actionFinished(false);
             }
         }
@@ -2133,17 +2123,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
         {
             PhysicsSceneManager script = GameObject.Find("PhysicsSceneManager").GetComponent<PhysicsSceneManager>();
 
-            if(script.RandomSpawnRequiredSceneObjects(action.randomSeed, action.forceVisible, action.maxNumRepeats, action.placeStationary)) //action.maxnumrepeats
-            {
-                
-                //script.SetupScene();
-                actionFinished(true);
-                return;
-            }
-            
-            else
-            actionFinished(false);
-
+            bool success = script.RandomSpawnRequiredSceneObjects(action.randomSeed, action.forceVisible, action.maxNumRepeats, action.placeStationary);
+            resetUniqueIdToSimObjPhysics();
+            actionFinished(success);
         }
 
         //if you are holding an object, place it on a valid Receptacle 
@@ -2159,9 +2141,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
             if(ItemInHand == null)
             {
                 errorMessage = "Can't place an object if Agent isn't holding anything";
-                #if UNITY_EDITOR
-                Debug.Log(errorMessage);
-                #endif
                 actionFinished(false);
                 return;
             }
@@ -2255,10 +2234,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         errorMessage = ItemInHand.name + " is not a valid Object Type to be placed in " + targetReceptacle.name;
                     }
 
-                    #if UNITY_EDITOR
-                    Debug.Log(errorMessage);
-                    #endif
-
                     actionFinished(false);
                     return;
                 }
@@ -2323,9 +2298,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
             else
             {
                 errorMessage = "No valid positions to place object found";
-                #if UNITY_EDITOR
-                Debug.Log(errorMessage);
-                #endif
                 actionFinished(false);
             }
 
@@ -2820,15 +2792,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 }
             } else if (so == null) {
                 errorMessage = "Object at location is not interactable.";
-                #if UNITY_EDITOR
-                Debug.Log(errorMessage);
-                #endif
                 actionFinished(false);
             } else {
                 errorMessage = so.UniqueID + " is too far away.";
-                #if UNITY_EDITOR
-                Debug.Log(errorMessage);
-                #endif
                 actionFinished(false);
             }
         }
@@ -3115,9 +3081,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     if (codd.isOpen)
                     {
                         errorMessage = "Object already open";
-                        #if UNITY_EDITOR
-                        Debug.Log(errorMessage);
-                        #endif
                         actionFinished(false);
                     }
 
@@ -3140,9 +3103,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			else
             {
                 errorMessage = "object not found: " + action.objectId;
-                #if UNITY_EDITOR
-				Debug.Log(errorMessage);
-                #endif
                 actionFinished(false);
             }
 		}
@@ -4849,37 +4809,51 @@ namespace UnityStandardAssets.Characters.FirstPerson
         }
 
         public void RandomizeHideSeekObjects(ServerAction action) {
-            GameObject topLevelObject = GameObject.Find("HideAndSeek");
-            SimObjPhysics[] hideSeekObjects = topLevelObject.GetComponentsInChildren<SimObjPhysics>();
-
             System.Random rnd = new System.Random(action.randomSeed);
-            HashSet<string> seenBooks = new HashSet<string>();
-            foreach (SimObjPhysics sop in hideSeekObjects) {
-                HashSet<SimObjPhysics> group = new HashSet<SimObjPhysics>();
-                if (sop.UniqueID.StartsWith("Book|")) {
-                    if (!seenBooks.Contains(sop.UniqueID)) {
-                        HashSet<SimObjPhysics> objectsNearBook = objectsInBox(
-                            sop.transform.position.x, sop.transform.position.z);
-                        group.Add(sop);
-                        seenBooks.Add(sop.UniqueID);
-                        foreach (SimObjPhysics possibleBook in objectsNearBook) {
-                            if (possibleBook.UniqueID.StartsWith("Book|") && 
-                                !seenBooks.Contains(possibleBook.UniqueID)) {
-                                group.Add(possibleBook);
-                                seenBooks.Add(possibleBook.UniqueID);
-                            }
-                        }
-                    }
-                } else {
-                    group.Add(sop);
-                }
 
-                if (group.Count != 0 && rnd.NextDouble() <= action.removeProb) {
-                    foreach (SimObjPhysics toRemove in group) {
-                        toRemove.gameObject.SetActive(false);
-                    }
-                }
+            PhysicsSceneManager psm = GameObject.Find("PhysicsSceneManager").GetComponent<PhysicsSceneManager>();
+            if (!psm.ToggleHideAndSeek(true)) {
+                errorMessage = "Hide and Seek object reference not set, nothing to randomize.";
+                actionFinished(false);
+                return;
             }
+
+            foreach (Transform child in psm.HideAndSeek.transform) {
+                child.gameObject.SetActive(rnd.NextDouble() > action.removeProb);
+            }
+            psm.SetupScene();
+            resetUniqueIdToSimObjPhysics();
+
+            // GameObject topLevelObject = GameObject.Find("HideAndSeek");
+            // SimObjPhysics[] hideSeekObjects = topLevelObject.GetComponentsInChildren<SimObjPhysics>();
+
+            // HashSet<string> seenBooks = new HashSet<string>();
+            // foreach (SimObjPhysics sop in hideSeekObjects) {
+            //     HashSet<SimObjPhysics> group = new HashSet<SimObjPhysics>();
+            //     if (sop.UniqueID.StartsWith("Book|")) {
+            //         if (!seenBooks.Contains(sop.UniqueID)) {
+            //             HashSet<SimObjPhysics> objectsNearBook = objectsInBox(
+            //                 sop.transform.position.x, sop.transform.position.z);
+            //             group.Add(sop);
+            //             seenBooks.Add(sop.UniqueID);
+            //             foreach (SimObjPhysics possibleBook in objectsNearBook) {
+            //                 if (possibleBook.UniqueID.StartsWith("Book|") && 
+            //                     !seenBooks.Contains(possibleBook.UniqueID)) {
+            //                     group.Add(possibleBook);
+            //                     seenBooks.Add(possibleBook.UniqueID);
+            //                 }
+            //             }
+            //         }
+            //     } else {
+            //         group.Add(sop);
+            //     }
+
+            //     if (group.Count != 0 && rnd.NextDouble() <= action.removeProb) {
+            //         foreach (SimObjPhysics toRemove in group) {
+            //             toRemove.gameObject.SetActive(false);
+            //         }
+            //     }
+            // }
             snapToGrid(); // This snapping seems necessary for some reason, really doesn't make any sense.
             actionFinished(true);
         }
