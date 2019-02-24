@@ -3434,7 +3434,15 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 		public void HideObject(ServerAction action) {
 			if (uniqueIdToSimObjPhysics.ContainsKey(action.objectId)) {
-				UpdateDisplayGameObject(uniqueIdToSimObjPhysics[action.objectId].gameObject, false);
+                SimObjPhysics sop = uniqueIdToSimObjPhysics[action.objectId];
+                if (!ReceptacleRestrictions.SpawnOnlyOutsideReceptacles.Contains(sop.ObjType)) {
+                    foreach (SimObjPhysics containedSop in sop.ReceptacleObjects) {
+                        UpdateDisplayGameObject(containedSop.gameObject, false);
+                    }
+                }
+				UpdateDisplayGameObject(sop.gameObject, false);
+                sop.Contains();
+
 				actionFinished(true);
 			} else {
 				errorMessage = "No object with given id could be found to hide.";
@@ -3444,7 +3452,13 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		
 		public void UnhideObject(ServerAction action) {
 			if (uniqueIdToSimObjPhysics.ContainsKey(action.objectId)) {
-				UpdateDisplayGameObject(uniqueIdToSimObjPhysics[action.objectId].gameObject, true);
+                SimObjPhysics sop = uniqueIdToSimObjPhysics[action.objectId];
+                if (!ReceptacleRestrictions.SpawnOnlyOutsideReceptacles.Contains(sop.ObjType)) {
+                    foreach (SimObjPhysics containedSop in sop.ReceptacleObjects) {
+                        UpdateDisplayGameObject(containedSop.gameObject, true);
+                    }
+                }
+                UpdateDisplayGameObject(sop.gameObject, true);
 				actionFinished(true);
 			} else {
 				errorMessage = "No object with given id could be found to unhide.";
