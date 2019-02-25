@@ -1039,7 +1039,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 case "push":
 					{
 						ServerAction action = new ServerAction();
-						action.action = "ApplyForceObject";
+						action.action = "PushObject";
 
                         if (splitcommand.Length > 1 && splitcommand.Length < 3)
                         {
@@ -1056,7 +1056,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         else
                         {
                             action.objectId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().UniqueIDOfClosestVisibleObject();
-                            action.moveMagnitude = 200f;//4000f;
+                            //action.moveMagnitude = 200f;//4000f;
                         }
 							
                         action.z = 1;
@@ -1067,7 +1067,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 case "pull":
 					{
 						ServerAction action = new ServerAction();
-						action.action = "ApplyForceObject";
+						action.action = "PullObject";
 
                         if (splitcommand.Length > 1 && splitcommand.Length < 3)
                         {
@@ -1084,7 +1084,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         else
                         {
                             action.objectId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().UniqueIDOfClosestVisibleObject();
-                            action.moveMagnitude = 200f;//4000f;
+                            //action.moveMagnitude = 200f;//4000f;
                         }
 							
                         //action.moveMagnitude = 200f;//4000f;
