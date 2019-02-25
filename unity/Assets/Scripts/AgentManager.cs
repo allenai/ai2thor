@@ -458,7 +458,6 @@ public class AgentManager : MonoBehaviour
 			this.activeAgent().ProcessControlCommand (controlCommand);
 			readyToEmit = true;
 		}
-
 	}
 
 	// Extra helper functions
