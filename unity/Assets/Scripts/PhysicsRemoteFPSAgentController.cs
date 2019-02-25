@@ -2385,7 +2385,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 Transform savedParent = target.transform.parent;
                 bool wasKinematic = target.GetComponent<Rigidbody>().isKinematic;
 
-                target.GetComponent<Rigidbody>().isKinematic = true;
+                //reset collision mode and set kinematic true since this is now being held
+                Rigidbody rb = target.GetComponent<Rigidbody>();
+                rb.collisionDetectionMode = CollisionDetectionMode.Discrete;
+                rb.isKinematic = true;
 
                 PickupContainedObjects(target);
 
@@ -2430,7 +2433,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     if(sop.PrimaryProperty == SimObjPrimaryProperty.CanPickup)
                     {
                         sop.transform.Find("Colliders").gameObject.SetActive(false);
-                        sop.GetComponent<Rigidbody>().isKinematic = true;
+                        Rigidbody soprb = sop.GetComponent<Rigidbody>();
+                        soprb.collisionDetectionMode = CollisionDetectionMode.Discrete;
+                        soprb.isKinematic = true;
                         sop.transform.SetParent(target.transform);
                     }
 
