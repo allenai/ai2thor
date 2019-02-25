@@ -86,8 +86,10 @@ public class PhysicsSceneManager : MonoBehaviour
 	{
 		if(HideAndSeek)
 		{
-			HideAndSeek.SetActive(hide);
-			SetupScene();
+			if (HideAndSeek.activeSelf != hide) {
+				HideAndSeek.SetActive(hide);
+				SetupScene();
+			}
 			return true;
 		}
 
