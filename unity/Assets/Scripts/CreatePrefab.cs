@@ -14,7 +14,7 @@ public class CreatePrefab : MonoBehaviour
 		Transform[] transforms = Selection.transforms;
 		foreach (Transform t in transforms)
 		{
-			PrefabUtility.CreatePrefab("Assets/Prefabs/" + t.gameObject.name + ".prefab", t.gameObject, ReplacePrefabOptions.ReplaceNameBased);
+            PrefabUtility.SaveAsPrefabAsset(t.gameObject, "Assets/Prefabs/" + t.gameObject.name + ".prefab");
 		}
 	}
 }
