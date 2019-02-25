@@ -268,7 +268,11 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 				SimObjPhysics colsop = col.transform.GetComponentInParent<SimObjPhysics>();
 
 				if(colsop.PrimaryProperty == SimObjPrimaryProperty.CanPickup)
-				colsop.transform.GetComponent<Rigidbody>().isKinematic = false;
+				{
+					Rigidbody rb = colsop.transform.GetComponent<Rigidbody>();
+					rb.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
+					rb.isKinematic = false;
+				}
 			}
 
 		}
@@ -454,6 +458,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 	{
 		Vector3 dir = new Vector3(action.x, action.y, action.z);
 		Rigidbody myrb = gameObject.GetComponent<Rigidbody>();
+		myrb.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
 		myrb.AddForce(dir * action.moveMagnitude);
 	}
 

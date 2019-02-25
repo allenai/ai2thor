@@ -1314,6 +1314,30 @@ namespace UnityStandardAssets.Characters.FirstPerson
             }
         }
 
+        public void PushObject(ServerAction action)
+        {
+            action.z = 1;
+
+            if(action.moveMagnitude == 0f)
+            {
+                action.moveMagnitude = 200f;
+            }
+
+            ApplyForceObject(action);
+        }
+
+        public void PullObject(ServerAction action)
+        {
+            action.z = -1;
+
+            if(action.moveMagnitude == 0f)
+            {
+                action.moveMagnitude = 200f;
+            }
+
+            ApplyForceObject(action);
+        }
+
         public void ApplyForceObject(ServerAction action)
         {
             SimObjPhysics target = null;
@@ -1335,7 +1359,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
             if (target == null)
             {
-                errorMessage = "No valid target to push";
+                errorMessage = "No valid target!";
                 Debug.Log(errorMessage);
                 actionFinished(false);
                 return;
@@ -1345,7 +1369,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
             if (!target.GetComponent<SimObjPhysics>())
             {
-                errorMessage = "Target must be SimObjPhysics to push";
+                errorMessage = "Target must be SimObjPhysics!";
                 Debug.Log(errorMessage);
                 actionFinished(false);
                 return;
@@ -1359,7 +1383,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
             if (!canbepushed)
             {
-                errorMessage = "Target Primary Property type can't be pushed";
+                errorMessage = "Target Primary Property type incompatible with push/pull";
                 Debug.Log(errorMessage);
                 actionFinished(false);
                 return;
@@ -1372,6 +1396,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 actionFinished(false);
                 return;
             }
+
 
             target.GetComponent<Rigidbody>().isKinematic = false;
             
