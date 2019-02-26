@@ -1628,12 +1628,12 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		{
 			Transform Colliders = transform.Find("Colliders");
 
-			List<GameObject> listColliders = new List<GameObject>();
+			List<Collider> listColliders = new List<Collider>();
 
 			foreach (Transform child in Colliders)
 			{
 				//list.toarray
-				listColliders.Add(child.gameObject);
+				listColliders.Add(child.GetComponent<Collider>());
 
 				//set correct tag and layer for each object
 				//also ensure all colliders are NOT trigger
@@ -1648,7 +1648,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 
 			}
 
-			//MyColliders = listColliders.ToArray();
+			MyColliders = listColliders.ToArray();
 		}
 	}
 
