@@ -132,6 +132,11 @@ public class PhysicsSceneManager : MonoBehaviour
 				UniqueIDsInScene.Add(o.UniqueID);
 
 		}
+		
+		PhysicsRemoteFPSAgentController fpsController = GameObject.Find("FPSController").GetComponent<PhysicsRemoteFPSAgentController>();
+		if (fpsController.imageSynthesis != null) {
+			fpsController.imageSynthesis.OnSceneChange();
+		}
 	}
 
 	public void GatherAllReceptaclesInScene()

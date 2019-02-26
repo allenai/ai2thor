@@ -1739,8 +1739,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
             // This has to be after the above as the contactPointsDictionary is only
             // updated while rb is not kinematic.
-            rb.isKinematic = true;
             rb.collisionDetectionMode = oldCollisionDetectionMode;
+            rb.isKinematic = true;
 
             if (handObjectIsColliding) {
                 AgentHand.transform.position = initialPosition;

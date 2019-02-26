@@ -270,10 +270,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
                             action.makeAgentsVisible = int.Parse(splitcommand[3]) == 1;
                         }
 
-                        action.renderNormalsImage = true;
-                        action.renderDepthImage = true;
-                        action.renderClassImage = true;
-                        action.renderObjectImage = true;
+                        // action.renderNormalsImage = true;
+                        // action.renderDepthImage = true;
+                        // action.renderClassImage = true;
+                        // action.renderObjectImage = true;
 
                         action.continuous = true;//testing what continuous mode true does...
 
@@ -288,6 +288,22 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         // AgentManager am = physicsSceneManager.GetComponent<AgentManager>();
                         // Debug.Log(am);
       			        // am.Initialize(action);
+                        break;
+                    }
+                case "initsynth":
+                    {
+						ServerAction action = new ServerAction();
+
+                        action.renderNormalsImage = true;
+                        action.renderDepthImage = true;
+                        action.renderClassImage = true;
+                        action.renderObjectImage = true;
+
+						PhysicsController.actionComplete = false;
+                        action.ssao = "default";
+
+                        action.action = "Initialize";
+                        AManager.Initialize(action);
                         break;
                     }
                 case "to":
