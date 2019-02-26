@@ -3137,7 +3137,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
             }
 		}
 
-        //
+        //XXX: To get all objects contained in a receptacle, target it with this Function and it will return a list of strings, each being the
+        //unique ID of an object in this receptacle
         public void Contains(ServerAction action)
 		{
 			if (action.objectId == null)
