@@ -50,7 +50,7 @@ public class PhysicsSceneManager : MonoBehaviour
 		//on enable, set the ssao on the camera according to the current quality setting. Disable on lower quality for performance
 		//need to adjust this value if the number of Quality Settings change
 		//right now only Very High and Ultra will have ssao on by default.
-		if(QualitySettings.GetQualityLevel() < 6)
+		if(QualitySettings.GetQualityLevel() < 5)
 		{
 			GameObject.Find("FirstPersonCharacter").
 			GetComponent<ScreenSpaceAmbientOcclusion>().enabled = false;
