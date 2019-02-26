@@ -270,8 +270,9 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 				if(colsop.PrimaryProperty == SimObjPrimaryProperty.CanPickup)
 				{
 					Rigidbody rb = colsop.transform.GetComponent<Rigidbody>();
-					rb.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
 					rb.isKinematic = false;
+					rb.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
+
 				}
 			}
 
@@ -444,6 +445,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		Rigidbody rb = gameObject.GetComponent<Rigidbody>();
 		if((rb.IsSleeping() == true) && (rb.collisionDetectionMode == CollisionDetectionMode.ContinuousDynamic))
 		{
+			//print("settling");
 			rb.collisionDetectionMode = CollisionDetectionMode.Discrete;
 		}
 	}
