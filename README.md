@@ -3,11 +3,7 @@
 --------------------------------------------------------------------------------
 
 
-AI2-THOR is a photo-realistic interactable framework for AI agents.
-
-## Tutorial
-
-Please refer to the [tutorial page](http://ai2thor.allenai.org/tutorials/) for a detailed walkthrough.
+AI2-THOR (The House Of inteRactions) is a photo-realistic interactable framework for AI agents.
 
 ## News
 * (4/2018) We have released version 0.0.25 of AI2-THOR. The main changes include: upgrade to Unity 2017, performance optimization to improve frame rate, and various bug fixes. We have also added some physics functionalities. Please contact us for instructions. 
@@ -26,8 +22,8 @@ Please refer to the [tutorial page](http://ai2thor.allenai.org/tutorials/) for a
 * Agent: A capsule shaped entity that can navigate within scenes and interact with objects.
 * Scene: A scene within AI2-THOR represents a virtual room that an agent can navigate in and interact with.
 * Action: A discrete command for the Agent to perform within a scene (e.g. MoveAhead, RotateRight, PickupObject)
-* Object Visibility: An object is said to be visible when it is in camera view and within a threshold of distance (default: 1 meter) when measured from the Agent’s camera to the centerpoint of the target object. This determines whether the agent can interact with the object or not.
-* Receptacle: A type of object that can contain another object. These types of objects include: sinks, refrigerators, cabinets and tabletops. 
+* Object Interactability: An object is said to be interactable when it is in camera view, within a threshold of distance (default: 1.5 meters), and not obstructed by any other objects. This means objects behind glass are flagged as Visible to the agent but not Interactable, since they can only be seen and not reached.
+* Receptacle: A type of object that can contain another object. These types of objects include: ArmChair, Bathtub, Bed, Bowl, Box, Cabinet, Cart, CoffeeMachine, CounterTop, Cup, Desk, Drawer, Dresser, Fridge, GarbageCan, HandTowelHolder, LaundryHamper, Microwave, Mug, NightStand, Ottoman, Pan, Plate, Pot, Safe, Shelf, Sink, Sofa, Stove Burner, TableTop, Toilet, ToiletPaperHanger, and TowelHolder. For more info about Sim Objects and their properties, refer to [this spreadsheet](https://docs.google.com/spreadsheets/d/1wx8vWgmFSi-4Gknkwl2fUMG8oRedu-tUklGSvU0oh4U/edit?usp=sharing)
 
 ## PIP Installation
 
@@ -129,8 +125,8 @@ Angle the agent's view down in 30 degree increments (max downward angle is 60 de
 event = controller.step(dict(action='LookDown'))
 ```
 
-#### Move Hand
-If the agent has picked up an object, it can manipulate the position of its hand (and the item now in its hand).
+#### Agent Hand/Object Manipulation
+If the agent has picked up an object, it can manipulate the position and rotation of the Hand and the object held.
 
 ##### Move Hand Forward
 Moves the hand forward relative to the agent's current facing the given moveMagnitude in meters.
@@ -161,6 +157,17 @@ event =controller.step(dict(action='MoveHandUp', moveMagnitude = 0.1))
 Moves the hand down relative to the agent's current facing the given moveMagnitude in meters.
 ```python
 event = controller.step(dict(action='MoveHandDown', moveMagnitude = 0.1))
+```
+##### Rotate Hand
+Rotates the hand and held object about the specified axes (x, y, z) the specified number of degrees. These examples rotate a held object 90 degrees about the each axis. 
+```python
+event = controller.step(dict(action='RotateHand', x = 90))
+event = controller.step(dict(action='RotateHand', y = 90))
+event = controller.step(dict(action='RotateHand', z = 90))
+```
+Multiple Axes can be specified at once as well.
+```python
+event = controller.step(dict(action='RotateHand', x = 90, y = 15, z = 28))
 ```
 
 ### Sim Object Interaction
