@@ -19,11 +19,17 @@ AI2-THOR (The House Of inteRactions) is a photo-realistic interactable framework
 
 ## Concepts
 
-* Agent: A capsule shaped entity that can navigate within scenes and interact with objects.
-* Scene: A scene within AI2-THOR represents a virtual room that an agent can navigate in and interact with.
-* Action: A discrete command for the Agent to perform within a scene (e.g. MoveAhead, RotateRight, PickupObject)
-* Object Interactability: An object is said to be interactable when it is in camera view, within a threshold of distance (default: 1.5 meters), and not obstructed by any other objects. This means objects behind glass are flagged as Visible to the agent but not Interactable, since they can only be seen and not reached.
-* Receptacle: A type of object that can contain another object. These types of objects include: ArmChair, Bathtub, Bed, Bowl, Box, Cabinet, Cart, CoffeeMachine, CounterTop, Cup, Desk, Drawer, Dresser, Fridge, GarbageCan, HandTowelHolder, LaundryHamper, Microwave, Mug, NightStand, Ottoman, Pan, Plate, Pot, Safe, Shelf, Sink, Sofa, Stove Burner, TableTop, Toilet, ToiletPaperHanger, and TowelHolder. For more info about Sim Objects and their properties, refer to [the Sim Object Info Table Spreadsheet](https://docs.google.com/spreadsheets/d/1wx8vWgmFSi-4Gknkwl2fUMG8oRedu-tUklGSvU0oh4U/edit?usp=sharing)
+* **Agent:** A capsule shaped entity that can navigate within scenes and interact with objects.
+
+* **Scene:** A scene within AI2-THOR represents a virtual room that an agent can navigate in and interact with. There are 4 scene Categories, each with 30 unique Scenes within them: **Kitchen, Living Room, Bedroom, Bathroom**.
+
+* **Action:** A discrete command for the Agent to perform within a scene (e.g. MoveAhead, RotateRight, PickupObject)
+
+* **Sim Object:** Objects that can be interacted with by the Agent. Please refer to [the Sim Object Info Table Spreadsheet](https://docs.google.com/spreadsheets/d/1wx8vWgmFSi-4Gknkwl2fUMG8oRedu-tUklGSvU0oh4U/edit?usp=sharing) and check the **Object Locations** sheet to see which Object types can be found in which Scene Category. Note that objects marked **_All_** are guaranteed to be found in all scenes of a given Category, objects marked **_Some_** can be found in some but not all scenes of a given Category, and objects marked **_None_** will not be found in a scene of the given Category.
+
+* **Object Interactability:** An object is said to be interactable when it is in camera view, within a threshold of distance (default: 1.5 meters), and not obstructed by any other objects. This means objects behind glass are flagged as Visible to the agent but not Interactable, since they can only be seen and not reached.
+
+* **Receptacle:** A type of object that can contain another object. These types of objects include: ArmChair, Bathtub, Bed, Bowl, Box, Cabinet, Cart, CoffeeMachine, CounterTop, Cup, Desk, Drawer, Dresser, Fridge, GarbageCan, HandTowelHolder, LaundryHamper, Microwave, Mug, NightStand, Ottoman, Pan, Plate, Pot, Safe, Shelf, Sink, Sofa, Stove Burner, TableTop, Toilet, ToiletPaperHanger, and TowelHolder. For more info about Sim Objects and their properties, refer to [the Sim Object Info Table Spreadsheet](https://docs.google.com/spreadsheets/d/1wx8vWgmFSi-4Gknkwl2fUMG8oRedu-tUklGSvU0oh4U/edit?usp=sharing)
 
 ## PIP Installation
 
@@ -135,7 +141,7 @@ event = controller.step(dict(action='Teleport', x=0.999, y=1.01, z=-0.3541))
 ``` 
 
 ### Sim Object Interaction
-Check [here](https://docs.google.com/spreadsheets/d/1wx8vWgmFSi-4Gknkwl2fUMG8oRedu-tUklGSvU0oh4U/edit?usp=sharing) and open the **Object Interactions** sheet for an info table on what Sim Object types can be interacted with in which ways.
+Check [The Sim Object Info Table](https://docs.google.com/spreadsheets/d/1wx8vWgmFSi-4Gknkwl2fUMG8oRedu-tUklGSvU0oh4U/edit?usp=sharing) and open the **Object Interactions** sheet for an info table on what Sim Object types can be interacted with in which ways.
 
 #### Pickup Object
 
