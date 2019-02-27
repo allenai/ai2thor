@@ -71,49 +71,114 @@ event.metadata
 
 ## Actions
 
-We currently provide the following API controlled actions. New actions such as turning on faucet or slicing a loaf of bread can be easily added to the API. Actions are defined in ```unity/Assets/Scripts/DiscreteRemoteFPSAgentController.cs```. Please refer to [this page](http://ai2thor.allenai.org/tutorials/object-types) to check which objects are actionable.
+We currently provide the following API controlled actions. Actions are defined in ```unity/Assets/Scripts/PhysicsRemoteFPSAgentController.cs```. 
+
+### Agent Movement and Item Manipulation
+
+When moving or rotating the agent, do note that if the agent is holding a Sim Object in its hand it could prevent moving or turning from succeeding. This is to prevent held objects from clipping with the environment.
 
 #### MoveAhead
-Move ahead in the amount of the grid size
+Move Ahead the given moveMagnitude in meters. If no moveMagnitude specified, it defaults to the initialized grid size
 ```python
 event = controller.step(dict(action='MoveAhead'))
+event = controller.step(dict(action='MoveAhead', moveMagnitude = 0.1))
 ```
 
 #### MoveRight
-Move right in the amount of the grid size
+Move Right the given moveMagnitude in meters. If no moveMagnitude specified, it defaults to the initialized grid size
 ```python
 event = controller.step(dict(action='MoveRight'))
+event = controller.step(dict(action='MoveRight', moveMagnitude = 0.1))
 ```
+
 #### MoveLeft
-Move left in the amount of the grid size
+Move Left the given moveMagnitude in meters. If no moveMagnitude specified, it defaults to the initialized grid size
 ```python
 event = controller.step(dict(action='MoveLeft'))
+event = controller.step(dict(action='MoveLeft', moveMagnitude = 0.1))
 ```
+
 #### MoveBack
-Move back in the amount of the grid size
+Move Backwards the given moveMagnitude in meters. If no moveMagnitude specified, it defaults to the initialized grid size
 ```python
 event = controller.step(dict(action='MoveBack'))
+event = controller.step(dict(action='MoveBack', moveMagnitude = 0.1))
 ```
+
 #### RotateRight
-Rotate the agent by 90 degrees to the right
+Rotate the agent by 90 degrees to the right of its current facing
 ```python
 event = controller.step(dict(action='RotateRight'))
 ```
 
 #### RotateLeft
-Rotate the agent by 90 degrees to the left
+Rotate the agent by 90 degrees to the left of its current facing
 ```python
 event = controller.step(dict(action='RotateLeft'))
 ```
 
+#### LookUp
+Angle the agent's view up in 30 degree increments (max upward angle is 30 degrees above the forward horizon)
+```python
+event = controller.step(dict(action='LookUp'))
+```
+
+#### LookDown
+Angle the agent's view down in 30 degree increments (max downward angle is 60 degrees below the forward horizon)
+```python
+event = controller.step(dict(action='LookDown'))
+```
+
+#### Move Hand
+If the agent has picked up an object, it can manipulate the position of its hand (and the item now in its hand).
+
+##### Move Hand Forward
+Moves the hand forward relative to the agent's current facing the given moveMagnitude in meters.
+```python
+event = controller.step(dict(action='MoveHandAhead', moveMagnitude = 0.1))
+```
+##### Move Hand Back
+Moves the hand back relative to the agent's current facing the given moveMagnitude in meters.
+```python
+event = controller.step(dict(action='MoveHandBack', moveMagnitude = 0.1))
+```
+##### Move Hand Left
+Moves the hand left relative to the agent's current facing the given moveMagnitude in meters.
+```python
+event = controller.step(dict(action='MoveHandLeft', moveMagnitude = 0.1))
+```
+##### Move Hand Right
+Moves the hand right relative to the agent's current facing the given moveMagnitude in meters.
+```python
+event = controller.step(dict(action='MoveHandRight', moveMagnitude = 0.1))
+```
+##### Move Hand Up
+Moves the hand up relative to the agent's current facing the given moveMagnitude in meters.
+```python
+event =controller.step(dict(action='MoveHandUp', moveMagnitude = 0.1))
+```
+##### Move Hand Down
+Moves the hand down relative to the agent's current facing the given moveMagnitude in meters.
+```python
+event = controller.step(dict(action='MoveHandDown', moveMagnitude = 0.1))
+```
+
+### Sim Object Interaction
+Check [here](https://docs.google.com/spreadsheets/d/1wx8vWgmFSi-4Gknkwl2fUMG8oRedu-tUklGSvU0oh4U/edit?usp=sharing) and open the **Object Interactions** sheet for an info table on what Sim Object types can be interacted with in which ways.
+
 #### OpenObject
-Open an object (assuming the object is visible to the agent). In the case of the Refrigerator, the door will open.
+Open an object specified by the object's Unique ID. If a moveMagnitude value is passed in as well, it can be used to open an object a percentage of its full "open" position. To do this, pass a value between 0 and 1 (1 being fully open). The second example here would open the Fridge halfway.
+
+An object can fail to open if it hits another object as it is opening. In this case the action will fail and the target object will reset to the position it was last in.
 ```python
 event = controller.step(dict(action='OpenObject', objectId="Fridge|0.25|0.75"))
+event = controller.step(dict(action='OpenObject', objectId="Fridge|0.25|0.75", moveMagnitude = 0.5))
 ```
 
 #### CloseObject
-Close an object (assuming object is visible to the agent). In the case of the Refrigerator, the door will close.
+Close an object specified by the object's UniqueID.
+
+An object can fail to open if it hits another object as it is closing. In this case the action will fail and the target object will reset to the position it was last in.
 ```python
 event = controller.step(dict(action='CloseObject', objectId="Fridge|0.25|0.75"))
 ```
@@ -134,7 +199,7 @@ event = controller.step(dict(
     objectId="Mug|0.25|-0.27",
     receptacleObjectId="Fridge|0.05|0.75"))
  ```
-#### Teleport
+#### Teleport (N/A?)
 Move the agent to any location in the scene. Using this command it is possible to put the agent into places that would not normally be possible to navigate to, but it can be useful if you need to place an agent in the exact same spot for a task.
 ```python
 event = controller.step(dict(action='Teleport', x=0.999, y=1.01, z=-0.3541))
