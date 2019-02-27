@@ -1316,6 +1316,14 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
         public void PushObject(ServerAction action)
         {
+            if(ItemInHand != null && action.objectId == ItemInHand.GetComponent<SimObjPhysics>().uniqueID)
+            {
+                errorMessage = "Please use Throw for an item in the Agent's Hand";
+                Debug.Log(errorMessage);
+                actionFinished(false);
+                return;
+            }
+            
             action.z = 1;
 
             if(action.moveMagnitude == 0f)
@@ -1328,6 +1336,14 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
         public void PullObject(ServerAction action)
         {
+            if(ItemInHand != null && action.objectId == ItemInHand.GetComponent<SimObjPhysics>().uniqueID)
+            {
+                errorMessage = "Please use Throw for an item in the Agent's Hand";
+                Debug.Log(errorMessage);
+                actionFinished(false);
+                return;
+            }
+
             action.z = -1;
 
             if(action.moveMagnitude == 0f)
