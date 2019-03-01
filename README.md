@@ -3,6 +3,7 @@
 --------------------------------------------------------------------------------
 
 
+
 AI2-THOR (The House Of inteRactions) is a photo-realistic interactable framework for AI agents.
 
 ## News
