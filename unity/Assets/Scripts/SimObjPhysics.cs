@@ -267,7 +267,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 			{
 				SimObjPhysics colsop = col.transform.GetComponentInParent<SimObjPhysics>();
 
-				if(colsop.PrimaryProperty == SimObjPrimaryProperty.CanPickup)
+				if(colsop.PrimaryProperty == SimObjPrimaryProperty.CanPickup || colsop.PrimaryProperty == SimObjPrimaryProperty.Moveable)
 				{
 					Rigidbody rb = colsop.transform.GetComponent<Rigidbody>();
 					rb.isKinematic = false;
