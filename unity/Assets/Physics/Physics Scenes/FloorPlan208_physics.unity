@@ -5342,11 +5342,6 @@ PrefabInstance:
       propertyPath: m_StaticEditorFlags
       value: 64
       objectReference: {fileID: 0}
-    - target: {fileID: 114540073506525948, guid: 89964b53372e849a6b7d3f9b40a42dde,
-        type: 3}
-      propertyPath: Type
-      value: 48
-      objectReference: {fileID: 0}
     - target: {fileID: 4322413866513770, guid: 89964b53372e849a6b7d3f9b40a42dde, type: 3}
       propertyPath: m_LocalPosition.x
       value: -0.51
@@ -5390,6 +5385,11 @@ PrefabInstance:
     - target: {fileID: 4322413866513770, guid: 89964b53372e849a6b7d3f9b40a42dde, type: 3}
       propertyPath: m_LocalScale.y
       value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 114540073506525948, guid: 89964b53372e849a6b7d3f9b40a42dde,
+        type: 3}
+      propertyPath: Type
+      value: 48
       objectReference: {fileID: 0}
     - target: {fileID: 1058126333994152, guid: 89964b53372e849a6b7d3f9b40a42dde, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -5491,9 +5491,9 @@ Rigidbody:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 582202941}
   serializedVersion: 2
-  m_Mass: 1
-  m_Drag: 0
-  m_AngularDrag: 0.05
+  m_Mass: 10
+  m_Drag: 1
+  m_AngularDrag: 200
   m_UseGravity: 1
   m_IsKinematic: 1
   m_Interpolate: 0
@@ -5513,7 +5513,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   uniqueID: Ottoman|-00.58|+00.00|+01.05
   Type: 101
-  PrimaryProperty: 1
+  PrimaryProperty: 2
   SecondaryProperties: 07000000
   BoundingBox: {fileID: 453078729}
   VisibilityPoints:
@@ -5531,12 +5531,13 @@ MonoBehaviour:
   isVisible: 0
   isInteractable: 0
   isColliding: 0
-  MyColliders: []
-  HFdynamicfriction: 0
-  HFstaticfriction: 0
+  MyColliders:
+  - {fileID: 1776533256}
+  HFdynamicfriction: 0.4
+  HFstaticfriction: 0.4
   HFbounciness: 0
-  HFrbdrag: 0
-  HFrbangulardrag: 0
+  HFrbdrag: 5
+  HFrbangulardrag: 200
 --- !u!1 &583662611
 GameObject:
   m_ObjectHideFlags: 0
@@ -18728,7 +18729,7 @@ BoxCollider:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1776533254}
-  m_Material: {fileID: 0}
+  m_Material: {fileID: 13400000, guid: 23d363b29a9e446bca74e885c5c55803, type: 2}
   m_IsTrigger: 0
   m_Enabled: 1
   serializedVersion: 2
