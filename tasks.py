@@ -206,7 +206,7 @@ def ci_build(context, branch):
         fcntl.flock(lock_f, fcntl.LOCK_EX | fcntl.LOCK_NB)
         procs = []
         for arch in ['OSXIntel64', 'Linux64']:
-            p = ci_build_arch(build_dir_base, arch, branch)
+            p = ci_build_arch(arch, branch)
             procs.append(p)
 
         for p in procs:
