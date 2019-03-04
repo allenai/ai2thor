@@ -2,11 +2,9 @@ language: python
 python:
   - "3.6"
 install:
-  - true
+  - pip install progressbar2 requests invoke
 cache: pip
 script:
-  - true
-after_success:
-  - true
+  - invoke poll-ci-build
 git:
     depth: 3

@@ -4,6 +4,7 @@ import datetime
 import zipfile
 import threading
 import hashlib
+import shutil
 import subprocess
 from invoke import task
 
@@ -18,14 +19,20 @@ def add_files(zipf, start_dir):
             # print("adding %s" % arcname)
             zipf.write(fn, arcname)
 
-def push_build(build_archive_name):
+def push_build(build_archive_name, archive_sha256):
     import boto3
     #subprocess.run("ls %s" % build_archive_name, shell=True)
     #subprocess.run("gsha256sum %s" % build_archive_name)
     s3 = boto3.resource('s3')
-    key = 'builds/%s' % (os.path.basename(build_archive_name),)
+    archive_base = os.path.basename(build_archive_name)
+    key = 'builds/%s' % (archive_base,)
 
-    s3.Object(S3_BUCKET, key).put(Body=open(build_archive_name, 'rb'), ACL="public-read")
+    sha256_key = 'builds/%s.sha256' % (os.path.splitext(archive_base)[0],)
+
+    with open(build_archive_name, 'rb') as af:
+        s3.Object(S3_BUCKET, key).put(Body=af, ACL="public-read")
+
+    s3.Object(S3_BUCKET, sha256_key).put(Body=archive_sha256, ACL="public-read", ContentType='text/plain')
     print("pushed build %s to %s" % (S3_BUCKET, build_archive_name))
 
 
@@ -36,7 +43,7 @@ def _local_build_path():
     )
 
 
-def _build(context, unity_path, arch, build_dir, build_name, env={}):
+def _build(unity_path, arch, build_dir, build_name, env={}):
     project_path = os.path.join(os.getcwd(), unity_path)
     unity_hub_path = "/Applications/Unity/Hub/Editor/{}/Unity.app/Contents/MacOS/Unity".format(
         UNITY_VERSION
@@ -48,15 +55,17 @@ def _build(context, unity_path, arch, build_dir, build_name, env={}):
         unity_path = unity_hub_path
     command = "%s -quit -batchmode -logFile build.log -projectpath %s -executeMethod Build.%s" % (unity_path, project_path, arch)
     target_path = os.path.join(build_dir, build_name)
-    print(target_path)
 
-    return context.run(command, warn=True, env=dict(UNITY_BUILD_NAME=target_path, **env))
+    full_env = os.environ.copy()
+    full_env.update(env)
+    full_env['UNITY_BUILD_NAME'] = target_path
+    subprocess.check_call(command, shell=True, env=full_env)
 
 @task
 def local_build(context, prefix='local', arch='OSXIntel64'):
     build_name = "thor-%s-%s" % (prefix, arch)
     fetch_source_textures(context)
-    if _build(context, 'unity', arch, "builds", build_name):
+    if _build('unity', arch, "builds", build_name):
         print("Build Successful")
     else:
         print("Build Failure")
@@ -74,7 +83,7 @@ def webgl_build(context, scenes, prefix='local'):
     arch = 'WebGL'
     build_name = "thor-%s-%s" % (prefix, arch)
     fetch_source_textures(context)
-    if _build(context, 'unity', arch, "builds", build_name, env=dict(SCENE=scenes)):
+    if _build('unity', arch, "builds", build_name, env=dict(SCENE=scenes)):
         print("Build Successful")
     else:
         print("Build Failure")
@@ -166,7 +175,7 @@ def archive_push(unity_path, build_path, build_dir, build_info):
     zipf.close()
 
     build_info['sha256'] = build_sha256(archive_name)
-    push_build(archive_name)
+    push_build(archive_name, build_info['sha256'])
     print("Build successful")
     threading.current_thread().success = True
 
@@ -177,6 +186,111 @@ def pre_test(context):
     c = ai2thor.controller.Controller()
     os.makedirs('unity/builds/%s' % c.build_name())
     shutil.move(os.path.join('unity', 'builds', c.build_name() + '.app'), 'unity/builds/%s' % c.build_name())
+
+
+def clean():
+    subprocess.check_call("git reset --hard", shell=True)
+    subprocess.check_call("git clean -f -x", shell=True)
+    shutil.rmtree("unity/builds", ignore_errors=True)
+
+    if os.path.isfile('build.log'):
+        os.unlink('build.log')
+
+@task
+def ci_build(context, build_dir_base, branch):
+    import fcntl
+
+    with open(".ci-build.lock", "w") as lock_f:
+        fcntl.flock(lock_f, fcntl.LOCK_EX | fcntl.LOCK_NB)
+
+
+        from multiprocessing import Process, Queue
+        result_queue = Queue()
+        procs = []
+        for arch in ['OSXIntel64', 'Linux64']:
+            p = Process(target=ci_build_arch, args=(build_dir_base, arch, branch, result_queue))
+            print("launcching %s" % arch)
+            p.start()
+            procs.append(p)
+
+        for p in procs:
+            p.join()
+
+        fcntl.flock(lock_f, fcntl.LOCK_UN)
+
+def ci_build_arch(build_dir_base, arch, branch, result_queue):
+    import subprocess
+    import boto3
+    import ai2thor.downloader
+
+    github_url = "https://github.com/allenai/ai2thor"
+    build_dir = os.path.join(build_dir_base, 'ai2thor-%s-%s' % (branch, arch))
+
+    os.makedirs(build_dir_base, exist_ok=True)
+
+    if not os.path.isdir(build_dir):
+        subprocess.check_call("git clone %s %s" % (github_url, build_dir), shell=True)
+
+    os.chdir(build_dir)
+    clean()
+    subprocess.check_call("git checkout %s" % branch, shell=True)
+    subprocess.check_call("git pull origin %s" % branch, shell=True)
+    commit_id = subprocess.check_output("git log -n 1 --format=%H", shell=True).decode('ascii').strip()
+
+    if ai2thor.downloader.commit_build_exists(arch, commit_id):
+        print("found build for commit %s %s" % (commit_id, arch))
+        return
+
+    build_url_base = 'http://s3-us-west-2.amazonaws.com/%s/' % S3_BUCKET
+    unity_path = 'unity'
+    build_name = "thor-%s-%s" % (arch, commit_id)
+    build_dir = os.path.join('builds', build_name)
+    build_path = build_dir + ".zip"
+    build_info = {}
+
+    build_info['url'] = build_url_base + build_path
+
+    # XXX need to trap this?
+    build_exception = ''
+    try:
+        _build(unity_path, arch, build_dir, build_name)
+
+        print("pushing archive")
+        archive_push(unity_path, build_path, build_dir, build_info)
+
+    except Exception as e:
+        build_exception = "Exception building: %s" % e
+
+    with open("build.log") as f:
+        build_log = f.read() + "\n" + build_exception
+
+    build_log_key = 'builds/%s.log' % (build_name,)
+    s3 = boto3.resource('s3')
+    s3.Object(S3_BUCKET, build_log_key).put(Body=build_log, ACL="public-read", ContentType='text/plain')
+
+
+@task
+def poll_ci_build(context):
+    from ai2thor.build import platform_map
+    import ai2thor.downloader
+    import time
+    commit_id = subprocess.check_output("git log -n 1 --format=%H", shell=True).decode('ascii').strip()
+    for i in range(10):
+        missing = False
+        for arch in platform_map.keys():
+            if ai2thor.downloader.commit_build_log_exists(arch, commit_id):
+                print("log exists %s" % commit_id)
+            else:
+                missing = True
+        time.sleep(30)
+        if not missing:
+            break
+
+    for arch in platform_map.keys():
+        if not ai2thor.downloader.commit_build_exists(arch, commit_id):
+            print("Build log url: %s" % ai2thor.downloader.commit_build_log_url(arch, commit_id))
+            raise Exception("Failed to build %s for commit: %s " % (arch, commit_id))
+
 
 @task
 def build(context, local=False):
@@ -202,14 +316,10 @@ def build(context, local=False):
 
         build_info['url'] = build_url_base + build_path
 
-        x = _build(context, unity_path, arch, build_dir, build_name)
-
-        if x:
-            t = threading.Thread(target=archive_push, args=(unity_path, build_path, build_dir, build_info))
-            t.start()
-            threads.append(t)
-        else:
-            raise Exception("Build Failure")
+        build(unity_path, arch, build_dir, build_name)
+        t = threading.Thread(target=archive_push, args=(unity_path, build_path, build_dir, build_info))
+        t.start()
+        threads.append(t)
 
     dp.join()
 
