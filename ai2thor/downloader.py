@@ -3,8 +3,17 @@ import requests
 from progressbar import ProgressBar, Bar, Percentage, FileTransferSpeed
 import hashlib
 import logging
+import os
 
 logger = logging.getLogger(__name__)
+base_url = "http://s3-us-west-2.amazonaws.com/ai2-thor/"
+
+def commit_build_url(arch, commit_id):
+    return base_url + os.path.join('builds', "thor-%s-%s.zip" % (arch, commit_id))
+
+def commit_build_exists(arch, commit_id):
+    return requests.head(commit_build_url(arch, commit_id)).status_code == 200
+
 
 def download(url, build_name, sha256_digest):
     logger.debug("Downloading file from %s" % url)
