@@ -200,7 +200,7 @@ def clean():
 def ci_build(context, branch):
     import fcntl
 
-    lock_f = open(".ci-build.lock", "w")
+    lock_f = open(os.path.join(os.environ['HOME'], ".ci-build.lock"), "w")
 
     try:
         fcntl.flock(lock_f, fcntl.LOCK_EX | fcntl.LOCK_NB)
