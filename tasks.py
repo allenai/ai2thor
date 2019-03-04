@@ -200,10 +200,12 @@ def clean():
 def ci_build(context, branch):
     import fcntl
 
+
     lock_f = open(os.path.join(os.environ['HOME'], ".ci-build.lock"), "w")
 
     try:
         fcntl.flock(lock_f, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        clean()
         procs = []
         for arch in ['OSXIntel64', 'Linux64']:
             p = ci_build_arch(arch, branch)
@@ -228,7 +230,6 @@ def ci_build_arch(arch, branch):
 
     github_url = "https://github.com/allenai/ai2thor"
 
-    clean()
     subprocess.check_call("git checkout %s" % branch, shell=True)
     subprocess.check_call("git pull origin %s" % branch, shell=True)
     commit_id = subprocess.check_output("git log -n 1 --format=%H", shell=True).decode('ascii').strip()
