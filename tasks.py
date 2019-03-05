@@ -211,7 +211,7 @@ def ci_build(context, branch):
 
         procs = []
         for arch in ['OSXIntel64', 'Linux64']:
-            p = ci_build_arch(arch)
+            p = ci_build_arch(arch, branch)
             procs.append(p)
 
         for p in procs:
