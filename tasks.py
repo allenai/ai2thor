@@ -277,7 +277,7 @@ def poll_ci_build(context):
     import ai2thor.downloader
     import time
     commit_id = subprocess.check_output("git log -n 1 --format=%H", shell=True).decode('ascii').strip()
-    for i in range(20):
+    for i in range(30):
         missing = False
         for arch in platform_map.keys():
             if ai2thor.downloader.commit_build_log_exists(arch, commit_id):
