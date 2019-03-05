@@ -197,44 +197,42 @@ def clean():
         os.unlink('build.log')
 
 @task
-def ci_build(context, build_dir_base, branch):
+def ci_build(context, branch):
     import fcntl
 
-    with open(".ci-build.lock", "w") as lock_f:
+
+    lock_f = open(os.path.join(os.environ['HOME'], ".ci-build.lock"), "w")
+
+    try:
         fcntl.flock(lock_f, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        clean()
+        subprocess.check_call("git checkout %s" % branch, shell=True)
+        subprocess.check_call("git pull origin %s" % branch, shell=True)
 
-
-        from multiprocessing import Process, Queue
-        result_queue = Queue()
         procs = []
         for arch in ['OSXIntel64', 'Linux64']:
-            p = Process(target=ci_build_arch, args=(build_dir_base, arch, branch, result_queue))
-            print("launcching %s" % arch)
-            p.start()
+            p = ci_build_arch(arch)
             procs.append(p)
 
         for p in procs:
-            p.join()
+            if p:
+                p.join()
 
         fcntl.flock(lock_f, fcntl.LOCK_UN)
 
-def ci_build_arch(build_dir_base, arch, branch, result_queue):
+    except BlockingIOError as e:
+        pass
+
+    lock_f.close()
+
+def ci_build_arch(arch, branch):
+    from multiprocessing import Process
     import subprocess
     import boto3
     import ai2thor.downloader
 
     github_url = "https://github.com/allenai/ai2thor"
-    build_dir = os.path.join(build_dir_base, 'ai2thor-%s-%s' % (branch, arch))
 
-    os.makedirs(build_dir_base, exist_ok=True)
-
-    if not os.path.isdir(build_dir):
-        subprocess.check_call("git clone %s %s" % (github_url, build_dir), shell=True)
-
-    os.chdir(build_dir)
-    clean()
-    subprocess.check_call("git checkout %s" % branch, shell=True)
-    subprocess.check_call("git pull origin %s" % branch, shell=True)
     commit_id = subprocess.check_output("git log -n 1 --format=%H", shell=True).decode('ascii').strip()
 
     if ai2thor.downloader.commit_build_exists(arch, commit_id):
@@ -250,15 +248,17 @@ def ci_build_arch(build_dir_base, arch, branch, result_queue):
 
     build_info['url'] = build_url_base + build_path
 
-    # XXX need to trap this?
     build_exception = ''
+    proc = None
     try:
         _build(unity_path, arch, build_dir, build_name)
 
         print("pushing archive")
-        archive_push(unity_path, build_path, build_dir, build_info)
+        proc = Process(target=archive_push, args=(unity_path, build_path, build_dir, build_info))
+        proc.start()
 
     except Exception as e:
+        print("Caught exception %s" % e)
         build_exception = "Exception building: %s" % e
 
     with open("build.log") as f:
@@ -268,6 +268,8 @@ def ci_build_arch(build_dir_base, arch, branch, result_queue):
     s3 = boto3.resource('s3')
     s3.Object(S3_BUCKET, build_log_key).put(Body=build_log, ACL="public-read", ContentType='text/plain')
 
+    return proc
+
 
 @task
 def poll_ci_build(context):
@@ -275,7 +277,7 @@ def poll_ci_build(context):
     import ai2thor.downloader
     import time
     commit_id = subprocess.check_output("git log -n 1 --format=%H", shell=True).decode('ascii').strip()
-    for i in range(10):
+    for i in range(20):
         missing = False
         for arch in platform_map.keys():
             if ai2thor.downloader.commit_build_log_exists(arch, commit_id):
