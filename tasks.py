@@ -206,9 +206,12 @@ def ci_build(context, branch):
     try:
         fcntl.flock(lock_f, fcntl.LOCK_EX | fcntl.LOCK_NB)
         clean()
+        subprocess.check_call("git checkout %s" % branch, shell=True)
+        subprocess.check_call("git pull origin %s" % branch, shell=True)
+
         procs = []
         for arch in ['OSXIntel64', 'Linux64']:
-            p = ci_build_arch(arch, branch)
+            p = ci_build_arch(arch)
             procs.append(p)
 
         for p in procs:
@@ -230,8 +233,6 @@ def ci_build_arch(arch, branch):
 
     github_url = "https://github.com/allenai/ai2thor"
 
-    subprocess.check_call("git checkout %s" % branch, shell=True)
-    subprocess.check_call("git pull origin %s" % branch, shell=True)
     commit_id = subprocess.check_output("git log -n 1 --format=%H", shell=True).decode('ascii').strip()
 
     if ai2thor.downloader.commit_build_exists(arch, commit_id):
