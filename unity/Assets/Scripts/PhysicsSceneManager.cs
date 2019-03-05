@@ -425,7 +425,7 @@ public class PhysicsSceneManager : MonoBehaviour
 							#if UNITY_EDITOR
 							// watch.Stop();
 							// var y = watch.ElapsedMilliseconds;
-							// print("time for SUCCESFULLY placing " + go.transform.name+ " in " + sop.transform.name + ": " + y + " ms");
+						    //print( "SUCCESFULLY placing " + go.transform.name+ " in " + sop.transform.name);
 							#endif
 
 							break;
@@ -585,6 +585,7 @@ public class PhysicsSceneManager : MonoBehaviour
 	//my god it took like 2 days to figure this out it should have been so simple
 	public bool StoveTopCheckSpawnArea(SimObjPhysics simObj, Vector3 position, Quaternion rotation, bool spawningInHand)
 	{
+		//print("stove check");
 		int layermask;
 
 		//first do a check to see if the area is clear
@@ -606,17 +607,18 @@ public class PhysicsSceneManager : MonoBehaviour
         //make sure ALL colliders of the simobj are turned off for this check - can't just turn off the Colliders child object because of objects like
         //laptops which have multiple sets of colliders, with one part moving...
         objcols = simObj.transform.GetComponentsInChildren<Collider>();
+
         foreach (Collider col in objcols)
         {
             if(col.gameObject.name != "BoundingBox")
             col.enabled = false;
         }
 
-        //let's move the simObj to the position we are trying, and then change it's rotation to the rotation we are trying
+ 		//keep track of both starting position and rotation to reset the object after performing the check!
         Vector3 originalPos = simObj.transform.position;
         Quaternion originalRot = simObj.transform.rotation;
 
-        //keep track of both starting position and rotation to reset the object after performing the check!
+		//let's move the simObj to the position we are trying, and then change it's rotation to the rotation we are trying
         simObj.transform.position = position;
         simObj.transform.rotation = rotation;
 
@@ -655,11 +657,11 @@ public class PhysicsSceneManager : MonoBehaviour
 					result = false;
 					simObj.transform.position = originalPos;
 					simObj.transform.rotation = originalRot;
-				
+
 					foreach (Collider yes in objcols)
 					{
-						if(col.gameObject.name != "BoundingBox")
-						col.enabled = true;
+						if(yes.gameObject.name != "BoundingBox")
+						yes.enabled = true;
 					}
 
 					return result;
@@ -667,6 +669,7 @@ public class PhysicsSceneManager : MonoBehaviour
 			}
 		}
          
+		//nothing hit in colliders, so we are good to spawn.
 		foreach (Collider col in objcols)
 		{
 			if(col.gameObject.name != "BoundingBox")
