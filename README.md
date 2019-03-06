@@ -6,6 +6,7 @@
 AI2-THOR (The House Of inteRactions) is a photo-realistic interactable framework for AI agents.
 
 ## News
+* (3/2019) Introducing the Full Physics Upgrade of AI2-THOR! The release of version 1.0 includes a full rework of all Sim Objects to have full physics functionality. All Scenes have been upgraded to allow reworked Sim Objects to be picked up, placed, or even dropped onto any physical surface in a scene in a more realistically modeled way than ever before. Please see the [full release notes here](doc/static/ReleaseNotes/ReleaseNotes_1.0.md) to view the new range of interactions and improvements.
 * (4/2018) We have released version 0.0.25 of AI2-THOR. The main changes include: upgrade to Unity 2017, performance optimization to improve frame rate, and various bug fixes. We have also added some physics functionalities. Please contact us for instructions. 
 * (1/2018) If you need a docker version, please contact us so we provide you with the instructions. Our docker version is in beta mode.
 
@@ -321,10 +322,12 @@ controller.start()
                   Daniel Gordon and 
                   Yuke Zhu and 
                   Abhinav Gupta and 
-                  Ali Farhadi},
+                  Ali Farhadi and
+                  Winson Han and
+                  Eli Vanderbilt},
         Title = {{AI2-THOR: An Interactive 3D Environment for Visual AI}},
         Journal = {arXiv},
-        Year = {2017}
+        Year = {2019}
     }
     
 
