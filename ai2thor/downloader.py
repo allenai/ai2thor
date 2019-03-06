@@ -14,11 +14,19 @@ def commit_build_url(arch, commit_id):
 def commit_build_log_url(arch, commit_id):
     return os.path.splitext(commit_build_url(arch, commit_id))[0] + '.log'
 
+def commit_build_sha256_url(arch, commit_id):
+    return os.path.splitext(commit_build_url(arch, commit_id))[0] + '.sha256'
+
 def commit_build_exists(arch, commit_id):
     return requests.head(commit_build_url(arch, commit_id)).status_code == 200
 
 def commit_build_log_exists(arch, commit_id):
     return requests.head(commit_build_log_url(arch, commit_id)).status_code == 200
+
+def commit_build_sha256(arch, commit_id):
+    res = requests.get(commit_build_sha256_url(arch, commit_id))
+    res.raise_for_status()
+    return res.content.decode('ascii')
 
 
 def download(url, build_name, sha256_digest):
