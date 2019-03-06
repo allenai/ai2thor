@@ -1,4 +1,4 @@
-# AI2-THOR Version 0.1 Release Notes
+# AI2-THOR Version 1.0 Release Notes
 
 ## All Sim Objects Now Have Full Collision and Physics Interactions
 All Sim Objects now have collision based physics behavior and accurate collision geometry. There are many implications to this:
