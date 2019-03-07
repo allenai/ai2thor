@@ -74,7 +74,7 @@ Originally, an object was only interactable if it was defined as “visible”. 
 Objects highlighted in Magenta are Visible and Interactable to the Agent. Objects highlighted only in Yellow are Visible to the Agent, but cannot be interacted with unless the transparent object blocking access is moved or if the Agent were to move to a different viewing angle (See Object Transparency below). The agent might have to perform a sequence of actions like “Open Shower Door, Open Toilet” in order to open the Toilet’s lid.
 
 ## Object Transparency
-Some Sim Objects now have a Transparent property. This allows the Agent to see through the object but restricts the agent from interacting with other objects obstructed by a transparent object (see example above in _Redefined Visibility and Interactability_).
+Some Sim Objects now have a Transparent property. This allows the Agent to see through the object but restricts the agent from interacting with other objects obstructed by a transparent object (see example above in _Redefined Visibility and Interactability_). Some example objects are glass Shower Doors, certain Cups that are glass, and some Glass Coffee Tables.
 
 ## All Non-Sim Object Assets in Scenes Have Updated Collision
 Any structural or decorative objects in scenes that are not included in our Sim Object library have had their collision and physics properties updated to be compatible with the now physics-enabled Sim Objects.
@@ -111,7 +111,13 @@ An increased variety of Agent Actions are now available. This includes actions t
 When choosing what quality to build at, Very High and Ultra quality levels now include SSAO (Screen Space Ambient Occlusion) for more graphical fidelity.
 
 ## Improved Sim Object Info Documentation
-See the new [Sim Object Info Table Spreadsheet](https://docs.google.com/spreadsheets/d/1wx8vWgmFSi-4Gknkwl2fUMG8oRedu-tUklGSvU0oh4U/edit?usp=sharing) to get information on where you can find Sim Objects, how they can be interacted with, and other properties of the revamped Sim Objects.
+See the new [Sim Object Info Table Spreadsheet](https://docs.google.com/spreadsheets/d/1wx8vWgmFSi-4Gknkwl2fUMG8oRedu-tUklGSvU0oh4U/edit?usp=sharing) to get information on where you can find Sim Objects, how they can be interacted with, and other properties of the revamped Sim Objects. Each sheet in the document has useful information detailed below:
+
+- **Object Locations:** Which Object Types can be found in what scene types. The intersection of an object type and scene category indicates if that object can be found in all scenes of that category, some scenes of that category, or cannot be found in that scene category at all.
+- **Object Interactions:** This sheet lists if an object type has specific interaction properties. For example, an Alarm Clock can be picked up and placed, but cannot be opened. All Interaction columns have corresponding actions the agent can perform.
+- **Pickupable Object Restrictions:** This sheet has a dropdown menu to select an Object Type. Select a Pickupable Object Type from the dropdown field, and the table will tell you which Receptacles it can be validly placed in. For example, an Apple can be placed in a Pot, but cannot be placed in a Coffee Machine.
+- **Receptacle Restrictions:** This sheet is the mirror of the Pickupable Object Restrictions table. Select a Receptacle Type from the dropdown field, and the table will tell you what kinds of Pickupable Objects can be placed in it. This table is also useful to see which objects the Agent can actually pickup, as not all Sim Objects are pickupable (ie: fridge is too big to be picked up);
+- **Pickupable Object/Receptacle Full Table:** This table has the same info as the two previous sheets, but includes the info as a giant table relating all Receptacle objects and all Pickupable Objects.
 
 ## New Unity Version
 - Old: 2017.3.1 
