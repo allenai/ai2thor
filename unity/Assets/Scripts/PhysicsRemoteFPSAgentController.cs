@@ -2162,6 +2162,30 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
         public void InitialRandomSpawn (ServerAction action)
         {
+            if(ItemInHand != null)
+            {
+                Rigidbody rb = ItemInHand.GetComponent<Rigidbody>();
+                rb.isKinematic = false;
+                rb.constraints = RigidbodyConstraints.None;
+                rb.useGravity = true;
+                rb.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
+
+                GameObject topObject = GameObject.Find("Objects");
+                if (topObject != null) 
+                {
+                    ItemInHand.transform.parent = topObject.transform;
+                } 
+                
+                else 
+                {
+                    ItemInHand.transform.parent = null;
+                }
+
+                rb.angularVelocity = UnityEngine.Random.insideUnitSphere;
+
+                ItemInHand = null;
+            }
+
             PhysicsSceneManager script = GameObject.Find("PhysicsSceneManager").GetComponent<PhysicsSceneManager>();
 
             bool success = script.RandomSpawnRequiredSceneObjects(action.randomSeed, action.forceVisible, action.maxNumRepeats, action.placeStationary);
@@ -2775,8 +2799,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     else
                     {
                         Debug.Log("can't close object if it's already closed");
+                        errorMessage = "object already closed: " + action.objectId;
                         actionFinished(false);
-                        errorMessage = "object already open: " + action.objectId;
                     }
 				}
               
