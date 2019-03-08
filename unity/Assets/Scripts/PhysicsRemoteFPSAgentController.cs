@@ -233,8 +233,14 @@ namespace UnityStandardAssets.Characters.FirstPerson
             objMeta.objectType = Enum.GetName(typeof(SimObjType), simObj.Type);
             objMeta.receptacle = simObj.IsReceptacle;
             objMeta.openable = simObj.IsOpenable;
+            objMeta.toggleable = simObj.IsToggleable;
+
             if (objMeta.openable) {
                 objMeta.isopen = simObj.IsOpen;
+            }
+
+            if (objMeta.toggleable) {
+                objMeta.istoggled = simObj.IsToggled;
             }
             objMeta.pickupable = simObj.PrimaryProperty == SimObjPrimaryProperty.CanPickup;
             objMeta.objectId = simObj.UniqueID;
@@ -4375,7 +4381,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             return true;
         }
 
-        override public Vector3[] getReachablePositions() {
+        override public Vector3[] getReachablePositions(float gridMultiplier=1.0f) {
             CapsuleCollider cc = GetComponent<CapsuleCollider>();
 
             Vector3 center = transform.position;
@@ -4413,7 +4419,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                             point2,
                             radius,
                             d,// * dirSkinWidthMultiplier, - multiplying direction doesn't increase distance cast
-                            gridSize + sw, //offset should be here, this mimics the additional distance check of MoveAgent()
+                            (gridSize * gridMultiplier)+ sw, //offset should be here, this mimics the additional distance check of MoveAgent()
                             layerMask,
                             QueryTriggerInteraction.Ignore
                         );
@@ -4427,7 +4433,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                                 break;
                             }
                         }
-                        Vector3 newPosition = p + d * gridSize;
+                        Vector3 newPosition = p + d * gridSize * gridMultiplier;
                         bool inBounds = sceneBounds.Contains(newPosition);
                         if (errorMessage == "" && !inBounds) {
                             errorMessage = "In " + 
