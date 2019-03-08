@@ -2162,9 +2162,28 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
         public void InitialRandomSpawn (ServerAction action)
         {
-            if(AgentHand != null)
+            if(ItemInHand != null)
             {
-               ItemInHand = null;
+                Rigidbody rb = ItemInHand.GetComponent<Rigidbody>();
+                rb.isKinematic = false;
+                rb.constraints = RigidbodyConstraints.None;
+                rb.useGravity = true;
+                rb.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
+
+                GameObject topObject = GameObject.Find("Objects");
+                if (topObject != null) 
+                {
+                    ItemInHand.transform.parent = topObject.transform;
+                } 
+                
+                else 
+                {
+                    ItemInHand.transform.parent = null;
+                }
+
+                rb.angularVelocity = UnityEngine.Random.insideUnitSphere;
+
+                ItemInHand = null;
             }
 
             PhysicsSceneManager script = GameObject.Find("PhysicsSceneManager").GetComponent<PhysicsSceneManager>();
