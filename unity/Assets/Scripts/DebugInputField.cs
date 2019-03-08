@@ -10,7 +10,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		public GameObject Agent = null;
 		public PhysicsRemoteFPSAgentController PhysicsController = null;
         public AgentManager AManager = null;
-		public DiscreteRemoteFPSAgentController PivotController = null;
 
         private InputField debugfield;
         private DebugFPSAgentController dfac;
@@ -41,7 +40,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
             PhysicsController.GetComponent<DebugFPSAgentController>().enabled = true;
 
-            PivotController = Agent.GetComponent<DiscreteRemoteFPSAgentController>();
             debugfield = gameObject.GetComponent<InputField>();
             dfac = Agent.GetComponent<DebugFPSAgentController>();
 
