@@ -50,6 +50,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
         // Update is called once per frame
         void Update()
         {
+            #if UNITY_EDITOR || UNITY_WEBGL
             //use these for the Breakable Window demo video
             // if(Input.GetKeyDown(KeyCode.P))
             // {
@@ -234,6 +235,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     }
                 }
             }
+            #endif
         }
 
         public void Execute(string command)
