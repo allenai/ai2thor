@@ -2199,6 +2199,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
             actionFinished(success);
         }
 
+        public void PutObject(ServerAction action){
+            action.objectId = action.receptacleObjectId;
+            action.receptacleObjectId = null;
+            PlaceHeldObject(action);
+        }
+
         //if you are holding an object, place it on a valid Receptacle 
         //used for placing objects on receptacles without enclosed restrictions (drawers, cabinets, etc)
         //only checks if the object can be placed on top of the target receptacle
