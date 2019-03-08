@@ -28,20 +28,37 @@ namespace UnityStandardAssets.Characters.FirstPerson
         [SerializeField] private GameObject Debug_Canvas = null;
 //        [SerializeField] private GameObject Inventory_Text = null;
 		[SerializeField] private GameObject InputMode_Text = null;
+
+        [SerializeField] private Text TargetText = null;
+        // [SerializeField] private GameObject ThrowForceBar = null;
+        [SerializeField] private Slider ThrowForceBarSlider = null;
 //        [SerializeField] private GameObject AgentHand = null;
 //        [SerializeField] private GameObject ItemInHand = null;
+        [SerializeField] private float MaxChargeThrowSeconds = 1.4f;
+        [SerializeField] private float MaxThrowForce = 1000.0f;
+        [SerializeField] private bool DisplayTargetText = true;
 
-		public bool FlightMode = false;
+        public bool FlightMode = false;
 
-		private Camera m_Camera;
-		//public bool rotateMouseLook;
-		private Vector2 m_Input;
-		private Vector3 m_MoveDir = Vector3.zero;
-		private CharacterController m_CharacterController;
-
+		
         //this is true if FPScontrol mode using Mouse and Keyboard is active
         public bool TextInputMode = false;
 		public GameObject InputFieldObj = null;
+
+        private Camera m_Camera;
+        private Vector2 m_Input;
+        private Vector3 m_MoveDir = Vector3.zero;
+        private CharacterController m_CharacterController;
+
+        private float timerAtPress;
+
+        private SimObjPhysics highlightedObject;
+        private Shader previousShader;
+        private Shader highlightShader;
+        private bool pickupState;
+        private bool mouseDownThrow;
+        private PhysicsRemoteFPSAgentController PhysicsController;
+        private bool scroll2DEnabled = true; 
 
         private void Start()
         {
@@ -51,10 +68,13 @@ namespace UnityStandardAssets.Characters.FirstPerson
             
             //find debug canvas related objects 
             Debug_Canvas = GameObject.Find("DebugCanvasPhysics");
-			//Inventory_Text = GameObject.Find("DebugCanvas/InventoryText");
 			InputMode_Text = GameObject.Find("DebugCanvasPhysics/InputModeText");
 
-			InputFieldObj = GameObject.Find("DebugCanvasPhysics/InputField");
+            TargetText = GameObject.Find("DebugCanvasPhysics/TargetText").GetComponent<Text>();
+
+            InputFieldObj = GameObject.Find("DebugCanvasPhysics/InputField");
+            var throwForceBar = GameObject.Find("DebugCanvasPhysics/ThrowForceBar");
+            ThrowForceBarSlider = throwForceBar.GetComponent<Slider>();
 
             //if this component is enabled, turn on the targeting reticle and target text
             if (this.isActiveAndEnabled)
@@ -64,7 +84,16 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 Cursor.lockState = CursorLockMode.Locked;
             }
 
-			FlightMode = gameObject.GetComponent<PhysicsRemoteFPSAgentController>().FlightMode;
+            PhysicsController = gameObject.GetComponent<PhysicsRemoteFPSAgentController>();
+            FlightMode = PhysicsController.FlightMode;
+
+            this.highlightShader = Shader.Find("Custom/TransparentOutline");
+
+            #if UNITY_WEBGL
+                Cursor.visible = true;
+                Cursor.lockState = CursorLockMode.None;
+                HideHUD();
+            #endif
         }
 		public Vector3 ScreenPointMoveHand(float yOffset)
 		{
@@ -76,6 +105,39 @@ namespace UnityStandardAssets.Characters.FirstPerson
 				//TestBall.transform.position = hit.point + new Vector3(0, 0.3f, 0);
 				return hit.point + new Vector3(0, yOffset, 0);
 		}
+
+        public void HideHUD()
+        {
+            InputMode_Text.SetActive(false);
+            InputFieldObj.SetActive(false);
+            var background = GameObject.Find("DebugCanvasPhysics/InputModeText_Background");
+            background.SetActive(false);
+        }
+
+        public void SetScroll2DEnabled(bool enabled)
+        {
+            this.scroll2DEnabled = enabled;
+        }
+
+        public void ToggleDisplayTargetText(bool display)
+        {
+            this.DisplayTargetText = display;
+        }
+
+        public void EnableMouseControl()
+        {
+            TextInputMode = false;
+            Cursor.visible = false;
+            Cursor.lockState = CursorLockMode.Locked;
+        }
+
+        public void DisableMouseControl()
+        {
+            Debug.Log("Disabled mouse");
+            TextInputMode = true;
+            Cursor.visible = true;
+            Cursor.lockState = CursorLockMode.None;
+        }
 
         private void DebugKeyboardControls()
 		{
@@ -104,7 +166,117 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
             }
 
-            //allow actions only via text input
+            // Interact action for mouse left-click
+            if (Input.GetKeyDown(KeyCode.Mouse0))
+            {
+
+                if (TextInputMode == false)
+                {
+                    if (this.PhysicsController.WhatAmIHolding() == null && this.PhysicsController.actionComplete)
+                    {
+                        var closestObj = this.highlightedObject;
+                        if (closestObj != null)
+                        {
+                            var actionName = "";
+                            if (closestObj.PrimaryProperty == SimObjPrimaryProperty.CanPickup)
+                            {
+                                pickupState = true;
+                                actionName = "PickupObject";
+                            }
+                            else if (closestObj.GetComponent<CanOpen_Object>())
+                            {
+                                actionName = closestObj.GetComponent<CanOpen_Object>().isOpen ? "CloseObject" : "OpenObject";
+                            }
+                            else if (closestObj.GetComponent<CanToggleOnOff>())
+                            {
+                                actionName = closestObj.GetComponent<CanToggleOnOff>().isOn ? "ToggleObjectOff" : "ToggleObjectOn";
+                            }
+
+                            if (actionName != "")
+                            {
+                                ServerAction action = new ServerAction
+                                {
+                                    action = actionName,
+                                    objectId = closestObj.uniqueID
+                                };
+                                this.PhysicsController.ProcessControlCommand(action);
+                            }
+                        }
+                    }
+                    else if (this.PhysicsController.actionComplete)
+                    {
+                        this.mouseDownThrow = true;
+                        this.timerAtPress = Time.time;
+                    }
+                }
+
+            }
+
+            // 1D Scroll for hand movement
+            if (!scroll2DEnabled && this.PhysicsController.WhatAmIHolding() != null)
+            {
+                var scrollAmount = Input.GetAxis("Mouse ScrollWheel");
+
+                var eps = 1e-6;
+                if (Mathf.Abs(scrollAmount) > eps) {
+                    ServerAction action = new ServerAction
+                    {
+                        action = "MoveHandAhead",
+                        moveMagnitude = scrollAmount
+                    };
+                    this.PhysicsController.ProcessControlCommand(action);
+                }
+
+            }
+
+            // Sets throw bar value
+            if (this.mouseDownThrow)
+            {
+                var diff = Time.time - this.timerAtPress;
+                var clampedForceTime = Mathf.Min(diff * diff, MaxChargeThrowSeconds);
+                ThrowForceBarSlider.value = clampedForceTime / MaxChargeThrowSeconds;
+
+            }
+            else
+            {
+                ThrowForceBarSlider.value -= ThrowForceBarSlider.value > 0.0f ?
+                     Time.deltaTime / MaxChargeThrowSeconds :
+                     0.0f;
+            }
+
+            // Throw action on left clock release
+            if (Input.GetKeyUp(KeyCode.Mouse0))
+            {
+                if (!pickupState)
+                {
+                  
+                    if (this.PhysicsController.WhatAmIHolding() != null)
+                    {
+                        var diff = Time.time - this.timerAtPress;
+                        var clampedForceTime = Mathf.Min(diff * diff, MaxChargeThrowSeconds);
+                        var force = clampedForceTime * MaxThrowForce / MaxChargeThrowSeconds;
+
+                        if (this.PhysicsController.actionComplete)
+                        {
+                            ServerAction action = new ServerAction
+                            {
+                                action = "ThrowObject",
+                                moveMagnitude = force,
+                                forceAction = true
+                            };
+                            this.PhysicsController.ProcessControlCommand(action);
+                            this.mouseDownThrow = false;
+                            //ThrowForceBar.GetComponent<Slider>().value = 0.0f;
+                        }
+                    }
+                }
+                else
+                {
+                    pickupState = false;
+                }
+            }
+
+            // allow actions only via text input
             if (TextInputMode == true)
             {
                 Cursor.visible = true;
@@ -118,28 +290,25 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 }
             }
 
-            //no text input, we are in fps mode
-            // if (TextInputMode == false)
-            // {
-			// 	if(Input.GetKey(KeyCode.Space))
-			// 	{
-			// 		Cursor.visible = true;
-            //         Cursor.lockState = CursorLockMode.None;
-			// 	}
+            // no text input, we are in fps mode
+             if (TextInputMode == false)
+             {
+			 	if(Input.GetKey(KeyCode.Space))
+			 	{
+			 		Cursor.visible = true;
+                    Cursor.lockState = CursorLockMode.None;
+			 	}
 
-            //     if(Input.GetKeyUp(KeyCode.Space))
-			// 	{
-			// 		Cursor.visible = false;
-            //         Cursor.lockState = CursorLockMode.Locked;
-			// 	}
-            // }
+                if(Input.GetKeyUp(KeyCode.Space))
+			 	{
+			 		Cursor.visible = false;
+                    Cursor.lockState = CursorLockMode.Locked;
+			 	}
+             }
 		}
 
 		private void Update()	
         {
-			//constantly check for visible objects in front of agent
-			//VisibleObjects = GetAllVisibleSimObjPhysics(m_Camera, MaxDistance);
-
 			DebugKeyboardControls();
          
             ///////////////////////////////////////////////////////////////////////////
@@ -147,26 +316,92 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			if(TextInputMode == false)
 			{
 				//this is the mouselook in first person mode
-
 				FPSInput();
-
 				if(Cursor.visible == false)
 				{
-					//accept input to update view based on mouse input
-					MouseRotateView();
-				}
+                    //accept input to update view based on mouse input
+                    MouseRotateView();
+                }
 			}
 
-            //we are in focus mode, this should be the default - can toggle fps control from here
-            //by default we can only use enter to execute commands in the text field
-			if(TextInputMode == true)
-			{
+            var ray = m_Camera.GetComponent<Camera>().ScreenPointToRay(new Vector3(Screen.width / 2, Screen.height / 2)); //Input.mousePosition);
+            RaycastHit hit;
+            int layerMask = LayerMask.GetMask("SimObjVisible"); // ~LayerMask.GetMask("Agent") 
+            Physics.Raycast(ray, out hit, 5f, layerMask);
+            Debug.DrawLine(ray.origin, hit.point, Color.red);
 
-			}
-	
-		}
+            
 
-		private void GetInput(out float speed)
+            if (this.highlightedObject != null)
+            {
+                var meshRenderer = this.highlightedObject.GetComponentInChildren<MeshRenderer>();
+
+                setTargetText("");
+                if (meshRenderer != null)
+                {
+                    meshRenderer.material.shader = this.previousShader;
+                }
+            }
+
+            if (hit.transform != null 
+                && hit.transform.tag == "SimObjPhysics" 
+                && this.PhysicsController.WhatAmIHolding() == null
+               )
+            {
+                var simObj = hit.transform.GetComponent<SimObjPhysics>();
+                var validObject = simObj.PrimaryProperty == SimObjPrimaryProperty.CanPickup ||
+                                  simObj.GetComponent<CanOpen_Object>() ||
+                                  simObj.GetComponent<CanToggleOnOff>();
+
+                if (simObj != null && validObject)
+                {
+                    setTargetText(simObj.name);
+                    this.highlightedObject = simObj;
+                    var mRenderer = this.highlightedObject.GetComponentInChildren<MeshRenderer>();
+                    if (mRenderer != null)
+                    {
+                        this.previousShader = mRenderer.material.shader;
+                        mRenderer.material.shader = this.highlightShader;
+                    }
+                }
+            }
+
+        }
+
+        public void OnGUI()
+        {
+            if (Event.current.type == EventType.ScrollWheel && scroll2DEnabled)
+            {
+                if (this.PhysicsController.WhatAmIHolding() != null)
+                {
+                    var scrollAmount = Event.current.delta;
+                    var eps = 1e-6;
+                    if (Mathf.Abs(scrollAmount.x) > eps || Mathf.Abs(scrollAmount.y) > eps)
+                    {
+                        ServerAction action = new ServerAction
+                        {
+                            action = "MoveHandDelta",
+                            x = scrollAmount.x * 0.05f,
+                            z = scrollAmount.y * -0.05f,
+                            y = 0
+                        };
+                        this.PhysicsController.ProcessControlCommand(action);
+                    }
+
+                }
+            }
+        }
+
+        private void setTargetText(string text)
+        {
+            if (DisplayTargetText && TargetText != null)
+            {
+                this.TargetText.text = text;
+            }
+
+        }
+
+        private void GetInput(out float speed)
 		{
 			// Read input
 			float horizontal = CrossPlatformInputManager.GetAxis("Horizontal");
