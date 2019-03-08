@@ -29,10 +29,17 @@ def push_build(build_archive_name):
     print("pushed build %s to %s" % (S3_BUCKET, build_archive_name))
 
 
-def _local_build_path():
+def _local_build_path(prefix='local'):
     return os.path.join(
         os.getcwd(),
-        'unity/builds/thor-local-OSXIntel64.app/Contents/MacOS/thor-local-OSXIntel64'
+        'unity/builds/thor-{}-OSXIntel64.app/Contents/MacOS/thor-local-OSXIntel64'.format(prefix)
+    )
+
+
+def _webgl_local_build_path(prefix, source_dir='builds'):
+    return os.path.join(
+        os.getcwd(),
+        'unity/{}/thor-{}-WebGL/'.format(source_dir,prefix)
     )
 
 
@@ -52,9 +59,13 @@ def _build(context, unity_path, arch, build_dir, build_name, env={}):
 
     return context.run(command, warn=True, env=dict(UNITY_BUILD_NAME=target_path, **env))
 
+
+def local_build_name(prefix, arch):
+    return "thor-%s-%s" % (prefix, arch)
+
 @task
 def local_build(context, prefix='local', arch='OSXIntel64'):
-    build_name = "thor-%s-%s" % (prefix, arch)
+    build_name = local_build_name(prefix, arch)
     fetch_source_textures(context)
     if _build(context, 'unity', arch, "builds", build_name):
         print("Build Successful")
@@ -63,7 +74,7 @@ def local_build(context, prefix='local', arch='OSXIntel64'):
     generate_quality_settings(context)
 
 @task
-def webgl_build(context, scenes, prefix='local'):
+def webgl_build(context, scenes="", room_ranges=None, directory="builds", prefix='local'):
     """
     Creates a WebGL build
     :param context:
@@ -71,10 +82,33 @@ def webgl_build(context, scenes, prefix='local'):
     :param prefix: Prefix name for the build
     :return:
     """
+    from functools import reduce
     arch = 'WebGL'
-    build_name = "thor-%s-%s" % (prefix, arch)
+    build_name = local_build_name(prefix, arch)
     fetch_source_textures(context)
-    if _build(context, 'unity', arch, "builds", build_name, env=dict(SCENE=scenes)):
+    if room_ranges is not None:
+        # number_ranges = [["FloorPlan{}_physics".format(i) for i in range(tuple([int(y) for y in x.split("-")]))] for x in room_ranges.split(",")]
+        #
+        # [tuple(int(y) for y in x.split("-")) for x in room_ranges.split(",")]
+        print(room_ranges)
+        print([list(range(*tuple(int(y) for y in x.split("-")))) for x in room_ranges.split(",")])
+        floor_plans = ["FloorPlan{}_physics".format(i) for i in
+            reduce(
+                lambda x, y: x + y,
+                map(
+                    lambda x: x + [x[-1] + 1],
+                    [list(range(*tuple(int(y) for y in x.split("-"))))
+                        for x in room_ranges.split(",")]
+                )
+            )
+         ]
+        print(floor_plans)
+        scenes = ",".join(floor_plans)
+
+
+    print(scenes)
+
+    if _build(context, 'unity', arch, directory, build_name, env=dict(SCENE=scenes)):
         print("Build Successful")
     else:
         print("Build Failure")
@@ -419,3 +453,101 @@ def benchmark(ctx, screen_width=600, screen_height=600, editor_mode=False, out='
         f.write(json.dumps(benchmark_map, indent=4, sort_keys=True))
 
     env.stop()
+
+@task
+def webgl_deploy(ctx, prefix='local', source_dir='builds', target_dir='', verbose=False):
+    import boto3
+    from os.path import isfile, join, isdir
+
+    content_types = {
+        '.js': 'application/javascript; charset=utf-8',
+        '.html': 'text/html; charset=utf-8',
+        '.ico': 'image/x-icon',
+        '.svg': 'image/svg+xml; charset=utf-8',
+        '.css': 'text/css; charset=utf-8',
+        '.png': 'image/png',
+        '.txt': 'text/plain',
+        '.jpg': 'image/jpeg',
+        '.unityweb': 'application/octet-stream',
+        '.json': 'application/json'
+    }
+
+    content_encoding = {
+        '.unityweb': 'gzip'
+    }
+
+    bucket_name = 'ai2-thor-webgl'
+    s3 = boto3.resource('s3')
+
+    if verbose:
+        print("Deploying to: {}/{}".format(bucket_name, target_dir))
+
+    def walk_recursive(path, func, parent_dir=''):
+        for file_name in os.listdir(path):
+            f_path = join(path, file_name)
+            relative_path = join(parent_dir, file_name)
+            if isfile(f_path):
+                func(f_path, join(target_dir, relative_path))
+            elif isdir(f_path):
+                walk_recursive(f_path, func, relative_path)
+
+    def upload_file(f_path, key):
+        _, ext = os.path.splitext(f_path)
+        if verbose:
+            print("'{}'".format(key))
+        with open(f_path, 'rb') as f:
+            kwargs = {}
+            if ext in content_encoding:
+                kwargs['ContentEncoding'] = content_encoding[ext]
+            if ext in content_types:
+                s3.Object(bucket_name, key).put(
+                    Body=f.read(),
+                    ACL="public-read",
+                    ContentType=content_types[ext],
+                    **kwargs
+                )
+            else:
+                if verbose:
+                    print("Warning: Content type for extension '{}' not defined,"
+                          " uploading with no content type".format(ext))
+                s3.Object(bucket_name, key).put(
+                    Body=f.read(),
+                    ACL="public-read")
+
+    build_path = _webgl_local_build_path(prefix, source_dir)
+    if verbose:
+        print("Build path: '{}'".format(build_path))
+        print("Uploading...")
+    walk_recursive(build_path, upload_file)
+
+
+@task
+def deploy_webgl_all(ctx, verbose=False, individual_rooms=False):
+
+    rooms = {
+        "kitchens": (1, 30),
+        "livingRooms": (201, 230),
+        "bedrooms": (301, 330),
+        "bathrooms": (401, 430),
+        "foyers": (501, 530)
+    }
+    room_ranges = [(1, 30), (201, 230), (301, 330), (401, 430), (501, 530)]
+
+    for key,room_range in rooms.items():
+        range_str = "{}-{}".format(room_range[0], room_range[1])
+        if verbose:
+            print("Building for rooms: {}".format( range_str))
+
+        build_dir = "builds/{}".format(key)
+        if individual_rooms:
+            for i in range(room_range[0], room_range[1]):
+                floorPlanName = "FloorPlan{}_physics".format(i)
+                target_s3_dir = "{}/{}".format(key, floorPlanName)
+                build_dir = "builds/{}".format(target_s3_dir)
+
+                webgl_build(ctx, scenes=floorPlanName, directory=build_dir)
+                webgl_deploy(ctx, source_dir=build_dir, target_dir=target_s3_dir, verbose=verbose)
+
+        else:
+            webgl_build(ctx, room_ranges=range_str, directory=build_dir)
+            webgl_deploy(ctx, source_dir=build_dir, target_dir=key, verbose=verbose)
