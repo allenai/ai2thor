@@ -388,7 +388,6 @@ public class AgentManager : MonoBehaviour
 				this.agents.ToArray () [i - 1].m_Camera.enabled = false;
 			}
 			agent.m_Camera.enabled = true;
-			yield return new WaitForEndOfFrame();
 			MetadataWrapper metadata = agent.generateMetadataWrapper ();
 			metadata.agentId = i;
 			// we don't need to render the agent's camera for the first agent
