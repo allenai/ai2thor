@@ -2162,6 +2162,11 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
         public void InitialRandomSpawn (ServerAction action)
         {
+            if(AgentHand != null)
+            {
+               ItemInHand = null;
+            }
+
             PhysicsSceneManager script = GameObject.Find("PhysicsSceneManager").GetComponent<PhysicsSceneManager>();
 
             bool success = script.RandomSpawnRequiredSceneObjects(action.randomSeed, action.forceVisible, action.maxNumRepeats, action.placeStationary);
@@ -2775,8 +2780,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     else
                     {
                         Debug.Log("can't close object if it's already closed");
+                        errorMessage = "object already closed: " + action.objectId;
                         actionFinished(false);
-                        errorMessage = "object already open: " + action.objectId;
                     }
 				}
               
