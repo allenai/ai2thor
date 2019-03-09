@@ -186,9 +186,31 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		return false;
 	}
 
+	public bool IsToggleable
+	{
+		get { return this.GetComponent<CanToggleOnOff>(); }
+	}
+
 	public bool IsOpenable
 	{
 		get { return this.GetComponent<CanOpen_Object>(); }
+	}
+
+	public bool IsToggled
+	{
+		get
+		{
+			CanToggleOnOff ctoo = this.GetComponent<CanToggleOnOff>();
+
+			if (ctoo != null)
+			{
+				return ctoo.isOn;
+			}
+			else
+			{
+				return false;
+			}
+		}
 	}
 
 	public bool IsOpen
@@ -404,22 +426,6 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		RBoriginalDrag = rb.drag;
 	}
 
-	private bool hasAncestor(GameObject child, GameObject potentialAncestor)
-    {
-        if (child == potentialAncestor)
-        {
-            return true;
-        }
-        else if (child.transform.parent != null)
-        {
-            return hasAncestor(child.transform.parent.gameObject, potentialAncestor);
-        }
-        else
-        {
-            return false;
-        }
-    }
-
 	public bool DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty prop)
 	{
 		bool result = false;
@@ -611,14 +617,6 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		//do this flag first so that the check against non Player objects overrides it in the right order
 		if (other.tag == "Receptacle")
 		{
-			isColliding = false;
-			return;
-		}
-
-		//don't collide if the object is a child of this object, specifically for picked up receptacles that contain things
-		else if(hasAncestor(other.transform.gameObject, gameObject))
-		{
-			//print("please ignore!");
 			isColliding = false;
 			return;
 		}
