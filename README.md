@@ -79,6 +79,17 @@ event.metadata
 
 We currently provide the following API controlled actions. Actions are defined in ```unity/Assets/Scripts/PhysicsRemoteFPSAgentController.cs```. 
 
+### Object Position Randomization
+
+After initializing the scene, pickupable objects can have their default positions randomized to any valid receptacle they could be placed in within the scene. Pass an int of your choice into `randomSeed` to seed the randomization. Setting `forceVisible = true` will attempt to spawn objects outside of openable receptacles (ie: if you wanted no objects to spawn in Cabinets or Drawers and only in outside, immediately visible receptacles). Finally, setting `maxNumRepeats` to higher values will improve position spawn accuracy by attempting to spawn objects in more locations, but this will be at the cost of performance. Setting it to `5` as a starting point is a good default.
+
+```python
+event = controller.reset('FloorPlan28')
+event = controller.step(dict(action='Initialize', gridSize=0.25))
+event = controller.step(dict(action = 'InitialRandomSpawn', randomSeed = 0, forceVisible = false, maxNumRepeats = 5))
+```
+Remember to reset and initiialize the scene before using the Position Randomizer, otherwise seeded values will be innacurate. 
+
 ### Agent Movement and Orientation
 
 When moving or rotating the agent, do note that if the agent is holding a Sim Object in its hand it could prevent moving or turning from succeeding. This is to prevent held objects from clipping with the environment.
