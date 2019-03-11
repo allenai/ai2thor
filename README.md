@@ -1,4 +1,4 @@
-<p align="center"><img width="45%" src="doc/static/thor-logo-main_1.0.png" /></p>
+<p align="center"><img width="40%" src="doc/static/thor-logo-main_1.0_thick.png" /></p>
 
 --------------------------------------------------------------------------------
 
