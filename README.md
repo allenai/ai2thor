@@ -1,4 +1,4 @@
-<p align="center"><img width="30%" src="doc/static/thor-logo-main.png" /></p>
+<p align="center"><img width="45%" src="doc/static/thor-logo-main_1.0.png" /></p>
 
 --------------------------------------------------------------------------------
 
@@ -194,7 +194,7 @@ Place a held item in a Fridge, in Stationary (Determanistic) Mode, ignoring rece
 ```python
 event = controller.step(dict(action='PutObject', receptacleObjectId = "Fridge|0.45|0.23|0.94", placeStationary = true, forceAction = true))
 ```
-Place a held item on a Table, in Physics (Non- Determanistic) Mode, and ignoring placement restrictions.
+Place a held item on a Table, in Physics (Non-Determanistic) Mode, and ignoring placement restrictions.
 ```python
 event = controller.step(dict(action='PutObject', receptacleObjectId = "Table|0.25|-0.27|0.95", placeStationary = false, forceAction = true))
 ```
