@@ -11,6 +11,11 @@ Fig. 1 and Fig. 2 compare how collision (represented by the light green boxes) h
 
 Any data, feedback, or interactions that might require realistic kinematic properties on Sim Objects will now be easily compatible within the THOR framework.
 
+## Multi-Agent
+Multi-Agent support has been added to the framework. This allows for teamwork oriented tasks that could involve any sort of agent to agent feedback or interaction.
+
+<p align = "center"><img width = "95%" src = "MultiAgent.png" /></p>
+
 ## Object Location Randomization
 Each scene now allows objects to be randomly moved to valid receptacles in a scene. Object randomization can be seeded and allows for exponentially more “scene states” of objects. Certain restrictions apply (large objects like Fridges, Sofas, etc. currently cannot be randomized). 
 
