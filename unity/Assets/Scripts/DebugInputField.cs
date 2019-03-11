@@ -348,18 +348,18 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         break;
                     }
 
-                case "place":
+                case "put":
                     {
                         ServerAction action = new ServerAction();
-                        action.action = "PlaceHeldObject";
+                        action.action = "PutObject";
                         
                         if(splitcommand.Length == 2)
                         {
-                            action.objectId = splitcommand[1];
+                            action.receptacleObjectId = splitcommand[1];
                         }
 
                         else
-                            action.objectId = PhysicsController.UniqueIDOfClosestReceptacleObject();
+                            action.receptacleObjectId = PhysicsController.UniqueIDOfClosestReceptacleObject();
                             
                         //set this to false if we want to place it and let physics resolve by having it fall a short distance into position
 
