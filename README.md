@@ -169,8 +169,8 @@ Picked up objects can also obstruct the Agent's view of the environment since th
 ```python
 event = controller.step(dict(action='PickupObject', objectId="Mug|0.25|-0.27"))
 ```
-#### Place Object
-If a sim object is in the Agent's Hand, this will place it in/on a target receptacle specified by `objectID`. 
+#### Put Object
+If a sim object is in the Agent's Hand, this will put it in/on a target receptacle specified by `receptacleObjectID`. 
 
 **Receptacle Restrictions:** By default, objects are restricted as to what type of receptacle they can be placed in. Please refer to [the Sim Object Info Table](https://docs.google.com/spreadsheets/d/1wx8vWgmFSi-4Gknkwl2fUMG8oRedu-tUklGSvU0oh4U/edit?usp=sharing), check the **_"Pickupable Object Restrictions"_** sheet, and use the dropdown menu under **_"Select Object Type"_** to see which object types can validly be placed in which receptacle types. 
 
@@ -178,25 +178,25 @@ If `forceAction = true` is passed in to this command, object placement will igno
 
 Additionally, there are 2 "modes" that can be used when placing an object:
 
-**Physics Resolution Mode:**
-If `placeStationary = false` is passed in, a placed object will use the physics engine to resolve the final position. This means placing an object on an uneven surface may cause inconsistent results due to the object rolling around or even falling off of the target receptacle.
+**Physics Mode: Non-determanistic final position**
+If `placeStationary = false` is passed in, a placed object will use the physics engine to resolve the final position. This means placing an object on an uneven surface may cause inconsistent results due to the object rolling around or even falling off of the target receptacle. Note that because of variances in physics resolution, this placement mode is non-determanistic!
 
-**Stationary Mode:**
-If `placeStationary = true` is passed in, the object will be placed in/on the valid receptacle without using physics to resolve the final position. This means that the object will be placed so that it will not roll around.
+**Stationary Mode: Determanistic final position**
+If `placeStationary = true` is passed in, the object will be placed in/on the valid receptacle without using physics to resolve the final position. This means that the object will be placed so that it will not roll around. For determanistic placement make sure to use this mode!
 
 Note that regardless of which placement mode is used, if another moving object hits a placed object, or if the Push/Pull actions are used on a placed object, the placed object will react with physics.
 
-Place a held item on a Table in Stationary Mode.
+Place a held item on a Table in Stationary (Determanistic) Mode.
 ```python
-event = controller.step(dict(action='PlaceHeldObject', objectId = "TableTop|0.25|-0.27|0.95", placeStationary = true))
+event = controller.step(dict(action='PutObject', receptacleObjectId = "TableTop|0.25|-0.27|0.95", placeStationary = true))
  ```
-Place a held item in a Fridge, ignoring receptacle restrictions
+Place a held item in a Fridge, in Stationary (Determanistic) Mode, ignoring receptacle restrictions
 ```python
-event = controller.step(dict(action='PlaceHeldObject', objectId = "Fridge|0.45|0.23|0.94", forceAction = true))
+event = controller.step(dict(action='PutObject', receptacleObjectId = "Fridge|0.45|0.23|0.94", placeStationary = true, forceAction = true))
 ```
-Place a held item on a Table, in Physics Resolution Mode, and ignoring placement restrictions.
+Place a held item on a Table, in Physics (Non- Determanistic) Mode, and ignoring placement restrictions.
 ```python
-event = controller.step(dict(action='PlaceHeldObject', objectId = "Table|0.25|-0.27|0.95", forceAction = true, placeStationary = false))
+event = controller.step(dict(action='PutObject', receptacleObjectId = "Table|0.25|-0.27|0.95", placeStationary = false, forceAction = true))
 ```
 #### Drop Object
 Drop a held object and let Physics resolve where it lands. Note that this is different from the "Place Object" function, as this does not guarantee the held object will be put into a specified receptacle. This is meant to be used in tandem with the Move/Rotate Hand functions to maneuver a held object to a target area, and the let it drop.
