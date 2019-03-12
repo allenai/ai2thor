@@ -131,5 +131,5 @@
         ENDCG
     }
  
-    Fallback "Standard"
+    Fallback "Custom/SimpleToon"
 }
