@@ -109,7 +109,6 @@ Angle the agent's view up in 30 degree increments (max upward angle is 30 degree
 ```python
 event = controller.step(dict(action='LookUp'))
 ```
-
 #### LookDown
 Angle the agent's view down in 30 degree increments (max downward angle is 60 degrees below the forward horizon)
 ```python
@@ -126,25 +125,22 @@ If crouching, the Agent will "stand up"- resetting the Camera and Hand to the de
 event = controller.step(dict(action='Stand'))
 ```
 #### MoveAhead
-Move Ahead the given `moveMagnitude` in meters. If no `moveMagnitude` specified, it defaults to the initialized grid size
+Move the agent forward by `gridSize`.
 ```python
 event = controller.step(dict(action='MoveAhead'))
-event = controller.step(dict(action='MoveAhead', moveMagnitude = 0.1))
 ```
 #### MoveRight
-Move Right the given `moveMagnitude` in meters. If no `moveMagnitude` specified, it defaults to the initialized grid size
+Move the agent right by `gridSize` (without changing view direction).
 ```python
 event = controller.step(dict(action='MoveRight'))
-event = controller.step(dict(action='MoveRight', moveMagnitude = 0.1))
 ```
 #### MoveLeft
-Move Left the given `moveMagnitude` in meters. If no `moveMagnitude` specified, it defaults to the initialized grid size
+Move the agent left by `gridSize` (without changing view direction).
 ```python
 event = controller.step(dict(action='MoveLeft'))
-event = controller.step(dict(action='MoveLeft', moveMagnitude = 0.1))
 ```
 #### MoveBack
-Move Backwards the given `moveMagnitude` in meters. If no `moveMagnitude` specified, it defaults to the initialized grid size
+Move the agent backward by `gridSize` (without changing view direction).
 ```python
 event = controller.step(dict(action='MoveBack'))
 event = controller.step(dict(action='MoveBack', moveMagnitude = 0.1))
@@ -188,8 +184,7 @@ Place the Tomato in the TableTop receptacle.
 ```python
 event = controller.step(dict(action='PutObject', objectId = "Tomato|0.1|3.2|0.43", receptacleObjectId = "TableTop|0.25|-0.27|0.95"))
  ```
-
-```
+ 
 #### Drop Object
 Drop a held object and let Physics resolve where it lands. Note that this is different from the "Place Object" function, as this does not guarantee the held object will be put into a specified receptacle. This is meant to be used in tandem with the Move/Rotate Hand functions to maneuver a held object to a target area, and the let it drop.
 
