@@ -53,7 +53,7 @@ class MultiAgentEvent(object):
 
     def __init__(self, active_agent_id, events):
         self._active_event = events[active_agent_id]
-        self.cv2image = self._active_event.cv2image
+        self.cv2img = self._active_event.cv2img
         self.metadata = self._active_event.metadata
         self.screen_width = self._active_event.screen_width
         self.screen_height = self._active_event.screen_height
