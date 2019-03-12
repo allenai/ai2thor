@@ -260,12 +260,13 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     placeStationary = true
                 };
                 PhysicsController.ProcessControlCommand(action);
+                pickupState = true;
             }
 
             // Throw action on left clock release
             if (Input.GetKeyUp(KeyCode.Mouse0))
             {
-                Debug.Log("Pickup state " + pickupState);
+                Debug.Log("Pickup state " + pickupState + " obj " + this.PhysicsController.WhatAmIHolding());
                 if (!pickupState)
                 {
                   
