@@ -2,7 +2,7 @@ language: python
 python:
   - "3.6"
 install:
-  - pip install progressbar2 requests invoke
+  - pip install progressbar2 requests invoke boto3
 cache: pip
 script:
   - invoke poll-ci-build
