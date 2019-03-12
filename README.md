@@ -170,7 +170,7 @@ Picked up objects can also obstruct the Agent's view of the environment since th
 event = controller.step(dict(action='PickupObject', objectId="Mug|0.25|-0.27"))
 ```
 #### Put Object
-If a sim object is in the Agent's Hand, this will put it in/on a target receptacle specified by `receptacleObjectID`. 
+A Sim Object in the Agent's hand (`objectId`), will be put in/on a target receptacle specified by `receptacleObjectID`. 
 
 **Receptacle Restrictions:** By default, objects are restricted as to what type of receptacle they can be placed in. Please refer to [the Sim Object Info Table](https://docs.google.com/spreadsheets/d/1wx8vWgmFSi-4Gknkwl2fUMG8oRedu-tUklGSvU0oh4U/edit?usp=sharing), check the **_"Pickupable Object Restrictions"_** sheet, and use the dropdown menu under **_"Select Object Type"_** to see which object types can validly be placed in which receptacle types. 
 
@@ -182,21 +182,13 @@ Additionally, there are 2 "modes" that can be used when placing an object:
 If `placeStationary = false` is passed in, a placed object will use the physics engine to resolve the final position. This means placing an object on an uneven surface may cause inconsistent results due to the object rolling around or even falling off of the target receptacle. Note that because of variances in physics resolution, this placement mode is non-determanistic!
 
 **Stationary Mode: Determanistic final position**
-If `placeStationary = true` is passed in, the object will be placed in/on the valid receptacle without using physics to resolve the final position. This means that the object will be placed so that it will not roll around. For determanistic placement make sure to use this mode!
+This is the default value of `placeStationary` if no parameter is passed in. If `placeStationary = true`, the object will be placed in/on the valid receptacle without using physics to resolve the final position. This means that the object will be placed so that it will not roll around. For determanistic placement make sure to use this mode!
 
-Note that regardless of which placement mode is used, if another moving object hits a placed object, or if the Push/Pull actions are used on a placed object, the placed object will react with physics.
-
-Place a held item on a Table in Stationary (Determanistic) Mode.
+Place the Tomato in the TableTop receptacle.
 ```python
-event = controller.step(dict(action='PutObject', receptacleObjectId = "TableTop|0.25|-0.27|0.95", placeStationary = true))
+event = controller.step(dict(action='PutObject', objectId = "Tomato|0.1|3.2|0.43", receptacleObjectId = "TableTop|0.25|-0.27|0.95"))
  ```
-Place a held item in a Fridge, in Stationary (Determanistic) Mode, ignoring receptacle restrictions
-```python
-event = controller.step(dict(action='PutObject', receptacleObjectId = "Fridge|0.45|0.23|0.94", placeStationary = true, forceAction = true))
-```
-Place a held item on a Table, in Physics (Non-Determanistic) Mode, and ignoring placement restrictions.
-```python
-event = controller.step(dict(action='PutObject', receptacleObjectId = "Table|0.25|-0.27|0.95", placeStationary = false, forceAction = true))
+
 ```
 #### Drop Object
 Drop a held object and let Physics resolve where it lands. Note that this is different from the "Place Object" function, as this does not guarantee the held object will be put into a specified receptacle. This is meant to be used in tandem with the Move/Rotate Hand functions to maneuver a held object to a target area, and the let it drop.
