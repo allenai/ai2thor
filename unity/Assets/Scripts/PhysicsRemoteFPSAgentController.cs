@@ -233,8 +233,14 @@ namespace UnityStandardAssets.Characters.FirstPerson
             objMeta.objectType = Enum.GetName(typeof(SimObjType), simObj.Type);
             objMeta.receptacle = simObj.IsReceptacle;
             objMeta.openable = simObj.IsOpenable;
+            objMeta.toggleable = simObj.IsToggleable;
+
             if (objMeta.openable) {
                 objMeta.isopen = simObj.IsOpen;
+            }
+
+            if (objMeta.toggleable) {
+                objMeta.istoggled = simObj.IsToggled;
             }
             objMeta.pickupable = simObj.PrimaryProperty == SimObjPrimaryProperty.CanPickup;
             objMeta.objectId = simObj.UniqueID;
@@ -2183,9 +2189,28 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
         public void InitialRandomSpawn (ServerAction action)
         {
-            if(AgentHand != null)
+            if(ItemInHand != null)
             {
-               ItemInHand = null;
+                Rigidbody rb = ItemInHand.GetComponent<Rigidbody>();
+                rb.isKinematic = false;
+                rb.constraints = RigidbodyConstraints.None;
+                rb.useGravity = true;
+                rb.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
+
+                GameObject topObject = GameObject.Find("Objects");
+                if (topObject != null) 
+                {
+                    ItemInHand.transform.parent = topObject.transform;
+                } 
+                
+                else 
+                {
+                    ItemInHand.transform.parent = null;
+                }
+
+                rb.angularVelocity = UnityEngine.Random.insideUnitSphere;
+
+                ItemInHand = null;
             }
 
             PhysicsSceneManager script = GameObject.Find("PhysicsSceneManager").GetComponent<PhysicsSceneManager>();
@@ -2193,6 +2218,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
             bool success = script.RandomSpawnRequiredSceneObjects(action.randomSeed, action.forceVisible, action.maxNumRepeats, action.placeStationary);
             resetUniqueIdToSimObjPhysics();
             actionFinished(success);
+        }
+
+        public void PutObject(ServerAction action){
+            action.objectId = action.receptacleObjectId;
+            action.receptacleObjectId = null;
+            PlaceHeldObject(action);
         }
 
         //if you are holding an object, place it on a valid Receptacle 
@@ -4377,7 +4408,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             return true;
         }
 
-        override public Vector3[] getReachablePositions() {
+        override public Vector3[] getReachablePositions(float gridMultiplier=1.0f) {
             CapsuleCollider cc = GetComponent<CapsuleCollider>();
 
             Vector3 center = transform.position;
@@ -4415,7 +4446,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                             point2,
                             radius,
                             d,// * dirSkinWidthMultiplier, - multiplying direction doesn't increase distance cast
-                            gridSize + sw, //offset should be here, this mimics the additional distance check of MoveAgent()
+                            (gridSize * gridMultiplier)+ sw, //offset should be here, this mimics the additional distance check of MoveAgent()
                             layerMask,
                             QueryTriggerInteraction.Ignore
                         );
@@ -4429,7 +4460,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                                 break;
                             }
                         }
-                        Vector3 newPosition = p + d * gridSize;
+                        Vector3 newPosition = p + d * gridSize * gridMultiplier;
                         bool inBounds = sceneBounds.Contains(newPosition);
                         if (errorMessage == "" && !inBounds) {
                             errorMessage = "In " + 

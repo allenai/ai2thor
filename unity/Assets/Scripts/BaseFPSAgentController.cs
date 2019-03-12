@@ -194,7 +194,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			targetTeleport = Vector3.zero;
 		}
 
-		abstract public Vector3[] getReachablePositions();
+		abstract public Vector3[] getReachablePositions(float gridMultiplier=1.0f);
 
 		public void Initialize(ServerAction action)
         {

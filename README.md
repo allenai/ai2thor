@@ -1,4 +1,4 @@
-<p align="center"><img width="30%" src="doc/static/thor-logo-main.png" /></p>
+<p align="center"><img width="40%" src="doc/static/thor-logo-main_1.0_thick.png" /></p>
 
 --------------------------------------------------------------------------------
 
@@ -6,7 +6,7 @@
 AI2-THOR (The House Of inteRactions) is a photo-realistic interactable framework for AI agents.
 
 ## News
-* (3/2019) Introducing Version 1.0 of the AI2-THOR framework! This release includes a full rework of all Sim Objects and Scenes to have additional physics functionality and improved fidelity. Physics based interactions can now be modeled in the THOR environment in realistic ways like never before! Object collision when placed in receptacles, moveable receptacles that contain other objects, object location randomization based on collision- these are a few of the many exciting new features that come with this update. Please check the [full release notes here](doc/static/ReleaseNotes/ReleaseNotes_1.0.md) to view details on all the changes and new features.
+* (3/2019) Introducing Version 1.0 of the AI2-THOR framework! This release includes a full rework of all Sim Objects and Scenes to have additional physics functionality and improved fidelity. Physics based interactions can now be modeled in the THOR environment in realistic ways like never before! Object collision when placed in receptacles, moveable receptacles that contain other objects, collision based object position randomization, Multi-Agent support— these are a few of the many exciting new features that come with this update. Please check the [full release notes here](doc/static/ReleaseNotes/ReleaseNotes_1.0.md) to view details on all the changes and new features.
 * (4/2018) We have released version 0.0.25 of AI2-THOR. The main changes include: upgrade to Unity 2017, performance optimization to improve frame rate, and various bug fixes. We have also added some physics functionalities. Please contact us for instructions. 
 * (1/2018) If you need a docker version, please contact us so we provide you with the instructions. Our docker version is in beta mode.
 
@@ -33,7 +33,7 @@ AI2-THOR (The House Of inteRactions) is a photo-realistic interactable framework
 * **Object Interactability:** An object is said to be interactable if it is flagged as Visible and if it is unobstructed by any other objects. Most objects will be Interactable as long as they are also Visible, but some objects have transparency which can cause objects to be reported as "visible" through them. An example is a Glass Shower Door with a Sponge object behind it. The glass door will be flagged as Visible and Interactable, but the sponge will only be Visible. Attempting to interact with the sponge will throw an error as it can't be reached through the glass door, only seen.
 
 
-* **Receptacle:** A type of object that can contain another object. These types of objects include: ArmChair, Bathtub, Bed, Bowl, Box, Cabinet, Cart, CoffeeMachine, CounterTop, Cup, Desk, Drawer, Dresser, Fridge, GarbageCan, HandTowelHolder, LaundryHamper, Microwave, Mug, NightStand, Ottoman, Pan, Plate, Pot, Safe, Shelf, Sink, Sofa, Stove Burner, TableTop, Toilet, ToiletPaperHanger, and TowelHolder. For more info about Sim Objects and their properties, refer to [the Sim Object Info Table Spreadsheet](https://docs.google.com/spreadsheets/d/1wx8vWgmFSi-4Gknkwl2fUMG8oRedu-tUklGSvU0oh4U/edit?usp=sharing)
+* **Receptacle:** A type of object that can contain another object. Some examples of receptacles are: TableTop, Cup, Sofa, Bed, Desk, Bowl, etc. Some Receptacles cannot be moved within the scene, and are mostly large objects that don't make sense to move (Countertop, Sink, etc). Some Receptacles can also open and close (Microwave, Cabinet, Drawer, etc) while others can also be picked up and moved around by the Agent (Plate, Bowl, Box, etc.).
 
 ## PIP Installation
 
@@ -79,6 +79,17 @@ event.metadata
 
 We currently provide the following API controlled actions. Actions are defined in ```unity/Assets/Scripts/PhysicsRemoteFPSAgentController.cs```. 
 
+### Object Position Randomization
+
+After initializing the scene, pickupable objects can have their default positions randomized to any valid receptacle they could be placed in within the scene. Pass an int of your choice into `randomSeed` to seed the randomization. Setting `forceVisible = true` will attempt to spawn objects outside of openable receptacles (ie: if you wanted no objects to spawn in Cabinets or Drawers and only in outside, immediately visible receptacles). Finally, setting `maxNumRepeats` to higher values will improve position spawn accuracy by attempting to spawn objects in more locations, but this will be at the cost of performance. Setting it to `5` as a starting point is a good default.
+
+```python
+event = controller.reset('FloorPlan28')
+event = controller.step(dict(action='Initialize', gridSize=0.25))
+event = controller.step(dict(action = 'InitialRandomSpawn', randomSeed = 0, forceVisible = false, maxNumRepeats = 5))
+```
+Remember to reset and initiialize the scene before using the Position Randomizer, otherwise seeded values will be innacurate. 
+
 ### Agent Movement and Orientation
 
 When moving or rotating the agent, do note that if the agent is holding a Sim Object in its hand it could prevent moving or turning from succeeding. This is to prevent held objects from clipping with the environment.
@@ -98,7 +109,6 @@ Angle the agent's view up in 30 degree increments (max upward angle is 30 degree
 ```python
 event = controller.step(dict(action='LookUp'))
 ```
-
 #### LookDown
 Angle the agent's view down in 30 degree increments (max downward angle is 60 degrees below the forward horizon)
 ```python
@@ -115,33 +125,34 @@ If crouching, the Agent will "stand up"- resetting the Camera and Hand to the de
 event = controller.step(dict(action='Stand'))
 ```
 #### MoveAhead
-Move Ahead the given `moveMagnitude` in meters. If no `moveMagnitude` specified, it defaults to the initialized grid size
+Move the agent forward by `gridSize`.
 ```python
 event = controller.step(dict(action='MoveAhead'))
-event = controller.step(dict(action='MoveAhead', moveMagnitude = 0.1))
 ```
 #### MoveRight
-Move Right the given `moveMagnitude` in meters. If no `moveMagnitude` specified, it defaults to the initialized grid size
+Move the agent right by `gridSize` (without changing view direction).
 ```python
 event = controller.step(dict(action='MoveRight'))
-event = controller.step(dict(action='MoveRight', moveMagnitude = 0.1))
 ```
 #### MoveLeft
-Move Left the given `moveMagnitude` in meters. If no `moveMagnitude` specified, it defaults to the initialized grid size
+Move the agent left by `gridSize` (without changing view direction).
 ```python
 event = controller.step(dict(action='MoveLeft'))
-event = controller.step(dict(action='MoveLeft', moveMagnitude = 0.1))
 ```
 #### MoveBack
-Move Backwards the given `moveMagnitude` in meters. If no `moveMagnitude` specified, it defaults to the initialized grid size
+Move the agent backward by `gridSize` (without changing view direction).
 ```python
 event = controller.step(dict(action='MoveBack'))
-event = controller.step(dict(action='MoveBack', moveMagnitude = 0.1))
 ```
 #### Teleport 
 Move the agent to any location in the scene (within scene bounds). Using this command it is possible to put the agent into places that would not normally be possible to navigate to, but it can be useful if you need to place an agent in the exact same spot for a task.
 ```python
 event = controller.step(dict(action='Teleport', x=0.999, y=1.01, z=-0.3541))
+``` 
+#### Get Reachable Positions
+Returns valid coordinates that the Agent can reach without colliding with the environment or Sim Objects. This can be used in tandem with `Teleport` to warp the Agent as needed. This is useful for things like randomizing the initial position of the agent without clipping into the environment.
+```python
+event = controller.step(dict(action='GetReachablePositions'))
 ``` 
 
 ### Sim Object Interaction
@@ -158,8 +169,8 @@ Picked up objects can also obstruct the Agent's view of the environment since th
 ```python
 event = controller.step(dict(action='PickupObject', objectId="Mug|0.25|-0.27"))
 ```
-#### Place Object
-If a sim object is in the Agent's Hand, this will place it in/on a target receptacle specified by `objectID`. 
+#### Put Object
+A Sim Object in the Agent's hand (`objectId`), will be put in/on a target receptacle specified by `receptacleObjectID`. 
 
 **Receptacle Restrictions:** By default, objects are restricted as to what type of receptacle they can be placed in. Please refer to [the Sim Object Info Table](https://docs.google.com/spreadsheets/d/1wx8vWgmFSi-4Gknkwl2fUMG8oRedu-tUklGSvU0oh4U/edit?usp=sharing), check the **_"Pickupable Object Restrictions"_** sheet, and use the dropdown menu under **_"Select Object Type"_** to see which object types can validly be placed in which receptacle types. 
 
@@ -167,26 +178,17 @@ If `forceAction = true` is passed in to this command, object placement will igno
 
 Additionally, there are 2 "modes" that can be used when placing an object:
 
-**Physics Resolution Mode:**
-If `placeStationary = false` is passed in, a placed object will use the physics engine to resolve the final position. This means placing an object on an uneven surface may cause inconsistent results due to the object rolling around or even falling off of the target receptacle.
+**Physics Mode: Non-determanistic final position**
+If `placeStationary = false` is passed in, a placed object will use the physics engine to resolve the final position. This means placing an object on an uneven surface may cause inconsistent results due to the object rolling around or even falling off of the target receptacle. Note that because of variances in physics resolution, this placement mode is non-determanistic!
 
-**Stationary Mode:**
-If `placeStationary = true` is passed in, the object will be placed in/on the valid receptacle without using physics to resolve the final position. This means that the object will be placed so that it will not roll around.
+**Stationary Mode: Determanistic final position**
+This is the default value of `placeStationary` if no parameter is passed in. If `placeStationary = true`, the object will be placed in/on the valid receptacle without using physics to resolve the final position. This means that the object will be placed so that it will not roll around. For determanistic placement make sure to use this mode!
 
-Note that regardless of which placement mode is used, if another moving object hits a placed object, or if the Push/Pull actions are used on a placed object, the placed object will react with physics.
-
-Place a held item on a Table in Stationary Mode.
+Place the Tomato in the TableTop receptacle.
 ```python
-event = controller.step(dict(action='PlaceHeldObject', objectId = "TableTop|0.25|-0.27|0.95", placeStationary = true))
+event = controller.step(dict(action='PutObject', objectId = "Tomato|0.1|3.2|0.43", receptacleObjectId = "TableTop|0.25|-0.27|0.95"))
  ```
-Place a held item in a Fridge, ignoring receptacle restrictions
-```python
-event = controller.step(dict(action='PlaceHeldObject', objectId = "Fridge|0.45|0.23|0.94", forceAction = true))
-```
-Place a held item on a Table, in Physics Resolution Mode, and ignoring placement restrictions.
-```python
-event = controller.step(dict(action='PlaceHeldObject', objectId = "Table|0.25|-0.27|0.95", forceAction = true, placeStationary = false))
-```
+ 
 #### Drop Object
 Drop a held object and let Physics resolve where it lands. Note that this is different from the "Place Object" function, as this does not guarantee the held object will be put into a specified receptacle. This is meant to be used in tandem with the Move/Rotate Hand functions to maneuver a held object to a target area, and the let it drop.
 
@@ -317,17 +319,14 @@ controller.start()
 ## Citation
 
     @article{ai2thor,
-        Author = {Eric Kolve and 
-                  Roozbeh Mottaghi and 
-                  Daniel Gordon and 
-                  Yuke Zhu and 
-                  Abhinav Gupta and 
-                  Ali Farhadi and
-                  Winson Han and
-                  Eli Vanderbilt},
+        Author = {Eric Kolve and Roozbeh Mottaghi 
+                  and Winson Han and Eli VanderBilt 
+                  and Luca Weihs and Alvaro Herrasti 
+                  and Daniel Gordon and Yuke Zhu 
+                  and Abhinav Gupta and Ali Farhadi},
         Title = {{AI2-THOR: An Interactive 3D Environment for Visual AI}},
         Journal = {arXiv},
-        Year = {2019}
+        Year = {2017}
     }
     
 
