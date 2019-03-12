@@ -119,16 +119,6 @@ Angle the agent's view down in 30 degree increments (max downward angle is 60 de
 ```python
 event = controller.step(dict(action='LookDown'))
 ```
-#### Crouch
-Lowers the Camera and Hand position of the Agent to observe the scene from a lower perspective. Do note that this does not actually make the Agent shorter, but only moves the Camera and Hand. The total height of the Agent is unaffected so this cannot be used to do something like move underneath a table.
-```python
-event = controller.step(dict(action='Crouch'))
-```
-#### Stand
-If crouching, the Agent will "stand up"- resetting the Camera and Hand to the default upright position.
-```python
-event = controller.step(dict(action='Stand'))
-```
 #### MoveAhead
 Move the agent forward by `gridSize`.
 ```python
@@ -223,24 +213,7 @@ The target object must be within range of the Agent and Interactable in order fo
 ```python
 event = controller.step(dict(action='CloseObject', objectId="Fridge|0.25|0.75"))
 ```
-#### Push Object
-Push a target object specified by `objectID` away from the Agent (relative to the Agent's forward orientation) with a given force. Force of the push is set with `moveMagnitude`. 
 
-Sim Objects can have different Mass properties, so certain objects will require more or less force to push the same distance. A heavy Chair object with 20kg of mass might require 4000 force to push, while a Tomato that is only 0.2kg would only require 10 units of force.
-
-Note that this cannot be used to Push an object held by the Agent in its hand. Refer to the "Throw" action for that.
-```python
-event = controller.step(dict(action='PushObject', objectID = "Statue|0.25|-0.27|0.95", moveMagnitude= 20 )))
-```
-#### Pull Object
-Pull a target object specified by `objectID` towards the Agent (relative to the Agent's forward orientation) with a given force. Force of the pull is set with `moveMagnitude`. 
-
-Sim Objects can have different Mass properties, so certain objects will require more or less force to pull the same distance. A heavy Chair object with 20kg of mass might require 4000 force to push, while a Tomato that is only 0.2kg would only require 10 units of force.
-
-Note that this cannot be used to Pull an object held by the Agent in its hand. 
-```python
-event = controller.step(dict(action='PullObject', objectID = "Statue|0.25|-0.27|0.95", moveMagnitude= 20 )))
-```
 #### Toggle On
 Toggles an object specified by `objectID` into the On state if applicable. Noteable examples are Lamps, Light Switches, and Laptops.
 ```python
