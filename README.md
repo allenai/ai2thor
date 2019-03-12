@@ -31,7 +31,7 @@ Please refer to the [tutorial page](http://ai2thor.allenai.org/tutorials/) for a
 
 * **Action:** A discrete command for the Agent to perform within a scene (e.g. MoveAhead, RotateRight, PickupObject)
 
-* **Sim Object:** Objects that can be interacted with by the Agent. Please refer to [the Sim Object Info Table Spreadsheet](https://docs.google.com/spreadsheets/d/1wx8vWgmFSi-4Gknkwl2fUMG8oRedu-tUklGSvU0oh4U/edit?usp=sharing) and check the **Object Locations** sheet to see which Object types can be found in which Scene Category. Note that objects marked **_All_** are guaranteed to be found in all scenes of a given Category, objects marked **_Some_** can be found in some but not all scenes of a given Category, and objects marked **_None_** will not be found in a scene of the given Category.
+* **Sim Object:** Objects that can be interacted with by the Agent. Objects have a range of interactions based on affordanced defined by the Object Type.
 
 * **Object Visibility:** An object is considered Visible when it satisfies three conditions: It must be within the Camera's viewport, it must be within a threshold of distance from the Agent's center (1.5 meters), and a ray emitted from the camera must hit the object without first hitting another obstruction. Note that an object rendered in an image will not always be Visible to the Agent. For example, an object outside the 1.5 meter threshold could be seen in an image, but will be reported as not-visible to the Agent.
 
@@ -151,7 +151,7 @@ event = controller.step(dict(action='GetReachablePositions'))
 ``` 
 
 ### Sim Object Interaction
-Check [The Sim Object Info Table](https://docs.google.com/spreadsheets/d/1wx8vWgmFSi-4Gknkwl2fUMG8oRedu-tUklGSvU0oh4U/edit?usp=sharing) and open the **Object Interactions** sheet for an info table on what Sim Object types can be interacted with in which ways.
+The following actions are all ways the Agent can interact with Sim Objects.
 
 #### Pickup Object
 
