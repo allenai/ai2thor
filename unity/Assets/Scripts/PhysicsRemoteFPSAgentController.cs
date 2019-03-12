@@ -178,11 +178,11 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 		private void LateUpdate()
 		{
-			//make sure this happens in late update so all physics related checks are done ahead of time
-			//this is also mostly for in editor, the array of visible sim objects is found via server actions
-			//using VisibleSimObjs(action), so be aware of that
+            //make sure this happens in late update so all physics related checks are done ahead of time
+            //this is also mostly for in editor, the array of visible sim objects is found via server actions
+            //using VisibleSimObjs(action), so be aware of that
 
-            #if UNITY_EDITOR
+            #if UNITY_EDITOR || UNITY_WEBGL
             if (this.actionComplete && !FlightMode) {
                 ServerAction action = new ServerAction();
                 VisibleSimObjPhysics = VisibleSimObjs(action);//GetAllVisibleSimObjPhysics(m_Camera, maxVisibleDistance);
@@ -465,6 +465,20 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 }
             }
             return objectID;
+        }
+
+        public SimObjPhysics ClosestObject(Func<SimObjPhysics, bool> filter = null)
+        {
+            SimObjPhysics obj = null;
+            foreach (SimObjPhysics o in VisibleSimObjPhysics)
+            {
+                if (filter != null && filter(o))
+                {
+                    obj = o;
+                    break;
+                }
+            }
+            return obj;
         }
 
         //return a reference to a SimObj that is Visible (in the VisibleSimObjPhysics array) and
@@ -1994,6 +2008,13 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		{
 			Vector3 newPos = AgentHand.transform.position;
             newPos = newPos + (m_Camera.transform.forward * action.moveMagnitude);    
+            actionFinished(moveHandToXYZ(newPos.x, newPos.y, newPos.z));
+        }
+
+        public void MoveHandDelta(ServerAction action)
+        {
+            Vector3 newPos = AgentHand.transform.position;
+            newPos = newPos + (m_Camera.transform.forward * action.z) + (m_Camera.transform.up * action.y) + (m_Camera.transform.right * action.x);
             actionFinished(moveHandToXYZ(newPos.x, newPos.y, newPos.z));
         }
 

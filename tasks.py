@@ -7,6 +7,7 @@ import shutil
 import subprocess
 import pprint
 from invoke import task
+import boto3
 
 S3_BUCKET = 'ai2-thor'
 UNITY_VERSION = '2018.3.6f1'
@@ -36,10 +37,17 @@ def push_build(build_archive_name, archive_sha256):
     print("pushed build %s to %s" % (S3_BUCKET, build_archive_name))
 
 
-def _local_build_path():
+def _local_build_path(prefix='local'):
     return os.path.join(
         os.getcwd(),
-        'unity/builds/thor-local-OSXIntel64.app/Contents/MacOS/thor-local-OSXIntel64'
+        'unity/builds/thor-{}-OSXIntel64.app/Contents/MacOS/thor-local-OSXIntel64'.format(prefix)
+    )
+
+
+def _webgl_local_build_path(prefix, source_dir='builds'):
+    return os.path.join(
+        os.getcwd(),
+        'unity/{}/thor-{}-WebGL/'.format(source_dir,prefix)
     )
 
 
@@ -206,9 +214,13 @@ def build_class_dataset(context):
         print("scene name complete: %s" % scene)
 
 
+
+def local_build_name(prefix, arch):
+    return "thor-%s-%s" % (prefix, arch)
+
 @task
 def local_build(context, prefix='local', arch='OSXIntel64'):
-    build_name = "thor-%s-%s" % (prefix, arch)
+    build_name = local_build_name(prefix, arch)
     fetch_source_textures(context)
     if _build('unity', arch, "builds", build_name):
         print("Build Successful")
@@ -217,7 +229,7 @@ def local_build(context, prefix='local', arch='OSXIntel64'):
     generate_quality_settings(context)
 
 @task
-def webgl_build(context, scenes, prefix='local'):
+def webgl_build(context, scenes="", room_ranges=None, directory="builds", prefix='local', verbose=False):
     """
     Creates a WebGL build
     :param context:
@@ -225,14 +237,86 @@ def webgl_build(context, scenes, prefix='local'):
     :param prefix: Prefix name for the build
     :return:
     """
+    from functools import reduce
     arch = 'WebGL'
-    build_name = "thor-%s-%s" % (prefix, arch)
+    build_name = local_build_name(prefix, arch)
     fetch_source_textures(context)
-    if _build('unity', arch, "builds", build_name, env=dict(SCENE=scenes)):
+    if room_ranges is not None:
+        # print(room_ranges)
+        # print([list(range(*tuple(int(y) for y in x.split("-")))) for x in room_ranges.split(",")])
+        floor_plans = ["FloorPlan{}_physics".format(i) for i in
+            reduce(
+                lambda x, y: x + y,
+                map(
+                    lambda x: x + [x[-1] + 1],
+                    [list(range(*tuple(int(y) for y in x.split("-"))))
+                        for x in room_ranges.split(",")]
+                )
+            )
+         ]
+
+        # print(floor_plans)
+        scenes = ",".join(floor_plans)
+    if verbose:
+        print(scenes)
+
+    if _build('unity', arch, directory, build_name, env=dict(SCENE=scenes)):
         print("Build Successful")
     else:
         print("Build Failure")
     generate_quality_settings(context)
+    build_path = _webgl_local_build_path(prefix, directory)
+
+    rooms = {
+        "kitchens": {
+            "name": "Kitchens",
+            "roomRanges": range(1, 31)
+        },
+        "livingRooms": {
+            "name": "Living Rooms",
+            "roomRanges": range(201, 231)
+        },
+        "bedrooms": {
+            "name": "Bedrooms",
+            "roomRanges": range(301, 331)
+        },
+        "bathrooms": {
+            "name": "Bathrooms",
+            "roomRanges": range(401, 431)
+        },
+        "foyers": {
+            "name": "Foyers",
+            "roomRanges": range(501, 531)
+        }
+    }
+
+    room_type_by_id = {}
+    scene_metadata = {}
+    for room_type, room_data in rooms.items():
+        for room_num in room_data["roomRanges"]:
+            room_id = "FloorPlan{}_physics".format(room_num)
+            room_type_by_id[room_id] = {
+                "type": room_type,
+                "name": room_data["name"]
+            }
+
+    for scene_name in scenes.split(","):
+        room_type = room_type_by_id[scene_name]
+        if room_type["type"] not in scene_metadata:
+            scene_metadata[room_type["type"]] = {
+                "scenes": [],
+                "name": room_type["name"]
+            }
+
+        scene_metadata[room_type["type"]]["scenes"].append(scene_name)
+
+    if verbose:
+        print(scene_metadata)
+
+    import json
+    with open(os.path.join(build_path, "scenes.json"), 'w') as f:
+        f.write(json.dumps(scene_metadata, sort_keys=False, indent=4))
+
 
 @task
 def generate_quality_settings(ctx):
@@ -676,23 +760,170 @@ def benchmark(ctx, screen_width=600, screen_height=600, editor_mode=False, out='
 
     env.stop()
 
-@task
-def test_thing(context, scene, editor_mode=True):
-    import ai2thor.controller
+def list_objects_with_metadata(bucket):
+    keys = {}
+    s3c = boto3.client('s3')
+    continuation_token = None
+    while True:
+        if continuation_token:
+            objects = s3c.list_objects_v2(Bucket=bucket, ContinuationToken=continuation_token)
+        else:
+            objects = s3c.list_objects_v2(Bucket=bucket)
 
-    env = ai2thor.controller.Controller()
-    if editor_mode:
-        env.start(8200, False, player_screen_width=600, player_screen_height=600)
-    else:
-        env.start(player_screen_width=600, player_screen_height=600)
-    env.reset(scene)
-    env.step(
-        dict(
-            action='Initialize',
-            gridSize=0.25,
-            renderNormalsImage=True,
-            renderDepthImage=True,
-            renderClassImage=False,
-            renderObjectImage=True))
-    env.interact()
-    env.stop()
+        for i in objects.get('Contents', []):
+            keys[i['Key']] = i
+
+        if 'NextContinuationToken' in objects:
+            continuation_token = objects['NextContinuationToken']
+        else:
+            break
+
+    return keys
+
+def s3_etag_data(data):
+    h = hashlib.md5()
+    h.update(data)
+    return '"' + h.hexdigest() + '"'
+
+
+cache_seconds = 31536000
+@task
+def webgl_deploy(ctx, prefix='local', source_dir='builds', target_dir='', verbose=False, force=False):
+
+    from os.path import isfile, join, isdir
+
+    content_types = {
+        '.js': 'application/javascript; charset=utf-8',
+        '.html': 'text/html; charset=utf-8',
+        '.ico': 'image/x-icon',
+        '.svg': 'image/svg+xml; charset=utf-8',
+        '.css': 'text/css; charset=utf-8',
+        '.png': 'image/png',
+        '.txt': 'text/plain',
+        '.jpg': 'image/jpeg',
+        '.unityweb': 'application/octet-stream',
+        '.json': 'application/json'
+    }
+
+    content_encoding = {
+        '.unityweb': 'gzip'
+    }
+
+    bucket_name = 'ai2-thor-webgl'
+    s3 = boto3.resource('s3')
+
+    current_objects = list_objects_with_metadata(bucket_name)
+
+    no_cache_extensions = {
+        ".txt",
+        ".html",
+        ".json"
+    }
+
+    if verbose:
+        print("Deploying to: {}/{}".format(bucket_name, target_dir))
+
+    def walk_recursive(path, func, parent_dir=''):
+        for file_name in os.listdir(path):
+            f_path = join(path, file_name)
+            relative_path = join(parent_dir, file_name)
+            if isfile(f_path):
+                func(f_path, join(target_dir, relative_path))
+            elif isdir(f_path):
+                walk_recursive(f_path, func, relative_path)
+
+    def upload_file(f_path, key):
+        _, ext = os.path.splitext(f_path)
+        if verbose:
+            print("'{}'".format(key))
+
+        with open(f_path, 'rb') as f:
+            file_data = f.read()
+            etag = s3_etag_data(file_data)
+            kwargs = {}
+            if ext in content_encoding:
+                kwargs['ContentEncoding'] = content_encoding[ext]
+
+            if not force and key in current_objects and etag == current_objects[key]['ETag']:
+                if verbose:
+                    print("ETag match - skipping %s" % key)
+                return
+
+            if ext in content_types:
+                cache = 'no-cache, no-store, must-revalidate' if ext in no_cache_extensions else 'public, max-age={}'.format(
+                    cache_seconds
+                )
+                now = datetime.datetime.utcnow()
+                expires = now if ext == '.html' or ext == '.txt' else now + datetime.timedelta(
+                    seconds=cache_seconds)
+                s3.Object(bucket_name, key).put(
+                    Body=file_data,
+                    ACL="public-read",
+                    ContentType=content_types[ext],
+                    CacheControl=cache,
+                    Expires=expires,
+                    **kwargs
+                )
+            else:
+                if verbose:
+                    print("Warning: Content type for extension '{}' not defined,"
+                          " uploading with no content type".format(ext))
+                s3.Object(bucket_name, key).put(
+                    Body=f.read(),
+                    ACL="public-read")
+
+    build_path = _webgl_local_build_path(prefix, source_dir)
+    if verbose:
+        print("Build path: '{}'".format(build_path))
+        print("Uploading...")
+    walk_recursive(build_path, upload_file)
+
+
+@task
+def webgl_build_deploy_demo(ctx, verbose=False, force=False):
+    webgl_build(ctx, room_ranges="1-30,201-230,301-330,401-430,501-530")
+    webgl_deploy(ctx, verbose=verbose, force=force)
+
+    if verbose:
+        print("Deployed all scenes to bucket's root.")
+
+    demo_selected_scene_indices = [
+        1, 3, 7, 29, 30, 204, 209, 221, 224, 227, 301, 302, 308, 326, 330, 401, 403, 411, 422, 430
+    ]
+    scenes = ["FloorPlan{}_physics".format(x) for x in demo_selected_scene_indices]
+    webgl_build(ctx, scenes=",".join(scenes), directory="builds/demo")
+    webgl_deploy(ctx, source_dir="builds/demo", target_dir="demo", verbose=verbose, force=force)
+
+    if verbose:
+        print("Deployed selected scenes to bucket's 'demo' directory")
+
+@task
+def webgl_deploy_all(ctx, verbose=False, individual_rooms=False):
+
+    rooms = {
+        "kitchens": (1, 30),
+        "livingRooms": (201, 230),
+        "bedrooms": (301, 330),
+        "bathrooms": (401, 430),
+        "foyers": (501, 530)
+    }
+    room_ranges = [(1, 30), (201, 230), (301, 330), (401, 430), (501, 530)]
+
+    for key,room_range in rooms.items():
+        range_str = "{}-{}".format(room_range[0], room_range[1])
+        if verbose:
+            print("Building for rooms: {}".format( range_str))
+
+        build_dir = "builds/{}".format(key)
+        if individual_rooms:
+            for i in range(room_range[0], room_range[1]):
+                floorPlanName = "FloorPlan{}_physics".format(i)
+                target_s3_dir = "{}/{}".format(key, floorPlanName)
+                build_dir = "builds/{}".format(target_s3_dir)
+
+                webgl_build(ctx, scenes=floorPlanName, directory=build_dir)
+                webgl_deploy(ctx, source_dir=build_dir, target_dir=target_s3_dir, verbose=verbose)
+
+        else:
+            webgl_build(ctx, room_ranges=range_str, directory=build_dir)
+            webgl_deploy(ctx, source_dir=build_dir, target_dir=key, verbose=verbose)
