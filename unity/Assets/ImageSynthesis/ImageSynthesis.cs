@@ -95,8 +95,9 @@ public class ImageSynthesis : MonoBehaviour {
 
 		// use real camera to capture final image
 		capturePasses[0].camera = GetComponent<Camera>();
-		for (int q = 1; q < capturePasses.Length; q++)
+		for (int q = 1; q < capturePasses.Length; q++) {
 			capturePasses[q].camera = CreateHiddenCamera (capturePasses[q].name);
+		}
 		md5 = System.Security.Cryptography.MD5.Create();
 
 		OnCameraChange();
@@ -118,7 +119,9 @@ public class ImageSynthesis : MonoBehaviour {
 	private Camera CreateHiddenCamera(string name)
 	{
 		var go = new GameObject (name, typeof (Camera));
-		go.hideFlags = HideFlags.HideAndDontSave;
+		#if !UNITY_EDITOR // Useful to be able to see these cameras in the editor
+		go.hideFlags = HideFlags.HideAndDontSave; 
+		#endif
 		go.transform.parent = transform;
 
 		var newCamera = go.GetComponent<Camera>();
@@ -170,8 +173,8 @@ public class ImageSynthesis : MonoBehaviour {
 
 	public void OnCameraChange()
 	{
-		int targetDisplay = 1;
 		var mainCamera = GetComponent<Camera>();
+		mainCamera.depth = 9999; // This ensures the main camera is rendered on screen
 		foreach (var pass in capturePasses)
 		{
 			if (pass.camera == mainCamera)
@@ -182,9 +185,7 @@ public class ImageSynthesis : MonoBehaviour {
 
 			// copy all "main" camera parameters into capturing camera
 			pass.camera.CopyFrom(mainCamera);
-
-			// set targetDisplay here since it gets overriden by CopyFrom()
-			pass.camera.targetDisplay = targetDisplay++;
+			pass.camera.depth = 0; // This ensures the new camera does not get rendered on screen
 		}
 
 		// cache materials and setup material properties
@@ -253,39 +254,45 @@ public class ImageSynthesis : MonoBehaviour {
 
 		foreach (var r in renderers)
 		{
-			var layer = r.gameObject.layer;
-			var tag = r.gameObject.tag;
-			SimObj simObj = r.gameObject.GetComponent<SimObj> ();
-			if (simObj == null) {
-				simObj = r.gameObject.GetComponentInParent<SimObj> ();
+			// var layer = r.gameObject.layer;
+			// var tag = r.gameObject.tag;
+
+			string classTag = r.name;
+			string objTag = getUniqueId(r.gameObject);
+
+			SimObj so = r.gameObject.GetComponent<SimObj> ();
+			if (so == null) {
+				so = r.gameObject.GetComponentInParent<SimObj> ();
+			}
+			SimObjPhysics sop = r.gameObject.GetComponent<SimObjPhysics> ();
+			if (sop == null) {
+				sop = r.gameObject.GetComponentInParent<SimObjPhysics> ();
 			}
 
+			if (so != null) {
+				classTag = "" + so.Type;
+				objTag = so.UniqueID;
+			} else if (sop != null) {
+				classTag = "" + sop.Type;
+				objTag = sop.UniqueID;
+			}
 
 			Color classColor;
 			Color objColor;
-			if (simObj == null) {
-				classColor = ColorEncoding.EncodeTagAsColor ("" + r.name);
-				objColor = ColorEncoding.EncodeTagAsColor(getUniqueId(r.gameObject));
-			} else {
-				classColor = ColorEncoding.EncodeTagAsColor ("" + simObj.Type);
-				objColor = ColorEncoding.EncodeTagAsColor ("" + simObj.UniqueID);
-				//Debug.Log ("renderer type " + simObj.Type + " " + simObj.name + " " + simObj.UniqueID + " " + MD5Hash(simObj.UniqueID) + " " + MD5Hash(simObj.UniqueID).GetHashCode());
-			}
+			classColor = ColorEncoding.EncodeTagAsColor (classTag);
+			objColor = ColorEncoding.EncodeTagAsColor(objTag);
 
 			capturePasses [0].camera.WorldToScreenPoint (r.bounds.center);
 
 			//mpb.SetVector ("_Scale", scaleVector);
 			//mpb.SetVector ("_Shift", shiftVector);
 			// Make transparent if light ray.
-			if (simObj != null) {
-				colorIds [objColor] = "" + simObj.UniqueID;
-				colorIds [classColor] = "" + simObj.name;
-				Debug.Log ("colored " + simObj.UniqueID);
+			if (so != null || sop != null) {
+				colorIds [objColor] = objTag;
+				colorIds [classColor] = classTag;
+				// Debug.Log ("colored " + simObj.UniqueID);
 			} else {
 				colorIds [objColor] = r.gameObject.name;
-				if (r.gameObject.name == "Cube.100") {
-					Debug.Log (r.gameObject.name);
-				}
 			}
 
 //			if (r.material.name.ToLower().Contains ("lightray")) {

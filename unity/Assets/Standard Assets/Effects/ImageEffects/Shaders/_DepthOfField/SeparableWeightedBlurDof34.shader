@@ -1,5 +1,3 @@
-// Upgrade NOTE: replaced 'mul(UNITY_MATRIX_MVP,*)' with 'UnityObjectToClipPos(*)'
-
 Shader "Hidden/SeparableWeightedBlurDof34" {
 	Properties {
 		_MainTex ("Base (RGB)", 2D) = "" {}

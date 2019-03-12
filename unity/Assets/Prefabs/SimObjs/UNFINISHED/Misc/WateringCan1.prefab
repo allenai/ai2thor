@@ -16,12 +16,12 @@ GameObject:
   m_ObjectHideFlags: 0
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 100100000}
-  serializedVersion: 4
+  serializedVersion: 5
   m_Component:
-  - 4: {fileID: 4000012950353544}
-  - 33: {fileID: 33000013481273986}
-  - 23: {fileID: 23000014009103384}
-  - 65: {fileID: 65000010730790710}
+  - component: {fileID: 4000012950353544}
+  - component: {fileID: 33000013481273986}
+  - component: {fileID: 23000014009103384}
+  - component: {fileID: 65000010730790710}
   m_Layer: 8
   m_Name: Base
   m_TagString: SimObj
@@ -34,12 +34,12 @@ GameObject:
   m_ObjectHideFlags: 0
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 100100000}
-  serializedVersion: 4
+  serializedVersion: 5
   m_Component:
-  - 4: {fileID: 4000012451584180}
-  - 54: {fileID: 54000013510986658}
-  - 114: {fileID: 114000011189657142}
-  - 114: {fileID: 114000010570623114}
+  - component: {fileID: 4000012451584180}
+  - component: {fileID: 54000013510986658}
+  - component: {fileID: 114000011189657142}
+  - component: {fileID: 114000010570623114}
   m_Layer: 0
   m_Name: WateringCan1
   m_TagString: SimObj
@@ -56,11 +56,11 @@ Transform:
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: -0, y: 0, z: -0}
   m_LocalScale: {x: 1, y: 1, z: 1}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_Children:
   - {fileID: 4000012950353544}
   m_Father: {fileID: 0}
   m_RootOrder: 0
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!4 &4000012950353544
 Transform:
   m_ObjectHideFlags: 1
@@ -70,10 +70,10 @@ Transform:
   m_LocalRotation: {x: -0.7069895, y: 0, z: 0, w: 0.707224}
   m_LocalPosition: {x: 0, y: 0.09, z: 0}
   m_LocalScale: {x: 69.32684, y: 69.32688, z: 69.32685}
-  m_LocalEulerAnglesHint: {x: -89.981, y: 0, z: 0}
   m_Children: []
   m_Father: {fileID: 4000012451584180}
   m_RootOrder: 0
+  m_LocalEulerAnglesHint: {x: -89.981, y: 0, z: 0}
 --- !u!23 &23000014009103384
 MeshRenderer:
   m_ObjectHideFlags: 1
@@ -83,12 +83,15 @@ MeshRenderer:
   m_Enabled: 1
   m_CastShadows: 1
   m_ReceiveShadows: 1
+  m_DynamicOccludee: 1
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
   m_Materials:
   - {fileID: 2100000, guid: 1d58fe309f34b41c9a14c25c8edf414b, type: 2}
-  m_SubsetIndices: 
+  m_StaticBatchInfo:
+    firstSubMesh: 0
+    subMeshCount: 0
   m_StaticBatchRoot: {fileID: 0}
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
@@ -96,12 +99,14 @@ MeshRenderer:
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
-  m_SelectedWireframeHidden: 0
+  m_StitchLightmapSeams: 0
+  m_SelectedEditorRenderState: 3
   m_MinimumChartSize: 4
   m_AutoUVMaxDistance: 0.5
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_SortingLayerID: 0
+  m_SortingLayer: 0
   m_SortingOrder: 0
 --- !u!33 &33000013481273986
 MeshFilter:
@@ -177,6 +182,8 @@ MonoBehaviour:
   Type: 49
   Manipulation: 0
   UseCustomBounds: 0
+  isVisible: 0
   UseWidthSearch: 0
+  hasCollision: 0
   BoundsTransform: {fileID: 0}
   VisibleNow: 0

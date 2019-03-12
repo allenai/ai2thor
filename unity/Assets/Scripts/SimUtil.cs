@@ -16,12 +16,12 @@ public static class SimUtil {
 	public const int RaycastHiddenLayerMask = 1 << RaycastHiddenLayer;
 	public const string ReceptacleTag = "Receptacle";
 	public const string SimObjTag = "SimObj";
-	public const string StructureTag = "Structure";
+	public const string StructureTag = "Structure";// what is this used for?
 	public const float ViewPointRangeHigh = 1f;
 	public const float ViewPointRangeLow = 0f;
 	public const int VisibilityCheckSteps = 10;
 
-    public const float DownwardRangeExtension = 2.0f;//1.45f; changes this so the agent can see low enough to open all drawers
+    public const float DownwardRangeExtension = 2.0f;//1.45f; changed this so the agent can see low enough to open all drawers
 	public const float MinDownwardLooKangle = 15f;
 	public const float MaxDownwardLookAngle = 60f;
 
@@ -431,7 +431,8 @@ public static class SimUtil {
 	}
 
 	//tries to get a SimObj from a collider, returns false if none found
-	public static bool GetSimObjFromCollider (Collider c, out SimObj o) {
+	public static bool GetSimObjFromCollider (Collider c, out SimObj o) 
+    {
 		o = null;
 		if (c.attachedRigidbody == null) {
 			//all sim objs must have a kinematic rigidbody
@@ -525,9 +526,7 @@ public static class SimUtil {
 		UnityEditor.PlayerSettings.displayResolutionDialog = UnityEditor.ResolutionDialogSetting.Disabled;
 		UnityEditor.PlayerSettings.usePlayerLog = true;
 		UnityEditor.PlayerSettings.resizableWindow = false;
-		UnityEditor.PlayerSettings.macFullscreenMode = UnityEditor.MacFullscreenMode.FullscreenWindowWithDockAndMenuBar;
-		UnityEditor.PlayerSettings.d3d11FullscreenMode = UnityEditor.D3D11FullscreenMode.FullscreenWindow;
-		//UnityEditor.PlayerSettings.d3d9FullscreenMode = UnityEditor.D3D9FullscreenMode.FullscreenWindow;
+        UnityEditor.PlayerSettings.fullScreenMode = FullScreenMode.FullScreenWindow;
 		UnityEditor.PlayerSettings.visibleInBackground = false;
 		UnityEditor.PlayerSettings.allowFullscreenSwitch = true;
 
@@ -598,7 +597,7 @@ public static class SimUtil {
 			if (t.name.Contains ("Pivot")) {
 				GameObject prefabParent = null;
 				if (UnityEditor.EditorUtility.IsPersistent (t)) {
-					prefabParent = UnityEditor.PrefabUtility.GetPrefabParent (t) as GameObject;
+					prefabParent = UnityEditor.PrefabUtility.GetCorrespondingObjectFromSource(t.gameObject) as GameObject;
 				}
 				Transform pivot = t;
 				Transform tempParent = pivot.parent;
@@ -618,9 +617,8 @@ public static class SimUtil {
 				pivot.parent = tempParent;
 				if (prefabParent != null) {
 					Debug.Log ("Reconnecting to " + prefabParent.name);
-					//UnityEditor.EditorUtility.ReconnectToLastPrefab (t.gameObject); depricated call, now use PrefabUtility
-                    UnityEditor.PrefabUtility.ReconnectToLastPrefab(t.gameObject);
-				}
+                    UnityEditor.PrefabUtility.RevertPrefabInstance(t.gameObject, UnityEditor.InteractionMode.AutomatedAction);
+                }
 			}
 		}
         UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty (UnityEngine.SceneManagement.SceneManager.GetActiveScene());//(UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene ());
