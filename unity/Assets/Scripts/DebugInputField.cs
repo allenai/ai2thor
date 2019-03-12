@@ -10,7 +10,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		public GameObject Agent = null;
 		public PhysicsRemoteFPSAgentController PhysicsController = null;
         public AgentManager AManager = null;
-		public DiscreteRemoteFPSAgentController PivotController = null;
 
         private InputField debugfield;
         private DebugFPSAgentController dfac;
@@ -41,7 +40,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
             PhysicsController.GetComponent<DebugFPSAgentController>().enabled = true;
 
-            PivotController = Agent.GetComponent<DiscreteRemoteFPSAgentController>();
             debugfield = gameObject.GetComponent<InputField>();
             dfac = Agent.GetComponent<DebugFPSAgentController>();
 
@@ -50,6 +48,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
         // Update is called once per frame
         void Update()
         {
+            #if UNITY_EDITOR || UNITY_WEBGL
             //use these for the Breakable Window demo video
             // if(Input.GetKeyDown(KeyCode.P))
             // {
@@ -234,6 +233,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     }
                 }
             }
+            #endif
         }
 
         public void Execute(string command)
@@ -348,18 +348,18 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         break;
                     }
 
-                case "place":
+                case "put":
                     {
                         ServerAction action = new ServerAction();
-                        action.action = "PlaceHeldObject";
+                        action.action = "PutObject";
                         
                         if(splitcommand.Length == 2)
                         {
-                            action.objectId = splitcommand[1];
+                            action.receptacleObjectId = splitcommand[1];
                         }
 
                         else
-                            action.objectId = PhysicsController.UniqueIDOfClosestReceptacleObject();
+                            action.receptacleObjectId = PhysicsController.UniqueIDOfClosestReceptacleObject();
                             
                         //set this to false if we want to place it and let physics resolve by having it fall a short distance into position
 

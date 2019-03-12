@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -83,15 +83,8 @@ public class AgentManager : MonoBehaviour
 	private void initializePrimaryAgent() {
 
 		GameObject fpsController = GameObject.Find("FPSController");
-		DiscreteRemoteFPSAgentController discreteAgent = fpsController.GetComponent<DiscreteRemoteFPSAgentController>();
 		PhysicsRemoteFPSAgentController physicsAgent = fpsController.GetComponent<PhysicsRemoteFPSAgentController>();
-		if (isPhysicsScene()) {
-			discreteAgent.enabled = false;
-			primaryAgent = physicsAgent;
-		} else {
-			physicsAgent.enabled = false;
-			primaryAgent = discreteAgent;
-		}
+		primaryAgent = physicsAgent;
 		primaryAgent.enabled = true;
 	}
 	
@@ -116,11 +109,11 @@ public class AgentManager : MonoBehaviour
 
 	private IEnumerator addAgents(ServerAction action) {
 		yield return null;
-		Vector3[] reachablePositions = primaryAgent.getReachablePositions();
+		Vector3[] reachablePositions = primaryAgent.getReachablePositions(2.0f);
 		for (int i = 1; i < action.agentCount && this.agents.Count < Math.Min(agentColors.Length, action.agentCount); i++) {
-			action.x = reachablePositions[i + 1].x;
-			action.y = reachablePositions[i + 1].y;
-			action.z = reachablePositions[i + 1].z;
+			action.x = reachablePositions[i + 4].x;
+			action.y = reachablePositions[i + 4].y;
+			action.z = reachablePositions[i + 4].z;
 			addAgent (action);
 			yield return null; // must do this so we wait a frame so that when we CapsuleCast we see the most recently added agent
 		}
@@ -233,7 +226,6 @@ public class AgentManager : MonoBehaviour
 
 
     private void LateUpdate() {
-
 		int completeCount = 0;
 		foreach (BaseFPSAgentController agent in this.agents) {
 			if (agent.actionComplete) {
@@ -368,10 +360,12 @@ public class AgentManager : MonoBehaviour
 		}
 	}
 
+
 	private IEnumerator EmitFrame() {
 
 
 		frameCounter += 1;
+
 
 		// we should only read the screen buffer after rendering is complete
 		yield return new WaitForEndOfFrame();
@@ -401,7 +395,6 @@ public class AgentManager : MonoBehaviour
 				this.agents.ToArray () [i - 1].m_Camera.enabled = false;
 			}
 			agent.m_Camera.enabled = true;
-			yield return new WaitForEndOfFrame();
 			MetadataWrapper metadata = agent.generateMetadataWrapper ();
 			metadata.agentId = i;
 			// we don't need to render the agent's camera for the first agent
@@ -442,7 +435,6 @@ public class AgentManager : MonoBehaviour
 	private BaseFPSAgentController activeAgent() {
 		return this.agents.ToArray () [activeAgentId];
 	}
-
 
 	private void ProcessControlCommand(string msg)
 	{
@@ -697,8 +689,6 @@ public class ServerAction
 	public float visibilityDistance;
 	public bool continuousMode;
 	public bool uniquePickupableObjectTypes; // only allow one of each object type to be visible
-	public ReceptacleObjectList[] receptacleObjects;
-	public ReceptacleObjectPair[] excludeReceptacleObjectPairs;
 	public float removeProb;
 	public int maxNumRepeats;
 	public bool randomizeObjectAppearance;
@@ -708,7 +698,7 @@ public class ServerAction
 	public bool renderObjectImage;
 	public bool renderNormalsImage;
 	public float cameraY;
-	public bool placeStationary; //when placing/spawning an object, do we spawn it stationary (kinematic true) or spawn and let physics resolve final position
+	public bool placeStationary = true; //when placing/spawning an object, do we spawn it stationary (kinematic true) or spawn and let physics resolve final position
 	public string ssao = "default";
 	public SimObjType ReceptableSimObjType()
 	{
@@ -732,21 +722,7 @@ public class ServerAction
 
 }
 
-[Serializable]
-public class ReceptacleObjectPair
-{
-	public string receptacleObjectId;
-	public string objectId;
-	public int pivot;
-}
 
-
-[Serializable]
-public class ReceptacleObjectList
-{
-	public string receptacleObjectType;
-	public string[] itemObjectTypes;
-}
 
 public enum ServerActionErrorCode  {
 	Undefined,

@@ -395,12 +395,7 @@ class Controller(object):
             max_num_repeats=1,
             remove_prob=0.5):
 
-        receptacle_objects = []
 
-        for rec_obj_type, object_types in RECEPTACLE_OBJECTS.items():
-            receptacle_objects.append(
-                dict(receptacleObjectType=rec_obj_type, itemObjectTypes=list(object_types))
-            )
         if random_seed is None:
             random_seed = random.randint(0, 2**32)
 
@@ -417,7 +412,6 @@ class Controller(object):
 
         return self.step(dict(
             action='RandomInitialize',
-            receptacleObjects=receptacle_objects,
             randomizeOpen=randomize_open,
             uniquePickupableObjectTypes=unique_object_types,
             excludeObjectIds=exclude_object_ids,
@@ -482,6 +476,10 @@ class Controller(object):
                     current_buffer = ''
 
     def interact(self):
+
+        if not sys.stdout.isatty():
+            raise RuntimeError("controller.interact() must be run from a terminal")
+
         default_interact_commands = {
             '\x1b[C': dict(action='MoveRight', moveMagnitude=0.25),
             '\x1b[D': dict(action='MoveLeft', moveMagnitude=0.25),
@@ -506,7 +504,7 @@ class Controller(object):
             command_counter = dict(counter=1)
 
             def add_command(cc, action, **args):
-                if cc['counter'] < 10:
+                if cc['counter'] < 15:
                     com = dict(action=action)
                     com.update(args)
                     new_commands[str(cc['counter'])] = com
@@ -528,10 +526,10 @@ class Controller(object):
                         add_command(command_counter, 'ToggleObjectOff', objectId=o['objectId'])
 
                     if len(event.metadata['inventoryObjects']) > 0:
-                        if o['receptacle'] and (not o['openable'] or o['isopen']):
-                            inventoryObjectId = event.metadata['inventoryObjects'][0]['objectId']
+                        inventoryObjectId = event.metadata['inventoryObjects'][0]['objectId']
+                        if o['receptacle'] and (not o['openable'] or o['isopen']) and inventoryObjectId != o['objectId']:
                             add_command(command_counter, 'PutObject', objectId=inventoryObjectId, receptacleObjectId=o['objectId'])
-                            add_command(command_counter, 'MoveHandForward', moveMagnitude=0.1)
+                            add_command(command_counter, 'MoveHandAhead', moveMagnitude=0.1)
                             add_command(command_counter, 'MoveHandBack', moveMagnitude=0.1)
                             add_command(command_counter, 'MoveHandRight', moveMagnitude=0.1)
                             add_command(command_counter, 'MoveHandLeft', moveMagnitude=0.1)
@@ -584,11 +582,6 @@ class Controller(object):
             if obj_metadata is None or obj_metadata['isopen'] == (action['action'] == 'OpenObject'):
                 should_fail = True
 
-        elif action['action'] == 'PutObject':
-            receptacle_type = action['receptacleObjectId'].split('|')[0]
-            object_type = action['objectId'].split('|')[0]
-            if object_type not in RECEPTACLE_OBJECTS[receptacle_type]:
-                should_fail = True
 
         rotation = action.get('rotation')
         if rotation is not None and type(rotation) != dict:
