@@ -1,7 +1,7 @@
 # AI2-THOR Version 1.0 Release Notes
 
 ## IMPORTANT NOTICE
-Note that AI2-THOR 1.0 is NOT backwards compatible with previous versions due to the nature of an entirely reworked backend in the framework.
+Note that AI2-THOR 1.0 is not fully backwards compatible with previous versions due to some reworked architecture in the framework. For example, some object types have been deprecated (PaintingHanger), new object types have been introduced (Spatula), and certain actions (PutObject) now use entirely different logic to be compatible with physics. Several scenes have also had their layout re-arranged, so objects are not guaranteed to be found in their same position, and the entire room itself might be different.
 
 ## All Sim Objects Now Have Full Collision and Physics Interactions
 All Sim Objects now have collision based physics behavior and accurate collision geometry. There are many implications to this:
