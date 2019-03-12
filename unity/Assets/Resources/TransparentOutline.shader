@@ -1,11 +1,12 @@
 ﻿Shader "Custom/TransparentOutline"
 {
     Properties {
-        _Color ("Main Color", Color) = (.5,.5,.5,1)
+        _Color ("Main Color", Color) = (.5,.5,.5,0)
         _OutlineColor ("Outline Color", Color) = (1,1,1,0.3)
         _Outline ("Outline width", Range (0.0, 0.03)) = .005
-        _MainTex ("Base (RGB)", 2D) = "white" { }
+        _MainTex ("Albedo", 2D) = "white" { }
         _BumpMap ("Bumpmap", 2D) = "bump" {}
+        
     }
  
     CGINCLUDE

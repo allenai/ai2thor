@@ -267,11 +267,12 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 			{
 				SimObjPhysics colsop = col.transform.GetComponentInParent<SimObjPhysics>();
 
-				if(colsop.PrimaryProperty == SimObjPrimaryProperty.CanPickup)
+				if(colsop.PrimaryProperty == SimObjPrimaryProperty.CanPickup || colsop.PrimaryProperty == SimObjPrimaryProperty.Moveable)
 				{
 					Rigidbody rb = colsop.transform.GetComponent<Rigidbody>();
-					rb.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
 					rb.isKinematic = false;
+					rb.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
+
 				}
 			}
 
@@ -444,6 +445,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		Rigidbody rb = gameObject.GetComponent<Rigidbody>();
 		if((rb.IsSleeping() == true) && (rb.collisionDetectionMode == CollisionDetectionMode.ContinuousDynamic))
 		{
+			//print("settling");
 			rb.collisionDetectionMode = CollisionDetectionMode.Discrete;
 		}
 	}
@@ -458,6 +460,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 	{
 		Vector3 dir = new Vector3(action.x, action.y, action.z);
 		Rigidbody myrb = gameObject.GetComponent<Rigidbody>();
+		myrb.isKinematic = false;
 		myrb.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
 		myrb.AddForce(dir * action.moveMagnitude);
 	}
@@ -1625,12 +1628,12 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		{
 			Transform Colliders = transform.Find("Colliders");
 
-			List<GameObject> listColliders = new List<GameObject>();
+			List<Collider> listColliders = new List<Collider>();
 
 			foreach (Transform child in Colliders)
 			{
 				//list.toarray
-				listColliders.Add(child.gameObject);
+				listColliders.Add(child.GetComponent<Collider>());
 
 				//set correct tag and layer for each object
 				//also ensure all colliders are NOT trigger
@@ -1645,7 +1648,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 
 			}
 
-			//MyColliders = listColliders.ToArray();
+			MyColliders = listColliders.ToArray();
 		}
 	}
 

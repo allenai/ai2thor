@@ -1,11 +1,13 @@
-import pprint
 import os
 import datetime
 import zipfile
 import threading
 import hashlib
+import shutil
 import subprocess
+import pprint
 from invoke import task
+import boto3
 
 S3_BUCKET = 'ai2-thor'
 UNITY_VERSION = '2018.3.6f1'
@@ -18,14 +20,20 @@ def add_files(zipf, start_dir):
             # print("adding %s" % arcname)
             zipf.write(fn, arcname)
 
-def push_build(build_archive_name):
+def push_build(build_archive_name, archive_sha256):
     import boto3
     #subprocess.run("ls %s" % build_archive_name, shell=True)
     #subprocess.run("gsha256sum %s" % build_archive_name)
     s3 = boto3.resource('s3')
-    key = 'builds/%s' % (os.path.basename(build_archive_name),)
+    archive_base = os.path.basename(build_archive_name)
+    key = 'builds/%s' % (archive_base,)
 
-    s3.Object(S3_BUCKET, key).put(Body=open(build_archive_name, 'rb'), ACL="public-read")
+    sha256_key = 'builds/%s.sha256' % (os.path.splitext(archive_base)[0],)
+
+    with open(build_archive_name, 'rb') as af:
+        s3.Object(S3_BUCKET, key).put(Body=af, ACL="public-read")
+
+    s3.Object(S3_BUCKET, sha256_key).put(Body=archive_sha256, ACL="public-read", ContentType='text/plain')
     print("pushed build %s to %s" % (S3_BUCKET, build_archive_name))
 
 
@@ -43,7 +51,7 @@ def _webgl_local_build_path(prefix, source_dir='builds'):
     )
 
 
-def _build(context, unity_path, arch, build_dir, build_name, env={}):
+def _build(unity_path, arch, build_dir, build_name, env={}):
     project_path = os.path.join(os.getcwd(), unity_path)
     unity_hub_path = "/Applications/Unity/Hub/Editor/{}/Unity.app/Contents/MacOS/Unity".format(
         UNITY_VERSION
@@ -55,9 +63,156 @@ def _build(context, unity_path, arch, build_dir, build_name, env={}):
         unity_path = unity_hub_path
     command = "%s -quit -batchmode -logFile build.log -projectpath %s -executeMethod Build.%s" % (unity_path, project_path, arch)
     target_path = os.path.join(build_dir, build_name)
-    print(target_path)
 
-    return context.run(command, warn=True, env=dict(UNITY_BUILD_NAME=target_path, **env))
+    full_env = os.environ.copy()
+    full_env.update(env)
+    full_env['UNITY_BUILD_NAME'] = target_path
+    subprocess.check_call(command, shell=True, env=full_env)
+
+def class_dataset_images_for_scene(scene_name):
+    import ai2thor.controller
+    from itertools import product
+    from collections import defaultdict
+    import numpy as np
+    import cv2
+    import hashlib
+    import json
+
+    env = ai2thor.controller.Controller(quality='Low')
+    player_size = 300
+    zoom_size = 1000
+    target_size = 256
+    rotations = [0, 90, 180, 270]
+    horizons = [330,  0, 30]
+    buffer = 15
+    # object must be at least 40% in view
+    min_size = ((target_size * 0.4)/zoom_size) * player_size
+
+    env.start(player_screen_width=player_size, player_screen_height=player_size)
+    env.reset(scene_name)
+    event = env.step(dict(action='Initialize', gridSize=0.25, renderObjectImage=True, renderClassImage=False, renderImage=False))
+
+    for o in event.metadata['objects']:
+        if o['receptacle'] and o['receptacleObjectIds'] and o['openable']:
+            print("opening %s" % o['objectId'])
+            env.step(dict(action='OpenObject', objectId=o['objectId'], forceAction=True))
+
+    event = env.step(dict(action='GetReachablePositions', gridSize=0.25))
+    
+    visible_object_locations = []
+    for point in event.metadata['actionReturn']:
+        for rot, hor in product(rotations, horizons):
+            exclude_colors = set(map(tuple, np.unique(event.instance_segmentation_frame[0], axis=0)))
+            exclude_colors.update(set(map(tuple, np.unique(event.instance_segmentation_frame[:, -1, :], axis=0))))
+            exclude_colors.update(set(map(tuple, np.unique(event.instance_segmentation_frame[-1], axis=0))))
+            exclude_colors.update(set(map(tuple, np.unique(event.instance_segmentation_frame[:, 0, :], axis=0))))
+
+            event = env.step(dict( action='TeleportFull', x=point['x'], y=point['y'], z=point['z'], rotation=rot, horizon=hor, forceAction=True), raise_for_failure=True) 
+
+            visible_objects = []
+
+            for o in event.metadata['objects']:
+
+                if o['visible'] and o['objectId'] and o['pickupable']:
+                    color = event.object_id_to_color[o['objectId']]
+                    mask = (event.instance_segmentation_frame[:,:,0] == color[0]) & (event.instance_segmentation_frame[:,:,1] == color[1]) &\
+                        (event.instance_segmentation_frame[:,:,2] == color[2])
+                    points = np.argwhere(mask)
+
+                    if len(points) > 0:
+                        min_y = int(np.min(points[:,0]))
+                        max_y = int(np.max(points[:,0]))
+                        min_x = int(np.min(points[:,1]))
+                        max_x = int(np.max(points[:,1]))
+                        max_dim = max((max_y - min_y), (max_x - min_x))
+                        if max_dim > min_size and min_y > buffer and min_x > buffer and max_x < (player_size - buffer) and max_y < (player_size - buffer):
+                            visible_objects.append(dict(objectId=o['objectId'],min_x=min_x, min_y=min_y, max_x=max_x, max_y=max_y))
+                            print("[%s] including object id %s %s" % (scene_name, o['objectId'], max_dim))
+
+
+
+
+            if visible_objects:
+                visible_object_locations.append(dict(point=point, rot=rot, hor=hor, visible_objects=visible_objects))
+
+    env.stop()
+    env = ai2thor.controller.Controller()
+    env.start(player_screen_width=zoom_size, player_screen_height=zoom_size)
+    env.reset(scene_name)
+    event = env.step(dict(action='Initialize', gridSize=0.25))
+
+    for o in event.metadata['objects']:
+        if o['receptacle'] and o['receptacleObjectIds'] and o['openable']:
+            print("opening %s" % o['objectId'])
+            env.step(dict(action='OpenObject', objectId=o['objectId'], forceAction=True))
+
+    for vol in visible_object_locations:
+        point = vol['point']
+        
+        event = env.step(dict( action='TeleportFull', x=point['x'], y=point['y'], z=point['z'],rotation=vol['rot'], horizon=vol['hor'], forceAction=True), raise_for_failure=True)
+        for v in vol['visible_objects']:
+            object_id = v['objectId']
+            min_y = int(round(v['min_y'] * (zoom_size/player_size)))
+            max_y = int(round(v['max_y'] * (zoom_size/player_size)))
+            max_x = int(round(v['max_x'] * (zoom_size/player_size)))
+            min_x = int(round(v['min_x'] * (zoom_size/player_size)))
+            delta_y = max_y - min_y
+            delta_x = max_x - min_x
+            scaled_target_size = max(delta_x, delta_y, target_size) + buffer * 2
+            if min_x > (zoom_size - max_x):
+                start_x = min_x - (scaled_target_size - delta_x)
+                end_x = max_x + buffer
+            else:
+                end_x = max_x + (scaled_target_size - delta_x )
+                start_x = min_x - buffer
+
+            if min_y > (zoom_size - max_y):
+                start_y = min_y - (scaled_target_size - delta_y)
+                end_y = max_y + buffer
+            else:
+                end_y = max_y + (scaled_target_size - delta_y)
+                start_y = min_y - buffer
+
+            #print("max x %s max y %s min x %s  min y %s" % (max_x, max_y, min_x, min_y))
+            #print("start x %s start_y %s end_x %s end y %s" % (start_x, start_y, end_x, end_y))
+            print("storing %s " % object_id)
+            img = event.cv2img[start_y: end_y, start_x:end_x, :]
+            seg_img = event.cv2img[min_y: max_y, min_x:max_x, :]
+            dst = cv2.resize(img, (target_size, target_size), interpolation = cv2.INTER_LANCZOS4)
+
+            object_type = object_id.split('|')[0].lower()
+            target_dir = os.path.join("images", scene_name, object_type)
+            h = hashlib.md5()
+            h.update(json.dumps(point, sort_keys=True).encode('utf8'))
+            h.update(json.dumps(v, sort_keys=True).encode('utf8'))
+
+            os.makedirs(target_dir,exist_ok=True)
+
+            cv2.imwrite(os.path.join(target_dir, h.hexdigest() + ".png"), dst)
+
+    env.stop()
+
+    return scene_name
+
+@task
+def build_class_dataset(context):
+    import concurrent.futures 
+    import ai2thor.controller
+    import multiprocessing as mp
+    mp.set_start_method('spawn')
+
+    controller = ai2thor.controller.Controller()
+    executor = concurrent.futures.ProcessPoolExecutor(max_workers=4)
+    futures = []
+
+    for scene in controller.scene_names():
+        print("processing scene %s" % scene)
+        futures.append(executor.submit(class_dataset_images_for_scene, scene))
+
+    for f in concurrent.futures.as_completed(futures):
+        scene = f.result()
+        print("scene name complete: %s" % scene)
+
 
 
 def local_build_name(prefix, arch):
@@ -67,14 +222,14 @@ def local_build_name(prefix, arch):
 def local_build(context, prefix='local', arch='OSXIntel64'):
     build_name = local_build_name(prefix, arch)
     fetch_source_textures(context)
-    if _build(context, 'unity', arch, "builds", build_name):
+    if _build('unity', arch, "builds", build_name):
         print("Build Successful")
     else:
         print("Build Failure")
     generate_quality_settings(context)
 
 @task
-def webgl_build(context, scenes="", room_ranges=None, directory="builds", prefix='local'):
+def webgl_build(context, scenes="", room_ranges=None, directory="builds", prefix='local', verbose=False):
     """
     Creates a WebGL build
     :param context:
@@ -87,11 +242,8 @@ def webgl_build(context, scenes="", room_ranges=None, directory="builds", prefix
     build_name = local_build_name(prefix, arch)
     fetch_source_textures(context)
     if room_ranges is not None:
-        # number_ranges = [["FloorPlan{}_physics".format(i) for i in range(tuple([int(y) for y in x.split("-")]))] for x in room_ranges.split(",")]
-        #
-        # [tuple(int(y) for y in x.split("-")) for x in room_ranges.split(",")]
-        print(room_ranges)
-        print([list(range(*tuple(int(y) for y in x.split("-")))) for x in room_ranges.split(",")])
+        # print(room_ranges)
+        # print([list(range(*tuple(int(y) for y in x.split("-")))) for x in room_ranges.split(",")])
         floor_plans = ["FloorPlan{}_physics".format(i) for i in
             reduce(
                 lambda x, y: x + y,
@@ -102,17 +254,69 @@ def webgl_build(context, scenes="", room_ranges=None, directory="builds", prefix
                 )
             )
          ]
-        print(floor_plans)
+
+        # print(floor_plans)
         scenes = ",".join(floor_plans)
+    if verbose:
+        print(scenes)
 
-
-    print(scenes)
-
-    if _build(context, 'unity', arch, directory, build_name, env=dict(SCENE=scenes)):
+    if _build('unity', arch, directory, build_name, env=dict(SCENE=scenes)):
         print("Build Successful")
     else:
         print("Build Failure")
     generate_quality_settings(context)
+    build_path = _webgl_local_build_path(prefix, directory)
+
+    rooms = {
+        "kitchens": {
+            "name": "Kitchens",
+            "roomRanges": range(1, 31)
+        },
+        "livingRooms": {
+            "name": "Living Rooms",
+            "roomRanges": range(201, 231)
+        },
+        "bedrooms": {
+            "name": "Bedrooms",
+            "roomRanges": range(301, 331)
+        },
+        "bathrooms": {
+            "name": "Bathrooms",
+            "roomRanges": range(401, 431)
+        },
+        "foyers": {
+            "name": "Foyers",
+            "roomRanges": range(501, 531)
+        }
+    }
+
+    room_type_by_id = {}
+    scene_metadata = {}
+    for room_type, room_data in rooms.items():
+        for room_num in room_data["roomRanges"]:
+            room_id = "FloorPlan{}_physics".format(room_num)
+            room_type_by_id[room_id] = {
+                "type": room_type,
+                "name": room_data["name"]
+            }
+
+    for scene_name in scenes.split(","):
+        room_type = room_type_by_id[scene_name]
+        if room_type["type"] not in scene_metadata:
+            scene_metadata[room_type["type"]] = {
+                "scenes": [],
+                "name": room_type["name"]
+            }
+
+        scene_metadata[room_type["type"]]["scenes"].append(scene_name)
+
+    if verbose:
+        print(scene_metadata)
+
+    import json
+    with open(os.path.join(build_path, "scenes.json"), 'w') as f:
+        f.write(json.dumps(scene_metadata, sort_keys=False, indent=4))
+
 
 @task
 def generate_quality_settings(ctx):
@@ -200,7 +404,7 @@ def archive_push(unity_path, build_path, build_dir, build_info):
     zipf.close()
 
     build_info['sha256'] = build_sha256(archive_name)
-    push_build(archive_name)
+    push_build(archive_name, build_info['sha256'])
     print("Build successful")
     threading.current_thread().success = True
 
@@ -212,9 +416,118 @@ def pre_test(context):
     os.makedirs('unity/builds/%s' % c.build_name())
     shutil.move(os.path.join('unity', 'builds', c.build_name() + '.app'), 'unity/builds/%s' % c.build_name())
 
+
+def clean():
+    subprocess.check_call("git reset --hard", shell=True)
+    subprocess.check_call("git clean -f -x", shell=True)
+    shutil.rmtree("unity/builds", ignore_errors=True)
+
+    if os.path.isfile('build.log'):
+        os.unlink('build.log')
+
+@task
+def ci_build(context, branch):
+    import fcntl
+
+
+    lock_f = open(os.path.join(os.environ['HOME'], ".ci-build.lock"), "w")
+
+    try:
+        fcntl.flock(lock_f, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        clean()
+        subprocess.check_call("git checkout %s" % branch, shell=True)
+        subprocess.check_call("git pull origin %s" % branch, shell=True)
+
+        procs = []
+        for arch in ['OSXIntel64', 'Linux64']:
+            p = ci_build_arch(arch, branch)
+            procs.append(p)
+
+        for p in procs:
+            if p:
+                p.join()
+
+        fcntl.flock(lock_f, fcntl.LOCK_UN)
+
+    except BlockingIOError as e:
+        pass
+
+    lock_f.close()
+
+def ci_build_arch(arch, branch):
+    from multiprocessing import Process
+    import subprocess
+    import boto3
+    import ai2thor.downloader
+
+    github_url = "https://github.com/allenai/ai2thor"
+
+    commit_id = subprocess.check_output("git log -n 1 --format=%H", shell=True).decode('ascii').strip()
+
+    if ai2thor.downloader.commit_build_exists(arch, commit_id):
+        print("found build for commit %s %s" % (commit_id, arch))
+        return
+
+    build_url_base = 'http://s3-us-west-2.amazonaws.com/%s/' % S3_BUCKET
+    unity_path = 'unity'
+    build_name = "thor-%s-%s" % (arch, commit_id)
+    build_dir = os.path.join('builds', build_name)
+    build_path = build_dir + ".zip"
+    build_info = {}
+
+    build_info['url'] = build_url_base + build_path
+
+    build_exception = ''
+    proc = None
+    try:
+        _build(unity_path, arch, build_dir, build_name)
+
+        print("pushing archive")
+        proc = Process(target=archive_push, args=(unity_path, build_path, build_dir, build_info))
+        proc.start()
+
+    except Exception as e:
+        print("Caught exception %s" % e)
+        build_exception = "Exception building: %s" % e
+
+    with open("build.log") as f:
+        build_log = f.read() + "\n" + build_exception
+
+    build_log_key = 'builds/%s.log' % (build_name,)
+    s3 = boto3.resource('s3')
+    s3.Object(S3_BUCKET, build_log_key).put(Body=build_log, ACL="public-read", ContentType='text/plain')
+
+    return proc
+
+
+@task
+def poll_ci_build(context):
+    from ai2thor.build import platform_map
+    import ai2thor.downloader
+    import time
+    commit_id = subprocess.check_output("git log -n 1 --format=%H", shell=True).decode('ascii').strip()
+    for i in range(30):
+        missing = False
+        for arch in platform_map.keys():
+            if ai2thor.downloader.commit_build_log_exists(arch, commit_id):
+                print("log exists %s" % commit_id)
+            else:
+                missing = True
+        time.sleep(30)
+        if not missing:
+            break
+
+    for arch in platform_map.keys():
+        if not ai2thor.downloader.commit_build_exists(arch, commit_id):
+            print("Build log url: %s" % ai2thor.downloader.commit_build_log_url(arch, commit_id))
+            raise Exception("Failed to build %s for commit: %s " % (arch, commit_id))
+
+
 @task
 def build(context, local=False):
     from multiprocessing import Process
+    from ai2thor.build import platform_map
+
     version = datetime.datetime.now().strftime('%Y%m%d%H%M')
     build_url_base = 'http://s3-us-west-2.amazonaws.com/%s/' % S3_BUCKET
 
@@ -223,9 +536,6 @@ def build(context, local=False):
     threads = []
     dp = Process(target=build_docker, args=(version,))
     dp.start()
-
-    #for arch in ['OSXIntel64']:
-    platform_map = dict(Linux64="Linux", OSXIntel64="Darwin")
 
     for arch in platform_map.keys():
         unity_path = 'unity'
@@ -236,14 +546,10 @@ def build(context, local=False):
 
         build_info['url'] = build_url_base + build_path
 
-        x = _build(context, unity_path, arch, build_dir, build_name)
-
-        if x:
-            t = threading.Thread(target=archive_push, args=(unity_path, build_path, build_dir, build_info))
-            t.start()
-            threads.append(t)
-        else:
-            raise Exception("Build Failure")
+        build(unity_path, arch, build_dir, build_name)
+        t = threading.Thread(target=archive_push, args=(unity_path, build_path, build_dir, build_info))
+        t.start()
+        threads.append(t)
 
     dp.join()
 
@@ -454,9 +760,36 @@ def benchmark(ctx, screen_width=600, screen_height=600, editor_mode=False, out='
 
     env.stop()
 
+def list_objects_with_metadata(bucket):
+    keys = {}
+    s3c = boto3.client('s3')
+    continuation_token = None
+    while True:
+        if continuation_token:
+            objects = s3c.list_objects_v2(Bucket=bucket, ContinuationToken=continuation_token)
+        else:
+            objects = s3c.list_objects_v2(Bucket=bucket)
+
+        for i in objects.get('Contents', []):
+            keys[i['Key']] = i
+
+        if 'NextContinuationToken' in objects:
+            continuation_token = objects['NextContinuationToken']
+        else:
+            break
+
+    return keys
+
+def s3_etag_data(data):
+    h = hashlib.md5()
+    h.update(data)
+    return '"' + h.hexdigest() + '"'
+
+
+cache_seconds = 31536000
 @task
-def webgl_deploy(ctx, prefix='local', source_dir='builds', target_dir='', verbose=False):
-    import boto3
+def webgl_deploy(ctx, prefix='local', source_dir='builds', target_dir='', verbose=False, force=False):
+
     from os.path import isfile, join, isdir
 
     content_types = {
@@ -479,6 +812,14 @@ def webgl_deploy(ctx, prefix='local', source_dir='builds', target_dir='', verbos
     bucket_name = 'ai2-thor-webgl'
     s3 = boto3.resource('s3')
 
+    current_objects = list_objects_with_metadata(bucket_name)
+
+    no_cache_extensions = {
+        ".txt",
+        ".html",
+        ".json"
+    }
+
     if verbose:
         print("Deploying to: {}/{}".format(bucket_name, target_dir))
 
@@ -495,15 +836,32 @@ def webgl_deploy(ctx, prefix='local', source_dir='builds', target_dir='', verbos
         _, ext = os.path.splitext(f_path)
         if verbose:
             print("'{}'".format(key))
+
         with open(f_path, 'rb') as f:
+            file_data = f.read()
+            etag = s3_etag_data(file_data)
             kwargs = {}
             if ext in content_encoding:
                 kwargs['ContentEncoding'] = content_encoding[ext]
+
+            if not force and key in current_objects and etag == current_objects[key]['ETag']:
+                if verbose:
+                    print("ETag match - skipping %s" % key)
+                return
+
             if ext in content_types:
+                cache = 'no-cache, no-store, must-revalidate' if ext in no_cache_extensions else 'public, max-age={}'.format(
+                    cache_seconds
+                )
+                now = datetime.datetime.utcnow()
+                expires = now if ext == '.html' or ext == '.txt' else now + datetime.timedelta(
+                    seconds=cache_seconds)
                 s3.Object(bucket_name, key).put(
-                    Body=f.read(),
+                    Body=file_data,
                     ACL="public-read",
                     ContentType=content_types[ext],
+                    CacheControl=cache,
+                    Expires=expires,
                     **kwargs
                 )
             else:
@@ -522,7 +880,25 @@ def webgl_deploy(ctx, prefix='local', source_dir='builds', target_dir='', verbos
 
 
 @task
-def deploy_webgl_all(ctx, verbose=False, individual_rooms=False):
+def webgl_build_deploy_demo(ctx, verbose=False, force=False):
+    webgl_build(ctx, room_ranges="1-30,201-230,301-330,401-430,501-530")
+    webgl_deploy(ctx, verbose=verbose, force=force)
+
+    if verbose:
+        print("Deployed all scenes to bucket's root.")
+
+    demo_selected_scene_indices = [
+        1, 3, 7, 29, 30, 204, 209, 221, 224, 227, 301, 302, 308, 326, 330, 401, 403, 411, 422, 430
+    ]
+    scenes = ["FloorPlan{}_physics".format(x) for x in demo_selected_scene_indices]
+    webgl_build(ctx, scenes=",".join(scenes), directory="builds/demo")
+    webgl_deploy(ctx, source_dir="builds/demo", target_dir="demo", verbose=verbose, force=force)
+
+    if verbose:
+        print("Deployed selected scenes to bucket's 'demo' directory")
+
+@task
+def webgl_deploy_all(ctx, verbose=False, individual_rooms=False):
 
     rooms = {
         "kitchens": (1, 30),

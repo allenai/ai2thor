@@ -178,11 +178,11 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 		private void LateUpdate()
 		{
-			//make sure this happens in late update so all physics related checks are done ahead of time
-			//this is also mostly for in editor, the array of visible sim objects is found via server actions
-			//using VisibleSimObjs(action), so be aware of that
+            //make sure this happens in late update so all physics related checks are done ahead of time
+            //this is also mostly for in editor, the array of visible sim objects is found via server actions
+            //using VisibleSimObjs(action), so be aware of that
 
-            #if UNITY_EDITOR
+            #if UNITY_EDITOR || UNITY_WEBGL
             if (this.actionComplete && !FlightMode) {
                 ServerAction action = new ServerAction();
                 VisibleSimObjPhysics = VisibleSimObjs(action);//GetAllVisibleSimObjPhysics(m_Camera, maxVisibleDistance);
@@ -1330,6 +1330,14 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
         public void PushObject(ServerAction action)
         {
+            if(ItemInHand != null && action.objectId == ItemInHand.GetComponent<SimObjPhysics>().uniqueID)
+            {
+                errorMessage = "Please use Throw for an item in the Agent's Hand";
+                Debug.Log(errorMessage);
+                actionFinished(false);
+                return;
+            }
+            
             action.z = 1;
 
             if(action.moveMagnitude == 0f)
@@ -1342,6 +1350,14 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
         public void PullObject(ServerAction action)
         {
+            if(ItemInHand != null && action.objectId == ItemInHand.GetComponent<SimObjPhysics>().uniqueID)
+            {
+                errorMessage = "Please use Throw for an item in the Agent's Hand";
+                Debug.Log(errorMessage);
+                actionFinished(false);
+                return;
+            }
+
             action.z = -1;
 
             if(action.moveMagnitude == 0f)
@@ -1753,8 +1769,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
             // This has to be after the above as the contactPointsDictionary is only
             // updated while rb is not kinematic.
-            rb.isKinematic = true;
             rb.collisionDetectionMode = oldCollisionDetectionMode;
+            rb.isKinematic = true;
 
             if (handObjectIsColliding) {
                 AgentHand.transform.position = initialPosition;
@@ -2167,6 +2183,11 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
         public void InitialRandomSpawn (ServerAction action)
         {
+            if(AgentHand != null)
+            {
+               ItemInHand = null;
+            }
+
             PhysicsSceneManager script = GameObject.Find("PhysicsSceneManager").GetComponent<PhysicsSceneManager>();
 
             bool success = script.RandomSpawnRequiredSceneObjects(action.randomSeed, action.forceVisible, action.maxNumRepeats, action.placeStationary);
@@ -2524,7 +2545,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			actionFinished (true);
 		}
 
-		public void DropHandObject(ServerAction action)
+		public bool DropHandObject(ServerAction action)
         {
             //make sure something is actually in our hands
             if (ItemInHand != null)
@@ -2536,7 +2557,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     errorMessage = ItemInHand.transform.name + " can't be dropped. It must be clear of all other objects first";
                     Debug.Log(errorMessage);
 				 	actionFinished(false);
-				 	return;
+				 	return false;
                 } 
 
 				else 
@@ -2565,7 +2586,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     DropContainedObjects(ItemInHand.GetComponent<SimObjPhysics>());
                     StartCoroutine (checkDropHandObjectAction (ItemInHand.GetComponent<SimObjPhysics>()));
                     ItemInHand = null;
-                    return;
+                    return true;
                 }
             }
 
@@ -2574,7 +2595,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 errorMessage = "nothing in hand to drop!";
                 Debug.Log(errorMessage);
 				actionFinished(false);
-				return;
+				return false;
             }         
         }  
 
@@ -2592,17 +2613,19 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 			GameObject go = ItemInHand;
 
-			DropHandObject(action);
+			if(DropHandObject(action))
+            {
+                ServerAction apply = new ServerAction();
+                apply.moveMagnitude = action.moveMagnitude;
 
-			ServerAction apply = new ServerAction();
-			apply.moveMagnitude = action.moveMagnitude;
+                Vector3 dir = m_Camera.transform.forward;
+                apply.x = dir.x;
+                apply.y = dir.y;
+                apply.z = dir.z;
 
-			Vector3 dir = m_Camera.transform.forward;
-			apply.x = dir.x;
-			apply.y = dir.y;
-			apply.z = dir.z;
-
-			go.GetComponent<SimObjPhysics>().ApplyForce(apply);         
+                go.GetComponent<SimObjPhysics>().ApplyForce(apply); 
+            }
+        
 		}
 
         protected HashSet<SimObjPhysics> objectsInBox(float x, float z) {
@@ -2778,8 +2801,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     else
                     {
                         Debug.Log("can't close object if it's already closed");
+                        errorMessage = "object already closed: " + action.objectId;
                         actionFinished(false);
-                        errorMessage = "object already open: " + action.objectId;
                     }
 				}
               
@@ -3158,7 +3181,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
             }
 		}
 
-        //
+        //XXX: To get all objects contained in a receptacle, target it with this Function and it will return a list of strings, each being the
+        //unique ID of an object in this receptacle
         public void Contains(ServerAction action)
 		{
 			if (action.objectId == null)
