@@ -44,6 +44,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
         //this is true if FPScontrol mode using Mouse and Keyboard is active
         public bool TextInputMode = false;
 		public GameObject InputFieldObj = null;
+        public Text CrosshairText = null;
 
         private Camera m_Camera;
         private Vector2 m_Input;
@@ -58,7 +59,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
         private bool pickupState;
         private bool mouseDownThrow;
         private PhysicsRemoteFPSAgentController PhysicsController;
-        private bool scroll2DEnabled = true; 
+        private bool scroll2DEnabled = true;
+        // Optimization
+        private bool strongHighlight = true;
+        private bool materialChanged = false;
 
         private void Start()
         {
@@ -73,6 +77,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             TargetText = GameObject.Find("DebugCanvasPhysics/TargetText").GetComponent<Text>();
 
             InputFieldObj = GameObject.Find("DebugCanvasPhysics/InputField");
+            CrosshairText = GameObject.Find("DebugCanvasPhysics/Crosshair").GetComponent<Text>();
             var throwForceBar = GameObject.Find("DebugCanvasPhysics/ThrowForceBar");
             ThrowForceBarSlider = throwForceBar.GetComponent<Slider>();
 
@@ -244,9 +249,23 @@ namespace UnityStandardAssets.Characters.FirstPerson
                      0.0f;
             }
 
+            if (Input.GetKeyDown(KeyCode.R))
+            {
+                var action = new ServerAction
+                {
+                    action = "InitialRandomSpawn",
+                    randomSeed = 0,
+                    forceVisible = false,
+                    maxNumRepeats = 5,
+                    placeStationary = true
+                };
+                PhysicsController.ProcessControlCommand(action);
+            }
+
             // Throw action on left clock release
             if (Input.GetKeyUp(KeyCode.Mouse0))
             {
+                Debug.Log("Pickup state " + pickupState);
                 if (!pickupState)
                 {
                   
@@ -334,9 +353,11 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
             if (this.highlightedObject != null)
             {
+
                 var meshRenderer = this.highlightedObject.GetComponentInChildren<MeshRenderer>();
 
                 setTargetText("");
+                strongHighlight = true;
                 if (meshRenderer != null)
                 {
                     meshRenderer.material.shader = this.previousShader;
@@ -349,19 +370,58 @@ namespace UnityStandardAssets.Characters.FirstPerson
                )
             {
                 var simObj = hit.transform.GetComponent<SimObjPhysics>();
-                var validObject = simObj.PrimaryProperty == SimObjPrimaryProperty.CanPickup ||
+                Func<int, string> s = cw => { return ""; };
+                Func<bool> validObjectLazy = () => { 
+                    return simObj.PrimaryProperty == SimObjPrimaryProperty.CanPickup ||
                                   simObj.GetComponent<CanOpen_Object>() ||
                                   simObj.GetComponent<CanToggleOnOff>();
+                };
+                //var validObject = simObj.PrimaryProperty == SimObjPrimaryProperty.CanPickup ||
+                                  //simObj.GetComponent<CanOpen_Object>() ||
+                                  //simObj.GetComponent<CanToggleOnOff>();
 
-                if (simObj != null && validObject)
+
+                //if (simObj != null)
+                //{
+                //    var withinReach = PhysicsController.FindObjectInVisibleSimObjPhysics(simObj.uniqueID) != null;
+                //}
+
+                if (simObj != null && validObjectLazy())
                 {
-                    setTargetText(simObj.name);
+                    var d = hit.point - ray.origin;
+                    d.y = 0;
+                    var distance = d.magnitude;
+                    // var k = PhysicsController.VisibleSimObjs(new ServerAction { objectId = simObj.uniqueID });
+                    // k.Length == 0;
+                    // k.
+                    var withinReach = PhysicsController.FindObjectInVisibleSimObjPhysics(simObj.uniqueID) != null;
+
+                    // TODO: Get 0.2 from character controller
+                    // distance = (hit.point - this.PhysicsController.transform.position).magnitude + this.PhysicsController.transform.GetComponent<CharacterController>().radius;
+                    // var withinReach = distance + 0.05 <= 1.5f;
+
+                    // Debug.Log("distance " + distance);
+                    setTargetText(simObj.name, withinReach);
                     this.highlightedObject = simObj;
                     var mRenderer = this.highlightedObject.GetComponentInChildren<MeshRenderer>();
                     if (mRenderer != null)
                     {
+
                         this.previousShader = mRenderer.material.shader;
                         mRenderer.material.shader = this.highlightShader;
+
+                        if (withinReach)
+                        {
+                            strongHighlight = true;
+                            mRenderer.sharedMaterial.SetFloat("_Outline", 0.005f);
+                            mRenderer.sharedMaterial.SetColor("_OutlineColor", new Color(1, 1, 1, 0.3f));
+                        }
+                        else if (strongHighlight)
+                        {
+                            strongHighlight = false;
+                            mRenderer.sharedMaterial.SetFloat("_Outline", 0.001f);
+                            mRenderer.sharedMaterial.SetColor("_OutlineColorr", new Color(0.66f, 0.66f, 0.66f, 0.1f));
+                        }
                     }
                 }
             }
@@ -392,8 +452,20 @@ namespace UnityStandardAssets.Characters.FirstPerson
             }
         }
 
-        private void setTargetText(string text)
+        private void setTargetText(string text, bool withinReach = false)
         {
+            var eps = 1e-5;
+            if (withinReach)
+            {
+                this.TargetText.color = new Color(1.0f, 1.0f, 1.0f, 1.0f);
+                this.CrosshairText.text = "( + )";
+            }
+            else if (Math.Abs(this.TargetText.color.a - 1.0f) < eps)
+            {
+                this.TargetText.color = new Color(197.0f / 255, 197.0f / 255, 197.0f / 255, 228.0f / 255);
+                this.CrosshairText.text = "+";
+            }
+
             if (DisplayTargetText && TargetText != null)
             {
                 this.TargetText.text = text;

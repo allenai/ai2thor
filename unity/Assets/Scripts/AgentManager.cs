@@ -44,9 +44,16 @@ public class AgentManager : MonoBehaviour
 
         tex = new Texture2D(UnityEngine.Screen.width, UnityEngine.Screen.height, TextureFormat.RGB24, false);
 		readPixelsRect = new Rect(0, 0, UnityEngine.Screen.width, UnityEngine.Screen.height);
-	
-		Application.targetFrameRate = 300;
-		QualitySettings.vSyncCount = 0;
+
+        #if !UNITY_WEBGL
+            // Creates warning for WebGL
+            // https://forum.unity.com/threads/rendering-without-using-requestanimationframe-for-the-main-loop.373331/
+            Application.targetFrameRate = 300;
+        #else
+            Debug.unityLogger.logEnabled = false;
+        #endif
+
+        QualitySettings.vSyncCount = 0;
 		robosimsPort = LoadIntVariable (robosimsPort, "PORT");
 		robosimsHost = LoadStringVariable(robosimsHost, "HOST");
 		serverSideScreenshot = LoadBoolVariable (serverSideScreenshot, "SERVER_SIDE_SCREENSHOT");
@@ -417,18 +424,20 @@ public class AgentManager : MonoBehaviour
 		form.AddField("metadata", Newtonsoft.Json.JsonConvert.SerializeObject(multiMeta));
 		form.AddField("token", robosimsClientToken);
 
-        using (var www = UnityWebRequest.Post("http://" + robosimsHost + ":" + robosimsPort + "/train", form))
-        {
-            yield return www.SendWebRequest();
-
-            if (www.isNetworkError || www.isHttpError)
+        #if !UNITY_2018
+            using (var www = UnityWebRequest.Post("http://" + robosimsHost + ":" + robosimsPort + "/train", form))
             {
-                Debug.Log("Error: " + www.error);
-                yield break;
+                yield return www.SendWebRequest();
+
+                if (www.isNetworkError || www.isHttpError)
+                {
+                    Debug.Log("Error: " + www.error);
+                    yield break;
+                }
+                ProcessControlCommand(www.downloadHandler.text);
             }
-            ProcessControlCommand(www.downloadHandler.text);
-        }
-	}
+        #endif
+    }
 
 	private BaseFPSAgentController activeAgent() {
 		return this.agents.ToArray () [activeAgentId];

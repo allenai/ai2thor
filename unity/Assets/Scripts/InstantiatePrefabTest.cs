@@ -238,8 +238,10 @@ public class InstantiatePrefabTest : MonoBehaviour
             #endif
             return false;
         }
-        
+
         //remember the original rotation of the sim object if we need to reset it
+        //Quaternion originalRot = sop.transform.rotation;
+        Vector3 originalPos = sop.transform.position;
         Quaternion originalRot = sop.transform.rotation;
 
         //get the bounding box of the sim object we are trying to place
@@ -374,11 +376,7 @@ public class InstantiatePrefabTest : MonoBehaviour
                 //Plane rspPlane = new Plane(rsp.Point, rsp.ParentSimObjPhys.transform.up);
 
                 //now check the corner count for either the 4 lowest corners, or all 8 corners depending on Corner Count
-                //sort corners so that first four corners are the corners closest to the spawn point we are checking against
-
-                //XXX - Found a bug for some Pots that makes the bottom four corners get sorted incorrectly... not sure why
-                //this leads to them being unplacable - It's strange, if we scale the pot down to smaller it totally works fine...
-                //probably because it becomes so long that the closest four points are no longer the only ones on the bottom?
+                //attmpt to sort corners so that first four corners are the corners closest to the spawn point we are checking against
                 SpawnCorners.Sort(delegate(Vector3 p1, Vector3 p2)
                 {
                     //sort by making a plane where rsp.point is, find the four corners closest to that point
@@ -392,8 +390,11 @@ public class InstantiatePrefabTest : MonoBehaviour
 
                 });
 
-                //now the SpawnCorners list is sorted with the four corners closest in y-position difference to the spawn point first
-                for(int i = 0; i < HowManyCornersToCheck; i++)
+                //ok so this is just checking if there are enough corners in the Receptacle Zone to consider it placed correctly.
+                //originally this looped up to i < HowManyCornersToCheck, but if we just check all the corners, regardless of
+                //sort order, it seems to bypass the issue above of how to sort the corners to find the "bottom" 4 corners, so uh
+                // i guess this might just work without fancy sorting to determine the bottom 4 corners... especially since the "bottom corners" starts to lose meaning as objects are rotated 
+                for(int i = 0; i < 8; i++)
                 {
                     if(rsp.Script.CheckIfPointIsInsideReceptacleTriggerBox(SpawnCorners[i]))
                     {
@@ -405,6 +406,7 @@ public class InstantiatePrefabTest : MonoBehaviour
                 if(CornerCount < HowManyCornersToCheck)
                 {
                     sop.transform.rotation = originalRot;
+                    sop.transform.position = originalPos;
                     return false;
                 }
 
@@ -414,8 +416,8 @@ public class InstantiatePrefabTest : MonoBehaviour
                 {
                     if(!rsp.Script.CheckIfPointIsAboveReceptacleTriggerBox(v))
                     {
-                                //reset rotation if no valid spawns found
                         sop.transform.rotation = originalRot;
+                        sop.transform.position = originalPos;
                         return false;
                     }
                 }
@@ -461,8 +463,10 @@ public class InstantiatePrefabTest : MonoBehaviour
         }
        
         //reset rotation if no valid spawns found
-        sop.transform.rotation = originalRot;
+        //sop.transform.rotation = originalRot;
         //oh now we couldn't spawn it, all the spawn areas were not clear
+        sop.transform.rotation = originalRot;
+        sop.transform.position = originalPos;
         return false;
 	}
 
@@ -490,11 +494,11 @@ public class InstantiatePrefabTest : MonoBehaviour
 		}
 
 
-        //let's move the simObj to the position we are trying, and then change it's rotation to the rotation we are trying
+        //track original position and rotation in case we need to reset
         Vector3 originalPos = simObj.transform.position;
         Quaternion originalRot = simObj.transform.rotation;
 
-        //keep track of both starting position and rotation to reset the object after performing the check!
+        //move it into place so the bouding box is in the right spot to generate the overlap box later
         simObj.transform.position = position;
         simObj.transform.rotation = rotation;
 
@@ -525,15 +529,6 @@ public class InstantiatePrefabTest : MonoBehaviour
 
         SpawnCorners = corners;
 
-        simObj.transform.position = originalPos;
-        simObj.transform.rotation = originalRot;
-
-        //we need the center of the box collider in world space, we need the box collider size/2, we need the rotation to set the box at, layermask, querytrigger
-        Collider[] hitColliders = Physics.OverlapBox(bbCenterTransformPoint,
-                                                     bbcol.size / 2.0f, simObj.transform.rotation, 
-                                                     layermask, QueryTriggerInteraction.Ignore);
-
-
         #if UNITY_EDITOR
 		m_Started = true;     
         gizmopos = bb.transform.TransformPoint(bbCenter); 
@@ -543,13 +538,25 @@ public class InstantiatePrefabTest : MonoBehaviour
         gizmoquaternion = rotation;
         #endif
 
+        //move sim object back to it's original spot back so the overlap box doesn't hit it
+        simObj.transform.position = originalPos;
+        simObj.transform.rotation = originalRot;
 
+        //we need the center of the box collider in world space, we need the box collider size/2, we need the rotation to set the box at, layermask, querytrigger
+        Collider[] hitColliders = Physics.OverlapBox(bbCenterTransformPoint,
+                                                     bbcol.size / 2.0f, simObj.transform.rotation, 
+                                                     layermask, QueryTriggerInteraction.Ignore);
+        // print("trying to place " + simObj.transform.name + ", hitCollider length is: " + hitColliders.Length);                                             
+        // foreach(Collider c in hitColliders)
+        // {
+        //     if(c.GetComponentInParent<Rigidbody>())
+        //     print(c.GetComponentInParent<Rigidbody>().transform.name);
+        // }
         //if a collider was hit, then the space is not clear to spawn
 		if (hitColliders.Length > 0)
 		{
 			return false;
 		}
-
 		return true;
 	}
 
