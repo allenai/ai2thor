@@ -1,5 +1,8 @@
 # AI2-THOR Version 1.0 Release Notes
 
+## IMPORTANT NOTICE
+Note that AI2-THOR 1.0 is NOT backwards compatible with previous versions due to the nature of an entirely reworked backend in the framework.
+
 ## All Sim Objects Now Have Full Collision and Physics Interactions
 All Sim Objects now have collision based physics behavior and accurate collision geometry. There are many implications to this:
 
