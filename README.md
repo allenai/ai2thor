@@ -33,7 +33,7 @@ AI2-THOR (The House Of inteRactions) is a photo-realistic interactable framework
 * **Object Interactability:** An object is said to be interactable if it is flagged as Visible and if it is unobstructed by any other objects. Most objects will be Interactable as long as they are also Visible, but some objects have transparency which can cause objects to be reported as "visible" through them. An example is a Glass Shower Door with a Sponge object behind it. The glass door will be flagged as Visible and Interactable, but the sponge will only be Visible. Attempting to interact with the sponge will throw an error as it can't be reached through the glass door, only seen.
 
 
-* **Receptacle:** A type of object that can contain another object. These types of objects include: ArmChair, Bathtub, Bed, Bowl, Box, Cabinet, Cart, CoffeeMachine, CounterTop, Cup, Desk, Drawer, Dresser, Fridge, GarbageCan, HandTowelHolder, LaundryHamper, Microwave, Mug, NightStand, Ottoman, Pan, Plate, Pot, Safe, Shelf, Sink, Sofa, Stove Burner, TableTop, Toilet, ToiletPaperHanger, and TowelHolder. For more info about Sim Objects and their properties, refer to [the Sim Object Info Table Spreadsheet](https://docs.google.com/spreadsheets/d/1wx8vWgmFSi-4Gknkwl2fUMG8oRedu-tUklGSvU0oh4U/edit?usp=sharing)
+* **Receptacle:** A type of object that can contain another object. Some examples of receptacles are: TableTop, Cup, Sofa, Bed, Desk, Bowl, etc. Some Receptacles cannot be moved within the scene, and are mostly large objects that don't make sense to move (Countertop, Sink, etc). Some Receptacles can also open and close (Microwave, Cabinet, Drawer, etc) while others can also be picked up and moved around by the Agent (Plate, Bowl, Box, etc.).
 
 ## PIP Installation
 
@@ -143,12 +143,16 @@ event = controller.step(dict(action='MoveLeft'))
 Move the agent backward by `gridSize` (without changing view direction).
 ```python
 event = controller.step(dict(action='MoveBack'))
-event = controller.step(dict(action='MoveBack', moveMagnitude = 0.1))
 ```
 #### Teleport 
 Move the agent to any location in the scene (within scene bounds). Using this command it is possible to put the agent into places that would not normally be possible to navigate to, but it can be useful if you need to place an agent in the exact same spot for a task.
 ```python
 event = controller.step(dict(action='Teleport', x=0.999, y=1.01, z=-0.3541))
+``` 
+#### Get Reachable Positions
+Returns valid coordinates that the Agent can reach without colliding with the environment or Sim Objects. This can be used in tandem with `Teleport` to warp the Agent as needed. This is useful for things like randomizing the initial position of the agent without clipping into the environment.
+```python
+event = controller.step(dict(action='GetReachablePositions'))
 ``` 
 
 ### Sim Object Interaction
