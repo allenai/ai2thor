@@ -1,5 +1,3 @@
-// Upgrade NOTE: replaced 'mul(UNITY_MATRIX_MVP,*)' with 'UnityObjectToClipPos(*)'
-
 
  Shader "Hidden/Dof/TiltShiftHdrLensBlur" {
 	Properties {
@@ -27,7 +25,7 @@
 	float _BlurSize;
 	float _BlurArea;
 
-	#if defined(SHADER_API_D3D11) || defined(SHADER_API_GLCORE)
+	#if defined(SHADER_API_D3D11) || defined(SHADER_API_GLCORE) || defined(SHADER_API_METAL)
 	#define SAMPLE_TEX(sampler, uv) tex2Dlod(sampler, float4(uv,0,1))
 	#else
 	#define SAMPLE_TEX(sampler, uv) tex2D(sampler, uv)
@@ -36,7 +34,7 @@
 	v2f vert (appdata_img v) 
 	{
 		v2f o;
-		o.pos = UnityObjectToClipPos (v.vertex);
+		o.pos = UnityObjectToClipPos(v.vertex);
 		o.uv.xy = v.texcoord;
 		o.uv1.xy = v.texcoord;
 
@@ -130,6 +128,52 @@
 		return lerp(frame, blurred, saturate(blurred.a));
 	}
 
+	float4 fragIrisLow(v2f i) : SV_Target
+	{
+		float4 centerTap = tex2D(_MainTex, UnityStereoScreenSpaceUVAdjust(i.uv.xy, _MainTex_ST));
+		float4 sum = centerTap;
+
+		float w = clamp(WeightIrisMode(i.uv.xy), 0, _BlurSize);
+
+		float4 poissonScale = _MainTex_TexelSize.xyxy * w;
+
+#ifndef SHADER_API_D3D9
+		if (w<1e-2f)
+			return sum;
+#endif
+
+		for (int l = 0; l<SmallDiscKernelSamples; l++)
+		{
+			float2 sampleUV = UnityStereoScreenSpaceUVAdjust(i.uv.xy + SmallDiscKernel[l].xy * poissonScale.xy, _MainTex_ST);
+			float4 sample0 = SAMPLE_TEX(_MainTex, sampleUV.xy);
+			sum += sample0;
+		}
+		return float4(sum.rgb / (1.0 + SmallDiscKernelSamples), w);
+	}
+
+	float4 fragFieldLow(v2f i) : SV_Target
+	{
+		float4 centerTap = tex2D(_MainTex, UnityStereoScreenSpaceUVAdjust(i.uv.xy, _MainTex_ST));
+		float4 sum = centerTap;
+
+		float w = clamp(WeightFieldMode(i.uv.xy), 0, _BlurSize);
+
+		float4 poissonScale = _MainTex_TexelSize.xyxy * w;
+
+#ifndef SHADER_API_D3D9
+		if (w<1e-2f)
+			return sum;
+#endif
+
+		for (int l = 0; l<SmallDiscKernelSamples; l++)
+		{
+			float2 sampleUV = UnityStereoScreenSpaceUVAdjust(i.uv.xy + SmallDiscKernel[l].xy * poissonScale.xy, _MainTex_ST);
+			float4 sample0 = SAMPLE_TEX(_MainTex, sampleUV.xy);
+			sum += sample0;
+		}
+		return float4(sum.rgb / (1.0 + SmallDiscKernelSamples), w);
+	}
+
 	float4 fragIris (v2f i) : SV_Target 
 	{
 		float4 centerTap = tex2D(_MainTex, UnityStereoScreenSpaceUVAdjust(i.uv.xy, _MainTex_ST));
@@ -183,7 +227,7 @@
 
 		float w = clamp(WeightIrisMode(i.uv.xy), 0, _BlurSize);
 
-		float4 poissonScale = _MainTex_TexelSize.xyxy * float4(1,1,-1,-1) * 2;
+		float4 poissonScale = _MainTex_TexelSize.xyxy * float4(1,1,-1,-1) * w;
 		
 		#ifndef SHADER_API_D3D9
 		if(w<1e-2f)
@@ -253,7 +297,29 @@ Subshader {
       ENDCG
   	} 
 
-  Pass { // 2
+Pass{ // 2
+
+		  CGPROGRAM
+
+#pragma target 3.0
+#pragma vertex vert
+#pragma fragment fragFieldLow
+
+		  ENDCG
+	  }
+
+Pass{ // 3
+
+		  CGPROGRAM
+
+#pragma target 3.0
+#pragma vertex vert
+#pragma fragment fragIrisLow
+
+		  ENDCG
+	  }
+
+  Pass { // 4
 
       CGPROGRAM
       
@@ -264,7 +330,7 @@ Subshader {
       ENDCG
   	}
 
- Pass { // 3
+ Pass { // 5
 
       CGPROGRAM
       
@@ -275,7 +341,7 @@ Subshader {
       ENDCG
   	}
 
-  Pass { // 4
+  Pass { // 6
 
       CGPROGRAM
       
@@ -286,7 +352,7 @@ Subshader {
       ENDCG
   	}
 
- Pass { // 5
+ Pass { // 7
 
       CGPROGRAM
       
@@ -297,7 +363,7 @@ Subshader {
       ENDCG
   	}  	
 
- Pass { // 6
+ Pass { // 8
 
       CGPROGRAM
       

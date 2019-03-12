@@ -1,62 +1,158 @@
 // Copyright Allen Institute for Artificial Intelligence 2017
 using UnityEngine;
+using System;
 using System.Collections;
+using System.Collections.Generic;
 
 [ExecuteInEditMode]
 [RequireComponent(typeof(Rigidbody))]
-public class SimObj : MonoBehaviour {
+public class SimObj : MonoBehaviour, SimpleSimObj
+{
 
-	public string UniqueID {
-		get {
+	public string UniqueID 
+	{
+		get 
+		{
 			return uniqueID;
-		} set {
+		} 
+
+		set 
+		{
 			//TODO add an ID lock
 			uniqueID = value;
 		}
 	}
+
+	public bool IsVisible 
+	{
+		get 
+		{
+			return isVisible;
+		} 
+
+		set {
+			isVisible = value;
+		}
+	}
+
+
 	public SimObjType Type = SimObjType.Undefined;
 	public SimObjManipType Manipulation = SimObjManipType.Inventory;
+	public static SimObjType[] OpenableTypes = new SimObjType[] { SimObjType.Fridge, SimObjType.Cabinet, SimObjType.Microwave, SimObjType.LightSwitch, SimObjType.Blinds, SimObjType.Book, SimObjType.Toilet };
+	public static SimObjType[] ImmobileTypes = new SimObjType[] { SimObjType.Chair, SimObjType.Toaster, SimObjType.CoffeeMachine, SimObjType.Television, SimObjType.StoveKnob };
+	private static Dictionary<SimObjType, Dictionary<string, int>> OPEN_CLOSE_STATES = new Dictionary<SimObjType, Dictionary<string, int>>{
+		{SimObjType.Microwave, new Dictionary<string, int>{{"open", 2}, {"close", 1}}},
+		{SimObjType.Laptop, new Dictionary<string, int>{{"open", 2}, {"close", 1}}},
+		{SimObjType.Book, new Dictionary<string, int>{{"open", 1}, {"close", 2}}},
+		{SimObjType.Toilet, new Dictionary<string, int>{{"open", 2}, {"close", 3}}},
+		{SimObjType.Sink, new Dictionary<string, int>{{"open", 2}, {"close", 1}}}
+	};
 	public bool UseCustomBounds = false;
+	public bool isVisible = false;
 	public bool UseWidthSearch = false;
 	public bool hasCollision = false;
 	public Transform BoundsTransform;
 	//stores the location of the simObj on startup
-	public Transform StartupTransform {
+
+	public SimObjType ObjType  {
+
 		get {
+			return Type;
+
+		}
+	}
+
+	public List<string> ReceptacleObjectIds {
+
+		get {
+			List<string> objectIds = new List<string>();
+			foreach (SimObj o in SimUtil.GetItemsFromReceptacle(this.Receptacle))
+			{
+				objectIds.Add(o.uniqueID);
+			}
+			return objectIds;
+		}
+	}
+
+	public List<PivotSimObj> PivotSimObjs {
+		get {
+
+			List<PivotSimObj> pivotSimObjs = new List<PivotSimObj>();
+			for (int i = 0; i < this.Receptacle.Pivots.Length; i++)
+			{
+				Transform t = this.Receptacle.Pivots[i];
+				if (t.childCount > 0)
+				{
+					SimObj psimobj = t.GetChild(0).GetComponent<SimObj>();
+					PivotSimObj pso = new PivotSimObj();
+					pso.objectId = psimobj.UniqueID;
+					pso.pivotId = i;
+					pivotSimObjs.Add(pso);
+				}
+			}
+			return pivotSimObjs;
+		}
+
+	}
+
+	public int ReceptacleCount {
+
+		get {
+			return this.Receptacle.Pivots.Length;
+		}
+	}
+
+	public Transform StartupTransform 
+    {
+		get 
+        {
 			return startupTransform;
 		}
 	}
 
-	public Animator Animator {
-		get {
+	public Animator Animator 
+    {
+		get 
+        {
 			return animator;
 		}
 	}
-	public Receptacle Receptacle {
-		get {
+	public Receptacle Receptacle 
+    {
+		get 
+        {
 			return receptacle;
 		}
 	}
-	public Rearrangeable Rearrangeable {
-		get {
+	public Rearrangeable Rearrangeable 
+    {
+		get 
+        {
 			return rearrangeable;
 		}
 	}
-	public bool IsReceptacle {
-		get {
+	public bool IsReceptacle 
+    {
+		get 
+        {
 			return receptacle != null;
 		}
 	}
-	public bool IsAnimated {
-		get {
+	public bool IsAnimated 
+    {
+		get 
+        {
 			return animator != null;
 		}
 	}
-	public bool IsAnimating {
-		get {
+	public bool IsAnimating 
+    {
+		get 
+        {
 			return isAnimating;
 		}
-		set {
+		set 
+        {
 			#if UNITY_EDITOR
 			UnityEditor.EditorUtility.SetDirty (this);
 			#endif
@@ -64,18 +160,85 @@ public class SimObj : MonoBehaviour {
 		}
 	}
 
-	public bool VisibleToRaycasts {
-		get {
+	private bool updateAnimState(Animator anim, int value)
+	{
+		AnimatorControllerParameter param = anim.parameters[0];
+
+		if (anim.GetInteger(param.name) == value)
+		{
+			return false;
+		}
+		else
+		{
+			anim.SetInteger(param.name, value);
+			return true;
+		}
+	}
+
+	private bool updateAnimState(Animator anim, bool value)
+	{
+		AnimatorControllerParameter param = anim.parameters[0];
+
+		if (anim.GetBool(param.name) == value)
+		{
+			return false;
+		}
+		else
+		{
+			anim.SetBool(param.name, value);
+			return true;
+		}
+	}
+
+	public bool Open() {
+		bool res = false;
+		if (OPEN_CLOSE_STATES.ContainsKey(this.Type))
+		{
+			res = updateAnimState(this.Animator, OPEN_CLOSE_STATES[this.Type]["open"]);
+
+		}
+		else if (this.IsAnimated)
+		{
+			res = updateAnimState(this.Animator, true);
+		}
+
+		return res;
+	}
+
+	public bool Close() {
+		bool res = false;
+		if (OPEN_CLOSE_STATES.ContainsKey(this.Type))
+		{
+			res = updateAnimState(this.Animator, OPEN_CLOSE_STATES[this.Type]["close"]);
+		}
+		else if (this.IsAnimated)
+		{
+			res = updateAnimState(this.Animator, false);
+		}
+
+		return res;
+	}
+
+	public bool VisibleToRaycasts 
+    {
+		get 
+        {
 			return visibleToRaycasts;
-		} set {
-			if (colliders == null) {
+		}
+
+        set 
+        {
+			if (colliders == null) 
+            {
 				#if UNITY_EDITOR
 				Debug.LogWarning ("Warning: Tried to set colliders enabled before item was initialized in " + name);
 				#endif
 				visibleToRaycasts = value;
 				return;
 			}
-			if (visibleToRaycasts != value) {
+
+			if (visibleToRaycasts != value) 
+            {
 				visibleToRaycasts = value;
 				gameObject.layer = (visibleToRaycasts ? SimUtil.RaycastVisibleLayer : SimUtil.RaycastHiddenLayer);
 				for (int i = 0; i < colliders.Length; i++) {
@@ -84,20 +247,24 @@ public class SimObj : MonoBehaviour {
 			}
 		}
 	}
-    public Vector3 CenterPoint {
-        get {
+    public Vector3 CenterPoint 
+    {
+        get 
+        {
             return centerPoint;
         }
     }
 
 	public Vector3 TopPoint {
-		get {
+		get 
+        {
 			return topPoint;
 		}
 	}
 
 	public Vector3 BottomPoint {
-		get {
+		get 
+        {
 			return bottomPoint;
 		}
 	}
@@ -112,8 +279,10 @@ public class SimObj : MonoBehaviour {
 
 	#if UNITY_EDITOR
 	//used for debugging object visibility
-    public string Error {
-		get {
+    public string Error 
+    {
+		get 
+        {
 			return error;
 		}
 	}
@@ -137,67 +306,123 @@ public class SimObj : MonoBehaviour {
 	private Bounds bounds;
 
 
-	public void ResetScale() {
+    //this guy right here caused the giant groceries... should only be an issue with pivots
+	public void ResetScale() 
+    {
 		Transform tempParent = transform.parent;
 		transform.parent = null;
 		transform.localScale = startupScale;
 		transform.parent = tempParent;
 	}
 
-    public void RecalculatePoints () {
+	public bool IsPickupable {
+		get {
+			return !this.IsOpenable && !this.IsReceptacle && !(Array.IndexOf(ImmobileTypes, this.Type) >= 0);
+		}
+
+	}
+
+	public bool IsOpen {
+		get {
+			Animator anim = this.Animator;
+			AnimatorControllerParameter param = anim.parameters[0];
+			if (OPEN_CLOSE_STATES.ContainsKey(this.Type))
+			{
+				return anim.GetInteger(param.name) == OPEN_CLOSE_STATES[this.Type]["open"];
+			}
+			else
+			{
+				return anim.GetBool(param.name);
+			}
+		}
+	}
+
+	public bool IsOpenable {
+		get {
+			return Array.IndexOf(OpenableTypes, this.Type) >= 0 && this.IsAnimated;
+		}
+
+	}
+
+    public void RecalculatePoints () 
+    {
 
         //get first renderer in object, use that object's bounds to get center point
 		Renderer r = null;
-		if (!IsReceptacle) {
+		if (!IsReceptacle) 
+        {
 			r = gameObject.GetComponentInChildren<MeshRenderer> ();
 		}
 
-		if (r != null) {
+		if (r != null) 
+        {
 			centerPoint = r.bounds.center;
-			if (UseWidthSearch) {
+			if (UseWidthSearch) 
+            {
 				topPoint = centerPoint + (Vector3.left * r.bounds.extents.x) + (Vector3.forward * r.bounds.extents.z);
 				bottomPoint = centerPoint + (Vector3.right * r.bounds.extents.x) + (Vector3.back * r.bounds.extents.z);
-			} else {
+			} 
+
+            else 
+            {
 				topPoint = centerPoint + (Vector3.up * r.bounds.extents.y);
 				bottomPoint = centerPoint + (Vector3.down * r.bounds.extents.y);
 			}
 			bounds = r.bounds;
-		} else {
+		} 
+
+        else 
+        {
 			//get the first collider
 			Collider c = null;
-			if (IsReceptacle) {
+			if (IsReceptacle) 
+            {
 				c = receptacle.VisibilityCollider;
-			} else {
+			} 
+
+            else 
+            {
 				c = gameObject.GetComponentInChildren<Collider> ();
 			}
 
-			if (c != null) {
+			if (c != null) 
+            {
 				centerPoint = c.bounds.center;
-				if (UseWidthSearch) {
+				if (UseWidthSearch) 
+                {
 					topPoint = centerPoint + (Vector3.left * c.bounds.extents.x) + (Vector3.forward * c.bounds.extents.z);
 					bottomPoint = centerPoint + (Vector3.right * c.bounds.extents.x) + (Vector3.back * c.bounds.extents.z);
-				} else {
+				} 
+
+                else 
+                {
 					topPoint = centerPoint + (Vector3.up * c.bounds.extents.y);
 					bottomPoint = centerPoint + (Vector3.down * c.bounds.extents.y);
 				}
 				bounds = c.bounds;
-			} else {
+			}
+
+            else 
+            {
 				Debug.Log ("Couldn't calculate center point in " + gameObject.name);
 			}
 		}
 
     }
 
-	void OnCollisionEnter (Collision col)	{
+	void OnCollisionEnter (Collision col)	
+    {
 		this.hasCollision = true;
 	}
 	// we do this to handle the case when an object is moved into by navigation into an object; since we reset the hasCollision flag to false prior
 	// to the moveHand we check if we are leaving a collider and consider that to be a collision as well
-	void OnCollisionExit (Collision col)	{
+	void OnCollisionExit (Collision col)	
+    {
 		this.hasCollision = true;
 	}
 
-	protected virtual void OnEnable () {
+	protected virtual void OnEnable () 
+    {
 		if (SceneManager.Current == null)
 			return;
 
@@ -217,7 +442,8 @@ public class SimObj : MonoBehaviour {
 		colliders = gameObject.GetComponentsInChildren<Collider> ();
 
 		//if the manip type isn't inventory, use the presence of the rearrangeable component to determine type
-		switch (Manipulation) {
+		switch (Manipulation) 
+        {
 		case SimObjManipType.Inventory:
 			break;
 
@@ -228,25 +454,33 @@ public class SimObj : MonoBehaviour {
 		}
 
 		#if UNITY_EDITOR
-		if (Type == SimObjType.Undefined) {
+		if (Type == SimObjType.Undefined) 
+        {
 			//check our prefab just in case the enum has gotten disconnected
-			GameObject prefabParent = UnityEditor.PrefabUtility.GetPrefabParent (gameObject) as GameObject;
-			if (prefabParent != null) {
+			GameObject prefabParent = UnityEditor.PrefabUtility.GetCorrespondingObjectFromSource(gameObject) as GameObject;
+			if (prefabParent != null) 
+            {
 				SimObj ps = prefabParent.GetComponent<SimObj> ();
-				if (ps != null) {
+				if (ps != null) 
+                {
 					Type = ps.Type;
 				}
 			}
 		}
 
-		if (!Application.isPlaying) {
-			foreach (Collider c in colliders) {
+		if (!Application.isPlaying) 
+        {
+			foreach (Collider c in colliders) 
+            {
 				c.gameObject.layer = SimUtil.RaycastVisibleLayer;
 			}
+
 			//if we're type static, set our renderers to static so navmeshes generate correctly
 			MeshRenderer [] renderers = gameObject.GetComponentsInChildren <MeshRenderer> ();
-			foreach (MeshRenderer mr in renderers) {
-				switch (Manipulation) {
+			foreach (MeshRenderer mr in renderers) 
+            {
+				switch (Manipulation) 
+                {
 				case SimObjManipType.Static:
 					mr.gameObject.isStatic = true;
 					UnityEditor.GameObjectUtility.SetNavMeshArea (mr.gameObject, PlacementManager.NavmeshShelfArea);
@@ -270,12 +504,15 @@ public class SimObj : MonoBehaviour {
 		#endif
 
 		Rigidbody rb = GetComponent<Rigidbody> ();
-		if (rb == null) {
+		if (rb == null) 
+        {
 			rb = gameObject.AddComponent<Rigidbody> ();
 		}
 
-		if (SceneManager.Current.LocalPhysicsMode == ScenePhysicsMode.Dynamic) {
-			switch (Manipulation) {
+		if (SceneManager.Current.LocalPhysicsMode == ScenePhysicsMode.Dynamic) 
+        {
+			switch (Manipulation) 
+            {
 			case SimObjManipType.Static:
 			case SimObjManipType.StaticNoPlacement:
 				rb.isKinematic = true;
@@ -285,14 +522,19 @@ public class SimObj : MonoBehaviour {
 				rb.isKinematic = false;
 				break;
 			}
-		} else {
+		} 
+
+        else 
+        {
 			rb.isKinematic = true;
 		}
 
         RecalculatePoints();
 
-		if (Application.isPlaying) {
-			if (startupTransform == null) {
+		if (Application.isPlaying) 
+        {
+			if (startupTransform == null) 
+            {
 				switch (Manipulation) {
 				case SimObjManipType.Inventory:
 				//if we can enter inventory
@@ -321,57 +563,77 @@ public class SimObj : MonoBehaviour {
 	}
 
 	#if UNITY_EDITOR
-	public void RefreshColliders () {
+	public void RefreshColliders () 
+    {
 		colliders = gameObject.GetComponentsInChildren<Collider> ();
 	}
 
-	void CheckForErrors() {
+	void CheckForErrors() 
+    {
 		error = string.Empty;
 		colliders = gameObject.GetComponentsInChildren<Collider> ();
 		//make sure all raycast targets are tagged correctly
-		if (colliders.Length == 0) {
+		if (colliders.Length == 0) 
+        {
 			error = "No colliders attached!";
 			return;
 		}
-		if (!gameObject.CompareTag (SimUtil.ReceptacleTag)) {
+
+		if (!gameObject.CompareTag (SimUtil.ReceptacleTag)) 
+        {
 			gameObject.tag = SimUtil.SimObjTag;
 		}
-		foreach (Collider c in colliders) {
+
+		foreach (Collider c in colliders) 
+        {
 			//don't re-tag something that's tagged as a receptacle
-			if (!c.CompareTag (SimUtil.ReceptacleTag)) {
+			if (!c.CompareTag (SimUtil.ReceptacleTag)) 
+            {
 				c.gameObject.tag = SimUtil.SimObjTag;
 			}
 		}
-		if (Type == SimObjType.Undefined) {
+
+		if (Type == SimObjType.Undefined) 
+        {
 			error = "Type is undefined!";
 			return;
 		}
+
 		if (UseCustomBounds && BoundsTransform == null) {
 			error = "Using custom bounds but no BoundsTransform supplied!";
 		}
 	}
 
-	void Update() {
+	void Update() 
+    {
 		//TEMPORARY - we'll move this into receptacl
-		if (transform.position != lastPosition) {
+		if (transform.position != lastPosition) 
+        {
 			lastPosition = transform.position;
 			RecalculatePoints ();
 		}
 	}
 
-	void OnDrawGizmos () {
+	void OnDrawGizmos () 
+    {
 		Gizmos.color = Color.white;
 
 		if (!SimUtil.ShowObjectVisibility)
 			VisibleNow = false;
 
-		if (!string.IsNullOrEmpty (error)) {
+		if (!string.IsNullOrEmpty (error)) 
+        {
 			Gizmos.color = Color.Lerp (Color.red, Color.clear, 0.5f);
 			Gizmos.DrawSphere (transform.position, 0.25f);
 			CheckForErrors ();
-		} else {
-			if (UseCustomBounds && SimUtil.ShowCustomBounds) {
-				if (BoundsTransform != null) {
+		} 
+
+        else 
+        {
+			if (UseCustomBounds && SimUtil.ShowCustomBounds) 
+            {
+				if (BoundsTransform != null) 
+                {
 					//draw aligned bounding box
 					Gizmos.matrix = transform.localToWorldMatrix;
 					Gizmos.color = VisibleNow ? Color.yellow : Color.cyan;
@@ -391,13 +653,18 @@ public class SimObj : MonoBehaviour {
 				Gizmos.DrawWireSphere (BottomPoint, 0.02f);
 			}
 
-			if (VisibleNow) {
+			if (VisibleNow) 
+            {
 				//draw an outline around our biggest renderer
 				MeshFilter mf = gameObject.GetComponentInChildren <MeshFilter> (false);
-				if (mf != null) {
+				if (mf != null) 
+                {
 					Gizmos.color = Color.yellow;
 					Gizmos.DrawWireMesh (mf.sharedMesh, -1, mf.transform.position, mf.transform.rotation, mf.transform.lossyScale);
-				} else {
+				} 
+
+                else 
+                {
 					//probably a visibility collider only sim obj
 					if (IsReceptacle) {
 						Gizmos.color = Color.yellow;
@@ -410,4 +677,21 @@ public class SimObj : MonoBehaviour {
 		}
 	}
 	#endif
+}
+
+public interface SimpleSimObj {
+	Bounds Bounds { get; }
+	SimObjType ObjType { get; }
+	string UniqueID {get; set; }
+	List<string> ReceptacleObjectIds {get;}
+	int ReceptacleCount {get;}
+	bool IsReceptacle {get; }
+	bool IsOpen {get; }
+	bool IsPickupable {get; }
+	bool IsOpenable {get; }
+	bool IsVisible {get; set;}
+	bool Open(); 
+	bool Close();
+	List<PivotSimObj> PivotSimObjs {get;}
+	GameObject gameObject {get; }
 }

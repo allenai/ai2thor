@@ -127,17 +127,18 @@ def test_rotate_right():
 def test_teleport():
     controller.step(dict(action='Teleport', x=-1.5, z=-1.5, y=1.0), raise_for_failure=True)
     position = controller.last_event.metadata['agent']['position']
-    assert position == dict(x=-1.5, z=-1.5, y=0.9799992442131042)
+
+    assert_near(position, dict(x=-1.5, z=-1.5, y=0.98))
 
     controller.step(dict(action='Teleport', x=-2.0, z=-2.5, y=1.0), raise_for_failure=True)
     position = controller.last_event.metadata['agent']['position']
-    assert position == dict(x=-2.0, z=-2.5, y=0.9799990057945251)
+    assert_near(position, dict(x=-2.0, z=-2.5, y=0.98))
 
 def test_moveahead():
     controller.step(dict(action='Teleport', x=-1.5, z=-1.5, y=1.0), raise_for_failure=True)
     controller.step(dict(action='MoveAhead'), raise_for_failure=True)
     position = controller.last_event.metadata['agent']['position']
-    assert position == dict(x=-1.25, z=-1.5, y=0.9799989461898804)
+    assert_near(position, dict(x=-1.25, z=-1.5, y=0.98))
 
 def test_moveback():
     controller.step(dict(action='Teleport', x=-1.5, z=-1.5, y=1.0), raise_for_failure=True)

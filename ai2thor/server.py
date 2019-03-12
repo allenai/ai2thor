@@ -53,7 +53,7 @@ class MultiAgentEvent(object):
 
     def __init__(self, active_agent_id, events):
         self._active_event = events[active_agent_id]
-        self.cv2image = self._active_event.cv2image
+        self.cv2img = self._active_event.cv2img
         self.metadata = self._active_event.metadata
         self.screen_width = self._active_event.screen_width
         self.screen_height = self._active_event.screen_height
@@ -133,11 +133,12 @@ class Event(object):
                 obj['visibleBounds2D'] = (obj['visible'] and obj['objectId'] in self.instance_detections2D)
 
     def process_colors(self):
-        for color_data in self.metadata['colors']:
-            name = color_data['name']
-            c_key = tuple(color_data['color'])
-            self.color_to_object_id[c_key] = name
-            self.object_id_to_color[name] = c_key
+        if self.metadata['colors']:
+            for color_data in self.metadata['colors']:
+                name = color_data['name']
+                c_key = tuple(color_data['color'])
+                self.color_to_object_id[c_key] = name
+                self.object_id_to_color[name] = c_key
 
     def objects_by_type(self, object_type):
         return [obj for obj in self.metadata['objects'] if obj['objectType'] == object_type]

@@ -395,12 +395,7 @@ class Controller(object):
             max_num_repeats=1,
             remove_prob=0.5):
 
-        receptacle_objects = []
 
-        for rec_obj_type, object_types in RECEPTACLE_OBJECTS.items():
-            receptacle_objects.append(
-                dict(receptacleObjectType=rec_obj_type, itemObjectTypes=list(object_types))
-            )
         if random_seed is None:
             random_seed = random.randint(0, 2**32)
 
@@ -417,7 +412,6 @@ class Controller(object):
 
         return self.step(dict(
             action='RandomInitialize',
-            receptacleObjects=receptacle_objects,
             randomizeOpen=randomize_open,
             uniquePickupableObjectTypes=unique_object_types,
             excludeObjectIds=exclude_object_ids,
@@ -430,7 +424,7 @@ class Controller(object):
         scenes = []
         for low, high in [(1,31), (201, 231), (301, 331), (401, 431)]:
             for i in range(low, high):
-                scenes.append('FloorPlan%s' % i)
+                scenes.append('FloorPlan%s_physics' % i)
 
         return scenes
 
@@ -482,6 +476,10 @@ class Controller(object):
                     current_buffer = ''
 
     def interact(self):
+
+        if not sys.stdout.isatty():
+            raise RuntimeError("controller.interact() must be run from a terminal")
+
         default_interact_commands = {
             '\x1b[C': dict(action='MoveRight', moveMagnitude=0.25),
             '\x1b[D': dict(action='MoveLeft', moveMagnitude=0.25),
@@ -489,6 +487,10 @@ class Controller(object):
             '\x1b[B': dict(action='MoveBack', moveMagnitude=0.25),
             '\x1b[1;2A': dict(action='LookUp'),
             '\x1b[1;2B': dict(action='LookDown'),
+            'i': dict(action='LookUp'),
+            'k': dict(action='LookDown'),
+            'l': dict(action='RotateRight'),
+            'j': dict(action='RotateLeft'),
             '\x1b[1;2C': dict(action='RotateRight'),
             '\x1b[1;2D': dict(action='RotateLeft')
         }
@@ -502,7 +504,7 @@ class Controller(object):
             command_counter = dict(counter=1)
 
             def add_command(cc, action, **args):
-                if cc['counter'] < 10:
+                if cc['counter'] < 15:
                     com = dict(action=action)
                     com.update(args)
                     new_commands[str(cc['counter'])] = com
@@ -519,10 +521,21 @@ class Controller(object):
                             add_command(command_counter, 'CloseObject', objectId=o['objectId'])
                         else:
                             add_command(command_counter, 'OpenObject', objectId=o['objectId'])
+
+                    if o['toggleable']:
+                        add_command(command_counter, 'ToggleObjectOff', objectId=o['objectId'])
+
                     if len(event.metadata['inventoryObjects']) > 0:
-                        if o['receptacle'] and (not o['openable'] or o['isopen']):
-                            inventoryObjectId = event.metadata['inventoryObjects'][0]['objectId']
+                        inventoryObjectId = event.metadata['inventoryObjects'][0]['objectId']
+                        if o['receptacle'] and (not o['openable'] or o['isopen']) and inventoryObjectId != o['objectId']:
                             add_command(command_counter, 'PutObject', objectId=inventoryObjectId, receptacleObjectId=o['objectId'])
+                            add_command(command_counter, 'MoveHandAhead', moveMagnitude=0.1)
+                            add_command(command_counter, 'MoveHandBack', moveMagnitude=0.1)
+                            add_command(command_counter, 'MoveHandRight', moveMagnitude=0.1)
+                            add_command(command_counter, 'MoveHandLeft', moveMagnitude=0.1)
+                            add_command(command_counter, 'MoveHandUp', moveMagnitude=0.1)
+                            add_command(command_counter, 'MoveHandDown', moveMagnitude=0.1)
+                            add_command(command_counter, 'DropHandObject')
 
                     elif o['pickupable']:
                         add_command(command_counter, 'PickupObject', objectId=o['objectId'])
@@ -569,11 +582,6 @@ class Controller(object):
             if obj_metadata is None or obj_metadata['isopen'] == (action['action'] == 'OpenObject'):
                 should_fail = True
 
-        elif action['action'] == 'PutObject':
-            receptacle_type = action['receptacleObjectId'].split('|')[0]
-            object_type = action['objectId'].split('|')[0]
-            if object_type not in RECEPTACLE_OBJECTS[receptacle_type]:
-                should_fail = True
 
         rotation = action.get('rotation')
         if rotation is not None and type(rotation) != dict:
@@ -603,6 +611,9 @@ class Controller(object):
 
         command = self.executable_path()
         fullscreen = 1 if self.fullscreen else 0
+        if QUALITY_SETTINGS[self.quality] == 0:
+            raise RuntimeError("Quality {} is associated with an index of 0. "
+                               "Due to a bug in unity, this quality setting would be ignored.".format(self.quality))
         command += " -screen-fullscreen %s -screen-quality %s -screen-width %s -screen-height %s" % (fullscreen, QUALITY_SETTINGS[self.quality], width, height)
         return shlex.split(command)
 
@@ -656,8 +667,34 @@ class Controller(object):
     def base_dir(self):
         return os.path.join(os.path.expanduser('~'), '.ai2thor')
 
+    def build_url(self):
+        from ai2thor.build import arch_platform_map
+        import ai2thor.build
+        if platform.system() in BUILDS:
+            BUILDS[platform.system()]['url'], BUILDS[platform.system()]['sha256']
+        else:
+            url = None
+            sha256_build = None
+            try:
+                for commit_id in subprocess.check_output('git log -n 10 --format=%H', shell=True).decode('ascii').strip().split("\n"):
+                    arch = arch_platform_map[platform.system()]
+
+                    if ai2thor.downloader.commit_build_exists(arch, commit_id):
+                        url = ai2thor.downloader.commit_build_url(arch, commit_id)
+                        sha256_build = ai2thor.downloader.commit_build_sha256(arch, commit_id)
+                        print("Got build for %s: " % (arch, url))
+                        break
+
+            except Exception:
+                pass
+
+            if url is None:
+                raise Exception("Couldn't find a suitable build url for platform: %s" % platform.system())
+
+            return (url, sha256_build)
+
     def build_name(self):
-        return os.path.splitext(os.path.basename(BUILDS[platform.system()]['url']))[0]
+        return os.path.splitext(os.path.basename(self.build_url()[0]))[0]
 
     def executable_path(self):
 
@@ -666,24 +703,24 @@ class Controller(object):
 
         target_arch = platform.system()
 
+        bn = self.build_name()
         if target_arch == 'Linux':
-            return os.path.join(self.releases_dir(), self.build_name(), self.build_name())
+            return os.path.join(self.releases_dir(), bn, bn)
         elif target_arch == 'Darwin':
             return os.path.join(
                 self.releases_dir(),
-                self.build_name(),
-                self.build_name() + ".app",
+                bn,
+                bn + ".app",
                 "Contents/MacOS",
-                self.build_name())
+                bn)
         else:
             raise Exception('unable to handle target arch %s' % target_arch)
 
     def download_binary(self):
-
         if platform.architecture()[0] != '64bit':
             raise Exception("Only 64bit currently supported")
 
-        url = BUILDS[platform.system()]['url']
+        url,sha256_build = self.build_url()
         tmp_dir = os.path.join(self.base_dir(), 'tmp')
         makedirs(self.releases_dir())
         makedirs(tmp_dir)
@@ -692,7 +729,7 @@ class Controller(object):
             zip_data = ai2thor.downloader.download(
                 url,
                 self.build_name(),
-                BUILDS[platform.system()]['sha256'])
+                sha256_build)
 
             z = zipfile.ZipFile(io.BytesIO(zip_data))
             # use tmpdir instead or a random number
@@ -760,9 +797,10 @@ class Controller(object):
 
                     self.check_x_display(env['DISPLAY'])
 
-            self.download_binary()
-            self.lock_release()
-            self.prune_releases()
+            if not self.local_executable_path:
+                self.download_binary()
+                self.lock_release()
+                self.prune_releases()
 
             unity_thread = threading.Thread(
                 target=self._start_unity_thread,

@@ -68,9 +68,7 @@ public class SceneManager : MonoBehaviour {
         this.AnimationMode = SceneAnimationMode.Instant;
 
 	}
-
-	
-
+   
 	//generates a unique ID for a sim object
 	public void AssignUniqueID (SimObj obj) {
 		//unique ID is a string consisting of:
@@ -185,7 +183,7 @@ public class SceneManager : MonoBehaviour {
 			//TODO specify whether to gather prefab lights
 
 			//if it's NOT in a prefab, move it
-			if (PrefabUtility.GetPrefabParent (l.gameObject) == null) {
+			if (PrefabUtility.GetCorrespondingObjectFromSource(l.gameObject) == null) {
 				l.transform.parent = LightingParent;
 			}
 		}
@@ -209,7 +207,7 @@ public class SceneManager : MonoBehaviour {
 			foreach (SimObj platonic in PlatonicPrefabs) {
 				if (generic.Type == platonic.Type) {
 					//make sure one isn't a prefab of the other
-					GameObject prefab = PrefabUtility.GetPrefabParent (generic.gameObject) as GameObject;
+					GameObject prefab = PrefabUtility.GetCorrespondingObjectFromSource(generic.gameObject) as GameObject;
 					if (prefab == null || prefab != platonic.gameObject) {
 						Debug.Log ("Replacing " + generic.name + " with " + platonic.name);
 						//as long as it's not a prefab, swap it out with the prefab
@@ -282,7 +280,7 @@ public class SceneManager : MonoBehaviour {
 			fpsObj.name = FPSControllerPrefab.name;
 		} else {
 			//re-attach to prefab
-			GameObject prefabParent = PrefabUtility.GetPrefabParent (fpsObj) as GameObject;
+			GameObject prefabParent = PrefabUtility.GetCorrespondingObjectFromSource(fpsObj) as GameObject;
 			if (prefabParent == null) {
 				//if it's not attached to a prefab, delete and start over
 				Vector3 pos = fpsObj.transform.position;
@@ -290,7 +288,7 @@ public class SceneManager : MonoBehaviour {
 				fpsObj = PrefabUtility.InstantiatePrefab (FPSControllerPrefab) as GameObject;
 				fpsObj.transform.position = pos;
 			} else {
-				PrefabUtility.ReconnectToLastPrefab (fpsObj);
+				PrefabUtility.RevertPrefabInstance(fpsObj, InteractionMode.AutomatedAction);
 			}
 		}
 		fpsObj.transform.parent = null;
