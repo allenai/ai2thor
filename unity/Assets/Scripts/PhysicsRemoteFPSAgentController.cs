@@ -2213,6 +2213,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 ItemInHand = null;
             }
 
+            //default repeats if no value is passed in.
+            if(action.maxNumRepeats == 0)
+            action.maxNumRepeats = 5;
+
             PhysicsSceneManager script = GameObject.Find("PhysicsSceneManager").GetComponent<PhysicsSceneManager>();
 
             bool success = script.RandomSpawnRequiredSceneObjects(action.randomSeed, action.forceVisible, action.maxNumRepeats, action.placeStationary);
