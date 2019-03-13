@@ -510,6 +510,8 @@ def poll_ci_build(context):
     for i in range(60):
         missing = False
         for arch in platform_map.keys():
+            if (i % 300) == 0:
+                print("checking %s for commit id %s" % (arch, commit_id))
             if ai2thor.downloader.commit_build_log_exists(arch, commit_id):
                 print("log exists %s" % commit_id)
             else:
