@@ -266,10 +266,10 @@ def webgl_build(
     if verbose:
         print(scenes)
 
-    # if _build('unity', arch, directory, build_name, env=dict(SCENE=scenes)):
-    #     print("Build Successful")
-    # else:
-    #     print("Build Failure")
+    if _build('unity', arch, directory, build_name, env=dict(SCENE=scenes)):
+        print("Build Successful")
+    else:
+        print("Build Failure")
     generate_quality_settings(context)
     build_path = _webgl_local_build_path(prefix, directory)
 
@@ -319,16 +319,16 @@ def webgl_build(
     if verbose:
         print(scene_metadata)
 
-    with open(os.path.join(build_path, "Build/{}.data.unityweb".format(build_name)), 'rb') as f:
-            h = hashlib.md5()
-            h.update(f.read())
-            md5_id = h.hexdigest()
-    os.rename(os.path.join(build_path, "Build/{}.data.unityweb".format(build_name)), os.path.join(build_path, "Build/{}_{}.data.unityweb".format(build_name, md5_id)))
-
     import json
-    with open(os.path.join(build_path, "Build/{}.json".format(build_name)), 'r') as f:
-        unity_json = json.load(f)
-        print("UNITY json {}".format(unity_json))
+    # with open(os.path.join(build_path, "Build/{}.data.unityweb".format(build_name)), 'rb') as f:
+    #         h = hashlib.md5()
+    #         h.update(f.read())
+    #         md5_id = h.hexdigest()
+    # os.rename(os.path.join(build_path, "Build/{}.data.unityweb".format(build_name)), os.path.join(build_path, "Build/{}_{}.data.unityweb".format(build_name, md5_id)))
+    #
+    # with open(os.path.join(build_path, "Build/{}.json".format(build_name)), 'r') as f:
+    #     unity_json = json.load(f)
+    #     print("UNITY json {}".format(unity_json))
 
 
     with open(os.path.join(build_path, "scenes.json"), 'w') as f:
