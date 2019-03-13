@@ -229,7 +229,15 @@ def local_build(context, prefix='local', arch='OSXIntel64'):
     generate_quality_settings(context)
 
 @task
-def webgl_build(context, scenes="", room_ranges=None, directory="builds", prefix='local', verbose=False):
+def webgl_build(
+        context,
+        scenes="",
+        room_ranges=None,
+        directory="builds",
+        prefix='local',
+        verbose=False,
+        content_addressable=False
+):
     """
     Creates a WebGL build
     :param context:
@@ -260,10 +268,10 @@ def webgl_build(context, scenes="", room_ranges=None, directory="builds", prefix
     if verbose:
         print(scenes)
 
-    if _build('unity', arch, directory, build_name, env=dict(SCENE=scenes)):
-        print("Build Successful")
-    else:
-        print("Build Failure")
+    # if _build('unity', arch, directory, build_name, env=dict(SCENE=scenes)):
+    #     print("Build Successful")
+    # else:
+    #     print("Build Failure")
     generate_quality_settings(context)
     build_path = _webgl_local_build_path(prefix, directory)
 
@@ -313,7 +321,18 @@ def webgl_build(context, scenes="", room_ranges=None, directory="builds", prefix
     if verbose:
         print(scene_metadata)
 
+    with open(os.path.join(build_path, "Build/{}.data.unityweb".format(build_name)), 'rb') as f:
+            h = hashlib.md5()
+            h.update(f.read())
+            md5_id = h.hexdigest()
+    os.rename(os.path.join(build_path, "Build/{}.data.unityweb".format(build_name)), os.path.join(build_path, "Build/{}_{}.data.unityweb".format(build_name, md5_id)))
+
     import json
+    with open(os.path.join(build_path, "Build/{}.json".format(build_name)), 'r') as f:
+        unity_json = json.load(f)
+        print("UNITY json {}".format(unity_json))
+
+
     with open(os.path.join(build_path, "scenes.json"), 'w') as f:
         f.write(json.dumps(scene_metadata, sort_keys=False, indent=4))
 
@@ -880,7 +899,7 @@ def webgl_deploy(ctx, prefix='local', source_dir='builds', target_dir='', verbos
 
 
 @task
-def webgl_build_deploy_demo(ctx, verbose=False, force=False):
+def webgl_build_deploy_demo(ctx, verbose=False, force=False, content_addressable=False):
     webgl_build(ctx, room_ranges="1-30,201-230,301-330,401-430,501-530")
     webgl_deploy(ctx, verbose=verbose, force=force)
 
