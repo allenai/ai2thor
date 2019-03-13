@@ -381,6 +381,9 @@ class Controller(object):
         self.fullscreen = fullscreen
 
     def reset(self, scene_name=None):
+        if not scene_name.endswith('_physics'):
+            scene_name = scene_name + "_physics"
+
         self.response_queue.put_nowait(dict(action='Reset', sceneName=scene_name, sequenceId=0))
         self.last_event = queue_get(self.request_queue)
 
