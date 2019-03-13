@@ -61,7 +61,7 @@ def _build(unity_path, arch, build_dir, build_name, env={}):
         unity_path = standalone_path
     else:
         unity_path = unity_hub_path
-    command = "%s -quit -batchmode -logFile build.log -projectpath %s -executeMethod Build.%s" % (unity_path, project_path, arch)
+    command = "%s -quit -batchmode -logFile %s.log -projectpath %s -executeMethod Build.%s" % (unity_path, build_name, project_path, arch)
     target_path = os.path.join(build_dir, build_name)
 
     full_env = os.environ.copy()
@@ -221,7 +221,6 @@ def local_build_name(prefix, arch):
 @task
 def local_build(context, prefix='local', arch='OSXIntel64'):
     build_name = local_build_name(prefix, arch)
-    fetch_source_textures(context)
     if _build('unity', arch, "builds", build_name):
         print("Build Successful")
     else:
@@ -248,7 +247,6 @@ def webgl_build(
     from functools import reduce
     arch = 'WebGL'
     build_name = local_build_name(prefix, arch)
-    fetch_source_textures(context)
     if room_ranges is not None:
         # print(room_ranges)
         # print([list(range(*tuple(int(y) for y in x.split("-")))) for x in room_ranges.split(",")])
@@ -415,6 +413,15 @@ def fetch_source_textures(context):
     z = zipfile.ZipFile(io.BytesIO(zip_data))
     z.extractall(os.getcwd())
 
+def build_log_push(build_info):
+    with open(build_info['log']) as f:
+        build_log = f.read() + "\n" + build_info['build_exception']
+
+    build_log_key = 'builds/' + build_info['log']
+    s3 = boto3.resource('s3')
+    s3.Object(S3_BUCKET, build_log_key).put(Body=build_log, ACL="public-read", ContentType='text/plain')
+
+
 def archive_push(unity_path, build_path, build_dir, build_info):
     threading.current_thread().success = False
     archive_name = os.path.join(unity_path, build_path)
@@ -424,6 +431,7 @@ def archive_push(unity_path, build_path, build_dir, build_info):
 
     build_info['sha256'] = build_sha256(archive_name)
     push_build(archive_name, build_info['sha256'])
+    build_log_push(build_info)
     print("Build successful")
     threading.current_thread().success = True
 
@@ -441,8 +449,6 @@ def clean():
     subprocess.check_call("git clean -f -x", shell=True)
     shutil.rmtree("unity/builds", ignore_errors=True)
 
-    if os.path.isfile('build.log'):
-        os.unlink('build.log')
 
 @task
 def ci_build(context, branch):
@@ -495,10 +501,11 @@ def ci_build_arch(arch, branch):
     build_info = {}
 
     build_info['url'] = build_url_base + build_path
+    build_info['build_exception'] = ''
 
-    build_exception = ''
     proc = None
     try:
+        build_info['log'] = "%s.log" % (build_name,)
         _build(unity_path, arch, build_dir, build_name)
 
         print("pushing archive")
@@ -507,14 +514,8 @@ def ci_build_arch(arch, branch):
 
     except Exception as e:
         print("Caught exception %s" % e)
-        build_exception = "Exception building: %s" % e
-
-    with open("build.log") as f:
-        build_log = f.read() + "\n" + build_exception
-
-    build_log_key = 'builds/%s.log' % (build_name,)
-    s3 = boto3.resource('s3')
-    s3.Object(S3_BUCKET, build_log_key).put(Body=build_log, ACL="public-read", ContentType='text/plain')
+        build_info['build_exception'] = "Exception building: %s" % e
+        build_log_push(build_info)
 
     return proc
 
@@ -525,7 +526,7 @@ def poll_ci_build(context):
     import ai2thor.downloader
     import time
     commit_id = subprocess.check_output("git log -n 1 --format=%H", shell=True).decode('ascii').strip()
-    for i in range(30):
+    for i in range(60):
         missing = False
         for arch in platform_map.keys():
             if ai2thor.downloader.commit_build_log_exists(arch, commit_id):
@@ -551,7 +552,6 @@ def build(context, local=False):
     build_url_base = 'http://s3-us-west-2.amazonaws.com/%s/' % S3_BUCKET
 
     builds = {'Docker': {'tag': version}}
-    fetch_source_textures(context)
     threads = []
     dp = Process(target=build_docker, args=(version,))
     dp.start()
@@ -601,6 +601,7 @@ def interact(ctx, scene, editor_mode=False, local_build=False):
         env.start(8200, False, player_screen_width=600, player_screen_height=600)
     else:
         env.start(player_screen_width=600, player_screen_height=600)
+
     env.reset(scene)
     env.step(dict(action='Initialize', gridSize=0.25))
     env.interact()
