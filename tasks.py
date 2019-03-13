@@ -61,7 +61,7 @@ def _build(unity_path, arch, build_dir, build_name, env={}):
         unity_path = standalone_path
     else:
         unity_path = unity_hub_path
-    command = "%s -quit -batchmode -logFile build.log -projectpath %s -executeMethod Build.%s" % (unity_path, project_path, arch)
+    command = "%s -quit -batchmode -logFile %s.log -projectpath %s -executeMethod Build.%s" % (unity_path, build_name, project_path, arch)
     target_path = os.path.join(build_dir, build_name)
 
     full_env = os.environ.copy()
@@ -412,6 +412,7 @@ def archive_push(unity_path, build_path, build_dir, build_info):
 
     build_info['sha256'] = build_sha256(archive_name)
     push_build(archive_name, build_info['sha256'])
+    build_log_push(build_info)
     print("Build successful")
     threading.current_thread().success = True
 
@@ -444,18 +445,13 @@ def ci_build(context, branch):
         subprocess.check_call("git pull origin %s" % branch, shell=True)
 
         procs = []
-        builds = []
         for arch in ['OSXIntel64', 'Linux64']:
-            (p, build_info) = ci_build_arch(arch, branch)
+            p = ci_build_arch(arch, branch)
             procs.append(p)
-            builds.append(build_info)
 
         for p in procs:
             if p:
                 p.join()
-
-        for build_info in builds:
-            build_log_push(build_info)
 
         fcntl.flock(lock_f, fcntl.LOCK_UN)
 
@@ -490,6 +486,7 @@ def ci_build_arch(arch, branch):
 
     proc = None
     try:
+        build_info['log'] = "%s.log" % (build_name,)
         _build(unity_path, arch, build_dir, build_name)
 
         print("pushing archive")
@@ -499,12 +496,9 @@ def ci_build_arch(arch, branch):
     except Exception as e:
         print("Caught exception %s" % e)
         build_info['build_exception'] = "Exception building: %s" % e
+        build_log_push(build_info)
 
-    build_info['log'] = "%s.log" % (build_name,)
-    os.rename("build.log", build_info['log'])
-
-
-    return (proc, build_info)
+    return proc
 
 
 @task
