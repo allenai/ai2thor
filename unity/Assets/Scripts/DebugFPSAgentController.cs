@@ -62,7 +62,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
         private bool scroll2DEnabled = true;
         // Optimization
         private bool strongHighlight = true;
-        private bool materialChanged = false;
 
         private void Start()
         {
@@ -343,9 +342,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 }
 			}
 
-            var ray = m_Camera.GetComponent<Camera>().ScreenPointToRay(new Vector3(Screen.width / 2, Screen.height / 2)); //Input.mousePosition);
+            var ray = m_Camera.GetComponent<Camera>().ScreenPointToRay(new Vector3(Screen.width / 2, Screen.height / 2));
             RaycastHit hit;
-            int layerMask = LayerMask.GetMask("SimObjVisible"); // ~LayerMask.GetMask("Agent") 
+            int layerMask = LayerMask.GetMask("SimObjVisible"); 
             Physics.Raycast(ray, out hit, 5f, layerMask);
             Debug.DrawLine(ray.origin, hit.point, Color.red);
 
@@ -370,37 +369,17 @@ namespace UnityStandardAssets.Characters.FirstPerson
                )
             {
                 var simObj = hit.transform.GetComponent<SimObjPhysics>();
-                Func<int, string> s = cw => { return ""; };
                 Func<bool> validObjectLazy = () => { 
                     return simObj.PrimaryProperty == SimObjPrimaryProperty.CanPickup ||
                                   simObj.GetComponent<CanOpen_Object>() ||
                                   simObj.GetComponent<CanToggleOnOff>();
                 };
-                //var validObject = simObj.PrimaryProperty == SimObjPrimaryProperty.CanPickup ||
-                                  //simObj.GetComponent<CanOpen_Object>() ||
-                                  //simObj.GetComponent<CanToggleOnOff>();
-
-
-                //if (simObj != null)
-                //{
-                //    var withinReach = PhysicsController.FindObjectInVisibleSimObjPhysics(simObj.uniqueID) != null;
-                //}
-
                 if (simObj != null && validObjectLazy())
                 {
                     var d = hit.point - ray.origin;
                     d.y = 0;
                     var distance = d.magnitude;
-                    // var k = PhysicsController.VisibleSimObjs(new ServerAction { objectId = simObj.uniqueID });
-                    // k.Length == 0;
-                    // k.
                     var withinReach = PhysicsController.FindObjectInVisibleSimObjPhysics(simObj.uniqueID) != null;
-
-                    // TODO: Get 0.2 from character controller
-                    // distance = (hit.point - this.PhysicsController.transform.position).magnitude + this.PhysicsController.transform.GetComponent<CharacterController>().radius;
-                    // var withinReach = distance + 0.05 <= 1.5f;
-
-                    // Debug.Log("distance " + distance);
                     setTargetText(simObj.name, withinReach);
                     this.highlightedObject = simObj;
                     var mRenderer = this.highlightedObject.GetComponentInChildren<MeshRenderer>();
@@ -424,6 +403,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         }
                     }
                 }
+            }
+            else
+            {
+                this.highlightedObject = null;
             }
 
         }
