@@ -32,6 +32,7 @@ def commit_build_sha256(arch, commit_id):
 def download(url, build_name, sha256_digest):
     logger.debug("Downloading file from %s" % url)
     r = requests.get(url, stream=True)
+    r.raise_for_status()
     size = int(r.headers['Content-Length'].strip())
     total_bytes = 0
 
