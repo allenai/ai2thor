@@ -142,12 +142,12 @@ event = controller.step(dict(action='MoveBack'))
 #### Teleport
 Move the agent to any location in the scene. Using this command it is possible to put the agent into places that would not normally be possible to navigate to, but it can be useful if you need to place an agent in the exact same spot for a task.
 ```python
-controller.step(dict(action='Teleport', x=0.999, y=1.01, z=-0.3541))
+event = controller.step(dict(action='Teleport', x=0.999, y=1.01, z=-0.3541))
 ```
 #### TeleportFull
 Move the agent to any location in the scene. Using this command it is possible to put the agent into places that would not normally be possible to navigate to, but it can be useful if you need to place an agent in the exact same spot for a task. Identical to Telport, but also allows rotation and horizon to be passed in.
 ```python
-controller.step(dict(action='TeleportFull', x=0.999, y=1.01, z=-0.3541, rotation=90.0, horizon=30.0))
+event = controller.step(dict(action='TeleportFull', x=0.999, y=1.01, z=-0.3541, rotation=90.0, horizon=30.0))
 ```
 #### Get Reachable Positions
 Returns valid coordinates that the Agent can reach without colliding with the environment or Sim Objects. This can be used in tandem with `Teleport` to warp the Agent as needed. This is useful for things like randomizing the initial position of the agent without clipping into the environment.
@@ -183,8 +183,6 @@ If `placeStationary = false` is passed in, a placed object will use the physics 
 
 **Stationary Mode: Determanistic final position**
 This is the default value of `placeStationary` if no parameter is passed in. If `placeStationary = true`, the object will be placed in/on the valid receptacle without using physics to resolve the final position. This means that the object will be placed so that it will not roll around. For determanistic placement make sure to use this mode!
-
-Place the Tomato in the TableTop receptacle.
 ```python
 event = controller.step(dict(action='PutObject', objectId = "Tomato|0.1|3.2|0.43", receptacleObjectId = "TableTop|0.25|-0.27|0.95"))
  ```
@@ -209,23 +207,29 @@ If a `moveMagnitude` value is passed in as well, it can be used to open an objec
 The target object must be within range of the Agent and Interactable in order for this action to succeed. An object can fail to open if it hits another object as it is opening. In this case the action will fail and the target object will reset to the position it was last in.
 ```python
 event = controller.step(dict(action='OpenObject', objectId="Fridge|0.25|0.75"))
+```
+Here is an example of opening the Fridge halfway:
+```python
 event = controller.step(dict(action='OpenObject', objectId="Fridge|0.25|0.75", moveMagnitude = 0.5))
 ```
 #### CloseObject
 Close an object specified by `objectID`.
 
 The target object must be within range of the Agent and Interactable in order for this action to succeed. An object can fail to open if it hits another object as it is closing. In this case the action will fail and the target object will reset to the position it was last in.
+
 ```python
 event = controller.step(dict(action='CloseObject', objectId="Fridge|0.25|0.75"))
 ```
 
 #### Toggle On
 Toggles an object specified by `objectID` into the On state if applicable. Noteable examples are Lamps, Light Switches, and Laptops.
+
 ```python
 event = controller.step(dict(action='ToggleObjectOn', objectId= "LightSwitch|0.25|-0.27|0.95")))
 ```
 #### Toggle Off
 Toggles an object specified by `objectID` into the Off state if applicable. Noteable examples are Lamps, Light Switches, and Laptops.
+
 ```python
 event = controller.step(dict(action='ToggleObjectOff', objectId= "LightSwitch|0.25|-0.27|0.95")))
 ```
