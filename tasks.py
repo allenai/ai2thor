@@ -394,6 +394,15 @@ def fetch_source_textures(context):
     z = zipfile.ZipFile(io.BytesIO(zip_data))
     z.extractall(os.getcwd())
 
+def build_log_push(build_info):
+    with open(build_info['log']) as f:
+        build_log = f.read() + "\n" + build_info['build_exception']
+
+    build_log_key = 'builds/' + build_info['log']
+    s3 = boto3.resource('s3')
+    s3.Object(S3_BUCKET, build_log_key).put(Body=build_log, ACL="public-read", ContentType='text/plain')
+
+
 def archive_push(unity_path, build_path, build_dir, build_info):
     threading.current_thread().success = False
     archive_name = os.path.join(unity_path, build_path)
@@ -420,8 +429,6 @@ def clean():
     subprocess.check_call("git clean -f -x", shell=True)
     shutil.rmtree("unity/builds", ignore_errors=True)
 
-    if os.path.isfile('build.log'):
-        os.unlink('build.log')
 
 @task
 def ci_build(context, branch):
@@ -437,13 +444,18 @@ def ci_build(context, branch):
         subprocess.check_call("git pull origin %s" % branch, shell=True)
 
         procs = []
+        builds = []
         for arch in ['OSXIntel64', 'Linux64']:
-            p = ci_build_arch(arch, branch)
+            (p, build_info) = ci_build_arch(arch, branch)
             procs.append(p)
+            builds.append(build_info)
 
         for p in procs:
             if p:
                 p.join()
+
+        for build_info in builds:
+            build_log_push(build_info)
 
         fcntl.flock(lock_f, fcntl.LOCK_UN)
 
@@ -474,8 +486,8 @@ def ci_build_arch(arch, branch):
     build_info = {}
 
     build_info['url'] = build_url_base + build_path
+    build_info['build_exception'] = ''
 
-    build_exception = ''
     proc = None
     try:
         _build(unity_path, arch, build_dir, build_name)
@@ -486,16 +498,13 @@ def ci_build_arch(arch, branch):
 
     except Exception as e:
         print("Caught exception %s" % e)
-        build_exception = "Exception building: %s" % e
+        build_info['build_exception'] = "Exception building: %s" % e
 
-    with open("build.log") as f:
-        build_log = f.read() + "\n" + build_exception
+    build_info['log'] = "%s.log" % (build_name,)
+    os.rename("build.log", build_info['log'])
 
-    build_log_key = 'builds/%s.log' % (build_name,)
-    s3 = boto3.resource('s3')
-    s3.Object(S3_BUCKET, build_log_key).put(Body=build_log, ACL="public-read", ContentType='text/plain')
 
-    return proc
+    return (proc, build_info)
 
 
 @task
