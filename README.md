@@ -83,81 +83,135 @@ event.metadata
 
 We currently provide the following API controlled actions. Actions are defined in ```unity/Assets/Scripts/PhysicsRemoteFPSAgentController.cs```. 
 
-### Object Position Randomization
+<hr>
 
-After initializing the scene, pickupable objects can have their default positions randomized to any valid receptacle they could be placed in within the scene. Pass an int of your choice into `randomSeed` to seed the randomization. Setting `forceVisible = true` will attempt to spawn objects outside of openable receptacles (ie: if you wanted no objects to spawn in Cabinets or Drawers and only in outside, immediately visible receptacles). Finally, setting `maxNumRepeats` to higher values will improve position spawn accuracy by attempting to spawn objects in more locations, but this will be at the cost of performance. Setting it to `5` as a starting point is a good default.
+## Object Position Randomization
+
+After initializing the scene, pickupable objects can have their default positions randomized to any valid receptacle they could be placed in within the scene.
 
 ```python
-event = controller.reset('FloorPlan28')
-event = controller.step(dict(action='Initialize', gridSize=0.25))
-event = controller.step(dict(action = 'InitialRandomSpawn', randomSeed = 0, forceVisible = false, maxNumRepeats = 5))
+controller.reset('FloorPlan28')
+controller.step(dict(action='Initialize', gridSize=0.25))
+controller.step(dict(action = 'InitialRandomSpawn', randomSeed = 0, forceVisible = false, maxNumRepeats = 5))
 ```
 Remember to reset and initiialize the scene before using the Position Randomizer, otherwise seeded values will be innacurate. 
 
-### Agent Movement and Orientation
+| Parameter | Type | Description | Default |
+|-----------|------|-------------|---------|
+|randomSeed| int | Used to seed the randomization for duplicatable scene states. Because this seed depends on the current state of the scene, remember to reset the scene with controller.reset() before running InitialRandomSpawn(), otherwise the seeded randomization will not be accurate | 0 |
+|forceVisible | bool | When enabled, the scene will attempt to randomize all moveable objects outside of receptacles in plain view. Use this if you want to avoid objects spawning inside closed drawers, cabinets, etc.| False|
+|maxNumRepeats | int | how many times each object in the scene attempts to randomly spawn. Setting this value higher will lead to fewer spawn failures at the cost of performance | 5|
 
-When moving or rotating the agent, do note that if the agent is holding a Sim Object in its hand it could prevent moving or turning from succeeding. This is to prevent held objects from clipping with the environment.
+<hr>
 
-#### RotateRight
+## Agent Navigation
+
+The agent can use these actions to navigate through the environment.
+<hr>
+
+### RotateRight
 Rotate the agent by 90 degrees to the right of its current facing
 ```python
-event = controller.step(dict(action='RotateRight'))
+controller.step(dict(action='RotateRight'))
 ```
-#### RotateLeft
+<hr>
+
+### RotateLeft
 Rotate the agent by 90 degrees to the left of its current facing
 ```python
-event = controller.step(dict(action='RotateLeft'))
+controller.step(dict(action='RotateLeft'))
 ```
-#### LookUp
+<hr>
+
+### LookUp
 Angle the agent's view up in 30 degree increments (max upward angle is 30 degrees above the forward horizon)
 ```python
-event = controller.step(dict(action='LookUp'))
+controller.step(dict(action='LookUp'))
 ```
-#### LookDown
+<hr>
+
+### LookDown
 Angle the agent's view down in 30 degree increments (max downward angle is 60 degrees below the forward horizon)
 ```python
-event = controller.step(dict(action='LookDown'))
+controller.step(dict(action='LookDown'))
 ```
-#### MoveAhead
+<hr>
+
+### MoveAhead
 Move the agent forward by `gridSize`.
 ```python
-event = controller.step(dict(action='MoveAhead'))
+controller.step(dict(action='MoveAhead'))
 ```
-#### MoveRight
+<hr>
+
+### MoveRight
 Move the agent right by `gridSize` (without changing view direction).
 ```python
-event = controller.step(dict(action='MoveRight'))
+controller.step(dict(action='MoveRight'))
 ```
-#### MoveLeft
+<hr>
+
+### MoveLeft
 Move the agent left by `gridSize` (without changing view direction).
 ```python
-event = controller.step(dict(action='MoveLeft'))
+controller.step(dict(action='MoveLeft'))
 ```
-#### MoveBack
+<hr>
+
+### MoveBack
 Move the agent backward by `gridSize` (without changing view direction).
 ```python
-event = controller.step(dict(action='MoveBack'))
+controller.step(dict(action='MoveBack'))
 ```
-#### Teleport
+<hr>
+
+
+## Agent Teleportation
+Use these actions to move the agent through the scene by warping to specified points rather than having to navigate to positions step by step.
+<hr>
+
+### Teleport
 Move the agent to any location in the scene. Using this command it is possible to put the agent into places that would not normally be possible to navigate to, but it can be useful if you need to place an agent in the exact same spot for a task.
 ```python
-event = controller.step(dict(action='Teleport', x=0.999, y=1.01, z=-0.3541))
+controller.step(dict(action='Teleport', x=0.999, y=1.01, z=-0.3541))
 ```
-#### TeleportFull
+
+| Parameter | Type | Description | Default |
+|-----------|------|-------------|---------|
+|x| float | x coordinate in 3D scene space | 0.0 |
+|y| float | y coordinate in 3D scene space | 0.0 |
+|z| float | z coordinate in 3D scene space | 0.0 |
+
+<hr>
+
+### TeleportFull
 Move the agent to any location in the scene. Using this command it is possible to put the agent into places that would not normally be possible to navigate to, but it can be useful if you need to place an agent in the exact same spot for a task. Identical to Telport, but also allows rotation and horizon to be passed in.
 ```python
-event = controller.step(dict(action='TeleportFull', x=0.999, y=1.01, z=-0.3541, rotation=90.0, horizon=30.0))
+controller.step(dict(action='TeleportFull', x=0.999, y=1.01, z=-0.3541, rotation=90.0, horizon=30.0))
 ```
-#### Get Reachable Positions
+
+| Parameter | Type | Description | Default |
+|-----------|------|-------------|---------|
+|x| float | x coordinate in 3D scene space | 0.0 |
+|y| float | y coordinate in 3D scene space | 0.0 |
+|z| float | z coordinate in 3D scene space | 0.0 |
+|rotation| float | Forward orientation of the Agent relative to world x/z axes | 0.0 |
+|horizon| float | Up/Down look angle of the Agent. Valid values are -60 to +30 degrees in 30 degree increments | 0.0 |
+
+<hr>
+
+### Get Reachable Positions
 Returns valid coordinates that the Agent can reach without colliding with the environment or Sim Objects. This can be used in tandem with `Teleport` to warp the Agent as needed. This is useful for things like randomizing the initial position of the agent without clipping into the environment.
 ```python
-event = controller.step(dict(action='GetReachablePositions'))
+controller.step(dict(action='GetReachablePositions'))
 ``` 
+<hr>
 
-### Sim Object Interaction
-The following actions are all ways the Agent can interact with Sim Objects.
+## Object Interaction
+These actions allow the agent to interact with Sim Objects in the scene in various ways.
+<hr>
 
-#### Pickup Object
+### Pickup Object
 
 Pick up an Interactable object specified by `objectID` and move it to the Agent's Hand. Note that the agent's hand must be clear of obstruction- if the target object being in the Agent's Hand would cause it to clip into the environment, this will fail.
 
@@ -166,117 +220,206 @@ Picked up objects can also obstruct the Agent's view of the environment since th
 **Moveable Receptacles:** Note that certain objects are Receptacles that can themselves be picked up. If a moveable receptacle is picked up while other Sim Objects are inside of it, the contained objects will be picked up with the moveable receptacle. This allows for sequences like "Place Egg on Plate -> Pick Up Plate" to move both the Plate and Egg.
 
 ```python
-event = controller.step(dict(action='PickupObject', objectId="Mug|0.25|-0.27"))
+controller.step(dict(action='PickupObject', objectId="Mug|0.25|-0.27"))
 ```
-#### Put Object
-A Sim Object in the Agent's hand (`objectId`), will be put in/on a target receptacle specified by `receptacleObjectID`. 
 
-**Receptacle Restrictions:** By default, objects are restricted as to what type of receptacle they can be placed in. Please refer to [the Sim Object Info Table](https://docs.google.com/spreadsheets/d/1wx8vWgmFSi-4Gknkwl2fUMG8oRedu-tUklGSvU0oh4U/edit?usp=sharing), check the **_"Pickupable Object Restrictions"_** sheet, and use the dropdown menu under **_"Select Object Type"_** to see which object types can validly be placed in which receptacle types. 
+| Parameter | Type | Description | Default |
+|-----------|------|-------------|---------|
+|objectId| string | the string unique id of the target object | null |
 
-If `forceAction = true` is passed in to this command, object placement will ignore the beforementioned placement restrictions.
+<hr>
 
-Additionally, there are 2 "modes" that can be used when placing an object:
-
-**Physics Mode: Non-determanistic final position**
-If `placeStationary = false` is passed in, a placed object will use the physics engine to resolve the final position. This means placing an object on an uneven surface may cause inconsistent results due to the object rolling around or even falling off of the target receptacle. Note that because of variances in physics resolution, this placement mode is non-determanistic!
-
-**Stationary Mode: Determanistic final position**
-This is the default value of `placeStationary` if no parameter is passed in. If `placeStationary = true`, the object will be placed in/on the valid receptacle without using physics to resolve the final position. This means that the object will be placed so that it will not roll around. For determanistic placement make sure to use this mode!
+### Put Object
+Attempt to Put an object the Agent is holding onto/in the target Receptacle.
 ```python
-event = controller.step(dict(action='PutObject', objectId = "Tomato|0.1|3.2|0.43", receptacleObjectId = "TableTop|0.25|-0.27|0.95"))
+controller.step(dict(action='PutObject', objectId = "Tomato|0.1|3.2|0.43", receptacleObjectId = "TableTop|0.25|-0.27|0.95"))
  ```
+
+ | Parameter | Type | Description | Default |
+|-----------|------|-------------|---------|
+|objectId| string| The string unique id of the object in the Agent's hand that it is trying to put down. Note that an error will be thrown if trying to put an object the Agent is not holding|null|
+|receptacleObjectId| string| string unique id of target receptacle to attempt putting the object in/on.|null|
+|forceAction | bool | Enable to ignore any Receptacle Restrictions when attempting to place objects. Normally objects will fail to be put on a receptacle if that receptacle is not valid for the object. See the [Receptacle Object Types](receptacle-object-types) page for more details.|False|
+|placeStationary| bool | If `placeStationary = False` is passed in, a placed object will use the physics engine to resolve the final position. This means placing an object on an uneven surface may cause inconsistent results due to the object rolling around or even falling off of the target receptacle. Note that because of variances in physics resolution, this placement mode is non-determanistic! If `placeStationary = True`, the object will be placed in/on the valid receptacle without using physics to resolve the final position. This means that the object will be placed so that it will not roll around. For determanistic placement make sure to set to true! | True|
+
+<hr>
  
-#### Drop Object
-Drop a held object and let Physics resolve where it lands. Note that this is different from the "Place Object" function, as this does not guarantee the held object will be put into a specified receptacle. This is meant to be used in tandem with the Move/Rotate Hand functions to maneuver a held object to a target area, and the let it drop.
+### Drop Object
+Drop a held object and let Physics resolve where it lands. Note that this is different from the Put Object function, as this does not guarantee the held object will be put into a specified receptacle. This is meant to be used in tandem with the Move/Rotate Hand functions to maneuver a held object to a target area, and the let it drop.
 
 Additionally, this Drop action will fail if the held object is not clear from all collisions. Most importantly, the Agent's collision will prevent Drop, as dropping an object if it is "inside" the agent will lead to unintended behavior.
 ```python
-event = controller.step(dict(action='DropHandObject')))
+controller.step(dict(action='DropHandObject')))
 ```
-#### Throw Object
-Throw a held object in the current forward direction of the Agent at a force specified by `moveMagnitude`. Because objects can have different Mass properties, certain objects will require more or less force to push the same distance. 
-```python
-event = controller.step(dict(action='ThrowObject', moveMagnitude= 150 )))
-```
-#### OpenObject 
-Open an object specified by `objectID`. 
+<hr>
 
-If a `moveMagnitude` value is passed in as well, it can be used to open an object a percentage of its full "open" position. To do this, pass a value between 0 and 1 (1 being fully open). The second example here would open the Fridge halfway.
+### Throw Object
+An extention of the Drop function-throw a held object in the current forward direction of the Agent at a force specified by `moveMagnitude`. Because objects can have different Mass properties, certain objects will require more or less force to push the same distance. 
+```python
+controller.step(dict(action='ThrowObject', moveMagnitude= 150.0 )))
+```
+
+| Parameter | Type | Description | Default |
+|-----------|------|-------------|---------|
+|moveMagnitude| float | The amount of force used to throw the object. Note that objects of different masses will have different throw distances if this magnitude is not changed | 0.0 |
+
+<hr>
+
+### OpenObject 
+Open an object specified by `objectID`. 
 
 The target object must be within range of the Agent and Interactable in order for this action to succeed. An object can fail to open if it hits another object as it is opening. In this case the action will fail and the target object will reset to the position it was last in.
 ```python
-event = controller.step(dict(action='OpenObject', objectId="Fridge|0.25|0.75"))
+controller.step(dict(action='OpenObject', objectId="Fridge|0.25|0.75"))
 ```
 Here is an example of opening the Fridge halfway:
 ```python
-event = controller.step(dict(action='OpenObject', objectId="Fridge|0.25|0.75", moveMagnitude = 0.5))
+controller.step(dict(action='OpenObject', objectId="Fridge|0.25|0.75", moveMagnitude = 0.5))
 ```
-#### CloseObject
+
+| Parameter | Type | Description | Default |
+|-----------|------|-------------|---------|
+|objectId| string | the string unique id of the target object | null |
+|moveMagnitude| float | Pass a magnitude between 0.0 and 1.0 to open by the corresponding percentage. For example, a magnitude of 0.5 will cause the object to open halfway, a value of 0.25 will open the object a quarter of it's full open position| 0.0 |
+
+<hr>
+
+### CloseObject
 Close an object specified by `objectID`.
 
 The target object must be within range of the Agent and Interactable in order for this action to succeed. An object can fail to open if it hits another object as it is closing. In this case the action will fail and the target object will reset to the position it was last in.
 
 ```python
-event = controller.step(dict(action='CloseObject', objectId="Fridge|0.25|0.75"))
+controller.step(dict(action='CloseObject', objectId="Fridge|0.25|0.75"))
 ```
 
-#### Toggle On
+| Parameter | Type | Description | Default |
+|-----------|------|-------------|---------|
+|objectId| string | the string unique id of the target object | null |
+
+<hr>
+
+### Toggle On
 Toggles an object specified by `objectID` into the On state if applicable. Noteable examples are Lamps, Light Switches, and Laptops.
 
 ```python
-event = controller.step(dict(action='ToggleObjectOn', objectId= "LightSwitch|0.25|-0.27|0.95")))
+controller.step(dict(action='ToggleObjectOn', objectId= "LightSwitch|0.25|-0.27|0.95")))
 ```
-#### Toggle Off
+
+| Parameter | Type | Description | Default |
+|-----------|------|-------------|---------|
+|objectId| string | the string unique id of the target object | null |
+
+<hr>
+
+### Toggle Off
 Toggles an object specified by `objectID` into the Off state if applicable. Noteable examples are Lamps, Light Switches, and Laptops.
 
 ```python
-event = controller.step(dict(action='ToggleObjectOff', objectId= "LightSwitch|0.25|-0.27|0.95")))
+controller.step(dict(action='ToggleObjectOff', objectId= "LightSwitch|0.25|-0.27|0.95")))
 ```
 
-### Agent Hand/Object Manipulation
-If the agent has picked up an object, it can manipulate the position and rotation of the Hand and the object held. The position of the Agent's hand is constrained by the Camera viewport and cannot be moved outside of the viewport.
+| Parameter | Type | Description | Default |
+|-----------|------|-------------|---------|
+|objectId| string | the string unique id of the target object | null |
 
-#### Move Hand Forward
-Moves the hand forward relative to the agent's current facing the given moveMagnitude in meters.
+<hr>
+
+## Object Manipulation
+After the agent has picked up a Sim Object that is pickupable, these actions can be used to manipulate held items in various ways.
+<hr>
+
+### Move Hand Forward
+Moves the Agent's hand and held object forward relative to the agent's current facing. The hand can only be moved if it is holding an object.
 ```python
-event = controller.step(dict(action='MoveHandAhead', moveMagnitude = 0.1))
+controller.step(dict(action='MoveHandAhead', moveMagnitude = 0.1))
 ```
-#### Move Hand Back
-Moves the hand back relative to the agent's current facing the given moveMagnitude in meters.
+
+| Parameter | Type | Description | Default |
+|-----------|------|-------------|---------|
+|moveMagnitude| float | The distance, in meters, to move the hand in this direction | 0.0 |
+
+<hr>
+
+### Move Hand Back
+Moves the Agent's hand and held object backward relative to the agent's current facing. The hand can only be moved if it is holding an object.
 ```python
-event = controller.step(dict(action='MoveHandBack', moveMagnitude = 0.1))
+controller.step(dict(action='MoveHandBack', moveMagnitude = 0.1))
 ```
-#### Move Hand Left
-Moves the hand left relative to the agent's current facing the given moveMagnitude in meters.
+
+| Parameter | Type | Description | Default |
+|-----------|------|-------------|---------|
+|moveMagnitude| float | The distance, in meters, to move the hand in this direction | 0.0 |
+
+<hr>
+
+### Move Hand Left
+Moves the Agent's hand and held object left relative to the agent's current facing. The hand can only be moved if it is holding an object.
 ```python
-event = controller.step(dict(action='MoveHandLeft', moveMagnitude = 0.1))
+controller.step(dict(action='MoveHandLeft', moveMagnitude = 0.1))
 ```
-#### Move Hand Right
-Moves the hand right relative to the agent's current facing the given moveMagnitude in meters.
+
+| Parameter | Type | Description | Default |
+|-----------|------|-------------|---------|
+|moveMagnitude| float | The distance, in meters, to move the hand in this direction | 0.0 |
+
+<hr>
+
+### Move Hand Right
+Moves the Agent's hand and held object right relative to the agent's current facing. The hand can only be moved if it is holding an object.
 ```python
-event = controller.step(dict(action='MoveHandRight', moveMagnitude = 0.1))
+controller.step(dict(action='MoveHandRight', moveMagnitude = 0.1))
 ```
-#### Move Hand Up
-Moves the hand up relative to the agent's current facing the given moveMagnitude in meters.
+
+| Parameter | Type | Description | Default |
+|-----------|------|-------------|---------|
+|moveMagnitude| float | The distance, in meters, to move the hand in this direction | 0.0 |
+
+<hr>
+
+### Move Hand Up
+Moves the Agent's hand and held object up relative to the agent's current facing. The hand can only be moved if it is holding an object.
 ```python
-event =controller.step(dict(action='MoveHandUp', moveMagnitude = 0.1))
+controller.step(dict(action='MoveHandUp', moveMagnitude = 0.1))
 ```
-#### Move Hand Down
-Moves the hand down relative to the agent's current facing the given moveMagnitude in meters.
+
+| Parameter | Type | Description | Default |
+|-----------|------|-------------|---------|
+|moveMagnitude| float | The distance, in meters, to move the hand in this direction | 0.0 |
+
+<hr>
+
+### Move Hand Down
+Moves the Agent's hand and held object down relative to the agent's current facing. The hand can only be moved if it is holding an object.
 ```python
-event = controller.step(dict(action='MoveHandDown', moveMagnitude = 0.1))
+controller.step(dict(action='MoveHandDown', moveMagnitude = 0.1))
 ```
-#### Rotate Hand
+
+| Parameter | Type | Description | Default |
+|-----------|------|-------------|---------|
+|moveMagnitude| float | The distance, in meters, to move the hand in this direction | 0.0 |
+
+<hr>
+
+### Rotate Hand
 Rotates the hand and held object about the specified axes (x, y, z) the specified number of degrees. These examples rotate a held object 90 degrees about the each axis. 
 ```python
-event = controller.step(dict(action='RotateHand', x = 90))
-event = controller.step(dict(action='RotateHand', y = 90))
-event = controller.step(dict(action='RotateHand', z = 90))
+controller.step(dict(action='RotateHand', x = 90))
+controller.step(dict(action='RotateHand', y = 90))
+controller.step(dict(action='RotateHand', z = 90))
 ```
-Multiple Axes can be specified at once as well.
+Multiple Axes can be specified at once as well. 
 ```python
-event = controller.step(dict(action='RotateHand', x = 90, y = 15, z = 28))
+controller.step(dict(action='RotateHand', x = 90, y = -15, z = 28))
 ```
+
+| Parameter | Type | Description | Default |
+|-----------|------|-------------|---------|
+|x| float | amount of rotation about the object's x axis | 0.0 |
+|y| float | amount of rotation about the object's y axis | 0.0 |
+|z| float | amount of rotation about the object's z axis | 0.0 |
+
+<hr>
 
 ## Architecture
 
