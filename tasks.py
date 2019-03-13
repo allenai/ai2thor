@@ -221,7 +221,6 @@ def local_build_name(prefix, arch):
 @task
 def local_build(context, prefix='local', arch='OSXIntel64'):
     build_name = local_build_name(prefix, arch)
-    fetch_source_textures(context)
     if _build('unity', arch, "builds", build_name):
         print("Build Successful")
     else:
@@ -240,7 +239,6 @@ def webgl_build(context, scenes="", room_ranges=None, directory="builds", prefix
     from functools import reduce
     arch = 'WebGL'
     build_name = local_build_name(prefix, arch)
-    fetch_source_textures(context)
     if room_ranges is not None:
         # print(room_ranges)
         # print([list(range(*tuple(int(y) for y in x.split("-")))) for x in room_ranges.split(",")])
@@ -506,7 +504,7 @@ def poll_ci_build(context):
     import ai2thor.downloader
     import time
     commit_id = subprocess.check_output("git log -n 1 --format=%H", shell=True).decode('ascii').strip()
-    for i in range(30):
+    for i in range(60):
         missing = False
         for arch in platform_map.keys():
             if ai2thor.downloader.commit_build_log_exists(arch, commit_id):
@@ -532,7 +530,6 @@ def build(context, local=False):
     build_url_base = 'http://s3-us-west-2.amazonaws.com/%s/' % S3_BUCKET
 
     builds = {'Docker': {'tag': version}}
-    fetch_source_textures(context)
     threads = []
     dp = Process(target=build_docker, args=(version,))
     dp.start()
@@ -582,6 +579,7 @@ def interact(ctx, scene, editor_mode=False, local_build=False):
         env.start(8200, False, player_screen_width=600, player_screen_height=600)
     else:
         env.start(player_screen_width=600, player_screen_height=600)
+
     env.reset(scene)
     env.step(dict(action='Initialize', gridSize=0.25))
     env.interact()
