@@ -139,11 +139,16 @@ Move the agent backward by `gridSize` (without changing view direction).
 ```python
 event = controller.step(dict(action='MoveBack'))
 ```
-#### Teleport 
-Move the agent to any location in the scene (within scene bounds). Using this command it is possible to put the agent into places that would not normally be possible to navigate to, but it can be useful if you need to place an agent in the exact same spot for a task.
+#### Teleport
+Move the agent to any location in the scene. Using this command it is possible to put the agent into places that would not normally be possible to navigate to, but it can be useful if you need to place an agent in the exact same spot for a task.
 ```python
-event = controller.step(dict(action='Teleport', x=0.999, y=1.01, z=-0.3541))
-``` 
+controller.step(dict(action='Teleport', x=0.999, y=1.01, z=-0.3541))
+```
+#### TeleportFull
+Move the agent to any location in the scene. Using this command it is possible to put the agent into places that would not normally be possible to navigate to, but it can be useful if you need to place an agent in the exact same spot for a task. Identical to Telport, but also allows rotation and horizon to be passed in.
+```python
+controller.step(dict(action='TeleportFull', x=0.999, y=1.01, z=-0.3541, rotation=90.0, horizon=30.0))
+```
 #### Get Reachable Positions
 Returns valid coordinates that the Agent can reach without colliding with the environment or Sim Objects. This can be used in tandem with `Teleport` to warp the Agent as needed. This is useful for things like randomizing the initial position of the agent without clipping into the environment.
 ```python
