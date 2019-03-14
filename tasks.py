@@ -566,8 +566,10 @@ def build(context, local=False):
         build_info = builds[platform_map[arch]] = {}
 
         build_info['url'] = build_url_base + build_path
+        build_info['build_exception'] = ''
+        build_info['log'] = "%s.log" % (build_name,)
 
-        build(unity_path, arch, build_dir, build_name)
+        _build(unity_path, arch, build_dir, build_name)
         t = threading.Thread(target=archive_push, args=(unity_path, build_path, build_dir, build_info))
         t.start()
         threads.append(t)
