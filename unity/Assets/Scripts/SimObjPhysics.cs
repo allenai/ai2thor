@@ -421,6 +421,11 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 				Debug.LogError(this.name + " is missing the ObjectSpecificReceptacle component!");
 			}
 		}
+
+		if(this.tag != "SimObjPhysics")
+		{
+			Debug.LogError(this.name + " is missing SimObjPhysics tag!");
+		}
 #endif
 		//end debug setup stuff
 
