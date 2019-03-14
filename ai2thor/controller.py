@@ -674,7 +674,7 @@ class Controller(object):
         from ai2thor.build import arch_platform_map
         import ai2thor.build
         if platform.system() in BUILDS:
-            BUILDS[platform.system()]['url'], BUILDS[platform.system()]['sha256']
+            return (BUILDS[platform.system()]['url'], BUILDS[platform.system()]['sha256'])
         else:
             url = None
             sha256_build = None
