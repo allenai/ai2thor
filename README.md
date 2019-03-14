@@ -64,7 +64,7 @@ event = controller.step(dict(action='MoveAhead'))
 Upon executing the ```controller.start()``` a window should appear on screen with a view of the room FloorPlan28.
 
 ## Event/Metadata
-Each call to ```controller.step()``` returns an instance of an Event.  Detailed descriptions of each field can be found within the [tutorial](http://ai2thor.allenai.org/tutorials/event-metadata).  The Event object contains a screen capture from the point the last action completed as well as metadata about each object within the scene.
+Each call to ```controller.step()``` returns an instance of an Event.  Detailed descriptions of each field can be found on the [Documentation Page](http://ai2thor.allenai.org/documentation/event-metadata).  The Event object contains a screen capture from the point the last action completed as well as metadata about each object within the scene.
 
 ```python
 event = controller.step(dict(action=MoveAhead))
