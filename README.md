@@ -402,7 +402,7 @@ event = controller.step(dict(action='MoveHandDown', moveMagnitude = 0.1))
 <hr>
 
 ### Rotate Hand
-Rotates the hand and held object about the specified axes (x, y, z) the specified number of degrees. These examples rotate a held object 90 degrees about the each axis. 
+Rotates the hand and held object about the specified axes (x, y, z) to the specified degree. These examples rotate a held object to 90 degrees about each axis. 
 ```python
 event = controller.step(dict(action='RotateHand', x = 90))
 event = controller.step(dict(action='RotateHand', y = 90))
@@ -415,9 +415,9 @@ event = controller.step(dict(action='RotateHand', x = 90, y = -15, z = 28))
 
 | Parameter | Type | Description | Default |
 |-----------|------|-------------|---------|
-|x| float | amount of rotation about the object's x axis | 0.0 |
-|y| float | amount of rotation about the object's y axis | 0.0 |
-|z| float | amount of rotation about the object's z axis | 0.0 |
+|x| float | rotation about the object's x axis | 0.0 |
+|y| float | rotation about the object's y axis | 0.0 |
+|z| float | rotation about the object's z axis | 0.0 |
 
 <hr>
 
