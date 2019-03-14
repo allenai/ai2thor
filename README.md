@@ -5,9 +5,9 @@
 AI2-THOR (The House Of inteRactions) is a photo-realistic interactable framework for AI agents.
 
 
-## Tutorial
+## Documentation
 
-Please refer to the [tutorial page](http://ai2thor.allenai.org/tutorials/) for a detailed walkthrough.
+Please refer to the [Documentation Page](http://ai2thor.allenai.org/documentation/) on the AI2-THOR website for more detailed information.
 
 ## News
 * (3/2019) Introducing Version 1.0 of the AI2-THOR framework! This release includes a full rework of all Sim Objects and Scenes to have additional physics functionality and improved fidelity. Physics based interactions can now be modeled in the THOR environment in realistic ways like never before! Object collision when placed in receptacles, moveable receptacles that contain other objects, collision based object position randomization, Multi-Agent support— these are a few of the many exciting new features that come with this update. Please check the [full release notes here](doc/static/ReleaseNotes/ReleaseNotes_1.0.md) to view details on all the changes and new features.
