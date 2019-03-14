@@ -2176,6 +2176,11 @@ namespace UnityStandardAssets.Characters.FirstPerson
 				Vector3 vec = new Vector3(action.x, action.y, action.z);
                 AgentHand.transform.localRotation = Quaternion.Euler(vec);
 				SetUpRotationBoxChecks();
+
+                //if this is rotated too much, drop any contained object if held item is a receptacle
+                if(Vector3.Angle(ItemInHand.transform.up, Vector3.up) > 95)
+                DropContainedObjects(ItemInHand.GetComponent<SimObjPhysics>());
+
                 actionFinished(true);
 			}
 
@@ -2492,6 +2497,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 rb.collisionDetectionMode = CollisionDetectionMode.Discrete;
                 rb.isKinematic = true;
 
+                //if the target is rotated too much, don't try to pick up any contained objects since they would fall out
+                if(Vector3.Angle(target.transform.up, Vector3.up) < 60)
                 PickupContainedObjects(target);
 
                 target.transform.position = AgentHand.transform.position;
@@ -2531,7 +2538,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 foreach(SimObjPhysics sop in target.ReceptacleObjects)
                 {
                     //for every object that is contained by this object...first make sure it's pickupable so we don't like, grab a Chair if it happened to be in the receptacle box or something
-                    //turn off the colliders, leaving Trigger Colliders active (this is important to maintain visibility!)
+                    //turn off the colliders (so contained object doesn't block movement), leaving Trigger Colliders active (this is important to maintain visibility!)
                     if(sop.PrimaryProperty == SimObjPrimaryProperty.CanPickup)
                     {
                         sop.transform.Find("Colliders").gameObject.SetActive(false);
@@ -2539,6 +2546,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         soprb.collisionDetectionMode = CollisionDetectionMode.Discrete;
                         soprb.isKinematic = true;
                         sop.transform.SetParent(target.transform);
+                        target.AddToContainedObjectReferences(sop);
                     }
 
                 }
@@ -2549,16 +2557,20 @@ namespace UnityStandardAssets.Characters.FirstPerson
         {
             if(target.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.Receptacle))
             {
+                //print("dropping contained objects");
                 GameObject topObject = GameObject.Find("Objects");
 
-                foreach(SimObjPhysics sop in target.ReceptacleObjects)
+                foreach(SimObjPhysics sop in target.ContainedObjectReferences)
                 {
+                    //print(sop.name);
                     //for every object that is contained by this object...
                     //turn off the colliders, leaving Trigger Colliders active (this is important to maintain visibility!)
                     sop.transform.Find("Colliders").gameObject.SetActive(true);
                     sop.GetComponent<Rigidbody>().isKinematic = false;
                     sop.transform.SetParent(topObject.transform);
                 }
+
+                target.ClearContainedObjectReferences();
             }
         }
 

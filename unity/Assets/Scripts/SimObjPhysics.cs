@@ -72,6 +72,8 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 	//initial position object spawned in in case we want to reset the scene
 	//private Vector3 startPosition;   
 
+	public List<SimObjPhysics> ContainedObjectReferences;
+
 	public class PhysicsMaterialValues
 	{
 		public float DynamicFriction;
@@ -84,6 +86,16 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 			StaticFriction = sFriction;
 			Bounciness = b;
 		}
+	}
+
+	public void AddToContainedObjectReferences(SimObjPhysics t)
+	{
+			ContainedObjectReferences.Add(t);
+	}
+
+	public void ClearContainedObjectReferences()
+	{
+			ContainedObjectReferences.Clear();
 	}
 
 	public string UniqueID
