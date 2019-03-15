@@ -248,8 +248,6 @@ def webgl_build(
     arch = 'WebGL'
     build_name = local_build_name(prefix, arch)
     if room_ranges is not None:
-        # print(room_ranges)
-        # print([list(range(*tuple(int(y) for y in x.split("-")))) for x in room_ranges.split(",")])
         floor_plans = ["FloorPlan{}_physics".format(i) for i in
             reduce(
                 lambda x, y: x + y,
@@ -261,7 +259,6 @@ def webgl_build(
             )
          ]
 
-        # print(floor_plans)
         scenes = ",".join(floor_plans)
     if verbose:
         print(scenes)
@@ -320,16 +317,25 @@ def webgl_build(
         print(scene_metadata)
 
     import json
-    # with open(os.path.join(build_path, "Build/{}.data.unityweb".format(build_name)), 'rb') as f:
-    #         h = hashlib.md5()
-    #         h.update(f.read())
-    #         md5_id = h.hexdigest()
-    # os.rename(os.path.join(build_path, "Build/{}.data.unityweb".format(build_name)), os.path.join(build_path, "Build/{}_{}.data.unityweb".format(build_name, md5_id)))
-    #
-    # with open(os.path.join(build_path, "Build/{}.json".format(build_name)), 'r') as f:
-    #     unity_json = json.load(f)
-    #     print("UNITY json {}".format(unity_json))
+    if content_addressable:
+        with open(os.path.join(build_path, "Build/{}.data.unityweb".format(build_name)), 'rb') as f:
+                h = hashlib.md5()
+                h.update(f.read())
+                md5_id = h.hexdigest()
+        os.rename(
+            os.path.join(build_path, "Build/{}.data.unityweb".format(build_name)),
+            os.path.join(build_path, "Build/{}_{}.data.unityweb".format(build_name, md5_id))
+        )
 
+        with open(os.path.join(build_path, "Build/{}.json".format(build_name)), 'r+') as f:
+            unity_json = json.load(f)
+            print("UNITY json {}".format(unity_json))
+            unity_json['dataUrl'] = "{}_{}.data.unityweb".format(build_name, md5_id)
+
+            print("UNITY L {}".format(unity_json))
+
+            f.seek(0)
+            json.dump(unity_json, f, indent=2)
 
     with open(os.path.join(build_path, "scenes.json"), 'w') as f:
         f.write(json.dumps(scene_metadata, sort_keys=False, indent=4))
@@ -454,7 +460,6 @@ def clean():
 def ci_build(context, branch):
     import fcntl
 
-
     lock_f = open(os.path.join(os.environ['HOME'], ".ci-build.lock"), "w")
 
     try:
@@ -467,6 +472,9 @@ def ci_build(context, branch):
         for arch in ['OSXIntel64', 'Linux64']:
             p = ci_build_arch(arch, branch)
             procs.append(p)
+
+        if branch == 'master':
+            webgl_build_deploy_demo(context, verbose=True, content_addressable=True)
 
         for p in procs:
             if p:
@@ -902,11 +910,14 @@ def webgl_deploy(ctx, prefix='local', source_dir='builds', target_dir='', verbos
         print("Uploading...")
     walk_recursive(build_path, upload_file)
 
-
 @task
 def webgl_build_deploy_demo(ctx, verbose=False, force=False, content_addressable=False):
-    webgl_build(ctx, room_ranges="1-30,201-230,301-330,401-430,501-530")
-    webgl_deploy(ctx, verbose=verbose, force=force)
+    webgl_build(
+        ctx,
+        room_ranges="1-30,201-230,301-330,401-430",
+        content_addressable=content_addressable
+    )
+    webgl_deploy(ctx, verbose=verbose, force=force, target_dir="demo")
 
     if verbose:
         print("Deployed all scenes to bucket's root.")
@@ -915,7 +926,12 @@ def webgl_build_deploy_demo(ctx, verbose=False, force=False, content_addressable
         1, 3, 7, 29, 30, 204, 209, 221, 224, 227, 301, 302, 308, 326, 330, 401, 403, 411, 422, 430
     ]
     scenes = ["FloorPlan{}_physics".format(x) for x in demo_selected_scene_indices]
-    webgl_build(ctx, scenes=",".join(scenes), directory="builds/demo")
+    webgl_build(
+        ctx,
+        scenes=",".join(scenes),
+        directory="builds/demo",
+        content_addressable=content_addressable
+    )
     webgl_deploy(ctx, source_dir="builds/demo", target_dir="demo", verbose=verbose, force=force)
 
     if verbose:
