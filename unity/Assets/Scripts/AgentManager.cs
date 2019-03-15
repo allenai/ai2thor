@@ -9,7 +9,7 @@ using UnityEngine.Networking;
 
 public class AgentManager : MonoBehaviour
 {
-	private List<BaseFPSAgentController> agents = new List<BaseFPSAgentController>();
+	public List<BaseFPSAgentController> agents = new List<BaseFPSAgentController>();
 
 	protected int frameCounter;
 	protected bool serverSideScreenshot;
@@ -85,19 +85,16 @@ public class AgentManager : MonoBehaviour
 		GameObject fpsController = GameObject.Find("FPSController");
 		PhysicsRemoteFPSAgentController physicsAgent = fpsController.GetComponent<PhysicsRemoteFPSAgentController>();
 		primaryAgent = physicsAgent;
+		primaryAgent.agentManager = this;
 		primaryAgent.enabled = true;
+		primaryAgent.actionComplete = true;
+
 	}
 	
-	private bool isPhysicsScene() {
-		return GameObject.Find("PhysicsSceneManager") != null;
-	}
-
 	public void Initialize(ServerAction action)
 	{
 		primaryAgent.ProcessControlCommand (action);
 		primaryAgent.IsVisible = action.makeAgentsVisible;
-		primaryAgent.Agents = new BaseFPSAgentController[1];
-		primaryAgent.Agents[0] = primaryAgent;
 		this.defaultRenderImage = action.renderImage;
 		this.renderClassImage = action.renderClassImage;
 		this.renderDepthImage = action.renderDepthImage;
@@ -118,8 +115,6 @@ public class AgentManager : MonoBehaviour
 			yield return null; // must do this so we wait a frame so that when we CapsuleCast we see the most recently added agent
 		}
 		for (int i = 0; i < this.agents.Count; i++) {
-			this.agents[i].AgentId = i;
-			this.agents[i].Agents = this.agents.ToArray();
 			if (i != 0) {
 				this.agents[i].m_Camera.enabled = false;
 			}
