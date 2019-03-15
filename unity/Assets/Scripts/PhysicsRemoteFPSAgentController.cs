@@ -118,9 +118,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     sceneBounds.Encapsulate(r.bounds);
                 }
             }
-
-            base.actionComplete = true;
-        }
+         }
 
         private void resetUniqueIdToSimObjPhysics() {
             uniqueIdToSimObjPhysics.Clear();
@@ -518,10 +516,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
         // turn off/on all the colliders on agents which should not block visibility for the current agent
         // (invisible agents for example). 
         protected void updateAllAgentCollidersForVisibilityCheck(bool enableColliders) {
-            foreach (BaseFPSAgentController agent in Agents) {
+            foreach (BaseFPSAgentController agent in this.agentManager.agents) {
                 PhysicsRemoteFPSAgentController phyAgent = (PhysicsRemoteFPSAgentController) agent;
                 bool overlapping = (transform.position - phyAgent.transform.position).magnitude < 0.001f;
-                if (overlapping || phyAgent.AgentId == AgentId || !phyAgent.IsVisible) {
+                if (overlapping || phyAgent == this || !phyAgent.IsVisible) {
                     foreach (Collider c in phyAgent.GetComponentsInChildren<Collider>()) {
                         if (ItemInHand == null || !hasAncestor(c.transform.gameObject, ItemInHand)) {
                             c.enabled = enableColliders;
@@ -529,7 +527,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     }
                 }
             }
-}
+        }
 
 		protected SimObjPhysics[] GetAllVisibleSimObjPhysics(Camera agentCamera, float maxDistance)
         {
@@ -3507,15 +3505,18 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			}
 		}
 
-		private void UnhideAll() {
-			foreach (GameObject go in GameObject.FindObjectsOfType<GameObject>()) {
-				UpdateDisplayGameObject(go, true);
-			}
+        private void UnhideAll()
+        {
+            foreach (GameObject go in GameObject.FindObjectsOfType<GameObject>())
+            {
+                UpdateDisplayGameObject(go, true);
+            }
             // Making sure the agents visibility capsules are not incorrectly unhidden
-            foreach (BaseFPSAgentController agent in Agents) {
+            foreach (BaseFPSAgentController agent in this.agentManager.agents)
+            {
                 agent.IsVisible = agent.IsVisible;
-		}
-		}
+            }
+        }
 
 		protected void HideAllObjectsExcept(ServerAction action) {
 			foreach (GameObject go in UnityEngine.Object.FindObjectsOfType<GameObject>()) {
