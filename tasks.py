@@ -537,6 +537,8 @@ def poll_ci_build(context):
     for i in range(60):
         missing = False
         for arch in platform_map.keys():
+            if (i % 300) == 0:
+                print("checking %s for commit id %s" % (arch, commit_id))
             if ai2thor.downloader.commit_build_log_exists(arch, commit_id):
                 print("log exists %s" % commit_id)
             else:
@@ -572,8 +574,10 @@ def build(context, local=False):
         build_info = builds[platform_map[arch]] = {}
 
         build_info['url'] = build_url_base + build_path
+        build_info['build_exception'] = ''
+        build_info['log'] = "%s.log" % (build_name,)
 
-        build(unity_path, arch, build_dir, build_name)
+        _build(unity_path, arch, build_dir, build_name)
         t = threading.Thread(target=archive_push, args=(unity_path, build_path, build_dir, build_info))
         t.start()
         threads.append(t)
