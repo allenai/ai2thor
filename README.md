@@ -1,3 +1,4 @@
+[![Build Status](https://travis-ci.org/allenai/ai2thor.svg?branch=master)](https://travis-ci.org/allenai/ai2thor)
 <p align="center"><img width="40%" src="doc/static/thor-logo-main_1.0_thick.png" /></p>
 
 --------------------------------------------------------------------------------
