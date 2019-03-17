@@ -917,7 +917,7 @@ def webgl_build_deploy_demo(ctx, verbose=False, force=False, content_addressable
         room_ranges="1-30,201-230,301-330,401-430",
         content_addressable=content_addressable
     )
-    webgl_deploy(ctx, verbose=verbose, force=force, target_dir="full")
+    webgl_deploy(ctx, verbose=verbose, force=force, target_dir="demo")
 
     if verbose:
         print("Deployed all scenes to bucket's root.")
