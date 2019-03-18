@@ -242,9 +242,40 @@ def webgl_build(
     :param context:
     :param scenes: String of scenes to include in the build as a comma separated list
     :param prefix: Prefix name for the build
+    :param content_addressable: Whether to change the unityweb build files to be content-addressable
+                                have their content hashes as part of their names.
     :return:
     """
+    import json
     from functools import reduce
+
+    def file_to_content_addressable(file_path, json_metadata_file_path, json_key):
+        # name_split = os.path.splitext(file_path)
+        path_split = os.path.split(file_path)
+        directory = path_split[0]
+        file_name = path_split[1]
+
+        print("File name {} ".format(file_name))
+        with open(file_path, 'rb') as f:
+            h = hashlib.md5()
+            h.update(f.read())
+            md5_id = h.hexdigest()
+        new_file_name = "{}_{}".format(md5_id, file_name)
+        os.rename(
+            file_path,
+            os.path.join(directory, new_file_name)
+        )
+
+        with open(json_metadata_file_path, 'r+') as f:
+            unity_json = json.load(f)
+            print("UNITY json {}".format(unity_json))
+            unity_json[json_key] = new_file_name
+
+            print("UNITY L {}".format(unity_json))
+
+            f.seek(0)
+            json.dump(unity_json, f, indent=4)
+
     arch = 'WebGL'
     build_name = local_build_name(prefix, arch)
     if room_ranges is not None:
@@ -316,26 +347,17 @@ def webgl_build(
     if verbose:
         print(scene_metadata)
 
-    import json
-    if content_addressable:
-        with open(os.path.join(build_path, "Build/{}.data.unityweb".format(build_name)), 'rb') as f:
-                h = hashlib.md5()
-                h.update(f.read())
-                md5_id = h.hexdigest()
-        os.rename(
-            os.path.join(build_path, "Build/{}.data.unityweb".format(build_name)),
-            os.path.join(build_path, "Build/{}_{}.data.unityweb".format(build_name, md5_id))
+    to_content_addressable = [
+        ('{}.data.unityweb'.format(build_name), 'dataUrl'),
+        ('{}.wasm.code.unityweb'.format(build_name), 'wasmCodeUrl'),
+        ('{}.wasm.framework.unityweb'.format(build_name), 'wasmFrameworkUrl')
+    ]
+    for file_name, key in to_content_addressable:
+        file_to_content_addressable(
+            os.path.join(build_path, "Build/{}".format(file_name)),
+            os.path.join(build_path, "Build/{}.json".format(build_name)),
+            key
         )
-
-        with open(os.path.join(build_path, "Build/{}.json".format(build_name)), 'r+') as f:
-            unity_json = json.load(f)
-            print("UNITY json {}".format(unity_json))
-            unity_json['dataUrl'] = "{}_{}.data.unityweb".format(build_name, md5_id)
-
-            print("UNITY L {}".format(unity_json))
-
-            f.seek(0)
-            json.dump(unity_json, f, indent=2)
 
     with open(os.path.join(build_path, "scenes.json"), 'w') as f:
         f.write(json.dumps(scene_metadata, sort_keys=False, indent=4))
@@ -849,7 +871,8 @@ def webgl_deploy(ctx, prefix='local', source_dir='builds', target_dir='', verbos
     no_cache_extensions = {
         ".txt",
         ".html",
-        ".json"
+        ".json",
+        ".js"
     }
 
     if verbose:
@@ -912,16 +935,7 @@ def webgl_deploy(ctx, prefix='local', source_dir='builds', target_dir='', verbos
 
 @task
 def webgl_build_deploy_demo(ctx, verbose=False, force=False, content_addressable=False):
-    webgl_build(
-        ctx,
-        room_ranges="1-30,201-230,301-330,401-430",
-        content_addressable=content_addressable
-    )
-    webgl_deploy(ctx, verbose=verbose, force=force, target_dir="demo")
-
-    if verbose:
-        print("Deployed all scenes to bucket's root.")
-
+    # Main demo
     demo_selected_scene_indices = [
         1, 3, 7, 29, 30, 204, 209, 221, 224, 227, 301, 302, 308, 326, 330, 401, 403, 411, 422, 430
     ]
@@ -937,9 +951,19 @@ def webgl_build_deploy_demo(ctx, verbose=False, force=False, content_addressable
     if verbose:
         print("Deployed selected scenes to bucket's 'demo' directory")
 
+    # Full framework demo
+    webgl_build(
+        ctx,
+        room_ranges="1-30,201-230,301-330,401-430",
+        content_addressable=content_addressable
+    )
+    webgl_deploy(ctx, verbose=verbose, force=force, target_dir="full")
+
+    if verbose:
+        print("Deployed all scenes to bucket's root.")
+
 @task
 def webgl_deploy_all(ctx, verbose=False, individual_rooms=False):
-
     rooms = {
         "kitchens": (1, 30),
         "livingRooms": (201, 230),
@@ -947,12 +971,11 @@ def webgl_deploy_all(ctx, verbose=False, individual_rooms=False):
         "bathrooms": (401, 430),
         "foyers": (501, 530)
     }
-    room_ranges = [(1, 30), (201, 230), (301, 330), (401, 430), (501, 530)]
 
     for key,room_range in rooms.items():
         range_str = "{}-{}".format(room_range[0], room_range[1])
         if verbose:
-            print("Building for rooms: {}".format( range_str))
+            print("Building for rooms: {}".format(range_str))
 
         build_dir = "builds/{}".format(key)
         if individual_rooms:
