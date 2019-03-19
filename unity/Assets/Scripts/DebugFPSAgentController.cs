@@ -509,7 +509,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 			if(!FlightMode)
             m_MoveDir += Physics.gravity * m_GravityMultiplier * Time.fixedDeltaTime;   
-			      
+
+            //added this check so that move is not called if/when the Character Controller's capsule is disabled. Right now the capsule is being disabled when open/close animations are in progress so yeah there's that
+            if(m_CharacterController.enabled == true)       
             m_CharacterController.Move(m_MoveDir * Time.fixedDeltaTime);
 		}
 
