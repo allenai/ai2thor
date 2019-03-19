@@ -37,7 +37,7 @@ public class CanOpen_Object : MonoBehaviour
 	[SerializeField]
     public bool canReset = true;
 
-	protected enum MovementType { Slide, Rotate };
+	protected enum MovementType { Slide, Rotate, ScaleX, ScaleY, ScaleZ};
 
 	[SerializeField]
     protected MovementType movementType;
@@ -93,16 +93,36 @@ public class CanOpen_Object : MonoBehaviour
     {
         movementType = MovementType.Rotate;
     }
-    
+
+    public void SetMovementToScaleX()
+    {
+        movementType = MovementType.ScaleX;
+    }
+
+    public void SetMovementToScaleY()
+    {
+        movementType = MovementType.ScaleY;
+    }
+
+    public void SetMovementToScaleZ()
+    {
+        movementType = MovementType.ScaleZ;
+    }   
 #endif
 
-	public void SetOpenPercent(float val)
+	public bool SetOpenPercent(float val)
     {
         if (val >= 0.0 && val <= 1.0)
+        {
+            //print(val);
             openPercentage = val;
+            return true;
+        }
 
         else
-            Debug.Log("Please give an open percentage between 0.0f and 1.0f");
+        {
+            return false;
+        }
     }
     
     public void Interact()
@@ -133,7 +153,7 @@ public class CanOpen_Object : MonoBehaviour
 				}
                 
 
-				if(movementType == MovementType.Slide)
+				else if(movementType == MovementType.Slide)
 				{
 					//we are on the last loop here
                     if (i == MovingParts.Length - 1)
@@ -152,6 +172,27 @@ public class CanOpen_Object : MonoBehaviour
                     "time", animationTime,
                     "easetype", "linear"));
 				}
+
+                else if(movementType == MovementType.ScaleX || movementType == MovementType.ScaleY 
+                        || movementType == MovementType.ScaleZ)
+                {
+                    //we are on the last loop here
+                    if(i == MovingParts.Length -1)
+                    {
+                        iTween.ScaleTo(MovingParts[i], iTween.Hash(
+                        "scale", closedPositions[i],
+                        "islocal", true,
+                        "time", animationTime,
+                        "easetype", "linear", "onComplete", "setisOpen", "onCompleteTarget", gameObject));
+                    }
+
+                    else
+                    iTween.ScaleTo(MovingParts[i], iTween.Hash(
+                    "scale", closedPositions[i],
+                    "islocal", true,
+                    "time", animationTime,
+                    "easetype", "linear"));
+                }
 			}
         }
 
@@ -180,7 +221,7 @@ public class CanOpen_Object : MonoBehaviour
 				}
 
                 
-				if (movementType == MovementType.Slide)
+				else if (movementType == MovementType.Slide)
 				{
 					if (i == MovingParts.Length - 1)
                     {
@@ -199,16 +240,74 @@ public class CanOpen_Object : MonoBehaviour
                     "easetype", "linear"));
 				}
 
+                //scale with Y axis
+                else if(movementType == MovementType.ScaleY)
+                {
+                    //we are on the last loop here
+                    if(i == MovingParts.Length -1)
+                    {
+                        iTween.ScaleTo(MovingParts[i], iTween.Hash(
+                        "scale", new Vector3(openPositions[i].x, closedPositions[i].y + (openPositions[i].y - closedPositions[i].y) * openPercentage, openPositions[i].z),
+                        "islocal", true,
+                        "time", animationTime,
+                        "easetype", "linear", "onComplete", "setisOpen", "onCompleteTarget", gameObject));
+                    }
+
+                    else
+                    iTween.ScaleTo(MovingParts[i], iTween.Hash(
+                    "scale", new Vector3(openPositions[i].x, closedPositions[i].y + (openPositions[i].y - closedPositions[i].y) * openPercentage, openPositions[i].z),
+                    "islocal", true,
+                    "time", animationTime,
+                    "easetype", "linear"));
+                }
+
+                //scale with X axis
+                else if(movementType == MovementType.ScaleX)
+                {
+                    //we are on the last loop here
+                    if(i == MovingParts.Length -1)
+                    {
+                        iTween.ScaleTo(MovingParts[i], iTween.Hash(
+                        "scale", new Vector3(closedPositions[i].x + (openPositions[i].x - closedPositions[i].x) * openPercentage, openPositions[i].y, openPositions[i].z),
+                        "islocal", true,
+                        "time", animationTime,
+                        "easetype", "linear", "onComplete", "setisOpen", "onCompleteTarget", gameObject));
+                    }
+
+                    else
+                    iTween.ScaleTo(MovingParts[i], iTween.Hash(
+                    "scale", new Vector3(closedPositions[i].x + (openPositions[i].x - closedPositions[i].x) * openPercentage, openPositions[i].y, openPositions[i].z),
+                    "islocal", true,
+                    "time", animationTime,
+                    "easetype", "linear"));
+                }
+
+                //scale with Z axis
+                else if(movementType == MovementType.ScaleZ)
+                {
+                    //we are on the last loop here
+                    if(i == MovingParts.Length -1)
+                    {
+                        iTween.ScaleTo(MovingParts[i], iTween.Hash(
+                        "scale", new Vector3(openPositions[i].x, openPositions[i].y, closedPositions[i].z + (openPositions[i].z - closedPositions[i].z) * openPercentage),
+                        "islocal", true,
+                        "time", animationTime,
+                        "easetype", "linear", "onComplete", "setisOpen", "onCompleteTarget", gameObject));
+                    }
+
+                    else
+                    iTween.ScaleTo(MovingParts[i], iTween.Hash(
+                    "scale", new Vector3(openPositions[i].x, openPositions[i].y, closedPositions[i].z + (openPositions[i].z - closedPositions[i].z) * openPercentage),
+                    "islocal", true,
+                    "time", animationTime,
+                    "easetype", "linear"));
+                }
 			}
         }
-    }
-                              
- //   IEnumerator SetisOpen()
-	//{
-	//	yield return new WaitForSeconds(animationTime);
-	//	isOpen = !isOpen;
 
-	//}
+        //default open percentage for next call
+        openPercentage = 1.0f;
+    }
 
     private void setisOpen()
 	{
@@ -280,7 +379,7 @@ public class CanOpen_Object : MonoBehaviour
                     }
 
 
-                    if (movementType == MovementType.Slide)
+                    else if (movementType == MovementType.Slide)
                     {
 						iTween.MoveTo(MovingParts[i], iTween.Hash(
                         "position", openPositions[i] * openPercentage,
@@ -288,6 +387,15 @@ public class CanOpen_Object : MonoBehaviour
                         "time", animationTime,
                         "easetype", "linear"));
 
+                    }
+
+                    else if (movementType == MovementType.ScaleY)
+                    {
+                        iTween.ScaleTo(MovingParts[i], iTween.Hash(
+                        "scale", new Vector3(openPositions[i].x, closedPositions[i].y + (openPositions[i].y - closedPositions[i].y) * openPercentage, openPositions[i].z),
+                        "islocal", true,
+                        "time", animationTime,
+                        "easetype", "linear"));
                     }
 
                 }
@@ -308,14 +416,23 @@ public class CanOpen_Object : MonoBehaviour
                     }
 
 
-                    if (movementType == MovementType.Slide)
+                    else if (movementType == MovementType.Slide)
                     {
 						iTween.MoveTo(MovingParts[i], iTween.Hash(
                         "position", closedPositions[i],
                         "islocal", true,
                         "time", animationTime,
                         "easetype", "linear"));
+                    }
 
+
+                    else if(movementType == MovementType.ScaleY)
+                    {
+                        iTween.ScaleTo(MovingParts[i], iTween.Hash(
+                        "scale", closedPositions[i],
+                        "islocal", true,
+                        "time", animationTime,
+                        "easetype", "linear"));
                     }
                 }
 			}
