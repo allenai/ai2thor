@@ -67,7 +67,9 @@ def _build(unity_path, arch, build_dir, build_name, env={}):
     full_env = os.environ.copy()
     full_env.update(env)
     full_env['UNITY_BUILD_NAME'] = target_path
-    subprocess.check_call(command, shell=True, env=full_env)
+    result_code = subprocess.check_call(command, shell=True, env=full_env)
+    print("Exited with code {}".format(result_code))
+    return result_code == 0
 
 def class_dataset_images_for_scene(scene_name):
     import ai2thor.controller
