@@ -242,13 +242,10 @@ public enum SimObjType : int
 	Curtains = 139,
 	Poster = 140,
 	HandTowel = 141,
-
 	HandTowelHolder = 142,
 	Ladle = 143,
 	WineBottle = 144,
-
-
-
+	ShowerCurtain = 145,
 	
 }
 
