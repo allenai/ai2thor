@@ -170,6 +170,36 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
             }
 
+            //test slicing object
+            if(Input.GetKeyDown(KeyCode.Mouse1))
+            {
+                if(TextInputMode == false && this.PhysicsController.actionComplete)
+                {
+                    var closestObj = this.highlightedObject;
+
+                    if (closestObj != null)
+                    {
+                        var actionName ="";
+
+                        if(closestObj.GetComponent<SimObjPhysics>().DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanBeSliced))
+                        {
+                            actionName = "SliceObject";
+                        }
+
+                        if(actionName != "")
+                        {
+                            ServerAction action = new ServerAction
+                            {
+                                action = actionName,
+                                objectId = closestObj.uniqueID
+                            };
+
+                            this.PhysicsController.ProcessControlCommand(action);
+                        }
+                    }
+                }
+            }
+
             // Interact action for mouse left-click
             if (Input.GetKeyDown(KeyCode.Mouse0))
             {
@@ -248,7 +278,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                      0.0f;
             }
 
-            if (Input.GetKeyDown(KeyCode.R))
+            if (Input.GetKeyDown(KeyCode.R) && TextInputMode == false)
             {
                 var action = new ServerAction
                 {

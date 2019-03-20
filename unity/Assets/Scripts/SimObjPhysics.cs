@@ -49,6 +49,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 
 	private Bounds bounds;
 
+	//these collider references are used for switching physics materials for all colliders on this object
 	[Header("Non - Trigger Colliders of this object")]
 	public Collider[] MyColliders = null;
 
