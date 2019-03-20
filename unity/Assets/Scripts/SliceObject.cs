@@ -45,6 +45,9 @@ public class SliceObject : MonoBehaviour
 
     void OnDestroy()
     {
-        GameObject.Find("PhysicsSceneManager").GetComponent<PhysicsSceneManager>().SetupScene();
+        PhysicsSceneManager psm = GameObject.Find("PhysicsSceneManager").GetComponent<PhysicsSceneManager>();
+        psm.SetupScene();
+        psm.RemoveFormSpawnedObjects(gameObject.GetComponent<SimObjPhysics>());
+        psm.RemoveFromRequiredObjects(gameObject.GetComponent<SimObjPhysics>());
     }
 }
