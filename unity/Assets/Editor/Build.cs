@@ -37,7 +37,7 @@ public class Build
     {
         List<string> files = new List<string>();
         List<string> scenes = new List<string>();
-        files.AddRange(Directory.GetFiles("Assets/Physics/Physics Scenes/"));
+        files.AddRange(Directory.GetFiles("Assets/Scenes/"));
 
         foreach (string f in files) {
             if (f.EndsWith(".unity")) {
