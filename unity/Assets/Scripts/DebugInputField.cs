@@ -364,7 +364,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         //set this to false if we want to place it and let physics resolve by having it fall a short distance into position
 
                         //set true to place with kinematic = true so that it doesn't fall or roll in place - making placement more consistant and not physics engine reliant - this more closely mimics legacy pivot placement behavior
-                        action.placeStationary = true; 
+                        action.placeStationary = false; 
 
                         //set this true to ignore Placement Restrictions
                         action.forceAction = true;
@@ -850,6 +850,24 @@ namespace UnityStandardAssets.Characters.FirstPerson
 						{
 							action.objectId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().UniqueIDOfClosestVisibleObject();
 						}
+
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+                
+                case "slice":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "SliceObject";
+						if(splitcommand.Length > 1)
+						{
+							action.objectId = splitcommand[1];
+						}
+
+                        else
+                        {
+                            action.objectId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().UniqueIDOfClosestVisibleObject();
+                        }
 
                         PhysicsController.ProcessControlCommand(action);
                         break;
