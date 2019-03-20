@@ -2816,7 +2816,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
             {            
 				if (sop.GetComponent<CanOpen_Object>())
                 {
-                    //print("wobbuffet");
                     target = sop;
                 }            
             }
@@ -5754,6 +5753,55 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 			StartCoroutine(SpamObjectsInRoomHelper(100, newObjects));
 		}
+
+        public void SliceObject(ServerAction action)
+        {
+			//pass name of object in from action.objectId
+            if (action.objectId == null)
+            {
+                Debug.Log("Hey, actually give me an object ID to open, yeah?");
+                errorMessage = "objectId required for OpenObject";
+                actionFinished(false);
+                return;
+            }
+
+            SimObjPhysics target = null;
+
+            if (action.forceAction)
+            {
+                action.forceVisible = true;
+            }
+
+            foreach (SimObjPhysics sop in VisibleSimObjs(action))
+            {
+                target = sop;
+            }
+
+            //we found it!
+            if(target)
+            {
+                if(target.GetComponent<SimObjPhysics>().DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanBeSliced))
+                {
+                    target.GetComponent<SliceObject>().Slice();
+                    actionFinished(true);
+                    return;
+                }
+
+                else
+                {
+                    errorMessage =  target.transform.name + " cannot be sliced!";
+                    actionFinished(false);
+                    return;
+                }
+            }
+
+            //target not found in currently visible objects, report not found
+			else
+            {
+                errorMessage = "object not found: " + action.objectId;
+                actionFinished(false);
+            }
+        }
 
         protected bool objectIsOfIntoType(SimObjPhysics so) {
             return so.ReceptacleTriggerBoxes != null && 
