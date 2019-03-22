@@ -321,6 +321,11 @@ public static class ReceptacleRestrictions
 		{SimObjType.Pot, SimObjType.Pan, SimObjType.Bowl, SimObjType.Microwave, SimObjType.Fridge, SimObjType.Plate, SimObjType.Sink, SimObjType.SinkBasin, SimObjType.TableTop,
 		 SimObjType.CounterTop, SimObjType.GarbageCan}},
 
+		//APPLE SLICED
+		{SimObjType.AppleSliced, new List<SimObjType>()
+		{SimObjType.Pot, SimObjType.Pan, SimObjType.Bowl, SimObjType.Microwave, SimObjType.Fridge, SimObjType.Plate, SimObjType.Sink, SimObjType.SinkBasin, SimObjType.TableTop,
+		 SimObjType.CounterTop, SimObjType.GarbageCan}},
+
 		//BASEBALL BAT
 		{SimObjType.BaseballBat, new List<SimObjType>()
 		{SimObjType.Bed, SimObjType.TableTop, SimObjType.CounterTop,}}, ///place on floor? 
