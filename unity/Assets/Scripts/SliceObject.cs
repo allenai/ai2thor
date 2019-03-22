@@ -10,6 +10,8 @@ public class SliceObject : MonoBehaviour
 	[SerializeField]
 	public GameObject ObjectToChangeTo;
 
+    private bool quit = false; //used to track when application is quitting
+
     void OnEnable ()
     {
 		//debug check for missing property
@@ -43,11 +45,20 @@ public class SliceObject : MonoBehaviour
         Instantiate(ObjectToChangeTo, transform.position, transform.rotation);
     }
 
+    void OnApplicationQuit()
+    {
+        quit = true;
+    }
+
     void OnDestroy()
     {
-        PhysicsSceneManager psm = GameObject.Find("PhysicsSceneManager").GetComponent<PhysicsSceneManager>();
-        psm.SetupScene();
-        psm.RemoveFormSpawnedObjects(gameObject.GetComponent<SimObjPhysics>());
-        psm.RemoveFromRequiredObjects(gameObject.GetComponent<SimObjPhysics>());
+        //don't do this when the application is quitting, because it throws null reference errors looking for the PhysicsSceneManager
+        if(!quit)
+        {
+            PhysicsSceneManager psm = GameObject.Find("PhysicsSceneManager").GetComponent<PhysicsSceneManager>();
+            psm.SetupScene();
+            psm.RemoveFormSpawnedObjects(gameObject.GetComponent<SimObjPhysics>());
+            psm.RemoveFromRequiredObjects(gameObject.GetComponent<SimObjPhysics>());
+        }
     }
 }
