@@ -497,8 +497,8 @@ def ci_build(context, branch):
             p = ci_build_arch(arch, branch)
             procs.append(p)
 
-        # if branch == 'master':
-        #     webgl_build_deploy_demo(context, verbose=True, content_addressable=True, force=True)
+        if branch == 'master':
+            webgl_build_deploy_demo(context, verbose=True, content_addressable=True, force=True)
 
         for p in procs:
             if p:
