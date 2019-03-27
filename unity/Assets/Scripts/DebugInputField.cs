@@ -1164,6 +1164,20 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         break;
                     }
 
+                case "toast":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "ToastObject";
+                        if (splitcommand.Length > 1)
+                        {
+                            action.objectId = splitcommand[1];
+                        }
+
+                        PhysicsController.ProcessControlCommand(action);
+
+                        break;
+                    }
+
                     //opens given object the given percent, default is 100% open
                     //open <object ID> percent
 				case "open":

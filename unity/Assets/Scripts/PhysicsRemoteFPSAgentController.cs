@@ -3036,6 +3036,62 @@ namespace UnityStandardAssets.Characters.FirstPerson
             actionFinished(true);
         }
 
+        public void ToastObject(ServerAction action)
+        {
+            if (action.objectId == null)
+            {
+                Debug.Log("Hey, actually give me an object ID to Toggle, yeah?");
+                errorMessage = "objectId required for ToastObject";
+                actionFinished(false);
+                return;
+            }  
+
+            SimObjPhysics target = null;
+            foreach (SimObjPhysics sop in VisibleSimObjs(action))
+            {
+                //does it toast?
+				if (sop.GetComponent<ToastObject>())
+                {
+                    target = sop;
+                }
+            }
+
+            if (target)
+            {
+                if (!action.forceAction && target.isInteractable == false)
+                {
+                    actionFinished(false);
+                    errorMessage = "object is visible but occluded by something: " + action.objectId;
+                    return;
+                }
+
+                if(target.GetComponent<ToastObject>())
+                {
+                    ToastObject to = target.GetComponent<ToastObject>();
+
+                    //is this toasted already? if not, good to go
+                    if(to.IsToasted())
+                    {
+                        actionFinished(false);
+                        errorMessage = action.objectId + " is already Toasted!";
+                        return;
+                    }
+
+                    to.Toast();
+
+                    actionFinished(true);
+                }
+            }
+
+            //target not found in currently visible objects, report not found
+            else
+            {
+                actionFinished(false);
+                errorMessage = "object not found: " + action.objectId;
+                Debug.Log(errorMessage);
+            }
+        }
+
         public void ToggleObjectOn(ServerAction action)
         {
             if (action.objectId == null)
