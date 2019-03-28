@@ -9,7 +9,7 @@ public class ToastObject : MonoBehaviour
 	[SerializeField]
 	public SwapObjList[] MaterialSwapObjects;
 
-    private bool isToasted = false;
+    public bool isToasted = false;
 
     void Start()
     {
