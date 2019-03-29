@@ -358,9 +358,10 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 	public static void CreateFromMesh()
 	{
 		GameObject prefabRoot = Selection.activeGameObject;
-		GameObject top = new GameObject("changethisname");
+        GameObject top = new GameObject(prefabRoot.name);
 		top.transform.position = prefabRoot.transform.position;
 		top.transform.rotation = prefabRoot.transform.rotation;
+        prefabRoot.name = "mesh";
 
 		prefabRoot.transform.SetParent(top.transform);
 
