@@ -348,6 +348,21 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         break;
                     }
 
+                case "tele":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "TeleportFull";
+
+                        action.x = 1.5f;
+                        action.y = 1f;
+                        action.z = -1.75f;
+
+                        action.horizon = 0;
+
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
                 case "put":
                     {
                         ServerAction action = new ServerAction();

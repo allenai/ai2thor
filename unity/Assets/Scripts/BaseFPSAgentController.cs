@@ -62,6 +62,17 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		protected float[] headingAngles = new float[] { 0.0f, 90.0f, 180.0f, 270.0f };
 		protected float[] horizonAngles = new float[] { 60.0f, 30.0f, 0.0f, 330.0f };
 
+		//When passing in the TeleportFull action's horizon value, these are the only values that should be allowed
+		//they will be translated to the actual horizonAngles used above, as 30 should rotate the agent's camera 30 degrees up, but actually the
+		//value 330 or -30 about the x axis is what will angle the camera up... so yeah this is just to make it less confusing for the user
+		protected Dictionary<int, float> validHorizonAngleValues = new Dictionary<int, float>()
+		{
+			{30, -30.0f},
+			{0, 0.0f},
+			{-30, 30.0f},
+			{-60, 60.0f},
+		};
+
 		//allow agent to push sim objects that can move, for physics
 		protected bool PushMode = false;
 		protected int actionCounter;

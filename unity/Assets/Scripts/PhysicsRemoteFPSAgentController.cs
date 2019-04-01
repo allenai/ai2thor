@@ -1052,6 +1052,21 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
         public void TeleportFull(ServerAction action) {
 			targetTeleport = new Vector3 (action.x, action.y, action.z);
+            float targetHorizon;
+
+            //check to make sure valid horizon angles are passed in
+            if(!validHorizonAngleValues.ContainsKey(action.horizon))
+            {
+                errorMessage = "Horizon angle value invalid! Please use a valid angle (30 to look up 30 degrees, 0 to look stright ahead, -30 to look down 30 degrees, -60 to look down 60 degrees)";
+                actionFinished(false);
+                return;
+            }
+
+            //grab the actual value needed to rotate the x axis based on the horizon key value
+            else
+            {
+                targetHorizon = validHorizonAngleValues[action.horizon];
+            }
 
             if (action.forceAction) {
                 DefaultAgentHand(action);
@@ -1062,7 +1077,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 } else {
                     m_Camera.transform.localPosition = crouchingLocalCameraPosition;
                 }
-                m_Camera.transform.localEulerAngles = new Vector3 (action.horizon, 0.0f, 0.0f);
+                m_Camera.transform.localEulerAngles = new Vector3 (targetHorizon, 0.0f, 0.0f);
             } else {
                 if (!sceneBounds.Contains(targetTeleport)) {
                     errorMessage = "Teleport target out of scene bounds.";
@@ -1089,7 +1104,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 } else {
                     m_Camera.transform.localPosition = crouchingLocalCameraPosition;
                 }
-                m_Camera.transform.localEulerAngles = new Vector3 (action.horizon, 0.0f, 0.0f);
+                m_Camera.transform.localEulerAngles = new Vector3 (targetHorizon, 0.0f, 0.0f);
 
                 bool agentCollides = isAgentCapsuleColliding();
                 bool handObjectCollides = isHandObjectColliding();
