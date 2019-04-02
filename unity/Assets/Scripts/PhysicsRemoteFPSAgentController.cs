@@ -3132,13 +3132,22 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         Debug.Log("can't toggle object on if it's already on!");
                         errorMessage = "can't toggle object on if it's already on!";
                         actionFinished(false);
+                        return;
                     }
 
-                    else
+                    //check if this object needs to be closed in order to turn on
+                    if(ctof.MustBeClosedToTurnOn.Contains(target.Type))
                     {
-                        ctof.Toggle();
-                        actionFinished(true);
+                        if(target.GetComponent<CanOpen_Object>().isOpen)
+                        {
+                            errorMessage = "Target must be closed to Toggle On!";
+                            actionFinished(false);
+                            return;
+                        }
                     }
+
+                    ctof.Toggle();
+                    actionFinished(true);
                 }
             }
 
@@ -3259,26 +3268,34 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         return;
                     }
 
-                    else
+                    if(codd.MustBeOffToOpen.Contains(target.Type))
                     {
-                        //pass in percentage open if desired
-                        if (action.moveMagnitude > 0.0f)
+                        if(target.GetComponent<CanToggleOnOff>().isOn)
                         {
-                            //if this fails, invalid percentage given
-                            if(!codd.SetOpenPercent(action.moveMagnitude))
-                            {
-                                errorMessage = "Please give an open percentage between 0.0f and 1.0f";
-                                actionFinished(false);
-                                return;
-                            }
+                            errorMessage = "Target must be OFF to open!";
+                            actionFinished(false);
+                            return;
                         }
-
-                        //XXX: So if we want to generate metadata at specific parts of the animation, this
-                        //coroutine will need some tweaking. Basically we need to send emit frames after some number of yield
-                        //return null calls in the loop that's tracking iTween instances? We will figure that out later but
-                        //for future notice I'm leaving this note.
-                        StartCoroutine(InteractAndWait(codd));
                     }
+
+                    //pass in percentage open if desired
+                    if (action.moveMagnitude > 0.0f)
+                    {
+                        //if this fails, invalid percentage given
+                        if(!codd.SetOpenPercent(action.moveMagnitude))
+                        {
+                            errorMessage = "Please give an open percentage between 0.0f and 1.0f";
+                            actionFinished(false);
+                            return;
+                        }
+                    }
+
+                    //XXX: So if we want to generate metadata at specific parts of the animation, this
+                    //coroutine will need some tweaking. Basically we need to send emit frames after some number of yield
+                    //return null calls in the loop that's tracking iTween instances? We will figure that out later but
+                    //for future notice I'm leaving this note.
+                    StartCoroutine(InteractAndWait(codd));
+                    
 				}
 
 			}
