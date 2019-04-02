@@ -66,6 +66,10 @@ public class CanToggleOnOff : MonoBehaviour
 	[SerializeField]
     protected MovementType movementType;
 
+	//keep a list of all objects that can turn on, but must be in the closed state before turning on (ie: can't microwave an object with the door open!)
+	public List<SimObjType> MustBeClosedToTurnOn = new List<SimObjType>()
+	{SimObjType.Microwave};
+
 	public bool isTurnedOnOrOff()
 	{
 		return isOn;
