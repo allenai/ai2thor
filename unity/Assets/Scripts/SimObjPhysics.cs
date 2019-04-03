@@ -399,11 +399,41 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 
 	}
 
+    [UnityEditor.MenuItem("SimObjectPhysics/Set All Transforms to Defaults &d")]
+    public static void ResetTransform()
+    {
+        GameObject selected = Selection.activeGameObject;
+
+        List<Transform> selectedchildren = new List<Transform>();
+
+        foreach (Transform t in selected.transform)
+        {
+            //print(t.name);
+            selectedchildren.Add(t);
+            //t.SetParent(null);
+        }
+
+        foreach (Transform yes in selectedchildren)
+        {
+            yes.SetParent(null);
+        }
+
+        selected.transform.localPosition = new Vector3(0, 0, 0);
+        selected.transform.localRotation = new Quaternion(0, 0, 0, 0);
+        selected.transform.localScale = new Vector3(1, 1, 1);
+
+        foreach (Transform t in selectedchildren)
+        {
+            t.SetParent(selected.transform);
+        }
+
+
+    }
 
 #endif
 
-	// Use this for initialization
-	void Start()
+    // Use this for initialization
+    void Start()
 	{
 		//XXX For Debug setting up scene, comment out or delete when done settig up scenes
 #if UNITY_EDITOR
