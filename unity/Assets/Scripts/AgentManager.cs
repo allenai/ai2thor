@@ -126,6 +126,12 @@ public class AgentManager : MonoBehaviour
 		GameObject gameObject = new GameObject("ThirdPartyCamera" + thirdPartyCameras.Count);
 		gameObject.AddComponent(typeof(Camera));
 		Camera camera = gameObject.GetComponentInChildren<Camera>();
+
+		if (this.renderDepthImage || this.renderClassImage || this.renderObjectImage || this.renderNormalsImage) 
+		{
+			gameObject.AddComponent(typeof(ImageSynthesis));
+		}
+
 		this.thirdPartyCameras.Add(camera);
 		gameObject.transform.eulerAngles = action.rotation;
 		gameObject.transform.position = action.position;
@@ -342,13 +348,13 @@ public class AgentManager : MonoBehaviour
 		}
 	}
 
-	private void addImageSynthesisImageForm(WWWForm form, BaseFPSAgentController agent, bool flag, string captureName, string fieldName)
+	private void addImageSynthesisImageForm(WWWForm form, ImageSynthesis synth, bool flag, string captureName, string fieldName)
 	{
 		if (flag) {
-			if (!agent.imageSynthesis.hasCapturePass (captureName)) {
+			if (!synth.hasCapturePass (captureName)) {
 				Debug.LogError (captureName + " not available - sending empty image");
 			}
-			byte[] bytes = agent.imageSynthesis.Encode (captureName);
+			byte[] bytes = synth.Encode (captureName);
 			form.AddBinaryData (fieldName, bytes);
 
 
@@ -381,7 +387,12 @@ public class AgentManager : MonoBehaviour
 			cMetadata.position = camera.gameObject.transform.position;
 			cMetadata.rotation = camera.gameObject.transform.eulerAngles;
 			cameraMetadata[i] = cMetadata;
+			ImageSynthesis imageSynthesis = camera.gameObject.GetComponentInChildren<ImageSynthesis> () as ImageSynthesis;
 			addThirdPartyCameraImageForm (form, camera);
+			addImageSynthesisImageForm(form, imageSynthesis, this.renderDepthImage, "_depth", "image_thirdParty_depth");
+			addImageSynthesisImageForm(form, imageSynthesis, this.renderNormalsImage, "_normals", "image_thirdParty_normals");
+			addImageSynthesisImageForm(form, imageSynthesis, this.renderObjectImage, "_id", "image_thirdParty_image_ids");
+			addImageSynthesisImageForm(form, imageSynthesis, this.renderClassImage, "_class", "image_thirdParty_classes");
 		}
 
 		for (int i = 0; i < this.agents.Count; i++) {
@@ -394,10 +405,10 @@ public class AgentManager : MonoBehaviour
 			metadata.agentId = i;
 			// we don't need to render the agent's camera for the first agent
 			addImageForm (form, agent);
-			addImageSynthesisImageForm(form, agent, this.renderDepthImage, "_depth", "image_depth");
-			addImageSynthesisImageForm(form, agent, this.renderNormalsImage, "_normals", "image_normals");
+			addImageSynthesisImageForm(form, agent.imageSynthesis, this.renderDepthImage, "_depth", "image_depth");
+			addImageSynthesisImageForm(form, agent.imageSynthesis, this.renderNormalsImage, "_normals", "image_normals");
 			addObjectImageForm (form, agent, ref metadata);
-			addImageSynthesisImageForm(form, agent, this.renderClassImage, "_class", "image_classes");
+			addImageSynthesisImageForm(form, agent.imageSynthesis, this.renderClassImage, "_class", "image_classes");
 			metadata.thirdPartyCameras = cameraMetadata;
 			multiMeta.agents [i] = metadata;
 		}
