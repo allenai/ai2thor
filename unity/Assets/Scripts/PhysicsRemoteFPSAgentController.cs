@@ -5821,7 +5821,37 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 }
             }
             actionFinished(true);
-		}  
+		}
+
+        //remove a given sim object from the scene. Pass in the object's uniqueID string to remove it.
+        public void RemoveFromScene(ServerAction action)
+        {
+            //pass name of object in from action.objectId
+            if (action.objectId == null)
+            {
+                Debug.Log("Hey, actually give me an object ID to open, yeah?");
+                errorMessage = "objectId required for OpenObject";
+                actionFinished(false);
+                return;
+            }
+
+            PhysicsSceneManager script = GameObject.Find("PhysicsSceneManager").GetComponent<PhysicsSceneManager>();
+            
+            //see if the object exists in this scene
+            foreach (SimObjPhysics sop in script.PhysObjectsInScene)
+            {
+                if(sop.uniqueID == action.objectId)
+                {
+                    sop.transform.gameObject.SetActive(false);
+                    script.SetupScene();
+                    actionFinished(true);
+                    return;
+                }
+            }
+
+            errorMessage = action.objectId + " could not be found in this scene, so it can't be removed";
+            actionFinished(false);
+        }
        
 		#if UNITY_EDITOR
 

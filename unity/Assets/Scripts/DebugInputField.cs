@@ -373,6 +373,21 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         break;
                     }
 
+                //remove target sim object from scene - actually just disables it and removes it from the active objects in scene on the Scene Manager    
+                case "remove":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "RemoveFromScene";
+                        
+                        if(splitcommand.Length == 2)
+                        {
+                            action.objectId = splitcommand[1];
+                        }
+
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
                 //set forceVisible to true if you want objects to not spawn inside receptacles and only out in the open
                 //set forceAction to true to spawn with kinematic = true to more closely resemble pivot functionality
                 case "irs":
