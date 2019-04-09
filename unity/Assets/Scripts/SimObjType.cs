@@ -64,29 +64,34 @@ public enum SimObjSecondaryProperty : int //EACH SimObjPhysics can have any numb
     CanFillWithCoffee = 23,
     CanBeWatered = 24,
     CanWater = 25,
-    CanBeFilledWithSoap = 26,
+    CanBeFilledWithSoap = 26, //might not use this, instead categorize all as CanBeFullOrEmpty -see below 28
     CanFillWithSoap = 27,
-    CanBeUnrolled = 28,
+    CanBeFullOrEmpty = 28, //for things that can be emptied like toilet paper, paper towel, tissue box
     CanToggleOnOff = 29,
     CanBeBedMade = 30,
     CanBeMounted = 31,
     CanMount = 32,
 	CanBeHungTowel = 33,
     CanHangTowel = 34,
-    CanBeOnToiletPaperHolder = 35,
-    CanHoldToiletPaper = 36,
+    CanBeOnToiletPaperHolder = 35, //do not use, use object specific receptacle instead
+    CanHoldToiletPaper = 36, //do not use, use object specific receptacle instead
     CanBeClogged = 37,
     CanUnclog = 38,
     CanBeOmelette = 39,
     CanMakeOmelette = 40,
     CanFlush = 41,
     CanTurnOnTV = 42,
+	
+	// Might not use this, as picking up paintings is not really feasible if we have to lift and carry it. They are just way too big....
+	// All Painting Mount Stuff Here
     CanMountSmall = 43,
     CanMountMedium = 44,
     CanMountLarge = 45,
     CanBeMountedSmall = 46,
     CanBeMountedMedium = 47,
     CanBeMountedLarge = 48,
+	//End Painting Mount Stuff
+
     CanBeLitOnFire = 49,
     CanLightOnFire = 50,
     CanSeeThrough = 51,
