@@ -348,6 +348,20 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         break;
                     }
 
+                case "remove":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "RemoveFromScene";
+                        
+                        if(splitcommand.Length == 2)
+                        {
+                            action.objectId = splitcommand[1];
+                        }
+
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
                 case "put":
                     {
                         ServerAction action = new ServerAction();
