@@ -430,6 +430,36 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 
     }
 
+    [UnityEditor.MenuItem("SimObjectPhysics/Rotate Box Flap 90 on Y")]
+    public static void RotateTheBoxFlap()
+    {
+        GameObject selected = Selection.activeGameObject;
+
+        List<Transform> selectedchildren = new List<Transform>();
+
+        foreach (Transform t in selected.transform)
+        {
+            //print(t.name);
+            selectedchildren.Add(t);
+            //t.SetParent(null);
+        }
+
+        foreach (Transform yes in selectedchildren)
+        {
+            yes.SetParent(null);
+        }
+
+		Vector3 setrot = new Vector3(0, 90, 0);
+
+        selected.transform.localRotation = Quaternion.Euler(setrot);
+        selected.transform.localScale = new Vector3(1, 1, 1);
+
+        foreach (Transform t in selectedchildren)
+        {
+            t.SetParent(selected.transform);
+        }
+    }
+
 #endif
 
     // Use this for initialization
