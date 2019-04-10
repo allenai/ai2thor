@@ -453,8 +453,6 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 
 		Vector3 setrot = new Vector3(0, 90, 180 - initialRot); //This is weird and we don't know why
 
-        Debug.Log(setrot);
-
         selected.transform.localRotation = Quaternion.Euler(setrot + new Vector3(-180, 180, 180)); //This is weird and we don't know why
         selected.transform.localScale = new Vector3(1, 1, 1);
 
