@@ -38,8 +38,8 @@ public class CanToggleOnOff : MonoBehaviour
 	[SerializeField]
 	public SwapObjList[] MaterialSwapObjects;
 
-	//Light emitting objects that must be toggled enabled/disabled
-	[Header("Light Source Objects")]
+	//Light emitting objects that must be toggled enabled/disabled. Can also be used for non-Light objects
+	[Header("Light Source Objects/Objects to Enable or Disable")]
 	[SerializeField]
 	public GameObject[] LightSources;
 
