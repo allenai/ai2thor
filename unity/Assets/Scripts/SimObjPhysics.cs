@@ -430,7 +430,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 
     }
 
-    [UnityEditor.MenuItem("SimObjectPhysics/Rotate Box Flap 90 on Y")]
+    [UnityEditor.MenuItem("SimObjectPhysics/Rotate Box Flap 90 on Y &s")]
     public static void RotateTheBoxFlap()
     {
         GameObject selected = Selection.activeGameObject;
