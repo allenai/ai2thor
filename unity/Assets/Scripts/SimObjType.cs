@@ -300,7 +300,7 @@ public static class ReceptacleRestrictions
 	//These receptacle sim objects MUST be in the open state before objects can be placed in them
 	public static List<SimObjType> MustBeOpenToPlaceObjectsIn = new List<SimObjType>()
 	{
-		SimObjType.Drawer, SimObjType.Cabinet, SimObjType.LaundryHamper, SimObjType.Microwave, SimObjType.Fridge //XXX add box to this once we have openable boxes
+		SimObjType.Drawer, SimObjType.Cabinet, SimObjType.LaundryHamper, SimObjType.Microwave, SimObjType.Fridge, SimObjType.Box 
 	};
 
 	//these objects should always be placed upright and not in weird angles. For example, you wouldn't place a pot sideways, you would always place
