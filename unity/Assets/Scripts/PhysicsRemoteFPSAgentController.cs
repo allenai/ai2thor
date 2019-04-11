@@ -1006,18 +1006,240 @@ namespace UnityStandardAssets.Characters.FirstPerson
             }
         }
 
+        public void ChangeAgentColor(ServerAction action) {
+            foreach (MeshRenderer r in this.gameObject.GetComponentsInChildren<MeshRenderer> () as MeshRenderer[]) {
+                foreach (Material m in r.materials) {
+                    m.color = new Color(action.x, action.y, action.z, 1.0f);
+                }
+            }
+            actionFinished(true);
+        }
+
+        protected float distanceToObject(SimObjPhysics sop) {
+            float dist = 10000.0f;
+            foreach (Collider c in sop.GetComponentsInChildren<Collider>()) {
+                dist = Math.Min(
+                    Vector3.Distance(transform.position, c.ClosestPointOnBounds(transform.position)), 
+                    dist
+                );
+            }
+            return dist;
+        }
+
+        public void DistanceToObject(ServerAction action) {
+            float dist = distanceToObject(uniqueIdToSimObjPhysics[action.objectId]);
+            actionFinished(true, dist);
+        }
+
+        public void RandomlyCreateLiftedFurniture(ServerAction action) {
+            Vector3[] reachablePositions = getReachablePositions();
+
+            List<Vector3> oldAgentPositions = new List<Vector3>();
+            List<Quaternion> oldAgentRotations = new List<Quaternion>();
+            foreach (BaseFPSAgentController agent in this.agentManager.agents) {
+                oldAgentPositions.Add(agent.transform.position);
+                agent.transform.position = new Vector3(50f, 50f, 50f);
+                oldAgentRotations.Add(agent.transform.rotation);
+            }
+            SimObjPhysics objectCreated = randomlyCreateAndPlaceObjectOnFloor(
+                action.objectType, action.objectVariation, reachablePositions
+            );
+            if (objectCreated == null) {
+                for (int i = 0; i < this.agentManager.agents.Count; i++) {
+                    var agent = this.agentManager.agents[i];
+                    agent.transform.position = oldAgentPositions[i];
+                    agent.transform.rotation = oldAgentRotations[i];
+                }
+                errorMessage = "Failed to create object of type " + action.objectType + " . " + errorMessage;
+                actionFinished(false);
+                return;
+            }
+            objectCreated.GetComponent<Rigidbody>().isKinematic = true;
+            bool objectFloating = moveObject(
+                objectCreated,
+                objectCreated.transform.position + new Vector3(0f, action.y, 0f)
+            );
+
+            float[] rotationsArr = {0f, 90f, 180f, 270f};
+            List<float> rotations = rotationsArr.ToList();
+
+            for (int i = 0; i < 10; i++) {
+                if (objectFloating) {
+                    List<Vector3> candidatePositionsList = new List<Vector3>();
+                    foreach (Vector3 p in reachablePositions) {
+                        transform.position = p;
+                        if (isAgentCapsuleColliding()) {
+                            continue;
+                        }
+                        if (distanceToObject(objectCreated) <= action.z) {
+                            candidatePositionsList.Add(p);
+                        }
+                    }
+                    transform.position = new Vector3(50f, 50f, 50f);
+                    
+                    if (candidatePositionsList.Count >= agentManager.agents.Count) {
+                        candidatePositionsList.Shuffle_();
+                        foreach (BaseFPSAgentController baseAgent in agentManager.agents) {
+                            var agent = (PhysicsRemoteFPSAgentController) baseAgent;
+                            agent.transform.position = candidatePositionsList[0];
+                            // In principle this is inefficient but candidatePositionsList should be small so
+                            // hopefully this doesn't matter.
+                            candidatePositionsList.RemoveAt(0);
+                            foreach (float r in rotations.Shuffle_()) {
+                                agent.transform.rotation = Quaternion.Euler(new Vector3(0f, r, 0f));
+                                if (agent.objectIsCurrentlyVisible(objectCreated, 100f)) {
+                                    break;
+                                }
+                            }
+                        }
+                        break;
+                    }
+                }
+                foreach (BaseFPSAgentController agent in this.agentManager.agents) {
+                    agent.transform.position = new Vector3(50f, 50f, 50f);
+                }
+                randomlyPlaceObjectOnFloor(objectCreated, reachablePositions);
+                objectFloating = moveObject(
+                    objectCreated,
+                    objectCreated.transform.position + new Vector3(0f, action.y, 0f)
+                );
+            }
+
+            if (!objectFloating) {
+                for (int i = 0; i < this.agentManager.agents.Count; i++) {
+                    var agent = this.agentManager.agents[i];
+                    agent.transform.position = oldAgentPositions[i];
+                    agent.transform.rotation = oldAgentRotations[i];
+                }
+                objectCreated.gameObject.SetActive(false);
+                errorMessage = "Could not find a place to put the object after 10 iterations. " + errorMessage;
+                actionFinished(false);
+                return;
+            }
+
+            actionFinished(true, objectCreated.UniqueID);
+        }
+
+        protected bool moveObject(SimObjPhysics sop, Vector3 targetPosition) {
+            Vector3 lastPosition = sop.transform.position;
+			Rigidbody ItemRB = sop.gameObject.GetComponent<Rigidbody>();
+			RaycastHit[] sweepResults = ItemRB.SweepTestAll(
+                targetPosition - sop.transform.position, 
+                Vector3.Distance(targetPosition, sop.transform.position),
+                QueryTriggerInteraction.Ignore
+            );
+
+			if (sweepResults.Length > 0)
+			{
+                RaycastHit hit = sweepResults[0];
+                errorMessage = hit.transform.name + " is in the way of moving " + sop.UniqueID;
+                return false;
+			}
+
+            sop.transform.position = targetPosition;
+		 	return true;
+        }
+
+        public bool moveAgentsWithObject(SimObjPhysics objectToMove, Vector3 d) {
+            List<Vector3> startAgentPositions = new List<Vector3>();
+            var agentMovePQ = new SimplePriorityQueue<BaseFPSAgentController>();
+            foreach (BaseFPSAgentController agent in agentManager.agents) {
+                var p = agent.transform.position;
+                startAgentPositions.Add(p);
+                agentMovePQ.Enqueue(agent, -(d.x * p.x + d.y * p.y + d.z * p.z));
+            }
+            Vector3 startObjectPosition = objectToMove.transform.position;
+            Quaternion startObjectRotation = objectToMove.transform.rotation;
+            float objectPriority = d.x * startObjectPosition.x + d.y * startObjectPosition.y + d.z * startObjectPosition.z;
+            bool objectMoved = false;
+
+            bool success = true;
+            while (agentMovePQ.Count > 0 || !objectMoved) {
+                if (agentMovePQ.Count == 0) {
+                    // Debug.Log("Object count 0");
+                    success = moveObject(objectToMove, objectToMove.transform.position + d);
+                    break;
+                } else {
+                    PhysicsRemoteFPSAgentController nextAgent = (PhysicsRemoteFPSAgentController) agentMovePQ.First;
+                    float agentPriority = -agentMovePQ.GetPriority(nextAgent);
+
+                    if (!objectMoved && agentPriority < objectPriority) {
+                        // Debug.Log("Object");
+                        success = moveObject(objectToMove, objectToMove.transform.position + d);
+                        objectMoved = true;
+                    } else {
+                        // Debug.Log(nextAgent);
+                        agentMovePQ.Dequeue();
+                        success = nextAgent.moveInDirection(d);
+                    }
+                }
+                if (!success) {
+                    break;
+                }
+            }
+            if (!success) {
+                for (int i = 0; i < agentManager.agents.Count; i++) {
+                    agentManager.agents[i].transform.position = startAgentPositions[i];
+                }
+                objectToMove.transform.position = startObjectPosition;
+            }
+            return success;
+        }
+
+        public void MoveAgentsAheadWithObject(ServerAction action) {
+            if (!uniqueIdToSimObjPhysics.ContainsKey(action.objectId)) {
+                errorMessage = "Cannot find object with id " + action.objectId;
+                actionFinished(false);
+                return;
+            }
+            SimObjPhysics objectToMove = uniqueIdToSimObjPhysics[action.objectId];
+            action.moveMagnitude = action.moveMagnitude > 0 ? action.moveMagnitude : gridSize;
+            actionFinished(moveAgentsWithObject(objectToMove, transform.forward * action.moveMagnitude));
+        }
+
+        public void MoveAgentsLeftWithObject(ServerAction action) {
+            if (!uniqueIdToSimObjPhysics.ContainsKey(action.objectId)) {
+                errorMessage = "Cannot find object with id " + action.objectId;
+                actionFinished(false);
+                return;
+            }
+            SimObjPhysics objectToMove = uniqueIdToSimObjPhysics[action.objectId];
+            action.moveMagnitude = action.moveMagnitude > 0 ? action.moveMagnitude : gridSize;
+            actionFinished(moveAgentsWithObject(objectToMove, -transform.right * action.moveMagnitude));
+        }
+
+        public void MoveAgentsRightWithObject(ServerAction action) {
+            if (!uniqueIdToSimObjPhysics.ContainsKey(action.objectId)) {
+                errorMessage = "Cannot find object with id " + action.objectId;
+                actionFinished(false);
+                return;
+            }
+            SimObjPhysics objectToMove = uniqueIdToSimObjPhysics[action.objectId];
+            action.moveMagnitude = action.moveMagnitude > 0 ? action.moveMagnitude : gridSize;
+            actionFinished(moveAgentsWithObject(objectToMove, transform.right * action.moveMagnitude));
+        }
+
+        public void MoveAgentsBackWithObject(ServerAction action) {
+            if (!uniqueIdToSimObjPhysics.ContainsKey(action.objectId)) {
+                errorMessage = "Cannot find object with id " + action.objectId;
+                actionFinished(false);
+                return;
+            }
+            SimObjPhysics objectToMove = uniqueIdToSimObjPhysics[action.objectId];
+            action.moveMagnitude = action.moveMagnitude > 0 ? action.moveMagnitude : gridSize;
+            actionFinished(moveAgentsWithObject(objectToMove, -transform.forward * action.moveMagnitude));
+        }
+
         public void TeleportObjectToFloor(ServerAction action) 
 		{
             if (!uniqueIdToSimObjPhysics.ContainsKey(action.objectId)) {
                 errorMessage = "Cannot find object with id " + action.objectId;
-                Debug.Log(errorMessage);
                 actionFinished(false);
                 return;
             } else {
                 SimObjPhysics sop = uniqueIdToSimObjPhysics[action.objectId];
                 if (ItemInHand != null && sop == ItemInHand.GetComponent<SimObjPhysics>()) {
                     errorMessage = "Cannot teleport object in hand.";
-                    Debug.Log(errorMessage);
                     actionFinished(false);
                     return;
                 }
@@ -1121,6 +1343,11 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     return;
                 }
             }
+
+            Vector3 v = new Vector3 ();
+			v.y = Physics.gravity.y * this.m_GravityMultiplier;
+			m_CharacterController.Move (v);
+
             snapToGrid();
             actionFinished(true);
 		}
@@ -1149,71 +1376,49 @@ namespace UnityStandardAssets.Characters.FirstPerson
         //Luca's movement grid and valid position generation, simple transform setting is used for movement instead.
 
         //XXX revisit what movement means when we more clearly define what "continuous" movement is
+		protected bool moveInDirection(Vector3 direction) {
+            Vector3 targetPosition = transform.position + direction;
+            float angle = Vector3.Angle(transform.forward, Vector3.Normalize(direction));
+
+            float right = Vector3.Dot(transform.right, direction);
+            if (right < 0) {
+                angle = 360f - angle;
+            }
+            int angleInt = Mathf.RoundToInt(angle) % 360;
+
+            if (checkIfSceneBoundsContainTargetPosition(direction) &&
+                CheckIfItemBlocksAgentMovement(direction.magnitude, angleInt) && 
+                CheckIfAgentCanMove(direction.magnitude, angleInt)) {
+				DefaultAgentHand();
+                transform.position = targetPosition;
+                this.snapToGrid();
+                return true;
+			} else {
+                return false;
+            }
+        }
 		public override void MoveLeft(ServerAction action)
 		{
             action.moveMagnitude = action.moveMagnitude > 0 ? action.moveMagnitude : gridSize;
-            Vector3 targetPosition = transform.position + -1 * transform.right * action.moveMagnitude;
-			if(checkIfSceneBoundsContainTargetPosition(targetPosition) &&
-                CheckIfItemBlocksAgentMovement(action.moveMagnitude, 270) &&
-                CheckIfAgentCanMove(action.moveMagnitude, 270)) {
-				DefaultAgentHand(action);
-                transform.position = targetPosition;
-                this.snapToGrid();
-                actionFinished(true);
-				// base.MoveLeft(action);
-			} else {
-                actionFinished(false);
-            }
+            actionFinished(moveInDirection(-1 * transform.right * action.moveMagnitude));
 		}
 
 		public override void MoveRight(ServerAction action)
 		{
             action.moveMagnitude = action.moveMagnitude > 0 ? action.moveMagnitude : gridSize;
-            Vector3 targetPosition = transform.position + transform.right * action.moveMagnitude;
-			if(checkIfSceneBoundsContainTargetPosition(targetPosition) &&
-                CheckIfItemBlocksAgentMovement(action.moveMagnitude, 90) &&
-                CheckIfAgentCanMove(action.moveMagnitude, 90))  {
-				DefaultAgentHand(action);
-                transform.position = targetPosition;
-                this.snapToGrid();
-                actionFinished(true);
-				// base.MoveRight(action);
-			} else {
-                actionFinished(false);
-            }
+            actionFinished(moveInDirection(transform.right * action.moveMagnitude));
 		}
 
 		public override void MoveAhead(ServerAction action)
 		{
             action.moveMagnitude = action.moveMagnitude > 0 ? action.moveMagnitude : gridSize;
-            Vector3 targetPosition = transform.position + transform.forward * action.moveMagnitude;
-            if (checkIfSceneBoundsContainTargetPosition(targetPosition) &&
-                CheckIfItemBlocksAgentMovement(action.moveMagnitude, 0) && 
-                CheckIfAgentCanMove(action.moveMagnitude, 0)) {
-				DefaultAgentHand(action);
-                transform.position = targetPosition;
-                this.snapToGrid();
-                actionFinished(true);
-			} else {
-                actionFinished(false);
-            }
+            actionFinished(moveInDirection(transform.forward * action.moveMagnitude));
 		}
         
 		public override void MoveBack(ServerAction action)
 		{
             action.moveMagnitude = action.moveMagnitude > 0 ? action.moveMagnitude : gridSize;
-			Vector3 targetPosition = transform.position + -1 * transform.forward * action.moveMagnitude;
-            if (checkIfSceneBoundsContainTargetPosition(targetPosition) &&
-                CheckIfItemBlocksAgentMovement(action.moveMagnitude, 180) &&
-                CheckIfAgentCanMove(action.moveMagnitude, 180)) {
-				DefaultAgentHand(action);
-                transform.position = targetPosition;
-                this.snapToGrid();
-                actionFinished(true);
-				// base.MoveBack(action);
-    		} else {
-                actionFinished(false);
-            }
+            actionFinished(moveInDirection(-1 * transform.forward * action.moveMagnitude));
 		}
 
         //Flying Drone Agent Controls
@@ -1688,27 +1893,45 @@ namespace UnityStandardAssets.Characters.FirstPerson
             bool hitMaxDistance = false;
             bool beyondVisibleDistance = false;
             bool leavingViewport = false;
-            float oldTimeScale = Time.timeScale;
-            float oldFixedDeltaTime = Time.fixedDeltaTime;
-            Time.timeScale = 5.0f;
-            Time.fixedDeltaTime = 0.02f * Time.timeScale;
             CollisionDetectionMode oldCollisionDetectionMode = rb.collisionDetectionMode;
-            rb.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
-            rb.AddForce(forceDirection, ForceMode.VelocityChange);
+            
             List<Vector3> positions = new List<Vector3>();
             List<Quaternion> rotations = new List<Quaternion>();
             positions.Add(initialPosition);
             rotations.Add(initialRotation);
-            for (int i = 0; i < 20; i++) {
+
+            Physics.autoSimulation = false;
+            List<Vector3> seenPositions = new List<Vector3>();
+            List<Quaternion> seenRotations = new List<Quaternion>();
+            for (int i = 0; i < 100; i++) {
+                seenPositions.Add(rb.transform.position);
+                seenRotations.Add(rb.transform.rotation);
+                if (rb.velocity.magnitude < 1) {
+                    rb.AddForce(forceDirection, ForceMode.Force);
+                }
+                rb.angularVelocity = rb.angularVelocity * 0.96f;
+                
+                Physics.Simulate(0.04f);
+                #if UNITY_EDITOR
                 yield return null;
+                #endif
                 float a = Vector3.Dot(rb.velocity, forceDirection);
                 float aPos = Math.Max(0.0f, a);
                 float aNeg = Math.Min(0.0f, a);
-                rb.velocity = (aPos + 0.5f * aNeg) * forceDirection + 0.5f * (rb.velocity - a * forceDirection);
-
-                if (rb.velocity.magnitude <= 0.001f &&
-                    rb.angularVelocity.magnitude < 0.001f) {
-                    break;
+                
+                if (i >= 5) {
+                    bool repeatedPosition = false;
+                    for (int j = seenPositions.Count - 4; j >= Math.Max(seenPositions.Count - 8, 0); j--) {
+                        float distance = Vector3.Distance(rb.transform.position, seenPositions[i]);
+                        float angle = Quaternion.Angle(rb.transform.rotation, seenRotations[i]);
+                        if (distance <= 0.001f && angle <= 3f) {
+                            repeatedPosition = true;
+                            break;
+                        }
+                    }
+                    if (repeatedPosition) {
+                        break;
+                    }
                 }
                 
                 hitMaxDistance = beyondVisibleDistance = leavingViewport = false;
@@ -1732,9 +1955,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
                 if (hitMaxDistance) {
                     rb.velocity = new Vector3(0f, 0f, 0f);
-                    rb.angularVelocity = 0.9f * rb.angularVelocity;
-                } else {
-                    rb.angularVelocity = 0.98f * rb.angularVelocity;
+                    rb.angularVelocity = 0.0f * rb.angularVelocity;
+                    break;
                 }
 
                 if (beyondVisibleDistance || leavingViewport) {
@@ -1746,8 +1968,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     lastRotation = rb.transform.rotation;
                 }
             }
-            Time.timeScale = oldTimeScale;
-            Time.fixedDeltaTime = oldFixedDeltaTime;
+            Physics.autoSimulation = true;
 
             Vector3 normalSum = new Vector3(0.0f, 0.0f, 0.0f);
             Vector3 aveCollisionsNormal = new Vector3(0.0f, 0.0f, 0.0f);
@@ -1758,6 +1979,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     count += 1;
                 }
             }
+
             if (count != 0) {
                 aveCollisionsNormal = normalSum / count;
                 aveCollisionsNormal.Normalize();
@@ -1772,15 +1994,20 @@ namespace UnityStandardAssets.Characters.FirstPerson
             SetUpRotationBoxChecks();
             IsHandDefault = false;
 
+            yield return null;
+            bool handObjectIsColliding = isHandObjectColliding();
             if (count != 0) {
-                AgentHand.transform.position = AgentHand.transform.position + 0.05f * aveCollisionsNormal;
+                for (int j = 0; handObjectIsColliding && j < 5; j++) {
+                    AgentHand.transform.position = AgentHand.transform.position + 0.01f * aveCollisionsNormal;
+                    yield return null;
+                    handObjectIsColliding = isHandObjectColliding();
+                }
             }
-            bool handObjectIsColliding = isHandObjectColliding(0.01f);
 
             // This has to be after the above as the contactPointsDictionary is only
             // updated while rb is not kinematic.
-            rb.collisionDetectionMode = oldCollisionDetectionMode;
             rb.isKinematic = true;
+            rb.collisionDetectionMode = oldCollisionDetectionMode;
 
             if (handObjectIsColliding) {
                 AgentHand.transform.position = initialPosition;
@@ -1863,17 +2090,17 @@ namespace UnityStandardAssets.Characters.FirstPerson
             }
         }
 
-		public void ResetAgentHandPosition(ServerAction action)
+		public void ResetAgentHandPosition(ServerAction action = null)
         {
             AgentHand.transform.position = DefaultHandPosition.transform.position;
         }
 
-        public void ResetAgentHandRotation(ServerAction action)
+        public void ResetAgentHandRotation(ServerAction action = null)
         {
             AgentHand.transform.localRotation = Quaternion.Euler(Vector3.zero);
         }
         
-        public void DefaultAgentHand(ServerAction action)
+        public void DefaultAgentHand(ServerAction action = null)
         {
             ResetAgentHandPosition(action);
             ResetAgentHandRotation(action);
@@ -1975,10 +2202,16 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			if (CheckIfAgentCanMoveHand(targetPosition))
 			{
 				//Debug.Log("Movement of Agent Hand holding " + ItemInHand.name + " succesful!");
+                Vector3 oldPosition = AgentHand.transform.position;
                 AgentHand.transform.position = targetPosition;
-				SetUpRotationBoxChecks();
-                IsHandDefault = false;
-                return true;
+                if (isHandObjectColliding()) {
+                    AgentHand.transform.position = oldPosition;
+                    return false;
+                } else {
+                    SetUpRotationBoxChecks();
+                    IsHandDefault = false;
+                    return true;
+                }
 			} else {
                 return false;
             }
@@ -4401,29 +4634,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
             if (ItemInHand == null) {
                 return false;
             }
-            int layerMask = 1 << 8;
-            foreach (CapsuleCollider cc in ItemInHand.GetComponentsInChildren<CapsuleCollider>()) {
-                foreach (Collider c in PhysicsExtensions.OverlapCapsule(cc, layerMask, QueryTriggerInteraction.Ignore, expandBy)) {
-                    if (!hasAncestor(c.transform.gameObject, gameObject)) {
-                        return true;
-                    }
-                }
-            }
-            foreach (BoxCollider bc in ItemInHand.GetComponentsInChildren<BoxCollider>()) {
-                foreach (Collider c in PhysicsExtensions.OverlapBox(bc, layerMask, QueryTriggerInteraction.Ignore, expandBy)) {
-                    if (!hasAncestor(c.transform.gameObject, gameObject)) {
-                        return true;
-                    }
-                }
-            }
-            foreach (SphereCollider sc in ItemInHand.GetComponentsInChildren<SphereCollider>()) {
-                foreach (Collider c in PhysicsExtensions.OverlapSphere(sc, layerMask, QueryTriggerInteraction.Ignore, expandBy)) {
-                    if (!hasAncestor(c.transform.gameObject, gameObject)) {
-                        return true;
-                    }
-                }
-            }
-            return false;
+            List<GameObject> ignoreGameObjects = new List<GameObject>();
+            // Ignore the agent when determining if the hand object is colliding
+            ignoreGameObjects.Add(this.gameObject);
+            return UtilityFunctions.isObjectColliding(ItemInHand, ignoreGameObjects, expandBy);
         }
 
         protected bool isAgentCapsuleCollidingWith(GameObject otherGameObject) {
@@ -4766,19 +4980,19 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			actionFinished(true);
 		}
 
-        public bool createObjectAtLocation(string objectType, Vector3 targetPosition, Vector3 targetRotation, int objectVariation = 1) 
+        protected SimObjPhysics createObjectAtLocation(string objectType, Vector3 targetPosition, Vector3 targetRotation, int objectVariation = 1) 
 		{
 			if(!sceneBounds.Contains(targetPosition))
 			{
 				errorMessage = "Target position is out of bounds!";
                 Debug.Log(errorMessage);
-                return false;
+                return null;
 			}
 
 			if (objectType == null)
             {
                 errorMessage = "Please give valid Object Type from SimObjType enum list";
-                return false;
+                return null;
             }
          
 			//spawn the object at the agent's hand position
@@ -4789,7 +5003,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			if (so == null) 
 			{
 				errorMessage = "Failed to create object, are you sure it can be spawned?";
-                return false;
+                return null;
 			} 
 
 			else 
@@ -4801,9 +5015,21 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 physicsSceneManager.AddToObjectsInScene(so);
 			}
 
-			return true;
+			return so;
 		}
 
+        protected float getFloorY(float x, float start_y, float z) {
+			int layerMask = ~(1 << 10 | 1 << 9);
+            
+            float y = start_y;
+            RaycastHit hit;
+            Ray ray = new Ray(new Vector3(x, y, z), -transform.up);
+			if (!Physics.Raycast(ray, out hit, 100f, layerMask)) {
+                errorMessage = "Could not find the floor";
+				return float.NegativeInfinity;
+			}
+			return hit.point.y;
+		}
         protected float getFloorY(float x, float z) {
 			int layerMask = ~(1 << 10);
 			
@@ -4813,16 +5039,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 errorMessage = "Could not find the floor";
 				return float.NegativeInfinity;
 			}
-
-            float y = hit.point.y;
-
-            ray = new Ray(new Vector3(x, y + 0.5f, z), -transform.up);
-			if (!Physics.Raycast(ray, out hit, 10f, layerMask)) {
-                errorMessage = "Could not find the floor";
-				return float.NegativeInfinity;
-			}
-
-			return hit.point.y;
+            return getFloorY(x, hit.point.y + 0.1f, z);
 		}
 
         public void CreateObjectOnFloor(ServerAction action) 
@@ -4840,26 +5057,67 @@ namespace UnityStandardAssets.Characters.FirstPerson
             }
 		}
 
-        public void RandomlyCreateAndPlaceObjectOnFloor(ServerAction action) {
-            InstantiatePrefabTest script = GameObject.Find("PhysicsSceneManager").GetComponent<InstantiatePrefabTest>();
-			Bounds b = script.BoundsOfObject(action.objectType, 1);
-            if (b.min.x != float.PositiveInfinity) {
-                errorMessage = "Could not get bounds of object with type " + action.objectType;
+        protected bool randomlyPlaceObjectOnFloor(SimObjPhysics sop, Vector3[] candidatePositions) {
+            var oldPosition = sop.transform.position;
+            var oldRotation = sop.transform.rotation;
+
+            sop.transform.rotation = Quaternion.identity;
+            Bounds b = new Bounds(
+                new Vector3(float.PositiveInfinity, float.PositiveInfinity, float.PositiveInfinity),
+                new Vector3(-float.PositiveInfinity, -float.PositiveInfinity, -float.PositiveInfinity)
+            );
+            foreach(Renderer r in sop.GetComponentsInChildren<Renderer>()) {
+                if (r.enabled) {
+                    b.Encapsulate(r.bounds);
+                }
             }
 
             System.Random rnd = new System.Random();
-            Vector3[] shuffledCurrentlyReachable = getReachablePositions().OrderBy(x => rnd.Next()).ToArray(); 
+            List<Vector3> shuffledCurrentlyReachable = (List<Vector3>) candidatePositions.ToList().Shuffle_();
+            float[] rotations = {0f, 90f, 180f, 270f};
+            List<float> shuffledRotations = (List<float>) rotations.ToList().Shuffle_();
+            bool objectColliding = true;
+            foreach (Vector3 position in shuffledCurrentlyReachable) {
+                float y = b.extents.y + getFloorY(position.x, position.y, position.z) + 0.1f;
+                foreach (float r in shuffledRotations) {
+                    sop.transform.position =  new Vector3(position.x, y, position.z);
+                    sop.transform.rotation = Quaternion.Euler(new Vector3(0.0f, r, 0.0f));
+                    objectColliding = UtilityFunctions.isObjectColliding(sop.gameObject);
+                    if (!objectColliding) {
+                        break;
+                    }
+                }
+                if (!objectColliding) {
+                    break;
+                }
+            }
+            if (objectColliding) {
+                sop.transform.position = oldPosition;
+                sop.transform.rotation = oldRotation;
+            }
+            return objectColliding;
+        }
+
+        protected SimObjPhysics randomlyCreateAndPlaceObjectOnFloor(string objectType, int objectVariation, Vector3[] candidatePositions) {
+            InstantiatePrefabTest script = GameObject.Find("PhysicsSceneManager").GetComponent<InstantiatePrefabTest>();
+			Bounds b = script.BoundsOfObject(objectType, 1);
+            if (b.min.x != float.PositiveInfinity) {
+                errorMessage = "Could not get bounds of object with type " + objectType;
+            }
+
+            System.Random rnd = new System.Random();
+            Vector3[] shuffledCurrentlyReachable = candidatePositions.OrderBy(x => rnd.Next()).ToArray(); 
             float[] rotations = {0f, 90f, 180f, 270f};
             float[] shuffledRotations = rotations.OrderBy(x => rnd.Next()).ToArray(); 
-            bool objectCreated = false;
+            SimObjPhysics objectCreated = null;
             foreach (Vector3 position in shuffledCurrentlyReachable) {
-                float y = b.extents.y + getFloorY(position.x, position.z) + 0.1f;
+                float y = b.extents.y + getFloorY(position.x, position.y, position.z) + 0.01f;
                 foreach (float r in shuffledRotations) {
                     objectCreated = createObjectAtLocation(
-                        action.objectType, 
+                        objectType, 
                         new Vector3(position.x, y, position.z), 
                         new Vector3(0.0f, r, 0.0f),
-                        action.objectVariation);
+                        objectVariation);
                     if (objectCreated) {
                         break;
                     }
@@ -4868,12 +5126,21 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     break;
                 }
             }
+            return objectCreated;
+        }
+
+        protected SimObjPhysics randomlyCreateAndPlaceObjectOnFloor(string objectType, int objectVariation) {
+            return randomlyCreateAndPlaceObjectOnFloor(objectType, objectVariation, getReachablePositions());
+        }
+
+        public void RandomlyCreateAndPlaceObjectOnFloor(ServerAction action) {
+            SimObjPhysics objectCreated = randomlyCreateAndPlaceObjectOnFloor(action.objectType, action.objectVariation);
             if (!objectCreated) {
-                errorMessage = "Failed to randomly create object";
+                errorMessage = "Failed to randomly create object. " + errorMessage;
                 actionFinished(false);
             } else {
                 errorMessage = "";
-                actionFinished(true);
+                actionFinished(true, objectCreated.UniqueID);
             }
         }
 
@@ -4885,13 +5152,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
             }
 
             SimObjPhysics sop = uniqueIdToSimObjPhysics[action.objectId];
-
-            GameObject[] visibilityCapsules = Resources.FindObjectsOfTypeAll<GameObject>().Where(
-                obj => obj.name == "VisibilityCapsule"
-            ).ToArray();
-            foreach (GameObject go in visibilityCapsules) {
-                go.SetActive(false);
-            }
 
             Vector3 savedPosition = transform.position;
             Quaternion savedRotation = transform.rotation;
@@ -4921,10 +5181,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
             actionVector3sReturn = goodPositions.ToArray();
             actionFloatsReturn = goodRotations.ToArray();
-
-            foreach (GameObject go in visibilityCapsules) {
-                go.SetActive(true);
-            }
 
             transform.position = savedPosition;
             transform.rotation = savedRotation;
