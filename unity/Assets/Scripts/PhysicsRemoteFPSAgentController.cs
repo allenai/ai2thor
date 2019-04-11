@@ -1083,6 +1083,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
                 DefaultAgentHand(action);
                 transform.position = targetTeleport;
+
+                //apply gravity after teleport so we aren't floating in the air
+                Vector3 m = new Vector3 ();
+                m.y = Physics.gravity.y * this.m_GravityMultiplier;
+                m_CharacterController.Move (m);
+
                 transform.rotation = Quaternion.Euler(new Vector3(0.0f, action.rotation.y, 0.0f));
                 if (action.standing) {
                     m_Camera.transform.localPosition = standingLocalCameraPosition;
@@ -3036,6 +3042,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             actionFinished(true);
         }
 
+        //toasts object if it has the CanBeToasted property and the ToastObject component - basically just Bread Slices have this at the moment
         public void ToastObject(ServerAction action)
         {
             if (action.objectId == null)
