@@ -99,13 +99,13 @@ public class CanToggleOnOff : MonoBehaviour
 	// Update is called once per frame
 	void Update () 
 	{
-		//test if it can open without Agent Command - Debug Purposes
-        #if UNITY_EDITOR
-		if (Input.GetKeyDown(KeyCode.Minus))
-        {
-            Toggle();
-        }
-        #endif
+		// //test if it can open without Agent Command - Debug Purposes
+        // #if UNITY_EDITOR
+		// if (Input.GetKeyDown(KeyCode.Minus))
+        // {
+        //     Toggle();
+        // }
+        // #endif
 	}
 
 	public void Toggle()

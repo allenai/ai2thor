@@ -248,7 +248,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                      0.0f;
             }
 
-            if (Input.GetKeyDown(KeyCode.R))
+            if (!TextInputMode && Input.GetKeyDown(KeyCode.R))
             {
                 var action = new ServerAction
                 {
@@ -262,7 +262,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             }
 
             // Throw action on left clock release
-            if (Input.GetKeyUp(KeyCode.Mouse0))
+            if (!TextInputMode && Input.GetKeyUp(KeyCode.Mouse0))
             {
                 // Debug.Log("Pickup state " + pickupState + " obj " + this.PhysicsController.WhatAmIHolding());
                 if (!pickupState)
