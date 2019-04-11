@@ -220,6 +220,16 @@ public class PhysicsSceneManager : MonoBehaviour
 		UniqueIDsInScene.Add(sop.uniqueID);
 	}
 
+	public void RemoveFormSpawnedObjects(SimObjPhysics sop)
+	{
+		SpawnedObjects.Remove(sop.gameObject);
+	}
+
+	public void RemoveFromRequiredObjects(SimObjPhysics sop)
+	{
+		RequiredObjects.Remove(sop.gameObject);
+	}
+
 	//use action.randomseed for seed, use action.forceVisible for if objects shoudld ONLY spawn outside and not inside anything
 	//set forceVisible to true for if you want objects to only spawn in immediately visible receptacles.
 	public bool RandomSpawnRequiredSceneObjects(ServerAction action)
@@ -376,6 +386,8 @@ public class PhysicsSceneManager : MonoBehaviour
 										go.transform.position = osr.attachPoint.position;
 										go.transform.SetParent(osr.attachPoint.transform);
 										go.transform.localRotation = Quaternion.identity;
+										
+										go.GetComponent<Rigidbody>().collisionDetectionMode = CollisionDetectionMode.Discrete;
 										go.GetComponent<Rigidbody>().isKinematic = true;
 
 										HowManyCouldntSpawn--;

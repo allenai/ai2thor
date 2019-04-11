@@ -348,6 +348,20 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         break;
                     }
 
+                case "remove":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "RemoveFromScene";
+                        
+                        if(splitcommand.Length == 2)
+                        {
+                            action.objectId = splitcommand[1];
+                        }
+
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
                 case "put":
                     {
                         ServerAction action = new ServerAction();
@@ -854,6 +868,24 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }
+                
+                case "slice":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "SliceObject";
+						if(splitcommand.Length > 1)
+						{
+							action.objectId = splitcommand[1];
+						}
+
+                        else
+                        {
+                            action.objectId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().UniqueIDOfClosestVisibleObject();
+                        }
+
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
                     
                     //drop object
 				case "dr":
@@ -1139,6 +1171,20 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         else
                         {
                             action.objectId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().UniqueIDOfClosestToggleObject();
+                        }
+
+                        PhysicsController.ProcessControlCommand(action);
+
+                        break;
+                    }
+
+                case "toast":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "ToastObject";
+                        if (splitcommand.Length > 1)
+                        {
+                            action.objectId = splitcommand[1];
                         }
 
                         PhysicsController.ProcessControlCommand(action);

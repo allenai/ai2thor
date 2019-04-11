@@ -1305,6 +1305,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
                 DefaultAgentHand(action);
                 transform.position = targetTeleport;
+
+                //apply gravity after teleport so we aren't floating in the air
+                Vector3 m = new Vector3 ();
+                m.y = Physics.gravity.y * this.m_GravityMultiplier;
+                m_CharacterController.Move (m);
+
                 transform.rotation = Quaternion.Euler(new Vector3(0.0f, action.rotation.y, 0.0f));
                 if (action.standing) {
                     m_Camera.transform.localPosition = standingLocalCameraPosition;
@@ -1338,9 +1344,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 }
             }
 
-            Vector3 m = new Vector3 ();
-			m.y = Physics.gravity.y * this.m_GravityMultiplier;
-			m_CharacterController.Move (m);
+            Vector3 v = new Vector3 ();
+			v.y = Physics.gravity.y * this.m_GravityMultiplier;
+			m_CharacterController.Move (v);
 
             snapToGrid();
             actionFinished(true);
@@ -3049,7 +3055,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
             {            
 				if (sop.GetComponent<CanOpen_Object>())
                 {
-                    //print("wobbuffet");
                     target = sop;
                 }            
             }
@@ -3270,6 +3275,63 @@ namespace UnityStandardAssets.Characters.FirstPerson
             actionFinished(true);
         }
 
+        //toasts object if it has the CanBeToasted property and the ToastObject component - basically just Bread Slices have this at the moment
+        public void ToastObject(ServerAction action)
+        {
+            if (action.objectId == null)
+            {
+                Debug.Log("Hey, actually give me an object ID to Toggle, yeah?");
+                errorMessage = "objectId required for ToastObject";
+                actionFinished(false);
+                return;
+            }  
+
+            SimObjPhysics target = null;
+            foreach (SimObjPhysics sop in VisibleSimObjs(action))
+            {
+                //does it toast?
+				if (sop.GetComponent<ToastObject>())
+                {
+                    target = sop;
+                }
+            }
+
+            if (target)
+            {
+                if (!action.forceAction && target.isInteractable == false)
+                {
+                    actionFinished(false);
+                    errorMessage = "object is visible but occluded by something: " + action.objectId;
+                    return;
+                }
+
+                if(target.GetComponent<ToastObject>())
+                {
+                    ToastObject to = target.GetComponent<ToastObject>();
+
+                    //is this toasted already? if not, good to go
+                    if(to.IsToasted())
+                    {
+                        actionFinished(false);
+                        errorMessage = action.objectId + " is already Toasted!";
+                        return;
+                    }
+
+                    to.Toast();
+
+                    actionFinished(true);
+                }
+            }
+
+            //target not found in currently visible objects, report not found
+            else
+            {
+                actionFinished(false);
+                errorMessage = "object not found: " + action.objectId;
+                Debug.Log(errorMessage);
+            }
+        }
+
         public void ToggleObjectOn(ServerAction action)
         {
             if (action.objectId == null)
@@ -3310,13 +3372,22 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         Debug.Log("can't toggle object on if it's already on!");
                         errorMessage = "can't toggle object on if it's already on!";
                         actionFinished(false);
+                        return;
                     }
 
-                    else
+                    //check if this object needs to be closed in order to turn on
+                    if(ctof.MustBeClosedToTurnOn.Contains(target.Type))
                     {
-                        ctof.Toggle();
-                        actionFinished(true);
+                        if(target.GetComponent<CanOpen_Object>().isOpen)
+                        {
+                            errorMessage = "Target must be closed to Toggle On!";
+                            actionFinished(false);
+                            return;
+                        }
                     }
+
+                    ctof.Toggle();
+                    actionFinished(true);
                 }
             }
 
@@ -3434,19 +3505,37 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     {
                         errorMessage = "Object already open";
                         actionFinished(false);
+                        return;
                     }
 
-                    else
+                    if(codd.MustBeOffToOpen.Contains(target.Type))
                     {
-                        //pass in percentage open if desired
-                        if (action.moveMagnitude > 0.0f)
+                        if(target.GetComponent<CanToggleOnOff>().isOn)
                         {
-                            codd.SetOpenPercent(action.moveMagnitude);
+                            errorMessage = "Target must be OFF to open!";
+                            actionFinished(false);
+                            return;
                         }
-
-                        // codd.Interact();
-                        StartCoroutine(InteractAndWait(codd));
                     }
+
+                    //pass in percentage open if desired
+                    if (action.moveMagnitude > 0.0f)
+                    {
+                        //if this fails, invalid percentage given
+                        if(!codd.SetOpenPercent(action.moveMagnitude))
+                        {
+                            errorMessage = "Please give an open percentage between 0.0f and 1.0f";
+                            actionFinished(false);
+                            return;
+                        }
+                    }
+
+                    //XXX: So if we want to generate metadata at specific parts of the animation, this
+                    //coroutine will need some tweaking. Basically we need to send emit frames after some number of yield
+                    //return null calls in the loop that's tracking iTween instances? We will figure that out later but
+                    //for future notice I'm leaving this note.
+                    StartCoroutine(InteractAndWait(codd));
+                    
 				}
 
 			}
@@ -6001,6 +6090,85 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			StartCoroutine(SpamObjectsInRoomHelper(100, newObjects));
 		}
 
+        //remove a given sim object from the scene. Pass in the object's uniqueID string to remove it.
+        public void RemoveFromScene(ServerAction action)
+        {
+			//pass name of object in from action.objectId
+            if (action.objectId == null)
+            {
+                Debug.Log("Hey, actually give me an object ID to open, yeah?");
+                errorMessage = "objectId required for OpenObject";
+                actionFinished(false);
+                return;
+            }
+
+            PhysicsSceneManager script = GameObject.Find("PhysicsSceneManager").GetComponent<PhysicsSceneManager>();
+            
+            //see if the object exists in this scene
+            foreach (SimObjPhysics sop in script.PhysObjectsInScene)
+            {
+                if(sop.uniqueID == action.objectId)
+                {
+                    sop.transform.gameObject.SetActive(false);
+                    script.SetupScene();
+                    actionFinished(true);
+                    return;
+                }
+            }
+
+            errorMessage = action.objectId + " could not be found in this scene, so it can't be removed";
+            actionFinished(false);
+        }
+
+        public void SliceObject(ServerAction action)
+        {
+			//pass name of object in from action.objectId
+            if (action.objectId == null)
+            {
+                Debug.Log("Hey, actually give me an object ID to open, yeah?");
+                errorMessage = "objectId required for OpenObject";
+                actionFinished(false);
+                return;
+            }
+
+            SimObjPhysics target = null;
+
+            if (action.forceAction)
+            {
+                action.forceVisible = true;
+            }
+
+            foreach (SimObjPhysics sop in VisibleSimObjs(action))
+            {
+                target = sop;
+            }
+
+            //we found it!
+            if(target)
+            {
+                if(target.GetComponent<SimObjPhysics>().DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanBeSliced))
+                {
+                    target.GetComponent<SliceObject>().Slice();
+                    actionFinished(true);
+                    return;
+                }
+
+                else
+                {
+                    errorMessage =  target.transform.name + " cannot be sliced!";
+                    actionFinished(false);
+                    return;
+                }
+            }
+
+            //target not found in currently visible objects, report not found
+			else
+            {
+                errorMessage = "object not found: " + action.objectId;
+                actionFinished(false);
+            }
+        }
+
         protected bool objectIsOfIntoType(SimObjPhysics so) {
             return so.ReceptacleTriggerBoxes != null && 
                 so.ReceptacleTriggerBoxes.Length != 0 &&
@@ -6148,4 +6316,3 @@ namespace UnityStandardAssets.Characters.FirstPerson
 	}
 
 }
-

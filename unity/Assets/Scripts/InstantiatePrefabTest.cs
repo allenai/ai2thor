@@ -446,6 +446,7 @@ public class InstantiatePrefabTest : MonoBehaviour
                 if(PlaceStationary == true)
                 {
                     //if place stationary make sure to set this object as a child of the parent receptacle in case it moves (like a drawer)
+                    sop.GetComponent<Rigidbody>().collisionDetectionMode = CollisionDetectionMode.Discrete;
                     sop.GetComponent<Rigidbody>().isKinematic = true;
 
                     //check if the parent sim object is one that moves like a drawer - and would require this to be parented

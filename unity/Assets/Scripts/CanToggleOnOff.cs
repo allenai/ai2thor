@@ -38,8 +38,8 @@ public class CanToggleOnOff : MonoBehaviour
 	[SerializeField]
 	public SwapObjList[] MaterialSwapObjects;
 
-	//Light emitting objects that must be toggled enabled/disabled
-	[Header("Light Source Objects")]
+	//Light emitting objects that must be toggled enabled/disabled. Can also be used for non-Light objects
+	[Header("Light Source Objects/Objects to Enable or Disable")]
 	[SerializeField]
 	public GameObject[] LightSources;
 
@@ -65,6 +65,10 @@ public class CanToggleOnOff : MonoBehaviour
 
 	[SerializeField]
     protected MovementType movementType;
+
+	//keep a list of all objects that can turn on, but must be in the closed state before turning on (ie: can't microwave an object with the door open!)
+	public List<SimObjType> MustBeClosedToTurnOn = new List<SimObjType>()
+	{SimObjType.Microwave};
 
 	public bool isTurnedOnOrOff()
 	{
