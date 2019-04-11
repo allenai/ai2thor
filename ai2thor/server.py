@@ -53,13 +53,16 @@ class MultiAgentEvent(object):
 
     def __init__(self, active_agent_id, events):
         self._active_event = events[active_agent_id]
-        self.cv2img = self._active_event.cv2img
         self.metadata = self._active_event.metadata
         self.screen_width = self._active_event.screen_width
         self.screen_height = self._active_event.screen_height
         self.events = events
         self.third_party_camera_frames = []
         # XXX add methods for depth,sem_seg
+
+    @property
+    def cv2img(self):
+        return self._active_event.cv2img
 
     def add_third_party_camera_image(self, third_party_image_data):
         self.third_party_camera_frames.append(read_buffer_image(third_party_image_data, self.screen_width, self.screen_height))
@@ -121,6 +124,10 @@ class Event(object):
         self.process_colors()
         self.process_visible_bounds2D()
         self.third_party_camera_frames = []
+        self.third_party_class_segmentation_frames = []
+        self.third_party_instance_segmentation_frames = []
+        self.third_party_depth_frames = []
+        self.third_party_normals_frames = []
 
     @property
     def image_data(self):
@@ -182,15 +189,25 @@ class Event(object):
                 else:
                     self.class_masks[cls] = np.logical_or(self.class_masks[cls], unique_masks[color_ind, ...])
 
-    def add_image_depth(self, image_depth_data):
-
+    def _image_depth(self, image_depth_data):
         image_depth = read_buffer_image(image_depth_data, self.screen_width, self.screen_height).astype(np.float32)
         max_spots = image_depth[:,:,0] == 255
         image_depth_out = image_depth[:,:,0] + image_depth[:,:,1] / 256 + image_depth[:,:,2] / 256 ** 2
         image_depth_out[max_spots] = 256
         image_depth_out *= 10.0 / 256.0 * 1000  # converts to meters then to mm
         image_depth_out[image_depth_out > MAX_DEPTH] = MAX_DEPTH
-        self.depth_frame = image_depth_out.astype(np.float32)
+
+        return image_depth_out.astype(np.float32)
+
+
+    def add_image_depth(self, image_depth_data):
+        self.depth_frame = self._image_depth(image_depth_data)
+
+    def add_third_party_image_depth(self, image_depth_data):
+        self.third_party_depth_frames.append(self._image_depth(image_depth_data))
+
+    def add_third_party_image_normals(self, normals_data):
+        self.third_party_normals_frames.append(read_buffer_image(normals_data, self.screen_width, self.screen_height))
 
     def add_image_normals(self, image_normals_data):
         self.normals_frame = read_buffer_image(image_normals_data, self.screen_width, self.screen_height)
@@ -205,8 +222,14 @@ class Event(object):
         self.instance_segmentation_frame = read_buffer_image(image_ids_data, self.screen_width, self.screen_height)
         self.process_colors_ids()
 
+    def add_third_party_image_ids(self, image_ids_data):
+        self.third_party_instance_segmentation_frames.append(read_buffer_image(image_ids_data, self.screen_width, self.screen_height))
+
     def add_image_classes(self, image_classes_data):
         self.class_segmentation_frame = read_buffer_image(image_classes_data, self.screen_width, self.screen_height)
+
+    def add_third_party_image_classes(self, image_classes_data):
+        self.third_party_class_segmentation_frames.append(read_buffer_image(image_classes_data, self.screen_width, self.screen_height))
 
     def cv2image(self):
         warnings.warn("Deprecated - please use event.cv2img")
@@ -364,6 +387,20 @@ class Server(object):
                 for key in image_mapping.keys():
                     if key in form.files:
                         image_mapping[key](form.files[key][i])
+
+                third_party_image_mapping = dict(
+                    image=e.add_image,
+                    image_thirdParty_depth=e.add_third_party_image_depth,
+                    image_thirdParty_image_ids=e.add_third_party_image_ids,
+                    image_thirdParty_classes=e.add_third_party_image_classes,
+                    image_thirdParty_normals=e.add_third_party_image_normals
+                )
+
+                for ti, t in enumerate(a['thirdPartyCameras']):
+                    for key in third_party_image_mapping.keys():
+                        if key in form.files:
+                            third_party_image_mapping[key](form.files[key][ti])
+
 
                 events.append(e)
 

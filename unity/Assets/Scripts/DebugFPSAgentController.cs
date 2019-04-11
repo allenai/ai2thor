@@ -311,7 +311,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             }
 
             // Throw action on left clock release
-            if (Input.GetKeyUp(KeyCode.Mouse0))
+            if (!TextInputMode && Input.GetKeyUp(KeyCode.Mouse0))
             {
                 // Debug.Log("Pickup state " + pickupState + " obj " + this.PhysicsController.WhatAmIHolding());
                 if (!pickupState)

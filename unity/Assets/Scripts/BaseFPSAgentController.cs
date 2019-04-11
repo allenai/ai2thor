@@ -37,7 +37,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 get { return isVisible; }
                 set {
                     GameObject visCapsule = this.transform.Find ("VisibilityCapsule").gameObject;
-					visCapsule.SetActive(value);
+					// DO NOT DISABLE THE VIS CAPSULE, instead disable the renderers below.
                     foreach (Renderer r in visCapsule.GetComponentsInChildren<Renderer>()) {
                         r.enabled = value;
                     }
