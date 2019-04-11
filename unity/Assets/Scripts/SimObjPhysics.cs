@@ -49,6 +49,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 
 	private Bounds bounds;
 
+	//these collider references are used for switching physics materials for all colliders on this object
 	[Header("Non - Trigger Colliders of this object")]
 	public Collider[] MyColliders = null;
 
@@ -357,9 +358,10 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 	public static void CreateFromMesh()
 	{
 		GameObject prefabRoot = Selection.activeGameObject;
-		GameObject top = new GameObject("changethisname");
+        GameObject top = new GameObject(prefabRoot.name);
 		top.transform.position = prefabRoot.transform.position;
 		top.transform.rotation = prefabRoot.transform.rotation;
+        prefabRoot.name = "mesh";
 
 		prefabRoot.transform.SetParent(top.transform);
 
@@ -397,11 +399,73 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 
 	}
 
+    [UnityEditor.MenuItem("SimObjectPhysics/Set All Transforms to Defaults &d")]
+    public static void ResetTransform()
+    {
+        GameObject selected = Selection.activeGameObject;
+
+        List<Transform> selectedchildren = new List<Transform>();
+
+        foreach (Transform t in selected.transform)
+        {
+            //print(t.name);
+            selectedchildren.Add(t);
+            //t.SetParent(null);
+        }
+
+        foreach (Transform yes in selectedchildren)
+        {
+            yes.SetParent(null);
+        }
+
+        selected.transform.localPosition = new Vector3(0, 0, 0);
+        selected.transform.localRotation = new Quaternion(0, 0, 0, 0);
+        selected.transform.localScale = new Vector3(1, 1, 1);
+
+        foreach (Transform t in selectedchildren)
+        {
+            t.SetParent(selected.transform);
+        }
+
+
+    }
+
+    [UnityEditor.MenuItem("SimObjectPhysics/Rotate Box Flap 90 on Y &s")]
+    public static void RotateTheBoxFlap()
+    {
+        GameObject selected = Selection.activeGameObject;
+
+        List<Transform> selectedchildren = new List<Transform>();
+
+        foreach (Transform t in selected.transform)
+        {
+            //print(t.name);
+            selectedchildren.Add(t);
+            //t.SetParent(null);
+        }
+
+        foreach (Transform yes in selectedchildren)
+        {
+            yes.SetParent(null);
+        }
+
+        float initialRot = selected.transform.localRotation.eulerAngles.x;
+
+		Vector3 setrot = new Vector3(0, 90, 180 - initialRot); //This is weird and we don't know why
+
+        selected.transform.localRotation = Quaternion.Euler(setrot + new Vector3(-180, 180, 180)); //This is weird and we don't know why
+        selected.transform.localScale = new Vector3(1, 1, 1);
+
+        foreach (Transform t in selectedchildren)
+        {
+            t.SetParent(selected.transform);
+        }
+    }
 
 #endif
 
-	// Use this for initialization
-	void Start()
+    // Use this for initialization
+    void Start()
 	{
 		//XXX For Debug setting up scene, comment out or delete when done settig up scenes
 #if UNITY_EDITOR
