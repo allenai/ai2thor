@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -115,10 +115,10 @@ public class AgentManager : MonoBehaviour
 			yield return null; // must do this so we wait a frame so that when we CapsuleCast we see the most recently added agent
 		}
 		for (int i = 0; i < this.agents.Count; i++) {
-			if (i != 0) {
-				this.agents[i].m_Camera.enabled = false;
-			}
+			this.agents[i].m_Camera.depth = 1;
 		}
+		this.agents[0].m_Camera.depth = 9999;
+
 		readyToEmit = true;
 	}
 
@@ -149,9 +149,6 @@ public class AgentManager : MonoBehaviour
 
 	private void addAgent(ServerAction action) {
 		Vector3 clonePosition = new Vector3(action.x, action.y, action.z);
-		
-		GameObject visCapsule = primaryAgent.transform.Find ("VisibilityCapsule").gameObject;
-		visCapsule.SetActive(true);
 
 		BaseFPSAgentController clone = UnityEngine.Object.Instantiate (primaryAgent);
 		clone.IsVisible = action.makeAgentsVisible;
@@ -397,10 +394,6 @@ public class AgentManager : MonoBehaviour
 
 		for (int i = 0; i < this.agents.Count; i++) {
 			BaseFPSAgentController agent = this.agents.ToArray () [i];
-			if (i > 0) {
-				this.agents.ToArray () [i - 1].m_Camera.enabled = false;
-			}
-			agent.m_Camera.enabled = true;
 			MetadataWrapper metadata = agent.generateMetadataWrapper ();
 			metadata.agentId = i;
 			// we don't need to render the agent's camera for the first agent
@@ -412,10 +405,6 @@ public class AgentManager : MonoBehaviour
 			metadata.thirdPartyCameras = cameraMetadata;
 			multiMeta.agents [i] = metadata;
 		}
-		if (this.agents.Count != 1) {
-			this.agents.ToArray()[this.agents.Count - 1].m_Camera.enabled = false;
-		}
-		this.agents.ToArray()[0].m_Camera.enabled = true;
 
 		RenderTexture.active = currentTexture;
 
