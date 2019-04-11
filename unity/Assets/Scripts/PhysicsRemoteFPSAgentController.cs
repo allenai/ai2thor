@@ -1386,7 +1386,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             }
             int angleInt = Mathf.RoundToInt(angle) % 360;
 
-            if (checkIfSceneBoundsContainTargetPosition(direction) &&
+            if (checkIfSceneBoundsContainTargetPosition(targetPosition) &&
                 CheckIfItemBlocksAgentMovement(direction.magnitude, angleInt) && 
                 CheckIfAgentCanMove(direction.magnitude, angleInt)) {
 				DefaultAgentHand();
@@ -1915,9 +1915,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 #if UNITY_EDITOR
                 yield return null;
                 #endif
-                float a = Vector3.Dot(rb.velocity, forceDirection);
-                float aPos = Math.Max(0.0f, a);
-                float aNeg = Math.Min(0.0f, a);
                 
                 if (i >= 5) {
                     bool repeatedPosition = false;
@@ -3113,6 +3110,64 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			}
 		}
 
+        protected SimObjPhysics getOpenableOrCloseableObjectNearLocation(
+            bool open, float x, float y, float radius, bool forceAction
+        ) {
+			y = 1.0f - y;
+
+            RaycastHit hit;
+            int layerMask = 3 << 8;
+            if (ItemInHand != null) {
+                foreach (Collider c in ItemInHand.GetComponentsInChildren<Collider>()) {
+                    c.enabled = false;
+                }
+            }
+            for (int i = 0; i < 10; i++) {
+                float r = radius * (i / 9.0f);
+                int n = 2 * i + 1;
+                for (int j = 0; j < n; j++) {
+                    float thetak =  2 * j * ((float) Math.PI) / n;
+
+                    float newX = x + (float) (r * Math.Cos(thetak));
+                    float newY = y + (float) (r * Math.Sin(thetak));
+                    if (x < 0 || x > 1.0 || y < 0 || y > 1.0) {
+                        continue;
+                    }
+
+                    Ray ray = m_Camera.ViewportPointToRay(new Vector3(newX, newY, 0.0f));
+                    bool raycastDidHit = Physics.Raycast(ray, out hit, 10f, layerMask);
+
+                    #if UNITY_EDITOR
+                    if (raycastDidHit) {
+                        Debug.DrawLine(ray.origin, hit.point, Color.red, 10f);
+                    }
+                    #endif
+
+                    SimObjPhysics sop = ancestorSimObjPhysics(hit.transform.gameObject);
+                    if (sop != null && sop.GetComponent<CanOpen_Object>() && (
+                        forceAction || objectIsCurrentlyVisible(sop, maxVisibleDistance)
+                    )) {
+                        CanOpen_Object coo = sop.GetComponent<CanOpen_Object>();
+
+                        if (open != coo.isOpen) {
+                            if (ItemInHand != null) {
+                                foreach (Collider c in ItemInHand.GetComponentsInChildren<Collider>()) {
+                                    c.enabled = true;
+                                }
+                            }
+                            return sop;
+                        }
+                    }
+                }
+            }
+            if (ItemInHand != null) {
+                foreach (Collider c in ItemInHand.GetComponentsInChildren<Collider>()) {
+                    c.enabled = true;
+                }
+            }
+            return null;
+        }
+
         private void OpenOrCloseObjectAtLocation(bool open, ServerAction action) {
             float x = action.x;
 			float y = 1.0f - action.y;
@@ -3157,7 +3212,22 @@ namespace UnityStandardAssets.Characters.FirstPerson
         }
 
         public void OpenObjectAtLocation(ServerAction action) {
-            OpenOrCloseObjectAtLocation(true, action);
+            if (action.z > 0) {
+                SimObjPhysics sop = getOpenableOrCloseableObjectNearLocation(
+                    true, action.x, action.y, action.z, false
+                );
+                if (sop != null) {
+                    action.objectId = sop.UniqueID;
+                    action.forceVisible = true;
+                    OpenObject(action);
+                } else {
+                    errorMessage = "No openable object found within a radius about given point.";
+                    actionFinished(false);
+                }
+
+            } else {
+                OpenOrCloseObjectAtLocation(true, action);
+            }
             return;
         }
 
@@ -5072,7 +5142,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 }
             }
 
-            System.Random rnd = new System.Random();
             List<Vector3> shuffledCurrentlyReachable = (List<Vector3>) candidatePositions.ToList().Shuffle_();
             float[] rotations = {0f, 90f, 180f, 270f};
             List<float> shuffledRotations = (List<float>) rotations.ToList().Shuffle_();
