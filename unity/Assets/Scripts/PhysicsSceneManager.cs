@@ -409,7 +409,7 @@ public class PhysicsSceneManager : MonoBehaviour
 						targetReceptacleSpawnPoints = sop.ReturnMySpawnPoints(false);
 
 						//first shuffle the list so it's raaaandom
-						targetReceptacleSpawnPoints.Shuffle();
+						targetReceptacleSpawnPoints.Shuffle_();
 						
 						//try to spawn it, and if it succeeds great! if not uhhh...
 
@@ -690,9 +690,9 @@ public class PhysicsSceneManager : MonoBehaviour
 			indDict[pair.Key] = pair.Value.Count - 1;
 		}
 		types.Sort();
-		types.Shuffle();
+		types.Shuffle_();
 		foreach (SimObjType t in types) {
-			dict[t].Shuffle();
+			dict[t].Shuffle_();
 		}
 
 		bool changed = true;
