@@ -712,8 +712,21 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		//this is hitting something else so it must be colliding at this point!
 		else if (other.tag != "Player")
 		{
-			isColliding = true;
-			return;
+			//don't flag as colliding if the thing i'm coliding with is something inside my receptacle trigger box
+			if(DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.Receptacle))
+			{
+				if(ContainedObjectReferences.Contains(other.GetComponentInParent<SimObjPhysics>()))
+				{
+					isColliding = false;
+					return;
+				}
+			}
+
+			else
+			{
+				isColliding = true;
+				return;
+			}
 		}
 	}
 
