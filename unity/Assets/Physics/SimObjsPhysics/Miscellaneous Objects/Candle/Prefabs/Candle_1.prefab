@@ -738,7 +738,6 @@ GameObject:
   - component: {fileID: 114636868379925046}
   - component: {fileID: 54540246337116112}
   - component: {fileID: 8829746098632621762}
-  - component: {fileID: 4807917720353715624}
   m_Layer: 8
   m_Name: Candle_1
   m_TagString: SimObjPhysics
@@ -763,6 +762,7 @@ Transform:
   - {fileID: 4847709047504674}
   - {fileID: 4230588341430774}
   - {fileID: 3547375537427877302}
+  - {fileID: 2648947281512692982}
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -778,7 +778,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b439f6e4ef5714ee2a3643acf37b7a9d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  uniqueID: Candle|-01.42|+00.00|-05.86
+  uniqueID: Candle|-03.63|+00.63|-06.25
   Type: 61
   PrimaryProperty: 3
   SecondaryProperties: 1d000000
@@ -851,18 +851,6 @@ MonoBehaviour:
   isOn: 0
   movementType: 0
   MustBeClosedToTurnOn: 10000000
---- !u!114 &4807917720353715624
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1606295063909508}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e6c03ab1d1b4241299ee806e38bc9aec, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1 &1660490051780266
 GameObject:
   m_ObjectHideFlags: 0
@@ -1438,6 +1426,64 @@ Transform:
   m_Father: {fileID: 4788310275915684}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &2648947281512692979
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2648947281512692982}
+  - component: {fileID: 1052368500419611502}
+  - component: {fileID: 5196137492088525471}
+  m_Layer: 9
+  m_Name: FlameTriggerBox
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2648947281512692982
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2648947281512692979}
+  m_LocalRotation: {x: -0.7071068, y: 0, z: 0, w: 0.7071068}
+  m_LocalPosition: {x: 0, y: 0.085, z: 0}
+  m_LocalScale: {x: 0.57029, y: 0.57029, z: 0.57029}
+  m_Children: []
+  m_Father: {fileID: 4726037933143866}
+  m_RootOrder: 6
+  m_LocalEulerAnglesHint: {x: -90.00001, y: 0, z: 0}
+--- !u!65 &1052368500419611502
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2648947281512692979}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 1
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Size: {x: 0.04288311, y: 0.047443643, z: 0.08728778}
+  m_Center: {x: 0.0021252555, y: 9.414348e-17, z: 0.017818937}
+--- !u!114 &5196137492088525471
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2648947281512692979}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e6c03ab1d1b4241299ee806e38bc9aec, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  MyObject: {fileID: 1606295063909508}
 --- !u!1001 &1583082085840386260
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -1510,7 +1556,8 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    m_RemovedComponents:
+    - {fileID: 5196137492604656395, guid: 45eb477277eaa4c0a82f50039894d693, type: 3}
   m_SourcePrefab: {fileID: 100100000, guid: 45eb477277eaa4c0a82f50039894d693, type: 3}
 --- !u!1 &3547375537427877299 stripped
 GameObject:
