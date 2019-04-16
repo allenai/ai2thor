@@ -251,6 +251,7 @@ public enum SimObjType : int
 	Ladle = 143,
 	WineBottle = 144,
 	ShowerCurtain = 145,
+	ShowerHead = 146,
 	
 }
 
