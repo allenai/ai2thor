@@ -1670,6 +1670,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 
 		foreach(Transform t in gameObject.transform)
 		{
+			//add any receptacle trigger boxes
 			if(t.GetComponent<Contains>())
 			{
 				if(!recepboxes.Contains(t.gameObject))
@@ -1697,6 +1698,23 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 					foreach(Transform yes in inst.transform)
 					{
 						yes.GetComponent<Collider>().isTrigger = true;
+					}
+				}
+			}
+
+			//check if child object "t" has any objects under it called "Colliders"
+			if(t.Find("Colliders"))
+			{
+				Transform childColliderObject = t.Find("Colliders");
+
+				//if TriggerColliders dont already exist as a child under this child object t, create it by copying childColliderObject
+				if(!t.Find("TriggerColliders"))
+				{
+					GameObject inst = Instantiate(childColliderObject.gameObject, t, true);
+					inst.name = "TriggerColliders";
+					foreach(Transform thing in inst.transform)
+					{
+						thing.GetComponent<Collider>().isTrigger = true;
 					}
 				}
 			}
