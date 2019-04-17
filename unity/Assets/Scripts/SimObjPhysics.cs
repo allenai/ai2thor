@@ -712,8 +712,21 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		//this is hitting something else so it must be colliding at this point!
 		else if (other.tag != "Player")
 		{
-			isColliding = true;
-			return;
+			//don't flag as colliding if the thing i'm coliding with is something inside my receptacle trigger box
+			if(DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.Receptacle))
+			{
+				if(ContainedObjectReferences.Contains(other.GetComponentInParent<SimObjPhysics>()))
+				{
+					isColliding = false;
+					return;
+				}
+			}
+
+			else
+			{
+				isColliding = true;
+				return;
+			}
 		}
 	}
 
@@ -1657,6 +1670,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 
 		foreach(Transform t in gameObject.transform)
 		{
+			//add any receptacle trigger boxes
 			if(t.GetComponent<Contains>())
 			{
 				if(!recepboxes.Contains(t.gameObject))
@@ -1687,6 +1701,23 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 					}
 				}
 			}
+
+			//check if child object "t" has any objects under it called "Colliders"
+			if(t.Find("Colliders"))
+			{
+				Transform childColliderObject = t.Find("Colliders");
+
+				//if TriggerColliders dont already exist as a child under this child object t, create it by copying childColliderObject
+				if(!t.Find("TriggerColliders"))
+				{
+					GameObject inst = Instantiate(childColliderObject.gameObject, t, true);
+					inst.name = "TriggerColliders";
+					foreach(Transform thing in inst.transform)
+					{
+						thing.GetComponent<Collider>().isTrigger = true;
+					}
+				}
+			}
 		}
 
 		ReceptacleTriggerBoxes = recepboxes.ToArray();
@@ -1703,11 +1734,11 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 	//[ContextMenu("Set Up Colliders")]
 	public void ContextSetUpColliders()
 	{
+		List<Collider> listColliders = new List<Collider>();
+		
 		if (transform.Find("Colliders"))
 		{
 			Transform Colliders = transform.Find("Colliders");
-
-			List<Collider> listColliders = new List<Collider>();
 
 			foreach (Transform child in Colliders)
 			{
@@ -1724,11 +1755,37 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 					child.GetComponent<Collider>().enabled = true;
 					child.GetComponent<Collider>().isTrigger = false;
 				}
-
 			}
-
-			MyColliders = listColliders.ToArray();
 		}
+
+		//loop through all child objects. For each object, check if the child itself has a child called Colliders....
+		foreach (Transform child in transform)
+		{
+			if(child.Find("Colliders"))
+			{
+				Transform Colliders = child.Find("Colliders");
+
+				foreach (Transform childschild in Colliders)
+				{
+					//list.toarray
+					listColliders.Add(childschild.GetComponent<Collider>());
+
+					//set correct tag and layer for each object
+					//also ensure all colliders are NOT trigger
+					childschild.gameObject.tag = "SimObjPhysics";
+					childschild.gameObject.layer = 8;
+
+					if (childschild.GetComponent<Collider>())
+					{
+						childschild.GetComponent<Collider>().enabled = true;
+						childschild.GetComponent<Collider>().isTrigger = false;
+					}
+				}
+			}
+		}
+
+		MyColliders = listColliders.ToArray();
+
 	}
 
 	//[ContextMenu("Set Up TriggerColliders")]
@@ -1765,11 +1822,11 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 	// [ContextMenu("Set Up VisibilityPoints")]
 	void ContextSetUpVisibilityPoints()
 	{
+		List<Transform> vplist = new List<Transform>();
+
 		if (transform.Find("VisibilityPoints"))
 		{
 			Transform vp = transform.Find("VisibilityPoints");
-
-			List<Transform> vplist = new List<Transform>();
 
 			foreach (Transform child in vp)
 			{
@@ -1779,9 +1836,24 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 				child.gameObject.tag = "Untagged";
 				child.gameObject.layer = 8;
 			}
-
-			VisibilityPoints = vplist.ToArray();
 		}
+
+		foreach (Transform child in transform)
+		{
+			if(child.Find("VisibilityPoints"))
+			{
+				Transform vp = child.Find("VisibilityPoints");
+
+				foreach (Transform childschild in vp)
+				{
+					vplist.Add(childschild);
+					childschild.gameObject.tag = "Untagged";
+					childschild.gameObject.layer = 8;
+				}
+			}
+		}
+
+		VisibilityPoints = vplist.ToArray();
 	}
 
 	//[ContextMenu("Set Up Rotate Agent Collider")]

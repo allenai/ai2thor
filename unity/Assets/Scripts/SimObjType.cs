@@ -251,6 +251,7 @@ public enum SimObjType : int
 	Ladle = 143,
 	WineBottle = 144,
 	ShowerCurtain = 145,
+	ShowerHead = 146,
 	
 }
 
@@ -266,7 +267,7 @@ public static class ReceptacleRestrictions
     //Objects are "placed into/placed in" these receptacles
     //The object placed must have the entirety of it's object oriented bounding box (all 8 corners) enclosed within the Receptacle's Box
     public static List<SimObjType> InReceptacles = new List<SimObjType>() 
-    {SimObjType.Drawer, SimObjType.Cabinet, SimObjType.Fridge, SimObjType.Microwave, SimObjType.LaundryHamper};
+    {SimObjType.Drawer, SimObjType.Cabinet, SimObjType.Fridge, SimObjType.Microwave, SimObjType.LaundryHamper, SimObjType.Box};
 
     //Objects are "placed on top of/placed on" these receptacles
     //the object placed only needs the bottom most 4 corners within the Receptacle Box to be placed validly, this allows
@@ -280,7 +281,7 @@ public static class ReceptacleRestrictions
     //receptacle box for the placement to be valid. This means we can have a Spoon placed IN a cup, but the top half of the spoon is still allowed to stick out
 	//this distinction is made in case we ever want to do some sort of semantic tests with placing things in/on instead of a generic "place" as the action descriptor
     public static List<SimObjType> InReceptaclesThatOnlyCheckBottomFourCorners = new List <SimObjType>()
-    { SimObjType.Cup, SimObjType.Bowl, SimObjType.GarbageCan, SimObjType.Box, SimObjType.Sink, SimObjType.BathtubBasin, SimObjType.Pan, SimObjType.Pot, };
+    { SimObjType.Cup, SimObjType.Bowl, SimObjType.GarbageCan, SimObjType.Sink, SimObjType.BathtubBasin, SimObjType.Pan, SimObjType.Pot, };
 
 
 	public static List<SimObjType> SpawnOnlyOutsideReceptacles = new List <SimObjType>()
