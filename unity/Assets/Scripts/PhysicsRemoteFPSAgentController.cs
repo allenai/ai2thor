@@ -1015,6 +1015,22 @@ namespace UnityStandardAssets.Characters.FirstPerson
             actionFinished(true);
         }
 
+        protected Vector3 closestPointToObject(SimObjPhysics sop) {
+            float closestDist = 10000.0f;
+            Vector3 closestPoint = new Vector3(0f, 0f, 0f);
+
+            foreach (Collider c in sop.GetComponentsInChildren<Collider>()) {
+                Vector3 point = c.ClosestPointOnBounds(transform.position);
+                float dist = Vector3.Distance(
+                    transform.position, c.ClosestPointOnBounds(transform.position)
+                );
+                if (dist < closestDist) {
+                    closestDist = dist;
+                    closestPoint = point;
+                }
+            }
+            return closestPoint;
+        }
         protected float distanceToObject(SimObjPhysics sop) {
             float dist = 10000.0f;
             foreach (Collider c in sop.GetComponentsInChildren<Collider>()) {
@@ -2811,8 +2827,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
         private IEnumerator checkDropHandObjectAction(SimObjPhysics currentHandSimObj) {
 			yield return null; // wait for two frames to pass
 			yield return null;
-			for (int i = 0; i < 50; i++) {
-				Rigidbody rb = currentHandSimObj.GetComponentInChildren<Rigidbody>();
+            float startTime = Time.time;
+            Rigidbody rb = currentHandSimObj.GetComponentInChildren<Rigidbody>();
+			while (Time.time - startTime < 2) {
 				if (Math.Abs (rb.angularVelocity.sqrMagnitude + rb.velocity.sqrMagnitude) < 0.00001) {
 					// Debug.Log ("object is now at rest");
 					break;
@@ -2821,9 +2838,27 @@ namespace UnityStandardAssets.Characters.FirstPerson
 					yield return null;
 				}
 			}
-
-            DefaultAgentHand(new ServerAction());
+            DefaultAgentHand();
 			actionFinished (true);
+		}
+
+        private IEnumerator checkDropHandObjectActionFast(SimObjPhysics currentHandSimObj) {
+            Rigidbody rb = currentHandSimObj.GetComponentInChildren<Rigidbody>();
+            Physics.autoSimulation = false;
+            yield return null;
+			for (int i = 0; i < 100; i++) {
+                Physics.Simulate(0.04f);
+                #if UNITY_EDITOR
+                yield return null;
+                #endif
+				if (Math.Abs (rb.angularVelocity.sqrMagnitude + rb.velocity.sqrMagnitude) < 0.00001) {
+					break;
+				}
+			}
+            Physics.autoSimulation = true;
+
+            DefaultAgentHand();
+			actionFinished(true);
 		}
 
 		public bool DropHandObject(ServerAction action)
@@ -2865,7 +2900,11 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     rb.angularVelocity = UnityEngine.Random.insideUnitSphere;
 
                     DropContainedObjects(ItemInHand.GetComponent<SimObjPhysics>());
-                    StartCoroutine (checkDropHandObjectAction (ItemInHand.GetComponent<SimObjPhysics>()));
+                    if (action.autoSimulation) {
+                        StartCoroutine (checkDropHandObjectAction (ItemInHand.GetComponent<SimObjPhysics>()));
+                    } else {
+                        StartCoroutine (checkDropHandObjectActionFast(ItemInHand.GetComponent<SimObjPhysics>()));
+                    }
                     ItemInHand = null;
                     return true;
                 }
@@ -2932,6 +2971,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
             foreach (SimObjPhysics so in objects) {
                 objectIdsInBox[i] = so.UniqueID;
                 i++;
+                #if UNITY_EDITOR
+                Debug.Log(so.UniqueID);
+                #endif
             }
 			actionFinished(true);
 		}
@@ -3010,7 +3052,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     }
                 }
             }
-			StartCoroutine(InteractAndWait(coos));
+            if (coos.Count != 0) {
+			    StartCoroutine(InteractAndWait(coos));
+            } else {
+                errorMessage = "No objects to close.";
+                actionFinished(false);
+            }
 		}
 
         public void OpenVisibleObjects(ServerAction action) {
@@ -3143,19 +3190,21 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     }
                     #endif
 
-                    SimObjPhysics sop = ancestorSimObjPhysics(hit.transform.gameObject);
-                    if (sop != null && sop.GetComponent<CanOpen_Object>() && (
-                        forceAction || objectIsCurrentlyVisible(sop, maxVisibleDistance)
-                    )) {
-                        CanOpen_Object coo = sop.GetComponent<CanOpen_Object>();
+                    if (raycastDidHit) {
+                        SimObjPhysics sop = ancestorSimObjPhysics(hit.transform.gameObject);
+                        if (sop != null && sop.GetComponent<CanOpen_Object>() && (
+                            forceAction || objectIsCurrentlyVisible(sop, maxVisibleDistance)
+                        )) {
+                            CanOpen_Object coo = sop.GetComponent<CanOpen_Object>();
 
-                        if (open != coo.isOpen) {
-                            if (ItemInHand != null) {
-                                foreach (Collider c in ItemInHand.GetComponentsInChildren<Collider>()) {
-                                    c.enabled = true;
+                            if (open != coo.isOpen) {
+                                if (ItemInHand != null) {
+                                    foreach (Collider c in ItemInHand.GetComponentsInChildren<Collider>()) {
+                                        c.enabled = true;
+                                    }
                                 }
+                                return sop;
                             }
-                            return sop;
                         }
                     }
                 }
@@ -3992,36 +4041,34 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		}
 
         protected void MaskSimObj(SimObjPhysics so, Material mat) {
-			if (!maskedObjects.ContainsKey(so.UniqueID)) {
-				HashSet<MeshRenderer> renderersToSkip = new HashSet<MeshRenderer>();
-				foreach (SimObjPhysics childSo in so.GetComponentsInChildren<SimObjPhysics>()) {
-					if (so.UniqueID != childSo.UniqueID) {
-						foreach (MeshRenderer mr in childSo.GetComponentsInChildren<MeshRenderer>()) {
-							renderersToSkip.Add(mr);
-						}
-					}
-				}
-				Dictionary<int, Material[]> dict = new Dictionary<int, Material[]>();
-				foreach (MeshRenderer r in so.gameObject.GetComponentsInChildren<MeshRenderer>() as MeshRenderer[]) {
-					if (!renderersToSkip.Contains(r)) {
-						dict[r.GetInstanceID()] = r.materials;
-						Material[] newMaterials = new Material[r.materials.Length];
-						for (int i = 0; i < newMaterials.Length; i++) {
-							newMaterials[i] = new Material(mat);
-						}
-						r.materials = newMaterials;
-					}
-				}
+            HashSet<MeshRenderer> renderersToSkip = new HashSet<MeshRenderer>();
+            foreach (SimObjPhysics childSo in so.GetComponentsInChildren<SimObjPhysics>()) {
+                if (so.UniqueID != childSo.UniqueID) {
+                    foreach (MeshRenderer mr in childSo.GetComponentsInChildren<MeshRenderer>()) {
+                        renderersToSkip.Add(mr);
+                    }
+                }
+            }
+            Dictionary<int, Material[]> dict = new Dictionary<int, Material[]>();
+            foreach (MeshRenderer r in so.gameObject.GetComponentsInChildren<MeshRenderer>() as MeshRenderer[]) {
+                if (!renderersToSkip.Contains(r)) {
+                    dict[r.GetInstanceID()] = r.materials;
+                    Material[] newMaterials = new Material[r.materials.Length];
+                    for (int i = 0; i < newMaterials.Length; i++) {
+                        newMaterials[i] = new Material(mat);
+                    }
+                    r.materials = newMaterials;
+                }
+            }
+            if (!maskedObjects.ContainsKey(so.UniqueID)) {
 				maskedObjects[so.UniqueID] = dict;
 			}
 		}
 
 		protected void MaskSimObj(SimObjPhysics so, Color color) {
-			if (!maskedObjects.ContainsKey(so.UniqueID)) {
-				Material material = new Material(Shader.Find("Unlit/Color"));
-				material.color = color;
-				MaskSimObj(so, material);
-			}
+            Material material = new Material(Shader.Find("Unlit/Color"));
+            material.color = color;
+            MaskSimObj(so, material);
 		}
 
 		protected void UnmaskSimObj(SimObjPhysics so) {
@@ -5725,6 +5772,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 k++;
 			}
 
+            
             HashSet<SimObjPhysics> visibleObjects = getAllItemsVisibleFromPositions(reachablePositions);
             foreach (SimObjPhysics so in newObjects) {
                 if (so.gameObject.activeSelf && !visibleObjects.Contains(so)) {
@@ -5870,6 +5918,47 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			actionFinished(true);
 		}
 
+        public void ColorSurfaceColorObjectsByDistance(ServerAction action) {
+            GameObject surfaceCoverObjects = GameObject.Find("SurfaceCoverObjects");
+
+            HashSet<string> objectIdsContained = new HashSet<string>();
+            foreach (SimObjPhysics so in uniqueIdToSimObjPhysics.Values) {
+                if (objectIsOfIntoType(so)) {
+                    foreach (string id in so.Contains()) {
+                        objectIdsContained.Add(id);
+                    }
+                }
+            }
+
+            foreach (SimObjPhysics sop in surfaceCoverObjects.GetComponentsInChildren<SimObjPhysics>()) {
+                Debug.Log(sop);
+                Material newMaterial;
+                float minRed = 0.0f;
+                float minGreen = 0.0f;
+                newMaterial = new Material(Shader.Find("Unlit/Color"));
+                if (objectIdsContained.Contains(sop.UniqueID)) {
+                    minGreen = 1.0f;
+                } else {
+                    minRed = 1.0f;
+                }
+
+                Vector3 closestPoint = closestPointToObject(sop);
+                closestPoint = new Vector3(closestPoint.x, 0f, closestPoint.z);
+                Vector3 tmp = new Vector3(transform.position.x, 0f, transform.position.z);
+
+                float min = Math.Min(Vector3.Distance(closestPoint, tmp) / action.z, 1.0f);
+                newMaterial.color = new Color(
+                    Math.Max(minRed, min),
+                    Math.Max(minGreen, min),
+                    min,
+                    1.0f
+                );
+                MaskSimObj(sop, newMaterial);
+            }
+
+            actionFinished(true);
+        }
+
 		public void CoverSurfacesWith(ServerAction action) {
 			string prefab = action.objectType;
             int objectVariation = action.objectVariation;
@@ -5981,13 +6070,15 @@ namespace UnityStandardAssets.Characters.FirstPerson
                                 newObjects.Add(newObj);
                             } 
                         }
-                        // else {
-                        //     Debug.Log("Intersects collider:");
-                        //     Debug.Log(colliders[0]);
-                        // }
                     }
                 }
 			}
+            GameObject topLevelObject = GameObject.Find("Objects");
+            GameObject newTopLevelObject = new GameObject("SurfaceCoverObjects");
+            newTopLevelObject.transform.parent = topLevelObject.transform;
+            foreach (SimObjPhysics sop in newObjects) {
+                sop.gameObject.transform.parent = newTopLevelObject.transform;
+            }
 			StartCoroutine(CoverSurfacesWithHelper(100, newObjects, reachablePositions));
 		}
 
