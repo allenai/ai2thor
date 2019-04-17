@@ -420,7 +420,7 @@ public class AgentManager : MonoBehaviour
 		form.AddField("metadata", Newtonsoft.Json.JsonConvert.SerializeObject(multiMeta));
 		form.AddField("token", robosimsClientToken);
 
-        #if !UNITY_WEBGL
+        #if !UNITY_WEBGL && !UNITY_EDITOR
 		if (synchronousHttp) {
 					IPAddress host = IPAddress.Parse(robosimsHost);
 					IPEndPoint hostep = new IPEndPoint(host, robosimsPort);
