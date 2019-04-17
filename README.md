@@ -249,14 +249,14 @@ Drop a held object and let Physics resolve where it lands. Note that this is dif
 
 Additionally, this Drop action will fail if the held object is not clear from all collisions. Most importantly, the Agent's collision will prevent Drop, as dropping an object if it is "inside" the agent will lead to unintended behavior.
 ```python
-event = controller.step(dict(action='DropHandObject')))
+event = controller.step(dict(action='DropHandObject'))
 ```
 <hr>
 
 ### Throw Object
 An extention of the Drop function-throw a held object in the current forward direction of the Agent at a force specified by `moveMagnitude`. Because objects can have different Mass properties, certain objects will require more or less force to push the same distance. 
 ```python
-event = controller.step(dict(action='ThrowObject', moveMagnitude= 150.0 )))
+event = controller.step(dict(action='ThrowObject', moveMagnitude= 150.0 ))
 ```
 
 | Parameter | Type | Description | Default |
@@ -303,7 +303,7 @@ event = controller.step(dict(action='CloseObject', objectId="Fridge|0.25|0.75"))
 Toggles an object specified by `objectID` into the On state if applicable. Noteable examples are Lamps, Light Switches, and Laptops.
 
 ```python
-event = controller.step(dict(action='ToggleObjectOn', objectId= "LightSwitch|0.25|-0.27|0.95")))
+event = controller.step(dict(action='ToggleObjectOn', objectId= "LightSwitch|0.25|-0.27|0.95"))
 ```
 
 | Parameter | Type | Description | Default |
@@ -316,7 +316,7 @@ event = controller.step(dict(action='ToggleObjectOn', objectId= "LightSwitch|0.2
 Toggles an object specified by `objectID` into the Off state if applicable. Noteable examples are Lamps, Light Switches, and Laptops.
 
 ```python
-event = controller.step(dict(action='ToggleObjectOff', objectId= "LightSwitch|0.25|-0.27|0.95")))
+event = controller.step(dict(action='ToggleObjectOff', objectId= "LightSwitch|0.25|-0.27|0.95"))
 ```
 
 | Parameter | Type | Description | Default |
