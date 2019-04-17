@@ -63,9 +63,9 @@ public class PhysicsSceneManager : MonoBehaviour
 	public void SetupScene()
 	{
 		ReceptaclesInScene.Clear();
+		UniqueIdToSimObjPhysics.Clear();
 		GatherSimObjPhysInScene();
 		GatherAllReceptaclesInScene();
-		ResetUniqueIdToSimObjPhysics();
 	}
 	// Use this for initialization
 	void Start () 
