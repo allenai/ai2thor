@@ -3,7 +3,10 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityStandardAssets.Characters.FirstPerson;
+using System.Net.Sockets;
+using System.Net;
 using Newtonsoft.Json;
+using System.Text;
 using UnityEngine.Networking;
 
 
@@ -27,6 +30,7 @@ public class AgentManager : MonoBehaviour
 	private bool renderClassImage;
 	private bool renderObjectImage;
 	private bool renderNormalsImage;
+	private bool synchronousHttp = true;
 	private List<Camera> thirdPartyCameras = new List<Camera>();
 	
 
@@ -367,6 +371,10 @@ public class AgentManager : MonoBehaviour
 
 		// we should only read the screen buffer after rendering is complete
 		yield return new WaitForEndOfFrame();
+		if (synchronousHttp) {
+			// must wait an additional frame when in synchronous mode otherwise the frame lags
+			yield return new WaitForEndOfFrame();
+		}
 
 		WWWForm form = new WWWForm();
 
@@ -413,17 +421,57 @@ public class AgentManager : MonoBehaviour
 		form.AddField("token", robosimsClientToken);
 
         #if !UNITY_WEBGL
-            using (var www = UnityWebRequest.Post("http://" + robosimsHost + ":" + robosimsPort + "/train", form))
-            {
-                yield return www.SendWebRequest();
+		if (synchronousHttp) {
+					IPAddress host = IPAddress.Parse(robosimsHost);
+					IPEndPoint hostep = new IPEndPoint(host, robosimsPort);
+					Socket sock = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
 
-                if (www.isNetworkError || www.isHttpError)
-                {
-                    Debug.Log("Error: " + www.error);
-                    yield break;
-                }
-                ProcessControlCommand(www.downloadHandler.text);
-            }
+					sock.Connect(hostep);
+					byte[] rawData = form.data;
+
+					string request = "POST /train HTTP/1.0\r\n" +
+					"Content-Length: " + rawData.Length.ToString() + "\r\n";
+
+					foreach(KeyValuePair<string, string> entry in form.headers) {
+						request += entry.Key + ": " + entry.Value + "\r\n";
+					}
+					request += "\r\n";
+
+					int sent = sock.Send(Encoding.ASCII.GetBytes(request));
+					sent = sock.Send(rawData);
+					byte[] buffer = new byte[4096];
+					int bytesReceived = 0;
+					string msg = "";
+
+					while (true) {
+						bytesReceived += sock.Receive(buffer, bytesReceived, buffer.Length - bytesReceived, SocketFlags.None);
+						int offset = Encoding.ASCII.GetString(buffer).IndexOf("\r\n\r\n");
+						if (offset > 0){
+							msg = Encoding.ASCII.GetString(buffer).Substring(offset + 4, bytesReceived - (offset - 4));
+							if (msg.Length > 8){
+								Debug.Log("Message: " + msg);
+								break;
+							}
+						}
+					}
+					//Debug.Log(msg);
+
+					sock.Close();
+					ProcessControlCommand(msg);
+		} else {
+
+			using (var www = UnityWebRequest.Post("http://" + robosimsHost + ":" + robosimsPort + "/train", form))
+			{
+				yield return www.SendWebRequest();
+
+				if (www.isNetworkError || www.isHttpError)
+				{
+					Debug.Log("Error: " + www.error);
+					yield break;
+				}
+				ProcessControlCommand(www.downloadHandler.text);
+			}
+		}
         #endif
     }
 
@@ -681,6 +729,8 @@ public class ServerAction
 	public int pivot;
 	public int randomSeed;
 	public float moveMagnitude;
+
+	public bool autoSimulation = true;
 	public float visibilityDistance;
 	public bool continuousMode;
 	public bool uniquePickupableObjectTypes; // only allow one of each object type to be visible
