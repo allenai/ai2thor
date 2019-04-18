@@ -36,7 +36,7 @@ public class AgentManager : MonoBehaviour
 
 	private bool readyToEmit;
 
-	private Color[] agentColors = new Color[]{Color.blue, Color.cyan, Color.green, Color.red, Color.magenta, Color.yellow};
+	private Color[] agentColors = new Color[]{Color.blue, Color.yellow, Color.green, Color.red, Color.magenta, Color.grey};
 
 	public int actionDuration = 3;
 
