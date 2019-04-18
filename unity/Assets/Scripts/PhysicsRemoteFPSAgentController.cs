@@ -41,7 +41,16 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         [SerializeField] Camera[] FlightCameras;
 
         // Extra stuff
-        private PhysicsSceneManager physicsSceneManager;
+        private PhysicsSceneManager _physicsSceneManager = null;
+        private PhysicsSceneManager physicsSceneManager
+        {
+            get {
+                if (_physicsSceneManager == null) {
+                    _physicsSceneManager = GameObject.Find("PhysicsSceneManager").GetComponent<PhysicsSceneManager>();
+                }
+                return _physicsSceneManager;
+            }
+        }
         [SerializeField] public string[] objectIdsInBox = new string[0];
         [SerializeField] protected bool inTopLevelView = false;
         [SerializeField] protected Vector3 lastLocalCameraPosition;
@@ -108,8 +117,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     sceneBounds.Encapsulate(r.bounds);
                 }
             }
-
-            physicsSceneManager = GameObject.Find("PhysicsSceneManager").GetComponent<PhysicsSceneManager>();
         }
 
         //forceVisible is true to activate, false to deactivate
@@ -908,16 +915,19 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         protected float distanceToObject(SimObjPhysics sop) {
             float dist = 10000.0f;
             foreach (Collider c in sop.GetComponentsInChildren<Collider>()) {
-                dist = Math.Min(
-                    Vector3.Distance(transform.position, c.ClosestPointOnBounds(transform.position)),
-                    dist
-                );
+                Vector3 closestPoint = c.ClosestPointOnBounds(transform.position);
+                Vector3 p0 = new Vector3(transform.position.x, 0f, transform.position.z);
+                Vector3 p1 = new Vector3(closestPoint.x, 0f, closestPoint.z);
+                dist = Math.Min(Vector3.Distance(p0, p1), dist);
             }
             return dist;
         }
 
         public void DistanceToObject(ServerAction action) {
             float dist = distanceToObject(physicsSceneManager.UniqueIdToSimObjPhysics[action.objectId]);
+            #if UNITY_EDITOR
+            Debug.Log(dist);
+            #endif
             actionFinished(true, dist);
         }
 
