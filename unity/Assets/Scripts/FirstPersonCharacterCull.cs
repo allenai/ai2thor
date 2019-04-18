@@ -5,18 +5,16 @@ using System.Collections;
 public class FirstPersonCharacterCull : MonoBehaviour
 {
 
-    public MeshRenderer myMeshRenderer; // material you want the camera to change
+    public MeshRenderer myMeshRenderer; //Mesh renderer that you want this script's camera to cull
 
-    void OnPreRender()
+    void OnPreRender() //Just before this camera starts to render...
     {
-        //myMeshRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.ShadowsOnly;
-        myMeshRenderer.enabled = false;
+        myMeshRenderer.enabled = false; //Turn off renderer
     }
 
-    void OnPostRender()
-    {
-        //myMeshRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.On;
-        myMeshRenderer.enabled = true;
+    void OnPostRender() //Immediately after this camera renders...
+    {  
+        myMeshRenderer.enabled = true; //Turn renderer back on
     }
 
 }
