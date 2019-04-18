@@ -519,6 +519,17 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }
+                case "rspawnlifted":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "RandomlyCreateLiftedFurniture";
+                        action.objectType = "Television";
+                        action.objectVariation = 1;
+                        action.y = 1.3f;
+                        action.z = 1;
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
                 case "rspawnfloor": 
                     {
                         ServerAction action = new ServerAction();
