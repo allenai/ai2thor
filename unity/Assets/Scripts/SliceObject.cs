@@ -56,9 +56,11 @@ public class SliceObject : MonoBehaviour
         if(!quit)
         {
             PhysicsSceneManager psm = GameObject.Find("PhysicsSceneManager").GetComponent<PhysicsSceneManager>();
-            psm.SetupScene();
-            psm.RemoveFormSpawnedObjects(gameObject.GetComponent<SimObjPhysics>());
-            psm.RemoveFromRequiredObjects(gameObject.GetComponent<SimObjPhysics>());
+            if (psm != null) {
+                psm.SetupScene();
+                psm.RemoveFormSpawnedObjects(gameObject.GetComponent<SimObjPhysics>());
+                psm.RemoveFromRequiredObjects(gameObject.GetComponent<SimObjPhysics>());
+            }
         }
     }
 }
