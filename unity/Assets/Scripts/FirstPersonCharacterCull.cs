@@ -11,7 +11,7 @@ public class FirstPersonCharacterCull : MonoBehaviour
 
     void OnPreRender() //Just before this camera starts to render...
     {
-        if(FPSController.IsVisible && FPSController != null)//only do this if visibility capsule has been toggled on
+        if(FPSController != null && RenderersToHide != null && FPSController.IsVisible)//only do this if visibility capsule has been toggled on
         {
             foreach (MeshRenderer mr in RenderersToHide)
             {
@@ -22,7 +22,7 @@ public class FirstPersonCharacterCull : MonoBehaviour
 
     void OnPostRender() //Immediately after this camera renders...
     {
-        if(FPSController.IsVisible && FPSController != null)//only do this if visibility capsule is toggled on
+        if(FPSController != null && RenderersToHide != null && FPSController.IsVisible)//only do this if visibility capsule is toggled on
         {
             foreach (MeshRenderer mr in RenderersToHide)
             {

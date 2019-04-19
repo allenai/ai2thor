@@ -31,20 +31,26 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		protected bool continuousMode;
 		public ImageSynthesis imageSynthesis;
 
+		private List<Renderer> capsuleRenderers = null;
+
         private bool isVisible = true;
-
-		private GameObject visCapsule;
-
         public bool IsVisible
         {
                 get { return isVisible; }
                 set {
-                    //GameObject visCapsule = this.transform.Find ("VisibilityCapsule").gameObject;
+					if (capsuleRenderers == null) {
+						GameObject visCapsule = this.transform.Find ("VisibilityCapsule").gameObject;
+						capsuleRenderers = new List<Renderer>();
+						foreach (Renderer r in visCapsule.GetComponentsInChildren<Renderer>()) {
+							if (r.enabled) {
+								capsuleRenderers.Add(r);
+							}
+						}
+					}
 					// DO NOT DISABLE THE VIS CAPSULE, instead disable the renderers below.
-                    // foreach (Renderer r in visCapsule.GetComponentsInChildren<Renderer>()) {
-                    //     r.enabled = value;
-					visCapsule.SetActive(value);
-                    //}
+                    foreach (Renderer r in capsuleRenderers) {
+                        r.enabled = value;
+                    }
                     isVisible = value;
                 }
         }
@@ -144,8 +150,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			this.m_WalkSpeed = 2;
 			this.m_RunSpeed = 10;
 			this.m_GravityMultiplier = 2;
-
-			visCapsule = this.transform.Find ("VisibilityCapsule").gameObject;
 			//this.m_UseFovKick = true;
 			//this.m_StepInterval = 5;
 		}
