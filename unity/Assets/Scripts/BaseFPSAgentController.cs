@@ -36,23 +36,23 @@ namespace UnityStandardAssets.Characters.FirstPerson
         private bool isVisible = true;
         public bool IsVisible
         {
-                get { return isVisible; }
-                set {
-					if (capsuleRenderers == null) {
-						GameObject visCapsule = this.transform.Find ("VisibilityCapsule").gameObject;
-						capsuleRenderers = new List<Renderer>();
-						foreach (Renderer r in visCapsule.GetComponentsInChildren<Renderer>()) {
-							if (r.enabled) {
-								capsuleRenderers.Add(r);
-							}
+			get { return isVisible; }
+			set {
+				if (capsuleRenderers == null) {
+					GameObject visCapsule = this.transform.Find ("VisibilityCapsule").gameObject;
+					capsuleRenderers = new List<Renderer>();
+					foreach (Renderer r in visCapsule.GetComponentsInChildren<Renderer>()) {
+						if (r.enabled) {
+							capsuleRenderers.Add(r);
 						}
 					}
-					// DO NOT DISABLE THE VIS CAPSULE, instead disable the renderers below.
-                    foreach (Renderer r in capsuleRenderers) {
-                        r.enabled = value;
-                    }
-                    isVisible = value;
-                }
+				}
+				// DO NOT DISABLE THE VIS CAPSULE, instead disable the renderers below.
+				foreach (Renderer r in capsuleRenderers) {
+					r.enabled = value;
+				}
+				isVisible = value;
+			}
         }
 
 		//[SerializeField]

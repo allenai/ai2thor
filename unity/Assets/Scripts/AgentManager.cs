@@ -204,19 +204,25 @@ public class AgentManager : MonoBehaviour
 		}
 	}
 
-	public void Reset(ServerAction response) {
+	public IEnumerator ResetCoroutine(ServerAction response) {
 		// Setting all the agents invisible here is silly but necessary
 		// as otherwise the FirstPersonCharacterCull.cs script will
 		// try to disable renderers that are invalid (but not null)
 		// as the scene they existed in has changed.
 		for (int i = 0; i < agents.Count; i++) {
-			agents[i].IsVisible = false;
+			Destroy(agents[i]);
 		}
+		yield return null;
+
 		if (string.IsNullOrEmpty(response.sceneName)){
 			UnityEngine.SceneManagement.SceneManager.LoadScene (UnityEngine.SceneManagement.SceneManager.GetActiveScene ().name);
 		} else {
 			UnityEngine.SceneManagement.SceneManager.LoadScene (response.sceneName);
 		}
+	}
+
+	public void Reset(ServerAction response) {
+		StartCoroutine(ResetCoroutine(response));
 	}
 
     public bool SwitchScene(string sceneName)
