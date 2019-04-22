@@ -48,13 +48,6 @@ def test_local_executable_path():
     c.local_executable_path = 'FOO'
     assert c.executable_path() == 'FOO'
 
-def test_step_put_object_in_wrong_receptacle():
-    fake_event = Event(dict(screenWidth=300, screenHeight=300, colors=[], lastActionSuccess=True))
-    c = ai2thor.controller.Controller()
-    c.last_event = fake_event
-    e = c.step(dict(action='PutObject', objectId='Mug|1.2|3.4|5.6', receptacleObjectId="Box|5.6|4.3|2.1"))
-    assert not e.metadata['lastActionSuccess']
-
 def test_invalid_action():
     fake_event = Event(dict(screenWidth=300, screenHeight=300, colors=[], lastActionSuccess=False, errorCode='InvalidAction', errorMessage='Invalid method: moveaheadbadmethod'))
     c = ai2thor.controller.Controller()
@@ -132,7 +125,7 @@ def test_unity_command():
         '-screen-fullscreen', 
         '0',
         '-screen-quality', 
-        '6', 
+        '7', 
         '-screen-width', 
         '650', 
         '-screen-height', 
@@ -144,7 +137,7 @@ def test_unity_command():
         '-screen-fullscreen', 
         '1',
         '-screen-quality', 
-        '1', 
+        '2', 
         '-screen-width', 
         '650', 
         '-screen-height', 
