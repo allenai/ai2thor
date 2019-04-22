@@ -72,6 +72,12 @@ public class CanOpen_Object : MonoBehaviour
             }
 		}
 
+		#if UNITY_EDITOR
+		if(!this.GetComponent<SimObjPhysics>().DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanOpen))
+		{
+			Debug.LogError(this.name + "is missing the CanOpen Secondary Property! Please set it!");
+		}
+		#endif
 	}
 
 	// Update is called once per frame

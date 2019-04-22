@@ -98,6 +98,13 @@ public class CanToggleOnOff : MonoBehaviour
                 iTween.Init(go);
             }
 		}
+
+		#if UNITY_EDITOR
+		if(!this.GetComponent<SimObjPhysics>().DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanToggleOnOff))
+		{
+			Debug.LogError(this.name + "is missing the CanToggleOnOff Secondary Property! Please set it!");
+		}
+		#endif
 	}
 	
 	// Update is called once per frame
