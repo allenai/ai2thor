@@ -42,6 +42,10 @@ public class CanOpen_Object : MonoBehaviour
 	[SerializeField]
     protected MovementType movementType;
 
+	//keep a list of all objects that, if able to turn on/off, must be in the Off state before opening (no opening microwave unless it's off!);
+	public List<SimObjType> MustBeOffToOpen = new List<SimObjType>()
+	{SimObjType.Microwave};
+
     #if UNITY_EDITOR
     void OnEnable ()
     {
@@ -68,6 +72,12 @@ public class CanOpen_Object : MonoBehaviour
             }
 		}
 
+		#if UNITY_EDITOR
+		if(!this.GetComponent<SimObjPhysics>().DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanOpen))
+		{
+			Debug.LogError(this.name + "is missing the CanOpen Secondary Property! Please set it!");
+		}
+		#endif
 	}
 
 	// Update is called once per frame

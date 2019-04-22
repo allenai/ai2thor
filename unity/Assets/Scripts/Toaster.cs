@@ -2,88 +2,39 @@
 using UnityEngine;
 using System.Collections;
 
-//[ExecuteInEditMode]
-public class Toaster : MonoBehaviour {
+public class Toaster : MonoBehaviour 
+{
 
-	public SimObj SimObjParent;
-	public GameObject BreadOn;
-	public GameObject BreadOff;
-	public GameObject LeverOn;
-	public GameObject LeverOff;
+	private ObjectSpecificReceptacle osr;
+	private CanToggleOnOff onOff;
 
-	public bool EditorOn;
-	public bool EditorFilled;
-	
-	bool displayedError = false;
+	void Start()
+	{
+		osr = gameObject.GetComponent<ObjectSpecificReceptacle>();
+		onOff = gameObject.GetComponent<CanToggleOnOff>();
+	}
+	void Update()
+	{
+		//on update.... maybe check if toaster is on? if so.... try and toast the object
+		Toast();
+	}
 
-	void Update() {
-		int animState = 0;
-		//1 - Off, Empty
-		//2 - On, Empty
-		//3 - Off, Full
-		//4 - On, Full
-		if (!Application.isPlaying) {
-			if (EditorOn) {
-				if (EditorFilled) {
-					animState = 4;
-				} else {
-					animState = 2;
-				}
-			} else {
-				if (EditorFilled) {
-					animState = 3;
-				} else {
-					animState = 1;
-				}
+	public void Toast()
+	{
+		//check if attachpoint has a bread
+		//if so, use the ToastObject.Toast() function
+		SimObjPhysics target;
+
+		if(osr.attachPoint.transform.GetComponentInChildren<SimObjPhysics>() && onOff.isTurnedOnOrOff())
+		{
+			target = osr.attachPoint.transform.GetComponentInChildren<SimObjPhysics>();
+			ToastObject toast = target.GetComponent<ToastObject>();
+
+			//if not already toasted, toast it!
+			if(!toast.IsToasted())
+			{
+				toast.Toast();
 			}
-		} else {
-			if (SimObjParent == null) {
-				if (!displayedError) {
-					Debug.LogError ("SimObjParent null in toaster " + gameObject.name);
-					displayedError = true;
-				}
-				return;
-			}
-			animState = SimObjParent.Animator.GetInteger ("AnimState1");
-		}
-
-		if (BreadOn == null || BreadOff == null || LeverOn == null || LeverOff == null) {
-			if (!displayedError) {
-				Debug.LogError ("Object null in toaster " + name);
-				displayedError = true;
-			}
-			return;
-		}
-		
-		switch (animState) {
-		default:
-		case 1:
-			BreadOn.SetActive (false);
-			BreadOff.SetActive (false);
-			LeverOn.SetActive (false);
-			LeverOff.SetActive (true);
-			break;
-
-		case 2:
-			BreadOn.SetActive (false);
-			BreadOff.SetActive (false);
-			LeverOn.SetActive (true);
-			LeverOff.SetActive (false);
-			break;
-
-		case 3:
-			BreadOn.SetActive (false);
-			BreadOff.SetActive (true);
-			LeverOn.SetActive (false);
-			LeverOff.SetActive (true);
-			break;
-
-		case 4:
-			BreadOn.SetActive (true);
-			BreadOff.SetActive (false);
-			LeverOn.SetActive (true);
-			LeverOff.SetActive (false);
-			break;
 		}
 	}
 }

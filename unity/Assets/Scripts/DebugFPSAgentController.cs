@@ -200,6 +200,25 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 }
             }
 
+            //try and put held object on/in something
+            if(Input.GetKeyDown(KeyCode.P))
+            {
+                if(TextInputMode == false && this.PhysicsController.actionComplete)
+                {
+                        ServerAction action = new ServerAction();
+                        action.action = "PutObject";
+                        action.receptacleObjectId = PhysicsController.UniqueIDOfClosestReceptacleObject();
+
+                        //set true to place with kinematic = true so that it doesn't fall or roll in place - making placement more consistant and not physics engine reliant - this more closely mimics legacy pivot placement behavior
+                        action.placeStationary = true; 
+
+                        //set this true to ignore Placement Restrictions
+                        action.forceAction = true;
+
+                        this.PhysicsController.ProcessControlCommand(action);
+                }
+            }
+
             // Interact action for mouse left-click
             if (Input.GetKeyDown(KeyCode.Mouse0))
             {
@@ -292,7 +311,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             }
 
             // Throw action on left clock release
-            if (Input.GetKeyUp(KeyCode.Mouse0))
+            if (!TextInputMode && Input.GetKeyUp(KeyCode.Mouse0))
             {
                 // Debug.Log("Pickup state " + pickupState + " obj " + this.PhysicsController.WhatAmIHolding());
                 if (!pickupState)
