@@ -74,6 +74,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         protected HashSet<int> initiallyDisabledRenderers = new HashSet<int>();
         public Vector3[] reachablePositions = new Vector3[0];
 
+        //face swap stuff here
+        public Material[] ScreenFaces; //0 - neutral, 1 - Happy, 2 - Mad, 3 - Angriest
+        public MeshRenderer MyFaceMesh;
+
         public Bounds sceneBounds = new Bounds(
             new Vector3(float.PositiveInfinity, float.PositiveInfinity, float.PositiveInfinity),
             new Vector3(-float.PositiveInfinity, -float.PositiveInfinity, -float.PositiveInfinity)
@@ -3122,6 +3126,52 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 errorMessage = "object not found: " + action.objectId;
                 Debug.Log(errorMessage);
             }
+        }
+
+        //face change the agent's face screen to demonstrate different "emotion" states
+        //for use with multi agent implicit communication
+        public void ChangeAgentFaceToNeutral(ServerAction action)
+        {
+            Material[] currentmats = MyFaceMesh.materials;
+
+            currentmats[2] = ScreenFaces[0];
+
+            MyFaceMesh.materials = currentmats;
+            
+            actionFinished(true);
+        }
+
+        public void ChangeAgentFaceToHappy(ServerAction action)
+        {
+            Material[] currentmats = MyFaceMesh.materials;
+
+            currentmats[2] = ScreenFaces[1];
+
+            MyFaceMesh.materials = currentmats;
+
+            actionFinished(true);
+        }
+
+        public void ChangeAgentFaceToMad(ServerAction action)
+        {
+            Material[] currentmats = MyFaceMesh.materials;
+
+            currentmats[2] = ScreenFaces[2];
+
+            MyFaceMesh.materials = currentmats;
+            
+            actionFinished(true);
+        }
+
+        public void ChangeAgentFaceToSuperMad(ServerAction action)
+        {
+            Material[] currentmats = MyFaceMesh.materials;
+
+            currentmats[2] = ScreenFaces[3];
+
+            MyFaceMesh.materials = currentmats;
+            
+            actionFinished(true);
         }
 
         public void ToggleObjectOn(ServerAction action) {
