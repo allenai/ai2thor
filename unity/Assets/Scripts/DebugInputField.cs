@@ -469,6 +469,37 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         break;
                     }
 
+                case "neutral":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "ChangeAgentFaceToNeutral";
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+                case "happy":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "ChangeAgentFaceToHappy";
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
+                case "mad":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "ChangeAgentFaceToMad";
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
+                case "supermad":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "ChangeAgentFaceToSuperMad";
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
                 case "thas":
                     {
                         ServerAction action = new ServerAction();
