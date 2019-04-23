@@ -348,6 +348,20 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         break;
                     }
 
+                case "remove":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "RemoveFromScene";
+                        
+                        if(splitcommand.Length == 2)
+                        {
+                            action.objectId = splitcommand[1];
+                        }
+
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
                 case "put":
                     {
                         ServerAction action = new ServerAction();
@@ -455,6 +469,37 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         break;
                     }
 
+                case "neutral":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "ChangeAgentFaceToNeutral";
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+                case "happy":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "ChangeAgentFaceToHappy";
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
+                case "mad":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "ChangeAgentFaceToMad";
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
+                case "supermad":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "ChangeAgentFaceToSuperMad";
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
                 case "thas":
                     {
                         ServerAction action = new ServerAction();
@@ -502,6 +547,17 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         action.randomizeObjectAppearance = false;//pick randomly from available or not?                  
                         action.objectVariation = 1; //if random false, which version of the object to spawn? (there are only 3 of each type atm)
 
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+                case "rspawnlifted":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "RandomlyCreateLiftedFurniture";
+                        action.objectType = "Television";
+                        action.objectVariation = 1;
+                        action.y = 1.3f;
+                        action.z = 1;
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }
@@ -854,6 +910,24 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }
+                
+                case "slice":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "SliceObject";
+						if(splitcommand.Length > 1)
+						{
+							action.objectId = splitcommand[1];
+						}
+
+                        else
+                        {
+                            action.objectId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().UniqueIDOfClosestVisibleObject();
+                        }
+
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
                     
                     //drop object
 				case "dr":
@@ -1139,6 +1213,20 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         else
                         {
                             action.objectId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().UniqueIDOfClosestToggleObject();
+                        }
+
+                        PhysicsController.ProcessControlCommand(action);
+
+                        break;
+                    }
+
+                case "toast":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "ToastObject";
+                        if (splitcommand.Length > 1)
+                        {
+                            action.objectId = splitcommand[1];
                         }
 
                         PhysicsController.ProcessControlCommand(action);

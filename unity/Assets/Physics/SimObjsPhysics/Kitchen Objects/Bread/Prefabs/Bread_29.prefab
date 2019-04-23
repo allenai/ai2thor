@@ -362,6 +362,7 @@ GameObject:
   - component: {fileID: 4022770262159034}
   - component: {fileID: 114957893170675300}
   - component: {fileID: 54560435240540750}
+  - component: {fileID: 2971063129836560342}
   m_Layer: 8
   m_Name: Bread_29
   m_TagString: SimObjPhysics
@@ -403,7 +404,7 @@ MonoBehaviour:
   uniqueID: 
   Type: 5
   PrimaryProperty: 3
-  SecondaryProperties: 
+  SecondaryProperties: 09000000
   BoundingBox: {fileID: 1627809885725872}
   VisibilityPoints:
   - {fileID: 4227285190604048}
@@ -425,6 +426,7 @@ MonoBehaviour:
   HFbounciness: 0
   HFrbdrag: 0
   HFrbangulardrag: 0
+  ContainedObjectReferences: []
 --- !u!54 &54560435240540750
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -441,6 +443,20 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
+--- !u!114 &2971063129836560342
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1799152691692272}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d07b0b60d7fb54ea9a1ddeca3f431392, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ObjectToChangeTo: {fileID: 3496926809215548156, guid: 52cc7464853bfbb4c80055a957d9ed87,
+    type: 3}
 --- !u!1 &1810073139386444
 GameObject:
   m_ObjectHideFlags: 0
@@ -499,6 +515,7 @@ MeshRenderer:
   m_RendererPriority: 0
   m_Materials:
   - {fileID: 2100000, guid: 18e67a2a6e2f544388e5ad1d00ea1052, type: 2}
+  - {fileID: 2100000, guid: 80e214496b7824a92911ed03706fa401, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0

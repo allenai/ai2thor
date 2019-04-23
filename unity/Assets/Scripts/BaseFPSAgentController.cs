@@ -31,18 +31,28 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		protected bool continuousMode;
 		public ImageSynthesis imageSynthesis;
 
+		private List<Renderer> capsuleRenderers = null;
+
         private bool isVisible = true;
         public bool IsVisible
         {
-                get { return isVisible; }
-                set {
-                    GameObject visCapsule = this.transform.Find ("VisibilityCapsule").gameObject;
-					visCapsule.SetActive(value);
-                    foreach (Renderer r in visCapsule.GetComponentsInChildren<Renderer>()) {
-                        r.enabled = value;
-                    }
-                    isVisible = value;
-                }
+			get { return isVisible; }
+			set {
+				if (capsuleRenderers == null) {
+					GameObject visCapsule = this.transform.Find ("VisibilityCapsule").gameObject;
+					capsuleRenderers = new List<Renderer>();
+					foreach (Renderer r in visCapsule.GetComponentsInChildren<Renderer>()) {
+						if (r.enabled) {
+							capsuleRenderers.Add(r);
+						}
+					}
+				}
+				// DO NOT DISABLE THE VIS CAPSULE, instead disable the renderers below.
+				foreach (Renderer r in capsuleRenderers) {
+					r.enabled = value;
+				}
+				isVisible = value;
+			}
         }
 
 		//[SerializeField]
