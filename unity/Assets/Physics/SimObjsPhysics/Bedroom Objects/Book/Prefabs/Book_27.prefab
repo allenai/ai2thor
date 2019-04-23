@@ -694,6 +694,7 @@ Transform:
   - {fileID: 2108163591}
   - {fileID: 1752969682}
   - {fileID: 2065275264}
+  - {fileID: 7326411997539334584}
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -713,7 +714,7 @@ MonoBehaviour:
   Type: 77
   PrimaryProperty: 3
   SecondaryProperties: 08000000
-  BoundingBox: {fileID: 2108163589}
+  BoundingBox: {fileID: 4976402147212478829}
   VisibilityPoints:
   - {fileID: 1736339952}
   - {fileID: 308759270}
@@ -798,7 +799,8 @@ MonoBehaviour:
   isOpen: 0
   canReset: 1
   movementType: 1
-  MustBeOffToOpen: 10000000
+  OpenBoundingBox: {fileID: 2108163589}
+  ClosedBoundingBox: {fileID: 4976402147212478829}
 --- !u!1 &835887311
 GameObject:
   m_ObjectHideFlags: 0
@@ -1949,8 +1951,8 @@ BoxCollider:
   m_IsTrigger: 0
   m_Enabled: 0
   serializedVersion: 2
-  m_Size: {x: 0.58309114, y: 0.3127079, z: 0.40207204}
-  m_Center: {x: -0.1448555, y: 0.15508175, z: 0}
+  m_Size: {x: 0.58309114, y: 0.035734653, z: 0.40207204}
+  m_Center: {x: -0.1448555, y: 0.016595125, z: 0}
 --- !u!1 &2146331435
 GameObject:
   m_ObjectHideFlags: 0
@@ -2139,3 +2141,47 @@ MeshRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
+--- !u!1 &4976402147212478829
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 7326411997539334584}
+  - component: {fileID: 4004139424717993001}
+  m_Layer: 9
+  m_Name: BoundingBox (1)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &7326411997539334584
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4976402147212478829}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 805106854}
+  m_RootOrder: 6
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!65 &4004139424717993001
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4976402147212478829}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_Enabled: 0
+  serializedVersion: 2
+  m_Size: {x: 0.30282065, y: 0.035734653, z: 0.40207204}
+  m_Center: {x: -0.0047202557, y: 0.016595125, z: 0}

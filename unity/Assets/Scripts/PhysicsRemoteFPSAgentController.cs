@@ -2211,6 +2211,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         public void InitialRandomSpawn(ServerAction action) {
+            //something is in our hand AND we are trying to spawn it. Quick drop the object
             if (ItemInHand != null) {
                 Rigidbody rb = ItemInHand.GetComponent<Rigidbody>();
                 rb.isKinematic = false;
@@ -2227,6 +2228,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                 rb.angularVelocity = UnityEngine.Random.insideUnitSphere;
 
+                ItemInHand.GetComponent<SimObjPhysics>().isInAgentHand = false;//agent hand flag
+                DefaultAgentHand();//also default agent hand
                 ItemInHand = null;
             }
 
@@ -2497,7 +2500,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                 SetUpRotationBoxChecks();
 
-                //return true;
+                //we have succesfully picked up something! 
+                target.GetComponent<SimObjPhysics>().isInAgentHand = true;
                 actionFinished(true);
                 return;
             }
@@ -2515,6 +2519,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         soprb.isKinematic = true;
                         sop.transform.SetParent(target.transform);
                         target.AddToContainedObjectReferences(sop);
+                        target.GetComponent<SimObjPhysics>().isInAgentHand = true;//agent hand flag
                     }
 
                 }
@@ -2532,6 +2537,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     //turn off the colliders, leaving Trigger Colliders active (this is important to maintain visibility!)
                     sop.transform.Find("Colliders").gameObject.SetActive(true);
                     sop.GetComponent<Rigidbody>().isKinematic = false;
+                    sop.isInAgentHand = false;//agent hand flag
                     sop.transform.SetParent(topObject.transform);
                 }
 
@@ -2614,6 +2620,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     } else {
                         StartCoroutine(checkDropHandObjectActionFast(ItemInHand.GetComponent<SimObjPhysics>()));
                     }
+                    ItemInHand.GetComponent<SimObjPhysics>().isInAgentHand = false;
                     ItemInHand = null;
                     return true;
                 }
@@ -3303,7 +3310,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             if (target) {
                 if (!action.forceAction && target.isInteractable == false) {
-                    //Debug.Log("can't close object if it's already closed");
                     actionFinished(false);
                     errorMessage = "object is visible but occluded by something: " + action.objectId;
                     return;
@@ -3319,7 +3325,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         return;
                     }
 
-                    if (codd.MustBeOffToOpen.Contains(target.Type)) {
+                    if (codd.WhatReceptaclesMustBeOffToOpen().Contains(target.Type)) {
                         if (target.GetComponent<CanToggleOnOff>().isOn) {
                             errorMessage = "Target must be OFF to open!";
                             actionFinished(false);
