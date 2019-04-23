@@ -2,14 +2,14 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class ToastObject : MonoBehaviour
+public class CookObject : MonoBehaviour
 {
     //Meshes that require different materials when in on/off state
 	[Header("Objects that need Mat Swaps")]
 	[SerializeField]
 	public SwapObjList[] MaterialSwapObjects;
 
-    public bool isToasted = false;
+    public bool isCooked = false;
 
     void Start()
     {
@@ -22,20 +22,20 @@ public class ToastObject : MonoBehaviour
         #if UNITY_EDITOR
 		if (Input.GetKeyDown(KeyCode.Minus))
         {
-            Toast();
+            Cook();
         }
         #endif
     }
 
     //use this to return info on if this object is toasted or not
-    public bool IsToasted()
+    public bool IsCooked()
     {
-        return isToasted;
+        return isCooked;
     }
 
     //this will swap the material of this object to toasted. There is no
     //un-toast function because uh... you can't un toast bread?
-    public void Toast()
+    public void Cook()
     {
         if(MaterialSwapObjects.Length > 0)
         {
@@ -45,7 +45,7 @@ public class ToastObject : MonoBehaviour
                 MaterialSwapObjects[i].OnMaterials;
             }
 
-            isToasted = true;
+            isCooked = true;
         }
     }
 }

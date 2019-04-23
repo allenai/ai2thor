@@ -1220,10 +1220,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         break;
                     }
 
-                case "toast":
+                case "cook":
                     {
                         ServerAction action = new ServerAction();
-                        action.action = "ToastObject";
+                        action.action = "CookObject";
                         if (splitcommand.Length > 1)
                         {
                             action.objectId = splitcommand[1];

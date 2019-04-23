@@ -3087,8 +3087,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true);
         }
 
-        //toasts object if it has the CanBeToasted property and the ToastObject component - basically just Bread Slices have this at the moment
-        public void ToastObject(ServerAction action) {
+        //swap an object's materials out to the cooked version of the object
+        public void CookObject(ServerAction action) {
             if (action.objectId == null) {
                 Debug.Log("Hey, actually give me an object ID to Toggle, yeah?");
                 errorMessage = "objectId required for ToastObject";
@@ -3098,8 +3098,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             SimObjPhysics target = null;
             foreach (SimObjPhysics sop in VisibleSimObjs(action)) {
-                //does it toast?
-                if (sop.GetComponent<ToastObject>()) {
+                //can this object be cooked?
+                if (sop.GetComponent<CookObject>()) {
                     target = sop;
                 }
             }
@@ -3111,17 +3111,17 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     return;
                 }
 
-                if (target.GetComponent<ToastObject>()) {
-                    ToastObject to = target.GetComponent<ToastObject>();
+                if (target.GetComponent<CookObject>()) {
+                    CookObject to = target.GetComponent<CookObject>();
 
                     //is this toasted already? if not, good to go
-                    if (to.IsToasted()) {
+                    if (to.IsCooked()) {
                         actionFinished(false);
                         errorMessage = action.objectId + " is already Toasted!";
                         return;
                     }
 
-                    to.Toast();
+                    to.Cook();
 
                     actionFinished(true);
                 }
