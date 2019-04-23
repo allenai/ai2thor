@@ -19,6 +19,7 @@ metadata_complex = {'agent': {'bounds3D': [],
            'receptacleObjectIds': [],
            'rotation': {'x': 0.0, 'y': 180.0, 'z': 0.0},
            'visible': False},
+'thirdPartyCameras': [],
  'agentId': 0,
  'collided': False,
  'collidedObjects': [],
@@ -1440,6 +1441,7 @@ metadata_simple = {'agent': {'bounds3D': [],
            'rotation': {'x': 0.0, 'y': 0.0, 'z': 0.0},
            'visible': False},
  'agentId': 0,
+'thirdPartyCameras': [],
  'collided': False,
  'collidedObjects': [],
  'colorBounds': [],
@@ -2651,6 +2653,8 @@ metadata_simple = {'agent': {'bounds3D': [],
  'screenHeight': 300,
  'screenWidth': 300}
 
+ 
+
 @pytest.fixture
 def event_complex():
     return Event(metadata_complex)
@@ -2660,8 +2664,8 @@ def event():
     return Event(metadata_simple)
 
 @pytest.fixture
-def event_with_frame():
-    e = event()
+def event_with_frame(event):
+    e = event
     with open("ai2thor/tests/data/rgb-image.raw", "rb") as f:
         raw_image = memoryview(f.read())
     e.add_image(raw_image)

@@ -170,6 +170,55 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
             }
 
+            //test slicing object
+            if(Input.GetKeyDown(KeyCode.Mouse1))
+            {
+                if(TextInputMode == false && this.PhysicsController.actionComplete)
+                {
+                    var closestObj = this.highlightedObject;
+
+                    if (closestObj != null)
+                    {
+                        var actionName ="";
+
+                        if(closestObj.GetComponent<SimObjPhysics>().DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanBeSliced))
+                        {
+                            actionName = "SliceObject";
+                        }
+
+                        if(actionName != "")
+                        {
+                            ServerAction action = new ServerAction
+                            {
+                                action = actionName,
+                                objectId = closestObj.uniqueID
+                            };
+
+                            this.PhysicsController.ProcessControlCommand(action);
+                        }
+                    }
+                }
+            }
+
+            //try and put held object on/in something
+            if(Input.GetKeyDown(KeyCode.P))
+            {
+                if(TextInputMode == false && this.PhysicsController.actionComplete)
+                {
+                        ServerAction action = new ServerAction();
+                        action.action = "PutObject";
+                        action.receptacleObjectId = PhysicsController.UniqueIDOfClosestReceptacleObject();
+
+                        //set true to place with kinematic = true so that it doesn't fall or roll in place - making placement more consistant and not physics engine reliant - this more closely mimics legacy pivot placement behavior
+                        action.placeStationary = true; 
+
+                        //set this true to ignore Placement Restrictions
+                        action.forceAction = true;
+
+                        this.PhysicsController.ProcessControlCommand(action);
+                }
+            }
+
             // Interact action for mouse left-click
             if (Input.GetKeyDown(KeyCode.Mouse0))
             {
@@ -248,7 +297,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                      0.0f;
             }
 
-            if (Input.GetKeyDown(KeyCode.R))
+            if (Input.GetKeyDown(KeyCode.R) && TextInputMode == false)
             {
                 var action = new ServerAction
                 {
@@ -262,7 +311,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             }
 
             // Throw action on left clock release
-            if (Input.GetKeyUp(KeyCode.Mouse0))
+            if (!TextInputMode && Input.GetKeyUp(KeyCode.Mouse0))
             {
                 // Debug.Log("Pickup state " + pickupState + " obj " + this.PhysicsController.WhatAmIHolding());
                 if (!pickupState)
@@ -509,7 +558,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 			if(!FlightMode)
             m_MoveDir += Physics.gravity * m_GravityMultiplier * Time.fixedDeltaTime;   
-			      
+
+            //added this check so that move is not called if/when the Character Controller's capsule is disabled. Right now the capsule is being disabled when open/close animations are in progress so yeah there's that
+            if(m_CharacterController.enabled == true)       
             m_CharacterController.Move(m_MoveDir * Time.fixedDeltaTime);
 		}
 

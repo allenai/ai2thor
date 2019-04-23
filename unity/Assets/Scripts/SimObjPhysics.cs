@@ -49,6 +49,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 
 	private Bounds bounds;
 
+	//these collider references are used for switching physics materials for all colliders on this object
 	[Header("Non - Trigger Colliders of this object")]
 	public Collider[] MyColliders = null;
 
@@ -357,9 +358,10 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 	public static void CreateFromMesh()
 	{
 		GameObject prefabRoot = Selection.activeGameObject;
-		GameObject top = new GameObject("changethisname");
+        GameObject top = new GameObject(prefabRoot.name);
 		top.transform.position = prefabRoot.transform.position;
 		top.transform.rotation = prefabRoot.transform.rotation;
+        prefabRoot.name = "mesh";
 
 		prefabRoot.transform.SetParent(top.transform);
 
@@ -397,11 +399,73 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 
 	}
 
+    [UnityEditor.MenuItem("SimObjectPhysics/Set All Transforms to Defaults &d")]
+    public static void ResetTransform()
+    {
+        GameObject selected = Selection.activeGameObject;
+
+        List<Transform> selectedchildren = new List<Transform>();
+
+        foreach (Transform t in selected.transform)
+        {
+            //print(t.name);
+            selectedchildren.Add(t);
+            //t.SetParent(null);
+        }
+
+        foreach (Transform yes in selectedchildren)
+        {
+            yes.SetParent(null);
+        }
+
+        selected.transform.localPosition = new Vector3(0, 0, 0);
+        selected.transform.localRotation = new Quaternion(0, 0, 0, 0);
+        selected.transform.localScale = new Vector3(1, 1, 1);
+
+        foreach (Transform t in selectedchildren)
+        {
+            t.SetParent(selected.transform);
+        }
+
+
+    }
+
+    [UnityEditor.MenuItem("SimObjectPhysics/Rotate Box Flap 90 on Y &s")]
+    public static void RotateTheBoxFlap()
+    {
+        GameObject selected = Selection.activeGameObject;
+
+        List<Transform> selectedchildren = new List<Transform>();
+
+        foreach (Transform t in selected.transform)
+        {
+            //print(t.name);
+            selectedchildren.Add(t);
+            //t.SetParent(null);
+        }
+
+        foreach (Transform yes in selectedchildren)
+        {
+            yes.SetParent(null);
+        }
+
+        float initialRot = selected.transform.localRotation.eulerAngles.x;
+
+		Vector3 setrot = new Vector3(0, 90, 180 - initialRot); //This is weird and we don't know why
+
+        selected.transform.localRotation = Quaternion.Euler(setrot + new Vector3(-180, 180, 180)); //This is weird and we don't know why
+        selected.transform.localScale = new Vector3(1, 1, 1);
+
+        foreach (Transform t in selectedchildren)
+        {
+            t.SetParent(selected.transform);
+        }
+    }
 
 #endif
 
-	// Use this for initialization
-	void Start()
+    // Use this for initialization
+    void Start()
 	{
 		//XXX For Debug setting up scene, comment out or delete when done settig up scenes
 #if UNITY_EDITOR
@@ -648,8 +712,21 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		//this is hitting something else so it must be colliding at this point!
 		else if (other.tag != "Player")
 		{
-			isColliding = true;
-			return;
+			//don't flag as colliding if the thing i'm coliding with is something inside my receptacle trigger box
+			if(DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.Receptacle))
+			{
+				if(ContainedObjectReferences.Contains(other.GetComponentInParent<SimObjPhysics>()))
+				{
+					isColliding = false;
+					return;
+				}
+			}
+
+			else
+			{
+				isColliding = true;
+				return;
+			}
 		}
 	}
 
@@ -1593,6 +1670,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 
 		foreach(Transform t in gameObject.transform)
 		{
+			//add any receptacle trigger boxes
 			if(t.GetComponent<Contains>())
 			{
 				if(!recepboxes.Contains(t.gameObject))
@@ -1623,6 +1701,23 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 					}
 				}
 			}
+
+			//check if child object "t" has any objects under it called "Colliders"
+			if(t.Find("Colliders"))
+			{
+				Transform childColliderObject = t.Find("Colliders");
+
+				//if TriggerColliders dont already exist as a child under this child object t, create it by copying childColliderObject
+				if(!t.Find("TriggerColliders"))
+				{
+					GameObject inst = Instantiate(childColliderObject.gameObject, t, true);
+					inst.name = "TriggerColliders";
+					foreach(Transform thing in inst.transform)
+					{
+						thing.GetComponent<Collider>().isTrigger = true;
+					}
+				}
+			}
 		}
 
 		ReceptacleTriggerBoxes = recepboxes.ToArray();
@@ -1639,11 +1734,11 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 	//[ContextMenu("Set Up Colliders")]
 	public void ContextSetUpColliders()
 	{
+		List<Collider> listColliders = new List<Collider>();
+		
 		if (transform.Find("Colliders"))
 		{
 			Transform Colliders = transform.Find("Colliders");
-
-			List<Collider> listColliders = new List<Collider>();
 
 			foreach (Transform child in Colliders)
 			{
@@ -1660,11 +1755,37 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 					child.GetComponent<Collider>().enabled = true;
 					child.GetComponent<Collider>().isTrigger = false;
 				}
-
 			}
-
-			MyColliders = listColliders.ToArray();
 		}
+
+		//loop through all child objects. For each object, check if the child itself has a child called Colliders....
+		foreach (Transform child in transform)
+		{
+			if(child.Find("Colliders"))
+			{
+				Transform Colliders = child.Find("Colliders");
+
+				foreach (Transform childschild in Colliders)
+				{
+					//list.toarray
+					listColliders.Add(childschild.GetComponent<Collider>());
+
+					//set correct tag and layer for each object
+					//also ensure all colliders are NOT trigger
+					childschild.gameObject.tag = "SimObjPhysics";
+					childschild.gameObject.layer = 8;
+
+					if (childschild.GetComponent<Collider>())
+					{
+						childschild.GetComponent<Collider>().enabled = true;
+						childschild.GetComponent<Collider>().isTrigger = false;
+					}
+				}
+			}
+		}
+
+		MyColliders = listColliders.ToArray();
+
 	}
 
 	//[ContextMenu("Set Up TriggerColliders")]
@@ -1701,11 +1822,11 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 	// [ContextMenu("Set Up VisibilityPoints")]
 	void ContextSetUpVisibilityPoints()
 	{
+		List<Transform> vplist = new List<Transform>();
+
 		if (transform.Find("VisibilityPoints"))
 		{
 			Transform vp = transform.Find("VisibilityPoints");
-
-			List<Transform> vplist = new List<Transform>();
 
 			foreach (Transform child in vp)
 			{
@@ -1715,9 +1836,24 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 				child.gameObject.tag = "Untagged";
 				child.gameObject.layer = 8;
 			}
-
-			VisibilityPoints = vplist.ToArray();
 		}
+
+		foreach (Transform child in transform)
+		{
+			if(child.Find("VisibilityPoints"))
+			{
+				Transform vp = child.Find("VisibilityPoints");
+
+				foreach (Transform childschild in vp)
+				{
+					vplist.Add(childschild);
+					childschild.gameObject.tag = "Untagged";
+					childschild.gameObject.layer = 8;
+				}
+			}
+		}
+
+		VisibilityPoints = vplist.ToArray();
 	}
 
 	//[ContextMenu("Set Up Rotate Agent Collider")]

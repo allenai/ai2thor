@@ -38,8 +38,8 @@ def server():
     return ai2thor.server.Server(request_queue, response_queue, '127.0.0.1')
 
 @pytest.fixture
-def client():
-    return server().app.test_client()
+def client(server):
+    return server.app.test_client()
 
 def test_ping(client):
     res = client.get('/ping')
@@ -90,7 +90,7 @@ def test_train():
     s = ai2thor.server.Server(request_queue, response_queue, '127.0.0.1')
     c = s.app.test_client()
     res = c.post(
-        '/train', 
+        '/train',
         buffered=True,
         content_type='multipart/form-data; boundary=OVCo05I3SVXLPeTvCgJjHl1EOleL4u9TDx5raRVt',
         input_stream=BytesIO(generate_form(metadata_simple, s.sequence_id)))
