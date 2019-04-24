@@ -892,11 +892,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         public void ChangeAgentColor(ServerAction action) {
-            foreach (MeshRenderer r in this.gameObject.GetComponentsInChildren<MeshRenderer>() as MeshRenderer[]) {
-                foreach (Material m in r.materials) {
-                    m.color = new Color(action.x, action.y, action.z, 1.0f);
-                }
-            }
+            agentManager.UpdateAgentColor(this, new Color(action.x, action.y, action.z, 1.0f));
             actionFinished(true);
         }
 
@@ -936,6 +932,16 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         public void RandomlyCreateLiftedFurniture(ServerAction action) {
+            if (action.z < 0.25f) {
+                errorMessage = "z must be at least 0.25";
+                actionFinished(false);
+                return;
+            }
+            if (action.y == 0.0f) {
+                errorMessage = "y must be non-zero";
+                actionFinished(false);
+                return;
+            }
             Vector3[] reachablePositions = getReachablePositions();
 
             List<Vector3> oldAgentPositions = new List<Vector3>();
@@ -1052,7 +1058,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 agentMovePQ.Enqueue(agent, -(d.x * p.x + d.y * p.y + d.z * p.z));
             }
             Vector3 startObjectPosition = objectToMove.transform.position;
-            Quaternion startObjectRotation = objectToMove.transform.rotation;
             float objectPriority = d.x * startObjectPosition.x + d.y * startObjectPosition.y + d.z * startObjectPosition.z;
             bool objectMoved = false;
 
@@ -4883,6 +4888,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     }
                 }
                 if (objectCreated) {
+                    errorMessage = "";
                     break;
                 }
             }
