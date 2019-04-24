@@ -2545,38 +2545,60 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
 
-        private IEnumerator checkDropHandObjectAction(SimObjPhysics currentHandSimObj) {
+        private IEnumerator checkDropHandObjectAction(SimObjPhysics currentHandSimObj) 
+        {
+            print("checkdrophand not fast i dunno man");
             yield return null; // wait for two frames to pass
             yield return null;
             float startTime = Time.time;
-            Rigidbody rb = currentHandSimObj.GetComponentInChildren<Rigidbody>();
-            while (Time.time - startTime < 2) {
-                if (Math.Abs(rb.angularVelocity.sqrMagnitude + rb.velocity.sqrMagnitude) < 0.00001) {
-                    // Debug.Log ("object is now at rest");
+
+            //if we can't find the currentHandSimObj's rigidbody because the object was destroyed, bypass this check
+            if (currentHandSimObj != null)
+            {
+                Rigidbody rb = currentHandSimObj.GetComponentInChildren<Rigidbody>();
+                while (Time.time - startTime < 2) 
+                {
+                    if(currentHandSimObj == null)
                     break;
-                } else {
-                    // Debug.Log ("object is still moving");
-                    yield return null;
+
+                    if (Math.Abs(rb.angularVelocity.sqrMagnitude + rb.velocity.sqrMagnitude) < 0.00001) 
+                    {
+                        // Debug.Log ("object is now at rest");
+                        break;
+                    } 
+
+                    else 
+                    {
+                        // Debug.Log ("object is still moving");
+                        yield return null;
+                    }
                 }
             }
+
             DefaultAgentHand();
             actionFinished(true);
         }
 
-        private IEnumerator checkDropHandObjectActionFast(SimObjPhysics currentHandSimObj) {
-            Rigidbody rb = currentHandSimObj.GetComponentInChildren<Rigidbody>();
-            Physics.autoSimulation = false;
-            yield return null;
-            for (int i = 0; i < 100; i++) {
-                Physics.Simulate(0.04f);
-#if UNITY_EDITOR
+        private IEnumerator checkDropHandObjectActionFast(SimObjPhysics currentHandSimObj) 
+        {
+            if(currentHandSimObj != null)
+            {
+                Rigidbody rb = currentHandSimObj.GetComponentInChildren<Rigidbody>();
+                Physics.autoSimulation = false;
                 yield return null;
-#endif
-                if (Math.Abs(rb.angularVelocity.sqrMagnitude + rb.velocity.sqrMagnitude) < 0.00001) {
-                    break;
+
+                for (int i = 0; i < 100; i++) 
+                {
+                    Physics.Simulate(0.04f);
+                    #if UNITY_EDITOR
+                    yield return null;
+                    #endif
+                    if (Math.Abs(rb.angularVelocity.sqrMagnitude + rb.velocity.sqrMagnitude) < 0.00001) {
+                        break;
+                    }
                 }
+                Physics.autoSimulation = true;
             }
-            Physics.autoSimulation = true;
 
             DefaultAgentHand();
             actionFinished(true);
@@ -6007,29 +6029,29 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                     GUILayout.EndHorizontal();
                 } else {
-                    Plane[] planes = GeometryUtility.CalculateFrustumPlanes(m_Camera);
+                    //Plane[] planes = GeometryUtility.CalculateFrustumPlanes(m_Camera);
 
                     //int position_number = 0;
                     foreach (SimObjPhysics o in VisibleSimObjPhysics) {
                         string suffix = "";
-                        Bounds bounds = new Bounds(o.gameObject.transform.position, new Vector3(0.05f, 0.05f, 0.05f));
-                        if (GeometryUtility.TestPlanesAABB(planes, bounds)) {
-                            //position_number += 1;
+                        // Bounds bounds = new Bounds(o.gameObject.transform.position, new Vector3(0.05f, 0.05f, 0.05f));
+                        // if (GeometryUtility.TestPlanesAABB(planes, bounds)) {
+                        //     //position_number += 1;
 
-                            //if (o.GetComponent<SimObj>().Manipulation == SimObjManipProperty.Inventory)
-                            //    suffix += " VISIBLE: " + "Press '" + position_number + "' to pick up";
+                        //     //if (o.GetComponent<SimObj>().Manipulation == SimObjManipProperty.Inventory)
+                        //     //    suffix += " VISIBLE: " + "Press '" + position_number + "' to pick up";
 
-                            //else
-                            //suffix += " VISIBLE";
-                            //if(!IgnoreInteractableFlag)
-                            //{
-                            // if (o.isInteractable == true)
-                            // {
-                            //     suffix += " INTERACTABLE";
-                            // }
-                            //}
+                        //     //else
+                        //     //suffix += " VISIBLE";
+                        //     //if(!IgnoreInteractableFlag)
+                        //     //{
+                        //     // if (o.isInteractable == true)
+                        //     // {
+                        //     //     suffix += " INTERACTABLE";
+                        //     // }
+                        //     //}
 
-                        }
+                        // }
 
                         if (GUILayout.Button(o.UniqueID + suffix, UnityEditor.EditorStyles.miniButton, GUILayout.MinWidth(100f))) {
                             CopyToClipboard(o.UniqueID);
