@@ -63,6 +63,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
         // Optimization
         private bool strongHighlight = true;
 
+        private bool allowFPSControl = true;
+
+
         private void Start()
         {
             m_CharacterController = GetComponent<CharacterController>();
@@ -130,9 +133,11 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
         public void EnableMouseControl()
         {
-            TextInputMode = false;
-            Cursor.visible = false;
-            Cursor.lockState = CursorLockMode.Locked;
+            if (allowFPSControl) {
+                TextInputMode = false;
+                Cursor.visible = false;
+                Cursor.lockState = CursorLockMode.Locked;
+            }
         }
 
         public void DisableMouseControl()
@@ -146,7 +151,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
         private void DebugKeyboardControls()
 		{
 			//swap between text input and not
-			if (Input.GetKeyDown(KeyCode.BackQuote) || Input.GetKeyDown(KeyCode.Escape))
+			if (allowFPSControl && Input.GetKeyDown(KeyCode.BackQuote) || Input.GetKeyDown(KeyCode.Escape))
             {
 				//Switch to Text Mode
                 if (TextInputMode == false)
@@ -174,7 +179,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             if (Input.GetKeyDown(KeyCode.Mouse0))
             {
 
-                if (TextInputMode == false)
+                if (TextInputMode == false || !allowFPSControl)
                 {
                     if (this.PhysicsController.WhatAmIHolding() == null && this.PhysicsController.actionComplete)
                     {
@@ -248,6 +253,39 @@ namespace UnityStandardAssets.Characters.FirstPerson
                      0.0f;
             }
 
+            if (this.PhysicsController.WhatAmIHolding() != null )
+            {
+                String actionName = "";
+                Debug.Log(" Key down shift ? " + Input.GetKey(KeyCode.LeftAlt) + " up " + Input.GetKeyDown(KeyCode.UpArrow));
+                if (Input.GetKey(KeyCode.LeftShift) && Input.GetKeyDown(KeyCode.UpArrow)) {
+                    actionName = "MoveHandUp";
+                }
+                else if (Input.GetKeyDown(KeyCode.O)) {
+                    actionName = "MoveHandDown";
+                }
+                else if (Input.GetKeyDown(KeyCode.I)) {
+                    actionName = "MoveHandAhead";
+                }
+                else if (Input.GetKeyDown(KeyCode.K)) {
+                    actionName = "MoveHandBack";
+                }
+                else if (Input.GetKeyDown(KeyCode.J)) {
+                    actionName = "MoveHandLeft";
+                }
+                else if (Input.GetKeyDown(KeyCode.L)) {
+                    actionName = "MoveHandRight";
+                }
+                if (actionName != "") {
+                    ServerAction action = new ServerAction
+                    {
+                        action = actionName,
+                        moveMagnitude = 0.1f
+                    };
+                    this.PhysicsController.ProcessControlCommand(action);
+                } 
+            }
+            
+
             if (Input.GetKeyDown(KeyCode.R))
             {
                 var action = new ServerAction
@@ -311,7 +349,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             // no text input, we are in fps mode
              if (TextInputMode == false)
              {
-			 	if(Input.GetKey(KeyCode.Space))
+			 	if(allowFPSControl && Input.GetKey(KeyCode.Space))
 			 	{
 			 		Cursor.visible = true;
                     Cursor.lockState = CursorLockMode.None;
@@ -325,14 +363,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
              }
 		}
 
-		private void Update()	
-        {
-			DebugKeyboardControls();
-         
-            ///////////////////////////////////////////////////////////////////////////
-			//we are not in focus mode, so use WASD and mouse to move around
-			if(TextInputMode == false)
+        private void UpdateHighlightedObject(Vector3 screenPosition) {
+            /* if(TextInputMode == false)
 			{
+                Debug.Log("FPS INPUT!!!!!!!!!");
 				//this is the mouselook in first person mode
 				FPSInput();
 				if(Cursor.visible == false)
@@ -340,19 +374,20 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     //accept input to update view based on mouse input
                     MouseRotateView();
                 }
-			}
-
-            var ray = m_Camera.GetComponent<Camera>().ScreenPointToRay(new Vector3(Screen.width / 2, Screen.height / 2));
-            RaycastHit hit;
+			}*/
+            RaycastHit hit = new RaycastHit();
+            //  Ray ray = new Ray();
+            // if (!allowFPSControl) {
+            var ray = m_Camera.GetComponent<Camera>().ScreenPointToRay(screenPosition);
             int layerMask = LayerMask.GetMask("SimObjVisible"); 
             Physics.Raycast(ray, out hit, 5f, layerMask);
             Debug.DrawLine(ray.origin, hit.point, Color.red);
+            // }
 
             
 
             if (this.highlightedObject != null)
             {
-
                 var meshRenderer = this.highlightedObject.GetComponentInChildren<MeshRenderer>();
 
                 setTargetText("");
@@ -363,8 +398,24 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 }
             }
 
+            // SimObjPhysics simObj = null;
+            // if (!allowFPSControl) {
+            //     Func<SimObjPhysics, bool> filter = (SimObjPhysics x) => { 
+            //             return x.PrimaryProperty == SimObjPrimaryProperty.CanPickup ||
+            //                     x.GetComponent<CanOpen_Object>() ||
+            //                     x.GetComponent<CanToggleOnOff>();
+            //         };
+            //     simObj = PhysicsController.ClosestObject(filter);
+            // }
+            // else if(
+            //     hit.transform != null 
+            //     && hit.transform.tag == "SimObjPhysics" ) {
+            //     simObj = hit.transform.GetComponent<SimObjPhysics>();
+
+            // }
+
             if (hit.transform != null 
-                && hit.transform.tag == "SimObjPhysics" 
+                && hit.transform.tag == "SimObjPhysics"
                 && this.PhysicsController.WhatAmIHolding() == null
                )
             {
@@ -376,9 +427,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 };
                 if (simObj != null && validObjectLazy())
                 {
-                    var d = hit.point - ray.origin;
-                    d.y = 0;
-                    var distance = d.magnitude;
                     var withinReach = PhysicsController.FindObjectInVisibleSimObjPhysics(simObj.uniqueID) != null;
                     setTargetText(simObj.name, withinReach);
                     this.highlightedObject = simObj;
@@ -408,7 +456,35 @@ namespace UnityStandardAssets.Characters.FirstPerson
             {
                 this.highlightedObject = null;
             }
+        }
 
+		private void Update()	
+        {
+			DebugKeyboardControls();
+         
+            ///////////////////////////////////////////////////////////////////////////
+			//we are not in focus mode, so use WASD and mouse to move around
+			if(TextInputMode == false)
+			{
+				//this is the mouselook in first person mode
+                Debug.Log("FPS !!!!!!!!!!!!!! ");
+                // gameObject.GetComponent<JavaScriptInterface>().SendAction(new ServerAction{
+                //     action = "debug "
+                // });
+				FPSInput();
+				if(Cursor.visible == false)
+				{
+                    //accept input to update view based on mouse input
+                    MouseRotateView();
+                }
+			}
+
+            // if (TextInputMode == false && allowFPSControl) {}
+
+            
+            UpdateHighlightedObject(new Vector3(Screen.width / 2, Screen.height / 2));
+            
+            // UpdateHighlightedObject(Input.mousePosition);
         }
 
         public void OnGUI()

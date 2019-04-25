@@ -237,7 +237,8 @@ def webgl_build(
         directory="builds",
         prefix='local',
         verbose=False,
-        content_addressable=False
+        content_addressable=False,
+        turk_build=False
 ):
     """
     Creates a WebGL build
@@ -296,7 +297,10 @@ def webgl_build(
     if verbose:
         print(scenes)
 
-    if _build('unity', arch, directory, build_name, env=dict(SCENE=scenes)):
+    env = dict(SCENE=scenes)
+    if turk_build:
+        env['DEFINES'] = 'TURK_TASK'
+    if _build('unity', arch, directory, build_name, env=env):
         print("Build Successful")
     else:
         print("Build Failure")
