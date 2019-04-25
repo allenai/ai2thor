@@ -221,6 +221,10 @@ public class AgentManager : MonoBehaviour
         return false;
     }
 
+	public void setReadyToEmit(bool readyToEmit) {
+		this.readyToEmit = readyToEmit;
+	}
+
     // Decide whether agent has stopped actions
     // And if we need to capture a new frame
 

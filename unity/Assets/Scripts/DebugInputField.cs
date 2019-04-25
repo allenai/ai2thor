@@ -2,17 +2,72 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using System;
 
 namespace UnityStandardAssets.Characters.FirstPerson
 {
+    public enum ControlMode {
+        DEBUG_TEXT_INPUT,
+        FPS,
+        DISCRETE_POINT_CLICK
+    }
+
+    public class ControlToggle {
+        public Type type;
+        public Action<MonoBehaviour> onEnable = null;
+        public Action<MonoBehaviour> onDisable = null;
+    }
+
 	public class DebugInputField : MonoBehaviour
     {
 		public GameObject Agent = null;
 		public PhysicsRemoteFPSAgentController PhysicsController = null;
         public AgentManager AManager = null;
-
         private InputField debugfield;
         private DebugFPSAgentController dfac;
+
+        private ControlMode controlMode;
+
+
+        // private Dictionary<ControlMode, ControlToggle> kk = new Dictionary<ControlMode, ControlToggle>{
+        //      {ControlMode.FPS, new ControlToggle{
+        //          type = typeof(DebugFPSAgentController),
+        //          onEnable = (MonoBehaviour con) => {
+        //             DebugFPSAgentController controller  = con as DebugFPSAgentController;
+        //             controller.EnableMouseControl();
+        //          },
+        //          onDisable = (MonoBehaviour con) => {
+        //             DebugFPSAgentController controller  = con as DebugFPSAgentController;
+        //             controller.DisableMouseControl();
+        //          }
+        //      }}
+        // };
+        private Dictionary<ControlMode, Type> controlModeToComponent = new Dictionary<ControlMode, Type>{
+            {ControlMode.DEBUG_TEXT_INPUT, typeof(DebugDiscreteAgentController)},
+            {ControlMode.FPS, typeof(DebugFPSAgentController)},
+            {ControlMode.DISCRETE_POINT_CLICK, typeof(DiscretePointClickAgentController)}
+        };
+
+        private bool setEnabledControlComponent(ControlMode mode, bool enabled) {
+            Type componentType;
+            var success = controlModeToComponent.TryGetValue(mode, out componentType);
+            if (success) {
+                var previousComponent = Agent.GetComponent(componentType) as MonoBehaviour;
+                if (previousComponent != null) {
+                    previousComponent.enabled = enabled;
+                }
+                else {
+                    success = false;
+                }
+            }
+            return success;
+        }
+
+        public void setControlMode(ControlMode mode) {
+            var prevDisableSuccess = setEnabledControlComponent(controlMode, false);
+            controlMode = mode;
+            var currEnableSuccess = setEnabledControlComponent(controlMode, true);
+        } 
 
         // Use this for initialization
         void Start()
@@ -23,13 +78,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 this.InitializeUserControl();
 
             #endif
-
-            #if UNITY_WEBGL
-
-                Debug.Log("Webgl");
-                PhysicsController.GetComponent<JavaScriptInterface>().enabled = true;
-
-            #endif
         }
 
         void InitializeUserControl()
@@ -38,17 +86,31 @@ namespace UnityStandardAssets.Characters.FirstPerson
             PhysicsController = Agent.GetComponent<PhysicsRemoteFPSAgentController>();
             AManager = GameObject.Find("PhysicsSceneManager").GetComponentInChildren<AgentManager>();
 
-            PhysicsController.GetComponent<DebugFPSAgentController>().enabled = true;
+            //PhysicsController.GetComponent<DebugFPSAgentController>().enabled = true;
 
             debugfield = gameObject.GetComponent<InputField>();
             dfac = Agent.GetComponent<DebugFPSAgentController>();
 
+            // Debug.Log("Init control");
+            #if UNITY_EDITOR
+                Debug.Log("Editor control");
+                setControlMode(ControlMode.DISCRETE_POINT_CLICK);
+            #endif
+            #if UNITY_WEBGL
+                Debug.Log("Webgl");
+                setControlMode(ControlMode.FPS);
+                PhysicsController.GetComponent<JavaScriptInterface>().enabled = true;
+            #endif
+            #if TURK_TASK
+                Debug.Log("TURK");
+                setControlMode(ControlMode.DISCRETE_POINT_CLICK);
+            #endif
         }
 
         // Update is called once per frame
         void Update()
         {
-            #if UNITY_EDITOR || UNITY_WEBGL
+            #if UNITY_EDITOR
             //use these for the Breakable Window demo video
             // if(Input.GetKeyDown(KeyCode.P))
             // {
@@ -81,8 +143,20 @@ namespace UnityStandardAssets.Characters.FirstPerson
             //     PhysicsController.ProcessControlCommand(action);
             // }
 
+            if (Input.GetKeyDown(KeyCode.BackQuote) || Input.GetKeyDown(KeyCode.Escape)) {
+                if (controlMode == ControlMode.FPS) {
+                    var fpsControl = Agent.GetComponent<DebugFPSAgentController>();
+                    fpsControl.DisableMouseControl();
+                    setControlMode(ControlMode.DEBUG_TEXT_INPUT);
+                }
+                else {
+                    Debug.Log("Switch to FPS");
+                    setControlMode(ControlMode.FPS);
+                    Agent.GetComponent<DebugFPSAgentController>().EnableMouseControl();
+                }
+            }
 
-            if(!debugfield.isFocused && dfac.TextInputMode)
+            /* if(!debugfield.isFocused && controlMode == ControlMode.DEBUG_TEXT_INPUT)
             {
                 float FlyMagnitude = 1.0f;
                 float WalkMagnitude = 0.25f;
@@ -194,14 +268,14 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     PhysicsController.ProcessControlCommand(action); 
                 }
 
-                if(Input.GetKeyDown(KeyCode.LeftArrow) || Input.GetKeyDown(KeyCode.J))
+                if(Input.GetKeyDown(KeyCode.LeftArrow) )//|| Input.GetKeyDown(KeyCode.J))
                 {
                     ServerAction action = new ServerAction();
                     action.action = "RotateLeft";
                     PhysicsController.ProcessControlCommand(action); 
                 }
 
-                if(Input.GetKeyDown(KeyCode.RightArrow) || Input.GetKeyDown(KeyCode.L))
+                if(Input.GetKeyDown(KeyCode.RightArrow) )//|| Input.GetKeyDown(KeyCode.L))
                 {
                     ServerAction action = new ServerAction();
                     action.action = "RotateRight";
@@ -232,7 +306,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         PhysicsController.ProcessControlCommand(action);
                     }
                 }
-            }
+            }*/
             #endif
         }
 
