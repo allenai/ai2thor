@@ -28,7 +28,7 @@ public class agent_trackball_rotation : MonoBehaviour
 
         directionVector = currentPosition - prevPosition; //Direction of ball's movement
 
-        if (directionVector != new Vector3(0, 0, 0)) //If agent is moving...    //ASK WINSON IF IT'S CHEAPER TO DEFINE THIS 0,0,0 VECTOR BEFORE VOID-START
+        if (directionVector != Vector3.zero) //If agent is moving...
         {
             changeInPosition = Mathf.Abs(Vector3.Magnitude(directionVector)); //How far agent has moved
             axisOfRotation = Vector3.Cross(Vector3.up, directionVector); //Axis of ball's rotation
