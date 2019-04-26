@@ -6103,7 +6103,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             //pass name of object in from action.objectId
             if (action.objectId == null) {
                 Debug.Log("Hey, actually give me an object ID to open, yeah?");
-                errorMessage = "objectId required for OpenObject";
+                errorMessage = "objectId required for SliceObject";
                 actionFinished(false);
                 return;
             }
@@ -6137,6 +6137,46 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 actionFinished(false);
             }
         }
+    
+    public void BreakObject(ServerAction action)
+    {
+            //pass name of object in from action.objectId
+            if (action.objectId == null) {
+                Debug.Log("Hey, actually give me an object ID to open, yeah?");
+                errorMessage = "objectId required for BreakObject";
+                actionFinished(false);
+                return;
+            }
+
+            SimObjPhysics target = null;
+
+            if (action.forceAction) {
+                action.forceVisible = true;
+            }
+
+            foreach (SimObjPhysics sop in VisibleSimObjs(action)) {
+                target = sop;
+            }
+
+            //we found it!
+            if (target) {
+                if (target.GetComponent<SimObjPhysics>().DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanBreak)) {
+                    target.GetComponent<Break>().BreakObject();
+                    actionFinished(true);
+                    return;
+                } else {
+                    errorMessage = target.transform.name + " cannot be broken!";
+                    actionFinished(false);
+                    return;
+                }
+            }
+
+            //target not found in currently visible objects, report not found
+            else {
+                errorMessage = "object not found: " + action.objectId;
+                actionFinished(false);
+            }
+    }
 
         protected bool objectIsOfIntoType(SimObjPhysics so) {
             return so.ReceptacleTriggerBoxes != null &&
