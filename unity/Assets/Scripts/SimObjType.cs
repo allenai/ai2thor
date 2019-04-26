@@ -36,20 +36,20 @@ public enum SimObjSecondaryProperty : int //EACH SimObjPhysics can have any numb
 	//NEVER LEAVE UNDEFINED
 	Undefined = 0,
 
-	//CLEANABLE PROPERTIES - this property defines what objects can clean certain objects
+	//CLEANABLE PROPERTIES - this property defines what objects can clean certain objects - we might not use this, stay posted
     CanBeCleanedFloor = 1,
     CanBeCleanedDishware = 2,
     CanBeCleanedGlass = 3,
 
     //OTHER SECONDARY PROPERTIES 
-    CanCleanFloor = 4,
-    CanCleanDishware = 5,
-    CanCleanGlass = 6,
+    CanBeDirty = 4,
+    CanBeFilled = 5,
+    CanBeDepleted = 6,
     Receptacle = 7,
     CanOpen = 8,
     CanBeSliced = 9,
     CanSlice = 10,
-    CanBeCracked = 11,
+    CanBreak = 11,
     CanBeFilledWithWater = 12,
     CanFillWithWater = 13,
     CanBeHeatedCookware = 14,
@@ -58,7 +58,7 @@ public enum SimObjSecondaryProperty : int //EACH SimObjPhysics can have any numb
     CanStoveTopCook = 17,
     CanBeMicrowaved = 18,
     CanMicrowave = 19,
-    CanBeToasted = 20,
+    CanBeCooked = 20,
     CanToast = 21,
     CanBeFilledWithCoffee = 22,
     CanFillWithCoffee = 23,
@@ -311,7 +311,7 @@ public static class ReceptacleRestrictions
 		SimObjType.Pot, SimObjType.Pan, SimObjType.Bowl, SimObjType.Plate, SimObjType.Bread, SimObjType.Cup, SimObjType.Mug, SimObjType.Laptop,
 		SimObjType.SaltShaker, SimObjType.PepperShaker, SimObjType.AlarmClock, SimObjType.Box, SimObjType.SoapBottle, SimObjType.SoapBottleFilled, SimObjType.Kettle,
 		SimObjType.Glassbottle, SimObjType.CreditCard, SimObjType.RemoteControl, SimObjType.Candle, SimObjType.SprayBottle, SimObjType.Statue, SimObjType.Vase, 
-		SimObjType.KeyChain, SimObjType.CD, 
+		SimObjType.KeyChain, SimObjType.CD, SimObjType.Book
 	};
 
 	//Each sim object type keeps track of what sort of Receptacles it can be placed in
