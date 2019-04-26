@@ -8,6 +8,8 @@ public class Break : MonoBehaviour
 
     [SerializeField]
     private GameObject PrefabToSwapTo;
+    [SerializeField]
+    private GameObject DirtyPrefabToSwapTo;
 
     [SerializeField]
     protected float ImpulseThreshold = 3.6f; //set this to lower if this object should be easier to break. Higher if the object requires more force to break
@@ -42,6 +44,12 @@ public class Break : MonoBehaviour
         {
             Debug.LogError(gameObject.name + " is missing the CanBreak secondary property!");
         }
+
+        if(gameObject.GetComponent<Dirty>())
+        {
+            if(DirtyPrefabToSwapTo == null)
+            Debug.LogError(gameObject.name + " is missing a DirtyPrefabToSpawnTo!");
+        }
         #endif
 
         CurrentImpulseThreshold = ImpulseThreshold;
@@ -74,6 +82,14 @@ public class Break : MonoBehaviour
             //if gameObject.GetComponent<Dirty>() - first check to make sure if this object can become dirty
             //if object is dirty - probably get this from the "Dirty" component to keep everything nice and self contained
             //PrefabToSwapTo = DirtyPrefabToSwapTo
+            if(gameObject.GetComponent<Dirty>())
+            {
+                //if the object is not clean, swap to the dirty prefab
+                if(!gameObject.GetComponent<Dirty>().IsClean())
+                {
+                    PrefabToSwapTo = DirtyPrefabToSwapTo;
+                }
+            }
 
             Instantiate(PrefabToSwapTo, transform.position, transform.rotation);
         }
