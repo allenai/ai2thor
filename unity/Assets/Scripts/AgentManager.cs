@@ -734,6 +734,8 @@ public class ServerAction
 	public bool standing = true;
 	public float fov = 60.0f;
 	public bool forceAction;
+
+	public float maxAgentsDistance = -1.0f;
 	public int sequenceId;
 	public bool snapToGrid = true;
 	public bool continuous;
