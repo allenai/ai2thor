@@ -49,7 +49,7 @@ public enum SimObjSecondaryProperty : int //EACH SimObjPhysics can have any numb
     CanOpen = 8,
     CanBeSliced = 9,
     CanSlice = 10,
-    CanBeCracked = 11,
+    CanBreak = 11,
     CanBeFilledWithWater = 12,
     CanFillWithWater = 13,
     CanBeHeatedCookware = 14,
