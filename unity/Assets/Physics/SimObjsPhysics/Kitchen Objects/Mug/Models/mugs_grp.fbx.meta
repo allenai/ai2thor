@@ -115,6 +115,8 @@ ModelImporter:
     2100006: pdiCutMat0
     2100008: mug_coffee_mat
     2100010: mug_primary_mat
+    2100012: mug_decal_mat
+    2100014: mug_decals_mat
     2300000: human_ref
     2300002: mug_1
     2300004: mug_1_shard_1
@@ -253,7 +255,17 @@ ModelImporter:
     4300086: mug_3_shard_13
     4300088: mug_3_shard_14
     4300090: mug_3_shard_15
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: mug_decal_mat
+    second: {fileID: 2100000, guid: d121505d6c0f5344e855301f511b7f34, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: mug_primary_mat
+    second: {fileID: 2100000, guid: 9beaad47b68da414bb931774d2e22e9e, type: 2}
   materials:
     importMaterials: 1
     materialName: 0
@@ -293,7 +305,7 @@ ModelImporter:
     importCameras: 1
     importLights: 1
     swapUVChannels: 0
-    generateSecondaryUV: 0
+    generateSecondaryUV: 1
     useFileUnits: 1
     optimizeMeshForGPU: 1
     keepQuads: 0
