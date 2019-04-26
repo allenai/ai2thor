@@ -8,6 +8,9 @@ public class Break : MonoBehaviour
 
     [SerializeField]
     private GameObject PrefabToSwapTo;
+
+    [SerializeField]
+    protected float ImpulseThreshold = 3.8f; //set this to lower if this object should be easier to break. Higher if the object requires more force to break
     protected bool readytobreak = true;
 
     public bool broken;//return this to metadata to report state of this object.
@@ -71,7 +74,7 @@ public class Break : MonoBehaviour
     {
 
         //ImpulseForce.Add(col.impulse.magnitude);
-        if(col.impulse.magnitude > 4.0f && !col.transform.GetComponentInParent<PhysicsRemoteFPSAgentController>())
+        if(col.impulse.magnitude > ImpulseThreshold && !col.transform.GetComponentInParent<PhysicsRemoteFPSAgentController>())
         {
             if(readytobreak)
             {
