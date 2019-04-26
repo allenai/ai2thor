@@ -2742,7 +2742,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         private IEnumerator checkDropHandObjectAction(SimObjPhysics currentHandSimObj) 
         {
-            print("checkdrophand not fast i dunno man");
             yield return null; // wait for two frames to pass
             yield return null;
             float startTime = Time.time;

@@ -13,7 +13,12 @@ public class CookObject : MonoBehaviour
 
     void Start()
     {
-        
+        #if UNITY_EDITOR
+        if(!gameObject.GetComponent<SimObjPhysics>().DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanBeCooked))
+        {
+            Debug.LogError(gameObject.name + " is missing the CanBeCooked secondary property!");
+        }
+        #endif
     }
 
     // Update is called once per frame
