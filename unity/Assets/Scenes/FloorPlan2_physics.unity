@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.70008117, g: 0.7227283, b: 0.73079306, a: 1}
+  m_IndirectSpecularColor: {r: 0.6995551, g: 0.7222368, b: 0.7302955, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -537,7 +537,8 @@ MonoBehaviour:
   isOpen: 0
   canReset: 1
   movementType: 1
-  MustBeOffToOpen: 10000000
+  OpenBoundingBox: {fileID: 0}
+  ClosedBoundingBox: {fileID: 0}
 --- !u!54 &40943766
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -587,6 +588,7 @@ MonoBehaviour:
   isVisible: 0
   isInteractable: 0
   isColliding: 0
+  isInAgentHand: 0
   MyColliders: []
   HFdynamicfriction: 0
   HFstaticfriction: 0
@@ -2828,6 +2830,7 @@ MonoBehaviour:
   isVisible: 0
   isInteractable: 0
   isColliding: 0
+  isInAgentHand: 0
   MyColliders: []
   HFdynamicfriction: 0
   HFstaticfriction: 0
@@ -3272,6 +3275,7 @@ MonoBehaviour:
   isVisible: 0
   isInteractable: 0
   isColliding: 0
+  isInAgentHand: 0
   MyColliders: []
   HFdynamicfriction: 0
   HFstaticfriction: 0
@@ -3303,7 +3307,8 @@ MonoBehaviour:
   isOpen: 0
   canReset: 1
   movementType: 0
-  MustBeOffToOpen: 10000000
+  OpenBoundingBox: {fileID: 0}
+  ClosedBoundingBox: {fileID: 0}
 --- !u!1001 &135012986
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -4387,6 +4392,7 @@ MonoBehaviour:
   isVisible: 0
   isInteractable: 0
   isColliding: 0
+  isInAgentHand: 0
   MyColliders: []
   HFdynamicfriction: 0
   HFstaticfriction: 0
@@ -4600,6 +4606,7 @@ MonoBehaviour:
   isVisible: 0
   isInteractable: 0
   isColliding: 0
+  isInAgentHand: 0
   MyColliders: []
   HFdynamicfriction: 0
   HFstaticfriction: 0
@@ -4631,7 +4638,8 @@ MonoBehaviour:
   isOpen: 0
   canReset: 1
   movementType: 0
-  MustBeOffToOpen: 10000000
+  OpenBoundingBox: {fileID: 0}
+  ClosedBoundingBox: {fileID: 0}
 --- !u!1 &179878715
 GameObject:
   m_ObjectHideFlags: 0
@@ -5737,6 +5745,7 @@ MonoBehaviour:
   isVisible: 0
   isInteractable: 0
   isColliding: 0
+  isInAgentHand: 0
   MyColliders: []
   HFdynamicfriction: 0
   HFstaticfriction: 0
@@ -5768,7 +5777,8 @@ MonoBehaviour:
   isOpen: 0
   canReset: 1
   movementType: 0
-  MustBeOffToOpen: 10000000
+  OpenBoundingBox: {fileID: 0}
+  ClosedBoundingBox: {fileID: 0}
 --- !u!1 &254569499
 GameObject:
   m_ObjectHideFlags: 0
@@ -6279,6 +6289,7 @@ MonoBehaviour:
   isVisible: 0
   isInteractable: 0
   isColliding: 0
+  isInAgentHand: 0
   MyColliders: []
   HFdynamicfriction: 0
   HFstaticfriction: 0
@@ -6310,7 +6321,8 @@ MonoBehaviour:
   isOpen: 0
   canReset: 1
   movementType: 0
-  MustBeOffToOpen: 10000000
+  OpenBoundingBox: {fileID: 0}
+  ClosedBoundingBox: {fileID: 0}
 --- !u!4 &272378610 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 4470699097953850, guid: a977be9bbffcf4db0883f46581976fbb,
@@ -7199,6 +7211,7 @@ MonoBehaviour:
   isVisible: 0
   isInteractable: 0
   isColliding: 0
+  isInAgentHand: 0
   MyColliders: []
   HFdynamicfriction: 0
   HFstaticfriction: 0
@@ -12036,7 +12049,7 @@ Transform:
   m_Children:
   - {fileID: 345858777}
   - {fileID: 181328520}
-  - {fileID: 672192170}
+  - {fileID: 1692880876}
   - {fileID: 1398558232}
   - {fileID: 2031416820}
   - {fileID: 116820913}
@@ -15951,7 +15964,8 @@ MonoBehaviour:
   isOpen: 0
   canReset: 1
   movementType: 1
-  MustBeOffToOpen: 10000000
+  OpenBoundingBox: {fileID: 0}
+  ClosedBoundingBox: {fileID: 0}
 --- !u!54 &668677522
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -16008,6 +16022,7 @@ MonoBehaviour:
   isVisible: 0
   isInteractable: 0
   isColliding: 0
+  isInAgentHand: 0
   MyColliders: []
   HFdynamicfriction: 0
   HFstaticfriction: 0
@@ -16015,30 +16030,6 @@ MonoBehaviour:
   HFrbdrag: 0
   HFrbangulardrag: 0
   ContainedObjectReferences: []
---- !u!1 &672192169 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 1003497106582564, guid: 2529fc1a396a4443fade9b51897cb9a5,
-    type: 3}
-  m_PrefabInstance: {fileID: 1692880875}
-  m_PrefabAsset: {fileID: 0}
---- !u!4 &672192170 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 4288446834985608, guid: 2529fc1a396a4443fade9b51897cb9a5,
-    type: 3}
-  m_PrefabInstance: {fileID: 1692880875}
-  m_PrefabAsset: {fileID: 0}
---- !u!114 &672192172 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 114399975976139176, guid: 2529fc1a396a4443fade9b51897cb9a5,
-    type: 3}
-  m_PrefabInstance: {fileID: 1692880875}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 672192169}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b439f6e4ef5714ee2a3643acf37b7a9d, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1 &673318727
 GameObject:
   m_ObjectHideFlags: 0
@@ -17455,7 +17446,8 @@ MonoBehaviour:
   isOpen: 0
   canReset: 1
   movementType: 1
-  MustBeOffToOpen: 10000000
+  OpenBoundingBox: {fileID: 0}
+  ClosedBoundingBox: {fileID: 0}
 --- !u!54 &703097659
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -17512,6 +17504,7 @@ MonoBehaviour:
   isVisible: 0
   isInteractable: 0
   isColliding: 0
+  isInAgentHand: 0
   MyColliders: []
   HFdynamicfriction: 0
   HFstaticfriction: 0
@@ -18353,7 +18346,8 @@ MonoBehaviour:
   isOpen: 0
   canReset: 1
   movementType: 1
-  MustBeOffToOpen: 10000000
+  OpenBoundingBox: {fileID: 0}
+  ClosedBoundingBox: {fileID: 0}
 --- !u!54 &742778972
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -18403,6 +18397,7 @@ MonoBehaviour:
   isVisible: 0
   isInteractable: 0
   isColliding: 0
+  isInAgentHand: 0
   MyColliders: []
   HFdynamicfriction: 0
   HFstaticfriction: 0
@@ -18487,7 +18482,8 @@ MonoBehaviour:
   isOpen: 0
   canReset: 1
   movementType: 1
-  MustBeOffToOpen: 10000000
+  OpenBoundingBox: {fileID: 0}
+  ClosedBoundingBox: {fileID: 0}
 --- !u!54 &744296970
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -18538,6 +18534,7 @@ MonoBehaviour:
   isVisible: 0
   isInteractable: 0
   isColliding: 0
+  isInAgentHand: 0
   MyColliders: []
   HFdynamicfriction: 0
   HFstaticfriction: 0
@@ -19751,6 +19748,7 @@ MonoBehaviour:
   isVisible: 0
   isInteractable: 0
   isColliding: 0
+  isInAgentHand: 0
   MyColliders: []
   HFdynamicfriction: 0
   HFstaticfriction: 0
@@ -19782,7 +19780,8 @@ MonoBehaviour:
   isOpen: 0
   canReset: 1
   movementType: 0
-  MustBeOffToOpen: 10000000
+  OpenBoundingBox: {fileID: 0}
+  ClosedBoundingBox: {fileID: 0}
 --- !u!1 &789229022
 GameObject:
   m_ObjectHideFlags: 0
@@ -20999,6 +20998,7 @@ MonoBehaviour:
   isVisible: 0
   isInteractable: 0
   isColliding: 0
+  isInAgentHand: 0
   MyColliders: []
   HFdynamicfriction: 0
   HFstaticfriction: 0
@@ -21030,7 +21030,8 @@ MonoBehaviour:
   isOpen: 0
   canReset: 1
   movementType: 0
-  MustBeOffToOpen: 10000000
+  OpenBoundingBox: {fileID: 0}
+  ClosedBoundingBox: {fileID: 0}
 --- !u!4 &826998395 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 4871826034222286, guid: 5768b36ae09474cd6bcfc84c3e861786,
@@ -22019,7 +22020,8 @@ MonoBehaviour:
   isOpen: 0
   canReset: 1
   movementType: 1
-  MustBeOffToOpen: 10000000
+  OpenBoundingBox: {fileID: 0}
+  ClosedBoundingBox: {fileID: 0}
 --- !u!54 &855983216
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -22071,6 +22073,7 @@ MonoBehaviour:
   isVisible: 0
   isInteractable: 0
   isColliding: 0
+  isInAgentHand: 0
   MyColliders: []
   HFdynamicfriction: 0
   HFstaticfriction: 0
@@ -22803,6 +22806,7 @@ MonoBehaviour:
   isVisible: 0
   isInteractable: 0
   isColliding: 0
+  isInAgentHand: 0
   MyColliders: []
   HFdynamicfriction: 0
   HFstaticfriction: 0
@@ -22834,7 +22838,8 @@ MonoBehaviour:
   isOpen: 0
   canReset: 1
   movementType: 0
-  MustBeOffToOpen: 10000000
+  OpenBoundingBox: {fileID: 0}
+  ClosedBoundingBox: {fileID: 0}
 --- !u!1 &882250801
 GameObject:
   m_ObjectHideFlags: 0
@@ -23409,6 +23414,7 @@ MonoBehaviour:
   isVisible: 0
   isInteractable: 0
   isColliding: 0
+  isInAgentHand: 0
   MyColliders: []
   HFdynamicfriction: 0
   HFstaticfriction: 0
@@ -24373,6 +24379,7 @@ MonoBehaviour:
   isVisible: 0
   isInteractable: 0
   isColliding: 0
+  isInAgentHand: 0
   MyColliders: []
   HFdynamicfriction: 0
   HFstaticfriction: 0
@@ -24404,7 +24411,8 @@ MonoBehaviour:
   isOpen: 0
   canReset: 1
   movementType: 0
-  MustBeOffToOpen: 10000000
+  OpenBoundingBox: {fileID: 0}
+  ClosedBoundingBox: {fileID: 0}
 --- !u!1 &956956403
 GameObject:
   m_ObjectHideFlags: 0
@@ -25953,6 +25961,7 @@ MonoBehaviour:
   isVisible: 0
   isInteractable: 0
   isColliding: 0
+  isInAgentHand: 0
   MyColliders: []
   HFdynamicfriction: 0
   HFstaticfriction: 0
@@ -31252,6 +31261,7 @@ MonoBehaviour:
   isVisible: 0
   isInteractable: 0
   isColliding: 0
+  isInAgentHand: 0
   MyColliders: []
   HFdynamicfriction: 0
   HFstaticfriction: 0
@@ -31299,7 +31309,8 @@ MonoBehaviour:
   isOpen: 0
   canReset: 1
   movementType: 0
-  MustBeOffToOpen: 10000000
+  OpenBoundingBox: {fileID: 0}
+  ClosedBoundingBox: {fileID: 0}
 --- !u!1 &1215789579
 GameObject:
   m_ObjectHideFlags: 0
@@ -31986,7 +31997,8 @@ MonoBehaviour:
   isOpen: 0
   canReset: 1
   movementType: 1
-  MustBeOffToOpen: 10000000
+  OpenBoundingBox: {fileID: 0}
+  ClosedBoundingBox: {fileID: 0}
 --- !u!54 &1241101942
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -32043,6 +32055,7 @@ MonoBehaviour:
   isVisible: 0
   isInteractable: 0
   isColliding: 0
+  isInAgentHand: 0
   MyColliders: []
   HFdynamicfriction: 0
   HFstaticfriction: 0
@@ -33237,6 +33250,7 @@ MonoBehaviour:
   isVisible: 0
   isInteractable: 0
   isColliding: 0
+  isInAgentHand: 0
   MyColliders: []
   HFdynamicfriction: 0
   HFstaticfriction: 0
@@ -33901,6 +33915,7 @@ MonoBehaviour:
   isVisible: 0
   isInteractable: 0
   isColliding: 0
+  isInAgentHand: 0
   MyColliders: []
   HFdynamicfriction: 0
   HFstaticfriction: 0
@@ -33932,7 +33947,8 @@ MonoBehaviour:
   isOpen: 0
   canReset: 1
   movementType: 0
-  MustBeOffToOpen: 10000000
+  OpenBoundingBox: {fileID: 0}
+  ClosedBoundingBox: {fileID: 0}
 --- !u!1 &1299957220
 GameObject:
   m_ObjectHideFlags: 0
@@ -34015,7 +34031,8 @@ MonoBehaviour:
   isOpen: 0
   canReset: 1
   movementType: 1
-  MustBeOffToOpen: 10000000
+  OpenBoundingBox: {fileID: 0}
+  ClosedBoundingBox: {fileID: 0}
 --- !u!114 &1299957225
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -34056,6 +34073,7 @@ MonoBehaviour:
   isVisible: 0
   isInteractable: 0
   isColliding: 0
+  isInAgentHand: 0
   MyColliders: []
   HFdynamicfriction: 0
   HFstaticfriction: 0
@@ -35497,7 +35515,7 @@ PrefabInstance:
         type: 3}
       propertyPath: RequiredObjects.Array.data[1]
       value: 
-      objectReference: {fileID: 672192169}
+      objectReference: {fileID: 0}
     - target: {fileID: 114080650210219948, guid: 3a963756b61df410c91df72a73d4efde,
         type: 3}
       propertyPath: RequiredObjects.Array.data[2]
@@ -35542,7 +35560,7 @@ PrefabInstance:
         type: 3}
       propertyPath: SpawnedObjects.Array.data[1]
       value: 
-      objectReference: {fileID: 672192169}
+      objectReference: {fileID: 0}
     - target: {fileID: 114080650210219948, guid: 3a963756b61df410c91df72a73d4efde,
         type: 3}
       propertyPath: SpawnedObjects.Array.data[2]
@@ -35692,7 +35710,7 @@ PrefabInstance:
         type: 3}
       propertyPath: PhysObjectsInScene.Array.data[22]
       value: 
-      objectReference: {fileID: 672192172}
+      objectReference: {fileID: 0}
     - target: {fileID: 114080650210219948, guid: 3a963756b61df410c91df72a73d4efde,
         type: 3}
       propertyPath: PhysObjectsInScene.Array.data[23]
@@ -35917,7 +35935,7 @@ PrefabInstance:
         type: 3}
       propertyPath: ReceptaclesInScene.Array.data[10]
       value: 
-      objectReference: {fileID: 672192172}
+      objectReference: {fileID: 0}
     - target: {fileID: 114080650210219948, guid: 3a963756b61df410c91df72a73d4efde,
         type: 3}
       propertyPath: ReceptaclesInScene.Array.data[11]
@@ -37117,6 +37135,7 @@ MonoBehaviour:
   isVisible: 0
   isInteractable: 0
   isColliding: 0
+  isInAgentHand: 0
   MyColliders: []
   HFdynamicfriction: 0
   HFstaticfriction: 0
@@ -38103,6 +38122,7 @@ MonoBehaviour:
   isVisible: 0
   isInteractable: 0
   isColliding: 0
+  isInAgentHand: 0
   MyColliders: []
   HFdynamicfriction: 0
   HFstaticfriction: 0
@@ -38134,7 +38154,8 @@ MonoBehaviour:
   isOpen: 0
   canReset: 1
   movementType: 0
-  MustBeOffToOpen: 10000000
+  OpenBoundingBox: {fileID: 0}
+  ClosedBoundingBox: {fileID: 0}
 --- !u!1 &1429766780 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 1170333579371094, guid: 6877aba5a696347dbb6c01f851f2da28,
@@ -41039,6 +41060,7 @@ MonoBehaviour:
   isVisible: 0
   isInteractable: 0
   isColliding: 0
+  isInAgentHand: 0
   MyColliders: []
   HFdynamicfriction: 0
   HFstaticfriction: 0
@@ -41357,6 +41379,7 @@ MonoBehaviour:
   isVisible: 0
   isInteractable: 0
   isColliding: 0
+  isInAgentHand: 0
   MyColliders: []
   HFdynamicfriction: 0
   HFstaticfriction: 0
@@ -41388,7 +41411,8 @@ MonoBehaviour:
   isOpen: 0
   canReset: 1
   movementType: 0
-  MustBeOffToOpen: 10000000
+  OpenBoundingBox: {fileID: 0}
+  ClosedBoundingBox: {fileID: 0}
 --- !u!1 &1525214459 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 1000013987753920, guid: c6cf98ada65b04564908f4a586bec7f4,
@@ -42660,6 +42684,7 @@ MonoBehaviour:
   isVisible: 0
   isInteractable: 0
   isColliding: 0
+  isInAgentHand: 0
   MyColliders: []
   HFdynamicfriction: 0
   HFstaticfriction: 0
@@ -43168,43 +43193,27 @@ PrefabInstance:
       propertyPath: m_RootOrder
       value: 55
       objectReference: {fileID: 0}
-    - target: {fileID: 1823354945556418, guid: 0deaf76db2d073b43ac473b1f9125794, type: 3}
+    - target: {fileID: 1104510359152664, guid: 0deaf76db2d073b43ac473b1f9125794, type: 3}
       propertyPath: m_StaticEditorFlags
       value: 64
       objectReference: {fileID: 0}
-    - target: {fileID: 1425008766321188, guid: 0deaf76db2d073b43ac473b1f9125794, type: 3}
+    - target: {fileID: 1916508570829898, guid: 0deaf76db2d073b43ac473b1f9125794, type: 3}
       propertyPath: m_StaticEditorFlags
       value: 64
       objectReference: {fileID: 0}
-    - target: {fileID: 1264711314917734, guid: 0deaf76db2d073b43ac473b1f9125794, type: 3}
+    - target: {fileID: 1465873895524020, guid: 0deaf76db2d073b43ac473b1f9125794, type: 3}
       propertyPath: m_StaticEditorFlags
       value: 64
       objectReference: {fileID: 0}
-    - target: {fileID: 1937812722653354, guid: 0deaf76db2d073b43ac473b1f9125794, type: 3}
+    - target: {fileID: 1820888499352414, guid: 0deaf76db2d073b43ac473b1f9125794, type: 3}
       propertyPath: m_StaticEditorFlags
       value: 64
       objectReference: {fileID: 0}
-    - target: {fileID: 1343465708718712, guid: 0deaf76db2d073b43ac473b1f9125794, type: 3}
+    - target: {fileID: 1251572782576390, guid: 0deaf76db2d073b43ac473b1f9125794, type: 3}
       propertyPath: m_StaticEditorFlags
       value: 64
       objectReference: {fileID: 0}
-    - target: {fileID: 1756418289705388, guid: 0deaf76db2d073b43ac473b1f9125794, type: 3}
-      propertyPath: m_StaticEditorFlags
-      value: 64
-      objectReference: {fileID: 0}
-    - target: {fileID: 1097312306538636, guid: 0deaf76db2d073b43ac473b1f9125794, type: 3}
-      propertyPath: m_StaticEditorFlags
-      value: 64
-      objectReference: {fileID: 0}
-    - target: {fileID: 1494973669436296, guid: 0deaf76db2d073b43ac473b1f9125794, type: 3}
-      propertyPath: m_StaticEditorFlags
-      value: 64
-      objectReference: {fileID: 0}
-    - target: {fileID: 1388041408274116, guid: 0deaf76db2d073b43ac473b1f9125794, type: 3}
-      propertyPath: m_StaticEditorFlags
-      value: 64
-      objectReference: {fileID: 0}
-    - target: {fileID: 1427326900229758, guid: 0deaf76db2d073b43ac473b1f9125794, type: 3}
+    - target: {fileID: 1068924393592516, guid: 0deaf76db2d073b43ac473b1f9125794, type: 3}
       propertyPath: m_StaticEditorFlags
       value: 64
       objectReference: {fileID: 0}
@@ -43212,11 +43221,11 @@ PrefabInstance:
       propertyPath: m_StaticEditorFlags
       value: 64
       objectReference: {fileID: 0}
-    - target: {fileID: 1571087165135946, guid: 0deaf76db2d073b43ac473b1f9125794, type: 3}
+    - target: {fileID: 1823354945556418, guid: 0deaf76db2d073b43ac473b1f9125794, type: 3}
       propertyPath: m_StaticEditorFlags
       value: 64
       objectReference: {fileID: 0}
-    - target: {fileID: 1723916329082934, guid: 0deaf76db2d073b43ac473b1f9125794, type: 3}
+    - target: {fileID: 1457321014038662, guid: 0deaf76db2d073b43ac473b1f9125794, type: 3}
       propertyPath: m_StaticEditorFlags
       value: 64
       objectReference: {fileID: 0}
@@ -43224,27 +43233,35 @@ PrefabInstance:
       propertyPath: m_StaticEditorFlags
       value: 64
       objectReference: {fileID: 0}
-    - target: {fileID: 1412155915160550, guid: 0deaf76db2d073b43ac473b1f9125794, type: 3}
-      propertyPath: m_StaticEditorFlags
-      value: 64
-      objectReference: {fileID: 0}
     - target: {fileID: 1624536401611386, guid: 0deaf76db2d073b43ac473b1f9125794, type: 3}
       propertyPath: m_StaticEditorFlags
       value: 64
       objectReference: {fileID: 0}
-    - target: {fileID: 1044309002653542, guid: 0deaf76db2d073b43ac473b1f9125794, type: 3}
+    - target: {fileID: 1463362719427038, guid: 0deaf76db2d073b43ac473b1f9125794, type: 3}
       propertyPath: m_StaticEditorFlags
       value: 64
       objectReference: {fileID: 0}
-    - target: {fileID: 1702117650705248, guid: 0deaf76db2d073b43ac473b1f9125794, type: 3}
+    - target: {fileID: 1756418289705388, guid: 0deaf76db2d073b43ac473b1f9125794, type: 3}
       propertyPath: m_StaticEditorFlags
       value: 64
       objectReference: {fileID: 0}
-    - target: {fileID: 1818880728017812, guid: 0deaf76db2d073b43ac473b1f9125794, type: 3}
+    - target: {fileID: 1571087165135946, guid: 0deaf76db2d073b43ac473b1f9125794, type: 3}
       propertyPath: m_StaticEditorFlags
       value: 64
       objectReference: {fileID: 0}
-    - target: {fileID: 1278068150168126, guid: 0deaf76db2d073b43ac473b1f9125794, type: 3}
+    - target: {fileID: 1097312306538636, guid: 0deaf76db2d073b43ac473b1f9125794, type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 64
+      objectReference: {fileID: 0}
+    - target: {fileID: 1614091911206706, guid: 0deaf76db2d073b43ac473b1f9125794, type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 64
+      objectReference: {fileID: 0}
+    - target: {fileID: 1937812722653354, guid: 0deaf76db2d073b43ac473b1f9125794, type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 64
+      objectReference: {fileID: 0}
+    - target: {fileID: 1264711314917734, guid: 0deaf76db2d073b43ac473b1f9125794, type: 3}
       propertyPath: m_StaticEditorFlags
       value: 64
       objectReference: {fileID: 0}
@@ -43256,31 +43273,19 @@ PrefabInstance:
       propertyPath: m_StaticEditorFlags
       value: 64
       objectReference: {fileID: 0}
-    - target: {fileID: 1068924393592516, guid: 0deaf76db2d073b43ac473b1f9125794, type: 3}
+    - target: {fileID: 1343465708718712, guid: 0deaf76db2d073b43ac473b1f9125794, type: 3}
       propertyPath: m_StaticEditorFlags
       value: 64
       objectReference: {fileID: 0}
-    - target: {fileID: 1465873895524020, guid: 0deaf76db2d073b43ac473b1f9125794, type: 3}
+    - target: {fileID: 1278068150168126, guid: 0deaf76db2d073b43ac473b1f9125794, type: 3}
       propertyPath: m_StaticEditorFlags
       value: 64
       objectReference: {fileID: 0}
-    - target: {fileID: 1972761501504842, guid: 0deaf76db2d073b43ac473b1f9125794, type: 3}
+    - target: {fileID: 1427326900229758, guid: 0deaf76db2d073b43ac473b1f9125794, type: 3}
       propertyPath: m_StaticEditorFlags
       value: 64
       objectReference: {fileID: 0}
-    - target: {fileID: 1463362719427038, guid: 0deaf76db2d073b43ac473b1f9125794, type: 3}
-      propertyPath: m_StaticEditorFlags
-      value: 64
-      objectReference: {fileID: 0}
-    - target: {fileID: 1820888499352414, guid: 0deaf76db2d073b43ac473b1f9125794, type: 3}
-      propertyPath: m_StaticEditorFlags
-      value: 64
-      objectReference: {fileID: 0}
-    - target: {fileID: 1916508570829898, guid: 0deaf76db2d073b43ac473b1f9125794, type: 3}
-      propertyPath: m_StaticEditorFlags
-      value: 64
-      objectReference: {fileID: 0}
-    - target: {fileID: 1457321014038662, guid: 0deaf76db2d073b43ac473b1f9125794, type: 3}
+    - target: {fileID: 1818880728017812, guid: 0deaf76db2d073b43ac473b1f9125794, type: 3}
       propertyPath: m_StaticEditorFlags
       value: 64
       objectReference: {fileID: 0}
@@ -43288,19 +43293,39 @@ PrefabInstance:
       propertyPath: m_StaticEditorFlags
       value: 64
       objectReference: {fileID: 0}
-    - target: {fileID: 1251572782576390, guid: 0deaf76db2d073b43ac473b1f9125794, type: 3}
-      propertyPath: m_StaticEditorFlags
-      value: 64
-      objectReference: {fileID: 0}
     - target: {fileID: 1400658373355436, guid: 0deaf76db2d073b43ac473b1f9125794, type: 3}
       propertyPath: m_StaticEditorFlags
       value: 64
       objectReference: {fileID: 0}
-    - target: {fileID: 1614091911206706, guid: 0deaf76db2d073b43ac473b1f9125794, type: 3}
+    - target: {fileID: 1388041408274116, guid: 0deaf76db2d073b43ac473b1f9125794, type: 3}
       propertyPath: m_StaticEditorFlags
       value: 64
       objectReference: {fileID: 0}
-    - target: {fileID: 1104510359152664, guid: 0deaf76db2d073b43ac473b1f9125794, type: 3}
+    - target: {fileID: 1972761501504842, guid: 0deaf76db2d073b43ac473b1f9125794, type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 64
+      objectReference: {fileID: 0}
+    - target: {fileID: 1723916329082934, guid: 0deaf76db2d073b43ac473b1f9125794, type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 64
+      objectReference: {fileID: 0}
+    - target: {fileID: 1494973669436296, guid: 0deaf76db2d073b43ac473b1f9125794, type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 64
+      objectReference: {fileID: 0}
+    - target: {fileID: 1044309002653542, guid: 0deaf76db2d073b43ac473b1f9125794, type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 64
+      objectReference: {fileID: 0}
+    - target: {fileID: 1702117650705248, guid: 0deaf76db2d073b43ac473b1f9125794, type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 64
+      objectReference: {fileID: 0}
+    - target: {fileID: 1412155915160550, guid: 0deaf76db2d073b43ac473b1f9125794, type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 64
+      objectReference: {fileID: 0}
+    - target: {fileID: 1425008766321188, guid: 0deaf76db2d073b43ac473b1f9125794, type: 3}
       propertyPath: m_StaticEditorFlags
       value: 64
       objectReference: {fileID: 0}
@@ -45698,8 +45723,34 @@ PrefabInstance:
       propertyPath: m_StaticEditorFlags
       value: 64
       objectReference: {fileID: 0}
+    - target: {fileID: 626195691514342360, guid: 2529fc1a396a4443fade9b51897cb9a5,
+        type: 3}
+      propertyPath: m_LocalPosition.x
+      value: -0.235
+      objectReference: {fileID: 0}
+    - target: {fileID: 626195691514342360, guid: 2529fc1a396a4443fade9b51897cb9a5,
+        type: 3}
+      propertyPath: m_RootOrder
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 626195691514342360, guid: 2529fc1a396a4443fade9b51897cb9a5,
+        type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0.915
+      objectReference: {fileID: 0}
+    - target: {fileID: 626195691514342360, guid: 2529fc1a396a4443fade9b51897cb9a5,
+        type: 3}
+      propertyPath: m_LocalPosition.z
+      value: -0.256
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 2529fc1a396a4443fade9b51897cb9a5, type: 3}
+--- !u!4 &1692880876 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 626195691514342360, guid: 2529fc1a396a4443fade9b51897cb9a5,
+    type: 3}
+  m_PrefabInstance: {fileID: 1692880875}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1695625503
 GameObject:
   m_ObjectHideFlags: 0
@@ -47296,6 +47347,7 @@ MonoBehaviour:
   isVisible: 0
   isInteractable: 0
   isColliding: 0
+  isInAgentHand: 0
   MyColliders: []
   HFdynamicfriction: 0
   HFstaticfriction: 0
@@ -47475,6 +47527,7 @@ MonoBehaviour:
   isVisible: 0
   isInteractable: 0
   isColliding: 0
+  isInAgentHand: 0
   MyColliders: []
   HFdynamicfriction: 0
   HFstaticfriction: 0
@@ -47522,7 +47575,8 @@ MonoBehaviour:
   isOpen: 0
   canReset: 1
   movementType: 0
-  MustBeOffToOpen: 10000000
+  OpenBoundingBox: {fileID: 0}
+  ClosedBoundingBox: {fileID: 0}
 --- !u!1 &1803364756
 GameObject:
   m_ObjectHideFlags: 0
@@ -51461,6 +51515,7 @@ MonoBehaviour:
   isVisible: 0
   isInteractable: 0
   isColliding: 0
+  isInAgentHand: 0
   MyColliders:
   - {fileID: 1106288978}
   - {fileID: 1731001836}
@@ -51863,6 +51918,7 @@ MonoBehaviour:
   isVisible: 0
   isInteractable: 0
   isColliding: 0
+  isInAgentHand: 0
   MyColliders: []
   HFdynamicfriction: 0
   HFstaticfriction: 0
@@ -52100,6 +52156,7 @@ MonoBehaviour:
   isVisible: 0
   isInteractable: 0
   isColliding: 0
+  isInAgentHand: 0
   MyColliders: []
   HFdynamicfriction: 0
   HFstaticfriction: 0
@@ -53331,7 +53388,8 @@ MonoBehaviour:
   isOpen: 0
   canReset: 1
   movementType: 1
-  MustBeOffToOpen: 10000000
+  OpenBoundingBox: {fileID: 0}
+  ClosedBoundingBox: {fileID: 0}
 --- !u!54 &2084512388
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -53382,6 +53440,7 @@ MonoBehaviour:
   isVisible: 0
   isInteractable: 0
   isColliding: 0
+  isInAgentHand: 0
   MyColliders: []
   HFdynamicfriction: 0
   HFstaticfriction: 0
@@ -56184,6 +56243,7 @@ MonoBehaviour:
   isVisible: 0
   isInteractable: 0
   isColliding: 0
+  isInAgentHand: 0
   MyColliders: []
   HFdynamicfriction: 0
   HFstaticfriction: 0
