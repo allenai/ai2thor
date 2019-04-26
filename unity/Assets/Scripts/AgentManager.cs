@@ -159,7 +159,7 @@ public class AgentManager : MonoBehaviour
 		clone.actionDuration = this.actionDuration;
 		// clone.m_Camera.targetDisplay = this.agents.Count;
 		clone.transform.position = clonePosition;
-		updateAgentColor(clone, agentColors[this.agents.Count]);
+		UpdateAgentColor(clone, agentColors[this.agents.Count]);
 		clone.ProcessControlCommand (action);
 		this.agents.Add (clone);
 	}
@@ -195,10 +195,12 @@ public class AgentManager : MonoBehaviour
 		return Vector3.zero;
 	}
 
-	private void updateAgentColor(BaseFPSAgentController agent, Color color) {
+	public void UpdateAgentColor(BaseFPSAgentController agent, Color color) {
 		foreach (MeshRenderer r in agent.gameObject.GetComponentsInChildren<MeshRenderer> () as MeshRenderer[]) {
 			foreach (Material m in r.materials) {
-				m.color = color;
+				if (m.name.Contains("Agent_Color_Mat")) {
+					m.color = color;
+				}
 			}
 
 		}
@@ -732,6 +734,8 @@ public class ServerAction
 	public bool standing = true;
 	public float fov = 60.0f;
 	public bool forceAction;
+
+	public float maxAgentsDistance = -1.0f;
 	public int sequenceId;
 	public bool snapToGrid = true;
 	public bool continuous;

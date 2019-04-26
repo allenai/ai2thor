@@ -28,12 +28,12 @@ public class Toaster : MonoBehaviour
 		if(osr.attachPoint.transform.GetComponentInChildren<SimObjPhysics>() && onOff.isTurnedOnOrOff())
 		{
 			target = osr.attachPoint.transform.GetComponentInChildren<SimObjPhysics>();
-			ToastObject toast = target.GetComponent<ToastObject>();
+			CookObject toast = target.GetComponent<CookObject>();
 
 			//if not already toasted, toast it!
-			if(!toast.IsToasted())
+			if(!toast.IsCooked())
 			{
-				toast.Toast();
+				toast.Cook();
 			}
 		}
 	}

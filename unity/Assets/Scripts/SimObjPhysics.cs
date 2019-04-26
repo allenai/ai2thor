@@ -47,6 +47,8 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 	public bool isInteractable = false;
 	public bool isColliding = false;
 
+	public bool isInAgentHand = false;
+
 	private Bounds bounds;
 
 	//these collider references are used for switching physics materials for all colliders on this object
