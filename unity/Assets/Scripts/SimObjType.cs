@@ -36,15 +36,15 @@ public enum SimObjSecondaryProperty : int //EACH SimObjPhysics can have any numb
 	//NEVER LEAVE UNDEFINED
 	Undefined = 0,
 
-	//CLEANABLE PROPERTIES - this property defines what objects can clean certain objects
+	//CLEANABLE PROPERTIES - this property defines what objects can clean certain objects - we might not use this, stay posted
     CanBeCleanedFloor = 1,
     CanBeCleanedDishware = 2,
     CanBeCleanedGlass = 3,
 
     //OTHER SECONDARY PROPERTIES 
-    CanCleanFloor = 4,
-    CanCleanDishware = 5,
-    CanCleanGlass = 6,
+    CanBeDirty = 4,
+    CanBeFilled = 5,
+    CanBeDepleted = 6,
     Receptacle = 7,
     CanOpen = 8,
     CanBeSliced = 9,
@@ -58,7 +58,7 @@ public enum SimObjSecondaryProperty : int //EACH SimObjPhysics can have any numb
     CanStoveTopCook = 17,
     CanBeMicrowaved = 18,
     CanMicrowave = 19,
-    CanBeToasted = 20,
+    CanBeCooked = 20,
     CanToast = 21,
     CanBeFilledWithCoffee = 22,
     CanFillWithCoffee = 23,
