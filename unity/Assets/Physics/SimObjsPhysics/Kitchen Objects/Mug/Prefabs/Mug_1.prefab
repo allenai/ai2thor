@@ -1026,6 +1026,7 @@ GameObject:
   - component: {fileID: 313136505743405468}
   - component: {fileID: 364434115796580898}
   - component: {fileID: 6472420175892020236}
+  - component: {fileID: 1465887897}
   m_Layer: 8
   m_Name: Mug_1
   m_TagString: SimObjPhysics
@@ -1065,10 +1066,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b439f6e4ef5714ee2a3643acf37b7a9d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  uniqueID: Mug|+00.00|+00.00|+00.00
+  uniqueID: Mug|-03.95|+00.52|-06.24
   Type: 24
   PrimaryProperty: 3
-  SecondaryProperties: 070000000b000000
+  SecondaryProperties: 070000000b00000004000000
   BoundingBox: {fileID: 417526265008340148}
   VisibilityPoints:
   - {fileID: 414692907731612822}
@@ -1133,10 +1134,33 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   PrefabToSwapTo: {fileID: 3732797837390763233, guid: a54ac7fe0204fe84c991da23ea195994,
     type: 3}
+  DirtyPrefabToSwapTo: {fileID: 8017176751805051712, guid: 2a46f2b2ac8ef9e4c8f64efb901be6cb,
+    type: 3}
   ImpulseThreshold: 3.6
   HighFrictionImpulseOffset: 2.5
   broken: 0
   breakType: 0
+--- !u!114 &1465887897
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 417596729295079306}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d106cf009583a40e4a85d860c9830f67, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  MaterialSwapObjects:
+  - MyObject: {fileID: 126860556}
+    OnMaterials:
+    - {fileID: 2100000, guid: 9beaad47b68da414bb931774d2e22e9e, type: 2}
+    - {fileID: 2100000, guid: 5c29e55865cd36c4299dff418b88a513, type: 2}
+    OffMaterials:
+    - {fileID: 2100000, guid: 9beaad47b68da414bb931774d2e22e9e, type: 2}
+    - {fileID: 2100000, guid: d121505d6c0f5344e855301f511b7f34, type: 2}
+  ObjectsToEnableOrDisable: []
 --- !u!1 &417628206487450866
 GameObject:
   m_ObjectHideFlags: 0
