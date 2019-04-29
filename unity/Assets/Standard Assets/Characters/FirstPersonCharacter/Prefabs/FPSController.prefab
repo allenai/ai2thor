@@ -3986,7 +3986,6 @@ GameObject:
   - component: {fileID: 4611790702071289363}
   - component: {fileID: 4611790702070519345}
   - component: {fileID: 4611790702069519601}
-  - component: {fileID: 4422454575277496568}
   m_Layer: 0
   m_Name: agent_neck_1
   m_TagString: Untagged
@@ -4002,12 +4001,12 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 4611790702071712307}
   m_LocalRotation: {x: -0, y: -0, z: 6.123234e-17, w: -1}
-  m_LocalPosition: {x: 0, y: 0.6061, z: 0}
+  m_LocalPosition: {x: 0, y: -0.06889999, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 4611790702071289365}
   - {fileID: 6730861878266071194}
-  m_Father: {fileID: 4611790702071289375}
+  m_Father: {fileID: 6693490630546055585}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 180}
 --- !u!33 &4611790702070519345
@@ -4056,20 +4055,6 @@ MeshRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
---- !u!114 &4422454575277496568
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4611790702071712307}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 2eae1dc79734c4e6988a0a9e034e8df5, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  WhichTransformPropertyAmITracking: 1
-  ThingIamTracking: {fileID: 100002}
 --- !u!1 &4611790702071712309
 GameObject:
   m_ObjectHideFlags: 0
@@ -4492,7 +4477,7 @@ Transform:
   m_LocalPosition: {x: 0, y: -0.928, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
-  - {fileID: 4611790702071289363}
+  - {fileID: 6693490630546055585}
   - {fileID: 6920467188468016547}
   - {fileID: 4611790702071289373}
   - {fileID: 4611790702071289353}
@@ -4997,3 +4982,49 @@ MeshRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
+--- !u!1 &9004058427308683916
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 6693490630546055585}
+  - component: {fileID: 7110750669029732074}
+  m_Layer: 0
+  m_Name: NeckAndShoulders
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &6693490630546055585
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9004058427308683916}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0.675, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children:
+  - {fileID: 4611790702071289363}
+  m_Father: {fileID: 4611790702071289375}
+  m_RootOrder: 0
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &7110750669029732074
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9004058427308683916}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2eae1dc79734c4e6988a0a9e034e8df5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  WhichTransformPropertyAmITracking: 1
+  ThingIamTracking: {fileID: 100002}
