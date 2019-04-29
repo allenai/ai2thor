@@ -31,10 +31,10 @@ public class Dirty : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if(Input.GetKeyDown(KeyCode.G))
-        {
-            ToggleCleanOrDirty();
-        }
+        // if(Input.GetKeyDown(KeyCode.G))
+        // {
+        //     ToggleCleanOrDirty();
+        // }
     }
 
     public void ToggleCleanOrDirty()
@@ -42,7 +42,6 @@ public class Dirty : MonoBehaviour
         //if clean, make dirt
         if(isClean)
         {
-            print("swapping to dirty");
             //swap all material swap objects to OnMaterials
             if(MaterialSwapObjects.Length > 0)
             {
@@ -67,7 +66,6 @@ public class Dirty : MonoBehaviour
         //if dirt, make clean
         else
         {
-            print("swapping to clean");
             //swap all material swap object to OffMaterials
             if(MaterialSwapObjects.Length > 0)
             {
