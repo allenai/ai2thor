@@ -6125,7 +6125,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     actionFinished(true);
                     return;
                 } else {
-                    errorMessage = target.transform.name + " cannot be sliced!";
+                    errorMessage = target.transform.name + " Does not have the CanBeSliced property!";
                     actionFinished(false);
                     return;
                 }
@@ -6138,8 +6138,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
     
-    public void BreakObject(ServerAction action)
-    {
+        public void BreakObject(ServerAction action)
+        {
             //pass name of object in from action.objectId
             if (action.objectId == null) {
                 Debug.Log("Hey, actually give me an object ID to open, yeah?");
@@ -6159,13 +6159,18 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
 
             //we found it!
-            if (target) {
-                if (target.GetComponent<SimObjPhysics>().DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanBreak)) {
+            if (target) 
+            {
+                if (target.GetComponent<SimObjPhysics>().DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanBreak)) 
+                {
                     target.GetComponent<Break>().BreakObject();
                     actionFinished(true);
                     return;
-                } else {
-                    errorMessage = target.transform.name + " cannot be broken!";
+                }
+
+                else 
+                {
+                    errorMessage = target.transform.name + " does not have the CanBreak property!!";
                     actionFinished(false);
                     return;
                 }
@@ -6176,7 +6181,124 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 errorMessage = "object not found: " + action.objectId;
                 actionFinished(false);
             }
-    }
+        }
+
+        public void DirtyObject(ServerAction action)
+        {
+            //pass name of object in from action.objectId
+            if (action.objectId == null) 
+            {
+                Debug.Log("Hey, actually give me an object ID to open, yeah?");
+                errorMessage = "objectId required for DirtyObject action";
+                actionFinished(false);
+                return;
+            } 
+
+            SimObjPhysics target = null;
+
+            if (action.forceAction) 
+            {
+                action.forceVisible = true;
+            }
+
+            foreach (SimObjPhysics sop in VisibleSimObjs(action)) 
+            {
+                target = sop;
+            }
+
+            if(target)
+            {
+                if(target.GetComponent<SimObjPhysics>().DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanBeDirty))
+                {
+                    Dirty dirt = target.GetComponent<Dirty>();
+                    if(dirt.IsClean() == true)
+                    {
+                        dirt.ToggleCleanOrDirty();
+                        actionFinished(true);
+                        return;
+                    }
+
+                    else
+                    {
+                        errorMessage = target.transform.name + " is already dirty!";
+                        actionFinished(false);
+                        return;
+                    }
+                }
+            
+                else 
+                {
+                    errorMessage = target.transform.name + " does not have CanBeDirty property!";
+                    actionFinished(false);
+                    return;
+                }
+            }
+
+            else
+            {
+                errorMessage = "object not found: " + action.objectId;
+                actionFinished(false);
+            }
+        }
+
+        public void CleanObject(ServerAction action)
+        {
+            //pass name of object in from action.objectId
+            if (action.objectId == null) 
+            {
+                Debug.Log("Hey, actually give me an object ID to open, yeah?");
+                errorMessage = "objectId required for CleanObject action";
+                actionFinished(false);
+                return;
+            }
+
+            SimObjPhysics target = null;
+
+            if (action.forceAction) 
+            {
+                action.forceVisible = true;
+            }
+
+            foreach (SimObjPhysics sop in VisibleSimObjs(action)) 
+            {
+                target = sop;
+            }
+
+            if(target)
+            {
+                if(target.GetComponent<SimObjPhysics>().DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanBeDirty))
+                {
+                    Dirty dirt = target.GetComponent<Dirty>();
+                    if(dirt.IsClean() == false)
+                    {
+                        dirt.ToggleCleanOrDirty();
+                        actionFinished(true);
+                        return;
+                    }
+
+                    else
+                    {
+                        errorMessage = target.transform.name + " is already Clean!";
+                        actionFinished(false);
+                        return;
+                    }
+                }
+
+                else 
+                {
+                    errorMessage = target.transform.name + " does not have CanBeDirty property!";
+                    actionFinished(false);
+                    return;
+                }
+            }
+
+            else
+            {
+                errorMessage = "object not found: " + action.objectId;
+                actionFinished(false);
+            }
+        }
+
 
         protected bool objectIsOfIntoType(SimObjPhysics so) {
             return so.ReceptacleTriggerBoxes != null &&
