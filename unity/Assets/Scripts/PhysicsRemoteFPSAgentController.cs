@@ -6269,7 +6269,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 if(target.GetComponent<SimObjPhysics>().DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanBeDirty))
                 {
                     Dirty dirt = target.GetComponent<Dirty>();
-                    if(dirt.IsClean() == false)
+                    if(!dirt.IsClean())
                     {
                         dirt.ToggleCleanOrDirty();
                         actionFinished(true);
@@ -6287,6 +6287,132 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 else 
                 {
                     errorMessage = target.transform.name + " does not have CanBeDirty property!";
+                    actionFinished(false);
+                    return;
+                }
+            }
+
+            else
+            {
+                errorMessage = "object not found: " + action.objectId;
+                actionFinished(false);
+            }
+        }
+
+        //fill an object with a liquid specified by action.fillLiquid - coffee, water, soap, wine, etc
+        public void FillObjectWithLiquid(ServerAction action)
+        {
+            //pass name of object in from action.objectId
+            if (action.objectId == null) 
+            {
+                Debug.Log("Hey, actually give me an object ID to open, yeah?");
+                errorMessage = "objectId required for FillObject action";
+                actionFinished(false);
+                return;
+            }
+
+            if(action.fillLiquid == null)
+            {
+                errorMessage = "Missing Liquid string for FillObject action";
+                Debug.Log(errorMessage);
+                actionFinished(false);
+            }
+
+            SimObjPhysics target = null;
+
+            if (action.forceAction) 
+            {
+                action.forceVisible = true;
+            }
+
+            foreach (SimObjPhysics sop in VisibleSimObjs(action)) 
+            {
+                target = sop;
+            }
+
+            if(target)
+            {
+                if(target.GetComponent<SimObjPhysics>().DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanBeFilled))
+                {
+                    Fill fil = target.GetComponent<Fill>();
+
+                    if(!fil.IsFilled())
+                    {
+                        fil.FillObject(action.fillLiquid);
+                        actionFinished(true);
+                        return;
+                    }
+
+                    else
+                    {
+                        errorMessage = target.transform.name + " is already Filled!";
+                        actionFinished(false);
+                        return;
+                    }
+                }
+
+                else 
+                {
+                    errorMessage = target.transform.name + " does not have CanBeFilled property!";
+                    actionFinished(false);
+                    return;
+                }
+            }
+
+            else
+            {
+                errorMessage = "object not found: " + action.objectId;
+                actionFinished(false);
+            }
+        }
+
+        public void EmptyLiquidFromObject(ServerAction action)
+        {
+            //pass name of object in from action.objectId
+            if (action.objectId == null) 
+            {
+                Debug.Log("Hey, actually give me an object ID to open, yeah?");
+                errorMessage = "objectId required for EmptyLiquidFromObject action";
+                actionFinished(false);
+                return;
+            }
+
+            SimObjPhysics target = null;
+
+            if (action.forceAction) 
+            {
+                action.forceVisible = true;
+            }
+
+            foreach (SimObjPhysics sop in VisibleSimObjs(action)) 
+            {
+                target = sop;
+            }
+
+            if(target)
+            {
+                if(target.GetComponent<SimObjPhysics>().DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanBeFilled))
+                {
+                    Fill fil = target.GetComponent<Fill>();
+
+                    if(fil.IsFilled())
+                    {
+                        fil.EmptyObject();
+                        actionFinished(true);
+                    }
+
+                    else
+                    {
+                        errorMessage = "object already empty";
+                        Debug.Log(errorMessage);
+                        actionFinished(false);
+                        return;
+                    }
+                }
+
+                else 
+                {
+                    errorMessage = target.transform.name + " does not have CanBeFilled property!";
                     actionFinished(false);
                     return;
                 }
