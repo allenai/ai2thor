@@ -762,6 +762,8 @@ public class ServerAction
 	public float cameraY;
 	public bool placeStationary = true; //when placing/spawning an object, do we spawn it stationary (kinematic true) or spawn and let physics resolve final position
 	public string ssao = "default";
+
+	public string fillLiquid; //string to indicate what kind of liquid this object should be filled with. Water, Coffee, Wine etc.
 	public SimObjType ReceptableSimObjType()
 	{
 		if (string.IsNullOrEmpty(receptacleObjectType))
