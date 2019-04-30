@@ -90,6 +90,7 @@ public class Dirty : MonoBehaviour
     //similar to Fire and Candles, if touching water and this object is dirty, auto toggle to clean
     public void OnTriggerStay(Collider other)
     {
+        //only clean the object if touching a running water zone (tagged Liquid). Object will not be cleaned if touching standing, still water.
         if(other.tag == "Liquid")
         {
             if(!isClean)
