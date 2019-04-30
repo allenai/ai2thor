@@ -19,7 +19,7 @@ public class Breakdown : MonoBehaviour
         if(col.GetComponent<Rigidbody>())
         {
             Rigidbody rb = col.GetComponent<Rigidbody>();            
-            rb.AddExplosionForce(power, gameObject.transform.position, explosionRadius, 0.01f);
+            rb.AddExplosionForce(power, gameObject.transform.position, explosionRadius, 0.005f);
             rb.AddTorque(new Vector3(Random.value, Random.value, Random.value));
         }
       }

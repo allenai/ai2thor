@@ -929,6 +929,116 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         break;
                     }
                     
+                case "break":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "BreakObject";
+						if(splitcommand.Length > 1)
+						{
+							action.objectId = splitcommand[1];
+						}
+
+                        else
+                        {
+                            action.objectId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().UniqueIDOfClosestVisibleObject();
+                        }
+
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+                
+                case "dirtyobject":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "DirtyObject";
+						if(splitcommand.Length > 1)
+						{
+							action.objectId = splitcommand[1];
+						}
+
+                        else
+                        {
+                            action.objectId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().UniqueIDOfClosestVisibleObject();
+                        }
+
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
+                case "cleanobject":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "CleanObject";
+						if(splitcommand.Length > 1)
+						{
+							action.objectId = splitcommand[1];
+						}
+
+                        else
+                        {
+                            action.objectId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().UniqueIDOfClosestVisibleObject();
+                        }
+
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
+                case "fillwater":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "FillObjectWithLiquid";
+						if(splitcommand.Length > 1)
+						{
+							action.objectId = splitcommand[1];
+						}
+
+                        else
+                        {
+                            action.objectId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().UniqueIDOfClosestVisibleObject();
+                        }
+
+                        action.fillLiquid = "water";
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
+                case "fillcoffee":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "FillObjectWithLiquid";
+						if(splitcommand.Length > 1)
+						{
+							action.objectId = splitcommand[1];
+						}
+
+                        else
+                        {
+                            action.objectId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().UniqueIDOfClosestVisibleObject();
+                        }
+
+                        action.fillLiquid = "coffee";
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
+                case "emptyliquid":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "EmptyLiquidFromObject";
+						if(splitcommand.Length > 1)
+						{
+							action.objectId = splitcommand[1];
+						}
+
+                        else
+                        {
+                            action.objectId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().UniqueIDOfClosestVisibleObject();
+                        }
+
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
                     //drop object
 				case "dr":
                     {
