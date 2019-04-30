@@ -1878,7 +1878,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         if (maybeOtherAgent != this) {
                             int thisAgentNum = agentManager.agents.IndexOf(this);
                             int otherAgentNum = agentManager.agents.IndexOf(maybeOtherAgent);
-                            errorMessage = "Agent " + thisAgentNum.ToString() + " is blocking Agent " + thisAgentNum.ToString() + " from moving " + orientation;
+                            errorMessage = "Agent " + otherAgentNum.ToString() + " is blocking Agent " + thisAgentNum.ToString() + " from moving " + orientation;
                             return false;
                         }
                     }
