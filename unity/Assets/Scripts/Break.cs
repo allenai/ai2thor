@@ -20,7 +20,7 @@ public class Break : MonoBehaviour
     protected float CurrentImpulseThreshold;//modify this with ImpulseThreshold and HighFrictionImpulseOffset based on trigger callback functions
     protected bool readytobreak = true;
 
-    public bool broken;//return this to metadata to report state of this object.
+    protected bool broken;
 
     //what does this object need to do when it is in the broken state? 
     //Some need a decal to show a cracked screen on the surface, others need a prefab swap to shattered pieces
@@ -36,6 +36,10 @@ public class Break : MonoBehaviour
     SimObjType.CreditCard, SimObjType.ToiletPaper, SimObjType.ToiletPaperRoll, SimObjType.SoapBar, SimObjType.Pen, SimObjType.Pencil, SimObjType.Towel, 
     SimObjType.Watch, SimObjType.DishSponge, SimObjType.Tissue, SimObjType.CD,};
 
+    public bool isBroken()
+    {
+        return broken;
+    }
     // Start is called before the first frame update
     void Start()
     {
@@ -85,18 +89,21 @@ public class Break : MonoBehaviour
             if(gameObject.GetComponent<Dirty>())
             {
                 //if the object is not clean, swap to the dirty prefab
-                if(!gameObject.GetComponent<Dirty>().IsClean())
+                if(gameObject.GetComponent<Dirty>().IsDirty())
                 {
                     PrefabToSwapTo = DirtyPrefabToSwapTo;
                 }
             }
 
             Instantiate(PrefabToSwapTo, transform.position, transform.rotation);
+            broken = true;
         }
 
         if(breakType == BreakType.Decal)
         {
             //decal logic here
+
+            broken = true;
         }
 
     }
@@ -123,7 +130,6 @@ public class Break : MonoBehaviour
             if(readytobreak)
             {
                 readytobreak = false;
-                broken = true;
                 BreakObject();
             }
         }

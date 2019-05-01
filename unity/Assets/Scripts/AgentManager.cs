@@ -578,11 +578,38 @@ public class ObjectMetadata
 	public bool visible;
 	public bool receptacle;
 	public int receptacleCount;
-	public bool toggleable;
+	///
+	//note: some objects are not themselves toggleable, because they must be toggled on/off via another sim object (stove knob -> stove burner)
+	public bool toggleable;//is this object able to be toggled on/off directly?
+	
+	//note some objects can still return the istoggle value even if they cannot directly be toggled on off (stove burner -> stove knob)
+	public bool istoggled;//is this object currently on or off? true is on
+	///
+	public bool breakable;
+	public bool isbroken;//is this object broken?
+	///
+	public bool fillable;//objects filled with liquids
+	public bool isfilled;//is this object filled with some liquid? - similar to 'depletable' but this is for liquids
+	///
+	public bool dirtyable;//can toggle object state dirty/clean
+	public bool isdirty;//is this object in a dirty or clean state?
+	///
+	public bool depletable;//for objects that can be emptied or depleted (toilet paper, paper towels, tissue box etc) - specifically not for liquids
+	public bool isdepleted; 
+	///
+	public bool cookable;//object can be cooked state?
+	public bool iscooked;//is it cooked right now?
+	///
+	public bool sliceable;//can this be sliced in some way?
+	public bool issliced;//currently sliced?
+	///
 	public bool openable;
-	public bool pickupable;
 	public bool isopen;
-	public bool istoggled;
+	///
+	public bool pickupable;
+	public bool ispickedup;//if the pickupable object is actively being held by the agent
+	///
+
 	public string[] receptacleObjectIds;
 	public PivotSimObj[] pivotSimObjs;
 	public float distance;
