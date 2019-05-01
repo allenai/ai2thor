@@ -9,7 +9,7 @@ public class CookObject : MonoBehaviour
 	[SerializeField]
 	public SwapObjList[] MaterialSwapObjects;
 
-    public bool isCooked = false;
+    protected bool isCooked = false;
 
     void Start()
     {

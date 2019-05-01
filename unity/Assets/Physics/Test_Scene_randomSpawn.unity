@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.44358367, g: 0.4928971, b: 0.5724767, a: 1}
+  m_IndirectSpecularColor: {r: 0.44359618, g: 0.49291182, b: 0.5724829, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -1313,7 +1313,7 @@ PrefabInstance:
     - target: {fileID: 626195691514342360, guid: 2529fc1a396a4443fade9b51897cb9a5,
         type: 3}
       propertyPath: m_RootOrder
-      value: 26
+      value: 24
       objectReference: {fileID: 0}
     - target: {fileID: 626195691514342360, guid: 2529fc1a396a4443fade9b51897cb9a5,
         type: 3}
@@ -1787,7 +1787,7 @@ Transform:
   m_Children:
   - {fileID: 84353463}
   m_Father: {fileID: 0}
-  m_RootOrder: 25
+  m_RootOrder: 27
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &136592543
 GameObject:
@@ -1991,7 +1991,7 @@ PrefabInstance:
     - target: {fileID: 7310510398753930747, guid: 94d48886ebd394014b725ba79e992f16,
         type: 3}
       propertyPath: m_RootOrder
-      value: 31
+      value: 29
       objectReference: {fileID: 0}
     - target: {fileID: 7310510398753930747, guid: 94d48886ebd394014b725ba79e992f16,
         type: 3}
@@ -2965,7 +2965,7 @@ Transform:
   - {fileID: 269001783}
   - {fileID: 1473169170}
   m_Father: {fileID: 0}
-  m_RootOrder: 24
+  m_RootOrder: 25
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &372646914
 MonoBehaviour:
@@ -4280,7 +4280,7 @@ Transform:
   - {fileID: 651160394}
   - {fileID: 375244104}
   m_Father: {fileID: 0}
-  m_RootOrder: 20
+  m_RootOrder: 21
   m_LocalEulerAnglesHint: {x: 0, y: -179.99998, z: 0}
 --- !u!1 &536010572
 GameObject:
@@ -6146,7 +6146,7 @@ Transform:
   - {fileID: 407577499}
   - {fileID: 90495329}
   m_Father: {fileID: 0}
-  m_RootOrder: 30
+  m_RootOrder: 31
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &833635067
 GameObject:
@@ -7329,7 +7329,9 @@ MonoBehaviour:
   animationTime: 0.05
   isOn: 0
   movementType: 1
-  MustBeClosedToTurnOn: 10000000
+  SelfControlled: 1
+  ControlledSimObjects:
+  - {fileID: 1199203697}
 --- !u!1 &1092296257
 GameObject:
   m_ObjectHideFlags: 0
@@ -8215,6 +8217,7 @@ GameObject:
   - component: {fileID: 1199203697}
   - component: {fileID: 1199203696}
   - component: {fileID: 1199203695}
+  - component: {fileID: 1199203699}
   m_Layer: 8
   m_Name: GasBurner (1)
   m_TagString: SimObjPhysics
@@ -8268,7 +8271,7 @@ MonoBehaviour:
   uniqueID: StoveBurner|-02.36|+00.52|-06.47
   Type: 17
   PrimaryProperty: 1
-  SecondaryProperties: 0700000034000000
+  SecondaryProperties: 07000000340000001d000000
   BoundingBox: {fileID: 0}
   VisibilityPoints:
   - {fileID: 105563961}
@@ -8309,8 +8312,30 @@ Transform:
   - {fileID: 1373979914}
   - {fileID: 706360231}
   m_Father: {fileID: 0}
-  m_RootOrder: 18
+  m_RootOrder: 20
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1199203699
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1199203694}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4fd556226fd294b1c845aae4efb365a1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  MovingParts: []
+  MaterialSwapObjects: []
+  LightSources: []
+  OnPositions: []
+  OffPositions: []
+  animationTime: 0.05
+  isOn: 0
+  movementType: 0
+  SelfControlled: 0
+  ControlledSimObjects: []
 --- !u!1 &1208647717
 GameObject:
   m_ObjectHideFlags: 0
@@ -8662,7 +8687,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 423996, guid: 977d462d3da090443aa549827d636355, type: 3}
       propertyPath: m_RootOrder
-      value: 21
+      value: 19
       objectReference: {fileID: 0}
     - target: {fileID: 423996, guid: 977d462d3da090443aa549827d636355, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
@@ -9188,7 +9213,7 @@ Transform:
   - {fileID: 2083258735}
   - {fileID: 443625880}
   m_Father: {fileID: 0}
-  m_RootOrder: 17
+  m_RootOrder: 18
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1410125645
 GameObject:
@@ -9552,7 +9577,7 @@ Transform:
   - {fileID: 474629982}
   - {fileID: 1169213299}
   m_Father: {fileID: 0}
-  m_RootOrder: 29
+  m_RootOrder: 30
   m_LocalEulerAnglesHint: {x: 0, y: -179.99998, z: 0}
 --- !u!114 &1494119018
 MonoBehaviour:
@@ -9574,7 +9599,8 @@ MonoBehaviour:
   animationTime: 0.05
   isOn: 1
   movementType: 0
-  MustBeClosedToTurnOn: 10000000
+  SelfControlled: 1
+  ControlledSimObjects: []
 --- !u!1 &1499824689
 GameObject:
   m_ObjectHideFlags: 0
@@ -9716,7 +9742,7 @@ PrefabInstance:
     - target: {fileID: 2365502302183138545, guid: 516db061633ca4ad5ac050fcb7316e73,
         type: 3}
       propertyPath: m_RootOrder
-      value: 27
+      value: 26
       objectReference: {fileID: 0}
     - target: {fileID: 2365502302183138545, guid: 516db061633ca4ad5ac050fcb7316e73,
         type: 3}
@@ -14511,7 +14537,7 @@ PrefabInstance:
     - target: {fileID: 1883014114557197773, guid: 1163c1f5b2a60429389cc160eb5ae9f9,
         type: 3}
       propertyPath: m_RootOrder
-      value: 19
+      value: 17
       objectReference: {fileID: 0}
     - target: {fileID: 1883014114557197773, guid: 1163c1f5b2a60429389cc160eb5ae9f9,
         type: 3}
@@ -19365,4 +19391,5 @@ MonoBehaviour:
   animationTime: 0.05
   isOn: 0
   movementType: 0
-  MustBeClosedToTurnOn: 10000000
+  SelfControlled: 1
+  ControlledSimObjects: []

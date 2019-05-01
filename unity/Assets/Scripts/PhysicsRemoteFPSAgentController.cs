@@ -215,17 +215,51 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             objMeta.rotation = o.transform.eulerAngles;
             objMeta.objectType = Enum.GetName(typeof(SimObjType), simObj.Type);
             objMeta.receptacle = simObj.IsReceptacle;
-            objMeta.openable = simObj.IsOpenable;
-            objMeta.toggleable = simObj.IsToggleable;
 
+            objMeta.openable = simObj.IsOpenable;
             if (objMeta.openable) {
                 objMeta.isopen = simObj.IsOpen;
             }
 
+            objMeta.toggleable = simObj.IsToggleable;
             if (objMeta.toggleable) {
                 objMeta.istoggled = simObj.IsToggled;
             }
-            objMeta.pickupable = simObj.PrimaryProperty == SimObjPrimaryProperty.CanPickup;
+
+            objMeta.breakable = simObj.IsBreakable;
+            if(objMeta.breakable) {
+                objMeta.isbroken = simObj.IsBroken;
+            }
+
+            objMeta.fillable = simObj.IsFillable;
+            if (objMeta.fillable) {
+                objMeta.isfilled = simObj.isFilled;
+            }
+
+            objMeta.dirtyable = simObj.IsDirtyable;
+            if (objMeta.dirtyable) {
+                objMeta.isdirty = simObj.IsDirty;
+            }
+
+            objMeta.cookable = simObj.IsCookable;
+            if (objMeta.cookable) {
+                objMeta.iscooked = simObj.IsCooked;
+            }
+
+            objMeta.sliceable = simObj.isSliceable;
+            if (objMeta.sliceable) {
+                objMeta.issliced = simObj.isSliced;
+            }
+
+            //placeholder for depleted objects here
+            objMeta.depletable = simObj.IsDepletable;
+            if (objMeta.depletable) {
+                objMeta.isdepleted = simObj.isDepleted;
+            }
+
+            objMeta.pickupable = simObj.PrimaryProperty == SimObjPrimaryProperty.CanPickup;//can this object be picked up?
+            objMeta.ispickedup = simObj.isPickedUp;//returns true for if this object is currently being held by the agent
+
             objMeta.objectId = simObj.UniqueID;
 
             // TODO: using the isVisible flag on the object causes weird problems
@@ -3424,6 +3458,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 if (target.GetComponent<CanToggleOnOff>()) {
                     CanToggleOnOff ctof = target.GetComponent<CanToggleOnOff>();
 
+                    if(!ctof.ReturnSelfControlled()){
+                        errorMessage = "target object is controlled by another sim object. target object cannot be turned on/off directly";
+                        actionFinished(false);
+                        return;
+                    }
+
                     //check to make sure object is off
                     if (ctof.isOn) {
                         Debug.Log("can't toggle object on if it's already on!");
@@ -3433,7 +3473,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     }
 
                     //check if this object needs to be closed in order to turn on
-                    if (ctof.MustBeClosedToTurnOn.Contains(target.Type)) {
+                    if (ctof.ReturnMustBeClosedToTurnOn().Contains(target.Type)) {
                         if (target.GetComponent<CanOpen_Object>().isOpen) {
                             errorMessage = "Target must be closed to Toggle On!";
                             actionFinished(false);
@@ -3480,6 +3520,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                 if (target.GetComponent<CanToggleOnOff>()) {
                     CanToggleOnOff ctof = target.GetComponent<CanToggleOnOff>();
+
+                    if(!ctof.ReturnSelfControlled()){
+                        errorMessage = "target object is controlled by another sim object. target object cannot be turned on/off directly";
+                        actionFinished(false);
+                        return;
+                    }
 
                     //check to make sure object is on
                     if (!ctof.isOn) {
@@ -6211,7 +6257,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 if(target.GetComponent<SimObjPhysics>().DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanBeDirty))
                 {
                     Dirty dirt = target.GetComponent<Dirty>();
-                    if(dirt.IsClean() == true)
+                    if(dirt.IsDirty() == false)
                     {
                         dirt.ToggleCleanOrDirty();
                         actionFinished(true);
@@ -6269,7 +6315,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 if(target.GetComponent<SimObjPhysics>().DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanBeDirty))
                 {
                     Dirty dirt = target.GetComponent<Dirty>();
-                    if(!dirt.IsClean())
+                    if(dirt.IsDirty())
                     {
                         dirt.ToggleCleanOrDirty();
                         actionFinished(true);
