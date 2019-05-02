@@ -213,7 +213,7 @@ public class PhysicsSceneManager : MonoBehaviour
 		UniqueIdToSimObjPhysics[sop.UniqueID] = sop;
 	}
 
-	public void RemoveFormSpawnedObjects(SimObjPhysics sop)
+	public void RemoveFromSpawnedObjects(SimObjPhysics sop)
 	{
 		SpawnedObjects.Remove(sop.gameObject);
 	}

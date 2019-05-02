@@ -11,11 +11,12 @@ public class Dirty : MonoBehaviour
     [SerializeField]
     public GameObject[] ObjectsToEnableOrDisable; //for things like bed sheets, decals etc. that need to toggle on and off the entire game object
 
-    protected bool isClean = true;//default to clean i guess?
+    [SerializeField]
+    protected bool isDirty = false;
 
-    public bool IsClean()
+    public bool IsDirty()
     {
-        return isClean;
+        return isDirty;
     }
     // Start is called before the first frame update
     void Start()
@@ -39,8 +40,8 @@ public class Dirty : MonoBehaviour
 
     public void ToggleCleanOrDirty()
     {
-        //if clean, make dirt
-        if(isClean)
+        //if clean make dirty
+        if(!isDirty)
         {
             //swap all material swap objects to OnMaterials
             if(MaterialSwapObjects.Length > 0)
@@ -60,7 +61,7 @@ public class Dirty : MonoBehaviour
                 }
             }
 
-            isClean = false;
+            isDirty = true;
         }
 
         //if dirt, make clean
@@ -83,7 +84,7 @@ public class Dirty : MonoBehaviour
                 }
             }
 
-            isClean = true;
+            isDirty = false;
         }
     }
 
@@ -93,7 +94,7 @@ public class Dirty : MonoBehaviour
         //only clean the object if touching a running water zone (tagged Liquid). Object will not be cleaned if touching standing, still water.
         if(other.tag == "Liquid")
         {
-            if(!isClean)
+            if(isDirty)
             {
                 ToggleCleanOrDirty();
             }

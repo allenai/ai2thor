@@ -136,16 +136,6 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		}
 	}
 
-
-	public bool IsPickupable
-	{
-		get
-		{
-			return this.PrimaryProperty == SimObjPrimaryProperty.CanPickup;
-		}
-	}
-
-
 	public SimObjType ObjType
 	{
 		get
@@ -189,32 +179,70 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		}
 	}
 
+	//this is not used.... maybe get rid of?
 	public bool Open()
 	{
 		// XXX need to implement
 		return false;
 	}
 
+	//this is also not used... also maybe get rid of?
 	public bool Close()
 	{
 		// XXX need to implement
 		return false;
 	}
 
-	public bool IsToggleable
+	public bool IsPickupable
 	{
-		get { return this.GetComponent<CanToggleOnOff>(); }
+		get
+		{
+			return this.PrimaryProperty == SimObjPrimaryProperty.CanPickup;
+		}
 	}
 
-	public bool IsOpenable
+	//if this pickupable object is being held by the agent right
+	public bool isPickedUp
 	{
-		get { return this.GetComponent<CanOpen_Object>(); }
+		get
+		{
+			return this.isInAgentHand;
+		}
+	}
+
+
+	//note some objects are not toggleable, but can still return the IsToggled meta value (ex: stove burners)
+	//stove burners are not toggleable directly, a stove knob controls them.
+	public bool IsToggleable
+	{
+		get 
+		{ 
+			if(this.GetComponent<CanToggleOnOff>())
+			{
+				//if this object is self controlled, it is toggleable
+				if(this.GetComponent<CanToggleOnOff>().ReturnSelfControlled())
+				return true;
+
+				//if it is not self controlled (meaning controlled by another sim object) return not toggleable
+				//although if this object is not toggleable, it may still return isToggled as a state (see IsToggled below)
+				else
+				return false;
+			}
+
+			else
+			return false;
+			//return this.GetComponent<CanToggleOnOff>(); 
+		}
 	}
 
 	public bool IsToggled
 	{
 		get
 		{
+			//note: this can return "toggled on or off" info about objects that are controlled by other sim objects
+			//for example, a stove burner will return if it is on/off even though the burner itself cannot be interacted with
+			//to toggle the on/off state. Stove burners and objects like it can only have their state toggled by a sim object
+			//that controls it (in this case stove knob -controls-> stove burner)
 			CanToggleOnOff ctoo = this.GetComponent<CanToggleOnOff>();
 
 			if (ctoo != null)
@@ -226,6 +254,11 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 				return false;
 			}
 		}
+	}
+
+	public bool IsOpenable
+	{
+		get { return this.GetComponent<CanOpen_Object>(); }
 	}
 
 	public bool IsOpen
@@ -244,6 +277,131 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 			}
 		}
 	}
+
+	public bool IsBreakable
+	{
+		get{ return this.GetComponent<Break>(); }
+	}
+
+	public bool IsBroken
+	{
+		get
+		{
+			Break b = this.GetComponent<Break>();
+			if(b != null)
+			{
+				return b.isBroken();
+			}
+			else
+			{
+				return false;
+			}
+		}
+	}
+
+	public bool IsFillable
+	{
+		get{ return this.GetComponent<Fill>(); }
+	}
+
+	public bool isFilled
+	{
+		get
+		{
+			Fill f = this.GetComponent<Fill>();
+			if(f != null)
+			{
+				return f.IsFilled();
+			}
+			else
+			{
+				return false;
+			}
+		}
+	}
+
+	public bool IsDirtyable
+	{
+		get{ return this.GetComponent<Dirty>(); }
+	}
+
+	public bool IsDirty
+	{
+		get
+		{
+			Dirty deedsdonedirtcheap = this.GetComponent<Dirty>();
+			if(deedsdonedirtcheap != null)
+			{
+				return deedsdonedirtcheap.IsDirty();
+			}
+			else
+			{
+				return false;
+			}
+		}
+	}
+
+	public bool IsCookable
+	{
+		get{ return this.GetComponent<CookObject>(); }
+	}
+
+	public bool IsCooked
+	{
+		get
+		{
+			CookObject tasty = this.GetComponent<CookObject>();
+			if(tasty != null)
+			{
+				return tasty.IsCooked();
+			}
+			else
+			{
+				return false;
+			}
+		}
+	}
+
+	//remember sliceable objects get disabled and a new sliced version of the object is spawned into the scene
+	public bool isSliceable
+	{
+		get{ return this.GetComponent<SliceObject>(); }
+	}
+
+	//if the object has been sliced, the rest of it has been disabled so it can't be seen or interacted with, but the metadata
+	//will still reflect it's last position at time of being sliced. This is similar to break
+	public bool isSliced
+	{
+		get
+		{
+			SliceObject kars = this.GetComponent<SliceObject>();
+			if(kars != null)
+			{
+				return kars.IsSliced();
+			}
+			else
+			{
+				return false;
+			}
+		}
+	}
+
+	///these aren't in yet, just placeholder
+	public bool IsDepletable
+	{
+		get
+		{
+			return false;
+		}
+	}
+	public bool isDepleted
+	{
+		get
+		{
+			return false;
+		}
+	}
+	/// end placeholder stuff
 
 	public bool IsReceptacle
 	{
@@ -759,7 +917,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 
 		//if this object is in visibile range and not blocked by any other object, it is visible
 		//visible drawn in yellow
-		if (isVisible == true)
+		if (isVisible == true && gameObject.GetComponent<MeshFilter>())
 		{
 			MeshFilter mf = gameObject.GetComponentInChildren<MeshFilter>(false);
 			Gizmos.color = Color.yellow;
@@ -767,7 +925,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		}
 
 		//interactable drawn in magenta
-		if (isInteractable == true)
+		if (isInteractable == true && gameObject.GetComponent<MeshFilter>())
 		{
 			MeshFilter mf = gameObject.GetComponentInChildren<MeshFilter>(false);
 			Gizmos.color = Color.magenta;

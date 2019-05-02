@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 1.0555702, g: 1.0319636, b: 1.0084823, a: 1}
+  m_IndirectSpecularColor: {r: 1.0553372, g: 1.031733, b: 1.0084364, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -733,7 +733,7 @@ PrefabInstance:
         type: 3}
       propertyPath: PhysObjectsInScene.Array.data[29]
       value: 
-      objectReference: {fileID: 540568937}
+      objectReference: {fileID: 0}
     - target: {fileID: 114080650210219948, guid: 3a963756b61df410c91df72a73d4efde,
         type: 3}
       propertyPath: PhysObjectsInScene.Array.data[30]
@@ -943,12 +943,12 @@ PrefabInstance:
         type: 3}
       propertyPath: ReceptaclesInScene.Array.data[1]
       value: 
-      objectReference: {fileID: 305280989}
+      objectReference: {fileID: 1595557413}
     - target: {fileID: 114080650210219948, guid: 3a963756b61df410c91df72a73d4efde,
         type: 3}
       propertyPath: ReceptaclesInScene.Array.data[2]
       value: 
-      objectReference: {fileID: 0}
+      objectReference: {fileID: 305280989}
     - target: {fileID: 114080650210219948, guid: 3a963756b61df410c91df72a73d4efde,
         type: 3}
       propertyPath: ReceptaclesInScene.Array.data[3]
@@ -1093,7 +1093,7 @@ PrefabInstance:
         type: 3}
       propertyPath: SpawnedObjects.Array.data[6]
       value: 
-      objectReference: {fileID: 540568934}
+      objectReference: {fileID: 167636625}
     - target: {fileID: 114080650210219948, guid: 3a963756b61df410c91df72a73d4efde,
         type: 3}
       propertyPath: SpawnedObjects.Array.data[7]
@@ -1108,7 +1108,7 @@ PrefabInstance:
         type: 3}
       propertyPath: RequiredObjects.Array.data[6]
       value: 
-      objectReference: {fileID: 540568934}
+      objectReference: {fileID: 167636625}
     - target: {fileID: 114080650210219948, guid: 3a963756b61df410c91df72a73d4efde,
         type: 3}
       propertyPath: RequiredObjects.Array.data[7]
@@ -2813,8 +2813,55 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.y
       value: -45.827003
       objectReference: {fileID: 0}
+    - target: {fileID: 2156912236600210606, guid: b49c0ee28ccd2c54a97195c57710df6d,
+        type: 3}
+      propertyPath: m_LocalPosition.x
+      value: -3.417
+      objectReference: {fileID: 0}
+    - target: {fileID: 2156912236600210606, guid: b49c0ee28ccd2c54a97195c57710df6d,
+        type: 3}
+      propertyPath: m_RootOrder
+      value: 38
+      objectReference: {fileID: 0}
+    - target: {fileID: 2156912236600210606, guid: b49c0ee28ccd2c54a97195c57710df6d,
+        type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0.525082
+      objectReference: {fileID: 0}
+    - target: {fileID: 2156912236600210606, guid: b49c0ee28ccd2c54a97195c57710df6d,
+        type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 8.406
+      objectReference: {fileID: 0}
+    - target: {fileID: 2156912236600210606, guid: b49c0ee28ccd2c54a97195c57710df6d,
+        type: 3}
+      propertyPath: m_LocalRotation.y
+      value: -0.389341
+      objectReference: {fileID: 0}
+    - target: {fileID: 2156912236600210606, guid: b49c0ee28ccd2c54a97195c57710df6d,
+        type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 0.92109376
+      objectReference: {fileID: 0}
+    - target: {fileID: 2156912236600210606, guid: b49c0ee28ccd2c54a97195c57710df6d,
+        type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: -45.827
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: b49c0ee28ccd2c54a97195c57710df6d, type: 3}
+--- !u!4 &167636624 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 2156912236600210606, guid: b49c0ee28ccd2c54a97195c57710df6d,
+    type: 3}
+  m_PrefabInstance: {fileID: 167636623}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1 &167636625 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 2159580863515617668, guid: b49c0ee28ccd2c54a97195c57710df6d,
+    type: 3}
+  m_PrefabInstance: {fileID: 167636623}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &168328458
 GameObject:
   m_ObjectHideFlags: 0
@@ -4068,6 +4115,7 @@ MonoBehaviour:
   isVisible: 0
   isInteractable: 0
   isColliding: 0
+  isInAgentHand: 0
   MyColliders: []
   HFdynamicfriction: 0
   HFstaticfriction: 0
@@ -4835,7 +4883,7 @@ Transform:
   - {fileID: 1873292103}
   - {fileID: 119216990}
   - {fileID: 2128562679}
-  - {fileID: 540568935}
+  - {fileID: 167636624}
   - {fileID: 1343589836}
   - {fileID: 718329264}
   - {fileID: 264533896}
@@ -6723,30 +6771,6 @@ Transform:
   m_Father: {fileID: 1980715948}
   m_RootOrder: 34
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &540568934 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 1867794899464454, guid: b49c0ee28ccd2c54a97195c57710df6d,
-    type: 3}
-  m_PrefabInstance: {fileID: 167636623}
-  m_PrefabAsset: {fileID: 0}
---- !u!4 &540568935 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 4781299143880402, guid: b49c0ee28ccd2c54a97195c57710df6d,
-    type: 3}
-  m_PrefabInstance: {fileID: 167636623}
-  m_PrefabAsset: {fileID: 0}
---- !u!114 &540568937 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 114654127304560310, guid: b49c0ee28ccd2c54a97195c57710df6d,
-    type: 3}
-  m_PrefabInstance: {fileID: 167636623}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 540568934}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b439f6e4ef5714ee2a3643acf37b7a9d, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1 &544923945
 GameObject:
   m_ObjectHideFlags: 0
@@ -8404,6 +8428,7 @@ MonoBehaviour:
   isVisible: 0
   isInteractable: 0
   isColliding: 0
+  isInAgentHand: 0
   MyColliders:
   - {fileID: 2041911234}
   - {fileID: 1408183230}
@@ -10278,6 +10303,7 @@ MonoBehaviour:
   isVisible: 0
   isInteractable: 0
   isColliding: 0
+  isInAgentHand: 0
   MyColliders:
   - {fileID: 1854979735}
   - {fileID: 339449091}
@@ -11215,6 +11241,7 @@ MonoBehaviour:
   isVisible: 0
   isInteractable: 0
   isColliding: 0
+  isInAgentHand: 0
   MyColliders: []
   HFdynamicfriction: 0
   HFstaticfriction: 0
@@ -13601,6 +13628,7 @@ MonoBehaviour:
   isVisible: 0
   isInteractable: 0
   isColliding: 0
+  isInAgentHand: 0
   MyColliders: []
   HFdynamicfriction: 0
   HFstaticfriction: 0
@@ -19540,6 +19568,7 @@ MonoBehaviour:
   isVisible: 0
   isInteractable: 0
   isColliding: 0
+  isInAgentHand: 0
   MyColliders:
   - {fileID: 340825839}
   - {fileID: 809186759}
@@ -21245,6 +21274,7 @@ MonoBehaviour:
   isVisible: 0
   isInteractable: 0
   isColliding: 0
+  isInAgentHand: 0
   MyColliders:
   - {fileID: 954475179}
   - {fileID: 2132116666}
@@ -23398,6 +23428,7 @@ MonoBehaviour:
   isVisible: 0
   isInteractable: 0
   isColliding: 0
+  isInAgentHand: 0
   MyColliders: []
   HFdynamicfriction: 0
   HFstaticfriction: 0
@@ -24033,6 +24064,7 @@ MonoBehaviour:
   isVisible: 0
   isInteractable: 0
   isColliding: 0
+  isInAgentHand: 0
   MyColliders: []
   HFdynamicfriction: 0
   HFstaticfriction: 0
@@ -24744,6 +24776,18 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 12ca3c79e1b42d843861d09913fe90ab, type: 3}
+--- !u!114 &1595557413 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 923560685, guid: 12ca3c79e1b42d843861d09913fe90ab,
+    type: 3}
+  m_PrefabInstance: {fileID: 1595557412}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 113650101}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b439f6e4ef5714ee2a3643acf37b7a9d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1001 &1598638830
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -25021,6 +25065,7 @@ MonoBehaviour:
   isVisible: 0
   isInteractable: 0
   isColliding: 0
+  isInAgentHand: 0
   MyColliders: []
   HFdynamicfriction: 0
   HFstaticfriction: 0
@@ -25831,6 +25876,7 @@ MonoBehaviour:
   isVisible: 0
   isInteractable: 0
   isColliding: 0
+  isInAgentHand: 0
   MyColliders:
   - {fileID: 958027297}
   - {fileID: 1784214626}
@@ -26733,6 +26779,7 @@ MonoBehaviour:
   isVisible: 0
   isInteractable: 0
   isColliding: 0
+  isInAgentHand: 0
   MyColliders: []
   HFdynamicfriction: 0
   HFstaticfriction: 0
@@ -28322,6 +28369,7 @@ MonoBehaviour:
   isVisible: 0
   isInteractable: 0
   isColliding: 0
+  isInAgentHand: 0
   MyColliders: []
   HFdynamicfriction: 0
   HFstaticfriction: 0
@@ -30407,6 +30455,7 @@ MonoBehaviour:
   isVisible: 0
   isInteractable: 0
   isColliding: 0
+  isInAgentHand: 0
   MyColliders: []
   HFdynamicfriction: 0
   HFstaticfriction: 0
@@ -30797,6 +30846,7 @@ MonoBehaviour:
   isVisible: 0
   isInteractable: 0
   isColliding: 0
+  isInAgentHand: 0
   MyColliders: []
   HFdynamicfriction: 0
   HFstaticfriction: 0
