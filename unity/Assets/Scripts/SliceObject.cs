@@ -10,7 +10,15 @@ public class SliceObject : MonoBehaviour
 	[SerializeField]
 	public GameObject ObjectToChangeTo;
 
-    private bool quit = false; //used to track when application is quitting
+    //private bool quit = false; //used to track when application is quitting
+
+    [SerializeField]
+    protected bool isSliced = false;
+
+    public bool IsSliced()
+    {
+        return isSliced;
+    }
 
     void OnEnable ()
     {
@@ -41,26 +49,46 @@ public class SliceObject : MonoBehaviour
     //action to be called from PhysicsRemoteFPSAgentController
     public void Slice()
     {
-        Destroy(gameObject);
+        //Destroy(gameObject);
+
+        //Disable this game object and spawn in the broken pieces
+        Rigidbody rb = gameObject.GetComponent<Rigidbody>();
+        rb.collisionDetectionMode = CollisionDetectionMode.Discrete;
+        rb.isKinematic = true;
+
+        //turn off everything except the top object, so we can continue to report back isSliced meta info without the object being "active"
+        foreach(Transform t in gameObject.transform)
+        {
+            t.gameObject.SetActive(false);
+        }
+
         Instantiate(ObjectToChangeTo, transform.position, transform.rotation);
+        isSliced = true;
+
+        PhysicsSceneManager psm = GameObject.Find("PhysicsSceneManager").GetComponent<PhysicsSceneManager>();
+        if (psm != null) 
+        {
+            psm.SetupScene();//gather new sliced objects here
+        }
+
     }
 
     void OnApplicationQuit()
     {
-        quit = true;
+        //quit = true;
     }
 
     void OnDestroy()
     {
-        //don't do this when the application is quitting, because it throws null reference errors looking for the PhysicsSceneManager
-        if(!quit)
-        {
-            PhysicsSceneManager psm = GameObject.Find("PhysicsSceneManager").GetComponent<PhysicsSceneManager>();
-            if (psm != null) {
-                psm.SetupScene();
-                psm.RemoveFormSpawnedObjects(gameObject.GetComponent<SimObjPhysics>());
-                psm.RemoveFromRequiredObjects(gameObject.GetComponent<SimObjPhysics>());
-            }
-        }
+        // //don't do this when the application is quitting, because it throws null reference errors looking for the PhysicsSceneManager
+        // if(!quit)
+        // {
+        //     PhysicsSceneManager psm = GameObject.Find("PhysicsSceneManager").GetComponent<PhysicsSceneManager>();
+        //     if (psm != null) {
+        //         psm.SetupScene();
+        //         psm.RemoveFromSpawnedObjects(gameObject.GetComponent<SimObjPhysics>());
+        //         psm.RemoveFromRequiredObjects(gameObject.GetComponent<SimObjPhysics>());
+        //     }
+        // }
     }
 }

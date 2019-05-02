@@ -734,7 +734,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1773568550671076}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 3.809, y: -0.344, z: 7.326}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 4767546009593874}
@@ -768,17 +768,24 @@ MonoBehaviour:
   - {fileID: 4683739542460520}
   - {fileID: 4352193711189656}
   - {fileID: 4345543006396324}
+  - {fileID: 4433851058269990}
+  - {fileID: 4066687796374308}
+  - {fileID: 4644007495058548}
+  - {fileID: 4289566549134292}
   ReceptacleTriggerBoxes: []
   isVisible: 0
   isInteractable: 0
   isColliding: 0
+  isInAgentHand: 0
   MyColliders:
   - {fileID: 65729235378367966}
+  - {fileID: 65794406316258254}
   HFdynamicfriction: 0.3
   HFstaticfriction: 0.3
   HFbounciness: 0
   HFrbdrag: 0
   HFrbangulardrag: 0
+  ContainedObjectReferences: []
 --- !u!54 &54410585402179148
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -819,6 +826,8 @@ MonoBehaviour:
   isOpen: 1
   canReset: 1
   movementType: 1
+  OpenBoundingBox: {fileID: 0}
+  ClosedBoundingBox: {fileID: 0}
 --- !u!114 &114457953206446984
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -852,6 +861,7 @@ MonoBehaviour:
   animationTime: 0.05
   isOn: 0
   movementType: 0
+  MustBeClosedToTurnOn: 10000000
 --- !u!1 &1778111834802936
 GameObject:
   m_ObjectHideFlags: 0

@@ -982,6 +982,63 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }
+
+                case "fillwater":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "FillObjectWithLiquid";
+						if(splitcommand.Length > 1)
+						{
+							action.objectId = splitcommand[1];
+						}
+
+                        else
+                        {
+                            action.objectId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().UniqueIDOfClosestVisibleObject();
+                        }
+
+                        action.fillLiquid = "water";
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
+                case "fillcoffee":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "FillObjectWithLiquid";
+						if(splitcommand.Length > 1)
+						{
+							action.objectId = splitcommand[1];
+						}
+
+                        else
+                        {
+                            action.objectId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().UniqueIDOfClosestVisibleObject();
+                        }
+
+                        action.fillLiquid = "coffee";
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
+                case "emptyliquid":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "EmptyLiquidFromObject";
+						if(splitcommand.Length > 1)
+						{
+							action.objectId = splitcommand[1];
+						}
+
+                        else
+                        {
+                            action.objectId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().UniqueIDOfClosestVisibleObject();
+                        }
+
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
                     //drop object
 				case "dr":
                     {
