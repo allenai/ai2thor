@@ -10,7 +10,7 @@ public class SliceObject : MonoBehaviour
 	[SerializeField]
 	public GameObject ObjectToChangeTo;
 
-    private bool quit = false; //used to track when application is quitting
+    //private bool quit = false; //used to track when application is quitting
 
     [SerializeField]
     protected bool isSliced = false;
