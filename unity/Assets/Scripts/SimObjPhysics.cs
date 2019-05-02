@@ -917,7 +917,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 
 		//if this object is in visibile range and not blocked by any other object, it is visible
 		//visible drawn in yellow
-		if (isVisible == true && gameObject.GetComponent<MeshFilter>())
+		if (isVisible == true && gameObject.GetComponentInChildren<MeshFilter>())
 		{
 			MeshFilter mf = gameObject.GetComponentInChildren<MeshFilter>(false);
 			Gizmos.color = Color.yellow;
@@ -925,7 +925,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		}
 
 		//interactable drawn in magenta
-		if (isInteractable == true && gameObject.GetComponent<MeshFilter>())
+		if (isInteractable == true && gameObject.GetComponentInChildren<MeshFilter>())
 		{
 			MeshFilter mf = gameObject.GetComponentInChildren<MeshFilter>(false);
 			Gizmos.color = Color.magenta;
