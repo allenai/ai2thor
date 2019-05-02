@@ -1912,7 +1912,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         if (maybeOtherAgent != this) {
                             int thisAgentNum = agentManager.agents.IndexOf(this);
                             int otherAgentNum = agentManager.agents.IndexOf(maybeOtherAgent);
-                            errorMessage = "Agent " + thisAgentNum.ToString() + " is blocking Agent " + thisAgentNum.ToString() + " from moving " + orientation;
+                            errorMessage = "Agent " + otherAgentNum.ToString() + " is blocking Agent " + thisAgentNum.ToString() + " from moving " + orientation;
                             return false;
                         }
                     }
@@ -2630,110 +2630,88 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         public void PickupObject(ServerAction action) //use serveraction objectid
         {
+            if (!physicsSceneManager.UniqueIdToSimObjPhysics.ContainsKey(action.objectId)) {
+                errorMessage = "Object ID appears to be invalid.";
+                actionFinished(false);
+                return;
+            }
+            
+            SimObjPhysics target = physicsSceneManager.UniqueIdToSimObjPhysics[action.objectId];
+
             if (ItemInHand != null) {
                 Debug.Log("Agent hand has something in it already! Can't pick up anything else");
                 actionFinished(false);
                 return;
-            }
+            } 
 
-            //else our hand is empty, commence other checks
-            else {
-                if (IsHandDefault == false) {
-                    errorMessage = "Reset Hand to default position before attempting to Pick Up objects";
-                    Debug.Log(errorMessage);
-                    actionFinished(false);
-                    //return false;
-                }
-
-                SimObjPhysics target = null;
-
-                if (action.forceAction) {
-                    action.forceVisible = true;
-                }
-
-                SimObjPhysics[] simObjPhysicsArray = VisibleSimObjs(action);
-
-                foreach (SimObjPhysics sop in simObjPhysicsArray) {
-                    if (action.objectId == sop.UniqueID) {
-                        target = sop;
-                    }
-                }
-
-                if (target == null) {
-                    errorMessage = "No valid target to pickup";
-                    Debug.Log(errorMessage);
-                    actionFinished(false);
-                    return;
-                }
-
-                if (!target.GetComponent<SimObjPhysics>()) {
-                    errorMessage = "Target must be SimObjPhysics to pickup";
-                    Debug.Log(errorMessage);
-                    actionFinished(false);
-                    return;
-                }
-
-                if (target.PrimaryProperty != SimObjPrimaryProperty.CanPickup) {
-                    errorMessage = "Only SimObjPhysics that have the property CanPickup can be picked up";
-                    Debug.Log(errorMessage);
-                    actionFinished(false);
-                    return;
-                    //return false;
-                }
-
-                if (!action.forceAction && target.isInteractable == false) {
-                    errorMessage = "Target is not interactable and is probably occluded by something!";
-                    Debug.Log(errorMessage);
-                    actionFinished(false);
-                    return;
-                }
-
-                //move the object to the hand's default position. Make it Kinematic
-                //then set parant and ItemInHand
-
-                Vector3 savedPos = target.transform.position;
-                Quaternion savedRot = target.transform.rotation;
-                Transform savedParent = target.transform.parent;
-                bool wasKinematic = target.GetComponent<Rigidbody>().isKinematic;
-
-                //reset collision mode and set kinematic true since this is now being held
-                Rigidbody rb = target.GetComponent<Rigidbody>();
-                rb.collisionDetectionMode = CollisionDetectionMode.Discrete;
-                rb.isKinematic = true;
-
-                //if the target is rotated too much, don't try to pick up any contained objects since they would fall out
-                if (Vector3.Angle(target.transform.up, Vector3.up) < 60)
-                    PickupContainedObjects(target);
-
-                target.transform.position = AgentHand.transform.position;
-                // target.transform.rotation = AgentHand.transform.rotation; - keep this line if we ever want to change the pickup position to be constant relative to the Agent Hand and Agent Camera rather than aligned by world axis
-                target.transform.rotation = transform.rotation;
-                target.transform.SetParent(AgentHand.transform);
-                ItemInHand = target.gameObject;
-
-                if (!action.forceAction && isHandObjectColliding()) {
-                    // Undo picking up the object if the object is colliding with something after picking it up
-                    target.GetComponent<Rigidbody>().isKinematic = wasKinematic;
-                    target.transform.position = savedPos;
-                    target.transform.rotation = savedRot;
-                    target.transform.SetParent(savedParent);
-                    ItemInHand = null;
-
-                    DropContainedObjects(target);
-
-                    errorMessage = "Picking up object would cause it to collide.";
-                    Debug.Log(errorMessage);
-                    actionFinished(true);
-                    return;
-                }
-
-                SetUpRotationBoxChecks();
-
-                //we have succesfully picked up something! 
-                target.GetComponent<SimObjPhysics>().isInAgentHand = true;
-                actionFinished(true);
+            if (IsHandDefault == false) {
+                errorMessage = "Reset Hand to default position before attempting to Pick Up objects";
+                actionFinished(false);
                 return;
             }
+
+            if (!action.forceAction && !objectIsCurrentlyVisible(target, maxVisibleDistance)) {
+                errorMessage = action.objectId + " is not visible.";
+                actionFinished(false);
+                return;
+            }
+
+            if (target.PrimaryProperty != SimObjPrimaryProperty.CanPickup) {
+                errorMessage = action.objectId + " must have the property CanPickup to be picked up.";
+                actionFinished(false);
+                return;
+            }
+
+            if (!action.forceAction && target.isInteractable == false) {
+                errorMessage = action.objectId + " is not interactable and (perhaps it is occluded by something).";
+                actionFinished(false);
+                return;
+            }
+
+            //move the object to the hand's default position. Make it Kinematic
+            //then set parant and ItemInHand
+
+            Vector3 savedPos = target.transform.position;
+            Quaternion savedRot = target.transform.rotation;
+            Transform savedParent = target.transform.parent;
+            bool wasKinematic = target.GetComponent<Rigidbody>().isKinematic;
+
+            //reset collision mode and set kinematic true since this is now being held
+            Rigidbody rb = target.GetComponent<Rigidbody>();
+            rb.collisionDetectionMode = CollisionDetectionMode.Discrete;
+            rb.isKinematic = true;
+
+            //if the target is rotated too much, don't try to pick up any contained objects since they would fall out
+            if (Vector3.Angle(target.transform.up, Vector3.up) < 60)
+                PickupContainedObjects(target);
+
+            target.transform.position = AgentHand.transform.position;
+            // target.transform.rotation = AgentHand.transform.rotation; - keep this line if we ever want to change the pickup position to be constant relative to the Agent Hand and Agent Camera rather than aligned by world axis
+            target.transform.rotation = transform.rotation;
+            target.transform.SetParent(AgentHand.transform);
+            ItemInHand = target.gameObject;
+
+            if (!action.forceAction && isHandObjectColliding()) {
+                // Undo picking up the object if the object is colliding with something after picking it up
+                target.GetComponent<Rigidbody>().isKinematic = wasKinematic;
+                target.transform.position = savedPos;
+                target.transform.rotation = savedRot;
+                target.transform.SetParent(savedParent);
+                ItemInHand = null;
+
+                DropContainedObjects(target);
+
+                errorMessage = "Picking up object would cause it to collide.";
+                actionFinished(false);
+                return;
+            }
+
+            SetUpRotationBoxChecks();
+
+            //we have succesfully picked up something! 
+            target.GetComponent<SimObjPhysics>().isInAgentHand = true;
+            actionFinished(true);
+            return;
         }
 
         public void PickupContainedObjects(SimObjPhysics target) {
@@ -4374,7 +4352,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public void ExhaustiveSearchForItem(ServerAction action) {
             if (!physicsSceneManager.UniqueIdToSimObjPhysics.ContainsKey(action.objectId)) {
                 errorMessage = "Object ID appears to be invalid.";
-                Debug.Log(errorMessage);
                 actionFinished(false);
                 return;
             }
@@ -4758,6 +4735,91 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
 
             return true;
+        }
+
+        public float roundToGridSize(float x, float gridSize, bool roundUp) {
+            int mFactor = (int) (1.0f / gridSize);
+            if (Math.Abs(mFactor - 1.0f / gridSize) > 1e-3) {
+                throw new Exception("1.0 / gridSize should be an integer.");
+            }
+            if (roundUp) {
+                return (float) Math.Ceiling(mFactor * x) / mFactor;
+            } else {
+                return (float) Math.Floor(mFactor * x) / mFactor;
+            }
+        }
+        public void GetReachablePositionsForObject(ServerAction action) {
+            if (!physicsSceneManager.UniqueIdToSimObjPhysics.ContainsKey(action.objectId)) {
+                errorMessage = "Object " + action.objectId + " does not seem to exist.";
+                actionFinished(false);
+                return;
+            }
+            SimObjPhysics sop = physicsSceneManager.UniqueIdToSimObjPhysics[action.objectId];
+
+            Vector3 startPos = sop.transform.position;
+            Quaternion startRot = sop.transform.rotation;
+
+            Bounds b = new Bounds();
+            foreach (Vector3 p in getReachablePositions()) {
+                b.Encapsulate(p);
+            }
+
+            float xMin = roundToGridSize(Math.Max(b.min.x - 0.25f, transform.position.x - 14), gridSize, true);
+            float xMax = roundToGridSize(Math.Min(b.max.x + 0.25f, transform.position.x + 14), gridSize, false);
+            float zMin = roundToGridSize(Math.Max(b.min.z - 0.25f, transform.position.z - 14), gridSize, true);
+            float zMax = roundToGridSize(Math.Min(b.max.z + 0.25f, transform.position.z + 14), gridSize, false);
+            // Debug.Log(xMin);
+            // Debug.Log(xMax);
+            // Debug.Log(zMin);
+            // Debug.Log(zMax);
+
+            
+            List<GameObject> agentGameObjects = new List<GameObject>();
+            foreach (BaseFPSAgentController agent in agentManager.agents) {
+                agentGameObjects.Add(agent.gameObject);
+            }
+            List<Vector3> reachable = new List<Vector3>();
+
+            List<Collider> enabledColliders = new List<Collider>();
+            foreach (Collider c in sop.GetComponentsInChildren<Collider>()) {
+                if (c.enabled) {
+                    c.enabled = false;
+                    enabledColliders.Add(c);
+                }
+            }
+
+            sop.BoundingBox.GetComponent<BoxCollider>().enabled = true;
+            for (int i = 0; i <= (int) ((xMax - xMin) / gridSize); i++) {
+                for (int j = 0; j <= (int) ((zMax - zMin) / gridSize); j++) {
+                    Vector3 p = new Vector3(xMin + gridSize * i, startPos.y, zMin + j * gridSize);
+                    sop.transform.position = p;
+                    for (int k = 0; k < 4; k++) {
+                        sop.transform.rotation = Quaternion.Euler(new Vector3(0f, k * 90f, 0f));
+                        if (!UtilityFunctions.isObjectColliding(sop.BoundingBox.gameObject, agentGameObjects)) {
+                            // #if UNITY_EDITOR
+                            // Debug.Log(p);
+                            // #endif
+                            #if UNITY_EDITOR
+                            Debug.DrawLine(p, new Vector3(p.x, p.y + 0.3f, p.z), Color.red, 100000f);
+                            #endif
+                            reachable.Add(p);
+                            break;
+                        }
+                    }
+                }
+            }
+            sop.BoundingBox.GetComponent<BoxCollider>().enabled = false;
+            foreach (Collider c in enabledColliders) {
+                c.enabled = true;
+            }
+
+            sop.transform.position = startPos;
+            sop.transform.rotation = startRot;
+
+            #if UNITY_EDITOR
+            Debug.Log(reachable.Count);
+            #endif
+            actionFinished(true, reachable.ToArray());
         }
 
         public RaycastHit[] capsuleCastAllForAgent(
