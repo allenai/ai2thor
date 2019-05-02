@@ -24,7 +24,6 @@ public class AgentManager : MonoBehaviour
 	private Rect readPixelsRect;
 	private int currentSequenceId;
 	private int activeAgentId;
-	private bool defaultRenderImage = true;
 	private bool renderImage = true;
 	private bool renderDepthImage;
 	private bool renderClassImage;
@@ -99,7 +98,6 @@ public class AgentManager : MonoBehaviour
 	{
 		primaryAgent.ProcessControlCommand (action);
 		primaryAgent.IsVisible = action.makeAgentsVisible;
-		this.defaultRenderImage = action.renderImage;
 		this.renderClassImage = action.renderClassImage;
 		this.renderDepthImage = action.renderDepthImage;
 		this.renderNormalsImage = action.renderNormalsImage;
@@ -383,96 +381,106 @@ public class AgentManager : MonoBehaviour
 
 		frameCounter += 1;
 
+		bool shouldRender = this.renderImage && serverSideScreenshot;
 
-		// we should only read the screen buffer after rendering is complete
-		yield return new WaitForEndOfFrame();
-		if (synchronousHttp) {
-			// must wait an additional frame when in synchronous mode otherwise the frame lags
+		if (shouldRender) {
+			// we should only read the screen buffer after rendering is complete
 			yield return new WaitForEndOfFrame();
+			if (synchronousHttp) {
+				// must wait an additional frame when in synchronous mode otherwise the frame lags
+				yield return new WaitForEndOfFrame();
+			}
 		}
 
 		WWWForm form = new WWWForm();
 
-		MultiAgentMetadata multiMeta = new MultiAgentMetadata ();
-		multiMeta.agents = new MetadataWrapper[this.agents.Count];
+        MultiAgentMetadata multiMeta = new MultiAgentMetadata ();
+        multiMeta.agents = new MetadataWrapper[this.agents.Count];
+        multiMeta.activeAgentId = this.activeAgentId;
+        multiMeta.sequenceId = this.currentSequenceId;
+
 		ThirdPartyCameraMetadata[] cameraMetadata = new ThirdPartyCameraMetadata[this.thirdPartyCameras.Count];
-		multiMeta.activeAgentId = this.activeAgentId;
-		multiMeta.sequenceId = this.currentSequenceId;
-		RenderTexture currentTexture = RenderTexture.active;
+		RenderTexture currentTexture = null;
+        if (shouldRender) {
+            currentTexture = RenderTexture.active;
+            for (int i = 0; i < this.thirdPartyCameras.Count; i++) {
+                ThirdPartyCameraMetadata cMetadata = new ThirdPartyCameraMetadata();
+                Camera camera = thirdPartyCameras.ToArray()[i];
+                cMetadata.thirdPartyCameraId = i;
+                cMetadata.position = camera.gameObject.transform.position;
+                cMetadata.rotation = camera.gameObject.transform.eulerAngles;
+                cameraMetadata[i] = cMetadata;
+                ImageSynthesis imageSynthesis = camera.gameObject.GetComponentInChildren<ImageSynthesis> () as ImageSynthesis;
+                addThirdPartyCameraImageForm (form, camera);
+                addImageSynthesisImageForm(form, imageSynthesis, this.renderDepthImage, "_depth", "image_thirdParty_depth");
+                addImageSynthesisImageForm(form, imageSynthesis, this.renderNormalsImage, "_normals", "image_thirdParty_normals");
+                addImageSynthesisImageForm(form, imageSynthesis, this.renderObjectImage, "_id", "image_thirdParty_image_ids");
+                addImageSynthesisImageForm(form, imageSynthesis, this.renderClassImage, "_class", "image_thirdParty_classes");
+            }
+        }
 
-		for (int i = 0; i < this.thirdPartyCameras.Count; i++) {
-			ThirdPartyCameraMetadata cMetadata = new ThirdPartyCameraMetadata();
-			Camera camera = thirdPartyCameras.ToArray()[i];
-			cMetadata.thirdPartyCameraId = i;
-			cMetadata.position = camera.gameObject.transform.position;
-			cMetadata.rotation = camera.gameObject.transform.eulerAngles;
-			cameraMetadata[i] = cMetadata;
-			ImageSynthesis imageSynthesis = camera.gameObject.GetComponentInChildren<ImageSynthesis> () as ImageSynthesis;
-			addThirdPartyCameraImageForm (form, camera);
-			addImageSynthesisImageForm(form, imageSynthesis, this.renderDepthImage, "_depth", "image_thirdParty_depth");
-			addImageSynthesisImageForm(form, imageSynthesis, this.renderNormalsImage, "_normals", "image_thirdParty_normals");
-			addImageSynthesisImageForm(form, imageSynthesis, this.renderObjectImage, "_id", "image_thirdParty_image_ids");
-			addImageSynthesisImageForm(form, imageSynthesis, this.renderClassImage, "_class", "image_thirdParty_classes");
-		}
+        for (int i = 0; i < this.agents.Count; i++) {
+            BaseFPSAgentController agent = this.agents.ToArray () [i];
+            MetadataWrapper metadata = agent.generateMetadataWrapper ();
+            metadata.agentId = i;
+            // we don't need to render the agent's camera for the first agent
+            if (shouldRender) {
+                addImageForm (form, agent);
+                addImageSynthesisImageForm(form, agent.imageSynthesis, this.renderDepthImage, "_depth", "image_depth");
+                addImageSynthesisImageForm(form, agent.imageSynthesis, this.renderNormalsImage, "_normals", "image_normals");
+                addObjectImageForm (form, agent, ref metadata);
+                addImageSynthesisImageForm(form, agent.imageSynthesis, this.renderClassImage, "_class", "image_classes");
+                metadata.thirdPartyCameras = cameraMetadata;
+            }
+            multiMeta.agents [i] = metadata;
+        }
 
-		for (int i = 0; i < this.agents.Count; i++) {
-			BaseFPSAgentController agent = this.agents.ToArray () [i];
-			MetadataWrapper metadata = agent.generateMetadataWrapper ();
-			metadata.agentId = i;
-			// we don't need to render the agent's camera for the first agent
-			addImageForm (form, agent);
-			addImageSynthesisImageForm(form, agent.imageSynthesis, this.renderDepthImage, "_depth", "image_depth");
-			addImageSynthesisImageForm(form, agent.imageSynthesis, this.renderNormalsImage, "_normals", "image_normals");
-			addObjectImageForm (form, agent, ref metadata);
-			addImageSynthesisImageForm(form, agent.imageSynthesis, this.renderClassImage, "_class", "image_classes");
-			metadata.thirdPartyCameras = cameraMetadata;
-			multiMeta.agents [i] = metadata;
-		}
+        if (shouldRender) {
+            RenderTexture.active = currentTexture;
+        }
 
-		RenderTexture.active = currentTexture;
-
-		//form.AddField("metadata", JsonUtility.ToJson(multiMeta));
-		form.AddField("metadata", Newtonsoft.Json.JsonConvert.SerializeObject(multiMeta));
-		form.AddField("token", robosimsClientToken);
+        //form.AddField("metadata", JsonUtility.ToJson(multiMeta));
+        form.AddField("metadata", Newtonsoft.Json.JsonConvert.SerializeObject(multiMeta));
+        form.AddField("token", robosimsClientToken);
 
         #if !UNITY_WEBGL && !UNITY_EDITOR
 		if (synchronousHttp) {
-					IPAddress host = IPAddress.Parse(robosimsHost);
-					IPEndPoint hostep = new IPEndPoint(host, robosimsPort);
-					Socket sock = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+            IPAddress host = IPAddress.Parse(robosimsHost);
+            IPEndPoint hostep = new IPEndPoint(host, robosimsPort);
+            Socket sock = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
 
-					sock.Connect(hostep);
-					byte[] rawData = form.data;
+            sock.Connect(hostep);
+            byte[] rawData = form.data;
 
-					string request = "POST /train HTTP/1.0\r\n" +
-					"Content-Length: " + rawData.Length.ToString() + "\r\n";
+            string request = "POST /train HTTP/1.0\r\n" +
+            "Content-Length: " + rawData.Length.ToString() + "\r\n";
 
-					foreach(KeyValuePair<string, string> entry in form.headers) {
-						request += entry.Key + ": " + entry.Value + "\r\n";
-					}
-					request += "\r\n";
+            foreach(KeyValuePair<string, string> entry in form.headers) {
+                request += entry.Key + ": " + entry.Value + "\r\n";
+            }
+            request += "\r\n";
 
-					int sent = sock.Send(Encoding.ASCII.GetBytes(request));
-					sent = sock.Send(rawData);
-					byte[] buffer = new byte[4096];
-					int bytesReceived = 0;
-					string msg = "";
+            int sent = sock.Send(Encoding.ASCII.GetBytes(request));
+            sent = sock.Send(rawData);
+            byte[] buffer = new byte[4096];
+            int bytesReceived = 0;
+            string msg = "";
 
-					while (true) {
-						bytesReceived += sock.Receive(buffer, bytesReceived, buffer.Length - bytesReceived, SocketFlags.None);
-						int offset = Encoding.ASCII.GetString(buffer).IndexOf("\r\n\r\n");
-						if (offset > 0){
-							msg = Encoding.ASCII.GetString(buffer).Substring(offset + 4, bytesReceived - (offset - 4));
-							if (msg.Length > 8){
-								Debug.Log("Message: " + msg);
-								break;
-							}
-						}
-					}
-					//Debug.Log(msg);
+            while (true) {
+                bytesReceived += sock.Receive(buffer, bytesReceived, buffer.Length - bytesReceived, SocketFlags.None);
+                int offset = Encoding.ASCII.GetString(buffer).IndexOf("\r\n\r\n");
+                if (offset > 0){
+                    msg = Encoding.ASCII.GetString(buffer).Substring(offset + 4, bytesReceived - (offset - 4));
+                    if (msg.Length > 8){
+                        Debug.Log("Message: " + msg);
+                        break;
+                    }
+                }
+            }
+            //Debug.Log(msg);
 
-					sock.Close();
-					ProcessControlCommand(msg);
+            sock.Close();
+            ProcessControlCommand(msg);
 		} else {
 
 			using (var www = UnityWebRequest.Post("http://" + robosimsHost + ":" + robosimsPort + "/train", form))
@@ -498,7 +506,6 @@ public class AgentManager : MonoBehaviour
 	{
 
 		ServerAction controlCommand = new ServerAction();
-		controlCommand.renderImage = this.defaultRenderImage;
 
 		JsonUtility.FromJsonOverwrite(msg, controlCommand);
 

@@ -83,6 +83,44 @@ public static class UtilityFunctions {
         return false;
     }
 
+    public static Collider[] collidersObjectCollidingWith(GameObject go, List<GameObject> ignoreGameObjects = null, float expandBy = 0.0f) {
+        if (ignoreGameObjects == null) {
+            ignoreGameObjects = new List<GameObject>();
+        }
+        ignoreGameObjects.Add(go);
+        HashSet<Collider> ignoreColliders = new HashSet<Collider>();
+        foreach (GameObject toIgnoreGo in ignoreGameObjects) {
+            foreach (Collider c in toIgnoreGo.GetComponentsInChildren<Collider>()) {
+                ignoreColliders.Add(c);
+            }
+        }
+
+        HashSet<Collider> collidersSet = new HashSet<Collider>();
+        int layerMask = 1 << 8 | 1 << 10;
+        foreach (CapsuleCollider cc in go.GetComponentsInChildren<CapsuleCollider>()) {
+            foreach (Collider c in PhysicsExtensions.OverlapCapsule(cc, layerMask, QueryTriggerInteraction.Ignore, expandBy)) {
+                if (!ignoreColliders.Contains(c)) {
+                    collidersSet.Add(c);
+                }
+            }
+        }
+        foreach (BoxCollider bc in go.GetComponentsInChildren<BoxCollider>()) {
+            foreach (Collider c in PhysicsExtensions.OverlapBox(bc, layerMask, QueryTriggerInteraction.Ignore, expandBy)) {
+                if (!ignoreColliders.Contains(c)) {
+                    collidersSet.Add(c);
+                }
+            }
+        }
+        foreach (SphereCollider sc in go.GetComponentsInChildren<SphereCollider>()) {
+            foreach (Collider c in PhysicsExtensions.OverlapSphere(sc, layerMask, QueryTriggerInteraction.Ignore, expandBy)) {
+                if (!ignoreColliders.Contains(c)) {
+                    collidersSet.Add(c);
+                }
+            }
+        }
+        return collidersSet.ToArray();
+    }
+
     public static RaycastHit[] CastAllPrimitiveColliders(GameObject go, Vector3 direction, float maxDistance = Mathf.Infinity, int layerMask = Physics.DefaultRaycastLayers, QueryTriggerInteraction queryTriggerInteraction = QueryTriggerInteraction.UseGlobal) {
         List<RaycastHit> hits = new List<RaycastHit>();
         foreach (CapsuleCollider cc in go.GetComponentsInChildren<CapsuleCollider>()) {

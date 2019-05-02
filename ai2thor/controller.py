@@ -364,7 +364,7 @@ def key_for_point(x, z):
 
 class Controller(object):
 
-    def __init__(self, quality=DEFAULT_QUALITY, fullscreen=False):
+    def __init__(self, quality=DEFAULT_QUALITY, fullscreen=False, headless=False):
         self.request_queue = Queue(maxsize=1)
         self.response_queue = Queue(maxsize=1)
         self.receptacle_nearest_pivot_points = {}
@@ -379,6 +379,7 @@ class Controller(object):
         self.quality = quality
         self.lock_file = None
         self.fullscreen = fullscreen
+        self.headless = headless
 
     def reset(self, scene_name=None):
         if not scene_name.endswith('_physics'):
@@ -564,6 +565,8 @@ class Controller(object):
                 print(' '.join(command_info))
 
     def step(self, action, raise_for_failure=False):
+        if self.headless:
+            action["renderImage"] = False
 
         # prevent changes to the action from leaking
         action = copy.deepcopy(action)
@@ -610,14 +613,16 @@ class Controller(object):
 
         return self.last_event
 
-    def unity_command(self, width, height):
-
+    def unity_command(self, width, height, headless):
         command = self.executable_path()
-        fullscreen = 1 if self.fullscreen else 0
-        if QUALITY_SETTINGS[self.quality] == 0:
-            raise RuntimeError("Quality {} is associated with an index of 0. "
-                               "Due to a bug in unity, this quality setting would be ignored.".format(self.quality))
-        command += " -screen-fullscreen %s -screen-quality %s -screen-width %s -screen-height %s" % (fullscreen, QUALITY_SETTINGS[self.quality], width, height)
+        if headless:
+            command += " -batchmode"
+        else:
+            fullscreen = 1 if self.fullscreen else 0
+            if QUALITY_SETTINGS[self.quality] == 0:
+                raise RuntimeError("Quality {} is associated with an index of 0. "
+                                   "Due to a bug in unity, this quality setting would be ignored.".format(self.quality))
+            command += " -screen-fullscreen %s -screen-quality %s -screen-width %s -screen-height %s" % (fullscreen, QUALITY_SETTINGS[self.quality], width, height)
         return shlex.split(command)
 
     def _start_unity_thread(self, env, width, height, host, port, image_name):
@@ -627,10 +632,10 @@ class Controller(object):
         env['AI2THOR_HOST'] = host
         env['AI2THOR_PORT'] = str(port)
 
-        # env['AI2THOR_SERVER_SIDE_SCREENSHOT'] = 'True'
+        env['AI2THOR_SERVER_SIDE_SCREENSHOT'] = 'False' if self.headless else 'True'
 
         # print("Viewer: http://%s:%s/viewer" % (host, port))
-        command = self.unity_command(width, height)
+        command = self.unity_command(width, height, headless=self.headless)
 
         if image_name is not None:
             self.container_id = ai2thor.docker.run(image_name, self.base_dir(), ' '.join(command), env)
