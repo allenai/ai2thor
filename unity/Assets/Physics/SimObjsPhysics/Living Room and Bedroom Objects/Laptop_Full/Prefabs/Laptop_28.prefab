@@ -221,7 +221,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1130521449759944}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -0.19, y: 0.011, z: 0.115}
+  m_LocalPosition: {x: -0.177, y: 0.011, z: 0.115}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 4824923253255800}
@@ -282,7 +282,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1172164357823348}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0.192, y: 0.011000007, z: 0.116}
+  m_LocalPosition: {x: 0.173, y: 0.011000007, z: 0.116}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 4824923253255800}
@@ -876,7 +876,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1962716487931556}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 4.295, y: -0.344, z: 7.414}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 4282254835295018}
@@ -910,17 +910,24 @@ MonoBehaviour:
   - {fileID: 4195875080071242}
   - {fileID: 4523029032850876}
   - {fileID: 4317440680428216}
+  - {fileID: 4042489052805984}
+  - {fileID: 4571719490351582}
+  - {fileID: 4837012747903992}
+  - {fileID: 4247049542632708}
   ReceptacleTriggerBoxes: []
   isVisible: 0
   isInteractable: 0
   isColliding: 0
+  isInAgentHand: 0
   MyColliders:
   - {fileID: 65896037884050720}
+  - {fileID: 65131559166240116}
   HFdynamicfriction: 0.3
   HFstaticfriction: 0.3
   HFbounciness: 0
   HFrbdrag: 0
   HFrbangulardrag: 0
+  ContainedObjectReferences: []
 --- !u!54 &54507148426975992
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -961,6 +968,8 @@ MonoBehaviour:
   isOpen: 1
   canReset: 1
   movementType: 1
+  OpenBoundingBox: {fileID: 0}
+  ClosedBoundingBox: {fileID: 0}
 --- !u!114 &114608714391460318
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -994,3 +1003,4 @@ MonoBehaviour:
   animationTime: 0.05
   isOn: 0
   movementType: 0
+  MustBeClosedToTurnOn: 10000000
