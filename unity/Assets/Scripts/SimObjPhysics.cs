@@ -834,58 +834,68 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		}
 	}
 
-	public void OnTriggerStay(Collider other)
+	public void OnTriggerEnter(Collider other)
 	{
-
-		if(other.gameObject.tag == "HighFriction" && (PrimaryProperty == SimObjPrimaryProperty.CanPickup || PrimaryProperty == SimObjPrimaryProperty.Moveable))
+		//is colliding only needs to be set for pickupable objects. Also drag/friction values only need to change for pickupable objects not all sim objects
+		if((PrimaryProperty == SimObjPrimaryProperty.CanPickup || PrimaryProperty == SimObjPrimaryProperty.Moveable))
 		{
-			Rigidbody rb = gameObject.GetComponent<Rigidbody>();
-
-			//add something so that drag/angular drag isn't reset if we haven't set it on the object yet
-			rb.drag = HFrbdrag;
-			rb.angularDrag = HFrbangulardrag;
-			
-			foreach (Collider col in MyColliders)
+			if(other.gameObject.tag == "HighFriction") //&& (PrimaryProperty == SimObjPrimaryProperty.CanPickup || PrimaryProperty == SimObjPrimaryProperty.Moveable))
 			{
-				col.material.dynamicFriction = HFdynamicfriction;
-				col.material.staticFriction = HFstaticfriction;
-				col.material.bounciness = HFbounciness;
-			}
-		}
+				Rigidbody rb = gameObject.GetComponent<Rigidbody>();
 
-		//ignore collision of ghosted receptacle trigger boxes
-		//because of this MAKE SURE ALL receptacle trigger boxes are tagged as "Receptacle," they should be by default
-		//do this flag first so that the check against non Player objects overrides it in the right order
-		if (other.tag == "Receptacle")
-		{
-			isColliding = false;
-			return;
-		}
-
-		//make sure nothing is dropped while inside the agent (the agent will try to "push(?)" it out and it will fall in unpredictable ways
-		else if (other.tag == "Player" && other.name == "FPSController")
-		{
-			isColliding = true;
-			return;
-		}
-
-		//this is hitting something else so it must be colliding at this point!
-		else if (other.tag != "Player")
-		{
-			//don't flag as colliding if the thing i'm coliding with is something inside my receptacle trigger box
-			if(DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.Receptacle))
-			{
-				if(ContainedObjectReferences.Contains(other.GetComponentInParent<SimObjPhysics>()))
+				//add something so that drag/angular drag isn't reset if we haven't set it on the object yet
+				rb.drag = HFrbdrag;
+				rb.angularDrag = HFrbangulardrag;
+				
+				foreach (Collider col in MyColliders)
 				{
-					isColliding = false;
-					return;
+					col.material.dynamicFriction = HFdynamicfriction;
+					col.material.staticFriction = HFstaticfriction;
+					col.material.bounciness = HFbounciness;
 				}
 			}
+		}
+	}
+	
+	public void OnTriggerStay(Collider other)
+	{
+		//check for collision if in agent hand, otherwise SKIP!
+		if(isInAgentHand)
+		{
+			//ignore collision of ghosted receptacle trigger boxes
+			//because of this MAKE SURE ALL receptacle trigger boxes are tagged as "Receptacle," they should be by default
+			//do this flag first so that the check against non Player objects overrides it in the right order
+			if (other.tag == "Receptacle")
+			{
+				isColliding = false;
+				return;
+			}
 
-			else
+			//make sure nothing is dropped while inside the agent (the agent will try to "push(?)" it out and it will fall in unpredictable ways
+			else if (other.tag == "Player" && other.name == "FPSController")
 			{
 				isColliding = true;
 				return;
+			}
+
+			//this is hitting something else so it must be colliding at this point!
+			else if (other.tag != "Player")
+			{
+				//don't flag as colliding if the thing i'm coliding with is something inside my receptacle trigger box
+				if(DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.Receptacle))
+				{
+					if(ContainedObjectReferences.Contains(other.GetComponentInParent<SimObjPhysics>()))
+					{
+						isColliding = false;
+						return;
+					}
+				}
+
+				else
+				{
+					isColliding = true;
+					return;
+				}
 			}
 		}
 	}
