@@ -246,6 +246,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 objMeta.iscooked = simObj.IsCooked;
             }
 
+            //placeholder for heatable objects -kettle, pot, pan
+            // objMeta.heatable = simObj.IsHeatable;
+            // if(objMeta.heatable) {
+            //     objMeta.isHeated = simObj.IsHeated;
+            // }
+
             objMeta.sliceable = simObj.isSliceable;
             if (objMeta.sliceable) {
                 objMeta.issliced = simObj.isSliced;
