@@ -198,6 +198,13 @@ public class PhysicsSceneManager : MonoBehaviour
         string zPos = (pos.z >= 0 ? "+" : "") + pos.z.ToString("00.00");
         o.UniqueID = o.Type.ToString() + "|" + xPos + "|" + yPos + "|" + zPos;
     }
+
+	//used to create unique id for an object created as result of a state change of another object ie: bread - >breadslice1, breadslice 2 etc
+	public void Generate_InheritedUniqueID(SimObjPhysics sourceObject, SimObjPhysics createdObject, int count)
+	{
+		createdObject.UniqueID = sourceObject.UniqueID + "|" + createdObject.ObjType + "_" + count;
+		AddToObjectsInScene(createdObject);
+	}
     
 	private bool CheckForDuplicateUniqueIDs(SimObjPhysics sop)
 	{

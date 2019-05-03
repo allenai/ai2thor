@@ -62,33 +62,40 @@ public class SliceObject : MonoBehaviour
             t.gameObject.SetActive(false);
         }
 
-        Instantiate(ObjectToChangeTo, transform.position, transform.rotation);
+        GameObject resultObject = Instantiate(ObjectToChangeTo, transform.position, transform.rotation);
         isSliced = true;
 
         PhysicsSceneManager psm = GameObject.Find("PhysicsSceneManager").GetComponent<PhysicsSceneManager>();
         if (psm != null) 
         {
-            psm.SetupScene();//gather new sliced objects here
+            //each instantiated sliced version of the object is a bunch of sim objects held by a master parent transform, so go into each one and assign the id to each based on the parent's id so 
+            //there is an association with the original source object
+            int count = 0;
+            foreach (Transform t in resultObject.transform)
+            {
+                SimObjPhysics tsop = t.GetComponent<SimObjPhysics>();
+                psm.Generate_InheritedUniqueID(gameObject.GetComponent<SimObjPhysics>(), tsop, count);
+                count++;
+            }
         }
-
     }
 
-    void OnApplicationQuit()
-    {
-        //quit = true;
-    }
+    // void OnApplicationQuit()
+    // {
+    //     //quit = true;
+    // }
 
-    void OnDestroy()
-    {
-        // //don't do this when the application is quitting, because it throws null reference errors looking for the PhysicsSceneManager
-        // if(!quit)
-        // {
-        //     PhysicsSceneManager psm = GameObject.Find("PhysicsSceneManager").GetComponent<PhysicsSceneManager>();
-        //     if (psm != null) {
-        //         psm.SetupScene();
-        //         psm.RemoveFromSpawnedObjects(gameObject.GetComponent<SimObjPhysics>());
-        //         psm.RemoveFromRequiredObjects(gameObject.GetComponent<SimObjPhysics>());
-        //     }
-        // }
-    }
+    // void OnDestroy()
+    // {
+    //     // //don't do this when the application is quitting, because it throws null reference errors looking for the PhysicsSceneManager
+    //     // if(!quit)
+    //     // {
+    //     //     PhysicsSceneManager psm = GameObject.Find("PhysicsSceneManager").GetComponent<PhysicsSceneManager>();
+    //     //     if (psm != null) {
+    //     //         psm.SetupScene();
+    //     //         psm.RemoveFromSpawnedObjects(gameObject.GetComponent<SimObjPhysics>());
+    //     //         psm.RemoveFromRequiredObjects(gameObject.GetComponent<SimObjPhysics>());
+    //     //     }
+    //     // }
+    // }
 }
