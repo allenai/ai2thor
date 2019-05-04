@@ -686,7 +686,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 
 	private void FixedUpdate()
 	{
-		isColliding = false;
+		isInteractable = false;
 	}
 
 	//used for throwing the sim object, or anything that requires adding force for some reason
@@ -821,21 +821,24 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		}
 	}
 
-
 	public void OnTriggerEnter(Collider other) {
-		if(other.gameObject.tag == "HighFriction" && (PrimaryProperty == SimObjPrimaryProperty.CanPickup || PrimaryProperty == SimObjPrimaryProperty.Moveable))
+		//is colliding only needs to be set for pickupable objects. Also drag/friction values only need to change for pickupable objects not all sim objects
+		if((PrimaryProperty == SimObjPrimaryProperty.CanPickup || PrimaryProperty == SimObjPrimaryProperty.Moveable))
 		{
-			Rigidbody rb = gameObject.GetComponent<Rigidbody>();
-
-			//add something so that drag/angular drag isn't reset if we haven't set it on the object yet
-			rb.drag = HFrbdrag;
-			rb.angularDrag = HFrbangulardrag;
-			
-			foreach (Collider col in MyColliders)
+			if(other.gameObject.tag == "HighFriction") //&& (PrimaryProperty == SimObjPrimaryProperty.CanPickup || PrimaryProperty == SimObjPrimaryProperty.Moveable))
 			{
-				col.material.dynamicFriction = HFdynamicfriction;
-				col.material.staticFriction = HFstaticfriction;
-				col.material.bounciness = HFbounciness;
+				Rigidbody rb = gameObject.GetComponent<Rigidbody>();
+
+				//add something so that drag/angular drag isn't reset if we haven't set it on the object yet
+				rb.drag = HFrbdrag;
+				rb.angularDrag = HFrbangulardrag;
+				
+				foreach (Collider col in MyColliders)
+				{
+					col.material.dynamicFriction = HFdynamicfriction;
+					col.material.staticFriction = HFstaticfriction;
+					col.material.bounciness = HFbounciness;
+				}
 			}
 		}
 	}
@@ -867,7 +870,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 
 		//if this object is in visibile range and not blocked by any other object, it is visible
 		//visible drawn in yellow
-		if (isVisible == true && gameObject.GetComponent<MeshFilter>())
+		if (isVisible == true && gameObject.GetComponentInChildren<MeshFilter>())
 		{
 			MeshFilter mf = gameObject.GetComponentInChildren<MeshFilter>(false);
 			Gizmos.color = Color.yellow;
@@ -875,7 +878,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		}
 
 		//interactable drawn in magenta
-		if (isInteractable == true && gameObject.GetComponent<MeshFilter>())
+		if (isInteractable == true && gameObject.GetComponentInChildren<MeshFilter>())
 		{
 			MeshFilter mf = gameObject.GetComponentInChildren<MeshFilter>(false);
 			Gizmos.color = Color.magenta;
