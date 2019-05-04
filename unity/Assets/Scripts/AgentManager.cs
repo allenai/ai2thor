@@ -603,9 +603,12 @@ public class ObjectMetadata
 	public bool depletable;//for objects that can be emptied or depleted (toilet paper, paper towels, tissue box etc) - specifically not for liquids
 	public bool isdepleted; 
 	///
-	public bool cookable;//object can be cooked state?
-	public bool iscooked;//is it cooked right now?
+	public bool cookable;//can this object be turned to a cooked state? object should not be able to toggle back to uncooked state with contextual interactions, only a direct action
+	public bool iscooked;//is it cooked right now? - context sensitive objects might set this automatically like Toaster/Microwave/ Pots/Pans if isHeated = true
 	///
+	public bool heatable;//can this object be heated up by a "fire" tagged source? -  use this for Pots/Pans
+	public bool isHeated;//object is in contact with a "fire" tagged source (stove burner), if this is heated any object cookable object touching it will be switched to cooked - again use for Pots/Pans
+	//
 	public bool sliceable;//can this be sliced in some way?
 	public bool issliced;//currently sliced?
 	///
