@@ -9,7 +9,6 @@ using Newtonsoft.Json;
 using System.Text;
 using UnityEngine.Networking;
 
-
 public class AgentManager : MonoBehaviour
 {
 	public List<BaseFPSAgentController> agents = new List<BaseFPSAgentController>();
@@ -628,36 +627,6 @@ public class ObjectMetadata
 	public float currentTime;
 
 	public ObjectMetadata() { }
-
-	public ObjectMetadata(SimpleSimObj simObj) {
-		GameObject o = simObj.gameObject;
-		this.name = o.name;
-		this.position = o.transform.position;
-		this.rotation = o.transform.eulerAngles;
-
-		this.objectType = Enum.GetName(typeof(SimObjType), simObj.ObjType);
-		this.receptacle = simObj.IsReceptacle;
-		this.openable = simObj.IsOpenable;
-		if (this.openable)
-		{
-			this.isopen = simObj.IsOpen;
-		}
-		this.pickupable = simObj.IsPickupable;
-		this.objectId = simObj.UniqueID;
-		this.visible = simObj.IsVisible;
-
-
-
-		Bounds bounds = simObj.Bounds;
-		this.bounds3D = new [] {
-			bounds.min.x,
-			bounds.min.y,
-			bounds.min.z,
-			bounds.max.x,
-			bounds.max.y,
-			bounds.max.z,
-		};
-	}
 }
 
 [Serializable]
