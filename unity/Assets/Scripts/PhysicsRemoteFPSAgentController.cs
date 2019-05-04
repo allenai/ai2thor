@@ -278,7 +278,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // };
             return objMeta;
         }
-        new private ObjectMetadata[] generateObjectMetadata() {
+        public override ObjectMetadata[] generateObjectMetadata() {
             SimObjPhysics[] visibleSimObjs = VisibleSimObjs(false); // Update visibility for all sim objects for this agent
             HashSet<SimObjPhysics> visibleSimObjsHash = new HashSet<SimObjPhysics>();
             foreach (SimObjPhysics sop in visibleSimObjs) {
@@ -525,10 +525,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         protected SimObjPhysics[] GetAllVisibleSimObjPhysics(Camera agentCamera, float maxDistance) {
+            #if UNITY_EDITOR        
             foreach (KeyValuePair<string, SimObjPhysics> pair in physicsSceneManager.UniqueIdToSimObjPhysics) {
                 // Set all objects to not be visible
                 pair.Value.isVisible = false;
             }
+            #endif
             List<SimObjPhysics> currentlyVisibleItems = new List<SimObjPhysics>();
 
             Vector3 agentCameraPos = agentCamera.transform.position;
@@ -578,9 +580,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                             //if we see at least one vis point, the object is "visible"
                             if (visPointCount > 0) {
+                                #if UNITY_EDITOR
                                 sop.isVisible = true;
-                                if (!currentlyVisibleItems.Contains(sop))
+                                #endif
+                                if (!currentlyVisibleItems.Contains(sop)) {
                                     currentlyVisibleItems.Add(sop);
+                                }
                             }
                         } else {
                             Debug.Log("Error! Set at least 1 visibility point on SimObjPhysics " + sop + ".");
@@ -622,9 +627,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                                 //if we see at least one vis point, the object is "visible"
                                 if (visPointCount > 0) {
+                                    #if UNITY_EDITOR
                                     sop.isVisible = true;
-                                    if (!currentlyVisibleItems.Contains(sop))
+                                    #endif
+                                    if (!currentlyVisibleItems.Contains(sop)) {
                                         currentlyVisibleItems.Add(sop);
+                                    }
                                 }
                             } else
                                 Debug.Log("Error! Set at least 1 visibility point on SimObjPhysics prefab!");
@@ -1107,9 +1115,17 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true, objectCreated.UniqueID);
         }
 
-        protected bool moveObject(SimObjPhysics sop, Vector3 targetPosition) {
+        protected bool moveObject(SimObjPhysics sop, Vector3 targetPosition, bool snapToGrid=false) {
             Vector3 lastPosition = sop.transform.position;
             Rigidbody ItemRB = sop.gameObject.GetComponent<Rigidbody>();
+
+            if (snapToGrid) {
+                float mult = 1.0f / gridSize;
+                float gridX = Convert.ToSingle(Math.Round(targetPosition.x * mult) / mult);
+                float gridZ = Convert.ToSingle(Math.Round(targetPosition.z * mult) / mult);
+                targetPosition = new Vector3(gridX, targetPosition.y, gridZ);
+            }
+
             RaycastHit[] sweepResults = ItemRB.SweepTestAll(
                 targetPosition - sop.transform.position,
                 Vector3.Distance(targetPosition, sop.transform.position),
@@ -1133,7 +1149,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
             SimObjPhysics objectToMove = physicsSceneManager.UniqueIdToSimObjPhysics[uniqueId];
             Vector3 oldPosition = objectToMove.transform.position;
-            if (moveObject(objectToMove, objectToMove.transform.position + relativeDir)) {
+            if (moveObject(objectToMove, objectToMove.transform.position + relativeDir, true)) {
                 if (maxAgentsDistance > 0.0f) {
                     for (int i = 0; i < agentManager.agents.Count; i++) {
                         if (((PhysicsRemoteFPSAgentController) agentManager.agents[i]).distanceToObject(objectToMove) > maxAgentsDistance) {
@@ -1710,14 +1726,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             if (!canbepushed) {
                 errorMessage = "Target Primary Property type incompatible with push/pull";
-                Debug.Log(errorMessage);
                 actionFinished(false);
                 return;
             }
 
             if (!action.forceAction && target.isInteractable == false) {
                 errorMessage = "Target is not interactable and is probably occluded by something!";
-                Debug.Log(errorMessage);
                 actionFinished(false);
                 return;
             }
@@ -2815,7 +2829,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             if (ItemInHand != null) {
                 //we do need this to check if the item is currently colliding with the agent, otherwise
                 //dropping an object while it is inside the agent will cause it to shoot out weirdly
-                if (!action.forceAction && ItemInHand.GetComponent<SimObjPhysics>().isColliding) {
+                if (!action.forceAction && isHandObjectColliding(true)) {
                     errorMessage = ItemInHand.transform.name + " can't be dropped. It must be clear of all other objects first";
                     Debug.Log(errorMessage);
                     actionFinished(false);
@@ -3039,7 +3053,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             if (target) {
                 if (!action.forceAction && target.isInteractable == false) {
                     errorMessage = "object is visible but occluded by something: " + action.objectId;
-                    Debug.Log(errorMessage);
                     actionFinished(false);
                 }
 
@@ -3052,7 +3065,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         // actionFinished(true);
                         StartCoroutine(InteractAndWait(codd));
                     } else {
-                        Debug.Log("can't close object if it's already closed");
                         errorMessage = "object already closed: " + action.objectId;
                         actionFinished(false);
                     }
@@ -3624,15 +3636,15 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 //the sim object receptacle target returns list of unique sim object IDs as strings
                 //XXX It looks like this goes right into the MetaData, so basically this just returns a list of strings
                 //that are the unique ID's of every object that is contained by the target object
-                target.Contains();
+                List<string> ids = target.Contains();
 
 #if UNITY_EDITOR
-                foreach (string s in target.Contains()) {
+                foreach (string s in ids) {
                     Debug.Log(s);
                 }
 #endif
 
-                actionFinished(true);
+                actionFinished(true, ids.ToArray());
             } else {
                 errorMessage = "object not found: " + action.objectId;
                 Debug.Log(errorMessage);
@@ -4639,13 +4651,15 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return false;
         }
 
-        protected bool isHandObjectColliding(float expandBy = 0.0f) {
+        protected bool isHandObjectColliding(bool includeAgent = false, float expandBy = 0.0f) {
             if (ItemInHand == null) {
                 return false;
             }
             List<GameObject> ignoreGameObjects = new List<GameObject>();
             // Ignore the agent when determining if the hand object is colliding
-            ignoreGameObjects.Add(this.gameObject);
+            if (!includeAgent) {
+                ignoreGameObjects.Add(this.gameObject);
+            }
             return UtilityFunctions.isObjectColliding(ItemInHand, ignoreGameObjects, expandBy);
         }
 
