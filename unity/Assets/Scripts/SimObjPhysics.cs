@@ -43,10 +43,10 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 	public GameObject[] ReceptacleTriggerBoxes = null;
 
 	[Header("State information Bools here")]
+	#if UNITY_EDITOR
 	public bool isVisible = false;
+	#endif
 	public bool isInteractable = false;
-	public bool isColliding = false;
-
 	public bool isInAgentHand = false;
 
 	private Bounds bounds;
@@ -113,19 +113,6 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 			uniqueID = value;
 		}
 	}
-
-       public bool IsVisible
-       {
-               get
-               {
-                       return isVisible;
-               }
-
-               set {
-                       isVisible = value;
-               }
-       }
-
 	public Bounds Bounds
 	{
 		get
@@ -683,23 +670,23 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 	void Update()
 	{
 
-		//this is overriden by the Agent when doing the Visibility Sphere test
-		//XXX Probably don't need to do this EVERY update loop except in editor for debug purposes
-		isVisible = false;
+		// this is overriden by the Agent when doing the Visibility Sphere test
+		// XXX Probably don't need to do this EVERY update loop except in editor for debug purposes
+		//isVisible = false;
 		isInteractable = false;
 
 		//if this object has come to rest, reset it's collision detection mode to discrete
-		Rigidbody rb = gameObject.GetComponent<Rigidbody>();
-		if((rb.IsSleeping() == true) && (rb.collisionDetectionMode == CollisionDetectionMode.ContinuousDynamic))
-		{
-			//print("settling");
-			rb.collisionDetectionMode = CollisionDetectionMode.Discrete;
-		}
+		//Rigidbody rb = gameObject.GetComponent<Rigidbody>();
+		//if((rb.IsSleeping() == true) && (rb.collisionDetectionMode == CollisionDetectionMode.ContinuousDynamic))
+		//{
+		//	//print("settling");
+		//	rb.collisionDetectionMode = CollisionDetectionMode.Discrete;
+		//}
 	}
 
 	private void FixedUpdate()
 	{
-		isColliding = false;
+		isInteractable = false;
 	}
 
 	//used for throwing the sim object, or anything that requires adding force for some reason
@@ -834,8 +821,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		}
 	}
 
-	public void OnTriggerEnter(Collider other)
-	{
+	public void OnTriggerEnter(Collider other) {
 		//is colliding only needs to be set for pickupable objects. Also drag/friction values only need to change for pickupable objects not all sim objects
 		if((PrimaryProperty == SimObjPrimaryProperty.CanPickup || PrimaryProperty == SimObjPrimaryProperty.Moveable))
 		{
@@ -852,49 +838,6 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 					col.material.dynamicFriction = HFdynamicfriction;
 					col.material.staticFriction = HFstaticfriction;
 					col.material.bounciness = HFbounciness;
-				}
-			}
-		}
-	}
-	
-	public void OnTriggerStay(Collider other)
-	{
-		//check for collision if in agent hand, otherwise SKIP!
-		if(isInAgentHand)
-		{
-			//ignore collision of ghosted receptacle trigger boxes
-			//because of this MAKE SURE ALL receptacle trigger boxes are tagged as "Receptacle," they should be by default
-			//do this flag first so that the check against non Player objects overrides it in the right order
-			if (other.tag == "Receptacle")
-			{
-				isColliding = false;
-				return;
-			}
-
-			//make sure nothing is dropped while inside the agent (the agent will try to "push(?)" it out and it will fall in unpredictable ways
-			else if (other.tag == "Player" && other.name == "FPSController")
-			{
-				isColliding = true;
-				return;
-			}
-
-			//this is hitting something else so it must be colliding at this point!
-			else if (other.tag != "Player")
-			{
-				//don't flag as colliding if the thing i'm coliding with is something inside my receptacle trigger box
-				if(DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.Receptacle))
-				{
-					if(ContainedObjectReferences.Contains(other.GetComponentInParent<SimObjPhysics>()))
-					{
-						isColliding = false;
-						return;
-					}
-				}
-
-				else
-				{
-					isColliding = true;
-					return;
 				}
 			}
 		}
