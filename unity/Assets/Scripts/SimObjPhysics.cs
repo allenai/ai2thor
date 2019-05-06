@@ -72,8 +72,22 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 	//if this object is a receptacle, get all valid spawn points from any child ReceptacleTriggerBoxes and sort them by distance to Agent
 	List<ReceptacleSpawnPoint> MySpawnPoints = new List<ReceptacleSpawnPoint>();
 
-	//initial position object spawned in in case we want to reset the scene
-	//private Vector3 startPosition;   
+	//keep track of this object's current temperature (abstracted to three states, RoomTemp/Hot/Cold)
+	public ObjectMetadata.Temperature CurrentTemperature = ObjectMetadata.Temperature.RoomTemp;
+
+	//value for how long it should take this object to get back to room temperature from hot/cold
+	public float HowManySecondsUntilRoomTemp = 10f;
+	private float TimerResetValue;
+	public float GetTimerResetValue()
+	{
+		return TimerResetValue;
+	}
+	private bool StartRoomTempTimer = false;
+
+	public void SetStartRoomTempTimer(bool b)
+	{
+		StartRoomTempTimer = b;
+	}
 
 	public List<SimObjPhysics> ContainedObjectReferences;
 
@@ -291,7 +305,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		get{ return this.GetComponent<Fill>(); }
 	}
 
-	public bool isFilled
+	public bool IsFilled
 	{
 		get
 		{
@@ -350,14 +364,14 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 	}
 
 	//remember sliceable objects get disabled and a new sliced version of the object is spawned into the scene
-	public bool isSliceable
+	public bool IsSliceable
 	{
 		get{ return this.GetComponent<SliceObject>(); }
 	}
 
 	//if the object has been sliced, the rest of it has been disabled so it can't be seen or interacted with, but the metadata
 	//will still reflect it's last position at time of being sliced. This is similar to break
-	public bool isSliced
+	public bool IsSliced
 	{
 		get
 		{
@@ -381,7 +395,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 			return false;
 		}
 	}
-	public bool isDepleted
+	public bool IsDepleted
 	{
 		get
 		{
@@ -389,6 +403,15 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		}
 	}
 	/// end placeholder stuff
+
+	//return temperature enum here
+	public ObjectMetadata.Temperature CurrentObjTemp
+	{
+		get
+		{
+			return CurrentTemperature;
+		}
+	}
 
 	public bool IsReceptacle
 	{
@@ -652,6 +675,8 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 
 		RBoriginalAngularDrag = rb.angularDrag;
 		RBoriginalDrag = rb.drag;
+
+		TimerResetValue = HowManySecondsUntilRoomTemp;
 	}
 
 	public bool DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty prop)
@@ -669,19 +694,21 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 	// Update is called once per frame
 	void Update()
 	{
-
-		// this is overriden by the Agent when doing the Visibility Sphere test
-		// XXX Probably don't need to do this EVERY update loop except in editor for debug purposes
-		//isVisible = false;
 		isInteractable = false;
 
-		//if this object has come to rest, reset it's collision detection mode to discrete
-		//Rigidbody rb = gameObject.GetComponent<Rigidbody>();
-		//if((rb.IsSleeping() == true) && (rb.collisionDetectionMode == CollisionDetectionMode.ContinuousDynamic))
-		//{
-		//	//print("settling");
-		//	rb.collisionDetectionMode = CollisionDetectionMode.Discrete;
-		//}
+		//if this object is either hot or col, begin a timer that counts until the object becomes room temperature again
+		if(CurrentTemperature != ObjectMetadata.Temperature.RoomTemp && StartRoomTempTimer == true)
+		{
+			HowManySecondsUntilRoomTemp -= Time.deltaTime;
+			if(HowManySecondsUntilRoomTemp < 0)
+			{
+				CurrentTemperature = ObjectMetadata.Temperature.RoomTemp;
+				HowManySecondsUntilRoomTemp = TimerResetValue;
+			}
+		}
+
+		//if this isn't reset by a HeatZone/ColdZone
+		StartRoomTempTimer = true;
 	}
 
 	private void FixedUpdate()
@@ -825,7 +852,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		//is colliding only needs to be set for pickupable objects. Also drag/friction values only need to change for pickupable objects not all sim objects
 		if((PrimaryProperty == SimObjPrimaryProperty.CanPickup || PrimaryProperty == SimObjPrimaryProperty.Moveable))
 		{
-			if(other.gameObject.tag == "HighFriction") //&& (PrimaryProperty == SimObjPrimaryProperty.CanPickup || PrimaryProperty == SimObjPrimaryProperty.Moveable))
+			if(other.CompareTag("HighFriction")) //&& (PrimaryProperty == SimObjPrimaryProperty.CanPickup || PrimaryProperty == SimObjPrimaryProperty.Moveable))
 			{
 				Rigidbody rb = gameObject.GetComponent<Rigidbody>();
 
@@ -845,7 +872,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 
 	public void OnTriggerExit(Collider other)
 	{
-		if(other.gameObject.tag == "HighFriction" && (PrimaryProperty == SimObjPrimaryProperty.CanPickup || PrimaryProperty == SimObjPrimaryProperty.Moveable))
+		if(other.CompareTag("HighFriction") && (PrimaryProperty == SimObjPrimaryProperty.CanPickup || PrimaryProperty == SimObjPrimaryProperty.Moveable))
 		{
 			//print( "resetting to default trigger exit");
 
@@ -860,6 +887,11 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 				MyColliders[i].material.staticFriction = OriginalPhysicsMaterialValuesForAllMyColliders[i].StaticFriction;
 				MyColliders[i].material.bounciness = OriginalPhysicsMaterialValuesForAllMyColliders[i].Bounciness;
 			}
+		}
+
+		if(other.CompareTag("HeatZone") || other.CompareTag("ColdZone"))
+		{
+			CurrentTemperature = ObjectMetadata.Temperature.RoomTemp;
 		}
 	}
 
