@@ -139,7 +139,7 @@ public class Break : MonoBehaviour
     //more force to break - ie: dropping mug on floor vs on a rug
     public void OnTriggerStay(Collider other)
     {
-        if(other.gameObject.tag == "HighFriction")
+        if(other.CompareTag("HighFriction"))
         {
             CurrentImpulseThreshold = ImpulseThreshold + HighFrictionImpulseOffset;
         }
@@ -147,7 +147,7 @@ public class Break : MonoBehaviour
 
     public void OnTriggerExit(Collider other)
     {
-        if(other.gameObject.tag == "HighFriction")
+        if(other.CompareTag("HighFriction"))
         {
             CurrentImpulseThreshold = ImpulseThreshold;
         }
