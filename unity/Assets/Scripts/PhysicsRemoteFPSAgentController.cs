@@ -233,7 +233,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             objMeta.fillable = simObj.IsFillable;
             if (objMeta.fillable) {
-                objMeta.isfilled = simObj.isFilled;
+                objMeta.isfilled = simObj.IsFilled;
             }
 
             objMeta.dirtyable = simObj.IsDirtyable;
@@ -247,21 +247,24 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
 
             //placeholder for heatable objects -kettle, pot, pan
-            // objMeta.heatable = simObj.IsHeatable;
-            // if(objMeta.heatable) {
-            //     objMeta.isHeated = simObj.IsHeated;
+            // objMeta.abletocook = simObj.abletocook;
+            // if(objMeta.abletocook) {
+            //     objMeta.isReadyToCook = simObj.IsHeated;
             // }
 
-            objMeta.sliceable = simObj.isSliceable;
+            objMeta.sliceable = simObj.IsSliceable;
             if (objMeta.sliceable) {
-                objMeta.issliced = simObj.isSliced;
+                objMeta.issliced = simObj.IsSliced;
             }
 
             //placeholder for depleted objects here
             objMeta.depletable = simObj.IsDepletable;
             if (objMeta.depletable) {
-                objMeta.isdepleted = simObj.isDepleted;
+                objMeta.isdepleted = simObj.IsDepleted;
             }
+
+            //object temperature to string
+            objMeta.ObjectTemperature = simObj.CurrentObjTemp.ToString();
 
             objMeta.pickupable = simObj.PrimaryProperty == SimObjPrimaryProperty.CanPickup;//can this object be picked up?
             objMeta.ispickedup = simObj.isPickedUp;//returns true for if this object is currently being held by the agent
