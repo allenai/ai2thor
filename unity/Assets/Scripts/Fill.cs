@@ -71,6 +71,14 @@ public class Fill : MonoBehaviour
             if(CoffeeObject != null)
             CoffeeObject.transform.gameObject.SetActive(true);
 
+            //coffee is hot!
+            SimObjPhysics sop = gameObject.GetComponent<SimObjPhysics>();
+            sop.CurrentTemperature = ObjectMetadata.Temperature.Hot;
+            if(sop.HowManySecondsUntilRoomTemp != sop.GetTimerResetValue())
+            sop.HowManySecondsUntilRoomTemp = sop.GetTimerResetValue();
+            sop.SetStartRoomTempTimer(false);
+
+
             isFilled = true;
             currentlyFilledWith = "coffee";
         }

@@ -82,6 +82,12 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 	{
 		return TimerResetValue;
 	}
+	
+	public void SetHowManySecondsUntilRoomTemp(float f)
+	{
+		TimerResetValue = f;
+		HowManySecondsUntilRoomTemp = f;
+	}
 	private bool StartRoomTempTimer = false;
 
 	public void SetStartRoomTempTimer(bool b)
@@ -887,11 +893,6 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 				MyColliders[i].material.staticFriction = OriginalPhysicsMaterialValuesForAllMyColliders[i].StaticFriction;
 				MyColliders[i].material.bounciness = OriginalPhysicsMaterialValuesForAllMyColliders[i].Bounciness;
 			}
-		}
-
-		if(other.CompareTag("HeatZone") || other.CompareTag("ColdZone"))
-		{
-			CurrentTemperature = ObjectMetadata.Temperature.RoomTemp;
 		}
 	}
 
