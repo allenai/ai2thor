@@ -146,6 +146,29 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return ItemInHand;
         }
 
+        //get all sim objets of action.type, then sets their temperature decay timers
+        public void SetRoomTempDecayTime(ServerAction action) {
+            //get all objects of type passed by action
+            SimObjPhysics[] simObjects = GameObject.FindObjectsOfType<SimObjPhysics>();
+
+            List<SimObjPhysics> simObjectsOfType = new List<SimObjPhysics>();
+
+            foreach (SimObjPhysics sop in simObjects)
+            {
+                if(sop.Type.ToString() == action.objectType)
+                {
+                    simObjectsOfType.Add(sop);
+                }
+            }
+            //use SetHowManySecondsUntilRoomTemp to set them all
+            foreach (SimObjPhysics sop in simObjectsOfType)
+            {
+                sop.SetHowManySecondsUntilRoomTemp(action.TimeUntilRoomTemp);
+            }
+
+            actionFinished(true);
+        }
+
         // Update is called once per frame
         void Update() {
             if (FlightMode) {
