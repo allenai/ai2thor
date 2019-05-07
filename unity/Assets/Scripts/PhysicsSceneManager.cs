@@ -49,14 +49,14 @@ public class PhysicsSceneManager : MonoBehaviour
 		//right now only Very High and Ultra will have ssao on by default.
 		if(QualitySettings.GetQualityLevel() < 5)
 		{
-			GameObject.Find("FirstPersonCharacter").
-			GetComponent<ScreenSpaceAmbientOcclusion>().enabled = false;
+			if(GameObject.Find("FirstPersonCharacter").GetComponent<ScreenSpaceAmbientOcclusion>())
+			GameObject.Find("FirstPersonCharacter").GetComponent<ScreenSpaceAmbientOcclusion>().enabled = false;
 		}
 
 		else
 		{
-			GameObject.Find("FirstPersonCharacter").
-			GetComponent<ScreenSpaceAmbientOcclusion>().enabled = true;
+			if(GameObject.Find("FirstPersonCharacter").GetComponent<ScreenSpaceAmbientOcclusion>())
+			GameObject.Find("FirstPersonCharacter").GetComponent<ScreenSpaceAmbientOcclusion>().enabled = true;
 		}
 	}
 
