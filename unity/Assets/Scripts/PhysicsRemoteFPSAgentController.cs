@@ -2314,6 +2314,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         if(psm.StoveTopCheckSpawnArea(ItemInHand.GetComponent<SimObjPhysics>(), osr.attachPoint.transform.position, 
                                                       osr.attachPoint.transform.rotation, false) == false)
                         {
+                            errorMessage = "another object's collision is blocking held object from being placed";
                             actionFinished(false);
                             return;
                         }
