@@ -32,7 +32,7 @@ public class Break : MonoBehaviour
     //if these soft objects hit this breakable object, ignore the breakobject check because it's soft so yeah why would it break this object?
     private List<SimObjType> TooSmalOrSoftToBreakOtherObjects = new List<SimObjType>()
     {SimObjType.TeddyBear, SimObjType.Pillow, SimObjType.Cloth, SimObjType.Bread, SimObjType.BreadSliced, SimObjType.Egg, SimObjType.EggShell, SimObjType.Omelette,
-    SimObjType.EggFried, SimObjType.LettuceSliced, SimObjType.TissueBox, SimObjType.Newspaper, SimObjType.TissueBoxEmpty, SimObjType.TissueBoxEmpty,
+    SimObjType.EggCracked, SimObjType.LettuceSliced, SimObjType.TissueBox, SimObjType.Newspaper, SimObjType.TissueBoxEmpty, SimObjType.TissueBoxEmpty,
     SimObjType.CreditCard, SimObjType.ToiletPaper, SimObjType.ToiletPaperRoll, SimObjType.SoapBar, SimObjType.Pen, SimObjType.Pencil, SimObjType.Towel, 
     SimObjType.Watch, SimObjType.DishSponge, SimObjType.Tissue, SimObjType.CD,};
 
@@ -95,8 +95,25 @@ public class Break : MonoBehaviour
                 }
             }
 
-            Instantiate(PrefabToSwapTo, transform.position, transform.rotation);
+            GameObject resultObject = Instantiate(PrefabToSwapTo, transform.position, transform.rotation);
             broken = true;
+
+            //if this object breaking is an egg, set rotation for the EggCracked object
+            //quick if the result object is an egg hard set it's rotation because EGGS ARE WEIRD and are not the same form as their shelled version
+            if(resultObject.GetComponent<SimObjPhysics>())
+            {
+                if(resultObject.GetComponent<SimObjPhysics>().Type == SimObjType.EggCracked)
+                {
+                    resultObject.transform.rotation = Quaternion.Euler(Vector3.zero);
+                    PhysicsSceneManager psm = GameObject.Find("PhysicsSceneManager").GetComponent<PhysicsSceneManager>();
+                    psm.Generate_InheritedUniqueID(gameObject.GetComponent<SimObjPhysics>(), resultObject.GetComponent<SimObjPhysics>(), 0);
+
+                    Rigidbody resultrb = resultObject.GetComponent<Rigidbody>();
+                    resultrb.collisionDetectionMode = CollisionDetectionMode.ContinuousSpeculative;
+                    resultrb.isKinematic = false;
+                }
+            }
+
         }
 
         if(breakType == BreakType.Decal)
@@ -111,11 +128,12 @@ public class Break : MonoBehaviour
     void OnCollisionEnter(Collision col)
     {
         //first see if the object (col) or this object is in the list of objects that are too small or too soft
-        if(TooSmalOrSoftToBreakOtherObjects.Contains(gameObject.GetComponent<SimObjPhysics>().Type))
-        {
-            return;
-        }
+        // if(TooSmalOrSoftToBreakOtherObjects.Contains(gameObject.GetComponent<SimObjPhysics>().Type))
+        // {
+        //     return;
+        // }
 
+        //if the other collider hit is on the list of things that shouldn't cause this object to break, return and do nothing
         if(col.transform.GetComponentInParent<SimObjPhysics>())
         {
             if(TooSmalOrSoftToBreakOtherObjects.Contains(col.transform.GetComponentInParent<SimObjPhysics>().Type))
