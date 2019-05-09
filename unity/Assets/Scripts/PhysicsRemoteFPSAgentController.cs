@@ -6275,6 +6275,15 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             //we found it!
             if (target) {
+
+                if(ItemInHand != null) {
+                    if(target.transform == ItemInHand.transform) {
+                        errorMessage = "target object cannot be sliced if it is in the agent's hand";
+                        actionFinished(false);
+                        return;
+                    }
+                }
+
                 if (target.GetComponent<SimObjPhysics>().DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanBeSliced)) {
                     target.GetComponent<SliceObject>().Slice();
                     actionFinished(true);

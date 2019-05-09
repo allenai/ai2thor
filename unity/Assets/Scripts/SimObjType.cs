@@ -135,7 +135,7 @@ public enum SimObjType : int
 	GarbageCan = 28,
 	Omelette = 29,
 	EggShell = 30,
-	EggFried = 31,
+	EggCracked = 31,
 	StoveKnob = 32,
 	Container = 33, //for physics version - see GlassBottle
 	Cup = 34,
@@ -311,7 +311,7 @@ public static class ReceptacleRestrictions
 		SimObjType.Pot, SimObjType.Pan, SimObjType.Bowl, SimObjType.Plate, SimObjType.Bread, SimObjType.Cup, SimObjType.Mug, SimObjType.Laptop,
 		SimObjType.SaltShaker, SimObjType.PepperShaker, SimObjType.AlarmClock, SimObjType.Box, SimObjType.SoapBottle, SimObjType.SoapBottleFilled, SimObjType.Kettle,
 		SimObjType.Glassbottle, SimObjType.CreditCard, SimObjType.RemoteControl, SimObjType.Candle, SimObjType.SprayBottle, SimObjType.Statue, SimObjType.Vase, 
-		SimObjType.KeyChain, SimObjType.CD, SimObjType.Book
+		SimObjType.KeyChain, SimObjType.CD, SimObjType.Book, SimObjType.EggCracked
 	};
 
 	//Each sim object type keeps track of what sort of Receptacles it can be placed in
