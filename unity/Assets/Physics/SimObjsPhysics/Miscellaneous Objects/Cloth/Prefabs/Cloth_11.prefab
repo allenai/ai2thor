@@ -56,6 +56,7 @@ GameObject:
   - component: {fileID: 4297940432136434}
   - component: {fileID: 33644572178135716}
   - component: {fileID: 23384267230598484}
+  - component: {fileID: 2010397475555704101}
   m_Layer: 0
   m_Name: mesh
   m_TagString: Untagged
@@ -70,13 +71,13 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1018271951461908}
-  m_LocalRotation: {x: 0.058164947, y: -0.05816496, z: 0.7047106, w: 0.70471036}
-  m_LocalPosition: {x: -0.021, y: -0.015299797, z: 0.096}
-  m_LocalScale: {x: 47.3006, y: 47.30071, z: 47.300556}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 4803748409150410}
   m_RootOrder: 0
-  m_LocalEulerAnglesHint: {x: 9.437, y: 0, z: 90.00001}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!33 &33644572178135716
 MeshFilter:
   m_ObjectHideFlags: 0
@@ -84,7 +85,7 @@ MeshFilter:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1018271951461908}
-  m_Mesh: {fileID: 4300000, guid: 8368c23b8259c4cc0afbed11ac9309b0, type: 3}
+  m_Mesh: {fileID: 4300006, guid: 4ff1f3f7f5045ed43be328ecff465a2b, type: 3}
 --- !u!23 &23384267230598484
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -103,6 +104,7 @@ MeshRenderer:
   m_RendererPriority: 0
   m_Materials:
   - {fileID: 2100000, guid: 912e121d654ff4ab6a9e916b28cf6104, type: 2}
+  - {fileID: 2100000, guid: 937f5335a74cfc14086739fde6c8acf7, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -122,6 +124,20 @@ MeshRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
+--- !u!64 &2010397475555704101
+MeshCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1018271951461908}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Convex: 0
+  m_CookingOptions: 14
+  m_Mesh: {fileID: 4300006, guid: 4ff1f3f7f5045ed43be328ecff465a2b, type: 3}
 --- !u!1 &1044232101850458
 GameObject:
   m_ObjectHideFlags: 0
@@ -538,7 +554,7 @@ MonoBehaviour:
   ReceptacleTriggerBoxes: []
   isVisible: 0
   isInteractable: 0
-  isColliding: 0
+  isInAgentHand: 0
   MyColliders:
   - {fileID: 65544188022167272}
   - {fileID: 65991148251138356}
@@ -552,6 +568,9 @@ MonoBehaviour:
   HFbounciness: 0
   HFrbdrag: 3
   HFrbangulardrag: 0.5
+  CurrentTemperature: 0
+  HowManySecondsUntilRoomTemp: 10
+  ContainedObjectReferences: []
 --- !u!54 &54080884632796424
 Rigidbody:
   m_ObjectHideFlags: 0
