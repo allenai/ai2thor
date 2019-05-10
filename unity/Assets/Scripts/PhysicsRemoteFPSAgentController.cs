@@ -1149,7 +1149,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         protected bool moveObject(SimObjPhysics sop, Vector3 targetPosition, bool snapToGrid=false) {
             Vector3 lastPosition = sop.transform.position;
-            Rigidbody ItemRB = sop.gameObject.GetComponent<Rigidbody>();
+            //Rigidbody ItemRB = sop.gameObject.GetComponent<Rigidbody>(); no longer needs rb reference
 
             if (snapToGrid) {
                 float mult = 1.0f / gridSize;
