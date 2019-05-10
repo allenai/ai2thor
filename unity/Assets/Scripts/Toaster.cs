@@ -5,13 +5,13 @@ using System.Collections;
 public class Toaster : MonoBehaviour 
 {
 
-	private ObjectSpecificReceptacle osr;
-	private CanToggleOnOff onOff;
+	//private ObjectSpecificReceptacle osr;
+	//private CanToggleOnOff onOff;
 
 	void Start()
 	{
-		osr = gameObject.GetComponent<ObjectSpecificReceptacle>();
-		onOff = gameObject.GetComponent<CanToggleOnOff>();
+		//osr = gameObject.GetComponent<ObjectSpecificReceptacle>();
+		//onOff = gameObject.GetComponent<CanToggleOnOff>();
 	}
 	void Update()
 	{
