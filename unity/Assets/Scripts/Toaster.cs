@@ -15,27 +15,30 @@ public class Toaster : MonoBehaviour
 	}
 	void Update()
 	{
-		//on update.... maybe check if toaster is on? if so.... try and toast the object
-		if(osr.attachPoint.transform.GetComponentInChildren<SimObjPhysics>() && onOff.isTurnedOnOrOff())
-		{
-			Toast();
-		}
+		//Note: Moved This call to the HeatZone that is turned on when the toaster is turned on
+
+		
+		// //on update.... maybe check if toaster is on? if so.... try and toast the object
+		// if(osr.attachPoint.transform.GetComponentInChildren<SimObjPhysics>() && onOff.isTurnedOnOrOff())
+		// {
+		// 	Toast();
+		// }
 
 	}
 
-	public void Toast()
-	{
-		//check if attachpoint has a bread
-		//if so, use the ToastObject.Toast() function
-		SimObjPhysics target;
-		target = osr.attachPoint.transform.GetComponentInChildren<SimObjPhysics>();
-		CookObject toast = target.GetComponent<CookObject>();
+	// public void Toast()
+	// {
+	// 	//check if attachpoint has a bread
+	// 	//if so, use the ToastObject.Toast() function
+	// 	SimObjPhysics target;
+	// 	target = osr.attachPoint.transform.GetComponentInChildren<SimObjPhysics>();
+	// 	CookObject toast = target.GetComponent<CookObject>();
 
-		//if not already toasted, toast it!
-		if(!toast.IsCooked())
-		{
-			toast.Cook();
-		}
-	}
+	// 	//if not already toasted, toast it!
+	// 	if(!toast.IsCooked())
+	// 	{
+	// 		toast.Cook();
+	// 	}
+	// }
 	
 }
