@@ -146,6 +146,29 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return ItemInHand;
         }
 
+        //get all sim objets of action.type, then sets their temperature decay timers
+        public void SetRoomTempDecayTime(ServerAction action) {
+            //get all objects of type passed by action
+            SimObjPhysics[] simObjects = GameObject.FindObjectsOfType<SimObjPhysics>();
+
+            List<SimObjPhysics> simObjectsOfType = new List<SimObjPhysics>();
+
+            foreach (SimObjPhysics sop in simObjects)
+            {
+                if(sop.Type.ToString() == action.objectType)
+                {
+                    simObjectsOfType.Add(sop);
+                }
+            }
+            //use SetHowManySecondsUntilRoomTemp to set them all
+            foreach (SimObjPhysics sop in simObjectsOfType)
+            {
+                sop.SetHowManySecondsUntilRoomTemp(action.TimeUntilRoomTemp);
+            }
+
+            actionFinished(true);
+        }
+
         // Update is called once per frame
         void Update() {
             if (FlightMode) {
@@ -233,7 +256,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             objMeta.fillable = simObj.IsFillable;
             if (objMeta.fillable) {
-                objMeta.isfilled = simObj.isFilled;
+                objMeta.isfilled = simObj.IsFilled;
             }
 
             objMeta.dirtyable = simObj.IsDirtyable;
@@ -247,21 +270,24 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
 
             //placeholder for heatable objects -kettle, pot, pan
-            // objMeta.heatable = simObj.IsHeatable;
-            // if(objMeta.heatable) {
-            //     objMeta.isHeated = simObj.IsHeated;
+            // objMeta.abletocook = simObj.abletocook;
+            // if(objMeta.abletocook) {
+            //     objMeta.isReadyToCook = simObj.IsHeated;
             // }
 
-            objMeta.sliceable = simObj.isSliceable;
+            objMeta.sliceable = simObj.IsSliceable;
             if (objMeta.sliceable) {
-                objMeta.issliced = simObj.isSliced;
+                objMeta.issliced = simObj.IsSliced;
             }
 
             //placeholder for depleted objects here
             objMeta.depletable = simObj.IsDepletable;
             if (objMeta.depletable) {
-                objMeta.isdepleted = simObj.isDepleted;
+                objMeta.isdepleted = simObj.IsDepleted;
             }
+
+            //object temperature to string
+            objMeta.ObjectTemperature = simObj.CurrentObjTemp.ToString();
 
             objMeta.pickupable = simObj.PrimaryProperty == SimObjPrimaryProperty.CanPickup;//can this object be picked up?
             objMeta.ispickedup = simObj.isPickedUp;//returns true for if this object is currently being held by the agent
@@ -2566,6 +2592,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         PhysicsSceneManager psm = GameObject.Find("PhysicsSceneManager").GetComponent<PhysicsSceneManager>();
                         if (psm.StoveTopCheckSpawnArea(ItemInHand.GetComponent<SimObjPhysics>(), osr.attachPoint.transform.position,
                                 osr.attachPoint.transform.rotation, false) == false) {
+                            errorMessage = "another object's collision is blocking held object from being placed";
                             actionFinished(false);
                             return;
                         }
@@ -6252,6 +6279,15 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             //we found it!
             if (target) {
+
+                if(ItemInHand != null) {
+                    if(target.transform == ItemInHand.transform) {
+                        errorMessage = "target object cannot be sliced if it is in the agent's hand";
+                        actionFinished(false);
+                        return;
+                    }
+                }
+
                 if (target.GetComponent<SimObjPhysics>().DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanBeSliced)) {
                     target.GetComponent<SliceObject>().Slice();
                     actionFinished(true);
