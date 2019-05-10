@@ -1216,6 +1216,18 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }  
+                
+                case "SetTempTimer":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "SetRoomTempDecayTime";
+
+                        action.TimeUntilRoomTemp = 20f;
+                        action.objectType = "Bread";
+                        PhysicsController.ProcessControlCommand(action);
+
+                        break;
+                    }
                     
                     //throw object by dropping it and applying force.
                     //default is with strength of 120, can pass in custom magnitude of throw force

@@ -16,7 +16,11 @@ public class Toaster : MonoBehaviour
 	void Update()
 	{
 		//on update.... maybe check if toaster is on? if so.... try and toast the object
-		Toast();
+		if(osr.attachPoint.transform.GetComponentInChildren<SimObjPhysics>() && onOff.isTurnedOnOrOff())
+		{
+			Toast();
+		}
+
 	}
 
 	public void Toast()
@@ -24,17 +28,14 @@ public class Toaster : MonoBehaviour
 		//check if attachpoint has a bread
 		//if so, use the ToastObject.Toast() function
 		SimObjPhysics target;
+		target = osr.attachPoint.transform.GetComponentInChildren<SimObjPhysics>();
+		CookObject toast = target.GetComponent<CookObject>();
 
-		if(osr.attachPoint.transform.GetComponentInChildren<SimObjPhysics>() && onOff.isTurnedOnOrOff())
+		//if not already toasted, toast it!
+		if(!toast.IsCooked())
 		{
-			target = osr.attachPoint.transform.GetComponentInChildren<SimObjPhysics>();
-			CookObject toast = target.GetComponent<CookObject>();
-
-			//if not already toasted, toast it!
-			if(!toast.IsCooked())
-			{
-				toast.Cook();
-			}
+			toast.Cook();
 		}
 	}
+	
 }

@@ -605,9 +605,13 @@ public class ObjectMetadata
 	///
 	public bool cookable;//can this object be turned to a cooked state? object should not be able to toggle back to uncooked state with contextual interactions, only a direct action
 	public bool iscooked;//is it cooked right now? - context sensitive objects might set this automatically like Toaster/Microwave/ Pots/Pans if isHeated = true
-	///
-	public bool heatable;//can this object be heated up by a "fire" tagged source? -  use this for Pots/Pans
-	public bool isHeated;//object is in contact with a "fire" tagged source (stove burner), if this is heated any object cookable object touching it will be switched to cooked - again use for Pots/Pans
+	// ///
+	// public bool abletocook;//can this object be heated up by a "fire" tagged source? -  use this for Pots/Pans
+	// public bool isabletocook;//object is in contact with a "fire" tagged source (stove burner), if this is heated any object cookable object touching it will be switched to cooked - again use for Pots/Pans
+	//
+	//temperature placeholder values, might get more specific later with degrees but for now just track these three states
+	public enum Temperature { RoomTemp, Hot, Cold};
+	public string ObjectTemperature;//return current abstracted temperature of object as a string (RoomTemp, Hot, Cold)
 	//
 	public bool sliceable;//can this be sliced in some way?
 	public bool issliced;//currently sliced?
@@ -768,8 +772,8 @@ public class ServerAction
 	public float cameraY;
 	public bool placeStationary = true; //when placing/spawning an object, do we spawn it stationary (kinematic true) or spawn and let physics resolve final position
 	public string ssao = "default";
-
 	public string fillLiquid; //string to indicate what kind of liquid this object should be filled with. Water, Coffee, Wine etc.
+	public float TimeUntilRoomTemp;
 	public SimObjType ReceptableSimObjType()
 	{
 		if (string.IsNullOrEmpty(receptacleObjectType))
