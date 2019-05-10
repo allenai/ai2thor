@@ -56,6 +56,8 @@ GameObject:
   - component: {fileID: 4283029283507966}
   - component: {fileID: 114337487216107734}
   - component: {fileID: 54314731973614192}
+  - component: {fileID: 7490751233978720825}
+  - component: {fileID: 1117314891470498773}
   m_Layer: 8
   m_Name: Egg_6
   m_TagString: SimObjPhysics
@@ -97,7 +99,7 @@ MonoBehaviour:
   uniqueID: 
   Type: 20
   PrimaryProperty: 3
-  SecondaryProperties: 
+  SecondaryProperties: 090000000b000000
   BoundingBox: {fileID: 1798389160870482}
   VisibilityPoints:
   - {fileID: 4278884142727064}
@@ -109,7 +111,7 @@ MonoBehaviour:
   ReceptacleTriggerBoxes: []
   isVisible: 0
   isInteractable: 0
-  isColliding: 0
+  isInAgentHand: 0
   MyColliders:
   - {fileID: 136698232357527252}
   HFdynamicfriction: 2
@@ -117,6 +119,8 @@ MonoBehaviour:
   HFbounciness: 0
   HFrbdrag: 1
   HFrbangulardrag: 5
+  CurrentTemperature: 0
+  HowManySecondsUntilRoomTemp: 10
   ContainedObjectReferences: []
 --- !u!54 &54314731973614192
 Rigidbody:
@@ -134,6 +138,39 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 2
+--- !u!114 &7490751233978720825
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1054363378087094}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d07b0b60d7fb54ea9a1ddeca3f431392, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ObjectToChangeTo: {fileID: 7174331658111165399, guid: 6444bc5f33c6b48288dd4a13f7ad2dd6,
+    type: 3}
+  isSliced: 0
+--- !u!114 &1117314891470498773
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1054363378087094}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 02b2beb760fcd4a6f957400c276adb00, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  PrefabToSwapTo: {fileID: 7174331658111165399, guid: 6444bc5f33c6b48288dd4a13f7ad2dd6,
+    type: 3}
+  DirtyPrefabToSwapTo: {fileID: 0}
+  ImpulseThreshold: 0.15
+  HighFrictionImpulseOffset: 0.25
+  breakType: 0
 --- !u!1 &1127400859337606
 GameObject:
   m_ObjectHideFlags: 0
