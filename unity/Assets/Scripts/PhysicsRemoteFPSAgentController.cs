@@ -1132,10 +1132,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 targetPosition = new Vector3(gridX, targetPosition.y, gridZ);
             }
 
-            RaycastHit[] sweepResults = ItemRB.SweepTestAll(
-                targetPosition - sop.transform.position,
-                Vector3.Distance(targetPosition, sop.transform.position),
-                QueryTriggerInteraction.Ignore
+            Vector3 dir = targetPosition - sop.transform.position;
+            RaycastHit[] sweepResults = UtilityFunctions.CastAllPrimitiveColliders(
+                sop.gameObject, targetPosition - sop.transform.position, dir.magnitude,
+                1 << 8 | 1 << 10, QueryTriggerInteraction.Ignore
             );
 
             if (sweepResults.Length > 0) {
@@ -1252,23 +1252,24 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
 
-        public bool moveAgentsWithObject(SimObjPhysics objectToMove, Vector3 d) {
+        public bool moveAgentsWithObject(SimObjPhysics objectToMove, Vector3 d, bool snapToGrid=true) {
             List<Vector3> startAgentPositions = new List<Vector3>();
             var agentMovePQ = new SimplePriorityQueue<BaseFPSAgentController>();
             foreach (BaseFPSAgentController agent in agentManager.agents) {
                 var p = agent.transform.position;
                 startAgentPositions.Add(p);
-                agentMovePQ.Enqueue(agent, -(d.x * p.x + d.y * p.y + d.z * p.z));
+                agentMovePQ.Enqueue(agent, -(d.x * p.x + d.z * p.z));
             }
             Vector3 startObjectPosition = objectToMove.transform.position;
-            float objectPriority = d.x * startObjectPosition.x + d.y * startObjectPosition.y + d.z * startObjectPosition.z;
+            float objectPriority = d.x * startObjectPosition.x + d.z * startObjectPosition.z;
             bool objectMoved = false;
 
             bool success = true;
+            Physics.autoSimulation = false;
             while (agentMovePQ.Count > 0 || !objectMoved) {
                 if (agentMovePQ.Count == 0) {
-                    // Debug.Log("Object count 0");
-                    success = moveObject(objectToMove, objectToMove.transform.position + d);
+                    success = moveObject(objectToMove, objectToMove.transform.position + d, snapToGrid);
+                    Physics.Simulate(0.04f);
                     break;
                 } else {
                     PhysicsRemoteFPSAgentController nextAgent = (PhysicsRemoteFPSAgentController) agentMovePQ.First;
@@ -1276,18 +1277,21 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                     if (!objectMoved && agentPriority < objectPriority) {
                         // Debug.Log("Object");
-                        success = moveObject(objectToMove, objectToMove.transform.position + d);
+                        success = moveObject(objectToMove, objectToMove.transform.position + d, snapToGrid);
+                        Physics.Simulate(0.04f);
                         objectMoved = true;
                     } else {
                         // Debug.Log(nextAgent);
                         agentMovePQ.Dequeue();
                         success = nextAgent.moveInDirection(d);
+                        Physics.Simulate(0.04f);
                     }
                 }
                 if (!success) {
                     break;
                 }
             }
+            Physics.autoSimulation = true;
             if (!success) {
                 for (int i = 0; i < agentManager.agents.Count; i++) {
                     agentManager.agents[i].transform.position = startAgentPositions[i];
@@ -4934,7 +4938,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     }
                 }
                 if (stepsTaken > 10000) {
-                    errorMessage = "Too many steps taken in getReachablePoints.";
+                    errorMessage = "Too many steps taken in GetReachablePositions.";
                     Debug.Log(errorMessage);
                     break;
                 }
