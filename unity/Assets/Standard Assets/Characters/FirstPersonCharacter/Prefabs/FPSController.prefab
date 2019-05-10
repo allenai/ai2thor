@@ -39,7 +39,7 @@ Transform:
   - {fileID: 4372852436466418}
   m_Father: {fileID: 0}
   m_RootOrder: 0
-  m_LocalEulerAnglesHint: {x: 0, y: 90, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!143 &14300000
 CharacterController:
   m_ObjectHideFlags: 0
@@ -86,6 +86,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 204095267115c4e5e881afdd16303d91, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  MaxChargeThrowSeconds: 1.4
+  MaxThrowForce: 1000
+  HandMoveMagnitude: 0.1
   PhysicsController: {fileID: 0}
 --- !u!114 &3388362411129917294
 MonoBehaviour:
@@ -99,7 +102,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c62b2af4d65ac45f4bff0484beb171f0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  InputFieldObj: {fileID: 0}
   PhysicsController: {fileID: 0}
+  InputMode_Text: {fileID: 0}
 --- !u!114 &114000010621761404
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -158,6 +163,7 @@ MonoBehaviour:
   m_Camera: {fileID: 0}
   m_CharacterController: {fileID: 0}
   actionComplete: 0
+  maxVisibleDistance: 1.5
   actionDuration: 3
   ToSetActive:
   - {fileID: 1340499340313870}
