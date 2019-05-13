@@ -43,12 +43,15 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 	public GameObject[] ReceptacleTriggerBoxes = null;
 
 	[Header("State information Bools here")]
+	#if UNITY_EDITOR
 	public bool isVisible = false;
+	#endif
 	public bool isInteractable = false;
-	public bool isColliding = false;
+	public bool isInAgentHand = false;
 
 	private Bounds bounds;
 
+	//these collider references are used for switching physics materials for all colliders on this object
 	[Header("Non - Trigger Colliders of this object")]
 	public Collider[] MyColliders = null;
 
@@ -69,8 +72,28 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 	//if this object is a receptacle, get all valid spawn points from any child ReceptacleTriggerBoxes and sort them by distance to Agent
 	List<ReceptacleSpawnPoint> MySpawnPoints = new List<ReceptacleSpawnPoint>();
 
-	//initial position object spawned in in case we want to reset the scene
-	//private Vector3 startPosition;   
+	//keep track of this object's current temperature (abstracted to three states, RoomTemp/Hot/Cold)
+	public ObjectMetadata.Temperature CurrentTemperature = ObjectMetadata.Temperature.RoomTemp;
+
+	//value for how long it should take this object to get back to room temperature from hot/cold
+	public float HowManySecondsUntilRoomTemp = 10f;
+	private float TimerResetValue;
+	public float GetTimerResetValue()
+	{
+		return TimerResetValue;
+	}
+	
+	public void SetHowManySecondsUntilRoomTemp(float f)
+	{
+		TimerResetValue = f;
+		HowManySecondsUntilRoomTemp = f;
+	}
+	private bool StartRoomTempTimer = false;
+
+	public void SetStartRoomTempTimer(bool b)
+	{
+		StartRoomTempTimer = b;
+	}
 
 	public List<SimObjPhysics> ContainedObjectReferences;
 
@@ -110,19 +133,6 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 			uniqueID = value;
 		}
 	}
-
-       public bool IsVisible
-       {
-               get
-               {
-                       return isVisible;
-               }
-
-               set {
-                       isVisible = value;
-               }
-       }
-
 	public Bounds Bounds
 	{
 		get
@@ -132,16 +142,6 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 			return bounds;
 		}
 	}
-
-
-	public bool IsPickupable
-	{
-		get
-		{
-			return this.PrimaryProperty == SimObjPrimaryProperty.CanPickup;
-		}
-	}
-
 
 	public SimObjType ObjType
 	{
@@ -186,32 +186,70 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		}
 	}
 
+	//this is not used.... maybe get rid of?
 	public bool Open()
 	{
 		// XXX need to implement
 		return false;
 	}
 
+	//this is also not used... also maybe get rid of?
 	public bool Close()
 	{
 		// XXX need to implement
 		return false;
 	}
 
-	public bool IsToggleable
+	public bool IsPickupable
 	{
-		get { return this.GetComponent<CanToggleOnOff>(); }
+		get
+		{
+			return this.PrimaryProperty == SimObjPrimaryProperty.CanPickup;
+		}
 	}
 
-	public bool IsOpenable
+	//if this pickupable object is being held by the agent right
+	public bool isPickedUp
 	{
-		get { return this.GetComponent<CanOpen_Object>(); }
+		get
+		{
+			return this.isInAgentHand;
+		}
+	}
+
+
+	//note some objects are not toggleable, but can still return the IsToggled meta value (ex: stove burners)
+	//stove burners are not toggleable directly, a stove knob controls them.
+	public bool IsToggleable
+	{
+		get 
+		{ 
+			if(this.GetComponent<CanToggleOnOff>())
+			{
+				//if this object is self controlled, it is toggleable
+				if(this.GetComponent<CanToggleOnOff>().ReturnSelfControlled())
+				return true;
+
+				//if it is not self controlled (meaning controlled by another sim object) return not toggleable
+				//although if this object is not toggleable, it may still return isToggled as a state (see IsToggled below)
+				else
+				return false;
+			}
+
+			else
+			return false;
+			//return this.GetComponent<CanToggleOnOff>(); 
+		}
 	}
 
 	public bool IsToggled
 	{
 		get
 		{
+			//note: this can return "toggled on or off" info about objects that are controlled by other sim objects
+			//for example, a stove burner will return if it is on/off even though the burner itself cannot be interacted with
+			//to toggle the on/off state. Stove burners and objects like it can only have their state toggled by a sim object
+			//that controls it (in this case stove knob -controls-> stove burner)
 			CanToggleOnOff ctoo = this.GetComponent<CanToggleOnOff>();
 
 			if (ctoo != null)
@@ -223,6 +261,11 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 				return false;
 			}
 		}
+	}
+
+	public bool IsOpenable
+	{
+		get { return this.GetComponent<CanOpen_Object>(); }
 	}
 
 	public bool IsOpen
@@ -239,6 +282,140 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 			{
 				return false;
 			}
+		}
+	}
+
+	public bool IsBreakable
+	{
+		get{ return this.GetComponent<Break>(); }
+	}
+
+	public bool IsBroken
+	{
+		get
+		{
+			Break b = this.GetComponent<Break>();
+			if(b != null)
+			{
+				return b.isBroken();
+			}
+			else
+			{
+				return false;
+			}
+		}
+	}
+
+	public bool IsFillable
+	{
+		get{ return this.GetComponent<Fill>(); }
+	}
+
+	public bool IsFilled
+	{
+		get
+		{
+			Fill f = this.GetComponent<Fill>();
+			if(f != null)
+			{
+				return f.IsFilled();
+			}
+			else
+			{
+				return false;
+			}
+		}
+	}
+
+	public bool IsDirtyable
+	{
+		get{ return this.GetComponent<Dirty>(); }
+	}
+
+	public bool IsDirty
+	{
+		get
+		{
+			Dirty deedsdonedirtcheap = this.GetComponent<Dirty>();
+			if(deedsdonedirtcheap != null)
+			{
+				return deedsdonedirtcheap.IsDirty();
+			}
+			else
+			{
+				return false;
+			}
+		}
+	}
+
+	public bool IsCookable
+	{
+		get{ return this.GetComponent<CookObject>(); }
+	}
+
+	public bool IsCooked
+	{
+		get
+		{
+			CookObject tasty = this.GetComponent<CookObject>();
+			if(tasty != null)
+			{
+				return tasty.IsCooked();
+			}
+			else
+			{
+				return false;
+			}
+		}
+	}
+
+	//remember sliceable objects get disabled and a new sliced version of the object is spawned into the scene
+	public bool IsSliceable
+	{
+		get{ return this.GetComponent<SliceObject>(); }
+	}
+
+	//if the object has been sliced, the rest of it has been disabled so it can't be seen or interacted with, but the metadata
+	//will still reflect it's last position at time of being sliced. This is similar to break
+	public bool IsSliced
+	{
+		get
+		{
+			SliceObject kars = this.GetComponent<SliceObject>();
+			if(kars != null)
+			{
+				return kars.IsSliced();
+			}
+			else
+			{
+				return false;
+			}
+		}
+	}
+
+	///these aren't in yet, just placeholder
+	public bool IsDepletable
+	{
+		get
+		{
+			return false;
+		}
+	}
+	public bool IsDepleted
+	{
+		get
+		{
+			return false;
+		}
+	}
+	/// end placeholder stuff
+
+	//return temperature enum here
+	public ObjectMetadata.Temperature CurrentObjTemp
+	{
+		get
+		{
+			return CurrentTemperature;
 		}
 	}
 
@@ -357,9 +534,10 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 	public static void CreateFromMesh()
 	{
 		GameObject prefabRoot = Selection.activeGameObject;
-		GameObject top = new GameObject("changethisname");
+        GameObject top = new GameObject(prefabRoot.name);
 		top.transform.position = prefabRoot.transform.position;
 		top.transform.rotation = prefabRoot.transform.rotation;
+        prefabRoot.name = "mesh";
 
 		prefabRoot.transform.SetParent(top.transform);
 
@@ -397,11 +575,73 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 
 	}
 
+    [UnityEditor.MenuItem("SimObjectPhysics/Set All Transforms to Defaults &d")]
+    public static void ResetTransform()
+    {
+        GameObject selected = Selection.activeGameObject;
+
+        List<Transform> selectedchildren = new List<Transform>();
+
+        foreach (Transform t in selected.transform)
+        {
+            //print(t.name);
+            selectedchildren.Add(t);
+            //t.SetParent(null);
+        }
+
+        foreach (Transform yes in selectedchildren)
+        {
+            yes.SetParent(null);
+        }
+
+        selected.transform.localPosition = new Vector3(0, 0, 0);
+        selected.transform.localRotation = new Quaternion(0, 0, 0, 0);
+        selected.transform.localScale = new Vector3(1, 1, 1);
+
+        foreach (Transform t in selectedchildren)
+        {
+            t.SetParent(selected.transform);
+        }
+
+
+    }
+
+    [UnityEditor.MenuItem("SimObjectPhysics/Rotate Box Flap 90 on Y &s")]
+    public static void RotateTheBoxFlap()
+    {
+        GameObject selected = Selection.activeGameObject;
+
+        List<Transform> selectedchildren = new List<Transform>();
+
+        foreach (Transform t in selected.transform)
+        {
+            //print(t.name);
+            selectedchildren.Add(t);
+            //t.SetParent(null);
+        }
+
+        foreach (Transform yes in selectedchildren)
+        {
+            yes.SetParent(null);
+        }
+
+        float initialRot = selected.transform.localRotation.eulerAngles.x;
+
+		Vector3 setrot = new Vector3(0, 90, 180 - initialRot); //This is weird and we don't know why
+
+        selected.transform.localRotation = Quaternion.Euler(setrot + new Vector3(-180, 180, 180)); //This is weird and we don't know why
+        selected.transform.localScale = new Vector3(1, 1, 1);
+
+        foreach (Transform t in selectedchildren)
+        {
+            t.SetParent(selected.transform);
+        }
+    }
 
 #endif
 
-	// Use this for initialization
-	void Start()
+    // Use this for initialization
+    void Start()
 	{
 		//XXX For Debug setting up scene, comment out or delete when done settig up scenes
 #if UNITY_EDITOR
@@ -441,6 +681,8 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 
 		RBoriginalAngularDrag = rb.angularDrag;
 		RBoriginalDrag = rb.drag;
+
+		TimerResetValue = HowManySecondsUntilRoomTemp;
 	}
 
 	public bool DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty prop)
@@ -458,24 +700,26 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 	// Update is called once per frame
 	void Update()
 	{
-
-		//this is overriden by the Agent when doing the Visibility Sphere test
-		//XXX Probably don't need to do this EVERY update loop except in editor for debug purposes
-		isVisible = false;
 		isInteractable = false;
 
-		//if this object has come to rest, reset it's collision detection mode to discrete
-		Rigidbody rb = gameObject.GetComponent<Rigidbody>();
-		if((rb.IsSleeping() == true) && (rb.collisionDetectionMode == CollisionDetectionMode.ContinuousDynamic))
+		//if this object is either hot or col, begin a timer that counts until the object becomes room temperature again
+		if(CurrentTemperature != ObjectMetadata.Temperature.RoomTemp && StartRoomTempTimer == true)
 		{
-			//print("settling");
-			rb.collisionDetectionMode = CollisionDetectionMode.Discrete;
+			HowManySecondsUntilRoomTemp -= Time.deltaTime;
+			if(HowManySecondsUntilRoomTemp < 0)
+			{
+				CurrentTemperature = ObjectMetadata.Temperature.RoomTemp;
+				HowManySecondsUntilRoomTemp = TimerResetValue;
+			}
 		}
+
+		//if this isn't reset by a HeatZone/ColdZone
+		StartRoomTempTimer = true;
 	}
 
 	private void FixedUpdate()
 	{
-		isColliding = false;
+		isInteractable = false;
 	}
 
 	//used for throwing the sim object, or anything that requires adding force for some reason
@@ -610,52 +854,31 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		}
 	}
 
-	public void OnTriggerStay(Collider other)
-	{
-
-		if(other.gameObject.tag == "HighFriction" && (PrimaryProperty == SimObjPrimaryProperty.CanPickup || PrimaryProperty == SimObjPrimaryProperty.Moveable))
+	public void OnTriggerEnter(Collider other) {
+		//is colliding only needs to be set for pickupable objects. Also drag/friction values only need to change for pickupable objects not all sim objects
+		if((PrimaryProperty == SimObjPrimaryProperty.CanPickup || PrimaryProperty == SimObjPrimaryProperty.Moveable))
 		{
-			Rigidbody rb = gameObject.GetComponent<Rigidbody>();
-
-			//add something so that drag/angular drag isn't reset if we haven't set it on the object yet
-			rb.drag = HFrbdrag;
-			rb.angularDrag = HFrbangulardrag;
-			
-			foreach (Collider col in MyColliders)
+			if(other.CompareTag("HighFriction")) //&& (PrimaryProperty == SimObjPrimaryProperty.CanPickup || PrimaryProperty == SimObjPrimaryProperty.Moveable))
 			{
-				col.material.dynamicFriction = HFdynamicfriction;
-				col.material.staticFriction = HFstaticfriction;
-				col.material.bounciness = HFbounciness;
+				Rigidbody rb = gameObject.GetComponent<Rigidbody>();
+
+				//add something so that drag/angular drag isn't reset if we haven't set it on the object yet
+				rb.drag = HFrbdrag;
+				rb.angularDrag = HFrbangulardrag;
+				
+				foreach (Collider col in MyColliders)
+				{
+					col.material.dynamicFriction = HFdynamicfriction;
+					col.material.staticFriction = HFstaticfriction;
+					col.material.bounciness = HFbounciness;
+				}
 			}
-		}
-
-		//ignore collision of ghosted receptacle trigger boxes
-		//because of this MAKE SURE ALL receptacle trigger boxes are tagged as "Receptacle," they should be by default
-		//do this flag first so that the check against non Player objects overrides it in the right order
-		if (other.tag == "Receptacle")
-		{
-			isColliding = false;
-			return;
-		}
-
-		//make sure nothing is dropped while inside the agent (the agent will try to "push(?)" it out and it will fall in unpredictable ways
-		else if (other.tag == "Player" && other.name == "FPSController")
-		{
-			isColliding = true;
-			return;
-		}
-
-		//this is hitting something else so it must be colliding at this point!
-		else if (other.tag != "Player")
-		{
-			isColliding = true;
-			return;
 		}
 	}
 
 	public void OnTriggerExit(Collider other)
 	{
-		if(other.gameObject.tag == "HighFriction" && (PrimaryProperty == SimObjPrimaryProperty.CanPickup || PrimaryProperty == SimObjPrimaryProperty.Moveable))
+		if(other.CompareTag("HighFriction") && (PrimaryProperty == SimObjPrimaryProperty.CanPickup || PrimaryProperty == SimObjPrimaryProperty.Moveable))
 		{
 			//print( "resetting to default trigger exit");
 
@@ -680,7 +903,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 
 		//if this object is in visibile range and not blocked by any other object, it is visible
 		//visible drawn in yellow
-		if (isVisible == true)
+		if (isVisible == true && gameObject.GetComponentInChildren<MeshFilter>())
 		{
 			MeshFilter mf = gameObject.GetComponentInChildren<MeshFilter>(false);
 			Gizmos.color = Color.yellow;
@@ -688,7 +911,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		}
 
 		//interactable drawn in magenta
-		if (isInteractable == true)
+		if (isInteractable == true && gameObject.GetComponentInChildren<MeshFilter>())
 		{
 			MeshFilter mf = gameObject.GetComponentInChildren<MeshFilter>(false);
 			Gizmos.color = Color.magenta;
@@ -1593,6 +1816,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 
 		foreach(Transform t in gameObject.transform)
 		{
+			//add any receptacle trigger boxes
 			if(t.GetComponent<Contains>())
 			{
 				if(!recepboxes.Contains(t.gameObject))
@@ -1623,6 +1847,23 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 					}
 				}
 			}
+
+			//check if child object "t" has any objects under it called "Colliders"
+			if(t.Find("Colliders"))
+			{
+				Transform childColliderObject = t.Find("Colliders");
+
+				//if TriggerColliders dont already exist as a child under this child object t, create it by copying childColliderObject
+				if(!t.Find("TriggerColliders"))
+				{
+					GameObject inst = Instantiate(childColliderObject.gameObject, t, true);
+					inst.name = "TriggerColliders";
+					foreach(Transform thing in inst.transform)
+					{
+						thing.GetComponent<Collider>().isTrigger = true;
+					}
+				}
+			}
 		}
 
 		ReceptacleTriggerBoxes = recepboxes.ToArray();
@@ -1639,11 +1880,11 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 	//[ContextMenu("Set Up Colliders")]
 	public void ContextSetUpColliders()
 	{
+		List<Collider> listColliders = new List<Collider>();
+		
 		if (transform.Find("Colliders"))
 		{
 			Transform Colliders = transform.Find("Colliders");
-
-			List<Collider> listColliders = new List<Collider>();
 
 			foreach (Transform child in Colliders)
 			{
@@ -1660,11 +1901,37 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 					child.GetComponent<Collider>().enabled = true;
 					child.GetComponent<Collider>().isTrigger = false;
 				}
-
 			}
-
-			MyColliders = listColliders.ToArray();
 		}
+
+		//loop through all child objects. For each object, check if the child itself has a child called Colliders....
+		foreach (Transform child in transform)
+		{
+			if(child.Find("Colliders"))
+			{
+				Transform Colliders = child.Find("Colliders");
+
+				foreach (Transform childschild in Colliders)
+				{
+					//list.toarray
+					listColliders.Add(childschild.GetComponent<Collider>());
+
+					//set correct tag and layer for each object
+					//also ensure all colliders are NOT trigger
+					childschild.gameObject.tag = "SimObjPhysics";
+					childschild.gameObject.layer = 8;
+
+					if (childschild.GetComponent<Collider>())
+					{
+						childschild.GetComponent<Collider>().enabled = true;
+						childschild.GetComponent<Collider>().isTrigger = false;
+					}
+				}
+			}
+		}
+
+		MyColliders = listColliders.ToArray();
+
 	}
 
 	//[ContextMenu("Set Up TriggerColliders")]
@@ -1701,11 +1968,11 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 	// [ContextMenu("Set Up VisibilityPoints")]
 	void ContextSetUpVisibilityPoints()
 	{
+		List<Transform> vplist = new List<Transform>();
+
 		if (transform.Find("VisibilityPoints"))
 		{
 			Transform vp = transform.Find("VisibilityPoints");
-
-			List<Transform> vplist = new List<Transform>();
 
 			foreach (Transform child in vp)
 			{
@@ -1715,9 +1982,24 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 				child.gameObject.tag = "Untagged";
 				child.gameObject.layer = 8;
 			}
-
-			VisibilityPoints = vplist.ToArray();
 		}
+
+		foreach (Transform child in transform)
+		{
+			if(child.Find("VisibilityPoints"))
+			{
+				Transform vp = child.Find("VisibilityPoints");
+
+				foreach (Transform childschild in vp)
+				{
+					vplist.Add(childschild);
+					childschild.gameObject.tag = "Untagged";
+					childschild.gameObject.layer = 8;
+				}
+			}
+		}
+
+		VisibilityPoints = vplist.ToArray();
 	}
 
 	//[ContextMenu("Set Up Rotate Agent Collider")]
