@@ -689,7 +689,6 @@ public interface SimpleSimObj {
 	bool IsOpen {get; }
 	bool IsPickupable {get; }
 	bool IsOpenable {get; }
-	bool IsVisible {get; set;}
 	bool Open(); 
 	bool Close();
 	List<PivotSimObj> PivotSimObjs {get;}

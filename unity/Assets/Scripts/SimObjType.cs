@@ -36,20 +36,20 @@ public enum SimObjSecondaryProperty : int //EACH SimObjPhysics can have any numb
 	//NEVER LEAVE UNDEFINED
 	Undefined = 0,
 
-	//CLEANABLE PROPERTIES - this property defines what objects can clean certain objects
+	//CLEANABLE PROPERTIES - this property defines what objects can clean certain objects - we might not use this, stay posted
     CanBeCleanedFloor = 1,
     CanBeCleanedDishware = 2,
     CanBeCleanedGlass = 3,
 
     //OTHER SECONDARY PROPERTIES 
-    CanCleanFloor = 4,
-    CanCleanDishware = 5,
-    CanCleanGlass = 6,
+    CanBeDirty = 4,
+    CanBeFilled = 5,
+    CanBeDepleted = 6,
     Receptacle = 7,
     CanOpen = 8,
     CanBeSliced = 9,
     CanSlice = 10,
-    CanBeCracked = 11,
+    CanBreak = 11,
     CanBeFilledWithWater = 12,
     CanFillWithWater = 13,
     CanBeHeatedCookware = 14,
@@ -58,35 +58,40 @@ public enum SimObjSecondaryProperty : int //EACH SimObjPhysics can have any numb
     CanStoveTopCook = 17,
     CanBeMicrowaved = 18,
     CanMicrowave = 19,
-    CanBeToasted = 20,
+    CanBeCooked = 20,
     CanToast = 21,
     CanBeFilledWithCoffee = 22,
     CanFillWithCoffee = 23,
     CanBeWatered = 24,
     CanWater = 25,
-    CanBeFilledWithSoap = 26,
+    CanBeFilledWithSoap = 26, //might not use this, instead categorize all as CanBeFullOrEmpty -see below 28
     CanFillWithSoap = 27,
-    CanBeUnrolled = 28,
+    CanBeFullOrEmpty = 28, //for things that can be emptied like toilet paper, paper towel, tissue box
     CanToggleOnOff = 29,
     CanBeBedMade = 30,
     CanBeMounted = 31,
     CanMount = 32,
 	CanBeHungTowel = 33,
     CanHangTowel = 34,
-    CanBeOnToiletPaperHolder = 35,
-    CanHoldToiletPaper = 36,
+    CanBeOnToiletPaperHolder = 35, //do not use, use object specific receptacle instead
+    CanHoldToiletPaper = 36, //do not use, use object specific receptacle instead
     CanBeClogged = 37,
     CanUnclog = 38,
     CanBeOmelette = 39,
     CanMakeOmelette = 40,
     CanFlush = 41,
     CanTurnOnTV = 42,
+	
+	// Might not use this, as picking up paintings is not really feasible if we have to lift and carry it. They are just way too big....
+	// All Painting Mount Stuff Here
     CanMountSmall = 43,
     CanMountMedium = 44,
     CanMountLarge = 45,
     CanBeMountedSmall = 46,
     CanBeMountedMedium = 47,
     CanBeMountedLarge = 48,
+	//End Painting Mount Stuff
+
     CanBeLitOnFire = 49,
     CanLightOnFire = 50,
     CanSeeThrough = 51,
@@ -130,7 +135,7 @@ public enum SimObjType : int
 	GarbageCan = 28,
 	Omelette = 29,
 	EggShell = 30,
-	EggFried = 31,
+	EggCracked = 31,
 	StoveKnob = 32,
 	Container = 33, //for physics version - see GlassBottle
 	Cup = 34,
@@ -242,13 +247,11 @@ public enum SimObjType : int
 	Curtains = 139,
 	Poster = 140,
 	HandTowel = 141,
-
 	HandTowelHolder = 142,
 	Ladle = 143,
 	WineBottle = 144,
-
-
-
+	ShowerCurtain = 145,
+	ShowerHead = 146,
 	
 }
 
@@ -264,7 +267,7 @@ public static class ReceptacleRestrictions
     //Objects are "placed into/placed in" these receptacles
     //The object placed must have the entirety of it's object oriented bounding box (all 8 corners) enclosed within the Receptacle's Box
     public static List<SimObjType> InReceptacles = new List<SimObjType>() 
-    {SimObjType.Drawer, SimObjType.Cabinet, SimObjType.Fridge, SimObjType.Microwave, SimObjType.LaundryHamper};
+    {SimObjType.Drawer, SimObjType.Cabinet, SimObjType.Fridge, SimObjType.Microwave, SimObjType.LaundryHamper, SimObjType.Box};
 
     //Objects are "placed on top of/placed on" these receptacles
     //the object placed only needs the bottom most 4 corners within the Receptacle Box to be placed validly, this allows
@@ -278,7 +281,7 @@ public static class ReceptacleRestrictions
     //receptacle box for the placement to be valid. This means we can have a Spoon placed IN a cup, but the top half of the spoon is still allowed to stick out
 	//this distinction is made in case we ever want to do some sort of semantic tests with placing things in/on instead of a generic "place" as the action descriptor
     public static List<SimObjType> InReceptaclesThatOnlyCheckBottomFourCorners = new List <SimObjType>()
-    { SimObjType.Cup, SimObjType.Bowl, SimObjType.GarbageCan, SimObjType.Box, SimObjType.Sink, SimObjType.BathtubBasin, SimObjType.Pan, SimObjType.Pot, };
+    { SimObjType.Cup, SimObjType.Bowl, SimObjType.GarbageCan, SimObjType.Sink, SimObjType.BathtubBasin, SimObjType.Pan, SimObjType.Pot, };
 
 
 	public static List<SimObjType> SpawnOnlyOutsideReceptacles = new List <SimObjType>()
@@ -298,7 +301,7 @@ public static class ReceptacleRestrictions
 	//These receptacle sim objects MUST be in the open state before objects can be placed in them
 	public static List<SimObjType> MustBeOpenToPlaceObjectsIn = new List<SimObjType>()
 	{
-		SimObjType.Drawer, SimObjType.Cabinet, SimObjType.LaundryHamper, SimObjType.Microwave, SimObjType.Fridge //XXX add box to this once we have openable boxes
+		SimObjType.Drawer, SimObjType.Cabinet, SimObjType.LaundryHamper, SimObjType.Microwave, SimObjType.Fridge, SimObjType.Box 
 	};
 
 	//these objects should always be placed upright and not in weird angles. For example, you wouldn't place a pot sideways, you would always place
@@ -308,7 +311,7 @@ public static class ReceptacleRestrictions
 		SimObjType.Pot, SimObjType.Pan, SimObjType.Bowl, SimObjType.Plate, SimObjType.Bread, SimObjType.Cup, SimObjType.Mug, SimObjType.Laptop,
 		SimObjType.SaltShaker, SimObjType.PepperShaker, SimObjType.AlarmClock, SimObjType.Box, SimObjType.SoapBottle, SimObjType.SoapBottleFilled, SimObjType.Kettle,
 		SimObjType.Glassbottle, SimObjType.CreditCard, SimObjType.RemoteControl, SimObjType.Candle, SimObjType.SprayBottle, SimObjType.Statue, SimObjType.Vase, 
-		SimObjType.KeyChain, SimObjType.CD, 
+		SimObjType.KeyChain, SimObjType.CD, SimObjType.Book, SimObjType.EggCracked
 	};
 
 	//Each sim object type keeps track of what sort of Receptacles it can be placed in
@@ -321,6 +324,11 @@ public static class ReceptacleRestrictions
 
 		//APPLE
 		{SimObjType.Apple, new List<SimObjType>()
+		{SimObjType.Pot, SimObjType.Pan, SimObjType.Bowl, SimObjType.Microwave, SimObjType.Fridge, SimObjType.Plate, SimObjType.Sink, SimObjType.SinkBasin, SimObjType.TableTop,
+		 SimObjType.CounterTop, SimObjType.GarbageCan}},
+
+		//APPLE SLICED
+		{SimObjType.AppleSliced, new List<SimObjType>()
 		{SimObjType.Pot, SimObjType.Pan, SimObjType.Bowl, SimObjType.Microwave, SimObjType.Fridge, SimObjType.Plate, SimObjType.Sink, SimObjType.SinkBasin, SimObjType.TableTop,
 		 SimObjType.CounterTop, SimObjType.GarbageCan}},
 

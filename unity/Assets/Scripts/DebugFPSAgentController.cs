@@ -34,6 +34,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
         [SerializeField] private Slider ThrowForceBarSlider = null;
 //        [SerializeField] private GameObject AgentHand = null;
 //        [SerializeField] private GameObject ItemInHand = null;
+        [SerializeField] private float MaxViewDistance = 5.0f;
         [SerializeField] private float MaxChargeThrowSeconds = 1.4f;
         [SerializeField] private float MaxThrowForce = 1000.0f;
         [SerializeField] private bool DisplayTargetText = true;
@@ -585,7 +586,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 			if(!FlightMode)
             m_MoveDir += Physics.gravity * m_GravityMultiplier * Time.fixedDeltaTime;   
-			      
+
+            //added this check so that move is not called if/when the Character Controller's capsule is disabled. Right now the capsule is being disabled when open/close animations are in progress so yeah there's that
+            if(m_CharacterController.enabled == true)       
             m_CharacterController.Move(m_MoveDir * Time.fixedDeltaTime);
 		}
 

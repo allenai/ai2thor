@@ -396,10 +396,11 @@ class Server(object):
                     image_thirdParty_normals=e.add_third_party_image_normals
                 )
 
-                for ti, t in enumerate(a['thirdPartyCameras']):
-                    for key in third_party_image_mapping.keys():
-                        if key in form.files:
-                            third_party_image_mapping[key](form.files[key][ti])
+                if a['thirdPartyCameras'] is not None:
+                    for ti, t in enumerate(a['thirdPartyCameras']):
+                        for key in third_party_image_mapping.keys():
+                            if key in form.files:
+                                third_party_image_mapping[key](form.files[key][ti])
 
 
                 events.append(e)

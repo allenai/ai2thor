@@ -151,7 +151,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 }
                 else {
                     Debug.Log("Switch to FPS");
-                    setControlMode(ControlMode.FPS);
+                    setControlMode(ControlMode.DISCRETE_POINT_CLICK);
                     Agent.GetComponent<DebugFPSAgentController>().EnableMouseControl();
                 }
             }
@@ -422,6 +422,20 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         break;
                     }
 
+                case "remove":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "RemoveFromScene";
+                        
+                        if(splitcommand.Length == 2)
+                        {
+                            action.objectId = splitcommand[1];
+                        }
+
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
                 case "put":
                     {
                         ServerAction action = new ServerAction();
@@ -529,6 +543,37 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         break;
                     }
 
+                case "neutral":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "ChangeAgentFaceToNeutral";
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+                case "happy":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "ChangeAgentFaceToHappy";
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
+                case "mad":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "ChangeAgentFaceToMad";
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
+                case "supermad":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "ChangeAgentFaceToSuperMad";
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
                 case "thas":
                     {
                         ServerAction action = new ServerAction();
@@ -576,6 +621,17 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         action.randomizeObjectAppearance = false;//pick randomly from available or not?                  
                         action.objectVariation = 1; //if random false, which version of the object to spawn? (there are only 3 of each type atm)
 
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+                case "rspawnlifted":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "RandomlyCreateLiftedFurniture";
+                        action.objectType = "Television";
+                        action.objectVariation = 1;
+                        action.y = 1.3f;
+                        action.z = 1;
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }
@@ -928,7 +984,135 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }
+                
+                case "slice":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "SliceObject";
+						if(splitcommand.Length > 1)
+						{
+							action.objectId = splitcommand[1];
+						}
+
+                        else
+                        {
+                            action.objectId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().UniqueIDOfClosestVisibleObject();
+                        }
+
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
                     
+                case "break":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "BreakObject";
+						if(splitcommand.Length > 1)
+						{
+							action.objectId = splitcommand[1];
+						}
+
+                        else
+                        {
+                            action.objectId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().UniqueIDOfClosestVisibleObject();
+                        }
+
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+                
+                case "dirtyobject":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "DirtyObject";
+						if(splitcommand.Length > 1)
+						{
+							action.objectId = splitcommand[1];
+						}
+
+                        else
+                        {
+                            action.objectId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().UniqueIDOfClosestVisibleObject();
+                        }
+
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
+                case "cleanobject":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "CleanObject";
+						if(splitcommand.Length > 1)
+						{
+							action.objectId = splitcommand[1];
+						}
+
+                        else
+                        {
+                            action.objectId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().UniqueIDOfClosestVisibleObject();
+                        }
+
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
+                case "fillwater":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "FillObjectWithLiquid";
+						if(splitcommand.Length > 1)
+						{
+							action.objectId = splitcommand[1];
+						}
+
+                        else
+                        {
+                            action.objectId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().UniqueIDOfClosestVisibleObject();
+                        }
+
+                        action.fillLiquid = "water";
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
+                case "fillcoffee":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "FillObjectWithLiquid";
+						if(splitcommand.Length > 1)
+						{
+							action.objectId = splitcommand[1];
+						}
+
+                        else
+                        {
+                            action.objectId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().UniqueIDOfClosestVisibleObject();
+                        }
+
+                        action.fillLiquid = "coffee";
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
+                case "emptyliquid":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "EmptyLiquidFromObject";
+						if(splitcommand.Length > 1)
+						{
+							action.objectId = splitcommand[1];
+						}
+
+                        else
+                        {
+                            action.objectId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().UniqueIDOfClosestVisibleObject();
+                        }
+
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
                     //drop object
 				case "dr":
                     {
@@ -1106,6 +1290,18 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }  
+                
+                case "SetTempTimer":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "SetRoomTempDecayTime";
+
+                        action.TimeUntilRoomTemp = 20f;
+                        action.objectType = "Bread";
+                        PhysicsController.ProcessControlCommand(action);
+
+                        break;
+                    }
                     
                     //throw object by dropping it and applying force.
                     //default is with strength of 120, can pass in custom magnitude of throw force
@@ -1213,6 +1409,20 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         else
                         {
                             action.objectId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().UniqueIDOfClosestToggleObject();
+                        }
+
+                        PhysicsController.ProcessControlCommand(action);
+
+                        break;
+                    }
+
+                case "cook":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "CookObject";
+                        if (splitcommand.Length > 1)
+                        {
+                            action.objectId = splitcommand[1];
                         }
 
                         PhysicsController.ProcessControlCommand(action);
