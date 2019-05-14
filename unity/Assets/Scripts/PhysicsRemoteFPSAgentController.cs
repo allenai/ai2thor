@@ -6504,11 +6504,30 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 {
                     Fill fil = target.GetComponent<Fill>();
 
+                    //if the passed in liquid string is not valid
+                    if(!fil.Liquids.ContainsKey(action.fillLiquid))
+                    {
+                        errorMessage = action.fillLiquid + " is not a valid Liquid Type";
+                        actionFinished(false);
+                        return;
+                    }
+
+                    //make sure object is empty
                     if(!fil.IsFilled())
                     {
-                        fil.FillObject(action.fillLiquid);
-                        actionFinished(true);
-                        return;
+                        if(fil.FillObject(action.fillLiquid))
+                        {
+                            actionFinished(true);
+                            return;
+                        }
+
+                        else
+                        {
+                            actionFinished(false);
+                            errorMessage = target.transform.name + " cannot be filled with " + action.fillLiquid;
+                            return;
+                        }
+
                     }
 
                     else

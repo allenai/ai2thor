@@ -2819,6 +2819,7 @@ GameObject:
   - component: {fileID: 4475333517281358}
   - component: {fileID: 114150342328594544}
   - component: {fileID: 54423648824265900}
+  - component: {fileID: 3562684417114588278}
   m_Layer: 8
   m_Name: Soap_Bottle_30
   m_TagString: SimObjPhysics
@@ -2860,7 +2861,7 @@ MonoBehaviour:
   uniqueID: 
   Type: 67
   PrimaryProperty: 3
-  SecondaryProperties: 
+  SecondaryProperties: 05000000
   BoundingBox: {fileID: 1135264551145740}
   VisibilityPoints:
   - {fileID: 4548392382603660}
@@ -2875,7 +2876,7 @@ MonoBehaviour:
   ReceptacleTriggerBoxes: []
   isVisible: 0
   isInteractable: 0
-  isColliding: 0
+  isInAgentHand: 0
   MyColliders:
   - {fileID: 65238351940563250}
   - {fileID: 65518005158545662}
@@ -2909,6 +2910,9 @@ MonoBehaviour:
   HFbounciness: 0
   HFrbdrag: 0.4
   HFrbangulardrag: 0
+  CurrentTemperature: 0
+  HowManySecondsUntilRoomTemp: 10
+  ContainedObjectReferences: []
 --- !u!54 &54423648824265900
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -2925,6 +2929,23 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
+--- !u!114 &3562684417114588278
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1947563140845168}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1bd11d6a356024a8fa04845f53405c23, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  WaterObject: {fileID: 0}
+  CoffeeObject: {fileID: 0}
+  WineObject: {fileID: 0}
+  SoapObject: {fileID: 1493700237178676}
+  isFilled: 1
 --- !u!1 &1953662099102024
 GameObject:
   m_ObjectHideFlags: 0
