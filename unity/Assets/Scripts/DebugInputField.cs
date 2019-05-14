@@ -6,51 +6,23 @@ using System;
 
 namespace UnityStandardAssets.Characters.FirstPerson
 {
-    public enum ControlMode {
-        DEBUG_TEXT_INPUT,
-        FPS,
-        DISCRETE_POINT_CLICK
-    }
-
-    public class ControlToggle {
-        public Type type;
-        public Action<MonoBehaviour> onEnable = null;
-        public Action<MonoBehaviour> onDisable = null;
-    }
-
 	public class DebugInputField : MonoBehaviour
     {
 		public GameObject Agent = null;
 		public PhysicsRemoteFPSAgentController PhysicsController = null;
         public AgentManager AManager = null;
-        private InputField debugfield;
-        private DebugFPSAgentController dfac;
 
         private ControlMode controlMode;
 
-
-        // private Dictionary<ControlMode, ControlToggle> kk = new Dictionary<ControlMode, ControlToggle>{
-        //      {ControlMode.FPS, new ControlToggle{
-        //          type = typeof(DebugFPSAgentController),
-        //          onEnable = (MonoBehaviour con) => {
-        //             DebugFPSAgentController controller  = con as DebugFPSAgentController;
-        //             controller.EnableMouseControl();
-        //          },
-        //          onDisable = (MonoBehaviour con) => {
-        //             DebugFPSAgentController controller  = con as DebugFPSAgentController;
-        //             controller.DisableMouseControl();
-        //          }
-        //      }}
-        // };
-        private Dictionary<ControlMode, Type> controlModeToComponent = new Dictionary<ControlMode, Type>{
-            {ControlMode.DEBUG_TEXT_INPUT, typeof(DebugDiscreteAgentController)},
-            {ControlMode.FPS, typeof(DebugFPSAgentController)},
-            {ControlMode.DISCRETE_POINT_CLICK, typeof(DiscretePointClickAgentController)}
+        private Dictionary<KeyCode, ControlMode> debugKeyToController = new Dictionary<KeyCode, ControlMode>{
+            {KeyCode.Alpha1, ControlMode.DEBUG_TEXT_INPUT},
+            {KeyCode.BackQuote, ControlMode.FPS},
+            {KeyCode.Alpha2, ControlMode.DISCRETE_POINT_CLICK}
         };
 
         private bool setEnabledControlComponent(ControlMode mode, bool enabled) {
             Type componentType;
-            var success = controlModeToComponent.TryGetValue(mode, out componentType);
+            var success = PlayerControllers.controlModeToComponent.TryGetValue(mode, out componentType);
             if (success) {
                 var previousComponent = Agent.GetComponent(componentType) as MonoBehaviour;
                 if (previousComponent != null) {
@@ -64,37 +36,25 @@ namespace UnityStandardAssets.Characters.FirstPerson
         }
 
         public void setControlMode(ControlMode mode) {
-            var prevDisableSuccess = setEnabledControlComponent(controlMode, false);
+            setEnabledControlComponent(controlMode, false);
             controlMode = mode;
-            var currEnableSuccess = setEnabledControlComponent(controlMode, true);
+            setEnabledControlComponent(controlMode, true);
         } 
 
         // Use this for initialization
         void Start()
         {
             #if UNITY_EDITOR || UNITY_WEBGL
-
                 Debug.Log("Unity editor");
                 this.InitializeUserControl();
 
             #endif
         }
 
-        void InitializeUserControl()
-        {
-            Agent = GameObject.Find("FPSController");
-            PhysicsController = Agent.GetComponent<PhysicsRemoteFPSAgentController>();
-            AManager = GameObject.Find("PhysicsSceneManager").GetComponentInChildren<AgentManager>();
-
-            //PhysicsController.GetComponent<DebugFPSAgentController>().enabled = true;
-
-            debugfield = gameObject.GetComponent<InputField>();
-            dfac = Agent.GetComponent<DebugFPSAgentController>();
-
-            // Debug.Log("Init control");
+        void SelectPlayerControl() {
             #if UNITY_EDITOR
                 Debug.Log("Editor control");
-                setControlMode(ControlMode.DISCRETE_POINT_CLICK);
+                setControlMode(ControlMode.DEBUG_TEXT_INPUT);
             #endif
             #if UNITY_WEBGL
                 Debug.Log("Webgl");
@@ -107,207 +67,44 @@ namespace UnityStandardAssets.Characters.FirstPerson
             #endif
         }
 
+        void InitializeUserControl()
+        {
+            Agent = GameObject.Find("FPSController");
+            PhysicsController = Agent.GetComponent<PhysicsRemoteFPSAgentController>();
+            AManager = GameObject.Find("PhysicsSceneManager").GetComponentInChildren<AgentManager>();
+            
+           SelectPlayerControl();
+
+           #if !UNITY_EDITOR
+               HideHUD();
+           #endif
+        }
+
         // Update is called once per frame
         void Update()
         {
             #if UNITY_EDITOR
-            //use these for the Breakable Window demo video
-            // if(Input.GetKeyDown(KeyCode.P))
-            // {
-            //    // print("pickup");
-            //     ServerAction action = new ServerAction();
-            //     action.action = "PickupObject";
-            //     action.objectId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().UniqueIDOfClosestVisibleObject();
-            //     PhysicsController.ProcessControlCommand(action);
-                        
-            // }
-
-            // if(Input.GetKeyDown(KeyCode.T))
-            // {
-            //     ServerAction action = new ServerAction();
-            //     action.action = "ThrowObject";
-            //     action.moveMagnitude = 600f;
-            //     PhysicsController.ProcessControlCommand(action);   
-            // }
-
-            // if(Input.GetKeyDown(KeyCode.U))
-            // {
-            //     ServerAction action = new ServerAction();
-            //     action.action = "MoveHandMagnitude";
-
-            //     action.moveMagnitude = 0.1f;
-                
-            //     action.x = 0f;
-            //     action.y = 1f;
-            //     action.z = 0f;
-            //     PhysicsController.ProcessControlCommand(action);
-            // }
-
-            if (Input.GetKeyDown(KeyCode.BackQuote) || Input.GetKeyDown(KeyCode.Escape)) {
-                if (controlMode == ControlMode.FPS) {
-                    var fpsControl = Agent.GetComponent<DebugFPSAgentController>();
-                    fpsControl.DisableMouseControl();
-                    setControlMode(ControlMode.DEBUG_TEXT_INPUT);
-                }
-                else {
-                    Debug.Log("Switch to FPS");
-                    setControlMode(ControlMode.DISCRETE_POINT_CLICK);
-                    Agent.GetComponent<DebugFPSAgentController>().EnableMouseControl();
-                }
-            }
-
-            /* if(!debugfield.isFocused && controlMode == ControlMode.DEBUG_TEXT_INPUT)
-            {
-                float FlyMagnitude = 1.0f;
-                float WalkMagnitude = 0.25f;
-                if(Input.GetKeyDown(KeyCode.W))
-                {
-                    ServerAction action = new ServerAction();
-                    if(PhysicsController.FlightMode)
-                    {
-                        action.action = "FlyAhead";
-                        action.moveMagnitude = FlyMagnitude;
-                        PhysicsController.ProcessControlCommand(action);
-                    }
-
-                    else
-                    {
-                        action.action = "MoveAhead";
-                        action.moveMagnitude = WalkMagnitude;		
-                        PhysicsController.ProcessControlCommand(action);
+                foreach (KeyValuePair<KeyCode, ControlMode> entry in debugKeyToController) {
+                    if (Input.GetKeyDown(entry.Key)) {
+                        if (controlMode != entry.Value) {
+                            setControlMode(entry.Value);
+                            break;
+                        }
                     }
                 }
-
-                if(Input.GetKeyDown(KeyCode.S))
-                {
-                    ServerAction action = new ServerAction();
-                    if(PhysicsController.FlightMode)
-                    {
-                        action.action = "FlyBack";
-                        action.moveMagnitude = FlyMagnitude;
-                        PhysicsController.ProcessControlCommand(action);
-                    }
-
-                    else
-                    {
-                        action.action = "MoveBack";
-                        action.moveMagnitude = WalkMagnitude;		
-                        PhysicsController.ProcessControlCommand(action);
-                    }
-                }
-
-                if(Input.GetKeyDown(KeyCode.A))
-                {
-                    ServerAction action = new ServerAction();
-                    if(PhysicsController.FlightMode)
-                    {
-                        action.action = "FlyLeft";
-                        action.moveMagnitude = FlyMagnitude;
-                        PhysicsController.ProcessControlCommand(action);
-                    }
-
-                    else
-                    {
-                        action.action = "MoveLeft";
-                        action.moveMagnitude = WalkMagnitude;		
-                        PhysicsController.ProcessControlCommand(action);
-                    }
-                }
-
-                if(Input.GetKeyDown(KeyCode.D))
-                {
-                    ServerAction action = new ServerAction();
-                    if(PhysicsController.FlightMode)
-                    {
-                        action.action = "FlyRight";
-                        action.moveMagnitude = FlyMagnitude;
-                        PhysicsController.ProcessControlCommand(action);
-                    }
-
-                    else
-                    {
-                        action.action = "MoveRight";
-                        action.moveMagnitude = WalkMagnitude;		
-                        PhysicsController.ProcessControlCommand(action);
-                    }
-                }
-
-                if(Input.GetKeyDown(KeyCode.I))
-                {
-                    if(PhysicsController.FlightMode)
-                    {
-                        ServerAction action = new ServerAction();
-                        action.action = "FlyUp";
-                        action.moveMagnitude = FlyMagnitude;
-                        PhysicsController.ProcessControlCommand(action);
-                    }
-                }
-
-                if(Input.GetKeyDown(KeyCode.K))
-                {
-                    if(PhysicsController.FlightMode)
-                    {
-                        ServerAction action = new ServerAction();
-                        action.action = "FlyDown";
-                        action.moveMagnitude = FlyMagnitude;
-                        PhysicsController.ProcessControlCommand(action);
-                    }
-                }
-
-                if(Input.GetKeyDown(KeyCode.UpArrow))
-                {
-                    ServerAction action = new ServerAction();
-                    action.action = "LookUp";
-                    PhysicsController.ProcessControlCommand(action); 
-                }
-
-                if(Input.GetKeyDown(KeyCode.DownArrow))
-                {
-                    ServerAction action = new ServerAction();
-                    action.action = "LookDown";
-                    PhysicsController.ProcessControlCommand(action); 
-                }
-
-                if(Input.GetKeyDown(KeyCode.LeftArrow) )//|| Input.GetKeyDown(KeyCode.J))
-                {
-                    ServerAction action = new ServerAction();
-                    action.action = "RotateLeft";
-                    PhysicsController.ProcessControlCommand(action); 
-                }
-
-                if(Input.GetKeyDown(KeyCode.RightArrow) )//|| Input.GetKeyDown(KeyCode.L))
-                {
-                    ServerAction action = new ServerAction();
-                    action.action = "RotateRight";
-                    PhysicsController.ProcessControlCommand(action); 
-                }
-
-                if(Input.GetKeyDown(KeyCode.Space))
-                {
-                    if(PhysicsController.FlightMode)
-                    {
-                        ServerAction action = new ServerAction();
-                        action.action = "LaunchDroneObject";
-                        action.moveMagnitude = 200f;
-                        //action. = new Vector3(0, 1, -1);
-                        action.x = 0;
-                        action.y = 1;
-                        action.z = -1;
-                        PhysicsController.ProcessControlCommand(action);
-                    }
-                }
-
-                if(Input.GetKeyDown(KeyCode.O))
-                {
-                    if(PhysicsController.FlightMode)
-                    {
-                        ServerAction action = new ServerAction();
-                        action.action = "CheckDroneCaught";
-                        PhysicsController.ProcessControlCommand(action);
-                    }
-                }
-            }*/
             #endif
+        }
+
+        public void HideHUD()
+        {
+            var InputMode_Text = GameObject.Find("DebugCanvasPhysics/InputModeText");
+            if (InputMode_Text != null) {
+                InputMode_Text.SetActive(false);
+            }
+            var InputFieldObj = GameObject.Find("DebugCanvasPhysics/InputField");
+            InputFieldObj.SetActive(false);
+            var background = GameObject.Find("DebugCanvasPhysics/InputModeText_Background");
+            background.SetActive(false);
         }
 
         public void Execute(string command)
