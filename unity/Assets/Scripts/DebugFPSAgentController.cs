@@ -57,7 +57,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             InputFieldObj = GameObject.Find("DebugCanvasPhysics/InputField");
             PhysicsController = gameObject.GetComponent<PhysicsRemoteFPSAgentController>();
 
-            highlightController = new ObjectHighlightController(PhysicsController, MaxViewDistance, MaxThrowForce, MaxChargeThrowSeconds);
+            highlightController = new ObjectHighlightController(PhysicsController, MaxViewDistance, true, MaxThrowForce, MaxChargeThrowSeconds);
 
             //if this component is enabled, turn on the targeting reticle and target text
             if (this.isActiveAndEnabled)
@@ -82,9 +82,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
 			//shoot a ray out based on mouse position
 			Physics.Raycast(ray, out hit);
-
-				//TestBall.transform.position = hit.point + new Vector3(0, 0.3f, 0);
-				return hit.point + new Vector3(0, yOffset, 0);
+            return hit.point + new Vector3(0, yOffset, 0);
 		}
 
         public void HideHUD()
@@ -130,7 +128,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
             //  if (InputFieldObj) {
             //     InputFieldObj.SetActive(true);
             //  }
-            
         }
 
         private void DebugKeyboardControls()
