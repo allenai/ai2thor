@@ -14,10 +14,14 @@ public class Fill : MonoBehaviour
     protected GameObject WineObject = null;
 
     [SerializeField]
+    protected GameObject SoapObject = null;
+
+    [SerializeField]
     protected bool isFilled = false; //false - empty, true - currently filled with
 
     protected string currentlyFilledWith = null;
 
+    public Dictionary <string, GameObject> Liquids = new Dictionary<string, GameObject>();
 
     public bool IsFilled()
     {
@@ -32,6 +36,12 @@ public class Fill : MonoBehaviour
             Debug.LogError(gameObject.name + " is missing the CanBeFilled secondary property!");
         }
         #endif 
+
+        Liquids.Add("water", WaterObject);
+        Liquids.Add("coffee", CoffeeObject);
+        Liquids.Add("wine", WineObject);
+        Liquids.Add("soap", SoapObject);
+
     }
 
     // Update is called once per frame
@@ -54,60 +64,107 @@ public class Fill : MonoBehaviour
         // }
     }
 
-    public void FillObject(string whichLiquid)
+    public bool FillObject(string whichLiquid)
     {
-
-        if(whichLiquid == "water")
+        if(Liquids.ContainsKey(whichLiquid))
         {
-            if(WaterObject != null)
-            WaterObject.transform.gameObject.SetActive(true);
+            //check if this object has whichLiquid setup as fillable: If the object has a null reference this object
+            //is not setup for that liquid
+            if(Liquids[whichLiquid] == null)
+            {
+                return false;
+            }
+
+            Liquids[whichLiquid].transform.gameObject.SetActive(true);
+
+            //coffee is hot so change the object's temperature if whichLiquid was coffee
+            if(whichLiquid == "coffee")
+            {
+                //coffee is hot!
+                SimObjPhysics sop = gameObject.GetComponent<SimObjPhysics>();
+                sop.CurrentTemperature = ObjectMetadata.Temperature.Hot;
+                if(sop.HowManySecondsUntilRoomTemp != sop.GetTimerResetValue())
+                sop.HowManySecondsUntilRoomTemp = sop.GetTimerResetValue();
+                sop.SetStartRoomTempTimer(false);
+            }
 
             isFilled = true;
-            currentlyFilledWith = "water";
+            currentlyFilledWith = whichLiquid;
+            return true;
         }
 
-        else if(whichLiquid == "coffee")
-        {
-            if(CoffeeObject != null)
-            CoffeeObject.transform.gameObject.SetActive(true);
-
-            //coffee is hot!
-            SimObjPhysics sop = gameObject.GetComponent<SimObjPhysics>();
-            sop.CurrentTemperature = ObjectMetadata.Temperature.Hot;
-            if(sop.HowManySecondsUntilRoomTemp != sop.GetTimerResetValue())
-            sop.HowManySecondsUntilRoomTemp = sop.GetTimerResetValue();
-            sop.SetStartRoomTempTimer(false);
+        //whichLiquid is not in the dictionary
+        else
+        return false;
 
 
-            isFilled = true;
-            currentlyFilledWith = "coffee";
-        }
+        //if the dict doesn't contain this key pair uuuuuh
 
-        else if(whichLiquid == "wine")
-        {
-            if(WineObject != null)
-            CoffeeObject.transform.gameObject.SetActive(true);
+        // if(whichLiquid == "water")
+        // {
+        //     if(WaterObject != null)
+        //     WaterObject.transform.gameObject.SetActive(true);
 
-            isFilled = true;
-            currentlyFilledWith = "wine";
-        }
+        //     isFilled = true;
+        //     currentlyFilledWith = "water";
+        // }
+
+        // else if(whichLiquid == "coffee")
+        // {
+        //     if(CoffeeObject != null)
+        //     CoffeeObject.transform.gameObject.SetActive(true);
+
+        //     //coffee is hot!
+        //     SimObjPhysics sop = gameObject.GetComponent<SimObjPhysics>();
+        //     sop.CurrentTemperature = ObjectMetadata.Temperature.Hot;
+        //     if(sop.HowManySecondsUntilRoomTemp != sop.GetTimerResetValue())
+        //     sop.HowManySecondsUntilRoomTemp = sop.GetTimerResetValue();
+        //     sop.SetStartRoomTempTimer(false);
+
+
+        //     isFilled = true;
+        //     currentlyFilledWith = "coffee";
+        // }
+
+        // else if(whichLiquid == "wine")
+        // {
+        //     if(WineObject != null)
+        //     CoffeeObject.transform.gameObject.SetActive(true);
+
+        //     isFilled = true;
+        //     currentlyFilledWith = "wine";
+        // }
     }
 
     public void EmptyObject()
     {
-        if(currentlyFilledWith == "water")
-        {
-            WaterObject.transform.gameObject.SetActive(false);
-            currentlyFilledWith = null;
-            isFilled= false;
-        }
+        //for each thing in Liquids, if it exists set it to false and then set bools appropriately
 
-        else if(currentlyFilledWith == "coffee")
+        foreach (KeyValuePair<string, GameObject> gogogo in Liquids)
         {
-            CoffeeObject.transform.gameObject.SetActive(false);
-            currentlyFilledWith = null;
-            isFilled= false;
+            //if the value field is not null and has a reference to a liquid object 
+            if(gogogo.Value != null)
+            {
+                gogogo.Value.SetActive(false);
+            }
         }
+        //Liquids[currentlyFilledWith].transform.gameObject.SetActive(false);
+        currentlyFilledWith = null;
+        isFilled = false;
+
+        // if(currentlyFilledWith == "water")
+        // {
+        //     WaterObject.transform.gameObject.SetActive(false);
+        //     currentlyFilledWith = null;
+        //     isFilled= false;
+        // }
+
+        // else if(currentlyFilledWith == "coffee")
+        // {
+        //     CoffeeObject.transform.gameObject.SetActive(false);
+        //     currentlyFilledWith = null;
+        //     isFilled= false;
+        // }
     }
 
     public void OnTriggerStay(Collider other)

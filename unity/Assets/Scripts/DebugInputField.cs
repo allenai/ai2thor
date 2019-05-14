@@ -1021,6 +1021,25 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         break;
                     }
 
+                case "fillsoap":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "FillObjectWithLiquid";
+						if(splitcommand.Length > 1)
+						{
+							action.objectId = splitcommand[1];
+						}
+
+                        else
+                        {
+                            action.objectId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().UniqueIDOfClosestVisibleObject();
+                        }
+
+                        action.fillLiquid = "soap";
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
                 case "emptyliquid":
                     {
                         ServerAction action = new ServerAction();
