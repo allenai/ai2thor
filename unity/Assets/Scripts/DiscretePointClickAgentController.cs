@@ -7,14 +7,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
 {
     public class DiscretePointClickAgentController : MonoBehaviour
     {
-        [SerializeField] private float MaxChargeThrowSeconds = 1.4f;
-        [SerializeField] private float MaxThrowForce = 1000.0f;
         [SerializeField] private float HandMoveMagnitude = 0.1f;
         public PhysicsRemoteFPSAgentController PhysicsController = null;
         private GameObject InputMode_Text = null;
         private ObjectHighlightController highlightController = null;
+        private GameObject throwForceBar = null;
         private bool handMode = false;
-        // Start is called before the first frame update
         void Start() 
         {
             var Debug_Canvas = GameObject.Find("DebugCanvasPhysics");
@@ -24,23 +22,28 @@ namespace UnityStandardAssets.Characters.FirstPerson
             Cursor.lockState = CursorLockMode.None;
             Debug_Canvas.GetComponent<Canvas>().enabled = true; 
 
-            highlightController = new ObjectHighlightController(PhysicsController, PhysicsController.maxVisibleDistance, MaxThrowForce, MaxChargeThrowSeconds);
+            highlightController = new ObjectHighlightController(PhysicsController, PhysicsController.maxVisibleDistance, false);
         }
 
         public void OnEnable() {
             InputMode_Text = GameObject.Find("DebugCanvasPhysics/InputModeText");
+            throwForceBar = GameObject.Find("DebugCanvasPhysics/ThrowForceBar");
             if (InputMode_Text) {
                 InputMode_Text.GetComponent<Text>().text = "Point and Click Mode";
+            }
+            if (throwForceBar) {
+                throwForceBar.SetActive(false);
             }
             // InputFieldObj = GameObject.Find("DebugCanvasPhysics/InputField");
             // TODO: move debug input field script from, Input Field and disable here
         }
 
          public void OnDisable() {
+             if (throwForceBar) {
+                throwForceBar.SetActive(true);
+            }
              // TODO: move debug input field script from, Input Field and enable here
         }
-
-        // Update is called once per frame
         void Update()
         {
                 highlightController.UpdateHighlightedObject(Input.mousePosition);
