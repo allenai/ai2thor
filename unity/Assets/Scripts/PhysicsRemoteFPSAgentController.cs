@@ -6355,7 +6355,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             //pass name of object in from action.objectId
             if (action.objectId == null) 
             {
-                Debug.Log("Hey, actually give me an object ID to open, yeah?");
                 errorMessage = "objectId required for DirtyObject action";
                 actionFinished(false);
                 return;
@@ -6413,7 +6412,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             //pass name of object in from action.objectId
             if (action.objectId == null) 
             {
-                Debug.Log("Hey, actually give me an object ID to open, yeah?");
                 errorMessage = "objectId required for CleanObject action";
                 actionFinished(false);
                 return;
