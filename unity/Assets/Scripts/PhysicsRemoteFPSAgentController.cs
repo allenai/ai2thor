@@ -246,27 +246,27 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             objMeta.toggleable = simObj.IsToggleable;
             if (objMeta.toggleable) {
-                objMeta.istoggled = simObj.IsToggled;
+                objMeta.isToggled = simObj.IsToggled;
             }
 
             objMeta.breakable = simObj.IsBreakable;
             if(objMeta.breakable) {
-                objMeta.isbroken = simObj.IsBroken;
+                objMeta.isBroken = simObj.IsBroken;
             }
 
-            objMeta.fillable = simObj.IsFillable;
-            if (objMeta.fillable) {
-                objMeta.isfilled = simObj.IsFilled;
+            objMeta.canFillWithLiquid = simObj.IsFillable;
+            if (objMeta.canFillWithLiquid) {
+                objMeta.isFilledWithLiquid = simObj.IsFilled;
             }
 
             objMeta.dirtyable = simObj.IsDirtyable;
             if (objMeta.dirtyable) {
-                objMeta.isdirty = simObj.IsDirty;
+                objMeta.isDirty = simObj.IsDirty;
             }
 
             objMeta.cookable = simObj.IsCookable;
             if (objMeta.cookable) {
-                objMeta.iscooked = simObj.IsCooked;
+                objMeta.isCooked = simObj.IsCooked;
             }
 
             //placeholder for heatable objects -kettle, pot, pan
@@ -280,10 +280,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 objMeta.issliced = simObj.IsSliced;
             }
 
-            //placeholder for depleted objects here
-            objMeta.depletable = simObj.IsDepletable;
-            if (objMeta.depletable) {
-                objMeta.isdepleted = simObj.IsDepleted;
+            objMeta.canBeUsedUp = simObj.CanBeUsedUp;
+            if (objMeta.canBeUsedUp) {
+                objMeta.isUsedUp = simObj.IsUsedUp;
             }
 
             //object temperature to string
@@ -2603,9 +2602,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     ItemInHand.transform.SetParent(osr.attachPoint.transform);
                     ItemInHand.transform.localRotation = Quaternion.identity;
                     ItemInHand.GetComponent<Rigidbody>().isKinematic = true;
-
                     ItemInHand = null;
-
+                    DefaultAgentHand();
                     actionFinished(true);
                     return;
                 } else {
@@ -2666,6 +2664,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             //set degreeIncrement to 90 for placing held objects to check for vertical angles
             if (script.PlaceObjectReceptacle(targetReceptacle.ReturnMySpawnPoints(onlyPointsCloseToAgent), ItemInHand.GetComponent<SimObjPhysics>(), action.placeStationary, 100, 90, placeUpright)) {
                 ItemInHand = null;
+                DefaultAgentHand();
                 actionFinished(true);
             } else {
                 errorMessage = "No valid positions to place object found";
@@ -6586,6 +6585,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     {
                         fil.EmptyObject();
                         actionFinished(true);
+                        return;
                     }
 
                     else
@@ -6612,7 +6612,67 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
 
+        //use up the contents of this object (toilet paper, paper towel, tissue box, etc).
+        public void UseUpObject(ServerAction action)
+        {
+            //pass name of object in from action.objectId
+            if (action.objectId == null) 
+            {
+                Debug.Log("Hey, actually give me an object ID to open, yeah?");
+                errorMessage = "objectId required for UseUpObject action";
+                actionFinished(false);
+                return;
+            }
 
+            SimObjPhysics target = null;
+
+            if (action.forceAction) 
+            {
+                action.forceVisible = true;
+            }
+
+            foreach (SimObjPhysics sop in VisibleSimObjs(action)) 
+            {
+                target = sop;
+            }
+
+            if(target)
+            {
+                if(target.GetComponent<SimObjPhysics>().DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanBeUsedUp))
+                {
+                    UsedUp u = target.GetComponent<UsedUp>();
+
+                    //make sure object is not already used up
+                    if(!u.isUsedUp)
+                    {
+                        u.UseUp();
+                        actionFinished(true);
+                        return;
+                    }
+
+                    else
+                    {
+                        errorMessage = "object already used up!";
+                        //Debug.Log(errorMessage);
+                        actionFinished(false);
+                        return;
+                    }
+                }
+
+                else 
+                {
+                    errorMessage = target.transform.name + " does not have CanBeUsedUp property!";
+                    actionFinished(false);
+                    return;
+                }
+            }
+
+            else
+            {
+                errorMessage = "object not found: " + action.objectId;
+                actionFinished(false);
+            }
+        }
         protected bool objectIsOfIntoType(SimObjPhysics so) {
             return so.ReceptacleTriggerBoxes != null &&
                 so.ReceptacleTriggerBoxes.Length != 0 &&

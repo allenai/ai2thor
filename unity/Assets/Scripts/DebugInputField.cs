@@ -1076,6 +1076,24 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         break;
                     }
 
+                case "useup":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "UseUpObject";
+						if(splitcommand.Length > 1)
+						{
+							action.objectId = splitcommand[1];
+						}
+
+                        else
+                        {
+                            action.objectId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().UniqueIDOfClosestVisibleObject();
+                        }
+
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
                     //drop object
 				case "dr":
                     {
