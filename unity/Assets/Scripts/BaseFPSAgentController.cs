@@ -104,7 +104,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		// Vector3 m_OriginalCameraPosition;
 
 
-		protected float maxVisibleDistance = 1.5f; //changed from 1.0f to account for objects randomly spawned far away on tables/countertops, which would be not visible at 1.0f
+		public float maxVisibleDistance = 1.5f; //changed from 1.0f to account for objects randomly spawned far away on tables/countertops, which would be not visible at 1.0f
 
 		// initial states
 		protected Vector3 init_position;
@@ -172,6 +172,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			// record initial positions and rotations
 			init_position = transform.position;
 			init_rotation = transform.rotation;
+
+			agentManager = GameObject.Find("PhysicsSceneManager").GetComponentInChildren<AgentManager>();
 
 			//allowNodes = false;
 		}
@@ -502,6 +504,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
 				Debug.Log(errorMessage);
 			}
 			#endif
+
+			agentManager.setReadyToEmit(true);
 		}
 
 		// Handle collisions - CharacterControllers don't apply physics innately, see "PushMode" check below
