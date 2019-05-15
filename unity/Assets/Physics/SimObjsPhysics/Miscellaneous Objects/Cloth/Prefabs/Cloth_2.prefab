@@ -86,6 +86,7 @@ GameObject:
   - component: {fileID: 4173009974138300}
   - component: {fileID: 114355888451691268}
   - component: {fileID: 54716980294003472}
+  - component: {fileID: 6051134580337867299}
   m_Layer: 8
   m_Name: Cloth_2
   m_TagString: SimObjPhysics
@@ -127,7 +128,7 @@ MonoBehaviour:
   uniqueID: 
   Type: 60
   PrimaryProperty: 3
-  SecondaryProperties: 
+  SecondaryProperties: 04000000
   BoundingBox: {fileID: 1762159565665402}
   VisibilityPoints:
   - {fileID: 4180743929590074}
@@ -175,6 +176,29 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
+--- !u!114 &6051134580337867299
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1072728206154820}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d106cf009583a40e4a85d860c9830f67, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  MaterialSwapObjects:
+  - MyObject: {fileID: 1118698707542364}
+    OnMaterials:
+    - {fileID: 2100000, guid: 1d85f88b7efb54241a7ed099d9b26d90, type: 2}
+    - {fileID: 2100000, guid: b03755ccf97c38748b0dd243d1d9bf58, type: 2}
+    OffMaterials:
+    - {fileID: 2100000, guid: 1d85f88b7efb54241a7ed099d9b26d90, type: 2}
+    - {fileID: 2100000, guid: 937f5335a74cfc14086739fde6c8acf7, type: 2}
+  ObjectsToEnableIfClean: []
+  ObjectsToEnableIfDirty: []
+  isDirty: 0
 --- !u!1 &1079104247916364
 GameObject:
   m_ObjectHideFlags: 0
@@ -367,7 +391,7 @@ MeshRenderer:
   m_RendererPriority: 0
   m_Materials:
   - {fileID: 2100000, guid: 1d85f88b7efb54241a7ed099d9b26d90, type: 2}
-  - {fileID: 2100000, guid: b03755ccf97c38748b0dd243d1d9bf58, type: 2}
+  - {fileID: 2100000, guid: 937f5335a74cfc14086739fde6c8acf7, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0

@@ -354,6 +354,7 @@ GameObject:
   - component: {fileID: 4946022936774226}
   - component: {fileID: 114159424719613704}
   - component: {fileID: 54898422699952238}
+  - component: {fileID: 420253914245753934}
   m_Layer: 8
   m_Name: Cloth_12
   m_TagString: SimObjPhysics
@@ -395,7 +396,7 @@ MonoBehaviour:
   uniqueID: 
   Type: 60
   PrimaryProperty: 3
-  SecondaryProperties: 
+  SecondaryProperties: 04000000
   BoundingBox: {fileID: 1704021505731728}
   VisibilityPoints:
   - {fileID: 4621524337996196}
@@ -443,6 +444,29 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
+--- !u!114 &420253914245753934
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1369035797137928}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d106cf009583a40e4a85d860c9830f67, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  MaterialSwapObjects:
+  - MyObject: {fileID: 1855811557069920}
+    OnMaterials:
+    - {fileID: 2100000, guid: 9619a3054b69d49f4923c7fbd6d01c8f, type: 2}
+    - {fileID: 2100000, guid: b03755ccf97c38748b0dd243d1d9bf58, type: 2}
+    OffMaterials:
+    - {fileID: 2100000, guid: 9619a3054b69d49f4923c7fbd6d01c8f, type: 2}
+    - {fileID: 2100000, guid: 937f5335a74cfc14086739fde6c8acf7, type: 2}
+  ObjectsToEnableIfClean: []
+  ObjectsToEnableIfDirty: []
+  isDirty: 0
 --- !u!1 &1479462700513842
 GameObject:
   m_ObjectHideFlags: 0
@@ -981,7 +1005,6 @@ GameObject:
   - component: {fileID: 4648473370785992}
   - component: {fileID: 33346576761387618}
   - component: {fileID: 23486452178940526}
-  - component: {fileID: 6386268089659198203}
   m_Layer: 0
   m_Name: mesh
   m_TagString: Untagged
@@ -1049,20 +1072,6 @@ MeshRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
---- !u!64 &6386268089659198203
-MeshCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1855811557069920}
-  m_Material: {fileID: 0}
-  m_IsTrigger: 0
-  m_Enabled: 1
-  serializedVersion: 3
-  m_Convex: 0
-  m_CookingOptions: 14
-  m_Mesh: {fileID: 4300006, guid: 4ff1f3f7f5045ed43be328ecff465a2b, type: 3}
 --- !u!1 &1859297535192292
 GameObject:
   m_ObjectHideFlags: 0
