@@ -394,14 +394,14 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 	}
 
 	///these aren't in yet, just placeholder
-	public bool IsDepletable
+	public bool CanBeUsedUp
 	{
 		get
 		{
 			return false;
 		}
 	}
-	public bool IsDepleted
+	public bool IsUsedUp
 	{
 		get
 		{

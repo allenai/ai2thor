@@ -589,22 +589,22 @@ public class ObjectMetadata
 	public bool toggleable;//is this object able to be toggled on/off directly?
 	
 	//note some objects can still return the istoggle value even if they cannot directly be toggled on off (stove burner -> stove knob)
-	public bool istoggled;//is this object currently on or off? true is on
+	public bool isToggled;//is this object currently on or off? true is on
 	///
 	public bool breakable;
-	public bool isbroken;//is this object broken?
+	public bool isBroken;//is this object broken?
 	///
-	public bool fillable;//objects filled with liquids
-	public bool isfilled;//is this object filled with some liquid? - similar to 'depletable' but this is for liquids
+	public bool canFillWithLiquid;//objects filled with liquids
+	public bool isFilledWithLiquid;//is this object filled with some liquid? - similar to 'depletable' but this is for liquids
 	///
 	public bool dirtyable;//can toggle object state dirty/clean
-	public bool isdirty;//is this object in a dirty or clean state?
+	public bool isDirty;//is this object in a dirty or clean state?
 	///
-	public bool depletable;//for objects that can be emptied or depleted (toilet paper, paper towels, tissue box etc) - specifically not for liquids
-	public bool isdepleted; 
+	public bool canBeUsedUp;//for objects that can be emptied or depleted (toilet paper, paper towels, tissue box etc) - specifically not for liquids
+	public bool isUsedUp; 
 	///
 	public bool cookable;//can this object be turned to a cooked state? object should not be able to toggle back to uncooked state with contextual interactions, only a direct action
-	public bool iscooked;//is it cooked right now? - context sensitive objects might set this automatically like Toaster/Microwave/ Pots/Pans if isHeated = true
+	public bool isCooked;//is it cooked right now? - context sensitive objects might set this automatically like Toaster/Microwave/ Pots/Pans if isHeated = true
 	// ///
 	// public bool abletocook;//can this object be heated up by a "fire" tagged source? -  use this for Pots/Pans
 	// public bool isabletocook;//object is in contact with a "fire" tagged source (stove burner), if this is heated any object cookable object touching it will be switched to cooked - again use for Pots/Pans
