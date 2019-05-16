@@ -2793,7 +2793,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     //for every object that is contained by this object...
                     //turn off the colliders, leaving Trigger Colliders active (this is important to maintain visibility!)
                     sop.transform.Find("Colliders").gameObject.SetActive(true);
-                    sop.GetComponent<Rigidbody>().isKinematic = false;
+                    Rigidbody rb = sop.GetComponent<Rigidbody>();
+                    
+                    rb.isKinematic = false;
+                    rb.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
+
                     sop.isInAgentHand = false;//agent hand flag
                     sop.transform.SetParent(topObject.transform);
                 }
