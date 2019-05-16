@@ -1088,6 +1088,7 @@ GameObject:
   - component: {fileID: 4334146282294812}
   - component: {fileID: 114588081108092978}
   - component: {fileID: 54702209213080446}
+  - component: {fileID: 7708445517409945407}
   m_Layer: 8
   m_Name: Waving_Statue_1
   m_TagString: SimObjPhysics
@@ -1126,10 +1127,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b439f6e4ef5714ee2a3643acf37b7a9d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  uniqueID: Statue|+13.00|+13.00|+13.00
+  uniqueID: Statue|-05.01|+00.00|-04.73
   Type: 39
   PrimaryProperty: 3
-  SecondaryProperties: 
+  SecondaryProperties: 0b000000
   BoundingBox: {fileID: 1116513310036000}
   VisibilityPoints:
   - {fileID: 4295094321540768}
@@ -1147,7 +1148,6 @@ MonoBehaviour:
   ReceptacleTriggerBoxes: []
   isVisible: 0
   isInteractable: 0
-  isColliding: 0
   isInAgentHand: 0
   MyColliders:
   - {fileID: 65661560276530008}
@@ -1167,6 +1167,8 @@ MonoBehaviour:
   HFbounciness: 0
   HFrbdrag: 1
   HFrbangulardrag: 0
+  CurrentTemperature: 0
+  HowManySecondsUntilRoomTemp: 10
   ContainedObjectReferences: []
 --- !u!54 &54702209213080446
 Rigidbody:
@@ -1184,6 +1186,23 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
+--- !u!114 &7708445517409945407
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1594382833489678}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 02b2beb760fcd4a6f957400c276adb00, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  PrefabToSwapTo: {fileID: 158428543, guid: ae70349c0f389944a8a3212747f201f9, type: 3}
+  DirtyPrefabToSwapTo: {fileID: 0}
+  ImpulseThreshold: 3.6
+  HighFrictionImpulseOffset: 2
+  breakType: 0
 --- !u!1 &1595844233316936
 GameObject:
   m_ObjectHideFlags: 0

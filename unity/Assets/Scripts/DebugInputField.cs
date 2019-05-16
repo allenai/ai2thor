@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using System;
 
 namespace UnityStandardAssets.Characters.FirstPerson
 {
@@ -11,24 +12,58 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		public PhysicsRemoteFPSAgentController PhysicsController = null;
         public AgentManager AManager = null;
 
-        private InputField debugfield;
-        private DebugFPSAgentController dfac;
+        private ControlMode controlMode;
+
+        private Dictionary<KeyCode, ControlMode> debugKeyToController = new Dictionary<KeyCode, ControlMode>{
+            {KeyCode.Alpha1, ControlMode.DEBUG_TEXT_INPUT},
+            {KeyCode.BackQuote, ControlMode.FPS},
+            {KeyCode.Alpha2, ControlMode.DISCRETE_POINT_CLICK}
+        };
+
+        private bool setEnabledControlComponent(ControlMode mode, bool enabled) {
+            Type componentType;
+            var success = PlayerControllers.controlModeToComponent.TryGetValue(mode, out componentType);
+            if (success) {
+                var previousComponent = Agent.GetComponent(componentType) as MonoBehaviour;
+                if (previousComponent != null) {
+                    previousComponent.enabled = enabled;
+                }
+                else {
+                    success = false;
+                }
+            }
+            return success;
+        }
+
+        public void setControlMode(ControlMode mode) {
+            setEnabledControlComponent(controlMode, false);
+            controlMode = mode;
+            setEnabledControlComponent(controlMode, true);
+        } 
 
         // Use this for initialization
         void Start()
         {
             #if UNITY_EDITOR || UNITY_WEBGL
-
                 Debug.Log("Unity editor");
                 this.InitializeUserControl();
 
             #endif
+        }
 
+        void SelectPlayerControl() {
+            #if UNITY_EDITOR
+                Debug.Log("Editor control");
+                setControlMode(ControlMode.DEBUG_TEXT_INPUT);
+            #endif
             #if UNITY_WEBGL
-
                 Debug.Log("Webgl");
+                setControlMode(ControlMode.FPS);
                 PhysicsController.GetComponent<JavaScriptInterface>().enabled = true;
-
+            #endif
+            #if TURK_TASK
+                Debug.Log("TURK");
+                setControlMode(ControlMode.DISCRETE_POINT_CLICK);
             #endif
         }
 
@@ -37,203 +72,39 @@ namespace UnityStandardAssets.Characters.FirstPerson
             Agent = GameObject.Find("FPSController");
             PhysicsController = Agent.GetComponent<PhysicsRemoteFPSAgentController>();
             AManager = GameObject.Find("PhysicsSceneManager").GetComponentInChildren<AgentManager>();
+            
+           SelectPlayerControl();
 
-            PhysicsController.GetComponent<DebugFPSAgentController>().enabled = true;
-
-            debugfield = gameObject.GetComponent<InputField>();
-            dfac = Agent.GetComponent<DebugFPSAgentController>();
-
+           #if !UNITY_EDITOR
+               HideHUD();
+           #endif
         }
 
         // Update is called once per frame
         void Update()
         {
-            #if UNITY_EDITOR || UNITY_WEBGL
-            //use these for the Breakable Window demo video
-            // if(Input.GetKeyDown(KeyCode.P))
-            // {
-            //    // print("pickup");
-            //     ServerAction action = new ServerAction();
-            //     action.action = "PickupObject";
-            //     action.objectId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().UniqueIDOfClosestVisibleObject();
-            //     PhysicsController.ProcessControlCommand(action);
-                        
-            // }
-
-            // if(Input.GetKeyDown(KeyCode.T))
-            // {
-            //     ServerAction action = new ServerAction();
-            //     action.action = "ThrowObject";
-            //     action.moveMagnitude = 600f;
-            //     PhysicsController.ProcessControlCommand(action);   
-            // }
-
-            // if(Input.GetKeyDown(KeyCode.U))
-            // {
-            //     ServerAction action = new ServerAction();
-            //     action.action = "MoveHandMagnitude";
-
-            //     action.moveMagnitude = 0.1f;
-                
-            //     action.x = 0f;
-            //     action.y = 1f;
-            //     action.z = 0f;
-            //     PhysicsController.ProcessControlCommand(action);
-            // }
-
-
-            if(!debugfield.isFocused && dfac.TextInputMode)
-            {
-                float FlyMagnitude = 1.0f;
-                float WalkMagnitude = 0.25f;
-                if(Input.GetKeyDown(KeyCode.W))
-                {
-                    ServerAction action = new ServerAction();
-                    if(PhysicsController.FlightMode)
-                    {
-                        action.action = "FlyAhead";
-                        action.moveMagnitude = FlyMagnitude;
-                        PhysicsController.ProcessControlCommand(action);
-                    }
-
-                    else
-                    {
-                        action.action = "MoveAhead";
-                        action.moveMagnitude = WalkMagnitude;		
-                        PhysicsController.ProcessControlCommand(action);
+            #if UNITY_EDITOR
+                foreach (KeyValuePair<KeyCode, ControlMode> entry in debugKeyToController) {
+                    if (Input.GetKeyDown(entry.Key)) {
+                        if (controlMode != entry.Value) {
+                            setControlMode(entry.Value);
+                            break;
+                        }
                     }
                 }
-
-                if(Input.GetKeyDown(KeyCode.S))
-                {
-                    ServerAction action = new ServerAction();
-                    if(PhysicsController.FlightMode)
-                    {
-                        action.action = "FlyBack";
-                        action.moveMagnitude = FlyMagnitude;
-                        PhysicsController.ProcessControlCommand(action);
-                    }
-
-                    else
-                    {
-                        action.action = "MoveBack";
-                        action.moveMagnitude = WalkMagnitude;		
-                        PhysicsController.ProcessControlCommand(action);
-                    }
-                }
-
-                if(Input.GetKeyDown(KeyCode.A))
-                {
-                    ServerAction action = new ServerAction();
-                    if(PhysicsController.FlightMode)
-                    {
-                        action.action = "FlyLeft";
-                        action.moveMagnitude = FlyMagnitude;
-                        PhysicsController.ProcessControlCommand(action);
-                    }
-
-                    else
-                    {
-                        action.action = "MoveLeft";
-                        action.moveMagnitude = WalkMagnitude;		
-                        PhysicsController.ProcessControlCommand(action);
-                    }
-                }
-
-                if(Input.GetKeyDown(KeyCode.D))
-                {
-                    ServerAction action = new ServerAction();
-                    if(PhysicsController.FlightMode)
-                    {
-                        action.action = "FlyRight";
-                        action.moveMagnitude = FlyMagnitude;
-                        PhysicsController.ProcessControlCommand(action);
-                    }
-
-                    else
-                    {
-                        action.action = "MoveRight";
-                        action.moveMagnitude = WalkMagnitude;		
-                        PhysicsController.ProcessControlCommand(action);
-                    }
-                }
-
-                if(Input.GetKeyDown(KeyCode.I))
-                {
-                    if(PhysicsController.FlightMode)
-                    {
-                        ServerAction action = new ServerAction();
-                        action.action = "FlyUp";
-                        action.moveMagnitude = FlyMagnitude;
-                        PhysicsController.ProcessControlCommand(action);
-                    }
-                }
-
-                if(Input.GetKeyDown(KeyCode.K))
-                {
-                    if(PhysicsController.FlightMode)
-                    {
-                        ServerAction action = new ServerAction();
-                        action.action = "FlyDown";
-                        action.moveMagnitude = FlyMagnitude;
-                        PhysicsController.ProcessControlCommand(action);
-                    }
-                }
-
-                if(Input.GetKeyDown(KeyCode.UpArrow))
-                {
-                    ServerAction action = new ServerAction();
-                    action.action = "LookUp";
-                    PhysicsController.ProcessControlCommand(action); 
-                }
-
-                if(Input.GetKeyDown(KeyCode.DownArrow))
-                {
-                    ServerAction action = new ServerAction();
-                    action.action = "LookDown";
-                    PhysicsController.ProcessControlCommand(action); 
-                }
-
-                if(Input.GetKeyDown(KeyCode.LeftArrow) || Input.GetKeyDown(KeyCode.J))
-                {
-                    ServerAction action = new ServerAction();
-                    action.action = "RotateLeft";
-                    PhysicsController.ProcessControlCommand(action); 
-                }
-
-                if(Input.GetKeyDown(KeyCode.RightArrow) || Input.GetKeyDown(KeyCode.L))
-                {
-                    ServerAction action = new ServerAction();
-                    action.action = "RotateRight";
-                    PhysicsController.ProcessControlCommand(action); 
-                }
-
-                if(Input.GetKeyDown(KeyCode.Space))
-                {
-                    if(PhysicsController.FlightMode)
-                    {
-                        ServerAction action = new ServerAction();
-                        action.action = "LaunchDroneObject";
-                        action.moveMagnitude = 200f;
-                        //action. = new Vector3(0, 1, -1);
-                        action.x = 0;
-                        action.y = 1;
-                        action.z = -1;
-                        PhysicsController.ProcessControlCommand(action);
-                    }
-                }
-
-                if(Input.GetKeyDown(KeyCode.O))
-                {
-                    if(PhysicsController.FlightMode)
-                    {
-                        ServerAction action = new ServerAction();
-                        action.action = "CheckDroneCaught";
-                        PhysicsController.ProcessControlCommand(action);
-                    }
-                }
-            }
             #endif
+        }
+
+        public void HideHUD()
+        {
+            var InputMode_Text = GameObject.Find("DebugCanvasPhysics/InputModeText");
+            if (InputMode_Text != null) {
+                InputMode_Text.SetActive(false);
+            }
+            var InputFieldObj = GameObject.Find("DebugCanvasPhysics/InputField");
+            InputFieldObj.SetActive(false);
+            var background = GameObject.Find("DebugCanvasPhysics/InputModeText_Background");
+            background.SetActive(false);
         }
 
         public void Execute(string command)
@@ -1021,10 +892,65 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         break;
                     }
 
+                case "fillsoap":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "FillObjectWithLiquid";
+						if(splitcommand.Length > 1)
+						{
+							action.objectId = splitcommand[1];
+						}
+
+                        else
+                        {
+                            action.objectId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().UniqueIDOfClosestVisibleObject();
+                        }
+
+                        action.fillLiquid = "soap";
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
+                case "fillwine":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "FillObjectWithLiquid";
+						if(splitcommand.Length > 1)
+						{
+							action.objectId = splitcommand[1];
+						}
+
+                        else
+                        {
+                            action.objectId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().UniqueIDOfClosestVisibleObject();
+                        }
+
+                        action.fillLiquid = "wine";
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
                 case "emptyliquid":
                     {
                         ServerAction action = new ServerAction();
                         action.action = "EmptyLiquidFromObject";
+						if(splitcommand.Length > 1)
+						{
+							action.objectId = splitcommand[1];
+						}
+
+                        else
+                        {
+                            action.objectId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().UniqueIDOfClosestVisibleObject();
+                        }
+
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
+                case "useup":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "UseUpObject";
 						if(splitcommand.Length > 1)
 						{
 							action.objectId = splitcommand[1];
@@ -1216,6 +1142,18 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }  
+                
+                case "SetTempTimer":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "SetRoomTempDecayTime";
+
+                        action.TimeUntilRoomTemp = 20f;
+                        action.objectType = "Bread";
+                        PhysicsController.ProcessControlCommand(action);
+
+                        break;
+                    }
                     
                     //throw object by dropping it and applying force.
                     //default is with strength of 120, can pass in custom magnitude of throw force

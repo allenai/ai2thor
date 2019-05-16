@@ -30,6 +30,11 @@ public class Build
     }
 
     static void build(string buildName, List<string> scenes, BuildTarget target)	{
+        var defines = GetDefineSymbolsFromEnv();
+        if (defines != "") {
+            var targetGroup = BuildPipeline.GetBuildTargetGroup(target);
+            PlayerSettings.SetScriptingDefineSymbolsForGroup(targetGroup, GetDefineSymbolsFromEnv());
+        }
         BuildPipeline.BuildPlayer(scenes.ToArray(), buildName, target, BuildOptions.StrictMode | BuildOptions.CompressWithLz4);
     }
 
@@ -51,7 +56,12 @@ public class Build
     private static IEnumerable<string> GetSceneFromEnv()
     {
         return Environment.GetEnvironmentVariable("SCENE").Split(',').Select(
-            x => "Assets/Physics/Physics Scenes/" + x + ".unity"
+            x => "Assets/Scenes/" + x + ".unity"
         );
+    }
+
+    private static string GetDefineSymbolsFromEnv()
+    {
+        return Environment.GetEnvironmentVariable("DEFINES");
     }
 }

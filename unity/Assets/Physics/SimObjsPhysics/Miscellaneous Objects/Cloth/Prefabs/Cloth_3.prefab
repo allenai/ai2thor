@@ -563,6 +563,7 @@ GameObject:
   - component: {fileID: 4681903114190866}
   - component: {fileID: 114697946104085196}
   - component: {fileID: 54146024025452872}
+  - component: {fileID: 6802325140031817893}
   m_Layer: 8
   m_Name: Cloth_3
   m_TagString: SimObjPhysics
@@ -604,7 +605,7 @@ MonoBehaviour:
   uniqueID: 
   Type: 60
   PrimaryProperty: 3
-  SecondaryProperties: 
+  SecondaryProperties: 04000000
   BoundingBox: {fileID: 1024118737418778}
   VisibilityPoints:
   - {fileID: 4727709832304578}
@@ -618,7 +619,7 @@ MonoBehaviour:
   ReceptacleTriggerBoxes: []
   isVisible: 0
   isInteractable: 0
-  isColliding: 0
+  isInAgentHand: 0
   MyColliders:
   - {fileID: 65638768837828326}
   - {fileID: 65686432226281942}
@@ -633,6 +634,9 @@ MonoBehaviour:
   HFbounciness: 0
   HFrbdrag: 3
   HFrbangulardrag: 0.5
+  CurrentTemperature: 0
+  HowManySecondsUntilRoomTemp: 10
+  ContainedObjectReferences: []
 --- !u!54 &54146024025452872
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -649,6 +653,29 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
+--- !u!114 &6802325140031817893
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1451922782455450}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d106cf009583a40e4a85d860c9830f67, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  MaterialSwapObjects:
+  - MyObject: {fileID: 1633510590788308}
+    OnMaterials:
+    - {fileID: 2100000, guid: e5618b12be8e0417196269553339064b, type: 2}
+    - {fileID: 2100000, guid: b03755ccf97c38748b0dd243d1d9bf58, type: 2}
+    OffMaterials:
+    - {fileID: 2100000, guid: e5618b12be8e0417196269553339064b, type: 2}
+    - {fileID: 2100000, guid: 937f5335a74cfc14086739fde6c8acf7, type: 2}
+  ObjectsToEnableIfClean: []
+  ObjectsToEnableIfDirty: []
+  isDirty: 0
 --- !u!1 &1459155637447340
 GameObject:
   m_ObjectHideFlags: 0
@@ -993,13 +1020,13 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1633510590788308}
-  m_LocalRotation: {x: -0.70710576, y: -0, z: -0, w: 0.70710784}
-  m_LocalPosition: {x: 0, y: 0.02550006, z: 0}
-  m_LocalScale: {x: 47.30062, y: 47.300617, z: 47.300617}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 4681903114190866}
   m_RootOrder: 0
-  m_LocalEulerAnglesHint: {x: -90.00001, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!33 &33934533743930682
 MeshFilter:
   m_ObjectHideFlags: 0
@@ -1007,7 +1034,7 @@ MeshFilter:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1633510590788308}
-  m_Mesh: {fileID: 4300000, guid: bc4e96554ca254d22814b91b702bfe1d, type: 3}
+  m_Mesh: {fileID: 4300004, guid: 4ff1f3f7f5045ed43be328ecff465a2b, type: 3}
 --- !u!23 &23219706272049410
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -1026,6 +1053,7 @@ MeshRenderer:
   m_RendererPriority: 0
   m_Materials:
   - {fileID: 2100000, guid: e5618b12be8e0417196269553339064b, type: 2}
+  - {fileID: 2100000, guid: 937f5335a74cfc14086739fde6c8acf7, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
