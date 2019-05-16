@@ -454,17 +454,21 @@ public class InstantiatePrefabTest : MonoBehaviour
                     sop.transform.SetParent(rsp.ParentSimObjPhys.transform);
                 }
 
+                //place stationary false, let physics drop everything too
                 else
                 {
-                    sop.GetComponent<Rigidbody>().isKinematic = false;
+                    Rigidbody rb = sop.GetComponent<Rigidbody>();
+                    rb.isKinematic = false;
+                    rb.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
+                    //if this object is a receptacle and it has other objects inside it, drop them all together
+                    if(sop.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.Receptacle))
+                    {
+                        PhysicsRemoteFPSAgentController agent = GameObject.Find("FPSController").GetComponent<PhysicsRemoteFPSAgentController>();
+                        agent.DropContainedObjects(sop);
+                    }
                 }
 
-                //if this object is a receptacle and it has other objects inside it, drop them all together
-                if(sop.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.Receptacle))
-                {
-                    PhysicsRemoteFPSAgentController agent = GameObject.Find("FPSController").GetComponent<PhysicsRemoteFPSAgentController>();
-                    agent.DropContainedObjects(sop);
-                }
+
 
                 #if UNITY_EDITOR
                 //Debug.Log(sop.name + " succesfully spawned in " +rsp.ParentSimObjPhys.name + " at coordinate " + rsp.Point);

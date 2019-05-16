@@ -480,6 +480,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 
 				if(colsop.PrimaryProperty == SimObjPrimaryProperty.CanPickup || colsop.PrimaryProperty == SimObjPrimaryProperty.Moveable)
 				{
+					//print(col.transform.GetComponentInParent<SimObjPhysics>().transform.name);
 					Rigidbody rb = colsop.transform.GetComponent<Rigidbody>();
 					rb.isKinematic = false;
 					rb.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
