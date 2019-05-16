@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.7115449, g: 0.7339943, b: 0.7439677, a: 1}
+  m_IndirectSpecularColor: {r: 0.70008117, g: 0.7227283, b: 0.73079306, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -599,7 +599,6 @@ MonoBehaviour:
   - {fileID: 269986117}
   isVisible: 0
   isInteractable: 0
-  isColliding: 0
   isInAgentHand: 0
   MyColliders: []
   HFdynamicfriction: 0
@@ -607,6 +606,8 @@ MonoBehaviour:
   HFbounciness: 0
   HFrbdrag: 0
   HFrbangulardrag: 0
+  CurrentTemperature: 0
+  HowManySecondsUntilRoomTemp: 10
   ContainedObjectReferences: []
 --- !u!4 &40943768
 Transform:
@@ -1648,7 +1649,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4322996899280170, guid: b18673dc5d4f14842a68d4dc9a891f3a, type: 3}
       propertyPath: m_RootOrder
-      value: 60
+      value: 76
       objectReference: {fileID: 0}
     - target: {fileID: 4322996899280170, guid: b18673dc5d4f14842a68d4dc9a891f3a, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
@@ -2785,7 +2786,6 @@ MonoBehaviour:
   ReceptacleTriggerBoxes: []
   isVisible: 0
   isInteractable: 0
-  isColliding: 0
   isInAgentHand: 0
   MyColliders: []
   HFdynamicfriction: 0
@@ -2793,6 +2793,8 @@ MonoBehaviour:
   HFbounciness: 0
   HFrbdrag: 0
   HFrbangulardrag: 0
+  CurrentTemperature: 0
+  HowManySecondsUntilRoomTemp: 10
   ContainedObjectReferences: []
 --- !u!1 &121275854
 GameObject:
@@ -3230,7 +3232,6 @@ MonoBehaviour:
   - {fileID: 2074802398}
   isVisible: 0
   isInteractable: 0
-  isColliding: 0
   isInAgentHand: 0
   MyColliders: []
   HFdynamicfriction: 0
@@ -3238,6 +3239,8 @@ MonoBehaviour:
   HFbounciness: 0
   HFrbdrag: 0
   HFrbangulardrag: 0
+  CurrentTemperature: 0
+  HowManySecondsUntilRoomTemp: 10
   ContainedObjectReferences: []
 --- !u!114 &132473220
 MonoBehaviour:
@@ -4276,8 +4279,8 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 169710988}
-  m_LocalRotation: {x: -0, y: -0.70710576, z: -0, w: 0.7071079}
-  m_LocalPosition: {x: 1.765, y: 0.9029, z: 0.6015}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 721013151}
@@ -4286,9 +4289,8 @@ Transform:
   - {fileID: 1386069775}
   - {fileID: 122289825}
   - {fileID: 1923097324}
-  - {fileID: 1799742487}
-  m_Father: {fileID: 472216731}
-  m_RootOrder: 63
+  m_Father: {fileID: 1876932437}
+  m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: -90.00001, z: 0}
 --- !u!114 &169710990
 MonoBehaviour:
@@ -4348,7 +4350,6 @@ MonoBehaviour:
   - {fileID: 721013150}
   isVisible: 0
   isInteractable: 0
-  isColliding: 0
   isInAgentHand: 0
   MyColliders: []
   HFdynamicfriction: 0
@@ -4356,6 +4357,8 @@ MonoBehaviour:
   HFbounciness: 0
   HFrbdrag: 0
   HFrbangulardrag: 0
+  CurrentTemperature: 0
+  HowManySecondsUntilRoomTemp: 10
   ContainedObjectReferences: []
 --- !u!114 &169710993
 MonoBehaviour:
@@ -4584,7 +4587,6 @@ MonoBehaviour:
   - {fileID: 1943867466}
   isVisible: 0
   isInteractable: 0
-  isColliding: 0
   isInAgentHand: 0
   MyColliders: []
   HFdynamicfriction: 0
@@ -4592,6 +4594,8 @@ MonoBehaviour:
   HFbounciness: 0
   HFrbdrag: 0
   HFrbangulardrag: 0
+  CurrentTemperature: 0
+  HowManySecondsUntilRoomTemp: 10
   ContainedObjectReferences: []
 --- !u!114 &178884841
 MonoBehaviour:
@@ -5305,7 +5309,7 @@ PrefabInstance:
   m_ObjectHideFlags: 0
   serializedVersion: 2
   m_Modification:
-    m_TransformParent: {fileID: 913259047}
+    m_TransformParent: {fileID: 1153173747}
     m_Modifications:
     - target: {fileID: 4109262173642923959, guid: 003a906049c764baf902631570db166f,
         type: 3}
@@ -5320,7 +5324,7 @@ PrefabInstance:
     - target: {fileID: 4109262173642923958, guid: 003a906049c764baf902631570db166f,
         type: 3}
       propertyPath: m_LocalPosition.x
-      value: -0.0015
+      value: -0.0015000066
       objectReference: {fileID: 0}
     - target: {fileID: 4109262173642923958, guid: 003a906049c764baf902631570db166f,
         type: 3}
@@ -5330,7 +5334,7 @@ PrefabInstance:
     - target: {fileID: 4109262173642923958, guid: 003a906049c764baf902631570db166f,
         type: 3}
       propertyPath: m_LocalPosition.z
-      value: -0.0014
+      value: -0.0013999983
       objectReference: {fileID: 0}
     - target: {fileID: 4109262173642923958, guid: 003a906049c764baf902631570db166f,
         type: 3}
@@ -5355,7 +5359,7 @@ PrefabInstance:
     - target: {fileID: 4109262173642923958, guid: 003a906049c764baf902631570db166f,
         type: 3}
       propertyPath: m_RootOrder
-      value: 6
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 4109262173642923958, guid: 003a906049c764baf902631570db166f,
         type: 3}
@@ -5397,6 +5401,31 @@ PrefabInstance:
     - target: {fileID: 1373979915, guid: 003a906049c764baf902631570db166f, type: 3}
       propertyPath: m_Center.z
       value: 1.837594e-17
+      objectReference: {fileID: 0}
+    - target: {fileID: 9167547658584556741, guid: 003a906049c764baf902631570db166f,
+        type: 3}
+      propertyPath: m_Size.x
+      value: 0.06788492
+      objectReference: {fileID: 0}
+    - target: {fileID: 9167547658584556741, guid: 003a906049c764baf902631570db166f,
+        type: 3}
+      propertyPath: m_Size.y
+      value: 0.1672019
+      objectReference: {fileID: 0}
+    - target: {fileID: 9167547658584556741, guid: 003a906049c764baf902631570db166f,
+        type: 3}
+      propertyPath: m_Size.z
+      value: 0.069489345
+      objectReference: {fileID: 0}
+    - target: {fileID: 9167547658584556741, guid: 003a906049c764baf902631570db166f,
+        type: 3}
+      propertyPath: m_Center.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 9167547658584556741, guid: 003a906049c764baf902631570db166f,
+        type: 3}
+      propertyPath: m_Center.y
+      value: 0.070178375
       objectReference: {fileID: 0}
     - target: {fileID: 4109262173534489993, guid: 003a906049c764baf902631570db166f,
         type: 3}
@@ -5982,7 +6011,7 @@ PrefabInstance:
   m_ObjectHideFlags: 0
   serializedVersion: 2
   m_Modification:
-    m_TransformParent: {fileID: 1377664260}
+    m_TransformParent: {fileID: 1178741787}
     m_Modifications:
     - target: {fileID: 4109262173642923959, guid: 003a906049c764baf902631570db166f,
         type: 3}
@@ -5997,7 +6026,7 @@ PrefabInstance:
     - target: {fileID: 4109262173642923958, guid: 003a906049c764baf902631570db166f,
         type: 3}
       propertyPath: m_LocalPosition.x
-      value: -0.0016
+      value: -0.0016000022
       objectReference: {fileID: 0}
     - target: {fileID: 4109262173642923958, guid: 003a906049c764baf902631570db166f,
         type: 3}
@@ -6007,7 +6036,7 @@ PrefabInstance:
     - target: {fileID: 4109262173642923958, guid: 003a906049c764baf902631570db166f,
         type: 3}
       propertyPath: m_LocalPosition.z
-      value: 0.0016
+      value: 0.0016000227
       objectReference: {fileID: 0}
     - target: {fileID: 4109262173642923958, guid: 003a906049c764baf902631570db166f,
         type: 3}
@@ -6032,7 +6061,7 @@ PrefabInstance:
     - target: {fileID: 4109262173642923958, guid: 003a906049c764baf902631570db166f,
         type: 3}
       propertyPath: m_RootOrder
-      value: 6
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 4109262173642923958, guid: 003a906049c764baf902631570db166f,
         type: 3}
@@ -6074,6 +6103,31 @@ PrefabInstance:
     - target: {fileID: 1373979915, guid: 003a906049c764baf902631570db166f, type: 3}
       propertyPath: m_Center.z
       value: 1.837594e-17
+      objectReference: {fileID: 0}
+    - target: {fileID: 9167547658584556741, guid: 003a906049c764baf902631570db166f,
+        type: 3}
+      propertyPath: m_Size.x
+      value: 0.06788492
+      objectReference: {fileID: 0}
+    - target: {fileID: 9167547658584556741, guid: 003a906049c764baf902631570db166f,
+        type: 3}
+      propertyPath: m_Size.y
+      value: 0.1672019
+      objectReference: {fileID: 0}
+    - target: {fileID: 9167547658584556741, guid: 003a906049c764baf902631570db166f,
+        type: 3}
+      propertyPath: m_Size.z
+      value: 0.069489345
+      objectReference: {fileID: 0}
+    - target: {fileID: 9167547658584556741, guid: 003a906049c764baf902631570db166f,
+        type: 3}
+      propertyPath: m_Center.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 9167547658584556741, guid: 003a906049c764baf902631570db166f,
+        type: 3}
+      propertyPath: m_Center.y
+      value: 0.070178375
       objectReference: {fileID: 0}
     - target: {fileID: 4109262173534489993, guid: 003a906049c764baf902631570db166f,
         type: 3}
@@ -6483,7 +6537,6 @@ MonoBehaviour:
   - {fileID: 1624981526}
   isVisible: 0
   isInteractable: 0
-  isColliding: 0
   isInAgentHand: 0
   MyColliders: []
   HFdynamicfriction: 0
@@ -6491,6 +6544,8 @@ MonoBehaviour:
   HFbounciness: 0
   HFrbdrag: 0
   HFrbangulardrag: 0
+  CurrentTemperature: 0
+  HowManySecondsUntilRoomTemp: 10
   ContainedObjectReferences: []
 --- !u!114 &252944114
 MonoBehaviour:
@@ -7027,7 +7082,6 @@ MonoBehaviour:
   - {fileID: 933605406}
   isVisible: 0
   isInteractable: 0
-  isColliding: 0
   isInAgentHand: 0
   MyColliders: []
   HFdynamicfriction: 0
@@ -7035,6 +7089,8 @@ MonoBehaviour:
   HFbounciness: 0
   HFrbdrag: 0
   HFrbangulardrag: 0
+  CurrentTemperature: 0
+  HowManySecondsUntilRoomTemp: 10
   ContainedObjectReferences: []
 --- !u!114 &271913140
 MonoBehaviour:
@@ -7893,8 +7949,8 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 298312462}
-  m_LocalRotation: {x: -0, y: -0.70710576, z: -0, w: 0.7071079}
-  m_LocalPosition: {x: 1.9753, y: 0.9029, z: 0.3846}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 2059355722}
@@ -7903,9 +7959,8 @@ Transform:
   - {fileID: 951786995}
   - {fileID: 651234327}
   - {fileID: 718730105}
-  - {fileID: 1621433788}
-  m_Father: {fileID: 472216731}
-  m_RootOrder: 71
+  m_Father: {fileID: 990380329}
+  m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: -90.00001, z: 0}
 --- !u!114 &298312464
 MonoBehaviour:
@@ -7965,7 +8020,6 @@ MonoBehaviour:
   - {fileID: 2059355721}
   isVisible: 0
   isInteractable: 0
-  isColliding: 0
   isInAgentHand: 0
   MyColliders: []
   HFdynamicfriction: 0
@@ -7973,6 +8027,8 @@ MonoBehaviour:
   HFbounciness: 0
   HFrbdrag: 0
   HFrbangulardrag: 0
+  CurrentTemperature: 0
+  HowManySecondsUntilRoomTemp: 10
   ContainedObjectReferences: []
 --- !u!114 &298312467
 MonoBehaviour:
@@ -9429,7 +9485,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4322996899280170, guid: b18673dc5d4f14842a68d4dc9a891f3a, type: 3}
       propertyPath: m_RootOrder
-      value: 62
+      value: 77
       objectReference: {fileID: 0}
     - target: {fileID: 4322996899280170, guid: b18673dc5d4f14842a68d4dc9a891f3a, type: 3}
       propertyPath: m_LocalScale.x
@@ -9500,11 +9556,6 @@ PrefabInstance:
       propertyPath: StoveRange
       value: 
       objectReference: {fileID: 0}
-    - target: {fileID: 114247244180501690, guid: b18673dc5d4f14842a68d4dc9a891f3a,
-        type: 3}
-      propertyPath: uniqueID
-      value: StoveKnob|+01.60|+00.92|+00.68
-      objectReference: {fileID: 0}
     - target: {fileID: 1518126381, guid: b18673dc5d4f14842a68d4dc9a891f3a, type: 3}
       propertyPath: ControlledSimObjects.Array.data[0]
       value: 
@@ -9513,6 +9564,11 @@ PrefabInstance:
       propertyPath: LightSources.Array.data[0]
       value: 
       objectReference: {fileID: 1799742486}
+    - target: {fileID: 114247244180501690, guid: b18673dc5d4f14842a68d4dc9a891f3a,
+        type: 3}
+      propertyPath: uniqueID
+      value: StoveKnob|+01.60|+00.92|+00.68
+      objectReference: {fileID: 0}
     m_RemovedComponents:
     - {fileID: 95000013073990602, guid: b18673dc5d4f14842a68d4dc9a891f3a, type: 3}
     - {fileID: 114000012838626064, guid: b18673dc5d4f14842a68d4dc9a891f3a, type: 3}
@@ -11763,7 +11819,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4322996899280170, guid: b18673dc5d4f14842a68d4dc9a891f3a, type: 3}
       propertyPath: m_RootOrder
-      value: 68
+      value: 80
       objectReference: {fileID: 0}
     - target: {fileID: 4322996899280170, guid: b18673dc5d4f14842a68d4dc9a891f3a, type: 3}
       propertyPath: m_LocalScale.x
@@ -11834,11 +11890,6 @@ PrefabInstance:
       propertyPath: StoveRange
       value: 
       objectReference: {fileID: 0}
-    - target: {fileID: 114247244180501690, guid: b18673dc5d4f14842a68d4dc9a891f3a,
-        type: 3}
-      propertyPath: uniqueID
-      value: StoveKnob|+01.60|+00.92|+00.52
-      objectReference: {fileID: 0}
     - target: {fileID: 1518126381, guid: b18673dc5d4f14842a68d4dc9a891f3a, type: 3}
       propertyPath: ControlledSimObjects.Array.data[0]
       value: 
@@ -11847,6 +11898,11 @@ PrefabInstance:
       propertyPath: LightSources.Array.data[0]
       value: 
       objectReference: {fileID: 8885339}
+    - target: {fileID: 114247244180501690, guid: b18673dc5d4f14842a68d4dc9a891f3a,
+        type: 3}
+      propertyPath: uniqueID
+      value: StoveKnob|+01.60|+00.92|+00.52
+      objectReference: {fileID: 0}
     m_RemovedComponents:
     - {fileID: 95000013073990602, guid: b18673dc5d4f14842a68d4dc9a891f3a, type: 3}
     - {fileID: 114000012838626064, guid: b18673dc5d4f14842a68d4dc9a891f3a, type: 3}
@@ -11949,11 +12005,6 @@ PrefabInstance:
         type: 3}
       propertyPath: m_IsKinematic
       value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 114275462077298490, guid: 28357fb495c1a4bada6894f6b77bfa3f,
-        type: 3}
-      propertyPath: uniqueID
-      value: Box|-02.70|+00.00|+02.18
       objectReference: {fileID: 0}
     - target: {fileID: 1363382001524100, guid: 28357fb495c1a4bada6894f6b77bfa3f, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -12086,6 +12137,11 @@ PrefabInstance:
     - target: {fileID: 1788754343561416, guid: 28357fb495c1a4bada6894f6b77bfa3f, type: 3}
       propertyPath: m_StaticEditorFlags
       value: 64
+      objectReference: {fileID: 0}
+    - target: {fileID: 114275462077298490, guid: 28357fb495c1a4bada6894f6b77bfa3f,
+        type: 3}
+      propertyPath: uniqueID
+      value: Box|-02.70|+00.00|+02.18
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 28357fb495c1a4bada6894f6b77bfa3f, type: 3}
@@ -12838,18 +12894,18 @@ Transform:
   - {fileID: 2033414824}
   - {fileID: 304481541}
   - {fileID: 233074011}
+  - {fileID: 816228300}
+  - {fileID: 1876932437}
+  - {fileID: 1178741787}
+  - {fileID: 918897013}
+  - {fileID: 1153173747}
+  - {fileID: 990380329}
   - {fileID: 74027992}
-  - {fileID: 1005729885}
   - {fileID: 356271006}
-  - {fileID: 169710989}
   - {fileID: 1564315726}
-  - {fileID: 1377664260}
   - {fileID: 1893647874}
-  - {fileID: 2022925384}
   - {fileID: 444456677}
-  - {fileID: 913259047}
   - {fileID: 479587685}
-  - {fileID: 298312463}
   m_Father: {fileID: 0}
   m_RootOrder: 3
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -12955,7 +13011,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4322996899280170, guid: b18673dc5d4f14842a68d4dc9a891f3a, type: 3}
       propertyPath: m_RootOrder
-      value: 70
+      value: 81
       objectReference: {fileID: 0}
     - target: {fileID: 4322996899280170, guid: b18673dc5d4f14842a68d4dc9a891f3a, type: 3}
       propertyPath: m_LocalScale.x
@@ -13026,11 +13082,6 @@ PrefabInstance:
       propertyPath: StoveRange
       value: 
       objectReference: {fileID: 0}
-    - target: {fileID: 114247244180501690, guid: b18673dc5d4f14842a68d4dc9a891f3a,
-        type: 3}
-      propertyPath: uniqueID
-      value: StoveKnob|+01.60|+00.92|+00.46
-      objectReference: {fileID: 0}
     - target: {fileID: 1518126381, guid: b18673dc5d4f14842a68d4dc9a891f3a, type: 3}
       propertyPath: ControlledSimObjects.Array.data[0]
       value: 
@@ -13039,6 +13090,11 @@ PrefabInstance:
       propertyPath: LightSources.Array.data[0]
       value: 
       objectReference: {fileID: 1621433787}
+    - target: {fileID: 114247244180501690, guid: b18673dc5d4f14842a68d4dc9a891f3a,
+        type: 3}
+      propertyPath: uniqueID
+      value: StoveKnob|+01.60|+00.92|+00.46
+      objectReference: {fileID: 0}
     m_RemovedComponents:
     - {fileID: 95000013073990602, guid: b18673dc5d4f14842a68d4dc9a891f3a, type: 3}
     - {fileID: 114000012838626064, guid: b18673dc5d4f14842a68d4dc9a891f3a, type: 3}
@@ -15100,7 +15156,7 @@ PrefabInstance:
   m_ObjectHideFlags: 0
   serializedVersion: 2
   m_Modification:
-    m_TransformParent: {fileID: 298312463}
+    m_TransformParent: {fileID: 990380329}
     m_Modifications:
     - target: {fileID: 4109262173642923959, guid: 003a906049c764baf902631570db166f,
         type: 3}
@@ -15115,7 +15171,7 @@ PrefabInstance:
     - target: {fileID: 4109262173642923958, guid: 003a906049c764baf902631570db166f,
         type: 3}
       propertyPath: m_LocalPosition.x
-      value: -0.0007
+      value: -0.00069999846
       objectReference: {fileID: 0}
     - target: {fileID: 4109262173642923958, guid: 003a906049c764baf902631570db166f,
         type: 3}
@@ -15125,7 +15181,7 @@ PrefabInstance:
     - target: {fileID: 4109262173642923958, guid: 003a906049c764baf902631570db166f,
         type: 3}
       propertyPath: m_LocalPosition.z
-      value: 0.0005
+      value: 0.0004999618
       objectReference: {fileID: 0}
     - target: {fileID: 4109262173642923958, guid: 003a906049c764baf902631570db166f,
         type: 3}
@@ -15150,7 +15206,7 @@ PrefabInstance:
     - target: {fileID: 4109262173642923958, guid: 003a906049c764baf902631570db166f,
         type: 3}
       propertyPath: m_RootOrder
-      value: 6
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 4109262173642923958, guid: 003a906049c764baf902631570db166f,
         type: 3}
@@ -15192,6 +15248,31 @@ PrefabInstance:
     - target: {fileID: 1373979915, guid: 003a906049c764baf902631570db166f, type: 3}
       propertyPath: m_Center.z
       value: 1.837594e-17
+      objectReference: {fileID: 0}
+    - target: {fileID: 9167547658584556741, guid: 003a906049c764baf902631570db166f,
+        type: 3}
+      propertyPath: m_Size.z
+      value: 0.069489345
+      objectReference: {fileID: 0}
+    - target: {fileID: 9167547658584556741, guid: 003a906049c764baf902631570db166f,
+        type: 3}
+      propertyPath: m_Size.x
+      value: 0.06788492
+      objectReference: {fileID: 0}
+    - target: {fileID: 9167547658584556741, guid: 003a906049c764baf902631570db166f,
+        type: 3}
+      propertyPath: m_Size.y
+      value: 0.1672019
+      objectReference: {fileID: 0}
+    - target: {fileID: 9167547658584556741, guid: 003a906049c764baf902631570db166f,
+        type: 3}
+      propertyPath: m_Center.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 9167547658584556741, guid: 003a906049c764baf902631570db166f,
+        type: 3}
+      propertyPath: m_Center.y
+      value: 0.070178375
       objectReference: {fileID: 0}
     - target: {fileID: 4109262173534489993, guid: 003a906049c764baf902631570db166f,
         type: 3}
@@ -16921,7 +17002,6 @@ MonoBehaviour:
   - {fileID: 1188886637}
   isVisible: 0
   isInteractable: 0
-  isColliding: 0
   isInAgentHand: 0
   MyColliders: []
   HFdynamicfriction: 0
@@ -16929,6 +17009,8 @@ MonoBehaviour:
   HFbounciness: 0
   HFrbdrag: 0
   HFrbangulardrag: 0
+  CurrentTemperature: 0
+  HowManySecondsUntilRoomTemp: 10
   ContainedObjectReferences: []
 --- !u!1 &673318727
 GameObject:
@@ -18403,7 +18485,6 @@ MonoBehaviour:
   - {fileID: 176717744}
   isVisible: 0
   isInteractable: 0
-  isColliding: 0
   isInAgentHand: 0
   MyColliders: []
   HFdynamicfriction: 0
@@ -18411,6 +18492,8 @@ MonoBehaviour:
   HFbounciness: 0
   HFrbdrag: 0
   HFrbangulardrag: 0
+  CurrentTemperature: 0
+  HowManySecondsUntilRoomTemp: 10
   ContainedObjectReferences: []
 --- !u!1 &706923187
 GameObject:
@@ -19214,7 +19297,6 @@ MonoBehaviour:
   - {fileID: 1717187121}
   isVisible: 0
   isInteractable: 0
-  isColliding: 0
   isInAgentHand: 0
   MyColliders: []
   HFdynamicfriction: 0
@@ -19222,6 +19304,8 @@ MonoBehaviour:
   HFbounciness: 0
   HFrbdrag: 0
   HFrbangulardrag: 0
+  CurrentTemperature: 0
+  HowManySecondsUntilRoomTemp: 10
   ContainedObjectReferences: []
 --- !u!4 &742778974
 Transform:
@@ -19351,7 +19435,6 @@ MonoBehaviour:
   - {fileID: 1429766780}
   isVisible: 0
   isInteractable: 0
-  isColliding: 0
   isInAgentHand: 0
   MyColliders: []
   HFdynamicfriction: 0
@@ -19359,6 +19442,8 @@ MonoBehaviour:
   HFbounciness: 0
   HFrbdrag: 0
   HFrbangulardrag: 0
+  CurrentTemperature: 0
+  HowManySecondsUntilRoomTemp: 10
   ContainedObjectReferences: []
 --- !u!1 &747248688
 GameObject:
@@ -20493,7 +20578,6 @@ MonoBehaviour:
   - {fileID: 1189479308}
   isVisible: 0
   isInteractable: 0
-  isColliding: 0
   isInAgentHand: 0
   MyColliders: []
   HFdynamicfriction: 0
@@ -20501,6 +20585,8 @@ MonoBehaviour:
   HFbounciness: 0
   HFrbdrag: 0
   HFrbangulardrag: 0
+  CurrentTemperature: 0
+  HowManySecondsUntilRoomTemp: 10
   ContainedObjectReferences: []
 --- !u!114 &786800541
 MonoBehaviour:
@@ -20866,11 +20952,6 @@ PrefabInstance:
       propertyPath: m_LocalScale.z
       value: 1
       objectReference: {fileID: 0}
-    - target: {fileID: 54001409976962402, guid: 17de1b8e1c6b24343b41a48e1df658f2,
-        type: 3}
-      propertyPath: m_IsKinematic
-      value: 1
-      objectReference: {fileID: 0}
     - target: {fileID: 1803537740067808, guid: 17de1b8e1c6b24343b41a48e1df658f2, type: 3}
       propertyPath: m_StaticEditorFlags
       value: 64
@@ -20918,6 +20999,11 @@ PrefabInstance:
     - target: {fileID: 1641963463543480, guid: 17de1b8e1c6b24343b41a48e1df658f2, type: 3}
       propertyPath: m_StaticEditorFlags
       value: 64
+      objectReference: {fileID: 0}
+    - target: {fileID: 54001409976962402, guid: 17de1b8e1c6b24343b41a48e1df658f2,
+        type: 3}
+      propertyPath: m_IsKinematic
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 17de1b8e1c6b24343b41a48e1df658f2, type: 3}
@@ -21438,6 +21524,38 @@ Transform:
   m_Father: {fileID: 271913136}
   m_RootOrder: 3
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &816228299
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 816228300}
+  m_Layer: 8
+  m_Name: Burner
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &816228300
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 816228299}
+  m_LocalRotation: {x: -0, y: -0.70710576, z: -0, w: 0.7071079}
+  m_LocalPosition: {x: 1.765, y: 0.9029, z: 0.8192}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children:
+  - {fileID: 573729964}
+  - {fileID: 1005729885}
+  m_Father: {fileID: 472216731}
+  m_RootOrder: 60
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &818254566
 GameObject:
   m_ObjectHideFlags: 0
@@ -21661,7 +21779,6 @@ MonoBehaviour:
   - {fileID: 1257684379}
   isVisible: 0
   isInteractable: 0
-  isColliding: 0
   isInAgentHand: 0
   MyColliders: []
   HFdynamicfriction: 0
@@ -21669,6 +21786,8 @@ MonoBehaviour:
   HFbounciness: 0
   HFrbdrag: 0
   HFrbangulardrag: 0
+  CurrentTemperature: 0
+  HowManySecondsUntilRoomTemp: 10
   ContainedObjectReferences: []
 --- !u!114 &826208284
 MonoBehaviour:
@@ -22736,7 +22855,6 @@ MonoBehaviour:
   - {fileID: 1235210612}
   isVisible: 0
   isInteractable: 0
-  isColliding: 0
   isInAgentHand: 0
   MyColliders: []
   HFdynamicfriction: 0
@@ -22744,6 +22862,8 @@ MonoBehaviour:
   HFbounciness: 0
   HFrbdrag: 0
   HFrbangulardrag: 0
+  CurrentTemperature: 0
+  HowManySecondsUntilRoomTemp: 10
   ContainedObjectReferences: []
 --- !u!1 &856510698
 GameObject:
@@ -23469,7 +23589,6 @@ MonoBehaviour:
   - {fileID: 2069530985}
   isVisible: 0
   isInteractable: 0
-  isColliding: 0
   isInAgentHand: 0
   MyColliders: []
   HFdynamicfriction: 0
@@ -23477,6 +23596,8 @@ MonoBehaviour:
   HFbounciness: 0
   HFrbdrag: 0
   HFrbangulardrag: 0
+  CurrentTemperature: 0
+  HowManySecondsUntilRoomTemp: 10
   ContainedObjectReferences: []
 --- !u!114 &881658756
 MonoBehaviour:
@@ -24006,8 +24127,8 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 913259046}
-  m_LocalRotation: {x: -0, y: -0.70710576, z: -0, w: 0.7071079}
-  m_LocalPosition: {x: 1.9753, y: 0.9029, z: 0.6015}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 1771551408}
@@ -24016,9 +24137,8 @@ Transform:
   - {fileID: 772823184}
   - {fileID: 430577286}
   - {fileID: 1224176018}
-  - {fileID: 8885340}
-  m_Father: {fileID: 472216731}
-  m_RootOrder: 69
+  m_Father: {fileID: 1153173747}
+  m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: -90.00001, z: 0}
 --- !u!114 &913259048
 MonoBehaviour:
@@ -24078,7 +24198,6 @@ MonoBehaviour:
   - {fileID: 1771551407}
   isVisible: 0
   isInteractable: 0
-  isColliding: 0
   isInAgentHand: 0
   MyColliders: []
   HFdynamicfriction: 0
@@ -24086,6 +24205,8 @@ MonoBehaviour:
   HFbounciness: 0
   HFrbdrag: 0
   HFrbangulardrag: 0
+  CurrentTemperature: 0
+  HowManySecondsUntilRoomTemp: 10
   ContainedObjectReferences: []
 --- !u!114 &913259051
 MonoBehaviour:
@@ -24109,6 +24230,38 @@ MonoBehaviour:
   movementType: 0
   SelfControlled: 0
   ControlledSimObjects: []
+--- !u!1 &918897012
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 918897013}
+  m_Layer: 8
+  m_Name: Burner
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &918897013
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 918897012}
+  m_LocalRotation: {x: -0, y: -0.70710576, z: -0, w: 0.7071079}
+  m_LocalPosition: {x: 1.9753, y: 0.9029, z: 0.8192}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children:
+  - {fileID: 1938318749}
+  - {fileID: 2022925384}
+  m_Father: {fileID: 472216731}
+  m_RootOrder: 63
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &919172808
 GameObject:
   m_ObjectHideFlags: 0
@@ -24993,7 +25146,6 @@ MonoBehaviour:
   - {fileID: 1675692715}
   isVisible: 0
   isInteractable: 0
-  isColliding: 0
   isInAgentHand: 0
   MyColliders: []
   HFdynamicfriction: 0
@@ -25001,6 +25153,8 @@ MonoBehaviour:
   HFbounciness: 0
   HFrbdrag: 0
   HFrbangulardrag: 0
+  CurrentTemperature: 0
+  HowManySecondsUntilRoomTemp: 10
   ContainedObjectReferences: []
 --- !u!114 &952371574
 MonoBehaviour:
@@ -26121,6 +26275,38 @@ Transform:
   m_Father: {fileID: 1910281135}
   m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &990380328
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 990380329}
+  m_Layer: 8
+  m_Name: Burner
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &990380329
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 990380328}
+  m_LocalRotation: {x: -0, y: -0.70710576, z: -0, w: 0.7071079}
+  m_LocalPosition: {x: 1.9753, y: 0.9029, z: 0.3846}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children:
+  - {fileID: 1621433788}
+  - {fileID: 298312463}
+  m_Father: {fileID: 472216731}
+  m_RootOrder: 65
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &993509663
 GameObject:
   m_ObjectHideFlags: 0
@@ -26576,7 +26762,6 @@ MonoBehaviour:
   - {fileID: 575878926}
   isVisible: 0
   isInteractable: 0
-  isColliding: 0
   isInAgentHand: 0
   MyColliders: []
   HFdynamicfriction: 0
@@ -26584,6 +26769,8 @@ MonoBehaviour:
   HFbounciness: 0
   HFrbdrag: 0
   HFrbangulardrag: 0
+  CurrentTemperature: 0
+  HowManySecondsUntilRoomTemp: 10
   ContainedObjectReferences: []
 --- !u!4 &1005729885
 Transform:
@@ -26593,8 +26780,8 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1005729881}
-  m_LocalRotation: {x: -0, y: -0.70710576, z: -0, w: 0.7071079}
-  m_LocalPosition: {x: 1.765, y: 0.9029, z: 0.8192}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 575878929}
@@ -26603,9 +26790,8 @@ Transform:
   - {fileID: 1918409834}
   - {fileID: 757092548}
   - {fileID: 753502702}
-  - {fileID: 573729964}
-  m_Father: {fileID: 472216731}
-  m_RootOrder: 61
+  m_Father: {fileID: 816228300}
+  m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: -90.00001, z: 0}
 --- !u!114 &1005729886
 MonoBehaviour:
@@ -29410,7 +29596,7 @@ PrefabInstance:
   m_ObjectHideFlags: 0
   serializedVersion: 2
   m_Modification:
-    m_TransformParent: {fileID: 1005729885}
+    m_TransformParent: {fileID: 816228300}
     m_Modifications:
     - target: {fileID: 4109262173642923959, guid: 003a906049c764baf902631570db166f,
         type: 3}
@@ -29460,7 +29646,7 @@ PrefabInstance:
     - target: {fileID: 4109262173642923958, guid: 003a906049c764baf902631570db166f,
         type: 3}
       propertyPath: m_RootOrder
-      value: 7
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 4109262173642923958, guid: 003a906049c764baf902631570db166f,
         type: 3}
@@ -29502,6 +29688,31 @@ PrefabInstance:
     - target: {fileID: 1373979915, guid: 003a906049c764baf902631570db166f, type: 3}
       propertyPath: m_Center.z
       value: 1.837594e-17
+      objectReference: {fileID: 0}
+    - target: {fileID: 9167547658584556741, guid: 003a906049c764baf902631570db166f,
+        type: 3}
+      propertyPath: m_Size.x
+      value: 0.06788492
+      objectReference: {fileID: 0}
+    - target: {fileID: 9167547658584556741, guid: 003a906049c764baf902631570db166f,
+        type: 3}
+      propertyPath: m_Size.y
+      value: 0.1672019
+      objectReference: {fileID: 0}
+    - target: {fileID: 9167547658584556741, guid: 003a906049c764baf902631570db166f,
+        type: 3}
+      propertyPath: m_Size.z
+      value: 0.069489345
+      objectReference: {fileID: 0}
+    - target: {fileID: 9167547658584556741, guid: 003a906049c764baf902631570db166f,
+        type: 3}
+      propertyPath: m_Center.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 9167547658584556741, guid: 003a906049c764baf902631570db166f,
+        type: 3}
+      propertyPath: m_Center.y
+      value: 0.070178375
       objectReference: {fileID: 0}
     - target: {fileID: 4109262173534489993, guid: 003a906049c764baf902631570db166f,
         type: 3}
@@ -30346,6 +30557,38 @@ Transform:
   m_Father: {fileID: 2036855922}
   m_RootOrder: 9
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1153173746
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1153173747}
+  m_Layer: 8
+  m_Name: Burner
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1153173747
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1153173746}
+  m_LocalRotation: {x: -0, y: -0.70710576, z: -0, w: 0.7071079}
+  m_LocalPosition: {x: 1.9753, y: 0.9029, z: 0.6015}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children:
+  - {fileID: 8885340}
+  - {fileID: 913259047}
+  m_Father: {fileID: 472216731}
+  m_RootOrder: 64
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &1156427029
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -31061,6 +31304,38 @@ Transform:
     type: 3}
   m_PrefabInstance: {fileID: 1178536877}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &1178741786
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1178741787}
+  m_Layer: 8
+  m_Name: Burner
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1178741787
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1178741786}
+  m_LocalRotation: {x: -0, y: -0.70710576, z: -0, w: 0.7071079}
+  m_LocalPosition: {x: 1.765, y: 0.9029, z: 0.3846}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children:
+  - {fileID: 1890253445}
+  - {fileID: 1377664260}
+  m_Father: {fileID: 472216731}
+  m_RootOrder: 62
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1179902019
 GameObject:
   m_ObjectHideFlags: 0
@@ -32206,7 +32481,6 @@ MonoBehaviour:
   - {fileID: 1550946892}
   isVisible: 0
   isInteractable: 0
-  isColliding: 0
   isInAgentHand: 0
   MyColliders: []
   HFdynamicfriction: 0
@@ -32214,6 +32488,8 @@ MonoBehaviour:
   HFbounciness: 0
   HFrbdrag: 0
   HFrbangulardrag: 0
+  CurrentTemperature: 0
+  HowManySecondsUntilRoomTemp: 10
   ContainedObjectReferences: []
 --- !u!54 &1214849059
 Rigidbody:
@@ -33000,7 +33276,6 @@ MonoBehaviour:
   - {fileID: 765025783}
   isVisible: 0
   isInteractable: 0
-  isColliding: 0
   isInAgentHand: 0
   MyColliders: []
   HFdynamicfriction: 0
@@ -33008,6 +33283,8 @@ MonoBehaviour:
   HFbounciness: 0
   HFrbdrag: 0
   HFrbangulardrag: 0
+  CurrentTemperature: 0
+  HowManySecondsUntilRoomTemp: 10
   ContainedObjectReferences: []
 --- !u!1 &1241867255
 GameObject:
@@ -34195,7 +34472,6 @@ MonoBehaviour:
   - {fileID: 1090089705}
   isVisible: 0
   isInteractable: 0
-  isColliding: 0
   isInAgentHand: 0
   MyColliders: []
   HFdynamicfriction: 0
@@ -34203,6 +34479,8 @@ MonoBehaviour:
   HFbounciness: 0
   HFrbdrag: 0
   HFrbangulardrag: 0
+  CurrentTemperature: 0
+  HowManySecondsUntilRoomTemp: 10
   ContainedObjectReferences: []
 --- !u!4 &1272828764
 Transform:
@@ -34860,7 +35138,6 @@ MonoBehaviour:
   - {fileID: 445963799}
   isVisible: 0
   isInteractable: 0
-  isColliding: 0
   isInAgentHand: 0
   MyColliders: []
   HFdynamicfriction: 0
@@ -34868,6 +35145,8 @@ MonoBehaviour:
   HFbounciness: 0
   HFrbdrag: 0
   HFrbangulardrag: 0
+  CurrentTemperature: 0
+  HowManySecondsUntilRoomTemp: 10
   ContainedObjectReferences: []
 --- !u!114 &1298483390
 MonoBehaviour:
@@ -35018,7 +35297,6 @@ MonoBehaviour:
   - {fileID: 475046071}
   isVisible: 0
   isInteractable: 0
-  isColliding: 0
   isInAgentHand: 0
   MyColliders: []
   HFdynamicfriction: 0
@@ -35026,6 +35304,8 @@ MonoBehaviour:
   HFbounciness: 0
   HFrbdrag: 0
   HFrbangulardrag: 0
+  CurrentTemperature: 0
+  HowManySecondsUntilRoomTemp: 10
   ContainedObjectReferences: []
 --- !u!1 &1300291747
 GameObject:
@@ -37937,8 +38217,8 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1377664259}
-  m_LocalRotation: {x: -0, y: -0.70710576, z: -0, w: 0.7071079}
-  m_LocalPosition: {x: 1.765, y: 0.9029, z: 0.3846}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 1841779871}
@@ -37947,9 +38227,8 @@ Transform:
   - {fileID: 1820072754}
   - {fileID: 1910281135}
   - {fileID: 1778651277}
-  - {fileID: 1890253445}
-  m_Father: {fileID: 472216731}
-  m_RootOrder: 65
+  m_Father: {fileID: 1178741787}
+  m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: -90.00001, z: 0}
 --- !u!114 &1377664261
 MonoBehaviour:
@@ -38009,7 +38288,6 @@ MonoBehaviour:
   - {fileID: 1841779870}
   isVisible: 0
   isInteractable: 0
-  isColliding: 0
   isInAgentHand: 0
   MyColliders: []
   HFdynamicfriction: 0
@@ -38017,6 +38295,8 @@ MonoBehaviour:
   HFbounciness: 0
   HFrbdrag: 0
   HFrbangulardrag: 0
+  CurrentTemperature: 0
+  HowManySecondsUntilRoomTemp: 10
   ContainedObjectReferences: []
 --- !u!114 &1377664264
 MonoBehaviour:
@@ -39018,7 +39298,6 @@ MonoBehaviour:
   - {fileID: 1738067327}
   isVisible: 0
   isInteractable: 0
-  isColliding: 0
   isInAgentHand: 0
   MyColliders: []
   HFdynamicfriction: 0
@@ -39026,6 +39305,8 @@ MonoBehaviour:
   HFbounciness: 0
   HFrbdrag: 0
   HFrbangulardrag: 0
+  CurrentTemperature: 0
+  HowManySecondsUntilRoomTemp: 10
   ContainedObjectReferences: []
 --- !u!114 &1427516951
 MonoBehaviour:
@@ -41968,7 +42249,6 @@ MonoBehaviour:
   - {fileID: 0}
   isVisible: 0
   isInteractable: 0
-  isColliding: 0
   isInAgentHand: 0
   MyColliders: []
   HFdynamicfriction: 0
@@ -41976,6 +42256,8 @@ MonoBehaviour:
   HFbounciness: 0
   HFrbdrag: 0
   HFrbangulardrag: 0
+  CurrentTemperature: 0
+  HowManySecondsUntilRoomTemp: 10
   ContainedObjectReferences: []
 --- !u!1001 &1510923621
 PrefabInstance:
@@ -42287,7 +42569,6 @@ MonoBehaviour:
   - {fileID: 655217482}
   isVisible: 0
   isInteractable: 0
-  isColliding: 0
   isInAgentHand: 0
   MyColliders: []
   HFdynamicfriction: 0
@@ -42295,6 +42576,8 @@ MonoBehaviour:
   HFbounciness: 0
   HFrbdrag: 0
   HFrbangulardrag: 0
+  CurrentTemperature: 0
+  HowManySecondsUntilRoomTemp: 10
   ContainedObjectReferences: []
 --- !u!114 &1521348530
 MonoBehaviour:
@@ -42463,16 +42746,16 @@ PrefabInstance:
       propertyPath: m_AnchorMax.y
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 114752788009735908, guid: 5b3a2f458d83e4af9a41ecf71b1f80f8,
-        type: 3}
-      propertyPath: m_FirstSelected
-      value: 
-      objectReference: {fileID: 0}
     - target: {fileID: 114064980305203072, guid: 5b3a2f458d83e4af9a41ecf71b1f80f8,
         type: 3}
       propertyPath: Agent
       value: 
       objectReference: {fileID: 676930610}
+    - target: {fileID: 114752788009735908, guid: 5b3a2f458d83e4af9a41ecf71b1f80f8,
+        type: 3}
+      propertyPath: m_FirstSelected
+      value: 
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 5b3a2f458d83e4af9a41ecf71b1f80f8, type: 3}
 --- !u!1 &1532136990
@@ -43233,7 +43516,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4322996899280170, guid: b18673dc5d4f14842a68d4dc9a891f3a, type: 3}
       propertyPath: m_RootOrder
-      value: 64
+      value: 78
       objectReference: {fileID: 0}
     - target: {fileID: 4322996899280170, guid: b18673dc5d4f14842a68d4dc9a891f3a, type: 3}
       propertyPath: m_LocalScale.x
@@ -43304,11 +43587,6 @@ PrefabInstance:
       propertyPath: StoveRange
       value: 
       objectReference: {fileID: 0}
-    - target: {fileID: 114247244180501690, guid: b18673dc5d4f14842a68d4dc9a891f3a,
-        type: 3}
-      propertyPath: uniqueID
-      value: StoveKnob|+01.60|+00.92|+00.63
-      objectReference: {fileID: 0}
     - target: {fileID: 1518126381, guid: b18673dc5d4f14842a68d4dc9a891f3a, type: 3}
       propertyPath: ControlledSimObjects.Array.data[0]
       value: 
@@ -43317,6 +43595,11 @@ PrefabInstance:
       propertyPath: LightSources.Array.data[0]
       value: 
       objectReference: {fileID: 1890253444}
+    - target: {fileID: 114247244180501690, guid: b18673dc5d4f14842a68d4dc9a891f3a,
+        type: 3}
+      propertyPath: uniqueID
+      value: StoveKnob|+01.60|+00.92|+00.63
+      objectReference: {fileID: 0}
     m_RemovedComponents:
     - {fileID: 95000013073990602, guid: b18673dc5d4f14842a68d4dc9a891f3a, type: 3}
     - {fileID: 114000012838626064, guid: b18673dc5d4f14842a68d4dc9a891f3a, type: 3}
@@ -43605,7 +43888,6 @@ MonoBehaviour:
   ReceptacleTriggerBoxes: []
   isVisible: 0
   isInteractable: 0
-  isColliding: 0
   isInAgentHand: 0
   MyColliders: []
   HFdynamicfriction: 0
@@ -43613,6 +43895,8 @@ MonoBehaviour:
   HFbounciness: 0
   HFrbdrag: 0
   HFrbangulardrag: 0
+  CurrentTemperature: 0
+  HowManySecondsUntilRoomTemp: 10
   ContainedObjectReferences: []
 --- !u!1 &1580714693
 GameObject:
@@ -45367,7 +45651,7 @@ PrefabInstance:
   m_ObjectHideFlags: 0
   serializedVersion: 2
   m_Modification:
-    m_TransformParent: {fileID: 2022925384}
+    m_TransformParent: {fileID: 918897013}
     m_Modifications:
     - target: {fileID: 4109262173642923959, guid: 003a906049c764baf902631570db166f,
         type: 3}
@@ -45382,7 +45666,7 @@ PrefabInstance:
     - target: {fileID: 4109262173642923958, guid: 003a906049c764baf902631570db166f,
         type: 3}
       propertyPath: m_LocalPosition.x
-      value: -0.0004
+      value: -0.00040000182
       objectReference: {fileID: 0}
     - target: {fileID: 4109262173642923958, guid: 003a906049c764baf902631570db166f,
         type: 3}
@@ -45392,7 +45676,7 @@ PrefabInstance:
     - target: {fileID: 4109262173642923958, guid: 003a906049c764baf902631570db166f,
         type: 3}
       propertyPath: m_LocalPosition.z
-      value: -0.0017
+      value: -0.0017000451
       objectReference: {fileID: 0}
     - target: {fileID: 4109262173642923958, guid: 003a906049c764baf902631570db166f,
         type: 3}
@@ -45417,7 +45701,7 @@ PrefabInstance:
     - target: {fileID: 4109262173642923958, guid: 003a906049c764baf902631570db166f,
         type: 3}
       propertyPath: m_RootOrder
-      value: 6
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 4109262173642923958, guid: 003a906049c764baf902631570db166f,
         type: 3}
@@ -45459,6 +45743,31 @@ PrefabInstance:
     - target: {fileID: 1373979915, guid: 003a906049c764baf902631570db166f, type: 3}
       propertyPath: m_Center.z
       value: 1.837594e-17
+      objectReference: {fileID: 0}
+    - target: {fileID: 9167547658584556741, guid: 003a906049c764baf902631570db166f,
+        type: 3}
+      propertyPath: m_Size.x
+      value: 0.06788492
+      objectReference: {fileID: 0}
+    - target: {fileID: 9167547658584556741, guid: 003a906049c764baf902631570db166f,
+        type: 3}
+      propertyPath: m_Size.y
+      value: 0.1672019
+      objectReference: {fileID: 0}
+    - target: {fileID: 9167547658584556741, guid: 003a906049c764baf902631570db166f,
+        type: 3}
+      propertyPath: m_Size.z
+      value: 0.069489345
+      objectReference: {fileID: 0}
+    - target: {fileID: 9167547658584556741, guid: 003a906049c764baf902631570db166f,
+        type: 3}
+      propertyPath: m_Center.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 9167547658584556741, guid: 003a906049c764baf902631570db166f,
+        type: 3}
+      propertyPath: m_Center.y
+      value: 0.070178375
       objectReference: {fileID: 0}
     - target: {fileID: 4109262173534489993, guid: 003a906049c764baf902631570db166f,
         type: 3}
@@ -46393,11 +46702,6 @@ PrefabInstance:
       propertyPath: m_IsKinematic
       value: 1
       objectReference: {fileID: 0}
-    - target: {fileID: 114967300898328738, guid: 03509c993799443f5ab57541667674aa,
-        type: 3}
-      propertyPath: uniqueID
-      value: Book|-00.12|+01.12|-00.17
-      objectReference: {fileID: 0}
     - target: {fileID: 1628155670810736, guid: 03509c993799443f5ab57541667674aa, type: 3}
       propertyPath: m_StaticEditorFlags
       value: 64
@@ -46445,6 +46749,11 @@ PrefabInstance:
     - target: {fileID: 1719751953288582, guid: 03509c993799443f5ab57541667674aa, type: 3}
       propertyPath: m_StaticEditorFlags
       value: 64
+      objectReference: {fileID: 0}
+    - target: {fileID: 114967300898328738, guid: 03509c993799443f5ab57541667674aa,
+        type: 3}
+      propertyPath: uniqueID
+      value: Book|-00.12|+01.12|-00.17
       objectReference: {fileID: 0}
     - target: {fileID: 4343350522836652, guid: 03509c993799443f5ab57541667674aa, type: 3}
       propertyPath: m_LocalPosition.x
@@ -47195,7 +47504,7 @@ PrefabInstance:
   m_ObjectHideFlags: 0
   serializedVersion: 2
   m_Modification:
-    m_TransformParent: {fileID: 169710989}
+    m_TransformParent: {fileID: 1876932437}
     m_Modifications:
     - target: {fileID: 4109262173642923959, guid: 003a906049c764baf902631570db166f,
         type: 3}
@@ -47210,7 +47519,7 @@ PrefabInstance:
     - target: {fileID: 4109262173642923958, guid: 003a906049c764baf902631570db166f,
         type: 3}
       propertyPath: m_LocalPosition.x
-      value: -0.0038
+      value: -0.0037999954
       objectReference: {fileID: 0}
     - target: {fileID: 4109262173642923958, guid: 003a906049c764baf902631570db166f,
         type: 3}
@@ -47220,7 +47529,7 @@ PrefabInstance:
     - target: {fileID: 4109262173642923958, guid: 003a906049c764baf902631570db166f,
         type: 3}
       propertyPath: m_LocalPosition.z
-      value: 0.0068
+      value: 0.0068000453
       objectReference: {fileID: 0}
     - target: {fileID: 4109262173642923958, guid: 003a906049c764baf902631570db166f,
         type: 3}
@@ -47245,7 +47554,7 @@ PrefabInstance:
     - target: {fileID: 4109262173642923958, guid: 003a906049c764baf902631570db166f,
         type: 3}
       propertyPath: m_RootOrder
-      value: 6
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 4109262173642923958, guid: 003a906049c764baf902631570db166f,
         type: 3}
@@ -47287,6 +47596,31 @@ PrefabInstance:
     - target: {fileID: 1373979915, guid: 003a906049c764baf902631570db166f, type: 3}
       propertyPath: m_Center.z
       value: 1.837594e-17
+      objectReference: {fileID: 0}
+    - target: {fileID: 9167547658584556741, guid: 003a906049c764baf902631570db166f,
+        type: 3}
+      propertyPath: m_Size.x
+      value: 0.06788492
+      objectReference: {fileID: 0}
+    - target: {fileID: 9167547658584556741, guid: 003a906049c764baf902631570db166f,
+        type: 3}
+      propertyPath: m_Size.y
+      value: 0.1672019
+      objectReference: {fileID: 0}
+    - target: {fileID: 9167547658584556741, guid: 003a906049c764baf902631570db166f,
+        type: 3}
+      propertyPath: m_Size.z
+      value: 0.069489345
+      objectReference: {fileID: 0}
+    - target: {fileID: 9167547658584556741, guid: 003a906049c764baf902631570db166f,
+        type: 3}
+      propertyPath: m_Center.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 9167547658584556741, guid: 003a906049c764baf902631570db166f,
+        type: 3}
+      propertyPath: m_Center.y
+      value: 0.070178375
       objectReference: {fileID: 0}
     - target: {fileID: 4109262173534489993, guid: 003a906049c764baf902631570db166f,
         type: 3}
@@ -48976,7 +49310,6 @@ MonoBehaviour:
   - {fileID: 676984614}
   isVisible: 0
   isInteractable: 0
-  isColliding: 0
   isInAgentHand: 0
   MyColliders: []
   HFdynamicfriction: 0
@@ -48984,6 +49317,8 @@ MonoBehaviour:
   HFbounciness: 0
   HFrbdrag: 0
   HFrbangulardrag: 0
+  CurrentTemperature: 0
+  HowManySecondsUntilRoomTemp: 10
   ContainedObjectReferences: []
 --- !u!1 &1795370561
 GameObject:
@@ -49156,7 +49491,6 @@ MonoBehaviour:
   - {fileID: 1566698835}
   isVisible: 0
   isInteractable: 0
-  isColliding: 0
   isInAgentHand: 0
   MyColliders: []
   HFdynamicfriction: 0
@@ -49164,6 +49498,8 @@ MonoBehaviour:
   HFbounciness: 0
   HFrbdrag: 0
   HFrbangulardrag: 0
+  CurrentTemperature: 0
+  HowManySecondsUntilRoomTemp: 10
   ContainedObjectReferences: []
 --- !u!54 &1799313333
 Rigidbody:
@@ -50233,6 +50569,38 @@ Transform:
   m_Father: {fileID: 870446297}
   m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1876932436
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1876932437}
+  m_Layer: 8
+  m_Name: Burner
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1876932437
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1876932436}
+  m_LocalRotation: {x: -0, y: -0.70710576, z: -0, w: 0.7071079}
+  m_LocalPosition: {x: 1.765, y: 0.9029, z: 0.6015}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children:
+  - {fileID: 1799742487}
+  - {fileID: 169710989}
+  m_Father: {fileID: 472216731}
+  m_RootOrder: 61
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &1877215817
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -50754,7 +51122,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4322996899280170, guid: b18673dc5d4f14842a68d4dc9a891f3a, type: 3}
       propertyPath: m_RootOrder
-      value: 66
+      value: 79
       objectReference: {fileID: 0}
     - target: {fileID: 4322996899280170, guid: b18673dc5d4f14842a68d4dc9a891f3a, type: 3}
       propertyPath: m_LocalScale.x
@@ -50825,11 +51193,6 @@ PrefabInstance:
       propertyPath: StoveRange
       value: 
       objectReference: {fileID: 0}
-    - target: {fileID: 114247244180501690, guid: b18673dc5d4f14842a68d4dc9a891f3a,
-        type: 3}
-      propertyPath: uniqueID
-      value: StoveKnob|+01.60|+00.92|+00.57
-      objectReference: {fileID: 0}
     - target: {fileID: 1518126381, guid: b18673dc5d4f14842a68d4dc9a891f3a, type: 3}
       propertyPath: ControlledSimObjects.Array.data[0]
       value: 
@@ -50838,6 +51201,11 @@ PrefabInstance:
       propertyPath: LightSources.Array.data[0]
       value: 
       objectReference: {fileID: 1938318748}
+    - target: {fileID: 114247244180501690, guid: b18673dc5d4f14842a68d4dc9a891f3a,
+        type: 3}
+      propertyPath: uniqueID
+      value: StoveKnob|+01.60|+00.92|+00.57
+      objectReference: {fileID: 0}
     m_RemovedComponents:
     - {fileID: 95000013073990602, guid: b18673dc5d4f14842a68d4dc9a891f3a, type: 3}
     - {fileID: 114000012838626064, guid: b18673dc5d4f14842a68d4dc9a891f3a, type: 3}
@@ -52707,11 +53075,6 @@ PrefabInstance:
       propertyPath: m_LocalScale.z
       value: 1
       objectReference: {fileID: 0}
-    - target: {fileID: 54001409976962402, guid: 17de1b8e1c6b24343b41a48e1df658f2,
-        type: 3}
-      propertyPath: m_IsKinematic
-      value: 1
-      objectReference: {fileID: 0}
     - target: {fileID: 1803537740067808, guid: 17de1b8e1c6b24343b41a48e1df658f2, type: 3}
       propertyPath: m_StaticEditorFlags
       value: 64
@@ -52759,6 +53122,11 @@ PrefabInstance:
     - target: {fileID: 1641963463543480, guid: 17de1b8e1c6b24343b41a48e1df658f2, type: 3}
       propertyPath: m_StaticEditorFlags
       value: 64
+      objectReference: {fileID: 0}
+    - target: {fileID: 54001409976962402, guid: 17de1b8e1c6b24343b41a48e1df658f2,
+        type: 3}
+      propertyPath: m_IsKinematic
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 114508142569790696, guid: 17de1b8e1c6b24343b41a48e1df658f2,
         type: 3}
@@ -53121,7 +53489,6 @@ MonoBehaviour:
   ReceptacleTriggerBoxes: []
   isVisible: 0
   isInteractable: 0
-  isColliding: 0
   isInAgentHand: 0
   MyColliders:
   - {fileID: 1106288978}
@@ -53148,6 +53515,8 @@ MonoBehaviour:
   HFbounciness: 0
   HFrbdrag: 10
   HFrbangulardrag: 200
+  CurrentTemperature: 0
+  HowManySecondsUntilRoomTemp: 10
   ContainedObjectReferences: []
 --- !u!114 &1997594702 stripped
 MonoBehaviour:
@@ -53525,7 +53894,6 @@ MonoBehaviour:
   - {fileID: 83300107}
   isVisible: 0
   isInteractable: 0
-  isColliding: 0
   isInAgentHand: 0
   MyColliders: []
   HFdynamicfriction: 0
@@ -53533,6 +53901,8 @@ MonoBehaviour:
   HFbounciness: 0
   HFrbdrag: 0
   HFrbangulardrag: 0
+  CurrentTemperature: 0
+  HowManySecondsUntilRoomTemp: 10
   ContainedObjectReferences: []
 --- !u!4 &2022925384
 Transform:
@@ -53542,8 +53912,8 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2022925380}
-  m_LocalRotation: {x: -0, y: -0.70710576, z: -0, w: 0.7071079}
-  m_LocalPosition: {x: 1.9753, y: 0.9029, z: 0.8192}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 83300110}
@@ -53552,9 +53922,8 @@ Transform:
   - {fileID: 248745707}
   - {fileID: 1558702597}
   - {fileID: 1440048436}
-  - {fileID: 1938318749}
-  m_Father: {fileID: 472216731}
-  m_RootOrder: 67
+  m_Father: {fileID: 918897013}
+  m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: -90.00001, z: 0}
 --- !u!114 &2022925385
 MonoBehaviour:
@@ -53785,7 +54154,6 @@ MonoBehaviour:
   ReceptacleTriggerBoxes: []
   isVisible: 0
   isInteractable: 0
-  isColliding: 0
   isInAgentHand: 0
   MyColliders: []
   HFdynamicfriction: 0
@@ -53793,6 +54161,8 @@ MonoBehaviour:
   HFbounciness: 0
   HFrbdrag: 0
   HFrbangulardrag: 0
+  CurrentTemperature: 0
+  HowManySecondsUntilRoomTemp: 10
   ContainedObjectReferences: []
 --- !u!1 &2033044670
 GameObject:
@@ -55069,7 +55439,6 @@ MonoBehaviour:
   - {fileID: 104392547}
   isVisible: 0
   isInteractable: 0
-  isColliding: 0
   isInAgentHand: 0
   MyColliders: []
   HFdynamicfriction: 0
@@ -55077,6 +55446,8 @@ MonoBehaviour:
   HFbounciness: 0
   HFrbdrag: 0
   HFrbangulardrag: 0
+  CurrentTemperature: 0
+  HowManySecondsUntilRoomTemp: 10
   ContainedObjectReferences: []
 --- !u!1 &2085280551
 GameObject:
@@ -57872,7 +58243,6 @@ MonoBehaviour:
   - {fileID: 1775819026223091}
   isVisible: 0
   isInteractable: 0
-  isColliding: 0
   isInAgentHand: 0
   MyColliders: []
   HFdynamicfriction: 0
@@ -57880,4 +58250,6 @@ MonoBehaviour:
   HFbounciness: 0
   HFrbdrag: 0
   HFrbangulardrag: 0
+  CurrentTemperature: 0
+  HowManySecondsUntilRoomTemp: 10
   ContainedObjectReferences: []

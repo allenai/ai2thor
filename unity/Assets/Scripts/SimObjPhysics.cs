@@ -43,10 +43,10 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 	public GameObject[] ReceptacleTriggerBoxes = null;
 
 	[Header("State information Bools here")]
+	#if UNITY_EDITOR
 	public bool isVisible = false;
+	#endif
 	public bool isInteractable = false;
-	public bool isColliding = false;
-
 	public bool isInAgentHand = false;
 
 	private Bounds bounds;
@@ -72,8 +72,28 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 	//if this object is a receptacle, get all valid spawn points from any child ReceptacleTriggerBoxes and sort them by distance to Agent
 	List<ReceptacleSpawnPoint> MySpawnPoints = new List<ReceptacleSpawnPoint>();
 
-	//initial position object spawned in in case we want to reset the scene
-	//private Vector3 startPosition;   
+	//keep track of this object's current temperature (abstracted to three states, RoomTemp/Hot/Cold)
+	public ObjectMetadata.Temperature CurrentTemperature = ObjectMetadata.Temperature.RoomTemp;
+
+	//value for how long it should take this object to get back to room temperature from hot/cold
+	public float HowManySecondsUntilRoomTemp = 10f;
+	private float TimerResetValue;
+	public float GetTimerResetValue()
+	{
+		return TimerResetValue;
+	}
+	
+	public void SetHowManySecondsUntilRoomTemp(float f)
+	{
+		TimerResetValue = f;
+		HowManySecondsUntilRoomTemp = f;
+	}
+	private bool StartRoomTempTimer = false;
+
+	public void SetStartRoomTempTimer(bool b)
+	{
+		StartRoomTempTimer = b;
+	}
 
 	public List<SimObjPhysics> ContainedObjectReferences;
 
@@ -113,19 +133,6 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 			uniqueID = value;
 		}
 	}
-
-       public bool IsVisible
-       {
-               get
-               {
-                       return isVisible;
-               }
-
-               set {
-                       isVisible = value;
-               }
-       }
-
 	public Bounds Bounds
 	{
 		get
@@ -304,7 +311,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		get{ return this.GetComponent<Fill>(); }
 	}
 
-	public bool isFilled
+	public bool IsFilled
 	{
 		get
 		{
@@ -363,14 +370,14 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 	}
 
 	//remember sliceable objects get disabled and a new sliced version of the object is spawned into the scene
-	public bool isSliceable
+	public bool IsSliceable
 	{
 		get{ return this.GetComponent<SliceObject>(); }
 	}
 
 	//if the object has been sliced, the rest of it has been disabled so it can't be seen or interacted with, but the metadata
 	//will still reflect it's last position at time of being sliced. This is similar to break
-	public bool isSliced
+	public bool IsSliced
 	{
 		get
 		{
@@ -387,14 +394,14 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 	}
 
 	///these aren't in yet, just placeholder
-	public bool IsDepletable
+	public bool CanBeUsedUp
 	{
 		get
 		{
 			return false;
 		}
 	}
-	public bool isDepleted
+	public bool IsUsedUp
 	{
 		get
 		{
@@ -402,6 +409,15 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		}
 	}
 	/// end placeholder stuff
+
+	//return temperature enum here
+	public ObjectMetadata.Temperature CurrentObjTemp
+	{
+		get
+		{
+			return CurrentTemperature;
+		}
+	}
 
 	public bool IsReceptacle
 	{
@@ -464,6 +480,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 
 				if(colsop.PrimaryProperty == SimObjPrimaryProperty.CanPickup || colsop.PrimaryProperty == SimObjPrimaryProperty.Moveable)
 				{
+					//print(col.transform.GetComponentInParent<SimObjPhysics>().transform.name);
 					Rigidbody rb = colsop.transform.GetComponent<Rigidbody>();
 					rb.isKinematic = false;
 					rb.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
@@ -665,6 +682,8 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 
 		RBoriginalAngularDrag = rb.angularDrag;
 		RBoriginalDrag = rb.drag;
+
+		TimerResetValue = HowManySecondsUntilRoomTemp;
 	}
 
 	public bool DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty prop)
@@ -682,24 +701,26 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 	// Update is called once per frame
 	void Update()
 	{
-
-		//this is overriden by the Agent when doing the Visibility Sphere test
-		//XXX Probably don't need to do this EVERY update loop except in editor for debug purposes
-		isVisible = false;
 		isInteractable = false;
 
-		//if this object has come to rest, reset it's collision detection mode to discrete
-		Rigidbody rb = gameObject.GetComponent<Rigidbody>();
-		if((rb.IsSleeping() == true) && (rb.collisionDetectionMode == CollisionDetectionMode.ContinuousDynamic))
+		//if this object is either hot or col, begin a timer that counts until the object becomes room temperature again
+		if(CurrentTemperature != ObjectMetadata.Temperature.RoomTemp && StartRoomTempTimer == true)
 		{
-			//print("settling");
-			rb.collisionDetectionMode = CollisionDetectionMode.Discrete;
+			HowManySecondsUntilRoomTemp -= Time.deltaTime;
+			if(HowManySecondsUntilRoomTemp < 0)
+			{
+				CurrentTemperature = ObjectMetadata.Temperature.RoomTemp;
+				HowManySecondsUntilRoomTemp = TimerResetValue;
+			}
 		}
+
+		//if this isn't reset by a HeatZone/ColdZone
+		StartRoomTempTimer = true;
 	}
 
 	private void FixedUpdate()
 	{
-		isColliding = false;
+		isInteractable = false;
 	}
 
 	//used for throwing the sim object, or anything that requires adding force for some reason
@@ -834,65 +855,31 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		}
 	}
 
-	public void OnTriggerStay(Collider other)
-	{
-
-		if(other.gameObject.tag == "HighFriction" && (PrimaryProperty == SimObjPrimaryProperty.CanPickup || PrimaryProperty == SimObjPrimaryProperty.Moveable))
+	public void OnTriggerEnter(Collider other) {
+		//is colliding only needs to be set for pickupable objects. Also drag/friction values only need to change for pickupable objects not all sim objects
+		if((PrimaryProperty == SimObjPrimaryProperty.CanPickup || PrimaryProperty == SimObjPrimaryProperty.Moveable))
 		{
-			Rigidbody rb = gameObject.GetComponent<Rigidbody>();
-
-			//add something so that drag/angular drag isn't reset if we haven't set it on the object yet
-			rb.drag = HFrbdrag;
-			rb.angularDrag = HFrbangulardrag;
-			
-			foreach (Collider col in MyColliders)
+			if(other.CompareTag("HighFriction")) //&& (PrimaryProperty == SimObjPrimaryProperty.CanPickup || PrimaryProperty == SimObjPrimaryProperty.Moveable))
 			{
-				col.material.dynamicFriction = HFdynamicfriction;
-				col.material.staticFriction = HFstaticfriction;
-				col.material.bounciness = HFbounciness;
-			}
-		}
+				Rigidbody rb = gameObject.GetComponent<Rigidbody>();
 
-		//ignore collision of ghosted receptacle trigger boxes
-		//because of this MAKE SURE ALL receptacle trigger boxes are tagged as "Receptacle," they should be by default
-		//do this flag first so that the check against non Player objects overrides it in the right order
-		if (other.tag == "Receptacle")
-		{
-			isColliding = false;
-			return;
-		}
-
-		//make sure nothing is dropped while inside the agent (the agent will try to "push(?)" it out and it will fall in unpredictable ways
-		else if (other.tag == "Player" && other.name == "FPSController")
-		{
-			isColliding = true;
-			return;
-		}
-
-		//this is hitting something else so it must be colliding at this point!
-		else if (other.tag != "Player")
-		{
-			//don't flag as colliding if the thing i'm coliding with is something inside my receptacle trigger box
-			if(DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.Receptacle))
-			{
-				if(ContainedObjectReferences.Contains(other.GetComponentInParent<SimObjPhysics>()))
+				//add something so that drag/angular drag isn't reset if we haven't set it on the object yet
+				rb.drag = HFrbdrag;
+				rb.angularDrag = HFrbangulardrag;
+				
+				foreach (Collider col in MyColliders)
 				{
-					isColliding = false;
-					return;
+					col.material.dynamicFriction = HFdynamicfriction;
+					col.material.staticFriction = HFstaticfriction;
+					col.material.bounciness = HFbounciness;
 				}
-			}
-
-			else
-			{
-				isColliding = true;
-				return;
 			}
 		}
 	}
 
 	public void OnTriggerExit(Collider other)
 	{
-		if(other.gameObject.tag == "HighFriction" && (PrimaryProperty == SimObjPrimaryProperty.CanPickup || PrimaryProperty == SimObjPrimaryProperty.Moveable))
+		if(other.CompareTag("HighFriction") && (PrimaryProperty == SimObjPrimaryProperty.CanPickup || PrimaryProperty == SimObjPrimaryProperty.Moveable))
 		{
 			//print( "resetting to default trigger exit");
 

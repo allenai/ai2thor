@@ -130,6 +130,7 @@ GameObject:
   - component: {fileID: 4965031381499244}
   - component: {fileID: 114602624312388466}
   - component: {fileID: 54110263462299450}
+  - component: {fileID: 3625564215330545232}
   m_Layer: 8
   m_Name: Towel_Statue_1
   m_TagString: SimObjPhysics
@@ -171,7 +172,7 @@ MonoBehaviour:
   uniqueID: Statue|+11.00|+11.00|+11.00
   Type: 39
   PrimaryProperty: 3
-  SecondaryProperties: 
+  SecondaryProperties: 0b000000
   BoundingBox: {fileID: 1275203931531430}
   VisibilityPoints:
   - {fileID: 4340176199967390}
@@ -189,7 +190,6 @@ MonoBehaviour:
   ReceptacleTriggerBoxes: []
   isVisible: 0
   isInteractable: 0
-  isColliding: 0
   isInAgentHand: 0
   MyColliders:
   - {fileID: 65902353516950104}
@@ -210,6 +210,8 @@ MonoBehaviour:
   HFbounciness: 0
   HFrbdrag: 1
   HFrbangulardrag: 0
+  CurrentTemperature: 0
+  HowManySecondsUntilRoomTemp: 10
   ContainedObjectReferences: []
 --- !u!54 &54110263462299450
 Rigidbody:
@@ -227,6 +229,23 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
+--- !u!114 &3625564215330545232
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1091107516575102}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 02b2beb760fcd4a6f957400c276adb00, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  PrefabToSwapTo: {fileID: 158428541, guid: 9ab4cec220eda4e4e92444a47d5a580b, type: 3}
+  DirtyPrefabToSwapTo: {fileID: 0}
+  ImpulseThreshold: 3.6
+  HighFrictionImpulseOffset: 2
+  breakType: 0
 --- !u!1 &1102785741747300
 GameObject:
   m_ObjectHideFlags: 0

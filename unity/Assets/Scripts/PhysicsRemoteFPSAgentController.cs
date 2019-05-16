@@ -146,6 +146,29 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return ItemInHand;
         }
 
+        //get all sim objets of action.type, then sets their temperature decay timers
+        public void SetRoomTempDecayTime(ServerAction action) {
+            //get all objects of type passed by action
+            SimObjPhysics[] simObjects = GameObject.FindObjectsOfType<SimObjPhysics>();
+
+            List<SimObjPhysics> simObjectsOfType = new List<SimObjPhysics>();
+
+            foreach (SimObjPhysics sop in simObjects)
+            {
+                if(sop.Type.ToString() == action.objectType)
+                {
+                    simObjectsOfType.Add(sop);
+                }
+            }
+            //use SetHowManySecondsUntilRoomTemp to set them all
+            foreach (SimObjPhysics sop in simObjectsOfType)
+            {
+                sop.SetHowManySecondsUntilRoomTemp(action.TimeUntilRoomTemp);
+            }
+
+            actionFinished(true);
+        }
+
         // Update is called once per frame
         void Update() {
             if (FlightMode) {
@@ -223,39 +246,47 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             objMeta.toggleable = simObj.IsToggleable;
             if (objMeta.toggleable) {
-                objMeta.istoggled = simObj.IsToggled;
+                objMeta.isToggled = simObj.IsToggled;
             }
 
             objMeta.breakable = simObj.IsBreakable;
             if(objMeta.breakable) {
-                objMeta.isbroken = simObj.IsBroken;
+                objMeta.isBroken = simObj.IsBroken;
             }
 
-            objMeta.fillable = simObj.IsFillable;
-            if (objMeta.fillable) {
-                objMeta.isfilled = simObj.isFilled;
+            objMeta.canFillWithLiquid = simObj.IsFillable;
+            if (objMeta.canFillWithLiquid) {
+                objMeta.isFilledWithLiquid = simObj.IsFilled;
             }
 
             objMeta.dirtyable = simObj.IsDirtyable;
             if (objMeta.dirtyable) {
-                objMeta.isdirty = simObj.IsDirty;
+                objMeta.isDirty = simObj.IsDirty;
             }
 
             objMeta.cookable = simObj.IsCookable;
             if (objMeta.cookable) {
-                objMeta.iscooked = simObj.IsCooked;
+                objMeta.isCooked = simObj.IsCooked;
             }
 
-            objMeta.sliceable = simObj.isSliceable;
+            //placeholder for heatable objects -kettle, pot, pan
+            // objMeta.abletocook = simObj.abletocook;
+            // if(objMeta.abletocook) {
+            //     objMeta.isReadyToCook = simObj.IsHeated;
+            // }
+
+            objMeta.sliceable = simObj.IsSliceable;
             if (objMeta.sliceable) {
-                objMeta.issliced = simObj.isSliced;
+                objMeta.issliced = simObj.IsSliced;
             }
 
-            //placeholder for depleted objects here
-            objMeta.depletable = simObj.IsDepletable;
-            if (objMeta.depletable) {
-                objMeta.isdepleted = simObj.isDepleted;
+            objMeta.canBeUsedUp = simObj.CanBeUsedUp;
+            if (objMeta.canBeUsedUp) {
+                objMeta.isUsedUp = simObj.IsUsedUp;
             }
+
+            //object temperature to string
+            objMeta.ObjectTemperature = simObj.CurrentObjTemp.ToString();
 
             objMeta.pickupable = simObj.PrimaryProperty == SimObjPrimaryProperty.CanPickup;//can this object be picked up?
             objMeta.ispickedup = simObj.isPickedUp;//returns true for if this object is currently being held by the agent
@@ -278,7 +309,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // };
             return objMeta;
         }
-        new private ObjectMetadata[] generateObjectMetadata() {
+        public override ObjectMetadata[] generateObjectMetadata() {
             SimObjPhysics[] visibleSimObjs = VisibleSimObjs(false); // Update visibility for all sim objects for this agent
             HashSet<SimObjPhysics> visibleSimObjsHash = new HashSet<SimObjPhysics>();
             foreach (SimObjPhysics sop in visibleSimObjs) {
@@ -525,10 +556,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         protected SimObjPhysics[] GetAllVisibleSimObjPhysics(Camera agentCamera, float maxDistance) {
+            #if UNITY_EDITOR        
             foreach (KeyValuePair<string, SimObjPhysics> pair in physicsSceneManager.UniqueIdToSimObjPhysics) {
                 // Set all objects to not be visible
                 pair.Value.isVisible = false;
             }
+            #endif
             List<SimObjPhysics> currentlyVisibleItems = new List<SimObjPhysics>();
 
             Vector3 agentCameraPos = agentCamera.transform.position;
@@ -578,9 +611,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                             //if we see at least one vis point, the object is "visible"
                             if (visPointCount > 0) {
+                                #if UNITY_EDITOR
                                 sop.isVisible = true;
-                                if (!currentlyVisibleItems.Contains(sop))
+                                #endif
+                                if (!currentlyVisibleItems.Contains(sop)) {
                                     currentlyVisibleItems.Add(sop);
+                                }
                             }
                         } else {
                             Debug.Log("Error! Set at least 1 visibility point on SimObjPhysics " + sop + ".");
@@ -622,9 +658,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                                 //if we see at least one vis point, the object is "visible"
                                 if (visPointCount > 0) {
+                                    #if UNITY_EDITOR
                                     sop.isVisible = true;
-                                    if (!currentlyVisibleItems.Contains(sop))
+                                    #endif
+                                    if (!currentlyVisibleItems.Contains(sop)) {
                                         currentlyVisibleItems.Add(sop);
+                                    }
                                 }
                             } else
                                 Debug.Log("Error! Set at least 1 visibility point on SimObjPhysics prefab!");
@@ -1107,13 +1146,21 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true, objectCreated.UniqueID);
         }
 
-        protected bool moveObject(SimObjPhysics sop, Vector3 targetPosition) {
+        protected bool moveObject(SimObjPhysics sop, Vector3 targetPosition, bool snapToGrid=false) {
             Vector3 lastPosition = sop.transform.position;
-            Rigidbody ItemRB = sop.gameObject.GetComponent<Rigidbody>();
-            RaycastHit[] sweepResults = ItemRB.SweepTestAll(
-                targetPosition - sop.transform.position,
-                Vector3.Distance(targetPosition, sop.transform.position),
-                QueryTriggerInteraction.Ignore
+            //Rigidbody ItemRB = sop.gameObject.GetComponent<Rigidbody>(); no longer needs rb reference
+
+            if (snapToGrid) {
+                float mult = 1.0f / gridSize;
+                float gridX = Convert.ToSingle(Math.Round(targetPosition.x * mult) / mult);
+                float gridZ = Convert.ToSingle(Math.Round(targetPosition.z * mult) / mult);
+                targetPosition = new Vector3(gridX, targetPosition.y, gridZ);
+            }
+
+            Vector3 dir = targetPosition - sop.transform.position;
+            RaycastHit[] sweepResults = UtilityFunctions.CastAllPrimitiveColliders(
+                sop.gameObject, targetPosition - sop.transform.position, dir.magnitude,
+                1 << 8 | 1 << 10, QueryTriggerInteraction.Ignore
             );
 
             if (sweepResults.Length > 0) {
@@ -1133,7 +1180,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
             SimObjPhysics objectToMove = physicsSceneManager.UniqueIdToSimObjPhysics[uniqueId];
             Vector3 oldPosition = objectToMove.transform.position;
-            if (moveObject(objectToMove, objectToMove.transform.position + relativeDir)) {
+            if (moveObject(objectToMove, objectToMove.transform.position + relativeDir, true)) {
                 if (maxAgentsDistance > 0.0f) {
                     for (int i = 0; i < agentManager.agents.Count; i++) {
                         if (((PhysicsRemoteFPSAgentController) agentManager.agents[i]).distanceToObject(objectToMove) > maxAgentsDistance) {
@@ -1230,23 +1277,24 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
 
-        public bool moveAgentsWithObject(SimObjPhysics objectToMove, Vector3 d) {
+        public bool moveAgentsWithObject(SimObjPhysics objectToMove, Vector3 d, bool snapToGrid=true) {
             List<Vector3> startAgentPositions = new List<Vector3>();
             var agentMovePQ = new SimplePriorityQueue<BaseFPSAgentController>();
             foreach (BaseFPSAgentController agent in agentManager.agents) {
                 var p = agent.transform.position;
                 startAgentPositions.Add(p);
-                agentMovePQ.Enqueue(agent, -(d.x * p.x + d.y * p.y + d.z * p.z));
+                agentMovePQ.Enqueue(agent, -(d.x * p.x + d.z * p.z));
             }
             Vector3 startObjectPosition = objectToMove.transform.position;
-            float objectPriority = d.x * startObjectPosition.x + d.y * startObjectPosition.y + d.z * startObjectPosition.z;
+            float objectPriority = d.x * startObjectPosition.x + d.z * startObjectPosition.z;
             bool objectMoved = false;
 
             bool success = true;
+            Physics.autoSimulation = false;
             while (agentMovePQ.Count > 0 || !objectMoved) {
                 if (agentMovePQ.Count == 0) {
-                    // Debug.Log("Object count 0");
-                    success = moveObject(objectToMove, objectToMove.transform.position + d);
+                    success = moveObject(objectToMove, objectToMove.transform.position + d, snapToGrid);
+                    Physics.Simulate(0.04f);
                     break;
                 } else {
                     PhysicsRemoteFPSAgentController nextAgent = (PhysicsRemoteFPSAgentController) agentMovePQ.First;
@@ -1254,18 +1302,21 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                     if (!objectMoved && agentPriority < objectPriority) {
                         // Debug.Log("Object");
-                        success = moveObject(objectToMove, objectToMove.transform.position + d);
+                        success = moveObject(objectToMove, objectToMove.transform.position + d, snapToGrid);
+                        Physics.Simulate(0.04f);
                         objectMoved = true;
                     } else {
                         // Debug.Log(nextAgent);
                         agentMovePQ.Dequeue();
                         success = nextAgent.moveInDirection(d);
+                        Physics.Simulate(0.04f);
                     }
                 }
                 if (!success) {
                     break;
                 }
             }
+            Physics.autoSimulation = true;
             if (!success) {
                 for (int i = 0; i < agentManager.agents.Count; i++) {
                     agentManager.agents[i].transform.position = startAgentPositions[i];
@@ -1710,14 +1761,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             if (!canbepushed) {
                 errorMessage = "Target Primary Property type incompatible with push/pull";
-                Debug.Log(errorMessage);
                 actionFinished(false);
                 return;
             }
 
             if (!action.forceAction && target.isInteractable == false) {
                 errorMessage = "Target is not interactable and is probably occluded by something!";
-                Debug.Log(errorMessage);
                 actionFinished(false);
                 return;
             }
@@ -2542,6 +2591,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         PhysicsSceneManager psm = GameObject.Find("PhysicsSceneManager").GetComponent<PhysicsSceneManager>();
                         if (psm.StoveTopCheckSpawnArea(ItemInHand.GetComponent<SimObjPhysics>(), osr.attachPoint.transform.position,
                                 osr.attachPoint.transform.rotation, false) == false) {
+                            errorMessage = "another object's collision is blocking held object from being placed";
                             actionFinished(false);
                             return;
                         }
@@ -2552,9 +2602,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     ItemInHand.transform.SetParent(osr.attachPoint.transform);
                     ItemInHand.transform.localRotation = Quaternion.identity;
                     ItemInHand.GetComponent<Rigidbody>().isKinematic = true;
-
                     ItemInHand = null;
-
+                    DefaultAgentHand();
                     actionFinished(true);
                     return;
                 } else {
@@ -2615,6 +2664,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             //set degreeIncrement to 90 for placing held objects to check for vertical angles
             if (script.PlaceObjectReceptacle(targetReceptacle.ReturnMySpawnPoints(onlyPointsCloseToAgent), ItemInHand.GetComponent<SimObjPhysics>(), action.placeStationary, 100, 90, placeUpright)) {
                 ItemInHand = null;
+                DefaultAgentHand();
                 actionFinished(true);
             } else {
                 errorMessage = "No valid positions to place object found";
@@ -2743,7 +2793,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     //for every object that is contained by this object...
                     //turn off the colliders, leaving Trigger Colliders active (this is important to maintain visibility!)
                     sop.transform.Find("Colliders").gameObject.SetActive(true);
-                    sop.GetComponent<Rigidbody>().isKinematic = false;
+                    Rigidbody rb = sop.GetComponent<Rigidbody>();
+                    
+                    rb.isKinematic = false;
+                    rb.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
+
                     sop.isInAgentHand = false;//agent hand flag
                     sop.transform.SetParent(topObject.transform);
                 }
@@ -2815,7 +2869,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             if (ItemInHand != null) {
                 //we do need this to check if the item is currently colliding with the agent, otherwise
                 //dropping an object while it is inside the agent will cause it to shoot out weirdly
-                if (!action.forceAction && ItemInHand.GetComponent<SimObjPhysics>().isColliding) {
+                if (!action.forceAction && isHandObjectColliding(true)) {
                     errorMessage = ItemInHand.transform.name + " can't be dropped. It must be clear of all other objects first";
                     Debug.Log(errorMessage);
                     actionFinished(false);
@@ -3039,7 +3093,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             if (target) {
                 if (!action.forceAction && target.isInteractable == false) {
                     errorMessage = "object is visible but occluded by something: " + action.objectId;
-                    Debug.Log(errorMessage);
                     actionFinished(false);
                 }
 
@@ -3052,7 +3105,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         // actionFinished(true);
                         StartCoroutine(InteractAndWait(codd));
                     } else {
-                        Debug.Log("can't close object if it's already closed");
                         errorMessage = "object already closed: " + action.objectId;
                         actionFinished(false);
                     }
@@ -3624,15 +3676,15 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 //the sim object receptacle target returns list of unique sim object IDs as strings
                 //XXX It looks like this goes right into the MetaData, so basically this just returns a list of strings
                 //that are the unique ID's of every object that is contained by the target object
-                target.Contains();
+                List<string> ids = target.Contains();
 
 #if UNITY_EDITOR
-                foreach (string s in target.Contains()) {
+                foreach (string s in ids) {
                     Debug.Log(s);
                 }
 #endif
 
-                actionFinished(true);
+                actionFinished(true, ids.ToArray());
             } else {
                 errorMessage = "object not found: " + action.objectId;
                 Debug.Log(errorMessage);
@@ -4639,13 +4691,15 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return false;
         }
 
-        protected bool isHandObjectColliding(float expandBy = 0.0f) {
+        protected bool isHandObjectColliding(bool includeAgent = false, float expandBy = 0.0f) {
             if (ItemInHand == null) {
                 return false;
             }
             List<GameObject> ignoreGameObjects = new List<GameObject>();
             // Ignore the agent when determining if the hand object is colliding
-            ignoreGameObjects.Add(this.gameObject);
+            if (!includeAgent) {
+                ignoreGameObjects.Add(this.gameObject);
+            }
             return UtilityFunctions.isObjectColliding(ItemInHand, ignoreGameObjects, expandBy);
         }
 
@@ -4914,7 +4968,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     }
                 }
                 if (stepsTaken > 10000) {
-                    errorMessage = "Too many steps taken in getReachablePoints.";
+                    errorMessage = "Too many steps taken in GetReachablePositions.";
                     Debug.Log(errorMessage);
                     break;
                 }
@@ -6228,6 +6282,15 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             //we found it!
             if (target) {
+
+                if(ItemInHand != null) {
+                    if(target.transform == ItemInHand.transform) {
+                        errorMessage = "target object cannot be sliced if it is in the agent's hand";
+                        actionFinished(false);
+                        return;
+                    }
+                }
+
                 if (target.GetComponent<SimObjPhysics>().DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanBeSliced)) {
                     target.GetComponent<SliceObject>().Slice();
                     actionFinished(true);
@@ -6296,7 +6359,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             //pass name of object in from action.objectId
             if (action.objectId == null) 
             {
-                Debug.Log("Hey, actually give me an object ID to open, yeah?");
                 errorMessage = "objectId required for DirtyObject action";
                 actionFinished(false);
                 return;
@@ -6354,7 +6416,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             //pass name of object in from action.objectId
             if (action.objectId == null) 
             {
-                Debug.Log("Hey, actually give me an object ID to open, yeah?");
                 errorMessage = "objectId required for CleanObject action";
                 actionFinished(false);
                 return;
@@ -6444,11 +6505,30 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 {
                     Fill fil = target.GetComponent<Fill>();
 
+                    //if the passed in liquid string is not valid
+                    if(!fil.Liquids.ContainsKey(action.fillLiquid))
+                    {
+                        errorMessage = action.fillLiquid + " is not a valid Liquid Type";
+                        actionFinished(false);
+                        return;
+                    }
+
+                    //make sure object is empty
                     if(!fil.IsFilled())
                     {
-                        fil.FillObject(action.fillLiquid);
-                        actionFinished(true);
-                        return;
+                        if(fil.FillObject(action.fillLiquid))
+                        {
+                            actionFinished(true);
+                            return;
+                        }
+
+                        else
+                        {
+                            actionFinished(false);
+                            errorMessage = target.transform.name + " cannot be filled with " + action.fillLiquid;
+                            return;
+                        }
+
                     }
 
                     else
@@ -6507,6 +6587,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     {
                         fil.EmptyObject();
                         actionFinished(true);
+                        return;
                     }
 
                     else
@@ -6533,7 +6614,67 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
 
+        //use up the contents of this object (toilet paper, paper towel, tissue box, etc).
+        public void UseUpObject(ServerAction action)
+        {
+            //pass name of object in from action.objectId
+            if (action.objectId == null) 
+            {
+                Debug.Log("Hey, actually give me an object ID to open, yeah?");
+                errorMessage = "objectId required for UseUpObject action";
+                actionFinished(false);
+                return;
+            }
 
+            SimObjPhysics target = null;
+
+            if (action.forceAction) 
+            {
+                action.forceVisible = true;
+            }
+
+            foreach (SimObjPhysics sop in VisibleSimObjs(action)) 
+            {
+                target = sop;
+            }
+
+            if(target)
+            {
+                if(target.GetComponent<SimObjPhysics>().DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanBeUsedUp))
+                {
+                    UsedUp u = target.GetComponent<UsedUp>();
+
+                    //make sure object is not already used up
+                    if(!u.isUsedUp)
+                    {
+                        u.UseUp();
+                        actionFinished(true);
+                        return;
+                    }
+
+                    else
+                    {
+                        errorMessage = "object already used up!";
+                        //Debug.Log(errorMessage);
+                        actionFinished(false);
+                        return;
+                    }
+                }
+
+                else 
+                {
+                    errorMessage = target.transform.name + " does not have CanBeUsedUp property!";
+                    actionFinished(false);
+                    return;
+                }
+            }
+
+            else
+            {
+                errorMessage = "object not found: " + action.objectId;
+                actionFinished(false);
+            }
+        }
         protected bool objectIsOfIntoType(SimObjPhysics so) {
             return so.ReceptacleTriggerBoxes != null &&
                 so.ReceptacleTriggerBoxes.Length != 0 &&

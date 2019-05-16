@@ -154,6 +154,7 @@ GameObject:
   - component: {fileID: 4530577602245322}
   - component: {fileID: 114149770712659482}
   - component: {fileID: 54978045343634994}
+  - component: {fileID: 4753722232320782042}
   m_Layer: 8
   m_Name: Cloth_9
   m_TagString: SimObjPhysics
@@ -195,7 +196,7 @@ MonoBehaviour:
   uniqueID: 
   Type: 60
   PrimaryProperty: 3
-  SecondaryProperties: 
+  SecondaryProperties: 04000000
   BoundingBox: {fileID: 1204819485698548}
   VisibilityPoints:
   - {fileID: 4103503832498312}
@@ -210,7 +211,7 @@ MonoBehaviour:
   ReceptacleTriggerBoxes: []
   isVisible: 0
   isInteractable: 0
-  isColliding: 0
+  isInAgentHand: 0
   MyColliders:
   - {fileID: 65108658247903944}
   - {fileID: 65469125266124298}
@@ -224,6 +225,9 @@ MonoBehaviour:
   HFbounciness: 0
   HFrbdrag: 3
   HFrbangulardrag: 0.5
+  CurrentTemperature: 0
+  HowManySecondsUntilRoomTemp: 10
+  ContainedObjectReferences: []
 --- !u!54 &54978045343634994
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -240,6 +244,29 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
+--- !u!114 &4753722232320782042
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1127117446582604}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d106cf009583a40e4a85d860c9830f67, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  MaterialSwapObjects:
+  - MyObject: {fileID: 1632547002997580}
+    OnMaterials:
+    - {fileID: 2100000, guid: 6f28821d9e0054ae997a60796cdfdee8, type: 2}
+    - {fileID: 2100000, guid: b03755ccf97c38748b0dd243d1d9bf58, type: 2}
+    OffMaterials:
+    - {fileID: 2100000, guid: 6f28821d9e0054ae997a60796cdfdee8, type: 2}
+    - {fileID: 2100000, guid: 937f5335a74cfc14086739fde6c8acf7, type: 2}
+  ObjectsToEnableIfClean: []
+  ObjectsToEnableIfDirty: []
+  isDirty: 0
 --- !u!1 &1132955820058822
 GameObject:
   m_ObjectHideFlags: 0
@@ -792,13 +819,13 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1632547002997580}
-  m_LocalRotation: {x: 0.058164947, y: -0.05816496, z: 0.7047106, w: 0.70471036}
-  m_LocalPosition: {x: -0.019200325, y: -0.015299793, z: 0.094}
-  m_LocalScale: {x: 47.300625, y: 47.300694, z: 47.30054}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 4530577602245322}
   m_RootOrder: 0
-  m_LocalEulerAnglesHint: {x: 9.437, y: 0, z: 90.00001}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!33 &33559016547235490
 MeshFilter:
   m_ObjectHideFlags: 0
@@ -806,7 +833,7 @@ MeshFilter:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1632547002997580}
-  m_Mesh: {fileID: 4300000, guid: 8368c23b8259c4cc0afbed11ac9309b0, type: 3}
+  m_Mesh: {fileID: 4300006, guid: 4ff1f3f7f5045ed43be328ecff465a2b, type: 3}
 --- !u!23 &23770396363674030
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -825,6 +852,7 @@ MeshRenderer:
   m_RendererPriority: 0
   m_Materials:
   - {fileID: 2100000, guid: 6f28821d9e0054ae997a60796cdfdee8, type: 2}
+  - {fileID: 2100000, guid: 937f5335a74cfc14086739fde6c8acf7, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0

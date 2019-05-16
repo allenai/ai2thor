@@ -122,20 +122,30 @@ public static class UtilityFunctions {
     }
 
     public static RaycastHit[] CastAllPrimitiveColliders(GameObject go, Vector3 direction, float maxDistance = Mathf.Infinity, int layerMask = Physics.DefaultRaycastLayers, QueryTriggerInteraction queryTriggerInteraction = QueryTriggerInteraction.UseGlobal) {
+        HashSet<Transform> transformsToIgnore = new HashSet<Transform>();
+        foreach (Transform t in go.GetComponentsInChildren<Transform>()) {
+            transformsToIgnore.Add(t);
+        }
         List<RaycastHit> hits = new List<RaycastHit>();
         foreach (CapsuleCollider cc in go.GetComponentsInChildren<CapsuleCollider>()) {
             foreach (RaycastHit h in PhysicsExtensions.CapsuleCastAll(cc, direction, maxDistance, layerMask, queryTriggerInteraction)) {
-                hits.Add(h);
+                if (!transformsToIgnore.Contains(h.transform)) {
+                    hits.Add(h);
+                }
             }
         }
         foreach (BoxCollider bc in go.GetComponentsInChildren<BoxCollider>()) {
             foreach (RaycastHit h in PhysicsExtensions.BoxCastAll(bc, direction, maxDistance, layerMask, queryTriggerInteraction)) {
-                hits.Add(h);
+                if (!transformsToIgnore.Contains(h.transform)) {
+                    hits.Add(h);
+                }
             }
         }
         foreach (SphereCollider sc in go.GetComponentsInChildren<SphereCollider>()) {
             foreach (RaycastHit h in PhysicsExtensions.SphereCastAll(sc, direction, maxDistance, layerMask, queryTriggerInteraction)) {
-                hits.Add(h);
+                if (!transformsToIgnore.Contains(h.transform)) {
+                    hits.Add(h);
+                }
             }
         }
         return hits.ToArray();

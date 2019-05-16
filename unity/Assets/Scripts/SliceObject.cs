@@ -62,33 +62,66 @@ public class SliceObject : MonoBehaviour
             t.gameObject.SetActive(false);
         }
 
-        Instantiate(ObjectToChangeTo, transform.position, transform.rotation);
+        GameObject resultObject = Instantiate(ObjectToChangeTo, transform.position, transform.rotation);
         isSliced = true;
 
         PhysicsSceneManager psm = GameObject.Find("PhysicsSceneManager").GetComponent<PhysicsSceneManager>();
         if (psm != null) 
         {
-            psm.SetupScene();//gather new sliced objects here
+            //if the spawned object is not a sim object itself, but if it's holding a ton of sim objects let's go
+            if(!resultObject.transform.GetComponent<SimObjPhysics>())
+            {
+                //each instantiated sliced version of the object is a bunch of sim objects held by a master parent transform, so go into each one and assign the id to each based on the parent's id so 
+                //there is an association with the original source object
+                int count = 0;
+                foreach (Transform t in resultObject.transform)
+                {
+                    SimObjPhysics tsop = t.GetComponent<SimObjPhysics>();
+                    psm.Generate_InheritedUniqueID(gameObject.GetComponent<SimObjPhysics>(), tsop, count);
+                    count++;
+
+                    //also turn on the kinematics of this object
+                    Rigidbody trb = t.GetComponent<Rigidbody>();
+                    trb.collisionDetectionMode = CollisionDetectionMode.ContinuousSpeculative;
+                    trb.isKinematic = false;
+                }
+            }
+
+            else
+            {
+                //quick if the result object is an egg hard set it's rotation because EGGS ARE WEIRD and are not the same form as their shelled version
+                if(resultObject.GetComponent<SimObjPhysics>().Type == SimObjType.EggCracked)
+                {
+                    resultObject.transform.rotation = Quaternion.Euler(Vector3.zero);
+                }
+
+                SimObjPhysics resultsop = resultObject.GetComponent<SimObjPhysics>();
+                psm.Generate_InheritedUniqueID(gameObject.GetComponent<SimObjPhysics>(), resultsop, 0);
+
+                Rigidbody resultrb = resultsop.GetComponent<Rigidbody>();
+                resultrb.collisionDetectionMode = CollisionDetectionMode.ContinuousSpeculative;
+                resultrb.isKinematic = false;
+            }
+
         }
-
     }
 
-    void OnApplicationQuit()
-    {
-        //quit = true;
-    }
+    // void OnApplicationQuit()
+    // {
+    //     //quit = true;
+    // }
 
-    void OnDestroy()
-    {
-        // //don't do this when the application is quitting, because it throws null reference errors looking for the PhysicsSceneManager
-        // if(!quit)
-        // {
-        //     PhysicsSceneManager psm = GameObject.Find("PhysicsSceneManager").GetComponent<PhysicsSceneManager>();
-        //     if (psm != null) {
-        //         psm.SetupScene();
-        //         psm.RemoveFromSpawnedObjects(gameObject.GetComponent<SimObjPhysics>());
-        //         psm.RemoveFromRequiredObjects(gameObject.GetComponent<SimObjPhysics>());
-        //     }
-        // }
-    }
+    // void OnDestroy()
+    // {
+    //     // //don't do this when the application is quitting, because it throws null reference errors looking for the PhysicsSceneManager
+    //     // if(!quit)
+    //     // {
+    //     //     PhysicsSceneManager psm = GameObject.Find("PhysicsSceneManager").GetComponent<PhysicsSceneManager>();
+    //     //     if (psm != null) {
+    //     //         psm.SetupScene();
+    //     //         psm.RemoveFromSpawnedObjects(gameObject.GetComponent<SimObjPhysics>());
+    //     //         psm.RemoveFromRequiredObjects(gameObject.GetComponent<SimObjPhysics>());
+    //     //     }
+    //     // }
+    // }
 }
