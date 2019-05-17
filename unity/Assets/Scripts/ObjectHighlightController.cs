@@ -195,21 +195,29 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             if (this.highlightedObject != null)
             {
-                var meshRenderer = this.highlightedObject.GetComponentInChildren<MeshRenderer>();
+                // var meshRenderer = this.highlightedObject.GetComponentInChildren<MeshRenderer>();
 
-                setTargetText("");
-                softHighlight = true;
-                if (meshRenderer != null)
-                {
-                    meshRenderer.material.shader = this.previousShader;
-                }
+                // setTargetText("");
+                // softHighlight = true;
+                // if (meshRenderer != null)
+                // {
+                //     meshRenderer.material.shader = this.previousShader;
+                //     foreach (var keyword in meshRenderer.material.shaderKeywords) {
+                //         Debug.Log("Keyword " + keyword + " enabled? " + meshRenderer.material.IsKeywordEnabled(keyword));
+                //         meshRenderer.material.EnableKeyword(keyword);
+                //     }
+                // }
             }
+
+            SimObjPhysics newHighlightedObject = null;
+            Shader newPreviousShader = null;
 
             if (hit.transform != null 
                 && hit.transform.tag == "SimObjPhysics"
                 && this.PhysicsController.WhatAmIHolding() == null
                )
             {
+                softHighlight = true;
                 var simObj = hit.transform.GetComponent<SimObjPhysics>();
                 Func<bool> validObjectLazy = () => { 
                     return simObj.PrimaryProperty == SimObjPrimaryProperty.CanPickup ||
@@ -220,13 +228,17 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 {
                     var withinReach = PhysicsController.FindObjectInVisibleSimObjPhysics(simObj.uniqueID) != null;
                     setTargetText(simObj.name, withinReach);
-                    this.highlightedObject = simObj;
-                    var mRenderer = this.highlightedObject.GetComponentInChildren<MeshRenderer>();
+                    newHighlightedObject = simObj;
+                    var mRenderer = newHighlightedObject.GetComponentInChildren<MeshRenderer>();
+                    
                     if (mRenderer != null)
                     {
-
-                        this.previousShader = mRenderer.material.shader;
-                        mRenderer.material.shader = this.highlightShader;
+                        
+                        if (this.highlightedObject != newHighlightedObject) {
+                            newPreviousShader = mRenderer.material.shader;
+                            mRenderer.material.renderQueue = -1;
+                            mRenderer.material.shader = this.highlightShader;
+                        }  
 
                         if (withinReach)
                         {
@@ -245,8 +257,27 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
             else
             {
-                this.highlightedObject = null;
+                    newHighlightedObject = null;
             }
+
+            if (this.highlightedObject != newHighlightedObject && this.highlightedObject != null) {
+                    var mRenderer = this.highlightedObject.GetComponentInChildren<MeshRenderer>();
+
+                    setTargetText("");
+                    
+                    if (mRenderer != null)
+                    {
+                        mRenderer.material.shader = this.previousShader;
+                        mRenderer.material.renderQueue = 3000;
+                    }
+            }
+            
+            if (newPreviousShader != null) {
+                this.previousShader = newPreviousShader;
+            }
+           
+           
+            this.highlightedObject = newHighlightedObject;
         }
 
         private void setTargetText(string text, bool withinReach = false)
