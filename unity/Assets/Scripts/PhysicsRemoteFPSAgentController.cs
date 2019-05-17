@@ -2602,6 +2602,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     ItemInHand.transform.SetParent(osr.attachPoint.transform);
                     ItemInHand.transform.localRotation = Quaternion.identity;
                     ItemInHand.GetComponent<Rigidbody>().isKinematic = true;
+                    ItemInHand.GetComponent<SimObjPhysics>().isInAgentHand = false;//remove in agent hand flag
                     ItemInHand = null;
                     DefaultAgentHand();
                     actionFinished(true);
@@ -2802,6 +2803,20 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     sop.transform.SetParent(topObject.transform);
                 }
 
+                target.ClearContainedObjectReferences();
+            }
+        }
+
+        public void DropContainedObjectsStationary(SimObjPhysics target) {
+            if (target.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.Receptacle)) {
+
+                foreach (SimObjPhysics sop in target.ContainedObjectReferences) {
+                    //print(sop.name);
+                    //for every object that is contained by this object...
+                    //turn off the colliders, leaving Trigger Colliders active (this is important to maintain visibility!)
+                    sop.transform.Find("Colliders").gameObject.SetActive(true);
+                    sop.isInAgentHand = false;//agent hand flag
+                }
                 target.ClearContainedObjectReferences();
             }
         }
