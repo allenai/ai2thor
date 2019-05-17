@@ -430,7 +430,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   CurrentlyContains: []
-  myParent: {fileID: 0}
+  myParent: {fileID: 1983099514373674}
   occupied: 0
 --- !u!1 &1284266828163110
 GameObject:
@@ -1029,7 +1029,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   CurrentlyContains: []
-  myParent: {fileID: 0}
+  myParent: {fileID: 1983099514373674}
   occupied: 0
 --- !u!1 &1626327730496442
 GameObject:
@@ -2154,6 +2154,8 @@ GameObject:
   - component: {fileID: 4520317742381546}
   - component: {fileID: 114102746350136624}
   - component: {fileID: 54616535284173798}
+  - component: {fileID: 849195938}
+  - component: {fileID: 849195939}
   m_Layer: 8
   m_Name: Plate_21
   m_TagString: SimObjPhysics
@@ -2194,10 +2196,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b439f6e4ef5714ee2a3643acf37b7a9d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  uniqueID: 
+  uniqueID: Plate|+00.00|+00.00|+00.00
   Type: 25
   PrimaryProperty: 3
-  SecondaryProperties: 07000000
+  SecondaryProperties: 07000000040000000b000000
   BoundingBox: {fileID: 1145599993342184}
   VisibilityPoints:
   - {fileID: 4940713695108918}
@@ -2214,7 +2216,6 @@ MonoBehaviour:
   - {fileID: 1605519788166154}
   isVisible: 0
   isInteractable: 0
-  isColliding: 0
   isInAgentHand: 0
   MyColliders:
   - {fileID: 65509564865383530}
@@ -2240,6 +2241,8 @@ MonoBehaviour:
   HFbounciness: 0.1
   HFrbdrag: 0
   HFrbangulardrag: 0
+  CurrentTemperature: 0
+  HowManySecondsUntilRoomTemp: 10
   ContainedObjectReferences: []
 --- !u!54 &54616535284173798
 Rigidbody:
@@ -2257,6 +2260,47 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
+--- !u!114 &849195938
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1983099514373674}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 02b2beb760fcd4a6f957400c276adb00, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  PrefabToSwapTo: {fileID: 269644920, guid: 30158288afa2af4429a0a0336ac83e27, type: 3}
+  DirtyPrefabToSwapTo: {fileID: 4643259431448257837, guid: 0f007b08f97f7fc47aa6d649b5b1782f,
+    type: 3}
+  ImpulseThreshold: 1.8
+  HighFrictionImpulseOffset: 2
+  breakType: 0
+--- !u!114 &849195939
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1983099514373674}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d106cf009583a40e4a85d860c9830f67, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  MaterialSwapObjects:
+  - MyObject: {fileID: 1672037284141340}
+    OnMaterials:
+    - {fileID: 2100000, guid: 2a67a80057da7ff4cac0b17488f2cbf8, type: 2}
+    - {fileID: 2100000, guid: 14065cf2e42954d43a17b4fdfa0e10f7, type: 2}
+    OffMaterials:
+    - {fileID: 2100000, guid: 2a67a80057da7ff4cac0b17488f2cbf8, type: 2}
+    - {fileID: 2100000, guid: c3ef3d51113eec2488c430cf97a2ebec, type: 2}
+  ObjectsToEnableIfClean: []
+  ObjectsToEnableIfDirty: []
+  isDirty: 0
 --- !u!1 &1983507943896174
 GameObject:
   m_ObjectHideFlags: 0
