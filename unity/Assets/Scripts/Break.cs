@@ -29,6 +29,9 @@ public class Break : MonoBehaviour
     [SerializeField]
     protected BreakType breakType; //please select how this object should be broken here
 
+    [SerializeField]
+    protected SwapObjList[] MaterialSwapObjects;//swap screen/surface with cracked version
+
     //if these soft objects hit this breakable object, ignore the breakobject check because it's soft so yeah why would it break this object?
     private List<SimObjType> TooSmalOrSoftToBreakOtherObjects = new List<SimObjType>()
     {SimObjType.TeddyBear, SimObjType.Pillow, SimObjType.Cloth, SimObjType.Bread, SimObjType.BreadSliced, SimObjType.Egg, SimObjType.EggShell, SimObjType.Omelette,
@@ -119,6 +122,13 @@ public class Break : MonoBehaviour
         if(breakType == BreakType.Decal)
         {
             //decal logic here
+            if(MaterialSwapObjects.Length > 0)
+            {
+                for(int i = 0; i < MaterialSwapObjects.Length; i++)
+                {
+                    MaterialSwapObjects[i].MyObject.GetComponent<MeshRenderer>().materials = MaterialSwapObjects[i].OnMaterials;
+                }
+            }
 
             broken = true;
         }

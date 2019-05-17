@@ -3526,6 +3526,17 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         }
                     }
 
+                    //check if the object can be broken, if it is broken you can't turn it on!
+                    if(target.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanBreak))
+                    {
+                        if(target.GetComponent<Break>().isBroken())
+                        {
+                            errorMessage = "Target is broken and can't be turned on!";
+                            actionFinished(false);
+                            return;
+                        }
+                    }
+
                     ctof.Toggle();
                     actionFinished(true);
                 }
