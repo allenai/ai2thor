@@ -391,6 +391,8 @@ GameObject:
   - component: {fileID: 4534758320005086}
   - component: {fileID: 114359721006046184}
   - component: {fileID: 54662053141358498}
+  - component: {fileID: 132817230}
+  - component: {fileID: 132817231}
   m_Layer: 8
   m_Name: Plate_13
   m_TagString: SimObjPhysics
@@ -430,10 +432,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b439f6e4ef5714ee2a3643acf37b7a9d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  uniqueID: 
+  uniqueID: Plate|+00.82|+00.00|+00.47
   Type: 25
   PrimaryProperty: 3
-  SecondaryProperties: 07000000
+  SecondaryProperties: 07000000040000000b000000
   BoundingBox: {fileID: 1734030420167564}
   VisibilityPoints:
   - {fileID: 4389719267613474}
@@ -445,7 +447,6 @@ MonoBehaviour:
   - {fileID: 1628871473223884}
   isVisible: 0
   isInteractable: 0
-  isColliding: 0
   isInAgentHand: 0
   MyColliders:
   - {fileID: 65250156681713190}
@@ -458,6 +459,8 @@ MonoBehaviour:
   HFbounciness: 0.1
   HFrbdrag: 0
   HFrbangulardrag: 0
+  CurrentTemperature: 0
+  HowManySecondsUntilRoomTemp: 10
   ContainedObjectReferences: []
 --- !u!54 &54662053141358498
 Rigidbody:
@@ -475,6 +478,47 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
+--- !u!114 &132817230
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1515254225731834}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 02b2beb760fcd4a6f957400c276adb00, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  PrefabToSwapTo: {fileID: 269644906, guid: 8bd2493aee86f3249bda5775e4bce642, type: 3}
+  DirtyPrefabToSwapTo: {fileID: 7359792598500096397, guid: a24703332211a754cae2137cd7b9b043,
+    type: 3}
+  ImpulseThreshold: 1.8
+  HighFrictionImpulseOffset: 2
+  breakType: 0
+--- !u!114 &132817231
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1515254225731834}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d106cf009583a40e4a85d860c9830f67, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  MaterialSwapObjects:
+  - MyObject: {fileID: 1567980304879306}
+    OnMaterials:
+    - {fileID: 2100000, guid: 6014e033ce6c7564890c3e69577413ec, type: 2}
+    - {fileID: 2100000, guid: 14065cf2e42954d43a17b4fdfa0e10f7, type: 2}
+    OffMaterials:
+    - {fileID: 2100000, guid: 6014e033ce6c7564890c3e69577413ec, type: 2}
+    - {fileID: 2100000, guid: c3ef3d51113eec2488c430cf97a2ebec, type: 2}
+  ObjectsToEnableIfClean: []
+  ObjectsToEnableIfDirty: []
+  isDirty: 0
 --- !u!1 &1567980304879306
 GameObject:
   m_ObjectHideFlags: 0
@@ -655,7 +699,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   CurrentlyContains: []
-  myParent: {fileID: 0}
+  myParent: {fileID: 1515254225731834}
   occupied: 0
 --- !u!1 &1679610069047112
 GameObject:
