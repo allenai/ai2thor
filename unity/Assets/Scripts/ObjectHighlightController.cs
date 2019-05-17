@@ -46,6 +46,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         private SimObjPhysics highlightedObject;
         private Shader previousShader;
         private Shader highlightShader;
+        private int previousRenderQueueValue = -1;
         private bool pickupState;
         private bool mouseDownThrow;
         private PhysicsRemoteFPSAgentController PhysicsController;
@@ -193,23 +194,15 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             Physics.Raycast(ray, out hit, this.MinHighlightDistance, layerMask);
             Debug.DrawLine(ray.origin, hit.point, Color.red);
 
-            if (this.highlightedObject != null)
-            {
-                var meshRenderer = this.highlightedObject.GetComponentInChildren<MeshRenderer>();
-
-                setTargetText("");
-                softHighlight = true;
-                if (meshRenderer != null)
-                {
-                    meshRenderer.material.shader = this.previousShader;
-                }
-            }
+            SimObjPhysics newHighlightedObject = null;
+            Shader newPreviousShader = null;
 
             if (hit.transform != null 
                 && hit.transform.tag == "SimObjPhysics"
                 && this.PhysicsController.WhatAmIHolding() == null
                )
             {
+                softHighlight = true;
                 var simObj = hit.transform.GetComponent<SimObjPhysics>();
                 Func<bool> validObjectLazy = () => { 
                     return simObj.PrimaryProperty == SimObjPrimaryProperty.CanPickup ||
@@ -220,13 +213,18 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 {
                     var withinReach = PhysicsController.FindObjectInVisibleSimObjPhysics(simObj.uniqueID) != null;
                     setTargetText(simObj.name, withinReach);
-                    this.highlightedObject = simObj;
-                    var mRenderer = this.highlightedObject.GetComponentInChildren<MeshRenderer>();
+                    newHighlightedObject = simObj;
+                    var mRenderer = newHighlightedObject.GetComponentInChildren<MeshRenderer>();
+                    
                     if (mRenderer != null)
                     {
-
-                        this.previousShader = mRenderer.material.shader;
-                        mRenderer.material.shader = this.highlightShader;
+                        
+                        if (this.highlightedObject != newHighlightedObject) {
+                            newPreviousShader = mRenderer.material.shader;
+                            this.previousRenderQueueValue = mRenderer.material.renderQueue;
+                            mRenderer.material.renderQueue = -1;
+                            mRenderer.material.shader = this.highlightShader;
+                        }  
 
                         if (withinReach)
                         {
@@ -245,8 +243,28 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
             else
             {
-                this.highlightedObject = null;
+                    newHighlightedObject = null;
             }
+
+            if (this.highlightedObject != newHighlightedObject && this.highlightedObject != null) {
+                    var mRenderer = this.highlightedObject.GetComponentInChildren<MeshRenderer>();
+
+                    setTargetText("");
+
+                    if (mRenderer != null)
+                    {
+                        mRenderer.material.shader = this.previousShader;
+                        // TODO unity has a bug for transparent objects they disappear when shader swapping, so we reset the previous shader's render queue value to render it appropiately.
+                        mRenderer.material.renderQueue = this.previousRenderQueueValue;
+                    }
+            }
+            
+            if (newPreviousShader != null) {
+                this.previousShader = newPreviousShader;
+            }
+           
+           
+            this.highlightedObject = newHighlightedObject;
         }
 
         private void setTargetText(string text, bool withinReach = false)
