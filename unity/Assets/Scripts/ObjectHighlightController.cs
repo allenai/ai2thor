@@ -46,6 +46,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         private SimObjPhysics highlightedObject;
         private Shader previousShader;
         private Shader highlightShader;
+        private int previousRenderQueueValue = -1;
         private bool pickupState;
         private bool mouseDownThrow;
         private PhysicsRemoteFPSAgentController PhysicsController;
@@ -220,6 +221,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         
                         if (this.highlightedObject != newHighlightedObject) {
                             newPreviousShader = mRenderer.material.shader;
+                            this.previousRenderQueueValue = mRenderer.material.renderQueue;
                             mRenderer.material.renderQueue = -1;
                             mRenderer.material.shader = this.highlightShader;
                         }  
@@ -252,7 +254,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     if (mRenderer != null)
                     {
                         mRenderer.material.shader = this.previousShader;
-                        mRenderer.material.renderQueue = 3000;
+                        // TODO unity has a bug for transparent objects they disappear when shader swapping, so we reset the previous shader's render queue value to render it appropiately.
+                        mRenderer.material.renderQueue = this.previousRenderQueueValue;
                     }
             }
             
