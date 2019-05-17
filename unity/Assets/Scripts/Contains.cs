@@ -100,11 +100,11 @@ public class Contains : MonoBehaviour
 		//trigger boxes correctly re-populate with the current objects via OnTriggerStay. We need this here
 		//because OnTriggerExit will miss correctly editing the list if objects are teleported around like with
 		//the Initial Random Spawn Function! 
-		CurrentlyContains.Clear();
-		occupied = false;
+		//CurrentlyContains.Clear();
+		//occupied = false;
 	}
 
-	public void OnTriggerStay(Collider other)
+	public void OnTriggerEnter(Collider other)
 	{
 		//from the collider, see if the thing hit is a sim object physics
 		//don't detect other trigger colliders to prevent nested objects from containing each other
@@ -154,8 +154,9 @@ public class Contains : MonoBehaviour
 				if(CurrentlyContains.Contains(sop))
 				//if(sop.Type != SimObjType.SinkBasin && sop.Type != SimObjType.BathtubBasin)
 				{
-					GameObject topObject = GameObject.Find("Objects");
-					sop.transform.SetParent(topObject.transform);
+					//check if initial random spawn is currently happening, if it is DO NOT DO THIS
+					// GameObject topObject = GameObject.Find("Objects");
+					// sop.transform.SetParent(topObject.transform);
 				}
 
 			}
