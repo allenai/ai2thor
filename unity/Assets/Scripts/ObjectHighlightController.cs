@@ -193,22 +193,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             Physics.Raycast(ray, out hit, this.MinHighlightDistance, layerMask);
             Debug.DrawLine(ray.origin, hit.point, Color.red);
 
-            if (this.highlightedObject != null)
-            {
-                // var meshRenderer = this.highlightedObject.GetComponentInChildren<MeshRenderer>();
-
-                // setTargetText("");
-                // softHighlight = true;
-                // if (meshRenderer != null)
-                // {
-                //     meshRenderer.material.shader = this.previousShader;
-                //     foreach (var keyword in meshRenderer.material.shaderKeywords) {
-                //         Debug.Log("Keyword " + keyword + " enabled? " + meshRenderer.material.IsKeywordEnabled(keyword));
-                //         meshRenderer.material.EnableKeyword(keyword);
-                //     }
-                // }
-            }
-
             SimObjPhysics newHighlightedObject = null;
             Shader newPreviousShader = null;
 
@@ -264,7 +248,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     var mRenderer = this.highlightedObject.GetComponentInChildren<MeshRenderer>();
 
                     setTargetText("");
-                    
+
                     if (mRenderer != null)
                     {
                         mRenderer.material.shader = this.previousShader;
