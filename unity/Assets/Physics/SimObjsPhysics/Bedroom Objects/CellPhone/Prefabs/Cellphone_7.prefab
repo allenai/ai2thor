@@ -11,6 +11,8 @@ GameObject:
   - component: {fileID: 4387400846041534}
   - component: {fileID: 114435812058144730}
   - component: {fileID: 54791988090472236}
+  - component: {fileID: 7478165740955632056}
+  - component: {fileID: 2213149744831121361}
   m_Layer: 8
   m_Name: Cellphone_7
   m_TagString: SimObjPhysics
@@ -89,6 +91,61 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
+--- !u!114 &7478165740955632056
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1153092959568928}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 02b2beb760fcd4a6f957400c276adb00, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  PrefabToSwapTo: {fileID: 0}
+  DirtyPrefabToSwapTo: {fileID: 0}
+  ImpulseThreshold: 0.7
+  HighFrictionImpulseOffset: 1.5
+  breakType: 1
+  MaterialSwapObjects:
+  - MyObject: {fileID: 1678999183518156}
+    OnMaterials:
+    - {fileID: 2100000, guid: 4bf88778970fe44f0ad42ded50c3a724, type: 2}
+    - {fileID: 2100000, guid: c14f460301b484b45b90126a1dfd7b17, type: 2}
+    - {fileID: 2100000, guid: dc51388438a333d4cab095f2a99810f1, type: 2}
+    OffMaterials: []
+--- !u!114 &2213149744831121361
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1153092959568928}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4fd556226fd294b1c845aae4efb365a1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  MovingParts: []
+  MaterialSwapObjects:
+  - MyObject: {fileID: 1678999183518156}
+    OnMaterials:
+    - {fileID: 2100000, guid: 4bf88778970fe44f0ad42ded50c3a724, type: 2}
+    - {fileID: 2100000, guid: 5f923a9f9dd32ee44a80ee95730c3181, type: 2}
+    - {fileID: 2100000, guid: c1473a130c98ef041b09db6e46277a6f, type: 2}
+    OffMaterials:
+    - {fileID: 2100000, guid: 4bf88778970fe44f0ad42ded50c3a724, type: 2}
+    - {fileID: 2100000, guid: c14f460301b484b45b90126a1dfd7b17, type: 2}
+    - {fileID: 2100000, guid: c1473a130c98ef041b09db6e46277a6f, type: 2}
+  LightSources: []
+  OnPositions: []
+  OffPositions: []
+  animationTime: 0.05
+  isOn: 0
+  movementType: 0
+  SelfControlled: 1
+  ControlledSimObjects: []
 --- !u!1 &1255405079323960
 GameObject:
   m_ObjectHideFlags: 0
@@ -186,7 +243,7 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1327143152228018}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: 0.70710677, y: -0, z: -0, w: 0.7071068}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
@@ -348,8 +405,8 @@ BoxCollider:
   m_IsTrigger: 0
   m_Enabled: 0
   serializedVersion: 2
-  m_Size: {x: 0.0794702, y: 0.15043466, z: 0.011739038}
-  m_Center: {x: 0, y: 0.0000136084855, z: -0.0049125403}
+  m_Size: {x: 0.0794702, y: 0.015010732, z: 0.15053539}
+  m_Center: {x: 0, y: 0.0047937096, z: 0.00022152811}
 --- !u!1 &1854059479925264
 GameObject:
   m_ObjectHideFlags: 0
@@ -433,7 +490,7 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1897367897521544}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: 0.70710677, y: -0, z: -0, w: 0.7071068}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
@@ -508,7 +565,7 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 5764156377805595586}
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalRotation: {x: 0.70710677, y: -0, z: -0, w: 0.7071068}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:

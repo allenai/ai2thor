@@ -70,6 +70,7 @@ public class Break : MonoBehaviour
 
     public void BreakObject()
     {
+        //prefab swap will switch the entire object out with a new prefab object entirely
         if(breakType == BreakType.PrefabSwap)
         {
             //Disable this game object and spawn in the broken pieces
@@ -119,6 +120,7 @@ public class Break : MonoBehaviour
 
         }
 
+        //if decal type, do not switch out the object but instead swap materials to show cracked/broken parts
         if(breakType == BreakType.Decal)
         {
             //decal logic here
@@ -128,6 +130,13 @@ public class Break : MonoBehaviour
                 {
                     MaterialSwapObjects[i].MyObject.GetComponent<MeshRenderer>().materials = MaterialSwapObjects[i].OnMaterials;
                 }
+            }
+
+            //if the object can be toggled on/off, if it is on, turn it off since it is now broken
+            if(gameObject.GetComponent<CanToggleOnOff>())
+            {
+                gameObject.GetComponent<CanToggleOnOff>().isOn = false;
+
             }
 
             broken = true;
@@ -165,7 +174,7 @@ public class Break : MonoBehaviour
 
     //change the ImpulseThreshold to higher if we are in a high friction zone, to simulate throwing an object at a "soft" object requiring
     //more force to break - ie: dropping mug on floor vs on a rug
-    public void OnTriggerStay(Collider other)
+    public void OnTriggerEnter(Collider other)
     {
         if(other.CompareTag("HighFriction"))
         {
