@@ -1002,6 +1002,8 @@ GameObject:
   - component: {fileID: 54738850562095333}
   - component: {fileID: 114160836258744099}
   - component: {fileID: 1134106670424612116}
+  - component: {fileID: 52082510}
+  - component: {fileID: 52082514}
   m_Layer: 8
   m_Name: Bowl_6
   m_TagString: SimObjPhysics
@@ -1064,7 +1066,7 @@ MonoBehaviour:
   uniqueID: Bowl|+01.34|+00.00|-00.06
   Type: 13
   PrimaryProperty: 3
-  SecondaryProperties: 070000000500000004000000
+  SecondaryProperties: 0700000005000000040000000b000000
   BoundingBox: {fileID: 1089176072121753}
   VisibilityPoints:
   - {fileID: 4818383819883229}
@@ -1125,8 +1127,50 @@ MonoBehaviour:
   WaterObject: {fileID: 2052563044003364573}
   CoffeeObject: {fileID: 7248409839015796336}
   WineObject: {fileID: 9165809380439779110}
-  SoapObject: {fileID: 0}
   isFilled: 0
+--- !u!114 &52082510
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1022960703555313}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d106cf009583a40e4a85d860c9830f67, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  MaterialSwapObjects:
+  - MyObject: {fileID: 1897773769561971}
+    OnMaterials:
+    - {fileID: 2100000, guid: 197d9610afaa2df42b86dc8ebae47228, type: 2}
+    - {fileID: 2100000, guid: 42be036c71613144a93cc166208aefe6, type: 2}
+    OffMaterials:
+    - {fileID: 2100000, guid: 197d9610afaa2df42b86dc8ebae47228, type: 2}
+    - {fileID: 2100000, guid: ee26df0c32aeed441ba08b801c9e290c, type: 2}
+  ObjectsToEnableIfClean: []
+  ObjectsToEnableIfDirty: []
+  isDirty: 0
+--- !u!114 &52082514
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1022960703555313}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 02b2beb760fcd4a6f957400c276adb00, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  PrefabToSwapTo: {fileID: 8008311598241419183, guid: cbbbaa650c6f9be409fe1ae60205880f,
+    type: 3}
+  DirtyPrefabToSwapTo: {fileID: 8008311596882439104, guid: d5dfead05dfdde7419fe61d8bd774fd3,
+    type: 3}
+  ImpulseThreshold: 2
+  HighFrictionImpulseOffset: 2
+  breakType: 0
+  MaterialSwapObjects: []
 --- !u!1 &1089176072121753
 GameObject:
   m_ObjectHideFlags: 0
@@ -2698,15 +2742,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 7c1c59c96325eaf49a01e87b49f1e13d, type: 3}
---- !u!4 &2052563044003586621 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 7614061652683997147, guid: 7c1c59c96325eaf49a01e87b49f1e13d,
-    type: 3}
-  m_PrefabInstance: {fileID: 8491184763100110310}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1 &2052563044003364573 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 7614061652683563835, guid: 7c1c59c96325eaf49a01e87b49f1e13d,
+    type: 3}
+  m_PrefabInstance: {fileID: 8491184763100110310}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &2052563044003586621 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 7614061652683997147, guid: 7c1c59c96325eaf49a01e87b49f1e13d,
     type: 3}
   m_PrefabInstance: {fileID: 8491184763100110310}
   m_PrefabAsset: {fileID: 0}
