@@ -1373,6 +1373,7 @@ GameObject:
   - component: {fileID: 54513598889262352}
   - component: {fileID: 114560288160317598}
   - component: {fileID: 653191563099815545}
+  - component: {fileID: 1589352855}
   m_Layer: 8
   m_Name: Bowl_15
   m_TagString: SimObjPhysics
@@ -1497,8 +1498,30 @@ MonoBehaviour:
   WaterObject: {fileID: 7097713249620963962}
   CoffeeObject: {fileID: 1857529688963676563}
   WineObject: {fileID: 2529620743191541475}
-  SoapObject: {fileID: 0}
   isFilled: 0
+--- !u!114 &1589352855
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1982638842329890}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d106cf009583a40e4a85d860c9830f67, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  MaterialSwapObjects:
+  - MyObject: {fileID: 1003597010609676}
+    OnMaterials:
+    - {fileID: 2100000, guid: e6b7215d3a41aff4695717079a033909, type: 2}
+    - {fileID: 2100000, guid: 5ab5214b45f4f104695a0864f4c2e3fa, type: 2}
+    OffMaterials:
+    - {fileID: 2100000, guid: e6b7215d3a41aff4695717079a033909, type: 2}
+    - {fileID: 2100000, guid: ee26df0c32aeed441ba08b801c9e290c, type: 2}
+  ObjectsToEnableIfClean: []
+  ObjectsToEnableIfDirty: []
+  isDirty: 0
 --- !u!1 &62657410908275462
 GameObject:
   m_ObjectHideFlags: 0
@@ -2718,11 +2741,6 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 4258264117732592}
     m_Modifications:
-    - target: {fileID: 5861644233598065581, guid: 4a2ac841307cb804c94f4256235719cc,
-        type: 3}
-      propertyPath: m_Name
-      value: Bowl_Volume_Wine_15
-      objectReference: {fileID: 0}
     - target: {fileID: 5861644233598027661, guid: 4a2ac841307cb804c94f4256235719cc,
         type: 3}
       propertyPath: m_LocalPosition.x
@@ -2777,6 +2795,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5861644233598065581, guid: 4a2ac841307cb804c94f4256235719cc,
+        type: 3}
+      propertyPath: m_Name
+      value: Bowl_Volume_Wine_15
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 4a2ac841307cb804c94f4256235719cc, type: 3}

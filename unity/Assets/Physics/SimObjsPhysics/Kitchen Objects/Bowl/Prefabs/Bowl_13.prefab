@@ -1200,6 +1200,8 @@ GameObject:
   - component: {fileID: 54847776220548776}
   - component: {fileID: 114277530945888574}
   - component: {fileID: 4176045809692445687}
+  - component: {fileID: 735036781}
+  - component: {fileID: 735036782}
   m_Layer: 8
   m_Name: Bowl_13
   m_TagString: SimObjPhysics
@@ -1323,8 +1325,50 @@ MonoBehaviour:
   WaterObject: {fileID: 5621926106058013514}
   CoffeeObject: {fileID: 3060644774137477795}
   WineObject: {fileID: 5918582546342527569}
-  SoapObject: {fileID: 0}
   isFilled: 0
+--- !u!114 &735036781
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1752634349611804}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 02b2beb760fcd4a6f957400c276adb00, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  PrefabToSwapTo: {fileID: 8008311598241419165, guid: 8299e6d6966c3554880e0e1b47c0b8fa,
+    type: 3}
+  DirtyPrefabToSwapTo: {fileID: 8008311597269244215, guid: d632c576806aac146a4f4c9392d98dd3,
+    type: 3}
+  ImpulseThreshold: 2
+  HighFrictionImpulseOffset: 2
+  breakType: 0
+  MaterialSwapObjects: []
+--- !u!114 &735036782
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1752634349611804}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d106cf009583a40e4a85d860c9830f67, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  MaterialSwapObjects:
+  - MyObject: {fileID: 1242946171855182}
+    OnMaterials:
+    - {fileID: 2100000, guid: fbc9486b2b8f29c448c6f52f6492bc13, type: 2}
+    - {fileID: 2100000, guid: 46f700e70f32a5c468165705bac0c9de, type: 2}
+    OffMaterials:
+    - {fileID: 2100000, guid: fbc9486b2b8f29c448c6f52f6492bc13, type: 2}
+    - {fileID: 2100000, guid: ee26df0c32aeed441ba08b801c9e290c, type: 2}
+  ObjectsToEnableIfClean: []
+  ObjectsToEnableIfDirty: []
+  isDirty: 0
 --- !u!1 &1797321485075956
 GameObject:
   m_ObjectHideFlags: 0

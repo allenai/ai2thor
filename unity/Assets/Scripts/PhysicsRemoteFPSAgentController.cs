@@ -6360,6 +6360,23 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             {
                 if (target.GetComponent<SimObjPhysics>().DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanBreak)) 
                 {
+                    SimObjPhysics targetsop = target.GetComponent<SimObjPhysics>();
+                    //if the object is in the agent's hand, we need to reset the agent hand booleans and other cleanup as well
+                    if(targetsop.isInAgentHand)
+                    {                      
+                        //if the target is also a Receptacle, drop contained objects first
+                        if(targetsop.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.Receptacle))
+                        {
+                            //drop contained objects as well
+                            DropContainedObjects(targetsop);
+                        }
+
+                        targetsop.isInAgentHand = false;
+                        ItemInHand = null;
+                        DefaultAgentHand();
+                        //ok now we are ready to break go go go
+                    }
+
                     target.GetComponent<Break>().BreakObject();
                     actionFinished(true);
                     return;

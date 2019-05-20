@@ -1205,6 +1205,8 @@ GameObject:
   - component: {fileID: 54748215720548524}
   - component: {fileID: 114603530198748780}
   - component: {fileID: 4783860641679856456}
+  - component: {fileID: 173690720}
+  - component: {fileID: 173690721}
   m_Layer: 8
   m_Name: Bowl_8
   m_TagString: SimObjPhysics
@@ -1328,8 +1330,50 @@ MonoBehaviour:
   WaterObject: {fileID: 4845121668924175041}
   CoffeeObject: {fileID: 7739198043636858932}
   WineObject: {fileID: 8818522858253759934}
-  SoapObject: {fileID: 0}
   isFilled: 0
+--- !u!114 &173690720
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1496395855902372}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 02b2beb760fcd4a6f957400c276adb00, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  PrefabToSwapTo: {fileID: 8008311598241419179, guid: 3528abb1087902f4583fc60d3adb6f01,
+    type: 3}
+  DirtyPrefabToSwapTo: {fileID: 8008311597142746022, guid: ca04574eebab64e4cbaf09c4c696939c,
+    type: 3}
+  ImpulseThreshold: 2
+  HighFrictionImpulseOffset: 2
+  breakType: 0
+  MaterialSwapObjects: []
+--- !u!114 &173690721
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1496395855902372}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d106cf009583a40e4a85d860c9830f67, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  MaterialSwapObjects:
+  - MyObject: {fileID: 0}
+    OnMaterials:
+    - {fileID: 2100000, guid: cbc8bd52321fda2479024993e770120a, type: 2}
+    - {fileID: 2100000, guid: 46f700e70f32a5c468165705bac0c9de, type: 2}
+    OffMaterials:
+    - {fileID: 2100000, guid: cbc8bd52321fda2479024993e770120a, type: 2}
+    - {fileID: 2100000, guid: ee26df0c32aeed441ba08b801c9e290c, type: 2}
+  ObjectsToEnableIfClean: []
+  ObjectsToEnableIfDirty: []
+  isDirty: 0
 --- !u!1 &1508408596456656
 GameObject:
   m_ObjectHideFlags: 0
