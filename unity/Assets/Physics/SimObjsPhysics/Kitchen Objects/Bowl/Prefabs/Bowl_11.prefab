@@ -1120,6 +1120,8 @@ GameObject:
   - component: {fileID: 54440666972016771}
   - component: {fileID: 114341553620969741}
   - component: {fileID: 7674140894940958472}
+  - component: {fileID: 577058519}
+  - component: {fileID: 577058520}
   m_Layer: 8
   m_Name: Bowl_11
   m_TagString: SimObjPhysics
@@ -1244,8 +1246,50 @@ MonoBehaviour:
   WaterObject: {fileID: 8011452673632798740}
   CoffeeObject: {fileID: 8414033603173280452}
   WineObject: {fileID: 7471638147324298783}
-  SoapObject: {fileID: 0}
   isFilled: 0
+--- !u!114 &577058519
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1229779488335027}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 02b2beb760fcd4a6f957400c276adb00, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  PrefabToSwapTo: {fileID: 8008311598241419153, guid: 067052e947c7a3045bc26e7b42217663,
+    type: 3}
+  DirtyPrefabToSwapTo: {fileID: 8008311596694222913, guid: 35d5877d9be1d6d4a8b932c931624969,
+    type: 3}
+  ImpulseThreshold: 2
+  HighFrictionImpulseOffset: 2
+  breakType: 0
+  MaterialSwapObjects: []
+--- !u!114 &577058520
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1229779488335027}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d106cf009583a40e4a85d860c9830f67, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  MaterialSwapObjects:
+  - MyObject: {fileID: 1408261893444489}
+    OnMaterials:
+    - {fileID: 2100000, guid: cf5ad55de0518d64f88b2dd49de57189, type: 2}
+    - {fileID: 2100000, guid: 42be036c71613144a93cc166208aefe6, type: 2}
+    OffMaterials:
+    - {fileID: 2100000, guid: cf5ad55de0518d64f88b2dd49de57189, type: 2}
+    - {fileID: 2100000, guid: ee26df0c32aeed441ba08b801c9e290c, type: 2}
+  ObjectsToEnableIfClean: []
+  ObjectsToEnableIfDirty: []
+  isDirty: 0
 --- !u!1 &1243644303636665
 GameObject:
   m_ObjectHideFlags: 0
@@ -2718,11 +2762,6 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 4172392717756837}
     m_Modifications:
-    - target: {fileID: 120883782666906176, guid: 0ce9f1f48a4591046817d5b7400051f8,
-        type: 3}
-      propertyPath: m_Name
-      value: Bowl_Volume_Coffee_11
-      objectReference: {fileID: 0}
     - target: {fileID: 120883782666483232, guid: 0ce9f1f48a4591046817d5b7400051f8,
         type: 3}
       propertyPath: m_LocalPosition.x
@@ -2777,6 +2816,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 120883782666906176, guid: 0ce9f1f48a4591046817d5b7400051f8,
+        type: 3}
+      propertyPath: m_Name
+      value: Bowl_Volume_Coffee_11
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 0ce9f1f48a4591046817d5b7400051f8, type: 3}

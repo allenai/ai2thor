@@ -1236,6 +1236,7 @@ GameObject:
   - component: {fileID: 54451203455723628}
   - component: {fileID: 114757905611472158}
   - component: {fileID: 7314967382487803284}
+  - component: {fileID: 2138087784}
   m_Layer: 8
   m_Name: Bowl_4
   m_TagString: SimObjPhysics
@@ -1359,8 +1360,30 @@ MonoBehaviour:
   WaterObject: {fileID: 1781388699365474960}
   CoffeeObject: {fileID: 1591649131810633889}
   WineObject: {fileID: 863248605727794801}
-  SoapObject: {fileID: 0}
   isFilled: 0
+--- !u!114 &2138087784
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1469214321872100}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d106cf009583a40e4a85d860c9830f67, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  MaterialSwapObjects:
+  - MyObject: {fileID: 1653061547800006}
+    OnMaterials:
+    - {fileID: 2100000, guid: e6b7215d3a41aff4695717079a033909, type: 2}
+    - {fileID: 2100000, guid: 5ab5214b45f4f104695a0864f4c2e3fa, type: 2}
+    OffMaterials:
+    - {fileID: 2100000, guid: c8074edb70f0131458afa75b3bce737c, type: 2}
+    - {fileID: 2100000, guid: ee26df0c32aeed441ba08b801c9e290c, type: 2}
+  ObjectsToEnableIfClean: []
+  ObjectsToEnableIfDirty: []
+  isDirty: 0
 --- !u!1 &1474417271587946
 GameObject:
   m_ObjectHideFlags: 0

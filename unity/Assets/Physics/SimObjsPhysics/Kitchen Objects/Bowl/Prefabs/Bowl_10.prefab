@@ -1003,6 +1003,7 @@ GameObject:
   - component: {fileID: 54930408053113773}
   - component: {fileID: 114901902601226741}
   - component: {fileID: 7433710373271981063}
+  - component: {fileID: 1024495052}
   m_Layer: 8
   m_Name: Bowl_10
   m_TagString: SimObjPhysics
@@ -1126,8 +1127,30 @@ MonoBehaviour:
   WaterObject: {fileID: 7291277396077420748}
   CoffeeObject: {fileID: 2258251720303871256}
   WineObject: {fileID: 3388828419364288290}
-  SoapObject: {fileID: 0}
   isFilled: 0
+--- !u!114 &1024495052
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1005489966664769}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d106cf009583a40e4a85d860c9830f67, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  MaterialSwapObjects:
+  - MyObject: {fileID: 1270797093589589}
+    OnMaterials:
+    - {fileID: 2100000, guid: c8074edb70f0131458afa75b3bce737c, type: 2}
+    - {fileID: 2100000, guid: 5ab5214b45f4f104695a0864f4c2e3fa, type: 2}
+    OffMaterials:
+    - {fileID: 2100000, guid: c8074edb70f0131458afa75b3bce737c, type: 2}
+    - {fileID: 2100000, guid: ee26df0c32aeed441ba08b801c9e290c, type: 2}
+  ObjectsToEnableIfClean: []
+  ObjectsToEnableIfDirty: []
+  isDirty: 0
 --- !u!1 &1269862994162511
 GameObject:
   m_ObjectHideFlags: 0
@@ -2781,15 +2804,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 8f7c6eb8abe134e44a4595ed14d62b02, type: 3}
---- !u!4 &2258251720304302456 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 8392959964253230623, guid: 8f7c6eb8abe134e44a4595ed14d62b02,
-    type: 3}
-  m_PrefabInstance: {fileID: 7723430812078870375}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1 &2258251720303871256 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 8392959964253260415, guid: 8f7c6eb8abe134e44a4595ed14d62b02,
+    type: 3}
+  m_PrefabInstance: {fileID: 7723430812078870375}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &2258251720304302456 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 8392959964253230623, guid: 8f7c6eb8abe134e44a4595ed14d62b02,
     type: 3}
   m_PrefabInstance: {fileID: 7723430812078870375}
   m_PrefabAsset: {fileID: 0}
