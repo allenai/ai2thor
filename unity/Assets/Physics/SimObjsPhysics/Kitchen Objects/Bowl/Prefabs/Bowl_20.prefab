@@ -1133,6 +1133,8 @@ GameObject:
   - component: {fileID: 54701553197348321}
   - component: {fileID: 114115025936392667}
   - component: {fileID: 5711397385436417837}
+  - component: {fileID: 1371365747}
+  - component: {fileID: 1371365748}
   m_Layer: 8
   m_Name: Bowl_20
   m_TagString: SimObjPhysics
@@ -1248,8 +1250,50 @@ MonoBehaviour:
   WaterObject: {fileID: 2685707488832826915}
   CoffeeObject: {fileID: 1191606995927587420}
   WineObject: {fileID: 6301065812998397440}
-  SoapObject: {fileID: 0}
   isFilled: 0
+--- !u!114 &1371365747
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1875145542048913}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 02b2beb760fcd4a6f957400c276adb00, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  PrefabToSwapTo: {fileID: 8008311598241419149, guid: 377ab2d4eb1cb6944b17e4d966a8bee4,
+    type: 3}
+  DirtyPrefabToSwapTo: {fileID: 8008311596742728148, guid: 81f5462473b4d8048876264c688aecc9,
+    type: 3}
+  ImpulseThreshold: 2
+  HighFrictionImpulseOffset: 2
+  breakType: 0
+  MaterialSwapObjects: []
+--- !u!114 &1371365748
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1875145542048913}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d106cf009583a40e4a85d860c9830f67, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  MaterialSwapObjects:
+  - MyObject: {fileID: 1570785739220615}
+    OnMaterials:
+    - {fileID: 2100000, guid: cbc8bd52321fda2479024993e770120a, type: 2}
+    - {fileID: 2100000, guid: 5ab5214b45f4f104695a0864f4c2e3fa, type: 2}
+    OffMaterials:
+    - {fileID: 2100000, guid: cbc8bd52321fda2479024993e770120a, type: 2}
+    - {fileID: 2100000, guid: ee26df0c32aeed441ba08b801c9e290c, type: 2}
+  ObjectsToEnableIfClean: []
+  ObjectsToEnableIfDirty: []
+  isDirty: 0
 --- !u!1 &44194236271558687
 GameObject:
   m_ObjectHideFlags: 0
@@ -2051,15 +2095,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 3f970227a190fd94cadcd049ed96622a, type: 3}
---- !u!4 &2685707488832729603 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 7614061652683997159, guid: 3f970227a190fd94cadcd049ed96622a,
-    type: 3}
-  m_PrefabInstance: {fileID: 5543676055138340324}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1 &2685707488832826915 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 7614061652683563975, guid: 3f970227a190fd94cadcd049ed96622a,
+    type: 3}
+  m_PrefabInstance: {fileID: 5543676055138340324}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &2685707488832729603 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 7614061652683997159, guid: 3f970227a190fd94cadcd049ed96622a,
     type: 3}
   m_PrefabInstance: {fileID: 5543676055138340324}
   m_PrefabAsset: {fileID: 0}

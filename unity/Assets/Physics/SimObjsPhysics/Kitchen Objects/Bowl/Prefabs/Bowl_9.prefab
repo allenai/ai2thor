@@ -1360,6 +1360,7 @@ GameObject:
   - component: {fileID: 54342535827069116}
   - component: {fileID: 114848531213680324}
   - component: {fileID: 8529182393889462001}
+  - component: {fileID: 1753910922}
   m_Layer: 8
   m_Name: Bowl_9
   m_TagString: SimObjPhysics
@@ -1419,7 +1420,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b439f6e4ef5714ee2a3643acf37b7a9d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  uniqueID: Bowl|+02.24|+00.00|+00.27
+  uniqueID: Bowl|+02.24|+00.00|+00.26
   Type: 13
   PrimaryProperty: 3
   SecondaryProperties: 070000000400000005000000
@@ -1483,8 +1484,30 @@ MonoBehaviour:
   WaterObject: {fileID: 259593737615773248}
   CoffeeObject: {fileID: 2911412136190985279}
   WineObject: {fileID: 6064383130245916331}
-  SoapObject: {fileID: 0}
   isFilled: 0
+--- !u!114 &1753910922
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1577684439700432}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d106cf009583a40e4a85d860c9830f67, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  MaterialSwapObjects:
+  - MyObject: {fileID: 1371724962253604}
+    OnMaterials:
+    - {fileID: 2100000, guid: e6b7215d3a41aff4695717079a033909, type: 2}
+    - {fileID: 2100000, guid: 5ab5214b45f4f104695a0864f4c2e3fa, type: 2}
+    OffMaterials:
+    - {fileID: 2100000, guid: e6b7215d3a41aff4695717079a033909, type: 2}
+    - {fileID: 2100000, guid: ee26df0c32aeed441ba08b801c9e290c, type: 2}
+  ObjectsToEnableIfClean: []
+  ObjectsToEnableIfDirty: []
+  isDirty: 0
 --- !u!1 &1695255944012368
 GameObject:
   m_ObjectHideFlags: 0
@@ -2638,11 +2661,6 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 4610358237188360}
     m_Modifications:
-    - target: {fileID: 9101255873019064682, guid: adb0145bb58aba942a1a29849299868f,
-        type: 3}
-      propertyPath: m_Name
-      value: Bowl_Volume_Coffee_9
-      objectReference: {fileID: 0}
     - target: {fileID: 9101255873018899850, guid: adb0145bb58aba942a1a29849299868f,
         type: 3}
       propertyPath: m_LocalPosition.x
@@ -2697,6 +2715,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 9101255873019064682, guid: adb0145bb58aba942a1a29849299868f,
+        type: 3}
+      propertyPath: m_Name
+      value: Bowl_Volume_Coffee_9
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: adb0145bb58aba942a1a29849299868f, type: 3}
