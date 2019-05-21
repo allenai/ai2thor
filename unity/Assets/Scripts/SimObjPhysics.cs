@@ -476,15 +476,17 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 			GameObject agent = GameObject.Find("FPSController");
 			if(!agent.transform.GetComponent<PhysicsRemoteFPSAgentController>().WhatAmIHolding() == this.transform)
 			{
-				SimObjPhysics colsop = col.transform.GetComponentInParent<SimObjPhysics>();
-
-				if(colsop.PrimaryProperty == SimObjPrimaryProperty.CanPickup || colsop.PrimaryProperty == SimObjPrimaryProperty.Moveable)
+				//if this object is pickupable or moveable
+				if(PrimaryProperty == SimObjPrimaryProperty.CanPickup || PrimaryProperty == SimObjPrimaryProperty.Moveable)
 				{
-					//print(col.transform.GetComponentInParent<SimObjPhysics>().transform.name);
-					Rigidbody rb = colsop.transform.GetComponent<Rigidbody>();
-					rb.isKinematic = false;
-					rb.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
-
+					//only do this if other object that hit this object is moving
+					if(col.impulse.magnitude > 0)
+					{
+						//print(col.transform.GetComponentInParent<SimObjPhysics>().transform.name);
+						Rigidbody rb = gameObject.transform.GetComponent<Rigidbody>();
+						rb.isKinematic = false;
+						rb.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
+					}
 				}
 			}
 
