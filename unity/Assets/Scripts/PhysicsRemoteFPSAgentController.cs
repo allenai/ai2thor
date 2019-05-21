@@ -2727,9 +2727,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             Transform savedParent = target.transform.parent;
             bool wasKinematic = target.GetComponent<Rigidbody>().isKinematic;
 
-            //reset collision mode and set kinematic true since this is now being held
+            //object is being held, set kinematic true
             Rigidbody rb = target.GetComponent<Rigidbody>();
-            rb.collisionDetectionMode = CollisionDetectionMode.Discrete;
+            //rb.collisionDetectionMode = CollisionDetectionMode.Discrete;
             rb.isKinematic = true;
 
             //if the target is rotated too much, don't try to pick up any contained objects since they would fall out
@@ -3950,6 +3950,21 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             foreach (SimObjPhysics sop in GameObject.FindObjectsOfType<SimObjPhysics>()) {
                 if (sop.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanSeeThrough)) {
                     UpdateDisplayGameObject(sop.gameObject, false);
+                }
+            }
+            actionFinished(true);
+        }
+
+        //if you want to do something like throw objects to knock over other objects, use this action to set all objects to Kinematic false
+        //otherwise objects will need to be hit multiple times in order to ensure kinematic false toggle
+        //use this by initializing the scene, then calling randomize if desired, and then call this action to prepare the scene so all objects will react to others upon collision.
+        public void MakeAllPickupableObjectsMoveable(ServerAction action)
+        {
+            foreach (SimObjPhysics sop in GameObject.FindObjectsOfType<SimObjPhysics>()) {
+                if (sop.PrimaryProperty == SimObjPrimaryProperty.CanPickup) {
+                    Rigidbody rb = sop.GetComponent<Rigidbody>();
+                    rb.isKinematic = false;
+                    rb.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
                 }
             }
             actionFinished(true);

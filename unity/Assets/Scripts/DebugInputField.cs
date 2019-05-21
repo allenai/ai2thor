@@ -258,6 +258,42 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         break;
                     }
 
+                //put an object down with stationary false
+                case "putf":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "PutObject";
+                        
+                        if(splitcommand.Length == 2)
+                        {
+                            action.receptacleObjectId = splitcommand[1];
+                        }
+
+                        else
+                            action.receptacleObjectId = PhysicsController.UniqueIDOfClosestReceptacleObject();
+                            
+                        //set this to false if we want to place it and let physics resolve by having it fall a short distance into position
+
+                        //set true to place with kinematic = true so that it doesn't fall or roll in place - making placement more consistant and not physics engine reliant - this more closely mimics legacy pivot placement behavior
+                        action.placeStationary = false; 
+
+                        //set this true to ignore Placement Restrictions
+                        action.forceAction = true;
+
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
+                //make all pickupable objects kinematic false so that they will react to collisions. Otherwise, some objects might be defaulted to kinematic true, or
+                //if they were placed with placeStationary true, then they will not interact with outside collisions immediately.
+                case "kinematicfalse":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "MakeAllPickupableObjectsMoveable";
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
                 //set forceVisible to true if you want objects to not spawn inside receptacles and only out in the open
                 //set forceAction to true to spawn with kinematic = true to more closely resemble pivot functionality
                 case "irs":
