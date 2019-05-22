@@ -79,6 +79,7 @@ public class AgentManager : MonoBehaviour
         primaryAgent.actionDuration = this.actionDuration;
 		readyToEmit = true;
 
+
 		this.agents.Add (primaryAgent);
 	}
 
@@ -376,6 +377,26 @@ public class AgentManager : MonoBehaviour
 
 
 		}
+	}
+
+	// Used for benchmarking only the server-side
+	// no call is made to the Python side
+	private IEnumerator EmitFrameNoClient() {
+		frameCounter += 1;
+
+		bool shouldRender = this.renderImage;
+
+		if (shouldRender) {
+			// we should only read the screen buffer after rendering is complete
+			yield return new WaitForEndOfFrame();
+			if (synchronousHttp) {
+				// must wait an additional frame when in synchronous mode otherwise the frame lags
+				yield return new WaitForEndOfFrame();
+			}
+		}
+
+		string msg = "{\"action\": \"RotateRight\"}";
+		ProcessControlCommand(msg);
 	}
 
 
