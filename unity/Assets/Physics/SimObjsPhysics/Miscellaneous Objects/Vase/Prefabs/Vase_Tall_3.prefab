@@ -1696,7 +1696,7 @@ GameObject:
   m_TagString: Structure
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
-  m_StaticEditorFlags: 4294967295
+  m_StaticEditorFlags: 4294967231
   m_IsActive: 1
 --- !u!4 &4915910000918798
 Transform:
@@ -1705,7 +1705,7 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1441760831981886}
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
@@ -1719,7 +1719,7 @@ MeshFilter:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1441760831981886}
-  m_Mesh: {fileID: 4300130, guid: 01d21b9d74c5f164f8df6df573f48826, type: 3}
+  m_Mesh: {fileID: 4300004, guid: c20dc19856e5dff42989602242c4d74f, type: 3}
 --- !u!23 &23917342835702784
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -3370,6 +3370,7 @@ GameObject:
   - component: {fileID: 4828641485868246}
   - component: {fileID: 114191004853687300}
   - component: {fileID: 54576087860605526}
+  - component: {fileID: 6353844317229247410}
   m_Layer: 8
   m_Name: Vase_Tall_3
   m_TagString: SimObjPhysics
@@ -3408,10 +3409,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b439f6e4ef5714ee2a3643acf37b7a9d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  uniqueID: Vase|+00.00|+00.00|-05.56
+  uniqueID: Vase|+00.00|+00.00|+00.00
   Type: 121
   PrimaryProperty: 3
-  SecondaryProperties: 
+  SecondaryProperties: 0b000000
   BoundingBox: {fileID: 1683446180477500}
   VisibilityPoints:
   - {fileID: 4704256559837208}
@@ -3433,7 +3434,7 @@ MonoBehaviour:
   ReceptacleTriggerBoxes: []
   isVisible: 0
   isInteractable: 0
-  isColliding: 0
+  isInAgentHand: 0
   MyColliders:
   - {fileID: 65798443649300226}
   - {fileID: 65084452431867760}
@@ -3476,6 +3477,9 @@ MonoBehaviour:
   HFbounciness: 0
   HFrbdrag: 0
   HFrbangulardrag: 0
+  CurrentTemperature: 0
+  HowManySecondsUntilRoomTemp: 10
+  ContainedObjectReferences: []
 --- !u!54 &54576087860605526
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -3492,6 +3496,25 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
+--- !u!114 &6353844317229247410
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1837261613422012}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 02b2beb760fcd4a6f957400c276adb00, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  PrefabToSwapTo: {fileID: 7850359005414010769, guid: 52f4ee6f15ca9c848acd69644ef84c87,
+    type: 3}
+  DirtyPrefabToSwapTo: {fileID: 0}
+  ImpulseThreshold: 3.6
+  HighFrictionImpulseOffset: 2
+  breakType: 0
+  MaterialSwapObjects: []
 --- !u!1 &1849241554670222
 GameObject:
   m_ObjectHideFlags: 0
