@@ -180,10 +180,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
 
-        public override void PreprocessControlCommand(ServerAction action) {
-            VisibleSimObjPhysics = VisibleSimObjs(action);
-        }
-
         private void LateUpdate() {
             //make sure this happens in late update so all physics related checks are done ahead of time
             //this is also mostly for in editor, the array of visible sim objects is found via server actions
@@ -498,16 +494,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return objectID;
         }
 
-        public SimObjPhysics ClosestObject(Func<SimObjPhysics, bool> filter = null) {
-            SimObjPhysics obj = null;
-            foreach (SimObjPhysics o in VisibleSimObjPhysics) {
-                if (filter != null && filter(o)) {
-                    obj = o;
-                    break;
-                }
-            }
-            return obj;
-        }
 
         //return a reference to a SimObj that is Visible (in the VisibleSimObjPhysics array) and
         //matches the passe din objectID
