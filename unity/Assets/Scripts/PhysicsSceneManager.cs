@@ -409,8 +409,11 @@ public class PhysicsSceneManager : MonoBehaviour
 										go.transform.position = osr.attachPoint.position;
 										go.transform.SetParent(osr.attachPoint.transform);
 										go.transform.localRotation = Quaternion.identity;
-										go.GetComponent<Rigidbody>().isKinematic = true;
 
+										Rigidbody rb = go.GetComponent<Rigidbody>();
+										rb.collisionDetectionMode = CollisionDetectionMode.Discrete;
+										rb.isKinematic = true;
+							
 										HowManyCouldntSpawn--;
 										spawned = true;
 										break;
