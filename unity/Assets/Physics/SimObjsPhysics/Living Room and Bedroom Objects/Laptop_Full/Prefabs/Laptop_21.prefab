@@ -196,6 +196,7 @@ GameObject:
   - component: {fileID: 54104580498021798}
   - component: {fileID: 114642339088615568}
   - component: {fileID: 114383234965843608}
+  - component: {fileID: 9155889723006909964}
   m_Layer: 8
   m_Name: Laptop_21
   m_TagString: SimObjPhysics
@@ -238,7 +239,7 @@ MonoBehaviour:
   uniqueID: Laptop|+04.08|-00.34|+07.20
   Type: 50
   PrimaryProperty: 3
-  SecondaryProperties: 080000001d000000
+  SecondaryProperties: 080000001d0000000b000000
   BoundingBox: {fileID: 1861108193582056}
   VisibilityPoints:
   - {fileID: 4968006160808120}
@@ -252,7 +253,6 @@ MonoBehaviour:
   ReceptacleTriggerBoxes: []
   isVisible: 0
   isInteractable: 0
-  isColliding: 0
   isInAgentHand: 0
   MyColliders:
   - {fileID: 65307939886271612}
@@ -262,6 +262,8 @@ MonoBehaviour:
   HFbounciness: 0
   HFrbdrag: 0
   HFrbangulardrag: 0
+  CurrentTemperature: 0
+  HowManySecondsUntilRoomTemp: 10
   ContainedObjectReferences: []
 --- !u!54 &54104580498021798
 Rigidbody:
@@ -338,7 +340,26 @@ MonoBehaviour:
   animationTime: 0.05
   isOn: 0
   movementType: 0
-  MustBeClosedToTurnOn: 10000000
+  SelfControlled: 1
+  ControlledSimObjects: []
+--- !u!114 &9155889723006909964
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1117836677197276}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 02b2beb760fcd4a6f957400c276adb00, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  PrefabToSwapTo: {fileID: 0}
+  DirtyPrefabToSwapTo: {fileID: 0}
+  ImpulseThreshold: 3.6
+  HighFrictionImpulseOffset: 2
+  breakType: 1
+  MaterialSwapObjects: []
 --- !u!1 &1178464194555134
 GameObject:
   m_ObjectHideFlags: 0
