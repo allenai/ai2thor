@@ -2715,7 +2715,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             //object is being held, set kinematic true
             Rigidbody rb = target.GetComponent<Rigidbody>();
-            //rb.collisionDetectionMode = CollisionDetectionMode.Discrete;
+            rb.collisionDetectionMode = CollisionDetectionMode.Discrete;
             rb.isKinematic = true;
 
             //if the target is rotated too much, don't try to pick up any contained objects since they would fall out
