@@ -176,9 +176,10 @@ MeshRenderer:
   m_RendererPriority: 0
   m_Materials:
   - {fileID: 2100000, guid: f50770cb2f6efeb4ba4b69e706cf6fdb, type: 2}
-  - {fileID: 2100000, guid: 74c137c86b8869d4c9a235f328112a29, type: 2}
+  - {fileID: 2100000, guid: c1890421b67683e4ea0f6a296d0071e3, type: 2}
   - {fileID: 2100000, guid: fdbde18543369ef4e971dfc2e3b8c8e5, type: 2}
-  - {fileID: 2100006, guid: b5c194345b2ae084b9b0a04223ff90a9, type: 3}
+  - {fileID: 2100000, guid: 313425d0504389b44bc797a2144d352a, type: 2}
+  - {fileID: 2100000, guid: 7afd56a5a7d0e18448e7937b55261aee, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -1640,6 +1641,7 @@ GameObject:
   - component: {fileID: 114310143477432844}
   - component: {fileID: 54674259808093384}
   - component: {fileID: 2164443702283231925}
+  - component: {fileID: 11028208}
   m_Layer: 8
   m_Name: Pot_30
   m_TagString: SimObjPhysics
@@ -1685,7 +1687,7 @@ MonoBehaviour:
   uniqueID: Pot|+30.00|+30.00|+30.00
   Type: 8
   PrimaryProperty: 3
-  SecondaryProperties: 0700000005000000
+  SecondaryProperties: 070000000500000004000000
   BoundingBox: {fileID: 1635370352559922}
   VisibilityPoints:
   - {fileID: 4846001751422394}
@@ -1761,6 +1763,35 @@ MonoBehaviour:
   CoffeeObject: {fileID: 2951666541979620059}
   WineObject: {fileID: 6972468262753669877}
   isFilled: 0
+--- !u!114 &11028208
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1739915406565898}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d106cf009583a40e4a85d860c9830f67, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  MaterialSwapObjects:
+  - MyObject: {fileID: 1049635631792230}
+    OnMaterials:
+    - {fileID: 2100000, guid: 74c137c86b8869d4c9a235f328112a29, type: 2}
+    - {fileID: 2100000, guid: c1890421b67683e4ea0f6a296d0071e3, type: 2}
+    - {fileID: 2100000, guid: fdbde18543369ef4e971dfc2e3b8c8e5, type: 2}
+    - {fileID: 2100000, guid: 313425d0504389b44bc797a2144d352a, type: 2}
+    - {fileID: 2100000, guid: d01124ba237e9fa47bdd85691d432be3, type: 2}
+    OffMaterials:
+    - {fileID: 2100000, guid: 74c137c86b8869d4c9a235f328112a29, type: 2}
+    - {fileID: 2100000, guid: c1890421b67683e4ea0f6a296d0071e3, type: 2}
+    - {fileID: 2100000, guid: fdbde18543369ef4e971dfc2e3b8c8e5, type: 2}
+    - {fileID: 2100000, guid: 313425d0504389b44bc797a2144d352a, type: 2}
+    - {fileID: 2100000, guid: 7afd56a5a7d0e18448e7937b55261aee, type: 2}
+  ObjectsToEnableIfClean: []
+  ObjectsToEnableIfDirty: []
+  isDirty: 0
 --- !u!1 &1759041186412168
 GameObject:
   m_ObjectHideFlags: 0
