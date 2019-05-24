@@ -228,7 +228,7 @@ GameObject:
   - component: {fileID: 33157486620016224}
   - component: {fileID: 23042037448431286}
   m_Layer: 0
-  m_Name: ScreenMesh
+  m_Name: lid_mesh
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -278,6 +278,7 @@ MeshRenderer:
   - {fileID: 2100000, guid: a271800b374dc1d4bab67d15f9e72ff6, type: 2}
   - {fileID: 2100000, guid: f69edd8d411dd3b4382fc4ef452812ff, type: 2}
   - {fileID: 2100000, guid: 8a78a5346c420af4998a4324b186302b, type: 2}
+  - {fileID: 2100000, guid: f7d48f5dfa4f0b24cb78749c0145d074, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -472,12 +473,14 @@ MonoBehaviour:
     - {fileID: 2100000, guid: a271800b374dc1d4bab67d15f9e72ff6, type: 2}
     - {fileID: 2100000, guid: 0be3ce90e480e4d18b7d658bf845520e, type: 2}
     - {fileID: 2100000, guid: 8a78a5346c420af4998a4324b186302b, type: 2}
+    - {fileID: 2100000, guid: f7d48f5dfa4f0b24cb78749c0145d074, type: 2}
     OffMaterials:
     - {fileID: 2100000, guid: 584d281df74234f4caa0096f45ecd1fc, type: 2}
     - {fileID: 2100000, guid: fcd2e4ed615ed9a48b0ccff63d798ffe, type: 2}
     - {fileID: 2100000, guid: a271800b374dc1d4bab67d15f9e72ff6, type: 2}
     - {fileID: 2100000, guid: f69edd8d411dd3b4382fc4ef452812ff, type: 2}
     - {fileID: 2100000, guid: 8a78a5346c420af4998a4324b186302b, type: 2}
+    - {fileID: 2100000, guid: f7d48f5dfa4f0b24cb78749c0145d074, type: 2}
   LightSources: []
   OnPositions: []
   OffPositions: []
@@ -503,7 +506,16 @@ MonoBehaviour:
   ImpulseThreshold: 3.6
   HighFrictionImpulseOffset: 2
   breakType: 1
-  MaterialSwapObjects: []
+  MaterialSwapObjects:
+  - MyObject: {fileID: 0}
+    OnMaterials:
+    - {fileID: 2100000, guid: 584d281df74234f4caa0096f45ecd1fc, type: 2}
+    - {fileID: 2100000, guid: fcd2e4ed615ed9a48b0ccff63d798ffe, type: 2}
+    - {fileID: 2100000, guid: a271800b374dc1d4bab67d15f9e72ff6, type: 2}
+    - {fileID: 2100000, guid: f69edd8d411dd3b4382fc4ef452812ff, type: 2}
+    - {fileID: 2100000, guid: 8a78a5346c420af4998a4324b186302b, type: 2}
+    - {fileID: 2100000, guid: dc51388438a333d4cab095f2a99810f1, type: 2}
+    OffMaterials: []
 --- !u!1 &1515422209241142
 GameObject:
   m_ObjectHideFlags: 0
@@ -852,7 +864,7 @@ GameObject:
   - component: {fileID: 33750650564057074}
   - component: {fileID: 23002274718164186}
   m_Layer: 0
-  m_Name: KeyboardMesh
+  m_Name: main_mesh
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -902,6 +914,7 @@ MeshRenderer:
   - {fileID: 2100000, guid: a271800b374dc1d4bab67d15f9e72ff6, type: 2}
   - {fileID: 2100000, guid: f69edd8d411dd3b4382fc4ef452812ff, type: 2}
   - {fileID: 2100000, guid: 8a78a5346c420af4998a4324b186302b, type: 2}
+  - {fileID: 2100000, guid: f7d48f5dfa4f0b24cb78749c0145d074, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
