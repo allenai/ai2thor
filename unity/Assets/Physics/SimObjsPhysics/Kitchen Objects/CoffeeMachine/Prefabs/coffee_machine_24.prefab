@@ -647,7 +647,7 @@ MonoBehaviour:
   uniqueID: CoffeeMachine|-03.95|+00.52|-07.96
   Type: 15
   PrimaryProperty: 1
-  SecondaryProperties: 1d0000000700000034000000
+  SecondaryProperties: 1d00000007000000340000000c000000
   BoundingBox: {fileID: 1847221109106558}
   VisibilityPoints:
   - {fileID: 4642538070811200}
@@ -662,7 +662,6 @@ MonoBehaviour:
   - {fileID: 1076223954600444}
   isVisible: 0
   isInteractable: 0
-  isColliding: 0
   isInAgentHand: 0
   MyColliders: []
   HFdynamicfriction: 0
@@ -670,6 +669,9 @@ MonoBehaviour:
   HFbounciness: 0
   HFrbdrag: 0
   HFrbangulardrag: 0
+  salientMaterials: 
+  CurrentTemperature: 0
+  HowManySecondsUntilRoomTemp: 10
   ContainedObjectReferences: []
 --- !u!54 &54959197275864204
 Rigidbody:
@@ -739,7 +741,8 @@ MonoBehaviour:
   animationTime: 0.05
   isOn: 0
   movementType: 0
-  MustBeClosedToTurnOn: 10000000
+  SelfControlled: 1
+  ControlledSimObjects: []
 --- !u!114 &6446478379662249167
 MonoBehaviour:
   m_ObjectHideFlags: 0
