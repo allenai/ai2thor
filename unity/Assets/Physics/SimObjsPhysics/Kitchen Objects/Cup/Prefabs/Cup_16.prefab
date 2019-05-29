@@ -746,6 +746,7 @@ GameObject:
   - component: {fileID: 114913352797943778}
   - component: {fileID: 54321685651622296}
   - component: {fileID: 1406175245073765}
+  - component: {fileID: 2993343217582489140}
   m_Layer: 8
   m_Name: Cup_16
   m_TagString: SimObjPhysics
@@ -788,10 +789,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b439f6e4ef5714ee2a3643acf37b7a9d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  uniqueID: Cup|+16.00|+16.00|+16.00
+  uniqueID: Cup|+02.00|+00.00|+06.00
   Type: 34
   PrimaryProperty: 3
-  SecondaryProperties: 0700000005000000
+  SecondaryProperties: 070000000500000004000000
   BoundingBox: {fileID: 1297963965501628}
   VisibilityPoints:
   - {fileID: 4774140569347286}
@@ -860,6 +861,32 @@ MonoBehaviour:
   CoffeeObject: {fileID: 5914217675875363061}
   WineObject: {fileID: 5914217675795814210}
   isFilled: 0
+--- !u!114 &2993343217582489140
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1406175245073764}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d106cf009583a40e4a85d860c9830f67, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  MaterialSwapObjects:
+  - MyObject: {fileID: 1416896005244286}
+    OnMaterials:
+    - {fileID: 2100000, guid: b8cd8687f585e504a9b9bb3896da1eeb, type: 2}
+    - {fileID: 2100000, guid: 2476099d2e25d9a4b8b617fd333a2927, type: 2}
+    OffMaterials:
+    - {fileID: 2100000, guid: b8cd8687f585e504a9b9bb3896da1eeb, type: 2}
+    - {fileID: 2100000, guid: d82be727d6eba844b9cd84201d7d963c, type: 2}
+  - MyObject: {fileID: 0}
+    OnMaterials: []
+    OffMaterials: []
+  ObjectsToEnableIfClean: []
+  ObjectsToEnableIfDirty: []
+  isDirty: 0
 --- !u!1 &1416896005244286
 GameObject:
   m_ObjectHideFlags: 0
@@ -918,6 +945,7 @@ MeshRenderer:
   m_RendererPriority: 0
   m_Materials:
   - {fileID: 2100000, guid: b8cd8687f585e504a9b9bb3896da1eeb, type: 2}
+  - {fileID: 2100000, guid: d82be727d6eba844b9cd84201d7d963c, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -1723,7 +1751,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   CurrentlyContains: []
-  myParent: {fileID: 0}
+  myParent: {fileID: 1406175245073764}
   occupied: 0
 --- !u!1001 &2993343217761855575
 PrefabInstance:
