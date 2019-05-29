@@ -875,7 +875,7 @@ GameObject:
   - component: {fileID: 1009506673}
   - component: {fileID: 3436766309563883787}
   m_Layer: 8
-  m_Name: coffee_machine_28
+  m_Name: Coffee_Machine_28
   m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -889,7 +889,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1757107285986872}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -2.514, y: 0.9303702, z: -3.798}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 4127429562086630}
@@ -934,7 +934,6 @@ MonoBehaviour:
   - {fileID: 1136667035783272}
   isVisible: 0
   isInteractable: 0
-  isColliding: 0
   isInAgentHand: 0
   MyColliders: []
   HFdynamicfriction: 0
@@ -942,6 +941,8 @@ MonoBehaviour:
   HFbounciness: 0
   HFrbdrag: 0
   HFrbangulardrag: 0
+  CurrentTemperature: 0
+  HowManySecondsUntilRoomTemp: 10
   ContainedObjectReferences: []
 --- !u!54 &54542070046863630
 Rigidbody:
@@ -1011,7 +1012,8 @@ MonoBehaviour:
   animationTime: 0.05
   isOn: 0
   movementType: 0
-  MustBeClosedToTurnOn: 10000000
+  SelfControlled: 1
+  ControlledSimObjects: []
 --- !u!114 &3436766309563883787
 MonoBehaviour:
   m_ObjectHideFlags: 0
