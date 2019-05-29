@@ -292,6 +292,7 @@ MeshRenderer:
   m_RendererPriority: 0
   m_Materials:
   - {fileID: 2100000, guid: 627289a18fe89c04888395587a47cf3e, type: 2}
+  - {fileID: 2100000, guid: d82be727d6eba844b9cd84201d7d963c, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -897,6 +898,7 @@ GameObject:
   - component: {fileID: 114093382162119936}
   - component: {fileID: 54592423794234378}
   - component: {fileID: 1633431546483003}
+  - component: {fileID: 2963382970401868471}
   m_Layer: 8
   m_Name: Cup_2
   m_TagString: SimObjPhysics
@@ -939,10 +941,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b439f6e4ef5714ee2a3643acf37b7a9d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  uniqueID: Cup|+00.90|+01.67|-01.61
+  uniqueID: Cup|+01.00|+00.00|+02.00
   Type: 34
   PrimaryProperty: 3
-  SecondaryProperties: 0700000005000000
+  SecondaryProperties: 070000000500000004000000
   BoundingBox: {fileID: 1306059149894488}
   VisibilityPoints:
   - {fileID: 4726570145713638}
@@ -1011,6 +1013,32 @@ MonoBehaviour:
   CoffeeObject: {fileID: 5961065461934550976}
   WineObject: {fileID: 5961065462457840375}
   isFilled: 0
+--- !u!114 &2963382970401868471
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1633431546483002}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d106cf009583a40e4a85d860c9830f67, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  MaterialSwapObjects:
+  - MyObject: {fileID: 1205560180766772}
+    OnMaterials:
+    - {fileID: 2100000, guid: 627289a18fe89c04888395587a47cf3e, type: 2}
+    - {fileID: 2100000, guid: 841fc21d30431d140ac8a21c846852a0, type: 2}
+    OffMaterials:
+    - {fileID: 2100000, guid: 627289a18fe89c04888395587a47cf3e, type: 2}
+    - {fileID: 2100000, guid: d82be727d6eba844b9cd84201d7d963c, type: 2}
+  - MyObject: {fileID: 0}
+    OnMaterials: []
+    OffMaterials: []
+  ObjectsToEnableIfClean: []
+  ObjectsToEnableIfDirty: []
+  isDirty: 0
 --- !u!1 &1646368321570268
 GameObject:
   m_ObjectHideFlags: 0
@@ -1723,7 +1751,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   CurrentlyContains: []
-  myParent: {fileID: 0}
+  myParent: {fileID: 1633431546483002}
   occupied: 0
 --- !u!1001 &2963382969251860008
 PrefabInstance:

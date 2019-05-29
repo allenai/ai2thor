@@ -100,6 +100,7 @@ GameObject:
   - component: {fileID: 114283571247288474}
   - component: {fileID: 54645405175501758}
   - component: {fileID: 1073484225571253}
+  - component: {fileID: 2072930573171539205}
   m_Layer: 8
   m_Name: Cup_28
   m_TagString: SimObjPhysics
@@ -142,10 +143,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b439f6e4ef5714ee2a3643acf37b7a9d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  uniqueID: Cup|+28.00|+28.00|+28.00
+  uniqueID: Cup|+03.00|+00.00|+08.00
   Type: 34
   PrimaryProperty: 3
-  SecondaryProperties: 0700000005000000
+  SecondaryProperties: 070000000500000004000000
   BoundingBox: {fileID: 1705290547875216}
   VisibilityPoints:
   - {fileID: 4570304977420954}
@@ -230,6 +231,32 @@ MonoBehaviour:
   CoffeeObject: {fileID: 7448249235172847685}
   WineObject: {fileID: 7448249236988121216}
   isFilled: 0
+--- !u!114 &2072930573171539205
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1073484225571252}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d106cf009583a40e4a85d860c9830f67, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  MaterialSwapObjects:
+  - MyObject: {fileID: 1363419832373260}
+    OnMaterials:
+    - {fileID: 2100000, guid: 627289a18fe89c04888395587a47cf3e, type: 2}
+    - {fileID: 2100000, guid: 2476099d2e25d9a4b8b617fd333a2927, type: 2}
+    OffMaterials:
+    - {fileID: 2100000, guid: 627289a18fe89c04888395587a47cf3e, type: 2}
+    - {fileID: 2100000, guid: d82be727d6eba844b9cd84201d7d963c, type: 2}
+  - MyObject: {fileID: 0}
+    OnMaterials: []
+    OffMaterials: []
+  ObjectsToEnableIfClean: []
+  ObjectsToEnableIfDirty: []
+  isDirty: 0
 --- !u!1 &1081674861682260
 GameObject:
   m_ObjectHideFlags: 0
@@ -1258,6 +1285,7 @@ MeshRenderer:
   m_RendererPriority: 0
   m_Materials:
   - {fileID: 2100000, guid: 627289a18fe89c04888395587a47cf3e, type: 2}
+  - {fileID: 2100000, guid: d82be727d6eba844b9cd84201d7d963c, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -3179,7 +3207,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   CurrentlyContains: []
-  myParent: {fileID: 0}
+  myParent: {fileID: 1073484225571252}
   occupied: 0
 --- !u!1001 &2072930574090578846
 PrefabInstance:
@@ -3331,15 +3359,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: a8b5a2f14029aa948ae17c3f8a0850f8, type: 3}
---- !u!1 &7448249236880642534 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 8906422864710387171, guid: a8b5a2f14029aa948ae17c3f8a0850f8,
-    type: 3}
-  m_PrefabInstance: {fileID: 2072930574156338181}
-  m_PrefabAsset: {fileID: 0}
 --- !u!4 &7448249236881132934 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 8906422864710556035, guid: a8b5a2f14029aa948ae17c3f8a0850f8,
+    type: 3}
+  m_PrefabInstance: {fileID: 2072930574156338181}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1 &7448249236880642534 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 8906422864710387171, guid: a8b5a2f14029aa948ae17c3f8a0850f8,
     type: 3}
   m_PrefabInstance: {fileID: 2072930574156338181}
   m_PrefabAsset: {fileID: 0}
