@@ -146,8 +146,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return ItemInHand;
         }
 
-        //get all sim objets of action.type, then sets their temperature decay timers
-        public void SetRoomTempDecayTime(ServerAction action) {
+        //get all sim objets of action.type, then sets their temperature decay timers to value
+        public void SetRoomTempDecayTimeForType(ServerAction action) {
             //get all objects of type passed by action
             SimObjPhysics[] simObjects = GameObject.FindObjectsOfType<SimObjPhysics>();
 
@@ -166,6 +166,27 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 sop.SetHowManySecondsUntilRoomTemp(action.TimeUntilRoomTemp);
             }
 
+            actionFinished(true);
+        }
+
+        //get all sim objects and globally set the room temp decay time for all of them
+        public void SetGlobalRoomTempDecayTime(ServerAction action) {
+            //get all objects 
+            SimObjPhysics[] simObjects = GameObject.FindObjectsOfType<SimObjPhysics>();
+
+            //use SetHowManySecondsUntilRoomTemp to set them all
+            foreach (SimObjPhysics sop in simObjects)
+            {
+                sop.SetHowManySecondsUntilRoomTemp(action.TimeUntilRoomTemp);
+            }
+
+            actionFinished(true);
+        }
+
+        //sets whether this scene should allow objects to decay temperature to room temp over time or not
+        public void SetDecayTemperatureBool(ServerAction action)
+        {
+            physicsSceneManager.GetComponent<PhysicsSceneManager>().AllowDecayTemperature = action.allowDecayTemperature;
             actionFinished(true);
         }
 
@@ -226,6 +247,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return flat;
         }
 
+        //generates object metatada based on sim object's properties
         private ObjectMetadata ObjectMetadataFromSimObjPhysics(SimObjPhysics simObj, bool isVisible) {
             ObjectMetadata objMeta = new ObjectMetadata();
             GameObject o = simObj.gameObject;
@@ -265,6 +287,22 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 objMeta.isCooked = simObj.IsCooked;
             }
 
+            //if the sim object is moveable or pickupable
+            if(simObj.IsPickupable || simObj.IsMoveable)
+            {
+                //this object should report back mass and salient materials
+                objMeta.salientMaterials = simObj.salientMaterials;
+
+                //this object should also report back mass since it is moveable/pickupable
+                objMeta.mass = simObj.Mass;
+            }
+
+            //can this object change others to hot?
+            objMeta.canChangeTempToHot = simObj.canChangeTempToHot;
+
+            //can this object change others to cold?
+            objMeta.canChangeTempToCold = simObj.canChangeTempToCold;
+
             //placeholder for heatable objects -kettle, pot, pan
             // objMeta.abletocook = simObj.abletocook;
             // if(objMeta.abletocook) {
@@ -273,7 +311,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             objMeta.sliceable = simObj.IsSliceable;
             if (objMeta.sliceable) {
-                objMeta.issliced = simObj.IsSliced;
+                objMeta.isSliced = simObj.IsSliced;
             }
 
             objMeta.canBeUsedUp = simObj.CanBeUsedUp;
@@ -285,7 +323,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             objMeta.ObjectTemperature = simObj.CurrentObjTemp.ToString();
 
             objMeta.pickupable = simObj.PrimaryProperty == SimObjPrimaryProperty.CanPickup;//can this object be picked up?
-            objMeta.ispickedup = simObj.isPickedUp;//returns true for if this object is currently being held by the agent
+            objMeta.isPickedUp = simObj.isPickedUp;//returns true for if this object is currently being held by the agent
 
             objMeta.objectId = simObj.UniqueID;
 

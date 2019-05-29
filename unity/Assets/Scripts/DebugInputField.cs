@@ -1179,10 +1179,11 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         break;
                     }  
                 
-                case "SetTempTimer":
+                //changes the time spent to decay to room temperature for all objects in this scene of given type
+                case "DecayTimeForType":
                     {
                         ServerAction action = new ServerAction();
-                        action.action = "SetRoomTempDecayTime";
+                        action.action = "SetRoomTempDecayTimeForType";
 
                         action.TimeUntilRoomTemp = 20f;
                         action.objectType = "Bread";
@@ -1191,6 +1192,28 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         break;
                     }
                     
+                //changes the time spent to decay to room temperature for all objects globally in the scene
+                case "DecayTimeGlobal":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "SetGlobalRoomTempDecayTime";
+
+                        action.TimeUntilRoomTemp = 20f;
+                        PhysicsController.ProcessControlCommand(action);
+
+                        break;
+                    }
+                
+                case "SetTempDecayBool":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "SetDecayTemperatureBool";
+
+                        action.allowDecayTemperature = false;
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
                     //throw object by dropping it and applying force.
                     //default is with strength of 120, can pass in custom magnitude of throw force
                 case "throw":

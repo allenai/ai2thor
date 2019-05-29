@@ -638,16 +638,24 @@ public class ObjectMetadata
 	public enum Temperature { RoomTemp, Hot, Cold};
 	public string ObjectTemperature;//return current abstracted temperature of object as a string (RoomTemp, Hot, Cold)
 	//
+	public bool canChangeTempToHot;//can change other object temp to hot
+	public bool canChangeTempToCold;//can change other object temp to cool
+	//
 	public bool sliceable;//can this be sliced in some way?
-	public bool issliced;//currently sliced?
+	public bool isSliced;//currently sliced?
 	///
 	public bool openable;
 	public bool isopen;
 	///
 	public bool pickupable;
-	public bool ispickedup;//if the pickupable object is actively being held by the agent
-	///
+	public bool isPickedUp;//if the pickupable object is actively being held by the agent
 
+	public float mass;//mass is only for moveable and pickupable objects
+
+	public enum ObjectSalientMaterial {Metal, Wood, Plastic, Glass, Ceramic, Stone, Fabric, Rubber, Food, Paper, Wax, Soap, Sponge, Organic} //salient materials that make up an object (ie: cell phone - metal, glass)
+
+	public ObjectSalientMaterial [] salientMaterials; //salient materials that this object is made of. This is only for objects that are Pickupable or Moveable
+	///
 	public string[] receptacleObjectIds;
 	public PivotSimObj[] pivotSimObjs;
 	public float distance;
@@ -799,6 +807,8 @@ public class ServerAction
 	public string ssao = "default";
 	public string fillLiquid; //string to indicate what kind of liquid this object should be filled with. Water, Coffee, Wine etc.
 	public float TimeUntilRoomTemp;
+
+	public bool allowDecayTemperature = true; //set to true if temperature should decay over time, set to false if temp changes should not decay, defaulted true;
 	public SimObjType ReceptableSimObjType()
 	{
 		if (string.IsNullOrEmpty(receptacleObjectType))

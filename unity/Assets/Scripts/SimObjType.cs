@@ -50,8 +50,8 @@ public enum SimObjSecondaryProperty : int //EACH SimObjPhysics can have any numb
     CanBeSliced = 9,
     CanSlice = 10,
     CanBreak = 11,
-    CanBeFilledWithWater = 12,
-    CanFillWithWater = 13,
+    CanChangeTempToHot = 12,//this object can change temperature of other objects to hot
+    CanChangeTempToCold = 13,//this object can change temperature of other objects to cold
     CanBeHeatedCookware = 14,
     CanHeatCookware = 15,
     CanBeStoveTopCooked = 16,
