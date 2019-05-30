@@ -652,9 +652,10 @@ public class ObjectMetadata
 
 	public float mass;//mass is only for moveable and pickupable objects
 
+	//salient materials are only for pickupable and moveable objects, for now static only objects do not report material back since we have to assign them manually
 	public enum ObjectSalientMaterial {Metal, Wood, Plastic, Glass, Ceramic, Stone, Fabric, Rubber, Food, Paper, Wax, Soap, Sponge, Organic} //salient materials that make up an object (ie: cell phone - metal, glass)
 
-	public ObjectSalientMaterial [] salientMaterials; //salient materials that this object is made of. This is only for objects that are Pickupable or Moveable
+	public string [] salientMaterials; //salient materials that this object is made of as strings (see enum above). This is only for objects that are Pickupable or Moveable
 	///
 	public string[] receptacleObjectIds;
 	public PivotSimObj[] pivotSimObjs;
