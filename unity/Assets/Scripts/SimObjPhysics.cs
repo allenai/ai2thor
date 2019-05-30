@@ -716,7 +716,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		{
 			if(salientMaterials.Length == 0)
 			{
-				//Debug.LogError(this.name + " is missing Salient Materials array!");
+				Debug.LogError(this.name + " is missing Salient Materials array!");
 			}
 		}
 #endif

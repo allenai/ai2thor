@@ -1504,7 +1504,7 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1736439983}
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
@@ -1565,7 +1565,7 @@ MonoBehaviour:
   ReceptacleTriggerBoxes: []
   isVisible: 0
   isInteractable: 0
-  isColliding: 0
+  isInAgentHand: 0
   MyColliders:
   - {fileID: 1362944408}
   - {fileID: 1608664173}
@@ -1582,6 +1582,9 @@ MonoBehaviour:
   HFbounciness: 0
   HFrbdrag: 2
   HFrbangulardrag: 0.5
+  salientMaterials: 09000000
+  CurrentTemperature: 0
+  HowManySecondsUntilRoomTemp: 10
   ContainedObjectReferences: []
 --- !u!54 &1736439976
 Rigidbody:
@@ -1623,8 +1626,8 @@ MonoBehaviour:
   isOpen: 0
   canReset: 1
   movementType: 1
-  ClosedBoundingBox: {fileID: 8301350859261588313}
   OpenBoundingBox: {fileID: 135318600}
+  ClosedBoundingBox: {fileID: 8301350859261588313}
 --- !u!1 &1753633613
 GameObject:
   m_ObjectHideFlags: 0
