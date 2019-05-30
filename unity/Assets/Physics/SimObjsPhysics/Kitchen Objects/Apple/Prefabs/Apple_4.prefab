@@ -337,7 +337,7 @@ GameObject:
   - component: {fileID: 54455452380179312}
   - component: {fileID: 1969666178}
   m_Layer: 8
-  m_Name: Apple4
+  m_Name: Apple_4
   m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -389,7 +389,7 @@ MonoBehaviour:
   ReceptacleTriggerBoxes: []
   isVisible: 0
   isInteractable: 0
-  isColliding: 0
+  isInAgentHand: 0
   MyColliders:
   - {fileID: 136773528262572524}
   HFdynamicfriction: 0.6
@@ -397,6 +397,9 @@ MonoBehaviour:
   HFbounciness: 0.1
   HFrbdrag: 3
   HFrbangulardrag: 2
+  salientMaterials: 08000000
+  CurrentTemperature: 0
+  HowManySecondsUntilRoomTemp: 10
   ContainedObjectReferences: []
 --- !u!54 &54455452380179312
 Rigidbody:
@@ -428,6 +431,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ObjectToChangeTo: {fileID: 1127221740387788, guid: b5a447d9303f84dd8b0e9badc327001d,
     type: 3}
+  isSliced: 0
 --- !u!1 &1849494591068934
 GameObject:
   m_ObjectHideFlags: 0
