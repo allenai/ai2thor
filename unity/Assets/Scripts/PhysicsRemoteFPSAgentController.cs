@@ -291,7 +291,15 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             if(simObj.IsPickupable || simObj.IsMoveable)
             {
                 //this object should report back mass and salient materials
-                objMeta.salientMaterials = simObj.salientMaterials;
+
+                string [] salientMaterialsToString = new string [simObj.salientMaterials.Length];
+
+                for(int i = 0; i < simObj.salientMaterials.Length; i++)
+                {
+                    salientMaterialsToString[i] = simObj.salientMaterials[i].ToString();
+                }
+
+                objMeta.salientMaterials = salientMaterialsToString;
 
                 //this object should also report back mass since it is moveable/pickupable
                 objMeta.mass = simObj.Mass;
