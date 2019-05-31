@@ -65,6 +65,9 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 	private float RBoriginalDrag;
 	private float RBoriginalAngularDrag;
 
+	[Header("Salient Materials")] //if this object is moveable or pickupable, set these up
+	public ObjectMetadata.ObjectSalientMaterial[] salientMaterials;
+
 	private PhysicsMaterialValues[] OriginalPhysicsMaterialValuesForAllMyColliders = null;
 
 	public Dictionary<Collider, ContactPoint[]> contactPointsDictionary = new Dictionary<Collider, ContactPoint[]>();
@@ -78,6 +81,9 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 	//value for how long it should take this object to get back to room temperature from hot/cold
 	public float HowManySecondsUntilRoomTemp = 10f;
 	private float TimerResetValue;
+
+	private PhysicsSceneManager sceneManager;//reference to scene manager object
+
 	public float GetTimerResetValue()
 	{
 		return TimerResetValue;
@@ -200,11 +206,29 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		return false;
 	}
 
+	//return mass of object
+	public float Mass
+	{
+		get
+		{
+			return this.GetComponent<Rigidbody>().mass;
+		}
+	}
+
 	public bool IsPickupable
 	{
 		get
 		{
 			return this.PrimaryProperty == SimObjPrimaryProperty.CanPickup;
+		}
+	}
+
+	//moveable objects can be pushed/pulled or shoved if another object collides with enough force to move it
+	public bool IsMoveable
+	{
+		get
+		{
+			return this.PrimaryProperty == SimObjPrimaryProperty.Moveable;
 		}
 	}
 
@@ -287,14 +311,14 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 
 	public bool IsBreakable
 	{
-		get{ return this.GetComponent<Break>(); }
+		get{ return this.GetComponentInChildren<Break>(); }
 	}
 
 	public bool IsBroken
 	{
 		get
 		{
-			Break b = this.GetComponent<Break>();
+			Break b = this.GetComponentInChildren<Break>();
 			if(b != null)
 			{
 				return b.isBroken();
@@ -394,14 +418,14 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 	}
 
 	///these aren't in yet, just placeholder
-	public bool IsDepletable
+	public bool CanBeUsedUp
 	{
 		get
 		{
 			return false;
 		}
 	}
-	public bool IsDepleted
+	public bool IsUsedUp
 	{
 		get
 		{
@@ -416,6 +440,24 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		get
 		{
 			return CurrentTemperature;
+		}
+	}
+
+	//can this object change other object's temps to hot?
+	public bool canChangeTempToHot
+	{
+		get
+		{
+			return DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanChangeTempToHot);
+		}
+	}
+
+	//can this object change other object's temps to cold?
+	public bool canChangeTempToCold
+	{
+		get
+		{
+			return DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanChangeTempToCold);
 		}
 	}
 
@@ -476,14 +518,17 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 			GameObject agent = GameObject.Find("FPSController");
 			if(!agent.transform.GetComponent<PhysicsRemoteFPSAgentController>().WhatAmIHolding() == this.transform)
 			{
-				SimObjPhysics colsop = col.transform.GetComponentInParent<SimObjPhysics>();
-
-				if(colsop.PrimaryProperty == SimObjPrimaryProperty.CanPickup || colsop.PrimaryProperty == SimObjPrimaryProperty.Moveable)
+				//if this object is pickupable or moveable
+				if(PrimaryProperty == SimObjPrimaryProperty.CanPickup || PrimaryProperty == SimObjPrimaryProperty.Moveable)
 				{
-					Rigidbody rb = colsop.transform.GetComponent<Rigidbody>();
-					rb.isKinematic = false;
-					rb.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
-
+					//only do this if other object that hit this object is moving
+					if(col.impulse.magnitude > 0)
+					{
+						//print(col.transform.GetComponentInParent<SimObjPhysics>().transform.name);
+						Rigidbody rb = gameObject.transform.GetComponent<Rigidbody>();
+						rb.isKinematic = false;
+						rb.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
+					}
 				}
 			}
 
@@ -643,7 +688,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
     // Use this for initialization
     void Start()
 	{
-		//XXX For Debug setting up scene, comment out or delete when done settig up scenes
+		//For debug in editor only
 #if UNITY_EDITOR
 		List<SimObjSecondaryProperty> temp = new List<SimObjSecondaryProperty>(SecondaryProperties);
 		if (temp.Contains(SimObjSecondaryProperty.Receptacle))
@@ -666,6 +711,14 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		{
 			Debug.LogError(this.name + " is missing SimObjPhysics tag!");
 		}
+
+		if(IsPickupable || IsMoveable)
+		{
+			if(salientMaterials.Length == 0)
+			{
+				Debug.LogError(this.name + " is missing Salient Materials array!");
+			}
+		}
 #endif
 		//end debug setup stuff
 
@@ -683,6 +736,8 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		RBoriginalDrag = rb.drag;
 
 		TimerResetValue = HowManySecondsUntilRoomTemp;
+
+		sceneManager = GameObject.Find("PhysicsSceneManager").GetComponent<PhysicsSceneManager>();
 	}
 
 	public bool DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty prop)
@@ -702,19 +757,21 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 	{
 		isInteractable = false;
 
-		//if this object is either hot or col, begin a timer that counts until the object becomes room temperature again
-		if(CurrentTemperature != ObjectMetadata.Temperature.RoomTemp && StartRoomTempTimer == true)
+		if(sceneManager.AllowDecayTemperature)//only do this if the scene is initialized to use Temperature decay over time
 		{
-			HowManySecondsUntilRoomTemp -= Time.deltaTime;
-			if(HowManySecondsUntilRoomTemp < 0)
+			//if this object is either hot or col, begin a timer that counts until the object becomes room temperature again
+			if(CurrentTemperature != ObjectMetadata.Temperature.RoomTemp && StartRoomTempTimer == true)
 			{
-				CurrentTemperature = ObjectMetadata.Temperature.RoomTemp;
-				HowManySecondsUntilRoomTemp = TimerResetValue;
+				HowManySecondsUntilRoomTemp -= Time.deltaTime;
+				if(HowManySecondsUntilRoomTemp < 0)
+				{
+					CurrentTemperature = ObjectMetadata.Temperature.RoomTemp;
+					HowManySecondsUntilRoomTemp = TimerResetValue;
+				}
 			}
+			//if this isn't reset by a HeatZone/ColdZone
+			StartRoomTempTimer = true;
 		}
-
-		//if this isn't reset by a HeatZone/ColdZone
-		StartRoomTempTimer = true;
 	}
 
 	private void FixedUpdate()

@@ -210,7 +210,7 @@ GameObject:
   - component: {fileID: 33768955641772134}
   - component: {fileID: 23751949877216580}
   m_Layer: 0
-  m_Name: ScreenMesh
+  m_Name: lid_mesh
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -260,6 +260,7 @@ MeshRenderer:
   - {fileID: 2100000, guid: a271800b374dc1d4bab67d15f9e72ff6, type: 2}
   - {fileID: 2100000, guid: f69edd8d411dd3b4382fc4ef452812ff, type: 2}
   - {fileID: 2100000, guid: 8a78a5346c420af4998a4324b186302b, type: 2}
+  - {fileID: 2100000, guid: f7d48f5dfa4f0b24cb78749c0145d074, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -469,7 +470,7 @@ GameObject:
   - component: {fileID: 33122349256250852}
   - component: {fileID: 23154209300462286}
   m_Layer: 0
-  m_Name: KeyboardMesh
+  m_Name: main_mesh
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -519,6 +520,7 @@ MeshRenderer:
   - {fileID: 2100000, guid: a271800b374dc1d4bab67d15f9e72ff6, type: 2}
   - {fileID: 2100000, guid: f69edd8d411dd3b4382fc4ef452812ff, type: 2}
   - {fileID: 2100000, guid: 8a78a5346c420af4998a4324b186302b, type: 2}
+  - {fileID: 2100000, guid: f7d48f5dfa4f0b24cb78749c0145d074, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -657,6 +659,7 @@ GameObject:
   - component: {fileID: 54470680932264828}
   - component: {fileID: 114566530335467430}
   - component: {fileID: 114447987672097200}
+  - component: {fileID: 7817350446477151246}
   m_Layer: 8
   m_Name: Laptop_2
   m_TagString: SimObjPhysics
@@ -699,7 +702,7 @@ MonoBehaviour:
   uniqueID: Laptop|+03.94|-00.34|+07.28
   Type: 50
   PrimaryProperty: 3
-  SecondaryProperties: 080000001d000000
+  SecondaryProperties: 080000001d0000000b000000
   BoundingBox: {fileID: 1558094919198438}
   VisibilityPoints:
   - {fileID: 4852620860272038}
@@ -713,7 +716,6 @@ MonoBehaviour:
   ReceptacleTriggerBoxes: []
   isVisible: 0
   isInteractable: 0
-  isColliding: 0
   isInAgentHand: 0
   MyColliders:
   - {fileID: 65664843418008724}
@@ -723,6 +725,9 @@ MonoBehaviour:
   HFbounciness: 0
   HFrbdrag: 0
   HFrbangulardrag: 0
+  salientMaterials: 000000000200000003000000
+  CurrentTemperature: 0
+  HowManySecondsUntilRoomTemp: 10
   ContainedObjectReferences: []
 --- !u!54 &54470680932264828
 Rigidbody:
@@ -787,19 +792,49 @@ MonoBehaviour:
     - {fileID: 2100000, guid: a271800b374dc1d4bab67d15f9e72ff6, type: 2}
     - {fileID: 2100000, guid: 0be3ce90e480e4d18b7d658bf845520e, type: 2}
     - {fileID: 2100000, guid: 8a78a5346c420af4998a4324b186302b, type: 2}
+    - {fileID: 2100000, guid: f7d48f5dfa4f0b24cb78749c0145d074, type: 2}
     OffMaterials:
     - {fileID: 2100000, guid: e82c99a59dfc0d94b953315de7f11d83, type: 2}
     - {fileID: 2100000, guid: 5c34aef094f05c04e8fa471d33208898, type: 2}
     - {fileID: 2100000, guid: a271800b374dc1d4bab67d15f9e72ff6, type: 2}
     - {fileID: 2100000, guid: f69edd8d411dd3b4382fc4ef452812ff, type: 2}
     - {fileID: 2100000, guid: 8a78a5346c420af4998a4324b186302b, type: 2}
+    - {fileID: 2100000, guid: f7d48f5dfa4f0b24cb78749c0145d074, type: 2}
   LightSources: []
   OnPositions: []
   OffPositions: []
   animationTime: 0.05
   isOn: 0
   movementType: 0
-  MustBeClosedToTurnOn: 10000000
+  SelfControlled: 1
+  ControlledSimObjects: []
+--- !u!114 &7817350446477151246
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1877604634687152}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 02b2beb760fcd4a6f957400c276adb00, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  PrefabToSwapTo: {fileID: 0}
+  DirtyPrefabToSwapTo: {fileID: 0}
+  ImpulseThreshold: 3.6
+  HighFrictionImpulseOffset: 2
+  breakType: 1
+  MaterialSwapObjects:
+  - MyObject: {fileID: 1347983120919956}
+    OnMaterials:
+    - {fileID: 2100000, guid: e82c99a59dfc0d94b953315de7f11d83, type: 2}
+    - {fileID: 2100000, guid: 5c34aef094f05c04e8fa471d33208898, type: 2}
+    - {fileID: 2100000, guid: a271800b374dc1d4bab67d15f9e72ff6, type: 2}
+    - {fileID: 2100000, guid: f69edd8d411dd3b4382fc4ef452812ff, type: 2}
+    - {fileID: 2100000, guid: 8a78a5346c420af4998a4324b186302b, type: 2}
+    - {fileID: 2100000, guid: dc51388438a333d4cab095f2a99810f1, type: 2}
+    OffMaterials: []
 --- !u!1 &1901402226799624
 GameObject:
   m_ObjectHideFlags: 0

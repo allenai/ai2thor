@@ -254,7 +254,7 @@ MeshFilter:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1172423383640506}
-  m_Mesh: {fileID: 4300068, guid: e1952d4b47e6825449a6a90ec7110231, type: 3}
+  m_Mesh: {fileID: 4300128, guid: e1952d4b47e6825449a6a90ec7110231, type: 3}
 --- !u!23 &23091203350343848
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -391,6 +391,7 @@ GameObject:
   - component: {fileID: 4439813824711978}
   - component: {fileID: 114030789815031158}
   - component: {fileID: 54444053048469598}
+  - component: {fileID: 1003317607563695637}
   m_Layer: 8
   m_Name: Soap_Bottle_2
   m_TagString: SimObjPhysics
@@ -432,7 +433,7 @@ MonoBehaviour:
   uniqueID: 
   Type: 67
   PrimaryProperty: 3
-  SecondaryProperties: 
+  SecondaryProperties: 06000000
   BoundingBox: {fileID: 1908225307218524}
   VisibilityPoints:
   - {fileID: 4500856039661952}
@@ -451,7 +452,7 @@ MonoBehaviour:
   ReceptacleTriggerBoxes: []
   isVisible: 0
   isInteractable: 0
-  isColliding: 0
+  isInAgentHand: 0
   MyColliders:
   - {fileID: 65779828670236766}
   - {fileID: 65437390038802346}
@@ -469,6 +470,10 @@ MonoBehaviour:
   HFbounciness: 0
   HFrbdrag: 0.4
   HFrbangulardrag: 0
+  salientMaterials: 02000000
+  CurrentTemperature: 0
+  HowManySecondsUntilRoomTemp: 10
+  ContainedObjectReferences: []
 --- !u!54 &54444053048469598
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -485,6 +490,20 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
+--- !u!114 &1003317607563695637
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1199701509452014}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 82c2105f4dc674ce9835e05ace7e011b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  DisableThis: {fileID: 1172423383640506}
+  isUsedUp: 0
 --- !u!1 &1222230729704922
 GameObject:
   m_ObjectHideFlags: 0

@@ -806,7 +806,7 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1224566405962816}
-  m_LocalRotation: {x: -0, y: 0.7071068, z: -0, w: 0.7071068}
+  m_LocalRotation: {x: 0, y: 0.7071068, z: 0, w: 0.70710677}
   m_LocalPosition: {x: 1.01, y: -0.355, z: -5.14}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
@@ -820,7 +820,7 @@ Transform:
   - {fileID: 4126871592671465724}
   m_Father: {fileID: 0}
   m_RootOrder: 0
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 90.00001, z: 0}
 --- !u!54 &54216657701915226
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -852,7 +852,7 @@ MonoBehaviour:
   uniqueID: Fridge|+01.01|-00.36|-05.14
   Type: 18
   PrimaryProperty: 1
-  SecondaryProperties: 0700000008000000
+  SecondaryProperties: 07000000080000000d000000
   BoundingBox: {fileID: 1231460638992488}
   VisibilityPoints:
   - {fileID: 4034963762253918}
@@ -913,6 +913,7 @@ MonoBehaviour:
   HFbounciness: 0
   HFrbdrag: 0
   HFrbangulardrag: 0
+  salientMaterials: 
   CurrentTemperature: 0
   HowManySecondsUntilRoomTemp: 10
   ContainedObjectReferences: []
@@ -2820,8 +2821,18 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8330502568265666448, guid: ed15616270d4de14ca70042691c091f6,
         type: 3}
+      propertyPath: m_Size.x
+      value: 0.7547336
+      objectReference: {fileID: 0}
+    - target: {fileID: 8330502568265666448, guid: ed15616270d4de14ca70042691c091f6,
+        type: 3}
       propertyPath: m_Size.y
       value: 1.3963972
+      objectReference: {fileID: 0}
+    - target: {fileID: 8330502568265666448, guid: ed15616270d4de14ca70042691c091f6,
+        type: 3}
+      propertyPath: m_Size.z
+      value: 0.41458625
       objectReference: {fileID: 0}
     - target: {fileID: 8330502568265666448, guid: ed15616270d4de14ca70042691c091f6,
         type: 3}
@@ -2835,18 +2846,8 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8330502568265666448, guid: ed15616270d4de14ca70042691c091f6,
         type: 3}
-      propertyPath: m_Size.x
-      value: 0.7547336
-      objectReference: {fileID: 0}
-    - target: {fileID: 8330502568265666448, guid: ed15616270d4de14ca70042691c091f6,
-        type: 3}
       propertyPath: m_Center.z
       value: 0.01688443
-      objectReference: {fileID: 0}
-    - target: {fileID: 8330502568265666448, guid: ed15616270d4de14ca70042691c091f6,
-        type: 3}
-      propertyPath: m_Size.z
-      value: 0.41458625
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: ed15616270d4de14ca70042691c091f6, type: 3}

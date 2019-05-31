@@ -6,19 +6,11 @@ mergeInto(LibraryManager.library, {
         window.game_init();
     }
   },
-
-  AddEvent: function(str) {
-    var evtData = {
-      event: Pointer_stringify(str)
-    };
-    
-    if (!window.data || !window.data.thorEvents) {
-        window.data = {
-            thorEvents: []
-        }
+  
+  SendEvent: function(str) {
+    if (window.onUnityEvent && typeof window.onUnityEvent === "function") {
+        window.onUnityEvent(Pointer_stringify(str));
     }
-    window.data.thorEvents.push(evtData);
-    console.log("Event: ", evtData);
   },
 
 });
