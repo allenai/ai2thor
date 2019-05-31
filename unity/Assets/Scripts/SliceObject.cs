@@ -60,7 +60,11 @@ public class SliceObject : MonoBehaviour
     //action to be called from PhysicsRemoteFPSAgentController
     public void Slice()
     {
-        //Destroy(gameObject);
+        //if this is already sliced, we can't slice again so yeah stop that
+        if(isSliced == true)
+        {
+            return;
+        }
 
         //Disable this game object and spawn in the broken pieces
         Rigidbody rb = gameObject.GetComponent<Rigidbody>();
