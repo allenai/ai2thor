@@ -257,6 +257,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         // TODO unity has a bug for transparent objects they disappear when shader swapping, so we reset the previous shader's render queue value to render it appropiately.
                         mRenderer.material.renderQueue = this.previousRenderQueueValue;
                     }
+                    
+                   
             }
             
             if (newPreviousShader != null) {

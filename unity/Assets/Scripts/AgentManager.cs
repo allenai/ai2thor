@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -78,8 +78,7 @@ public class AgentManager : MonoBehaviour
 		initializePrimaryAgent();
         primaryAgent.actionDuration = this.actionDuration;
 		readyToEmit = true;
-
-
+		Debug.Log("Graphics Tier: " + Graphics.activeTier);
 		this.agents.Add (primaryAgent);
 	}
 

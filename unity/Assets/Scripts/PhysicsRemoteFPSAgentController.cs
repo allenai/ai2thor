@@ -2657,7 +2657,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         int rollForInitiative = UnityEngine.Random.Range(1, 20);
                         if(rollForInitiative > 10.5)
                         {
-                            sop.GetComponent<Break>().BreakObject();
+                            sop.GetComponentInChildren<Break>().BreakObject(null);
                         }
                     }
 
@@ -3736,7 +3736,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     //check if the object can be broken, if it is broken you can't turn it on!
                     if(target.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanBreak))
                     {
-                        if(target.GetComponent<Break>().isBroken())
+                        if(target.GetComponentInChildren<Break>().isBroken())
                         {
                             errorMessage = "Target is broken and can't be turned on!";
                             actionFinished(false);
@@ -6599,7 +6599,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         //ok now we are ready to break go go go
                     }
 
-                    target.GetComponent<Break>().BreakObject();
+                    target.GetComponentInChildren<Break>().BreakObject(null);
                     actionFinished(true);
                     return;
                 }
