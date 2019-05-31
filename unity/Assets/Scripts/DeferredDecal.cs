@@ -37,11 +37,6 @@ public class DeferredDecal : MonoBehaviour
             buffer.name = "Deferred Decals";
         }
         buffer.Clear();
-
-        // TODO review direct3d projection matrix format for Windows support
-        var MVP = GL.GetGPUProjectionMatrix(this.viewCamera.projectionMatrix, true) * this.viewCamera.worldToCameraMatrix * this.transform.localToWorldMatrix;
-        // Calculate once instead of in shader
-        Shader.SetGlobalMatrix("_inverseMVP", MVP.inverse);
         
         if (type == DecalType.EMISSIVE_SPECULAR) {
             // Diffuse + specular decals

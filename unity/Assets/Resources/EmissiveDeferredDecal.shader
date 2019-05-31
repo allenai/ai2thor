@@ -58,7 +58,6 @@ Shader "Custom/EmissiveDeferredDecal" {
            
             sampler2D _MainTex;
             sampler2D _CameraDepthTexture;
-            float4x4 _inverseMVP;
             half _Emissiveness;
             half _Specular;
  
