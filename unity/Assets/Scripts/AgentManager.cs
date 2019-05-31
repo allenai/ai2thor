@@ -78,7 +78,7 @@ public class AgentManager : MonoBehaviour
 		initializePrimaryAgent();
         primaryAgent.actionDuration = this.actionDuration;
 		readyToEmit = true;
-
+		Debug.Log("Graphics Tier: " + Graphics.activeTier);
 		this.agents.Add (primaryAgent);
 	}
 
