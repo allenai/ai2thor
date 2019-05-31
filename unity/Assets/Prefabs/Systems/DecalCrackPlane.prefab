@@ -11,10 +11,10 @@ GameObject:
   - component: {fileID: 1785001795}
   - component: {fileID: 1785001798}
   - component: {fileID: 1785001797}
-  - component: {fileID: 1785001799}
   - component: {fileID: 1785001800}
-  - component: {fileID: 1785001801}
   - component: {fileID: 1785001802}
+  - component: {fileID: 594712188159725901}
+  - component: {fileID: 365798941238383205}
   m_Layer: 8
   m_Name: DecalCrackPlane
   m_TagString: Untagged
@@ -81,18 +81,6 @@ MeshRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
---- !u!114 &1785001799
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1785001794}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7ac46e125fa10419f867ebdbebf274c7, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!65 &1785001800
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -106,29 +94,6 @@ BoxCollider:
   serializedVersion: 2
   m_Size: {x: 10.000002, y: 0.20586158, z: 10.000001}
   m_Center: {x: -2.1691388e-10, y: 0.0014902883, z: -0.0000019820225}
---- !u!114 &1785001801
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1785001794}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 80227e661360d4bfbbf64a132603a0b8, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  PrefabToSwapTo: {fileID: 0}
-  DirtyPrefabToSwapTo: {fileID: 0}
-  ImpulseThreshold: 3.6
-  HighFrictionImpulseOffset: 2
-  breakType: 0
-  MaterialSwapObjects: []
-  decals:
-  - {fileID: 1121847277, guid: 341df9c2e493e45a692952569e263a4f, type: 3}
-  nextDecalWaitTimeSeconds: 1
-  decalScale: {x: 0.2, y: 0.2, z: 0.2}
-  minimumImpulseMagnitudeForDecal: 10
 --- !u!54 &1785001802
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -145,3 +110,38 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
+--- !u!114 &594712188159725901
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1785001794}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f7d98477ae6de4449943b8453b5fab7c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  PrefabToSwapTo: {fileID: 0}
+  DirtyPrefabToSwapTo: {fileID: 0}
+  ImpulseThreshold: 3.6
+  HighFrictionImpulseOffset: 2
+  breakType: 0
+  MaterialSwapObjects: []
+  decals:
+  - {fileID: 1121847277, guid: 341df9c2e493e45a692952569e263a4f, type: 3}
+  nextDecalWaitTimeSeconds: 1
+  decalScale: {x: 0.3, y: 0.3, z: 0.2}
+  minimumImpulseMagnitudeForDecal: 10
+--- !u!114 &365798941238383205
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1785001794}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 786ba28818a6447da8508a37fdad85d0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
