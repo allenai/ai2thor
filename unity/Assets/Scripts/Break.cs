@@ -24,10 +24,13 @@ public class Break : MonoBehaviour
 
     //what does this object need to do when it is in the broken state? 
     //Some need a decal to show a cracked screen on the surface, others need a prefab swap to shattered pieces
-    protected enum BreakType {PrefabSwap, Decal};
+    protected enum BreakType {PrefabSwap, MaterialSwap, Decal};
 
     [SerializeField]
     protected BreakType breakType; //please select how this object should be broken here
+
+    [SerializeField]
+    protected SwapObjList[] MaterialSwapObjects;//swap screen/surface with cracked version
 
     //if these soft objects hit this breakable object, ignore the breakobject check because it's soft so yeah why would it break this object?
     private List<SimObjType> TooSmalOrSoftToBreakOtherObjects = new List<SimObjType>()
@@ -44,7 +47,7 @@ public class Break : MonoBehaviour
     void Start()
     {
         #if UNITY_EDITOR
-        if(!gameObject.GetComponent<SimObjPhysics>().DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanBreak))
+        if(!gameObject.GetComponentInParent<SimObjPhysics>().DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanBreak))
         {
             Debug.LogError(gameObject.name + " is missing the CanBreak secondary property!");
         }
@@ -65,8 +68,9 @@ public class Break : MonoBehaviour
 
     }
 
-    public void BreakObject()
+    public void BreakObject(Collision collision)
     {
+        //prefab swap will switch the entire object out with a new prefab object entirely
         if(breakType == BreakType.PrefabSwap)
         {
             //Disable this game object and spawn in the broken pieces
@@ -116,12 +120,38 @@ public class Break : MonoBehaviour
 
         }
 
-        if(breakType == BreakType.Decal)
+        //if decal type, do not switch out the object but instead swap materials to show cracked/broken parts
+        if(breakType == BreakType.MaterialSwap)
         {
             //decal logic here
+            if(MaterialSwapObjects.Length > 0)
+            {
+                for(int i = 0; i < MaterialSwapObjects.Length; i++)
+                {
+                    MaterialSwapObjects[i].MyObject.GetComponent<MeshRenderer>().materials = MaterialSwapObjects[i].OnMaterials;
+                }
+            }
+
+            //if the object can be toggled on/off, if it is on, turn it off since it is now broken
+            if(gameObject.GetComponent<CanToggleOnOff>())
+            {
+                gameObject.GetComponent<CanToggleOnOff>().isOn = false;
+            }
 
             broken = true;
         }
+
+        if(breakType == BreakType.Decal)
+        {
+            //move shattered decal to location of the collision, or if there was no collision and this is being called
+            //directly from the Break() action, create a default decal i guess?
+            BreakForDecalType(collision);
+        }
+
+    }
+
+    // Override for Decal behavior
+    protected virtual void BreakForDecalType(Collision collision) {
 
     }
 
@@ -148,14 +178,14 @@ public class Break : MonoBehaviour
             if(readytobreak)
             {
                 readytobreak = false;
-                BreakObject();
+                BreakObject(col);
             }
         }
     }
 
     //change the ImpulseThreshold to higher if we are in a high friction zone, to simulate throwing an object at a "soft" object requiring
     //more force to break - ie: dropping mug on floor vs on a rug
-    public void OnTriggerStay(Collider other)
+    public void OnTriggerEnter(Collider other)
     {
         if(other.CompareTag("HighFriction"))
         {

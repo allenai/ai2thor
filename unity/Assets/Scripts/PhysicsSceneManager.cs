@@ -23,6 +23,8 @@ public class PhysicsSceneManager : MonoBehaviour
 
 	public GameObject HideAndSeek;
 
+	public bool AllowDecayTemperature = true;//if true, temperature of sim objects decays to Room Temp over time
+
     //public List<SimObjPhysics> LookAtThisList = new List<SimObjPhysics>();
 
 	private bool m_Started = false;
@@ -409,8 +411,11 @@ public class PhysicsSceneManager : MonoBehaviour
 										go.transform.position = osr.attachPoint.position;
 										go.transform.SetParent(osr.attachPoint.transform);
 										go.transform.localRotation = Quaternion.identity;
-										go.GetComponent<Rigidbody>().isKinematic = true;
 
+										Rigidbody rb = go.GetComponent<Rigidbody>();
+										rb.collisionDetectionMode = CollisionDetectionMode.Discrete;
+										rb.isKinematic = true;
+							
 										HowManyCouldntSpawn--;
 										spawned = true;
 										break;

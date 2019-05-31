@@ -11,6 +11,8 @@ GameObject:
   - component: {fileID: 400000}
   - component: {fileID: 14300000}
   - component: {fileID: 5400000}
+  - component: {fileID: 2007744055320053985}
+  - component: {fileID: 3388362411129917294}
   - component: {fileID: 114000010621761404}
   - component: {fileID: 114749714472260818}
   - component: {fileID: 114372750333748660}
@@ -72,6 +74,35 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 36
   m_CollisionDetection: 0
+--- !u!114 &2007744055320053985
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 100000}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 204095267115c4e5e881afdd16303d91, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  HandMoveMagnitude: 0.1
+  PhysicsController: {fileID: 0}
+--- !u!114 &3388362411129917294
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 100000}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c62b2af4d65ac45f4bff0484beb171f0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  InputFieldObj: {fileID: 0}
+  PhysicsController: {fileID: 0}
+  InputMode_Text: {fileID: 0}
 --- !u!114 &114000010621761404
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -99,15 +130,12 @@ MonoBehaviour:
     lockCursor: 0
   Debug_Canvas: {fileID: 0}
   InputMode_Text: {fileID: 0}
-  TargetText: {fileID: 0}
-  ThrowForceBarSlider: {fileID: 0}
+  MaxViewDistance: 5
   MaxChargeThrowSeconds: 1.4
   MaxThrowForce: 1000
-  DisplayTargetText: 1
   FlightMode: 0
-  TextInputMode: 1
+  FPSEnabled: 1
   InputFieldObj: {fileID: 0}
-  CrosshairText: {fileID: 0}
 --- !u!114 &114749714472260818
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -130,6 +158,7 @@ MonoBehaviour:
   m_Camera: {fileID: 0}
   m_CharacterController: {fileID: 0}
   actionComplete: 0
+  maxVisibleDistance: 1.5
   actionDuration: 3
   ToSetActive:
   - {fileID: 1340499340313870}
@@ -239,6 +268,7 @@ GameObject:
   - component: {fileID: 2000000}
   - component: {fileID: 8100000}
   - component: {fileID: 12474086}
+  - component: {fileID: 6767686627676241163}
   - component: {fileID: 114317082596199212}
   - component: {fileID: 114176532703538896}
   - component: {fileID: 114785506931627080}
@@ -291,7 +321,7 @@ Camera:
     width: 1
     height: 1
   near clip plane: 0.1
-  far clip plane: 1000
+  far clip plane: 20
   field of view: 60
   orthographic: 0
   orthographic size: 5
@@ -299,7 +329,7 @@ Camera:
   m_CullingMask:
     serializedVersion: 2
     m_Bits: 4294967295
-  m_RenderingPath: -1
+  m_RenderingPath: 3
   m_TargetTexture: {fileID: 0}
   m_TargetDisplay: 0
   m_TargetEye: 3
@@ -326,6 +356,18 @@ Behaviour:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 100002}
   m_Enabled: 1
+--- !u!114 &6767686627676241163
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 100002}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 000c072b8316c4bb7ba6b452cf71b300, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!114 &114317082596199212
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -378,12 +420,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b0923359e9e352a4b9b11c7b7161ad67, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_Radius: 0.1
-  m_SampleCount: 0
-  m_OcclusionIntensity: 0.6
-  m_Blur: 4
-  m_Downsampling: 1
-  m_OcclusionAttenuation: 0.2
+  m_Radius: 0.4
+  m_SampleCount: 1
+  m_OcclusionIntensity: 1.5
+  m_Blur: 2
+  m_Downsampling: 2
+  m_OcclusionAttenuation: 1
   m_MinZ: 0.01
   m_SSAOShader: {fileID: 4800000, guid: 43ca18288c424f645aaa1e9e07f04c50, type: 3}
   m_RandomTexture: {fileID: 2800000, guid: a181ca8e3c62f3e4b8f183f6c586b032, type: 3}

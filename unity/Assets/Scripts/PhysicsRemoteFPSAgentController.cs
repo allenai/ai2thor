@@ -148,8 +148,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return ItemInHand;
         }
 
-        //get all sim objets of action.type, then sets their temperature decay timers
-        public void SetRoomTempDecayTime(ServerAction action) {
+        //get all sim objets of action.type, then sets their temperature decay timers to value
+        public void SetRoomTempDecayTimeForType(ServerAction action) {
             //get all objects of type passed by action
             SimObjPhysics[] simObjects = GameObject.FindObjectsOfType<SimObjPhysics>();
 
@@ -171,6 +171,27 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true);
         }
 
+        //get all sim objects and globally set the room temp decay time for all of them
+        public void SetGlobalRoomTempDecayTime(ServerAction action) {
+            //get all objects 
+            SimObjPhysics[] simObjects = GameObject.FindObjectsOfType<SimObjPhysics>();
+
+            //use SetHowManySecondsUntilRoomTemp to set them all
+            foreach (SimObjPhysics sop in simObjects)
+            {
+                sop.SetHowManySecondsUntilRoomTemp(action.TimeUntilRoomTemp);
+            }
+
+            actionFinished(true);
+        }
+
+        //sets whether this scene should allow objects to decay temperature to room temp over time or not
+        public void SetDecayTemperatureBool(ServerAction action)
+        {
+            physicsSceneManager.GetComponent<PhysicsSceneManager>().AllowDecayTemperature = action.allowDecayTemperature;
+            actionFinished(true);
+        }
+
         // Update is called once per frame
         void Update() {
             if (FlightMode) {
@@ -180,10 +201,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                 thrust = Vector3.Lerp(thrust, Vector3.zero, 5 * Time.deltaTime);
             }
-        }
-
-        public override void PreprocessControlCommand(ServerAction action) {
-            VisibleSimObjPhysics = VisibleSimObjs(action);
         }
 
         private void LateUpdate() {
@@ -232,6 +249,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return flat;
         }
 
+        //generates object metatada based on sim object's properties
         private ObjectMetadata ObjectMetadataFromSimObjPhysics(SimObjPhysics simObj, bool isVisible) {
             ObjectMetadata objMeta = new ObjectMetadata();
             GameObject o = simObj.gameObject;
@@ -248,28 +266,52 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             objMeta.toggleable = simObj.IsToggleable;
             if (objMeta.toggleable) {
-                objMeta.istoggled = simObj.IsToggled;
+                objMeta.isToggled = simObj.IsToggled;
             }
 
             objMeta.breakable = simObj.IsBreakable;
             if(objMeta.breakable) {
-                objMeta.isbroken = simObj.IsBroken;
+                objMeta.isBroken = simObj.IsBroken;
             }
 
-            objMeta.fillable = simObj.IsFillable;
-            if (objMeta.fillable) {
-                objMeta.isfilled = simObj.IsFilled;
+            objMeta.canFillWithLiquid = simObj.IsFillable;
+            if (objMeta.canFillWithLiquid) {
+                objMeta.isFilledWithLiquid = simObj.IsFilled;
             }
 
             objMeta.dirtyable = simObj.IsDirtyable;
             if (objMeta.dirtyable) {
-                objMeta.isdirty = simObj.IsDirty;
+                objMeta.isDirty = simObj.IsDirty;
             }
 
             objMeta.cookable = simObj.IsCookable;
             if (objMeta.cookable) {
-                objMeta.iscooked = simObj.IsCooked;
+                objMeta.isCooked = simObj.IsCooked;
             }
+
+            //if the sim object is moveable or pickupable
+            if(simObj.IsPickupable || simObj.IsMoveable)
+            {
+                //this object should report back mass and salient materials
+
+                string [] salientMaterialsToString = new string [simObj.salientMaterials.Length];
+
+                for(int i = 0; i < simObj.salientMaterials.Length; i++)
+                {
+                    salientMaterialsToString[i] = simObj.salientMaterials[i].ToString();
+                }
+
+                objMeta.salientMaterials = salientMaterialsToString;
+
+                //this object should also report back mass since it is moveable/pickupable
+                objMeta.mass = simObj.Mass;
+            }
+
+            //can this object change others to hot?
+            objMeta.canChangeTempToHot = simObj.canChangeTempToHot;
+
+            //can this object change others to cold?
+            objMeta.canChangeTempToCold = simObj.canChangeTempToCold;
 
             //placeholder for heatable objects -kettle, pot, pan
             // objMeta.abletocook = simObj.abletocook;
@@ -279,20 +321,19 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             objMeta.sliceable = simObj.IsSliceable;
             if (objMeta.sliceable) {
-                objMeta.issliced = simObj.IsSliced;
+                objMeta.isSliced = simObj.IsSliced;
             }
 
-            //placeholder for depleted objects here
-            objMeta.depletable = simObj.IsDepletable;
-            if (objMeta.depletable) {
-                objMeta.isdepleted = simObj.IsDepleted;
+            objMeta.canBeUsedUp = simObj.CanBeUsedUp;
+            if (objMeta.canBeUsedUp) {
+                objMeta.isUsedUp = simObj.IsUsedUp;
             }
 
             //object temperature to string
             objMeta.ObjectTemperature = simObj.CurrentObjTemp.ToString();
 
             objMeta.pickupable = simObj.PrimaryProperty == SimObjPrimaryProperty.CanPickup;//can this object be picked up?
-            objMeta.ispickedup = simObj.isPickedUp;//returns true for if this object is currently being held by the agent
+            objMeta.isPickedUp = simObj.isPickedUp;//returns true for if this object is currently being held by the agent
 
             objMeta.objectId = simObj.UniqueID;
 
@@ -505,16 +546,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return objectID;
         }
 
-        public SimObjPhysics ClosestObject(Func<SimObjPhysics, bool> filter = null) {
-            SimObjPhysics obj = null;
-            foreach (SimObjPhysics o in VisibleSimObjPhysics) {
-                if (filter != null && filter(o)) {
-                    obj = o;
-                    break;
-                }
-            }
-            return obj;
-        }
 
         //return a reference to a SimObj that is Visible (in the VisibleSimObjPhysics array) and
         //matches the passe din objectID
@@ -2506,6 +2537,181 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
 
+        //use a seed value to randomly change the starting state of sim objects in scene that have state changes
+        //USE THIS AFTER INITIALIZING THE SCENE FIRST
+        //NOTE: SOME OF THESE STATE CHANGES ARE DESTRUCTIVE AND CANNOT BE REVERSED WITHOUT A SCENE RESET
+        public void RandomToggleStateOfAllObjects(ServerAction action)
+        {
+            RandomToggleState(action.randomSeed, SimObjSecondaryProperty.CanOpen);
+            RandomToggleState(action.randomSeed, SimObjSecondaryProperty.CanToggleOnOff);
+            RandomToggleState(action.randomSeed, SimObjSecondaryProperty.CanBeFilled);
+            RandomToggleState(action.randomSeed, SimObjSecondaryProperty.CanBeSliced);
+            RandomToggleState(action.randomSeed, SimObjSecondaryProperty.CanBeCooked);
+            RandomToggleState(action.randomSeed, SimObjSecondaryProperty.CanBreak);
+            RandomToggleState(action.randomSeed, SimObjSecondaryProperty.CanBeDirty);
+            RandomToggleState(action.randomSeed, SimObjSecondaryProperty.CanBeUsedUp);
+
+            actionFinished(true);
+        }
+
+        //random toggle the state of all objects with a specified State
+        public void RandomToggleSpecificState(ServerAction action)
+        {
+            if(action.StateChange == null)
+            {
+                errorMessage = "Missing State parameter. Please use valid State";
+                actionFinished(false);
+            }
+
+            //action.StateChange == 
+            SimObjSecondaryProperty state = (SimObjSecondaryProperty)System.Enum.Parse
+            (typeof(SimObjSecondaryProperty), action.StateChange);
+
+            //if the state is not defined in the SimObjSecondaryProperty enum... false finish
+            if(!SimObjSecondaryProperty.IsDefined(typeof(SimObjSecondaryProperty), state))
+            {
+                errorMessage = "State is not defined. Please check if state matches SimObjSecondaryProperty";
+                actionFinished(false);
+            }
+            
+            RandomToggleState(action.randomSeed, state);
+            actionFinished(true);
+        }
+
+        public void RandomToggleState(int seed, SimObjSecondaryProperty sosp)
+        {
+
+            UnityEngine.Random.InitState(seed);
+
+            SimObjPhysics[] simObjects = GameObject.FindObjectsOfType<SimObjPhysics>();
+            List<SimObjPhysics> simObjectsOfType = new List<SimObjPhysics>();
+
+            foreach (SimObjPhysics sop in simObjects)
+            {
+                if(sop.DoesThisObjectHaveThisSecondaryProperty(sosp))
+                {
+                    simObjectsOfType.Add(sop);
+                }
+            }
+
+            //switch for which kind of state change is going to be toggled?
+            switch(sosp)
+            {
+                case SimObjSecondaryProperty.CanOpen:
+                {
+                    foreach(SimObjPhysics sop in simObjectsOfType)
+                    {
+                        int rollForInitiative = UnityEngine.Random.Range(1, 20);
+                        if(rollForInitiative > 10.5)
+                        {
+                            sop.GetComponent<CanOpen_Object>().Interact();
+                        }
+                    }
+
+                    break;
+                }
+
+                case SimObjSecondaryProperty.CanToggleOnOff:
+                {
+                    foreach(SimObjPhysics sop in simObjectsOfType)
+                    {
+                        int rollForInitiative = UnityEngine.Random.Range(1, 20);
+                        if(rollForInitiative > 10.5)
+                        {
+                            sop.GetComponent<CanToggleOnOff>().Toggle();
+                        }
+                    }
+
+                    break;
+                }
+
+                case SimObjSecondaryProperty.CanBeFilled:
+                {
+                    foreach(SimObjPhysics sop in simObjectsOfType)
+                    {
+                        int rollForInitiative = UnityEngine.Random.Range(1, 20);
+                        if(rollForInitiative > 10.5)
+                        {
+                            sop.GetComponent<Fill>().FillObjectRandomLiquid();
+                        }
+                    }
+
+                    break;
+                }
+
+                case SimObjSecondaryProperty.CanBeSliced:
+                {
+                    foreach(SimObjPhysics sop in simObjectsOfType)
+                    {
+                        int rollForInitiative = UnityEngine.Random.Range(1, 20);
+                        if(rollForInitiative > 10.5)
+                        {
+                            sop.GetComponent<SliceObject>().Slice();
+                        }
+                    }
+
+                    break;
+                }
+
+                case SimObjSecondaryProperty.CanBeCooked:
+                {
+                    foreach(SimObjPhysics sop in simObjectsOfType)
+                    {
+                        int rollForInitiative = UnityEngine.Random.Range(1, 20);
+                        if(rollForInitiative > 10.5)
+                        {
+                            sop.GetComponent<CookObject>().Cook();
+                        }
+                    }
+
+                    break;
+                }
+
+                case SimObjSecondaryProperty.CanBreak:
+                {
+                    foreach(SimObjPhysics sop in simObjectsOfType)
+                    {
+                        int rollForInitiative = UnityEngine.Random.Range(1, 20);
+                        if(rollForInitiative > 10.5)
+                        {
+                            sop.GetComponentInChildren<Break>().BreakObject(null);
+                        }
+                    }
+
+                    break;
+                }
+
+                case SimObjSecondaryProperty.CanBeDirty:
+                {
+                    foreach(SimObjPhysics sop in simObjectsOfType)
+                    {
+                        int rollForInitiative = UnityEngine.Random.Range(1, 20);
+                        if(rollForInitiative > 10.5)
+                        {
+                            sop.GetComponent<Dirty>().ToggleCleanOrDirty();
+                        }
+                    }
+
+                    break;
+                }
+
+                case SimObjSecondaryProperty.CanBeUsedUp:
+                {
+                    foreach(SimObjPhysics sop in simObjectsOfType)
+                    {
+                        int rollForInitiative = UnityEngine.Random.Range(1, 20);
+                        if(rollForInitiative > 10.5)
+                        {
+                            sop.GetComponent<UsedUp>().UseUp();
+                        }
+                    }
+
+                    break;
+                }
+            }
+        }
+
+        //randomly repositions sim objects in the current scene
         public void InitialRandomSpawn(ServerAction action) {
             //something is in our hand AND we are trying to spawn it. Quick drop the object
             if (ItemInHand != null) {
@@ -2620,9 +2826,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     ItemInHand.transform.SetParent(osr.attachPoint.transform);
                     ItemInHand.transform.localRotation = Quaternion.identity;
                     ItemInHand.GetComponent<Rigidbody>().isKinematic = true;
-
+                    ItemInHand.GetComponent<SimObjPhysics>().isInAgentHand = false;//remove in agent hand flag
                     ItemInHand = null;
-
+                    DefaultAgentHand();
                     actionFinished(true);
                     return;
                 } else {
@@ -2683,6 +2889,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             //set degreeIncrement to 90 for placing held objects to check for vertical angles
             if (script.PlaceObjectReceptacle(targetReceptacle.ReturnMySpawnPoints(onlyPointsCloseToAgent), ItemInHand.GetComponent<SimObjPhysics>(), action.placeStationary, 100, 90, placeUpright)) {
                 ItemInHand = null;
+                DefaultAgentHand();
                 actionFinished(true);
             } else {
                 errorMessage = "No valid positions to place object found";
@@ -2744,7 +2951,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             Transform savedParent = target.transform.parent;
             bool wasKinematic = target.GetComponent<Rigidbody>().isKinematic;
 
-            //reset collision mode and set kinematic true since this is now being held
+            //object is being held, set kinematic true
             Rigidbody rb = target.GetComponent<Rigidbody>();
             rb.collisionDetectionMode = CollisionDetectionMode.Discrete;
             rb.isKinematic = true;
@@ -2811,11 +3018,29 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     //for every object that is contained by this object...
                     //turn off the colliders, leaving Trigger Colliders active (this is important to maintain visibility!)
                     sop.transform.Find("Colliders").gameObject.SetActive(true);
-                    sop.GetComponent<Rigidbody>().isKinematic = false;
+                    Rigidbody rb = sop.GetComponent<Rigidbody>();
+                    
+                    rb.isKinematic = false;
+                    rb.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
+
                     sop.isInAgentHand = false;//agent hand flag
                     sop.transform.SetParent(topObject.transform);
                 }
 
+                target.ClearContainedObjectReferences();
+            }
+        }
+
+        public void DropContainedObjectsStationary(SimObjPhysics target) {
+            if (target.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.Receptacle)) {
+
+                foreach (SimObjPhysics sop in target.ContainedObjectReferences) {
+                    //print(sop.name);
+                    //for every object that is contained by this object...
+                    //turn off the colliders, leaving Trigger Colliders active (this is important to maintain visibility!)
+                    sop.transform.Find("Colliders").gameObject.SetActive(true);
+                    sop.isInAgentHand = false;//agent hand flag
+                }
                 target.ClearContainedObjectReferences();
             }
         }
@@ -3520,6 +3745,17 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         }
                     }
 
+                    //check if the object can be broken, if it is broken you can't turn it on!
+                    if(target.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanBreak))
+                    {
+                        if(target.GetComponentInChildren<Break>().isBroken())
+                        {
+                            errorMessage = "Target is broken and can't be turned on!";
+                            actionFinished(false);
+                            return;
+                        }
+                    }
+
                     ctof.Toggle();
                     actionFinished(true);
                 }
@@ -3925,6 +4161,21 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             foreach (SimObjPhysics sop in GameObject.FindObjectsOfType<SimObjPhysics>()) {
                 if (sop.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanSeeThrough)) {
                     UpdateDisplayGameObject(sop.gameObject, false);
+                }
+            }
+            actionFinished(true);
+        }
+
+        //if you want to do something like throw objects to knock over other objects, use this action to set all objects to Kinematic false
+        //otherwise objects will need to be hit multiple times in order to ensure kinematic false toggle
+        //use this by initializing the scene, then calling randomize if desired, and then call this action to prepare the scene so all objects will react to others upon collision.
+        public void MakeAllPickupableObjectsMoveable(ServerAction action)
+        {
+            foreach (SimObjPhysics sop in GameObject.FindObjectsOfType<SimObjPhysics>()) {
+                if (sop.PrimaryProperty == SimObjPrimaryProperty.CanPickup) {
+                    Rigidbody rb = sop.GetComponent<Rigidbody>();
+                    rb.isKinematic = false;
+                    rb.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
                 }
             }
             actionFinished(true);
@@ -6488,7 +6739,24 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             {
                 if (target.GetComponent<SimObjPhysics>().DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanBreak)) 
                 {
-                    target.GetComponent<Break>().BreakObject();
+                    SimObjPhysics targetsop = target.GetComponent<SimObjPhysics>();
+                    //if the object is in the agent's hand, we need to reset the agent hand booleans and other cleanup as well
+                    if(targetsop.isInAgentHand)
+                    {                      
+                        //if the target is also a Receptacle, drop contained objects first
+                        if(targetsop.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.Receptacle))
+                        {
+                            //drop contained objects as well
+                            DropContainedObjects(targetsop);
+                        }
+
+                        targetsop.isInAgentHand = false;
+                        ItemInHand = null;
+                        DefaultAgentHand();
+                        //ok now we are ready to break go go go
+                    }
+
+                    target.GetComponentInChildren<Break>().BreakObject(null);
                     actionFinished(true);
                     return;
                 }
@@ -6657,11 +6925,30 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 {
                     Fill fil = target.GetComponent<Fill>();
 
+                    //if the passed in liquid string is not valid
+                    if(!fil.Liquids.ContainsKey(action.fillLiquid))
+                    {
+                        errorMessage = action.fillLiquid + " is not a valid Liquid Type";
+                        actionFinished(false);
+                        return;
+                    }
+
+                    //make sure object is empty
                     if(!fil.IsFilled())
                     {
-                        fil.FillObject(action.fillLiquid);
-                        actionFinished(true);
-                        return;
+                        if(fil.FillObject(action.fillLiquid))
+                        {
+                            actionFinished(true);
+                            return;
+                        }
+
+                        else
+                        {
+                            actionFinished(false);
+                            errorMessage = target.transform.name + " cannot be filled with " + action.fillLiquid;
+                            return;
+                        }
+
                     }
 
                     else
@@ -6719,6 +7006,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     {
                         fil.EmptyObject();
                         actionFinished(true);
+                        return;
                     }
 
                     else
@@ -6744,7 +7032,67 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
 
+        //use up the contents of this object (toilet paper, paper towel, tissue box, etc).
+        public void UseUpObject(ServerAction action)
+        {
+            //pass name of object in from action.objectId
+            if (action.objectId == null) 
+            {
+                Debug.Log("Hey, actually give me an object ID to open, yeah?");
+                errorMessage = "objectId required for UseUpObject action";
+                actionFinished(false);
+                return;
+            }
 
+            SimObjPhysics target = null;
+
+            if (action.forceAction) 
+            {
+                action.forceVisible = true;
+            }
+
+            foreach (SimObjPhysics sop in VisibleSimObjs(action)) 
+            {
+                target = sop;
+            }
+
+            if(target)
+            {
+                if(target.GetComponent<SimObjPhysics>().DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanBeUsedUp))
+                {
+                    UsedUp u = target.GetComponent<UsedUp>();
+
+                    //make sure object is not already used up
+                    if(!u.isUsedUp)
+                    {
+                        u.UseUp();
+                        actionFinished(true);
+                        return;
+                    }
+
+                    else
+                    {
+                        errorMessage = "object already used up!";
+                        //Debug.Log(errorMessage);
+                        actionFinished(false);
+                        return;
+                    }
+                }
+
+                else 
+                {
+                    errorMessage = target.transform.name + " does not have CanBeUsedUp property!";
+                    actionFinished(false);
+                    return;
+                }
+            }
+
+            else
+            {
+                errorMessage = "object not found: " + action.objectId;
+                actionFinished(false);
+            }
+        }
         protected bool objectIsOfIntoType(SimObjPhysics so) {
             return so.ReceptacleTriggerBoxes != null &&
                 so.ReceptacleTriggerBoxes.Length != 0 &&

@@ -64,7 +64,7 @@ MonoBehaviour:
   ReceptacleTriggerBoxes: []
   isVisible: 0
   isInteractable: 0
-  isColliding: 0
+  isInAgentHand: 0
   MyColliders:
   - {fileID: 136019483671323026}
   HFdynamicfriction: 1.1
@@ -72,6 +72,9 @@ MonoBehaviour:
   HFbounciness: 0.1
   HFrbdrag: 0
   HFrbangulardrag: 0
+  salientMaterials: 0a000000
+  CurrentTemperature: 0
+  HowManySecondsUntilRoomTemp: 10
   ContainedObjectReferences: []
 --- !u!54 &54161469001384240
 Rigidbody:
@@ -110,7 +113,8 @@ MonoBehaviour:
   animationTime: 0.05
   isOn: 0
   movementType: 0
-  MustBeClosedToTurnOn: 10000000
+  SelfControlled: 1
+  ControlledSimObjects: []
 --- !u!1 &1141709824178406
 GameObject:
   m_ObjectHideFlags: 0
@@ -577,13 +581,13 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4292502821929421003, guid: ac97b3eb5e6234f81ac521f310825f3b,
         type: 3}
-      propertyPath: m_Size.y
-      value: 0.039311297
+      propertyPath: m_Size.x
+      value: 0.041342724
       objectReference: {fileID: 0}
     - target: {fileID: 4292502821929421003, guid: ac97b3eb5e6234f81ac521f310825f3b,
         type: 3}
-      propertyPath: m_Center.y
-      value: 6.2922425e-17
+      propertyPath: m_Size.y
+      value: 0.039311297
       objectReference: {fileID: 0}
     - target: {fileID: 4292502821929421003, guid: ac97b3eb5e6234f81ac521f310825f3b,
         type: 3}
@@ -592,13 +596,13 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4292502821929421003, guid: ac97b3eb5e6234f81ac521f310825f3b,
         type: 3}
-      propertyPath: m_Center.z
-      value: 0.015892737
+      propertyPath: m_Center.y
+      value: 6.2922425e-17
       objectReference: {fileID: 0}
     - target: {fileID: 4292502821929421003, guid: ac97b3eb5e6234f81ac521f310825f3b,
         type: 3}
-      propertyPath: m_Size.x
-      value: 0.041342724
+      propertyPath: m_Center.z
+      value: 0.015892737
       objectReference: {fileID: 0}
     - target: {fileID: 9013014045441380666, guid: ac97b3eb5e6234f81ac521f310825f3b,
         type: 3}
@@ -700,8 +704,7 @@ PrefabInstance:
       propertyPath: m_LocalScale.z
       value: 0.34795755
       objectReference: {fileID: 0}
-    m_RemovedComponents:
-    - {fileID: 5196137492604656395, guid: 45eb477277eaa4c0a82f50039894d693, type: 3}
+    m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 45eb477277eaa4c0a82f50039894d693, type: 3}
 --- !u!1 &8592149320673848127 stripped
 GameObject:

@@ -2023,13 +2023,13 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1663793418923470}
-  m_LocalRotation: {x: -0.7069834, y: -0, z: -0, w: 0.7072302}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 65.73433, y: 65.73395, z: 65.73395}
+  m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 4998734767817998}
   m_RootOrder: 0
-  m_LocalEulerAnglesHint: {x: -89.98, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!33 &33940521582078460
 MeshFilter:
   m_ObjectHideFlags: 0
@@ -2037,7 +2037,7 @@ MeshFilter:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1663793418923470}
-  m_Mesh: {fileID: 4300000, guid: 0d27a944d3d65412dbca56b811202cf0, type: 3}
+  m_Mesh: {fileID: 4300006, guid: c20dc19856e5dff42989602242c4d74f, type: 3}
 --- !u!23 &23061948893903910
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -2055,7 +2055,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 96e4a0b2095044990bf4b9f337d52ce2, type: 2}
+  - {fileID: 2100000, guid: b90bea018e469425b88877d0e29de350, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -3040,6 +3040,7 @@ GameObject:
   - component: {fileID: 4998734767817998}
   - component: {fileID: 114154374551867732}
   - component: {fileID: 54184264005590766}
+  - component: {fileID: 4390670009557717805}
   m_Layer: 8
   m_Name: Vase_Flat_4
   m_TagString: SimObjPhysics
@@ -3078,10 +3079,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b439f6e4ef5714ee2a3643acf37b7a9d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  uniqueID: 
+  uniqueID: Vase|+00.00|+00.00|+00.00
   Type: 121
   PrimaryProperty: 3
-  SecondaryProperties: 
+  SecondaryProperties: 0b000000
   BoundingBox: {fileID: 1135291264183424}
   VisibilityPoints:
   - {fileID: 4935149910808044}
@@ -3099,7 +3100,7 @@ MonoBehaviour:
   ReceptacleTriggerBoxes: []
   isVisible: 0
   isInteractable: 0
-  isColliding: 0
+  isInAgentHand: 0
   MyColliders:
   - {fileID: 65749630656765824}
   - {fileID: 65221894688057030}
@@ -3134,6 +3135,10 @@ MonoBehaviour:
   HFbounciness: 0
   HFrbdrag: 0
   HFrbangulardrag: 0
+  salientMaterials: 04000000
+  CurrentTemperature: 0
+  HowManySecondsUntilRoomTemp: 10
+  ContainedObjectReferences: []
 --- !u!54 &54184264005590766
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -3150,6 +3155,25 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
+--- !u!114 &4390670009557717805
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1950672452938746}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 02b2beb760fcd4a6f957400c276adb00, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  PrefabToSwapTo: {fileID: 4692061000502300964, guid: 6daadd0f8ef62f148911c8a48de1e8e6,
+    type: 3}
+  DirtyPrefabToSwapTo: {fileID: 0}
+  ImpulseThreshold: 3.6
+  HighFrictionImpulseOffset: 2
+  breakType: 0
+  MaterialSwapObjects: []
 --- !u!1 &1975399999083374
 GameObject:
   m_ObjectHideFlags: 0
