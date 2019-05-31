@@ -311,14 +311,14 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 
 	public bool IsBreakable
 	{
-		get{ return this.GetComponent<Break>(); }
+		get{ return this.GetComponentInChildren<Break>(); }
 	}
 
 	public bool IsBroken
 	{
 		get
 		{
-			Break b = this.GetComponent<Break>();
+			Break b = this.GetComponentInChildren<Break>();
 			if(b != null)
 			{
 				return b.isBroken();
