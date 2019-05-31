@@ -22,6 +22,7 @@ public class SliceObject : MonoBehaviour
 
     void OnEnable ()
     {
+        #if UNITY_EDITOR
 		//debug check for missing property
         if (!gameObject.GetComponent<SimObjPhysics>().DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanBeSliced))
         {
@@ -32,6 +33,16 @@ public class SliceObject : MonoBehaviour
         {
             Debug.LogError(gameObject.transform.name + " is missing Object To Change To!");
         }
+
+        // //if the object can be cooked, check if CookedObjectToChangeTo is missing
+        // if(gameObject.GetComponent<SimObjPhysics>().DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanBeCooked))
+        // {
+        //     if(CookedObjectToChangeTo == null)
+        //     {
+        //         Debug.LogError(gameObject.transform.name + " is missing Cooked Object To Change To!");
+        //     }
+        // }
+        #endif
     }
 
     // Start is called before the first frame update
@@ -62,8 +73,33 @@ public class SliceObject : MonoBehaviour
             t.gameObject.SetActive(false);
         }
 
-        GameObject resultObject = Instantiate(ObjectToChangeTo, transform.position, transform.rotation);
-        isSliced = true;
+        GameObject resultObject;
+
+        if(!gameObject.GetComponent<SimObjPhysics>().DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanBeCooked))
+        {
+            //instantiate the normal object if this object is not cooked, otherwise....
+            resultObject = Instantiate(ObjectToChangeTo, transform.position, transform.rotation);
+            isSliced = true;
+        }
+
+        //if the object can be cooked, check if it is cooked and then spawn the cooked object to change to, otherwise spawn the normal object
+        else
+        {
+            //instantiate the normal object if this object is not cooked, otherwise....
+            resultObject = Instantiate(ObjectToChangeTo, transform.position, transform.rotation);
+            isSliced = true;
+
+            if(gameObject.GetComponent<CookObject>().IsCooked())
+            {
+                //cook all objects under the resultObject
+                foreach(Transform t in resultObject.transform)
+                {
+                    t.GetComponent<CookObject>().Cook();
+                }
+            }
+
+        }
+
 
         PhysicsSceneManager psm = GameObject.Find("PhysicsSceneManager").GetComponent<PhysicsSceneManager>();
         if (psm != null) 
@@ -103,6 +139,11 @@ public class SliceObject : MonoBehaviour
                 resultrb.isKinematic = false;
             }
 
+        }
+
+        else
+        {
+            Debug.LogError("Physics Scene Manager object is missing from scene!");
         }
     }
 
