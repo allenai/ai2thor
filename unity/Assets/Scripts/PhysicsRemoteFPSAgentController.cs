@@ -74,6 +74,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         protected HashSet<int> initiallyDisabledRenderers = new HashSet<int>();
         public Vector3[] reachablePositions = new Vector3[0];
 
+        public bool alwaysReturnVisibleRange = false;
+
         //face swap stuff here
         public Material[] ScreenFaces; //0 - neutral, 1 - Happy, 2 - Mad, 3 - Angriest
         public MeshRenderer MyFaceMesh;
@@ -460,6 +462,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             metaMessage.actionStringsReturn = actionStringsReturn;
             metaMessage.actionVector3sReturn = actionVector3sReturn;
 
+            if (alwaysReturnVisibleRange) {
+                metaMessage.visibleRange = visibleRange();
+            }
+
             //test time
             metaMessage.currentTime = TimeSinceStart();
 
@@ -791,7 +797,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 //so if an object ONLY has colliders on it that are not on layer 8, this raycast will go through them 
                 else {
                     if (Physics.Raycast(agentCamera.transform.position, point.position - agentCamera.transform.position, out hit,
-                            raycastDistance, (1 << 8) | (1 << 10))) { //layer mask automatically excludes Agent from this check
+                            raycastDistance, (1 << 8) | (1 << 10))) {
                         if (hit.transform != sop.transform) {
                             //we didn't directly hit the sop we are checking for with this cast, 
                             //check if it's because we hit something see-through
@@ -995,6 +1001,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                 sop.transform.position = new Vector3(action.x, action.y, action.z);
                 sop.transform.rotation = Quaternion.Euler(action.rotation);
+                if (action.forceKinematic) {
+                    sop.GetComponent<Rigidbody>().isKinematic = true;
+                }
                 if (!action.forceAction) {
                     if (UtilityFunctions.isObjectColliding(sop.gameObject)) {
                         sop.transform.position = oldPosition;
@@ -2231,10 +2240,18 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         public void ResetAgentHandPosition(ServerAction action = null) {
             AgentHand.transform.position = DefaultHandPosition.transform.position;
+            SimObjPhysics sop = AgentHand.GetComponentInChildren<SimObjPhysics>();
+            if (sop != null) {
+                sop.gameObject.transform.localPosition = Vector3.zero;
+            }
         }
 
         public void ResetAgentHandRotation(ServerAction action = null) {
             AgentHand.transform.localRotation = Quaternion.Euler(Vector3.zero);
+            SimObjPhysics sop = AgentHand.GetComponentInChildren<SimObjPhysics>();
+            if (sop != null) {
+                sop.gameObject.transform.localRotation = Quaternion.Euler(Vector3.zero);
+            }
         }
 
         public void DefaultAgentHand(ServerAction action = null) {
@@ -3530,7 +3547,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             if (!success) {
                 errorMessage = "Object failed to open/close successfully.";
-                Debug.Log(errorMessage);
             }
 
             actionFinished(success);
@@ -3592,7 +3608,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         //swap an object's materials out to the cooked version of the object
         public void CookObject(ServerAction action) {
             if (action.objectId == null) {
-                Debug.Log("Hey, actually give me an object ID to Toggle, yeah?");
                 errorMessage = "objectId required for ToastObject";
                 actionFinished(false);
                 return;
@@ -3633,7 +3648,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             else {
                 actionFinished(false);
                 errorMessage = "object not found: " + action.objectId;
-                Debug.Log(errorMessage);
             }
         }
 
@@ -3685,7 +3699,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         public void ToggleObjectOn(ServerAction action) {
             if (action.objectId == null) {
-                Debug.Log("Hey, actually give me an object ID to Toggle, yeah?");
                 errorMessage = "objectId required for ToggleObject";
                 actionFinished(false);
                 return;
@@ -3718,7 +3731,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                     //check to make sure object is off
                     if (ctof.isOn) {
-                        Debug.Log("can't toggle object on if it's already on!");
                         errorMessage = "can't toggle object on if it's already on!";
                         actionFinished(false);
                         return;
@@ -3753,13 +3765,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             else {
                 actionFinished(false);
                 errorMessage = "object not found: " + action.objectId;
-                Debug.Log(errorMessage);
             }
         }
 
         public void ToggleObjectOff(ServerAction action) {
             if (action.objectId == null) {
-                Debug.Log("Hey, actually give me an object ID to Toggle, yeah?");
                 errorMessage = "objectId required for ToggleObject";
                 actionFinished(false);
                 return;
@@ -3775,7 +3785,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             if (target) {
                 if (!action.forceAction && target.isInteractable == false) {
-                    //Debug.Log("can't close object if it's already closed");
                     actionFinished(false);
                     errorMessage = "object is visible but occluded by something: " + action.objectId;
                     return;
@@ -3792,7 +3801,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                     //check to make sure object is on
                     if (!ctof.isOn) {
-                        Debug.Log("can't toggle object off if it's already off!");
                         errorMessage = "can't toggle object off if it's already off!";
                         actionFinished(false);
                     } else {
@@ -3806,7 +3814,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             else {
                 actionFinished(false);
                 errorMessage = "object not found: " + action.objectId;
-                Debug.Log(errorMessage);
             }
         }
         public void OpenObject(ServerAction action) {
@@ -3814,7 +3821,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             //check if that object is in the viewport
             //also check to make sure that target object is interactable
             if (action.objectId == null) {
-                Debug.Log("Hey, actually give me an object ID to open, yeah?");
                 errorMessage = "objectId required for OpenObject";
                 actionFinished(false);
                 return;
@@ -3890,7 +3896,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public void Contains(ServerAction action) {
             if (action.objectId == null) {
                 errorMessage = "Hey, actually give me an object ID check containment for, yeah?";
-                Debug.Log(errorMessage);
                 actionFinished(false);
                 return;
             }
@@ -3920,7 +3925,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 actionFinished(true, ids.ToArray());
             } else {
                 errorMessage = "object not found: " + action.objectId;
-                Debug.Log(errorMessage);
                 actionFinished(false);
             }
         }
@@ -4284,10 +4288,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         public void EmphasizeObject(ServerAction action) {
+            #if UNITY_EDITOR
             foreach (KeyValuePair<string, SimObjPhysics> entry in physicsSceneManager.UniqueIdToSimObjPhysics) {
                 Debug.Log(entry.Key);
                 Debug.Log(entry.Key == action.objectId);
             }
+            #endif
 
             if (physicsSceneManager.UniqueIdToSimObjPhysics.ContainsKey(action.objectId)) {
                 HideAll();
@@ -4296,7 +4302,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 actionFinished(true);
             } else {
                 errorMessage = "No object with id: " + action.objectId;
-                Debug.Log(errorMessage);
                 actionFinished(false);
             }
         }
@@ -4314,7 +4319,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 MaskSimObj(physicsSceneManager.UniqueIdToSimObjPhysics[action.objectId], Color.magenta);
                 actionFinished(true);
             } else {
-                Debug.Log("No such object with id: " + action.objectId);
                 errorMessage = "No such object with id: " + action.objectId;
                 actionFinished(false);
             }
@@ -4325,7 +4329,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 UnmaskSimObj(physicsSceneManager.UniqueIdToSimObjPhysics[action.objectId]);
                 actionFinished(true);
             } else {
-                Debug.Log("No such object with id: " + action.objectId);
                 errorMessage = "No such object with id: " + action.objectId;
                 actionFinished(false);
             }
@@ -4598,7 +4601,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 actionFinished(true);
             } else {
                 errorMessage = "Time scale must be >0";
-                Debug.Log(errorMessage);
                 actionFinished(false);
             }
         }
@@ -4627,7 +4629,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     }
                 }
             } else {
+                #if UNITY_EDITOR
                 Debug.Log("Error! Set at least 1 visibility point on SimObjPhysics prefab!");
+                #endif
             }
             updateAllAgentCollidersForVisibilityCheck(true);
             return false;
@@ -4657,7 +4661,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
             SimObjPhysics theObject = physicsSceneManager.UniqueIdToSimObjPhysics[action.objectId];
 
-            Vector3[] positions = getReachablePositions();
+            Vector3[] positions = null;
+            if (action.positions != null) {
+                positions = action.positions.ToArray();
+            } else {
+                positions = getReachablePositions();
+            }
+
             bool wasStanding = isStanding();
             Vector3 oldPosition = transform.position;
             Quaternion oldRotation = transform.rotation;
@@ -4810,7 +4820,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         public void NumberOfPositionsFromWhichItemIsVisible(ServerAction action) {
-            Vector3[] positions = getReachablePositions();
+            Vector3[] positions = null;
+            if (action.positions != null) {
+                positions = action.positions.ToArray();
+            } else {
+                positions = getReachablePositions();
+            }
+
             bool wasStanding = isStanding();
             Vector3 oldPosition = transform.position;
             Quaternion oldRotation = transform.rotation;
@@ -4820,7 +4836,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             if (!physicsSceneManager.UniqueIdToSimObjPhysics.ContainsKey(action.objectId)) {
                 errorMessage = "Object ID appears to be invalid.";
-                Debug.Log(errorMessage);
                 actionFinished(false);
                 return;
             }
@@ -5217,7 +5232,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 }
                 if (stepsTaken > 10000) {
                     errorMessage = "Too many steps taken in GetReachablePositions.";
-                    Debug.Log(errorMessage);
                     break;
                 }
             }
@@ -5301,14 +5315,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public void CreateObject(ServerAction action) {
             if (ItemInHand != null) {
                 errorMessage = "Already have an object in hand, can't create a new one to put there.";
-                Debug.Log(errorMessage);
                 actionFinished(false);
                 return;
             }
 
             if (action.objectType == null) {
                 errorMessage = "Please give valid Object Type from SimObjType enum list";
-                Debug.Log(errorMessage);
                 actionFinished(false);
                 return;
             }
@@ -5320,7 +5332,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             if (so == null) {
                 errorMessage = "Failed to create object, are you sure it can be spawned?";
-                Debug.Log(errorMessage);
                 actionFinished(false);
                 return;
             } else {
@@ -5341,14 +5352,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             if (!action.forceAction && !sceneBounds.Contains(targetPosition)) {
                 errorMessage = "Target position is out of bounds!";
-                Debug.Log(errorMessage);
                 actionFinished(false);
                 return;
             }
 
             if (action.objectType == null) {
                 errorMessage = "Please give valid Object Type from SimObjType enum list";
-                Debug.Log(errorMessage);
                 actionFinished(false);
                 return;
             }
@@ -5360,7 +5369,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             if (so == null) {
                 errorMessage = "Failed to create object, are you sure it can be spawned?";
-                Debug.Log(errorMessage);
                 actionFinished(false);
                 return;
             } else {
@@ -5374,7 +5382,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         protected SimObjPhysics createObjectAtLocation(string objectType, Vector3 targetPosition, Vector3 targetRotation, int objectVariation = 1) {
             if (!sceneBounds.Contains(targetPosition)) {
                 errorMessage = "Target position is out of bounds!";
-                Debug.Log(errorMessage);
                 return null;
             }
 
@@ -5428,7 +5435,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             Bounds b = script.BoundsOfObject(action.objectType, 1);
             if (b.min.x == float.PositiveInfinity) {
                 errorMessage = "Could not get bounds for the object to be created on the floor";
-                Debug.Log(errorMessage);
                 actionFinished(false);
             } else {
                 action.y = b.extents.y + getFloorY(action.x, action.z) + 0.1f;
@@ -5540,7 +5546,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             List<Vector3> goodPositions = new List<Vector3>();
             List<float> goodRotations = new List<float>();
 
-            foreach (Vector3 position in getReachablePositions()) {
+            Vector3[] positions = null;
+            if (action.positions != null) {
+                positions = action.positions.ToArray();
+            } else {
+                positions = getReachablePositions();
+            }
+
+            foreach (Vector3 position in positions) {
                 Vector3 tmp = position;
                 tmp.y = sop.transform.position.y;
                 if (Vector3.Distance(tmp, sop.transform.position) <= 2 * maxVisibleDistance) {
@@ -5566,6 +5579,158 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             transform.rotation = savedRotation;
 
             actionFinished(true);
+        }
+
+        protected float approxPercentScreenObjectOccupies(SimObjPhysics sop, bool updateVisibilityColliders=true) {
+            float percent = 0.0f;
+            if (sop.VisibilityPoints != null && sop.VisibilityPoints.Length > 0) {
+                float minX = 1.0f;
+                float maxX = 0.0f;
+                float minY = 1.0f;
+                float maxY = 0.0f;
+
+                if (updateVisibilityColliders) {
+                    updateAllAgentCollidersForVisibilityCheck(false);
+                }
+                foreach (Transform point in sop.VisibilityPoints) {
+                    Vector3 viewPoint = m_Camera.WorldToViewportPoint(point.position);
+
+                    if (CheckIfVisibilityPointInViewport(sop, point, m_Camera, false)) {
+                        minX = Math.Min(viewPoint.x, minX);
+                        maxX = Math.Max(viewPoint.x, maxX);
+                        minY = Math.Min(viewPoint.y, minY);
+                        maxY = Math.Max(viewPoint.y, maxY);
+                    }
+                }
+                percent = Math.Max(0f, maxX - minX) * Math.Max(0f, maxY - minY);
+                if (updateVisibilityColliders) {
+                    updateAllAgentCollidersForVisibilityCheck(true);
+                }
+            }
+            #if UNITY_EDITOR
+            Debug.Log(percent);
+            #endif
+            return percent;
+        }
+
+        public void ApproxPercentScreenObjectOccupies(ServerAction action) {
+            if (!physicsSceneManager.UniqueIdToSimObjPhysics.ContainsKey(action.objectId)) {
+                errorMessage = "Cannot find object with id " + action.objectId;
+                actionFinished(false);
+                return;
+            }
+            SimObjPhysics sop = physicsSceneManager.UniqueIdToSimObjPhysics[action.objectId];
+            actionFinished(true, approxPercentScreenObjectOccupies(sop));
+        }
+
+        public void ApproxPercentScreenObjectFromPositions(ServerAction action) {
+            if (!physicsSceneManager.UniqueIdToSimObjPhysics.ContainsKey(action.objectId)) {
+                errorMessage = "Cannot find object with id " + action.objectId;
+                actionFinished(false);
+                return;
+            }
+            SimObjPhysics sop = physicsSceneManager.UniqueIdToSimObjPhysics[action.objectId];
+
+            Vector3[] positions = null;
+            if (action.positions != null) {
+                positions = action.positions.ToArray();
+            } else {
+                positions = getReachablePositions();
+            }
+
+            Vector3 oldPosition = transform.position;
+            Quaternion oldRotation = transform.rotation;
+            float[] rotations = {0f, 90f, 180f, 270f};
+            
+            List<float[]> positionAndApproxAmountVisible = new List<float[]>();
+
+            updateAllAgentCollidersForVisibilityCheck(false);
+            foreach (Vector3 position in positions) {
+                transform.position = position;
+                foreach (float rotation in rotations) {
+                    transform.rotation = Quaternion.Euler(0f, rotation, 0f);
+                    float approxVisible = approxPercentScreenObjectOccupies(sop, false);
+                    if (approxVisible > 0.0f) {
+                        float[] tuple = {position.x, position.y, position.z, transform.eulerAngles.y};
+                        positionAndApproxAmountVisible.Add(tuple);
+                    }
+                }
+            }
+            updateAllAgentCollidersForVisibilityCheck(true);
+
+            transform.position = oldPosition;
+            transform.rotation = oldRotation;
+            actionFinished(true, positionAndApproxAmountVisible);
+        }
+
+        protected List<Vector3> visibleRange() {
+            int n = 5;
+            List<Vector3> points = new List<Vector3>();
+            points.Add(transform.position);
+            updateAllAgentCollidersForVisibilityCheck(false);
+            for (int i = 0; i < n; i++) {
+                for (int j = 0; j < n; j++) {
+                    RaycastHit hit;
+                    Ray ray = m_Camera.ViewportPointToRay(new Vector3(
+                        (i + 0.5f) / n, (j + 0.5f) / n, 0.0f));
+                    if (Physics.Raycast(ray, out hit, 100f, (1 << 8) | (1 << 10))) {
+                        points.Add(hit.point);
+                    }
+                }
+            }
+            updateAllAgentCollidersForVisibilityCheck(true);
+            return points;
+        }
+        public void VisibleRange(ServerAction action) {
+            actionFinished(true, visibleRange());
+        }
+
+        public void GetVisibilityPointsOfObjects(ServerAction action) {
+            Dictionary<string, List<Vector3>> uniqueIdToVisibilityPoints = new Dictionary<string, List<Vector3>>();
+            foreach (SimObjPhysics sop in physicsSceneManager.UniqueIdToSimObjPhysics.Values) {
+                uniqueIdToVisibilityPoints[sop.UniqueID] = new List<Vector3>();
+                if (sop.VisibilityPoints != null) {
+                    foreach (Transform t in sop.VisibilityPoints) {
+                        uniqueIdToVisibilityPoints[sop.UniqueID].Add(t.position);
+                    }
+                }
+            }
+            actionFinished(true, uniqueIdToVisibilityPoints);
+        }
+
+        public void ObjectsVisibleFromPositions(ServerAction action) {
+            Vector3[] positions = null;
+            if (action.positions != null) {
+                positions = action.positions.ToArray();
+            } else {
+                positions = getReachablePositions();
+            }
+
+            Vector3 oldPosition = transform.position;
+            Quaternion oldRotation = transform.rotation;
+            float[] rotations = {0f, 90f, 180f, 270f};
+            
+            Dictionary<string, List<float[]>> uniqueIdToVisiblePositions = new Dictionary<string, List<float[]>>();
+
+            foreach (Vector3 position in positions) {
+                transform.position = position;
+                foreach (float rotation in rotations) {
+                    transform.rotation = Quaternion.Euler(0f, rotation, 0f);
+                    foreach (SimObjPhysics sop in GetAllVisibleSimObjPhysics(m_Camera, maxVisibleDistance)) {
+                        if (!uniqueIdToVisiblePositions.ContainsKey(sop.UniqueID)) {
+                            uniqueIdToVisiblePositions[sop.UniqueID] = new List<float[]>();
+                        }
+                        List<float[]> l = uniqueIdToVisiblePositions[sop.UniqueID];
+                        float[] tuple = {position.x, position.y, position.z, transform.eulerAngles.y};
+                        l.Add(tuple);
+                    }
+                }
+            }
+
+            transform.position = oldPosition;
+            transform.rotation = oldRotation;
+
+            actionFinished(true, uniqueIdToVisiblePositions);
         }
 
         public void DisableAllObjectsOfType(ServerAction action) {
@@ -5767,7 +5932,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 }
                 if (!hasActiveRenderer) {
                     errorMessage = "Cannot get bounds for " + action.objectId + " as it has no attached (and active) renderers.";
-                    Debug.Log(errorMessage);
                     actionFinished(false);
                     return;
                 }
@@ -5780,7 +5944,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 actionFinished(true);
             } else {
                 errorMessage = "Invalid objectId " + action.objectId;
-                Debug.Log(errorMessage);
                 actionFinished(false);
             }
         }
@@ -5853,7 +6016,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 actionFinished(true);
             } else {
                 errorMessage = "Invalid objectId " + action.objectId;
-                Debug.Log(errorMessage);
                 actionFinished(false);
             }
         }
@@ -5868,7 +6030,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 actionFinished(true);
             } else {
                 errorMessage = "Invalid objectId " + action.objectId;
-                Debug.Log(errorMessage);
                 actionFinished(false);
             }
         }
@@ -6164,7 +6325,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
 
             foreach (SimObjPhysics sop in surfaceCoverObjects.GetComponentsInChildren<SimObjPhysics>()) {
-                Debug.Log(sop);
                 Material newMaterial;
                 float minRed = 0.0f;
                 float minGreen = 0.0f;
@@ -6491,7 +6651,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public void RemoveFromScene(ServerAction action) {
             //pass name of object in from action.objectId
             if (action.objectId == null) {
-                Debug.Log("Hey, actually give me an object ID to open, yeah?");
                 errorMessage = "objectId required for OpenObject";
                 actionFinished(false);
                 return;
@@ -6512,7 +6671,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public void SliceObject(ServerAction action) {
             //pass name of object in from action.objectId
             if (action.objectId == null) {
-                Debug.Log("Hey, actually give me an object ID to open, yeah?");
                 errorMessage = "objectId required for SliceObject";
                 actionFinished(false);
                 return;
@@ -6561,7 +6719,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         {
             //pass name of object in from action.objectId
             if (action.objectId == null) {
-                Debug.Log("Hey, actually give me an object ID to open, yeah?");
                 errorMessage = "objectId required for BreakObject";
                 actionFinished(false);
                 return;
@@ -6739,7 +6896,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             //pass name of object in from action.objectId
             if (action.objectId == null) 
             {
-                Debug.Log("Hey, actually give me an object ID to open, yeah?");
                 errorMessage = "objectId required for FillObject action";
                 actionFinished(false);
                 return;
@@ -6748,7 +6904,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             if(action.fillLiquid == null)
             {
                 errorMessage = "Missing Liquid string for FillObject action";
-                Debug.Log(errorMessage);
                 actionFinished(false);
             }
 
@@ -6824,7 +6979,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             //pass name of object in from action.objectId
             if (action.objectId == null) 
             {
-                Debug.Log("Hey, actually give me an object ID to open, yeah?");
                 errorMessage = "objectId required for EmptyLiquidFromObject action";
                 actionFinished(false);
                 return;
@@ -6858,7 +7012,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     else
                     {
                         errorMessage = "object already empty";
-                        Debug.Log(errorMessage);
                         actionFinished(false);
                         return;
                     }

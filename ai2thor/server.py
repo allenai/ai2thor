@@ -129,6 +129,8 @@ class Event(object):
         self.third_party_depth_frames = []
         self.third_party_normals_frames = []
 
+        self.events = [self] # Ensure we have a similar API to MultiAgentEvent
+
     @property
     def image_data(self):
         warnings.warn("Event.image_data has been removed - RGB data can be retrieved from event.frame and encoded to an image format")
