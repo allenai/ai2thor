@@ -2520,6 +2520,47 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
 
+        //use a seed value to randomly change the starting state of sim objects in scene that have state changes
+        //USE THIS AFTER INITIALIZING THE SCENE FIRST
+        //NOTE: SOME OF THESE STATE CHANGES ARE DESTRUCTIVE AND CANNOT BE REVERSED WITHOUT A SCENE RESET
+        public void RandomToggleAllObjectsWithMultipleStates(ServerAction action)
+        {
+            //gather all sim objects in scene
+            //filter them by if they have a state change
+            //if they have a state change, call the individual state change random toggle on it (ie - OnOff(SimObjPhysics sop, Int RandomSeed))
+
+            //each state should also have an individual action that can toggle the state for all objects that have that state
+            //this function should itself call a thing that takes (SimObj sop) as a parameter in case someone wants to toggle the state of a single object without using the Agent
+
+            //open/close
+            //fill
+            //sliced
+            //cooked
+            //dirty
+            //on/off
+            //broken-note: broken objects with prefab swaps will not be visible to the agent since shards aren't sim objects. The metadata will reflect where the source object was when broken though
+            //depleted
+            //
+        }
+
+        public void RandomToggleAllOpenCloseObjects()
+        {
+            
+        }
+
+        public void RandomToggleAllFillableObjects()
+        {
+
+        }
+
+        public void RandomToggleAllOnOffObjects()
+        {
+
+        }
+
+
+
+        //randomly repositions sim objects in the current scene
         public void InitialRandomSpawn(ServerAction action) {
             //something is in our hand AND we are trying to spawn it. Quick drop the object
             if (ItemInHand != null) {

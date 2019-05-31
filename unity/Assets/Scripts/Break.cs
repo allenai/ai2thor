@@ -24,7 +24,7 @@ public class Break : MonoBehaviour
 
     //what does this object need to do when it is in the broken state? 
     //Some need a decal to show a cracked screen on the surface, others need a prefab swap to shattered pieces
-    protected enum BreakType {PrefabSwap, Decal};
+    protected enum BreakType {PrefabSwap, MaterialSwap, Decal};
 
     [SerializeField]
     protected BreakType breakType; //please select how this object should be broken here
@@ -121,7 +121,7 @@ public class Break : MonoBehaviour
         }
 
         //if decal type, do not switch out the object but instead swap materials to show cracked/broken parts
-        if(breakType == BreakType.Decal)
+        if(breakType == BreakType.MaterialSwap)
         {
             //decal logic here
             if(MaterialSwapObjects.Length > 0)
@@ -140,6 +140,12 @@ public class Break : MonoBehaviour
             }
 
             broken = true;
+        }
+
+        if(breakType == BreakType.Decal)
+        {
+            //move shattered decal to location of the collision, or if there was no collision and this is being called
+            //directly from the Break() action, create a default decal i guess?
         }
 
     }
