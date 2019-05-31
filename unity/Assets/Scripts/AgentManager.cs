@@ -101,6 +101,9 @@ public class AgentManager : MonoBehaviour
 		this.renderDepthImage = action.renderDepthImage;
 		this.renderNormalsImage = action.renderNormalsImage;
 		this.renderObjectImage = action.renderObjectImage;
+		if (action.alwaysReturnVisibleRange) {
+			((PhysicsRemoteFPSAgentController) primaryAgent).alwaysReturnVisibleRange = action.alwaysReturnVisibleRange;
+		}
 		StartCoroutine (addAgents (action));
 
 	}
@@ -462,21 +465,28 @@ public class AgentManager : MonoBehaviour
             int sent = sock.Send(Encoding.ASCII.GetBytes(request));
             sent = sock.Send(rawData);
             byte[] buffer = new byte[4096];
-            int bytesReceived = 0;
+            int totalBytesReceived = 0;
             string msg = "";
 
             while (true) {
-                bytesReceived += sock.Receive(buffer, bytesReceived, buffer.Length - bytesReceived, SocketFlags.None);
-                int offset = Encoding.ASCII.GetString(buffer).IndexOf("\r\n\r\n");
+				int bytesReceived = 0;
+				do {
+					bytesReceived = sock.Receive(buffer, buffer.Length, SocketFlags.None);
+					totalBytesReceived += bytesReceived;
+					if (bytesReceived != 0) {
+						msg += Encoding.ASCII.GetString(buffer, 0, bytesReceived);
+					}
+				} while (bytesReceived != 0);
+
+                int offset = msg.IndexOf("\r\n\r\n");
                 if (offset > 0){
-                    msg = Encoding.ASCII.GetString(buffer).Substring(offset + 4, bytesReceived - (offset - 4));
+                    msg = msg.Substring(offset + 4);
                     if (msg.Length > 8){
                         Debug.Log("Message: " + msg);
                         break;
                     }
                 }
             }
-            //Debug.Log(msg);
 
             sock.Close();
             ProcessControlCommand(msg);
@@ -711,6 +721,7 @@ public struct MetadataWrapper
 
 	public float[] actionFloatsReturn;
 	public Vector3[] actionVector3sReturn;
+	public List<Vector3> visibleRange;
 	public System.Object actionReturn;
 
 	public float currentTime;
@@ -741,11 +752,17 @@ public class ServerAction
 	public int horizon;
 	public Vector3 rotation;
 	public Vector3 position;
+
+	public List<Vector3> positions = null;
 	public bool standing = true;
 	public float fov = 60.0f;
 	public bool forceAction;
 
+	public bool forceKinematic;
+
 	public float maxAgentsDistance = -1.0f;
+
+	public bool alwaysReturnVisibleRange = false;
 	public int sequenceId;
 	public bool snapToGrid = true;
 	public bool continuous;
