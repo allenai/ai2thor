@@ -64,11 +64,12 @@ Shader "Custom/EmissiveDeferredDecal" {
  
             void frag (v2f i, out half4 outDiffuse : COLOR0, out half4 outSpecular : COLOR1, out half4 outEmission : COLOR2) //: SV_Target
             {
-                // float2 uv = i.sreenPos.xy / i.sreenPos.w;
                 i.rayToCamera = i.rayToCamera * (_ProjectionParams.z / i.rayToCamera.z);
                
+                // float2 uv = i.sreenPos.xy / i.sreenPos.w;
                 // float depth = Linear01Depth(tex2(_CameraDepthTexture, uv));
-                // Same as above tex2Dproj does the division by w but takes a vec4
+
+                // Same as above tex2Dproj does the division by w and takes a vec4
                 float depth = Linear01Depth(tex2Dproj(_CameraDepthTexture, i.sreenPos));
                 
 
