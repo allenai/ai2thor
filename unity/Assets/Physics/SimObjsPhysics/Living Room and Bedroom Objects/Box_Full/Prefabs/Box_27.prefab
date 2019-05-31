@@ -1048,7 +1048,7 @@ MonoBehaviour:
   - {fileID: 1616040751176851}
   isVisible: 0
   isInteractable: 0
-  isColliding: 0
+  isInAgentHand: 0
   MyColliders:
   - {fileID: 65655219628410319}
   - {fileID: 65727435885337429}
@@ -1064,6 +1064,9 @@ MonoBehaviour:
   HFbounciness: 0
   HFrbdrag: 2.3
   HFrbangulardrag: 0.7
+  salientMaterials: 09000000
+  CurrentTemperature: 0
+  HowManySecondsUntilRoomTemp: 10
   ContainedObjectReferences: []
 --- !u!54 &1666648525
 Rigidbody:
@@ -1114,7 +1117,8 @@ MonoBehaviour:
   isOpen: 1
   canReset: 1
   movementType: 1
-  MustBeOffToOpen: 10000000
+  OpenBoundingBox: {fileID: 0}
+  ClosedBoundingBox: {fileID: 0}
 --- !u!1 &1741616569
 GameObject:
   m_ObjectHideFlags: 0

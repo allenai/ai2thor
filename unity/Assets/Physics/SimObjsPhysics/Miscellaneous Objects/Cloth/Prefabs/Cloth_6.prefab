@@ -697,6 +697,7 @@ GameObject:
   - component: {fileID: 4745199825687848}
   - component: {fileID: 114075319560991532}
   - component: {fileID: 54220687600490914}
+  - component: {fileID: 7348965603265578219}
   m_Layer: 8
   m_Name: Cloth_6
   m_TagString: SimObjPhysics
@@ -738,7 +739,7 @@ MonoBehaviour:
   uniqueID: 
   Type: 60
   PrimaryProperty: 3
-  SecondaryProperties: 
+  SecondaryProperties: 04000000
   BoundingBox: {fileID: 1010932738216990}
   VisibilityPoints:
   - {fileID: 4566054494110570}
@@ -763,6 +764,7 @@ MonoBehaviour:
   HFbounciness: 0
   HFrbdrag: 3
   HFrbangulardrag: 0.5
+  salientMaterials: 06000000
   CurrentTemperature: 0
   HowManySecondsUntilRoomTemp: 10
   ContainedObjectReferences: []
@@ -782,6 +784,29 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
+--- !u!114 &7348965603265578219
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1831750474358618}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d106cf009583a40e4a85d860c9830f67, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  MaterialSwapObjects:
+  - MyObject: {fileID: 1393057531073724}
+    OnMaterials:
+    - {fileID: 2100000, guid: 4dd9cfacec4b449d480d7ce2e1d17c64, type: 2}
+    - {fileID: 2100000, guid: b03755ccf97c38748b0dd243d1d9bf58, type: 2}
+    OffMaterials:
+    - {fileID: 2100000, guid: 4dd9cfacec4b449d480d7ce2e1d17c64, type: 2}
+    - {fileID: 2100000, guid: 937f5335a74cfc14086739fde6c8acf7, type: 2}
+  ObjectsToEnableIfClean: []
+  ObjectsToEnableIfDirty: []
+  isDirty: 0
 --- !u!1 &1835584389844198
 GameObject:
   m_ObjectHideFlags: 0

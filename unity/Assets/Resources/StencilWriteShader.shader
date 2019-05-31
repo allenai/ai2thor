@@ -43,9 +43,7 @@
 
             fixed4 frag (v2f i) : SV_Target
             {
-                // discard;
-                return float4(1, 0, 0, 1);
-                // return 0;
+                return 0;
             }
             ENDCG
         }

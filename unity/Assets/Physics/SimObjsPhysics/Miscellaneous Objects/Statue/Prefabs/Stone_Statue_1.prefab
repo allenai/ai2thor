@@ -374,6 +374,7 @@ GameObject:
   - component: {fileID: 4274581921687198}
   - component: {fileID: 114669665968820106}
   - component: {fileID: 54479263309865836}
+  - component: {fileID: 752248826}
   m_Layer: 8
   m_Name: Stone_Statue_1
   m_TagString: SimObjPhysics
@@ -412,10 +413,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b439f6e4ef5714ee2a3643acf37b7a9d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  uniqueID: Statue|+16.00|+16.00|+16.00
+  uniqueID: Statue|-02.92|+00.00|-04.91
   Type: 39
   PrimaryProperty: 3
-  SecondaryProperties: 
+  SecondaryProperties: 0b000000
   BoundingBox: {fileID: 1856312093779094}
   VisibilityPoints:
   - {fileID: 4198468015934702}
@@ -434,7 +435,6 @@ MonoBehaviour:
   ReceptacleTriggerBoxes: []
   isVisible: 0
   isInteractable: 0
-  isColliding: 0
   isInAgentHand: 0
   MyColliders:
   - {fileID: 65269727113768146}
@@ -449,6 +449,9 @@ MonoBehaviour:
   HFbounciness: 0
   HFrbdrag: 1
   HFrbangulardrag: 0
+  salientMaterials: 05000000
+  CurrentTemperature: 0
+  HowManySecondsUntilRoomTemp: 10
   ContainedObjectReferences: []
 --- !u!54 &54479263309865836
 Rigidbody:
@@ -466,6 +469,24 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
+--- !u!114 &752248826
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1397834373311856}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 02b2beb760fcd4a6f957400c276adb00, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  PrefabToSwapTo: {fileID: 158428539, guid: 369a0616114979a44b02033c08032d4e, type: 3}
+  DirtyPrefabToSwapTo: {fileID: 0}
+  ImpulseThreshold: 3.6
+  HighFrictionImpulseOffset: 2
+  breakType: 0
+  MaterialSwapObjects: []
 --- !u!1 &1408000969065140
 GameObject:
   m_ObjectHideFlags: 0

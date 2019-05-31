@@ -44,14 +44,14 @@ public enum SimObjSecondaryProperty : int //EACH SimObjPhysics can have any numb
     //OTHER SECONDARY PROPERTIES 
     CanBeDirty = 4,
     CanBeFilled = 5,
-    CanBeDepleted = 6,
+    CanBeUsedUp = 6,
     Receptacle = 7,
     CanOpen = 8,
     CanBeSliced = 9,
     CanSlice = 10,
     CanBreak = 11,
-    CanBeFilledWithWater = 12,
-    CanFillWithWater = 13,
+    CanChangeTempToHot = 12,//this object can change temperature of other objects to hot
+    CanChangeTempToCold = 13,//this object can change temperature of other objects to cold
     CanBeHeatedCookware = 14,
     CanHeatCookware = 15,
     CanBeStoveTopCooked = 16,
@@ -172,18 +172,18 @@ public enum SimObjType : int
 	ToiletPaper = 65,
 	ToiletPaperHanger = 66,
 	SoapBottle = 67,
-	SoapBottleFilled = 68,//will become a state of SoapBottle in physics
+	SoapBottleFilled = 68,//DO NOT USE: Soap bottle now just has two states
 	SoapBar = 69,
 	ShowerDoor = 70,
 	SprayBottle = 71,
 	ScrubBrush = 72,
-	ToiletPaperRoll = 73,
-	Lamp = 74, //don't use this, use either FloorLamp or DeskLamp
+	ToiletPaperRoll = 73,//DO NOT USE ANYMORE - ToiletPaper is now a single object that toggles states
+	Lamp = 74, //DO NOT USE: don't use this, use either FloorLamp or DeskLamp
 	LightSwitch = 75,
 	Bed = 76,
 	Book = 77,
 	AlarmClock = 78,
-	SportsEquipment = 79,//delineated into specific objects in physics - see Basketball etc
+	SportsEquipment = 79,//DO NOT USE: delineated into specific objects in physics - see Basketball etc
 	Pen = 80,
 	Pencil = 81,
 	Blinds = 82,
@@ -191,7 +191,7 @@ public enum SimObjType : int
 	TowelHolder = 84,
 	Towel = 85,
 	Watch = 86,
-	MiscTableObject = 87,//not sure what this is, not used for physics
+	MiscTableObject = 87,//DO NOT USE: not sure what this is, not used for physics
 
     ArmChair = 88,
     BaseballBat = 89,

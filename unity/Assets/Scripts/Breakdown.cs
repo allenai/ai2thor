@@ -5,7 +5,7 @@ using UnityEngine;
 //this logic is for controlling how pieces shatter after spawning in a broken version of a sim object (mug, plate, etc)
 public class Breakdown : MonoBehaviour
 {
-    protected float power = 10.0f;
+    public float power = 10.0f;
     protected float explosionRadius = 0.25f;
     
     // Start is called before the first frame update

@@ -293,6 +293,7 @@ GameObject:
   - component: {fileID: 637329991}
   - component: {fileID: 637329993}
   - component: {fileID: 637329992}
+  - component: {fileID: 5558983856316429292}
   m_Layer: 8
   m_Name: Bed_16
   m_TagString: SimObjPhysics
@@ -334,7 +335,7 @@ MonoBehaviour:
   uniqueID: Bed|-01.70|+00.04|-00.45
   Type: 76
   PrimaryProperty: 1
-  SecondaryProperties: 07000000
+  SecondaryProperties: 0700000004000000
   BoundingBox: {fileID: 1139291846}
   VisibilityPoints:
   - {fileID: 389275041}
@@ -395,6 +396,24 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
+--- !u!114 &5558983856316429292
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 637329990}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d106cf009583a40e4a85d860c9830f67, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  MaterialSwapObjects: []
+  ObjectsToEnableIfClean:
+  - {fileID: 220284807218333614}
+  ObjectsToEnableIfDirty:
+  - {fileID: 4113818099475974103}
+  isDirty: 1
 --- !u!1 &741074110
 GameObject:
   m_ObjectHideFlags: 0
@@ -473,8 +492,8 @@ BoxCollider:
   m_IsTrigger: 0
   m_Enabled: 1
   serializedVersion: 2
-  m_Size: {x: 1.4317203, y: 0.3220804, z: 2.270281}
-  m_Center: {x: 0, y: -0.009164467, z: -0.038569093}
+  m_Size: {x: 1.4317203, y: 0.34375918, z: 2.270281}
+  m_Center: {x: 0, y: 0.0016749203, z: -0.038569093}
 --- !u!1 &820378909
 GameObject:
   m_ObjectHideFlags: 0
@@ -1704,6 +1723,12 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 8ce8f41e580e99c4eb9af8b7a57f5bf4, type: 3}
+--- !u!1 &220284807218333614 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 4385547584642559184, guid: 8ce8f41e580e99c4eb9af8b7a57f5bf4,
+    type: 3}
+  m_PrefabInstance: {fileID: 4598742119184280446}
+  m_PrefabAsset: {fileID: 0}
 --- !u!4 &220284807218567758 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 4385547584642920752, guid: 8ce8f41e580e99c4eb9af8b7a57f5bf4,
@@ -1792,6 +1817,12 @@ PrefabInstance:
 --- !u!4 &4113818099475618359 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 4835547144537639580, guid: 746c1718430cad04293cb6a214cd475a,
+    type: 3}
+  m_PrefabInstance: {fileID: 8794517705194672299}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1 &4113818099475974103 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 4835547144537872252, guid: 746c1718430cad04293cb6a214cd475a,
     type: 3}
   m_PrefabInstance: {fileID: 8794517705194672299}
   m_PrefabAsset: {fileID: 0}
