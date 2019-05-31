@@ -433,10 +433,6 @@ public class InstantiatePrefabTest : MonoBehaviour
                     }
                 }
 
-                //we passed all the checks! Place the object now!
-                GameObject topObject = GameObject.Find("Objects");
-                //parent to the Objects transform
-                sop.transform.SetParent(topObject.transform);
                 //translate position of the target sim object to the rsp.Point and offset in local y up
                 sop.transform.position = rsp.Point + rsp.ReceptacleBox.transform.up * (quat.distance + yoffset);//rsp.Point + sop.transform.up * DistanceFromBottomOfBoxToTransform;
                 sop.transform.rotation = quat.rotation;
@@ -445,26 +441,48 @@ public class InstantiatePrefabTest : MonoBehaviour
                 //if false, once placed the object will resolve with physics (if placed on uneven surface object might slide or roll)
                 if(PlaceStationary == true)
                 {
-                    //if place stationary make sure to set this object as a child of the parent receptacle in case it moves (like a drawer)
+                    //make object being placed kinematic true
                     sop.GetComponent<Rigidbody>().collisionDetectionMode = CollisionDetectionMode.Discrete;
                     sop.GetComponent<Rigidbody>().isKinematic = true;
 
                     //check if the parent sim object is one that moves like a drawer - and would require this to be parented
                     //if(rsp.ParentSimObjPhys.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanOpen))
                     sop.transform.SetParent(rsp.ParentSimObjPhys.transform);
+
+                    //if this object is a receptacle and it has other objects inside it, drop them all together
+                    if(sop.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.Receptacle))
+                    {
+                        PhysicsRemoteFPSAgentController agent = GameObject.Find("FPSController").GetComponent<PhysicsRemoteFPSAgentController>();
+                        agent.DropContainedObjectsStationary(sop);//use stationary version so that colliders are turned back on, but kinematics remain true
+                    }
+
+                    //if the target receptacle is a pickupable receptacle, set it to kinematic true as will sence we are placing stationary
+                    if(rsp.ParentSimObjPhys.PrimaryProperty == SimObjPrimaryProperty.CanPickup)
+                    {
+                        rsp.ParentSimObjPhys.GetComponent<Rigidbody>().isKinematic = true;
+                    }
+
                 }
 
+                //place stationary false, let physics drop everything too
                 else
                 {
-                    sop.GetComponent<Rigidbody>().isKinematic = false;
-                }
+                    //if not placing stationary, put all objects under Objects game object
+                    GameObject topObject = GameObject.Find("Objects");
+                    //parent to the Objects transform
+                    sop.transform.SetParent(topObject.transform);
 
-                //if this object is a receptacle and it has other objects inside it, drop them all together
-                if(sop.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.Receptacle))
-                {
-                    PhysicsRemoteFPSAgentController agent = GameObject.Find("FPSController").GetComponent<PhysicsRemoteFPSAgentController>();
-                    agent.DropContainedObjects(sop);
+                    Rigidbody rb = sop.GetComponent<Rigidbody>();
+                    rb.isKinematic = false;
+                    rb.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
+                    //if this object is a receptacle and it has other objects inside it, drop them all together
+                    if(sop.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.Receptacle))
+                    {
+                        PhysicsRemoteFPSAgentController agent = GameObject.Find("FPSController").GetComponent<PhysicsRemoteFPSAgentController>();
+                        agent.DropContainedObjects(sop);
+                    }
                 }
+                sop.isInAgentHand = false;//set agent hand flag
 
                 #if UNITY_EDITOR
                 //Debug.Log(sop.name + " succesfully spawned in " +rsp.ParentSimObjPhys.name + " at coordinate " + rsp.Point);

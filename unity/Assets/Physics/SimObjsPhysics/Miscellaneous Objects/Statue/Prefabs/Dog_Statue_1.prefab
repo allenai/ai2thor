@@ -1515,6 +1515,7 @@ GameObject:
   - component: {fileID: 4582797006263952}
   - component: {fileID: 114784401111192718}
   - component: {fileID: 54895488621026820}
+  - component: {fileID: 1945641132}
   m_Layer: 8
   m_Name: Dog_Statue_1
   m_TagString: SimObjPhysics
@@ -1553,10 +1554,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b439f6e4ef5714ee2a3643acf37b7a9d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  uniqueID: Statue|+01.00|+01.00|+01.00
+  uniqueID: Statue|-03.40|+00.00|-05.72
   Type: 39
   PrimaryProperty: 3
-  SecondaryProperties: 
+  SecondaryProperties: 0b000000
   BoundingBox: {fileID: 1196581631862326}
   VisibilityPoints:
   - {fileID: 4019009304923314}
@@ -1571,7 +1572,6 @@ MonoBehaviour:
   ReceptacleTriggerBoxes: []
   isVisible: 0
   isInteractable: 0
-  isColliding: 0
   isInAgentHand: 0
   MyColliders:
   - {fileID: 136652778116198158}
@@ -1591,6 +1591,9 @@ MonoBehaviour:
   HFbounciness: 0
   HFrbdrag: 1
   HFrbangulardrag: 0
+  salientMaterials: 05000000
+  CurrentTemperature: 0
+  HowManySecondsUntilRoomTemp: 10
   ContainedObjectReferences: []
 --- !u!54 &54895488621026820
 Rigidbody:
@@ -1608,6 +1611,24 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
+--- !u!114 &1945641132
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1956158693247930}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 02b2beb760fcd4a6f957400c276adb00, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  PrefabToSwapTo: {fileID: 158428533, guid: ee566ea65c8d18f4fac56cd7def4c67d, type: 3}
+  DirtyPrefabToSwapTo: {fileID: 0}
+  ImpulseThreshold: 3.5
+  HighFrictionImpulseOffset: 2
+  breakType: 0
+  MaterialSwapObjects: []
 --- !u!1 &1958828249204434
 GameObject:
   m_ObjectHideFlags: 0

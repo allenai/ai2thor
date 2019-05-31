@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -378,6 +378,26 @@ public class AgentManager : MonoBehaviour
 		}
 	}
 
+	// Used for benchmarking only the server-side
+	// no call is made to the Python side
+	private IEnumerator EmitFrameNoClient() {
+		frameCounter += 1;
+
+		bool shouldRender = this.renderImage;
+
+		if (shouldRender) {
+			// we should only read the screen buffer after rendering is complete
+			yield return new WaitForEndOfFrame();
+			if (synchronousHttp) {
+				// must wait an additional frame when in synchronous mode otherwise the frame lags
+				yield return new WaitForEndOfFrame();
+			}
+		}
+
+		string msg = "{\"action\": \"RotateRight\"}";
+		ProcessControlCommand(msg);
+	}
+
 
 	private IEnumerator EmitFrame() {
 
@@ -593,22 +613,22 @@ public class ObjectMetadata
 	public bool toggleable;//is this object able to be toggled on/off directly?
 	
 	//note some objects can still return the istoggle value even if they cannot directly be toggled on off (stove burner -> stove knob)
-	public bool istoggled;//is this object currently on or off? true is on
+	public bool isToggled;//is this object currently on or off? true is on
 	///
 	public bool breakable;
-	public bool isbroken;//is this object broken?
+	public bool isBroken;//is this object broken?
 	///
-	public bool fillable;//objects filled with liquids
-	public bool isfilled;//is this object filled with some liquid? - similar to 'depletable' but this is for liquids
+	public bool canFillWithLiquid;//objects filled with liquids
+	public bool isFilledWithLiquid;//is this object filled with some liquid? - similar to 'depletable' but this is for liquids
 	///
 	public bool dirtyable;//can toggle object state dirty/clean
-	public bool isdirty;//is this object in a dirty or clean state?
+	public bool isDirty;//is this object in a dirty or clean state?
 	///
-	public bool depletable;//for objects that can be emptied or depleted (toilet paper, paper towels, tissue box etc) - specifically not for liquids
-	public bool isdepleted; 
+	public bool canBeUsedUp;//for objects that can be emptied or depleted (toilet paper, paper towels, tissue box etc) - specifically not for liquids
+	public bool isUsedUp; 
 	///
 	public bool cookable;//can this object be turned to a cooked state? object should not be able to toggle back to uncooked state with contextual interactions, only a direct action
-	public bool iscooked;//is it cooked right now? - context sensitive objects might set this automatically like Toaster/Microwave/ Pots/Pans if isHeated = true
+	public bool isCooked;//is it cooked right now? - context sensitive objects might set this automatically like Toaster/Microwave/ Pots/Pans if isHeated = true
 	// ///
 	// public bool abletocook;//can this object be heated up by a "fire" tagged source? -  use this for Pots/Pans
 	// public bool isabletocook;//object is in contact with a "fire" tagged source (stove burner), if this is heated any object cookable object touching it will be switched to cooked - again use for Pots/Pans
@@ -617,16 +637,25 @@ public class ObjectMetadata
 	public enum Temperature { RoomTemp, Hot, Cold};
 	public string ObjectTemperature;//return current abstracted temperature of object as a string (RoomTemp, Hot, Cold)
 	//
+	public bool canChangeTempToHot;//can change other object temp to hot
+	public bool canChangeTempToCold;//can change other object temp to cool
+	//
 	public bool sliceable;//can this be sliced in some way?
-	public bool issliced;//currently sliced?
+	public bool isSliced;//currently sliced?
 	///
 	public bool openable;
 	public bool isopen;
 	///
 	public bool pickupable;
-	public bool ispickedup;//if the pickupable object is actively being held by the agent
-	///
+	public bool isPickedUp;//if the pickupable object is actively being held by the agent
 
+	public float mass;//mass is only for moveable and pickupable objects
+
+	//salient materials are only for pickupable and moveable objects, for now static only objects do not report material back since we have to assign them manually
+	public enum ObjectSalientMaterial {Metal, Wood, Plastic, Glass, Ceramic, Stone, Fabric, Rubber, Food, Paper, Wax, Soap, Sponge, Organic} //salient materials that make up an object (ie: cell phone - metal, glass)
+
+	public string [] salientMaterials; //salient materials that this object is made of as strings (see enum above). This is only for objects that are Pickupable or Moveable
+	///
 	public string[] receptacleObjectIds;
 	public PivotSimObj[] pivotSimObjs;
 	public float distance;
@@ -778,6 +807,8 @@ public class ServerAction
 	public string ssao = "default";
 	public string fillLiquid; //string to indicate what kind of liquid this object should be filled with. Water, Coffee, Wine etc.
 	public float TimeUntilRoomTemp;
+	public bool allowDecayTemperature = true; //set to true if temperature should decay over time, set to false if temp changes should not decay, defaulted true
+	public string StateChange;//a string that specifies which state change to randomly toggle
 	public SimObjType ReceptableSimObjType()
 	{
 		if (string.IsNullOrEmpty(receptacleObjectType))

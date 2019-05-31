@@ -72,8 +72,8 @@ BoxCollider:
   m_IsTrigger: 0
   m_Enabled: 1
   serializedVersion: 2
-  m_Size: {x: 1.9171994, y: 0.3266163, z: 1.1461161}
-  m_Center: {x: -0.025190711, y: 0.35238504, z: 0}
+  m_Size: {x: 1.9171994, y: 0.3328247, z: 1.1461161}
+  m_Center: {x: -0.025190724, y: 0.35548925, z: -8.6105875e-17}
 --- !u!1 &77675082
 GameObject:
   m_ObjectHideFlags: 0
@@ -533,6 +533,7 @@ GameObject:
   - component: {fileID: 1037026992}
   - component: {fileID: 1037026958}
   - component: {fileID: 1037026993}
+  - component: {fileID: 805510792654029808}
   m_Layer: 8
   m_Name: Bed_20
   m_TagString: SimObjPhysics
@@ -574,7 +575,7 @@ MonoBehaviour:
   uniqueID: Bed|-01.04|+00.01|-00.69
   Type: 76
   PrimaryProperty: 1
-  SecondaryProperties: 07000000
+  SecondaryProperties: 0700000004000000
   BoundingBox: {fileID: 1878433096}
   VisibilityPoints:
   - {fileID: 1535231639}
@@ -628,6 +629,24 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
+--- !u!114 &805510792654029808
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1037026995}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d106cf009583a40e4a85d860c9830f67, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  MaterialSwapObjects: []
+  ObjectsToEnableIfClean:
+  - {fileID: 8869920596608544276}
+  ObjectsToEnableIfDirty:
+  - {fileID: 4357679977695676312}
+  isDirty: 1
 --- !u!1 &1209843766
 GameObject:
   m_ObjectHideFlags: 0
@@ -1354,6 +1373,12 @@ Transform:
     type: 3}
   m_PrefabInstance: {fileID: 4129029884005960340}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &4357679977695676312 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 375157866447228172, guid: 6669463b993777e4baa3fdc517b1ebb0,
+    type: 3}
+  m_PrefabInstance: {fileID: 4129029884005960340}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &4741922594253523566
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -1446,6 +1471,12 @@ PrefabInstance:
 --- !u!4 &8869920596608316404 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 4239849535828081050, guid: e9eaea296b96b0344a850584dbcd0422,
+    type: 3}
+  m_PrefabInstance: {fileID: 4741922594253523566}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1 &8869920596608544276 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 4239849535828173946, guid: e9eaea296b96b0344a850584dbcd0422,
     type: 3}
   m_PrefabInstance: {fileID: 4741922594253523566}
   m_PrefabAsset: {fileID: 0}

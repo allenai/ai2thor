@@ -1066,6 +1066,7 @@ GameObject:
   - component: {fileID: 4649092201568748}
   - component: {fileID: 114166097999475178}
   - component: {fileID: 54073293082404800}
+  - component: {fileID: 6893364005200247890}
   m_Layer: 8
   m_Name: Television_1
   m_TagString: SimObjPhysics
@@ -1080,7 +1081,7 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1436232906347884}
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
@@ -1107,7 +1108,7 @@ MonoBehaviour:
   uniqueID: Television|+01.00|+01.00|+01.00
   Type: 44
   PrimaryProperty: 1
-  SecondaryProperties: 
+  SecondaryProperties: 1d000000
   BoundingBox: {fileID: 1297986326196040}
   VisibilityPoints:
   - {fileID: 4321816512429096}
@@ -1128,7 +1129,6 @@ MonoBehaviour:
   ReceptacleTriggerBoxes: []
   isVisible: 0
   isInteractable: 0
-  isColliding: 0
   isInAgentHand: 0
   MyColliders: []
   HFdynamicfriction: 0
@@ -1136,6 +1136,8 @@ MonoBehaviour:
   HFbounciness: 0
   HFrbdrag: 0
   HFrbangulardrag: 0
+  CurrentTemperature: 0
+  HowManySecondsUntilRoomTemp: 10
   ContainedObjectReferences: []
 --- !u!54 &54073293082404800
 Rigidbody:
@@ -1153,6 +1155,41 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
+--- !u!114 &6893364005200247890
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1436232906347884}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4fd556226fd294b1c845aae4efb365a1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  MovingParts: []
+  MaterialSwapObjects:
+  - MyObject: {fileID: 1781729131869952}
+    OnMaterials:
+    - {fileID: 2100000, guid: 017532715a14a6142927cdebd7929f48, type: 2}
+    - {fileID: 2100000, guid: a326ae68d55311248a609c115a9a525d, type: 2}
+    - {fileID: 2100000, guid: 6606f702e1e4a4c468a5070165d14524, type: 2}
+    - {fileID: 2100000, guid: 5a2e8b752adfbf840a22f5a4836be718, type: 2}
+    - {fileID: 0}
+    OffMaterials:
+    - {fileID: 2100000, guid: 017532715a14a6142927cdebd7929f48, type: 2}
+    - {fileID: 2100000, guid: a326ae68d55311248a609c115a9a525d, type: 2}
+    - {fileID: 2100000, guid: 9364874998551a4429340a7048aa1c90, type: 2}
+    - {fileID: 2100000, guid: 5a2e8b752adfbf840a22f5a4836be718, type: 2}
+    - {fileID: 0}
+  LightSources: []
+  OnPositions: []
+  OffPositions: []
+  animationTime: 0.05
+  isOn: 0
+  movementType: 0
+  SelfControlled: 1
+  ControlledSimObjects: []
 --- !u!1 &1464421253707838
 GameObject:
   m_ObjectHideFlags: 0
