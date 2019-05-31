@@ -258,6 +258,8 @@ GameObject:
   - component: {fileID: 4767142704395498}
   - component: {fileID: 114824343100392866}
   - component: {fileID: 54189676090221590}
+  - component: {fileID: 645699251}
+  - component: {fileID: 645699253}
   m_Layer: 8
   m_Name: Potato_11
   m_TagString: SimObjPhysics
@@ -296,7 +298,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b439f6e4ef5714ee2a3643acf37b7a9d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  uniqueID: 
+  uniqueID: Potato|+00.00|+00.00|+00.00
   Type: 23
   PrimaryProperty: 3
   SecondaryProperties: 09000000
@@ -339,6 +341,38 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
+--- !u!114 &645699251
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1660341310624012}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d07b0b60d7fb54ea9a1ddeca3f431392, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ObjectToChangeTo: {fileID: 2087732093, guid: 000591abdcbf69e47adc0de3ee6a9a45, type: 3}
+  isSliced: 0
+--- !u!114 &645699253
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1660341310624012}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8a7c19d0c53e745af949e89de5ba7a38, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  MaterialSwapObjects:
+  - MyObject: {fileID: 1909175110569986}
+    OnMaterials:
+    - {fileID: 2100000, guid: 890ef07c84a53064fb815a64b0bd345c, type: 2}
+    OffMaterials:
+    - {fileID: 2100000, guid: 92b3167695e464865bc6337e3d453aa3, type: 2}
 --- !u!1 &1754735689742688
 GameObject:
   m_ObjectHideFlags: 0
