@@ -161,6 +161,29 @@ namespace UnityStandardAssets.Characters.FirstPerson
       			        // am.Initialize(action);
                         break;
                     }
+
+                //random toggle state of all objects
+                case "rts":
+                    {
+                        ServerAction action = new ServerAction();
+
+                        action.randomSeed = 0;
+                        action.action = "RandomToggleStateOfAllObjects";
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
+                case "rtss":
+                    {
+                        ServerAction action = new ServerAction();
+
+                        action.randomSeed = 0;
+                        action.StateChange = "CanOpen";
+                        action.action = "RandomToggleSpecificState";
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
                 case "initsynth":
                     {
 						ServerAction action = new ServerAction();

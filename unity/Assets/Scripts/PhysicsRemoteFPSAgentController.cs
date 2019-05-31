@@ -2523,42 +2523,176 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         //use a seed value to randomly change the starting state of sim objects in scene that have state changes
         //USE THIS AFTER INITIALIZING THE SCENE FIRST
         //NOTE: SOME OF THESE STATE CHANGES ARE DESTRUCTIVE AND CANNOT BE REVERSED WITHOUT A SCENE RESET
-        public void RandomToggleAllObjectsWithMultipleStates(ServerAction action)
+        public void RandomToggleStateOfAllObjects(ServerAction action)
         {
-            //gather all sim objects in scene
-            //filter them by if they have a state change
-            //if they have a state change, call the individual state change random toggle on it (ie - OnOff(SimObjPhysics sop, Int RandomSeed))
+            RandomToggleState(action.randomSeed, SimObjSecondaryProperty.CanOpen);
+            RandomToggleState(action.randomSeed, SimObjSecondaryProperty.CanToggleOnOff);
+            RandomToggleState(action.randomSeed, SimObjSecondaryProperty.CanBeFilled);
+            RandomToggleState(action.randomSeed, SimObjSecondaryProperty.CanBeSliced);
+            RandomToggleState(action.randomSeed, SimObjSecondaryProperty.CanBeCooked);
+            RandomToggleState(action.randomSeed, SimObjSecondaryProperty.CanBreak);
+            RandomToggleState(action.randomSeed, SimObjSecondaryProperty.CanBeDirty);
+            RandomToggleState(action.randomSeed, SimObjSecondaryProperty.CanBeUsedUp);
 
-            //each state should also have an individual action that can toggle the state for all objects that have that state
-            //this function should itself call a thing that takes (SimObj sop) as a parameter in case someone wants to toggle the state of a single object without using the Agent
-
-            //open/close
-            //fill
-            //sliced
-            //cooked
-            //dirty
-            //on/off
-            //broken-note: broken objects with prefab swaps will not be visible to the agent since shards aren't sim objects. The metadata will reflect where the source object was when broken though
-            //depleted
-            //
+            actionFinished(true);
         }
 
-        public void RandomToggleAllOpenCloseObjects()
+        //random toggle the state of all objects with a specified State
+        public void RandomToggleSpecificState(ServerAction action)
         {
+            if(action.StateChange == null)
+            {
+                errorMessage = "Missing State parameter. Please use valid State";
+                actionFinished(false);
+            }
+
+            //action.StateChange == 
+            SimObjSecondaryProperty state = (SimObjSecondaryProperty)System.Enum.Parse
+            (typeof(SimObjSecondaryProperty), action.StateChange);
+
+            //if the state is not defined in the SimObjSecondaryProperty enum... false finish
+            if(!SimObjSecondaryProperty.IsDefined(typeof(SimObjSecondaryProperty), state))
+            {
+                errorMessage = "State is not defined. Please check if state matches SimObjSecondaryProperty";
+                actionFinished(false);
+            }
             
+            RandomToggleState(action.randomSeed, state);
+            actionFinished(true);
         }
 
-        public void RandomToggleAllFillableObjects()
+        public void RandomToggleState(int seed, SimObjSecondaryProperty sosp)
         {
 
+            UnityEngine.Random.InitState(seed);
+
+            SimObjPhysics[] simObjects = GameObject.FindObjectsOfType<SimObjPhysics>();
+            List<SimObjPhysics> simObjectsOfType = new List<SimObjPhysics>();
+
+            foreach (SimObjPhysics sop in simObjects)
+            {
+                if(sop.DoesThisObjectHaveThisSecondaryProperty(sosp))
+                {
+                    simObjectsOfType.Add(sop);
+                }
+            }
+
+            //switch for which kind of state change is going to be toggled?
+            switch(sosp)
+            {
+                case SimObjSecondaryProperty.CanOpen:
+                {
+                    foreach(SimObjPhysics sop in simObjectsOfType)
+                    {
+                        int rollForInitiative = UnityEngine.Random.Range(1, 20);
+                        if(rollForInitiative > 10.5)
+                        {
+                            sop.GetComponent<CanOpen_Object>().Interact();
+                        }
+                    }
+
+                    break;
+                }
+
+                case SimObjSecondaryProperty.CanToggleOnOff:
+                {
+                    foreach(SimObjPhysics sop in simObjectsOfType)
+                    {
+                        int rollForInitiative = UnityEngine.Random.Range(1, 20);
+                        if(rollForInitiative > 10.5)
+                        {
+                            sop.GetComponent<CanToggleOnOff>().Toggle();
+                        }
+                    }
+
+                    break;
+                }
+
+                case SimObjSecondaryProperty.CanBeFilled:
+                {
+                    foreach(SimObjPhysics sop in simObjectsOfType)
+                    {
+                        int rollForInitiative = UnityEngine.Random.Range(1, 20);
+                        if(rollForInitiative > 10.5)
+                        {
+                            sop.GetComponent<Fill>().FillObjectRandomLiquid();
+                        }
+                    }
+
+                    break;
+                }
+
+                case SimObjSecondaryProperty.CanBeSliced:
+                {
+                    foreach(SimObjPhysics sop in simObjectsOfType)
+                    {
+                        int rollForInitiative = UnityEngine.Random.Range(1, 20);
+                        if(rollForInitiative > 10.5)
+                        {
+                            sop.GetComponent<SliceObject>().Slice();
+                        }
+                    }
+
+                    break;
+                }
+
+                case SimObjSecondaryProperty.CanBeCooked:
+                {
+                    foreach(SimObjPhysics sop in simObjectsOfType)
+                    {
+                        int rollForInitiative = UnityEngine.Random.Range(1, 20);
+                        if(rollForInitiative > 10.5)
+                        {
+                            sop.GetComponent<CookObject>().Cook();
+                        }
+                    }
+
+                    break;
+                }
+
+                case SimObjSecondaryProperty.CanBreak:
+                {
+                    foreach(SimObjPhysics sop in simObjectsOfType)
+                    {
+                        int rollForInitiative = UnityEngine.Random.Range(1, 20);
+                        if(rollForInitiative > 10.5)
+                        {
+                            sop.GetComponent<Break>().BreakObject();
+                        }
+                    }
+
+                    break;
+                }
+
+                case SimObjSecondaryProperty.CanBeDirty:
+                {
+                    foreach(SimObjPhysics sop in simObjectsOfType)
+                    {
+                        int rollForInitiative = UnityEngine.Random.Range(1, 20);
+                        if(rollForInitiative > 10.5)
+                        {
+                            sop.GetComponent<Dirty>().ToggleCleanOrDirty();
+                        }
+                    }
+
+                    break;
+                }
+
+                case SimObjSecondaryProperty.CanBeUsedUp:
+                {
+                    foreach(SimObjPhysics sop in simObjectsOfType)
+                    {
+                        int rollForInitiative = UnityEngine.Random.Range(1, 20);
+                        if(rollForInitiative > 10.5)
+                        {
+                            sop.GetComponent<UsedUp>().UseUp();
+                        }
+                    }
+
+                    break;
+                }
+            }
         }
-
-        public void RandomToggleAllOnOffObjects()
-        {
-
-        }
-
-
 
         //randomly repositions sim objects in the current scene
         public void InitialRandomSpawn(ServerAction action) {

@@ -61,6 +61,26 @@ public class Fill : MonoBehaviour
         // }
     }
 
+    //fill the object with a random liquid
+    public void FillObjectRandomLiquid()
+    {
+        int whichone = Random.Range(1, 3);
+        if(whichone == 1)
+        {
+            FillObject("water");
+        }
+
+        if(whichone == 2)
+        {
+            FillObject("wine");
+        }
+
+        if(whichone == 3)
+        {
+            FillObject("coffee");
+        }
+    }
+
     public bool FillObject(string whichLiquid)
     {
         if(Liquids.ContainsKey(whichLiquid))
