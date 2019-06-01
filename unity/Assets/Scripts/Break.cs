@@ -47,7 +47,7 @@ public class Break : MonoBehaviour
     void Start()
     {
         #if UNITY_EDITOR
-        if(!gameObject.GetComponentInParent<SimObjPhysics>().DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanBreak))
+        if(gameObject.GetComponentInParent<SimObjPhysics>() != null && !gameObject.GetComponentInParent<SimObjPhysics>().DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanBreak))
         {
             Debug.LogError(gameObject.name + " is missing the CanBreak secondary property!");
         }
@@ -60,12 +60,6 @@ public class Break : MonoBehaviour
         #endif
 
         CurrentImpulseThreshold = ImpulseThreshold;
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-
     }
 
     public void BreakObject(Collision collision)
