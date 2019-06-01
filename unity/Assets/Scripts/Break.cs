@@ -20,6 +20,7 @@ public class Break : MonoBehaviour
     protected float CurrentImpulseThreshold;//modify this with ImpulseThreshold and HighFrictionImpulseOffset based on trigger callback functions
     protected bool readytobreak = true;
 
+    [SerializeField]
     protected bool broken;
 
     //what does this object need to do when it is in the broken state? 
