@@ -12,6 +12,12 @@ public class DecalCollision : Break
     private Vector3 decalScale = new Vector3(0.3f, 0.3f, 0.2f);
     [SerializeField]
     private float minimumImpulseMagnitudeForDecal = 10;
+    [SerializeField]
+    private bool transparent = false;
+
+    [SerializeField]
+    // In local space
+    private Vector3 transparentDecalSpawnOffset = new Vector3(0, 0, 0);
     private float prevTime;
 
     private System.Random random;
@@ -23,39 +29,49 @@ public class DecalCollision : Break
     }
 
     protected override void BreakForDecalType(Collision collision) {
-        if (collision != null) {
-            foreach (ContactPoint contact in collision.contacts)
-            {
-                float newTime = Time.time;
-                float timeDiff = newTime - prevTime;
-                var scale = contact.otherCollider.bounds.size;
-                // unused for now
-                var comp = scale.sqrMagnitude > 0.0f;
+        if (!transparent) {
+            if (collision != null) {
+                foreach (ContactPoint contact in collision.contacts)
+                {
+                    float newTime = Time.time;
+                    float timeDiff = newTime - prevTime;
+                    var scale = contact.otherCollider.bounds.size;
+                    // unused for now
+                    var comp = scale.sqrMagnitude > 0.0f;
 
-                var comp1 = timeDiff > nextDecalWaitTimeSeconds;
+                    var comp1 = timeDiff > nextDecalWaitTimeSeconds;
 
-                Debug.Log(collision.impulse.sqrMagnitude + " size " + scale);
-                if (timeDiff > nextDecalWaitTimeSeconds) {
-                    this.prevTime = Time.time;
-                    var index = random.Next(0, decals.Length);
-                    var decalCopy = Object.Instantiate(decals[index], contact.point, new Quaternion(), this.transform.parent);
-                
-                    // Taking into account the collider box of the object is breaking to resize the decal looks weirder than having the same decal size
-                    // Maybe factor the other object size somehow but not directly, also first collider that hits somtimes has size 0 :(
-                    // decalCopy.transform.localScale = scale + new Vector3(0.0f, 0.0f, 0.02f);
-                    decalCopy.transform.localScale = decalScale;
-                    broken = true;
-                    readytobreak = true;
-                    break;
+                    if (timeDiff > nextDecalWaitTimeSeconds) {
+                        this.prevTime = Time.time;
+            
+                        // Taking into account the collider box of the object is breaking to resize the decal looks weirder than having the same decal size
+                        // Maybe factor the other object size somehow but not directly, also first collider that hits somtimes has size 0 :(
+                        // decalCopy.transform.localScale = scale + new Vector3(0.0f, 0.0f, 0.02f);
+               
+                        // TODO: remove quaternion multiplication by -90 when we get a z oriented simole plane
+                        spawnDecal(contact.point, this.transform.rotation, decalScale);
+                        break;
+                    }
                 }
+            }
+            else {
+                spawnDecal(transform.position, this.transform.rotation * Quaternion.AngleAxis(-90, Vector3.right), decalScale * 2);
             }
         }
         else {
-            var index = random.Next(0, decals.Length);
-            var decalCopy = Object.Instantiate(decals[index], transform.position, new Quaternion(), this.transform.parent);
-            decalCopy.transform.localScale = decalScale * 2;
-            broken = true;
-            readytobreak = true;
+                spawnDecal(this.transform.position + this.transform.rotation * transparentDecalSpawnOffset, this.transform.rotation, this.transform.localScale); 
         }
+    }
+
+    private void spawnDecal(Vector3 position, Quaternion rotation, Vector3 scale, int index = -1) {
+
+        var selectIndex = index;
+        if (index < 0) {
+            selectIndex = random.Next(0, decals.Length);
+        }
+        var decalCopy = Object.Instantiate(decals[selectIndex], position, rotation, this.transform.parent);
+        decalCopy.transform.localScale = scale;
+        broken = true;
+        readytobreak = true;
     }
 }
