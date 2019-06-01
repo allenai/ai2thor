@@ -15,12 +15,12 @@ public class PlaneGizmo : MonoBehaviour
        
         Gizmos.color = new Color(1, 0.92f, 0.016f, 1f);
 
-        var size = 5.0f;
-        
-        var p0 = new Vector3(-size, 0.0f, -size);
-        var p1 = new Vector3(-size, 0.0f, size);
-        var p2 = new Vector3(size, 0.0f, size);
-        var p3 = new Vector3(size, 0.0f, -size);
+        var size = 0.5f;
+        var rot = Quaternion.AngleAxis(90, Vector3.right);
+        var p0 = rot * new Vector3(-size, 0.0f, -size);
+        var p1 = rot * new Vector3(-size, 0.0f, size);
+        var p2 = rot * new Vector3(size, 0.0f, size);
+        var p3 = rot * new Vector3(size, 0.0f, -size);
         
 
         Gizmos.DrawLine(transform.TransformPoint(p0), transform.TransformPoint(p1));
