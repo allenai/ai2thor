@@ -981,7 +981,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		{
 			foreach (Transform t in VisibilityPoints)
 			{
-				Gizmos.DrawSphere(t.position, 0.01f);
+				Gizmos.DrawSphere(t.position, 0.001f);
 
 			}
 		}
