@@ -38,7 +38,7 @@ public class Break : MonoBehaviour
     {SimObjType.TeddyBear, SimObjType.Pillow, SimObjType.Cloth, SimObjType.Bread, SimObjType.BreadSliced, SimObjType.Egg, SimObjType.EggShell, SimObjType.Omelette,
     SimObjType.EggCracked, SimObjType.LettuceSliced, SimObjType.TissueBox, SimObjType.Newspaper, SimObjType.TissueBoxEmpty, SimObjType.TissueBoxEmpty,
     SimObjType.CreditCard, SimObjType.ToiletPaper, SimObjType.ToiletPaperRoll, SimObjType.SoapBar, SimObjType.Pen, SimObjType.Pencil, SimObjType.Towel, 
-    SimObjType.Watch, SimObjType.DishSponge, SimObjType.Tissue, SimObjType.CD,};
+    SimObjType.Watch, SimObjType.DishSponge, SimObjType.Tissue, SimObjType.CD, SimObjType.HandTowel};
 
     public bool isBroken()
     {
