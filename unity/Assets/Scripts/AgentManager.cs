@@ -654,7 +654,7 @@ public class ObjectMetadata
 	public bool isSliced;//currently sliced?
 	///
 	public bool openable;
-	public bool isopen;
+	public bool isOpen;
 	///
 	public bool pickupable;
 	public bool isPickedUp;//if the pickupable object is actively being held by the agent
