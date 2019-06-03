@@ -261,7 +261,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             objMeta.openable = simObj.IsOpenable;
             if (objMeta.openable) {
-                objMeta.isopen = simObj.IsOpen;
+                objMeta.isOpen = simObj.IsOpen;
             }
 
             objMeta.toggleable = simObj.IsToggleable;
