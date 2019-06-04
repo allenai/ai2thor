@@ -1,4 +1,4 @@
-﻿Shader "Unlit/StencilWriteShader"
+﻿Shader "Custom/StencilWriteDeferred"
 {
    
     SubShader
