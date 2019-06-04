@@ -110,7 +110,6 @@ public class DecalCollision : Break
                         break;
                     }
                 }
-                // spawnDecal(this.transform.position + this.transform.rotation * transparentDecalSpawnOffset, this.transform.rotation, this.transform.localScale); 
         }
     }
 
@@ -127,23 +126,30 @@ public class DecalCollision : Break
             // selectIndex = random.Next(0, decals.Length);
             selectIndex = Random.Range(0, decals.Length);
         }
-        var decalCopy = Object.Instantiate(decals[selectIndex], position, rotation, this.transform.parent);
-        decalCopy.transform.localScale = decalScale;
+
+        var finalRotation = rotation;
+        var randomAngle = Random.Range(-180.0f, 180.0f);
         if (randomRotationAxis == DecalRotationAxis.FORWARD) {
-            decalCopy.transform.Rotate(decalCopy.transform.forward, Random.Range(-180.0f, 180.0f));
+            finalRotation =  Quaternion.AngleAxis(randomAngle, Vector3.forward) * rotation;
         }
         else if (randomRotationAxis == DecalRotationAxis.SIDE) {
-            decalCopy.transform.Rotate(decalCopy.transform.right, Random.Range(-180.0f, 180.0f));
+            finalRotation = Quaternion.AngleAxis(randomAngle, Vector3.right) * rotation;
         }
+
+        var decalCopy = Object.Instantiate(decals[selectIndex], position, finalRotation, this.transform.parent);
+
+        decalCopy.transform.localScale = decalScale;
+        
         var mr = decalCopy.GetComponent<MeshRenderer>();
         if (transparent && mr && mr.enabled) {
             mr.material.SetInt("_StencilRef", this.stencilWriteValue);
             Debug.Log("Setting stencil write for deca; shader to " + this.stencilWriteValue);
         }
+        // Not needed if deffered decal prefab is correctly set with  _StencilRef to 1 in material
         else {
             var decal = decalCopy.GetComponent<DeferredDecal>();
             if (decal) {
-                // decal.material.SetInt("_StencilRef", this.stencilWriteValue);
+                decal.material.SetInt("_StencilRef", this.stencilWriteValue);
             }
         }
         
