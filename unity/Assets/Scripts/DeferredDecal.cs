@@ -8,7 +8,7 @@ public enum DecalType {
     EMISSIVE_SPECULAR,
     NORMAL_DIFFUSE,
     ALL,
-    FORWARD
+    FORWARD // TODO: not supported
 }
 
 public class DeferredDecal : MonoBehaviour
