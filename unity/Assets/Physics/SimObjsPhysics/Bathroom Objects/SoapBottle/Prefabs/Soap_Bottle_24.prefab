@@ -127,7 +127,7 @@ MeshFilter:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1133484651452362}
-  m_Mesh: {fileID: 4300112, guid: e1952d4b47e6825449a6a90ec7110231, type: 3}
+  m_Mesh: {fileID: 4300172, guid: e1952d4b47e6825449a6a90ec7110231, type: 3}
 --- !u!23 &23589293774379784
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -1663,7 +1663,7 @@ GameObject:
   - component: {fileID: 4568595423943926}
   - component: {fileID: 114687169515918334}
   - component: {fileID: 54882444904828518}
-  - component: {fileID: 5698125832505796985}
+  - component: {fileID: 8694875832858917989}
   m_Layer: 8
   m_Name: Soap_Bottle_24
   m_TagString: SimObjPhysics
@@ -1705,7 +1705,7 @@ MonoBehaviour:
   uniqueID: 
   Type: 67
   PrimaryProperty: 3
-  SecondaryProperties: 05000000
+  SecondaryProperties: 06000000
   BoundingBox: {fileID: 1301327604178916}
   VisibilityPoints:
   - {fileID: 4540176501198834}
@@ -1739,6 +1739,7 @@ MonoBehaviour:
   HFbounciness: 0
   HFrbdrag: 0.4
   HFrbangulardrag: 0
+  salientMaterials: 02000000
   CurrentTemperature: 0
   HowManySecondsUntilRoomTemp: 10
   ContainedObjectReferences: []
@@ -1758,7 +1759,7 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
---- !u!114 &5698125832505796985
+--- !u!114 &8694875832858917989
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -1767,11 +1768,8 @@ MonoBehaviour:
   m_GameObject: {fileID: 1999974663838608}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 1bd11d6a356024a8fa04845f53405c23, type: 3}
+  m_Script: {fileID: 11500000, guid: 82c2105f4dc674ce9835e05ace7e011b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  WaterObject: {fileID: 0}
-  CoffeeObject: {fileID: 0}
-  WineObject: {fileID: 0}
-  SoapObject: {fileID: 1133484651452362}
-  isFilled: 1
+  DisableThis: {fileID: 1133484651452362}
+  isUsedUp: 0

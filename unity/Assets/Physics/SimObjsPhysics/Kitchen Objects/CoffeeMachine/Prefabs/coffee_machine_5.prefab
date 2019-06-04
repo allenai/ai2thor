@@ -401,7 +401,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1529151837809676}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 4.443, y: -0.3439953, z: 1.302}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 4691594210246882}
@@ -428,7 +428,7 @@ MonoBehaviour:
   uniqueID: CoffeeMachine|-02.69|+00.52|-10.82
   Type: 15
   PrimaryProperty: 1
-  SecondaryProperties: 1d0000000700000034000000
+  SecondaryProperties: 1d00000007000000340000000c000000
   BoundingBox: {fileID: 1193266514697878}
   VisibilityPoints:
   - {fileID: 4715248083128390}
@@ -443,7 +443,6 @@ MonoBehaviour:
   - {fileID: 1066708042755862}
   isVisible: 0
   isInteractable: 0
-  isColliding: 0
   isInAgentHand: 0
   MyColliders: []
   HFdynamicfriction: 0
@@ -451,6 +450,9 @@ MonoBehaviour:
   HFbounciness: 0
   HFrbdrag: 0
   HFrbangulardrag: 0
+  salientMaterials: 
+  CurrentTemperature: 0
+  HowManySecondsUntilRoomTemp: 10
   ContainedObjectReferences: []
 --- !u!54 &54841445821027046
 Rigidbody:
@@ -520,7 +522,8 @@ MonoBehaviour:
   animationTime: 0.05
   isOn: 0
   movementType: 0
-  MustBeClosedToTurnOn: 10000000
+  SelfControlled: 1
+  ControlledSimObjects: []
 --- !u!114 &8252254958671694355
 MonoBehaviour:
   m_ObjectHideFlags: 0
