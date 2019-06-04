@@ -77,7 +77,7 @@ public class DecalCollision : Break
                         // Maybe factor the other object size somehow but not directly, also first collider that hits somtimes has size 0 :(
                         // decalCopy.transform.localScale = scale + new Vector3(0.0f, 0.0f, 0.02f);
 
-                        spawnDecal(contact.point, this.transform.rotation, decalScale, DecalRotationAxis.SIDE);
+                        spawnDecal(contact.point, this.transform.rotation, decalScale, DecalRotationAxis.FORWARD);
                         break;
                     }
                 }
