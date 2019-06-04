@@ -5,7 +5,7 @@
 // - no lightmap support
 // - no per-material color
 
-// Unity's Unlit Trnansparent shader with stencil functionality
+// Unity's Unlit Transparent shader with stencil functionality
 
 Shader "Unlit/TransparentStencil" {
 Properties {

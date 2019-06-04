@@ -4,7 +4,7 @@
 // - no lightmap support
 // - no per-material color
 
-// Modification of Unity's alpha cutout shader
+// Modification of Unity's alpha cutout shader that uses the stencil buffer
 
 Shader "Unlit/TransparentCutoutStencil" {
 Properties {
