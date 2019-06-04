@@ -1,4 +1,4 @@
-﻿Shader "Custom/StencilWriteDeferred"
+﻿Shader "Unlit/StencilWriteShader"
 {
    
     SubShader
@@ -16,7 +16,7 @@
         Pass
         {
             Blend Zero One
-			ZWrite Off
+            ZWrite Off
             Cull Off
 
             CGPROGRAM

@@ -1,12 +1,14 @@
-﻿Shader "Custom/StencilWriteDeferred"
+﻿Shader "Custom/StencilWriteForward"
 {
-   
+    Properties {
+     [IntRange] _StencilRef ("Stencil Reference Value", Range(0,255)) = 0
+    }
     SubShader
     {
-        Tags { "RenderType"="Opaque" "LightMode" = "Deferred" "Queue"="Geometry+225"}
+        Tags { "RenderType"="Opaque" "Queue"="Transparent-1"}
 
         Stencil {
-            Ref 1
+            Ref [_StencilRef]
             Comp Always
             WriteMask 255
             Pass Replace
@@ -16,7 +18,7 @@
         Pass
         {
             Blend Zero One
-			ZWrite Off
+            ZWrite Off
             Cull Off
 
             CGPROGRAM
