@@ -87,6 +87,8 @@ public class DecalCollision : Break
             }
         }
         else {
+
+            if (collision != null) {
                  foreach (ContactPoint contact in collision.contacts)
                 {
                     Debug.Log("Decal pre for " + this.stencilWriteValue);
@@ -110,6 +112,10 @@ public class DecalCollision : Break
                         break;
                     }
                 }
+            }
+            else {
+                spawnDecal(this.transform.position,  this.transform.rotation, decalScale * 2);
+            }
         }
     }
 
@@ -127,17 +133,18 @@ public class DecalCollision : Break
             selectIndex = Random.Range(0, decals.Length);
         }
 
-        var finalRotation = rotation;
+        var randomRotation = new Quaternion();
         var randomAngle = Random.Range(-180.0f, 180.0f);
         if (randomRotationAxis == DecalRotationAxis.FORWARD) {
-            finalRotation =  Quaternion.AngleAxis(randomAngle, Vector3.forward) * rotation;
+            randomRotation =  Quaternion.AngleAxis(randomAngle, Vector3.forward) ;
         }
         else if (randomRotationAxis == DecalRotationAxis.SIDE) {
-            finalRotation = Quaternion.AngleAxis(randomAngle, Vector3.right) * rotation;
+            randomRotation = Quaternion.AngleAxis(randomAngle, Vector3.right) ;
         }
 
-        var decalCopy = Object.Instantiate(decals[selectIndex], position, finalRotation, this.transform.parent);
+        var decalCopy = Object.Instantiate(decals[selectIndex], position, rotation * randomRotation, this.transform.parent);
 
+        //decalCopy.transform.rotation = rotation * decalCopy.transform.rotation;
         decalCopy.transform.localScale = decalScale;
         
         var mr = decalCopy.GetComponent<MeshRenderer>();
