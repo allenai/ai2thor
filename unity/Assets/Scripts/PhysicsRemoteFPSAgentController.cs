@@ -2966,7 +2966,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             target.transform.SetParent(AgentHand.transform);
             ItemInHand = target.gameObject;
 
-            if (!action.forceAction && isHandObjectColliding()) {
+            if (!action.forceAction && isHandObjectColliding(true)) {
                 // Undo picking up the object if the object is colliding with something after picking it up
                 target.GetComponent<Rigidbody>().isKinematic = wasKinematic;
                 target.transform.position = savedPos;
@@ -3108,8 +3108,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             if (ItemInHand != null) {
                 //we do need this to check if the item is currently colliding with the agent, otherwise
                 //dropping an object while it is inside the agent will cause it to shoot out weirdly
-                if (!action.forceAction && isHandObjectColliding(true)) {
-                    errorMessage = ItemInHand.transform.name + " can't be dropped. It must be clear of all other objects first";
+                if (!action.forceAction && isHandObjectColliding(false)) {
+                    errorMessage = ItemInHand.transform.name + " can't be dropped. It must be clear of all other collision first, including the Agent";
                     Debug.Log(errorMessage);
                     actionFinished(false);
                     return false;
@@ -4954,13 +4954,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return false;
         }
 
-        protected bool isHandObjectColliding(bool includeAgent = false, float expandBy = 0.0f) {
+        //to ignore the agent in this collision check, set ignoreAgent to true
+        protected bool isHandObjectColliding(bool ignoreAgent = false, float expandBy = 0.0f) {
             if (ItemInHand == null) {
                 return false;
             }
             List<GameObject> ignoreGameObjects = new List<GameObject>();
             // Ignore the agent when determining if the hand object is colliding
-            if (!includeAgent) {
+            if (ignoreAgent) {
                 ignoreGameObjects.Add(this.gameObject);
             }
             return UtilityFunctions.isObjectColliding(ItemInHand, ignoreGameObjects, expandBy);
