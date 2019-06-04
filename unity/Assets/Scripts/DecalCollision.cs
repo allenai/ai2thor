@@ -5,6 +5,8 @@ using UnityEngine;
 public class DecalCollision : Break
 {
     [SerializeField]
+    private int stencilWriteValue = 1;
+    [SerializeField]
     private GameObject[] decals;
     [SerializeField]
     private float nextDecalWaitTimeSeconds = 1;
@@ -20,12 +22,22 @@ public class DecalCollision : Break
     private Vector3 transparentDecalSpawnOffset = new Vector3(0, 0, 0);
     private float prevTime;
 
+    private static int currentStencilId = 0;
+
     private System.Random random;
     
     void OnEnable() {
         breakType = BreakType.Decal;
         prevTime = Time.time;
         random = new System.Random();
+
+        var mr = this.GetComponent<MeshRenderer>();
+        if (mr && mr.enabled) {
+            DecalCollision.currentStencilId = DecalCollision.currentStencilId + 1;
+            this.stencilWriteValue =  DecalCollision.currentStencilId << 1;
+            mr.material.SetInt("_StencilRef", this.stencilWriteValue);
+            Debug.Log("Setting stencil write for shader to " + this.stencilWriteValue);
+        }
     }
 
     protected override void BreakForDecalType(Collision collision) {
@@ -55,11 +67,35 @@ public class DecalCollision : Break
                 }
             }
             else {
-                spawnDecal(transform.position, this.transform.rotation * Quaternion.AngleAxis(-90, Vector3.right), decalScale * 2);
+                spawnDecal(transform.position, this.transform.rotation, decalScale * 2);
             }
         }
         else {
-                spawnDecal(this.transform.position + this.transform.rotation * transparentDecalSpawnOffset, this.transform.rotation, this.transform.localScale); 
+                 foreach (ContactPoint contact in collision.contacts)
+                {
+                    Debug.Log("Decal pre for " + this.stencilWriteValue);
+                    float newTime = Time.time;
+                    float timeDiff = newTime - prevTime;
+                    var scale = contact.otherCollider.bounds.size;
+                    // unused for now
+                    var comp = scale.sqrMagnitude > 0.0f;
+
+                    var comp1 = timeDiff > nextDecalWaitTimeSeconds;
+
+                    if (timeDiff > nextDecalWaitTimeSeconds) {
+                        Debug.Log("Decal spawn for " + this.stencilWriteValue);
+                        this.prevTime = Time.time;
+            
+                        // Taking into account the collider box of the object is breaking to resize the decal looks weirder than having the same decal size
+                        // Maybe factor the other object size somehow but not directly, also first collider that hits somtimes has size 0 :(
+                        // decalCopy.transform.localScale = scale + new Vector3(0.0f, 0.0f, 0.02f);
+               
+                        // TODO: remove quaternion multiplication by -90 when we get a z oriented simole plane
+                        spawnDecal(contact.point, this.transform.rotation, decalScale);
+                        break;
+                    }
+                }
+                // spawnDecal(this.transform.position + this.transform.rotation * transparentDecalSpawnOffset, this.transform.rotation, this.transform.localScale); 
         }
     }
 
@@ -71,6 +107,12 @@ public class DecalCollision : Break
         }
         var decalCopy = Object.Instantiate(decals[selectIndex], position, rotation, this.transform.parent);
         decalCopy.transform.localScale = scale;
+        var mr = decalCopy.GetComponent<MeshRenderer>();
+        if (mr && mr.enabled) {
+            mr.material.SetInt("_StencilRef", this.stencilWriteValue);
+            Debug.Log("Setting stencil write for deca; shader to " + this.stencilWriteValue);
+        
+        }
         broken = true;
         readytobreak = true;
     }
