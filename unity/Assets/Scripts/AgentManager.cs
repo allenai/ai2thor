@@ -29,7 +29,6 @@ public class AgentManager : MonoBehaviour
 	private bool renderObjectImage;
 	private bool renderNormalsImage;
 	private bool synchronousHttp = true;
-	private Socket sock = null;
 	private List<Camera> thirdPartyCameras = new List<Camera>();
 	
 
