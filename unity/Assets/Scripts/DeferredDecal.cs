@@ -7,18 +7,21 @@ public enum DecalType {
     DIFFUSE_ONLY,
     EMISSIVE_SPECULAR,
     NORMAL_DIFFUSE,
-    ALL
+    ALL,
+    FORWARD
 }
 
 public class DeferredDecal : MonoBehaviour
 {
 
      [SerializeField]
-     private Material material;
+     public Material material;
      [SerializeField]
      private Mesh cubeMesh;
      [SerializeField]
      private DecalType type = DecalType.DIFFUSE_ONLY;
+     [SerializeField]
+     private CameraEvent atRenderEvent = CameraEvent.BeforeLighting;
      private CommandBuffer buffer;
      private Camera viewCamera;
 
@@ -26,7 +29,7 @@ public class DeferredDecal : MonoBehaviour
         this.buffer = new CommandBuffer();
         buffer.name = "Deferred Decals";
         this.viewCamera = Camera.main;
-        viewCamera.AddCommandBuffer(CameraEvent.BeforeLighting, buffer);
+        viewCamera.AddCommandBuffer(atRenderEvent, buffer);
      }
  
     public void OnWillRenderObject()
@@ -56,6 +59,9 @@ public class DeferredDecal : MonoBehaviour
         else if (type == DecalType.DIFFUSE_ONLY) {
             // Diffuse only, no MTR
             buffer.SetRenderTarget(BuiltinRenderTextureType.GBuffer0, BuiltinRenderTextureType.CameraTarget);
+        }
+        else if (type == DecalType.FORWARD) {
+            buffer.SetRenderTarget(BuiltinRenderTextureType.CurrentActive, BuiltinRenderTextureType.CameraTarget);
         }
         
         buffer.DrawMesh(this.cubeMesh, this.transform.localToWorldMatrix, this.material);
