@@ -1008,6 +1008,7 @@ Transform:
   - {fileID: 379240267}
   - {fileID: 8247721366008783814}
   - {fileID: 3407049587651186056}
+  - {fileID: 8502297113626965496}
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -1042,7 +1043,6 @@ MonoBehaviour:
   - {fileID: 2368808818833173329}
   isVisible: 0
   isInteractable: 0
-  isColliding: 0
   isInAgentHand: 0
   MyColliders:
   - {fileID: 2320481179462477117}
@@ -1060,6 +1060,9 @@ MonoBehaviour:
   HFbounciness: 0
   HFrbdrag: 0
   HFrbangulardrag: 0.2
+  salientMaterials: 04000000
+  CurrentTemperature: 0
+  HowManySecondsUntilRoomTemp: 10
   ContainedObjectReferences: []
 --- !u!54 &2313779041862687473
 Rigidbody:
@@ -1095,8 +1098,8 @@ MonoBehaviour:
     type: 3}
   ImpulseThreshold: 3.6
   HighFrictionImpulseOffset: 2
-  broken: 0
   breakType: 0
+  MaterialSwapObjects: []
 --- !u!114 &1056087504
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1117,7 +1120,9 @@ MonoBehaviour:
     OffMaterials:
     - {fileID: 2100000, guid: 3d7f50338d0254a1591df0fff02af58a, type: 2}
     - {fileID: 2100000, guid: d121505d6c0f5344e855301f511b7f34, type: 2}
-  ObjectsToEnableOrDisable: []
+  ObjectsToEnableIfClean: []
+  ObjectsToEnableIfDirty: []
+  isDirty: 0
 --- !u!114 &275105139
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1132,7 +1137,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   WaterObject: {fileID: 8247721366009020390}
   CoffeeObject: {fileID: 3407049587650761128}
-  WineObject: {fileID: 0}
+  WineObject: {fileID: 8502297113627453912}
   isFilled: 0
 --- !u!1 &2367110602971091803
 GameObject:
@@ -1818,4 +1823,105 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 8247721366491270550, guid: 6e5f2fea4bf1b604e83c29c757a9aeff,
     type: 3}
   m_PrefabInstance: {fileID: 591851088}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1001 &6549080634728662497
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    m_TransformParent: {fileID: 2365502302183138545}
+    m_Modifications:
+    - target: {fileID: 3394931327004552249, guid: 68d52e84289e5e8439d1f3d33dae977d,
+        type: 3}
+      propertyPath: m_Name
+      value: Liquid_Cap_Wine_Circle
+      objectReference: {fileID: 0}
+    - target: {fileID: 3394931327004552249, guid: 68d52e84289e5e8439d1f3d33dae977d,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3394931327004586009, guid: 68d52e84289e5e8439d1f3d33dae977d,
+        type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3394931327004586009, guid: 68d52e84289e5e8439d1f3d33dae977d,
+        type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0.0889
+      objectReference: {fileID: 0}
+    - target: {fileID: 3394931327004586009, guid: 68d52e84289e5e8439d1f3d33dae977d,
+        type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3394931327004586009, guid: 68d52e84289e5e8439d1f3d33dae977d,
+        type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3394931327004586009, guid: 68d52e84289e5e8439d1f3d33dae977d,
+        type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3394931327004586009, guid: 68d52e84289e5e8439d1f3d33dae977d,
+        type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3394931327004586009, guid: 68d52e84289e5e8439d1f3d33dae977d,
+        type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3394931327004586009, guid: 68d52e84289e5e8439d1f3d33dae977d,
+        type: 3}
+      propertyPath: m_RootOrder
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 3394931327004586009, guid: 68d52e84289e5e8439d1f3d33dae977d,
+        type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3394931327004586009, guid: 68d52e84289e5e8439d1f3d33dae977d,
+        type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3394931327004586009, guid: 68d52e84289e5e8439d1f3d33dae977d,
+        type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3394931327004586009, guid: 68d52e84289e5e8439d1f3d33dae977d,
+        type: 3}
+      propertyPath: m_LocalScale.x
+      value: 0.7929318
+      objectReference: {fileID: 0}
+    - target: {fileID: 3394931327004586009, guid: 68d52e84289e5e8439d1f3d33dae977d,
+        type: 3}
+      propertyPath: m_LocalScale.y
+      value: 0.7929318
+      objectReference: {fileID: 0}
+    - target: {fileID: 3394931327004586009, guid: 68d52e84289e5e8439d1f3d33dae977d,
+        type: 3}
+      propertyPath: m_LocalScale.z
+      value: 0.7929318
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 68d52e84289e5e8439d1f3d33dae977d, type: 3}
+--- !u!1 &8502297113627453912 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 3394931327004552249, guid: 68d52e84289e5e8439d1f3d33dae977d,
+    type: 3}
+  m_PrefabInstance: {fileID: 6549080634728662497}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &8502297113626965496 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 3394931327004586009, guid: 68d52e84289e5e8439d1f3d33dae977d,
+    type: 3}
+  m_PrefabInstance: {fileID: 6549080634728662497}
   m_PrefabAsset: {fileID: 0}

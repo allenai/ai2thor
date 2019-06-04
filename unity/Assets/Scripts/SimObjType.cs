@@ -50,8 +50,8 @@ public enum SimObjSecondaryProperty : int //EACH SimObjPhysics can have any numb
     CanBeSliced = 9,
     CanSlice = 10,
     CanBreak = 11,
-    CanBeFilledWithWater = 12,
-    CanFillWithWater = 13,
+    CanChangeTempToHot = 12,//this object can change temperature of other objects to hot
+    CanChangeTempToCold = 13,//this object can change temperature of other objects to cold
     CanBeHeatedCookware = 14,
     CanHeatCookware = 15,
     CanBeStoveTopCooked = 16,
@@ -372,6 +372,10 @@ public static class ReceptacleRestrictions
 		{SimObjType.Bread, new List<SimObjType>()
 		{SimObjType.Microwave, SimObjType.Fridge, SimObjType.TableTop, SimObjType.CounterTop, SimObjType.GarbageCan}},
 
+		//BREAD SLICED
+		{SimObjType.BreadSliced, new List<SimObjType>()
+		{SimObjType.Microwave, SimObjType.Fridge, SimObjType.TableTop, SimObjType.CounterTop, SimObjType.GarbageCan, SimObjType.Toaster}},
+
 		//BUTTER KNIFE
 		{SimObjType.ButterKnife, new List<SimObjType>()
 		{SimObjType.Pot, SimObjType.Pan, SimObjType.Bowl, SimObjType.Mug, SimObjType.Plate, SimObjType.Cup, SimObjType.Sink, SimObjType.SinkBasin, SimObjType.TableTop, SimObjType.CounterTop,
@@ -417,6 +421,10 @@ public static class ReceptacleRestrictions
 		//EGG
 		{SimObjType.Egg, new List<SimObjType>()
 		{SimObjType.Pot, SimObjType.Pan, SimObjType.Bowl, SimObjType.Microwave, SimObjType.Fridge, SimObjType.Plate, SimObjType.Sink, SimObjType.SinkBasin, SimObjType.TableTop, SimObjType.CounterTop, SimObjType.GarbageCan}},
+	
+		//EGG CRACKED
+		{SimObjType.EggCracked, new List<SimObjType>()
+		{SimObjType.Pot, SimObjType.Pan, SimObjType.Bowl, SimObjType.Microwave, SimObjType.Fridge, SimObjType.Plate, SimObjType.Sink, SimObjType.SinkBasin, SimObjType.TableTop, SimObjType.CounterTop, SimObjType.GarbageCan}},
 
 		//FORK
 		{SimObjType.Fork, new List<SimObjType>()
@@ -449,6 +457,10 @@ public static class ReceptacleRestrictions
 
 		//LETTUCE
 		{SimObjType.Lettuce, new List<SimObjType>()
+		{SimObjType.Pot, SimObjType.Pan, SimObjType.Bowl, SimObjType.Fridge, SimObjType.Plate, SimObjType.Sink, SimObjType.SinkBasin, SimObjType.TableTop, SimObjType.CounterTop, SimObjType.GarbageCan}},
+
+		//LETTUCE SLICED
+		{SimObjType.LettuceSliced, new List<SimObjType>()
 		{SimObjType.Pot, SimObjType.Pan, SimObjType.Bowl, SimObjType.Fridge, SimObjType.Plate, SimObjType.Sink, SimObjType.SinkBasin, SimObjType.TableTop, SimObjType.CounterTop, SimObjType.GarbageCan}},
 
 		//MUG
@@ -506,6 +518,9 @@ public static class ReceptacleRestrictions
 		{SimObjType.Potato, new List<SimObjType>()
 		{SimObjType.Pot, SimObjType.Pan, SimObjType.Bowl, SimObjType.Microwave, SimObjType.Fridge, SimObjType.Plate, SimObjType.Sink, SimObjType.SinkBasin, SimObjType.TableTop, SimObjType.CounterTop, SimObjType.GarbageCan}},
 
+		//POTATO SLICED
+		{SimObjType.PotatoSliced, new List<SimObjType>()
+		{SimObjType.Pot, SimObjType.Pan, SimObjType.Bowl, SimObjType.Microwave, SimObjType.Fridge, SimObjType.Plate, SimObjType.Sink, SimObjType.SinkBasin, SimObjType.TableTop, SimObjType.CounterTop, SimObjType.GarbageCan}},
 
 		//REMOTE CONTROL
 		{SimObjType.RemoteControl, new List<SimObjType>()
@@ -573,6 +588,11 @@ public static class ReceptacleRestrictions
 
 		//TOMATO
 		{SimObjType.Tomato, new List<SimObjType>()
+		{SimObjType.TableTop, SimObjType.CounterTop, SimObjType.Sink, SimObjType.SinkBasin, SimObjType.Pot,
+		 SimObjType.Bowl, SimObjType.Fridge, SimObjType.GarbageCan, SimObjType.Plate}},
+
+		//TOMATO SLICED
+		{SimObjType.TomatoSliced, new List<SimObjType>()
 		{SimObjType.TableTop, SimObjType.CounterTop, SimObjType.Sink, SimObjType.SinkBasin, SimObjType.Pot,
 		 SimObjType.Bowl, SimObjType.Fridge, SimObjType.GarbageCan, SimObjType.Plate}},
 

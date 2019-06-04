@@ -161,6 +161,29 @@ namespace UnityStandardAssets.Characters.FirstPerson
       			        // am.Initialize(action);
                         break;
                     }
+
+                //random toggle state of all objects
+                case "rts":
+                    {
+                        ServerAction action = new ServerAction();
+
+                        action.randomSeed = 0;
+                        action.action = "RandomToggleStateOfAllObjects";
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
+                case "rtss":
+                    {
+                        ServerAction action = new ServerAction();
+
+                        action.randomSeed = 0;
+                        action.StateChange = "CanOpen";
+                        action.action = "RandomToggleSpecificState";
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
                 case "initsynth":
                     {
 						ServerAction action = new ServerAction();
@@ -254,6 +277,42 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         //set this true to ignore Placement Restrictions
                         action.forceAction = true;
 
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
+                //put an object down with stationary false
+                case "putf":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "PutObject";
+                        
+                        if(splitcommand.Length == 2)
+                        {
+                            action.receptacleObjectId = splitcommand[1];
+                        }
+
+                        else
+                            action.receptacleObjectId = PhysicsController.UniqueIDOfClosestReceptacleObject();
+                            
+                        //set this to false if we want to place it and let physics resolve by having it fall a short distance into position
+
+                        //set true to place with kinematic = true so that it doesn't fall or roll in place - making placement more consistant and not physics engine reliant - this more closely mimics legacy pivot placement behavior
+                        action.placeStationary = false; 
+
+                        //set this true to ignore Placement Restrictions
+                        action.forceAction = true;
+
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
+                //make all pickupable objects kinematic false so that they will react to collisions. Otherwise, some objects might be defaulted to kinematic true, or
+                //if they were placed with placeStationary true, then they will not interact with outside collisions immediately.
+                case "kinematicfalse":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "MakeAllPickupableObjectsMoveable";
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }
@@ -892,24 +951,24 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         break;
                     }
 
-                case "fillsoap":
-                    {
-                        ServerAction action = new ServerAction();
-                        action.action = "FillObjectWithLiquid";
-						if(splitcommand.Length > 1)
-						{
-							action.objectId = splitcommand[1];
-						}
+                // case "fillsoap":
+                //     {
+                //         ServerAction action = new ServerAction();
+                //         action.action = "FillObjectWithLiquid";
+				// 		if(splitcommand.Length > 1)
+				// 		{
+				// 			action.objectId = splitcommand[1];
+				// 		}
 
-                        else
-                        {
-                            action.objectId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().UniqueIDOfClosestVisibleObject();
-                        }
+                //         else
+                //         {
+                //             action.objectId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().UniqueIDOfClosestVisibleObject();
+                //         }
 
-                        action.fillLiquid = "soap";
-                        PhysicsController.ProcessControlCommand(action);
-                        break;
-                    }
+                //         action.fillLiquid = "soap";
+                //         PhysicsController.ProcessControlCommand(action);
+                //         break;
+                //     }
 
                 case "fillwine":
                     {
@@ -1143,10 +1202,11 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         break;
                     }  
                 
-                case "SetTempTimer":
+                //changes the time spent to decay to room temperature for all objects in this scene of given type
+                case "DecayTimeForType":
                     {
                         ServerAction action = new ServerAction();
-                        action.action = "SetRoomTempDecayTime";
+                        action.action = "SetRoomTempDecayTimeForType";
 
                         action.TimeUntilRoomTemp = 20f;
                         action.objectType = "Bread";
@@ -1155,6 +1215,28 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         break;
                     }
                     
+                //changes the time spent to decay to room temperature for all objects globally in the scene
+                case "DecayTimeGlobal":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "SetGlobalRoomTempDecayTime";
+
+                        action.TimeUntilRoomTemp = 20f;
+                        PhysicsController.ProcessControlCommand(action);
+
+                        break;
+                    }
+                
+                case "SetTempDecayBool":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "SetDecayTemperatureBool";
+
+                        action.allowDecayTemperature = false;
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
                     //throw object by dropping it and applying force.
                     //default is with strength of 120, can pass in custom magnitude of throw force
                 case "throw":

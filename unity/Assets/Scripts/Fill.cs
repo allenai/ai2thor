@@ -13,8 +13,6 @@ public class Fill : MonoBehaviour
     [SerializeField]
     protected GameObject WineObject = null;
 
-    [SerializeField]
-    protected GameObject SoapObject = null;
 
     [SerializeField]
     protected bool isFilled = false; //false - empty, true - currently filled with
@@ -40,7 +38,6 @@ public class Fill : MonoBehaviour
         Liquids.Add("water", WaterObject);
         Liquids.Add("coffee", CoffeeObject);
         Liquids.Add("wine", WineObject);
-        Liquids.Add("soap", SoapObject);
 
     }
 
@@ -62,6 +59,26 @@ public class Fill : MonoBehaviour
         // {
         //     FillObject("water");
         // }
+    }
+
+    //fill the object with a random liquid
+    public void FillObjectRandomLiquid()
+    {
+        int whichone = Random.Range(1, 3);
+        if(whichone == 1)
+        {
+            FillObject("water");
+        }
+
+        if(whichone == 2)
+        {
+            FillObject("wine");
+        }
+
+        if(whichone == 3)
+        {
+            FillObject("coffee");
+        }
     }
 
     public bool FillObject(string whichLiquid)
@@ -169,6 +186,7 @@ public class Fill : MonoBehaviour
 
     public void OnTriggerStay(Collider other)
     {
+        //if touching running water, automatically fill with water.
         if(other.tag == "Liquid")
         {
             if(!isFilled)
