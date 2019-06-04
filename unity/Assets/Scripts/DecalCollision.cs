@@ -101,20 +101,20 @@ public class DecalCollision : Break
                     var comp1 = timeDiff > nextDecalWaitTimeSeconds;
 
                     if (timeDiff > nextDecalWaitTimeSeconds) {
-                        Debug.Log("Decal spawn for " + this.stencilWriteValue);
                         this.prevTime = Time.time;
             
                         // Taking into account the collider box of the object is breaking to resize the decal looks weirder than having the same decal size
                         // Maybe factor the other object size somehow but not directly, also first collider that hits somtimes has size 0 :(
                         // decalCopy.transform.localScale = scale + new Vector3(0.0f, 0.0f, 0.02f);
-
                         spawnDecal(contact.point, this.transform.rotation, decalScale, DecalRotationAxis.FORWARD);
                         break;
                     }
                 }
             }
             else {
-                spawnDecal(this.transform.position,  this.transform.rotation, decalScale * 2);
+                // Debug.Log("Spawn decal break " + this.transform.rotation + " final " + this.transform.rotation * Quaternion.Euler(-90, 0, 0));
+                // spawnDecal(this.transform.position,  this.transform.rotation * Quaternion.Euler(-90, 0, 0), decalScale * 2);
+                  spawnDecal(this.transform.position + this.transform.rotation * transparentDecalSpawnOffset, this.transform.rotation, this.transform.localScale); 
             }
         }
     }
@@ -129,11 +129,10 @@ public class DecalCollision : Break
         }
         var selectIndex = index;
         if (index < 0) {
-            // selectIndex = random.Next(0, decals.Length);
             selectIndex = Random.Range(0, decals.Length);
         }
 
-        var randomRotation = new Quaternion();
+        var randomRotation = Quaternion.identity;
         var randomAngle = Random.Range(-180.0f, 180.0f);
         if (randomRotationAxis == DecalRotationAxis.FORWARD) {
             randomRotation =  Quaternion.AngleAxis(randomAngle, Vector3.forward) ;
@@ -143,14 +142,11 @@ public class DecalCollision : Break
         }
 
         var decalCopy = Object.Instantiate(decals[selectIndex], position, rotation * randomRotation, this.transform.parent);
-
-        //decalCopy.transform.rotation = rotation * decalCopy.transform.rotation;
         decalCopy.transform.localScale = decalScale;
         
         var mr = decalCopy.GetComponent<MeshRenderer>();
         if (transparent && mr && mr.enabled) {
             mr.material.SetInt("_StencilRef", this.stencilWriteValue);
-            Debug.Log("Setting stencil write for deca; shader to " + this.stencilWriteValue);
         }
         // Not needed if deffered decal prefab is correctly set with  _StencilRef to 1 in material
         else {
