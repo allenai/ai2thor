@@ -89,6 +89,13 @@ New metadata values have been added to represent new state changes:
 
 Additionally, some Metadata values have been renamed for consistency, and certain depracated Metadata features have been removed.
 
+Removed Metadata Values:
+- pivot
+- pivotSimObjs
+- receptacleCount
+- bounds3d
+- bounds
+
 ## More Sim Object Types
 Additional Sim Object Types have been added to the framework
 - Old Total Types: 105 
