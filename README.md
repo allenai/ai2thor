@@ -3,7 +3,7 @@
 
 --------------------------------------------------------------------------------
 
-AI2-THOR (The House Of inteRactions) is a photo-realistic interactable framework for AI agents.
+[AI2-THOR (The House Of inteRactions)](https://ai2thor.allenai.org/) is a photo-realistic interactable framework for AI agents.
 
 ## News
 * (6/2019) Version 1.1 update of the AI2-THOR framework is now live! We have over quadrupled our total action and state space, adding new actions that allow visually distinct new object states such as broken screens on electronics, shattered windows, breakable dishware and more. Along with these new state changes, objects have more physical properties like Temperature, Mass, and Salient Materials that are all reported back in object metadata. To combine all of these new properties and actions, new context sensative interactions can now automatically change object states. This includes interactions like placing a dirty bowl under running sink water to clean it, placing a mug in a coffee machine to automatically fill it with coffee, putting out a lit candle by placing it in water, or placing an object over an active stove burner or in the fridge to change its temperature.  Please see the [full release notes here](doc/static/ReleaseNotes/ReleaseNotes_1.0.md) to view details on all the changes and new features.
