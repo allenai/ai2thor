@@ -49,8 +49,6 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 	public bool isInteractable = false;
 	public bool isInAgentHand = false;
 
-	private Bounds bounds;
-
 	//these collider references are used for switching physics materials for all colliders on this object
 	[Header("Non - Trigger Colliders of this object")]
 	public Collider[] MyColliders = null;
@@ -137,15 +135,6 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		set
 		{
 			uniqueID = value;
-		}
-	}
-	public Bounds Bounds
-	{
-		get
-		{
-			// XXX must define how to get the bounds of the simobj
-			//We can use Bounds.Encapsulate to grow a bounding box to enclose all Visibility Points on this Sim Obj
-			return bounds;
 		}
 	}
 
