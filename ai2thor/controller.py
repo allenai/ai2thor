@@ -521,7 +521,7 @@ class Controller(object):
                 if o['visible']:
                     visible_objects.append(o['objectId'])
                     if o['openable']:
-                        if o['isopen']:
+                        if o['isOpen']:
                             add_command(command_counter, 'CloseObject', objectId=o['objectId'])
                         else:
                             add_command(command_counter, 'OpenObject', objectId=o['objectId'])
@@ -531,7 +531,7 @@ class Controller(object):
 
                     if len(event.metadata['inventoryObjects']) > 0:
                         inventoryObjectId = event.metadata['inventoryObjects'][0]['objectId']
-                        if o['receptacle'] and (not o['openable'] or o['isopen']) and inventoryObjectId != o['objectId']:
+                        if o['receptacle'] and (not o['openable'] or o['isOpen']) and inventoryObjectId != o['objectId']:
                             add_command(command_counter, 'PutObject', objectId=inventoryObjectId, receptacleObjectId=o['objectId'])
                             add_command(command_counter, 'MoveHandAhead', moveMagnitude=0.1)
                             add_command(command_counter, 'MoveHandBack', moveMagnitude=0.1)
@@ -585,7 +585,7 @@ class Controller(object):
                 should_fail = True
 
             obj_metadata = self.last_event.get_object(action['objectId'])
-            if obj_metadata is None or obj_metadata['isopen'] == (action['action'] == 'OpenObject'):
+            if obj_metadata is None or obj_metadata['isOpen'] == (action['action'] == 'OpenObject'):
                 should_fail = True
 
 
@@ -1279,7 +1279,7 @@ class BFSController(Controller):
             for oid in obj['receptacleObjectIds']:
                 self.object_receptacle[oid] = obj
 
-            is_open[obj['objectId']] = (obj['openable'] and obj['isopen'])
+            is_open[obj['objectId']] = (obj['openable'] and obj['isOpen'])
 
         for obj in filter(lambda x: x['receptacle'], self.last_event.metadata['objects']):
             for oid in obj['receptacleObjectIds']:

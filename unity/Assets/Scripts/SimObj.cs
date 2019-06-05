@@ -74,34 +74,6 @@ public class SimObj : MonoBehaviour, SimpleSimObj
 		}
 	}
 
-	public List<PivotSimObj> PivotSimObjs {
-		get {
-
-			List<PivotSimObj> pivotSimObjs = new List<PivotSimObj>();
-			for (int i = 0; i < this.Receptacle.Pivots.Length; i++)
-			{
-				Transform t = this.Receptacle.Pivots[i];
-				if (t.childCount > 0)
-				{
-					SimObj psimobj = t.GetChild(0).GetComponent<SimObj>();
-					PivotSimObj pso = new PivotSimObj();
-					pso.objectId = psimobj.UniqueID;
-					pso.pivotId = i;
-					pivotSimObjs.Add(pso);
-				}
-			}
-			return pivotSimObjs;
-		}
-
-	}
-
-	public int ReceptacleCount {
-
-		get {
-			return this.Receptacle.Pivots.Length;
-		}
-	}
-
 	public Transform StartupTransform 
     {
 		get 
@@ -683,13 +655,11 @@ public interface SimpleSimObj {
 	SimObjType ObjType { get; }
 	string UniqueID {get; set; }
 	List<string> ReceptacleObjectIds {get;}
-	int ReceptacleCount {get;}
 	bool IsReceptacle {get; }
 	bool IsOpen {get; }
 	bool IsPickupable {get; }
 	bool IsOpenable {get; }
 	bool Open(); 
 	bool Close();
-	List<PivotSimObj> PivotSimObjs {get;}
 	GameObject gameObject {get; }
 }
