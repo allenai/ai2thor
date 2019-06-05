@@ -78,13 +78,13 @@ Removed Metadata Values:
 Numerous objects can contextually change states and properties of other objects or themselves. These changes automatically take place in the environment without the need of explicit actions.
 
 Some examples include:
-- **Breakable objects will break if dropped with enough force
-- **Dirty dishwater will become clean if moved under running water
-- **Potatoes are cooked if moved over an active stove burner
-- **Fillable objects are filled with water if moved under a running water source
-- **Lit candles will be put out if placed in water
+- **Breakable objects will break if dropped with enough force**
+- **Dirty dishwater will become clean if moved under running water**
+- **Potatoes are cooked if moved over an active stove burner**
+- **Fillable objects are filled with water if moved under a running water source**
+- **Lit candles will be put out if placed in water**
 
-There too many Contextual Interactions to list all of them here. Please see the [documentation on our website](https://ai2thor.allenai.org/documentation/installation) for the full table of interactions.
+Many object types can have multiple contextual interactions compatible with them (ie: Mugs can be dirty/clean, filled, and break). There too many Contextual Interactions to list all of them here. Please see the [documentation on our website](https://ai2thor.allenai.org/documentation/object-types/material-properties) for the full table of interactions.
 
 ## New Actions Added
 Many new actions have been added in this release:
@@ -93,13 +93,13 @@ Many new actions have been added in this release:
 All state changes have an accompanying Action that can be used to change the state. Note that some states can also be changed automatically via contextual interactions as stated above.
 
 New Actions include:
-- **SliceObject
-- **BreakObject
-- **DirtyObject
-- **CleanObject
-- **FillObjectWithLiquid
-- **EmptyLiquidFromObject
-- **UseUpObject
+- **SliceObject**
+- **BreakObject**
+- **DirtyObject**
+- **CleanObject**
+- **FillObjectWithLiquid**
+- **EmptyLiquidFromObject**
+- **UseUpObject**
 
 Please check our [full documentation](https://ai2thor.allenai.org/documentation/actions) for all details on Actions and any corresponding States.
 
