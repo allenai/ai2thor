@@ -1,85 +1,105 @@
 # AI2-THOR Version 1.1 Release Notes
 
 ## IMPORTANT NOTICE
-Note that AI2-THOR 1.1 is not fully backwards compatible with previous versions due to some reworked architecture in the framework. For example, some object types have been deprecated (example: ToiletPaperRoll), new object types have been introduced (example: Faucet). Several scenes have also had their layout re-arranged, so objects are not guaranteed to be found in their same position, and as such the entire room itself might be different.
+Note that AI2-THOR 1.1 is not fully backwards compatible with previous versions due to some reworked architecture in the framework. For example, some object types have been deprecated (example: ToiletPaperRoll), new object types have been introduced (example: Faucet). Several scenes have also had their layout re-arranged, so objects are not guaranteed to be found in their same position, and as such the entire room itself might be different. Additionaly Metadata values might have been changed, added, or removed.
 
-New Object States and Interactions added
-Old interactions: openable, pickupable, on/off, receptacle
-New interactions: fillable, sliceable, cookable, breakable, dirty, used up
-Fillable pic
-Sliceable pic
-Cookable pic
-Breakable pic
-Dirty 
-Used up pic
+## New Object States and Interactions Added
+- Old interactions: openable, pickupable, on/off, receptacle
+- New additional interactions: fillable, sliceable, cookable, breakable, dirty, used up
 
-New Physics and Material properties added to objects
--temperature - abstracted temperature (Cold, Hot, Room Temp) is reported by all objects
--mass - all pickup able objects have a mass value in kilograms
--salient materials - return a list of observable materials an object is composed of
+New states have been added to the framework, increasing the total number of different states to 10.
 
-Contextual Interactions that change object states
-Numerous objects can contextually change states and properties of other objects or themselves. Examples:
+<p align = "center"><img width = "70%" src = "Fill.png" /></p>
 
-Get pictures for all
+<p align = "center"><img width = "70%" src = "Slice.png" /></p>
 
-Breakable objects will break if dropped with enough force
-Dirty dishwater will become clean if moved under running water
-Potatoes are cooked if moved over an active stove burner
-Fillable objects are filled with water if moved under a running water source
-Lit candles will be put out if placed in water
+<p align = "center"><img width = "70%" src = "Cook.png" /></p>
 
+<p align = "center"><img width = "70%" src = "Break.png" /></p>
 
-New actions that can change object states
-All state changes have an accompanying Action that can be used to change the state. Note that some states can also be changed automatically via contextual interactions:
-SliceObject
-BreakObject
-DirtyObject
-CleanObject
-FillObjectWithLiquid
-EmptyLiquidFromObject
-UseUpObject
+<p align = "center"><img width = "70%" src = "Dirty.png" /></p>
 
+<p align = "center"><img width = "70%" src = "UseUp.png" /></p>
 
-Object State Randomization 
-New actions have been added to allow random initialization of new object states
-RandomToggleStateOfAllObjects
-RandomToggleSpecificState
+Some old object types have also been updated with increased functionality (ex: Shower Curtains and Blinds now Open). For the full table of object states and interactions, [see the documentation page](https://ai2thor.allenai.org/documentation/object-types/actionable-properties).
 
-Temperature Manipulation
-New actions have been added to manipulate Temperature properties
-SetRoomTempDecayTimeForType
-SetGlobalRoomTempDecayTime
-SetDecayTemperatureBool
+##New Physics and Material Properties Added to Objects
+- temperature - abstracted temperature (Cold, Hot, Room Temp) is reported by all objects
+- mass - all pickupable objects have a mass value in kilograms
+- salient materials - return a list of observable materials an object is composed of (ie: Knife - Metal, Plastic)
 
-State changes added to object metadata
-New metadata values have been added to represent new state changes
-pickupable, isPickedUp
-receptacleCount
-Openable, isOpen
-toggleable, isToggled
-breakable, isBroken
-canFillWithLiquid, isFilledWithLiquid
-dirtyable, isDirty
-cookable, isCooked
-sliceable, isSliced
-canBeUsedUp, isUsedUp
-objectTemperature
-canChangeTempToHot
-canChangeTempToCold
-mass
-salientMaterials
+##Contextual Interactions That Automatically Change States
+Numerous objects can contextually change states and properties of other objects or themselves. These changes automatically take place in the environment without the need of explicit actions.
+
+Some examples include:
+- Breakable objects will break if dropped with enough force
+- Dirty dishwater will become clean if moved under running water
+- Potatoes are cooked if moved over an active stove burner
+- Fillable objects are filled with water if moved under a running water source
+- Lit candles will be put out if placed in water
+
+There too many Contextual Interactions to list all of them here. Please see the [documentation on our website](https://ai2thor.allenai.org/documentation/installation) for the full table of interactions.
 
 
-More Sim Object Types
+##New Actions That Can Change Object States
+All state changes have an accompanying Action that can be used to change the state. Note that some states can also be changed automatically via contextual interactions as stated above.
+
+New Actions include:
+- SliceObject
+- BreakObject
+- DirtyObject
+- CleanObject
+- FillObjectWithLiquid
+- EmptyLiquidFromObject
+- UseUpObject
+
+Please check our [full documentation](https://ai2thor.allenai.org/documentation/actions) for all details on Actions and any corresponding States.
+
+
+##Object State Randomization 
+New actions have been added to allow random initialization of new object states:
+
+RandomToggleStateOfAllObjects - Randomly change all objects in the scene that have a different state.
+RandomToggleSpecificState - Randomly change all objects with a specified state.
+
+##Temperature Manipulation
+New actions have been added to manipulate the new abstract Temperature properties:
+- SetRoomTempDecayTimeForType - Change the time it takes for specific object types to return to room temperature
+- SetGlobalRoomTempDecayTime - Change the time it takes for all objects to return to room temperature
+- SetDecayTemperatureBool - Disable temperature decay over time
+
+##State Changes Added to Object Metadata
+New metadata values have been added to represent new state changes:
+
+- pickupable, isPickedUp
+- receptacleCount
+- Openable, isOpen
+- toggleable, isToggled
+- breakable, isBroken
+- canFillWithLiquid, isFilledWithLiquid
+- dirtyable, isDirty
+- cookable, isCooked
+- sliceable, isSliced
+- canBeUsedUp, isUsedUp
+- objectTemperature
+- canChangeTempToHot
+- canChangeTempToCold
+- salientMaterials
+- mass
+
+Additionally, some Metadata values have been renamed for consistency, and certain depracated Metadata features have been removed.
+
+##More Sim Object Types
 Additional Sim Object Types have been added to the framework
-Old 105, new 113
+- Old Total Types: 105 
+- New Total Types: 113
 
-More agent Actions
+##More agent Actions
 Additional Agent Navigation actions have been added
--stand, crouch
+- stand
+- crouch
 
-Improved Documentation
-
+##Improved Documentation
+[Documentation on the AI2-THOR website](https://ai2thor.allenai.org/documentation/installation) has been expanded to detail all functionality of this update. Additionally documentation has been re-arranged for ease of use.
 
 
