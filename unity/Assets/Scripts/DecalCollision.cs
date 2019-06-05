@@ -19,8 +19,6 @@ public class DecalCollision : Break
     [SerializeField]
     private Vector3 decalScale = new Vector3(0.3f, 0.3f, 0.2f);
     [SerializeField]
-    private float minimumImpulseMagnitudeForDecal = 10;
-    [SerializeField]
     private bool transparent = false;
 
     [SerializeField]
@@ -29,13 +27,10 @@ public class DecalCollision : Break
     private float prevTime;
 
     private static int currentStencilId = 0;
-
-    private System.Random random;
     
     void OnEnable() {
         breakType = BreakType.Decal;
         prevTime = Time.time;
-        random = new System.Random();
 
         var mr = this.GetComponent<MeshRenderer>();
         if (mr && mr.enabled) {
@@ -65,11 +60,7 @@ public class DecalCollision : Break
                     float newTime = Time.time;
                     float timeDiff = newTime - prevTime;
                     var scale = contact.otherCollider.bounds.size;
-                    // unused for now
-                    var comp = scale.sqrMagnitude > 0.0f;
-
-                    var comp1 = timeDiff > nextDecalWaitTimeSeconds;
-
+ 
                     if (timeDiff > nextDecalWaitTimeSeconds) {
                         this.prevTime = Time.time;
             
@@ -95,10 +86,6 @@ public class DecalCollision : Break
                     float newTime = Time.time;
                     float timeDiff = newTime - prevTime;
                     var scale = contact.otherCollider.bounds.size;
-                    // unused for now
-                    var comp = scale.sqrMagnitude > 0.0f;
-
-                    var comp1 = timeDiff > nextDecalWaitTimeSeconds;
 
                     if (timeDiff > nextDecalWaitTimeSeconds) {
                         this.prevTime = Time.time;
