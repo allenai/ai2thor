@@ -380,7 +380,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         parentReceptacles[oid].Add(simObj.UniqueID);
                     }
                     meta.receptacleObjectIds = receptacleObjectIds.ToArray();
-                    meta.receptacleCount = meta.receptacleObjectIds.Length;
                 }
                 meta.distance = Vector3.Distance(transform.position, simObj.gameObject.transform.position);
                 metadata.Add(meta);
@@ -457,7 +456,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             metaMessage.objectIdsInBox = objectIdsInBox;
             metaMessage.actionIntReturn = actionIntReturn;
             metaMessage.actionFloatReturn = actionFloatReturn;
-            metaMessage.actionBoolReturn = actionBoolReturn;
             metaMessage.actionFloatsReturn = actionFloatsReturn;
             metaMessage.actionStringsReturn = actionStringsReturn;
             metaMessage.actionVector3sReturn = actionVector3sReturn;
@@ -479,7 +477,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             objectIdsInBox = new string[0];
             actionIntReturn = 0;
             actionFloatReturn = 0.0f;
-            actionBoolReturn = false;
             actionFloatsReturn = new float[0];
             actionStringsReturn = new string[0];
             actionVector3sReturn = new Vector3[0];
@@ -1724,8 +1721,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         public void CheckDroneCaught(ServerAction action) {
             if (FlightMode) {
-                actionBoolReturn = this.GetComponent<FlyingDrone>().DidICatchTheThing(action);
-                actionFinished(true);
+                actionFinished(true, this.GetComponent<FlyingDrone>().DidICatchTheThing(action));
             }
         }
 

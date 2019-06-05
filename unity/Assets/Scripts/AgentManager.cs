@@ -29,6 +29,7 @@ public class AgentManager : MonoBehaviour
 	private bool renderObjectImage;
 	private bool renderNormalsImage;
 	private bool synchronousHttp = true;
+	private Socket sock = null;
 	private List<Camera> thirdPartyCameras = new List<Camera>();
 	
 
@@ -424,6 +425,7 @@ public class AgentManager : MonoBehaviour
         multiMeta.agents = new MetadataWrapper[this.agents.Count];
         multiMeta.activeAgentId = this.activeAgentId;
         multiMeta.sequenceId = this.currentSequenceId;
+		
 
 		ThirdPartyCameraMetadata[] cameraMetadata = new ThirdPartyCameraMetadata[this.thirdPartyCameras.Count];
 		RenderTexture currentTexture = null;
@@ -557,7 +559,6 @@ public class AgentManager : MonoBehaviour
 		foreach(string field in fields) {
 			string[] elements = field.Split(new char[]{':'});
 			if (elements[0].ToLower() == "content-length") {
-				Debug.Log("Got content length: " + field);
 				return Int32.Parse(elements[1].Trim());
 			}
 		}
@@ -651,7 +652,6 @@ public class ObjectMetadata
 	public float cameraHorizon;
 	public bool visible;
 	public bool receptacle;
-	public int receptacleCount;
 	///
 	//note: some objects are not themselves toggleable, because they must be toggled on/off via another sim object (stove knob -> stove burner)
 	public bool toggleable;//is this object able to be toggled on/off directly?
@@ -701,11 +701,9 @@ public class ObjectMetadata
 	public string [] salientMaterials; //salient materials that this object is made of as strings (see enum above). This is only for objects that are Pickupable or Moveable
 	///
 	public string[] receptacleObjectIds;
-	public PivotSimObj[] pivotSimObjs;
 	public float distance;
 	public String objectType;
 	public string objectId;
-	public float[] bounds3D;
 	public string parentReceptacle;
 	public string[] parentReceptacles;
 	public float currentTime;
@@ -718,13 +716,6 @@ public class InventoryObject
 {
 	public string objectId;
 	public string objectType;
-}
-
-[Serializable]
-public class PivotSimObj
-{
-	public int pivotId;
-	public string objectId;
 }
 
 [Serializable]
@@ -783,7 +774,6 @@ public struct MetadataWrapper
 
 	public int actionIntReturn;
 	public float actionFloatReturn;
-	public bool actionBoolReturn;
 	public string[] actionStringsReturn;
 
 	public float[] actionFloatsReturn;
@@ -837,7 +827,6 @@ public class ServerAction
 	public bool rotateOnTeleport;
 	public bool forceVisible;
 	public bool randomizeOpen;
-	public int pivot;
 	public int randomSeed;
 	public float moveMagnitude;
 
