@@ -30,7 +30,7 @@ New states have been added to the framework, increasing the total number of diff
 
 <p align = "center"><img width = "70%" src = "Cook.png" /></p>
 
-<p align = "center"><img width = "70%" src = "Break.png" /></p>
+<p align = "center"><img width = "70%" src = "BreakObject.png" /></p>
 
 <p align = "center"><img width = "70%" src = "Dirty.png" /></p>
 
