@@ -58,7 +58,7 @@ public static class UtilityFunctions {
             }
         }
 
-        int layerMask = 1 << 8;
+        int layerMask = 1 << 8 | 1<<10;
         foreach (CapsuleCollider cc in go.GetComponentsInChildren<CapsuleCollider>()) {
             foreach (Collider c in PhysicsExtensions.OverlapCapsule(cc, layerMask, QueryTriggerInteraction.Ignore, expandBy)) {
                 if (!ignoreColliders.Contains(c)) {

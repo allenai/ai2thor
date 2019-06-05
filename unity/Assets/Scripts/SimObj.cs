@@ -680,7 +680,6 @@ public class SimObj : MonoBehaviour, SimpleSimObj
 }
 
 public interface SimpleSimObj {
-	Bounds Bounds { get; }
 	SimObjType ObjType { get; }
 	string UniqueID {get; set; }
 	List<string> ReceptacleObjectIds {get;}
