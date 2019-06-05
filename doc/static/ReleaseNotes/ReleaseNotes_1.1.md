@@ -94,10 +94,15 @@ Additional Sim Object Types have been added to the framework
 - Old Total Types: 105 
 - New Total Types: 113
 
-## More agent Actions
+## New Agent Navigation/Manipulation Actions
 Additional Agent Navigation actions have been added
-- stand
-- crouch
+- Crouch - Lower the Agent's camera
+- Stand - Raise the Agent's camera back to eye level
+
+## New Interaction Actions
+Additional Object Interaction Actions have been added
+- Push - Push an object away from the agent with a specified force in Newtons
+- Pull - Pull an object toward the agent with a specified force in Newtons
 
 ## Improved Documentation
 [Documentation on the AI2-THOR website](https://ai2thor.allenai.org/documentation/installation) has been expanded to detail all functionality of this update. Additionally documentation has been re-arranged for ease of use.
