@@ -173,14 +173,6 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 
 	}
 
-	public List<PivotSimObj> PivotSimObjs
-	{
-		get
-		{
-			return new List<PivotSimObj>();
-		}
-	}
-
 	//this is not used.... maybe get rid of?
 	public bool Open()
 	{
