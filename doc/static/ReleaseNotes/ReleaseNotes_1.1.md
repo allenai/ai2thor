@@ -39,53 +39,31 @@ New states have been added to the framework, increasing the total number of diff
 Some old object types have also been updated with increased functionality (ex: Shower Curtains and Blinds now Open). For the full table of object states and interactions, [see the documentation page](https://ai2thor.allenai.org/documentation/object-types/actionable-properties).
 
 ### New Physics and Material Properties Added to Objects
-- temperature - abstracted temperature (Cold, Hot, Room Temp) is reported by all objects
-- mass - all pickupable objects have a mass value in kilograms
-- salient materials - return a list of observable materials an object is composed of (ie: Knife - Metal, Plastic)
+- **temperature** - abstracted temperature (Cold, Hot, Room Temp) is reported by all objects
+- **mass** - all pickupable objects have a mass value in kilograms
+- **salient materials** - return a list of observable materials an object is composed of (ie: Knife - Metal, Plastic)
 
 ### State Changes Added to Object Metadata
 New metadata values have been added to represent new state changes:
 
-- pickupable, isPickedUp
-- receptacleCount
-- Openable, isOpen
-- toggleable, isToggled
-- breakable, isBroken
-- canFillWithLiquid, isFilledWithLiquid
-- dirtyable, isDirty
-- cookable, isCooked
-- sliceable, isSliced
-- canBeUsedUp, isUsedUp
-- objectTemperature
-- canChangeTempToHot
-- canChangeTempToCold
-- salientMaterials
-- mass
-
-### Contextual Interactions That Automatically Change States
-Numerous objects can contextually change states and properties of other objects or themselves. These changes automatically take place in the environment without the need of explicit actions.
-
-Some examples include:
-- Breakable objects will break if dropped with enough force
-- Dirty dishwater will become clean if moved under running water
-- Potatoes are cooked if moved over an active stove burner
-- Fillable objects are filled with water if moved under a running water source
-- Lit candles will be put out if placed in water
-
-There too many Contextual Interactions to list all of them here. Please see the [documentation on our website](https://ai2thor.allenai.org/documentation/installation) for the full table of interactions.
-
-### Object State Randomization 
-New actions have been added to allow random initialization of new object states:
-
-RandomToggleStateOfAllObjects - Randomly change all objects in the scene that have a different state.
-RandomToggleSpecificState - Randomly change all objects with a specified state.
-
-### Temperature Manipulation
-New actions have been added to manipulate the new abstract Temperature properties:
-- **SetRoomTempDecayTimeForType** - Change the time it takes for specific object types to return to room temperature
-- **SetGlobalRoomTempDecayTime** - Change the time it takes for all objects to return to room temperature
-- **SetDecayTemperatureBool** - Disable temperature decay over time
-
+- **isPickedUp**
+- **breakable**
+- **isBroken**
+- **canFillWithLiquid**
+- **isFilledWithLiquid**
+- **dirtyable**
+- **isDirty**
+- **cookable**
+- **isCooked**
+- **sliceable**
+- **isSliced**
+- **canBeUsedUp**
+- **isUsedUp**
+- **objectTemperature**
+- **canChangeTempToHot**
+- **canChangeTempToCold**
+- **salientMaterials**
+- **mass**
 
 Additionally, some Metadata values have been renamed for consistency, and certain depracated Metadata features have been removed.
 
@@ -96,6 +74,18 @@ Removed Metadata Values:
 - **bounds3d**
 - **bounds**
 
+### Contextual Interactions That Automatically Change States
+Numerous objects can contextually change states and properties of other objects or themselves. These changes automatically take place in the environment without the need of explicit actions.
+
+Some examples include:
+- **Breakable objects will break if dropped with enough force
+- **Dirty dishwater will become clean if moved under running water
+- **Potatoes are cooked if moved over an active stove burner
+- **Fillable objects are filled with water if moved under a running water source
+- **Lit candles will be put out if placed in water
+
+There too many Contextual Interactions to list all of them here. Please see the [documentation on our website](https://ai2thor.allenai.org/documentation/installation) for the full table of interactions.
+
 ## New Actions Added
 Many new actions have been added in this release:
 
@@ -103,13 +93,13 @@ Many new actions have been added in this release:
 All state changes have an accompanying Action that can be used to change the state. Note that some states can also be changed automatically via contextual interactions as stated above.
 
 New Actions include:
-- SliceObject
-- BreakObject
-- DirtyObject
-- CleanObject
-- FillObjectWithLiquid
-- EmptyLiquidFromObject
-- UseUpObject
+- **SliceObject
+- **BreakObject
+- **DirtyObject
+- **CleanObject
+- **FillObjectWithLiquid
+- **EmptyLiquidFromObject
+- **UseUpObject
 
 Please check our [full documentation](https://ai2thor.allenai.org/documentation/actions) for all details on Actions and any corresponding States.
 
@@ -122,6 +112,18 @@ Additional Agent Navigation actions have been added
 Additional Object Interaction Actions have been added
 - **Push** - Push an object away from the agent with a specified force in Newtons
 - **Pull** - Pull an object toward the agent with a specified force in Newtons
+
+### Object State Randomization Actions
+New actions have been added to allow random initialization of new object states:
+
+- **RandomToggleStateOfAllObjects** - Randomly change all objects in the scene that have a different state.
+- **RandomToggleSpecificState** - Randomly change all objects with a specified state.
+
+### Temperature Manipulation Actions
+New actions have been added to manipulate the new abstract Temperature properties:
+- **SetRoomTempDecayTimeForType** - Change the time it takes for specific object types to return to room temperature
+- **SetGlobalRoomTempDecayTime** - Change the time it takes for all objects to return to room temperature
+- **SetDecayTemperatureBool** - Disable temperature decay over time
 
 ## Improved Documentation
 [Documentation on the AI2-THOR website](https://ai2thor.allenai.org/documentation/installation) has been expanded to detail all functionality of this update. Additionally documentation has been re-arranged for ease of use.
