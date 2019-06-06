@@ -10,6 +10,9 @@ enum DecalRotationAxis {
 
 public class DecalCollision : Break
 {
+    // If true Guarantees that other spawn planes under the same parent will have the same stencil value
+    [SerializeField]
+    private bool sameStencilAsSiblings = false;
     [SerializeField]
     private int stencilWriteValue = 1;
     [SerializeField]
@@ -22,11 +25,15 @@ public class DecalCollision : Break
     private bool transparent = false;
 
     [SerializeField]
+
+    protected bool stencilSet = false;
     // In local space
     private Vector3 transparentDecalSpawnOffset = new Vector3(0, 0, 0);
     private float prevTime;
 
     private static int currentStencilId = 0;
+
+    
     
     void OnEnable() {
         breakType = BreakType.Decal;
@@ -35,14 +42,27 @@ public class DecalCollision : Break
         var mr = this.GetComponent<MeshRenderer>();
         if (mr && mr.enabled) {
             if (transparent) {
-                DecalCollision.currentStencilId = DecalCollision.currentStencilId + 1;
-                this.stencilWriteValue =  DecalCollision.currentStencilId << 1;
-                if (this.stencilWriteValue > 0xFF) {
-                    this.stencilWriteValue = this.stencilWriteValue % 0xFF;
-                    Debug.LogWarning("Stencil buffer write value overflow with: " + this.stencilWriteValue + " for " + this.gameObject.name + " wraping back to " + ", decal overlap with other spawn planes with same stencil value.");
+                if (!sameStencilAsSiblings) {
+                    setStencilWriteValue(mr);
                 }
-                mr.material.SetInt("_StencilRef", this.stencilWriteValue);
-                Debug.Log("Setting stencil write for shader to " + this.stencilWriteValue);
+                else {
+                    var otherPlanes = this.transform.parent.gameObject.GetComponentsInChildren<DecalCollision>();
+                    // var otherPlanes = this.gameObject.GetComponentsInParent<DecalCollision>();
+                    Debug.Log("other planes id " + this.stencilWriteValue + " len " + otherPlanes.Length);
+                    foreach (var spawnPlane in otherPlanes) {
+                       
+                        if (spawnPlane.isActiveAndEnabled && spawnPlane.stencilSet && spawnPlane.sameStencilAsSiblings) {
+                            this.stencilWriteValue = spawnPlane.stencilWriteValue;
+                            this.stencilSet = true;
+                            mr.material.SetInt("_StencilRef", this.stencilWriteValue);
+                            Debug.Log("Value for " + gameObject.name + " set to " + this.stencilWriteValue);
+                            break;
+                        }
+                    }
+                    if (!stencilSet) {
+                         setStencilWriteValue(mr);
+                    }
+                }
             }
             else {
                 this.stencilWriteValue = 1;
@@ -50,6 +70,18 @@ public class DecalCollision : Break
             }
         }
 
+    }
+
+    private void setStencilWriteValue(MeshRenderer mr) {
+         DecalCollision.currentStencilId = DecalCollision.currentStencilId + 1;
+        this.stencilWriteValue =  DecalCollision.currentStencilId << 1;
+        if (this.stencilWriteValue > 0xFF) {
+            this.stencilWriteValue = this.stencilWriteValue % 0xFF;
+            Debug.LogWarning("Stencil buffer write value overflow with: " + this.stencilWriteValue + " for " + this.gameObject.name + " wraping back to " + ", decal overlap with other spawn planes with same stencil value.");
+        }
+        mr.material.SetInt("_StencilRef", this.stencilWriteValue);
+        Debug.Log("Setting stencil for " +  this.gameObject.name + " write for shader to " + this.stencilWriteValue);
+        this.stencilSet = true;
     }
 
     protected override void BreakForDecalType(Collision collision) {

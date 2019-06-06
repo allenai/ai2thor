@@ -5,7 +5,7 @@
     }
     SubShader
     {
-        Tags { "RenderType"="Opaque" "Queue"="Transparent-1"}
+        Tags { "RenderType"="Opaque" "Queue"="AlphaTest-1"}
 
         Stencil {
             Ref [_StencilRef]
