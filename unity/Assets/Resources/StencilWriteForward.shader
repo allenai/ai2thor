@@ -5,7 +5,7 @@
     }
     SubShader
     {
-        Tags { "RenderType"="Opaque" "Queue"="AlphaTest-1"}
+        Tags { "RenderType"="TransparentCutout" "Queue"="Transparent-2"}
 
         Stencil {
             Ref [_StencilRef]
@@ -19,7 +19,7 @@
         {
             Blend Zero One
             ZWrite Off
-            Cull Off
+            // Cull Off
 
             CGPROGRAM
             #pragma vertex vert
