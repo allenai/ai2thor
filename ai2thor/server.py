@@ -29,6 +29,8 @@ import numpy as np
 
 logging.getLogger('werkzeug').setLevel(logging.ERROR)
 
+werkzeug.serving.WSGIRequestHandler.protocol_version = 'HTTP/1.1'
+
 MAX_DEPTH = 5000
 
 # get with timeout to allow quit
@@ -128,6 +130,8 @@ class Event(object):
         self.third_party_instance_segmentation_frames = []
         self.third_party_depth_frames = []
         self.third_party_normals_frames = []
+
+        self.events = [self] # Ensure we have a similar API to MultiAgentEvent
 
     @property
     def image_data(self):
@@ -396,10 +400,11 @@ class Server(object):
                     image_thirdParty_normals=e.add_third_party_image_normals
                 )
 
-                for ti, t in enumerate(a['thirdPartyCameras']):
-                    for key in third_party_image_mapping.keys():
-                        if key in form.files:
-                            third_party_image_mapping[key](form.files[key][ti])
+                if a['thirdPartyCameras'] is not None:
+                    for ti, t in enumerate(a['thirdPartyCameras']):
+                        for key in third_party_image_mapping.keys():
+                            if key in form.files:
+                                third_party_image_mapping[key](form.files[key][ti])
 
 
                 events.append(e)

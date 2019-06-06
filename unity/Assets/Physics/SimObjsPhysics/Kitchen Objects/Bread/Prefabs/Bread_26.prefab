@@ -642,6 +642,7 @@ GameObject:
   - component: {fileID: 4604845808422644}
   - component: {fileID: 114283325553420346}
   - component: {fileID: 54426753277872862}
+  - component: {fileID: 8113809101916505281}
   m_Layer: 8
   m_Name: Bread_26
   m_TagString: SimObjPhysics
@@ -683,7 +684,7 @@ MonoBehaviour:
   uniqueID: 
   Type: 5
   PrimaryProperty: 3
-  SecondaryProperties: 
+  SecondaryProperties: 09000000
   BoundingBox: {fileID: 1942835630617058}
   VisibilityPoints:
   - {fileID: 4869870289553274}
@@ -701,7 +702,7 @@ MonoBehaviour:
   ReceptacleTriggerBoxes: []
   isVisible: 0
   isInteractable: 0
-  isColliding: 0
+  isInAgentHand: 0
   MyColliders:
   - {fileID: 65389593837336058}
   - {fileID: 65454271611607192}
@@ -712,6 +713,10 @@ MonoBehaviour:
   HFbounciness: 0
   HFrbdrag: 0
   HFrbangulardrag: 0
+  salientMaterials: 08000000
+  CurrentTemperature: 0
+  HowManySecondsUntilRoomTemp: 10
+  ContainedObjectReferences: []
 --- !u!54 &54426753277872862
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -728,6 +733,21 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
+--- !u!114 &8113809101916505281
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1621126133299778}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d07b0b60d7fb54ea9a1ddeca3f431392, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ObjectToChangeTo: {fileID: 156692134937393891, guid: f4ff72c252a319c4eb94eadd7e8cd88a,
+    type: 3}
+  isSliced: 0
 --- !u!1 &1682443756570200
 GameObject:
   m_ObjectHideFlags: 0

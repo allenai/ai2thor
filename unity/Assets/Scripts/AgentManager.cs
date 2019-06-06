@@ -1,11 +1,13 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityStandardAssets.Characters.FirstPerson;
+using System.Net.Sockets;
+using System.Net;
 using Newtonsoft.Json;
+using System.Text;
 using UnityEngine.Networking;
-
 
 public class AgentManager : MonoBehaviour
 {
@@ -21,18 +23,19 @@ public class AgentManager : MonoBehaviour
 	private Rect readPixelsRect;
 	private int currentSequenceId;
 	private int activeAgentId;
-	private bool defaultRenderImage = true;
 	private bool renderImage = true;
 	private bool renderDepthImage;
 	private bool renderClassImage;
 	private bool renderObjectImage;
 	private bool renderNormalsImage;
+	private bool synchronousHttp = true;
+	private Socket sock = null;
 	private List<Camera> thirdPartyCameras = new List<Camera>();
 	
 
 	private bool readyToEmit;
 
-	private Color[] agentColors = new Color[]{Color.blue, Color.cyan, Color.green, Color.red, Color.magenta, Color.yellow};
+	private Color[] agentColors = new Color[]{Color.blue, Color.yellow, Color.green, Color.red, Color.magenta, Color.grey};
 
 	public int actionDuration = 3;
 
@@ -76,7 +79,7 @@ public class AgentManager : MonoBehaviour
 		initializePrimaryAgent();
         primaryAgent.actionDuration = this.actionDuration;
 		readyToEmit = true;
-
+		Debug.Log("Graphics Tier: " + Graphics.activeTier);
 		this.agents.Add (primaryAgent);
 	}
 
@@ -95,11 +98,13 @@ public class AgentManager : MonoBehaviour
 	{
 		primaryAgent.ProcessControlCommand (action);
 		primaryAgent.IsVisible = action.makeAgentsVisible;
-		this.defaultRenderImage = action.renderImage;
 		this.renderClassImage = action.renderClassImage;
 		this.renderDepthImage = action.renderDepthImage;
 		this.renderNormalsImage = action.renderNormalsImage;
 		this.renderObjectImage = action.renderObjectImage;
+		if (action.alwaysReturnVisibleRange) {
+			((PhysicsRemoteFPSAgentController) primaryAgent).alwaysReturnVisibleRange = action.alwaysReturnVisibleRange;
+		}
 		StartCoroutine (addAgents (action));
 
 	}
@@ -115,10 +120,10 @@ public class AgentManager : MonoBehaviour
 			yield return null; // must do this so we wait a frame so that when we CapsuleCast we see the most recently added agent
 		}
 		for (int i = 0; i < this.agents.Count; i++) {
-			if (i != 0) {
-				this.agents[i].m_Camera.enabled = false;
-			}
+			this.agents[i].m_Camera.depth = 1;
 		}
+		this.agents[0].m_Camera.depth = 9999;
+
 		readyToEmit = true;
 	}
 
@@ -149,16 +154,13 @@ public class AgentManager : MonoBehaviour
 
 	private void addAgent(ServerAction action) {
 		Vector3 clonePosition = new Vector3(action.x, action.y, action.z);
-		
-		GameObject visCapsule = primaryAgent.transform.Find ("VisibilityCapsule").gameObject;
-		visCapsule.SetActive(true);
 
 		BaseFPSAgentController clone = UnityEngine.Object.Instantiate (primaryAgent);
 		clone.IsVisible = action.makeAgentsVisible;
 		clone.actionDuration = this.actionDuration;
 		// clone.m_Camera.targetDisplay = this.agents.Count;
 		clone.transform.position = clonePosition;
-		updateAgentColor(clone, agentColors[this.agents.Count]);
+		UpdateAgentColor(clone, agentColors[this.agents.Count]);
 		clone.ProcessControlCommand (action);
 		this.agents.Add (clone);
 	}
@@ -194,21 +196,36 @@ public class AgentManager : MonoBehaviour
 		return Vector3.zero;
 	}
 
-	private void updateAgentColor(BaseFPSAgentController agent, Color color) {
+	public void UpdateAgentColor(BaseFPSAgentController agent, Color color) {
 		foreach (MeshRenderer r in agent.gameObject.GetComponentsInChildren<MeshRenderer> () as MeshRenderer[]) {
 			foreach (Material m in r.materials) {
-				m.color = color;
+				if (m.name.Contains("Agent_Color_Mat")) {
+					m.color = color;
+				}
 			}
 
 		}
 	}
 
-	public void Reset(ServerAction response) {
+	public IEnumerator ResetCoroutine(ServerAction response) {
+		// Setting all the agents invisible here is silly but necessary
+		// as otherwise the FirstPersonCharacterCull.cs script will
+		// try to disable renderers that are invalid (but not null)
+		// as the scene they existed in has changed.
+		for (int i = 0; i < agents.Count; i++) {
+			Destroy(agents[i]);
+		}
+		yield return null;
+
 		if (string.IsNullOrEmpty(response.sceneName)){
 			UnityEngine.SceneManagement.SceneManager.LoadScene (UnityEngine.SceneManagement.SceneManager.GetActiveScene ().name);
 		} else {
 			UnityEngine.SceneManagement.SceneManager.LoadScene (response.sceneName);
 		}
+	}
+
+	public void Reset(ServerAction response) {
+		StartCoroutine(ResetCoroutine(response));
 	}
 
     public bool SwitchScene(string sceneName)
@@ -220,6 +237,10 @@ public class AgentManager : MonoBehaviour
         }
         return false;
     }
+
+	public void setReadyToEmit(bool readyToEmit) {
+		this.readyToEmit = readyToEmit;
+	}
 
     // Decide whether agent has stopped actions
     // And if we need to capture a new frame
@@ -361,82 +382,189 @@ public class AgentManager : MonoBehaviour
 		}
 	}
 
+	// Used for benchmarking only the server-side
+	// no call is made to the Python side
+	private IEnumerator EmitFrameNoClient() {
+		frameCounter += 1;
+
+		bool shouldRender = this.renderImage;
+
+		if (shouldRender) {
+			// we should only read the screen buffer after rendering is complete
+			yield return new WaitForEndOfFrame();
+			if (synchronousHttp) {
+				// must wait an additional frame when in synchronous mode otherwise the frame lags
+				yield return new WaitForEndOfFrame();
+			}
+		}
+
+		string msg = "{\"action\": \"RotateRight\"}";
+		ProcessControlCommand(msg);
+	}
+
 
 	private IEnumerator EmitFrame() {
 
 
 		frameCounter += 1;
 
+		bool shouldRender = this.renderImage && serverSideScreenshot;
 
-		// we should only read the screen buffer after rendering is complete
-		yield return new WaitForEndOfFrame();
+		if (shouldRender) {
+			// we should only read the screen buffer after rendering is complete
+			yield return new WaitForEndOfFrame();
+			if (synchronousHttp) {
+				// must wait an additional frame when in synchronous mode otherwise the frame lags
+				yield return new WaitForEndOfFrame();
+			}
+		}
 
 		WWWForm form = new WWWForm();
 
-		MultiAgentMetadata multiMeta = new MultiAgentMetadata ();
-		multiMeta.agents = new MetadataWrapper[this.agents.Count];
+        MultiAgentMetadata multiMeta = new MultiAgentMetadata ();
+        multiMeta.agents = new MetadataWrapper[this.agents.Count];
+        multiMeta.activeAgentId = this.activeAgentId;
+        multiMeta.sequenceId = this.currentSequenceId;
+		
+
 		ThirdPartyCameraMetadata[] cameraMetadata = new ThirdPartyCameraMetadata[this.thirdPartyCameras.Count];
-		multiMeta.activeAgentId = this.activeAgentId;
-		multiMeta.sequenceId = this.currentSequenceId;
-		RenderTexture currentTexture = RenderTexture.active;
-
-		for (int i = 0; i < this.thirdPartyCameras.Count; i++) {
-			ThirdPartyCameraMetadata cMetadata = new ThirdPartyCameraMetadata();
-			Camera camera = thirdPartyCameras.ToArray()[i];
-			cMetadata.thirdPartyCameraId = i;
-			cMetadata.position = camera.gameObject.transform.position;
-			cMetadata.rotation = camera.gameObject.transform.eulerAngles;
-			cameraMetadata[i] = cMetadata;
-			ImageSynthesis imageSynthesis = camera.gameObject.GetComponentInChildren<ImageSynthesis> () as ImageSynthesis;
-			addThirdPartyCameraImageForm (form, camera);
-			addImageSynthesisImageForm(form, imageSynthesis, this.renderDepthImage, "_depth", "image_thirdParty_depth");
-			addImageSynthesisImageForm(form, imageSynthesis, this.renderNormalsImage, "_normals", "image_thirdParty_normals");
-			addImageSynthesisImageForm(form, imageSynthesis, this.renderObjectImage, "_id", "image_thirdParty_image_ids");
-			addImageSynthesisImageForm(form, imageSynthesis, this.renderClassImage, "_class", "image_thirdParty_classes");
-		}
-
-		for (int i = 0; i < this.agents.Count; i++) {
-			BaseFPSAgentController agent = this.agents.ToArray () [i];
-			if (i > 0) {
-				this.agents.ToArray () [i - 1].m_Camera.enabled = false;
-			}
-			agent.m_Camera.enabled = true;
-			MetadataWrapper metadata = agent.generateMetadataWrapper ();
-			metadata.agentId = i;
-			// we don't need to render the agent's camera for the first agent
-			addImageForm (form, agent);
-			addImageSynthesisImageForm(form, agent.imageSynthesis, this.renderDepthImage, "_depth", "image_depth");
-			addImageSynthesisImageForm(form, agent.imageSynthesis, this.renderNormalsImage, "_normals", "image_normals");
-			addObjectImageForm (form, agent, ref metadata);
-			addImageSynthesisImageForm(form, agent.imageSynthesis, this.renderClassImage, "_class", "image_classes");
-			metadata.thirdPartyCameras = cameraMetadata;
-			multiMeta.agents [i] = metadata;
-		}
-		if (this.agents.Count != 1) {
-			this.agents.ToArray()[this.agents.Count - 1].m_Camera.enabled = false;
-		}
-		this.agents.ToArray()[0].m_Camera.enabled = true;
-
-		RenderTexture.active = currentTexture;
-
-		//form.AddField("metadata", JsonUtility.ToJson(multiMeta));
-		form.AddField("metadata", Newtonsoft.Json.JsonConvert.SerializeObject(multiMeta));
-		form.AddField("token", robosimsClientToken);
-
-        #if !UNITY_WEBGL
-            using (var www = UnityWebRequest.Post("http://" + robosimsHost + ":" + robosimsPort + "/train", form))
-            {
-                yield return www.SendWebRequest();
-
-                if (www.isNetworkError || www.isHttpError)
-                {
-                    Debug.Log("Error: " + www.error);
-                    yield break;
-                }
-                ProcessControlCommand(www.downloadHandler.text);
+		RenderTexture currentTexture = null;
+        if (shouldRender) {
+            currentTexture = RenderTexture.active;
+            for (int i = 0; i < this.thirdPartyCameras.Count; i++) {
+                ThirdPartyCameraMetadata cMetadata = new ThirdPartyCameraMetadata();
+                Camera camera = thirdPartyCameras.ToArray()[i];
+                cMetadata.thirdPartyCameraId = i;
+                cMetadata.position = camera.gameObject.transform.position;
+                cMetadata.rotation = camera.gameObject.transform.eulerAngles;
+                cameraMetadata[i] = cMetadata;
+                ImageSynthesis imageSynthesis = camera.gameObject.GetComponentInChildren<ImageSynthesis> () as ImageSynthesis;
+                addThirdPartyCameraImageForm (form, camera);
+                addImageSynthesisImageForm(form, imageSynthesis, this.renderDepthImage, "_depth", "image_thirdParty_depth");
+                addImageSynthesisImageForm(form, imageSynthesis, this.renderNormalsImage, "_normals", "image_thirdParty_normals");
+                addImageSynthesisImageForm(form, imageSynthesis, this.renderObjectImage, "_id", "image_thirdParty_image_ids");
+                addImageSynthesisImageForm(form, imageSynthesis, this.renderClassImage, "_class", "image_thirdParty_classes");
             }
+        }
+
+        for (int i = 0; i < this.agents.Count; i++) {
+            BaseFPSAgentController agent = this.agents.ToArray () [i];
+            MetadataWrapper metadata = agent.generateMetadataWrapper ();
+            metadata.agentId = i;
+            // we don't need to render the agent's camera for the first agent
+            if (shouldRender) {
+                addImageForm (form, agent);
+                addImageSynthesisImageForm(form, agent.imageSynthesis, this.renderDepthImage, "_depth", "image_depth");
+                addImageSynthesisImageForm(form, agent.imageSynthesis, this.renderNormalsImage, "_normals", "image_normals");
+                addObjectImageForm (form, agent, ref metadata);
+                addImageSynthesisImageForm(form, agent.imageSynthesis, this.renderClassImage, "_class", "image_classes");
+                metadata.thirdPartyCameras = cameraMetadata;
+            }
+            multiMeta.agents [i] = metadata;
+        }
+
+        if (shouldRender) {
+            RenderTexture.active = currentTexture;
+        }
+
+        //form.AddField("metadata", JsonUtility.ToJson(multiMeta));
+        form.AddField("metadata", Newtonsoft.Json.JsonConvert.SerializeObject(multiMeta));
+        form.AddField("token", robosimsClientToken);
+
+        #if !UNITY_WEBGL && !UNITY_EDITOR
+		if (synchronousHttp) {
+
+			if (this.sock == null) {
+				// Debug.Log("connecting to host: " + robosimsHost);
+				IPAddress host = IPAddress.Parse(robosimsHost);
+				IPEndPoint hostep = new IPEndPoint(host, robosimsPort);
+				this.sock = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+				this.sock.Connect(hostep);
+			}
+
+            byte[] rawData = form.data;
+
+            string request = "POST /train HTTP/1.1\r\n" +
+            "Content-Length: " + rawData.Length.ToString() + "\r\n";
+
+            foreach(KeyValuePair<string, string> entry in form.headers) {
+                request += entry.Key + ": " + entry.Value + "\r\n";
+            }
+            request += "\r\n";
+
+            int sent = this.sock.Send(Encoding.ASCII.GetBytes(request));
+            sent = this.sock.Send(rawData);
+            byte[] headerBuffer = new byte[1024];
+            int bytesReceived = 0;
+			byte[] bodyBuffer = null;
+			int bodyBytesReceived = 0;
+			int contentLength = 0;
+
+			// read header
+            while (true) {
+				int received = this.sock.Receive(headerBuffer, bytesReceived, headerBuffer.Length - bytesReceived, SocketFlags.None);	
+				if (received == 0) {
+					Debug.LogError("0 bytes received attempting to read header - connection closed");
+					break;
+				}
+
+				bytesReceived += received;;
+				string headerMsg = Encoding.ASCII.GetString(headerBuffer, 0, bytesReceived);
+                int offset = headerMsg.IndexOf("\r\n\r\n");
+                if (offset > 0){
+					contentLength = parseContentLength(headerMsg.Substring(0, offset));
+					bodyBuffer = new byte[contentLength];
+					bodyBytesReceived = bytesReceived - (offset + 4);
+					Array.Copy(headerBuffer, offset + 4, bodyBuffer, 0, bodyBytesReceived);
+					break;
+                }
+            }
+
+			// read body
+            while (bodyBytesReceived < contentLength) {
+				// check for 0 bytes received
+				int received = this.sock.Receive(bodyBuffer, bodyBytesReceived, bodyBuffer.Length - bodyBytesReceived, SocketFlags.None);	
+				if (received == 0) {
+					Debug.LogError("0 bytes received attempting to read body - connection closed");
+					break;
+				}
+
+				bodyBytesReceived += received;
+				//Debug.Log("total bytes received: " + bodyBytesReceived);
+            }
+
+			string msg = Encoding.ASCII.GetString(bodyBuffer, 0, bodyBytesReceived);
+
+
+            ProcessControlCommand(msg);
+		} else {
+
+			using (var www = UnityWebRequest.Post("http://" + robosimsHost + ":" + robosimsPort + "/train", form))
+			{
+				yield return www.SendWebRequest();
+
+				if (www.isNetworkError || www.isHttpError)
+				{
+					Debug.Log("Error: " + www.error);
+					yield break;
+				}
+				ProcessControlCommand(www.downloadHandler.text);
+			}
+		}
         #endif
     }
+	private int parseContentLength(string header) {
+		// Debug.Log("got header: " + header);
+		string[] fields = header.Split(new char[]{'\r','\n'});
+		foreach(string field in fields) {
+			string[] elements = field.Split(new char[]{':'});
+			if (elements[0].ToLower() == "content-length") {
+				return Int32.Parse(elements[1].Trim());
+			}
+		}
+
+		return 0;
+	}
 
 	private BaseFPSAgentController activeAgent() {
 		return this.agents.ToArray () [activeAgentId];
@@ -446,7 +574,6 @@ public class AgentManager : MonoBehaviour
 	{
 
 		ServerAction controlCommand = new ServerAction();
-		controlCommand.renderImage = this.defaultRenderImage;
 
 		JsonUtility.FromJsonOverwrite(msg, controlCommand);
 
@@ -525,53 +652,63 @@ public class ObjectMetadata
 	public float cameraHorizon;
 	public bool visible;
 	public bool receptacle;
-	public int receptacleCount;
-	public bool toggleable;
+	///
+	//note: some objects are not themselves toggleable, because they must be toggled on/off via another sim object (stove knob -> stove burner)
+	public bool toggleable;//is this object able to be toggled on/off directly?
+	
+	//note some objects can still return the istoggle value even if they cannot directly be toggled on off (stove burner -> stove knob)
+	public bool isToggled;//is this object currently on or off? true is on
+	///
+	public bool breakable;
+	public bool isBroken;//is this object broken?
+	///
+	public bool canFillWithLiquid;//objects filled with liquids
+	public bool isFilledWithLiquid;//is this object filled with some liquid? - similar to 'depletable' but this is for liquids
+	///
+	public bool dirtyable;//can toggle object state dirty/clean
+	public bool isDirty;//is this object in a dirty or clean state?
+	///
+	public bool canBeUsedUp;//for objects that can be emptied or depleted (toilet paper, paper towels, tissue box etc) - specifically not for liquids
+	public bool isUsedUp; 
+	///
+	public bool cookable;//can this object be turned to a cooked state? object should not be able to toggle back to uncooked state with contextual interactions, only a direct action
+	public bool isCooked;//is it cooked right now? - context sensitive objects might set this automatically like Toaster/Microwave/ Pots/Pans if isHeated = true
+	// ///
+	// public bool abletocook;//can this object be heated up by a "fire" tagged source? -  use this for Pots/Pans
+	// public bool isabletocook;//object is in contact with a "fire" tagged source (stove burner), if this is heated any object cookable object touching it will be switched to cooked - again use for Pots/Pans
+	//
+	//temperature placeholder values, might get more specific later with degrees but for now just track these three states
+	public enum Temperature { RoomTemp, Hot, Cold};
+	public string ObjectTemperature;//return current abstracted temperature of object as a string (RoomTemp, Hot, Cold)
+	//
+	public bool canChangeTempToHot;//can change other object temp to hot
+	public bool canChangeTempToCold;//can change other object temp to cool
+	//
+	public bool sliceable;//can this be sliced in some way?
+	public bool isSliced;//currently sliced?
+	///
 	public bool openable;
+	public bool isOpen;
+	///
 	public bool pickupable;
-	public bool isopen;
-	public bool istoggled;
+	public bool isPickedUp;//if the pickupable object is actively being held by the agent
+
+	public float mass;//mass is only for moveable and pickupable objects
+
+	//salient materials are only for pickupable and moveable objects, for now static only objects do not report material back since we have to assign them manually
+	public enum ObjectSalientMaterial {Metal, Wood, Plastic, Glass, Ceramic, Stone, Fabric, Rubber, Food, Paper, Wax, Soap, Sponge, Organic} //salient materials that make up an object (ie: cell phone - metal, glass)
+
+	public string [] salientMaterials; //salient materials that this object is made of as strings (see enum above). This is only for objects that are Pickupable or Moveable
+	///
 	public string[] receptacleObjectIds;
-	public PivotSimObj[] pivotSimObjs;
 	public float distance;
 	public String objectType;
 	public string objectId;
-	public float[] bounds3D;
 	public string parentReceptacle;
 	public string[] parentReceptacles;
 	public float currentTime;
 
 	public ObjectMetadata() { }
-
-	public ObjectMetadata(SimpleSimObj simObj) {
-		GameObject o = simObj.gameObject;
-		this.name = o.name;
-		this.position = o.transform.position;
-		this.rotation = o.transform.eulerAngles;
-
-		this.objectType = Enum.GetName(typeof(SimObjType), simObj.ObjType);
-		this.receptacle = simObj.IsReceptacle;
-		this.openable = simObj.IsOpenable;
-		if (this.openable)
-		{
-			this.isopen = simObj.IsOpen;
-		}
-		this.pickupable = simObj.IsPickupable;
-		this.objectId = simObj.UniqueID;
-		this.visible = simObj.IsVisible;
-
-
-
-		Bounds bounds = simObj.Bounds;
-		this.bounds3D = new [] {
-			bounds.min.x,
-			bounds.min.y,
-			bounds.min.z,
-			bounds.max.x,
-			bounds.max.y,
-			bounds.max.z,
-		};
-	}
 }
 
 [Serializable]
@@ -579,13 +716,6 @@ public class InventoryObject
 {
 	public string objectId;
 	public string objectType;
-}
-
-[Serializable]
-public class PivotSimObj
-{
-	public int pivotId;
-	public string objectId;
 }
 
 [Serializable]
@@ -644,11 +774,11 @@ public struct MetadataWrapper
 
 	public int actionIntReturn;
 	public float actionFloatReturn;
-	public bool actionBoolReturn;
 	public string[] actionStringsReturn;
 
 	public float[] actionFloatsReturn;
 	public Vector3[] actionVector3sReturn;
+	public List<Vector3> visibleRange;
 	public System.Object actionReturn;
 
 	public float currentTime;
@@ -679,9 +809,17 @@ public class ServerAction
 	public int horizon;
 	public Vector3 rotation;
 	public Vector3 position;
+
+	public List<Vector3> positions = null;
 	public bool standing = true;
 	public float fov = 60.0f;
 	public bool forceAction;
+
+	public bool forceKinematic;
+
+	public float maxAgentsDistance = -1.0f;
+
+	public bool alwaysReturnVisibleRange = false;
 	public int sequenceId;
 	public bool snapToGrid = true;
 	public bool continuous;
@@ -689,9 +827,10 @@ public class ServerAction
 	public bool rotateOnTeleport;
 	public bool forceVisible;
 	public bool randomizeOpen;
-	public int pivot;
 	public int randomSeed;
 	public float moveMagnitude;
+
+	public bool autoSimulation = true;
 	public float visibilityDistance;
 	public bool continuousMode;
 	public bool uniquePickupableObjectTypes; // only allow one of each object type to be visible
@@ -706,6 +845,10 @@ public class ServerAction
 	public float cameraY;
 	public bool placeStationary = true; //when placing/spawning an object, do we spawn it stationary (kinematic true) or spawn and let physics resolve final position
 	public string ssao = "default";
+	public string fillLiquid; //string to indicate what kind of liquid this object should be filled with. Water, Coffee, Wine etc.
+	public float TimeUntilRoomTemp;
+	public bool allowDecayTemperature = true; //set to true if temperature should decay over time, set to false if temp changes should not decay, defaulted true
+	public string StateChange;//a string that specifies which state change to randomly toggle
 	public SimObjType ReceptableSimObjType()
 	{
 		if (string.IsNullOrEmpty(receptacleObjectType))

@@ -148,7 +148,7 @@ GameObject:
   - component: {fileID: 33061367507950288}
   - component: {fileID: 23015839763461448}
   m_Layer: 0
-  m_Name: laptop_16
+  m_Name: main_mesh
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -198,6 +198,7 @@ MeshRenderer:
   - {fileID: 2100000, guid: a271800b374dc1d4bab67d15f9e72ff6, type: 2}
   - {fileID: 2100000, guid: f69edd8d411dd3b4382fc4ef452812ff, type: 2}
   - {fileID: 2100000, guid: 8a78a5346c420af4998a4324b186302b, type: 2}
+  - {fileID: 2100000, guid: f7d48f5dfa4f0b24cb78749c0145d074, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -505,7 +506,7 @@ GameObject:
   - component: {fileID: 33811955806203642}
   - component: {fileID: 23584243799127830}
   m_Layer: 0
-  m_Name: laptop_lid_16
+  m_Name: lid_mesh
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -555,6 +556,7 @@ MeshRenderer:
   - {fileID: 2100000, guid: a271800b374dc1d4bab67d15f9e72ff6, type: 2}
   - {fileID: 2100000, guid: f69edd8d411dd3b4382fc4ef452812ff, type: 2}
   - {fileID: 2100000, guid: 8a78a5346c420af4998a4324b186302b, type: 2}
+  - {fileID: 2100000, guid: f7d48f5dfa4f0b24cb78749c0145d074, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -587,6 +589,7 @@ GameObject:
   - component: {fileID: 54585782161622600}
   - component: {fileID: 114029644323665856}
   - component: {fileID: 114933270008600734}
+  - component: {fileID: 1148811656546164284}
   m_Layer: 8
   m_Name: Laptop_16
   m_TagString: SimObjPhysics
@@ -602,7 +605,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1720354390447832}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 3.61, y: -0.34, z: 6.89}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 4984674693581002}
@@ -626,27 +629,36 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b439f6e4ef5714ee2a3643acf37b7a9d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  uniqueID: Laptop|+03.61|-00.34|+06.89
+  uniqueID: Laptop|+00.00|+00.00|+00.00
   Type: 50
   PrimaryProperty: 3
-  SecondaryProperties: 080000001d000000
+  SecondaryProperties: 080000001d0000000b000000
   BoundingBox: {fileID: 1542843594236718}
   VisibilityPoints:
   - {fileID: 4996399149020412}
   - {fileID: 4531610178935322}
   - {fileID: 4655114386453648}
   - {fileID: 4697497344340602}
+  - {fileID: 4739885146039094}
+  - {fileID: 4601233852515724}
+  - {fileID: 4200885660251782}
+  - {fileID: 4276487029064174}
   ReceptacleTriggerBoxes: []
   isVisible: 0
   isInteractable: 0
-  isColliding: 0
+  isInAgentHand: 0
   MyColliders:
   - {fileID: 65592354261836288}
+  - {fileID: 65217671636640638}
   HFdynamicfriction: 0.3
   HFstaticfriction: 0.3
   HFbounciness: 0
   HFrbdrag: 0
   HFrbangulardrag: 0
+  salientMaterials: 000000000200000003000000
+  CurrentTemperature: 0
+  HowManySecondsUntilRoomTemp: 10
+  ContainedObjectReferences: []
 --- !u!54 &54585782161622600
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -687,6 +699,8 @@ MonoBehaviour:
   isOpen: 1
   canReset: 1
   movementType: 1
+  OpenBoundingBox: {fileID: 0}
+  ClosedBoundingBox: {fileID: 0}
 --- !u!114 &114933270008600734
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -708,18 +722,49 @@ MonoBehaviour:
     - {fileID: 2100000, guid: a271800b374dc1d4bab67d15f9e72ff6, type: 2}
     - {fileID: 2100000, guid: 0be3ce90e480e4d18b7d658bf845520e, type: 2}
     - {fileID: 2100000, guid: 8a78a5346c420af4998a4324b186302b, type: 2}
+    - {fileID: 2100000, guid: f7d48f5dfa4f0b24cb78749c0145d074, type: 2}
     OffMaterials:
     - {fileID: 2100000, guid: 584d281df74234f4caa0096f45ecd1fc, type: 2}
     - {fileID: 2100000, guid: fcd2e4ed615ed9a48b0ccff63d798ffe, type: 2}
     - {fileID: 2100000, guid: a271800b374dc1d4bab67d15f9e72ff6, type: 2}
     - {fileID: 2100000, guid: f69edd8d411dd3b4382fc4ef452812ff, type: 2}
     - {fileID: 2100000, guid: 8a78a5346c420af4998a4324b186302b, type: 2}
+    - {fileID: 2100000, guid: f7d48f5dfa4f0b24cb78749c0145d074, type: 2}
   LightSources: []
   OnPositions: []
   OffPositions: []
   animationTime: 0.05
   isOn: 0
   movementType: 0
+  SelfControlled: 1
+  ControlledSimObjects: []
+--- !u!114 &1148811656546164284
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1720354390447832}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 02b2beb760fcd4a6f957400c276adb00, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  PrefabToSwapTo: {fileID: 0}
+  DirtyPrefabToSwapTo: {fileID: 0}
+  ImpulseThreshold: 3.6
+  HighFrictionImpulseOffset: 2
+  breakType: 1
+  MaterialSwapObjects:
+  - MyObject: {fileID: 1712531992475040}
+    OnMaterials:
+    - {fileID: 2100000, guid: 584d281df74234f4caa0096f45ecd1fc, type: 2}
+    - {fileID: 2100000, guid: fcd2e4ed615ed9a48b0ccff63d798ffe, type: 2}
+    - {fileID: 2100000, guid: a271800b374dc1d4bab67d15f9e72ff6, type: 2}
+    - {fileID: 2100000, guid: f69edd8d411dd3b4382fc4ef452812ff, type: 2}
+    - {fileID: 2100000, guid: 8a78a5346c420af4998a4324b186302b, type: 2}
+    - {fileID: 2100000, guid: dc51388438a333d4cab095f2a99810f1, type: 2}
+    OffMaterials: []
 --- !u!1 &1727139686726894
 GameObject:
   m_ObjectHideFlags: 0

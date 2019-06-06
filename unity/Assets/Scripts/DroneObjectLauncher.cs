@@ -27,6 +27,7 @@ public class DroneObjectLauncher : MonoBehaviour
 		GameObject fireaway = Instantiate(prefabToLaunch, this.transform.position, this.transform.rotation);
 		Rigidbody rb = fireaway.GetComponent<Rigidbody>();
 
+		rb.collisionDetectionMode = CollisionDetectionMode.ContinuousSpeculative;
 		rb.isKinematic = false;
 		rb.AddForce(direction * magnitude);
 

@@ -18,13 +18,12 @@ public class PhysicsSceneManager : MonoBehaviour
 
 	//get references to the spawned Required objects after spawning them for the first time.
 	public List<GameObject> SpawnedObjects = new List<GameObject>();
-	public List<SimObjPhysics> PhysObjectsInScene = new List<SimObjPhysics>();
-
-	public List<string> UniqueIDsInScene = new List<string>();
-
+	public Dictionary<string, SimObjPhysics> UniqueIdToSimObjPhysics = new Dictionary<string, SimObjPhysics>();
 	public List<SimObjPhysics> ReceptaclesInScene = new List<SimObjPhysics>();
 
 	public GameObject HideAndSeek;
+
+	public bool AllowDecayTemperature = true;//if true, temperature of sim objects decays to Room Temp over time
 
     //public List<SimObjPhysics> LookAtThisList = new List<SimObjPhysics>();
 
@@ -52,22 +51,21 @@ public class PhysicsSceneManager : MonoBehaviour
 		//right now only Very High and Ultra will have ssao on by default.
 		if(QualitySettings.GetQualityLevel() < 5)
 		{
-			GameObject.Find("FirstPersonCharacter").
-			GetComponent<ScreenSpaceAmbientOcclusion>().enabled = false;
+			if(GameObject.Find("FirstPersonCharacter").GetComponent<ScreenSpaceAmbientOcclusion>())
+			GameObject.Find("FirstPersonCharacter").GetComponent<ScreenSpaceAmbientOcclusion>().enabled = false;
 		}
 
 		else
 		{
-			GameObject.Find("FirstPersonCharacter").
-			GetComponent<ScreenSpaceAmbientOcclusion>().enabled = true;
+			if(GameObject.Find("FirstPersonCharacter").GetComponent<ScreenSpaceAmbientOcclusion>())
+			GameObject.Find("FirstPersonCharacter").GetComponent<ScreenSpaceAmbientOcclusion>().enabled = true;
 		}
 	}
 
 	public void SetupScene()
 	{
-        UniqueIDsInScene.Clear();
 		ReceptaclesInScene.Clear();
-		PhysObjectsInScene.Clear();
+		UniqueIdToSimObjPhysics.Clear();
 		GatherSimObjPhysInScene();
 		GatherAllReceptaclesInScene();
 	}
@@ -101,19 +99,23 @@ public class PhysicsSceneManager : MonoBehaviour
 
 			return false;
 		}
-
-
 	}
+
+	public void ResetUniqueIdToSimObjPhysics() {
+            UniqueIdToSimObjPhysics.Clear();
+            foreach (SimObjPhysics so in GameObject.FindObjectsOfType<SimObjPhysics>()) {
+                UniqueIdToSimObjPhysics[so.UniqueID] = so;
+            }
+        }
 
     public void GatherSimObjPhysInScene()
 	{
-		//PhysObjectsInScene.Clear();
-		PhysObjectsInScene = new List<SimObjPhysics>();
+		List<SimObjPhysics> allPhysObjects = new List<SimObjPhysics>();
 
-		PhysObjectsInScene.AddRange(FindObjectsOfType<SimObjPhysics>());
-		PhysObjectsInScene.Sort((x, y) => (x.Type.ToString().CompareTo(y.Type.ToString())));
+		allPhysObjects.AddRange(FindObjectsOfType<SimObjPhysics>());
+		allPhysObjects.Sort((x, y) => (x.Type.ToString().CompareTo(y.Type.ToString())));
 
-		foreach(SimObjPhysics o in PhysObjectsInScene)
+		foreach(SimObjPhysics o in allPhysObjects)
 		{
 			Generate_UniqueID(o);
 
@@ -121,16 +123,14 @@ public class PhysicsSceneManager : MonoBehaviour
 			#if UNITY_EDITOR
 			if (CheckForDuplicateUniqueIDs(o))
 			{
-				
-				Debug.Log("Yo there are duplicate UniqueIDs! Check" + o.UniqueID);
-				
+				Debug.Log("Yo there are duplicate UniqueIDs! Check" + o.UniqueID);	
+			} else {
+				AddToObjectsInScene(o);
+				continue;
 			}
-
-
-			else
 			#endif
-				UniqueIDsInScene.Add(o.UniqueID);
 
+			AddToObjectsInScene(o);
 		}
 		
 		PhysicsRemoteFPSAgentController fpsController = GameObject.Find("FPSController").GetComponent<PhysicsRemoteFPSAgentController>();
@@ -141,7 +141,7 @@ public class PhysicsSceneManager : MonoBehaviour
 
 	public void GatherAllReceptaclesInScene()
 	{
-		foreach(SimObjPhysics sop in PhysObjectsInScene)
+		foreach(SimObjPhysics sop in UniqueIdToSimObjPhysics.Values)
 		{
 			if(sop.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.Receptacle))
 			{
@@ -200,10 +200,17 @@ public class PhysicsSceneManager : MonoBehaviour
         string zPos = (pos.z >= 0 ? "+" : "") + pos.z.ToString("00.00");
         o.UniqueID = o.Type.ToString() + "|" + xPos + "|" + yPos + "|" + zPos;
     }
+
+	//used to create unique id for an object created as result of a state change of another object ie: bread - >breadslice1, breadslice 2 etc
+	public void Generate_InheritedUniqueID(SimObjPhysics sourceObject, SimObjPhysics createdObject, int count)
+	{
+		createdObject.UniqueID = sourceObject.UniqueID + "|" + createdObject.ObjType + "_" + count;
+		AddToObjectsInScene(createdObject);
+	}
     
 	private bool CheckForDuplicateUniqueIDs(SimObjPhysics sop)
 	{
-		if (UniqueIDsInScene.Contains(sop.UniqueID))
+		if (UniqueIdToSimObjPhysics.ContainsKey(sop.UniqueID))
 			return true;
 
 		else
@@ -212,12 +219,17 @@ public class PhysicsSceneManager : MonoBehaviour
 
 	public void AddToObjectsInScene(SimObjPhysics sop)
 	{
-		PhysObjectsInScene.Add(sop);
+		UniqueIdToSimObjPhysics[sop.UniqueID] = sop;
 	}
 
-	public void AddToIDsInScene(SimObjPhysics sop)
+	public void RemoveFromSpawnedObjects(SimObjPhysics sop)
 	{
-		UniqueIDsInScene.Add(sop.uniqueID);
+		SpawnedObjects.Remove(sop.gameObject);
+	}
+
+	public void RemoveFromRequiredObjects(SimObjPhysics sop)
+	{
+		RequiredObjects.Remove(sop.gameObject);
 	}
 
 	//use action.randomseed for seed, use action.forceVisible for if objects shoudld ONLY spawn outside and not inside anything
@@ -376,6 +388,8 @@ public class PhysicsSceneManager : MonoBehaviour
 										go.transform.position = osr.attachPoint.position;
 										go.transform.SetParent(osr.attachPoint.transform);
 										go.transform.localRotation = Quaternion.identity;
+										
+										go.GetComponent<Rigidbody>().collisionDetectionMode = CollisionDetectionMode.Discrete;
 										go.GetComponent<Rigidbody>().isKinematic = true;
 
 										HowManyCouldntSpawn--;
@@ -397,8 +411,11 @@ public class PhysicsSceneManager : MonoBehaviour
 										go.transform.position = osr.attachPoint.position;
 										go.transform.SetParent(osr.attachPoint.transform);
 										go.transform.localRotation = Quaternion.identity;
-										go.GetComponent<Rigidbody>().isKinematic = true;
 
+										Rigidbody rb = go.GetComponent<Rigidbody>();
+										rb.collisionDetectionMode = CollisionDetectionMode.Discrete;
+										rb.isKinematic = true;
+							
 										HowManyCouldntSpawn--;
 										spawned = true;
 										break;
@@ -409,7 +426,7 @@ public class PhysicsSceneManager : MonoBehaviour
 						targetReceptacleSpawnPoints = sop.ReturnMySpawnPoints(false);
 
 						//first shuffle the list so it's raaaandom
-						targetReceptacleSpawnPoints.Shuffle();
+						targetReceptacleSpawnPoints.Shuffle_();
 						
 						//try to spawn it, and if it succeeds great! if not uhhh...
 
@@ -690,9 +707,9 @@ public class PhysicsSceneManager : MonoBehaviour
 			indDict[pair.Key] = pair.Value.Count - 1;
 		}
 		types.Sort();
-		types.Shuffle();
+		types.Shuffle_();
 		foreach (SimObjType t in types) {
-			dict[t].Shuffle();
+			dict[t].Shuffle_();
 		}
 
 		bool changed = true;

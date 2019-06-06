@@ -261,10 +261,10 @@ CapsuleCollider:
   m_Material: {fileID: 13400000, guid: ed0a9628490bf034abde79f0444dec42, type: 2}
   m_IsTrigger: 0
   m_Enabled: 1
-  m_Radius: 0.032453768
-  m_Height: 0.38749963
+  m_Radius: 0.025785182
+  m_Height: 0.37302136
   m_Direction: 1
-  m_Center: {x: 0, y: 0, z: -0.0037129074}
+  m_Center: {x: 0, y: -8.881784e-16, z: -0.0126321465}
 --- !u!1 &1381029022286144
 GameObject:
   m_ObjectHideFlags: 0
@@ -399,7 +399,7 @@ Transform:
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
-  - {fileID: 4763888412885524}
+  - {fileID: 8250925918630824360}
   - {fileID: 4203709842561670}
   - {fileID: 4115071906521110}
   m_Father: {fileID: 4061940557935408}
@@ -490,6 +490,7 @@ GameObject:
   - component: {fileID: 4061940557935408}
   - component: {fileID: 114450767040619156}
   - component: {fileID: 54450505838610548}
+  - component: {fileID: 6753348509195849925}
   m_Layer: 8
   m_Name: Bread_20
   m_TagString: SimObjPhysics
@@ -531,7 +532,7 @@ MonoBehaviour:
   uniqueID: 
   Type: 5
   PrimaryProperty: 3
-  SecondaryProperties: 
+  SecondaryProperties: 09000000
   BoundingBox: {fileID: 1928637248575488}
   VisibilityPoints:
   - {fileID: 4724998386443124}
@@ -549,7 +550,7 @@ MonoBehaviour:
   ReceptacleTriggerBoxes: []
   isVisible: 0
   isInteractable: 0
-  isColliding: 0
+  isInAgentHand: 0
   MyColliders:
   - {fileID: 136778898602911732}
   - {fileID: 65385013383188208}
@@ -559,6 +560,10 @@ MonoBehaviour:
   HFbounciness: 0
   HFrbdrag: 0
   HFrbangulardrag: 0
+  salientMaterials: 08000000
+  CurrentTemperature: 0
+  HowManySecondsUntilRoomTemp: 10
+  ContainedObjectReferences: []
 --- !u!54 &54450505838610548
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -575,6 +580,21 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
+--- !u!114 &6753348509195849925
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1617535994680984}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d07b0b60d7fb54ea9a1ddeca3f431392, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ObjectToChangeTo: {fileID: 4855432944150371509, guid: 85f745477ece6794484519624ef535ca,
+    type: 3}
+  isSliced: 0
 --- !u!1 &1626161470422416
 GameObject:
   m_ObjectHideFlags: 0
@@ -906,7 +926,7 @@ Transform:
   m_Father: {fileID: 4429725268066852}
   m_RootOrder: 10
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &1970211659208484
+--- !u!1 &4844009107549810059
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -914,8 +934,8 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 4763888412885524}
-  - component: {fileID: 136584128067346904}
+  - component: {fileID: 8250925918630824360}
+  - component: {fileID: 7509867445435006750}
   m_Layer: 8
   m_Name: Col (1)
   m_TagString: SimObjPhysics
@@ -923,13 +943,13 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &4763888412885524
+--- !u!4 &8250925918630824360
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1970211659208484}
+  m_GameObject: {fileID: 4844009107549810059}
   m_LocalRotation: {x: -0.70710576, y: -0, z: -0, w: 0.70710784}
   m_LocalPosition: {x: 0.0018997192, y: 0.003200531, z: 0.0020008087}
   m_LocalScale: {x: 1.3375008, y: 1, z: 1}
@@ -937,17 +957,17 @@ Transform:
   m_Father: {fileID: 4280261333763138}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: -90.00001, y: 0, z: 0}
---- !u!136 &136584128067346904
+--- !u!136 &7509867445435006750
 CapsuleCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1970211659208484}
-  m_Material: {fileID: 0}
-  m_IsTrigger: 1
+  m_GameObject: {fileID: 4844009107549810059}
+  m_Material: {fileID: 13400000, guid: ed0a9628490bf034abde79f0444dec42, type: 2}
+  m_IsTrigger: 0
   m_Enabled: 1
-  m_Radius: 0.032453768
-  m_Height: 0.38749963
+  m_Radius: 0.025785182
+  m_Height: 0.37302136
   m_Direction: 1
-  m_Center: {x: 0, y: 0, z: -0.0037129074}
+  m_Center: {x: 0, y: -8.881784e-16, z: -0.0126321465}
