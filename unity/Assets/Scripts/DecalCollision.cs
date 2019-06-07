@@ -125,7 +125,13 @@ public class DecalCollision : Break
                         // Taking into account the collider box of the object is breaking to resize the decal looks weirder than having the same decal size
                         // Maybe factor the other object size somehow but not directly, also first collider that hits somtimes has size 0 :(
                         // decalCopy.transform.localScale = scale + new Vector3(0.0f, 0.0f, 0.02f);
-                        spawnDecal(contact.point, this.transform.rotation, decalScale, DecalRotationAxis.FORWARD);
+
+                        // Projects contact point on spawn plane
+                        var planeToCollision = contact.point - this.transform.position;
+                        var forwardNormalized = this.transform.forward.normalized;
+                        var proyOnForward = Vector3.Dot(forwardNormalized, planeToCollision);
+                        var proyectedPoint = contact.point - forwardNormalized * proyOnForward;
+                        spawnDecal(proyectedPoint, this.transform.rotation, decalScale, DecalRotationAxis.FORWARD);
                         break;
                     }
                 }

@@ -19,7 +19,7 @@
         {
             Blend Zero One
             ZWrite Off
-            // Cull Off
+            Cull Off
 
             CGPROGRAM
             #pragma vertex vert

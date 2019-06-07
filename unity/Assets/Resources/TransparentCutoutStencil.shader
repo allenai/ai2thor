@@ -16,7 +16,7 @@ SubShader {
     Tags {"Queue"="Transparent-1" "IgnoreProjector"="True" "RenderType"="TransparentCutout"}
     LOD 100
 
-    Cull Off
+    // Cull Off
 
     Stencil {
             Ref [_StencilRef]
