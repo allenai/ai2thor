@@ -122,12 +122,25 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
         public void OnDisable()
         {
-            FPSEnabled = false;
-            Cursor.visible = true;
-            Cursor.lockState = CursorLockMode.None;
+            DisableMouseControl();
             //  if (InputFieldObj) {
             //     InputFieldObj.SetActive(true);
             //  }
+        }
+
+        public void EnableMouseControl()
+        {
+            FPSEnabled = true;
+            Cursor.visible = false;
+            Cursor.lockState = CursorLockMode.Locked;
+        }
+
+        public void DisableMouseControl()
+        {
+            Debug.Log("Disabled mouse");
+            FPSEnabled = false;
+            Cursor.visible = true;
+            Cursor.lockState = CursorLockMode.None;
         }
 
         private void DebugKeyboardControls()
