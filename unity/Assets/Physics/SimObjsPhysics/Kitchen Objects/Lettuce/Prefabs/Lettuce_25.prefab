@@ -241,6 +241,7 @@ GameObject:
   - component: {fileID: 4680398434647490}
   - component: {fileID: 114841432247815362}
   - component: {fileID: 54509480293616478}
+  - component: {fileID: 1190060978}
   m_Layer: 8
   m_Name: Lettuce_25
   m_TagString: SimObjPhysics
@@ -282,7 +283,7 @@ MonoBehaviour:
   uniqueID: 
   Type: 22
   PrimaryProperty: 3
-  SecondaryProperties: 
+  SecondaryProperties: 09000000
   BoundingBox: {fileID: 1288192331869884}
   VisibilityPoints:
   - {fileID: 4843631966503534}
@@ -294,7 +295,7 @@ MonoBehaviour:
   ReceptacleTriggerBoxes: []
   isVisible: 0
   isInteractable: 0
-  isColliding: 0
+  isInAgentHand: 0
   MyColliders:
   - {fileID: 136257264245361540}
   - {fileID: 136951000993151932}
@@ -303,6 +304,10 @@ MonoBehaviour:
   HFbounciness: 0.1
   HFrbdrag: 0
   HFrbangulardrag: 2.5
+  salientMaterials: 08000000
+  CurrentTemperature: 0
+  HowManySecondsUntilRoomTemp: 10
+  ContainedObjectReferences: []
 --- !u!54 &54509480293616478
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -319,6 +324,21 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
+--- !u!114 &1190060978
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1404413741112154}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d07b0b60d7fb54ea9a1ddeca3f431392, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ObjectToChangeTo: {fileID: 3552702208020902359, guid: e82b0d4f20f41bc4d8e8f1a6cd19ea53,
+    type: 3}
+  isSliced: 0
 --- !u!1 &1560606533531554
 GameObject:
   m_ObjectHideFlags: 0

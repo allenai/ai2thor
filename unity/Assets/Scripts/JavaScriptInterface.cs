@@ -8,11 +8,11 @@ public class JavaScriptInterface : MonoBehaviour {
     private static extern void Init();
 
     [DllImport("__Internal")]
-    private static extern void AddEvent(string str);
+    private static extern void SendEvent(string str);
 
     public void SendAction(ServerAction action)
     {
-        AddEvent(JsonUtility.ToJson(action));
+        SendEvent(JsonUtility.ToJson(action));
     }
 
     void Start()

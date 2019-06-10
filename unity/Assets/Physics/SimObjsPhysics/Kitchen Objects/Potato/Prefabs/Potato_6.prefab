@@ -29,7 +29,7 @@ Transform:
   m_Children:
   - {fileID: 4188544054336418}
   m_Father: {fileID: 4585444177730930}
-  m_RootOrder: 0
+  m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1069425848730958
 GameObject:
@@ -42,6 +42,8 @@ GameObject:
   - component: {fileID: 4585444177730930}
   - component: {fileID: 114397455109724626}
   - component: {fileID: 54558535804245944}
+  - component: {fileID: 507119917}
+  - component: {fileID: 507119919}
   m_Layer: 8
   m_Name: Potato_6
   m_TagString: SimObjPhysics
@@ -60,10 +62,10 @@ Transform:
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
+  - {fileID: 4995687512765166}
   - {fileID: 4358741999352956}
   - {fileID: 4300325954283620}
   - {fileID: 4630741470727352}
-  - {fileID: 4995687512765166}
   - {fileID: 4398958103410770}
   m_Father: {fileID: 0}
   m_RootOrder: 0
@@ -83,7 +85,7 @@ MonoBehaviour:
   uniqueID: 
   Type: 23
   PrimaryProperty: 3
-  SecondaryProperties: 
+  SecondaryProperties: 0900000014000000
   BoundingBox: {fileID: 1913592009603998}
   VisibilityPoints:
   - {fileID: 4299519081539304}
@@ -95,7 +97,7 @@ MonoBehaviour:
   ReceptacleTriggerBoxes: []
   isVisible: 0
   isInteractable: 0
-  isColliding: 0
+  isInAgentHand: 0
   MyColliders:
   - {fileID: 136743934929962440}
   HFdynamicfriction: 1.1
@@ -103,6 +105,10 @@ MonoBehaviour:
   HFbounciness: 0.1
   HFrbdrag: 0
   HFrbangulardrag: 2
+  salientMaterials: 08000000
+  CurrentTemperature: 0
+  HowManySecondsUntilRoomTemp: 10
+  ContainedObjectReferences: []
 --- !u!54 &54558535804245944
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -119,6 +125,40 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
+--- !u!114 &507119917
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1069425848730958}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d07b0b60d7fb54ea9a1ddeca3f431392, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ObjectToChangeTo: {fileID: 369714653, guid: a949eb967d0c7a0419402ecf7fe63858, type: 3}
+  CookedObjectToChangeTo: {fileID: 0}
+  isSliced: 0
+--- !u!114 &507119919
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1069425848730958}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8a7c19d0c53e745af949e89de5ba7a38, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  MaterialSwapObjects:
+  - MyObject: {fileID: 1849604395702674}
+    OnMaterials:
+    - {fileID: 2100000, guid: 8d9043b4361c6c74795ae798b85094be, type: 2}
+    OffMaterials:
+    - {fileID: 2100000, guid: e3a3bad01717c410c8af71996e7d2bb8, type: 2}
+  isCooked: 0
 --- !u!1 &1136880602979908
 GameObject:
   m_ObjectHideFlags: 0
@@ -348,7 +388,7 @@ Transform:
   - {fileID: 4971326507714320}
   - {fileID: 4630291706907674}
   m_Father: {fileID: 4585444177730930}
-  m_RootOrder: 1
+  m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1811704116735756
 GameObject:
@@ -411,7 +451,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 4585444177730930}
-  m_RootOrder: 3
+  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!33 &33693930715032856
 MeshFilter:
@@ -532,7 +572,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 4585444177730930}
-  m_RootOrder: 2
+  m_RootOrder: 3
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!65 &65401101892704498
 BoxCollider:
