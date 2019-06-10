@@ -1,7 +1,7 @@
-# AI2-THOR Version 1.1 Release Notes
+# AI2-THOR Version 2.0 Release Notes
 
 ## IMPORTANT NOTICE
-Note that AI2-THOR 1.1 is not fully backwards compatible with previous versions due to some reworked architecture in the framework. For example, some object types have been deprecated (example: ToiletPaperRoll), new object types have been introduced (example: Faucet). Several scenes have also had their layout re-arranged, so objects are not guaranteed to be found in their same position, and as such the entire room itself might be different. Additionaly Metadata values might have been changed, added, or removed.
+Note that AI2-THOR 2.0 is not fully backwards compatible with previous versions due to some reworked architecture in the framework. For example, some object types have been deprecated (example: ToiletPaperRoll), new object types have been introduced (example: Faucet). Several scenes have also had their layout re-arranged, so objects are not guaranteed to be found in their same position, and as such the entire room itself might be different. Additionaly Metadata values might have been changed, added, or removed.
 
 ## More Sim Object Types
 Additional Sim Object Types have been added to the framework
