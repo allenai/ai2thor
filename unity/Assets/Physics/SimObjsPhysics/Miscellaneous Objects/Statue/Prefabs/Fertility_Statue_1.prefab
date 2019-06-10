@@ -825,7 +825,7 @@ GameObject:
   m_TagString: Structure
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
-  m_StaticEditorFlags: 4294967295
+  m_StaticEditorFlags: 4294967294
   m_IsActive: 1
 --- !u!4 &4641896465673492
 Transform:
@@ -834,13 +834,13 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1496101056582154}
-  m_LocalRotation: {x: -0, y: 0.7071099, z: -0, w: -0.7071037}
-  m_LocalPosition: {x: 0, y: 0.039299965, z: 0}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 4723125414346894}
   m_RootOrder: 0
-  m_LocalEulerAnglesHint: {x: 0, y: 269.999, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!33 &33792974485121066
 MeshFilter:
   m_ObjectHideFlags: 0
@@ -848,7 +848,7 @@ MeshFilter:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1496101056582154}
-  m_Mesh: {fileID: 4300030, guid: 11c162f324df615499d11ba18d978150, type: 3}
+  m_Mesh: {fileID: 4300012, guid: 9a2e3c1ecbb6d48449b2fa31ef8e0f06, type: 3}
 --- !u!23 &23592009989178486
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -866,8 +866,8 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: a29429233dece488891fe507becdc791, type: 2}
   - {fileID: 2100000, guid: 65381ac2671414a9286c6882f7125fbe, type: 2}
+  - {fileID: 2100000, guid: a29429233dece488891fe507becdc791, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -1721,6 +1721,7 @@ GameObject:
   - component: {fileID: 4723125414346894}
   - component: {fileID: 114761931898260508}
   - component: {fileID: 54962836688564246}
+  - component: {fileID: 5858654200512345095}
   m_Layer: 8
   m_Name: Fertility_Statue_1
   m_TagString: SimObjPhysics
@@ -1759,10 +1760,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b439f6e4ef5714ee2a3643acf37b7a9d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  uniqueID: Statue|+05.00|+05.00|+05.00
+  uniqueID: Statue|+00.00|+00.00|+00.00
   Type: 39
   PrimaryProperty: 3
-  SecondaryProperties: 
+  SecondaryProperties: 0b000000
   BoundingBox: {fileID: 1907732412491078}
   VisibilityPoints:
   - {fileID: 4910372793008442}
@@ -1783,7 +1784,7 @@ MonoBehaviour:
   ReceptacleTriggerBoxes: []
   isVisible: 0
   isInteractable: 0
-  isColliding: 0
+  isInAgentHand: 0
   MyColliders:
   - {fileID: 65684835236813408}
   - {fileID: 136655538227439512}
@@ -1804,6 +1805,10 @@ MonoBehaviour:
   HFbounciness: 0
   HFrbdrag: 1
   HFrbangulardrag: 0
+  salientMaterials: 05000000
+  CurrentTemperature: 0
+  HowManySecondsUntilRoomTemp: 10
+  ContainedObjectReferences: []
 --- !u!54 &54962836688564246
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -1820,6 +1825,25 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
+--- !u!114 &5858654200512345095
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1897454433323586}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 02b2beb760fcd4a6f957400c276adb00, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  PrefabToSwapTo: {fileID: 158428535, guid: b0c5064c3d9f1f64498a7b475536e77b, type: 3}
+  DirtyPrefabToSwapTo: {fileID: 0}
+  ImpulseThreshold: 5
+  HighFrictionImpulseOffset: 2
+  broken: 0
+  breakType: 0
+  MaterialSwapObjects: []
 --- !u!1 &1907732412491078
 GameObject:
   m_ObjectHideFlags: 0

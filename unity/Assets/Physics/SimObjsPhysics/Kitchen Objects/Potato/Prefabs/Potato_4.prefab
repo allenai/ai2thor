@@ -348,6 +348,8 @@ GameObject:
   - component: {fileID: 4032668601978528}
   - component: {fileID: 114375217218035872}
   - component: {fileID: 54278310966297560}
+  - component: {fileID: 493302160}
+  - component: {fileID: 493302162}
   m_Layer: 8
   m_Name: Potato_4
   m_TagString: SimObjPhysics
@@ -386,10 +388,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b439f6e4ef5714ee2a3643acf37b7a9d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  uniqueID: 
+  uniqueID: Potato|+00.00|+00.00|+00.00
   Type: 23
   PrimaryProperty: 3
-  SecondaryProperties: 
+  SecondaryProperties: 0900000014000000
   BoundingBox: {fileID: 1471716747835820}
   VisibilityPoints:
   - {fileID: 4409840444131402}
@@ -401,7 +403,7 @@ MonoBehaviour:
   ReceptacleTriggerBoxes: []
   isVisible: 0
   isInteractable: 0
-  isColliding: 0
+  isInAgentHand: 0
   MyColliders:
   - {fileID: 136051403390554810}
   HFdynamicfriction: 1.1
@@ -409,6 +411,10 @@ MonoBehaviour:
   HFbounciness: 0.1
   HFrbdrag: 0
   HFrbangulardrag: 2
+  salientMaterials: 08000000
+  CurrentTemperature: 0
+  HowManySecondsUntilRoomTemp: 10
+  ContainedObjectReferences: []
 --- !u!54 &54278310966297560
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -425,6 +431,40 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
+--- !u!114 &493302160
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1697831449963736}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d07b0b60d7fb54ea9a1ddeca3f431392, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ObjectToChangeTo: {fileID: 1909252309, guid: 482e261bdc1d5e24bb212440fecb37ee, type: 3}
+  CookedObjectToChangeTo: {fileID: 0}
+  isSliced: 0
+--- !u!114 &493302162
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1697831449963736}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8a7c19d0c53e745af949e89de5ba7a38, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  MaterialSwapObjects:
+  - MyObject: {fileID: 1794162737799936}
+    OnMaterials:
+    - {fileID: 2100000, guid: 2aee52aa59b6b044f82af75ab3a62a5a, type: 2}
+    OffMaterials:
+    - {fileID: 2100000, guid: 0d25d2fb68794434dafcf9359e6bcd1f, type: 2}
+  isCooked: 0
 --- !u!1 &1794162737799936
 GameObject:
   m_ObjectHideFlags: 0

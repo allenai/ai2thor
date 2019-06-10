@@ -92,6 +92,8 @@ GameObject:
   - component: {fileID: 4587377309274416}
   - component: {fileID: 114730218042924540}
   - component: {fileID: 54154076133729850}
+  - component: {fileID: 3235514295873289862}
+  - component: {fileID: 5233843679182929901}
   m_Layer: 8
   m_Name: Egg_17
   m_TagString: SimObjPhysics
@@ -133,7 +135,7 @@ MonoBehaviour:
   uniqueID: 
   Type: 20
   PrimaryProperty: 3
-  SecondaryProperties: 
+  SecondaryProperties: 090000000b000000
   BoundingBox: {fileID: 1298830181135132}
   VisibilityPoints:
   - {fileID: 4257570038340040}
@@ -145,7 +147,7 @@ MonoBehaviour:
   ReceptacleTriggerBoxes: []
   isVisible: 0
   isInteractable: 0
-  isColliding: 0
+  isInAgentHand: 0
   MyColliders:
   - {fileID: 136285793720270550}
   HFdynamicfriction: 2
@@ -153,6 +155,10 @@ MonoBehaviour:
   HFbounciness: 0
   HFrbdrag: 1
   HFrbangulardrag: 5
+  salientMaterials: 08000000
+  CurrentTemperature: 0
+  HowManySecondsUntilRoomTemp: 10
+  ContainedObjectReferences: []
 --- !u!54 &54154076133729850
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -169,6 +175,40 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 2
+--- !u!114 &3235514295873289862
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1230104870126002}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d07b0b60d7fb54ea9a1ddeca3f431392, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ObjectToChangeTo: {fileID: 5249050344105341980, guid: b68fd06f9b67e4f52b916a999346d7c1,
+    type: 3}
+  isSliced: 0
+--- !u!114 &5233843679182929901
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1230104870126002}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 02b2beb760fcd4a6f957400c276adb00, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  PrefabToSwapTo: {fileID: 5249050344105341980, guid: b68fd06f9b67e4f52b916a999346d7c1,
+    type: 3}
+  DirtyPrefabToSwapTo: {fileID: 0}
+  ImpulseThreshold: 0.15
+  HighFrictionImpulseOffset: 0.25
+  breakType: 0
+  MaterialSwapObjects: []
 --- !u!1 &1264588959875532
 GameObject:
   m_ObjectHideFlags: 0
@@ -225,7 +265,7 @@ Transform:
   m_GameObject: {fileID: 1298830181135132}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 0.96541643, y: 0.9654164, z: 0.9654164}
+  m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 4587377309274416}
   m_RootOrder: 3
@@ -241,8 +281,8 @@ BoxCollider:
   m_IsTrigger: 0
   m_Enabled: 0
   serializedVersion: 2
-  m_Size: {x: 0.058899302, y: 0.08032652, z: 0.058699016}
-  m_Center: {x: 0, y: 0, z: 0}
+  m_Size: {x: 0.056932524, y: 0.07932975, z: 0.055914693}
+  m_Center: {x: 0, y: 0.00049838424, z: 0}
 --- !u!1 &1398498536410638
 GameObject:
   m_ObjectHideFlags: 0
