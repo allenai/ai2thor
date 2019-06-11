@@ -60,6 +60,21 @@ public class PhysicsSceneManager : MonoBehaviour
 			if(GameObject.Find("FirstPersonCharacter").GetComponent<ScreenSpaceAmbientOcclusion>())
 			GameObject.Find("FirstPersonCharacter").GetComponent<ScreenSpaceAmbientOcclusion>().enabled = true;
 		}
+
+		//use this block to check if any SpawnedObjects/RequiredObjects arrays have anything null in them
+		// #if UNITY_EDITOR
+		// //just loop through it to see if there is a null reference somewhere
+		// foreach(GameObject go in SpawnedObjects)
+		// {
+		// 	string s = go.name;
+		// }
+
+		// //just loop through it and see if there is a null reference somewhere
+		// foreach(GameObject go in RequiredObjects)
+		// {
+		// 	string s = go.name;
+		// }
+		// #endif
 	}
 
 	public void SetupScene()
