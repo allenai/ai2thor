@@ -210,10 +210,12 @@ public class ImageSynthesis : MonoBehaviour {
 		SetupCameraWithReplacementShader(capturePasses[4].camera, uberReplacementShader, ReplacelementModes.Normals);
 		SetupCameraWithPostShader(capturePasses[5].camera, opticalFlowMaterial, DepthTextureMode.Depth | DepthTextureMode.MotionVectors);
 
-        for(int i = 0; i < capturePasses.Length; i++)
-        {
-            capturePasses[i].camera.targetDisplay = i;
-        }
+        #if UNITY_EDITOR
+            for(int i = 0; i < capturePasses.Length; i++)
+            {
+                capturePasses[i].camera.targetDisplay = i;
+            }
+        #endif
 
         /*
 		SetupCameraWithReplacementShader(capturePasses[6].camera, positionShader);
