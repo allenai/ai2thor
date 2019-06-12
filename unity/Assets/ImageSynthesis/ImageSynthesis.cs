@@ -26,9 +26,8 @@ public class ImageSynthesis : MonoBehaviour {
 		new CapturePass() { name = "_depth" },
 		new CapturePass() { name = "_id", supportsAntialiasing = false },
 		new CapturePass() { name = "_class", supportsAntialiasing = false },
-
 		new CapturePass() { name = "_normals"},
-		//new CapturePass() { name = "_flow", supportsAntialiasing = false, needsRescale = true }, // (see issue with Motion Vectors in @KNOWN ISSUES)
+		new CapturePass() { name = "_flow", supportsAntialiasing = false, needsRescale = true }, // (see issue with Motion Vectors in @KNOWN ISSUES)
 
 
 		//new CapturePass() { name = "_position" },
@@ -58,7 +57,7 @@ public class ImageSynthesis : MonoBehaviour {
 	public Shader uberReplacementShader;
 	public Shader opticalFlowShader;
 	public Shader depthShader;
-	public Shader positionShader;
+	//public Shader positionShader;
 
 
 	public Dictionary<Color, string> colorIds;
@@ -85,13 +84,17 @@ public class ImageSynthesis : MonoBehaviour {
 		if (!opticalFlowShader)
 			opticalFlowShader = Shader.Find("Hidden/OpticalFlow");
 
-		if (!depthShader)
-			depthShader = Shader.Find("Hidden/Depth");
+        #if UNITY_EDITOR
+            if (!depthShader)
+                depthShader = Shader.Find("Hidden/DepthBW");
+        #else
+            if (!depthShader)
+                depthShader = Shader.Find("Hidden/Depth");
+        #endif
+        //if (!positionShader)
+        //	positionShader = Shader.Find("Hidden/World");
 
-		if (!positionShader)
-			positionShader = Shader.Find("Hidden/World");
-		
-		opticalFlowSensitivity = 50.0f;
+        opticalFlowSensitivity = 50.0f;
 
 		// use real camera to capture final image
 		capturePasses[0].camera = GetComponent<Camera>();
@@ -110,18 +113,15 @@ public class ImageSynthesis : MonoBehaviour {
 		#if UNITY_EDITOR
 		if (DetectPotentialSceneChangeInEditor())
 			OnSceneChange();
-		#endif // UNITY_EDITOR
-
-		// @TODO: detect if camera properties actually changed
-		OnCameraChange();
+		#endif
 	}
 	
 	private Camera CreateHiddenCamera(string name)
 	{
 		var go = new GameObject (name, typeof (Camera));
-		#if !UNITY_EDITOR // Useful to be able to see these cameras in the editor
+#if !UNITY_EDITOR // Useful to be able to see these cameras in the editor
 		go.hideFlags = HideFlags.HideAndDontSave; 
-		#endif
+#endif
 		go.transform.parent = transform;
 
 		var newCamera = go.GetComponent<Camera>();
@@ -168,7 +168,8 @@ public class ImageSynthesis : MonoBehaviour {
 		CatergoryId			= 1,
 		DepthCompressed		= 2,
 		DepthMultichannel	= 3,
-		Normals				= 4
+		Normals				= 4,
+        Flow                = 5,
 	};
 
 	public void OnCameraChange()
@@ -205,7 +206,7 @@ public class ImageSynthesis : MonoBehaviour {
 
 
 		SetupCameraWithReplacementShader(capturePasses[4].camera, uberReplacementShader, ReplacelementModes.Normals);
-		//SetupCameraWithPostShader(capturePasses[5].camera, opticalFlowMaterial, DepthTextureMode.Depth | DepthTextureMode.MotionVectors);
+		SetupCameraWithPostShader(capturePasses[5].camera, opticalFlowMaterial, DepthTextureMode.Depth | DepthTextureMode.MotionVectors);
 
 
 		/*
@@ -443,7 +444,7 @@ public class ImageSynthesis : MonoBehaviour {
 		File.WriteAllBytes(filename, bytes);					
     }
 
-	#if UNITY_EDITOR
+#if UNITY_EDITOR
 	private GameObject lastSelectedGO;
 	private int lastSelectedGOLayer = -1;
 	private string lastSelectedGOTag = "unknown";
@@ -475,5 +476,5 @@ public class ImageSynthesis : MonoBehaviour {
 
 		return change;
 	}
-	#endif // UNITY_EDITOR
+#endif // UNITY_EDITOR
 }

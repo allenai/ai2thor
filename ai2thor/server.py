@@ -110,6 +110,7 @@ class Event(object):
         self.frame = None
         self.depth_frame = None
         self.normals_frame = None
+        self.flow_frame = None
 
         self.color_to_object_id = {}
         self.object_id_to_color = {}
@@ -130,6 +131,7 @@ class Event(object):
         self.third_party_instance_segmentation_frames = []
         self.third_party_depth_frames = []
         self.third_party_normals_frames = []
+        self.third_party_flows_frames = []
 
         self.events = [self] # Ensure we have a similar API to MultiAgentEvent
 
@@ -215,6 +217,12 @@ class Event(object):
 
     def add_image_normals(self, image_normals_data):
         self.normals_frame = read_buffer_image(image_normals_data, self.screen_width, self.screen_height)
+
+    def add_third_party_image_flows(self, flows_data):
+        self.third_party_flows_frames.append(read_buffer_image(flows_data, self.screen_width, self.screen_height))
+
+    def add_image_flows(self, image_flows_data):
+        self.flows_frame = read_buffer_image(image_flows_data, self.screen_width, self.screen_height)
 
     def add_third_party_camera_image(self, third_party_image_data):
         self.third_party_camera_frames.append(read_buffer_image(third_party_image_data, self.screen_width, self.screen_height))
@@ -385,7 +393,8 @@ class Server(object):
                     image_depth=e.add_image_depth,
                     image_ids=e.add_image_ids,
                     image_classes=e.add_image_classes,
-                    image_normals=e.add_image_normals
+                    image_normals=e.add_image_normals,
+                    image_flows=e.add_image_flows
                 )
 
                 for key in image_mapping.keys():
@@ -397,7 +406,8 @@ class Server(object):
                     image_thirdParty_depth=e.add_third_party_image_depth,
                     image_thirdParty_image_ids=e.add_third_party_image_ids,
                     image_thirdParty_classes=e.add_third_party_image_classes,
-                    image_thirdParty_normals=e.add_third_party_image_normals
+                    image_thirdParty_normals=e.add_third_party_image_normals,
+                    image_thirdParty_flows=e.add_third_party_image_flows
                 )
 
                 if a['thirdPartyCameras'] is not None:
