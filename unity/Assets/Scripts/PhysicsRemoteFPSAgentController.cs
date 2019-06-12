@@ -3233,13 +3233,35 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         public void ToggleMapView(ServerAction action) {
+
+            SyncTransform[] syncInChildren;
+
             if (inTopLevelView) {
                 inTopLevelView = false;
                 m_Camera.orthographic = false;
                 m_Camera.transform.localPosition = lastLocalCameraPosition;
                 m_Camera.transform.localRotation = lastLocalCameraRotation;
+
+                //restore agent body culling
+                m_Camera.transform.GetComponent<FirstPersonCharacterCull>().StopCullingThingsForASecond = false;
+                syncInChildren = gameObject.GetComponentsInChildren<SyncTransform>();
+                foreach (SyncTransform sync in syncInChildren)
+                {
+                    sync.StopSyncingForASecond = false;
+                }
+
+
                 UpdateDisplayGameObject(GameObject.Find("Ceiling"), true);
             } else {
+
+                //stop culling the agent's body so it's visible from the top?
+                m_Camera.transform.GetComponent<FirstPersonCharacterCull>().StopCullingThingsForASecond = true;
+                syncInChildren = gameObject.GetComponentsInChildren<SyncTransform>();
+                foreach (SyncTransform sync in syncInChildren)
+                {
+                    sync.StopSyncingForASecond = true;
+                }
+
                 inTopLevelView = true;
                 lastLocalCameraPosition = m_Camera.transform.localPosition;
                 lastLocalCameraRotation = m_Camera.transform.localRotation;
