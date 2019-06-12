@@ -54,9 +54,9 @@ public class ImageSynthesis : MonoBehaviour {
 		return false;
 	}
 	
-	public Shader uberReplacementShader;
-	public Shader opticalFlowShader;
-	public Shader depthShader;
+	private Shader uberReplacementShader;
+    private Shader opticalFlowShader;
+    private Shader depthShader;
 	//public Shader positionShader;
 
 
@@ -201,22 +201,28 @@ public class ImageSynthesis : MonoBehaviour {
 		//capturePasses [1].camera.farClipPlane = 100;
 		//SetupCameraWithReplacementShader(capturePasses[1].camera, uberReplacementShader, ReplacelementModes.DepthMultichannel);
 		SetupCameraWithPostShader(capturePasses[1].camera, depthMaterial, DepthTextureMode.Depth);
-		SetupCameraWithReplacementShader(capturePasses[2].camera, uberReplacementShader, ReplacelementModes.ObjectId);
+
+
+        SetupCameraWithReplacementShader(capturePasses[2].camera, uberReplacementShader, ReplacelementModes.ObjectId);
 		SetupCameraWithReplacementShader(capturePasses[3].camera, uberReplacementShader, ReplacelementModes.CatergoryId);
 
 
 		SetupCameraWithReplacementShader(capturePasses[4].camera, uberReplacementShader, ReplacelementModes.Normals);
 		SetupCameraWithPostShader(capturePasses[5].camera, opticalFlowMaterial, DepthTextureMode.Depth | DepthTextureMode.MotionVectors);
 
+        for(int i = 0; i < capturePasses.Length; i++)
+        {
+            capturePasses[i].camera.targetDisplay = i;
+        }
 
-		/*
+        /*
 		SetupCameraWithReplacementShader(capturePasses[6].camera, positionShader);
 		*/
 
-	}
+    }
 
 
-	public string MD5Hash(string input) {
+    public string MD5Hash(string input) {
 		byte[] data = md5.ComputeHash(System.Text.Encoding.Default.GetBytes(input));
 		// Create string representation
 		System.Text.StringBuilder sb = new System.Text.StringBuilder();
