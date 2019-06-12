@@ -477,11 +477,9 @@ public class AgentManager : MonoBehaviour
         form.AddField("token", robosimsClientToken);
 
 #if !UNITY_WEBGL
-        if (synchronousHttp)
-        {
+        if (synchronousHttp) {
 
-            if (this.sock == null)
-            {
+            if (this.sock == null) {
                 // Debug.Log("connecting to host: " + robosimsHost);
                 IPAddress host = IPAddress.Parse(robosimsHost);
                 IPEndPoint hostep = new IPEndPoint(host, robosimsPort);
@@ -494,65 +492,55 @@ public class AgentManager : MonoBehaviour
             string request = "POST /train HTTP/1.1\r\n" +
             "Content-Length: " + rawData.Length.ToString() + "\r\n";
 
-            foreach (KeyValuePair<string, string> entry in form.headers)
-            {
+            foreach(KeyValuePair<string, string> entry in form.headers) {
                 request += entry.Key + ": " + entry.Value + "\r\n";
             }
             request += "\r\n";
 
             int sent = this.sock.Send(Encoding.ASCII.GetBytes(request));
             sent = this.sock.Send(rawData);
-            StringBuilder sb = new StringBuilder();
-            string msg = null;
-            // Incoming data from the client.
-            byte[] bytes;
-            int bufferSize = 4096;
-            ServerAction controlCommand = new ServerAction();
+            byte[] headerBuffer = new byte[1024];
+            int bytesReceived = 0;
+            byte[] bodyBuffer = null;
+            int bodyBytesReceived = 0;
+            int contentLength = 0;
 
-            while (msg == null)
-            {
-                while (true)
-                {
-                    bytes = new byte[bufferSize];
-                    int bytesRec = sock.Receive(bytes, bufferSize, SocketFlags.None);
-                    sb.Append(Encoding.ASCII.GetString(bytes, 0, bytesRec));
-                    if (bytesRec < bufferSize)
-                    {
-                        break;
-                    }
+            // read header
+            while (true) {
+                int received = this.sock.Receive(headerBuffer, bytesReceived, headerBuffer.Length - bytesReceived, SocketFlags.None);   
+                if (received == 0) {
+                    Debug.LogError("0 bytes received attempting to read header - connection closed");
+                    break;
                 }
-                msg = sb.ToString();
 
-                int offset = msg.IndexOf("\r\n\r\n");
-                if (offset > -1)
-                {
-                    msg = msg.Substring(offset + 4);
-
-                    if (msg.Length > 8)
-                    {
-                        Debug.Log("Message: " + msg);
-                    }
-                    else
-                    {
-                        msg = null;
-                    }
-                }
-                else
-                {
-                    msg = null;
-                }
-                try
-                {
-                    controlCommand = new ServerAction();
-                    JsonUtility.FromJsonOverwrite(msg, controlCommand);
-                }
-                catch (JsonException e)
-                {
-                    Debug.LogError(e.Message);
-                    msg = null;
+                bytesReceived += received;;
+                string headerMsg = Encoding.ASCII.GetString(headerBuffer, 0, bytesReceived);
+                int offset = headerMsg.IndexOf("\r\n\r\n");
+                if (offset > 0){
+                    contentLength = parseContentLength(headerMsg.Substring(0, offset));
+                    bodyBuffer = new byte[contentLength];
+                    bodyBytesReceived = bytesReceived - (offset + 4);
+                    Array.Copy(headerBuffer, offset + 4, bodyBuffer, 0, bodyBytesReceived);
+                    break;
                 }
             }
-            ProcessControlCommand(controlCommand);
+
+            // read body
+            while (bodyBytesReceived < contentLength) {
+                // check for 0 bytes received
+                int received = this.sock.Receive(bodyBuffer, bodyBytesReceived, bodyBuffer.Length - bodyBytesReceived, SocketFlags.None);   
+                if (received == 0) {
+                    Debug.LogError("0 bytes received attempting to read body - connection closed");
+                    break;
+                }
+
+                bodyBytesReceived += received;
+                //Debug.Log("total bytes received: " + bodyBytesReceived);
+            }
+
+            string msg = Encoding.ASCII.GetString(bodyBuffer, 0, bodyBytesReceived);
+
+            ProcessControlCommand(msg);
         }
         else
         {
