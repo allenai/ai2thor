@@ -476,88 +476,88 @@ public class AgentManager : MonoBehaviour
         form.AddField("metadata", Newtonsoft.Json.JsonConvert.SerializeObject(multiMeta));
         form.AddField("token", robosimsClientToken);
 
-#if !UNITY_WEBGL
-        if (synchronousHttp) {
+        #if !UNITY_WEBGL
+            if (synchronousHttp) {
 
-            if (this.sock == null) {
-                // Debug.Log("connecting to host: " + robosimsHost);
-                IPAddress host = IPAddress.Parse(robosimsHost);
-                IPEndPoint hostep = new IPEndPoint(host, robosimsPort);
-                this.sock = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-                this.sock.Connect(hostep);
-            }
-
-            byte[] rawData = form.data;
-
-            string request = "POST /train HTTP/1.1\r\n" +
-            "Content-Length: " + rawData.Length.ToString() + "\r\n";
-
-            foreach(KeyValuePair<string, string> entry in form.headers) {
-                request += entry.Key + ": " + entry.Value + "\r\n";
-            }
-            request += "\r\n";
-
-            int sent = this.sock.Send(Encoding.ASCII.GetBytes(request));
-            sent = this.sock.Send(rawData);
-            byte[] headerBuffer = new byte[1024];
-            int bytesReceived = 0;
-            byte[] bodyBuffer = null;
-            int bodyBytesReceived = 0;
-            int contentLength = 0;
-
-            // read header
-            while (true) {
-                int received = this.sock.Receive(headerBuffer, bytesReceived, headerBuffer.Length - bytesReceived, SocketFlags.None);   
-                if (received == 0) {
-                    Debug.LogError("0 bytes received attempting to read header - connection closed");
-                    break;
+                if (this.sock == null) {
+                    // Debug.Log("connecting to host: " + robosimsHost);
+                    IPAddress host = IPAddress.Parse(robosimsHost);
+                    IPEndPoint hostep = new IPEndPoint(host, robosimsPort);
+                    this.sock = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+                    this.sock.Connect(hostep);
                 }
 
-                bytesReceived += received;;
-                string headerMsg = Encoding.ASCII.GetString(headerBuffer, 0, bytesReceived);
-                int offset = headerMsg.IndexOf("\r\n\r\n");
-                if (offset > 0){
-                    contentLength = parseContentLength(headerMsg.Substring(0, offset));
-                    bodyBuffer = new byte[contentLength];
-                    bodyBytesReceived = bytesReceived - (offset + 4);
-                    Array.Copy(headerBuffer, offset + 4, bodyBuffer, 0, bodyBytesReceived);
-                    break;
+                byte[] rawData = form.data;
+
+                string request = "POST /train HTTP/1.1\r\n" +
+                "Content-Length: " + rawData.Length.ToString() + "\r\n";
+
+                foreach(KeyValuePair<string, string> entry in form.headers) {
+                    request += entry.Key + ": " + entry.Value + "\r\n";
                 }
-            }
+                request += "\r\n";
 
-            // read body
-            while (bodyBytesReceived < contentLength) {
-                // check for 0 bytes received
-                int received = this.sock.Receive(bodyBuffer, bodyBytesReceived, bodyBuffer.Length - bodyBytesReceived, SocketFlags.None);   
-                if (received == 0) {
-                    Debug.LogError("0 bytes received attempting to read body - connection closed");
-                    break;
+                int sent = this.sock.Send(Encoding.ASCII.GetBytes(request));
+                sent = this.sock.Send(rawData);
+                byte[] headerBuffer = new byte[1024];
+                int bytesReceived = 0;
+                byte[] bodyBuffer = null;
+                int bodyBytesReceived = 0;
+                int contentLength = 0;
+
+                // read header
+                while (true) {
+                    int received = this.sock.Receive(headerBuffer, bytesReceived, headerBuffer.Length - bytesReceived, SocketFlags.None);
+                    if (received == 0) {
+                        Debug.LogError("0 bytes received attempting to read header - connection closed");
+                        break;
+                    }
+
+                    bytesReceived += received;;
+                    string headerMsg = Encoding.ASCII.GetString(headerBuffer, 0, bytesReceived);
+                    int offset = headerMsg.IndexOf("\r\n\r\n");
+                    if (offset > 0){
+                        contentLength = parseContentLength(headerMsg.Substring(0, offset));
+                        bodyBuffer = new byte[contentLength];
+                        bodyBytesReceived = bytesReceived - (offset + 4);
+                        Array.Copy(headerBuffer, offset + 4, bodyBuffer, 0, bodyBytesReceived);
+                        break;
+                    }
                 }
 
-                bodyBytesReceived += received;
-                //Debug.Log("total bytes received: " + bodyBytesReceived);
+                // read body
+                while (bodyBytesReceived < contentLength) {
+                    // check for 0 bytes received
+                    int received = this.sock.Receive(bodyBuffer, bodyBytesReceived, bodyBuffer.Length - bodyBytesReceived, SocketFlags.None);   
+                    if (received == 0) {
+                        Debug.LogError("0 bytes received attempting to read body - connection closed");
+                        break;
+                    }
+
+                    bodyBytesReceived += received;
+                    //Debug.Log("total bytes received: " + bodyBytesReceived);
+                }
+
+                string msg = Encoding.ASCII.GetString(bodyBuffer, 0, bodyBytesReceived);
+
+                ProcessControlCommand(msg);
             }
-
-            string msg = Encoding.ASCII.GetString(bodyBuffer, 0, bodyBytesReceived);
-
-            ProcessControlCommand(msg);
-        }
-        else
-        {
-
-            using (var www = UnityWebRequest.Post("http://" + robosimsHost + ":" + robosimsPort + "/train", form))
+            else
             {
-                yield return www.SendWebRequest();
 
-                if (www.isNetworkError || www.isHttpError)
+                using (var www = UnityWebRequest.Post("http://" + robosimsHost + ":" + robosimsPort + "/train", form))
                 {
-                    Debug.Log("Error: " + www.error);
-                    yield break;
+                    yield return www.SendWebRequest();
+
+                    if (www.isNetworkError || www.isHttpError)
+                    {
+                        Debug.Log("Error: " + www.error);
+                        yield break;
+                    }
+                    ProcessControlCommand(www.downloadHandler.text);
                 }
-                ProcessControlCommand(www.downloadHandler.text);
             }
-        }
-#endif
+        #endif
     }
 	private int parseContentLength(string header) {
 		// Debug.Log("got header: " + header);
