@@ -247,9 +247,87 @@ public class PhysicsSceneManager : MonoBehaviour
 		RequiredObjects.Remove(sop.gameObject);
 	}
 
-	//use action.randomseed for seed, use action.forceVisible for if objects shoudld ONLY spawn outside and not inside anything
-	//set forceVisible to true for if you want objects to only spawn in immediately visible receptacles.
-	public bool RandomSpawnRequiredSceneObjects(ServerAction action)
+    public bool SetSceneState(ObjectPose[] objectPoses, ObjectToggle[] objectToggles)
+    {
+        SetupScene();
+        bool shouldFail = false;
+        if (objectPoses != null && objectPoses.Length > 0)
+        {
+            // Perform object state sets
+            //Dictionary<SimObjType, SimObjPhysics> objectOfType = new Dictionary<SimObjType, SimObjPhysics>();
+            SimObjPhysics[] sceneObjects = FindObjectsOfType<SimObjPhysics>();
+            Dictionary<string, SimObjPhysics> nameToObject = new Dictionary<string, SimObjPhysics>();
+            foreach (SimObjPhysics sop in sceneObjects)
+            {
+                if (sop.IsPickupable)
+                {
+                    //objectOfType[sop.ObjType] = sop;
+                    sop.gameObject.SetActive(false);
+                    //sop.gameObject.GetComponent<SimpleSimObj>().IsDisabled = true;
+                    nameToObject[sop.name] = sop;
+                }
+            }
+            for (int ii = 0; ii < objectPoses.Length; ii++)
+            {
+                ObjectPose objectPose = objectPoses[ii];
+                if (!nameToObject.ContainsKey(objectPose.objectName))
+                {
+                    Debug.Log("No object of name " + objectPose.objectName + " found in scene.");
+                    shouldFail = true;
+                    continue;
+                }
+                SimObjPhysics obj = nameToObject[objectPose.objectName];
+                SimObjPhysics existingSOP = obj.GetComponent<SimObjPhysics>();
+                SimObjPhysics copy = Instantiate(existingSOP);
+                copy.name += "_random_copy_" + ii;
+                copy.UniqueID = existingSOP.UniqueID + "_copy_" + ii;
+                copy.uniqueID = copy.UniqueID;
+                copy.transform.position = objectPose.position;
+                copy.transform.eulerAngles = objectPose.rotation;
+                copy.gameObject.SetActive(true);
+                //copy.GetComponent<SimpleSimObj>().IsDisabled = false;
+            }
+        }
+        if (objectToggles != null && objectToggles.Length > 0)
+        {
+            // Perform object toggle state sets.
+            SimObjPhysics[] simObjs = GameObject.FindObjectsOfType(typeof(SimObjPhysics)) as SimObjPhysics[];
+            Dictionary<SimObjType, bool> toggles = new Dictionary<SimObjType, bool>();
+            foreach (ObjectToggle objectToggle in objectToggles)
+            {
+                SimObjType objType = (SimObjType)System.Enum.Parse(typeof(SimObjType), objectToggle.objectType);
+                toggles[objType] = objectToggle.isOn;
+            }
+            PhysicsRemoteFPSAgentController fpsController = GameObject.Find("FPSController").GetComponent<PhysicsRemoteFPSAgentController>();
+            foreach (SimObjPhysics sop in simObjs)
+            {
+                if (toggles.ContainsKey(sop.ObjType))
+                {
+                    bool success;
+                    if (toggles[sop.ObjType])
+                    {
+                        success = fpsController.ToggleObject(sop, true, true);
+                    }
+                    else
+                    {
+                        success = fpsController.ToggleObject(sop, false, true);
+                    }
+                    if (!success)
+                    {
+                        shouldFail = true;
+                    }
+                }
+            }
+        }
+
+        SetupScene();
+        return !shouldFail;
+
+    }
+
+    //use action.randomseed for seed, use action.forceVisible for if objects shoudld ONLY spawn outside and not inside anything
+    //set forceVisible to true for if you want objects to only spawn in immediately visible receptacles.
+    public bool RandomSpawnRequiredSceneObjects(ServerAction action)
 	{
 		
 		if(RandomSpawnRequiredSceneObjects(action.randomSeed, action.forceVisible, action.maxNumRepeats, action.placeStationary))
