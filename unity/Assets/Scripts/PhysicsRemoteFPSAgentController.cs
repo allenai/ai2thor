@@ -1057,6 +1057,218 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true, dist);
         }
 
+        public void PointsOverTableWhereHandCanBe(ServerAction action) {
+            // Assumes InitializeTableSetting has been run before calling this
+
+            string tableId = action.objectId;
+
+            int xSteps = Convert.ToInt32(Math.Abs(action.x / 0.1f));
+            int zStart = Convert.ToInt32(Math.Abs(action.z / 0.1f));
+
+            DefaultAgentHand();
+
+            AgentHand.transform.position = AgentHand.transform.position;
+
+            if (ItemInHand != null) {
+                ItemInHand.SetActive(false);
+            }
+            List<Vector3> goodPositions = new List<Vector3>();
+            for (int i = -xSteps; i <= xSteps; i++) { 
+                for (int j = zStart; j < 11; j++) {
+                    DefaultAgentHand();
+
+                    Vector3 testPosition = AgentHand.transform.position + 0.1f * i * transform.right + 0.1f * j * transform.forward;
+
+                    RaycastHit hit;
+                    if (Physics.Raycast(testPosition, -transform.up, out hit, 1f, 1 << 8)) {
+                        Vector3 viewportPoint = m_Camera.WorldToViewportPoint(hit.point);
+                        if (viewportPoint.x >= 0f && viewportPoint.x <= 1f && viewportPoint.y >= 0f && viewportPoint.y <= 1f) {
+                            SimObjPhysics hitSop = hit.transform.gameObject.GetComponent<SimObjPhysics>();
+                            if (hitSop && hitSop.UniqueID == tableId) {
+                                goodPositions.Add(hit.point);
+                                #if UNITY_EDITOR
+                                Debug.Log("Point");
+                                Debug.Log(hit.point.x);
+                                Debug.Log(hit.point.y);
+                                Debug.Log(hit.point.z);
+                                Debug.DrawLine(
+                                    m_Camera.transform.position, 
+                                    hit.point,
+                                    Color.red,
+                                    20f,
+                                    true
+                                );
+                                #endif
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (ItemInHand != null) {
+                ItemInHand.SetActive(true);
+            }
+
+            DefaultAgentHand();
+
+            actionFinished(true, goodPositions);
+        }
+
+        public void PlaceFixedReceptacleAtLocation(ServerAction action) {
+            if (action.objectVariation < 0 || action.objectVariation > 4) {
+                errorMessage = "Invalid receptacle variation.";
+                actionFinished(false);
+                return;
+            }
+
+            if (
+                physicsSceneManager.ManipulatorReceptacles == null || 
+                physicsSceneManager.ManipulatorReceptacles.Length == 0
+            ) {
+                errorMessage = "Scene does not have manipulator receptacles set.";
+                actionFinished(false);
+                return;
+            }
+
+            // float[] yoffsets = {-0.1049f, -0.1329f, -0.1009f, -0.0969f, -0.0971f};
+            float[] yoffsets = {0f, -0.0277601f, 0f, 0f, 0f};
+
+            string receptId = "";
+            for (int i = 0; i < 5; i++) {
+                GameObject recept = physicsSceneManager.ManipulatorReceptacles[i];
+                SimObjPhysics receptSop = recept.GetComponent<SimObjPhysics>();
+
+                if (action.objectVariation == i) {
+                    recept.SetActive(true);
+                    recept.GetComponent<Rigidbody>().isKinematic = true;
+                    recept.transform.position = new Vector3(action.x, action.y + yoffsets[i], action.z);
+                    recept.transform.rotation = transform.rotation;
+                    physicsSceneManager.AddToObjectsInScene(receptSop);
+                    receptId = receptSop.UniqueID;
+                } else if (recept.activeInHierarchy) {
+                    physicsSceneManager.RemoveFromObjectsInScene(receptSop);
+                    recept.SetActive(false);
+                }
+            }
+
+            actionFinished(true, receptId);
+        }
+
+        public void PlaceBookWallAtLocation(ServerAction action) {
+            if (
+                physicsSceneManager.ManipulatorBooks == null || 
+                physicsSceneManager.ManipulatorBooks.Length == 0
+            ) {
+                errorMessage = "Scene does not have manipulator books set.";
+                actionFinished(false);
+                return;
+            }
+
+            if (action.objectVariation < 0) {
+                errorMessage = "objectVariation must be >= 0";
+                actionFinished(false);
+                return;
+            }
+
+            float yoffset = 0.19f;
+
+            uint which = (uint) Convert.ToUInt32(action.objectVariation);
+            // List<bool> whichIncluded = new List<bool>();
+            for (int i = 0; i < 5; i++) {
+                if (((action.objectVariation >> i) % 2) == 1) {
+                    physicsSceneManager.ManipulatorBooks[i].transform.gameObject.SetActive(true);
+                } else {
+                    physicsSceneManager.ManipulatorBooks[i].transform.gameObject.SetActive(false);
+                }
+                // whichIncluded.Add(
+                //     ((action.objectVariation >> i) % 2) == 1
+                // );
+            }
+
+            GameObject allBooksObject = physicsSceneManager.ManipulatorBooks[0].transform.parent.gameObject;
+
+            allBooksObject.transform.position = new Vector3(action.x, action.y + yoffset, action.z);
+            allBooksObject.transform.localRotation = Quaternion.Euler(
+                action.rotation.x,
+                action.rotation.y,
+                action.rotation.z
+            );
+
+            actionFinished(true);
+        }
+
+        public void InitializeTableSetting(ServerAction action) {
+            string scene = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
+
+            Vector3 newPosition = transform.position;
+            Quaternion newRotation = transform.rotation;
+
+            if (scene == "FloorPlan501_physics") {
+                newPosition = new Vector3(0f, transform.position.y, 0.75f);
+                newRotation = Quaternion.Euler(0f, 180f, 0f);
+            } else if (scene == "FloorPlan502_physics") {
+                newPosition = new Vector3(-0.5f, transform.position.y, 0.75f);
+                newRotation = Quaternion.Euler(0f, 90f, 0f);
+            } else if (scene == "FloorPlan503_physics") {
+                newPosition = new Vector3(-0.5f, transform.position.y, -0.25f);
+                newRotation = Quaternion.Euler(0f, 0f, 0f);
+            } else if (scene == "FloorPlan504_physics") {
+                newPosition = new Vector3(0f, transform.position.y, 0.5f);
+                newRotation = Quaternion.Euler(0f, 180f, 0f);
+            } else if (scene == "FloorPlan505_physics") {
+                newPosition = new Vector3(0f, transform.position.y, 1.25f);
+                newRotation = Quaternion.Euler(0f, 180f, 0f);
+            } else {
+                errorMessage = "Cannot initialize table in scene " + scene;
+                actionFinished(false);
+                return;
+            }
+
+            if (action.objectVariation < 0 || action.objectVariation > 4) {
+                errorMessage = "Invalid table variation.";
+                actionFinished(false);
+                return;
+            }
+
+            transform.position = newPosition;
+            transform.rotation = newRotation;
+
+            if (m_Camera.fieldOfView != 90f) {
+                m_Camera.fieldOfView = 90f;
+            }
+            m_Camera.transform.localEulerAngles = new Vector3(30f, 0.0f, 0.0f);
+
+            string tableId = "";
+            for (int i = 0; i < 5; i++) {
+                GameObject table = physicsSceneManager.ManipulatorTables[i];
+                SimObjPhysics tableSop = table.GetComponent<SimObjPhysics>();
+
+                if (action.objectVariation == i) {
+                    table.SetActive(true);
+                    physicsSceneManager.AddToObjectsInScene(tableSop);
+                    tableId = tableSop.UniqueID;
+                } else if (table.activeInHierarchy) {
+                    physicsSceneManager.RemoveFromObjectsInScene(tableSop);
+                    table.SetActive(false);
+                }
+
+                GameObject recept = physicsSceneManager.ManipulatorReceptacles[i];
+                SimObjPhysics receptSop = recept.GetComponent<SimObjPhysics>();
+                if (recept.activeInHierarchy) {
+                    physicsSceneManager.RemoveFromObjectsInScene(receptSop);
+                    recept.SetActive(false);
+                }
+            }
+
+            if (physicsSceneManager.ManipulatorBooks != null) {
+                foreach (GameObject book in physicsSceneManager.ManipulatorBooks) {
+                    book.SetActive(false);
+                }
+            }
+
+            actionFinished(true, tableId);
+        }
+
         public void RandomlyCreateLiftedFurniture(ServerAction action) {
             if (action.z < 0.25f) {
                 errorMessage = "z must be at least 0.25";
@@ -2099,7 +2311,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                 hitMaxDistance = Vector3.Distance(initialPosition, newPosition) > maxDistance;
                 beyondVisibleDistance = Vector3.Distance(m_Camera.transform.position, tmpForCamera) > maxVisibleDistance;
-                leavingViewport = !objectIsCurrentlyVisible(simObjInHand, 1000f);
+                leavingViewport = !objectIsWithinViewport(simObjInHand);
+                // leavingViewport = !objectIsCurrentlyVisible(simObjInHand, 1000f);
 
                 if (hitMaxDistance) {
                     rb.velocity = new Vector3(0f, 0f, 0f);
@@ -2250,7 +2463,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             AgentHand.transform.localRotation = Quaternion.Euler(Vector3.zero);
             SimObjPhysics sop = AgentHand.GetComponentInChildren<SimObjPhysics>();
             if (sop != null) {
-                sop.gameObject.transform.localRotation = Quaternion.Euler(Vector3.zero);
+                sop.gameObject.transform.rotation = transform.rotation;
             }
         }
 
@@ -2296,7 +2509,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             Vector3 lastPosition = AgentHand.transform.position;
             AgentHand.transform.position = targetPosition;
             if (!objectIsCurrentlyVisible(ItemInHand.GetComponent<SimObjPhysics>(), 1000f)) {
-                Debug.Log("The target position is not in the Are of the Agent's Viewport!");
+                errorMessage = "The target position is not in the Are of the Agent's Viewport!";
                 result = false;
                 AgentHand.transform.position = lastPosition;
                 return result;
@@ -2887,7 +3100,23 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             //ok we are holding something, time to try and place it
             InstantiatePrefabTest script = GameObject.Find("PhysicsSceneManager").GetComponent<InstantiatePrefabTest>();
             //set degreeIncrement to 90 for placing held objects to check for vertical angles
-            if (script.PlaceObjectReceptacle(targetReceptacle.ReturnMySpawnPoints(onlyPointsCloseToAgent), ItemInHand.GetComponent<SimObjPhysics>(), action.placeStationary, 100, 90, placeUpright)) {
+            List<ReceptacleSpawnPoint> spawnPoints = targetReceptacle.ReturnMySpawnPoints(onlyPointsCloseToAgent);
+            if (action.randomSeed != 0) {
+                List<ReceptacleSpawnPoint> randomizedSpawnPoints = new List<ReceptacleSpawnPoint>();
+                float maxDistance = action.z;
+                if (maxDistance == 0.0f) {
+                    maxDistance = maxVisibleDistance;
+                }
+                foreach (ReceptacleSpawnPoint sp in spawnPoints) {
+                    Vector3 tmp = new Vector3(transform.position.x, sp.Point.y, transform.position.z);
+                    if (Vector3.Distance(sp.Point, tmp) < maxDistance) {
+                        randomizedSpawnPoints.Add(sp);
+                    }
+                }
+                randomizedSpawnPoints.Shuffle_(action.randomSeed);
+                spawnPoints = randomizedSpawnPoints;
+            }
+            if (script.PlaceObjectReceptacle(spawnPoints, ItemInHand.GetComponent<SimObjPhysics>(), action.placeStationary, 100, 90, placeUpright)) {
                 ItemInHand = null;
                 DefaultAgentHand();
                 actionFinished(true);
@@ -2985,7 +3214,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             //we have succesfully picked up something! 
             target.GetComponent<SimObjPhysics>().isInAgentHand = true;
-            actionFinished(true);
+            actionFinished(true, target.UniqueID);
             return;
         }
 
@@ -4612,6 +4841,29 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public void Pass(ServerAction action) {
             actionFinished(true);
         }
+
+        protected bool objectIsWithinViewport(SimObjPhysics sop) {
+            if (sop.VisibilityPoints.Length > 0) {
+                Transform[] visPoints = sop.VisibilityPoints;
+                foreach (Transform point in visPoints) {
+                    Vector3 viewPoint = m_Camera.WorldToViewportPoint(point.position);
+                    float ViewPointRangeHigh = 1.0f;
+                    float ViewPointRangeLow = 0.0f;
+
+                    if (viewPoint.z > 0 &&
+                        viewPoint.x < ViewPointRangeHigh && viewPoint.x > ViewPointRangeLow && //within x bounds of viewport
+                        viewPoint.y < ViewPointRangeHigh && viewPoint.y > ViewPointRangeLow //within y bounds of viewport
+                    ) {
+                            return true;
+                    }
+                }
+            } else {
+                #if UNITY_EDITOR
+                Debug.Log("Error! Set at least 1 visibility point on SimObjPhysics prefab!");
+                #endif
+            }
+            return false;
+        }
         protected bool objectIsCurrentlyVisible(SimObjPhysics sop, float maxDistance) {
             if (sop.VisibilityPoints.Length > 0) {
                 Transform[] visPoints = sop.VisibilityPoints;
@@ -5579,6 +5831,18 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             transform.rotation = savedRotation;
 
             actionFinished(true);
+        }
+
+        public void WorldToViewportPoint(ServerAction action) {
+            Vector3 point = m_Camera.WorldToViewportPoint(action.position);
+            if (point.x < 0f || point.x > 1.0f || point.y < 0f || point.y > 1.0f) {
+                errorMessage = "Point not in viewport.";
+                actionFinished(false);
+                return;
+            }
+            
+            // Translate to coordinates from top left of screen
+            actionFinished(true, new Vector3(point.x, 1.0f - point.y, point.z));
         }
 
         protected float approxPercentScreenObjectOccupies(SimObjPhysics sop, bool updateVisibilityColliders=true) {
