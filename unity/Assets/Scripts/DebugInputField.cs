@@ -162,6 +162,48 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         break;
                     }
 
+                case "its":
+                    {
+                        ServerAction action = new ServerAction();
+
+                        action.action = "InitializeTableSetting";
+                        if (splitcommand.Length > 1) {
+                            action.objectVariation = int.Parse(splitcommand[1]);
+                        }
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
+                case "pfrat":
+                    {
+                        ServerAction action = new ServerAction();
+
+                        action.action = "PlaceFixedReceptacleAtLocation";
+                        if (splitcommand.Length > 1) {
+                            action.objectVariation = int.Parse(splitcommand[1]);
+                            action.x = float.Parse(splitcommand[2]);
+                            action.y = float.Parse(splitcommand[3]);
+                            action.z = float.Parse(splitcommand[4]);
+                        }
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+                case "pbwal":
+                    {
+                        ServerAction action = new ServerAction();
+
+                        action.action = "PlaceBookWallAtLocation";
+                        if (splitcommand.Length > 1) {
+                            action.objectVariation = int.Parse(splitcommand[1]);
+                            action.x = float.Parse(splitcommand[2]);
+                            action.y = float.Parse(splitcommand[3]);
+                            action.z = float.Parse(splitcommand[4]);
+                            action.rotation = new Vector3(0f, float.Parse(splitcommand[5]), 0f);
+                        }
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
                 //random toggle state of all objects
                 case "rts":
                     {
@@ -256,6 +298,24 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         break;
                     }
 
+                case "putr":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "PutObject";
+                        action.receptacleObjectId = PhysicsController.UniqueIDOfClosestReceptacleObject();
+                        action.randomSeed = int.Parse(splitcommand[1]);
+                            
+                        //set this to false if we want to place it and let physics resolve by having it fall a short distance into position
+
+                        //set true to place with kinematic = true so that it doesn't fall or roll in place - making placement more consistant and not physics engine reliant - this more closely mimics legacy pivot placement behavior
+                        action.placeStationary = false; 
+
+                        //set this true to ignore Placement Restrictions
+                        action.forceAction = true;
+
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
                 case "put":
                     {
                         ServerAction action = new ServerAction();
