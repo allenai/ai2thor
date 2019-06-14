@@ -20,6 +20,7 @@ public class Break : MonoBehaviour
     protected float CurrentImpulseThreshold;//modify this with ImpulseThreshold and HighFrictionImpulseOffset based on trigger callback functions
     protected bool readytobreak = true;
 
+    [SerializeField]
     protected bool broken;
 
     //what does this object need to do when it is in the broken state? 
@@ -37,7 +38,7 @@ public class Break : MonoBehaviour
     {SimObjType.TeddyBear, SimObjType.Pillow, SimObjType.Cloth, SimObjType.Bread, SimObjType.BreadSliced, SimObjType.Egg, SimObjType.EggShell, SimObjType.Omelette,
     SimObjType.EggCracked, SimObjType.LettuceSliced, SimObjType.TissueBox, SimObjType.Newspaper, SimObjType.TissueBoxEmpty, SimObjType.TissueBoxEmpty,
     SimObjType.CreditCard, SimObjType.ToiletPaper, SimObjType.ToiletPaperRoll, SimObjType.SoapBar, SimObjType.Pen, SimObjType.Pencil, SimObjType.Towel, 
-    SimObjType.Watch, SimObjType.DishSponge, SimObjType.Tissue, SimObjType.CD,};
+    SimObjType.Watch, SimObjType.DishSponge, SimObjType.Tissue, SimObjType.CD, SimObjType.HandTowel};
 
     public bool isBroken()
     {
@@ -47,7 +48,7 @@ public class Break : MonoBehaviour
     void Start()
     {
         #if UNITY_EDITOR
-        if(!gameObject.GetComponentInParent<SimObjPhysics>().DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanBreak))
+        if(gameObject.GetComponentInParent<SimObjPhysics>() != null && !gameObject.GetComponentInParent<SimObjPhysics>().DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanBreak))
         {
             Debug.LogError(gameObject.name + " is missing the CanBreak secondary property!");
         }
@@ -60,12 +61,6 @@ public class Break : MonoBehaviour
         #endif
 
         CurrentImpulseThreshold = ImpulseThreshold;
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-
     }
 
     public void BreakObject(Collision collision)

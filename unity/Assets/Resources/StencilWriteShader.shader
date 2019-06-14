@@ -1,4 +1,4 @@
-﻿Shader "Unlit/StencilWriteShader"
+﻿Shader "Custom/StencilWriteDeferred"
 {
    
     SubShader
@@ -17,6 +17,7 @@
         {
             Blend Zero One
 			ZWrite Off
+            Cull Off
 
             CGPROGRAM
             #pragma vertex vert
