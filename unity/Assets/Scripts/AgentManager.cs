@@ -155,6 +155,9 @@ public class AgentManager : MonoBehaviour
 	private void addAgent(ServerAction action) {
 		Vector3 clonePosition = new Vector3(action.x, action.y, action.z);
 
+		//disable ambient occlusion on primary agetn because it causes issues with multiple main cameras
+		primaryAgent.GetComponent<PhysicsRemoteFPSAgentController>().DisableScreenSpaceAmbientOcclusion();
+
 		BaseFPSAgentController clone = UnityEngine.Object.Instantiate (primaryAgent);
 		clone.IsVisible = action.makeAgentsVisible;
 		clone.actionDuration = this.actionDuration;
