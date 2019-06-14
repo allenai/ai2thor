@@ -525,17 +525,23 @@ class Controller(object):
             frame_writes = [
                 ('instance_segmentation.jpeg',
                  instance_segmentation_frame,
-                 lambda event: event.instance_segmentation_frame),
+                 lambda event: event.instance_segmentation_frame,
+                 lambda x: x
+                 ),
                 ('class_segmentation.jpeg',
                  class_segmentation_frame,
-                 lambda event: event.class_segmentation_frame),
+                 lambda event: event.class_segmentation_frame,
+                 lambda x: x
+                 ),
                 ('depth.jpeg',
                  depth_frame,
-                 lambda event: event.depth_frame)
+                 lambda event: event.depth_frame,
+                 lambda data: (255.0 / data.max() * (data - data.min())).astype(np.uint8)
+                 )
             ]
 
-            for frame_filename, condition, frame_func in frame_writes:
-                frame = frame_func(event)
+            for frame_filename, condition, frame_func, transform in frame_writes:
+                frame = transform(frame_func(event))
                 if frame is not None:
                     im = Image.fromarray(frame)
                     im.save(frame_filename)
