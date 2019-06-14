@@ -124,6 +124,9 @@ public class ImageSynthesis : MonoBehaviour {
 		#endif
 		go.transform.parent = transform;
 
+		//add the FirstPersonCharacterCull so this camera's agent is not rendered- other agents when multi agent is enabled should still be rendered
+		go.AddComponent<FirstPersonCharacterCull>(go.transform.parent.GetComponent<FirstPersonCharacterCull>());
+
 		var newCamera = go.GetComponent<Camera>();
 		return newCamera;
 	}
@@ -148,6 +151,7 @@ public class ImageSynthesis : MonoBehaviour {
 	{
 		var cb = new CommandBuffer();
 		cb.SetGlobalFloat("_OutputMode", (int)mode); // @TODO: CommandBuffer is missing SetGlobalInt() method
+		cam.renderingPath = RenderingPath.Forward;
 		cam.AddCommandBuffer(CameraEvent.BeforeForwardOpaque, cb);
 		cam.AddCommandBuffer(CameraEvent.BeforeFinalPass, cb);
 		cam.SetReplacementShader(shader, "");
@@ -175,6 +179,7 @@ public class ImageSynthesis : MonoBehaviour {
 	{
 		var mainCamera = GetComponent<Camera>();
 		mainCamera.depth = 9999; // This ensures the main camera is rendered on screen
+		Debug.Log("Camera change happened");
 		foreach (var pass in capturePasses)
 		{
 			if (pass.camera == mainCamera)
