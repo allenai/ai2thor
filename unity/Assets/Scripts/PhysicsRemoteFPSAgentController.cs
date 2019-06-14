@@ -261,7 +261,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             objMeta.openable = simObj.IsOpenable;
             if (objMeta.openable) {
-                objMeta.isopen = simObj.IsOpen;
+                objMeta.isOpen = simObj.IsOpen;
             }
 
             objMeta.toggleable = simObj.IsToggleable;
@@ -380,7 +380,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         parentReceptacles[oid].Add(simObj.UniqueID);
                     }
                     meta.receptacleObjectIds = receptacleObjectIds.ToArray();
-                    meta.receptacleCount = meta.receptacleObjectIds.Length;
                 }
                 meta.distance = Vector3.Distance(transform.position, simObj.gameObject.transform.position);
                 metadata.Add(meta);
@@ -457,7 +456,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             metaMessage.objectIdsInBox = objectIdsInBox;
             metaMessage.actionIntReturn = actionIntReturn;
             metaMessage.actionFloatReturn = actionFloatReturn;
-            metaMessage.actionBoolReturn = actionBoolReturn;
             metaMessage.actionFloatsReturn = actionFloatsReturn;
             metaMessage.actionStringsReturn = actionStringsReturn;
             metaMessage.actionVector3sReturn = actionVector3sReturn;
@@ -479,7 +477,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             objectIdsInBox = new string[0];
             actionIntReturn = 0;
             actionFloatReturn = 0.0f;
-            actionBoolReturn = false;
             actionFloatsReturn = new float[0];
             actionStringsReturn = new string[0];
             actionVector3sReturn = new Vector3[0];
@@ -1936,8 +1933,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         public void CheckDroneCaught(ServerAction action) {
             if (FlightMode) {
-                actionBoolReturn = this.GetComponent<FlyingDrone>().DidICatchTheThing(action);
-                actionFinished(true);
+                actionFinished(true, this.GetComponent<FlyingDrone>().DidICatchTheThing(action));
             }
         }
 
@@ -3195,7 +3191,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             target.transform.SetParent(AgentHand.transform);
             ItemInHand = target.gameObject;
 
-            if (!action.forceAction && isHandObjectColliding()) {
+            if (!action.forceAction && isHandObjectColliding(true)) {
                 // Undo picking up the object if the object is colliding with something after picking it up
                 target.GetComponent<Rigidbody>().isKinematic = wasKinematic;
                 target.transform.position = savedPos;
@@ -3218,19 +3214,36 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return;
         }
 
-        public void PickupContainedObjects(SimObjPhysics target) {
-            if (target.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.Receptacle)) {
-                foreach (SimObjPhysics sop in target.ReceptacleObjects) {
+        //make sure not to pick up any sliced objects because those should remain uninteractable i they have been sliced
+        public void PickupContainedObjects(SimObjPhysics target) 
+        {
+            if (target.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.Receptacle)) 
+            {
+                foreach (SimObjPhysics sop in target.ReceptacleObjects) 
+                {
                     //for every object that is contained by this object...first make sure it's pickupable so we don't like, grab a Chair if it happened to be in the receptacle box or something
                     //turn off the colliders (so contained object doesn't block movement), leaving Trigger Colliders active (this is important to maintain visibility!)
-                    if (sop.PrimaryProperty == SimObjPrimaryProperty.CanPickup) {
-                        sop.transform.Find("Colliders").gameObject.SetActive(false);
-                        Rigidbody soprb = sop.GetComponent<Rigidbody>();
-                        soprb.collisionDetectionMode = CollisionDetectionMode.Discrete;
-                        soprb.isKinematic = true;
-                        sop.transform.SetParent(target.transform);
-                        target.AddToContainedObjectReferences(sop);
-                        target.GetComponent<SimObjPhysics>().isInAgentHand = true;//agent hand flag
+                    if (sop.PrimaryProperty == SimObjPrimaryProperty.CanPickup) 
+                    {
+                        //wait! check if this object is sliceable and is sliced, if so SKIP!
+                        if(sop.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanBeSliced))
+                        {
+                            //if this object is sliced, don't pick it up because it is effectively disabled
+                            if(sop.GetComponent<SliceObject>().IsSliced())
+                            continue;
+                        }
+
+                        else
+                        {
+                            sop.transform.Find("Colliders").gameObject.SetActive(false);
+                            Rigidbody soprb = sop.GetComponent<Rigidbody>();
+                            soprb.collisionDetectionMode = CollisionDetectionMode.Discrete;
+                            soprb.isKinematic = true;
+                            sop.transform.SetParent(target.transform);
+                            target.AddToContainedObjectReferences(sop);
+                            target.GetComponent<SimObjPhysics>().isInAgentHand = true;//agent hand flag
+                        }
+
                     }
 
                 }
@@ -3250,7 +3263,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     Rigidbody rb = sop.GetComponent<Rigidbody>();
                     
                     rb.isKinematic = false;
-                    rb.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
+                    rb.collisionDetectionMode = CollisionDetectionMode.ContinuousSpeculative;
 
                     sop.isInAgentHand = false;//agent hand flag
                     sop.transform.SetParent(topObject.transform);
@@ -3337,8 +3350,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             if (ItemInHand != null) {
                 //we do need this to check if the item is currently colliding with the agent, otherwise
                 //dropping an object while it is inside the agent will cause it to shoot out weirdly
-                if (!action.forceAction && isHandObjectColliding(true)) {
-                    errorMessage = ItemInHand.transform.name + " can't be dropped. It must be clear of all other objects first";
+                if (!action.forceAction && isHandObjectColliding(false)) {
+                    errorMessage = ItemInHand.transform.name + " can't be dropped. It must be clear of all other collision first, including the Agent";
                     Debug.Log(errorMessage);
                     actionFinished(false);
                     return false;
@@ -3350,7 +3363,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                     //change collision detection mode while falling so that obejcts don't phase through colliders.
                     //this is reset to discrete on SimObjPhysics.cs's update 
-                    rb.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
+                    rb.collisionDetectionMode = CollisionDetectionMode.ContinuousSpeculative;
 
                     GameObject topObject = GameObject.Find("Objects");
                     if (topObject != null) {
@@ -3449,13 +3462,35 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         public void ToggleMapView(ServerAction action) {
+
+            SyncTransform[] syncInChildren;
+
             if (inTopLevelView) {
                 inTopLevelView = false;
                 m_Camera.orthographic = false;
                 m_Camera.transform.localPosition = lastLocalCameraPosition;
                 m_Camera.transform.localRotation = lastLocalCameraRotation;
+
+                //restore agent body culling
+                m_Camera.transform.GetComponent<FirstPersonCharacterCull>().StopCullingThingsForASecond = false;
+                syncInChildren = gameObject.GetComponentsInChildren<SyncTransform>();
+                foreach (SyncTransform sync in syncInChildren)
+                {
+                    sync.StopSyncingForASecond = false;
+                }
+
+
                 UpdateDisplayGameObject(GameObject.Find("Ceiling"), true);
             } else {
+
+                //stop culling the agent's body so it's visible from the top?
+                m_Camera.transform.GetComponent<FirstPersonCharacterCull>().StopCullingThingsForASecond = true;
+                syncInChildren = gameObject.GetComponentsInChildren<SyncTransform>();
+                foreach (SyncTransform sync in syncInChildren)
+                {
+                    sync.StopSyncingForASecond = true;
+                }
+
                 inTopLevelView = true;
                 lastLocalCameraPosition = m_Camera.transform.localPosition;
                 lastLocalCameraRotation = m_Camera.transform.localRotation;
@@ -4404,7 +4439,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 if (sop.PrimaryProperty == SimObjPrimaryProperty.CanPickup) {
                     Rigidbody rb = sop.GetComponent<Rigidbody>();
                     rb.isKinematic = false;
-                    rb.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
+                    rb.collisionDetectionMode = CollisionDetectionMode.ContinuousSpeculative;
                 }
             }
             actionFinished(true);
@@ -4824,6 +4859,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true);
         }
 
+        public void DisableScreenSpaceAmbientOcclusion() {
+            ScreenSpaceAmbientOcclusion script = GameObject.Find("FirstPersonCharacter").GetComponent<ScreenSpaceAmbientOcclusion>();
+            script.enabled = false;
+        }
+
         public void ChangeTimeScale(ServerAction action) {
             if (action.timeScale > 0) {
                 Time.timeScale = action.timeScale;
@@ -5206,13 +5246,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return false;
         }
 
-        protected bool isHandObjectColliding(bool includeAgent = false, float expandBy = 0.0f) {
+        //to ignore the agent in this collision check, set ignoreAgent to true
+        protected bool isHandObjectColliding(bool ignoreAgent = false, float expandBy = 0.0f) {
             if (ItemInHand == null) {
                 return false;
             }
             List<GameObject> ignoreGameObjects = new List<GameObject>();
             // Ignore the agent when determining if the hand object is colliding
-            if (!includeAgent) {
+            if (ignoreAgent) {
                 ignoreGameObjects.Add(this.gameObject);
             }
             return UtilityFunctions.isObjectColliding(ItemInHand, ignoreGameObjects, expandBy);

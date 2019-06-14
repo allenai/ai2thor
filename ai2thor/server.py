@@ -29,6 +29,8 @@ import numpy as np
 
 logging.getLogger('werkzeug').setLevel(logging.ERROR)
 
+werkzeug.serving.WSGIRequestHandler.protocol_version = 'HTTP/1.1'
+
 MAX_DEPTH = 5000
 
 # get with timeout to allow quit

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -29,6 +29,7 @@ public class AgentManager : MonoBehaviour
 	private bool renderObjectImage;
 	private bool renderNormalsImage;
 	private bool synchronousHttp = true;
+	private Socket sock = null;
 	private List<Camera> thirdPartyCameras = new List<Camera>();
 	
 
@@ -153,6 +154,9 @@ public class AgentManager : MonoBehaviour
 
 	private void addAgent(ServerAction action) {
 		Vector3 clonePosition = new Vector3(action.x, action.y, action.z);
+
+		//disable ambient occlusion on primary agetn because it causes issues with multiple main cameras
+		primaryAgent.GetComponent<PhysicsRemoteFPSAgentController>().DisableScreenSpaceAmbientOcclusion();
 
 		BaseFPSAgentController clone = UnityEngine.Object.Instantiate (primaryAgent);
 		clone.IsVisible = action.makeAgentsVisible;
@@ -424,6 +428,7 @@ public class AgentManager : MonoBehaviour
         multiMeta.agents = new MetadataWrapper[this.agents.Count];
         multiMeta.activeAgentId = this.activeAgentId;
         multiMeta.sequenceId = this.currentSequenceId;
+		
 
 		ThirdPartyCameraMetadata[] cameraMetadata = new ThirdPartyCameraMetadata[this.thirdPartyCameras.Count];
 		RenderTexture currentTexture = null;
@@ -471,14 +476,18 @@ public class AgentManager : MonoBehaviour
 
         #if !UNITY_WEBGL && !UNITY_EDITOR
 		if (synchronousHttp) {
-            IPAddress host = IPAddress.Parse(robosimsHost);
-            IPEndPoint hostep = new IPEndPoint(host, robosimsPort);
-            Socket sock = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
 
-            sock.Connect(hostep);
+			if (this.sock == null) {
+				// Debug.Log("connecting to host: " + robosimsHost);
+				IPAddress host = IPAddress.Parse(robosimsHost);
+				IPEndPoint hostep = new IPEndPoint(host, robosimsPort);
+				this.sock = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+				this.sock.Connect(hostep);
+			}
+
             byte[] rawData = form.data;
 
-            string request = "POST /train HTTP/1.0\r\n" +
+            string request = "POST /train HTTP/1.1\r\n" +
             "Content-Length: " + rawData.Length.ToString() + "\r\n";
 
             foreach(KeyValuePair<string, string> entry in form.headers) {
@@ -486,33 +495,50 @@ public class AgentManager : MonoBehaviour
             }
             request += "\r\n";
 
-            int sent = sock.Send(Encoding.ASCII.GetBytes(request));
-            sent = sock.Send(rawData);
-            byte[] buffer = new byte[4096];
-            int totalBytesReceived = 0;
-            string msg = "";
+            int sent = this.sock.Send(Encoding.ASCII.GetBytes(request));
+            sent = this.sock.Send(rawData);
+            byte[] headerBuffer = new byte[1024];
+            int bytesReceived = 0;
+			byte[] bodyBuffer = null;
+			int bodyBytesReceived = 0;
+			int contentLength = 0;
 
+			// read header
             while (true) {
-				int bytesReceived = 0;
-				do {
-					bytesReceived = sock.Receive(buffer, buffer.Length, SocketFlags.None);
-					totalBytesReceived += bytesReceived;
-					if (bytesReceived != 0) {
-						msg += Encoding.ASCII.GetString(buffer, 0, bytesReceived);
-					}
-				} while (bytesReceived != 0);
+				int received = this.sock.Receive(headerBuffer, bytesReceived, headerBuffer.Length - bytesReceived, SocketFlags.None);	
+				if (received == 0) {
+					Debug.LogError("0 bytes received attempting to read header - connection closed");
+					break;
+				}
 
-                int offset = msg.IndexOf("\r\n\r\n");
+				bytesReceived += received;;
+				string headerMsg = Encoding.ASCII.GetString(headerBuffer, 0, bytesReceived);
+                int offset = headerMsg.IndexOf("\r\n\r\n");
                 if (offset > 0){
-                    msg = msg.Substring(offset + 4);
-                    if (msg.Length > 8){
-                        Debug.Log("Message: " + msg);
-                        break;
-                    }
+					contentLength = parseContentLength(headerMsg.Substring(0, offset));
+					bodyBuffer = new byte[contentLength];
+					bodyBytesReceived = bytesReceived - (offset + 4);
+					Array.Copy(headerBuffer, offset + 4, bodyBuffer, 0, bodyBytesReceived);
+					break;
                 }
             }
 
-            sock.Close();
+			// read body
+            while (bodyBytesReceived < contentLength) {
+				// check for 0 bytes received
+				int received = this.sock.Receive(bodyBuffer, bodyBytesReceived, bodyBuffer.Length - bodyBytesReceived, SocketFlags.None);	
+				if (received == 0) {
+					Debug.LogError("0 bytes received attempting to read body - connection closed");
+					break;
+				}
+
+				bodyBytesReceived += received;
+				//Debug.Log("total bytes received: " + bodyBytesReceived);
+            }
+
+			string msg = Encoding.ASCII.GetString(bodyBuffer, 0, bodyBytesReceived);
+
+
             ProcessControlCommand(msg);
 		} else {
 
@@ -530,6 +556,18 @@ public class AgentManager : MonoBehaviour
 		}
         #endif
     }
+	private int parseContentLength(string header) {
+		// Debug.Log("got header: " + header);
+		string[] fields = header.Split(new char[]{'\r','\n'});
+		foreach(string field in fields) {
+			string[] elements = field.Split(new char[]{':'});
+			if (elements[0].ToLower() == "content-length") {
+				return Int32.Parse(elements[1].Trim());
+			}
+		}
+
+		return 0;
+	}
 
 	private BaseFPSAgentController activeAgent() {
 		return this.agents.ToArray () [activeAgentId];
@@ -617,7 +655,6 @@ public class ObjectMetadata
 	public float cameraHorizon;
 	public bool visible;
 	public bool receptacle;
-	public int receptacleCount;
 	///
 	//note: some objects are not themselves toggleable, because they must be toggled on/off via another sim object (stove knob -> stove burner)
 	public bool toggleable;//is this object able to be toggled on/off directly?
@@ -654,7 +691,7 @@ public class ObjectMetadata
 	public bool isSliced;//currently sliced?
 	///
 	public bool openable;
-	public bool isopen;
+	public bool isOpen;
 	///
 	public bool pickupable;
 	public bool isPickedUp;//if the pickupable object is actively being held by the agent
@@ -667,11 +704,9 @@ public class ObjectMetadata
 	public string [] salientMaterials; //salient materials that this object is made of as strings (see enum above). This is only for objects that are Pickupable or Moveable
 	///
 	public string[] receptacleObjectIds;
-	public PivotSimObj[] pivotSimObjs;
 	public float distance;
 	public String objectType;
 	public string objectId;
-	public float[] bounds3D;
 	public string parentReceptacle;
 	public string[] parentReceptacles;
 	public float currentTime;
@@ -684,13 +719,6 @@ public class InventoryObject
 {
 	public string objectId;
 	public string objectType;
-}
-
-[Serializable]
-public class PivotSimObj
-{
-	public int pivotId;
-	public string objectId;
 }
 
 [Serializable]
@@ -749,7 +777,6 @@ public struct MetadataWrapper
 
 	public int actionIntReturn;
 	public float actionFloatReturn;
-	public bool actionBoolReturn;
 	public string[] actionStringsReturn;
 
 	public float[] actionFloatsReturn;
@@ -803,7 +830,6 @@ public class ServerAction
 	public bool rotateOnTeleport;
 	public bool forceVisible;
 	public bool randomizeOpen;
-	public int pivot;
 	public int randomSeed;
 	public float moveMagnitude;
 
