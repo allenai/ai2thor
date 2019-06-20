@@ -128,6 +128,7 @@ public class ImageSynthesis : MonoBehaviour {
 		go.AddComponent<FirstPersonCharacterCull>(go.transform.parent.GetComponent<FirstPersonCharacterCull>());
 
 		var newCamera = go.GetComponent<Camera>();
+		newCamera.cullingMask = 1;//render everything, including PlaceableSurfaces
 		return newCamera;
 	}
 
@@ -179,7 +180,7 @@ public class ImageSynthesis : MonoBehaviour {
 	{
 		var mainCamera = GetComponent<Camera>();
 		mainCamera.depth = 9999; // This ensures the main camera is rendered on screen
-		Debug.Log("Camera change happened");
+		//Debug.Log("Camera change happened");
 		foreach (var pass in capturePasses)
 		{
 			if (pass.camera == mainCamera)
@@ -190,6 +191,12 @@ public class ImageSynthesis : MonoBehaviour {
 
 			// copy all "main" camera parameters into capturing camera
 			pass.camera.CopyFrom(mainCamera);
+
+			//make sure the capturing camera is set to Forward rendering (main camera uses Deffered now)
+			pass.camera.renderingPath = RenderingPath.Forward;
+			//make sure capturing camera renders all layers (Main camera excludes PlaceableSurfaces layer)
+			pass.camera.cullingMask = -1;
+
 			pass.camera.depth = 0; // This ensures the new camera does not get rendered on screen
 		}
 
