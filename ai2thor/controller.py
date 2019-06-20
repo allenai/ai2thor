@@ -541,8 +541,9 @@ class Controller(object):
             ]
 
             for frame_filename, condition, frame_func, transform in frame_writes:
-                frame = transform(frame_func(event))
+                frame = frame_func(event)
                 if frame is not None:
+                    frame = transform(frame)
                     im = Image.fromarray(frame)
                     im.save(frame_filename)
                 else:
