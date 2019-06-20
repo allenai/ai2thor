@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using System;
 
-public class Volume_Calc : MonoBehaviour
+public class mesh_volume_calculator : MonoBehaviour
 {
     public double SignedVolumeOfTriangle(Vector3 p1, Vector3 p2, Vector3 p3, Vector3 o)
     {
