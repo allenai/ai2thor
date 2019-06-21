@@ -174,9 +174,11 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			init_rotation = transform.rotation;
 
 			agentManager = GameObject.Find("PhysicsSceneManager").GetComponentInChildren<AgentManager>();
-            #if UNITY_EDITOR
-                this.enableImageSynthesis();
-            #endif
+
+			//disabling in editor by default so performance in editor isn't garbage all the time. Enable this from the DebugInputField -InitSynth
+            // #if UNITY_EDITOR
+            //     this.enableImageSynthesis();
+            // #endif
 			//allowNodes = false;
 		}
 
