@@ -77,6 +77,11 @@ public class ImageSynthesis : MonoBehaviour {
 
 	void Start()
 	{
+		//XXXXXXXXXXX************
+		//Remember, adding any new Shaders requires them to be included in Project Settings->Graphics->Always Included Shaders
+		//
+
+
 		// default fallbacks, if shaders are unspecified
 		if (!uberReplacementShader)
 			uberReplacementShader = Shader.Find("Hidden/UberReplacement");
@@ -84,13 +89,16 @@ public class ImageSynthesis : MonoBehaviour {
 		if (!opticalFlowShader)
 			opticalFlowShader = Shader.Find("Hidden/OpticalFlow");
 
-        #if UNITY_EDITOR
+        // #if UNITY_EDITOR
+
+        //     if (!depthShader)
+        //         depthShader = Shader.Find("Hidden/DepthBW");
+        // #else
             if (!depthShader)
                 depthShader = Shader.Find("Hidden/DepthBW");
-        #else
-            if (!depthShader)
-                depthShader = Shader.Find("Hidden/Depth");
-        #endif
+
+        //#endif
+
         //if (!positionShader)
         //	positionShader = Shader.Find("Hidden/World");
 
