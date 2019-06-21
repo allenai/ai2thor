@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.7115449, g: 0.7339943, b: 0.7439677, a: 1}
+  m_IndirectSpecularColor: {r: 0.70008117, g: 0.7227283, b: 0.73079306, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -793,8 +793,9 @@ GameObject:
   - component: {fileID: 35602842}
   - component: {fileID: 35602841}
   - component: {fileID: 35602840}
+  - component: {fileID: 35602843}
   m_Layer: 8
-  m_Name: StoveBottomDoor1
+  m_Name: Stove
   m_TagString: Structure
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 3
@@ -876,6 +877,19 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 35602838}
   m_Mesh: {fileID: 4300012, guid: 182b986abfbfe4f79beede5300898883, type: 3}
+--- !u!114 &35602843
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 35602838}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 917874e6a1f71455ca9c978c826895fb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  WhatIsMyStructureObjectTag: 6
 --- !u!1001 &37753570
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -4471,7 +4485,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 1000013084484466, guid: c6cf98ada65b04564908f4a586bec7f4, type: 3}
       propertyPath: m_Name
-      value: LightFixture1 (2)
+      value: CeilingLight
       objectReference: {fileID: 0}
     - target: {fileID: 1000013084484466, guid: c6cf98ada65b04564908f4a586bec7f4, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -8504,14 +8518,6 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 1945212740}
     m_Modifications:
-    - target: {fileID: 1000011724260038, guid: d675268a8e8ea43dbb9b68cb852b8bd4, type: 3}
-      propertyPath: m_StaticEditorFlags
-      value: 4294967295
-      objectReference: {fileID: 0}
-    - target: {fileID: 1000011724260038, guid: d675268a8e8ea43dbb9b68cb852b8bd4, type: 3}
-      propertyPath: m_NavMeshLayer
-      value: 3
-      objectReference: {fileID: 0}
     - target: {fileID: 4000013011339066, guid: d675268a8e8ea43dbb9b68cb852b8bd4, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0.24004224
@@ -8543,14 +8549,6 @@ PrefabInstance:
     - target: {fileID: 4000013011339066, guid: d675268a8e8ea43dbb9b68cb852b8bd4, type: 3}
       propertyPath: m_RootOrder
       value: 11
-      objectReference: {fileID: 0}
-    - target: {fileID: 4000013011339066, guid: d675268a8e8ea43dbb9b68cb852b8bd4, type: 3}
-      propertyPath: m_LocalScale.y
-      value: 99.99997
-      objectReference: {fileID: 0}
-    - target: {fileID: 4000013011339066, guid: d675268a8e8ea43dbb9b68cb852b8bd4, type: 3}
-      propertyPath: m_LocalScale.z
-      value: 99.99997
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: d675268a8e8ea43dbb9b68cb852b8bd4, type: 3}
@@ -20007,8 +20005,9 @@ GameObject:
   - component: {fileID: 667387634}
   - component: {fileID: 667387633}
   - component: {fileID: 667387632}
+  - component: {fileID: 667387635}
   m_Layer: 8
-  m_Name: StoveTopGas
+  m_Name: Stove
   m_TagString: Structure
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 3
@@ -20090,6 +20089,19 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 667387630}
   m_Mesh: {fileID: 4300004, guid: 182b986abfbfe4f79beede5300898883, type: 3}
+--- !u!114 &667387635
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 667387630}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 917874e6a1f71455ca9c978c826895fb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  WhatIsMyStructureObjectTag: 6
 --- !u!1 &671077252
 GameObject:
   m_ObjectHideFlags: 0
@@ -20329,6 +20341,11 @@ PrefabInstance:
       propertyPath: m_StaticEditorFlags
       value: 64
       objectReference: {fileID: 0}
+    - target: {fileID: 114293299830058118, guid: 89e882d822289471ba8179e3855f1296,
+        type: 3}
+      propertyPath: uniqueID
+      value: GarbageCan|+02.16|+00.00|+01.22
+      objectReference: {fileID: 0}
     - target: {fileID: 4048422594924464, guid: 89e882d822289471ba8179e3855f1296, type: 3}
       propertyPath: m_LocalPosition.x
       value: 2.161
@@ -20445,11 +20462,6 @@ PrefabInstance:
         type: 3}
       propertyPath: m_IsKinematic
       value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 114293299830058118, guid: 89e882d822289471ba8179e3855f1296,
-        type: 3}
-      propertyPath: uniqueID
-      value: GarbageCan|+02.16|+00.00|+01.22
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 89e882d822289471ba8179e3855f1296, type: 3}
@@ -20829,7 +20841,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 1007665540}
-  m_RootOrder: 5
+  m_RootOrder: 3
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!23 &688629688
 MeshRenderer:
@@ -21947,8 +21959,9 @@ GameObject:
   - component: {fileID: 745881034}
   - component: {fileID: 745881033}
   - component: {fileID: 745881035}
+  - component: {fileID: 745881036}
   m_Layer: 8
-  m_Name: StandardDoorFrame1
+  m_Name: DoorFrame
   m_TagString: Structure
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 3
@@ -21967,7 +21980,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 1007665540}
-  m_RootOrder: 9
+  m_RootOrder: 7
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!23 &745881033
 MeshRenderer:
@@ -22030,6 +22043,19 @@ MeshCollider:
   m_Convex: 0
   m_CookingOptions: 14
   m_Mesh: {fileID: 4300032, guid: c3188871b84d14afda03945cd2f5ff4a, type: 3}
+--- !u!114 &745881036
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 745881031}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 917874e6a1f71455ca9c978c826895fb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  WhatIsMyStructureObjectTag: 8
 --- !u!4 &746364234 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 4610446089810540, guid: 9d6e7abbc03fe4393b34fb96d7478c77,
@@ -22163,7 +22189,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 1000011463252702, guid: 106c874fadfcc473ebec120ab766e503, type: 3}
       propertyPath: m_Name
-      value: LightFixture2 (2)
+      value: LightFixture1
       objectReference: {fileID: 0}
     - target: {fileID: 1000011463252702, guid: 106c874fadfcc473ebec120ab766e503, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -22396,38 +22422,6 @@ Transform:
   - {fileID: 583661159}
   m_Father: {fileID: 986792881}
   m_RootOrder: 1
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &765871719
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 100084, guid: c3188871b84d14afda03945cd2f5ff4a,
-    type: 3}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 765871720}
-  m_Layer: 0
-  m_Name: Camera
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 3
-  m_StaticEditorFlags: 4294967295
-  m_IsActive: 1
---- !u!4 &765871720
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 400084, guid: c3188871b84d14afda03945cd2f5ff4a,
-    type: 3}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 765871719}
-  m_LocalRotation: {x: -0.030843565, y: -0.7064338, z: 0.030843565, w: 0.7064338}
-  m_LocalPosition: {x: -0, y: 0.75, z: 4}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_Children: []
-  m_Father: {fileID: 1007665540}
-  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &765970022
 GameObject:
@@ -25185,8 +25179,9 @@ GameObject:
   - component: {fileID: 893052905}
   - component: {fileID: 893052904}
   - component: {fileID: 893052906}
+  - component: {fileID: 893052907}
   m_Layer: 0
-  m_Name: WindowGlass (2)
+  m_Name: Window
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 3
@@ -25205,7 +25200,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 1007665540}
-  m_RootOrder: 4
+  m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!23 &893052904
 MeshRenderer:
@@ -25268,6 +25263,19 @@ MeshCollider:
   m_Convex: 0
   m_CookingOptions: 14
   m_Mesh: {fileID: 4300092, guid: c3188871b84d14afda03945cd2f5ff4a, type: 3}
+--- !u!114 &893052907
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 893052902}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 917874e6a1f71455ca9c978c826895fb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  WhatIsMyStructureObjectTag: 0
 --- !u!1 &901129338
 GameObject:
   m_ObjectHideFlags: 0
@@ -28202,6 +28210,7 @@ GameObject:
   - component: {fileID: 1007665546}
   - component: {fileID: 1007665545}
   - component: {fileID: 1007665537}
+  - component: {fileID: 1007665547}
   m_Layer: 8
   m_Name: Floor
   m_TagString: Structure
@@ -28268,9 +28277,7 @@ Transform:
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
-  - {fileID: 765871720}
   - {fileID: 1911780671}
-  - {fileID: 1783400804}
   - {fileID: 1007665544}
   - {fileID: 893052903}
   - {fileID: 688629687}
@@ -28298,7 +28305,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 1007665540}
-  m_RootOrder: 6
+  m_RootOrder: 4
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!23 &1007665542
 MeshRenderer:
@@ -28363,7 +28370,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 1007665540}
-  m_RootOrder: 3
+  m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!23 &1007665545
 MeshRenderer:
@@ -28412,6 +28419,19 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1007665536}
   m_Mesh: {fileID: 4300008, guid: c3188871b84d14afda03945cd2f5ff4a, type: 3}
+--- !u!114 &1007665547
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1007665536}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 917874e6a1f71455ca9c978c826895fb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  WhatIsMyStructureObjectTag: 2
 --- !u!1 &1008080612
 GameObject:
   m_ObjectHideFlags: 0
@@ -34035,8 +34055,9 @@ GameObject:
   - component: {fileID: 1283479766}
   - component: {fileID: 1283479765}
   - component: {fileID: 1283479767}
+  - component: {fileID: 1283479768}
   m_Layer: 8
-  m_Name: StandardWallSize
+  m_Name: Wall
   m_TagString: Structure
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 3
@@ -34055,7 +34076,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 1007665540}
-  m_RootOrder: 12
+  m_RootOrder: 10
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!23 &1283479765
 MeshRenderer:
@@ -34119,6 +34140,19 @@ MeshCollider:
   m_Convex: 0
   m_CookingOptions: 14
   m_Mesh: {fileID: 4300000, guid: c3188871b84d14afda03945cd2f5ff4a, type: 3}
+--- !u!114 &1283479768
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1283479763}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 917874e6a1f71455ca9c978c826895fb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  WhatIsMyStructureObjectTag: 1
 --- !u!1 &1283757494
 GameObject:
   m_ObjectHideFlags: 0
@@ -34482,7 +34516,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 1000013084484466, guid: c6cf98ada65b04564908f4a586bec7f4, type: 3}
       propertyPath: m_Name
-      value: LightFixture1 (3)
+      value: CeilingLight
       objectReference: {fileID: 0}
     - target: {fileID: 1000013084484466, guid: c6cf98ada65b04564908f4a586bec7f4, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -34895,6 +34929,10 @@ PrefabInstance:
     - target: {fileID: 1000013084484466, guid: c6cf98ada65b04564908f4a586bec7f4, type: 3}
       propertyPath: m_NavMeshLayer
       value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 1000013084484466, guid: c6cf98ada65b04564908f4a586bec7f4, type: 3}
+      propertyPath: m_Name
+      value: CeilingLight
       objectReference: {fileID: 0}
     - target: {fileID: 1000013987753920, guid: c6cf98ada65b04564908f4a586bec7f4, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -36239,7 +36277,7 @@ GameObject:
   - component: {fileID: 1357465125}
   - component: {fileID: 1357465127}
   m_Layer: 8
-  m_Name: StandardIslandHeight2
+  m_Name: StandardIslandHeight
   m_TagString: Structure
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 3
@@ -36258,7 +36296,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 1007665540}
-  m_RootOrder: 11
+  m_RootOrder: 9
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!23 &1357465125
 MeshRenderer:
@@ -36988,7 +37026,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 1000011463252702, guid: 106c874fadfcc473ebec120ab766e503, type: 3}
       propertyPath: m_Name
-      value: LightFixture2 (1)
+      value: LightFixture2
       objectReference: {fileID: 0}
     - target: {fileID: 1000011463252702, guid: 106c874fadfcc473ebec120ab766e503, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -38585,8 +38623,9 @@ GameObject:
   - component: {fileID: 1424482258}
   - component: {fileID: 1424482257}
   - component: {fileID: 1424482256}
+  - component: {fileID: 1424482259}
   m_Layer: 8
-  m_Name: StoveBase1
+  m_Name: Stove
   m_TagString: Structure
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 3
@@ -38655,6 +38694,19 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1424482255}
   m_Mesh: {fileID: 4300000, guid: 182b986abfbfe4f79beede5300898883, type: 3}
+--- !u!114 &1424482259
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1424482255}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 917874e6a1f71455ca9c978c826895fb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  WhatIsMyStructureObjectTag: 6
 --- !u!65 &1431192401 stripped
 BoxCollider:
   m_CorrespondingSourceObject: {fileID: 65625599347787298, guid: 4401d0c10cb450c4ca6595308cf6d12c,
@@ -38674,8 +38726,9 @@ GameObject:
   - component: {fileID: 1436530945}
   - component: {fileID: 1436530944}
   - component: {fileID: 1436530946}
+  - component: {fileID: 1436530947}
   m_Layer: 8
-  m_Name: StandardDoorFrame1 (2)
+  m_Name: DoorFrame
   m_TagString: Structure
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 3
@@ -38694,7 +38747,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 1007665540}
-  m_RootOrder: 10
+  m_RootOrder: 8
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!23 &1436530944
 MeshRenderer:
@@ -38757,6 +38810,19 @@ MeshCollider:
   m_Convex: 0
   m_CookingOptions: 14
   m_Mesh: {fileID: 4300034, guid: c3188871b84d14afda03945cd2f5ff4a, type: 3}
+--- !u!114 &1436530947
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1436530942}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 917874e6a1f71455ca9c978c826895fb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  WhatIsMyStructureObjectTag: 8
 --- !u!4 &1443441501 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 4968738936553170, guid: bf146d8dcd333a448b5b553e2ed3bb4e,
@@ -39579,8 +39645,9 @@ GameObject:
   - component: {fileID: 1479060381}
   - component: {fileID: 1479060380}
   - component: {fileID: 1479060378}
+  - component: {fileID: 1479060382}
   m_Layer: 8
-  m_Name: StoveTopDoor1
+  m_Name: Stove
   m_TagString: Structure
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 3
@@ -39664,6 +39731,19 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1479060377}
   m_Mesh: {fileID: 4300014, guid: 182b986abfbfe4f79beede5300898883, type: 3}
+--- !u!114 &1479060382
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1479060377}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 917874e6a1f71455ca9c978c826895fb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  WhatIsMyStructureObjectTag: 6
 --- !u!4 &1480026341 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 4083531434343004, guid: 1061d6bcb5a5f462c8f551c086ec50d0,
@@ -40089,6 +40169,10 @@ PrefabInstance:
     - target: {fileID: 1000011463252702, guid: 106c874fadfcc473ebec120ab766e503, type: 3}
       propertyPath: m_Layer
       value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 1000011463252702, guid: 106c874fadfcc473ebec120ab766e503, type: 3}
+      propertyPath: m_Name
+      value: LightFixture
       objectReference: {fileID: 0}
     - target: {fileID: 1000010476657356, guid: 106c874fadfcc473ebec120ab766e503, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -41785,8 +41869,9 @@ GameObject:
   - component: {fileID: 1556043203}
   - component: {fileID: 1556043205}
   - component: {fileID: 1556043206}
+  - component: {fileID: 1556043207}
   m_Layer: 8
-  m_Name: StandardDoor1 (2)
+  m_Name: Door
   m_TagString: Structure
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 3
@@ -41806,7 +41891,7 @@ Transform:
   m_Children:
   - {fileID: 1652403803}
   m_Father: {fileID: 1007665540}
-  m_RootOrder: 8
+  m_RootOrder: 6
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!23 &1556043203
 MeshRenderer:
@@ -41882,6 +41967,19 @@ MeshCollider:
   m_Convex: 0
   m_CookingOptions: 14
   m_Mesh: {fileID: 4300028, guid: c3188871b84d14afda03945cd2f5ff4a, type: 3}
+--- !u!114 &1556043207
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1556043201}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 917874e6a1f71455ca9c978c826895fb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  WhatIsMyStructureObjectTag: 9
 --- !u!1 &1559694891
 GameObject:
   m_ObjectHideFlags: 0
@@ -43795,7 +43893,7 @@ GameObject:
   - component: {fileID: 1618160664}
   - component: {fileID: 1618160666}
   m_Layer: 8
-  m_Name: StandardWallTileHeight1
+  m_Name: BackSplash
   m_TagString: Structure
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 3
@@ -43814,7 +43912,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 1007665540}
-  m_RootOrder: 13
+  m_RootOrder: 11
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!23 &1618160664
 MeshRenderer:
@@ -44643,6 +44741,7 @@ GameObject:
   - component: {fileID: 1652403803}
   - component: {fileID: 1652403805}
   - component: {fileID: 1652403804}
+  - component: {fileID: 1652403806}
   m_Layer: 8
   m_Name: StandardKnob1 (2)
   m_TagString: Untagged
@@ -44712,6 +44811,19 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1652403802}
   m_Mesh: {fileID: 4300030, guid: c3188871b84d14afda03945cd2f5ff4a, type: 3}
+--- !u!114 &1652403806
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1652403802}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 917874e6a1f71455ca9c978c826895fb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  WhatIsMyStructureObjectTag: 10
 --- !u!4 &1652618479 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 4570583755185738, guid: bf146d8dcd333a448b5b553e2ed3bb4e,
@@ -46016,7 +46128,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 1000013084484466, guid: c6cf98ada65b04564908f4a586bec7f4, type: 3}
       propertyPath: m_Name
-      value: LightFixture1 (4)
+      value: CeilingLight
       objectReference: {fileID: 0}
     - target: {fileID: 1000013084484466, guid: c6cf98ada65b04564908f4a586bec7f4, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -47591,38 +47703,6 @@ Transform:
   m_Father: {fileID: 946917984}
   m_RootOrder: 4
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &1783400803
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 100088, guid: c3188871b84d14afda03945cd2f5ff4a,
-    type: 3}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1783400804}
-  m_Layer: 0
-  m_Name: Directional Light
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 3
-  m_StaticEditorFlags: 4294967295
-  m_IsActive: 1
---- !u!4 &1783400804
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 400088, guid: c3188871b84d14afda03945cd2f5ff4a,
-    type: 3}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1783400803}
-  m_LocalRotation: {x: 0.46193975, y: 0.33141357, z: -0.19134171, w: 0.8001031}
-  m_LocalPosition: {x: 2, y: 2, z: 2}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_Children: []
-  m_Father: {fileID: 1007665540}
-  m_RootOrder: 2
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1783732516 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 1170333579371094, guid: 6877aba5a696347dbb6c01f851f2da28,
@@ -48348,7 +48428,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 1000013084484466, guid: c6cf98ada65b04564908f4a586bec7f4, type: 3}
       propertyPath: m_Name
-      value: LightFixture1 (1)
+      value: CeilingLight
       objectReference: {fileID: 0}
     - target: {fileID: 1000013084484466, guid: c6cf98ada65b04564908f4a586bec7f4, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -50770,8 +50850,9 @@ GameObject:
   - component: {fileID: 1909575341}
   - component: {fileID: 1909575343}
   - component: {fileID: 1909575344}
+  - component: {fileID: 1909575345}
   m_Layer: 8
-  m_Name: StandardDoor1
+  m_Name: Door
   m_TagString: Structure
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 3
@@ -50791,7 +50872,7 @@ Transform:
   m_Children:
   - {fileID: 1951354593}
   m_Father: {fileID: 1007665540}
-  m_RootOrder: 7
+  m_RootOrder: 5
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!23 &1909575341
 MeshRenderer:
@@ -50867,6 +50948,19 @@ MeshCollider:
   m_Convex: 0
   m_CookingOptions: 14
   m_Mesh: {fileID: 4300024, guid: c3188871b84d14afda03945cd2f5ff4a, type: 3}
+--- !u!114 &1909575345
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1909575339}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 917874e6a1f71455ca9c978c826895fb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  WhatIsMyStructureObjectTag: 9
 --- !u!1 &1911780670
 GameObject:
   m_ObjectHideFlags: 0
@@ -50880,6 +50974,7 @@ GameObject:
   - component: {fileID: 1911780673}
   - component: {fileID: 1911780672}
   - component: {fileID: 1911780674}
+  - component: {fileID: 1911780675}
   m_Layer: 8
   m_Name: Ceiling
   m_TagString: Structure
@@ -50900,7 +50995,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 1007665540}
-  m_RootOrder: 1
+  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!23 &1911780672
 MeshRenderer:
@@ -50962,6 +51057,19 @@ BoxCollider:
   serializedVersion: 2
   m_Size: {x: 4.8300004, y: 0.10000014, z: 5.4}
   m_Center: {x: 0.015000105, y: 2.5499997, z: -0.20000029}
+--- !u!114 &1911780675
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1911780670}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 917874e6a1f71455ca9c978c826895fb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  WhatIsMyStructureObjectTag: 3
 --- !u!1 &1916716367
 GameObject:
   m_ObjectHideFlags: 0
@@ -51643,6 +51751,7 @@ GameObject:
   - component: {fileID: 1951354593}
   - component: {fileID: 1951354595}
   - component: {fileID: 1951354594}
+  - component: {fileID: 1951354596}
   m_Layer: 8
   m_Name: StandardKnob1
   m_TagString: Untagged
@@ -51712,6 +51821,19 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1951354592}
   m_Mesh: {fileID: 4300026, guid: c3188871b84d14afda03945cd2f5ff4a, type: 3}
+--- !u!114 &1951354596
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1951354592}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 917874e6a1f71455ca9c978c826895fb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  WhatIsMyStructureObjectTag: 10
 --- !u!1 &1953012816
 GameObject:
   m_ObjectHideFlags: 0
