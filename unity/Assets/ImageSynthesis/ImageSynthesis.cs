@@ -113,7 +113,7 @@ public class ImageSynthesis : MonoBehaviour {
 		#endif // UNITY_EDITOR
 
 		// @TODO: detect if camera properties actually changed
-		OnCameraChange();
+		//OnCameraChange();
 	}
 	
 	private Camera CreateHiddenCamera(string name)
@@ -176,11 +176,15 @@ public class ImageSynthesis : MonoBehaviour {
 		Normals				= 4
 	};
 
+	//Call this if the settings on the main camera ever change? But the main camera now uses slightly different layer masks and deffered/forward render settings than these image synth cameras
+	//do, so maybe it's fine for now I dunno
 	public void OnCameraChange()
 	{
 		var mainCamera = GetComponent<Camera>();
 		mainCamera.depth = 9999; // This ensures the main camera is rendered on screen
 		//Debug.Log("Camera change happened");
+		int i = 0;
+
 		foreach (var pass in capturePasses)
 		{
 			if (pass.camera == mainCamera)
@@ -196,6 +200,9 @@ public class ImageSynthesis : MonoBehaviour {
 			pass.camera.renderingPath = RenderingPath.Forward;
 			//make sure capturing camera renders all layers (Main camera excludes PlaceableSurfaces layer)
 			pass.camera.cullingMask = -1;
+			//set the display corresponding to which capturePass this is
+			pass.camera.targetDisplay = i;
+			i++;
 
 			pass.camera.depth = 0; // This ensures the new camera does not get rendered on screen
 		}
@@ -272,22 +279,27 @@ public class ImageSynthesis : MonoBehaviour {
 			string classTag = r.name;
 			string objTag = getUniqueId(r.gameObject);
 
-			SimObj so = r.gameObject.GetComponent<SimObj> ();
-			if (so == null) {
-				so = r.gameObject.GetComponentInParent<SimObj> ();
+			StructureObject so = r.gameObject.GetComponent<StructureObject> ();
+			if (so == null) 
+			{
+				so = r.gameObject.GetComponentInParent<StructureObject> ();
 			}
+
 			SimObjPhysics sop = r.gameObject.GetComponent<SimObjPhysics> ();
 			if (sop == null) {
 				sop = r.gameObject.GetComponentInParent<SimObjPhysics> ();
 			}
 
 			if (so != null) {
-				classTag = "" + so.Type;
-				objTag = so.UniqueID;
-			} else if (sop != null) {
+				classTag = "" + so.WhatIsMyStructureObjectTag;
+				//objTag = so.gameObject.name;
+			} 
+			if (sop != null) 
+			{
 				classTag = "" + sop.Type;
 				objTag = sop.UniqueID;
 			}
+
 
 			Color classColor;
 			Color objColor;
@@ -296,14 +308,14 @@ public class ImageSynthesis : MonoBehaviour {
 
 			capturePasses [0].camera.WorldToScreenPoint (r.bounds.center);
 
-			//mpb.SetVector ("_Scale", scaleVector);
-			//mpb.SetVector ("_Shift", shiftVector);
-			// Make transparent if light ray.
-			if (so != null || sop != null) {
+			if (so != null || sop != null) 
+			{
 				colorIds [objColor] = objTag;
 				colorIds [classColor] = classTag;
-				// Debug.Log ("colored " + simObj.UniqueID);
-			} else {
+			} 
+
+			else 
+			{
 				colorIds [objColor] = r.gameObject.name;
 			}
 
@@ -327,8 +339,6 @@ public class ImageSynthesis : MonoBehaviour {
 			objColor.a = 1;
 			classColor.a = 1;
 			mpb.SetFloat ("_Opacity", 1);
-
-
 			mpb.SetColor("_CategoryColor", classColor);
 			mpb.SetColor("_ObjectColor", objColor);
 
