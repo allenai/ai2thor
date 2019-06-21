@@ -101,10 +101,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		public System.Object actionReturn;
 
 
-		// Vector3 m_OriginalCameraPosition;
+        // Vector3 m_OriginalCameraPosition;
 
 
-		public float maxVisibleDistance = 1.5f; //changed from 1.0f to account for objects randomly spawned far away on tables/countertops, which would be not visible at 1.0f
+        public float maxVisibleDistance = 1.5f; //changed from 1.0f to account for objects randomly spawned far away on tables/countertops, which would be not visible at 1.0f
 
 		// initial states
 		protected Vector3 init_position;
@@ -174,7 +174,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			init_rotation = transform.rotation;
 
 			agentManager = GameObject.Find("PhysicsSceneManager").GetComponentInChildren<AgentManager>();
-
+            #if UNITY_EDITOR
+                this.enableImageSynthesis();
+            #endif
 			//allowNodes = false;
 		}
 
@@ -234,10 +236,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 			this.continuousMode = action.continuous;
 
-			if (action.renderDepthImage || action.renderClassImage || action.renderObjectImage || action.renderNormalsImage) 
+            if (action.renderDepthImage || action.renderClassImage || action.renderObjectImage || action.renderNormalsImage) 
             {
-				this.enableImageSynthesis ();
-			}
+    			this.enableImageSynthesis ();
+    		}
 
 			if (action.visibilityDistance > 0.0f) {
 				this.maxVisibleDistance = action.visibilityDistance;
@@ -497,11 +499,11 @@ namespace UnityStandardAssets.Characters.FirstPerson
 				actionFinished(false);
 			}
 
-			#if UNITY_EDITOR
+#if UNITY_EDITOR
 			if (errorMessage != "") {
 				Debug.Log(errorMessage);
 			}
-			#endif
+#endif
 
 			agentManager.setReadyToEmit(true);
 		}
