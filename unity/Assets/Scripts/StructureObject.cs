@@ -35,11 +35,9 @@ public enum StructureObjectTag : int
     CeilingLight = 5,//for embedded lights in the ceiling
     Stove = 6,//for the uninteractable body of the stove
     DishWasher = 7,
-    ///Doors might be changed into openable SimObjects at some point///
-    DoorFrame = 8,
+    KitchenIsland = 8,
     Door = 9,
-    DoorKnob = 10,
-    ////
+    SomethingElse = 10,
     Something = 11,
     PaperClutter = 12,
     SkyLightWindow = 13,

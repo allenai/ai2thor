@@ -474,7 +474,7 @@ public class AgentManager : MonoBehaviour
         form.AddField("metadata", Newtonsoft.Json.JsonConvert.SerializeObject(multiMeta));
         form.AddField("token", robosimsClientToken);
 
-        #if !UNITY_WEBGL && !UNITY_EDITOR
+        #if !UNITY_WEBGL //&& !UNITY_EDITOR
 		if (synchronousHttp) {
 
 			if (this.sock == null) {
