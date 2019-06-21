@@ -145,6 +145,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         // action.renderDepthImage = true;
                         // action.renderClassImage = true;
                         // action.renderObjectImage = true;
+                        // action.renderFlowImage = true;
 
                         action.continuous = true;//testing what continuous mode true does...
 
@@ -234,6 +235,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         action.renderDepthImage = true;
                         action.renderClassImage = true;
                         action.renderObjectImage = true;
+                        action.renderFlowImage = true;
 
 						PhysicsController.actionComplete = false;
                         action.ssao = "default";
