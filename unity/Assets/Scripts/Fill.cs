@@ -5,6 +5,11 @@ using UnityEngine;
 public class Fill : MonoBehaviour
 {
     [SerializeField]
+    protected GameObject LiquidVolumeObject = null;
+
+    public float LiquidVolumeBaseValue;
+
+    [SerializeField]
     protected GameObject WaterObject = null;
 
     [SerializeField]
@@ -12,7 +17,6 @@ public class Fill : MonoBehaviour
 
     [SerializeField]
     protected GameObject WineObject = null;
-
 
     [SerializeField]
     protected bool isFilled = false; //false - empty, true - currently filled with
