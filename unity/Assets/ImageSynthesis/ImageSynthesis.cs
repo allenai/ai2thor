@@ -182,8 +182,6 @@ public class ImageSynthesis : MonoBehaviour {
 	{
 		var mainCamera = GetComponent<Camera>();
 		mainCamera.depth = 9999; // This ensures the main camera is rendered on screen
-		//Debug.Log("Camera change happened");
-		int i = 0;
 
 		foreach (var pass in capturePasses)
 		{
@@ -198,13 +196,16 @@ public class ImageSynthesis : MonoBehaviour {
 
 			//make sure the capturing camera is set to Forward rendering (main camera uses Deffered now)
 			pass.camera.renderingPath = RenderingPath.Forward;
-			//make sure capturing camera renders all layers (Main camera excludes PlaceableSurfaces layer)
+			//make sure capturing camera renders all layers (value copied from Main camera excludes PlaceableSurfaces layer, which needs to be rendered on this camera)
 			pass.camera.cullingMask = -1;
-			//set the display corresponding to which capturePass this is
-			pass.camera.targetDisplay = i;
-			i++;
 
 			pass.camera.depth = 0; // This ensures the new camera does not get rendered on screen
+		}
+	
+		//set the display corresponding to which capturePass this is
+		for(int i = 0; i < capturePasses.Length; i++)
+		{
+			capturePasses[i].camera.targetDisplay = i;
 		}
 
 		// cache materials and setup material properties
@@ -221,8 +222,6 @@ public class ImageSynthesis : MonoBehaviour {
 		SetupCameraWithPostShader(capturePasses[1].camera, depthMaterial, DepthTextureMode.Depth);
 		SetupCameraWithReplacementShader(capturePasses[2].camera, uberReplacementShader, ReplacelementModes.ObjectId);
 		SetupCameraWithReplacementShader(capturePasses[3].camera, uberReplacementShader, ReplacelementModes.CatergoryId);
-
-
 		SetupCameraWithReplacementShader(capturePasses[4].camera, uberReplacementShader, ReplacelementModes.Normals);
 		//SetupCameraWithPostShader(capturePasses[5].camera, opticalFlowMaterial, DepthTextureMode.Depth | DepthTextureMode.MotionVectors);
 
