@@ -6,10 +6,11 @@
     }
     SubShader
     {
-        Tags {"Queue"="Opaque" }
+        Tags {"Queue"="Opaque"}
         Zwrite On
         Cull Off // we want the front and back faces
         AlphaToMask On // transparency
+        // Blend DstColor SrcColor
 
         Pass
         {
