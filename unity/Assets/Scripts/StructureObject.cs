@@ -37,8 +37,8 @@ public enum StructureObjectTag : int
     DishWasher = 7,
     KitchenIsland = 8,
     Door = 9,
-    SomethingElse = 10,
-    Something = 11,
+    WallCabinetBody = 10,
+    OvenHood = 11,
     PaperClutter = 12,
     SkyLightWindow = 13,
 

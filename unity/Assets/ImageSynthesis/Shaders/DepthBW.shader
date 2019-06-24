@@ -49,7 +49,7 @@
               fixed3 frag(output o) : COLOR
              {
                  //depth01 = pow(LinearEyeDepth(depth01), _DepthLevel);
-                 float depth01 = 1.0 - (LinearEyeDepth(UNITY_SAMPLE_DEPTH(tex2D(_CameraDepthTexture, o.uv))) / 5);
+                 float depth01 = (LinearEyeDepth(UNITY_SAMPLE_DEPTH(tex2D(_CameraDepthTexture, o.uv))) / 5);
                  return fixed3(depth01, depth01, depth01);
              }
 
