@@ -483,8 +483,21 @@ public class AgentManager : MonoBehaviour
                     // Debug.Log("connecting to host: " + robosimsHost);
                     IPAddress host = IPAddress.Parse(robosimsHost);
                     IPEndPoint hostep = new IPEndPoint(host, robosimsPort);
-                    this.sock = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-                    this.sock.Connect(hostep);
+                    try 
+                    {
+                        Socket s = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+                        s.Connect(hostep);
+                        this.sock = s;
+                    } 
+                    catch (SocketException ex) 
+                    {
+                        # if UNITY_EDITOR
+                        // swallowing the error since its fine to run without the Python side with the editor
+                        yield break;
+                        # else
+                        throw ex;
+                        # endif
+                    }
                 }
 
                 byte[] rawData = form.data;
