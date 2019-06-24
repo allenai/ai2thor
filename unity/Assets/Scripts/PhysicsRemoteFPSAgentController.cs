@@ -1169,7 +1169,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             float yoffset = 0.19f;
 
-            uint which = (uint) Convert.ToUInt32(action.objectVariation);
+            //uint which = (uint) Convert.ToUInt32(action.objectVariation);
             // List<bool> whichIncluded = new List<bool>();
             for (int i = 0; i < 5; i++) {
                 if (((action.objectVariation >> i) % 2) == 1) {
