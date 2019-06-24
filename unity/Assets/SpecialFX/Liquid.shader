@@ -16,13 +16,20 @@
  
     SubShader
     {
-        Tags {"Queue"="Geometry"  "DisableBatching" = "True" }
+        Tags {
+          "Queue"="Geometry" 
+          "DisableBatching" = "True"
+          // "LightMode" = "ForwardBase"
+          
+           
+           }
  
                 Pass
         {
          Zwrite On
          Cull Off // we want the front and back faces
          AlphaToMask On // transparency
+        //  Blend DstColor Zero
  
          CGPROGRAM
  
@@ -120,6 +127,8 @@
           // if (finalResult.r - 0.0001 < 0.0) {
           //   discard;
           // }
+
+          // clip(finalResult - 0.0001);
 
            return facing > 0 ? finalResult: topColor; 
                
