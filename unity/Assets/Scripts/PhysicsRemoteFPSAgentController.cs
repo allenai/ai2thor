@@ -5007,9 +5007,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     for (int i = 0; i < 4; i++) { // 4 rotations
                         transform.rotation = Quaternion.Euler(new Vector3(0.0f, 90.0f * i, 0.0f));
                         if (objectIsCurrentlyVisible(theObject, 1000f)) {
-                            // for (int k = 0; k < 100; k++) {
-                            //     yield return null;
-                            // }
                             objectSeen = true;
                             visiblePosition = p;
                             break;
@@ -5041,6 +5038,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             actionBoolReturn = objectSeen;
             actionIntReturn = positionsTried;
+
+            Dictionary<string, int> toReturn = new Dictionary<string, int>();
+            toReturn["objectSeen"] = objectSeen ? 1 : 0;
+            toReturn["positionsTried"] = positionsTried;
 
             if (wasStanding) {
                 stand();
