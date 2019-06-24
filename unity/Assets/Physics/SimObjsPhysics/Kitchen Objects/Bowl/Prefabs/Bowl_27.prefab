@@ -1755,6 +1755,7 @@ Transform:
   - {fileID: 367383674695629900}
   - {fileID: 956277799142170840}
   - {fileID: 6196237628346588380}
+  - {fileID: 2897876592495469855}
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -1786,7 +1787,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b439f6e4ef5714ee2a3643acf37b7a9d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  uniqueID: Bowl|+02.29|+00.00|-00.54
+  uniqueID: Bowl|+27.00|+00.00|-26.87
   Type: 13
   PrimaryProperty: 3
   SecondaryProperties: 070000000b0000000400000005000000
@@ -1856,6 +1857,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1bd11d6a356024a8fa04845f53405c23, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  LiquidVolumeObject: {fileID: 2897876592495376703}
+  LiquidVolumeBaseValue: 0.00083590386
   WaterObject: {fileID: 367383674695786668}
   CoffeeObject: {fileID: 956277799141882936}
   WineObject: {fileID: 6196237628346875964}
@@ -2308,6 +2311,83 @@ BoxCollider:
   serializedVersion: 2
   m_Size: {x: 0.46493527, y: 0.47704676, z: 0.702826}
   m_Center: {x: 5.4632165e-10, y: -0.3044171, z: 0.3046289}
+--- !u!1 &2897876592495376703
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2897876592495469855}
+  - component: {fileID: 2897876592496272697}
+  - component: {fileID: 2897876592497371129}
+  m_Layer: 0
+  m_Name: Bowl_Liquid_Volume_27
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2897876592495469855
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2897876592495376703}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 2084456282398672580}
+  m_RootOrder: 10
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!33 &2897876592496272697
+MeshFilter:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2897876592495376703}
+  m_Mesh: {fileID: 4300296, guid: ae7129f50b579fd4cae18f9cf02f6932, type: 3}
+--- !u!23 &2897876592497371129
+MeshRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2897876592495376703}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_DynamicOccludee: 1
+  m_MotionVectors: 1
+  m_LightProbeUsage: 1
+  m_ReflectionProbeUsage: 1
+  m_RenderingLayerMask: 1
+  m_RendererPriority: 0
+  m_Materials:
+  - {fileID: 2100010, guid: ae7129f50b579fd4cae18f9cf02f6932, type: 3}
+  m_StaticBatchInfo:
+    firstSubMesh: 0
+    subMeshCount: 0
+  m_StaticBatchRoot: {fileID: 0}
+  m_ProbeAnchor: {fileID: 0}
+  m_LightProbeVolumeOverride: {fileID: 0}
+  m_ScaleInLightmap: 1
+  m_PreserveUVs: 0
+  m_IgnoreNormalsForChartDetection: 0
+  m_ImportantGI: 0
+  m_StitchLightmapSeams: 0
+  m_SelectedEditorRenderState: 3
+  m_MinimumChartSize: 4
+  m_AutoUVMaxDistance: 0.5
+  m_AutoUVMaxAngle: 89
+  m_LightmapParameters: {fileID: 0}
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 0
 --- !u!1 &2966242499538988175
 GameObject:
   m_ObjectHideFlags: 0
@@ -3410,11 +3490,6 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 2084456282398672580}
     m_Modifications:
-    - target: {fileID: 3836092012617679585, guid: b398a2f8e58d7fe4c8f7bc5a76d8de63,
-        type: 3}
-      propertyPath: m_Name
-      value: Bowl_Volume_Wine_27
-      objectReference: {fileID: 0}
     - target: {fileID: 3836092012617915905, guid: b398a2f8e58d7fe4c8f7bc5a76d8de63,
         type: 3}
       propertyPath: m_LocalPosition.x
@@ -3469,6 +3544,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3836092012617679585, guid: b398a2f8e58d7fe4c8f7bc5a76d8de63,
+        type: 3}
+      propertyPath: m_Name
+      value: Bowl_Volume_Wine_27
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: b398a2f8e58d7fe4c8f7bc5a76d8de63, type: 3}

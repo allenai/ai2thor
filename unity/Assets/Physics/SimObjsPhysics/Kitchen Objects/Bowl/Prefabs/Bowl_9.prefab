@@ -1389,6 +1389,7 @@ Transform:
   - {fileID: 259593737616134816}
   - {fileID: 2911412136190892255}
   - {fileID: 6064383130245691979}
+  - {fileID: 2897876592495469875}
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -1420,7 +1421,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b439f6e4ef5714ee2a3643acf37b7a9d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  uniqueID: Bowl|+02.24|+00.00|+00.26
+  uniqueID: Bowl|+09.00|+00.00|-26.87
   Type: 13
   PrimaryProperty: 3
   SecondaryProperties: 070000000400000005000000
@@ -1482,6 +1483,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1bd11d6a356024a8fa04845f53405c23, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  LiquidVolumeObject: {fileID: 2897876592495376723}
+  LiquidVolumeBaseValue: 0.0020535314
   WaterObject: {fileID: 259593737615773248}
   CoffeeObject: {fileID: 2911412136190985279}
   WineObject: {fileID: 6064383130245916331}
@@ -1687,6 +1690,83 @@ BoxCollider:
   serializedVersion: 2
   m_Size: {x: 0.43377346, y: 1, z: 1.0658494}
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!1 &2897876592495376723
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2897876592495469875}
+  - component: {fileID: 2897876592496272717}
+  - component: {fileID: 2897876592497370893}
+  m_Layer: 0
+  m_Name: Bowl_Liquid_Volume_9
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2897876592495469875
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2897876592495376723}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 4610358237188360}
+  m_RootOrder: 10
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!33 &2897876592496272717
+MeshFilter:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2897876592495376723}
+  m_Mesh: {fileID: 4300260, guid: ae7129f50b579fd4cae18f9cf02f6932, type: 3}
+--- !u!23 &2897876592497370893
+MeshRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2897876592495376723}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_DynamicOccludee: 1
+  m_MotionVectors: 1
+  m_LightProbeUsage: 1
+  m_ReflectionProbeUsage: 1
+  m_RenderingLayerMask: 1
+  m_RendererPriority: 0
+  m_Materials:
+  - {fileID: 2100010, guid: ae7129f50b579fd4cae18f9cf02f6932, type: 3}
+  m_StaticBatchInfo:
+    firstSubMesh: 0
+    subMeshCount: 0
+  m_StaticBatchRoot: {fileID: 0}
+  m_ProbeAnchor: {fileID: 0}
+  m_LightProbeVolumeOverride: {fileID: 0}
+  m_ScaleInLightmap: 1
+  m_PreserveUVs: 0
+  m_IgnoreNormalsForChartDetection: 0
+  m_ImportantGI: 0
+  m_StitchLightmapSeams: 0
+  m_SelectedEditorRenderState: 3
+  m_MinimumChartSize: 4
+  m_AutoUVMaxDistance: 0.5
+  m_AutoUVMaxAngle: 89
+  m_LightmapParameters: {fileID: 0}
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 0
 --- !u!1 &3294294422771176176
 GameObject:
   m_ObjectHideFlags: 0
@@ -2662,11 +2742,6 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 4610358237188360}
     m_Modifications:
-    - target: {fileID: 9101255873019064682, guid: adb0145bb58aba942a1a29849299868f,
-        type: 3}
-      propertyPath: m_Name
-      value: Bowl_Volume_Coffee_9
-      objectReference: {fileID: 0}
     - target: {fileID: 9101255873018899850, guid: adb0145bb58aba942a1a29849299868f,
         type: 3}
       propertyPath: m_LocalPosition.x
@@ -2721,6 +2796,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 9101255873019064682, guid: adb0145bb58aba942a1a29849299868f,
+        type: 3}
+      propertyPath: m_Name
+      value: Bowl_Volume_Coffee_9
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: adb0145bb58aba942a1a29849299868f, type: 3}
