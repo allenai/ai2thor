@@ -5053,7 +5053,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             if (ItemInHand != null) {
                 ItemInHand.gameObject.SetActive(true);
             }
-            actionFinished(true);
+            actionFinished(true, toReturn);
         }
 
         protected HashSet<SimObjPhysics> getAllItemsVisibleFromPositions(Vector3[] positions) {
