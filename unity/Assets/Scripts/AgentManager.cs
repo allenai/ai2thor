@@ -28,6 +28,7 @@ public class AgentManager : MonoBehaviour
 	private bool renderClassImage;
 	private bool renderObjectImage;
 	private bool renderNormalsImage;
+    private bool renderFlowImage;
 	private bool synchronousHttp = true;
 	private Socket sock = null;
 	private List<Camera> thirdPartyCameras = new List<Camera>();
@@ -102,6 +103,7 @@ public class AgentManager : MonoBehaviour
 		this.renderDepthImage = action.renderDepthImage;
 		this.renderNormalsImage = action.renderNormalsImage;
 		this.renderObjectImage = action.renderObjectImage;
+        this.renderFlowImage = action.renderFlowImage;
 		if (action.alwaysReturnVisibleRange) {
 			((PhysicsRemoteFPSAgentController) primaryAgent).alwaysReturnVisibleRange = action.alwaysReturnVisibleRange;
 		}
@@ -132,7 +134,7 @@ public class AgentManager : MonoBehaviour
 		gameObject.AddComponent(typeof(Camera));
 		Camera camera = gameObject.GetComponentInChildren<Camera>();
 
-		if (this.renderDepthImage || this.renderClassImage || this.renderObjectImage || this.renderNormalsImage) 
+		if (this.renderDepthImage || this.renderClassImage || this.renderObjectImage || this.renderNormalsImage || this.renderFlowImage) 
 		{
 			gameObject.AddComponent(typeof(ImageSynthesis));
 		}
@@ -447,6 +449,7 @@ public class AgentManager : MonoBehaviour
                 addImageSynthesisImageForm(form, imageSynthesis, this.renderNormalsImage, "_normals", "image_thirdParty_normals");
                 addImageSynthesisImageForm(form, imageSynthesis, this.renderObjectImage, "_id", "image_thirdParty_image_ids");
                 addImageSynthesisImageForm(form, imageSynthesis, this.renderClassImage, "_class", "image_thirdParty_classes");
+                addImageSynthesisImageForm(form, imageSynthesis, this.renderClassImage, "_flow", "image_thirdParty_flow");//XXX fix this in a bit
             }
         }
 
@@ -461,6 +464,8 @@ public class AgentManager : MonoBehaviour
                 addImageSynthesisImageForm(form, agent.imageSynthesis, this.renderNormalsImage, "_normals", "image_normals");
                 addObjectImageForm (form, agent, ref metadata);
                 addImageSynthesisImageForm(form, agent.imageSynthesis, this.renderClassImage, "_class", "image_classes");
+                addImageSynthesisImageForm(form, agent.imageSynthesis, this.renderFlowImage, "_flow", "image_flow");
+
                 metadata.thirdPartyCameras = cameraMetadata;
             }
             multiMeta.agents [i] = metadata;
@@ -474,8 +479,9 @@ public class AgentManager : MonoBehaviour
         form.AddField("metadata", Newtonsoft.Json.JsonConvert.SerializeObject(multiMeta));
         form.AddField("token", robosimsClientToken);
 
-        #if !UNITY_WEBGL && !UNITY_EDITOR
+        #if !UNITY_WEBGL 
 		if (synchronousHttp) {
+
 
 			if (this.sock == null) {
 				// Debug.Log("connecting to host: " + robosimsHost);
@@ -845,6 +851,7 @@ public class ServerAction
 	public bool renderClassImage;
 	public bool renderObjectImage;
 	public bool renderNormalsImage;
+    public bool renderFlowImage;
 	public float cameraY;
 	public bool placeStationary = true; //when placing/spawning an object, do we spawn it stationary (kinematic true) or spawn and let physics resolve final position
 	public string ssao = "default";

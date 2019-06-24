@@ -631,11 +631,20 @@ def build(context, local=False):
     build_pip(context)
 
 @task
-def interact(ctx, scene, editor_mode=False, local_build=False):
+def interact(
+        ctx,
+        scene,
+        editor_mode=False,
+        local_build=False,
+        depth_image=False,
+        class_image=False,
+        object_image=False
+):
     import ai2thor.controller
 
     env = ai2thor.controller.Controller()
     if local_build:
+        print("Executing from local build at {} ".format( _local_build_path()))
         env.local_executable_path = _local_build_path()
     if editor_mode:
         env.start(8200, False, player_screen_width=600, player_screen_height=600)
@@ -643,7 +652,15 @@ def interact(ctx, scene, editor_mode=False, local_build=False):
         env.start(player_screen_width=600, player_screen_height=600)
 
     env.reset(scene)
-    env.step(dict(action='Initialize', gridSize=0.25))
+    env.step(
+        dict(
+            action='Initialize',
+            gridSize=0.25,
+            renderObjectImage=object_image,
+            renderClassImage=class_image,
+            renderDepthImage=depth_image
+        )
+    )
     env.interact()
     env.stop()
 
