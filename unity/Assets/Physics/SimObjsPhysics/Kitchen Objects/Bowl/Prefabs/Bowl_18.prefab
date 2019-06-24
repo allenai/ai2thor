@@ -1260,6 +1260,7 @@ Transform:
   - {fileID: 72383928627480205}
   - {fileID: 1956553685493392127}
   - {fileID: 2800663179777103714}
+  - {fileID: 2897876592495469835}
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -1291,7 +1292,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b439f6e4ef5714ee2a3643acf37b7a9d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  uniqueID: Bowl|+02.36|+00.00|-00.05
+  uniqueID: Bowl|+18.00|+00.00|-26.87
   Type: 13
   PrimaryProperty: 3
   SecondaryProperties: 070000000b0000000400000005000000
@@ -1353,6 +1354,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1bd11d6a356024a8fa04845f53405c23, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  LiquidVolumeObject: {fileID: 2897876592495376683}
+  LiquidVolumeBaseValue: 0.0020662686
   WaterObject: {fileID: 72383928627780269}
   CoffeeObject: {fileID: 1956553685493825247}
   WineObject: {fileID: 2800663179777461058}
@@ -1838,6 +1841,83 @@ Transform:
   m_Father: {fileID: 4560226858971831}
   m_RootOrder: 7
   m_LocalEulerAnglesHint: {x: 0, y: 45.000004, z: 0}
+--- !u!1 &2897876592495376683
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2897876592495469835}
+  - component: {fileID: 2897876592496272677}
+  - component: {fileID: 2897876592497371109}
+  m_Layer: 0
+  m_Name: Bowl_Liquid_Volume_18
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2897876592495469835
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2897876592495376683}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 4327599269223151}
+  m_RootOrder: 10
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!33 &2897876592496272677
+MeshFilter:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2897876592495376683}
+  m_Mesh: {fileID: 4300278, guid: ae7129f50b579fd4cae18f9cf02f6932, type: 3}
+--- !u!23 &2897876592497371109
+MeshRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2897876592495376683}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_DynamicOccludee: 1
+  m_MotionVectors: 1
+  m_LightProbeUsage: 1
+  m_ReflectionProbeUsage: 1
+  m_RenderingLayerMask: 1
+  m_RendererPriority: 0
+  m_Materials:
+  - {fileID: 2100010, guid: ae7129f50b579fd4cae18f9cf02f6932, type: 3}
+  m_StaticBatchInfo:
+    firstSubMesh: 0
+    subMeshCount: 0
+  m_StaticBatchRoot: {fileID: 0}
+  m_ProbeAnchor: {fileID: 0}
+  m_LightProbeVolumeOverride: {fileID: 0}
+  m_ScaleInLightmap: 1
+  m_PreserveUVs: 0
+  m_IgnoreNormalsForChartDetection: 0
+  m_ImportantGI: 0
+  m_StitchLightmapSeams: 0
+  m_SelectedEditorRenderState: 3
+  m_MinimumChartSize: 4
+  m_AutoUVMaxDistance: 0.5
+  m_AutoUVMaxAngle: 89
+  m_LightmapParameters: {fileID: 0}
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 0
 --- !u!1 &2991785994161343135
 GameObject:
   m_ObjectHideFlags: 0
@@ -2744,15 +2824,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 9067feba3fbcf544082928fa79355979, type: 3}
---- !u!1 &72383928627780269 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 7614061652683563993, guid: 9067feba3fbcf544082928fa79355979,
-    type: 3}
-  m_PrefabInstance: {fileID: 7542329223930640756}
-  m_PrefabAsset: {fileID: 0}
 --- !u!4 &72383928627480205 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 7614061652683997177, guid: 9067feba3fbcf544082928fa79355979,
+    type: 3}
+  m_PrefabInstance: {fileID: 7542329223930640756}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1 &72383928627780269 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 7614061652683563993, guid: 9067feba3fbcf544082928fa79355979,
     type: 3}
   m_PrefabInstance: {fileID: 7542329223930640756}
   m_PrefabAsset: {fileID: 0}
@@ -2763,11 +2843,6 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 4327599269223151}
     m_Modifications:
-    - target: {fileID: 8216230932056203473, guid: 352b52c9dd783364da6b8c158c523257,
-        type: 3}
-      propertyPath: m_Name
-      value: Bowl_Volume_Coffee_18
-      objectReference: {fileID: 0}
     - target: {fileID: 8216230932056571121, guid: 352b52c9dd783364da6b8c158c523257,
         type: 3}
       propertyPath: m_LocalPosition.x
@@ -2823,17 +2898,22 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 8216230932056203473, guid: 352b52c9dd783364da6b8c158c523257,
+        type: 3}
+      propertyPath: m_Name
+      value: Bowl_Volume_Coffee_18
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 352b52c9dd783364da6b8c158c523257, type: 3}
---- !u!4 &1956553685493392127 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 8216230932056571121, guid: 352b52c9dd783364da6b8c158c523257,
-    type: 3}
-  m_PrefabInstance: {fileID: 7575892082164653582}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1956553685493825247 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 8216230932056203473, guid: 352b52c9dd783364da6b8c158c523257,
+    type: 3}
+  m_PrefabInstance: {fileID: 7575892082164653582}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &1956553685493392127 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 8216230932056571121, guid: 352b52c9dd783364da6b8c158c523257,
     type: 3}
   m_PrefabInstance: {fileID: 7575892082164653582}
   m_PrefabAsset: {fileID: 0}
