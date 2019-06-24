@@ -42,6 +42,8 @@ public enum StructureObjectTag : int
     PaperClutter = 12,
     SkyLightWindow = 13,
 
+    Clock = 14,
+    
 
 }
 
