@@ -143,6 +143,12 @@ public class Break : MonoBehaviour
             BreakForDecalType(collision);
         }
 
+        BaseFPSAgentController primaryAgent = GameObject.Find("PhysicsSceneManager").GetComponent<AgentManager>().ReturnPrimaryAgent();
+        if(primaryAgent.imageSynthesis.enabled)
+        {
+            primaryAgent.imageSynthesis.OnSceneChange();
+        }
+
     }
 
     // Override for Decal behavior

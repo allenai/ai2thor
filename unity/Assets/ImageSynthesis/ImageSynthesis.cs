@@ -8,7 +8,7 @@ using System.Collections.Generic;
 // @TODO:
 // . support custom color wheels in optical flow via lookup textures
 // . support custom depth encoding
-// . support multiple overlay cameras
+// . support multiple overlay cameras - note:this can be shown in editor already by creating multiple GAME windows and assigning a different display number to each
 // . tests
 // . better example scene(s)
 
@@ -79,7 +79,7 @@ public class ImageSynthesis : MonoBehaviour {
 	{
 		//XXXXXXXXXXX************
 		//Remember, adding any new Shaders requires them to be included in Project Settings->Graphics->Always Included Shaders
-		//
+		//otherwise the standlone will build without the shaders and you will be sad
 
 
 		// default fallbacks, if shaders are unspecified
@@ -296,6 +296,7 @@ public class ImageSynthesis : MonoBehaviour {
 			// var layer = r.gameObject.layer;
 			// var tag = r.gameObject.tag;
 
+            print(r.name);
 			string classTag = r.name;
 			string objTag = getUniqueId(r.gameObject);
 
