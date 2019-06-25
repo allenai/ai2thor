@@ -24,7 +24,7 @@
 
 ## Documentation
 
-Please refer to the [Documentation Page on the AI2-THOR website](http://ai2thor.allenai.org/documentation/) for information on Installation, API, Metadata, actions, object properties and other important framework information.
+Please refer to the [documentation page on the AI2-THOR website](http://ai2thor.allenai.org/documentation/) for information on installation, API, metadata, actions, object properties and other important framework information.
 
 ## Installation
 
