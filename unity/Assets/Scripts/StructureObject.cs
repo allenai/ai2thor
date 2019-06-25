@@ -41,8 +41,11 @@ public enum StructureObjectTag : int
     OvenHood = 11,
     PaperClutter = 12,
     SkyLightWindow = 13,
-
     Clock = 14,
+    Rug = 15,
+    FirePlace = 16,
+    DecorativeSticks = 17,
+    
     
 
 }
