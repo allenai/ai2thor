@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityStandardAssets.Characters.FirstPerson;
+using UnityEngine.Rendering;
+using System.IO;
 
 public class SliceObject : MonoBehaviour
 {
@@ -149,6 +151,14 @@ public class SliceObject : MonoBehaviour
         {
             Debug.LogError("Physics Scene Manager object is missing from scene!");
         }
+
+        //if image synthesis is active, make sure to update the renderers for image synthesis since now there are new objects with renderes in the scene
+        BaseFPSAgentController primaryAgent = GameObject.Find("PhysicsSceneManager").GetComponent<AgentManager>().ReturnPrimaryAgent();
+        if(primaryAgent.imageSynthesis.enabled)
+        {
+            primaryAgent.imageSynthesis.OnSceneChange();
+        }
+
     }
 
     // void OnApplicationQuit()
