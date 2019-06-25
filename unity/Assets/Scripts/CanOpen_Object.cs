@@ -384,11 +384,12 @@ public class CanOpen_Object : MonoBehaviour
                     agent.SetUpRotationBoxChecks();
                 }
             }
-
+            #if UNITY_EDITOR
             else
             {
                 Debug.Log("Closed/Open Bounding box references are null!");
             }
+            #endif
         }
         //check if this object is in the ResetPositionIfPickupableAndOpenable list
         //also check if the ClosedBoundingBox and OpenBoundingBox fields are null or not
