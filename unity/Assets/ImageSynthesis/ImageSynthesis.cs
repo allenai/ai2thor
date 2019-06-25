@@ -296,7 +296,6 @@ public class ImageSynthesis : MonoBehaviour {
 			// var layer = r.gameObject.layer;
 			// var tag = r.gameObject.tag;
 
-            print(r.name);
 			string classTag = r.name;
 			string objTag = getUniqueId(r.gameObject);
 
