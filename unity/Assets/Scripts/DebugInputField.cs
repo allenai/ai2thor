@@ -232,9 +232,22 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 {
                     ServerAction action = new ServerAction();
 
-                    action.StateChange = "CanBreak";
+                    action.StateChange = "CanBeDirty";
                     action.forceAction = true;
                     action.action = "SetStateOfAllObjects";
+
+                     if (splitcommand.Length > 1) 
+                     {
+                        if(splitcommand[1] == "t")
+                        {
+                            action.forceAction = true;
+                        }
+
+                        if(splitcommand[1] == "f")
+                        {
+                            action.forceAction = false;
+                        }
+                     }
                     PhysicsController.ProcessControlCommand(action);
                         
                     break;
