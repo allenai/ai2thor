@@ -12,23 +12,23 @@
         _Rim ("Foam Line Width", Range(0,0.1)) = 0.0    
         _RimColor ("Rim Color", Color) = (1,1,1,1)
         _RimPower ("Rim Power", Range(0,10)) = 0.0
+        
     }
  
     SubShader
     {
         Tags {
-          "Queue"="Geometry" 
-          "DisableBatching" = "True"
-          // "LightMode" = "ForwardBase"
-          
-           
-           }
+          "Queue"="Transparent" 
+        //   "DisableBatching" = "True"
+        //   "LightMode" = "ForwardBase"
+        }
  
-                Pass
+        Pass
         {
-         Zwrite On
+         //Zwrite On
          Cull Off // we want the front and back faces
          AlphaToMask On // transparency
+         Blend SrcAlpha OneMinusSrcAlpha
         //  Blend DstColor Zero
  
          CGPROGRAM
@@ -120,7 +120,7 @@
            finalResult.rgb += RimResult;
  
            // color of backfaces/ top
-           float4 topColor = _TopColor * (foam + result);
+           float4 topColor = _TopColor * (foam + result) + RimResult;
            //VFACE returns positive for front facing, negative for backfacing
 
            // Fix for mac?? 
@@ -128,7 +128,7 @@
           //   discard;
           // }
 
-          // clip(finalResult - 0.0001);
+           clip(finalResult - 0.0001);
 
            return facing > 0 ? finalResult: topColor; 
                
