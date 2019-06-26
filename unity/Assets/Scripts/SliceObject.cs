@@ -154,8 +154,9 @@ public class SliceObject : MonoBehaviour
 
         //if image synthesis is active, make sure to update the renderers for image synthesis since now there are new objects with renderes in the scene
         BaseFPSAgentController primaryAgent = GameObject.Find("PhysicsSceneManager").GetComponent<AgentManager>().ReturnPrimaryAgent();
-        if(primaryAgent.imageSynthesis.enabled)
+        if(primaryAgent.imageSynthesis)
         {
+            if(primaryAgent.imageSynthesis.enabled)
             primaryAgent.imageSynthesis.OnSceneChange();
         }
 

@@ -144,11 +144,14 @@ public class Break : MonoBehaviour
         }
 
         BaseFPSAgentController primaryAgent = GameObject.Find("PhysicsSceneManager").GetComponent<AgentManager>().ReturnPrimaryAgent();
-        if(primaryAgent.imageSynthesis.enabled)
+        if(primaryAgent.imageSynthesis)
         {
+            if(primaryAgent.imageSynthesis.enabled)
             primaryAgent.imageSynthesis.OnSceneChange();
         }
 
+        //it's broken, make sure that it cant trigger this call again
+        readytobreak = false;
     }
 
     // Override for Decal behavior
