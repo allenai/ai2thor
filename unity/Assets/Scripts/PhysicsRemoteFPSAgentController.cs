@@ -4954,7 +4954,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             SimObjPhysics theObject = physicsSceneManager.UniqueIdToSimObjPhysics[action.objectId];
 
             Vector3[] positions = null;
-            if (action.positions != null) {
+            if (action.positions != null && action.positions.Count != 0) {
                 positions = action.positions.ToArray();
             } else {
                 positions = getReachablePositions();
@@ -5114,7 +5114,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         public void NumberOfPositionsFromWhichItemIsVisible(ServerAction action) {
             Vector3[] positions = null;
-            if (action.positions != null) {
+            if (action.positions != null && action.positions.Count != 0) {
                 positions = action.positions.ToArray();
             } else {
                 positions = getReachablePositions();
@@ -5841,7 +5841,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             List<float> goodRotations = new List<float>();
 
             Vector3[] positions = null;
-            if (action.positions != null) {
+            if (action.positions != null && action.positions.Count != 0) {
                 positions = action.positions.ToArray();
             } else {
                 positions = getReachablePositions();
@@ -5938,7 +5938,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             SimObjPhysics sop = physicsSceneManager.UniqueIdToSimObjPhysics[action.objectId];
 
             Vector3[] positions = null;
-            if (action.positions != null) {
+            if (action.positions != null && action.positions.Count != 0) {
                 positions = action.positions.ToArray();
             } else {
                 positions = getReachablePositions();
@@ -6006,7 +6006,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         public void ObjectsVisibleFromPositions(ServerAction action) {
             Vector3[] positions = null;
-            if (action.positions != null) {
+            if (action.positions != null && action.positions.Count != 0) {
                 positions = action.positions.ToArray();
             } else {
                 positions = getReachablePositions();
