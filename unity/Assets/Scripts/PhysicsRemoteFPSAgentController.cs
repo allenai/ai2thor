@@ -1709,7 +1709,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 m_Camera.transform.localEulerAngles = new Vector3(action.horizon, 0.0f, 0.0f);
 
                 bool agentCollides = isAgentCapsuleColliding();
-                bool handObjectCollides = isHandObjectColliding();
+                bool handObjectCollides = isHandObjectColliding(true);
 
                 if (agentCollides) {
                     errorMessage = "Cannot teleport due to agent collision.";
@@ -2352,12 +2352,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             IsHandDefault = false;
 
             yield return null;
-            bool handObjectIsColliding = isHandObjectColliding();
+            bool handObjectIsColliding = isHandObjectColliding(true);
             if (count != 0) {
                 for (int j = 0; handObjectIsColliding && j < 5; j++) {
                     AgentHand.transform.position = AgentHand.transform.position + 0.01f * aveCollisionsNormal;
                     yield return null;
-                    handObjectIsColliding = isHandObjectColliding();
+                    handObjectIsColliding = isHandObjectColliding(true);
                 }
             }
 
@@ -2556,7 +2556,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 //Debug.Log("Movement of Agent Hand holding " + ItemInHand.name + " succesful!");
                 Vector3 oldPosition = AgentHand.transform.position;
                 AgentHand.transform.position = targetPosition;
-                if (isHandObjectColliding()) {
+                if (isHandObjectColliding(true)) {
                     AgentHand.transform.position = oldPosition;
                     return false;
                 } else {
@@ -5190,7 +5190,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             SimObjPhysics theObject = physicsSceneManager.UniqueIdToSimObjPhysics[action.objectId];
 
             Vector3[] positions = null;
-            if (action.positions != null) {
+            if (action.positions != null && action.positions.Count != 0) {
                 positions = action.positions.ToArray();
             } else {
                 positions = getReachablePositions();
@@ -5243,9 +5243,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     for (int i = 0; i < 4; i++) { // 4 rotations
                         transform.rotation = Quaternion.Euler(new Vector3(0.0f, 90.0f * i, 0.0f));
                         if (objectIsCurrentlyVisible(theObject, 1000f)) {
-                            // for (int k = 0; k < 100; k++) {
-                            //     yield return null;
-                            // }
                             objectSeen = true;
                             visiblePosition = p;
                             break;
@@ -5278,6 +5275,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionBoolReturn = objectSeen;
             actionIntReturn = positionsTried;
 
+            Dictionary<string, int> toReturn = new Dictionary<string, int>();
+            toReturn["objectSeen"] = objectSeen ? 1 : 0;
+            toReturn["positionsTried"] = positionsTried;
+
             if (wasStanding) {
                 stand();
             } else {
@@ -5288,7 +5289,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             if (ItemInHand != null) {
                 ItemInHand.gameObject.SetActive(true);
             }
-            actionFinished(true);
+            actionFinished(true, toReturn);
         }
 
         protected HashSet<SimObjPhysics> getAllItemsVisibleFromPositions(Vector3[] positions) {
@@ -5349,7 +5350,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         public void NumberOfPositionsFromWhichItemIsVisible(ServerAction action) {
             Vector3[] positions = null;
-            if (action.positions != null) {
+            if (action.positions != null && action.positions.Count != 0) {
                 positions = action.positions.ToArray();
             } else {
                 positions = getReachablePositions();
@@ -6076,7 +6077,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             List<float> goodRotations = new List<float>();
 
             Vector3[] positions = null;
-            if (action.positions != null) {
+            if (action.positions != null && action.positions.Count != 0) {
                 positions = action.positions.ToArray();
             } else {
                 positions = getReachablePositions();
@@ -6173,7 +6174,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             SimObjPhysics sop = physicsSceneManager.UniqueIdToSimObjPhysics[action.objectId];
 
             Vector3[] positions = null;
-            if (action.positions != null) {
+            if (action.positions != null && action.positions.Count != 0) {
                 positions = action.positions.ToArray();
             } else {
                 positions = getReachablePositions();
@@ -6241,7 +6242,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         public void ObjectsVisibleFromPositions(ServerAction action) {
             Vector3[] positions = null;
-            if (action.positions != null) {
+            if (action.positions != null && action.positions.Count != 0) {
                 positions = action.positions.ToArray();
             } else {
                 positions = getReachablePositions();
