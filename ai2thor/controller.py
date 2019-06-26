@@ -486,6 +486,7 @@ class Controller(object):
                  ):
 
         from PIL import Image
+        print("Interact handler!")
         if not sys.stdout.isatty():
             raise RuntimeError("controller.interact() must be run from a terminal")
 
@@ -597,6 +598,7 @@ class Controller(object):
                 print(' '.join(command_info))
 
     def step(self, action, raise_for_failure=False):
+        print("Step!")
         if self.headless:
             action["renderImage"] = False
 

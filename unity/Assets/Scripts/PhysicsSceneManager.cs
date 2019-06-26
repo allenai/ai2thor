@@ -22,6 +22,9 @@ public class PhysicsSceneManager : MonoBehaviour
 	public List<SimObjPhysics> ReceptaclesInScene = new List<SimObjPhysics>();
 
 	public GameObject HideAndSeek;
+	public GameObject[] ManipulatorTables;
+	public GameObject[] ManipulatorReceptacles;
+	public GameObject[] ManipulatorBooks;
 
 	public bool AllowDecayTemperature = true;//if true, temperature of sim objects decays to Room Temp over time
 
@@ -235,6 +238,13 @@ public class PhysicsSceneManager : MonoBehaviour
 	public void AddToObjectsInScene(SimObjPhysics sop)
 	{
 		UniqueIdToSimObjPhysics[sop.UniqueID] = sop;
+	}
+
+	public void RemoveFromObjectsInScene(SimObjPhysics sop)
+	{
+		if (UniqueIdToSimObjPhysics.ContainsKey(sop.UniqueID)) {
+			UniqueIdToSimObjPhysics.Remove(sop.UniqueID);
+		}
 	}
 
 	public void RemoveFromSpawnedObjects(SimObjPhysics sop)
