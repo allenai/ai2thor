@@ -56,11 +56,17 @@ public class AgentManager : MonoBehaviour
             Debug.unityLogger.logEnabled = false;
         #endif
 
+
+
         QualitySettings.vSyncCount = 0;
 		robosimsPort = LoadIntVariable (robosimsPort, "PORT");
 		robosimsHost = LoadStringVariable(robosimsHost, "HOST");
-		serverSideScreenshot = LoadBoolVariable (serverSideScreenshot, "SERVER_SIDE_SCREENSHOT");
-		robosimsClientToken = LoadStringVariable (robosimsClientToken, "CLIENT_TOKEN");
+        #if UNITY_EDITOR
+            serverSideScreenshot = true;
+        #else
+            serverSideScreenshot = LoadBoolVariable (serverSideScreenshot, "SERVER_SIDE_SCREENSHOT");
+        #endif
+        robosimsClientToken = LoadStringVariable (robosimsClientToken, "CLIENT_TOKEN");
 		bool trainPhase = true;
 		trainPhase = LoadBoolVariable(trainPhase, "TRAIN_PHASE");
 
@@ -407,10 +413,9 @@ public class AgentManager : MonoBehaviour
 
 
 		frameCounter += 1;
+        bool shouldRender = this.renderImage && serverSideScreenshot;
 
-		bool shouldRender = this.renderImage && serverSideScreenshot;
-
-		if (shouldRender) {
+        if (shouldRender) {
 			// we should only read the screen buffer after rendering is complete
 			yield return new WaitForEndOfFrame();
 			if (synchronousHttp) {
@@ -471,86 +476,100 @@ public class AgentManager : MonoBehaviour
         form.AddField("metadata", Newtonsoft.Json.JsonConvert.SerializeObject(multiMeta));
         form.AddField("token", robosimsClientToken);
 
-        #if !UNITY_WEBGL && !UNITY_EDITOR
-		if (synchronousHttp) {
+        #if !UNITY_WEBGL
+            if (synchronousHttp) {
 
-			if (this.sock == null) {
-				// Debug.Log("connecting to host: " + robosimsHost);
-				IPAddress host = IPAddress.Parse(robosimsHost);
-				IPEndPoint hostep = new IPEndPoint(host, robosimsPort);
-				this.sock = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-				this.sock.Connect(hostep);
-			}
+                if (this.sock == null) {
+                    // Debug.Log("connecting to host: " + robosimsHost);
+                    IPAddress host = IPAddress.Parse(robosimsHost);
+                    IPEndPoint hostep = new IPEndPoint(host, robosimsPort);
+                    try 
+                    {
+                        Socket s = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+                        s.Connect(hostep);
+                        this.sock = s;
+                    } 
+                    catch (SocketException ex) 
+                    {
+                        # if UNITY_EDITOR
+                        // swallowing the error since its fine to run without the Python side with the editor
+                        yield break;
+                        # else
+                        throw ex;
+                        # endif
+                    }
+                }
 
-            byte[] rawData = form.data;
+                byte[] rawData = form.data;
 
-            string request = "POST /train HTTP/1.1\r\n" +
-            "Content-Length: " + rawData.Length.ToString() + "\r\n";
+                string request = "POST /train HTTP/1.1\r\n" +
+                "Content-Length: " + rawData.Length.ToString() + "\r\n";
 
-            foreach(KeyValuePair<string, string> entry in form.headers) {
-                request += entry.Key + ": " + entry.Value + "\r\n";
+                foreach(KeyValuePair<string, string> entry in form.headers) {
+                    request += entry.Key + ": " + entry.Value + "\r\n";
+                }
+                request += "\r\n";
+
+                int sent = this.sock.Send(Encoding.ASCII.GetBytes(request));
+                sent = this.sock.Send(rawData);
+                byte[] headerBuffer = new byte[1024];
+                int bytesReceived = 0;
+                byte[] bodyBuffer = null;
+                int bodyBytesReceived = 0;
+                int contentLength = 0;
+
+                // read header
+                while (true) {
+                    int received = this.sock.Receive(headerBuffer, bytesReceived, headerBuffer.Length - bytesReceived, SocketFlags.None);
+                    if (received == 0) {
+                        Debug.LogError("0 bytes received attempting to read header - connection closed");
+                        break;
+                    }
+
+                    bytesReceived += received;;
+                    string headerMsg = Encoding.ASCII.GetString(headerBuffer, 0, bytesReceived);
+                    int offset = headerMsg.IndexOf("\r\n\r\n");
+                    if (offset > 0){
+                        contentLength = parseContentLength(headerMsg.Substring(0, offset));
+                        bodyBuffer = new byte[contentLength];
+                        bodyBytesReceived = bytesReceived - (offset + 4);
+                        Array.Copy(headerBuffer, offset + 4, bodyBuffer, 0, bodyBytesReceived);
+                        break;
+                    }
+                }
+
+                // read body
+                while (bodyBytesReceived < contentLength) {
+                    // check for 0 bytes received
+                    int received = this.sock.Receive(bodyBuffer, bodyBytesReceived, bodyBuffer.Length - bodyBytesReceived, SocketFlags.None);   
+                    if (received == 0) {
+                        Debug.LogError("0 bytes received attempting to read body - connection closed");
+                        break;
+                    }
+
+                    bodyBytesReceived += received;
+                    //Debug.Log("total bytes received: " + bodyBytesReceived);
+                }
+
+                string msg = Encoding.ASCII.GetString(bodyBuffer, 0, bodyBytesReceived);
+
+                ProcessControlCommand(msg);
             }
-            request += "\r\n";
+            else
+            {
 
-            int sent = this.sock.Send(Encoding.ASCII.GetBytes(request));
-            sent = this.sock.Send(rawData);
-            byte[] headerBuffer = new byte[1024];
-            int bytesReceived = 0;
-			byte[] bodyBuffer = null;
-			int bodyBytesReceived = 0;
-			int contentLength = 0;
+                using (var www = UnityWebRequest.Post("http://" + robosimsHost + ":" + robosimsPort + "/train", form))
+                {
+                    yield return www.SendWebRequest();
 
-			// read header
-            while (true) {
-				int received = this.sock.Receive(headerBuffer, bytesReceived, headerBuffer.Length - bytesReceived, SocketFlags.None);	
-				if (received == 0) {
-					Debug.LogError("0 bytes received attempting to read header - connection closed");
-					break;
-				}
-
-				bytesReceived += received;;
-				string headerMsg = Encoding.ASCII.GetString(headerBuffer, 0, bytesReceived);
-                int offset = headerMsg.IndexOf("\r\n\r\n");
-                if (offset > 0){
-					contentLength = parseContentLength(headerMsg.Substring(0, offset));
-					bodyBuffer = new byte[contentLength];
-					bodyBytesReceived = bytesReceived - (offset + 4);
-					Array.Copy(headerBuffer, offset + 4, bodyBuffer, 0, bodyBytesReceived);
-					break;
+                    if (www.isNetworkError || www.isHttpError)
+                    {
+                        Debug.Log("Error: " + www.error);
+                        yield break;
+                    }
+                    ProcessControlCommand(www.downloadHandler.text);
                 }
             }
-
-			// read body
-            while (bodyBytesReceived < contentLength) {
-				// check for 0 bytes received
-				int received = this.sock.Receive(bodyBuffer, bodyBytesReceived, bodyBuffer.Length - bodyBytesReceived, SocketFlags.None);	
-				if (received == 0) {
-					Debug.LogError("0 bytes received attempting to read body - connection closed");
-					break;
-				}
-
-				bodyBytesReceived += received;
-				//Debug.Log("total bytes received: " + bodyBytesReceived);
-            }
-
-			string msg = Encoding.ASCII.GetString(bodyBuffer, 0, bodyBytesReceived);
-
-
-            ProcessControlCommand(msg);
-		} else {
-
-			using (var www = UnityWebRequest.Post("http://" + robosimsHost + ":" + robosimsPort + "/train", form))
-			{
-				yield return www.SendWebRequest();
-
-				if (www.isNetworkError || www.isHttpError)
-				{
-					Debug.Log("Error: " + www.error);
-					yield break;
-				}
-				ProcessControlCommand(www.downloadHandler.text);
-			}
-		}
         #endif
     }
 	private int parseContentLength(string header) {
@@ -570,13 +589,22 @@ public class AgentManager : MonoBehaviour
 		return this.agents.ToArray () [activeAgentId];
 	}
 
-	private void ProcessControlCommand(string msg)
+    private void ProcessControlCommand(string msg)
+    {
+        ServerAction controlCommand = new ServerAction();
+        try
+        {
+            JsonUtility.FromJsonOverwrite(msg, controlCommand);
+            ProcessControlCommand(controlCommand);
+
+        }
+        catch (JsonException e)
+        {
+            Debug.LogError(e.Message);
+        }
+    }
+    private void ProcessControlCommand(ServerAction controlCommand)
 	{
-
-		ServerAction controlCommand = new ServerAction();
-
-		JsonUtility.FromJsonOverwrite(msg, controlCommand);
-
 		this.currentSequenceId = controlCommand.sequenceId;
 		this.renderImage = controlCommand.renderImage;
 		activeAgentId = controlCommand.agentId;
