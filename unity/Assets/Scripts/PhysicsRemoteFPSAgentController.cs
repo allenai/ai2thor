@@ -1709,7 +1709,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 m_Camera.transform.localEulerAngles = new Vector3(action.horizon, 0.0f, 0.0f);
 
                 bool agentCollides = isAgentCapsuleColliding();
-                bool handObjectCollides = isHandObjectColliding();
+                bool handObjectCollides = isHandObjectColliding(true);
 
                 if (agentCollides) {
                     errorMessage = "Cannot teleport due to agent collision.";
@@ -2352,12 +2352,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             IsHandDefault = false;
 
             yield return null;
-            bool handObjectIsColliding = isHandObjectColliding();
+            bool handObjectIsColliding = isHandObjectColliding(true);
             if (count != 0) {
                 for (int j = 0; handObjectIsColliding && j < 5; j++) {
                     AgentHand.transform.position = AgentHand.transform.position + 0.01f * aveCollisionsNormal;
                     yield return null;
-                    handObjectIsColliding = isHandObjectColliding();
+                    handObjectIsColliding = isHandObjectColliding(true);
                 }
             }
 
@@ -2556,7 +2556,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 //Debug.Log("Movement of Agent Hand holding " + ItemInHand.name + " succesful!");
                 Vector3 oldPosition = AgentHand.transform.position;
                 AgentHand.transform.position = targetPosition;
-                if (isHandObjectColliding()) {
+                if (isHandObjectColliding(true)) {
                     AgentHand.transform.position = oldPosition;
                     return false;
                 } else {

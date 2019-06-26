@@ -70,8 +70,6 @@ public class Break : MonoBehaviour
         {
             //Disable this game object and spawn in the broken pieces
             Rigidbody rb = gameObject.GetComponent<Rigidbody>();
-            rb.collisionDetectionMode = CollisionDetectionMode.Discrete;
-            rb.isKinematic = true;
 
             //turn off everything except the top object
             foreach(Transform t in gameObject.transform)
@@ -96,6 +94,15 @@ public class Break : MonoBehaviour
 
             GameObject resultObject = Instantiate(PrefabToSwapTo, transform.position, transform.rotation);
             broken = true;
+
+            // ContactPoint cp = collision.GetContact(0);
+            foreach (Rigidbody subRb in resultObject.GetComponentsInChildren<Rigidbody>()) {
+                subRb.velocity = rb.velocity * 0.4f;
+                subRb.angularVelocity = rb.angularVelocity * 0.4f;
+            }
+
+            rb.collisionDetectionMode = CollisionDetectionMode.Discrete;
+            rb.isKinematic = true;
 
             //if this object breaking is an egg, set rotation for the EggCracked object
             //quick if the result object is an egg hard set it's rotation because EGGS ARE WEIRD and are not the same form as their shelled version
