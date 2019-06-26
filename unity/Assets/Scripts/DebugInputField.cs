@@ -227,6 +227,19 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         break;
                     }
 
+                //set state of all objects that have a state
+                case "ssa":
+                {
+                    ServerAction action = new ServerAction();
+
+                    action.StateChange = "CanBreak";
+                    action.forceAction = true;
+                    action.action = "SetStateOfAllObjects";
+                    PhysicsController.ProcessControlCommand(action);
+                        
+                    break;
+                }
+
                 case "initsynth":
                     {
 						ServerAction action = new ServerAction();

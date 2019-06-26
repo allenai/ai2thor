@@ -111,6 +111,12 @@ public class AgentManager : MonoBehaviour
 
 	}
 
+    //return reference to primary agent in case we need a reference to the primary
+    public BaseFPSAgentController ReturnPrimaryAgent()
+    {
+        return primaryAgent;
+    }
+
 	private IEnumerator addAgents(ServerAction action) {
 		yield return null;
 		Vector3[] reachablePositions = primaryAgent.getReachablePositions(2.0f);
