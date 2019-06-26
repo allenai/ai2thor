@@ -221,6 +221,7 @@ MonoBehaviour:
   standingLocalCameraPosition: {x: 0, y: 0, z: 0}
   crouchingLocalCameraPosition: {x: 0, y: 0, z: 0}
   reachablePositions: []
+  alwaysReturnVisibleRange: 0
   ScreenFaces:
   - {fileID: 2100000, guid: 3244a00d10815aa4b8ca6f11febd11f9, type: 2}
   - {fileID: 2100000, guid: 7b776d33d2e7db4499b93e29978400ea, type: 2}
@@ -329,7 +330,7 @@ Camera:
   m_CullingMask:
     serializedVersion: 2
     m_Bits: 4294967295
-  m_RenderingPath: 3
+  m_RenderingPath: -1
   m_TargetTexture: {fileID: 0}
   m_TargetDisplay: 0
   m_TargetEye: 3
@@ -441,6 +442,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 181cb022eb181f047b9a3b6c23af0e80, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  StopCullingThingsForASecond: 0
   RenderersToHide:
   - {fileID: 4611790702069519613}
   - {fileID: 4611790702069519607}
@@ -4017,6 +4019,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   WhichTransformPropertyAmITracking: 0
   ThingIamTracking: {fileID: 100002}
+  StopSyncingForASecond: 0
 --- !u!1 &4611790702071712307
 GameObject:
   m_ObjectHideFlags: 0
@@ -4856,6 +4859,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   WhichTransformPropertyAmITracking: 0
   ThingIamTracking: {fileID: 100002}
+  StopSyncingForASecond: 0
 --- !u!1 &8668031331251325921
 GameObject:
   m_ObjectHideFlags: 0
@@ -5070,3 +5074,4 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   WhichTransformPropertyAmITracking: 1
   ThingIamTracking: {fileID: 100002}
+  StopSyncingForASecond: 0
