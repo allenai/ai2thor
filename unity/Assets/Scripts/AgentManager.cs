@@ -494,8 +494,6 @@ public class AgentManager : MonoBehaviour
 				IPAddress host = IPAddress.Parse(robosimsHost);
 				IPEndPoint hostep = new IPEndPoint(host, robosimsPort);
 				this.sock = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-                
-                //this.sock.Connect(hostep);
                 try {
 				    this.sock.Connect(hostep);
                 }
