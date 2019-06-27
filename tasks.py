@@ -496,12 +496,11 @@ def link_build_cache(branch):
 
 def pending_travis_build():
     import requests
-    res = requests.get('https://api.travis-ci.org/repo/16690831/builds?repository_id=16690831&include=build.commit%2Cbuild.branch%2Cbuild.request%2Cbuild.created_by%2Cbuild.repository&sort_by=started_at:desc',
+    res = requests.get('https://api.travis-ci.org/repo/16690831/builds?repository_id=16690831&include=build.commit%2Cbuild.branch%2Cbuild.request%2Cbuild.created_by%2Cbuild.repository&build.state=started%2Ccreated&sort_by=started_at:desc',
             headers={'Accept': 'application/json', 'Content-Type': 'application/json', "Travis-API-Version": '3'})
 
     for b in res.json()['builds']:
-        if b['state'] in ['created', 'started']:
-            return dict(branch=b['branch']['name'], commit_id=b['commit']['sha'])
+        return dict(branch=b['branch']['name'], commit_id=b['commit']['sha'])
 
 @task
 def ci_build(context):
@@ -512,23 +511,24 @@ def ci_build(context):
     try:
         fcntl.flock(lock_f, fcntl.LOCK_EX | fcntl.LOCK_NB)
         build = pending_travis_build()
-        clean()
-        link_build_cache(build['branch'])
-        subprocess.check_call("git fetch", shell=True)
-        subprocess.check_call("git checkout %s" % build['branch'], shell=True)
-        subprocess.check_call("git checkout -qf %s" % build['commit_id'], shell=True)
+        if build:
+            clean()
+            link_build_cache(build['branch'])
+            subprocess.check_call("git fetch", shell=True)
+            subprocess.check_call("git checkout %s" % build['branch'], shell=True)
+            subprocess.check_call("git checkout -qf %s" % build['commit_id'], shell=True)
 
-        procs = []
-        for arch in ['OSXIntel64', 'Linux64']:
-            p = ci_build_arch(arch, build['branch'])
-            procs.append(p)
+            procs = []
+            for arch in ['OSXIntel64', 'Linux64']:
+                p = ci_build_arch(arch, build['branch'])
+                procs.append(p)
 
-        if build['branch'] == 'master':
-            webgl_build_deploy_demo(context, verbose=True, content_addressable=True, force=True)
+            if build['branch'] == 'master':
+                webgl_build_deploy_demo(context, verbose=True, content_addressable=True, force=True)
 
-        for p in procs:
-            if p:
-                p.join()
+            for p in procs:
+                if p:
+                    p.join()
 
         fcntl.flock(lock_f, fcntl.LOCK_UN)
 
