@@ -100,3 +100,5 @@ We have done our best to fix all bugs and issues. However, you might still encou
 
 AI2-THOR is an open-source project backed by [the Allen Institute for Artificial Intelligence (AI2)](http://www.allenai.org).
 AI2 is a non-profit institute with the mission to contribute to humanity through high-impact AI research and engineering.
+
+
