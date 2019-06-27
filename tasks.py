@@ -483,6 +483,16 @@ def clean():
     subprocess.check_call("git clean -f -x", shell=True)
     shutil.rmtree("unity/builds", ignore_errors=True)
 
+def link_build_cache(branch):
+    library_path = os.path.join('unity', 'Library')
+
+    if os.path.exists(library_path):
+        os.unlink(library_path)
+
+    branch_cache_dir = os.path.join(os.environ['HOME'], 'cache', branch, 'Library')
+    os.makedirs(branch_cache_dir, exist_ok=True)
+    os.symlink(branch_cache_dir, library_path)
+
 
 @task
 def ci_build(context, branch):
@@ -493,6 +503,7 @@ def ci_build(context, branch):
     try:
         fcntl.flock(lock_f, fcntl.LOCK_EX | fcntl.LOCK_NB)
         clean()
+        link_build_cache(branch)
         subprocess.check_call("git checkout %s" % branch, shell=True)
         subprocess.check_call("git pull origin %s" % branch, shell=True)
 
