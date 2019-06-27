@@ -253,20 +253,19 @@ public class PhysicsSceneManager : MonoBehaviour
         bool shouldFail = false;
         if (objectPoses != null && objectPoses.Length > 0)
         {
-            // Perform object state sets
-            //Dictionary<SimObjType, SimObjPhysics> objectOfType = new Dictionary<SimObjType, SimObjPhysics>();
+            // Perform object location sets
             SimObjPhysics[] sceneObjects = FindObjectsOfType<SimObjPhysics>();
             Dictionary<string, SimObjPhysics> nameToObject = new Dictionary<string, SimObjPhysics>();
             foreach (SimObjPhysics sop in sceneObjects)
             {
                 if (sop.IsPickupable)
                 {
-                    //objectOfType[sop.ObjType] = sop;
                     sop.gameObject.SetActive(false);
                     //sop.gameObject.GetComponent<SimpleSimObj>().IsDisabled = true;
                     nameToObject[sop.name] = sop;
                 }
             }
+            HashSet<SimObjPhysics> placedOriginal = new HashSet<SimObjPhysics>();
             for (int ii = 0; ii < objectPoses.Length; ii++)
             {
                 ObjectPose objectPose = objectPoses[ii];
@@ -278,10 +277,19 @@ public class PhysicsSceneManager : MonoBehaviour
                 }
                 SimObjPhysics obj = nameToObject[objectPose.objectName];
                 SimObjPhysics existingSOP = obj.GetComponent<SimObjPhysics>();
-                SimObjPhysics copy = Instantiate(existingSOP);
-                copy.name += "_random_copy_" + ii;
-                copy.UniqueID = existingSOP.UniqueID + "_copy_" + ii;
-                copy.uniqueID = copy.UniqueID;
+                SimObjPhysics copy;
+                if (placedOriginal.Contains(existingSOP))
+                {
+                    copy = Instantiate(existingSOP);
+                    copy.name += "_random_copy_" + ii;
+                    copy.UniqueID = existingSOP.UniqueID + "_copy_" + ii;
+                    copy.uniqueID = copy.UniqueID;
+                } else
+                {
+                    copy = existingSOP;
+                    placedOriginal.Add(existingSOP);
+                }
+
                 copy.transform.position = objectPose.position;
                 copy.transform.eulerAngles = objectPose.rotation;
                 copy.gameObject.SetActive(true);
@@ -303,15 +311,7 @@ public class PhysicsSceneManager : MonoBehaviour
             {
                 if (toggles.ContainsKey(sop.ObjType))
                 {
-                    bool success;
-                    if (toggles[sop.ObjType])
-                    {
-                        success = fpsController.ToggleObject(sop, true, true);
-                    }
-                    else
-                    {
-                        success = fpsController.ToggleObject(sop, false, true);
-                    }
+                    bool success = fpsController.ToggleObject(sop, toggles[sop.ObjType], true);
                     if (!success)
                     {
                         shouldFail = true;
