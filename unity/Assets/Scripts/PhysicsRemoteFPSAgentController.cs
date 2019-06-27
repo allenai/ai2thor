@@ -2746,7 +2746,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         {
             PhysicsSceneManager script = GameObject.Find("PhysicsSceneManager").GetComponent<PhysicsSceneManager>();
             bool success = script.SetSceneState(action.objectPoses, action.objectToggles);
-            physicsSceneManager.ResetUniqueIdToSimObjPhysics();
             actionFinished(success);
         }
 
