@@ -18,6 +18,7 @@ public class Break : MonoBehaviour
     protected float HighFrictionImpulseOffset = 2.0f;//if the object is colliding with a "soft" high friction zone, offset the ImpulseThreshold to be harder to break
 
     protected float CurrentImpulseThreshold;//modify this with ImpulseThreshold and HighFrictionImpulseOffset based on trigger callback functions
+    [SerializeField]
     protected bool readytobreak = true;
 
     [SerializeField]
@@ -120,6 +121,8 @@ public class Break : MonoBehaviour
                 }
             }
 
+            //it's broken, make sure that it cant trigger this call again
+            readytobreak = false;
         }
 
         //if decal type, do not switch out the object but instead swap materials to show cracked/broken parts
@@ -141,6 +144,8 @@ public class Break : MonoBehaviour
             }
 
             broken = true;
+            //it's broken, make sure that it cant trigger this call again
+            readytobreak = false;
         }
 
         if(breakType == BreakType.Decal)
@@ -156,9 +161,6 @@ public class Break : MonoBehaviour
             if(primaryAgent.imageSynthesis.enabled)
             primaryAgent.imageSynthesis.OnSceneChange();
         }
-
-        //it's broken, make sure that it cant trigger this call again
-        readytobreak = false;
     }
 
     // Override for Decal behavior
