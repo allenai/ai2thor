@@ -145,6 +145,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         // action.renderDepthImage = true;
                         // action.renderClassImage = true;
                         // action.renderObjectImage = true;
+                        // action.renderFlowImage = true;
 
                         action.continuous = true;//testing what continuous mode true does...
 
@@ -159,6 +160,48 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         // AgentManager am = physicsSceneManager.GetComponent<AgentManager>();
                         // Debug.Log(am);
       			        // am.Initialize(action);
+                        break;
+                    }
+
+                case "its":
+                    {
+                        ServerAction action = new ServerAction();
+
+                        action.action = "InitializeTableSetting";
+                        if (splitcommand.Length > 1) {
+                            action.objectVariation = int.Parse(splitcommand[1]);
+                        }
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
+                case "pfrat":
+                    {
+                        ServerAction action = new ServerAction();
+
+                        action.action = "PlaceFixedReceptacleAtLocation";
+                        if (splitcommand.Length > 1) {
+                            action.objectVariation = int.Parse(splitcommand[1]);
+                            action.x = float.Parse(splitcommand[2]);
+                            action.y = float.Parse(splitcommand[3]);
+                            action.z = float.Parse(splitcommand[4]);
+                        }
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+                case "pbwal":
+                    {
+                        ServerAction action = new ServerAction();
+
+                        action.action = "PlaceBookWallAtLocation";
+                        if (splitcommand.Length > 1) {
+                            action.objectVariation = int.Parse(splitcommand[1]);
+                            action.x = float.Parse(splitcommand[2]);
+                            action.y = float.Parse(splitcommand[3]);
+                            action.z = float.Parse(splitcommand[4]);
+                            action.rotation = new Vector3(0f, float.Parse(splitcommand[5]), 0f);
+                        }
+                        PhysicsController.ProcessControlCommand(action);
                         break;
                     }
 
@@ -184,6 +227,32 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         break;
                     }
 
+                //set state of all objects that have a state
+                case "ssa":
+                {
+                    ServerAction action = new ServerAction();
+
+                    action.StateChange = "CanBeDirty";
+                    action.forceAction = true;
+                    action.action = "SetStateOfAllObjects";
+
+                     if (splitcommand.Length > 1) 
+                     {
+                        if(splitcommand[1] == "t")
+                        {
+                            action.forceAction = true;
+                        }
+
+                        if(splitcommand[1] == "f")
+                        {
+                            action.forceAction = false;
+                        }
+                     }
+                    PhysicsController.ProcessControlCommand(action);
+                        
+                    break;
+                }
+
                 case "initsynth":
                     {
 						ServerAction action = new ServerAction();
@@ -192,6 +261,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         action.renderDepthImage = true;
                         action.renderClassImage = true;
                         action.renderObjectImage = true;
+                        action.renderFlowImage = true;
 
 						PhysicsController.actionComplete = false;
                         action.ssao = "default";
@@ -256,6 +326,24 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         break;
                     }
 
+                case "putr":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "PutObject";
+                        action.receptacleObjectId = PhysicsController.UniqueIDOfClosestReceptacleObject();
+                        action.randomSeed = int.Parse(splitcommand[1]);
+                            
+                        //set this to false if we want to place it and let physics resolve by having it fall a short distance into position
+
+                        //set true to place with kinematic = true so that it doesn't fall or roll in place - making placement more consistant and not physics engine reliant - this more closely mimics legacy pivot placement behavior
+                        action.placeStationary = false; 
+
+                        //set this true to ignore Placement Restrictions
+                        action.forceAction = true;
+
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
                 case "put":
                     {
                         ServerAction action = new ServerAction();

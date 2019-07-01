@@ -18,6 +18,7 @@ public class Break : MonoBehaviour
     protected float HighFrictionImpulseOffset = 2.0f;//if the object is colliding with a "soft" high friction zone, offset the ImpulseThreshold to be harder to break
 
     protected float CurrentImpulseThreshold;//modify this with ImpulseThreshold and HighFrictionImpulseOffset based on trigger callback functions
+    [SerializeField]
     protected bool readytobreak = true;
 
     [SerializeField]
@@ -70,8 +71,6 @@ public class Break : MonoBehaviour
         {
             //Disable this game object and spawn in the broken pieces
             Rigidbody rb = gameObject.GetComponent<Rigidbody>();
-            rb.collisionDetectionMode = CollisionDetectionMode.Discrete;
-            rb.isKinematic = true;
 
             //turn off everything except the top object
             foreach(Transform t in gameObject.transform)
@@ -97,6 +96,15 @@ public class Break : MonoBehaviour
             GameObject resultObject = Instantiate(PrefabToSwapTo, transform.position, transform.rotation);
             broken = true;
 
+            // ContactPoint cp = collision.GetContact(0);
+            foreach (Rigidbody subRb in resultObject.GetComponentsInChildren<Rigidbody>()) {
+                subRb.velocity = rb.velocity * 0.4f;
+                subRb.angularVelocity = rb.angularVelocity * 0.4f;
+            }
+
+            rb.collisionDetectionMode = CollisionDetectionMode.Discrete;
+            rb.isKinematic = true;
+
             //if this object breaking is an egg, set rotation for the EggCracked object
             //quick if the result object is an egg hard set it's rotation because EGGS ARE WEIRD and are not the same form as their shelled version
             if(resultObject.GetComponent<SimObjPhysics>())
@@ -113,6 +121,8 @@ public class Break : MonoBehaviour
                 }
             }
 
+            //it's broken, make sure that it cant trigger this call again
+            readytobreak = false;
         }
 
         //if decal type, do not switch out the object but instead swap materials to show cracked/broken parts
@@ -134,6 +144,8 @@ public class Break : MonoBehaviour
             }
 
             broken = true;
+            //it's broken, make sure that it cant trigger this call again
+            readytobreak = false;
         }
 
         if(breakType == BreakType.Decal)
@@ -143,6 +155,12 @@ public class Break : MonoBehaviour
             BreakForDecalType(collision);
         }
 
+        BaseFPSAgentController primaryAgent = GameObject.Find("PhysicsSceneManager").GetComponent<AgentManager>().ReturnPrimaryAgent();
+        if(primaryAgent.imageSynthesis)
+        {
+            if(primaryAgent.imageSynthesis.enabled)
+            primaryAgent.imageSynthesis.OnSceneChange();
+        }
     }
 
     // Override for Decal behavior
