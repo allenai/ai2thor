@@ -486,6 +486,7 @@ class Controller(object):
                  ):
 
         from PIL import Image
+        print("Interact handler!")
         if not sys.stdout.isatty():
             raise RuntimeError("controller.interact() must be run from a terminal")
 
@@ -525,18 +526,25 @@ class Controller(object):
             frame_writes = [
                 ('instance_segmentation.jpeg',
                  instance_segmentation_frame,
-                 lambda event: event.instance_segmentation_frame),
+                 lambda event: event.instance_segmentation_frame,
+                 lambda x: x
+                 ),
                 ('class_segmentation.jpeg',
                  class_segmentation_frame,
-                 lambda event: event.class_segmentation_frame),
+                 lambda event: event.class_segmentation_frame,
+                 lambda x: x
+                 ),
                 ('depth.jpeg',
                  depth_frame,
-                 lambda event: event.depth_frame)
+                 lambda event: event.depth_frame,
+                 lambda data: (255.0 / data.max() * (data - data.min())).astype(np.uint8)
+                 )
             ]
 
-            for frame_filename, condition, frame_func in frame_writes:
+            for frame_filename, condition, frame_func, transform in frame_writes:
                 frame = frame_func(event)
                 if frame is not None:
+                    frame = transform(frame)
                     im = Image.fromarray(frame)
                     im.save(frame_filename)
                 else:
@@ -590,6 +598,7 @@ class Controller(object):
                 print(' '.join(command_info))
 
     def step(self, action, raise_for_failure=False):
+        print("Step!")
         if self.headless:
             action["renderImage"] = False
 

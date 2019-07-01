@@ -666,6 +666,7 @@ def interact(
 
     env = ai2thor.controller.Controller()
     if local_build:
+        print("Executing from local build at {} ".format( _local_build_path()))
         env.local_executable_path = _local_build_path()
     if editor_mode:
         env.start(8200, False, player_screen_width=600, player_screen_height=600)
@@ -679,7 +680,7 @@ def interact(
             gridSize=0.25,
             renderObjectImage=object_image,
             renderClassImage=class_image,
-            renderDepthImage=False
+            renderDepthImage=depth_image
         )
     )
     env.interact()
