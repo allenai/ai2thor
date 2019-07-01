@@ -24,7 +24,42 @@
 
 ## Documentation
 
-Please refer to the [Documentation Page on the AI2-THOR website](http://ai2thor.allenai.org/documentation/) for information on Installation, API, Metadata, actions, object properties and other important framework information.
+Please refer to the [documentation page on the AI2-THOR website](http://ai2thor.allenai.org/documentation/) for information on installation, API, metadata, actions, object properties and other important framework information.
+
+## Installation
+
+```bash
+pip install ai2thor
+```
+Once installed you can launch the framework. **Make sure X server with OpenGL extensions is running before running the following commands. You can check by running ```glxinfo``` or ```glxgears```.**
+
+```python
+import ai2thor.controller
+controller = ai2thor.controller.Controller()
+controller.start()
+# Kitchens:       FloorPlan1 - FloorPlan30
+# Living rooms:   FloorPlan201 - FloorPlan230
+# Bedrooms:       FloorPlan301 - FloorPlan330
+# Bathrooms:      FloorPLan401 - FloorPlan430
+controller.reset('FloorPlan28')
+# gridSize specifies the coarseness of the grid that the agent navigates on
+controller.step(dict(action='Initialize', gridSize=0.25))
+event = controller.step(dict(action='MoveAhead'))
+```
+Upon executing the ```controller.start()``` a window should appear on screen with a view of the room FloorPlan28.
+
+Each call to ```controller.step()``` returns an instance of an Event. The Event object contains a screen capture from the point the last action completed as well as metadata about each object within the scene.
+
+```python
+event = controller.step(dict(action=MoveAhead))
+# Numpy Array - shape (width, height, channels), channels are in RGB order
+event.frame
+# byte[] PNG image
+event.image
+# current metadata dictionary that includes the state of the scene
+event.metadata
+```
+
 ## Unity Development
 
 If you wish to make changes to the Unity scenes/assets you will need to install Unity Editor version 2018.3.6 for OSX (Linux Editor is currently in Beta) from [Unity Download Archive](https://unity3d.com/get-unity/download/archive).  After making your desired changes using the Unity Editor you will need to build.  To do this you must first exit the editor, then run the following commands from the ai2thor base directory. Individual scenes (the 3D models) can be found beneath the unity/Assets/Scenes directory - scenes are named FloorPlan###.
@@ -65,3 +100,5 @@ We have done our best to fix all bugs and issues. However, you might still encou
 
 AI2-THOR is an open-source project backed by [the Allen Institute for Artificial Intelligence (AI2)](http://www.allenai.org).
 AI2 is a non-profit institute with the mission to contribute to humanity through high-impact AI research and engineering.
+
+

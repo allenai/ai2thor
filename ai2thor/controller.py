@@ -479,8 +479,13 @@ class Controller(object):
                 if not match:
                     current_buffer = ''
 
-    def interact(self):
+    def interact(self,
+                 class_segmentation_frame=False,
+                 instance_segmentation_frame=False,
+                 depth_frame=False
+                 ):
 
+        from PIL import Image
         if not sys.stdout.isatty():
             raise RuntimeError("controller.interact() must be run from a terminal")
 
@@ -517,6 +522,26 @@ class Controller(object):
             event = self.step(a)
             # check inventory
             visible_objects = []
+            frame_writes = [
+                ('instance_segmentation.jpeg',
+                 instance_segmentation_frame,
+                 lambda event: event.instance_segmentation_frame),
+                ('class_segmentation.jpeg',
+                 class_segmentation_frame,
+                 lambda event: event.class_segmentation_frame),
+                ('depth.jpeg',
+                 depth_frame,
+                 lambda event: event.depth_frame)
+            ]
+
+            for frame_filename, condition, frame_func in frame_writes:
+                frame = frame_func(event)
+                if frame is not None:
+                    im = Image.fromarray(frame)
+                    im.save(frame_filename)
+                else:
+                    print("No frame present, call initialize with the right parameters")
+
             for o in event.metadata['objects']:
                 if o['visible']:
                     visible_objects.append(o['objectId'])
