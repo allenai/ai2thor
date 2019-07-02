@@ -848,9 +848,9 @@ class Controller(object):
 
     def stop(self):
         self.response_queue.put_nowait({})
+        self.stop_unity()
         self.server.wsgi_server.shutdown()
         self.stop_container()
-        self.stop_unity()
         self.unlock_release()
 
     def stop_container(self):
