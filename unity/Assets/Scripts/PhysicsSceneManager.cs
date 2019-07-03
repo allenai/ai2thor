@@ -247,7 +247,36 @@ public class PhysicsSceneManager : MonoBehaviour
 		RequiredObjects.Remove(sop.gameObject);
 	}
 
-    public bool SetSceneState(ObjectPose[] objectPoses, ObjectToggle[] objectToggles)
+    public bool SetObjectToggles(ObjectToggle[] objectToggles)
+    {
+        bool shouldFail = false;
+        if (objectToggles != null && objectToggles.Length > 0)
+        {
+            // Perform object toggle state sets.
+            SimObjPhysics[] simObjs = GameObject.FindObjectsOfType(typeof(SimObjPhysics)) as SimObjPhysics[];
+            Dictionary<SimObjType, bool> toggles = new Dictionary<SimObjType, bool>();
+            foreach (ObjectToggle objectToggle in objectToggles)
+            {
+                SimObjType objType = (SimObjType)System.Enum.Parse(typeof(SimObjType), objectToggle.objectType);
+                toggles[objType] = objectToggle.isOn;
+            }
+            PhysicsRemoteFPSAgentController fpsController = GameObject.Find("FPSController").GetComponent<PhysicsRemoteFPSAgentController>();
+            foreach (SimObjPhysics sop in simObjs)
+            {
+                if (toggles.ContainsKey(sop.ObjType))
+                {
+                    bool success = fpsController.ToggleObject(sop, toggles[sop.ObjType], true);
+                    if (!success)
+                    {
+                        shouldFail = true;
+                    }
+                }
+            }
+        }
+        return !shouldFail;
+    }
+
+    public bool SetObjectPoses(ObjectPose[] objectPoses)
     {
         SetupScene();
         bool shouldFail = false;
@@ -296,33 +325,8 @@ public class PhysicsSceneManager : MonoBehaviour
                 //copy.GetComponent<SimpleSimObj>().IsDisabled = false;
             }
         }
-        if (objectToggles != null && objectToggles.Length > 0)
-        {
-            // Perform object toggle state sets.
-            SimObjPhysics[] simObjs = GameObject.FindObjectsOfType(typeof(SimObjPhysics)) as SimObjPhysics[];
-            Dictionary<SimObjType, bool> toggles = new Dictionary<SimObjType, bool>();
-            foreach (ObjectToggle objectToggle in objectToggles)
-            {
-                SimObjType objType = (SimObjType)System.Enum.Parse(typeof(SimObjType), objectToggle.objectType);
-                toggles[objType] = objectToggle.isOn;
-            }
-            PhysicsRemoteFPSAgentController fpsController = GameObject.Find("FPSController").GetComponent<PhysicsRemoteFPSAgentController>();
-            foreach (SimObjPhysics sop in simObjs)
-            {
-                if (toggles.ContainsKey(sop.ObjType))
-                {
-                    bool success = fpsController.ToggleObject(sop, toggles[sop.ObjType], true);
-                    if (!success)
-                    {
-                        shouldFail = true;
-                    }
-                }
-            }
-        }
-
         SetupScene();
         return !shouldFail;
-
     }
 
     //use action.randomseed for seed, use action.forceVisible for if objects shoudld ONLY spawn outside and not inside anything
