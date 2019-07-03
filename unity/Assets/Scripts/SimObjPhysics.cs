@@ -1158,7 +1158,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 	[ContextMenu("Table")]
 	void SetUpTable()
 	{
-		this.Type = SimObjType.TableTop;
+		this.Type = SimObjType.DiningTable;
 		this.PrimaryProperty = SimObjPrimaryProperty.Static;
 		this.SecondaryProperties = new SimObjSecondaryProperty[] {SimObjSecondaryProperty.Receptacle};
 		
