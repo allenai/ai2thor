@@ -2742,11 +2742,19 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(success);
         }
 
-        public void SetSceneState(ServerAction action)
+        public void SetObjectPoses(ServerAction action)
         {
             PhysicsSceneManager script = GameObject.Find("PhysicsSceneManager").GetComponent<PhysicsSceneManager>();
-            bool success = script.SetSceneState(action.objectPoses, action.objectToggles);
+            bool success = script.SetObjectPoses(action.objectPoses);
             actionFinished(success);
+        }
+
+        public void SetObjectToggles(ServerAction action)
+        {
+            PhysicsSceneManager script = GameObject.Find("PhysicsSceneManager").GetComponent<PhysicsSceneManager>();
+            bool success = script.SetObjectToggles(action.objectToggles);
+            actionFinished(success);
+
         }
 
         public void PutObject(ServerAction action) {
@@ -3784,7 +3792,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         {
             if (!forceAction && target.isInteractable == false)
             {
-                //Debug.Log("can't close object if it's already closed");
                 errorMessage = "object is visible but occluded by something: " + target.UniqueID;
                 return false;
             }
