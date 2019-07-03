@@ -196,9 +196,9 @@ class Event(object):
                     self.class_masks[cls] = np.logical_or(self.class_masks[cls], unique_masks[color_ind, ...])
 
     def _image_depth(self, image_depth_data):
-        image_depth = read_buffer_image(image_depth_data, self.screen_width, self.screen_height).astype(np.float32)
+        image_depth = read_buffer_image(image_depth_data, self.screen_width, self.screen_height)
         max_spots = image_depth[:,:,0] == 255
-        image_depth_out = image_depth[:,:,0] + image_depth[:,:,1] / 256 + image_depth[:,:,2] / 256 ** 2
+        image_depth_out = image_depth[:,:,0] + image_depth[:,:,1] / np.float32(256) + image_depth[:,:,2] / np.float32(256 ** 2)
         image_depth_out[max_spots] = 256
         image_depth_out *= 10.0 / 256.0 * 1000  # converts to meters then to mm
         image_depth_out[image_depth_out > MAX_DEPTH] = MAX_DEPTH
