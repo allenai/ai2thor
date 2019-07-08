@@ -4637,7 +4637,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
 
-        protected void HideAllObjectsExcept(ServerAction action) {
+        public void HideAllObjectsExcept(ServerAction action) {
             foreach (GameObject go in UnityEngine.Object.FindObjectsOfType<GameObject>()) {
                 UpdateDisplayGameObject(go, false);
             }
