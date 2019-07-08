@@ -258,8 +258,7 @@ public enum SimObjType : int
     AluminumFoil = 150,
     DogBed = 151,
     Dumbbell = 152,
-    NatureDecor = 153,
-    GlassDecor = 154
+    Decor = 153
 }
 
 public static class ReceptacleRestrictions
