@@ -760,6 +760,21 @@ public class HandMetadata {
 }
 
 [Serializable]
+public class ObjectPose
+{
+    public string objectName;
+    public Vector3 position;
+    public Vector3 rotation;
+}
+
+[Serializable]
+public class ObjectToggle
+{
+    public string objectType;
+    public bool isOn;
+}
+
+[Serializable]
 public struct MetadataWrapper
 {
 	public ObjectMetadata[] objects;
@@ -871,7 +886,11 @@ public class ServerAction
 	public float TimeUntilRoomTemp;
 	public bool allowDecayTemperature = true; //set to true if temperature should decay over time, set to false if temp changes should not decay, defaulted true
 	public string StateChange;//a string that specifies which state change to randomly toggle
-	public SimObjType ReceptableSimObjType()
+
+    	public ObjectPose[] objectPoses;
+    	public ObjectToggle[] objectToggles;
+
+    	public SimObjType ReceptableSimObjType()
 	{
 		if (string.IsNullOrEmpty(receptacleObjectType))
 		{
