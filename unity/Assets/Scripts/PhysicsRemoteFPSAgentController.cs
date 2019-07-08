@@ -3191,6 +3191,21 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(success);
         }
 
+        public void SetObjectPoses(ServerAction action)
+        {
+            PhysicsSceneManager script = GameObject.Find("PhysicsSceneManager").GetComponent<PhysicsSceneManager>();
+            bool success = script.SetObjectPoses(action.objectPoses);
+            actionFinished(success);
+        }
+
+        public void SetObjectToggles(ServerAction action)
+        {
+            PhysicsSceneManager script = GameObject.Find("PhysicsSceneManager").GetComponent<PhysicsSceneManager>();
+            bool success = script.SetObjectToggles(action.objectToggles);
+            actionFinished(success);
+
+        }
+
         public void PutObject(ServerAction action) {
             action.objectId = action.receptacleObjectId;
             action.receptacleObjectId = null;
@@ -4197,125 +4212,100 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true);
         }
 
-        public void ToggleObjectOn(ServerAction action) {
-            if (action.objectId == null) {
+        public void ToggleObjectOn(ServerAction action)
+        {
+            bool result = ToggleObject(action, true, action.forceAction);
+            actionFinished(result);
+        }
+
+        public void ToggleObjectOff(ServerAction action)
+        {
+            bool result = ToggleObject(action, false, action.forceAction);
+            actionFinished(result);
+        }
+
+
+        public bool ToggleObject(ServerAction action, bool toggleOn, bool forceAction)
+        {
+            if (action.objectId == null)
+            {
                 errorMessage = "objectId required for ToggleObject";
-                actionFinished(false);
-                return;
+                return false;
             }
 
             SimObjPhysics target = null;
-            foreach (SimObjPhysics sop in VisibleSimObjs(action)) {
+            foreach (SimObjPhysics sop in VisibleSimObjs(action))
+            {
                 //check for CanOpen drawers, cabinets or CanOpen_Fridge fridge objects
-                if (sop.GetComponent<CanToggleOnOff>()) {
+                if (sop.GetComponent<CanToggleOnOff>())
+                {
                     target = sop;
+                    break;
                 }
             }
+            if (!target)
+            {
 
-            if (target) {
-                if (!action.forceAction && target.isInteractable == false) {
-                    //Debug.Log("can't close object if it's already closed");
-                    actionFinished(false);
-                    errorMessage = "object is visible but occluded by something: " + action.objectId;
-                    return;
+                //target not found in currently visible objects, report not found
+                errorMessage = "object not found: " + action.objectId;
+                return false;
+            }
+            return ToggleObject(target, toggleOn, forceAction);
+        }
+
+        public bool ToggleObject(SimObjPhysics target, bool toggleOn, bool forceAction)
+        {
+            if (!forceAction && target.isInteractable == false)
+            {
+                errorMessage = "object is visible but occluded by something: " + target.UniqueID;
+                return false;
+            }
+
+            if (target.GetComponent<CanToggleOnOff>())
+            {
+                CanToggleOnOff ctof = target.GetComponent<CanToggleOnOff>();
+
+                if (!ctof.ReturnSelfControlled())
+                {
+                    errorMessage = "target object is controlled by another sim object. target object cannot be turned on/off directly";
+                    return false;
                 }
 
-                if (target.GetComponent<CanToggleOnOff>()) {
-                    CanToggleOnOff ctof = target.GetComponent<CanToggleOnOff>();
-
-                    if(!ctof.ReturnSelfControlled()){
-                        errorMessage = "target object is controlled by another sim object. target object cannot be turned on/off directly";
-                        actionFinished(false);
-                        return;
-                    }
-
-                    //check to make sure object is off
+                //check to make sure object is in other state
+                if (ctof.isOn == toggleOn)
+                {
                     if (ctof.isOn) {
                         errorMessage = "can't toggle object on if it's already on!";
-                        actionFinished(false);
-                        return;
                     }
-
-                    //check if this object needs to be closed in order to turn on
-                    if (ctof.ReturnMustBeClosedToTurnOn().Contains(target.Type)) {
-                        if (target.GetComponent<CanOpen_Object>().isOpen) {
-                            errorMessage = "Target must be closed to Toggle On!";
-                            actionFinished(false);
-                            return;
-                        }
-                    }
-
-                    //check if the object can be broken, if it is broken you can't turn it on!
-                    if(target.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanBreak))
+                    else
                     {
-                        if(target.GetComponentInChildren<Break>().isBroken())
-                        {
-                            errorMessage = "Target is broken and can't be turned on!";
-                            actionFinished(false);
-                            return;
-                        }
-                    }
-
-                    ctof.Toggle();
-                    actionFinished(true);
-                }
-            }
-
-            //target not found in currently visible objects, report not found
-            else {
-                actionFinished(false);
-                errorMessage = "object not found: " + action.objectId;
-            }
-        }
-
-        public void ToggleObjectOff(ServerAction action) {
-            if (action.objectId == null) {
-                errorMessage = "objectId required for ToggleObject";
-                actionFinished(false);
-                return;
-            }
-
-            SimObjPhysics target = null;
-            foreach (SimObjPhysics sop in VisibleSimObjs(action)) {
-                //check for CanOpen drawers, cabinets or CanOpen_Fridge fridge objects
-                if (sop.GetComponent<CanToggleOnOff>()) {
-                    target = sop;
-                }
-            }
-
-            if (target) {
-                if (!action.forceAction && target.isInteractable == false) {
-                    actionFinished(false);
-                    errorMessage = "object is visible but occluded by something: " + action.objectId;
-                    return;
-                }
-
-                if (target.GetComponent<CanToggleOnOff>()) {
-                    CanToggleOnOff ctof = target.GetComponent<CanToggleOnOff>();
-
-                    if(!ctof.ReturnSelfControlled()){
-                        errorMessage = "target object is controlled by another sim object. target object cannot be turned on/off directly";
-                        actionFinished(false);
-                        return;
-                    }
-
-                    //check to make sure object is on
-                    if (!ctof.isOn) {
                         errorMessage = "can't toggle object off if it's already off!";
-                        actionFinished(false);
-                    } else {
-                        ctof.Toggle();
-                        actionFinished(true);
+
+                    }
+
+                    return false;
+                }
+                //check if this object needs to be closed in order to turn on
+                if (toggleOn && ctof.ReturnMustBeClosedToTurnOn().Contains(target.Type))
+                {
+                    if (target.GetComponent<CanOpen_Object>().isOpen)
+                    {
+                        errorMessage = "Target must be closed to Toggle On!";
+                        return false;
                     }
                 }
-            }
 
-            //target not found in currently visible objects, report not found
-            else {
-                actionFinished(false);
-                errorMessage = "object not found: " + action.objectId;
+                ctof.Toggle();
+                return true;
+
+            }
+            else
+            {
+                errorMessage = "object is not toggleable.";
+                return false;
             }
         }
+
         public void OpenObject(ServerAction action) {
             //pass name of object in from action.objectID
             //check if that object is in the viewport
@@ -4647,7 +4637,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
 
-        protected void HideAllObjectsExcept(ServerAction action) {
+        public void HideAllObjectsExcept(ServerAction action) {
             foreach (GameObject go in UnityEngine.Object.FindObjectsOfType<GameObject>()) {
                 UpdateDisplayGameObject(go, false);
             }
@@ -4669,11 +4659,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         //if you want to do something like throw objects to knock over other objects, use this action to set all objects to Kinematic false
         //otherwise objects will need to be hit multiple times in order to ensure kinematic false toggle
         //use this by initializing the scene, then calling randomize if desired, and then call this action to prepare the scene so all objects will react to others upon collision.
-        public void MakeAllPickupableObjectsMoveable(ServerAction action)
+        public void MakeAllObjectsMoveable(ServerAction action)
         {
             foreach (SimObjPhysics sop in GameObject.FindObjectsOfType<SimObjPhysics>()) {
-                if (sop.PrimaryProperty == SimObjPrimaryProperty.CanPickup) {
+                if (sop.PrimaryProperty == SimObjPrimaryProperty.CanPickup || sop.PrimaryProperty == SimObjPrimaryProperty.Moveable) {
                     Rigidbody rb = sop.GetComponent<Rigidbody>();
+                    //XXX we might need to add something here to account for objects that have other sim objects as children (dresser-drawer)
                     rb.isKinematic = false;
                     rb.collisionDetectionMode = CollisionDetectionMode.ContinuousSpeculative;
                 }
