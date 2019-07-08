@@ -4669,11 +4669,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         //if you want to do something like throw objects to knock over other objects, use this action to set all objects to Kinematic false
         //otherwise objects will need to be hit multiple times in order to ensure kinematic false toggle
         //use this by initializing the scene, then calling randomize if desired, and then call this action to prepare the scene so all objects will react to others upon collision.
-        public void MakeAllPickupableObjectsMoveable(ServerAction action)
+        public void MakeAllObjectsMoveable(ServerAction action)
         {
             foreach (SimObjPhysics sop in GameObject.FindObjectsOfType<SimObjPhysics>()) {
-                if (sop.PrimaryProperty == SimObjPrimaryProperty.CanPickup) {
+                if (sop.PrimaryProperty == SimObjPrimaryProperty.CanPickup || sop.PrimaryProperty == SimObjPrimaryProperty.Moveable) {
                     Rigidbody rb = sop.GetComponent<Rigidbody>();
+                    //XXX we might need to add something here to account for objects that have other sim objects as children (dresser-drawer)
                     rb.isKinematic = false;
                     rb.collisionDetectionMode = CollisionDetectionMode.ContinuousSpeculative;
                 }
