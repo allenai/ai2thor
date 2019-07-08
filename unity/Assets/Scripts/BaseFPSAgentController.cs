@@ -518,8 +518,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
 				return;
 			}
 
-			if (hit.gameObject.name.Equals("Floor"))
+			if (hit.gameObject.GetComponent<StructureObject>())
 			{
+                if(hit.gameObject.GetComponent<StructureObject>().WhatIsMyStructureObjectTag == StructureObjectTag.Floor)
 				return;
 			}
 

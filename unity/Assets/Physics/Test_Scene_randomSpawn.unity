@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.4435841, g: 0.49289882, b: 0.57247555, a: 1}
+  m_IndirectSpecularColor: {r: 0.4435984, g: 0.49291283, b: 0.5724829, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -3732,6 +3732,7 @@ MonoBehaviour:
   DirtyPrefabToSwapTo: {fileID: 0}
   ImpulseThreshold: 3.8
   HighFrictionImpulseOffset: 2.5
+  readytobreak: 1
   broken: 0
   breakType: 0
   MaterialSwapObjects: []
@@ -10143,6 +10144,7 @@ MonoBehaviour:
   DirtyPrefabToSwapTo: {fileID: 0}
   ImpulseThreshold: 0.15
   HighFrictionImpulseOffset: 0.25
+  readytobreak: 1
   broken: 0
   breakType: 0
   MaterialSwapObjects: []
@@ -11863,17 +11865,18 @@ MonoBehaviour:
   DirtyPrefabToSwapTo: {fileID: 0}
   ImpulseThreshold: 3.6
   HighFrictionImpulseOffset: 2
+  readytobreak: 1
   broken: 0
   breakType: 0
   MaterialSwapObjects: []
+  sameStencilAsSiblings: 0
   stencilWriteValue: 1
   decals:
   - {fileID: 7777608363880003584, guid: 764378ccd01c74a5ba3a05553499c18f, type: 3}
   nextDecalWaitTimeSeconds: 1
   decalScale: {x: 0.3, y: 0.3, z: 0.2}
-  minimumImpulseMagnitudeForDecal: 10
   transparent: 0
-  transparentDecalSpawnOffset: {x: 0, y: 0, z: -0.03}
+  stencilSet: 0
 --- !u!54 &1427215373
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -15765,6 +15768,7 @@ GameObject:
   - component: {fileID: 2018252479}
   - component: {fileID: 2018252478}
   - component: {fileID: 2018252477}
+  - component: {fileID: 2018252481}
   m_Layer: 8
   m_Name: floor
   m_TagString: Structure
@@ -15844,6 +15848,19 @@ Transform:
   m_Father: {fileID: 1057093819}
   m_RootOrder: 3
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &2018252481
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2018252476}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 917874e6a1f71455ca9c978c826895fb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  WhatIsMyStructureObjectTag: 2
 --- !u!1 &2018743848
 GameObject:
   m_ObjectHideFlags: 0
@@ -18358,9 +18375,11 @@ MonoBehaviour:
   DirtyPrefabToSwapTo: {fileID: 0}
   ImpulseThreshold: 3.6
   HighFrictionImpulseOffset: 2
+  readytobreak: 1
   broken: 0
   breakType: 0
   MaterialSwapObjects: []
+  sameStencilAsSiblings: 0
   stencilWriteValue: 1
   decals:
   - {fileID: 5847586044502736223, guid: 19ee84792cfbf4f31a46e06ae2b30a2e, type: 3}
@@ -18369,9 +18388,8 @@ MonoBehaviour:
   - {fileID: 2402449100485929190, guid: 77c52d523345d4918a3013e865f8f505, type: 3}
   nextDecalWaitTimeSeconds: 1
   decalScale: {x: 0.5, y: 0.5, z: 0.2}
-  minimumImpulseMagnitudeForDecal: 10
   transparent: 1
-  transparentDecalSpawnOffset: {x: 0, y: 0, z: -0.03}
+  stencilSet: 0
 --- !u!1 &6270588447086738535
 GameObject:
   m_ObjectHideFlags: 0
@@ -18492,17 +18510,18 @@ MonoBehaviour:
   DirtyPrefabToSwapTo: {fileID: 0}
   ImpulseThreshold: 3.6
   HighFrictionImpulseOffset: 2
+  readytobreak: 1
   broken: 0
   breakType: 0
   MaterialSwapObjects: []
+  sameStencilAsSiblings: 0
   stencilWriteValue: 1
   decals:
   - {fileID: 7777608363880003584, guid: 764378ccd01c74a5ba3a05553499c18f, type: 3}
   nextDecalWaitTimeSeconds: 1
   decalScale: {x: 0.3, y: 0.3, z: 0.2}
-  minimumImpulseMagnitudeForDecal: 10
   transparent: 0
-  transparentDecalSpawnOffset: {x: 0, y: 0, z: -0.03}
+  stencilSet: 0
 --- !u!114 &6270588447943318914
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -18515,8 +18534,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e26e36d8208af482bbc9fb5bdb783ca5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  material: {fileID: 2100000, guid: a98ce57d4c59b417eb37214101182da7, type: 2}
-  quadMesh: {fileID: 0}
 --- !u!114 &6270588447943318916
 MonoBehaviour:
   m_ObjectHideFlags: 0
