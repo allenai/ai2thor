@@ -1418,7 +1418,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                             action.moveMagnitude = float.Parse(splitcommand[2]);
                         }
 
-                        action.PushAngle = 279f;
+                        action.pushAngle = 279f;
 
 						PhysicsController.ProcessControlCommand(action);                  
 						break;
