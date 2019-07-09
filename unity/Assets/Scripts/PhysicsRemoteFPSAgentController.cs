@@ -1983,7 +1983,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             //the direction vecctor to push the target object defined by action.PushAngle 
             //degrees clockwise from the agent's forward, the PushAngle must be less than 360
-            if(action.PushAngle <= 0 || action.PushAngle >= 360)
+            if(action.pushAngle <= 0 || action.pushAngle >= 360)
             {
                 errorMessage = "please give a PushAngle between 0 and 360.";
                 Debug.Log(errorMessage);
@@ -2041,7 +2041,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             //find the Direction to push the object basec on action.PushAngle
             Vector3 agentForward = transform.forward;
-            float pushAngleInRadians = action.PushAngle * Mathf.PI/-180; //using -180 so positive PushAngle values go clockwise
+            float pushAngleInRadians = action.pushAngle * Mathf.PI/-180; //using -180 so positive PushAngle values go clockwise
 
             Vector3 direction = new Vector3((agentForward.x * Mathf.Cos(pushAngleInRadians) - agentForward.z * Mathf.Sin(pushAngleInRadians)), 0, 
             agentForward.x * Mathf.Sin(pushAngleInRadians) + agentForward.z * Mathf.Cos(pushAngleInRadians));

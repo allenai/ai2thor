@@ -842,7 +842,7 @@ public class ServerAction
 	public float fieldOfView = 60f;
 	public float x;
 	public float z;
-    public float PushAngle;
+    public float pushAngle;
 	public int horizon;
 	public Vector3 rotation;
 	public Vector3 position;
