@@ -93,6 +93,21 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     }
                 }
             #endif
+
+            if(Input.GetKeyDown(KeyCode.Alpha9))
+            {
+                ServerAction action = new ServerAction();
+                action.action = "PausePhysicsAutoSim";
+                PhysicsController.ProcessControlCommand(action);
+            }
+
+            if(Input.GetKeyDown(KeyCode.Alpha0))
+            {
+                ServerAction action = new ServerAction();
+                action.action = "AdvancePhysicsStep";
+                action.timeStep = 0.02f; //clamp this range to have max of 0.05
+                PhysicsController.ProcessControlCommand(action);
+            }
         }
 
         public void HideHUD()
@@ -147,7 +162,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         // action.renderObjectImage = true;
                         // action.renderFlowImage = true;
 
-                        action.continuous = true;//testing what continuous mode true does...
+                        //action.continuous = true;//turn on continuous to test multiple emit frames after a single action
 
 						PhysicsController.actionComplete = false;
                         action.ssao = "default";
@@ -1397,6 +1412,29 @@ namespace UnityStandardAssets.Characters.FirstPerson
 							
                         //action.moveMagnitude = 200f;//4000f;
                         action.z = -1;
+						PhysicsController.ProcessControlCommand(action);                  
+						break;
+					}
+
+                case "dirpush":
+					{
+						ServerAction action = new ServerAction();
+						action.action = "DirectionalPush";
+
+                        if (splitcommand.Length > 1 && splitcommand.Length < 3)
+                        {
+                            action.objectId = splitcommand[1];
+                            action.moveMagnitude = 10f;//4000f;
+                        }
+
+                        else if(splitcommand.Length > 2)
+                        {
+                            action.objectId = splitcommand[1];
+                            action.moveMagnitude = float.Parse(splitcommand[2]);
+                        }
+
+                        action.pushAngle = 279f;
+
 						PhysicsController.ProcessControlCommand(action);                  
 						break;
 					}

@@ -480,33 +480,55 @@ def pre_test(context):
 
 def clean():
     subprocess.check_call("git reset --hard", shell=True)
+    subprocess.check_call("git clean -f -d", shell=True)
     subprocess.check_call("git clean -f -x", shell=True)
     shutil.rmtree("unity/builds", ignore_errors=True)
 
+def link_build_cache(branch):
+    library_path = os.path.join('unity', 'Library')
+
+    if os.path.exists(library_path):
+        os.unlink(library_path)
+
+    branch_cache_dir = os.path.join(os.environ['HOME'], 'cache', branch, 'Library')
+    os.makedirs(branch_cache_dir, exist_ok=True)
+    os.symlink(branch_cache_dir, library_path)
+
+def pending_travis_build():
+    import requests
+    res = requests.get('https://api.travis-ci.org/repo/16690831/builds?repository_id=16690831&include=build.commit%2Cbuild.branch%2Cbuild.request%2Cbuild.created_by%2Cbuild.repository&build.state=started%2Ccreated&sort_by=started_at:desc',
+            headers={'Accept': 'application/json', 'Content-Type': 'application/json', "Travis-API-Version": '3'})
+
+    for b in res.json()['builds']:
+        return dict(branch=b['branch']['name'], commit_id=b['commit']['sha'])
 
 @task
-def ci_build(context, branch):
+def ci_build(context):
     import fcntl
 
     lock_f = open(os.path.join(os.environ['HOME'], ".ci-build.lock"), "w")
 
     try:
         fcntl.flock(lock_f, fcntl.LOCK_EX | fcntl.LOCK_NB)
-        clean()
-        subprocess.check_call("git checkout %s" % branch, shell=True)
-        subprocess.check_call("git pull origin %s" % branch, shell=True)
+        build = pending_travis_build()
+        if build:
+            clean()
+            link_build_cache(build['branch'])
+            subprocess.check_call("git fetch", shell=True)
+            subprocess.check_call("git checkout %s" % build['branch'], shell=True)
+            subprocess.check_call("git checkout -qf %s" % build['commit_id'], shell=True)
 
-        procs = []
-        for arch in ['OSXIntel64', 'Linux64']:
-            p = ci_build_arch(arch, branch)
-            procs.append(p)
+            procs = []
+            for arch in ['OSXIntel64', 'Linux64']:
+                p = ci_build_arch(arch, build['branch'])
+                procs.append(p)
 
-        if branch == 'master':
-            webgl_build_deploy_demo(context, verbose=True, content_addressable=True, force=True)
+            if build['branch'] == 'master':
+                webgl_build_deploy_demo(context, verbose=True, content_addressable=True, force=True)
 
-        for p in procs:
-            if p:
-                p.join()
+            for p in procs:
+                if p:
+                    p.join()
 
         fcntl.flock(lock_f, fcntl.LOCK_UN)
 
@@ -571,9 +593,9 @@ def poll_ci_build(context):
                 print("log exists %s" % commit_id)
             else:
                 missing = True
-        time.sleep(30)
         if not missing:
             break
+        time.sleep(30)
 
     for arch in platform_map.keys():
         if not ai2thor.downloader.commit_build_exists(arch, commit_id):

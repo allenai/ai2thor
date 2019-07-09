@@ -341,6 +341,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // in the multiagent setting, explicitly giving this information for now.
             objMeta.visible = isVisible; //simObj.isVisible;
 
+            objMeta.isMoving = simObj.inMotion;//keep track of if this object is actively moving
+
             // TODO: bounds necessary?
             // Bounds bounds = simObj.Bounds;
             // this.bounds3D = new [] {
@@ -408,6 +410,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             metaMessage.agent = agentMeta;
             metaMessage.sceneName = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
             metaMessage.objects = this.generateObjectMetadata();
+            //check scene manager to see if the scene's objects are at rest
+            metaMessage.isSceneAtRest = physicsSceneManager.isSceneAtRest;
             metaMessage.collided = collidedObjects.Length > 0;
             metaMessage.collidedObjects = collidedObjects;
             metaMessage.screenWidth = Screen.width;
@@ -1947,9 +1951,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             action.z = 1;
 
-            if (action.moveMagnitude == 0f) {
-                action.moveMagnitude = 200f;
-            }
+            // if (action.moveMagnitude == 0f) {
+            //     action.moveMagnitude = 200f;
+            // }
 
             ApplyForceObject(action);
         }
@@ -1964,11 +1968,100 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             action.z = -1;
 
-            if (action.moveMagnitude == 0f) {
-                action.moveMagnitude = 200f;
-            }
+            // if (action.moveMagnitude == 0f) {
+            //     action.moveMagnitude = 200f;
+            // }
 
             ApplyForceObject(action);
+        }
+
+        //pass in a magnitude and an angle offset to push an object relative to agent forward
+        public void DirectionalPush(ServerAction action)
+        {
+            if (ItemInHand != null && action.objectId == ItemInHand.GetComponent<SimObjPhysics>().uniqueID) {
+                errorMessage = "Please use Throw for an item in the Agent's Hand";
+                Debug.Log(errorMessage);
+                actionFinished(false);
+                return;
+            }
+
+            //the direction vecctor to push the target object defined by action.PushAngle 
+            //degrees clockwise from the agent's forward, the PushAngle must be less than 360
+            if(action.pushAngle <= 0 || action.pushAngle >= 360)
+            {
+                errorMessage = "please give a PushAngle between 0 and 360.";
+                Debug.Log(errorMessage);
+                actionFinished(false);
+                return;
+            }
+
+            SimObjPhysics target = null;
+
+            if (action.forceAction) {
+                action.forceVisible = true;
+            }
+
+            SimObjPhysics[] simObjPhysicsArray = VisibleSimObjs(action);
+
+            foreach (SimObjPhysics sop in simObjPhysicsArray) {
+                if (action.objectId == sop.UniqueID) {
+                    target = sop;
+                }
+            }
+
+            if (target == null) {
+                errorMessage = "No valid target!";
+                Debug.Log(errorMessage);
+                actionFinished(false);
+                return;
+            }
+
+            //print(target.name);
+
+            if (!target.GetComponent<SimObjPhysics>()) {
+                errorMessage = "Target must be SimObjPhysics!";
+                Debug.Log(errorMessage);
+                actionFinished(false);
+                return;
+            }
+
+            bool canbepushed = false;
+
+            if (target.PrimaryProperty == SimObjPrimaryProperty.CanPickup ||
+                target.PrimaryProperty == SimObjPrimaryProperty.Moveable)
+                canbepushed = true;
+
+            if (!canbepushed) {
+                errorMessage = "Target Primary Property type incompatible with push/pull";
+                actionFinished(false);
+                return;
+            }
+
+            if (!action.forceAction && target.isInteractable == false) {
+                errorMessage = "Target is not interactable and is probably occluded by something!";
+                actionFinished(false);
+                return;
+            }
+
+            //find the Direction to push the object basec on action.PushAngle
+            Vector3 agentForward = transform.forward;
+            float pushAngleInRadians = action.pushAngle * Mathf.PI/-180; //using -180 so positive PushAngle values go clockwise
+
+            Vector3 direction = new Vector3((agentForward.x * Mathf.Cos(pushAngleInRadians) - agentForward.z * Mathf.Sin(pushAngleInRadians)), 0, 
+            agentForward.x * Mathf.Sin(pushAngleInRadians) + agentForward.z * Mathf.Cos(pushAngleInRadians));
+
+            ServerAction pushAction = new ServerAction();
+            pushAction.x = direction.x;
+            pushAction.y = direction.y;
+            pushAction.z = direction.z;
+
+            pushAction.moveMagnitude = action.moveMagnitude;
+
+            target.GetComponent<Rigidbody>().isKinematic = false;
+            sopApplyForce(pushAction, target);
+
+            // target.GetComponent<SimObjPhysics>().ApplyForce(pushAction);
+            // actionFinished(true);
         }
 
         public void ApplyForceObject(ServerAction action) {
@@ -2040,9 +2133,122 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             apply.y = dir.y;
             apply.z = dir.z;
 
-            target.GetComponent<SimObjPhysics>().ApplyForce(apply);
+            sopApplyForce(apply, target);
+            //target.GetComponent<SimObjPhysics>().ApplyForce(apply);
+            //actionFinished(true);
+        }
+
+        //pause physics!
+        public void PausePhysicsAutoSim(ServerAction action)
+        {
+            print("ZA WARUDO!");
+            Physics.autoSimulation = false;
+            physicsSceneManager.physicsSimulationPaused = true;
             actionFinished(true);
         }
+
+        public void AdvancePhysicsStep(ServerAction action)
+        {
+            if(Physics.autoSimulation == true)
+            {
+                errorMessage = "AdvancePhysicsStep can only be called if PausePHysicsAutoSim is called first!";
+                actionFinished(false);
+                return;
+            }
+
+            if(action.timeStep <= 0.0f || action.timeStep > 0.05f)
+            {
+                errorMessage = "Please use a timeStep between 0.0f and 0.05f";
+                actionFinished(false);
+                return;
+            }
+            
+            //pass in the timeStep to advance the physics simulation
+            Physics.Simulate(action.timeStep);
+            agentManager.AdvancePhysicsStepCount++;
+            actionFinished(true);
+        }
+
+        // //not sure if we need this just yet... might resolve automatically once the environment has come to rest
+        // public void UnpausePhysicsAutoSim(ServerAction action)
+        // {
+        //     Physics.autoSimulation = true;
+        //     physicsSceneManager.physicsSimulationPaused = false;
+        //     actionFinished(true);
+        // }
+
+        //wrapping the SimObjPhysics.ApplyForce function since lots of things use it....
+        protected void sopApplyForce(ServerAction action, SimObjPhysics sop)
+        {
+            //apply force, return action finished immediately
+            if(physicsSceneManager.physicsSimulationPaused)
+            {
+                sop.ApplyForce(action);
+                actionFinished(true);
+            }
+
+            //if physics is automatically being simulated, use coroutine to check when object has come to rest
+            else
+            {
+                sop.ApplyForce(action);
+                StartCoroutine(checkIfObjectHasStoppedMoving(sop));
+            }
+ 
+        }
+
+        //used to check if an specified sim object has come to rest, max time of 4 seconds
+        private IEnumerator checkIfObjectHasStoppedMoving(SimObjPhysics sop)
+        {
+            yield return null;
+            float startTime = Time.time;
+
+            if(sop != null)
+            {
+                Rigidbody rb = sop.GetComponentInChildren<Rigidbody>();
+                while(Time.time - startTime < 4)
+                {
+                    if(sop == null)
+                    break;
+
+                    if(Math.Abs(rb.angularVelocity.sqrMagnitude + rb.velocity.sqrMagnitude) < 0.00001) 
+                    {
+                        // Debug.Log ("object is now at rest");
+                        break;
+                    }
+
+                    else
+                    yield return null;
+                }
+            }
+
+            actionFinished(true);
+        }
+
+        // private IEnumerator emitFrameOverTimeAfterApplyForce(SimObjPhysics sop)
+        // {
+        //     Rigidbody rb = sop.GetComponentInChildren<Rigidbody>();
+        //     Physics.autoSimulation = false;
+        //     yield return null;
+
+        //     for(int i = 0; i < 100; i++)
+        //     {
+        //         Physics.Simulate(0.04f);
+        //         //emit frame now!
+        //         yield return StartCoroutine(agentManager.EmitFrame());
+
+        //         #if UNITY_EDITOR
+        //         yield return null;
+        //         #endif
+
+        //         //stop stepwise simulation once object comes to rest
+        //         if (Math.Abs(rb.angularVelocity.sqrMagnitude + rb.velocity.sqrMagnitude) < 0.00001) 
+        //         {
+        //             break;
+        //         }
+        //     }
+        //     Physics.autoSimulation = true;
+        //     actionFinished(true);
+        // }
 
         //Sweeptest to see if the object Agent is holding will prohibit movement
         public bool CheckIfItemBlocksAgentMovement(float moveMagnitude, int orientation) {
@@ -3191,6 +3397,21 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(success);
         }
 
+        public void SetObjectPoses(ServerAction action)
+        {
+            PhysicsSceneManager script = GameObject.Find("PhysicsSceneManager").GetComponent<PhysicsSceneManager>();
+            bool success = script.SetObjectPoses(action.objectPoses);
+            actionFinished(success);
+        }
+
+        public void SetObjectToggles(ServerAction action)
+        {
+            PhysicsSceneManager script = GameObject.Find("PhysicsSceneManager").GetComponent<PhysicsSceneManager>();
+            bool success = script.SetObjectToggles(action.objectToggles);
+            actionFinished(success);
+
+        }
+
         public void PutObject(ServerAction action) {
             action.objectId = action.receptacleObjectId;
             action.receptacleObjectId = null;
@@ -3614,11 +3835,24 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     rb.angularVelocity = UnityEngine.Random.insideUnitSphere;
 
                     DropContainedObjects(ItemInHand.GetComponent<SimObjPhysics>());
-                    if (action.autoSimulation) {
-                        StartCoroutine(checkDropHandObjectAction(ItemInHand.GetComponent<SimObjPhysics>()));
-                    } else {
-                        StartCoroutine(checkDropHandObjectActionFast(ItemInHand.GetComponent<SimObjPhysics>()));
+
+                    //if physics simulation has been paused by the PausePhysicsAutoSim() action, don't do any coroutine checks
+                    if(!physicsSceneManager.physicsSimulationPaused)
+                    {
+                        if (action.autoSimulation) 
+                        {
+                            StartCoroutine(checkDropHandObjectAction(ItemInHand.GetComponent<SimObjPhysics>()));
+                        } 
+
+                        else 
+                        {
+                            StartCoroutine(checkDropHandObjectActionFast(ItemInHand.GetComponent<SimObjPhysics>()));
+                        }
                     }
+
+                    else
+                    actionFinished(true);
+
                     ItemInHand.GetComponent<SimObjPhysics>().isInAgentHand = false;
                     ItemInHand = null;
                     return true;
@@ -3644,15 +3878,20 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             GameObject go = ItemInHand;
 
             if (DropHandObject(action)) {
-                ServerAction apply = new ServerAction();
-                apply.moveMagnitude = action.moveMagnitude;
-
                 Vector3 dir = m_Camera.transform.forward;
-                apply.x = dir.x;
-                apply.y = dir.y;
-                apply.z = dir.z;
+                //use action.moveMagnitude
 
-                go.GetComponent<SimObjPhysics>().ApplyForce(apply);
+                // ServerAction apply = new ServerAction();
+                // apply.moveMagnitude = action.moveMagnitude;
+
+                // Vector3 dir = m_Camera.transform.forward;
+                // apply.x = dir.x;
+                // apply.y = dir.y;
+                // apply.z = dir.z;
+
+                go.GetComponent<SimObjPhysics>().ApplyForce(dir, action.moveMagnitude);
+                //sopApplyForce(apply, go.GetComponent<SimObjPhysics>());
+
             }
 
         }
@@ -4197,125 +4436,100 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true);
         }
 
-        public void ToggleObjectOn(ServerAction action) {
-            if (action.objectId == null) {
+        public void ToggleObjectOn(ServerAction action)
+        {
+            bool result = ToggleObject(action, true, action.forceAction);
+            actionFinished(result);
+        }
+
+        public void ToggleObjectOff(ServerAction action)
+        {
+            bool result = ToggleObject(action, false, action.forceAction);
+            actionFinished(result);
+        }
+
+
+        public bool ToggleObject(ServerAction action, bool toggleOn, bool forceAction)
+        {
+            if (action.objectId == null)
+            {
                 errorMessage = "objectId required for ToggleObject";
-                actionFinished(false);
-                return;
+                return false;
             }
 
             SimObjPhysics target = null;
-            foreach (SimObjPhysics sop in VisibleSimObjs(action)) {
+            foreach (SimObjPhysics sop in VisibleSimObjs(action))
+            {
                 //check for CanOpen drawers, cabinets or CanOpen_Fridge fridge objects
-                if (sop.GetComponent<CanToggleOnOff>()) {
+                if (sop.GetComponent<CanToggleOnOff>())
+                {
                     target = sop;
+                    break;
                 }
             }
+            if (!target)
+            {
 
-            if (target) {
-                if (!action.forceAction && target.isInteractable == false) {
-                    //Debug.Log("can't close object if it's already closed");
-                    actionFinished(false);
-                    errorMessage = "object is visible but occluded by something: " + action.objectId;
-                    return;
+                //target not found in currently visible objects, report not found
+                errorMessage = "object not found: " + action.objectId;
+                return false;
+            }
+            return ToggleObject(target, toggleOn, forceAction);
+        }
+
+        public bool ToggleObject(SimObjPhysics target, bool toggleOn, bool forceAction)
+        {
+            if (!forceAction && target.isInteractable == false)
+            {
+                errorMessage = "object is visible but occluded by something: " + target.UniqueID;
+                return false;
+            }
+
+            if (target.GetComponent<CanToggleOnOff>())
+            {
+                CanToggleOnOff ctof = target.GetComponent<CanToggleOnOff>();
+
+                if (!ctof.ReturnSelfControlled())
+                {
+                    errorMessage = "target object is controlled by another sim object. target object cannot be turned on/off directly";
+                    return false;
                 }
 
-                if (target.GetComponent<CanToggleOnOff>()) {
-                    CanToggleOnOff ctof = target.GetComponent<CanToggleOnOff>();
-
-                    if(!ctof.ReturnSelfControlled()){
-                        errorMessage = "target object is controlled by another sim object. target object cannot be turned on/off directly";
-                        actionFinished(false);
-                        return;
-                    }
-
-                    //check to make sure object is off
+                //check to make sure object is in other state
+                if (ctof.isOn == toggleOn)
+                {
                     if (ctof.isOn) {
                         errorMessage = "can't toggle object on if it's already on!";
-                        actionFinished(false);
-                        return;
                     }
-
-                    //check if this object needs to be closed in order to turn on
-                    if (ctof.ReturnMustBeClosedToTurnOn().Contains(target.Type)) {
-                        if (target.GetComponent<CanOpen_Object>().isOpen) {
-                            errorMessage = "Target must be closed to Toggle On!";
-                            actionFinished(false);
-                            return;
-                        }
-                    }
-
-                    //check if the object can be broken, if it is broken you can't turn it on!
-                    if(target.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanBreak))
+                    else
                     {
-                        if(target.GetComponentInChildren<Break>().isBroken())
-                        {
-                            errorMessage = "Target is broken and can't be turned on!";
-                            actionFinished(false);
-                            return;
-                        }
-                    }
-
-                    ctof.Toggle();
-                    actionFinished(true);
-                }
-            }
-
-            //target not found in currently visible objects, report not found
-            else {
-                actionFinished(false);
-                errorMessage = "object not found: " + action.objectId;
-            }
-        }
-
-        public void ToggleObjectOff(ServerAction action) {
-            if (action.objectId == null) {
-                errorMessage = "objectId required for ToggleObject";
-                actionFinished(false);
-                return;
-            }
-
-            SimObjPhysics target = null;
-            foreach (SimObjPhysics sop in VisibleSimObjs(action)) {
-                //check for CanOpen drawers, cabinets or CanOpen_Fridge fridge objects
-                if (sop.GetComponent<CanToggleOnOff>()) {
-                    target = sop;
-                }
-            }
-
-            if (target) {
-                if (!action.forceAction && target.isInteractable == false) {
-                    actionFinished(false);
-                    errorMessage = "object is visible but occluded by something: " + action.objectId;
-                    return;
-                }
-
-                if (target.GetComponent<CanToggleOnOff>()) {
-                    CanToggleOnOff ctof = target.GetComponent<CanToggleOnOff>();
-
-                    if(!ctof.ReturnSelfControlled()){
-                        errorMessage = "target object is controlled by another sim object. target object cannot be turned on/off directly";
-                        actionFinished(false);
-                        return;
-                    }
-
-                    //check to make sure object is on
-                    if (!ctof.isOn) {
                         errorMessage = "can't toggle object off if it's already off!";
-                        actionFinished(false);
-                    } else {
-                        ctof.Toggle();
-                        actionFinished(true);
+
+                    }
+
+                    return false;
+                }
+                //check if this object needs to be closed in order to turn on
+                if (toggleOn && ctof.ReturnMustBeClosedToTurnOn().Contains(target.Type))
+                {
+                    if (target.GetComponent<CanOpen_Object>().isOpen)
+                    {
+                        errorMessage = "Target must be closed to Toggle On!";
+                        return false;
                     }
                 }
-            }
 
-            //target not found in currently visible objects, report not found
-            else {
-                actionFinished(false);
-                errorMessage = "object not found: " + action.objectId;
+                ctof.Toggle();
+                return true;
+
+            }
+            else
+            {
+                errorMessage = "object is not toggleable.";
+                return false;
             }
         }
+
         public void OpenObject(ServerAction action) {
             //pass name of object in from action.objectID
             //check if that object is in the viewport
@@ -4647,7 +4861,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
 
-        protected void HideAllObjectsExcept(ServerAction action) {
+        public void HideAllObjectsExcept(ServerAction action) {
             foreach (GameObject go in UnityEngine.Object.FindObjectsOfType<GameObject>()) {
                 UpdateDisplayGameObject(go, false);
             }
@@ -4669,11 +4883,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         //if you want to do something like throw objects to knock over other objects, use this action to set all objects to Kinematic false
         //otherwise objects will need to be hit multiple times in order to ensure kinematic false toggle
         //use this by initializing the scene, then calling randomize if desired, and then call this action to prepare the scene so all objects will react to others upon collision.
-        public void MakeAllPickupableObjectsMoveable(ServerAction action)
+        public void MakeAllObjectsMoveable(ServerAction action)
         {
             foreach (SimObjPhysics sop in GameObject.FindObjectsOfType<SimObjPhysics>()) {
-                if (sop.PrimaryProperty == SimObjPrimaryProperty.CanPickup) {
+                if (sop.PrimaryProperty == SimObjPrimaryProperty.CanPickup || sop.PrimaryProperty == SimObjPrimaryProperty.Moveable) {
                     Rigidbody rb = sop.GetComponent<Rigidbody>();
+                    //XXX we might need to add something here to account for objects that have other sim objects as children (dresser-drawer)
                     rb.isKinematic = false;
                     rb.collisionDetectionMode = CollisionDetectionMode.ContinuousSpeculative;
                 }

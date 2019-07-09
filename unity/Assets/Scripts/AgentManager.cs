@@ -32,8 +32,6 @@ public class AgentManager : MonoBehaviour
 	private bool synchronousHttp = true;
 	private Socket sock = null;
 	private List<Camera> thirdPartyCameras = new List<Camera>();
-	
-
 	private bool readyToEmit;
 
 	private Color[] agentColors = new Color[]{Color.blue, Color.yellow, Color.green, Color.red, Color.magenta, Color.grey};
@@ -43,6 +41,9 @@ public class AgentManager : MonoBehaviour
 	private BaseFPSAgentController primaryAgent;
 
     private JavaScriptInterface jsInterface;
+
+    private PhysicsSceneManager physicsSceneManager;
+    public int AdvancePhysicsStepCount = 0;
 
 	void Awake() {
 
@@ -82,6 +83,8 @@ public class AgentManager : MonoBehaviour
 		readyToEmit = true;
 		Debug.Log("Graphics Tier: " + Graphics.activeTier);
 		this.agents.Add (primaryAgent);
+
+        physicsSceneManager = GameObject.Find("PhysicsSceneManager").GetComponent<PhysicsSceneManager>();
 	}
 
 	private void initializePrimaryAgent() {
@@ -265,16 +268,46 @@ public class AgentManager : MonoBehaviour
 				completeCount++;
 			}
 		}
-		// if (completeCount == agents.Count) {
-		// 	Physics.autoSimulation = false;
-		// } else {
-		// 	Physics.Simulate(0.02f);
-		// }
+
+        //check what objects in the scene are currently in motion
+        Rigidbody[] rbs = FindObjectsOfType(typeof(Rigidbody)) as Rigidbody[];
+        physicsSceneManager.isSceneAtRest = true;//assume the scene is at rest by default
+
+        foreach(Rigidbody rb in rbs)
+        {
+            //
+            if(Math.Abs(rb.angularVelocity.sqrMagnitude + 
+            rb.velocity.sqrMagnitude) < 0.0001)
+            {
+                if(rb.GetComponentInParent<SimObjPhysics>())
+                rb.GetComponentInParent<SimObjPhysics>().inMotion = false;
+            }
+
+            //if the object is in motion, set it, and also change isSceneAtRest to false
+            else
+            {
+                if(rb.GetComponentInParent<SimObjPhysics>())
+                {
+                    rb.GetComponentInParent<SimObjPhysics>().inMotion = true;
+                    physicsSceneManager.isSceneAtRest = false;
+                }
+            }
+        }
 
 		if (completeCount == agents.Count && completeCount > 0 && readyToEmit) {
 			readyToEmit = false;
 			StartCoroutine (EmitFrame ());
 		}
+
+        //ok now if the scene is at rest, turn back on physics autosimulation
+        if(physicsSceneManager.isSceneAtRest && 
+        physicsSceneManager.physicsSimulationPaused && AdvancePhysicsStepCount > 0)
+        {
+            print("soshite toki wa ugoki desu");
+            Physics.autoSimulation = true;
+            physicsSceneManager.physicsSimulationPaused = false;
+            AdvancePhysicsStepCount = 0;
+        }
 
 	}
 
@@ -414,7 +447,7 @@ public class AgentManager : MonoBehaviour
 	}
 
 
-	private IEnumerator EmitFrame() {
+	public IEnumerator EmitFrame() {
 
 
 		frameCounter += 1;
@@ -728,6 +761,7 @@ public class ObjectMetadata
 	public string parentReceptacle;
 	public string[] parentReceptacles;
 	public float currentTime;
+    public bool isMoving;//true if this game object currently has a non-zero velocity
 
 	public ObjectMetadata() { }
 }
@@ -760,9 +794,25 @@ public class HandMetadata {
 }
 
 [Serializable]
+public class ObjectPose
+{
+    public string objectName;
+    public Vector3 position;
+    public Vector3 rotation;
+}
+
+[Serializable]
+public class ObjectToggle
+{
+    public string objectType;
+    public bool isOn;
+}
+
+[Serializable]
 public struct MetadataWrapper
 {
 	public ObjectMetadata[] objects;
+    public bool isSceneAtRest;//set true if all objects in the scene are at rest (or very very close to 0 velocity)
 	public ObjectMetadata agent;
 	public HandMetadata hand;
 	public float fov;
@@ -827,6 +877,7 @@ public class ServerAction
 	public float fieldOfView = 60f;
 	public float x;
 	public float z;
+    public float pushAngle;
 	public int horizon;
 	public Vector3 rotation;
 	public Vector3 position;
@@ -850,10 +901,9 @@ public class ServerAction
 	public bool randomizeOpen;
 	public int randomSeed;
 	public float moveMagnitude;
-
 	public bool autoSimulation = true;
 	public float visibilityDistance;
-	public bool continuousMode;
+	public bool continuousMode; //i don't think this is used right now? also how is this different from the continuous bool above?
 	public bool uniquePickupableObjectTypes; // only allow one of each object type to be visible
 	public float removeProb;
 	public int maxNumRepeats;
@@ -871,7 +921,12 @@ public class ServerAction
 	public float TimeUntilRoomTemp;
 	public bool allowDecayTemperature = true; //set to true if temperature should decay over time, set to false if temp changes should not decay, defaulted true
 	public string StateChange;//a string that specifies which state change to randomly toggle
-	public SimObjType ReceptableSimObjType()
+    public float timeStep = 0.01f;
+
+    public ObjectPose[] objectPoses;
+    public ObjectToggle[] objectToggles;
+
+    public SimObjType ReceptableSimObjType()
 	{
 		if (string.IsNullOrEmpty(receptacleObjectType))
 		{

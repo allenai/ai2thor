@@ -518,8 +518,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
 				return;
 			}
 
-			if (hit.gameObject.name.Equals("Floor"))
+			if (hit.gameObject.GetComponent<StructureObject>())
 			{
+                if(hit.gameObject.GetComponent<StructureObject>().WhatIsMyStructureObjectTag == StructureObjectTag.Floor)
 				return;
 			}
 
@@ -609,11 +610,13 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			// StartCoroutine(checkMoveAction(action));
 		}
 
+        //this is not currently used by the Physics agent. Physics agent now checks the final movement position first before moving, so collision checks after trying to move are no longer needed
 		virtual protected IEnumerator checkMoveAction(ServerAction action)
 		{
 
 			yield return null;
 
+    
 			if (continuousMode)
 			{
 				actionFinished(true);
