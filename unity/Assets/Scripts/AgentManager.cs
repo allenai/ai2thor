@@ -842,6 +842,7 @@ public class ServerAction
 	public float fieldOfView = 60f;
 	public float x;
 	public float z;
+    public float PushAngle;
 	public int horizon;
 	public Vector3 rotation;
 	public Vector3 position;
@@ -865,7 +866,6 @@ public class ServerAction
 	public bool randomizeOpen;
 	public int randomSeed;
 	public float moveMagnitude;
-
 	public bool autoSimulation = true;
 	public float visibilityDistance;
 	public bool continuousMode;
@@ -887,10 +887,10 @@ public class ServerAction
 	public bool allowDecayTemperature = true; //set to true if temperature should decay over time, set to false if temp changes should not decay, defaulted true
 	public string StateChange;//a string that specifies which state change to randomly toggle
 
-    	public ObjectPose[] objectPoses;
-    	public ObjectToggle[] objectToggles;
+    public ObjectPose[] objectPoses;
+    public ObjectToggle[] objectToggles;
 
-    	public SimObjType ReceptableSimObjType()
+    public SimObjType ReceptableSimObjType()
 	{
 		if (string.IsNullOrEmpty(receptacleObjectType))
 		{

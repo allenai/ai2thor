@@ -1947,9 +1947,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             action.z = 1;
 
-            if (action.moveMagnitude == 0f) {
-                action.moveMagnitude = 200f;
-            }
+            // if (action.moveMagnitude == 0f) {
+            //     action.moveMagnitude = 200f;
+            // }
 
             ApplyForceObject(action);
         }
@@ -1964,11 +1964,98 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             action.z = -1;
 
-            if (action.moveMagnitude == 0f) {
-                action.moveMagnitude = 200f;
-            }
+            // if (action.moveMagnitude == 0f) {
+            //     action.moveMagnitude = 200f;
+            // }
 
             ApplyForceObject(action);
+        }
+
+        //pass in a magnitude and an angle offset to push an object relative to agent forward
+        public void DirectionalPush(ServerAction action)
+        {
+            if (ItemInHand != null && action.objectId == ItemInHand.GetComponent<SimObjPhysics>().uniqueID) {
+                errorMessage = "Please use Throw for an item in the Agent's Hand";
+                Debug.Log(errorMessage);
+                actionFinished(false);
+                return;
+            }
+
+            //the direction vecctor to push the target object defined by action.PushAngle 
+            //degrees clockwise from the agent's forward, the PushAngle must be less than 360
+            if(action.PushAngle <= 0 || action.PushAngle >= 360)
+            {
+                errorMessage = "please give a PushAngle between 0 and 360.";
+                Debug.Log(errorMessage);
+                actionFinished(false);
+                return;
+            }
+
+            SimObjPhysics target = null;
+
+            if (action.forceAction) {
+                action.forceVisible = true;
+            }
+
+            SimObjPhysics[] simObjPhysicsArray = VisibleSimObjs(action);
+
+            foreach (SimObjPhysics sop in simObjPhysicsArray) {
+                if (action.objectId == sop.UniqueID) {
+                    target = sop;
+                }
+            }
+
+            if (target == null) {
+                errorMessage = "No valid target!";
+                Debug.Log(errorMessage);
+                actionFinished(false);
+                return;
+            }
+
+            //print(target.name);
+
+            if (!target.GetComponent<SimObjPhysics>()) {
+                errorMessage = "Target must be SimObjPhysics!";
+                Debug.Log(errorMessage);
+                actionFinished(false);
+                return;
+            }
+
+            bool canbepushed = false;
+
+            if (target.PrimaryProperty == SimObjPrimaryProperty.CanPickup ||
+                target.PrimaryProperty == SimObjPrimaryProperty.Moveable)
+                canbepushed = true;
+
+            if (!canbepushed) {
+                errorMessage = "Target Primary Property type incompatible with push/pull";
+                actionFinished(false);
+                return;
+            }
+
+            if (!action.forceAction && target.isInteractable == false) {
+                errorMessage = "Target is not interactable and is probably occluded by something!";
+                actionFinished(false);
+                return;
+            }
+
+            //find the Direction to push the object basec on action.PushAngle
+            Vector3 agentForward = transform.forward;
+            float pushAngleInRadians = action.PushAngle * Mathf.PI/-180; //using -180 so positive PushAngle values go clockwise
+
+            Vector3 direction = new Vector3((agentForward.x * Mathf.Cos(pushAngleInRadians) - agentForward.z * Mathf.Sin(pushAngleInRadians)), 0, 
+            agentForward.x * Mathf.Sin(pushAngleInRadians) + agentForward.z * Mathf.Cos(pushAngleInRadians));
+
+            ServerAction pushAction = new ServerAction();
+            pushAction.x = direction.x;
+            pushAction.y = direction.y;
+            pushAction.z = direction.z;
+
+            pushAction.moveMagnitude = action.moveMagnitude;
+
+            target.GetComponent<Rigidbody>().isKinematic = false;
+            target.GetComponent<SimObjPhysics>().ApplyForce(pushAction);
+            actionFinished(true);
         }
 
         public void ApplyForceObject(ServerAction action) {
