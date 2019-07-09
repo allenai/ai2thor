@@ -221,7 +221,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   CurrentlyContains: []
-  myParent: {fileID: 0}
+  myParent: {fileID: 1468489160025782}
   occupied: 0
 --- !u!1 &1158380960153360
 GameObject:
@@ -896,6 +896,7 @@ GameObject:
   - component: {fileID: 4612869741883616}
   - component: {fileID: 114322956756684228}
   - component: {fileID: 54006456854058102}
+  - component: {fileID: 700293349}
   m_Layer: 8
   m_Name: Pan_10
   m_TagString: SimObjPhysics
@@ -939,7 +940,7 @@ MonoBehaviour:
   uniqueID: Pan|+10.00|+10.00|+10.00
   Type: 9
   PrimaryProperty: 3
-  SecondaryProperties: 07000000
+  SecondaryProperties: 0700000004000000
   BoundingBox: {fileID: 1368608797118248}
   VisibilityPoints:
   - {fileID: 4603676213230780}
@@ -960,7 +961,7 @@ MonoBehaviour:
   - {fileID: 1114041624252846}
   isVisible: 0
   isInteractable: 0
-  isColliding: 0
+  isInAgentHand: 0
   MyColliders:
   - {fileID: 136866058811918506}
   - {fileID: 65692099050263166}
@@ -981,6 +982,10 @@ MonoBehaviour:
   HFbounciness: 0
   HFrbdrag: 0
   HFrbangulardrag: 0
+  salientMaterials: 00000000
+  CurrentTemperature: 0
+  HowManySecondsUntilRoomTemp: 10
+  ContainedObjectReferences: []
 --- !u!54 &54006456854058102
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -997,6 +1002,30 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
+--- !u!114 &700293349
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1468489160025782}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d106cf009583a40e4a85d860c9830f67, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  MaterialSwapObjects:
+  - MyObject: {fileID: 1776289977988630}
+    OnMaterials:
+    - {fileID: 2100000, guid: 341c98f683e1f401e924cd4be7c4ff11, type: 2}
+    - {fileID: 2100000, guid: 769b8d6719cd04e4d82a58eadbb7ce61, type: 2}
+    - {fileID: 2100000, guid: 49cda992fe956784c9bfc0ef1823f165, type: 2}
+    - {fileID: 2100000, guid: d3b9e669b9d7f3342af647e94c7399a4, type: 2}
+    - {fileID: 2100000, guid: 68a0ad4012bfdac48a026048278c99ac, type: 2}
+    OffMaterials: []
+  ObjectsToEnableIfClean: []
+  ObjectsToEnableIfDirty: []
+  isDirty: 0
 --- !u!1 &1472656958998048
 GameObject:
   m_ObjectHideFlags: 0
@@ -1688,10 +1717,11 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 1c32d9dc44eed4dadaae2ef051bedb70, type: 2}
+  - {fileID: 2100000, guid: 341c98f683e1f401e924cd4be7c4ff11, type: 2}
   - {fileID: 2100000, guid: 769b8d6719cd04e4d82a58eadbb7ce61, type: 2}
   - {fileID: 2100000, guid: 49cda992fe956784c9bfc0ef1823f165, type: 2}
   - {fileID: 2100000, guid: d3b9e669b9d7f3342af647e94c7399a4, type: 2}
+  - {fileID: 2100000, guid: 7afd56a5a7d0e18448e7937b55261aee, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -1873,7 +1903,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   CurrentlyContains: []
-  myParent: {fileID: 0}
+  myParent: {fileID: 1468489160025782}
   occupied: 0
 --- !u!1 &1901464148747508
 GameObject:

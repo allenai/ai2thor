@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using System;
 
 namespace UnityStandardAssets.Characters.FirstPerson
 {
@@ -11,24 +12,58 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		public PhysicsRemoteFPSAgentController PhysicsController = null;
         public AgentManager AManager = null;
 
-        private InputField debugfield;
-        private DebugFPSAgentController dfac;
+        private ControlMode controlMode;
+
+        private Dictionary<KeyCode, ControlMode> debugKeyToController = new Dictionary<KeyCode, ControlMode>{
+            {KeyCode.Alpha1, ControlMode.DEBUG_TEXT_INPUT},
+            {KeyCode.BackQuote, ControlMode.FPS},
+            {KeyCode.Alpha2, ControlMode.DISCRETE_POINT_CLICK}
+        };
+
+        private bool setEnabledControlComponent(ControlMode mode, bool enabled) {
+            Type componentType;
+            var success = PlayerControllers.controlModeToComponent.TryGetValue(mode, out componentType);
+            if (success) {
+                var previousComponent = Agent.GetComponent(componentType) as MonoBehaviour;
+                if (previousComponent != null) {
+                    previousComponent.enabled = enabled;
+                }
+                else {
+                    success = false;
+                }
+            }
+            return success;
+        }
+
+        public void setControlMode(ControlMode mode) {
+            setEnabledControlComponent(controlMode, false);
+            controlMode = mode;
+            setEnabledControlComponent(controlMode, true);
+        } 
 
         // Use this for initialization
         void Start()
         {
             #if UNITY_EDITOR || UNITY_WEBGL
-
                 Debug.Log("Unity editor");
                 this.InitializeUserControl();
 
             #endif
+        }
 
+        void SelectPlayerControl() {
+            #if UNITY_EDITOR
+                Debug.Log("Editor control");
+                setControlMode(ControlMode.DEBUG_TEXT_INPUT);
+            #endif
             #if UNITY_WEBGL
-
                 Debug.Log("Webgl");
+                setControlMode(ControlMode.FPS);
                 PhysicsController.GetComponent<JavaScriptInterface>().enabled = true;
-
+            #endif
+            #if TURK_TASK
+                Debug.Log("TURK");
+                setControlMode(ControlMode.DISCRETE_POINT_CLICK);
             #endif
         }
 
@@ -37,203 +72,39 @@ namespace UnityStandardAssets.Characters.FirstPerson
             Agent = GameObject.Find("FPSController");
             PhysicsController = Agent.GetComponent<PhysicsRemoteFPSAgentController>();
             AManager = GameObject.Find("PhysicsSceneManager").GetComponentInChildren<AgentManager>();
+            
+           SelectPlayerControl();
 
-            PhysicsController.GetComponent<DebugFPSAgentController>().enabled = true;
-
-            debugfield = gameObject.GetComponent<InputField>();
-            dfac = Agent.GetComponent<DebugFPSAgentController>();
-
+           #if !UNITY_EDITOR
+               HideHUD();
+           #endif
         }
 
         // Update is called once per frame
         void Update()
         {
-            #if UNITY_EDITOR || UNITY_WEBGL
-            //use these for the Breakable Window demo video
-            // if(Input.GetKeyDown(KeyCode.P))
-            // {
-            //    // print("pickup");
-            //     ServerAction action = new ServerAction();
-            //     action.action = "PickupObject";
-            //     action.objectId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().UniqueIDOfClosestVisibleObject();
-            //     PhysicsController.ProcessControlCommand(action);
-                        
-            // }
-
-            // if(Input.GetKeyDown(KeyCode.T))
-            // {
-            //     ServerAction action = new ServerAction();
-            //     action.action = "ThrowObject";
-            //     action.moveMagnitude = 600f;
-            //     PhysicsController.ProcessControlCommand(action);   
-            // }
-
-            // if(Input.GetKeyDown(KeyCode.U))
-            // {
-            //     ServerAction action = new ServerAction();
-            //     action.action = "MoveHandMagnitude";
-
-            //     action.moveMagnitude = 0.1f;
-                
-            //     action.x = 0f;
-            //     action.y = 1f;
-            //     action.z = 0f;
-            //     PhysicsController.ProcessControlCommand(action);
-            // }
-
-
-            if(!debugfield.isFocused && dfac.TextInputMode)
-            {
-                float FlyMagnitude = 1.0f;
-                float WalkMagnitude = 0.25f;
-                if(Input.GetKeyDown(KeyCode.W))
-                {
-                    ServerAction action = new ServerAction();
-                    if(PhysicsController.FlightMode)
-                    {
-                        action.action = "FlyAhead";
-                        action.moveMagnitude = FlyMagnitude;
-                        PhysicsController.ProcessControlCommand(action);
-                    }
-
-                    else
-                    {
-                        action.action = "MoveAhead";
-                        action.moveMagnitude = WalkMagnitude;		
-                        PhysicsController.ProcessControlCommand(action);
+            #if UNITY_EDITOR
+                foreach (KeyValuePair<KeyCode, ControlMode> entry in debugKeyToController) {
+                    if (Input.GetKeyDown(entry.Key)) {
+                        if (controlMode != entry.Value) {
+                            setControlMode(entry.Value);
+                            break;
+                        }
                     }
                 }
-
-                if(Input.GetKeyDown(KeyCode.S))
-                {
-                    ServerAction action = new ServerAction();
-                    if(PhysicsController.FlightMode)
-                    {
-                        action.action = "FlyBack";
-                        action.moveMagnitude = FlyMagnitude;
-                        PhysicsController.ProcessControlCommand(action);
-                    }
-
-                    else
-                    {
-                        action.action = "MoveBack";
-                        action.moveMagnitude = WalkMagnitude;		
-                        PhysicsController.ProcessControlCommand(action);
-                    }
-                }
-
-                if(Input.GetKeyDown(KeyCode.A))
-                {
-                    ServerAction action = new ServerAction();
-                    if(PhysicsController.FlightMode)
-                    {
-                        action.action = "FlyLeft";
-                        action.moveMagnitude = FlyMagnitude;
-                        PhysicsController.ProcessControlCommand(action);
-                    }
-
-                    else
-                    {
-                        action.action = "MoveLeft";
-                        action.moveMagnitude = WalkMagnitude;		
-                        PhysicsController.ProcessControlCommand(action);
-                    }
-                }
-
-                if(Input.GetKeyDown(KeyCode.D))
-                {
-                    ServerAction action = new ServerAction();
-                    if(PhysicsController.FlightMode)
-                    {
-                        action.action = "FlyRight";
-                        action.moveMagnitude = FlyMagnitude;
-                        PhysicsController.ProcessControlCommand(action);
-                    }
-
-                    else
-                    {
-                        action.action = "MoveRight";
-                        action.moveMagnitude = WalkMagnitude;		
-                        PhysicsController.ProcessControlCommand(action);
-                    }
-                }
-
-                if(Input.GetKeyDown(KeyCode.I))
-                {
-                    if(PhysicsController.FlightMode)
-                    {
-                        ServerAction action = new ServerAction();
-                        action.action = "FlyUp";
-                        action.moveMagnitude = FlyMagnitude;
-                        PhysicsController.ProcessControlCommand(action);
-                    }
-                }
-
-                if(Input.GetKeyDown(KeyCode.K))
-                {
-                    if(PhysicsController.FlightMode)
-                    {
-                        ServerAction action = new ServerAction();
-                        action.action = "FlyDown";
-                        action.moveMagnitude = FlyMagnitude;
-                        PhysicsController.ProcessControlCommand(action);
-                    }
-                }
-
-                if(Input.GetKeyDown(KeyCode.UpArrow))
-                {
-                    ServerAction action = new ServerAction();
-                    action.action = "LookUp";
-                    PhysicsController.ProcessControlCommand(action); 
-                }
-
-                if(Input.GetKeyDown(KeyCode.DownArrow))
-                {
-                    ServerAction action = new ServerAction();
-                    action.action = "LookDown";
-                    PhysicsController.ProcessControlCommand(action); 
-                }
-
-                if(Input.GetKeyDown(KeyCode.LeftArrow) || Input.GetKeyDown(KeyCode.J))
-                {
-                    ServerAction action = new ServerAction();
-                    action.action = "RotateLeft";
-                    PhysicsController.ProcessControlCommand(action); 
-                }
-
-                if(Input.GetKeyDown(KeyCode.RightArrow) || Input.GetKeyDown(KeyCode.L))
-                {
-                    ServerAction action = new ServerAction();
-                    action.action = "RotateRight";
-                    PhysicsController.ProcessControlCommand(action); 
-                }
-
-                if(Input.GetKeyDown(KeyCode.Space))
-                {
-                    if(PhysicsController.FlightMode)
-                    {
-                        ServerAction action = new ServerAction();
-                        action.action = "LaunchDroneObject";
-                        action.moveMagnitude = 200f;
-                        //action. = new Vector3(0, 1, -1);
-                        action.x = 0;
-                        action.y = 1;
-                        action.z = -1;
-                        PhysicsController.ProcessControlCommand(action);
-                    }
-                }
-
-                if(Input.GetKeyDown(KeyCode.O))
-                {
-                    if(PhysicsController.FlightMode)
-                    {
-                        ServerAction action = new ServerAction();
-                        action.action = "CheckDroneCaught";
-                        PhysicsController.ProcessControlCommand(action);
-                    }
-                }
-            }
             #endif
+        }
+
+        public void HideHUD()
+        {
+            var InputMode_Text = GameObject.Find("DebugCanvasPhysics/InputModeText");
+            if (InputMode_Text != null) {
+                InputMode_Text.SetActive(false);
+            }
+            var InputFieldObj = GameObject.Find("DebugCanvasPhysics/InputField");
+            InputFieldObj.SetActive(false);
+            var background = GameObject.Find("DebugCanvasPhysics/InputModeText_Background");
+            background.SetActive(false);
         }
 
         public void Execute(string command)
@@ -274,6 +145,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         // action.renderDepthImage = true;
                         // action.renderClassImage = true;
                         // action.renderObjectImage = true;
+                        // action.renderFlowImage = true;
 
                         action.continuous = true;//testing what continuous mode true does...
 
@@ -290,6 +162,97 @@ namespace UnityStandardAssets.Characters.FirstPerson
       			        // am.Initialize(action);
                         break;
                     }
+
+                case "its":
+                    {
+                        ServerAction action = new ServerAction();
+
+                        action.action = "InitializeTableSetting";
+                        if (splitcommand.Length > 1) {
+                            action.objectVariation = int.Parse(splitcommand[1]);
+                        }
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
+                case "pfrat":
+                    {
+                        ServerAction action = new ServerAction();
+
+                        action.action = "PlaceFixedReceptacleAtLocation";
+                        if (splitcommand.Length > 1) {
+                            action.objectVariation = int.Parse(splitcommand[1]);
+                            action.x = float.Parse(splitcommand[2]);
+                            action.y = float.Parse(splitcommand[3]);
+                            action.z = float.Parse(splitcommand[4]);
+                        }
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+                case "pbwal":
+                    {
+                        ServerAction action = new ServerAction();
+
+                        action.action = "PlaceBookWallAtLocation";
+                        if (splitcommand.Length > 1) {
+                            action.objectVariation = int.Parse(splitcommand[1]);
+                            action.x = float.Parse(splitcommand[2]);
+                            action.y = float.Parse(splitcommand[3]);
+                            action.z = float.Parse(splitcommand[4]);
+                            action.rotation = new Vector3(0f, float.Parse(splitcommand[5]), 0f);
+                        }
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
+                //random toggle state of all objects
+                case "rts":
+                    {
+                        ServerAction action = new ServerAction();
+
+                        action.randomSeed = 0;
+                        action.action = "RandomToggleStateOfAllObjects";
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
+                case "rtss":
+                    {
+                        ServerAction action = new ServerAction();
+
+                        action.randomSeed = 0;
+                        action.StateChange = "CanOpen";
+                        action.action = "RandomToggleSpecificState";
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
+                //set state of all objects that have a state
+                case "ssa":
+                {
+                    ServerAction action = new ServerAction();
+
+                    action.StateChange = "CanBeDirty";
+                    action.forceAction = true;
+                    action.action = "SetStateOfAllObjects";
+
+                     if (splitcommand.Length > 1) 
+                     {
+                        if(splitcommand[1] == "t")
+                        {
+                            action.forceAction = true;
+                        }
+
+                        if(splitcommand[1] == "f")
+                        {
+                            action.forceAction = false;
+                        }
+                     }
+                    PhysicsController.ProcessControlCommand(action);
+                        
+                    break;
+                }
+
                 case "initsynth":
                     {
 						ServerAction action = new ServerAction();
@@ -298,6 +261,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         action.renderDepthImage = true;
                         action.renderClassImage = true;
                         action.renderObjectImage = true;
+                        action.renderFlowImage = true;
 
 						PhysicsController.actionComplete = false;
                         action.ssao = "default";
@@ -362,6 +326,24 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         break;
                     }
 
+                case "putr":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "PutObject";
+                        action.receptacleObjectId = PhysicsController.UniqueIDOfClosestReceptacleObject();
+                        action.randomSeed = int.Parse(splitcommand[1]);
+                            
+                        //set this to false if we want to place it and let physics resolve by having it fall a short distance into position
+
+                        //set true to place with kinematic = true so that it doesn't fall or roll in place - making placement more consistant and not physics engine reliant - this more closely mimics legacy pivot placement behavior
+                        action.placeStationary = false; 
+
+                        //set this true to ignore Placement Restrictions
+                        action.forceAction = true;
+
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
                 case "put":
                     {
                         ServerAction action = new ServerAction();
@@ -383,6 +365,42 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         //set this true to ignore Placement Restrictions
                         action.forceAction = true;
 
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
+                //put an object down with stationary false
+                case "putf":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "PutObject";
+                        
+                        if(splitcommand.Length == 2)
+                        {
+                            action.receptacleObjectId = splitcommand[1];
+                        }
+
+                        else
+                            action.receptacleObjectId = PhysicsController.UniqueIDOfClosestReceptacleObject();
+                            
+                        //set this to false if we want to place it and let physics resolve by having it fall a short distance into position
+
+                        //set true to place with kinematic = true so that it doesn't fall or roll in place - making placement more consistant and not physics engine reliant - this more closely mimics legacy pivot placement behavior
+                        action.placeStationary = false; 
+
+                        //set this true to ignore Placement Restrictions
+                        action.forceAction = true;
+
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
+                //make all pickupable objects kinematic false so that they will react to collisions. Otherwise, some objects might be defaulted to kinematic true, or
+                //if they were placed with placeStationary true, then they will not interact with outside collisions immediately.
+                case "kinematicfalse":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "MakeAllPickupableObjectsMoveable";
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }
@@ -929,6 +947,171 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         break;
                     }
                     
+                case "break":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "BreakObject";
+						if(splitcommand.Length > 1)
+						{
+							action.objectId = splitcommand[1];
+						}
+
+                        else
+                        {
+                            action.objectId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().UniqueIDOfClosestVisibleObject();
+                        }
+
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+                
+                case "dirtyobject":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "DirtyObject";
+						if(splitcommand.Length > 1)
+						{
+							action.objectId = splitcommand[1];
+						}
+
+                        else
+                        {
+                            action.objectId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().UniqueIDOfClosestVisibleObject();
+                        }
+
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
+                case "cleanobject":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "CleanObject";
+						if(splitcommand.Length > 1)
+						{
+							action.objectId = splitcommand[1];
+						}
+
+                        else
+                        {
+                            action.objectId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().UniqueIDOfClosestVisibleObject();
+                        }
+
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
+                case "fillwater":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "FillObjectWithLiquid";
+						if(splitcommand.Length > 1)
+						{
+							action.objectId = splitcommand[1];
+						}
+
+                        else
+                        {
+                            action.objectId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().UniqueIDOfClosestVisibleObject();
+                        }
+
+                        action.fillLiquid = "water";
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
+                case "fillcoffee":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "FillObjectWithLiquid";
+						if(splitcommand.Length > 1)
+						{
+							action.objectId = splitcommand[1];
+						}
+
+                        else
+                        {
+                            action.objectId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().UniqueIDOfClosestVisibleObject();
+                        }
+
+                        action.fillLiquid = "coffee";
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
+                // case "fillsoap":
+                //     {
+                //         ServerAction action = new ServerAction();
+                //         action.action = "FillObjectWithLiquid";
+				// 		if(splitcommand.Length > 1)
+				// 		{
+				// 			action.objectId = splitcommand[1];
+				// 		}
+
+                //         else
+                //         {
+                //             action.objectId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().UniqueIDOfClosestVisibleObject();
+                //         }
+
+                //         action.fillLiquid = "soap";
+                //         PhysicsController.ProcessControlCommand(action);
+                //         break;
+                //     }
+
+                case "fillwine":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "FillObjectWithLiquid";
+						if(splitcommand.Length > 1)
+						{
+							action.objectId = splitcommand[1];
+						}
+
+                        else
+                        {
+                            action.objectId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().UniqueIDOfClosestVisibleObject();
+                        }
+
+                        action.fillLiquid = "wine";
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+                case "emptyliquid":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "EmptyLiquidFromObject";
+						if(splitcommand.Length > 1)
+						{
+							action.objectId = splitcommand[1];
+						}
+
+                        else
+                        {
+                            action.objectId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().UniqueIDOfClosestVisibleObject();
+                        }
+
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
+                case "useup":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "UseUpObject";
+						if(splitcommand.Length > 1)
+						{
+							action.objectId = splitcommand[1];
+						}
+
+                        else
+                        {
+                            action.objectId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().UniqueIDOfClosestVisibleObject();
+                        }
+
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
                     //drop object
 				case "dr":
                     {
@@ -1106,7 +1289,42 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }  
+                
+                //changes the time spent to decay to room temperature for all objects in this scene of given type
+                case "DecayTimeForType":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "SetRoomTempDecayTimeForType";
+
+                        action.TimeUntilRoomTemp = 20f;
+                        action.objectType = "Bread";
+                        PhysicsController.ProcessControlCommand(action);
+
+                        break;
+                    }
                     
+                //changes the time spent to decay to room temperature for all objects globally in the scene
+                case "DecayTimeGlobal":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "SetGlobalRoomTempDecayTime";
+
+                        action.TimeUntilRoomTemp = 20f;
+                        PhysicsController.ProcessControlCommand(action);
+
+                        break;
+                    }
+                
+                case "SetTempDecayBool":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "SetDecayTemperatureBool";
+
+                        action.allowDecayTemperature = false;
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
                     //throw object by dropping it and applying force.
                     //default is with strength of 120, can pass in custom magnitude of throw force
                 case "throw":
@@ -1183,6 +1401,29 @@ namespace UnityStandardAssets.Characters.FirstPerson
 						break;
 					}
 
+                case "dirpush":
+					{
+						ServerAction action = new ServerAction();
+						action.action = "DirectionalPush";
+
+                        if (splitcommand.Length > 1 && splitcommand.Length < 3)
+                        {
+                            action.objectId = splitcommand[1];
+                            action.moveMagnitude = 10f;//4000f;
+                        }
+
+                        else if(splitcommand.Length > 2)
+                        {
+                            action.objectId = splitcommand[1];
+                            action.moveMagnitude = float.Parse(splitcommand[2]);
+                        }
+
+                        action.pushAngle = 279f;
+
+						PhysicsController.ProcessControlCommand(action);                  
+						break;
+					}
+
                 case "toggleon":
                     {
                         ServerAction action = new ServerAction();
@@ -1220,10 +1461,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         break;
                     }
 
-                case "toast":
+                case "cook":
                     {
                         ServerAction action = new ServerAction();
-                        action.action = "ToastObject";
+                        action.action = "CookObject";
                         if (splitcommand.Length > 1)
                         {
                             action.objectId = splitcommand[1];

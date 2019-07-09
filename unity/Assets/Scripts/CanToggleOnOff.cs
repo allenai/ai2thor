@@ -67,8 +67,39 @@ public class CanToggleOnOff : MonoBehaviour
     protected MovementType movementType;
 
 	//keep a list of all objects that can turn on, but must be in the closed state before turning on (ie: can't microwave an object with the door open!)
-	public List<SimObjType> MustBeClosedToTurnOn = new List<SimObjType>()
+	protected List<SimObjType> MustBeClosedToTurnOn = new List<SimObjType>()
 	{SimObjType.Microwave};
+
+	//if this object controls the on/off state of ONLY itself, set to true (lamps, laptops, etc.)
+	//if this object's on/off state is not controlled by itself, but instead controlled by another sim object (ex: stove burner is controlled by the stove knob) set this to false
+	[SerializeField]
+	protected bool SelfControlled = true;
+
+	//reference to any sim objects that this object will turn on/off by proxy (ie: stove burner knob will toggle on/off state of its stove burner)
+	[SerializeField]
+	protected SimObjPhysics[] ControlledSimObjects;
+
+	//return this for metadata check to see if this object is Toggleable or not
+	//specifically, stove burners should not be Toggleable, but they can return 'isToggled' because they can be Toggled on by
+	//another sim object, the stove knob.
+	//stove knob: returns toggleable, returns istoggled
+	//stove burner: only returns istoggled
+	public bool ReturnSelfControlled()
+	{
+		return SelfControlled;
+	}
+
+	//returns references to all sim objects this object toggles the on/off state of. For example all stove knobs can
+	//return which burner they control with this
+	public SimObjPhysics[] ReturnControlledSimObjects()
+	{
+		return ControlledSimObjects;
+	}
+
+	public List<SimObjType> ReturnMustBeClosedToTurnOn()
+	{
+		return MustBeClosedToTurnOn;
+	}
 
 	public bool isTurnedOnOrOff()
 	{
@@ -121,6 +152,10 @@ public class CanToggleOnOff : MonoBehaviour
 
 	public void Toggle()
 	{
+		//if this object is controlled by another object, do nothing and report failure?
+		if(!SelfControlled)
+		return;
+
 		//check if there are moving parts
 		//check if there are lights/materials etc to swap out
 		if(isOn)
@@ -253,6 +288,15 @@ public class CanToggleOnOff : MonoBehaviour
 				}
 			}
 
+			//also set any objects this object controlls to the off state
+			if(ControlledSimObjects.Length >0)
+			{
+				foreach (SimObjPhysics sop in ControlledSimObjects)
+				{
+					sop.GetComponent<CanToggleOnOff>().isOn = false;
+				}
+			}
+
 			isOn = false;
 		}
 
@@ -273,6 +317,15 @@ public class CanToggleOnOff : MonoBehaviour
 				{
 					MaterialSwapObjects[i].MyObject.GetComponent<MeshRenderer>().materials =
 					MaterialSwapObjects[i].OnMaterials;
+				}
+			}
+
+			//also set any objects this object controlls to the on state
+			if(ControlledSimObjects.Length >0)
+			{
+				foreach (SimObjPhysics sop in ControlledSimObjects)
+				{
+					sop.GetComponent<CanToggleOnOff>().isOn = true;
 				}
 			}
 

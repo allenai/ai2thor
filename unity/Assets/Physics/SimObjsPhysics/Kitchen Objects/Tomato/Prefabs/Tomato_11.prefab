@@ -407,6 +407,7 @@ GameObject:
   - component: {fileID: 4017733907673176}
   - component: {fileID: 114399852369981474}
   - component: {fileID: 54029021483177600}
+  - component: {fileID: 1421562082362039196}
   m_Layer: 8
   m_Name: Tomato_11
   m_TagString: SimObjPhysics
@@ -422,7 +423,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1530108549724112}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 1.5942626, y: 0.955, z: -1.5760076}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 4342666114397662}
@@ -448,7 +449,7 @@ MonoBehaviour:
   uniqueID: Tomato|+01.59|+00.96|-01.58
   Type: 3
   PrimaryProperty: 3
-  SecondaryProperties: 
+  SecondaryProperties: 09000000
   BoundingBox: {fileID: 1992928859548108}
   VisibilityPoints:
   - {fileID: 4877954004762188}
@@ -460,7 +461,7 @@ MonoBehaviour:
   ReceptacleTriggerBoxes: []
   isVisible: 0
   isInteractable: 0
-  isColliding: 0
+  isInAgentHand: 0
   MyColliders:
   - {fileID: 136785528595807210}
   - {fileID: 136363752741523968}
@@ -471,6 +472,10 @@ MonoBehaviour:
   HFbounciness: 0
   HFrbdrag: 5
   HFrbangulardrag: 5
+  salientMaterials: 08000000
+  CurrentTemperature: 0
+  HowManySecondsUntilRoomTemp: 10
+  ContainedObjectReferences: []
 --- !u!54 &54029021483177600
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -487,6 +492,21 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
+--- !u!114 &1421562082362039196
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1530108549724112}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d07b0b60d7fb54ea9a1ddeca3f431392, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ObjectToChangeTo: {fileID: 3591234670757481721, guid: d5b30744df547a64084fef761ff300fe,
+    type: 3}
+  isSliced: 0
 --- !u!1 &1564246956758414
 GameObject:
   m_ObjectHideFlags: 0

@@ -28,7 +28,8 @@ public class Flame : MonoBehaviour
     //if this touches water and it's on, it is put out. Fire safety is important!
     public void OnTriggerStay(Collider MagiciansRed)
     {
-        if(MagiciansRed.tag == "Liquid")
+        //check if the fire zone is touching Liquid(running water effects) or StandingLiquid(filled water effects)
+        if(MagiciansRed.CompareTag("Liquid") || MagiciansRed.CompareTag("StandingLiquid"))
         {
             if(MyObject.GetComponent<CanToggleOnOff>().isOn)
             {
@@ -36,7 +37,7 @@ public class Flame : MonoBehaviour
             }
         }
 
-        if(MagiciansRed.tag == "Fire")
+        if(MagiciansRed.CompareTag("Fire"))
         {
             if(!MyObject.GetComponent<CanToggleOnOff>().isOn)
             {

@@ -11,6 +11,8 @@ GameObject:
   - component: {fileID: 4324595804915032}
   - component: {fileID: 114243229961794966}
   - component: {fileID: 54685038998599690}
+  - component: {fileID: 5521211347779271995}
+  - component: {fileID: 3183861258391038186}
   m_Layer: 8
   m_Name: Egg_16
   m_TagString: SimObjPhysics
@@ -52,7 +54,7 @@ MonoBehaviour:
   uniqueID: Egg|-01.33|+00.00|-05.88
   Type: 20
   PrimaryProperty: 3
-  SecondaryProperties: 
+  SecondaryProperties: 090000000b000000
   BoundingBox: {fileID: 1761816569892476}
   VisibilityPoints:
   - {fileID: 4259870723397754}
@@ -64,7 +66,7 @@ MonoBehaviour:
   ReceptacleTriggerBoxes: []
   isVisible: 0
   isInteractable: 0
-  isColliding: 0
+  isInAgentHand: 0
   MyColliders:
   - {fileID: 136728933705709484}
   HFdynamicfriction: 2
@@ -72,6 +74,9 @@ MonoBehaviour:
   HFbounciness: 0
   HFrbdrag: 1
   HFrbangulardrag: 5
+  salientMaterials: 08000000
+  CurrentTemperature: 0
+  HowManySecondsUntilRoomTemp: 10
   ContainedObjectReferences: []
 --- !u!54 &54685038998599690
 Rigidbody:
@@ -89,6 +94,40 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 2
+--- !u!114 &5521211347779271995
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1026772374875634}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d07b0b60d7fb54ea9a1ddeca3f431392, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ObjectToChangeTo: {fileID: 8325428861206550173, guid: e2af39057bc044bfa82172292bfec5e3,
+    type: 3}
+  isSliced: 0
+--- !u!114 &3183861258391038186
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1026772374875634}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 02b2beb760fcd4a6f957400c276adb00, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  PrefabToSwapTo: {fileID: 8325428861206550173, guid: e2af39057bc044bfa82172292bfec5e3,
+    type: 3}
+  DirtyPrefabToSwapTo: {fileID: 0}
+  ImpulseThreshold: 0.15
+  HighFrictionImpulseOffset: 0.25
+  breakType: 0
+  MaterialSwapObjects: []
 --- !u!1 &1031697218139650
 GameObject:
   m_ObjectHideFlags: 0

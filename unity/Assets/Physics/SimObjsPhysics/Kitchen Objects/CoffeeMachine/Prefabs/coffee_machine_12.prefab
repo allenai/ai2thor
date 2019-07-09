@@ -788,6 +788,7 @@ GameObject:
   - component: {fileID: 54105917829485994}
   - component: {fileID: 114879958257505266}
   - component: {fileID: 1807755902}
+  - component: {fileID: 7549204205998133422}
   m_Layer: 8
   m_Name: coffee_machine_12
   m_TagString: SimObjPhysics
@@ -803,7 +804,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1520666041450772}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 5.968, y: -0.344, z: 3.463}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 4075895797975522}
@@ -831,7 +832,7 @@ MonoBehaviour:
   uniqueID: CoffeeMachine|-03.51|+00.52|-09.33
   Type: 15
   PrimaryProperty: 1
-  SecondaryProperties: 1700000007000000340000001d000000
+  SecondaryProperties: 1d00000007000000340000000c000000
   BoundingBox: {fileID: 1507026081111140}
   VisibilityPoints:
   - {fileID: 4761913231481528}
@@ -847,13 +848,16 @@ MonoBehaviour:
   - {fileID: 1035766101046340}
   isVisible: 0
   isInteractable: 0
-  isColliding: 0
+  isInAgentHand: 0
   MyColliders: []
   HFdynamicfriction: 0
   HFstaticfriction: 0
   HFbounciness: 0
   HFrbdrag: 0
   HFrbangulardrag: 0
+  salientMaterials: 
+  CurrentTemperature: 0
+  HowManySecondsUntilRoomTemp: 10
   ContainedObjectReferences: []
 --- !u!54 &54105917829485994
 Rigidbody:
@@ -923,6 +927,20 @@ MonoBehaviour:
   animationTime: 0.05
   isOn: 0
   movementType: 0
+  SelfControlled: 1
+  ControlledSimObjects: []
+--- !u!114 &7549204205998133422
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1520666041450772}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d819bcc623a4f4ee6b0bcd38969a2fbd, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &1598052519349194
 GameObject:
   m_ObjectHideFlags: 0
