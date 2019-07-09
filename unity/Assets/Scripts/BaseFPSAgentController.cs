@@ -101,10 +101,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		public System.Object actionReturn;
 
 
-		// Vector3 m_OriginalCameraPosition;
+        // Vector3 m_OriginalCameraPosition;
 
 
-		protected float maxVisibleDistance = 1.5f; //changed from 1.0f to account for objects randomly spawned far away on tables/countertops, which would be not visible at 1.0f
+        public float maxVisibleDistance = 1.5f; //changed from 1.0f to account for objects randomly spawned far away on tables/countertops, which would be not visible at 1.0f
 
 		// initial states
 		protected Vector3 init_position;
@@ -173,6 +173,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			init_position = transform.position;
 			init_rotation = transform.rotation;
 
+			agentManager = GameObject.Find("PhysicsSceneManager").GetComponentInChildren<AgentManager>();
+
+			//disabling in editor by default so performance in editor isn't garbage all the time. Enable this from the DebugInputField -InitSynth
+            // #if UNITY_EDITOR
+            //     this.enableImageSynthesis();
+            // #endif
 			//allowNodes = false;
 		}
 
@@ -232,10 +238,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 			this.continuousMode = action.continuous;
 
-			if (action.renderDepthImage || action.renderClassImage || action.renderObjectImage || action.renderNormalsImage) 
+            if (action.renderDepthImage || action.renderClassImage || action.renderObjectImage || action.renderNormalsImage) 
             {
-				this.enableImageSynthesis ();
-			}
+    			this.enableImageSynthesis ();
+    		}
 
 			if (action.visibilityDistance > 0.0f) {
 				this.maxVisibleDistance = action.visibilityDistance;
@@ -415,56 +421,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			return GameObject.FindObjectsOfType<SimObj>();
         }
 
-        public virtual ObjectMetadata[] generateObjectMetadata()
-		{
-			// Encode these in a json string and send it to the server
-			SimpleSimObj[] simObjects = this.allSceneObjects();
-
-			int numObj = simObjects.Length;
-			List<ObjectMetadata> metadata = new List<ObjectMetadata>();
-			Dictionary<string, List<string>> parentReceptacles = new Dictionary<string, List<string>> ();
-
-			HashSet<string> visibleObjectIds = new HashSet<string>();
-
-			foreach (SimpleSimObj so in VisibleSimObjs() as SimpleSimObj[])
-			{
-				visibleObjectIds.Add(so.UniqueID);
-			}
-
-
-			for (int k = 0; k < numObj; k++) {
-				SimpleSimObj simObj = simObjects[k];
-				if (this.excludeObject(simObj.UniqueID)) {
-					continue;
-				}
-				ObjectMetadata meta = new ObjectMetadata(simObj);
-
-				if (meta.receptacle)
-				{
-					List<string> receptacleObjectIds = simObj.ReceptacleObjectIds;
-					foreach (string oid in receptacleObjectIds)
-					{
-                        if (!parentReceptacles.ContainsKey(oid)) {
-                            parentReceptacles[oid] = new List<string>();
-                        }
-                        parentReceptacles[oid].Add(simObj.UniqueID);
-					}
-
-					meta.receptacleObjectIds = receptacleObjectIds.ToArray();
-					meta.receptacleCount = simObj.ReceptacleCount; // may want to change this to the number of objects for physics?
-				}
-				meta.distance = Vector3.Distance(transform.position, simObj.gameObject.transform.position);
-				meta.visible = visibleObjectIds.Contains(simObj.UniqueID);
-				metadata.Add(meta);
-			}
-
-			foreach (ObjectMetadata meta in metadata) {
-				if (parentReceptacles.ContainsKey (meta.objectId)) {
-					meta.parentReceptacles = parentReceptacles[meta.objectId].ToArray();
-				}
-			}
-			return metadata.ToArray();
-		}
+        public abstract ObjectMetadata[] generateObjectMetadata();
 
 		public virtual MetadataWrapper generateMetadataWrapper()
 		{
@@ -504,71 +461,15 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			return new SimObj[]{} as SimpleSimObj[];
 		}
 
-
-		private ObjectMetadata[] generateObjectMetadataForTag(string tag, bool isAnimated)
-		{
-			// Encode these in a json string and send it to the server
-			SimpleSimObj[] simObjects = GameObject.FindObjectsOfType(typeof(SimObj)) as SimpleSimObj[];
-
-			HashSet<SimpleSimObj> visibleObjectIds = new HashSet<SimpleSimObj>();
-			foreach (SimpleSimObj so in VisibleSimObjs() as SimpleSimObj[])
-			{
-				visibleObjectIds.Add(so);
-			}
-			int numObj = simObjects.Length;
-			List<ObjectMetadata> metadata = new List<ObjectMetadata>();
-			Dictionary<string, string> parentReceptacles = new Dictionary<string, string> ();
-
-			for (int k = 0; k < numObj; k++)
-			{
-				SimpleSimObj simObj = simObjects[k];
-				if (this.excludeObject(simObj))
-				{
-					continue;
-				}
-				ObjectMetadata meta = new ObjectMetadata(simObj);
-
-				if (meta.receptacle)
-				{
-					List<string> receptacleObjectIds = simObj.ReceptacleObjectIds;
-					foreach (string oid in receptacleObjectIds)
-					{
-						parentReceptacles.Add (oid, simObj.UniqueID);
-					}
-
-					meta.pivotSimObjs = simObj.PivotSimObjs.ToArray();
-					meta.receptacleObjectIds = receptacleObjectIds.ToArray();
-					meta.receptacleCount = simObj.ReceptacleCount;
-
-				}
-				meta.visible = (visibleObjectIds.Contains(simObj));
-				meta.distance = Vector3.Distance(transform.position, simObj.gameObject.transform.position);
-				metadata.Add(meta);
-			}
-
-
-			foreach (ObjectMetadata meta in metadata) {
-				if (parentReceptacles.ContainsKey (meta.objectId)) {
-					meta.parentReceptacle = parentReceptacles [meta.objectId];
-				}
-			}
-
-			return metadata.ToArray();
-
-		}
-
-
 		private void enableImageSynthesis() {
 			imageSynthesis = this.gameObject.GetComponentInChildren<ImageSynthesis> () as ImageSynthesis;
 			imageSynthesis.enabled = true;			
 		}
 
-		public abstract void PreprocessControlCommand(ServerAction controlCommand);
 
 		public void ProcessControlCommand(ServerAction controlCommand)
 		{
             currentServerAction = controlCommand;
-			PreprocessControlCommand(controlCommand);
 			
 	        errorMessage = "";
 			errorCode = ServerActionErrorCode.Undefined;
@@ -600,11 +501,13 @@ namespace UnityStandardAssets.Characters.FirstPerson
 				actionFinished(false);
 			}
 
-			#if UNITY_EDITOR
+#if UNITY_EDITOR
 			if (errorMessage != "") {
 				Debug.Log(errorMessage);
 			}
-			#endif
+#endif
+
+			agentManager.setReadyToEmit(true);
 		}
 
 		// Handle collisions - CharacterControllers don't apply physics innately, see "PushMode" check below
@@ -615,8 +518,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
 				return;
 			}
 
-			if (hit.gameObject.name.Equals("Floor"))
+			if (hit.gameObject.GetComponent<StructureObject>())
 			{
+                if(hit.gameObject.GetComponent<StructureObject>().WhatIsMyStructureObjectTag == StructureObjectTag.Floor)
 				return;
 			}
 

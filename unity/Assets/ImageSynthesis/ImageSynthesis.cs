@@ -8,7 +8,7 @@ using System.Collections.Generic;
 // @TODO:
 // . support custom color wheels in optical flow via lookup textures
 // . support custom depth encoding
-// . support multiple overlay cameras
+// . support multiple overlay cameras - note:this can be shown in editor already by creating multiple GAME windows and assigning a different display number to each
 // . tests
 // . better example scene(s)
 
@@ -26,9 +26,8 @@ public class ImageSynthesis : MonoBehaviour {
 		new CapturePass() { name = "_depth" },
 		new CapturePass() { name = "_id", supportsAntialiasing = false },
 		new CapturePass() { name = "_class", supportsAntialiasing = false },
-
 		new CapturePass() { name = "_normals"},
-		//new CapturePass() { name = "_flow", supportsAntialiasing = false, needsRescale = true }, // (see issue with Motion Vectors in @KNOWN ISSUES)
+		new CapturePass() { name = "_flow", supportsAntialiasing = false, needsRescale = true }, // (see issue with Motion Vectors in @KNOWN ISSUES)
 
 
 		//new CapturePass() { name = "_position" },
@@ -55,10 +54,10 @@ public class ImageSynthesis : MonoBehaviour {
 		return false;
 	}
 	
-	public Shader uberReplacementShader;
-	public Shader opticalFlowShader;
-	public Shader depthShader;
-	public Shader positionShader;
+	private Shader uberReplacementShader;
+    private Shader opticalFlowShader;
+    private Shader depthShader;
+	//public Shader positionShader;
 
 
 	public Dictionary<Color, string> colorIds;
@@ -78,6 +77,11 @@ public class ImageSynthesis : MonoBehaviour {
 
 	void Start()
 	{
+		//XXXXXXXXXXX************
+		//Remember, adding any new Shaders requires them to be included in Project Settings->Graphics->Always Included Shaders
+		//otherwise the standlone will build without the shaders and you will be sad
+
+
 		// default fallbacks, if shaders are unspecified
 		if (!uberReplacementShader)
 			uberReplacementShader = Shader.Find("Hidden/UberReplacement");
@@ -85,13 +89,20 @@ public class ImageSynthesis : MonoBehaviour {
 		if (!opticalFlowShader)
 			opticalFlowShader = Shader.Find("Hidden/OpticalFlow");
 
-		if (!depthShader)
-			depthShader = Shader.Find("Hidden/Depth");
+        #if UNITY_EDITOR
 
-		if (!positionShader)
-			positionShader = Shader.Find("Hidden/World");
-		
-		opticalFlowSensitivity = 50.0f;
+            if (!depthShader)
+                depthShader = Shader.Find("Hidden/DepthBW");
+        #else
+            if (!depthShader)
+                depthShader = Shader.Find("Hidden/Depth");
+
+        #endif
+
+        //if (!positionShader)
+        //	positionShader = Shader.Find("Hidden/World");
+
+        opticalFlowSensitivity = 50.0f;
 
 		// use real camera to capture final image
 		capturePasses[0].camera = GetComponent<Camera>();
@@ -110,21 +121,26 @@ public class ImageSynthesis : MonoBehaviour {
 		#if UNITY_EDITOR
 		if (DetectPotentialSceneChangeInEditor())
 			OnSceneChange();
+
 		#endif // UNITY_EDITOR
 
 		// @TODO: detect if camera properties actually changed
-		OnCameraChange();
+		//OnCameraChange();
 	}
 	
 	private Camera CreateHiddenCamera(string name)
 	{
 		var go = new GameObject (name, typeof (Camera));
-		#if !UNITY_EDITOR // Useful to be able to see these cameras in the editor
+#if !UNITY_EDITOR // Useful to be able to see these cameras in the editor
 		go.hideFlags = HideFlags.HideAndDontSave; 
-		#endif
+#endif
 		go.transform.parent = transform;
 
+		//add the FirstPersonCharacterCull so this camera's agent is not rendered- other agents when multi agent is enabled should still be rendered
+		go.AddComponent<FirstPersonCharacterCull>(go.transform.parent.GetComponent<FirstPersonCharacterCull>());
+
 		var newCamera = go.GetComponent<Camera>();
+		newCamera.cullingMask = 1;//render everything, including PlaceableSurfaces
 		return newCamera;
 	}
 
@@ -148,6 +164,7 @@ public class ImageSynthesis : MonoBehaviour {
 	{
 		var cb = new CommandBuffer();
 		cb.SetGlobalFloat("_OutputMode", (int)mode); // @TODO: CommandBuffer is missing SetGlobalInt() method
+		cam.renderingPath = RenderingPath.Forward;
 		cam.AddCommandBuffer(CameraEvent.BeforeForwardOpaque, cb);
 		cam.AddCommandBuffer(CameraEvent.BeforeFinalPass, cb);
 		cam.SetReplacementShader(shader, "");
@@ -168,13 +185,17 @@ public class ImageSynthesis : MonoBehaviour {
 		CatergoryId			= 1,
 		DepthCompressed		= 2,
 		DepthMultichannel	= 3,
-		Normals				= 4
+		Normals				= 4,
+        Flow                = 5,
 	};
 
+	//Call this if the settings on the main camera ever change? But the main camera now uses slightly different layer masks and deffered/forward render settings than these image synth cameras
+	//do, so maybe it's fine for now I dunno
 	public void OnCameraChange()
 	{
 		var mainCamera = GetComponent<Camera>();
 		mainCamera.depth = 9999; // This ensures the main camera is rendered on screen
+
 		foreach (var pass in capturePasses)
 		{
 			if (pass.camera == mainCamera)
@@ -185,7 +206,19 @@ public class ImageSynthesis : MonoBehaviour {
 
 			// copy all "main" camera parameters into capturing camera
 			pass.camera.CopyFrom(mainCamera);
+
+			//make sure the capturing camera is set to Forward rendering (main camera uses Deffered now)
+			pass.camera.renderingPath = RenderingPath.Forward;
+			//make sure capturing camera renders all layers (value copied from Main camera excludes PlaceableSurfaces layer, which needs to be rendered on this camera)
+			pass.camera.cullingMask = -1;
+
 			pass.camera.depth = 0; // This ensures the new camera does not get rendered on screen
+		}
+	
+		//set the display corresponding to which capturePass this is
+		for(int i = 0; i < capturePasses.Length; i++)
+		{
+			capturePasses[i].camera.targetDisplay = i;
 		}
 
 		// cache materials and setup material properties
@@ -200,22 +233,28 @@ public class ImageSynthesis : MonoBehaviour {
 		//capturePasses [1].camera.farClipPlane = 100;
 		//SetupCameraWithReplacementShader(capturePasses[1].camera, uberReplacementShader, ReplacelementModes.DepthMultichannel);
 		SetupCameraWithPostShader(capturePasses[1].camera, depthMaterial, DepthTextureMode.Depth);
-		SetupCameraWithReplacementShader(capturePasses[2].camera, uberReplacementShader, ReplacelementModes.ObjectId);
+
+
+        SetupCameraWithReplacementShader(capturePasses[2].camera, uberReplacementShader, ReplacelementModes.ObjectId);
 		SetupCameraWithReplacementShader(capturePasses[3].camera, uberReplacementShader, ReplacelementModes.CatergoryId);
-
-
 		SetupCameraWithReplacementShader(capturePasses[4].camera, uberReplacementShader, ReplacelementModes.Normals);
-		//SetupCameraWithPostShader(capturePasses[5].camera, opticalFlowMaterial, DepthTextureMode.Depth | DepthTextureMode.MotionVectors);
+		SetupCameraWithPostShader(capturePasses[5].camera, opticalFlowMaterial, DepthTextureMode.Depth | DepthTextureMode.MotionVectors);
 
+        #if UNITY_EDITOR
+            for(int i = 0; i < capturePasses.Length; i++)
+            {
+                capturePasses[i].camera.targetDisplay = i;
+            }
+        #endif
 
-		/*
+        /*
 		SetupCameraWithReplacementShader(capturePasses[6].camera, positionShader);
 		*/
 
-	}
+    }
 
 
-	public string MD5Hash(string input) {
+    public string MD5Hash(string input) {
 		byte[] data = md5.ComputeHash(System.Text.Encoding.Default.GetBytes(input));
 		// Create string representation
 		System.Text.StringBuilder sb = new System.Text.StringBuilder();
@@ -260,22 +299,27 @@ public class ImageSynthesis : MonoBehaviour {
 			string classTag = r.name;
 			string objTag = getUniqueId(r.gameObject);
 
-			SimObj so = r.gameObject.GetComponent<SimObj> ();
-			if (so == null) {
-				so = r.gameObject.GetComponentInParent<SimObj> ();
+			StructureObject so = r.gameObject.GetComponent<StructureObject> ();
+			if (so == null) 
+			{
+				so = r.gameObject.GetComponentInParent<StructureObject> ();
 			}
+
 			SimObjPhysics sop = r.gameObject.GetComponent<SimObjPhysics> ();
 			if (sop == null) {
 				sop = r.gameObject.GetComponentInParent<SimObjPhysics> ();
 			}
 
 			if (so != null) {
-				classTag = "" + so.Type;
-				objTag = so.UniqueID;
-			} else if (sop != null) {
+				classTag = "" + so.WhatIsMyStructureObjectTag;
+				//objTag = so.gameObject.name;
+			} 
+			if (sop != null) 
+			{
 				classTag = "" + sop.Type;
 				objTag = sop.UniqueID;
 			}
+
 
 			Color classColor;
 			Color objColor;
@@ -284,14 +328,14 @@ public class ImageSynthesis : MonoBehaviour {
 
 			capturePasses [0].camera.WorldToScreenPoint (r.bounds.center);
 
-			//mpb.SetVector ("_Scale", scaleVector);
-			//mpb.SetVector ("_Shift", shiftVector);
-			// Make transparent if light ray.
-			if (so != null || sop != null) {
+			if (so != null || sop != null) 
+			{
 				colorIds [objColor] = objTag;
 				colorIds [classColor] = classTag;
-				// Debug.Log ("colored " + simObj.UniqueID);
-			} else {
+			} 
+
+			else 
+			{
 				colorIds [objColor] = r.gameObject.name;
 			}
 
@@ -315,8 +359,6 @@ public class ImageSynthesis : MonoBehaviour {
 			objColor.a = 1;
 			classColor.a = 1;
 			mpb.SetFloat ("_Opacity", 1);
-
-
 			mpb.SetColor("_CategoryColor", classColor);
 			mpb.SetColor("_ObjectColor", objColor);
 
@@ -443,7 +485,7 @@ public class ImageSynthesis : MonoBehaviour {
 		File.WriteAllBytes(filename, bytes);					
     }
 
-	#if UNITY_EDITOR
+#if UNITY_EDITOR
 	private GameObject lastSelectedGO;
 	private int lastSelectedGOLayer = -1;
 	private string lastSelectedGOTag = "unknown";
@@ -475,5 +517,5 @@ public class ImageSynthesis : MonoBehaviour {
 
 		return change;
 	}
-	#endif // UNITY_EDITOR
+#endif // UNITY_EDITOR
 }

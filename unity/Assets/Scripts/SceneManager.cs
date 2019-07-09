@@ -48,7 +48,6 @@ public class SceneManager : MonoBehaviour {
 	public string LightingParentName = "Lighting";
 	public string StructureParentName = "Structure";
 	public string TargetsParentName = "Targets";
-
 	public GameObject FPSControllerPrefab;
 
 	public List<SimObj> ObjectsInScene = new List<SimObj>();

@@ -22,6 +22,11 @@ public class PhysicsSceneManager : MonoBehaviour
 	public List<SimObjPhysics> ReceptaclesInScene = new List<SimObjPhysics>();
 
 	public GameObject HideAndSeek;
+	public GameObject[] ManipulatorTables;
+	public GameObject[] ManipulatorReceptacles;
+	public GameObject[] ManipulatorBooks;
+
+	public bool AllowDecayTemperature = true;//if true, temperature of sim objects decays to Room Temp over time
 
     //public List<SimObjPhysics> LookAtThisList = new List<SimObjPhysics>();
 
@@ -49,15 +54,30 @@ public class PhysicsSceneManager : MonoBehaviour
 		//right now only Very High and Ultra will have ssao on by default.
 		if(QualitySettings.GetQualityLevel() < 5)
 		{
-			GameObject.Find("FirstPersonCharacter").
-			GetComponent<ScreenSpaceAmbientOcclusion>().enabled = false;
+			if(GameObject.Find("FirstPersonCharacter").GetComponent<ScreenSpaceAmbientOcclusion>())
+			GameObject.Find("FirstPersonCharacter").GetComponent<ScreenSpaceAmbientOcclusion>().enabled = false;
 		}
 
 		else
 		{
-			GameObject.Find("FirstPersonCharacter").
-			GetComponent<ScreenSpaceAmbientOcclusion>().enabled = true;
+			if(GameObject.Find("FirstPersonCharacter").GetComponent<ScreenSpaceAmbientOcclusion>())
+			GameObject.Find("FirstPersonCharacter").GetComponent<ScreenSpaceAmbientOcclusion>().enabled = true;
 		}
+
+		//use this block to check if any SpawnedObjects/RequiredObjects arrays have anything null in them
+		// #if UNITY_EDITOR
+		// //just loop through it to see if there is a null reference somewhere
+		// foreach(GameObject go in SpawnedObjects)
+		// {
+		// 	string s = go.name;
+		// }
+
+		// //just loop through it and see if there is a null reference somewhere
+		// foreach(GameObject go in RequiredObjects)
+		// {
+		// 	string s = go.name;
+		// }
+		// #endif
 	}
 
 	public void SetupScene()
@@ -198,6 +218,13 @@ public class PhysicsSceneManager : MonoBehaviour
         string zPos = (pos.z >= 0 ? "+" : "") + pos.z.ToString("00.00");
         o.UniqueID = o.Type.ToString() + "|" + xPos + "|" + yPos + "|" + zPos;
     }
+
+	//used to create unique id for an object created as result of a state change of another object ie: bread - >breadslice1, breadslice 2 etc
+	public void Generate_InheritedUniqueID(SimObjPhysics sourceObject, SimObjPhysics createdObject, int count)
+	{
+		createdObject.UniqueID = sourceObject.UniqueID + "|" + createdObject.ObjType + "_" + count;
+		AddToObjectsInScene(createdObject);
+	}
     
 	private bool CheckForDuplicateUniqueIDs(SimObjPhysics sop)
 	{
@@ -213,7 +240,14 @@ public class PhysicsSceneManager : MonoBehaviour
 		UniqueIdToSimObjPhysics[sop.UniqueID] = sop;
 	}
 
-	public void RemoveFormSpawnedObjects(SimObjPhysics sop)
+	public void RemoveFromObjectsInScene(SimObjPhysics sop)
+	{
+		if (UniqueIdToSimObjPhysics.ContainsKey(sop.UniqueID)) {
+			UniqueIdToSimObjPhysics.Remove(sop.UniqueID);
+		}
+	}
+
+	public void RemoveFromSpawnedObjects(SimObjPhysics sop)
 	{
 		SpawnedObjects.Remove(sop.gameObject);
 	}
@@ -223,9 +257,91 @@ public class PhysicsSceneManager : MonoBehaviour
 		RequiredObjects.Remove(sop.gameObject);
 	}
 
-	//use action.randomseed for seed, use action.forceVisible for if objects shoudld ONLY spawn outside and not inside anything
-	//set forceVisible to true for if you want objects to only spawn in immediately visible receptacles.
-	public bool RandomSpawnRequiredSceneObjects(ServerAction action)
+    public bool SetObjectToggles(ObjectToggle[] objectToggles)
+    {
+        bool shouldFail = false;
+        if (objectToggles != null && objectToggles.Length > 0)
+        {
+            // Perform object toggle state sets.
+            SimObjPhysics[] simObjs = GameObject.FindObjectsOfType(typeof(SimObjPhysics)) as SimObjPhysics[];
+            Dictionary<SimObjType, bool> toggles = new Dictionary<SimObjType, bool>();
+            foreach (ObjectToggle objectToggle in objectToggles)
+            {
+                SimObjType objType = (SimObjType)System.Enum.Parse(typeof(SimObjType), objectToggle.objectType);
+                toggles[objType] = objectToggle.isOn;
+            }
+            PhysicsRemoteFPSAgentController fpsController = GameObject.Find("FPSController").GetComponent<PhysicsRemoteFPSAgentController>();
+            foreach (SimObjPhysics sop in simObjs)
+            {
+                if (toggles.ContainsKey(sop.ObjType))
+                {
+                    bool success = fpsController.ToggleObject(sop, toggles[sop.ObjType], true);
+                    if (!success)
+                    {
+                        shouldFail = true;
+                    }
+                }
+            }
+        }
+        return !shouldFail;
+    }
+
+    public bool SetObjectPoses(ObjectPose[] objectPoses)
+    {
+        SetupScene();
+        bool shouldFail = false;
+        if (objectPoses != null && objectPoses.Length > 0)
+        {
+            // Perform object location sets
+            SimObjPhysics[] sceneObjects = FindObjectsOfType<SimObjPhysics>();
+            Dictionary<string, SimObjPhysics> nameToObject = new Dictionary<string, SimObjPhysics>();
+            foreach (SimObjPhysics sop in sceneObjects)
+            {
+                if (sop.IsPickupable)
+                {
+                    sop.gameObject.SetActive(false);
+                    //sop.gameObject.GetComponent<SimpleSimObj>().IsDisabled = true;
+                    nameToObject[sop.name] = sop;
+                }
+            }
+            HashSet<SimObjPhysics> placedOriginal = new HashSet<SimObjPhysics>();
+            for (int ii = 0; ii < objectPoses.Length; ii++)
+            {
+                ObjectPose objectPose = objectPoses[ii];
+                if (!nameToObject.ContainsKey(objectPose.objectName))
+                {
+                    Debug.Log("No object of name " + objectPose.objectName + " found in scene.");
+                    shouldFail = true;
+                    continue;
+                }
+                SimObjPhysics obj = nameToObject[objectPose.objectName];
+                SimObjPhysics existingSOP = obj.GetComponent<SimObjPhysics>();
+                SimObjPhysics copy;
+                if (placedOriginal.Contains(existingSOP))
+                {
+                    copy = Instantiate(existingSOP);
+                    copy.name += "_random_copy_" + ii;
+                    copy.UniqueID = existingSOP.UniqueID + "_copy_" + ii;
+                    copy.uniqueID = copy.UniqueID;
+                } else
+                {
+                    copy = existingSOP;
+                    placedOriginal.Add(existingSOP);
+                }
+
+                copy.transform.position = objectPose.position;
+                copy.transform.eulerAngles = objectPose.rotation;
+                copy.gameObject.SetActive(true);
+                //copy.GetComponent<SimpleSimObj>().IsDisabled = false;
+            }
+        }
+        SetupScene();
+        return !shouldFail;
+    }
+
+    //use action.randomseed for seed, use action.forceVisible for if objects shoudld ONLY spawn outside and not inside anything
+    //set forceVisible to true for if you want objects to only spawn in immediately visible receptacles.
+    public bool RandomSpawnRequiredSceneObjects(ServerAction action)
 	{
 		
 		if(RandomSpawnRequiredSceneObjects(action.randomSeed, action.forceVisible, action.maxNumRepeats, action.placeStationary))
@@ -402,8 +518,11 @@ public class PhysicsSceneManager : MonoBehaviour
 										go.transform.position = osr.attachPoint.position;
 										go.transform.SetParent(osr.attachPoint.transform);
 										go.transform.localRotation = Quaternion.identity;
-										go.GetComponent<Rigidbody>().isKinematic = true;
 
+										Rigidbody rb = go.GetComponent<Rigidbody>();
+										rb.collisionDetectionMode = CollisionDetectionMode.Discrete;
+										rb.isKinematic = true;
+							
 										HowManyCouldntSpawn--;
 										spawned = true;
 										break;

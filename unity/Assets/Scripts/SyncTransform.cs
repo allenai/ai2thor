@@ -12,6 +12,9 @@ public class SyncTransform : MonoBehaviour
     [SerializeField]
     GameObject ThingIamTracking;
 
+    //used to stop syncing the upper body when the ToggleMapView function is called
+    public bool StopSyncingForASecond = false;
+
 
     // Start is called before the first frame update
     void Start()
@@ -22,14 +25,17 @@ public class SyncTransform : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if(WhichTransformPropertyAmITracking == WhatToTrack.Rotation)
+        if(!StopSyncingForASecond)
         {
-            gameObject.transform.rotation = ThingIamTracking.transform.rotation;
-        }
+            if(WhichTransformPropertyAmITracking == WhatToTrack.Rotation)
+            {
+                gameObject.transform.rotation = ThingIamTracking.transform.rotation;
+            }
 
-        else if(WhichTransformPropertyAmITracking == WhatToTrack.Position)
-        {
-            gameObject.transform.localPosition = ThingIamTracking.transform.localPosition;
+            else if(WhichTransformPropertyAmITracking == WhatToTrack.Position)
+            {
+                gameObject.transform.localPosition = ThingIamTracking.transform.localPosition;
+            }
         }
     }
 }

@@ -36,29 +36,29 @@ public enum SimObjSecondaryProperty : int //EACH SimObjPhysics can have any numb
 	//NEVER LEAVE UNDEFINED
 	Undefined = 0,
 
-	//CLEANABLE PROPERTIES - this property defines what objects can clean certain objects
+	//CLEANABLE PROPERTIES - this property defines what objects can clean certain objects - we might not use this, stay posted
     CanBeCleanedFloor = 1,
     CanBeCleanedDishware = 2,
     CanBeCleanedGlass = 3,
 
     //OTHER SECONDARY PROPERTIES 
-    CanCleanFloor = 4,
-    CanCleanDishware = 5,
-    CanCleanGlass = 6,
+    CanBeDirty = 4,
+    CanBeFilled = 5,
+    CanBeUsedUp = 6,
     Receptacle = 7,
     CanOpen = 8,
     CanBeSliced = 9,
     CanSlice = 10,
-    CanBeCracked = 11,
-    CanBeFilledWithWater = 12,
-    CanFillWithWater = 13,
+    CanBreak = 11,
+    CanChangeTempToHot = 12,//this object can change temperature of other objects to hot
+    CanChangeTempToCold = 13,//this object can change temperature of other objects to cold
     CanBeHeatedCookware = 14,
     CanHeatCookware = 15,
     CanBeStoveTopCooked = 16,
     CanStoveTopCook = 17,
     CanBeMicrowaved = 18,
     CanMicrowave = 19,
-    CanBeToasted = 20,
+    CanBeCooked = 20,
     CanToast = 21,
     CanBeFilledWithCoffee = 22,
     CanFillWithCoffee = 23,
@@ -130,12 +130,12 @@ public enum SimObjType : int
 	Potato = 23,
 	Mug = 24,
 	Plate = 25,
-	TableTop = 26,
+	DiningTable = 26,
 	CounterTop = 27,
 	GarbageCan = 28,
 	Omelette = 29,
 	EggShell = 30,
-	EggFried = 31,
+	EggCracked = 31,
 	StoveKnob = 32,
 	Container = 33, //for physics version - see GlassBottle
 	Cup = 34,
@@ -172,18 +172,18 @@ public enum SimObjType : int
 	ToiletPaper = 65,
 	ToiletPaperHanger = 66,
 	SoapBottle = 67,
-	SoapBottleFilled = 68,//will become a state of SoapBottle in physics
+	SoapBottleFilled = 68,//DO NOT USE: Soap bottle now just has two states
 	SoapBar = 69,
 	ShowerDoor = 70,
 	SprayBottle = 71,
 	ScrubBrush = 72,
-	ToiletPaperRoll = 73,
-	Lamp = 74, //don't use this, use either FloorLamp or DeskLamp
+	ToiletPaperRoll = 73,//DO NOT USE ANYMORE - ToiletPaper is now a single object that toggles states
+	Lamp = 74, //DO NOT USE: don't use this, use either FloorLamp or DeskLamp
 	LightSwitch = 75,
 	Bed = 76,
 	Book = 77,
 	AlarmClock = 78,
-	SportsEquipment = 79,//delineated into specific objects in physics - see Basketball etc
+	SportsEquipment = 79,//DO NOT USE: delineated into specific objects in physics - see Basketball etc
 	Pen = 80,
 	Pencil = 81,
 	Blinds = 82,
@@ -191,7 +191,7 @@ public enum SimObjType : int
 	TowelHolder = 84,
 	Towel = 85,
 	Watch = 86,
-	MiscTableObject = 87,//not sure what this is, not used for physics
+	MiscTableObject = 87,//DO NOT USE: not sure what this is, not used for physics
 
     ArmChair = 88,
     BaseballBat = 89,
@@ -234,7 +234,7 @@ public enum SimObjType : int
 	Shelf = 126,
 	Dresser = 127,
 	Desk = 128,
-	NightStand = 129,
+	SideTable = 129,
 	Pillow = 130,
 	Bench = 131,
 	Cart = 132, //bathroom cart on wheels
@@ -252,7 +252,8 @@ public enum SimObjType : int
 	WineBottle = 144,
 	ShowerCurtain = 145,
 	ShowerHead = 146,
-	
+    TVStand = 147,
+    CoffeeTable = 148,
 }
 
 public static class ReceptacleRestrictions
@@ -273,7 +274,7 @@ public static class ReceptacleRestrictions
     //the object placed only needs the bottom most 4 corners within the Receptacle Box to be placed validly, this allows
     //things like a tall cup to have the top half of it sticking out of the receptacle box when placed on a table without requiring the table's receptacle box to be gigantic and unweildy
     public static List<SimObjType> OnReceptacles = new List <SimObjType>()
-    {SimObjType.TableTop, SimObjType.Dresser, SimObjType.CounterTop, SimObjType.Shelf, SimObjType.ArmChair,
+    {SimObjType.DiningTable, SimObjType.TVStand, SimObjType.CoffeeTable, SimObjType.SideTable, SimObjType.Desk, SimObjType.Dresser, SimObjType.CounterTop, SimObjType.Shelf, SimObjType.ArmChair,
      SimObjType.Sofa, SimObjType.Ottoman, SimObjType.StoveBurner,SimObjType.Bathtub, SimObjType.Plate};
 
     //Objects are "placed into/placed in" to these receptacles
@@ -286,9 +287,9 @@ public static class ReceptacleRestrictions
 
 	public static List<SimObjType> SpawnOnlyOutsideReceptacles = new List <SimObjType>()
 	{
-		SimObjType.TableTop, SimObjType.Dresser, SimObjType.CounterTop, SimObjType.Sofa, SimObjType.Bench, SimObjType.Bed,
-		SimObjType.Ottoman, SimObjType.Desk, SimObjType.StoveBurner, SimObjType.Shelf, SimObjType.Bathtub, SimObjType.Sink, SimObjType.BathtubBasin, SimObjType.SinkBasin,
-		SimObjType.NightStand, SimObjType.CoffeeMachine, SimObjType.ToiletPaperHanger, SimObjType.Toilet,
+		SimObjType.DiningTable, SimObjType.TVStand, SimObjType.CoffeeTable, SimObjType.SideTable, SimObjType.Desk, SimObjType.Dresser, SimObjType.CounterTop, SimObjType.Sofa, SimObjType.Bench, SimObjType.Bed,
+		SimObjType.Ottoman, SimObjType.StoveBurner, SimObjType.Shelf, SimObjType.Bathtub, SimObjType.Sink, SimObjType.BathtubBasin, SimObjType.SinkBasin,
+		SimObjType.CoffeeMachine, SimObjType.ToiletPaperHanger, SimObjType.Toilet,
 	};
 
 	//objects in this list should always return all spawn points inside of it when trying to place an object from the hand into the object
@@ -311,7 +312,7 @@ public static class ReceptacleRestrictions
 		SimObjType.Pot, SimObjType.Pan, SimObjType.Bowl, SimObjType.Plate, SimObjType.Bread, SimObjType.Cup, SimObjType.Mug, SimObjType.Laptop,
 		SimObjType.SaltShaker, SimObjType.PepperShaker, SimObjType.AlarmClock, SimObjType.Box, SimObjType.SoapBottle, SimObjType.SoapBottleFilled, SimObjType.Kettle,
 		SimObjType.Glassbottle, SimObjType.CreditCard, SimObjType.RemoteControl, SimObjType.Candle, SimObjType.SprayBottle, SimObjType.Statue, SimObjType.Vase, 
-		SimObjType.KeyChain, SimObjType.CD, 
+		SimObjType.KeyChain, SimObjType.CD, SimObjType.Book, SimObjType.EggCracked
 	};
 
 	//Each sim object type keeps track of what sort of Receptacles it can be placed in
@@ -320,29 +321,29 @@ public static class ReceptacleRestrictions
 	{
 		//ALARM CLOCK
 		{SimObjType.AlarmClock, new List<SimObjType>()
-		{SimObjType.Box, SimObjType.Dresser, SimObjType.Desk, SimObjType.NightStand, SimObjType.TableTop, SimObjType.CounterTop, SimObjType.Shelf}},
+		{SimObjType.Box, SimObjType.Dresser, SimObjType.Desk, SimObjType.SideTable, SimObjType.DiningTable, SimObjType.TVStand, SimObjType.CoffeeTable, SimObjType.CounterTop, SimObjType.Shelf}},
 
 		//APPLE
 		{SimObjType.Apple, new List<SimObjType>()
-		{SimObjType.Pot, SimObjType.Pan, SimObjType.Bowl, SimObjType.Microwave, SimObjType.Fridge, SimObjType.Plate, SimObjType.Sink, SimObjType.SinkBasin, SimObjType.TableTop,
-		 SimObjType.CounterTop, SimObjType.GarbageCan}},
+		{SimObjType.Pot, SimObjType.Pan, SimObjType.Bowl, SimObjType.Microwave, SimObjType.Fridge, SimObjType.Plate, SimObjType.Sink, SimObjType.SinkBasin, SimObjType.DiningTable, SimObjType.TVStand, SimObjType.CoffeeTable, SimObjType.SideTable, SimObjType.Desk,
+		 SimObjType.CounterTop, SimObjType.GarbageCan, SimObjType.Dresser}},
 
 		//APPLE SLICED
 		{SimObjType.AppleSliced, new List<SimObjType>()
-		{SimObjType.Pot, SimObjType.Pan, SimObjType.Bowl, SimObjType.Microwave, SimObjType.Fridge, SimObjType.Plate, SimObjType.Sink, SimObjType.SinkBasin, SimObjType.TableTop,
-		 SimObjType.CounterTop, SimObjType.GarbageCan}},
+		{SimObjType.Pot, SimObjType.Pan, SimObjType.Bowl, SimObjType.Microwave, SimObjType.Fridge, SimObjType.Plate, SimObjType.Sink, SimObjType.SinkBasin, SimObjType.DiningTable, SimObjType.TVStand, SimObjType.CoffeeTable, SimObjType.SideTable, SimObjType.Desk,
+		 SimObjType.CounterTop, SimObjType.GarbageCan, SimObjType.Dresser}},
 
 		//BASEBALL BAT
 		{SimObjType.BaseballBat, new List<SimObjType>()
-		{SimObjType.Bed, SimObjType.TableTop, SimObjType.CounterTop,}}, ///place on floor? 
+		{SimObjType.Bed, SimObjType.DiningTable, SimObjType.TVStand, SimObjType.CoffeeTable, SimObjType.SideTable, SimObjType.Desk, SimObjType.CounterTop,}}, ///place on floor? 
 
 		//BASKETBALL
 		{SimObjType.BasketBall, new List<SimObjType>()
-		{SimObjType.Sofa, SimObjType.ArmChair, SimObjType.Dresser, SimObjType.Desk, SimObjType.NightStand, SimObjType.Bed, SimObjType.TableTop, SimObjType.CounterTop}},
+		{SimObjType.Sofa, SimObjType.ArmChair, SimObjType.Dresser, SimObjType.Desk, SimObjType.Bed, SimObjType.DiningTable,SimObjType.TVStand, SimObjType.CoffeeTable, SimObjType.SideTable, SimObjType.CounterTop}},
 
-		//BOOK - Need to alter this later so that Open Books are no longer their own prefabs, combine into one once we have state change
+		//BOOK 
 		{SimObjType.Book, new List<SimObjType>()
-		{SimObjType.Sofa, SimObjType.ArmChair, SimObjType.Box, SimObjType.Ottoman, SimObjType.Dresser, SimObjType.Desk, SimObjType.NightStand, SimObjType.Bed, SimObjType.Cabinet, SimObjType.TableTop,
+		{SimObjType.Sofa, SimObjType.ArmChair, SimObjType.Box, SimObjType.Ottoman, SimObjType.Dresser, SimObjType.Desk, SimObjType.Bed, SimObjType.Cabinet, SimObjType.DiningTable,SimObjType.TVStand, SimObjType.CoffeeTable, SimObjType.SideTable,
 		 SimObjType.CounterTop, SimObjType.Shelf, SimObjType.Drawer}},
 
 		//BOOTS
@@ -353,74 +354,88 @@ public static class ReceptacleRestrictions
 
 		//BOTTLE (Glassbottle)
 		{SimObjType.Glassbottle, new List<SimObjType>()
-		{SimObjType.Fridge, SimObjType.Box, SimObjType.Dresser, SimObjType.Desk, SimObjType.NightStand, SimObjType.Sink, SimObjType.SinkBasin, SimObjType.Cabinet, SimObjType.TableTop,
+		{SimObjType.Fridge, SimObjType.Box, SimObjType.Dresser, SimObjType.Desk, SimObjType.Sink, SimObjType.SinkBasin, SimObjType.Cabinet, SimObjType.DiningTable, SimObjType.TVStand, SimObjType.CoffeeTable, SimObjType.SideTable,
 		 SimObjType.CounterTop, SimObjType.Shelf, SimObjType.GarbageCan,
 		}},
 
 		//BOWL
 		{SimObjType.Bowl, new List<SimObjType>()
-		{SimObjType.Microwave, SimObjType.Fridge, SimObjType.Dresser, SimObjType.Desk, SimObjType.NightStand, SimObjType.Sink, SimObjType.SinkBasin, SimObjType.Cabinet, SimObjType.TableTop,
-		 SimObjType.CounterTop, SimObjType.Shelf,
+		{SimObjType.Microwave, SimObjType.Fridge, SimObjType.Dresser, SimObjType.Desk, SimObjType.Sink, SimObjType.SinkBasin, SimObjType.Cabinet, SimObjType.DiningTable, SimObjType.TVStand, SimObjType.CoffeeTable, SimObjType.SideTable,
+		 SimObjType.CounterTop, SimObjType.Shelf, 
 		}},
 
 		//BOX
 		{SimObjType.Box, new List<SimObjType>()
-		{SimObjType.Sofa, SimObjType.ArmChair, SimObjType.Dresser, SimObjType.Desk, SimObjType.NightStand, SimObjType.Cabinet, SimObjType.TableTop, SimObjType.CounterTop, SimObjType.Shelf, 
+		{SimObjType.Sofa, SimObjType.ArmChair, SimObjType.Dresser, SimObjType.Desk, SimObjType.Cabinet, SimObjType.DiningTable, SimObjType.TVStand, SimObjType.CoffeeTable, SimObjType.SideTable, SimObjType.CounterTop, SimObjType.Shelf, SimObjType.Ottoman
 		}},
 
 		//BREAD
 		{SimObjType.Bread, new List<SimObjType>()
-		{SimObjType.Microwave, SimObjType.Fridge, SimObjType.TableTop, SimObjType.CounterTop, SimObjType.GarbageCan}},
+		{SimObjType.Microwave, SimObjType.Fridge, SimObjType.DiningTable, SimObjType.TVStand, SimObjType.CoffeeTable, SimObjType.SideTable, SimObjType.Desk, SimObjType.CounterTop, SimObjType.GarbageCan, SimObjType.Plate}},
+
+		//BREAD SLICED
+		{SimObjType.BreadSliced, new List<SimObjType>()
+		{SimObjType.Microwave, SimObjType.Fridge, SimObjType.DiningTable,SimObjType.TVStand, SimObjType.CoffeeTable, SimObjType.SideTable, SimObjType.Desk, SimObjType.CounterTop, SimObjType.GarbageCan, SimObjType.Toaster, SimObjType.Plate}},
 
 		//BUTTER KNIFE
 		{SimObjType.ButterKnife, new List<SimObjType>()
-		{SimObjType.Pot, SimObjType.Pan, SimObjType.Bowl, SimObjType.Mug, SimObjType.Plate, SimObjType.Cup, SimObjType.Sink, SimObjType.SinkBasin, SimObjType.TableTop, SimObjType.CounterTop,
+		{SimObjType.Pot, SimObjType.Pan, SimObjType.Bowl, SimObjType.Mug, SimObjType.Plate, SimObjType.Cup, SimObjType.Sink, SimObjType.SinkBasin, SimObjType.DiningTable, SimObjType.TVStand, SimObjType.CoffeeTable, SimObjType.SideTable, SimObjType.Desk, SimObjType.CounterTop,
 		 SimObjType.Drawer}},
 
 		//CANDLE
 		{SimObjType.Candle, new List <SimObjType>()
-		{SimObjType.Box, SimObjType.Dresser, SimObjType.Desk, SimObjType.NightStand, SimObjType.Toilet, SimObjType.Cart, SimObjType.Bathtub, SimObjType.Cabinet, SimObjType.TableTop, SimObjType.CounterTop,
+		{SimObjType.Box, SimObjType.Dresser, SimObjType.Desk, SimObjType.Toilet, SimObjType.Cart, SimObjType.Bathtub, SimObjType.Cabinet, SimObjType.DiningTable, SimObjType.TVStand, SimObjType.CoffeeTable, SimObjType.SideTable, SimObjType.CounterTop,
 		 SimObjType.Shelf, SimObjType.Drawer,
 		}},
 
 		//CD
 		{SimObjType.CD, new List<SimObjType>()
-		{SimObjType.Box, SimObjType.Ottoman, SimObjType.Dresser, SimObjType.Desk, SimObjType.NightStand, SimObjType.Cabinet, SimObjType.TableTop, SimObjType.CounterTop, SimObjType.Shelf, SimObjType.Drawer,
-		 SimObjType.GarbageCan, SimObjType.Safe}},
+		{SimObjType.Box, SimObjType.Ottoman, SimObjType.Dresser, SimObjType.Desk, SimObjType.Cabinet, SimObjType.DiningTable, SimObjType.TVStand, SimObjType.CoffeeTable, SimObjType.SideTable, SimObjType.CounterTop, SimObjType.Shelf, SimObjType.Drawer,
+		 SimObjType.GarbageCan, SimObjType.Safe, SimObjType.Sofa, SimObjType.ArmChair}},
 
 		//CELL PHONE
 		{SimObjType.CellPhone, new List<SimObjType>()
-		{SimObjType.Sofa, SimObjType.ArmChair, SimObjType.Box, SimObjType.Ottoman, SimObjType.Dresser, SimObjType.Desk, SimObjType.NightStand, SimObjType.Bed, SimObjType.TableTop, SimObjType.CounterTop,
+		{SimObjType.Sofa, SimObjType.ArmChair, SimObjType.Box, SimObjType.Ottoman, SimObjType.Dresser, SimObjType.Desk, SimObjType.Bed, SimObjType.DiningTable, SimObjType.TVStand, SimObjType.CoffeeTable, SimObjType.SideTable, SimObjType.CounterTop,
 		 SimObjType.Shelf, SimObjType.Drawer, SimObjType.Safe,
 		 }},
 
 		//CLOTH
 		{SimObjType.Cloth, new List<SimObjType>()
-		{SimObjType.Sofa, SimObjType.ArmChair, SimObjType.Box, SimObjType.Ottoman, SimObjType.Dresser, SimObjType.LaundryHamper, SimObjType.Desk, SimObjType.NightStand, SimObjType.Toilet, SimObjType.Cart,
-		 SimObjType.BathtubBasin, SimObjType.Bathtub, SimObjType.Sink, SimObjType.SinkBasin, SimObjType.Cabinet, SimObjType.TableTop, SimObjType.CounterTop, SimObjType.Shelf, SimObjType.Drawer, SimObjType.GarbageCan}},
+		{SimObjType.Sofa, SimObjType.ArmChair, SimObjType.Box, SimObjType.Ottoman, SimObjType.Dresser, SimObjType.LaundryHamper, SimObjType.Desk, SimObjType.Toilet, SimObjType.Cart,
+		 SimObjType.BathtubBasin, SimObjType.Bathtub, SimObjType.Sink, SimObjType.SinkBasin, SimObjType.Cabinet, SimObjType.DiningTable, SimObjType.TVStand, SimObjType.CoffeeTable, SimObjType.SideTable,  
+         SimObjType.CounterTop, SimObjType.Shelf, SimObjType.Drawer, SimObjType.GarbageCan
+         }},
 
 		//CREDIT CARD
 		{SimObjType.CreditCard, new List<SimObjType>()
-		{SimObjType.Sofa, SimObjType.ArmChair, SimObjType.Box, SimObjType.Ottoman, SimObjType.Dresser, SimObjType.Desk, SimObjType.NightStand, SimObjType.TableTop, SimObjType.CounterTop, SimObjType.Shelf, SimObjType.Drawer,
+		{SimObjType.Sofa, SimObjType.ArmChair, SimObjType.Box, SimObjType.Ottoman, SimObjType.Dresser, SimObjType.Desk, SimObjType.DiningTable, SimObjType.TVStand, SimObjType.CoffeeTable, SimObjType.SideTable,
+         SimObjType.CounterTop, SimObjType.Shelf, SimObjType.Drawer,
 		 SimObjType.Shelf}},
 
 		//CUP
 		{SimObjType.Cup, new List<SimObjType>()
-		{SimObjType.Microwave, SimObjType.Fridge, SimObjType.Dresser, SimObjType.Desk, SimObjType.NightStand, SimObjType.Sink, SimObjType.SinkBasin, SimObjType.Cabinet, SimObjType.TableTop,
+		{SimObjType.Microwave, SimObjType.Fridge, SimObjType.Dresser, SimObjType.Desk, SimObjType.Sink, SimObjType.SinkBasin, SimObjType.Cabinet, SimObjType.DiningTable, SimObjType.TVStand, SimObjType.CoffeeTable, SimObjType.SideTable,
 		 SimObjType.CounterTop, SimObjType.Shelf }}, //might want to add this to coffee machines later, but right now they don't fit, only mugs were created to fit coffee machines initially
 
 		//DISH SPONGE
 		{SimObjType.DishSponge, new List<SimObjType>()
 		{SimObjType.Pot, SimObjType.Pan, SimObjType.Bowl, SimObjType.Plate, SimObjType.Box, SimObjType.Toilet, SimObjType.Cart, SimObjType.Cart, SimObjType.BathtubBasin, SimObjType.Bathtub, SimObjType.Sink, 
-		 SimObjType.SinkBasin, SimObjType.Cabinet, SimObjType.TableTop, SimObjType.CounterTop, SimObjType.Shelf, SimObjType.Drawer, SimObjType.GarbageCan}},
+		 SimObjType.SinkBasin, SimObjType.Cabinet, SimObjType.DiningTable, SimObjType.TVStand, SimObjType.CoffeeTable, SimObjType.SideTable, SimObjType.CounterTop, SimObjType.Shelf, SimObjType.Drawer, SimObjType.GarbageCan}},
 
 		//EGG
 		{SimObjType.Egg, new List<SimObjType>()
-		{SimObjType.Pot, SimObjType.Pan, SimObjType.Bowl, SimObjType.Microwave, SimObjType.Fridge, SimObjType.Plate, SimObjType.Sink, SimObjType.SinkBasin, SimObjType.TableTop, SimObjType.CounterTop, SimObjType.GarbageCan}},
+		{SimObjType.Pot, SimObjType.Pan, SimObjType.Bowl, SimObjType.Microwave, SimObjType.Fridge, SimObjType.Plate, SimObjType.Sink, SimObjType.SinkBasin, SimObjType.DiningTable, SimObjType.TVStand, SimObjType.CoffeeTable, SimObjType.SideTable, 
+         SimObjType.CounterTop, SimObjType.GarbageCan}},
+	
+		//EGG CRACKED
+		{SimObjType.EggCracked, new List<SimObjType>()
+		{SimObjType.Pot, SimObjType.Pan, SimObjType.Bowl, SimObjType.Microwave, SimObjType.Fridge, SimObjType.Plate, SimObjType.Sink, SimObjType.SinkBasin, SimObjType.DiningTable, SimObjType.TVStand, SimObjType.CoffeeTable, SimObjType.SideTable, 
+         SimObjType.CounterTop, SimObjType.GarbageCan}},
 
 		//FORK
 		{SimObjType.Fork, new List<SimObjType>()
-		{SimObjType.Pot, SimObjType.Pan, SimObjType.Bowl, SimObjType.Mug, SimObjType.Plate, SimObjType.Cup, SimObjType.Sink, SimObjType.SinkBasin, SimObjType.TableTop, SimObjType.CounterTop, SimObjType.Drawer, }},
+		{SimObjType.Pot, SimObjType.Pan, SimObjType.Bowl, SimObjType.Mug, SimObjType.Plate, SimObjType.Cup, SimObjType.Sink, SimObjType.SinkBasin, SimObjType.DiningTable, SimObjType.TVStand, SimObjType.CoffeeTable, SimObjType.SideTable, 
+         SimObjType.CounterTop, SimObjType.Drawer,}},
 
 		//HAND TOWEL- small hand towel
 		{SimObjType.HandTowel, new List<SimObjType>()
@@ -428,61 +443,65 @@ public static class ReceptacleRestrictions
 
 		//KETTLE
 		{SimObjType.Kettle, new List<SimObjType>()
-		{SimObjType.TableTop, SimObjType.CounterTop, SimObjType.Sink, SimObjType.SinkBasin, SimObjType.Cabinet, SimObjType.StoveBurner, SimObjType.Shelf}},
+		{SimObjType.DiningTable,SimObjType.TVStand, SimObjType.CoffeeTable, SimObjType.SideTable, SimObjType.CounterTop, SimObjType.Sink, SimObjType.SinkBasin, SimObjType.Cabinet, SimObjType.StoveBurner, SimObjType.Shelf}},
 
 		//KEYCHAIN
 		{SimObjType.KeyChain, new List<SimObjType>()
-		{SimObjType.Sofa, SimObjType.ArmChair, SimObjType.Box, SimObjType.Ottoman, SimObjType.Dresser, SimObjType.Desk, SimObjType.NightStand, SimObjType.TableTop, SimObjType.CounterTop, SimObjType.Shelf, SimObjType.Drawer,
+		{SimObjType.Sofa, SimObjType.ArmChair, SimObjType.Box, SimObjType.Ottoman, SimObjType.Dresser, SimObjType.Desk, SimObjType.DiningTable, SimObjType.TVStand, SimObjType.CoffeeTable, SimObjType.SideTable, SimObjType.CounterTop, SimObjType.Shelf, SimObjType.Drawer,
 		 SimObjType.Safe,}},
 
 		//KNIFE - Big chef's knife
 		{SimObjType.Knife, new List<SimObjType>()
-		{SimObjType.Pot, SimObjType.Pan, SimObjType.Bowl, SimObjType.Mug, SimObjType.Plate, SimObjType.Sink, SimObjType.SinkBasin, SimObjType.TableTop, SimObjType.CounterTop, SimObjType.Drawer, }},
+		{SimObjType.Pot, SimObjType.Pan, SimObjType.Bowl, SimObjType.Mug, SimObjType.Plate, SimObjType.Sink, SimObjType.SinkBasin, SimObjType.DiningTable, SimObjType.TVStand, SimObjType.CoffeeTable, SimObjType.SideTable, SimObjType.CounterTop, SimObjType.Drawer, }},
 
 		//LADLE
 		{SimObjType.Ladle, new List<SimObjType>()
-		{SimObjType.Pot, SimObjType.Pan, SimObjType.Bowl, SimObjType.Plate, SimObjType.Sink, SimObjType.SinkBasin, SimObjType.Cabinet, SimObjType.TableTop, SimObjType.CounterTop, SimObjType.Drawer}},
+		{SimObjType.Pot, SimObjType.Pan, SimObjType.Bowl, SimObjType.Plate, SimObjType.Sink, SimObjType.SinkBasin, SimObjType.Cabinet, SimObjType.DiningTable, SimObjType.TVStand, SimObjType.CoffeeTable, SimObjType.SideTable, SimObjType.CounterTop, SimObjType.Drawer}},
 
 		//LAPTOP
 		{SimObjType.Laptop, new List<SimObjType>()
-		{SimObjType.Sofa, SimObjType.ArmChair, SimObjType.Ottoman, SimObjType.Dresser, SimObjType.Desk, SimObjType.NightStand, SimObjType.Bed, SimObjType.TableTop, SimObjType.CounterTop}},
+		{SimObjType.Sofa, SimObjType.ArmChair, SimObjType.Ottoman, SimObjType.Dresser, SimObjType.Desk, SimObjType.Bed, SimObjType.DiningTable, SimObjType.TVStand, SimObjType.CoffeeTable, SimObjType.SideTable, SimObjType.CounterTop}},
 
 		//LETTUCE
 		{SimObjType.Lettuce, new List<SimObjType>()
-		{SimObjType.Pot, SimObjType.Pan, SimObjType.Bowl, SimObjType.Fridge, SimObjType.Plate, SimObjType.Sink, SimObjType.SinkBasin, SimObjType.TableTop, SimObjType.CounterTop, SimObjType.GarbageCan}},
+		{SimObjType.Pot, SimObjType.Pan, SimObjType.Bowl, SimObjType.Fridge, SimObjType.Plate, SimObjType.Sink, SimObjType.SinkBasin, SimObjType.DiningTable, SimObjType.TVStand, SimObjType.CoffeeTable, SimObjType.SideTable, SimObjType.CounterTop, SimObjType.GarbageCan}},
+
+		//LETTUCE SLICED
+		{SimObjType.LettuceSliced, new List<SimObjType>()
+		{SimObjType.Pot, SimObjType.Pan, SimObjType.Bowl, SimObjType.Fridge, SimObjType.Plate, SimObjType.Sink, SimObjType.SinkBasin, SimObjType.DiningTable, SimObjType.TVStand, SimObjType.CoffeeTable, SimObjType.SideTable, SimObjType.CounterTop, SimObjType.GarbageCan}},
 
 		//MUG
 		{SimObjType.Mug, new List<SimObjType>()
-		{SimObjType.CoffeeMachine, SimObjType.Microwave, SimObjType.Fridge, SimObjType.Plate, SimObjType.Box, SimObjType.Dresser, SimObjType.Desk, SimObjType.NightStand, SimObjType.Cart, SimObjType.Sink,
-		 SimObjType.SinkBasin, SimObjType.Cabinet, SimObjType.TableTop, SimObjType.CounterTop, SimObjType.Shelf, 
+		{SimObjType.CoffeeMachine, SimObjType.Microwave, SimObjType.Fridge, SimObjType.Plate, SimObjType.Box, SimObjType.Dresser, SimObjType.Desk, SimObjType.Cart, SimObjType.Sink,
+		 SimObjType.SinkBasin, SimObjType.Cabinet, SimObjType.DiningTable, SimObjType.TVStand, SimObjType.CoffeeTable, SimObjType.SideTable, SimObjType.CounterTop, SimObjType.Shelf, 
 		}},
 
 		//NEWSPAPER
 		{SimObjType.Newspaper, new List<SimObjType>()
-		{SimObjType.Sofa, SimObjType.ArmChair, SimObjType.Ottoman, SimObjType.Dresser, SimObjType.Desk, SimObjType.NightStand, SimObjType.Bed, SimObjType.Toilet, SimObjType.Cabinet, SimObjType.TableTop, 
+		{SimObjType.Sofa, SimObjType.ArmChair, SimObjType.Ottoman, SimObjType.Dresser, SimObjType.Desk, SimObjType.Bed, SimObjType.Toilet, SimObjType.Cabinet, SimObjType.DiningTable, SimObjType.TVStand, SimObjType.CoffeeTable, SimObjType.SideTable, 
 		 SimObjType.CounterTop, SimObjType.Shelf, SimObjType.Drawer, SimObjType.GarbageCan
 		}},
 
 		//PAN
 		{SimObjType.Pan, new List<SimObjType>()
-		{SimObjType.TableTop, SimObjType.CounterTop, SimObjType.Sink, SimObjType.SinkBasin, SimObjType.Cabinet, SimObjType.StoveBurner, SimObjType.Fridge}},
+		{SimObjType.DiningTable, SimObjType.CounterTop, SimObjType.TVStand, SimObjType.CoffeeTable, SimObjType.SideTable, SimObjType.Sink, SimObjType.SinkBasin, SimObjType.Cabinet, SimObjType.StoveBurner, SimObjType.Fridge}},
 
 		//PAPER TOWEL
 		{SimObjType.PaperTowelRoll, new List<SimObjType>()
-		{SimObjType.Box, SimObjType.Toilet, SimObjType.Cart, SimObjType.Bathtub, SimObjType.TableTop, SimObjType.CounterTop, SimObjType.Shelf, SimObjType.GarbageCan}},
+		{SimObjType.Box, SimObjType.Toilet, SimObjType.Cart, SimObjType.Bathtub, SimObjType.DiningTable, SimObjType.TVStand, SimObjType.CoffeeTable, SimObjType.SideTable, SimObjType.CounterTop, SimObjType.Shelf, SimObjType.GarbageCan}},
 
 
 		//PEN
 		{SimObjType.Pen, new List<SimObjType>()
-		{SimObjType.Mug, SimObjType.Box, SimObjType.Dresser, SimObjType.Desk, SimObjType.NightStand, SimObjType.TableTop, SimObjType.CounterTop, SimObjType.Shelf, SimObjType.Drawer, SimObjType.GarbageCan}},
+		{SimObjType.Mug, SimObjType.Box, SimObjType.Dresser, SimObjType.Desk, SimObjType.DiningTable, SimObjType.TVStand, SimObjType.CoffeeTable, SimObjType.SideTable, SimObjType.CounterTop, SimObjType.Shelf, SimObjType.Drawer, SimObjType.GarbageCan}},
 
 		//PENCIL
 		{SimObjType.Pencil, new List<SimObjType>()
-		{SimObjType.Mug, SimObjType.Box, SimObjType.Dresser, SimObjType.Desk, SimObjType.NightStand, SimObjType.TableTop, SimObjType.CounterTop, SimObjType.Shelf, SimObjType.Drawer, SimObjType.GarbageCan}},
+		{SimObjType.Mug, SimObjType.Box, SimObjType.Dresser, SimObjType.Desk, SimObjType.DiningTable, SimObjType.TVStand, SimObjType.CoffeeTable, SimObjType.SideTable, SimObjType.CounterTop, SimObjType.Shelf, SimObjType.Drawer, SimObjType.GarbageCan}},
 
 		//PEPPER SHAKER
 		{SimObjType.PepperShaker, new List<SimObjType>()
-		{SimObjType.TableTop, SimObjType.CounterTop, SimObjType.Drawer, SimObjType.Cabinet, SimObjType.Shelf}},
+		{SimObjType.DiningTable, SimObjType.TVStand, SimObjType.CoffeeTable, SimObjType.SideTable, SimObjType.CounterTop, SimObjType.Drawer, SimObjType.Cabinet, SimObjType.Shelf}},
 
 		//PILLOW
 		{SimObjType.Pillow, new List<SimObjType>()
@@ -490,7 +509,7 @@ public static class ReceptacleRestrictions
 
 		//Plate
 		{SimObjType.Plate, new List<SimObjType>()
-		{SimObjType.Microwave, SimObjType.Fridge, SimObjType.Dresser, SimObjType.Desk, SimObjType.NightStand, SimObjType.Sink,SimObjType.Sink, SimObjType.SinkBasin, SimObjType.Cabinet, SimObjType.TableTop,
+		{SimObjType.Microwave, SimObjType.Fridge, SimObjType.Dresser, SimObjType.Desk, SimObjType.Sink,SimObjType.Sink, SimObjType.SinkBasin, SimObjType.Cabinet, SimObjType.DiningTable, SimObjType.TVStand, SimObjType.CoffeeTable, SimObjType.SideTable,
 		 SimObjType.CounterTop, SimObjType.Shelf
 		}},
 
@@ -500,80 +519,88 @@ public static class ReceptacleRestrictions
 
 		//POT
 		{SimObjType.Pot, new List<SimObjType>()
-		{SimObjType.StoveBurner, SimObjType.Fridge, SimObjType.Sink, SimObjType.SinkBasin, SimObjType.Cabinet, SimObjType.TableTop, SimObjType.CounterTop, SimObjType.Shelf}},
+		{SimObjType.StoveBurner, SimObjType.Fridge, SimObjType.Sink, SimObjType.SinkBasin, SimObjType.Cabinet, SimObjType.DiningTable, SimObjType.TVStand, SimObjType.CoffeeTable, SimObjType.SideTable, SimObjType.CounterTop, SimObjType.Shelf}},
 
 		//POTATO
 		{SimObjType.Potato, new List<SimObjType>()
-		{SimObjType.Pot, SimObjType.Pan, SimObjType.Bowl, SimObjType.Microwave, SimObjType.Fridge, SimObjType.Plate, SimObjType.Sink, SimObjType.SinkBasin, SimObjType.TableTop, SimObjType.CounterTop, SimObjType.GarbageCan}},
+		{SimObjType.Pot, SimObjType.Pan, SimObjType.Bowl, SimObjType.Microwave, SimObjType.Fridge, SimObjType.Plate, SimObjType.Sink, SimObjType.SinkBasin, SimObjType.DiningTable, SimObjType.TVStand, SimObjType.CoffeeTable, SimObjType.SideTable, SimObjType.CounterTop, SimObjType.GarbageCan}},
 
+		//POTATO SLICED
+		{SimObjType.PotatoSliced, new List<SimObjType>()
+		{SimObjType.Pot, SimObjType.Pan, SimObjType.Bowl, SimObjType.Microwave, SimObjType.Fridge, SimObjType.Plate, SimObjType.Sink, SimObjType.SinkBasin, SimObjType.DiningTable, SimObjType.TVStand, SimObjType.CoffeeTable, SimObjType.SideTable, SimObjType.CounterTop, SimObjType.GarbageCan}},
 
 		//REMOTE CONTROL
 		{SimObjType.RemoteControl, new List<SimObjType>()
-		{SimObjType.Sofa, SimObjType.ArmChair, SimObjType.Box, SimObjType.Ottoman, SimObjType.Dresser, SimObjType.Desk, SimObjType.NightStand, SimObjType.TableTop, SimObjType.CounterTop, SimObjType.Shelf, 
+		{SimObjType.Sofa, SimObjType.ArmChair, SimObjType.Box, SimObjType.Ottoman, SimObjType.Dresser, SimObjType.Desk, SimObjType.DiningTable, SimObjType.TVStand, SimObjType.CoffeeTable, SimObjType.SideTable, SimObjType.CounterTop, SimObjType.Shelf, 
 		 SimObjType.Drawer, }},
 
 		//SALT SHAKER
 		{SimObjType.SaltShaker, new List<SimObjType>()
-		{SimObjType.TableTop, SimObjType.CounterTop, SimObjType.Drawer, SimObjType.Cabinet, SimObjType.Shelf}},
+		{SimObjType.DiningTable, SimObjType.TVStand, SimObjType.CoffeeTable, SimObjType.SideTable, SimObjType.CounterTop, SimObjType.Drawer, SimObjType.Cabinet, SimObjType.Shelf}},
 
 		//SOAP BAR
 		{SimObjType.SoapBar, new List <SimObjType>()
-		{SimObjType.Toilet, SimObjType.Cart, SimObjType.Bathtub, SimObjType.BathtubBasin, SimObjType.Sink, SimObjType.SinkBasin, SimObjType.Cabinet, SimObjType.TableTop, SimObjType.CounterTop, SimObjType.Shelf,
+		{SimObjType.Toilet, SimObjType.Cart, SimObjType.Bathtub, SimObjType.BathtubBasin, SimObjType.Sink, SimObjType.SinkBasin, SimObjType.Cabinet, SimObjType.DiningTable, SimObjType.TVStand, SimObjType.CoffeeTable, SimObjType.SideTable, SimObjType.CounterTop, SimObjType.Shelf,
 		 SimObjType.Drawer, SimObjType.GarbageCan,
 		}},
 
 		//SOAP BOTTLE
 		{SimObjType.SoapBottle, new List <SimObjType>()
-		{SimObjType.Dresser, SimObjType.Desk, SimObjType.NightStand, SimObjType.Toilet, SimObjType.Cart, SimObjType.Bathtub, SimObjType.Sink, SimObjType.Cabinet, SimObjType.TableTop, SimObjType.CounterTop, 
+		{SimObjType.Dresser, SimObjType.Desk, SimObjType.Toilet, SimObjType.Cart, SimObjType.Bathtub, SimObjType.Sink, SimObjType.Cabinet, SimObjType.DiningTable, SimObjType.TVStand, SimObjType.CoffeeTable, SimObjType.SideTable, SimObjType.CounterTop, 
 		 SimObjType.Shelf, SimObjType.Drawer, SimObjType.GarbageCan,
 		}},
 
 		//SPATULA
 		{SimObjType.Spatula, new List<SimObjType>()
-		{SimObjType.Pot, SimObjType.Pan, SimObjType.Bowl, SimObjType.Plate, SimObjType.Sink, SimObjType.SinkBasin, SimObjType.TableTop, SimObjType.CounterTop, SimObjType.Drawer,}},
+		{SimObjType.Pot, SimObjType.Pan, SimObjType.Bowl, SimObjType.Plate, SimObjType.Sink, SimObjType.SinkBasin, SimObjType.DiningTable, SimObjType.TVStand, SimObjType.CoffeeTable, SimObjType.SideTable, SimObjType.CounterTop, SimObjType.Drawer,}},
 
 		//SPOON
 		{SimObjType.Spoon, new List<SimObjType>()
-		{SimObjType.Pot, SimObjType.Pan, SimObjType.Bowl, SimObjType.Mug, SimObjType.Plate, SimObjType.Cup, SimObjType.Sink, SimObjType.SinkBasin, SimObjType.TableTop, SimObjType.CounterTop, SimObjType.Drawer, }},
+		{SimObjType.Pot, SimObjType.Pan, SimObjType.Bowl, SimObjType.Mug, SimObjType.Plate, SimObjType.Cup, SimObjType.Sink, SimObjType.SinkBasin, SimObjType.DiningTable, SimObjType.TVStand, SimObjType.CoffeeTable, SimObjType.SideTable, SimObjType.CounterTop, SimObjType.Drawer, }},
 
 		//SPRAY BOTTLE
 		{SimObjType.SprayBottle, new List <SimObjType>()
-		{SimObjType.Dresser, SimObjType.Desk, SimObjType.NightStand, SimObjType.Toilet, SimObjType.Cart, SimObjType.Cabinet, SimObjType.TableTop, SimObjType.CounterTop, SimObjType.Shelf, SimObjType.Drawer, 
+		{SimObjType.Dresser, SimObjType.Desk, SimObjType.Toilet, SimObjType.Cart, SimObjType.Cabinet, SimObjType.DiningTable, SimObjType.TVStand, SimObjType.CoffeeTable, SimObjType.SideTable, SimObjType.CounterTop, SimObjType.Shelf, SimObjType.Drawer, 
 		 SimObjType.GarbageCan
 		}},
 		
 		//STATUE
 		{SimObjType.Statue, new List<SimObjType>()
-		{SimObjType.Box, SimObjType.Dresser, SimObjType.Desk, SimObjType.NightStand, SimObjType.Cart, SimObjType.TableTop, SimObjType.CounterTop, SimObjType.Shelf, SimObjType.Safe, }},
+		{SimObjType.Box, SimObjType.Dresser, SimObjType.Desk, SimObjType.Cart, SimObjType.DiningTable, SimObjType.TVStand, SimObjType.CoffeeTable, SimObjType.SideTable, SimObjType.CounterTop, SimObjType.Shelf, SimObjType.Safe, }},
 
 		//TEDDY BEAR
 		{SimObjType.TeddyBear, new List<SimObjType>()
-		{SimObjType.Bed, SimObjType.Sofa, SimObjType.ArmChair, SimObjType.Ottoman, SimObjType.Dresser, SimObjType.Desk, SimObjType.NightStand, SimObjType.TableTop, SimObjType.CounterTop, SimObjType.Safe}},
+		{SimObjType.Bed, SimObjType.Sofa, SimObjType.ArmChair, SimObjType.Ottoman, SimObjType.Dresser, SimObjType.Desk, SimObjType.DiningTable, SimObjType.TVStand, SimObjType.CoffeeTable, SimObjType.SideTable, SimObjType.CounterTop, SimObjType.Safe}},
 
 		//TENNIS RACKET
 		{SimObjType.TennisRacket, new List<SimObjType>()
-		{SimObjType.Dresser, SimObjType.Desk, SimObjType.NightStand, SimObjType.Bed, SimObjType.TableTop, SimObjType.CounterTop}}, ///place on floor? 
+		{SimObjType.Dresser, SimObjType.Desk, SimObjType.Bed, SimObjType.DiningTable, SimObjType.TVStand, SimObjType.CoffeeTable, SimObjType.SideTable, SimObjType.CounterTop}}, ///place on floor? 
 	
 		//TISSUE BOX
 		{SimObjType.TissueBox, new List<SimObjType>()
-		{SimObjType.Box, SimObjType.Dresser, SimObjType.Desk, SimObjType.NightStand, SimObjType.Toilet, SimObjType.Cart, SimObjType.Cabinet, SimObjType.TableTop, SimObjType.CounterTop, SimObjType.Shelf, 
+		{SimObjType.Box, SimObjType.Dresser, SimObjType.Desk, SimObjType.Toilet, SimObjType.Cart, SimObjType.Cabinet, SimObjType.DiningTable, SimObjType.TVStand, SimObjType.CoffeeTable, SimObjType.SideTable, SimObjType.CounterTop, SimObjType.Shelf, 
 		 SimObjType.Drawer, SimObjType.GarbageCan}},
 
 		//TOILET PAPER
 		{SimObjType.ToiletPaper, new List <SimObjType>()
-		{SimObjType.Dresser, SimObjType.Desk, SimObjType.NightStand, SimObjType.Toilet, SimObjType.ToiletPaperHanger, SimObjType.Cart, SimObjType.Bathtub, SimObjType.Cabinet, SimObjType.TableTop, 
+		{SimObjType.Dresser, SimObjType.Desk, SimObjType.Toilet, SimObjType.ToiletPaperHanger, SimObjType.Cart, SimObjType.Bathtub, SimObjType.Cabinet, SimObjType.DiningTable, SimObjType.TVStand, SimObjType.CoffeeTable, SimObjType.SideTable,
 		 SimObjType.CounterTop, SimObjType.Shelf, SimObjType.Drawer, SimObjType.GarbageCan,
 		}},
 
 		//TOILET PAPER ROLL - should be same as Toilet Paper's list
 		{SimObjType.ToiletPaperRoll, new List <SimObjType>()
-		{SimObjType.Dresser, SimObjType.Desk, SimObjType.NightStand, SimObjType.Toilet, SimObjType.ToiletPaperHanger, SimObjType.Cart, SimObjType.Bathtub, SimObjType.Cabinet, SimObjType.TableTop, 
+		{SimObjType.Dresser, SimObjType.Desk, SimObjType.Toilet, SimObjType.ToiletPaperHanger, SimObjType.Cart, SimObjType.Bathtub, SimObjType.Cabinet, SimObjType.DiningTable, SimObjType.TVStand, SimObjType.CoffeeTable, SimObjType.SideTable,
 		 SimObjType.CounterTop, SimObjType.Shelf, SimObjType.Drawer, SimObjType.GarbageCan,
 		}},
 
 		//TOMATO
 		{SimObjType.Tomato, new List<SimObjType>()
-		{SimObjType.TableTop, SimObjType.CounterTop, SimObjType.Sink, SimObjType.SinkBasin, SimObjType.Pot,
+		{SimObjType.DiningTable, SimObjType.TVStand, SimObjType.CoffeeTable, SimObjType.SideTable, SimObjType.CounterTop, SimObjType.Sink, SimObjType.SinkBasin, SimObjType.Pot,
+		 SimObjType.Bowl, SimObjType.Fridge, SimObjType.GarbageCan, SimObjType.Plate}},
+
+		//TOMATO SLICED
+		{SimObjType.TomatoSliced, new List<SimObjType>()
+		{SimObjType.DiningTable, SimObjType.CounterTop, SimObjType.TVStand, SimObjType.CoffeeTable, SimObjType.SideTable, SimObjType.Sink, SimObjType.SinkBasin, SimObjType.Pot,
 		 SimObjType.Bowl, SimObjType.Fridge, SimObjType.GarbageCan, SimObjType.Plate}},
 
 		//TOWEL - large bath towel
@@ -582,19 +609,19 @@ public static class ReceptacleRestrictions
 
 		//VASE
 		{SimObjType.Vase, new List<SimObjType>()
-		{SimObjType.Box, SimObjType.Dresser, SimObjType.Desk, SimObjType.NightStand, SimObjType.Cart, SimObjType.Cabinet, SimObjType.TableTop, SimObjType.CounterTop, SimObjType.Shelf, SimObjType.Safe}},
+		{SimObjType.Box, SimObjType.Dresser, SimObjType.Desk, SimObjType.Cart, SimObjType.Cabinet, SimObjType.DiningTable, SimObjType.TVStand, SimObjType.CoffeeTable, SimObjType.SideTable, SimObjType.CounterTop, SimObjType.Shelf, SimObjType.Safe}},
 
 		//WATCH
 		{SimObjType.Watch, new List<SimObjType>()
-		{SimObjType.Box, SimObjType.Dresser, SimObjType.Desk, SimObjType.NightStand, SimObjType.TableTop, SimObjType.CounterTop, SimObjType.Shelf, SimObjType.Drawer, SimObjType.Safe}},
+		{SimObjType.Box, SimObjType.Dresser, SimObjType.Desk, SimObjType.DiningTable, SimObjType.TVStand, SimObjType.CoffeeTable, SimObjType.SideTable, SimObjType.CounterTop, SimObjType.Shelf, SimObjType.Drawer, SimObjType.Safe}},
 
 		//WATERING CAN
 		{SimObjType.WateringCan, new List<SimObjType>()
-		{SimObjType.Dresser, SimObjType.Desk, SimObjType.NightStand, SimObjType.Cabinet, SimObjType.TableTop, SimObjType.CounterTop, SimObjType.Shelf, SimObjType.Drawer,}},
+		{SimObjType.Dresser, SimObjType.Desk, SimObjType.Cabinet, SimObjType.DiningTable, SimObjType.TVStand, SimObjType.CoffeeTable, SimObjType.SideTable, SimObjType.CounterTop, SimObjType.Shelf, SimObjType.Drawer,}},
 
 		//WINE BOTTLE
 		{SimObjType.WineBottle, new List<SimObjType>()
-		{SimObjType.Fridge, SimObjType.Dresser, SimObjType.Desk, SimObjType.NightStand, SimObjType.Cabinet, SimObjType.TableTop, SimObjType.CounterTop, SimObjType.Shelf, SimObjType.GarbageCan}},
+		{SimObjType.Fridge, SimObjType.Dresser, SimObjType.Desk, SimObjType.Cabinet, SimObjType.DiningTable, SimObjType.TVStand, SimObjType.CoffeeTable, SimObjType.SideTable, SimObjType.CounterTop, SimObjType.Shelf, SimObjType.GarbageCan}},
 
 	};
 

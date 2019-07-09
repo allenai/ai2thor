@@ -237,7 +237,8 @@ def webgl_build(
         directory="builds",
         prefix='local',
         verbose=False,
-        content_addressable=False
+        content_addressable=False,
+        turk_build=False
 ):
     """
     Creates a WebGL build
@@ -296,7 +297,10 @@ def webgl_build(
     if verbose:
         print(scenes)
 
-    if _build('unity', arch, directory, build_name, env=dict(SCENE=scenes)):
+    env = dict(SCENE=scenes)
+    if turk_build:
+        env['DEFINES'] = 'TURK_TASK'
+    if _build('unity', arch, directory, build_name, env=env):
         print("Build Successful")
     else:
         print("Build Failure")
@@ -476,33 +480,55 @@ def pre_test(context):
 
 def clean():
     subprocess.check_call("git reset --hard", shell=True)
+    subprocess.check_call("git clean -f -d", shell=True)
     subprocess.check_call("git clean -f -x", shell=True)
     shutil.rmtree("unity/builds", ignore_errors=True)
 
+def link_build_cache(branch):
+    library_path = os.path.join('unity', 'Library')
+
+    if os.path.exists(library_path):
+        os.unlink(library_path)
+
+    branch_cache_dir = os.path.join(os.environ['HOME'], 'cache', branch, 'Library')
+    os.makedirs(branch_cache_dir, exist_ok=True)
+    os.symlink(branch_cache_dir, library_path)
+
+def pending_travis_build():
+    import requests
+    res = requests.get('https://api.travis-ci.org/repo/16690831/builds?repository_id=16690831&include=build.commit%2Cbuild.branch%2Cbuild.request%2Cbuild.created_by%2Cbuild.repository&build.state=started%2Ccreated&sort_by=started_at:desc',
+            headers={'Accept': 'application/json', 'Content-Type': 'application/json', "Travis-API-Version": '3'})
+
+    for b in res.json()['builds']:
+        return dict(branch=b['branch']['name'], commit_id=b['commit']['sha'])
 
 @task
-def ci_build(context, branch):
+def ci_build(context):
     import fcntl
 
     lock_f = open(os.path.join(os.environ['HOME'], ".ci-build.lock"), "w")
 
     try:
         fcntl.flock(lock_f, fcntl.LOCK_EX | fcntl.LOCK_NB)
-        clean()
-        subprocess.check_call("git checkout %s" % branch, shell=True)
-        subprocess.check_call("git pull origin %s" % branch, shell=True)
+        build = pending_travis_build()
+        if build:
+            clean()
+            link_build_cache(build['branch'])
+            subprocess.check_call("git fetch", shell=True)
+            subprocess.check_call("git checkout %s" % build['branch'], shell=True)
+            subprocess.check_call("git checkout -qf %s" % build['commit_id'], shell=True)
 
-        procs = []
-        for arch in ['OSXIntel64', 'Linux64']:
-            p = ci_build_arch(arch, branch)
-            procs.append(p)
+            procs = []
+            for arch in ['OSXIntel64', 'Linux64']:
+                p = ci_build_arch(arch, build['branch'])
+                procs.append(p)
 
-        if branch == 'master':
-            webgl_build_deploy_demo(context, verbose=True, content_addressable=True, force=True)
+            if build['branch'] == 'master':
+                webgl_build_deploy_demo(context, verbose=True, content_addressable=True, force=True)
 
-        for p in procs:
-            if p:
-                p.join()
+            for p in procs:
+                if p:
+                    p.join()
 
         fcntl.flock(lock_f, fcntl.LOCK_UN)
 
@@ -561,15 +587,15 @@ def poll_ci_build(context):
     for i in range(60):
         missing = False
         for arch in platform_map.keys():
-            if (i % 300) == 0:
+            if (i % 5) == 0:
                 print("checking %s for commit id %s" % (arch, commit_id))
             if ai2thor.downloader.commit_build_log_exists(arch, commit_id):
                 print("log exists %s" % commit_id)
             else:
                 missing = True
-        time.sleep(30)
         if not missing:
             break
+        time.sleep(30)
 
     for arch in platform_map.keys():
         if not ai2thor.downloader.commit_build_exists(arch, commit_id):
@@ -627,11 +653,20 @@ def build(context, local=False):
     build_pip(context)
 
 @task
-def interact(ctx, scene, editor_mode=False, local_build=False):
+def interact(
+        ctx,
+        scene,
+        editor_mode=False,
+        local_build=False,
+        depth_image=False,
+        class_image=False,
+        object_image=False
+):
     import ai2thor.controller
 
     env = ai2thor.controller.Controller()
     if local_build:
+        print("Executing from local build at {} ".format( _local_build_path()))
         env.local_executable_path = _local_build_path()
     if editor_mode:
         env.start(8200, False, player_screen_width=600, player_screen_height=600)
@@ -639,7 +674,15 @@ def interact(ctx, scene, editor_mode=False, local_build=False):
         env.start(player_screen_width=600, player_screen_height=600)
 
     env.reset(scene)
-    env.step(dict(action='Initialize', gridSize=0.25))
+    env.step(
+        dict(
+            action='Initialize',
+            gridSize=0.25,
+            renderObjectImage=object_image,
+            renderClassImage=class_image,
+            renderDepthImage=depth_image
+        )
+    )
     env.interact()
     env.stop()
 

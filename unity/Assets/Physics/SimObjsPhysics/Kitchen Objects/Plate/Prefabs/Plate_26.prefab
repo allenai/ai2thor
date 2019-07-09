@@ -203,6 +203,8 @@ GameObject:
   - component: {fileID: 4122276284449954}
   - component: {fileID: 114058053625728160}
   - component: {fileID: 54910461004161024}
+  - component: {fileID: 877262577}
+  - component: {fileID: 877262578}
   m_Layer: 8
   m_Name: Plate_26
   m_TagString: SimObjPhysics
@@ -243,10 +245,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b439f6e4ef5714ee2a3643acf37b7a9d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  uniqueID: 
+  uniqueID: Plate|+01.80|+00.00|+00.00
   Type: 25
   PrimaryProperty: 3
-  SecondaryProperties: 07000000
+  SecondaryProperties: 07000000040000000b000000
   BoundingBox: {fileID: 1123238486625652}
   VisibilityPoints:
   - {fileID: 4334097121457082}
@@ -263,7 +265,7 @@ MonoBehaviour:
   - {fileID: 1958201419773600}
   isVisible: 0
   isInteractable: 0
-  isColliding: 0
+  isInAgentHand: 0
   MyColliders:
   - {fileID: 65693108028990218}
   - {fileID: 65362117974124752}
@@ -281,6 +283,10 @@ MonoBehaviour:
   HFbounciness: 0.1
   HFrbdrag: 0
   HFrbangulardrag: 0
+  salientMaterials: 04000000
+  CurrentTemperature: 0
+  HowManySecondsUntilRoomTemp: 10
+  ContainedObjectReferences: []
 --- !u!54 &54910461004161024
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -297,6 +303,49 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
+--- !u!114 &877262577
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1098839295657838}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 02b2beb760fcd4a6f957400c276adb00, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  PrefabToSwapTo: {fileID: 269644942, guid: 6c7d59042adfdbd468f9db1dade2c838, type: 3}
+  DirtyPrefabToSwapTo: {fileID: 445029788141567200, guid: 5909c31afe1ba0b44883dab27826c5ad,
+    type: 3}
+  ImpulseThreshold: 3
+  HighFrictionImpulseOffset: 2
+  broken: 0
+  breakType: 0
+  MaterialSwapObjects: []
+--- !u!114 &877262578
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1098839295657838}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d106cf009583a40e4a85d860c9830f67, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  MaterialSwapObjects:
+  - MyObject: {fileID: 1111087868027668}
+    OnMaterials:
+    - {fileID: 2100000, guid: 6014e033ce6c7564890c3e69577413ec, type: 2}
+    - {fileID: 2100000, guid: 14065cf2e42954d43a17b4fdfa0e10f7, type: 2}
+    OffMaterials:
+    - {fileID: 2100000, guid: 6014e033ce6c7564890c3e69577413ec, type: 2}
+    - {fileID: 2100000, guid: c3ef3d51113eec2488c430cf97a2ebec, type: 2}
+  ObjectsToEnableIfClean: []
+  ObjectsToEnableIfDirty: []
+  isDirty: 0
 --- !u!1 &1111087868027668
 GameObject:
   m_ObjectHideFlags: 0
@@ -355,6 +404,7 @@ MeshRenderer:
   m_RendererPriority: 0
   m_Materials:
   - {fileID: 2100000, guid: 6014e033ce6c7564890c3e69577413ec, type: 2}
+  - {fileID: 2100000, guid: c3ef3d51113eec2488c430cf97a2ebec, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -1335,7 +1385,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   CurrentlyContains: []
-  myParent: {fileID: 0}
+  myParent: {fileID: 1098839295657838}
   occupied: 0
 --- !u!1 &1774033719501668
 GameObject:
@@ -1659,7 +1709,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   CurrentlyContains: []
-  myParent: {fileID: 0}
+  myParent: {fileID: 1098839295657838}
   occupied: 0
 --- !u!1 &1984132473349002
 GameObject:
