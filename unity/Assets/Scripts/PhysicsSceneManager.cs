@@ -35,6 +35,11 @@ public class PhysicsSceneManager : MonoBehaviour
 	private Vector3 gizmoscale;
 	private Quaternion gizmoquaternion;
 
+    //keep track of if the physics autosimulation has been paused or not
+    public bool physicsSimulationPaused = false;
+
+    public bool isSceneAtRest;//if any object in the scene has a non zero velocity, set to false
+
 	private void OnEnable()
 	{
 		//clear this on start so that the CheckForDuplicates function doesn't check pre-existing lists
