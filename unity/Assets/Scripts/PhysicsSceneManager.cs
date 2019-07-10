@@ -414,7 +414,7 @@ public class PhysicsSceneManager : MonoBehaviour
             List<GameObject> unduplicatedSimObjects = new List<GameObject>();
             Dictionary<SimObjType, int> requestedNumRepeats = new Dictionary<SimObjType, int>();
             Dictionary<SimObjType, int> minFreePerReceptacleType = new Dictionary<SimObjType, int>();
-
+            HashSet<GameObject> originalObjects = new HashSet<GameObject>(SpawnedObjects);
 
             if (numRepeats == null)
             {
@@ -644,17 +644,23 @@ public class PhysicsSceneManager : MonoBehaviour
 						#if UNITY_EDITOR
 						// watch.Stop();
 						// var elapsedMs = watch.ElapsedMilliseconds;
-						// print("time for trying, but FAILING, to place " + go.transform.name+ " in " + sop.transform.name + ": " + elapsedMs + " ms");
+						// print("time for trying, but FAILING, to place " + go.transform.name + " in " + sop.transform.name + ": " + elapsedMs + " ms");
 						#endif
 					}
 					
 					if (!spawned) {
 						#if UNITY_EDITOR
 						Debug.Log(go.name + " could not be spawned.");
-						#endif
-						// go.SetActive(false);
-					}
-				}
+                        #endif
+                        //go.GetComponent<SimpleSimObj>().IsDisabled = true;
+                        if (!originalObjects.Contains(go))
+                        {
+                            go.SetActive(false);
+                            Destroy(go);
+                        }
+
+                    }
+                }
 			}
 		} else {
 			throw new NotImplementedException();
