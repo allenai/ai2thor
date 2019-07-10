@@ -596,6 +596,18 @@ class Controller(object):
 
                 print(' '.join(command_info))
 
+    def multi_step_physics(self, action, timeStep=0.05):
+        events = []
+        self.step(action=dict(action='PausePhysicsAutoSim'), raise_for_failure=True)
+        events.append(self.step(action))
+        while not self.last_event.metadata['isSceneAtRest']:
+            events.append(
+                self.step(action=dict(
+                    action='AdvancePhysicsStep',
+                    timeStep=timeStep), raise_for_failure=True))
+
+        return events
+
     def step(self, action, raise_for_failure=False):
         if self.headless:
             action["renderImage"] = False
