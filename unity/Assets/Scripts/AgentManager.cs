@@ -760,6 +760,13 @@ public class HandMetadata {
 }
 
 [Serializable]
+public class ObjectTypeCount
+{
+    public string objectType;
+    public int count;
+}
+
+[Serializable]
 public class ObjectPose
 {
     public string objectName;
@@ -871,7 +878,7 @@ public class ServerAction
 	public bool continuousMode;
 	public bool uniquePickupableObjectTypes; // only allow one of each object type to be visible
 	public float removeProb;
-	public int maxNumRepeats;
+	public int numPlacementAttempts;
 	public bool randomizeObjectAppearance;
 	public bool renderImage = true;
 	public bool renderDepthImage;
@@ -886,7 +893,8 @@ public class ServerAction
 	public float TimeUntilRoomTemp;
 	public bool allowDecayTemperature = true; //set to true if temperature should decay over time, set to false if temp changes should not decay, defaulted true
 	public string StateChange;//a string that specifies which state change to randomly toggle
-
+    public ObjectTypeCount[] numRepeats;
+    public ObjectTypeCount[] minFreePerReceptacleType;
     public ObjectPose[] objectPoses;
     public ObjectToggle[] objectToggles;
 
