@@ -341,6 +341,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // in the multiagent setting, explicitly giving this information for now.
             objMeta.visible = isVisible; //simObj.isVisible;
 
+            objMeta.isMoving = simObj.inMotion;//keep track of if this object is actively moving
+
             // TODO: bounds necessary?
             // Bounds bounds = simObj.Bounds;
             // this.bounds3D = new [] {
@@ -408,6 +410,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             metaMessage.agent = agentMeta;
             metaMessage.sceneName = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
             metaMessage.objects = this.generateObjectMetadata();
+            //check scene manager to see if the scene's objects are at rest
+            metaMessage.isSceneAtRest = physicsSceneManager.isSceneAtRest;
             metaMessage.collided = collidedObjects.Length > 0;
             metaMessage.collidedObjects = collidedObjects;
             metaMessage.screenWidth = Screen.width;
@@ -2054,8 +2058,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             pushAction.moveMagnitude = action.moveMagnitude;
 
             target.GetComponent<Rigidbody>().isKinematic = false;
-            target.GetComponent<SimObjPhysics>().ApplyForce(pushAction);
-            actionFinished(true);
+            sopApplyForce(pushAction, target);
+
+            // target.GetComponent<SimObjPhysics>().ApplyForce(pushAction);
+            // actionFinished(true);
         }
 
         public void ApplyForceObject(ServerAction action) {
@@ -2127,9 +2133,124 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             apply.y = dir.y;
             apply.z = dir.z;
 
-            target.GetComponent<SimObjPhysics>().ApplyForce(apply);
+            sopApplyForce(apply, target);
+            //target.GetComponent<SimObjPhysics>().ApplyForce(apply);
+            //actionFinished(true);
+        }
+
+        //pause physics autosimulation! Automatic physics simulation can be resumed using the UnpausePhysicsAutoSim() action.
+        //additionally, auto simulation will automatically resume from the LateUpdate() check on AgentManager.cs - if the scene has come to rest, physics autosimulation will resume
+        public void PausePhysicsAutoSim(ServerAction action)
+        {
+            //print("ZA WARUDO!");
+            Physics.autoSimulation = false;
+            physicsSceneManager.physicsSimulationPaused = true;
             actionFinished(true);
         }
+
+        //if physics AutoSimulation is paused, manually advance the physics timestep by action.timeStep's value. Only use values for timeStep no less than zero and no greater than 0.05
+        public void AdvancePhysicsStep(ServerAction action)
+        {
+            if(Physics.autoSimulation == true)
+            {
+                errorMessage = "AdvancePhysicsStep can only be called if Physics Autosimulation is currently paused! Either use the PausePhysicsAutoSim() action first, or if you already used it, Physics Autosimulation has been turned back on already.";
+                actionFinished(false);
+                return;
+            }
+
+            if(action.timeStep <= 0.0f || action.timeStep > 0.05f)
+            {
+                errorMessage = "Please use a timeStep between 0.0f and 0.05f. Larger timeSteps produce inconsistent simulation results.";
+                actionFinished(false);
+                return;
+            }
+            
+            //pass in the timeStep to advance the physics simulation
+            Physics.Simulate(action.timeStep);
+            agentManager.AdvancePhysicsStepCount++;
+            actionFinished(true);
+        }
+
+        //Use this to immediately unpause physics autosimulation and allow physics to resolve automatically like normal
+        public void UnpausePhysicsAutoSim(ServerAction action)
+        {
+            Physics.autoSimulation = true;
+            physicsSceneManager.physicsSimulationPaused = false;
+            actionFinished(true);
+        }
+
+        //wrapping the SimObjPhysics.ApplyForce function since lots of things use it....
+        protected void sopApplyForce(ServerAction action, SimObjPhysics sop)
+        {
+            //apply force, return action finished immediately
+            if(physicsSceneManager.physicsSimulationPaused)
+            {
+                sop.ApplyForce(action);
+                actionFinished(true);
+            }
+
+            //if physics is automatically being simulated, use coroutine to check when object has come to rest
+            else
+            {
+                sop.ApplyForce(action);
+                StartCoroutine(checkIfObjectHasStoppedMoving(sop));
+            }
+ 
+        }
+
+        //used to check if an specified sim object has come to rest, max time of 4 seconds
+        private IEnumerator checkIfObjectHasStoppedMoving(SimObjPhysics sop)
+        {
+            yield return null;
+            float startTime = Time.time;
+
+            if(sop != null)
+            {
+                Rigidbody rb = sop.GetComponentInChildren<Rigidbody>();
+                while(Time.time - startTime < 4)
+                {
+                    if(sop == null)
+                    break;
+
+                    if(Math.Abs(rb.angularVelocity.sqrMagnitude + rb.velocity.sqrMagnitude) < 0.00001) 
+                    {
+                        // Debug.Log ("object is now at rest");
+                        break;
+                    }
+
+                    else
+                    yield return null;
+                }
+            }
+
+            actionFinished(true);
+        }
+
+        // private IEnumerator emitFrameOverTimeAfterApplyForce(SimObjPhysics sop)
+        // {
+        //     Rigidbody rb = sop.GetComponentInChildren<Rigidbody>();
+        //     Physics.autoSimulation = false;
+        //     yield return null;
+
+        //     for(int i = 0; i < 100; i++)
+        //     {
+        //         Physics.Simulate(0.04f);
+        //         //emit frame now!
+        //         yield return StartCoroutine(agentManager.EmitFrame());
+
+        //         #if UNITY_EDITOR
+        //         yield return null;
+        //         #endif
+
+        //         //stop stepwise simulation once object comes to rest
+        //         if (Math.Abs(rb.angularVelocity.sqrMagnitude + rb.velocity.sqrMagnitude) < 0.00001) 
+        //         {
+        //             break;
+        //         }
+        //     }
+        //     Physics.autoSimulation = true;
+        //     actionFinished(true);
+        // }
 
         //Sweeptest to see if the object Agent is holding will prohibit movement
         public bool CheckIfItemBlocksAgentMovement(float moveMagnitude, int orientation) {
@@ -3723,11 +3844,24 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     rb.angularVelocity = UnityEngine.Random.insideUnitSphere;
 
                     DropContainedObjects(ItemInHand.GetComponent<SimObjPhysics>());
-                    if (action.autoSimulation) {
-                        StartCoroutine(checkDropHandObjectAction(ItemInHand.GetComponent<SimObjPhysics>()));
-                    } else {
-                        StartCoroutine(checkDropHandObjectActionFast(ItemInHand.GetComponent<SimObjPhysics>()));
+
+                    //if physics simulation has been paused by the PausePhysicsAutoSim() action, don't do any coroutine checks
+                    if(!physicsSceneManager.physicsSimulationPaused)
+                    {
+                        if (action.autoSimulation) 
+                        {
+                            StartCoroutine(checkDropHandObjectAction(ItemInHand.GetComponent<SimObjPhysics>()));
+                        } 
+
+                        else 
+                        {
+                            StartCoroutine(checkDropHandObjectActionFast(ItemInHand.GetComponent<SimObjPhysics>()));
+                        }
                     }
+
+                    else
+                    actionFinished(true);
+
                     ItemInHand.GetComponent<SimObjPhysics>().isInAgentHand = false;
                     ItemInHand = null;
                     return true;
@@ -3753,15 +3887,20 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             GameObject go = ItemInHand;
 
             if (DropHandObject(action)) {
-                ServerAction apply = new ServerAction();
-                apply.moveMagnitude = action.moveMagnitude;
-
                 Vector3 dir = m_Camera.transform.forward;
-                apply.x = dir.x;
-                apply.y = dir.y;
-                apply.z = dir.z;
+                //use action.moveMagnitude
 
-                go.GetComponent<SimObjPhysics>().ApplyForce(apply);
+                // ServerAction apply = new ServerAction();
+                // apply.moveMagnitude = action.moveMagnitude;
+
+                // Vector3 dir = m_Camera.transform.forward;
+                // apply.x = dir.x;
+                // apply.y = dir.y;
+                // apply.z = dir.z;
+
+                go.GetComponent<SimObjPhysics>().ApplyForce(dir, action.moveMagnitude);
+                //sopApplyForce(apply, go.GetComponent<SimObjPhysics>());
+
             }
 
         }
