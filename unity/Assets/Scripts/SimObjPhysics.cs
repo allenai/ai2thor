@@ -82,6 +82,8 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 
 	private PhysicsSceneManager sceneManager;//reference to scene manager object
 
+    public bool inMotion = false;
+
 	public float GetTimerResetValue()
 	{
 		return TimerResetValue;
@@ -769,6 +771,15 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		myrb.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
 		myrb.AddForce(dir * action.moveMagnitude);
 	}
+
+    //overload that doesn't use a server action
+    public void ApplyForce(Vector3 dir, float magnitude)
+    {
+        Rigidbody myrb = gameObject.GetComponent<Rigidbody>();
+        myrb.isKinematic = false;
+        myrb.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
+        myrb.AddForce(dir * magnitude);
+    }
 
 	//returns a game object list of all sim objects contained by this object if it is a receptacle
 	public List<GameObject> Contains_GameObject()
