@@ -2138,27 +2138,29 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             //actionFinished(true);
         }
 
-        //pause physics!
+        //pause physics autosimulation! Automatic physics simulation can be resumed using the UnpausePhysicsAutoSim() action.
+        //additionally, auto simulation will automatically resume from the LateUpdate() check on AgentManager.cs - if the scene has come to rest, physics autosimulation will resume
         public void PausePhysicsAutoSim(ServerAction action)
         {
-            print("ZA WARUDO!");
+            //print("ZA WARUDO!");
             Physics.autoSimulation = false;
             physicsSceneManager.physicsSimulationPaused = true;
             actionFinished(true);
         }
 
+        //if physics AutoSimulation is paused, manually advance the physics timestep by action.timeStep's value. Only use values for timeStep no less than zero and no greater than 0.05
         public void AdvancePhysicsStep(ServerAction action)
         {
             if(Physics.autoSimulation == true)
             {
-                errorMessage = "AdvancePhysicsStep can only be called if PausePHysicsAutoSim is called first!";
+                errorMessage = "AdvancePhysicsStep can only be called if Physics Autosimulation is currently paused! Either use the PausePhysicsAutoSim() action first, or if you already used it, Physics Autosimulation has been turned back on already.";
                 actionFinished(false);
                 return;
             }
 
             if(action.timeStep <= 0.0f || action.timeStep > 0.05f)
             {
-                errorMessage = "Please use a timeStep between 0.0f and 0.05f";
+                errorMessage = "Please use a timeStep between 0.0f and 0.05f. Larger timeSteps produce inconsistent simulation results.";
                 actionFinished(false);
                 return;
             }
@@ -2169,13 +2171,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true);
         }
 
-        // //not sure if we need this just yet... might resolve automatically once the environment has come to rest
-        // public void UnpausePhysicsAutoSim(ServerAction action)
-        // {
-        //     Physics.autoSimulation = true;
-        //     physicsSceneManager.physicsSimulationPaused = false;
-        //     actionFinished(true);
-        // }
+        //Use this to immediately unpause physics autosimulation and allow physics to resolve automatically like normal
+        public void UnpausePhysicsAutoSim(ServerAction action)
+        {
+            Physics.autoSimulation = true;
+            physicsSceneManager.physicsSimulationPaused = false;
+            actionFinished(true);
+        }
 
         //wrapping the SimObjPhysics.ApplyForce function since lots of things use it....
         protected void sopApplyForce(ServerAction action, SimObjPhysics sop)
