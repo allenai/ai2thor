@@ -5563,6 +5563,78 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         }
 
+        public void PositionsFromWhichItemIsInteractable(ServerAction action) {
+            Vector3[] positions = null;
+            if (action.positions != null && action.positions.Count != 0) {
+                positions = action.positions.ToArray();
+            } else {
+                positions = getReachablePositions();
+            }
+
+            bool wasStanding = isStanding();
+            Vector3 oldPosition = transform.position;
+            Quaternion oldRotation = transform.rotation;
+
+            if (!physicsSceneManager.UniqueIdToSimObjPhysics.ContainsKey(action.objectId)) {
+                errorMessage = "Object ID appears to be invalid.";
+                actionFinished(false);
+                return;
+            }
+
+            if (ItemInHand != null) {
+                ItemInHand.gameObject.SetActive(false);
+            }
+
+            SimObjPhysics theObject = physicsSceneManager.UniqueIdToSimObjPhysics[action.objectId];
+
+            Dictionary<string, List<float>> goodLocationsDict = new Dictionary<string, List<float>>();
+            string[] keys = {"x", "y", "z", "rotation", "standing", "horizon"};
+            foreach (string key in keys) {
+                goodLocationsDict[key] = new List<float>();
+            }
+
+            for (int j = 0; j < 2; j++) { // Standing / Crouching
+                if (j == 0) {
+                    stand();
+                } else {
+                    crouch();
+                }
+                for (int i = 0; i < 4; i++) { // 4 rotations
+                    transform.rotation = Quaternion.Euler(new Vector3(0.0f, 90.0f * i, 0.0f));
+                    foreach (Vector3 p in positions) {
+                        transform.position = p;
+
+                        if (objectIsCurrentlyVisible(theObject, maxVisibleDistance)) {
+                            goodLocationsDict["x"].Add(p.x);
+                            goodLocationsDict["y"].Add(p.y);
+                            goodLocationsDict["z"].Add(p.z);
+                            goodLocationsDict["rotation"].Add(90.0f * i);
+                            goodLocationsDict["standing"].Add((1 - j) * 1.0f);
+                            goodLocationsDict["horizon"].Add(m_Camera.transform.localEulerAngles.x);
+                        }
+                    }
+                }
+            }
+
+            if (wasStanding) {
+                stand();
+            } else {
+                crouch();
+            }
+            transform.position = oldPosition;
+            transform.rotation = oldRotation;
+            if (ItemInHand != null) {
+                ItemInHand.gameObject.SetActive(true);
+            }
+
+#if UNITY_EDITOR
+            Debug.Log(goodLocationsDict["x"].Count);
+            Debug.Log(goodLocationsDict["x"]);
+#endif
+
+            actionFinished(true, goodLocationsDict);
+        }
+        
         public void NumberOfPositionsFromWhichItemIsVisible(ServerAction action) {
             Vector3[] positions = null;
             if (action.positions != null && action.positions.Count != 0) {
@@ -5574,15 +5646,16 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             bool wasStanding = isStanding();
             Vector3 oldPosition = transform.position;
             Quaternion oldRotation = transform.rotation;
-            if (ItemInHand != null) {
-                ItemInHand.gameObject.SetActive(true);
-            }
 
             if (!physicsSceneManager.UniqueIdToSimObjPhysics.ContainsKey(action.objectId)) {
                 errorMessage = "Object ID appears to be invalid.";
                 actionFinished(false);
                 return;
             }
+            if (ItemInHand != null) {
+                ItemInHand.gameObject.SetActive(false);
+            }
+
             SimObjPhysics theObject = physicsSceneManager.UniqueIdToSimObjPhysics[action.objectId];
 
             int numTimesVisible = 0;
