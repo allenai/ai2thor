@@ -183,7 +183,7 @@ public class InstantiatePrefabTest : MonoBehaviour
     //The ReceptacleSpawnPoint list should be sorted based on what we are doing. If placing from the agent's hand, the list
     //should be sorted by distance to agent so the closest points are checked first. If used for Random Initial Spawn, it should
     //be randomized so that the random spawn is... random
-    public bool PlaceObjectReceptacle(List<ReceptacleSpawnPoint> rsps, SimObjPhysics sop, bool PlaceStationary, int maxcount, int degreeIncrement, bool AlwaysPlaceUpright)
+    public bool PlaceObjectReceptacle(List<ReceptacleSpawnPoint> rsps, SimObjPhysics sop, bool PlaceStationary, int maxPlacementAttempts, int degreeIncrement, bool AlwaysPlaceUpright, Dictionary<SimObjType, int> minFreePerReceptacleType)
     {
         
         if(rsps == null)
@@ -200,9 +200,6 @@ public class InstantiatePrefabTest : MonoBehaviour
                 (SimObjSecondaryProperty.ObjectSpecificReceptacle)) {
                 goodRsps.Add(p);
             }
-            if (goodRsps.Count == maxcount) {
-                break;
-            }
         }
 
         if(rsps.Count == 0)
@@ -210,16 +207,29 @@ public class InstantiatePrefabTest : MonoBehaviour
             return false;
         }
 
+        goodRsps.Shuffle_();
+        int tries = 0;
         foreach (ReceptacleSpawnPoint p in goodRsps)
         {
+            SimObjType parentType = p.ParentSimObjPhys.ObjType;
+            if (minFreePerReceptacleType != null && minFreePerReceptacleType.ContainsKey(parentType) && goodRsps.Count < minFreePerReceptacleType[parentType])
+            {
+                return false;
+            }
+
             //if this is an Object Specific Receptacle, stop this check right now! I mean it!
             //Placing objects in/on an Object Specific Receptacle uses different logic to place the
             //object at the Attachemnet point rather than in the spawn area, so stop this right now!
 
-            if(PlaceObject(sop, p, PlaceStationary, degreeIncrement, AlwaysPlaceUpright))
+            if (PlaceObject(sop, p, PlaceStationary, degreeIncrement, AlwaysPlaceUpright))
             {
                 //found a place to spawn! neato, return success
                 return true;
+            }
+            tries += 1;
+            if (tries > maxPlacementAttempts)
+            {
+                break;
             }
         }
         //couldn't find valid places to spawn
