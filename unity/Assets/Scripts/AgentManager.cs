@@ -303,7 +303,7 @@ public class AgentManager : MonoBehaviour
         if(physicsSceneManager.isSceneAtRest && 
         physicsSceneManager.physicsSimulationPaused && AdvancePhysicsStepCount > 0)
         {
-            print("soshite toki wa ugoki desu");
+            //print("soshite toki wa ugoki desu");
             Physics.autoSimulation = true;
             physicsSceneManager.physicsSimulationPaused = false;
             AdvancePhysicsStepCount = 0;
