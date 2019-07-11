@@ -728,7 +728,8 @@ class Controller(object):
             url = None
             sha256_build = None
             try:
-                for commit_id in subprocess.check_output('git log -n 10 --format=%H', shell=True).decode('ascii').strip().split("\n"):
+                git_dir = os.path.normpath(os.path.dirname(os.path.realpath(__file__)) + "/../.git")
+                for commit_id in subprocess.check_output('git --git-dir=' + git_dir + ' log -n 10 --format=%H', shell=True).decode('ascii').strip().split("\n"):
                     arch = arch_platform_map[platform.system()]
 
                     if ai2thor.downloader.commit_build_exists(arch, commit_id):
