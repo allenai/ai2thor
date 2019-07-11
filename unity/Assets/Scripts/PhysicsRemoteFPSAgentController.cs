@@ -2438,7 +2438,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         /////AGENT HAND STUFF////
         protected IEnumerator moveHandToTowardsXYZWithForce(float x, float y, float z, float maxDistance) {
             if (ItemInHand == null) {
-                Debug.Log("Agent can only move hand if holding an item");
+                errorMessage = "Agent can only move hand if holding an item";
                 actionFinished(false);
                 yield break;
             }
@@ -2533,7 +2533,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     lastRotation = rb.transform.rotation;
                 }
             }
-            Physics.autoSimulation = true;
 
             Vector3 normalSum = new Vector3(0.0f, 0.0f, 0.0f);
             Vector3 aveCollisionsNormal = new Vector3(0.0f, 0.0f, 0.0f);
@@ -2559,15 +2558,17 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             SetUpRotationBoxChecks();
             IsHandDefault = false;
 
-            yield return null;
+            Physics.Simulate(0.1f);
             bool handObjectIsColliding = isHandObjectColliding(true);
             if (count != 0) {
                 for (int j = 0; handObjectIsColliding && j < 5; j++) {
                     AgentHand.transform.position = AgentHand.transform.position + 0.01f * aveCollisionsNormal;
-                    yield return null;
+                    Physics.Simulate(0.1f);
                     handObjectIsColliding = isHandObjectColliding(true);
                 }
             }
+
+            Physics.autoSimulation = true;
 
             // This has to be after the above as the contactPointsDictionary is only
             // updated while rb is not kinematic.
@@ -2597,7 +2598,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 } else {
                     errorMessage = "Hand object did not move, perhaps its being blocked.";
                 }
-                Debug.Log(errorMessage);
                 actionFinished(false);
             } else {
                 actionFinished(true);
@@ -3779,7 +3779,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true);
         }
 
-        private IEnumerator checkDropHandObjectActionFast(SimObjPhysics currentHandSimObj) 
+        private IEnumerator checkDropHandObjectActionFast(SimObjPhysics currentHandSimObj)
         {
             if(currentHandSimObj != null)
             {
@@ -5565,6 +5565,78 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         }
 
+        public void PositionsFromWhichItemIsInteractable(ServerAction action) {
+            Vector3[] positions = null;
+            if (action.positions != null && action.positions.Count != 0) {
+                positions = action.positions.ToArray();
+            } else {
+                positions = getReachablePositions();
+            }
+
+            bool wasStanding = isStanding();
+            Vector3 oldPosition = transform.position;
+            Quaternion oldRotation = transform.rotation;
+
+            if (!physicsSceneManager.UniqueIdToSimObjPhysics.ContainsKey(action.objectId)) {
+                errorMessage = "Object ID appears to be invalid.";
+                actionFinished(false);
+                return;
+            }
+
+            if (ItemInHand != null) {
+                ItemInHand.gameObject.SetActive(false);
+            }
+
+            SimObjPhysics theObject = physicsSceneManager.UniqueIdToSimObjPhysics[action.objectId];
+
+            Dictionary<string, List<float>> goodLocationsDict = new Dictionary<string, List<float>>();
+            string[] keys = {"x", "y", "z", "rotation", "standing", "horizon"};
+            foreach (string key in keys) {
+                goodLocationsDict[key] = new List<float>();
+            }
+
+            for (int j = 0; j < 2; j++) { // Standing / Crouching
+                if (j == 0) {
+                    stand();
+                } else {
+                    crouch();
+                }
+                for (int i = 0; i < 4; i++) { // 4 rotations
+                    transform.rotation = Quaternion.Euler(new Vector3(0.0f, 90.0f * i, 0.0f));
+                    foreach (Vector3 p in positions) {
+                        transform.position = p;
+
+                        if (objectIsCurrentlyVisible(theObject, maxVisibleDistance)) {
+                            goodLocationsDict["x"].Add(p.x);
+                            goodLocationsDict["y"].Add(p.y);
+                            goodLocationsDict["z"].Add(p.z);
+                            goodLocationsDict["rotation"].Add(90.0f * i);
+                            goodLocationsDict["standing"].Add((1 - j) * 1.0f);
+                            goodLocationsDict["horizon"].Add(m_Camera.transform.localEulerAngles.x);
+                        }
+                    }
+                }
+            }
+
+            if (wasStanding) {
+                stand();
+            } else {
+                crouch();
+            }
+            transform.position = oldPosition;
+            transform.rotation = oldRotation;
+            if (ItemInHand != null) {
+                ItemInHand.gameObject.SetActive(true);
+            }
+
+#if UNITY_EDITOR
+            Debug.Log(goodLocationsDict["x"].Count);
+            Debug.Log(goodLocationsDict["x"]);
+#endif
+
+            actionFinished(true, goodLocationsDict);
+        }
+        
         public void NumberOfPositionsFromWhichItemIsVisible(ServerAction action) {
             Vector3[] positions = null;
             if (action.positions != null && action.positions.Count != 0) {
@@ -5576,15 +5648,16 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             bool wasStanding = isStanding();
             Vector3 oldPosition = transform.position;
             Quaternion oldRotation = transform.rotation;
-            if (ItemInHand != null) {
-                ItemInHand.gameObject.SetActive(true);
-            }
 
             if (!physicsSceneManager.UniqueIdToSimObjPhysics.ContainsKey(action.objectId)) {
                 errorMessage = "Object ID appears to be invalid.";
                 actionFinished(false);
                 return;
             }
+            if (ItemInHand != null) {
+                ItemInHand.gameObject.SetActive(false);
+            }
+
             SimObjPhysics theObject = physicsSceneManager.UniqueIdToSimObjPhysics[action.objectId];
 
             int numTimesVisible = 0;
@@ -6866,6 +6939,80 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
             actionFinished(true);
         }
+
+        // public void ReachableWithHandObject(ServerAction action) {
+        //     if (ItemInHand == null) {
+        //         errorMessage = "No object in hand";
+        //         actionFinished(false);
+        //         return;
+        //     }
+
+        //     SimObjPhysics handObject = ItemInHand.GetComponent<SimObjPhysics>();
+        //     Vector3 startingPosition = handObject.transform.position;
+        //     Quaternion startingRotation = handObject.transform.rotation;
+
+        //     Vector3[] offsets = {
+        //         new Vector3(0.1f, 0f, 0f),
+        //         new Vector3(-0.1f, 0f, 0f),
+        //         new Vector3(0f, 0f, 0.1f),
+        //         new Vector3(0.0f, 0f, -0.1f),
+        //     };
+
+        //     GameObject topObject = GameObject.Find("Objects");
+        //     HashSet<Vector3> goodPoints = new HashSet<Vector3>();
+        //     Queue<Vector3> pointsQueue = new Queue<Vector3>();
+        //     Queue<Quaternion> rotationsQueue = new Queue<Quaternion>();
+        //     pointsQueue.Enqueue(handObject.transform.position);
+        //     rotationsQueue.Enqueue(handObject.transform.rotation);
+        //     bool success = false;
+        //     action.autoSimulation = true;
+        //     action.forceAction = true;
+        //     Transform[] visPoints = handObject.VisibilityPoints;
+
+        //     List<Vector3> droppedFromPoints = new List<Vector3>();
+        //     List<Quaternion> droppedFromRots = new List<Quaternion>();
+        //     List<List<Vector3>> visibleVisPoints = new List<List<Vector3>>();
+        //     List<List<Vector3>> obscuredVisPoints = new List<List<Vector3>>();
+        //     while (pointsQueue.Count != 0) {
+        //         Vector3 p = pointsQueue.Dequeue();
+        //         Quaternion q = rotationsQueue.Dequeue();
+
+        //         if (goodPoints.Contains(p.Round(2))) {
+        //             continue;
+        //         }
+        //         goodPoints.Add(p.Round(2));
+
+        //         // Dropping the object
+        //         Rigidbody rb = handObject.GetComponent<Rigidbody>();
+        //         rb.isKinematic = false;
+        //         rb.constraints = RigidbodyConstraints.None;
+        //         rb.useGravity = true;
+        //         rb.collisionDetectionMode = CollisionDetectionMode.ContinuousSpeculative;
+        //         handObject.transform.parent = topObject.transform;
+        //         ItemInHand.GetComponent<SimObjPhysics>().isInAgentHand = false;
+        //         ItemInHand = null;
+        //         rb.velocity = new Vector3(0.0f, 0.0f, 0.0f);
+        //         rb.angularVelocity = UnityEngine.Random.insideUnitSphere;
+        //         checkDropHandObjectActionFast(handObject);
+
+        //         if (objectIsWithinViewport(handObject)) {
+
+        //         }
+
+        //         // Enqueuing new points
+        //         foreach (Vector3 offset in offsets) {
+        //             handObject.transform.position = p;
+        //             handObject.transform.rotation = q;
+        //             success = moveHandToTowardsXYZWithForce(
+        //                 p + new Vector3(0.1f, 0f, 0f), maxVisibleDistance
+        //             );
+        //             if (success) {
+        //                 pointsQueue.Enqueue(handObject.transform.position);
+        //                 rotationsQueue.Enqueue(handObject.transform.rotation);
+        //             }
+        //         }
+        //     }
+        // }
 
         private IEnumerator CoverSurfacesWithHelper(
             int n,
