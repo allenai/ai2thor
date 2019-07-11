@@ -35,7 +35,7 @@ public class Build
             var targetGroup = BuildPipeline.GetBuildTargetGroup(target);
             PlayerSettings.SetScriptingDefineSymbolsForGroup(targetGroup, GetDefineSymbolsFromEnv());
         }
-        BuildPipeline.BuildPlayer(scenes.ToArray(), buildName, target, BuildOptions.StrictMode | BuildOptions.CompressWithLz4);
+        BuildPipeline.BuildPlayer(scenes.ToArray(), buildName, target, BuildOptions.StrictMode | BuildOptions.UncompressedAssetBundle);
     }
 
     private static List<string> GetAllScenePaths()
