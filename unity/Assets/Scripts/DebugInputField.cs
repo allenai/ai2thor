@@ -1169,7 +1169,18 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         action.action = "DefaultAgentHand";
                         PhysicsController.ProcessControlCommand(action);
                         break;
-                    }   
+                    }
+
+                case "mhta":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "MoveHandThenApplyForce";
+                        action.position = new Vector3(0, 0, 0.1f);
+                        action.direction = new Vector3(1, 0, 0);
+                        action.moveMagnitude = 200f;
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
 
                     //move hand ahead, forward relative to agent's facing
                     //pass in move magnitude or default is 0.25 units

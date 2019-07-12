@@ -881,7 +881,7 @@ public class ServerAction
 	public int horizon;
 	public Vector3 rotation;
 	public Vector3 position;
-
+    public Vector3 direction;
 	public List<Vector3> positions = null;
 	public bool standing = true;
 	public float fov = 60.0f;
