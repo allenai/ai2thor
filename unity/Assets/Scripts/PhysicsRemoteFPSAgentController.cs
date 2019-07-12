@@ -2102,7 +2102,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 canbepushed = true;
 
             if (!canbepushed) {
-                errorMessage = "Target Primary Property type incompatible with push/pull";
+                errorMessage = "Target Sim Object cannot be moved. It's primary property must be Pickupable or Moveable";
                 actionFinished(false);
                 return;
             }
@@ -2186,7 +2186,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             if(physicsSceneManager.physicsSimulationPaused)
             {
                 sop.ApplyForce(action);
-                actionFinished(true);
+                bool objectWasMoved = true;
+                actionFinished(true, objectWasMoved);
             }
 
             //if physics is automatically being simulated, use coroutine to check when object has come to rest
@@ -2223,7 +2224,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 }
             }
 
-            actionFinished(true);
+            //return to metadatawrapper.actionReturn if an object was touched during this interaction
+            bool objectWasMoved = true;
+            actionFinished(true, objectWasMoved);
         }
 
         // private IEnumerator emitFrameOverTimeAfterApplyForce(SimObjPhysics sop)
@@ -2678,7 +2681,123 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             IsHandDefault = true;
         }
 
-        //checks if agent hand can move to a target location. Returns false if any obstructions
+        //moves the agent hand to a target xyz position, then apply a force of a given magnitude to any objects in a specific direction
+        public void MoveHandThenApplyForce(ServerAction action)
+        {
+            //default hand to be safe
+            DefaultAgentHand();
+            Vector3 targetPosition = AgentHand.transform.localPosition + action.position;
+
+
+            //check if the agent's hand can actually move to targetPosition without problems
+            if(CheckIfAgentCanMoveEmptyHand(AgentHand.transform.TransformPoint(targetPosition)))
+            {
+                //move the hand
+                AgentHand.transform.localPosition = targetPosition;
+
+                //raycast out from targetPosition to direction
+                RaycastHit hit;
+                //raycast from hand in action.direction a max distance of 2m
+                Physics.Raycast(AgentHand.transform.position, action.direction, out hit, 2.0f,
+                (1 << 8) | (1 << 9) | (1 << 10));
+                //print(hit.transform);
+                if(hit.transform.GetComponent<SimObjPhysics>())
+                {
+                    //if the object is a sim object, apply force now!
+                    SimObjPhysics target = hit.transform.GetComponent<SimObjPhysics>();
+                    bool canbepushed = false;
+
+                    if (target.PrimaryProperty == SimObjPrimaryProperty.CanPickup ||
+                        target.PrimaryProperty == SimObjPrimaryProperty.Moveable)
+                        canbepushed = true;
+
+                    if (!canbepushed) 
+                    {
+                        errorMessage = "Target Sim Object cannot be moved. It's primary property must be Pickupable or Moveable";
+                        actionFinished(false);
+                        return;
+                    }
+
+                    ServerAction apply = new ServerAction();
+                    apply.moveMagnitude = action.moveMagnitude;
+                    apply.x = action.direction.x;
+                    apply.y = action.direction.y;
+                    apply.z = action.direction.z;
+                    sopApplyForce(apply, target);
+                    //sopApplyForce uses a coroutine to return actionFinished()
+                }
+
+                else
+                {
+                    errorMessage = "object hit was not a SimObject and can't be moved";
+                    actionFinished(false);
+                    return;
+                }
+            }
+
+            //target location was not valid
+            else
+            {
+                //errormessage taken care of above
+                actionFinished(false);
+                return;
+            }
+        }
+
+        //checks if agent hand that is empty can move to a target location within the viewport and max distance
+        public bool CheckIfAgentCanMoveEmptyHand(Vector3 targetPosition)
+        {
+            bool result = false;
+
+            //now check if the target position is within bounds of the Agent's forward (z) view
+            Vector3 tmp = m_Camera.transform.position;
+            tmp.y = targetPosition.y;
+
+            if (Vector3.Distance(tmp, targetPosition) > maxVisibleDistance) // + 0.3)
+            {
+                errorMessage = "The target position is outside the agent's max visible distance.";
+                Debug.Log(errorMessage);
+                result = false;
+                return result;
+            }
+
+            //now make sure that the targetPosition is within the Agent's x/y view, restricted by camera
+            Vector3 vp = m_Camera.WorldToViewportPoint(targetPosition);
+            if(vp.z < 0 || vp.x > 1.0f || vp.y < 0.0f || vp.y > 1.0f || vp.y < 0.0f)
+            {
+                errorMessage = "The target position is outside the agent's camera viewport";
+                Debug.Log(errorMessage);
+                result = false;
+                return result;
+            }
+
+            //raycast toward the point from the camera, if anythng was hit return false
+            RaycastHit hit;
+            //if it did not hit anything...
+            if(Physics.Raycast(
+            m_Camera.transform.position,
+            targetPosition - m_Camera.transform.position, 
+            out hit, 
+            Vector3.Distance(targetPosition, 
+            m_Camera.transform.position),
+            (1 << 0 |1 << 8)))//raycast against default and SimObjVisible collision layers only
+            {
+                //some object was hit
+                errorMessage = hit.transform + " blocked the hand from moving to target position";
+                Debug.Log(errorMessage);
+                result = false;
+                return result;
+            }
+
+            else
+            {
+                result = true;
+            }
+
+            return result;
+        }
+
+        //checks if agent hand that is holding an object can move to a target location. Returns false if any obstructions
         public bool CheckIfAgentCanMoveHand(Vector3 targetPosition) {
             bool result = false;
 
@@ -2713,7 +2832,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             Vector3 lastPosition = AgentHand.transform.position;
             AgentHand.transform.position = targetPosition;
             if (!objectIsCurrentlyVisible(ItemInHand.GetComponent<SimObjPhysics>(), 1000f)) {
-                errorMessage = "The target position is not in the Are of the Agent's Viewport!";
+                errorMessage = "The target position is not in the Area of the Agent's Viewport!";
                 result = false;
                 AgentHand.transform.position = lastPosition;
                 return result;
