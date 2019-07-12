@@ -27,6 +27,9 @@ public class LiquidPourEdge : MonoBehaviour
     private GameObject activeFlow = null;
 
     private Wobble wobbleComponent = null;
+
+    private float minY;
+    private float maxY;
     
     // Start is called before the first frame update
     void Start()
@@ -35,7 +38,10 @@ public class LiquidPourEdge : MonoBehaviour
 
         var mr = this.transform.GetComponentInParent<MeshRenderer>();
         normalizedCurrentFill = liquidVolumeLiters / containerMaxVolumeLiters;
-        shaderFill = emptyValue - (emptyValue - fullValue) * (normalizedCurrentFill);
+        // shaderFill = emptyValue - (emptyValue - fullValue) * (normalizedCurrentFill);
+        // float minY, maxY;
+        this.getWaterLevelPositionWorld(out shaderFill, out minY, out maxY);
+
         mr.material.SetFloat("_FillAmount", shaderFill);
         
     }
@@ -47,6 +53,20 @@ public class LiquidPourEdge : MonoBehaviour
         mr.material.SetFloat("_FillAmount", shaderFill);
     }
 
+    void SetFillAmountLiters(float liters) {
+        normalizedCurrentFill = liters / containerMaxVolumeLiters;
+        var mr = this.transform.GetComponentInParent<MeshRenderer>();
+        //shaderFill = emptyValue - (emptyValue - fullValue) * (normalizedCurrentFill);
+        shaderFill = GetShaderFill(this.minY, this.maxY);
+        mr.material.SetFloat("_FillAmount", shaderFill);
+    }
+
+    void SetShaderFill(float shaderFillValue) {
+        shaderFill = shaderFillValue;
+        var mr = this.transform.GetComponentInParent<MeshRenderer>();
+        mr.material.SetFloat("_FillAmount", shaderFillValue);
+    }
+
     void TransferLiquid(float normalizedDelta, LiquidPourEdge transferer) {
         // TODO: Calculate correctly how much this gets filled based on the transferer properties
         Debug.Log("Transfering liquid from " +  this.gameObject.name + " to  " + transferer.gameObject.name + " amount " + normalizedDelta);
@@ -54,16 +74,18 @@ public class LiquidPourEdge : MonoBehaviour
     }
 
      void TransferLiquidVolume(float liters, LiquidPourEdge transferer) {
-        // TODO: Calculate correctly how much this gets filled based on the transferer properties
+        // TODO: Calculate correctly how much this gets filled based on the transferer properties, clamp
 
         transferer.liquidVolumeLiters -= liters;
         transferer.normalizedCurrentFill = transferer.liquidVolumeLiters / transferer.containerMaxVolumeLiters;
+        transferer.SetFillAmountLiters(transferer.liquidVolumeLiters);
 
-        liquidVolumeLiters += liters;
+        this.liquidVolumeLiters += liters;
         Debug.Log("Transfering liquid volume from " +  this.gameObject.name + " to  " + transferer.gameObject.name + " amount " + liters);
 
-        normalizedCurrentFill = liquidVolumeLiters / containerMaxVolumeLiters;
-        this.SetFillAmount(normalizedCurrentFill);
+        this.normalizedCurrentFill = this.liquidVolumeLiters / this.containerMaxVolumeLiters;
+        this.SetFillAmountLiters(this.liquidVolumeLiters);
+        //this.SetFillAmount(normalizedCurrentFill);
     }
 
     // Update is called once per frame
@@ -75,23 +97,50 @@ public class LiquidPourEdge : MonoBehaviour
         // Debug.Log("fullValue " + fullValue + ", emptyValue ," + emptyValue + " normalizedCurrentFill " + normalizedCurrentFill);
         // mr.material.SetFloat("_FillAmount", shaderFill);
 
+        // TODO: maybe move to late update
+
         var up = this.transform.parent.up;
         var edgeLowestWorld = getLowestEdgePointWorld(up);
-        var waterLevelWorld = getWaterLevelPositionWorld();
+        float shaderFillValue;
+        var waterLevelWorld = getWaterLevelPositionWorld(out shaderFillValue, out this.minY, out this.maxY);
 
         var edgeLiquidDifference = waterLevelWorld.y - edgeLowestWorld.y;
         if (edgeLiquidDifference > 0) {
             Debug.Log("Release liquid " + edgeLiquidDifference  + " water level  " + waterLevelWorld.y + " cup edge lowest "+ edgeLowestWorld.y);
-            ReleaseLiquid(edgeLiquidDifference, edgeLowestWorld);
+            ReleaseLiquid(edgeLiquidDifference, edgeLowestWorld, shaderFillValue, minY, maxY);
         }
         else if (activeFlow != null)
         {
             // Make flow smaller do not turn off
             activeFlow.SetActive(false);
+
+           
         }
+       
+        if (edgeLiquidDifference <= 0 && Mathf.Abs(shaderFillValue - shaderFill) >= 0.0001f)  {
+        
+            var m = Mathf.Abs(shaderFillValue - shaderFill) >= 0.0001f;
+            Debug.Log("Previous shader val " + shaderFill + " new " + shaderFillValue);     
+            Debug.Log("Condition " + m );
+             shaderFill = shaderFillValue;
+
+            var mr = GetComponentInParent<MeshRenderer>();
+
+            //this.getWaterLevelPositionWorld(out shaderFill, out minY, out maxY);
+
+            if (mr) {
+                mr.material.SetFloat("_FillAmount", shaderFillValue);
+            }
+            
+            
+            // if (mr) {
+            //      mr.material.SetFloat("_FillAmount", shaderFillValue);
+            // }
+        }
+        
     }
 
-    protected void ReleaseLiquid(float edgeDifference, Vector3 edgePositionWorld) {
+    protected void ReleaseLiquid(float edgeDifference, Vector3 edgePositionWorld, float shaderFillValue, float minY, float maxY) {
         //Debug.Log("Fluid out!!!! " + edgeDifference);
         if (activeFlow == null) {
             activeFlow = Object.Instantiate(this.waterEmiter, edgePositionWorld, Quaternion.identity, this.transform.parent);
@@ -100,12 +149,12 @@ public class LiquidPourEdge : MonoBehaviour
             activeFlow.SetActive(true);
         }
 
-        var normalizedFillDifference = edgeDifference / (emptyValue - fullValue);
+
+        
+
+        // var normalizedFillDifference = edgeDifference / (emptyValue - fullValue);
         // var normalizedNew = (emptyValue - edgeDifference) / (emptyValue - fullValue);
        
-
-       
-        
 
         var mr = this.transform.GetComponentInParent<MeshRenderer>();
         var currentFill = mr.material.GetFloat("_FillAmount");
@@ -113,9 +162,31 @@ public class LiquidPourEdge : MonoBehaviour
         const float magicConstant = 1f;
         var newFill = currentFill + magicConstant * edgeDifference;
 
-        var normalizedNew = (emptyValue - newFill) / (emptyValue - fullValue);
+        // var originOffset =  this.transform.parent.position.y - minY;
+        var fillRatio = GetLitersFromShaderFill(edgeDifference, minY, maxY);
+        // var litersDeltaTransfer = containerMaxVolumeLiters * fillRatio;
 
-        normalizedCurrentFill = normalizedNew;
+        var litersDeltaTransfer = containerMaxVolumeLiters * fillRatio;
+
+
+        // var normalizedNew = (litersDeltaTransfer + liquidVolumeLiters) / containerMaxVolumeLiters;
+
+        // normalizedCurrentFill = normalizedNew;
+
+       
+        
+
+        // var mr = this.transform.GetComponentInParent<MeshRenderer>();
+        // var currentFill = mr.material.GetFloat("_FillAmount");
+
+        // const float magicConstant = 1f;
+        // var newFill = currentFill + magicConstant * edgeDifference;
+
+        // var normalizedNew = (emptyValue - newFill) / (emptyValue - fullValue);
+
+        // normalizedCurrentFill = normalizedNew;
+
+
 
         // var newCurrentNormalizedFill = (emptyValue - currentFill) / (emptyValue - fullValue);
 
@@ -138,7 +209,7 @@ public class LiquidPourEdge : MonoBehaviour
 
                 //otherLiquidEdge.TransferLiquid(normalizedFillDifference, this);
 
-                otherLiquidEdge.TransferLiquidVolume(normalizedFillDifference * containerMaxVolumeLiters, this);
+                otherLiquidEdge.TransferLiquidVolume(litersDeltaTransfer, this);
 
                 Debug.Log("Transfered " + edgeDifference);
                 
@@ -157,6 +228,8 @@ public class LiquidPourEdge : MonoBehaviour
             Debug.Log("Raycast fail");
         }
 
+
+        // TODO Clamp on liter value
         mr.material.SetFloat("_FillAmount", newFill);
         
     }
@@ -206,20 +279,72 @@ public class LiquidPourEdge : MonoBehaviour
     }
 
     protected Vector3 getWaterLevelPositionWorld() {
+        float shaderFillv;
+        float minYv;
+        float maxYv;
+        return getWaterLevelPositionWorld(out shaderFillv, out minYv, out maxYv);
+    }
+
+    protected Vector3 getWaterLevelPositionWorld(out float shaderFillValue, out float minY, out float maxY) {
         var mr = this.transform.GetComponentInParent<MeshRenderer>();
-        if (mr != null) {
-            var fillAmount = mr.material.GetFloat("_FillAmount");
 
-            Gizmos.color = new Color(1f, 1f, 0.0f, 0.7f);
+        var visibilityPoints = this.transform.parent.parent.Find("VisibilityPoints");
+        minY = float.MaxValue;
+        maxY = float.MinValue;
+        for (int i = 0; i <  visibilityPoints.childCount; i++) {
+            var point = visibilityPoints.GetChild(i);
+            minY = point.position.y < minY ? point.position.y : minY;
+            maxY = point.position.y > minY ? point.position.y : maxY;
+        }
 
-            var pos = this.transform.parent.position;
-            pos.y += 0.5f - fillAmount;
-            return pos;
-        }
-        else {
-            Debug.LogError("No mesh renderer, with liquid material to get fill value");
-        }
-        return Vector3.zero;
+        // var fillRatio = liquidVolumeLiters / containerMaxVolumeLiters;
+        
+        // //this.parent.position
+
+        // var yRelative = (maxY - minY) * fillRatio;
+
+        // var originOffset =  this.transform.parent.position.y - minY;
+
+        // shaderFillValue = originOffset - yRelative + 0.5f;
+
+        var pos = this.transform.parent.position;
+
+        shaderFillValue = GetShaderFill(minY, maxY);
+
+        pos.y += 0.5f - shaderFillValue;
+        return pos;
+
+
+
+        // if (mr != null) {
+        //     var fillAmount = mr.material.GetFloat("_FillAmount");
+
+        //     Gizmos.color = new Color(1f, 1f, 0.0f, 0.7f);
+
+        //     var pos = this.transform.parent.position;
+        //     pos.y += 0.5f - fillAmount;
+        //     return pos;
+        // }
+        // else {
+        //     Debug.LogError("No mesh renderer, with liquid material to get fill value");
+        // }
+        // return Vector3.zero;
+    }
+
+    // private getModelYBounds(out float minY, out float minY) {
+
+    // }
+
+    private float GetShaderFill(float minY, float maxY) {
+        var fillRatio = liquidVolumeLiters / containerMaxVolumeLiters;
+        var yRelative = (maxY - minY) * fillRatio;
+        var originOffset =  this.transform.parent.position.y - minY;
+        return originOffset - yRelative + 0.5f;
+    }
+
+    private float GetLitersFromShaderFill(float shaderFillValue, float minY, float maxY) {
+        var originOffset =  this.transform.parent.position.y - minY;
+        return (originOffset -  shaderFillValue) / (maxY - minY);
     }
 
     void OnDrawGizmos() {
