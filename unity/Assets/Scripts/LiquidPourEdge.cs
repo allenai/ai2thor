@@ -75,30 +75,43 @@ public class LiquidPourEdge : MonoBehaviour
         // Debug.Log("fullValue " + fullValue + ", emptyValue ," + emptyValue + " normalizedCurrentFill " + normalizedCurrentFill);
         // mr.material.SetFloat("_FillAmount", shaderFill);
 
-        var up = this.transform.parent.up;
-        var edgeLowestWorld = getLowestEdgePointWorld(up);
-        var waterLevelWorld = getWaterLevelPositionWorld();
+        // if (liquidVolumeLiters > 0) {
+            var up = this.transform.parent.up;
+            var edgeLowestWorld = getLowestEdgePointWorld(up);
+            var waterLevelWorld = getWaterLevelPositionWorld();
 
-        var edgeLiquidDifference = waterLevelWorld.y - edgeLowestWorld.y;
-        if (edgeLiquidDifference > 0) {
-            Debug.Log("Release liquid " + edgeLiquidDifference  + " water level  " + waterLevelWorld.y + " cup edge lowest "+ edgeLowestWorld.y);
-            ReleaseLiquid(edgeLiquidDifference, edgeLowestWorld);
-        }
-        else if (activeFlow != null)
-        {
-            // Make flow smaller do not turn off
-            activeFlow.SetActive(false);
-        }
+            var edgeLiquidDifference = waterLevelWorld.y - edgeLowestWorld.y;
+            if (edgeLiquidDifference > 0) {
+                var containerRotationRadians = Mathf.Acos(Vector3.Dot(Vector3.up, up));
+                Debug.Log("Release liquid " + edgeLiquidDifference  + " water level  " + waterLevelWorld.y + " cup edge lowest "+ edgeLowestWorld.y + " container angle " + (180.0f/Mathf.PI) * containerRotationRadians) ;
+                
+                ReleaseLiquid(edgeLiquidDifference, edgeLowestWorld, containerRotationRadians);
+            }
+            else if (activeFlow != null)
+            {
+                // Make flow smaller do not turn off
+                activeFlow.transform.position = edgeLowestWorld;
+                activeFlow.SetActive(false);
+            }
+        // }
     }
 
-    protected void ReleaseLiquid(float edgeDifference, Vector3 edgePositionWorld) {
+    protected void ReleaseLiquid(float edgeDifference, Vector3 edgePositionWorld, float containerRotationRadians) {
         //Debug.Log("Fluid out!!!! " + edgeDifference);
         if (activeFlow == null) {
-            activeFlow = Object.Instantiate(this.waterEmiter, edgePositionWorld, Quaternion.identity, this.transform.parent);
+            activeFlow = Object.Instantiate(
+                this.waterEmiter,
+                edgePositionWorld,
+                Quaternion.identity,
+                this.transform.parent
+            );
         }
         else {
             activeFlow.SetActive(true);
+            //activeFlow.transform.rotation = Quaternion.Inverse(this.transform.parent.rotation);
         }
+
+        activeFlow.transform.rotation = Quaternion.identity;
 
         var normalizedFillDifference = edgeDifference / (emptyValue - fullValue);
         // var normalizedNew = (emptyValue - edgeDifference) / (emptyValue - fullValue);
@@ -119,6 +132,33 @@ public class LiquidPourEdge : MonoBehaviour
 
         // var newCurrentNormalizedFill = (emptyValue - currentFill) / (emptyValue - fullValue);
 
+        var litersTransfer = normalizedFillDifference * containerMaxVolumeLiters;
+
+        var newLiters = liquidVolumeLiters - litersTransfer;
+
+        //var ratio = containerRotationRadians / (Mathf.PI / 2.0f);
+        // litersTransfer = ratio * liquidVolumeLiters;
+        // normalizedFillDifference = litersTransfer / containerMaxVolumeLiters;
+        // newFill = currentFill + normalizedFillDifference * (emptyValue - fullValue);
+
+        
+
+        if (litersTransfer > liquidVolumeLiters) {
+            if (Mathf.Abs(containerRotationRadians) - 0.001f < (Mathf.PI / 2.0f)) {
+                var ratio = containerRotationRadians / (Mathf.PI / 2.0f);
+                litersTransfer = ratio * liquidVolumeLiters;
+                
+            //  newFill = emptyValue + 1.0f;
+            //  litersTransfer = liquidVolumeLiters;
+            }
+            else {
+
+
+                newFill = emptyValue + 1.0f;
+                litersTransfer = liquidVolumeLiters;
+            }
+            // edgeDifference = (liquidVolumeLiters / containerMaxVolumeLiters) * (emptyValue - fullValue);
+        }
 
         
 
@@ -138,7 +178,7 @@ public class LiquidPourEdge : MonoBehaviour
 
                 //otherLiquidEdge.TransferLiquid(normalizedFillDifference, this);
 
-                otherLiquidEdge.TransferLiquidVolume(normalizedFillDifference * containerMaxVolumeLiters, this);
+                otherLiquidEdge.TransferLiquidVolume(litersTransfer, this);
 
                 Debug.Log("Transfered " + edgeDifference);
                 
