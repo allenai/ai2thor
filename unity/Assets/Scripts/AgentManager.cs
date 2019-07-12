@@ -457,10 +457,6 @@ public class AgentManager : MonoBehaviour
 		if (shouldRender) {
 			// we should only read the screen buffer after rendering is complete
 			yield return new WaitForEndOfFrame();
-			if (synchronousHttp) {
-				// must wait an additional frame when in synchronous mode otherwise the frame lags
-				yield return new WaitForEndOfFrame();
-			}
 		}
 
 		WWWForm form = new WWWForm();
@@ -549,6 +545,12 @@ public class AgentManager : MonoBehaviour
 
                 int sent = this.sock.Send(Encoding.ASCII.GetBytes(request));
                 sent = this.sock.Send(rawData);
+
+                // waiting for a frame here keeps the Unity window in sync visually
+                // its not strictly necessary, but allows the interact() command to work properly
+                // and does not reduce the overall FPS
+                yield return new WaitForEndOfFrame();
+
                 byte[] headerBuffer = new byte[1024];
                 int bytesReceived = 0;
                 byte[] bodyBuffer = null;
