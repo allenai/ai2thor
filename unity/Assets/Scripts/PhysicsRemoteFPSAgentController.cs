@@ -5741,7 +5741,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 goodLocationsDict[key] = new List<float>();
             }
 
-            for (int k = -1; k < 2; k++) {
+            for (int k = -1; k <= 2; k++) {
                 m_Camera.transform.localEulerAngles = new Vector3(30f * k, 0f, 0f);
                 for (int j = 0; j < 2; j++) { // Standing / Crouching
                     if (j == 0) {
