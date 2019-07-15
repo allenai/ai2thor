@@ -5695,6 +5695,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             bool wasStanding = isStanding();
             Vector3 oldPosition = transform.position;
             Quaternion oldRotation = transform.rotation;
+            Vector3 oldHorizon = m_Camera.transform.localEulerAngles;
 
             if (!physicsSceneManager.UniqueIdToSimObjPhysics.ContainsKey(action.objectId)) {
                 errorMessage = "Object ID appears to be invalid.";
@@ -5708,30 +5709,37 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             SimObjPhysics theObject = physicsSceneManager.UniqueIdToSimObjPhysics[action.objectId];
 
+            List<Vector3> filteredPositions = positions.Where(
+                p => (Vector3.Distance(p, theObject.transform.position) <= maxVisibleDistance + 0.5f)
+            ).ToList();
+
             Dictionary<string, List<float>> goodLocationsDict = new Dictionary<string, List<float>>();
             string[] keys = {"x", "y", "z", "rotation", "standing", "horizon"};
             foreach (string key in keys) {
                 goodLocationsDict[key] = new List<float>();
             }
 
-            for (int j = 0; j < 2; j++) { // Standing / Crouching
-                if (j == 0) {
-                    stand();
-                } else {
-                    crouch();
-                }
-                for (int i = 0; i < 4; i++) { // 4 rotations
-                    transform.rotation = Quaternion.Euler(new Vector3(0.0f, 90.0f * i, 0.0f));
-                    foreach (Vector3 p in positions) {
-                        transform.position = p;
+            for (int k = -1; k < 2; k++) {
+                m_Camera.transform.localEulerAngles = new Vector3(30f * k, 0f, 0f);
+                for (int j = 0; j < 2; j++) { // Standing / Crouching
+                    if (j == 0) {
+                        stand();
+                    } else {
+                        crouch();
+                    }
+                    for (int i = 0; i < 4; i++) { // 4 rotations
+                        transform.rotation = Quaternion.Euler(new Vector3(0.0f, 90.0f * i, 0.0f));
+                        foreach (Vector3 p in filteredPositions) {
+                            transform.position = p;
 
-                        if (objectIsCurrentlyVisible(theObject, maxVisibleDistance)) {
-                            goodLocationsDict["x"].Add(p.x);
-                            goodLocationsDict["y"].Add(p.y);
-                            goodLocationsDict["z"].Add(p.z);
-                            goodLocationsDict["rotation"].Add(90.0f * i);
-                            goodLocationsDict["standing"].Add((1 - j) * 1.0f);
-                            goodLocationsDict["horizon"].Add(m_Camera.transform.localEulerAngles.x);
+                            if (objectIsCurrentlyVisible(theObject, maxVisibleDistance)) {
+                                goodLocationsDict["x"].Add(p.x);
+                                goodLocationsDict["y"].Add(p.y);
+                                goodLocationsDict["z"].Add(p.z);
+                                goodLocationsDict["rotation"].Add(90.0f * i);
+                                goodLocationsDict["standing"].Add((1 - j) * 1.0f);
+                                goodLocationsDict["horizon"].Add(m_Camera.transform.localEulerAngles.x);
+                            }
                         }
                     }
                 }
@@ -5744,6 +5752,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
             transform.position = oldPosition;
             transform.rotation = oldRotation;
+            m_Camera.transform.localEulerAngles = oldHorizon;
             if (ItemInHand != null) {
                 ItemInHand.gameObject.SetActive(true);
             }
