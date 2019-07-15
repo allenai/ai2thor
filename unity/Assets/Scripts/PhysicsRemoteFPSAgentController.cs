@@ -2186,8 +2186,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             if(physicsSceneManager.physicsSimulationPaused)
             {
                 sop.ApplyForce(action);
-                bool objectWasMoved = true;
-                actionFinished(true, objectWasMoved);
+                Debug.Log("hand touched something moveable and is applying force");
+                bool handTouchedSomething = true;
+                actionFinished(true, handTouchedSomething);
             }
 
             //if physics is automatically being simulated, use coroutine to check when object has come to rest
@@ -2225,8 +2226,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
 
             //return to metadatawrapper.actionReturn if an object was touched during this interaction
-            bool objectWasMoved = true;
-            actionFinished(true, objectWasMoved);
+            Debug.Log("hand touched something and it has finished moving");
+            bool handTouchedSomething = true;
+            actionFinished(true, handTouchedSomething);
         }
 
         // private IEnumerator emitFrameOverTimeAfterApplyForce(SimObjPhysics sop)
@@ -2697,48 +2699,68 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                 //raycast out from targetPosition to direction
                 RaycastHit hit;
+
+                // Debug.DrawRay(AgentHand.transform.position, 
+                // m_Camera.transform.TransformDirection(action.direction), Color.yellow, 5.0f);
+
                 //raycast from hand in action.direction a max distance of 2m
-                Physics.Raycast(AgentHand.transform.position, action.direction, out hit, 2.0f,
-                (1 << 8) | (1 << 9) | (1 << 10));
-                //print(hit.transform);
-                if(hit.transform.GetComponent<SimObjPhysics>())
+                if(Physics.Raycast(AgentHand.transform.position, 
+                m_Camera.transform.TransformDirection(action.direction), 
+                out hit, 2.0f, 1 << 0 |1 << 8| 1<<10, QueryTriggerInteraction.Ignore))
                 {
-                    //if the object is a sim object, apply force now!
-                    SimObjPhysics target = hit.transform.GetComponent<SimObjPhysics>();
-                    bool canbepushed = false;
-
-                    if (target.PrimaryProperty == SimObjPrimaryProperty.CanPickup ||
-                        target.PrimaryProperty == SimObjPrimaryProperty.Moveable)
-                        canbepushed = true;
-
-                    if (!canbepushed) 
+                    //print(hit.transform);
+                    if(hit.transform.GetComponent<SimObjPhysics>())
                     {
-                        errorMessage = "Target Sim Object cannot be moved. It's primary property must be Pickupable or Moveable";
-                        actionFinished(false);
-                        return;
+                        //if the object is a sim object, apply force now!
+                        SimObjPhysics target = hit.transform.GetComponent<SimObjPhysics>();
+                        bool canbepushed = false;
+
+                        if (target.PrimaryProperty == SimObjPrimaryProperty.CanPickup ||
+                            target.PrimaryProperty == SimObjPrimaryProperty.Moveable)
+                            canbepushed = true;
+
+                        if (!canbepushed) 
+                        {
+                            //the sim object hit was not moveable or pickupable, but we still hit something so return handTouchedSomething = true
+                            bool handTouchedSomething = true;
+                            Debug.Log("hand touched something that can't be pushed: " + hit.transform.name);
+                            actionFinished(true, handTouchedSomething);
+                            return;
+                        }
+
+                        ServerAction apply = new ServerAction();
+                        apply.moveMagnitude = action.moveMagnitude;
+                        apply.x = action.direction.x;
+                        apply.y = action.direction.y;
+                        apply.z = action.direction.z;
+                        sopApplyForce(apply, target);
+                        //sopApplyForce uses a coroutine to return actionFinished()
                     }
 
-                    ServerAction apply = new ServerAction();
-                    apply.moveMagnitude = action.moveMagnitude;
-                    apply.x = action.direction.x;
-                    apply.y = action.direction.y;
-                    apply.z = action.direction.z;
-                    sopApplyForce(apply, target);
-                    //sopApplyForce uses a coroutine to return actionFinished()
+                    else
+                    {
+                            //something that was not a sim object was touched
+                            bool handTouchedSomething = true;
+                            Debug.Log("hand touched something that was not a sim object");
+                            actionFinished(true, handTouchedSomething);
+                            return;
+                    }
                 }
 
+                //raycast didn't hit any objects
                 else
                 {
-                    errorMessage = "object hit was not a SimObject and can't be moved";
+                    errorMessage = "no objects were hit by the hand";
+                    Debug.Log(errorMessage);
                     actionFinished(false);
                     return;
                 }
+
             }
 
-            //target location was not valid
+            //target location to move hand to was not valid (probably obstructed)
             else
             {
-                //errormessage taken care of above
                 actionFinished(false);
                 return;
             }
@@ -2780,7 +2802,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             out hit, 
             Vector3.Distance(targetPosition, 
             m_Camera.transform.position),
-            (1 << 0 |1 << 8)))//raycast against default and SimObjVisible collision layers only
+            1 << 0 |1 << 8| 1<<10, QueryTriggerInteraction.Ignore))
             {
                 //some object was hit
                 errorMessage = hit.transform + " blocked the hand from moving to target position";
