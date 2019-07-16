@@ -259,8 +259,6 @@ public class AgentManager : MonoBehaviour
     // Decide whether agent has stopped actions
     // And if we need to capture a new frame
 
-
-
     private void LateUpdate() {
 		int completeCount = 0;
 		foreach (BaseFPSAgentController agent in this.agents) {
@@ -281,6 +279,8 @@ public class AgentManager : MonoBehaviour
             {
                 if(rb.GetComponentInParent<SimObjPhysics>())
                 rb.GetComponentInParent<SimObjPhysics>().inMotion = false;
+
+                //TODO: get if acceleration is zero by checking against rb's lastVelocity from last frame instead of what is happening above
             }
 
             //if the object is in motion, set it, and also change isSceneAtRest to false
@@ -884,6 +884,7 @@ public class ServerAction
 	public Vector3 rotation;
 	public Vector3 position;
     public Vector3 direction;
+    public float handDistance;//used for max distance agent's hand can move
 	public List<Vector3> positions = null;
 	public bool standing = true;
 	public float fov = 60.0f;

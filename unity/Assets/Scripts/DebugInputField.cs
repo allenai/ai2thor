@@ -1171,12 +1171,14 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         break;
                     }
 
-                case "mhta":
+                case "tta":
                     {
                         ServerAction action = new ServerAction();
-                        action.action = "MoveHandThenApplyForce";
-                        action.position = new Vector3(0, 0, 0.1f);
-                        action.direction = new Vector3(1, 0, 0);
+                        action.action = "TouchThenApplyForce";
+                        action.x = 0.5f;
+                        action.y = 0.5f;
+                        action.handDistance = 5.0f;
+                        action.direction = new Vector3(0, 1, 0);
                         action.moveMagnitude = 200f;
                         PhysicsController.ProcessControlCommand(action);
                         break;
