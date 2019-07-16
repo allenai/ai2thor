@@ -2165,6 +2165,17 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 return;
             }
             
+            //update the lastVelocity value for all rigidbodies in scene that are SimObjects manually
+            Rigidbody[] rbs = FindObjectsOfType(typeof(Rigidbody)) as Rigidbody[];
+            foreach(Rigidbody rb in rbs)
+            {
+                if(rb.GetComponentInParent<SimObjPhysics>())
+                {
+                    SimObjPhysics sop = rb.GetComponentInParent<SimObjPhysics>();
+                    sop.lastVelocity = Math.Abs(rb.angularVelocity.sqrMagnitude + rb.velocity.sqrMagnitude);
+                }
+            }
+
             //pass in the timeStep to advance the physics simulation
             Physics.Simulate(action.timeStep);
             agentManager.AdvancePhysicsStepCount++;
@@ -2229,23 +2240,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     if(sop == null)
                     break;
 
-                    //https://answers.unity.com/questions/48179/rigidbody-acceleration.html
-                    //acceleration = (rigidbody.velocity - lastVelocity) / Time.fixedDeltaTime;
-                    //lastVelocity = rigidbody.velocity; - on late update of SimObjPhysics, store lastVelocity to use for this
+                    float currentVelocity = Math.Abs(rb.angularVelocity.sqrMagnitude + rb.velocity.sqrMagnitude);
+                    float accel = (currentVelocity - sop.lastVelocity) / Time.fixedDeltaTime;
 
-                    if(Math.Abs(rb.angularVelocity.sqrMagnitude + rb.velocity.sqrMagnitude) < 0.00001) 
+                    if(accel == 0)
                     {
-                        //delay the break until we know for sure the object has been at rest long enough
-                        //TODO: there must be a better way to do this than randomly picking some amount of seconds to wait...
-                        //this was added because objects pushed straight up would hit v=0 at the peak of their movement, which prematurely
-                        //made them seem to come to rest even though they were really about to begin falling down again. classic physics
-                        yield return new WaitForSeconds(1.0f);
-
-                        //ok we waited a little bit and the object is still at v = 0, so it's probably at rest for real
-                        if(Math.Abs(rb.angularVelocity.sqrMagnitude + rb.velocity.sqrMagnitude) < 0.00001)
-                        {
-                            break;
-                        }
+                        break;
                     }
 
                     else
@@ -2254,17 +2254,23 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
 
             //return to metadatawrapper.actionReturn if an object was touched during this interaction
-            Debug.Log("hand touched something and it has finished moving");
             if(length != 0.0f)
             {
                 WhatDidITouch feedback = new WhatDidITouch(){didHandTouchSomething = true, objectId = sop.uniqueID, armsLength = length};
+
+                #if UNITY_EDITOR
                 print("didHandTouchSomething: " + feedback.didHandTouchSomething);
                 print("object id: " + feedback.objectId);
                 print("armslength: " + feedback.armsLength);
+                #endif
+
                 actionFinished(true, feedback);
             }
+
+            //if passed in length is 0, don't return feedback cause not all actions need that
             else
             {
+                DefaultAgentHand();
                 actionFinished(true);
             }
 
@@ -3996,38 +4002,38 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
 
-        private IEnumerator checkDropHandObjectAction(SimObjPhysics currentHandSimObj) 
-        {
-            yield return null; // wait for two frames to pass
-            yield return null;
-            float startTime = Time.time;
+        // private IEnumerator checkDropHandObjectAction(SimObjPhysics currentHandSimObj) 
+        // {
+        //     yield return null; // wait for two frames to pass
+        //     yield return null;
+        //     float startTime = Time.time;
 
-            //if we can't find the currentHandSimObj's rigidbody because the object was destroyed, bypass this check
-            if (currentHandSimObj != null)
-            {
-                Rigidbody rb = currentHandSimObj.GetComponentInChildren<Rigidbody>();
-                while (Time.time - startTime < 2) 
-                {
-                    if(currentHandSimObj == null)
-                    break;
+        //     //if we can't find the currentHandSimObj's rigidbody because the object was destroyed, bypass this check
+        //     if (currentHandSimObj != null)
+        //     {
+        //         Rigidbody rb = currentHandSimObj.GetComponentInChildren<Rigidbody>();
+        //         while (Time.time - startTime < 2) 
+        //         {
+        //             if(currentHandSimObj == null)
+        //             break;
 
-                    if (Math.Abs(rb.angularVelocity.sqrMagnitude + rb.velocity.sqrMagnitude) < 0.00001) 
-                    {
-                        // Debug.Log ("object is now at rest");
-                        break;
-                    } 
+        //             if (Math.Abs(rb.angularVelocity.sqrMagnitude + rb.velocity.sqrMagnitude) < 0.00001) 
+        //             {
+        //                 // Debug.Log ("object is now at rest");
+        //                 break;
+        //             } 
 
-                    else 
-                    {
-                        // Debug.Log ("object is still moving");
-                        yield return null;
-                    }
-                }
-            }
+        //             else 
+        //             {
+        //                 // Debug.Log ("object is still moving");
+        //                 yield return null;
+        //             }
+        //         }
+        //     }
 
-            DefaultAgentHand();
-            actionFinished(true);
-        }
+        //     DefaultAgentHand();
+        //     actionFinished(true);
+        // }
 
         private IEnumerator checkDropHandObjectActionFast(SimObjPhysics currentHandSimObj)
         {
@@ -4091,9 +4097,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     //if physics simulation has been paused by the PausePhysicsAutoSim() action, don't do any coroutine checks
                     if(!physicsSceneManager.physicsSimulationPaused)
                     {
+                        //this is true by default
                         if (action.autoSimulation) 
                         {
-                            StartCoroutine(checkDropHandObjectAction(ItemInHand.GetComponent<SimObjPhysics>()));
+                            StartCoroutine(checkIfObjectHasStoppedMoving(ItemInHand.GetComponent<SimObjPhysics>(), 0));
                         } 
 
                         else 
