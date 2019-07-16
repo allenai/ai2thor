@@ -93,21 +93,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     }
                 }
             #endif
-
-            if(Input.GetKeyDown(KeyCode.Alpha9))
-            {
-                ServerAction action = new ServerAction();
-                action.action = "PausePhysicsAutoSim";
-                PhysicsController.ProcessControlCommand(action);
-            }
-
-            if(Input.GetKeyDown(KeyCode.Alpha0))
-            {
-                ServerAction action = new ServerAction();
-                action.action = "AdvancePhysicsStep";
-                action.timeStep = 0.02f; //clamp this range to have max of 0.05
-                PhysicsController.ProcessControlCommand(action);
-            }
         }
 
         public void HideHUD()
@@ -178,6 +163,31 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         break;
                     }
 
+                case "pp":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "PausePhysicsAutoSim";
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
+                case "ap":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "AdvancePhysicsStep";
+                        action.timeStep = 0.02f; //max 0.05, min 0.01
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+                    
+                case "up":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "UnpausePhysicsAutoSim";
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+                    
                 case "its":
                     {
                         ServerAction action = new ServerAction();
