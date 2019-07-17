@@ -2024,7 +2024,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 
 		foreach (Transform child in transform)
 		{
-			if(child.Find("VisibilityPoints"))
+			if(child.Find("VisibilityPoints") && !child.GetComponent<SimObjPhysics>())
 			{
 				Transform vp = child.Find("VisibilityPoints");
 
