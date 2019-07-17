@@ -32,8 +32,6 @@ public class AgentManager : MonoBehaviour
 	private bool synchronousHttp = true;
 	private Socket sock = null;
 	private List<Camera> thirdPartyCameras = new List<Camera>();
-	
-
 	private bool readyToEmit;
 
 	private Color[] agentColors = new Color[]{Color.blue, Color.yellow, Color.green, Color.red, Color.magenta, Color.grey};
@@ -43,6 +41,9 @@ public class AgentManager : MonoBehaviour
 	private BaseFPSAgentController primaryAgent;
 
     private JavaScriptInterface jsInterface;
+
+    private PhysicsSceneManager physicsSceneManager;
+    public int AdvancePhysicsStepCount = 0;
 
 	void Awake() {
 
@@ -82,6 +83,8 @@ public class AgentManager : MonoBehaviour
 		readyToEmit = true;
 		Debug.Log("Graphics Tier: " + Graphics.activeTier);
 		this.agents.Add (primaryAgent);
+
+        physicsSceneManager = GameObject.Find("PhysicsSceneManager").GetComponent<PhysicsSceneManager>();
 	}
 
 	private void initializePrimaryAgent() {
@@ -256,7 +259,10 @@ public class AgentManager : MonoBehaviour
     // Decide whether agent has stopped actions
     // And if we need to capture a new frame
 
-
+    private void Update()
+    {
+        physicsSceneManager.isSceneAtRest = true;//assume the scene is at rest by default
+    }
 
     private void LateUpdate() {
 		int completeCount = 0;
@@ -265,16 +271,61 @@ public class AgentManager : MonoBehaviour
 				completeCount++;
 			}
 		}
-		// if (completeCount == agents.Count) {
-		// 	Physics.autoSimulation = false;
-		// } else {
-		// 	Physics.Simulate(0.02f);
-		// }
+
+        //check what objects in the scene are currently in motion
+        Rigidbody[] rbs = FindObjectsOfType(typeof(Rigidbody)) as Rigidbody[];
+        foreach(Rigidbody rb in rbs)
+        {
+            //if this rigidbody is part of a SimObject, calculate rest using lastVelocity/currentVelocity comparisons
+            if(rb.GetComponentInParent<SimObjPhysics>())
+            {
+                
+                SimObjPhysics sop = rb.GetComponentInParent<SimObjPhysics>();
+                
+                float currentVelocity = Math.Abs(rb.angularVelocity.sqrMagnitude + rb.velocity.sqrMagnitude);
+                float accel = (currentVelocity - sop.lastVelocity) / Time.fixedDeltaTime;
+
+                if(accel == 0)
+                {
+                    sop.inMotion = false;
+                }
+
+                else
+                {
+                    //the rb's velocities are not 0, so it is in motion and the scene is not at rest
+                    rb.GetComponentInParent<SimObjPhysics>().inMotion = true;
+                    physicsSceneManager.isSceneAtRest = false;
+                }
+
+            }
+
+            //this rigidbody is not a SimOBject, and might be a piece of a shattered sim object spawned in, or something
+            else
+            {
+                //is the rigidbody at non zero velocity? then the scene is not at rest
+                if(!(Math.Abs(rb.angularVelocity.sqrMagnitude + 
+                rb.velocity.sqrMagnitude) < 0.001))
+                {
+                    physicsSceneManager.isSceneAtRest = false;
+                }
+            }
+        }
 
 		if (completeCount == agents.Count && completeCount > 0 && readyToEmit) {
 			readyToEmit = false;
 			StartCoroutine (EmitFrame ());
 		}
+
+        //ok now if the scene is at rest, turn back on physics autosimulation automatically
+        //note: you can do this earlier by manually using the UnpausePhysicsAutoSim() action found in PhysicsRemoteFPSAgentController
+        if(physicsSceneManager.isSceneAtRest && 
+        physicsSceneManager.physicsSimulationPaused && AdvancePhysicsStepCount > 0)
+        {
+            //print("soshite toki wa ugoki desu");
+            Physics.autoSimulation = true;
+            physicsSceneManager.physicsSimulationPaused = false;
+            AdvancePhysicsStepCount = 0;
+        }
 
 	}
 
@@ -414,7 +465,7 @@ public class AgentManager : MonoBehaviour
 	}
 
 
-	private IEnumerator EmitFrame() {
+	public IEnumerator EmitFrame() {
 
 
 		frameCounter += 1;
@@ -424,10 +475,6 @@ public class AgentManager : MonoBehaviour
 		if (shouldRender) {
 			// we should only read the screen buffer after rendering is complete
 			yield return new WaitForEndOfFrame();
-			if (synchronousHttp) {
-				// must wait an additional frame when in synchronous mode otherwise the frame lags
-				yield return new WaitForEndOfFrame();
-			}
 		}
 
 		WWWForm form = new WWWForm();
@@ -516,6 +563,12 @@ public class AgentManager : MonoBehaviour
 
                 int sent = this.sock.Send(Encoding.ASCII.GetBytes(request));
                 sent = this.sock.Send(rawData);
+
+                // waiting for a frame here keeps the Unity window in sync visually
+                // its not strictly necessary, but allows the interact() command to work properly
+                // and does not reduce the overall FPS
+                yield return new WaitForEndOfFrame();
+
                 byte[] headerBuffer = new byte[1024];
                 int bytesReceived = 0;
                 byte[] bodyBuffer = null;
@@ -728,6 +781,7 @@ public class ObjectMetadata
 	public string parentReceptacle;
 	public string[] parentReceptacles;
 	public float currentTime;
+    public bool isMoving;//true if this game object currently has a non-zero velocity
 
 	public ObjectMetadata() { }
 }
@@ -778,6 +832,7 @@ public class ObjectToggle
 public struct MetadataWrapper
 {
 	public ObjectMetadata[] objects;
+    public bool isSceneAtRest;//set true if all objects in the scene are at rest (or very very close to 0 velocity)
 	public ObjectMetadata agent;
 	public HandMetadata hand;
 	public float fov;
@@ -842,10 +897,12 @@ public class ServerAction
 	public float fieldOfView = 60f;
 	public float x;
 	public float z;
+    public float pushAngle;
 	public int horizon;
 	public Vector3 rotation;
 	public Vector3 position;
-
+    public Vector3 direction;
+    public float handDistance;//used for max distance agent's hand can move
 	public List<Vector3> positions = null;
 	public bool standing = true;
 	public float fov = 60.0f;
@@ -865,10 +922,9 @@ public class ServerAction
 	public bool randomizeOpen;
 	public int randomSeed;
 	public float moveMagnitude;
-
 	public bool autoSimulation = true;
 	public float visibilityDistance;
-	public bool continuousMode;
+	public bool continuousMode; //i don't think this is used right now? also how is this different from the continuous bool above?
 	public bool uniquePickupableObjectTypes; // only allow one of each object type to be visible
 	public float removeProb;
 	public int maxNumRepeats;
@@ -886,11 +942,12 @@ public class ServerAction
 	public float TimeUntilRoomTemp;
 	public bool allowDecayTemperature = true; //set to true if temperature should decay over time, set to false if temp changes should not decay, defaulted true
 	public string StateChange;//a string that specifies which state change to randomly toggle
+    public float timeStep = 0.01f;
 
-    	public ObjectPose[] objectPoses;
-    	public ObjectToggle[] objectToggles;
+    public ObjectPose[] objectPoses;
+    public ObjectToggle[] objectToggles;
 
-    	public SimObjType ReceptableSimObjType()
+    public SimObjType ReceptableSimObjType()
 	{
 		if (string.IsNullOrEmpty(receptacleObjectType))
 		{

@@ -82,6 +82,14 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 
 	private PhysicsSceneManager sceneManager;//reference to scene manager object
 
+    public bool inMotion = false;
+
+    //the velocity of this object from the last frame
+    public float lastVelocity = 0;//start at zero assuming at rest
+
+    //reference to this gameobject's rigidbody
+    private Rigidbody myRigidbody; 
+
 	public float GetTimerResetValue()
 	{
 		return TimerResetValue;
@@ -711,7 +719,9 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 			new PhysicsMaterialValues(MyColliders[i].material.dynamicFriction, MyColliders[i].material.staticFriction, MyColliders[i].material.bounciness);
 		}
 
-		Rigidbody rb = gameObject.GetComponent<Rigidbody>();
+        myRigidbody = gameObject.GetComponent<Rigidbody>();
+
+		Rigidbody rb = myRigidbody;
 
 		RBoriginalAngularDrag = rb.angularDrag;
 		RBoriginalDrag = rb.drag;
@@ -754,7 +764,14 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 			StartRoomTempTimer = true;
 		}
 	}
-
+    
+    void LateUpdate()
+    {
+        //only update lastVelocity if physicsAutosimulation = true, otherwise let the Advance Physics function take care of it;
+        if(sceneManager.physicsSimulationPaused == false)
+        //record this object's current velocity
+        lastVelocity = Math.Abs(myRigidbody.angularVelocity.sqrMagnitude + myRigidbody.velocity.sqrMagnitude);
+    }
 	private void FixedUpdate()
 	{
 		isInteractable = false;
@@ -769,6 +786,15 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		myrb.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
 		myrb.AddForce(dir * action.moveMagnitude);
 	}
+
+    //overload that doesn't use a server action
+    public void ApplyForce(Vector3 dir, float magnitude)
+    {
+        Rigidbody myrb = gameObject.GetComponent<Rigidbody>();
+        myrb.isKinematic = false;
+        myrb.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
+        myrb.AddForce(dir * magnitude);
+    }
 
 	//returns a game object list of all sim objects contained by this object if it is a receptacle
 	public List<GameObject> Contains_GameObject()

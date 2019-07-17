@@ -147,7 +147,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         // action.renderObjectImage = true;
                         // action.renderFlowImage = true;
 
-                        action.continuous = true;//testing what continuous mode true does...
+                        //action.continuous = true;//turn on continuous to test multiple emit frames after a single action
 
 						PhysicsController.actionComplete = false;
                         action.ssao = "default";
@@ -163,6 +163,31 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         break;
                     }
 
+                case "pp":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "PausePhysicsAutoSim";
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
+                case "ap":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "AdvancePhysicsStep";
+                        action.timeStep = 0.02f; //max 0.05, min 0.01
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+                    
+                case "up":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "UnpausePhysicsAutoSim";
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+                    
                 case "its":
                     {
                         ServerAction action = new ServerAction();
@@ -1154,7 +1179,20 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         action.action = "DefaultAgentHand";
                         PhysicsController.ProcessControlCommand(action);
                         break;
-                    }   
+                    }
+
+                case "tta":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "TouchThenApplyForce";
+                        action.x = 0.5f;
+                        action.y = 0.5f;
+                        action.handDistance = 5.0f;
+                        action.direction = new Vector3(0, 1, 0);
+                        action.moveMagnitude = 200f;
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
 
                     //move hand ahead, forward relative to agent's facing
                     //pass in move magnitude or default is 0.25 units
@@ -1397,6 +1435,29 @@ namespace UnityStandardAssets.Characters.FirstPerson
 							
                         //action.moveMagnitude = 200f;//4000f;
                         action.z = -1;
+						PhysicsController.ProcessControlCommand(action);                  
+						break;
+					}
+
+                case "dirpush":
+					{
+						ServerAction action = new ServerAction();
+						action.action = "DirectionalPush";
+
+                        if (splitcommand.Length > 1 && splitcommand.Length < 3)
+                        {
+                            action.objectId = splitcommand[1];
+                            action.moveMagnitude = 10f;//4000f;
+                        }
+
+                        else if(splitcommand.Length > 2)
+                        {
+                            action.objectId = splitcommand[1];
+                            action.moveMagnitude = float.Parse(splitcommand[2]);
+                        }
+
+                        action.pushAngle = 279f;
+
 						PhysicsController.ProcessControlCommand(action);                  
 						break;
 					}
