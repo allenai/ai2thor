@@ -86,7 +86,7 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1073262990490074}
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
@@ -113,9 +113,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b439f6e4ef5714ee2a3643acf37b7a9d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  uniqueID: 
+  uniqueID: HousePlant|+00.00|+00.00|+00.00
   Type: 45
-  PrimaryProperty: 1
+  PrimaryProperty: 2
   SecondaryProperties: 05000000
   BoundingBox: {fileID: 1483958118320246}
   VisibilityPoints:
@@ -146,14 +146,24 @@ MonoBehaviour:
   isVisible: 0
   isInteractable: 0
   isInAgentHand: 0
-  MyColliders: []
-  HFdynamicfriction: 0
-  HFstaticfriction: 0
+  MyColliders:
+  - {fileID: 136321723823074674}
+  - {fileID: 65763733780775258}
+  - {fileID: 65213624816569098}
+  - {fileID: 65163564366057086}
+  - {fileID: 65554750559755014}
+  - {fileID: 136546377373429044}
+  - {fileID: 136291167899338036}
+  HFdynamicfriction: 0.8
+  HFstaticfriction: 0.8
   HFbounciness: 0
   HFrbdrag: 0
   HFrbangulardrag: 0
+  salientMaterials: 040000000d000000
   CurrentTemperature: 0
   HowManySecondsUntilRoomTemp: 10
+  inMotion: 0
+  lastVelocity: 0
   ContainedObjectReferences: []
 --- !u!54 &54099331865081476
 Rigidbody:
@@ -163,11 +173,11 @@ Rigidbody:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1073262990490074}
   serializedVersion: 2
-  m_Mass: 1
+  m_Mass: 3
   m_Drag: 0
   m_AngularDrag: 0.05
   m_UseGravity: 1
-  m_IsKinematic: 1
+  m_IsKinematic: 0
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
@@ -335,7 +345,7 @@ BoxCollider:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1214448131595346}
-  m_Material: {fileID: 0}
+  m_Material: {fileID: 13400000, guid: a80f36a50f63e42499f2cab83624a5f5, type: 2}
   m_IsTrigger: 0
   m_Enabled: 1
   serializedVersion: 2
@@ -379,7 +389,7 @@ BoxCollider:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1235874466376540}
-  m_Material: {fileID: 0}
+  m_Material: {fileID: 13400000, guid: a80f36a50f63e42499f2cab83624a5f5, type: 2}
   m_IsTrigger: 0
   m_Enabled: 1
   serializedVersion: 2
@@ -535,7 +545,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &4943793119243328
 Transform:
   m_ObjectHideFlags: 0
@@ -557,7 +567,7 @@ CapsuleCollider:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1337285505708636}
-  m_Material: {fileID: 0}
+  m_Material: {fileID: 13400000, guid: a80f36a50f63e42499f2cab83624a5f5, type: 2}
   m_IsTrigger: 0
   m_Enabled: 1
   m_Radius: 0.14087015
@@ -662,7 +672,7 @@ BoxCollider:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1441341992115176}
-  m_Material: {fileID: 0}
+  m_Material: {fileID: 13400000, guid: a80f36a50f63e42499f2cab83624a5f5, type: 2}
   m_IsTrigger: 0
   m_Enabled: 1
   serializedVersion: 2
@@ -1042,7 +1052,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &4541456633792816
 Transform:
   m_ObjectHideFlags: 0
@@ -1064,7 +1074,7 @@ CapsuleCollider:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1648570663214248}
-  m_Material: {fileID: 0}
+  m_Material: {fileID: 13400000, guid: a80f36a50f63e42499f2cab83624a5f5, type: 2}
   m_IsTrigger: 0
   m_Enabled: 1
   m_Radius: 0.14530672
@@ -1423,7 +1433,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &4261570416508406
 Transform:
   m_ObjectHideFlags: 0
@@ -1445,7 +1455,7 @@ CapsuleCollider:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1852072978861884}
-  m_Material: {fileID: 0}
+  m_Material: {fileID: 13400000, guid: a80f36a50f63e42499f2cab83624a5f5, type: 2}
   m_IsTrigger: 0
   m_Enabled: 1
   m_Radius: 0.14794828
@@ -1617,7 +1627,7 @@ BoxCollider:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1954326868869600}
-  m_Material: {fileID: 0}
+  m_Material: {fileID: 13400000, guid: a80f36a50f63e42499f2cab83624a5f5, type: 2}
   m_IsTrigger: 0
   m_Enabled: 1
   serializedVersion: 2
@@ -1697,16 +1707,6 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 4795988589902322}
     m_Modifications:
-    - target: {fileID: 7854311495974567871, guid: 441e6140366414031a8350c12f99deb9,
-        type: 3}
-      propertyPath: m_Name
-      value: WaterCylinder
-      objectReference: {fileID: 0}
-    - target: {fileID: 7854311495974567871, guid: 441e6140366414031a8350c12f99deb9,
-        type: 3}
-      propertyPath: m_IsActive
-      value: 0
-      objectReference: {fileID: 0}
     - target: {fileID: 7854311495974567868, guid: 441e6140366414031a8350c12f99deb9,
         type: 3}
       propertyPath: m_LocalPosition.x
@@ -1777,6 +1777,16 @@ PrefabInstance:
       propertyPath: m_LocalScale.z
       value: 0.16345
       objectReference: {fileID: 0}
+    - target: {fileID: 7854311495974567871, guid: 441e6140366414031a8350c12f99deb9,
+        type: 3}
+      propertyPath: m_Name
+      value: WaterCylinder
+      objectReference: {fileID: 0}
+    - target: {fileID: 7854311495974567871, guid: 441e6140366414031a8350c12f99deb9,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 441e6140366414031a8350c12f99deb9, type: 3}
 --- !u!1 &5135965847468530027 stripped
@@ -1798,16 +1808,6 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 4795988589902322}
     m_Modifications:
-    - target: {fileID: 7854311495974567871, guid: 441e6140366414031a8350c12f99deb9,
-        type: 3}
-      propertyPath: m_Name
-      value: Wine
-      objectReference: {fileID: 0}
-    - target: {fileID: 7854311495974567871, guid: 441e6140366414031a8350c12f99deb9,
-        type: 3}
-      propertyPath: m_IsActive
-      value: 0
-      objectReference: {fileID: 0}
     - target: {fileID: 7854311495974567868, guid: 441e6140366414031a8350c12f99deb9,
         type: 3}
       propertyPath: m_LocalPosition.x
@@ -1878,6 +1878,16 @@ PrefabInstance:
       propertyPath: m_LocalScale.z
       value: 0.16345
       objectReference: {fileID: 0}
+    - target: {fileID: 7854311495974567871, guid: 441e6140366414031a8350c12f99deb9,
+        type: 3}
+      propertyPath: m_Name
+      value: Wine
+      objectReference: {fileID: 0}
+    - target: {fileID: 7854311495974567871, guid: 441e6140366414031a8350c12f99deb9,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 7854311495974567870, guid: 441e6140366414031a8350c12f99deb9,
         type: 3}
       propertyPath: m_Materials.Array.data[0]
@@ -1904,16 +1914,6 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 4795988589902322}
     m_Modifications:
-    - target: {fileID: 7854311495974567871, guid: 441e6140366414031a8350c12f99deb9,
-        type: 3}
-      propertyPath: m_Name
-      value: Coffee
-      objectReference: {fileID: 0}
-    - target: {fileID: 7854311495974567871, guid: 441e6140366414031a8350c12f99deb9,
-        type: 3}
-      propertyPath: m_IsActive
-      value: 0
-      objectReference: {fileID: 0}
     - target: {fileID: 7854311495974567868, guid: 441e6140366414031a8350c12f99deb9,
         type: 3}
       propertyPath: m_LocalPosition.x
@@ -1983,6 +1983,16 @@ PrefabInstance:
         type: 3}
       propertyPath: m_LocalScale.z
       value: 0.16345
+      objectReference: {fileID: 0}
+    - target: {fileID: 7854311495974567871, guid: 441e6140366414031a8350c12f99deb9,
+        type: 3}
+      propertyPath: m_Name
+      value: Coffee
+      objectReference: {fileID: 0}
+    - target: {fileID: 7854311495974567871, guid: 441e6140366414031a8350c12f99deb9,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 7854311495974567870, guid: 441e6140366414031a8350c12f99deb9,
         type: 3}
