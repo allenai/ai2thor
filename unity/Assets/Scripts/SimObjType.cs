@@ -260,6 +260,7 @@ public enum SimObjType : int
     Dumbbell = 152,
     TableTopDecor = 153, //for display pieces that are meant to be decorative and placed on tables, shelves, in cabinets etc.
     RoomDecor = 154, //for display pieces that are mean to go on the floor of rooms, like the decorative sticks
+	Stool = 155,
 }
 
 public static class ReceptacleRestrictions
