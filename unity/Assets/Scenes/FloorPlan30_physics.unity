@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.9432207, g: 0.96824485, b: 0.77938247, a: 1}
+  m_IndirectSpecularColor: {r: 0.943227, g: 0.9682397, b: 0.77938455, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -1617,7 +1617,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1295088856364942, guid: 41e0d019caa774233bf63ed379d092ea, type: 3}
       propertyPath: m_StaticEditorFlags
-      value: 64
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 4303234351116976, guid: 41e0d019caa774233bf63ed379d092ea, type: 3}
       propertyPath: m_LocalPosition.x
@@ -2095,7 +2095,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4340207458070068, guid: 455a094c271f5394f9d1f479ae9a4a8b, type: 3}
       propertyPath: m_RootOrder
-      value: 86
+      value: 89
       objectReference: {fileID: 0}
     - target: {fileID: 1459733810091246, guid: 455a094c271f5394f9d1f479ae9a4a8b, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -2755,6 +2755,8 @@ MonoBehaviour:
   salientMaterials: 
   CurrentTemperature: 0
   HowManySecondsUntilRoomTemp: 10
+  inMotion: 0
+  lastVelocity: 0
   ContainedObjectReferences: []
 --- !u!114 &85340405
 MonoBehaviour:
@@ -5123,7 +5125,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 186238452}
   m_LocalRotation: {x: -0, y: 0.38268343, z: -0, w: 0.92387956}
-  m_LocalPosition: {x: 0.9642499, y: 0.0059999824, z: -1.4472752}
+  m_LocalPosition: {x: -0.17667179, y: 0.0059999824, z: -0.028675199}
   m_LocalScale: {x: 0.5252092, y: 0.103, z: 0.5808302}
   m_Children: []
   m_Father: {fileID: 1292783982}
@@ -5936,6 +5938,8 @@ MonoBehaviour:
   salientMaterials: 
   CurrentTemperature: 0
   HowManySecondsUntilRoomTemp: 10
+  inMotion: 0
+  lastVelocity: 0
   ContainedObjectReferences: []
 --- !u!114 &207999464
 MonoBehaviour:
@@ -6374,6 +6378,8 @@ MonoBehaviour:
   salientMaterials: 
   CurrentTemperature: 0
   HowManySecondsUntilRoomTemp: 10
+  inMotion: 0
+  lastVelocity: 0
   ContainedObjectReferences: []
 --- !u!114 &219138889
 MonoBehaviour:
@@ -6460,6 +6466,8 @@ MonoBehaviour:
   salientMaterials: 
   CurrentTemperature: 0
   HowManySecondsUntilRoomTemp: 10
+  inMotion: 0
+  lastVelocity: 0
   ContainedObjectReferences: []
 --- !u!54 &220929986
 Rigidbody:
@@ -8994,6 +9002,8 @@ MonoBehaviour:
   salientMaterials: 
   CurrentTemperature: 0
   HowManySecondsUntilRoomTemp: 10
+  inMotion: 0
+  lastVelocity: 0
   ContainedObjectReferences: []
 --- !u!114 &303061106
 MonoBehaviour:
@@ -9176,6 +9186,8 @@ MonoBehaviour:
   salientMaterials: 
   CurrentTemperature: 0
   HowManySecondsUntilRoomTemp: 10
+  inMotion: 0
+  lastVelocity: 0
   ContainedObjectReferences: []
 --- !u!1 &311988545
 GameObject:
@@ -9865,6 +9877,11 @@ PrefabInstance:
       propertyPath: m_RootOrder
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 54837493855513364, guid: 65d675d75e645425f9ce8066cb86edea,
+        type: 3}
+      propertyPath: m_IsKinematic
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 1239191338596702, guid: 65d675d75e645425f9ce8066cb86edea, type: 3}
       propertyPath: m_StaticEditorFlags
       value: 64
@@ -9952,11 +9969,6 @@ PrefabInstance:
     - target: {fileID: 1581220539039588, guid: 65d675d75e645425f9ce8066cb86edea, type: 3}
       propertyPath: m_StaticEditorFlags
       value: 64
-      objectReference: {fileID: 0}
-    - target: {fileID: 54837493855513364, guid: 65d675d75e645425f9ce8066cb86edea,
-        type: 3}
-      propertyPath: m_IsKinematic
-      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 65d675d75e645425f9ce8066cb86edea, type: 3}
@@ -10393,6 +10405,8 @@ MonoBehaviour:
   salientMaterials: 
   CurrentTemperature: 0
   HowManySecondsUntilRoomTemp: 10
+  inMotion: 0
+  lastVelocity: 0
   ContainedObjectReferences: []
 --- !u!1 &341640469
 GameObject:
@@ -11671,7 +11685,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4392085232731934, guid: fc1ba553e6cb3ce41aeb2e1b82800a0d, type: 3}
       propertyPath: m_RootOrder
-      value: 88
+      value: 91
       objectReference: {fileID: 0}
     - target: {fileID: 1241035212182642, guid: fc1ba553e6cb3ce41aeb2e1b82800a0d, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -12471,6 +12485,8 @@ MonoBehaviour:
   salientMaterials: 
   CurrentTemperature: 0
   HowManySecondsUntilRoomTemp: 10
+  inMotion: 0
+  lastVelocity: 0
   ContainedObjectReferences: []
 --- !u!114 &395727167
 MonoBehaviour:
@@ -13173,6 +13189,8 @@ MonoBehaviour:
   salientMaterials: 
   CurrentTemperature: 0
   HowManySecondsUntilRoomTemp: 10
+  inMotion: 0
+  lastVelocity: 0
   ContainedObjectReferences: []
 --- !u!4 &423045188
 Transform:
@@ -13755,6 +13773,8 @@ MonoBehaviour:
   salientMaterials: 
   CurrentTemperature: 0
   HowManySecondsUntilRoomTemp: 10
+  inMotion: 0
+  lastVelocity: 0
   ContainedObjectReferences: []
 --- !u!54 &440500593
 Rigidbody:
@@ -14996,7 +15016,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 491747307}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 1.2661599, y: 0.0059999824, z: -1.5490502}
+  m_LocalPosition: {x: 0.1252382, y: 0.0059999824, z: -0.13045025}
   m_LocalScale: {x: 0.62893534, y: 0.103, z: 0.5729111}
   m_Children: []
   m_Father: {fileID: 1292783982}
@@ -18354,6 +18374,8 @@ MonoBehaviour:
   salientMaterials: 
   CurrentTemperature: 0
   HowManySecondsUntilRoomTemp: 10
+  inMotion: 0
+  lastVelocity: 0
   ContainedObjectReferences: []
 --- !u!114 &604842119
 MonoBehaviour:
@@ -19311,6 +19333,8 @@ MonoBehaviour:
   salientMaterials: 
   CurrentTemperature: 0
   HowManySecondsUntilRoomTemp: 10
+  inMotion: 0
+  lastVelocity: 0
   ContainedObjectReferences: []
 --- !u!114 &636843791
 MonoBehaviour:
@@ -20151,6 +20175,8 @@ MonoBehaviour:
   salientMaterials: 
   CurrentTemperature: 0
   HowManySecondsUntilRoomTemp: 10
+  inMotion: 0
+  lastVelocity: 0
   ContainedObjectReferences: []
 --- !u!1 &668951887
 GameObject:
@@ -20438,6 +20464,8 @@ MonoBehaviour:
   salientMaterials: 
   CurrentTemperature: 0
   HowManySecondsUntilRoomTemp: 10
+  inMotion: 0
+  lastVelocity: 0
   ContainedObjectReferences: []
 --- !u!4 &673609995
 Transform:
@@ -21813,6 +21841,8 @@ MonoBehaviour:
   salientMaterials: 
   CurrentTemperature: 0
   HowManySecondsUntilRoomTemp: 10
+  inMotion: 0
+  lastVelocity: 0
   ContainedObjectReferences: []
 --- !u!4 &725166374
 Transform:
@@ -21905,7 +21935,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4696556782369500, guid: a60ab6d1d983b454ebba04293816064f, type: 3}
       propertyPath: m_RootOrder
-      value: 89
+      value: 92
       objectReference: {fileID: 0}
     - target: {fileID: 4696556782369500, guid: a60ab6d1d983b454ebba04293816064f, type: 3}
       propertyPath: m_LocalEulerAnglesHint.y
@@ -22834,6 +22864,8 @@ MonoBehaviour:
   salientMaterials: 
   CurrentTemperature: 0
   HowManySecondsUntilRoomTemp: 10
+  inMotion: 0
+  lastVelocity: 0
   ContainedObjectReferences: []
 --- !u!114 &756547825
 MonoBehaviour:
@@ -23022,6 +23054,16 @@ PrefabInstance:
       propertyPath: m_RootOrder
       value: 7
       objectReference: {fileID: 0}
+    - target: {fileID: 54111161659683376, guid: 8576bb2b459f749888f1f59f6ffd376c,
+        type: 3}
+      propertyPath: m_IsKinematic
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 114845467521247960, guid: 8576bb2b459f749888f1f59f6ffd376c,
+        type: 3}
+      propertyPath: uniqueID
+      value: Book|-00.83|+01.01|+00.41
+      objectReference: {fileID: 0}
     - target: {fileID: 1612502432133290, guid: 8576bb2b459f749888f1f59f6ffd376c, type: 3}
       propertyPath: m_StaticEditorFlags
       value: 64
@@ -23069,16 +23111,6 @@ PrefabInstance:
     - target: {fileID: 1497566636683140, guid: 8576bb2b459f749888f1f59f6ffd376c, type: 3}
       propertyPath: m_StaticEditorFlags
       value: 64
-      objectReference: {fileID: 0}
-    - target: {fileID: 54111161659683376, guid: 8576bb2b459f749888f1f59f6ffd376c,
-        type: 3}
-      propertyPath: m_IsKinematic
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 114845467521247960, guid: 8576bb2b459f749888f1f59f6ffd376c,
-        type: 3}
-      propertyPath: uniqueID
-      value: Book|-00.83|+01.01|+00.41
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 8576bb2b459f749888f1f59f6ffd376c, type: 3}
@@ -23575,7 +23607,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 784761082}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0.050000012, z: 0}
+  m_LocalPosition: {x: -1.1409217, y: 0.050000012, z: 1.4186}
   m_LocalScale: {x: 0.6649999, y: 1, z: 0.86250013}
   m_Children:
   - {fileID: 1275985173}
@@ -24652,6 +24684,8 @@ MonoBehaviour:
   salientMaterials: 
   CurrentTemperature: 0
   HowManySecondsUntilRoomTemp: 10
+  inMotion: 0
+  lastVelocity: 0
   ContainedObjectReferences: []
 --- !u!54 &823476109
 Rigidbody:
@@ -26556,7 +26590,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4843470684545140, guid: f04343d5a0f16304392b506c7a5d7b0f, type: 3}
       propertyPath: m_RootOrder
-      value: 81
+      value: 84
       objectReference: {fileID: 0}
     - target: {fileID: 4843470684545140, guid: f04343d5a0f16304392b506c7a5d7b0f, type: 3}
       propertyPath: m_LocalEulerAnglesHint.y
@@ -27185,6 +27219,8 @@ MonoBehaviour:
   salientMaterials: 
   CurrentTemperature: 0
   HowManySecondsUntilRoomTemp: 10
+  inMotion: 0
+  lastVelocity: 0
   ContainedObjectReferences: []
 --- !u!114 &914206439
 MonoBehaviour:
@@ -28463,7 +28499,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4042404749135100, guid: bf146d8dcd333a448b5b553e2ed3bb4e, type: 3}
       propertyPath: m_RootOrder
-      value: 79
+      value: 82
       objectReference: {fileID: 0}
     - target: {fileID: 4042404749135100, guid: bf146d8dcd333a448b5b553e2ed3bb4e, type: 3}
       propertyPath: m_LocalEulerAnglesHint.y
@@ -30151,6 +30187,8 @@ MonoBehaviour:
   salientMaterials: 
   CurrentTemperature: 0
   HowManySecondsUntilRoomTemp: 10
+  inMotion: 0
+  lastVelocity: 0
   ContainedObjectReferences: []
 --- !u!114 &1029533791
 MonoBehaviour:
@@ -31528,6 +31566,8 @@ MonoBehaviour:
   salientMaterials: 
   CurrentTemperature: 0
   HowManySecondsUntilRoomTemp: 10
+  inMotion: 0
+  lastVelocity: 0
   ContainedObjectReferences: []
 --- !u!114 &1066945977
 MonoBehaviour:
@@ -32749,6 +32789,8 @@ MonoBehaviour:
   salientMaterials: 
   CurrentTemperature: 0
   HowManySecondsUntilRoomTemp: 10
+  inMotion: 0
+  lastVelocity: 0
   ContainedObjectReferences: []
 --- !u!114 &1119507925
 MonoBehaviour:
@@ -32971,7 +33013,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4589637511365660, guid: 59815311428a0484e8a099ef2dd71574, type: 3}
       propertyPath: m_RootOrder
-      value: 82
+      value: 85
       objectReference: {fileID: 0}
     - target: {fileID: 1049635631792230, guid: 59815311428a0484e8a099ef2dd71574, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -33654,7 +33696,7 @@ PrefabInstance:
     - target: {fileID: 5122161660437329742, guid: 78f635d28540b459bb9faae524f96e30,
         type: 3}
       propertyPath: m_RootOrder
-      value: 90
+      value: 93
       objectReference: {fileID: 0}
     - target: {fileID: 5122161660437329742, guid: 78f635d28540b459bb9faae524f96e30,
         type: 3}
@@ -34358,7 +34400,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4511095621582240, guid: 8f1141233b0ae344a99cb6b708d8be8e, type: 3}
       propertyPath: m_RootOrder
-      value: 85
+      value: 88
       objectReference: {fileID: 0}
     - target: {fileID: 1663960678659300, guid: 8f1141233b0ae344a99cb6b708d8be8e, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -38435,7 +38477,7 @@ PrefabInstance:
     - target: {fileID: 2365502302183138545, guid: 516db061633ca4ad5ac050fcb7316e73,
         type: 3}
       propertyPath: m_RootOrder
-      value: 76
+      value: 79
       objectReference: {fileID: 0}
     - target: {fileID: 2365502302183138545, guid: 516db061633ca4ad5ac050fcb7316e73,
         type: 3}
@@ -38790,6 +38832,8 @@ MonoBehaviour:
   salientMaterials: 
   CurrentTemperature: 0
   HowManySecondsUntilRoomTemp: 10
+  inMotion: 0
+  lastVelocity: 0
   ContainedObjectReferences: []
 --- !u!114 &1237949349
 MonoBehaviour:
@@ -38880,6 +38924,8 @@ MonoBehaviour:
   salientMaterials: 
   CurrentTemperature: 0
   HowManySecondsUntilRoomTemp: 10
+  inMotion: 0
+  lastVelocity: 0
   ContainedObjectReferences: []
 --- !u!1 &1237949353
 GameObject:
@@ -39235,6 +39281,8 @@ MonoBehaviour:
   salientMaterials: 
   CurrentTemperature: 0
   HowManySecondsUntilRoomTemp: 10
+  inMotion: 0
+  lastVelocity: 0
   ContainedObjectReferences: []
 --- !u!114 &1237949372
 MonoBehaviour:
@@ -39283,6 +39331,8 @@ MonoBehaviour:
   salientMaterials: 
   CurrentTemperature: 0
   HowManySecondsUntilRoomTemp: 10
+  inMotion: 0
+  lastVelocity: 0
   ContainedObjectReferences: []
 --- !u!4 &1237949373
 Transform:
@@ -39397,6 +39447,8 @@ MonoBehaviour:
   salientMaterials: 
   CurrentTemperature: 0
   HowManySecondsUntilRoomTemp: 10
+  inMotion: 0
+  lastVelocity: 0
   ContainedObjectReferences: []
 --- !u!114 &1237949379
 MonoBehaviour:
@@ -39491,6 +39543,8 @@ MonoBehaviour:
   salientMaterials: 
   CurrentTemperature: 0
   HowManySecondsUntilRoomTemp: 10
+  inMotion: 0
+  lastVelocity: 0
   ContainedObjectReferences: []
 --- !u!114 &1237949383
 MonoBehaviour:
@@ -39576,6 +39630,8 @@ MonoBehaviour:
   salientMaterials: 
   CurrentTemperature: 0
   HowManySecondsUntilRoomTemp: 10
+  inMotion: 0
+  lastVelocity: 0
   ContainedObjectReferences: []
 --- !u!114 &1237949387
 MonoBehaviour:
@@ -39661,6 +39717,8 @@ MonoBehaviour:
   salientMaterials: 
   CurrentTemperature: 0
   HowManySecondsUntilRoomTemp: 10
+  inMotion: 0
+  lastVelocity: 0
   ContainedObjectReferences: []
 --- !u!114 &1237949391
 MonoBehaviour:
@@ -39746,6 +39804,8 @@ MonoBehaviour:
   salientMaterials: 
   CurrentTemperature: 0
   HowManySecondsUntilRoomTemp: 10
+  inMotion: 0
+  lastVelocity: 0
   ContainedObjectReferences: []
 --- !u!114 &1237949395
 MonoBehaviour:
@@ -39851,6 +39911,8 @@ MonoBehaviour:
   salientMaterials: 
   CurrentTemperature: 0
   HowManySecondsUntilRoomTemp: 10
+  inMotion: 0
+  lastVelocity: 0
   ContainedObjectReferences: []
 --- !u!114 &1237949400
 MonoBehaviour:
@@ -39937,6 +39999,8 @@ MonoBehaviour:
   salientMaterials: 
   CurrentTemperature: 0
   HowManySecondsUntilRoomTemp: 10
+  inMotion: 0
+  lastVelocity: 0
   ContainedObjectReferences: []
 --- !u!114 &1237949404
 MonoBehaviour:
@@ -40023,6 +40087,8 @@ MonoBehaviour:
   salientMaterials: 
   CurrentTemperature: 0
   HowManySecondsUntilRoomTemp: 10
+  inMotion: 0
+  lastVelocity: 0
   ContainedObjectReferences: []
 --- !u!114 &1237949408
 MonoBehaviour:
@@ -40110,6 +40176,8 @@ MonoBehaviour:
   salientMaterials: 
   CurrentTemperature: 0
   HowManySecondsUntilRoomTemp: 10
+  inMotion: 0
+  lastVelocity: 0
   ContainedObjectReferences: []
 --- !u!4 &1237949432
 Transform:
@@ -41061,6 +41129,8 @@ MonoBehaviour:
   salientMaterials: 
   CurrentTemperature: 0
   HowManySecondsUntilRoomTemp: 10
+  inMotion: 0
+  lastVelocity: 0
   ContainedObjectReferences: []
 --- !u!114 &1258433127
 MonoBehaviour:
@@ -42083,7 +42153,7 @@ PrefabInstance:
       propertyPath: m_LocalScale.z
       value: 1
       objectReference: {fileID: 0}
-    - target: {fileID: 1743668644715414, guid: 4d1e4d0fb2b514b4586e009f1c9a4efa, type: 3}
+    - target: {fileID: 1368416861698256, guid: 4d1e4d0fb2b514b4586e009f1c9a4efa, type: 3}
       propertyPath: m_StaticEditorFlags
       value: 64
       objectReference: {fileID: 0}
@@ -42091,27 +42161,7 @@ PrefabInstance:
       propertyPath: m_StaticEditorFlags
       value: 64
       objectReference: {fileID: 0}
-    - target: {fileID: 1400596332924232, guid: 4d1e4d0fb2b514b4586e009f1c9a4efa, type: 3}
-      propertyPath: m_StaticEditorFlags
-      value: 64
-      objectReference: {fileID: 0}
-    - target: {fileID: 1197172297906424, guid: 4d1e4d0fb2b514b4586e009f1c9a4efa, type: 3}
-      propertyPath: m_StaticEditorFlags
-      value: 64
-      objectReference: {fileID: 0}
-    - target: {fileID: 1269200672444336, guid: 4d1e4d0fb2b514b4586e009f1c9a4efa, type: 3}
-      propertyPath: m_StaticEditorFlags
-      value: 64
-      objectReference: {fileID: 0}
-    - target: {fileID: 1154751617994484, guid: 4d1e4d0fb2b514b4586e009f1c9a4efa, type: 3}
-      propertyPath: m_StaticEditorFlags
-      value: 64
-      objectReference: {fileID: 0}
     - target: {fileID: 1237061207472332, guid: 4d1e4d0fb2b514b4586e009f1c9a4efa, type: 3}
-      propertyPath: m_StaticEditorFlags
-      value: 64
-      objectReference: {fileID: 0}
-    - target: {fileID: 1368416861698256, guid: 4d1e4d0fb2b514b4586e009f1c9a4efa, type: 3}
       propertyPath: m_StaticEditorFlags
       value: 64
       objectReference: {fileID: 0}
@@ -42119,23 +42169,19 @@ PrefabInstance:
       propertyPath: m_StaticEditorFlags
       value: 64
       objectReference: {fileID: 0}
+    - target: {fileID: 1743668644715414, guid: 4d1e4d0fb2b514b4586e009f1c9a4efa, type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 64
+      objectReference: {fileID: 0}
     - target: {fileID: 1251905844906320, guid: 4d1e4d0fb2b514b4586e009f1c9a4efa, type: 3}
       propertyPath: m_StaticEditorFlags
       value: 64
       objectReference: {fileID: 0}
-    - target: {fileID: 1802293282971072, guid: 4d1e4d0fb2b514b4586e009f1c9a4efa, type: 3}
-      propertyPath: m_StaticEditorFlags
-      value: 64
-      objectReference: {fileID: 0}
-    - target: {fileID: 1217364086682456, guid: 4d1e4d0fb2b514b4586e009f1c9a4efa, type: 3}
-      propertyPath: m_StaticEditorFlags
-      value: 64
-      objectReference: {fileID: 0}
-    - target: {fileID: 1349526307411084, guid: 4d1e4d0fb2b514b4586e009f1c9a4efa, type: 3}
-      propertyPath: m_StaticEditorFlags
-      value: 64
-      objectReference: {fileID: 0}
     - target: {fileID: 1807469754932440, guid: 4d1e4d0fb2b514b4586e009f1c9a4efa, type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 64
+      objectReference: {fileID: 0}
+    - target: {fileID: 1400596332924232, guid: 4d1e4d0fb2b514b4586e009f1c9a4efa, type: 3}
       propertyPath: m_StaticEditorFlags
       value: 64
       objectReference: {fileID: 0}
@@ -42151,19 +42197,7 @@ PrefabInstance:
       propertyPath: m_StaticEditorFlags
       value: 64
       objectReference: {fileID: 0}
-    - target: {fileID: 1607103557488928, guid: 4d1e4d0fb2b514b4586e009f1c9a4efa, type: 3}
-      propertyPath: m_StaticEditorFlags
-      value: 64
-      objectReference: {fileID: 0}
     - target: {fileID: 1491919564943142, guid: 4d1e4d0fb2b514b4586e009f1c9a4efa, type: 3}
-      propertyPath: m_StaticEditorFlags
-      value: 64
-      objectReference: {fileID: 0}
-    - target: {fileID: 1772601246689800, guid: 4d1e4d0fb2b514b4586e009f1c9a4efa, type: 3}
-      propertyPath: m_StaticEditorFlags
-      value: 64
-      objectReference: {fileID: 0}
-    - target: {fileID: 1187696790742590, guid: 4d1e4d0fb2b514b4586e009f1c9a4efa, type: 3}
       propertyPath: m_StaticEditorFlags
       value: 64
       objectReference: {fileID: 0}
@@ -42171,23 +42205,15 @@ PrefabInstance:
       propertyPath: m_StaticEditorFlags
       value: 64
       objectReference: {fileID: 0}
+    - target: {fileID: 1197172297906424, guid: 4d1e4d0fb2b514b4586e009f1c9a4efa, type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 64
+      objectReference: {fileID: 0}
     - target: {fileID: 1190056329615342, guid: 4d1e4d0fb2b514b4586e009f1c9a4efa, type: 3}
       propertyPath: m_StaticEditorFlags
       value: 64
       objectReference: {fileID: 0}
-    - target: {fileID: 1949537298778220, guid: 4d1e4d0fb2b514b4586e009f1c9a4efa, type: 3}
-      propertyPath: m_StaticEditorFlags
-      value: 64
-      objectReference: {fileID: 0}
-    - target: {fileID: 1216874916652436, guid: 4d1e4d0fb2b514b4586e009f1c9a4efa, type: 3}
-      propertyPath: m_StaticEditorFlags
-      value: 64
-      objectReference: {fileID: 0}
-    - target: {fileID: 1713196624835928, guid: 4d1e4d0fb2b514b4586e009f1c9a4efa, type: 3}
-      propertyPath: m_StaticEditorFlags
-      value: 64
-      objectReference: {fileID: 0}
-    - target: {fileID: 1423784013453744, guid: 4d1e4d0fb2b514b4586e009f1c9a4efa, type: 3}
+    - target: {fileID: 1269200672444336, guid: 4d1e4d0fb2b514b4586e009f1c9a4efa, type: 3}
       propertyPath: m_StaticEditorFlags
       value: 64
       objectReference: {fileID: 0}
@@ -42195,7 +42221,7 @@ PrefabInstance:
       propertyPath: m_StaticEditorFlags
       value: 64
       objectReference: {fileID: 0}
-    - target: {fileID: 1771846535290742, guid: 4d1e4d0fb2b514b4586e009f1c9a4efa, type: 3}
+    - target: {fileID: 1154751617994484, guid: 4d1e4d0fb2b514b4586e009f1c9a4efa, type: 3}
       propertyPath: m_StaticEditorFlags
       value: 64
       objectReference: {fileID: 0}
@@ -42211,11 +42237,19 @@ PrefabInstance:
       propertyPath: m_StaticEditorFlags
       value: 64
       objectReference: {fileID: 0}
-    - target: {fileID: 1816123868036048, guid: 4d1e4d0fb2b514b4586e009f1c9a4efa, type: 3}
+    - target: {fileID: 1041603297804270, guid: 4d1e4d0fb2b514b4586e009f1c9a4efa, type: 3}
       propertyPath: m_StaticEditorFlags
       value: 64
       objectReference: {fileID: 0}
-    - target: {fileID: 1237639475206038, guid: 4d1e4d0fb2b514b4586e009f1c9a4efa, type: 3}
+    - target: {fileID: 1772601246689800, guid: 4d1e4d0fb2b514b4586e009f1c9a4efa, type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 64
+      objectReference: {fileID: 0}
+    - target: {fileID: 1607103557488928, guid: 4d1e4d0fb2b514b4586e009f1c9a4efa, type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 64
+      objectReference: {fileID: 0}
+    - target: {fileID: 1187696790742590, guid: 4d1e4d0fb2b514b4586e009f1c9a4efa, type: 3}
       propertyPath: m_StaticEditorFlags
       value: 64
       objectReference: {fileID: 0}
@@ -42223,7 +42257,43 @@ PrefabInstance:
       propertyPath: m_StaticEditorFlags
       value: 64
       objectReference: {fileID: 0}
-    - target: {fileID: 1041603297804270, guid: 4d1e4d0fb2b514b4586e009f1c9a4efa, type: 3}
+    - target: {fileID: 1237639475206038, guid: 4d1e4d0fb2b514b4586e009f1c9a4efa, type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 64
+      objectReference: {fileID: 0}
+    - target: {fileID: 1349526307411084, guid: 4d1e4d0fb2b514b4586e009f1c9a4efa, type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 64
+      objectReference: {fileID: 0}
+    - target: {fileID: 1713196624835928, guid: 4d1e4d0fb2b514b4586e009f1c9a4efa, type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 64
+      objectReference: {fileID: 0}
+    - target: {fileID: 1816123868036048, guid: 4d1e4d0fb2b514b4586e009f1c9a4efa, type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 64
+      objectReference: {fileID: 0}
+    - target: {fileID: 1217364086682456, guid: 4d1e4d0fb2b514b4586e009f1c9a4efa, type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 64
+      objectReference: {fileID: 0}
+    - target: {fileID: 1949537298778220, guid: 4d1e4d0fb2b514b4586e009f1c9a4efa, type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 64
+      objectReference: {fileID: 0}
+    - target: {fileID: 1771846535290742, guid: 4d1e4d0fb2b514b4586e009f1c9a4efa, type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 64
+      objectReference: {fileID: 0}
+    - target: {fileID: 1423784013453744, guid: 4d1e4d0fb2b514b4586e009f1c9a4efa, type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 64
+      objectReference: {fileID: 0}
+    - target: {fileID: 1216874916652436, guid: 4d1e4d0fb2b514b4586e009f1c9a4efa, type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 64
+      objectReference: {fileID: 0}
+    - target: {fileID: 1802293282971072, guid: 4d1e4d0fb2b514b4586e009f1c9a4efa, type: 3}
       propertyPath: m_StaticEditorFlags
       value: 64
       objectReference: {fileID: 0}
@@ -42355,7 +42425,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1292783981}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -1.0079217, y: 0.9358, z: -0.0394}
+  m_LocalPosition: {x: 0.133, y: 0.9358, z: -1.458}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 186238453}
@@ -42393,7 +42463,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b439f6e4ef5714ee2a3643acf37b7a9d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  uniqueID: CounterTop|-01.01|+00.94|-00.04
+  uniqueID: CounterTop|+00.13|+00.94|-01.46
   Type: 27
   PrimaryProperty: 1
   SecondaryProperties: 07000000
@@ -42422,6 +42492,8 @@ MonoBehaviour:
   salientMaterials: 
   CurrentTemperature: 0
   HowManySecondsUntilRoomTemp: 10
+  inMotion: 0
+  lastVelocity: 0
   ContainedObjectReferences: []
 --- !u!1 &1294991724
 GameObject:
@@ -43148,6 +43220,8 @@ MonoBehaviour:
   salientMaterials: 
   CurrentTemperature: 0
   HowManySecondsUntilRoomTemp: 10
+  inMotion: 0
+  lastVelocity: 0
   ContainedObjectReferences: []
 --- !u!114 &1326423912
 MonoBehaviour:
@@ -43346,6 +43420,8 @@ MonoBehaviour:
   salientMaterials: 
   CurrentTemperature: 0
   HowManySecondsUntilRoomTemp: 10
+  inMotion: 0
+  lastVelocity: 0
   ContainedObjectReferences: []
 --- !u!4 &1333431058
 Transform:
@@ -43690,6 +43766,8 @@ MonoBehaviour:
   salientMaterials: 
   CurrentTemperature: 0
   HowManySecondsUntilRoomTemp: 10
+  inMotion: 0
+  lastVelocity: 0
   ContainedObjectReferences: []
 --- !u!114 &1339473959
 MonoBehaviour:
@@ -44208,6 +44286,8 @@ MonoBehaviour:
   salientMaterials: 
   CurrentTemperature: 0
   HowManySecondsUntilRoomTemp: 10
+  inMotion: 0
+  lastVelocity: 0
   ContainedObjectReferences: []
 --- !u!114 &1354405298
 MonoBehaviour:
@@ -47086,7 +47166,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4518974466688642, guid: 80c6ccd2d3933394390c8255edad1dce, type: 3}
       propertyPath: m_RootOrder
-      value: 87
+      value: 90
       objectReference: {fileID: 0}
     - target: {fileID: 1300506953359418, guid: 80c6ccd2d3933394390c8255edad1dce, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -47433,7 +47513,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 1137234381619494, guid: f9965335d92884dfa963506c38242108, type: 3}
       propertyPath: m_StaticEditorFlags
-      value: 64
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 4511409876550370, guid: f9965335d92884dfa963506c38242108, type: 3}
       propertyPath: m_LocalPosition.x
@@ -47465,7 +47545,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4511409876550370, guid: f9965335d92884dfa963506c38242108, type: 3}
       propertyPath: m_RootOrder
-      value: 77
+      value: 80
       objectReference: {fileID: 0}
     - target: {fileID: 4511409876550370, guid: f9965335d92884dfa963506c38242108, type: 3}
       propertyPath: m_LocalEulerAnglesHint.y
@@ -48068,6 +48148,8 @@ MonoBehaviour:
   salientMaterials: 
   CurrentTemperature: 0
   HowManySecondsUntilRoomTemp: 10
+  inMotion: 0
+  lastVelocity: 0
   ContainedObjectReferences: []
 --- !u!4 &1455998982
 Transform:
@@ -48292,6 +48374,8 @@ MonoBehaviour:
   salientMaterials: 
   CurrentTemperature: 0
   HowManySecondsUntilRoomTemp: 10
+  inMotion: 0
+  lastVelocity: 0
   ContainedObjectReferences: []
 --- !u!114 &1462476056
 MonoBehaviour:
@@ -50428,6 +50512,8 @@ MonoBehaviour:
   salientMaterials: 
   CurrentTemperature: 0
   HowManySecondsUntilRoomTemp: 10
+  inMotion: 0
+  lastVelocity: 0
   ContainedObjectReferences: []
 --- !u!4 &1549055824
 Transform:
@@ -50725,7 +50811,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4613403647489294, guid: 03544085c8acd8546a745fbc3572b6e7, type: 3}
       propertyPath: m_RootOrder
-      value: 80
+      value: 83
       objectReference: {fileID: 0}
     - target: {fileID: 1082559291018246, guid: 03544085c8acd8546a745fbc3572b6e7, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -51143,7 +51229,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 1427302575440530, guid: f55e5da7d930d37459586907eb1a72ac, type: 3}
       propertyPath: m_StaticEditorFlags
-      value: 64
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 4120837199567918, guid: f55e5da7d930d37459586907eb1a72ac, type: 3}
       propertyPath: m_LocalPosition.x
@@ -51175,7 +51261,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4120837199567918, guid: f55e5da7d930d37459586907eb1a72ac, type: 3}
       propertyPath: m_RootOrder
-      value: 78
+      value: 81
       objectReference: {fileID: 0}
     - target: {fileID: 1944995767434040, guid: f55e5da7d930d37459586907eb1a72ac, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -52823,6 +52909,8 @@ MonoBehaviour:
   salientMaterials: 
   CurrentTemperature: 0
   HowManySecondsUntilRoomTemp: 10
+  inMotion: 0
+  lastVelocity: 0
   ContainedObjectReferences: []
 --- !u!54 &1625948522
 Rigidbody:
@@ -54935,6 +55023,8 @@ MonoBehaviour:
   salientMaterials: 
   CurrentTemperature: 0
   HowManySecondsUntilRoomTemp: 10
+  inMotion: 0
+  lastVelocity: 0
   ContainedObjectReferences: []
 --- !u!114 &1723030594
 MonoBehaviour:
@@ -55676,7 +55766,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1740903436}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 4.387922, y: -0.9358, z: -1.8406}
+  m_LocalPosition: {x: 3.2470002, y: -0.9358, z: -0.42200005}
   m_LocalScale: {x: 1.1, y: 1.1, z: 1.1}
   m_Children: []
   m_Father: {fileID: 1292783982}
@@ -57759,6 +57849,8 @@ MonoBehaviour:
   salientMaterials: 
   CurrentTemperature: 0
   HowManySecondsUntilRoomTemp: 10
+  inMotion: 0
+  lastVelocity: 0
   ContainedObjectReferences: []
 --- !u!1 &1824543064
 GameObject:
@@ -58090,6 +58182,11 @@ PrefabInstance:
       propertyPath: m_LocalScale.z
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 54986929344924210, guid: cab77ca7323aa4f7aa962911ebcfbcb3,
+        type: 3}
+      propertyPath: m_IsKinematic
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 1009139606778534, guid: cab77ca7323aa4f7aa962911ebcfbcb3, type: 3}
       propertyPath: m_StaticEditorFlags
       value: 64
@@ -58137,11 +58234,6 @@ PrefabInstance:
     - target: {fileID: 1439828092146208, guid: cab77ca7323aa4f7aa962911ebcfbcb3, type: 3}
       propertyPath: m_StaticEditorFlags
       value: 64
-      objectReference: {fileID: 0}
-    - target: {fileID: 54986929344924210, guid: cab77ca7323aa4f7aa962911ebcfbcb3,
-        type: 3}
-      propertyPath: m_IsKinematic
-      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 114516217381571012, guid: cab77ca7323aa4f7aa962911ebcfbcb3,
         type: 3}
@@ -58832,6 +58924,8 @@ MonoBehaviour:
   salientMaterials: 
   CurrentTemperature: 0
   HowManySecondsUntilRoomTemp: 10
+  inMotion: 0
+  lastVelocity: 0
   ContainedObjectReferences: []
 --- !u!114 &1851694947
 MonoBehaviour:
@@ -58900,7 +58994,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4149437557687504, guid: 91972c5a86358cb448b3bba9832ddb08, type: 3}
       propertyPath: m_RootOrder
-      value: 83
+      value: 86
       objectReference: {fileID: 0}
     - target: {fileID: 4149437557687504, guid: 91972c5a86358cb448b3bba9832ddb08, type: 3}
       propertyPath: m_LocalEulerAnglesHint.y
@@ -61322,6 +61416,8 @@ MonoBehaviour:
   salientMaterials: 
   CurrentTemperature: 0
   HowManySecondsUntilRoomTemp: 10
+  inMotion: 0
+  lastVelocity: 0
   ContainedObjectReferences: []
 --- !u!4 &1910635913
 Transform:
@@ -63231,7 +63327,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4458023723049016, guid: 2f747246a56614a40af4a20baddb7da6, type: 3}
       propertyPath: m_RootOrder
-      value: 84
+      value: 87
       objectReference: {fileID: 0}
     - target: {fileID: 1716848978916414, guid: 2f747246a56614a40af4a20baddb7da6, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -64426,6 +64522,8 @@ MonoBehaviour:
   salientMaterials: 
   CurrentTemperature: 0
   HowManySecondsUntilRoomTemp: 10
+  inMotion: 0
+  lastVelocity: 0
   ContainedObjectReferences: []
 --- !u!114 &1996620738
 MonoBehaviour:
@@ -65666,6 +65764,8 @@ MonoBehaviour:
   salientMaterials: 
   CurrentTemperature: 0
   HowManySecondsUntilRoomTemp: 10
+  inMotion: 0
+  lastVelocity: 0
   ContainedObjectReferences: []
 --- !u!114 &2034323400
 MonoBehaviour:
@@ -66226,7 +66326,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 1501060613235926, guid: 3120b876570aa4661bedce0a2fc432b1, type: 3}
       propertyPath: m_StaticEditorFlags
-      value: 64
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 4765872426525650, guid: 3120b876570aa4661bedce0a2fc432b1, type: 3}
       propertyPath: m_LocalPosition.x
@@ -67185,6 +67285,11 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.y
       value: 105.00001
       objectReference: {fileID: 0}
+    - target: {fileID: 54242738514848528, guid: 03509c993799443f5ab57541667674aa,
+        type: 3}
+      propertyPath: m_IsKinematic
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 1628155670810736, guid: 03509c993799443f5ab57541667674aa, type: 3}
       propertyPath: m_StaticEditorFlags
       value: 64
@@ -67232,11 +67337,6 @@ PrefabInstance:
     - target: {fileID: 1719751953288582, guid: 03509c993799443f5ab57541667674aa, type: 3}
       propertyPath: m_StaticEditorFlags
       value: 64
-      objectReference: {fileID: 0}
-    - target: {fileID: 54242738514848528, guid: 03509c993799443f5ab57541667674aa,
-        type: 3}
-      propertyPath: m_IsKinematic
-      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 114967300898328738, guid: 03509c993799443f5ab57541667674aa,
         type: 3}
@@ -67732,7 +67832,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4316550144703594, guid: 24820c60646ed4f1bbcf45ac808a83d7, type: 3}
       propertyPath: m_RootOrder
-      value: 75
+      value: 78
       objectReference: {fileID: 0}
     - target: {fileID: 114500127484844686, guid: 24820c60646ed4f1bbcf45ac808a83d7,
         type: 3}
@@ -70909,6 +71009,8 @@ MonoBehaviour:
   salientMaterials: 
   CurrentTemperature: 0
   HowManySecondsUntilRoomTemp: 10
+  inMotion: 0
+  lastVelocity: 0
   ContainedObjectReferences: []
 --- !u!114 &114660693340508045
 MonoBehaviour:
@@ -70966,6 +71068,8 @@ MonoBehaviour:
   salientMaterials: 
   CurrentTemperature: 0
   HowManySecondsUntilRoomTemp: 10
+  inMotion: 0
+  lastVelocity: 0
   ContainedObjectReferences: []
 --- !u!23 &7152854152094782617
 MeshRenderer:
