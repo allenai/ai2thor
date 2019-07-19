@@ -2746,7 +2746,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     //this should basically only happen if the handDistance value is too big
                     if(!CheckIfTargetPositionIsInViewportRange(hit.point))
                     {
-                        actionFinished(false);
+                        errorMessage = "Object succesfully hit, but it is outside of the Agent's interaction range";
+                        WhatDidITouch errorFeedback = new WhatDidITouch(){didHandTouchSomething = false, objectId = "", armsLength = action.handDistance};
+                        actionFinished(false, errorFeedback);
                         return;
                     }
 
@@ -2761,11 +2763,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     if (!canbepushed) 
                     {
                         //the sim object hit was not moveable or pickupable
-                        
                         WhatDidITouch feedback = new WhatDidITouch(){didHandTouchSomething = true, objectId = target.uniqueID, armsLength = hit.distance};
+                        #if UNITY_EDITOR
                         print("didHandTouchSomething: " + feedback.didHandTouchSomething);
                         print("object id: " + feedback.objectId);
                         print("armslength: " + feedback.armsLength);
+                        #endif
                         actionFinished(true, feedback);
                         return;
                     }
@@ -2787,9 +2790,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 else
                 {
                     WhatDidITouch feedback = new WhatDidITouch(){didHandTouchSomething = true, objectId = "structure", armsLength = hit.distance};
+                    #if UNITY_EDITOR
                     print("didHandTouchSomething: " + feedback.didHandTouchSomething);
                     print("object id: " + feedback.objectId);
                     print("armslength: " + feedback.armsLength);
+                    #endif
                     actionFinished(true, feedback);
                     return;
                 }
@@ -2803,15 +2808,19 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 Vector3 testPosition = ((action.handDistance * ray.direction) + ray.origin);
                 if(!CheckIfTargetPositionIsInViewportRange(testPosition))
                 {
-                    errorMessage = "the position the hand would have moved to is outside the agent's max visible distance";
-                    actionFinished(false);
+                    errorMessage = "the position the hand would have moved to is outside the agent's max interaction range";
+                    WhatDidITouch errorFeedback = new WhatDidITouch(){didHandTouchSomething = false, objectId = "", armsLength = action.handDistance};
+                    actionFinished(false, errorFeedback);
                     return;
                 }
 
+                //the nothing hit was not out of range, but still nothing was hit
                 WhatDidITouch feedback = new WhatDidITouch(){didHandTouchSomething = false, objectId = "", armsLength = action.handDistance};
+                #if UNITY_EDITOR
                 print("didHandTouchSomething: " + feedback.didHandTouchSomething);
                 print("object id: " + feedback.objectId);
                 print("armslength: " + feedback.armsLength);
+                #endif
                 actionFinished(true,feedback);
             }
             
