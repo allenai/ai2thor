@@ -126,7 +126,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b439f6e4ef5714ee2a3643acf37b7a9d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  uniqueID: 
+  uniqueID: Egg|+00.00|+00.00|+00.00
   Type: 20
   PrimaryProperty: 3
   SecondaryProperties: 090000000b000000
@@ -152,6 +152,8 @@ MonoBehaviour:
   salientMaterials: 08000000
   CurrentTemperature: 0
   HowManySecondsUntilRoomTemp: 10
+  inMotion: 0
+  lastVelocity: 0
   ContainedObjectReferences: []
 --- !u!54 &54943841105462708
 Rigidbody:
@@ -168,7 +170,7 @@ Rigidbody:
   m_IsKinematic: 0
   m_Interpolate: 0
   m_Constraints: 0
-  m_CollisionDetection: 2
+  m_CollisionDetection: 3
 --- !u!114 &3947988870313781128
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -201,6 +203,8 @@ MonoBehaviour:
   DirtyPrefabToSwapTo: {fileID: 0}
   ImpulseThreshold: 0.15
   HighFrictionImpulseOffset: 0.25
+  readytobreak: 1
+  broken: 0
   breakType: 0
   MaterialSwapObjects: []
 --- !u!1 &1261815149864200
