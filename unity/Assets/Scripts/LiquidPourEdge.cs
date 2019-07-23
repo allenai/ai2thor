@@ -1,7 +1,35 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 
+
+ public class ReadOnlyAttribute : PropertyAttribute
+ {
+ 
+ }
+ 
+ [CustomPropertyDrawer(typeof(ReadOnlyAttribute))]
+ public class ReadOnlyDrawer : PropertyDrawer
+ {
+     public override float GetPropertyHeight(SerializedProperty property,
+                                             GUIContent label)
+     {
+         return EditorGUI.GetPropertyHeight(property, label, true);
+     }
+ 
+     public override void OnGUI(Rect position,
+                                SerializedProperty property,
+                                GUIContent label)
+     {
+         GUI.enabled = false;
+         EditorGUI.PropertyField(position, property, label, true);
+         GUI.enabled = true;
+     }
+ }
+ 
 public class LiquidPourEdge : MonoBehaviour
 {
     public float radius = 1.0f;
@@ -13,20 +41,21 @@ public class LiquidPourEdge : MonoBehaviour
 
     public GameObject waterEmiter = null;
 
-    public float emptyValue = 0.6f;
-
-    public float fullValue = 0.4f;
-
-    public float normalizedCurrentFill = 0.5f;
-
     public float liquidVolumeLiters = 0f; 
 
-    public float containerMaxVolumeLiters = 1f;
+    [ReadOnly] public float emptyValue = 0.6f;
 
-    public float shaderFill = 0.0f;
+    [ReadOnly] public float fullValue = 0.4f;
+
+    [ReadOnly] public float containerMaxVolumeLiters = 1f;
+
+    [ReadOnly] public float shaderFill = 0.0f;
+
+    [ReadOnly] public float normalizedCurrentFill = 0.0f;
     private GameObject activeFlow = null;
 
     private Wobble wobbleComponent = null;
+    
     
     // Start is called before the first frame update
     void Start()
@@ -35,6 +64,9 @@ public class LiquidPourEdge : MonoBehaviour
 
         var mr = this.transform.GetComponentInParent<MeshRenderer>();
         normalizedCurrentFill = liquidVolumeLiters / containerMaxVolumeLiters;
+        if (normalizedCurrentFill > 0.0001f) {
+            mr.enabled = true;
+        }
         shaderFill = emptyValue - (emptyValue - fullValue) * (normalizedCurrentFill);
         mr.material.SetFloat("_FillAmount", shaderFill);
         
@@ -166,7 +198,7 @@ public class LiquidPourEdge : MonoBehaviour
         RaycastHit hit;
 
         var fromRay  = this.getLowestEdgePointWorld(this.getUpVector(), true);
-        var raycastTrue = Physics.Raycast(fromRay, Vector3.down, out hit, 100, Physics.AllLayers);
+        var raycastTrue = Physics.Raycast(fromRay, Vector3.down, out hit, 100, Physics.AllLayers & ~LayerMask.GetMask("SimObjInVisible"));
 
         Debug.DrawRay(fromRay, Vector3.down, Color.green, 2f);
         if (raycastTrue) {
@@ -308,4 +340,54 @@ public class LiquidPourEdge : MonoBehaviour
 
 
     }
+
+
+#if UNITY_EDITOR
+	
+	[UnityEditor.MenuItem("Thor/Set Liquid Shader Constants")]
+	public static void AddLiquidContainer()
+	{
+		GameObject prefabRoot = Selection.activeGameObject;
+        // Selection.gameO
+        var liquidEdge = prefabRoot.GetComponentInChildren<LiquidPourEdge>();
+        var worldOrigin = prefabRoot.transform.position;
+
+		Mesh mesh = liquidEdge.GetComponentInParent<MeshFilter>().sharedMesh;
+
+        Vector3[] vertices = mesh.vertices;
+        float minY = float.MaxValue;
+        float maxY = float.MinValue;
+
+        for (int i = 0; i < mesh.vertices.Length; i++) {
+            minY = vertices[i].y < minY ? vertices[i].y : minY;
+            maxY = vertices[i].y > maxY ? vertices[i].y : maxY;
+        }
+        
+        var mr = liquidEdge.GetComponentInParent<MeshRenderer>();
+        var offset = (maxY - minY) * 0.00001f;
+        var volume = mesh_volume_calculator.VolumeOfMesh(mesh);
+
+        GameObject waterStream = UnityEditor.AssetDatabase.LoadAssetAtPath("Assets/Physics/Scene Setup Prefabs/WaterPourParticle.prefab",typeof(GameObject)) as GameObject;
+        Debug.Log("Object " + waterStream);
+
+        liquidEdge.emptyValue = 0.5f - minY - offset;
+        liquidEdge.fullValue = 0.5f - maxY + offset;
+
+        liquidEdge.waterEmiter = waterStream;
+
+        var floatVolume = ((float) volume) * 1000.0f;
+        liquidEdge.containerMaxVolumeLiters = floatVolume;
+
+        mr.enabled = false;
+
+
+        Debug.Log("Constants, empty: " + liquidEdge.emptyValue + " full: " + liquidEdge.fullValue + "maxVolume liters: " + floatVolume + " minY: " + minY + " maxY: " + maxY + " maxY - minY: " + (maxY - minY));
+	}
+
+	
+
+#endif
+
 }
+
+

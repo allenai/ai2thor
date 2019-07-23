@@ -5,7 +5,7 @@ using System;
 
 public class mesh_volume_calculator : MonoBehaviour
 {
-    public double SignedVolumeOfTriangle(Vector3 p1, Vector3 p2, Vector3 p3, Vector3 o)
+    public static double SignedVolumeOfTriangle(Vector3 p1, Vector3 p2, Vector3 p3, Vector3 o)
     {
         Vector3 v1 = p1 - o;
         Vector3 v2 = p2 - o;
@@ -14,7 +14,7 @@ public class mesh_volume_calculator : MonoBehaviour
         return Vector3.Dot(Vector3.Cross(v1, v2), v3) / 6f;
     }
 
-    public double VolumeOfMesh(Mesh mesh)
+    public static double VolumeOfMesh(Mesh mesh)
     {
         double volume = 0;
         Vector3[] vertices = mesh.vertices;
