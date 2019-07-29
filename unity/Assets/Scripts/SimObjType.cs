@@ -262,6 +262,7 @@ public enum SimObjType : int
     RoomDecor = 154, //for display pieces that are mean to go on the floor of rooms, like the decorative sticks
 	Stool = 155,
     GarbageBag = 156,
+    Desktop = 157
 }
 
 public static class ReceptacleRestrictions
