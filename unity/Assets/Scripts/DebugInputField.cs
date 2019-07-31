@@ -1387,6 +1387,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
 						ServerAction action = new ServerAction();
 						action.action = "PushObject";
 
+                        action.moveMagnitude = 2000f;
+
                         if (splitcommand.Length > 1 && splitcommand.Length < 3)
                         {
                             action.objectId = splitcommand[1];
@@ -1401,7 +1403,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
                         else
                         {
-                            action.objectId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().UniqueIDOfClosestVisibleObject();
+                            action.objectId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().UniqueIDOfClosestPickupableOrMoveableObject();
                             //action.moveMagnitude = 200f;//4000f;
                         }
 							
@@ -1415,6 +1417,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
 						ServerAction action = new ServerAction();
 						action.action = "PullObject";
 
+                        action.moveMagnitude = 2000f;
+
                         if (splitcommand.Length > 1 && splitcommand.Length < 3)
                         {
                             action.objectId = splitcommand[1];
@@ -1429,7 +1433,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
                         else
                         {
-                            action.objectId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().UniqueIDOfClosestVisibleObject();
+                            action.objectId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().UniqueIDOfClosestPickupableOrMoveableObject();
                             //action.moveMagnitude = 200f;//4000f;
                         }
 							

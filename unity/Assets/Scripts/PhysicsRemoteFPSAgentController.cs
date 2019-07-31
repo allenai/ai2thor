@@ -507,6 +507,20 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return objectID;
         }
 
+        public string UniqueIDOfClosestPickupableOrMoveableObject() {
+            string objectID = null;
+
+            foreach (SimObjPhysics o in VisibleSimObjPhysics) {
+                if (o.PrimaryProperty == SimObjPrimaryProperty.CanPickup || o.PrimaryProperty == SimObjPrimaryProperty.Moveable) {
+                    objectID = o.UniqueID;
+                    //  print(objectID);
+                    break;
+                }
+            }
+
+            return objectID;
+        }
+
         //return ID of closest CanOpen or CanOpen_Fridge object by distance
         public string UniqueIDOfClosestVisibleOpenableObject() {
             string objectID = null;
@@ -1939,6 +1953,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             if (FlightMode) {
                 actionFinished(true, this.GetComponent<FlyingDrone>().DidICatchTheThing(action));
             }
+        }
+
+        //a no op action used to return metadata via actionFinished call, but not actually doing anything to interact with the scene or manipulate the Agent
+        public void NoOp(ServerAction action)
+        {
+            actionFinished(true);
         }
 
         public void PushObject(ServerAction action) {
