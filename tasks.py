@@ -22,6 +22,7 @@ def add_files(zipf, start_dir):
 
 def push_build(build_archive_name, archive_sha256):
     import boto3
+
     #subprocess.run("ls %s" % build_archive_name, shell=True)
     #subprocess.run("gsha256sum %s" % build_archive_name)
     s3 = boto3.resource('s3')
