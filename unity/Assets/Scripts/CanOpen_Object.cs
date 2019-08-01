@@ -559,7 +559,9 @@ public class CanOpen_Object : MonoBehaviour
         //..., reset position and report failed action
 		if (other.name == "FPSController" && canReset == true && !gameObject.GetComponentInParent<PhysicsRemoteFPSAgentController>())
 		{
+            #if UNITY_EDITOR
 			Debug.Log(gameObject.name + " hit " + other.name + " Resetting position");
+            #endif
 			canReset = false;
 			Reset();
 		}
@@ -590,7 +592,9 @@ public class CanOpen_Object : MonoBehaviour
                     && other.GetComponentInParent<SimObjPhysics>().PrimaryProperty == SimObjPrimaryProperty.Static)//check this so that objects that are openable & pickupable don't prevent drawers/cabinets from animating
 				{
 					//print(other.GetComponentInParent<CanOpen>().transform.name);
+                    #if UNITY_EDITOR
 					Debug.Log(gameObject.name + " hit " + other.name + " Resetting position");
+                    #endif
 					canReset = false;
 					Reset();
 				}

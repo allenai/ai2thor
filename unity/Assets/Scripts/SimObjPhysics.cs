@@ -992,6 +992,11 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 
 			}
 		}
+
+        // foreach(Collider col in MyColliders)
+        // {
+        //     DebugExtension.DrawBounds(col.bounds, Color.green);
+        // }
 	}
 
 	//CONTEXT MENU STUFF FOR SETTING UP SIM OBJECTS
@@ -1971,7 +1976,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		//loop through all child objects. For each object, check if the child itself has a child called Colliders....
 		foreach (Transform child in transform)
 		{
-			if(child.Find("Colliders"))
+			if(child.Find("Colliders") && !child.GetComponent<SimObjPhysics>())
 			{
 				Transform Colliders = child.Find("Colliders");
 
