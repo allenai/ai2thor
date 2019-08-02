@@ -1779,9 +1779,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
             int angleInt = Mathf.RoundToInt(angle) % 360;
 
-            if ((checkIfSceneBoundsContainTargetPosition(targetPosition) &&
-                CheckIfItemBlocksAgentMovement(direction.magnitude, angleInt) &&
-                CheckIfAgentCanMove(direction.magnitude, angleInt)) || forceAction == true) {
+            if (checkIfSceneBoundsContainTargetPosition(targetPosition) &&
+                CheckIfItemBlocksAgentMovement(direction.magnitude, angleInt, forceAction) && // forceAction = true allows ignoring movement restrictions caused by held objects
+                CheckIfAgentCanMove(direction.magnitude, angleInt)) {
                 DefaultAgentHand();
                 Vector3 oldPosition = transform.position;
                 transform.position = targetPosition;
@@ -2303,9 +2303,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         // }
 
         //Sweeptest to see if the object Agent is holding will prohibit movement
-        public bool CheckIfItemBlocksAgentMovement(float moveMagnitude, int orientation) {
+        public bool CheckIfItemBlocksAgentMovement(float moveMagnitude, int orientation, bool forceAction = false) {
             bool result = false;
 
+            //if forceAction true, ignore collision restrictions caused by held objects
+            if(forceAction)
+            {
+                return true;
+            }
             //if there is nothing in our hand, we are good, return!
             if (ItemInHand == null) {
                 result = true;
