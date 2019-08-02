@@ -596,7 +596,7 @@ class Controller(object):
 
                 print(' '.join(command_info))
 
-    def multi_step_physics(self, action, timeStep=0.05):
+    def multi_step_physics(self, action, timeStep=0.05, max_steps=20):
         events = []
         self.step(action=dict(action='PausePhysicsAutoSim'), raise_for_failure=True)
         events.append(self.step(action))
@@ -605,6 +605,10 @@ class Controller(object):
                 self.step(action=dict(
                     action='AdvancePhysicsStep',
                     timeStep=timeStep), raise_for_failure=True))
+
+            if len(events) == (max_steps - 1):
+                events.append(self.step(action=dict(action='UnpausePhysicsAutoSim'), raise_for_failure=True))
+                break
 
         return events
 
