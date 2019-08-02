@@ -459,7 +459,7 @@ def build_log_push(build_info):
 def archive_push(unity_path, build_path, build_dir, build_info):
     threading.current_thread().success = False
     archive_name = os.path.join(unity_path, build_path)
-    zipf = zipfile.ZipFile(archive_name, 'w', zipfile.ZIP_STORED)
+    zipf = zipfile.ZipFile(archive_name, 'w', zipfile.ZIP_DEFLATED)
     add_files(zipf, os.path.join(unity_path, build_dir))
     zipf.close()
 
@@ -536,6 +536,7 @@ def ci_build(context):
         pass
 
     lock_f.close()
+
 
 def ci_build_arch(arch, branch):
     from multiprocessing import Process

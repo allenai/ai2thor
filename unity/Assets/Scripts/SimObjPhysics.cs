@@ -84,6 +84,12 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 
     public bool inMotion = false;
 
+    //the velocity of this object from the last frame
+    public float lastVelocity = 0;//start at zero assuming at rest
+
+    //reference to this gameobject's rigidbody
+    private Rigidbody myRigidbody; 
+
 	public float GetTimerResetValue()
 	{
 		return TimerResetValue;
@@ -713,7 +719,9 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 			new PhysicsMaterialValues(MyColliders[i].material.dynamicFriction, MyColliders[i].material.staticFriction, MyColliders[i].material.bounciness);
 		}
 
-		Rigidbody rb = gameObject.GetComponent<Rigidbody>();
+        myRigidbody = gameObject.GetComponent<Rigidbody>();
+
+		Rigidbody rb = myRigidbody;
 
 		RBoriginalAngularDrag = rb.angularDrag;
 		RBoriginalDrag = rb.drag;
@@ -756,7 +764,14 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 			StartRoomTempTimer = true;
 		}
 	}
-
+    
+    void LateUpdate()
+    {
+        //only update lastVelocity if physicsAutosimulation = true, otherwise let the Advance Physics function take care of it;
+        if(sceneManager.physicsSimulationPaused == false)
+        //record this object's current velocity
+        lastVelocity = Math.Abs(myRigidbody.angularVelocity.sqrMagnitude + myRigidbody.velocity.sqrMagnitude);
+    }
 	private void FixedUpdate()
 	{
 		isInteractable = false;

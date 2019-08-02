@@ -596,6 +596,22 @@ class Controller(object):
 
                 print(' '.join(command_info))
 
+    def multi_step_physics(self, action, timeStep=0.05, max_steps=20):
+        events = []
+        self.step(action=dict(action='PausePhysicsAutoSim'), raise_for_failure=True)
+        events.append(self.step(action))
+        while not self.last_event.metadata['isSceneAtRest']:
+            events.append(
+                self.step(action=dict(
+                    action='AdvancePhysicsStep',
+                    timeStep=timeStep), raise_for_failure=True))
+
+            if len(events) == (max_steps - 1):
+                events.append(self.step(action=dict(action='UnpausePhysicsAutoSim'), raise_for_failure=True))
+                break
+
+        return events
+
     def step(self, action, raise_for_failure=False):
         if self.headless:
             action["renderImage"] = False
@@ -716,7 +732,8 @@ class Controller(object):
             url = None
             sha256_build = None
             try:
-                for commit_id in subprocess.check_output('git log -n 10 --format=%H', shell=True).decode('ascii').strip().split("\n"):
+                git_dir = os.path.normpath(os.path.dirname(os.path.realpath(__file__)) + "/../.git")
+                for commit_id in subprocess.check_output('git --git-dir=' + git_dir + ' log -n 10 --format=%H', shell=True).decode('ascii').strip().split("\n"):
                     arch = arch_platform_map[platform.system()]
 
                     if ai2thor.downloader.commit_build_exists(arch, commit_id):
