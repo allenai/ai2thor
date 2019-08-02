@@ -2263,7 +2263,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     float currentVelocity = Math.Abs(rb.angularVelocity.sqrMagnitude + rb.velocity.sqrMagnitude);
                     float accel = (currentVelocity - sop.lastVelocity) / Time.fixedDeltaTime;
 
-                    if(accel == 0)
+                    if(accel < 0.001)
                     {
                         break;
                     }

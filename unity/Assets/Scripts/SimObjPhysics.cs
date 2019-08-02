@@ -729,6 +729,16 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		TimerResetValue = HowManySecondsUntilRoomTemp;
 
 		sceneManager = GameObject.Find("PhysicsSceneManager").GetComponent<PhysicsSceneManager>();
+
+        //default all rigidbodies so that if their drag/angular drag is zero, it's at least nonzero
+        if(myRigidbody.drag == 0)
+        {
+            myRigidbody.drag = 0.01f;
+        }
+        if(myRigidbody.angularDrag == 0)
+        {
+            myRigidbody.angularDrag = 0.01f;
+        }
 	}
 
 	public bool DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty prop)

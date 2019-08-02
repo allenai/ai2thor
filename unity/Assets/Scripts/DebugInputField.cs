@@ -425,7 +425,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 case "kinematicfalse":
                     {
                         ServerAction action = new ServerAction();
-                        action.action = "MakeAllPickupableObjectsMoveable";
+                        action.action = "MakeAllObjectsMoveable";
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }
