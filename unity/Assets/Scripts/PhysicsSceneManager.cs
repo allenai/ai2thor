@@ -38,6 +38,8 @@ public class PhysicsSceneManager : MonoBehaviour
     //keep track of if the physics autosimulation has been paused or not
     public bool physicsSimulationPaused = false;
 
+    //this is used to report if the scene is at rest in metadata, and also to automatically resume Physics Autosimulation if
+    //physics simulation was paused
     public bool isSceneAtRest;//if any object in the scene has a non zero velocity, set to false
 
 	private void OnEnable()

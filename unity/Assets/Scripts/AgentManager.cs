@@ -259,7 +259,10 @@ public class AgentManager : MonoBehaviour
     // Decide whether agent has stopped actions
     // And if we need to capture a new frame
 
-
+    private void Update()
+    {
+        physicsSceneManager.isSceneAtRest = true;//assume the scene is at rest by default
+    }
 
     private void LateUpdate() {
 		int completeCount = 0;
@@ -271,24 +274,38 @@ public class AgentManager : MonoBehaviour
 
         //check what objects in the scene are currently in motion
         Rigidbody[] rbs = FindObjectsOfType(typeof(Rigidbody)) as Rigidbody[];
-        physicsSceneManager.isSceneAtRest = true;//assume the scene is at rest by default
-
         foreach(Rigidbody rb in rbs)
         {
-            //
-            if(Math.Abs(rb.angularVelocity.sqrMagnitude + 
-            rb.velocity.sqrMagnitude) < 0.0001)
+            //if this rigidbody is part of a SimObject, calculate rest using lastVelocity/currentVelocity comparisons
+            if(rb.GetComponentInParent<SimObjPhysics>())
             {
-                if(rb.GetComponentInParent<SimObjPhysics>())
-                rb.GetComponentInParent<SimObjPhysics>().inMotion = false;
+                
+                SimObjPhysics sop = rb.GetComponentInParent<SimObjPhysics>();
+                
+                float currentVelocity = Math.Abs(rb.angularVelocity.sqrMagnitude + rb.velocity.sqrMagnitude);
+                float accel = (currentVelocity - sop.lastVelocity) / Time.fixedDeltaTime;
+
+                if(accel == 0)
+                {
+                    sop.inMotion = false;
+                }
+
+                else
+                {
+                    //the rb's velocities are not 0, so it is in motion and the scene is not at rest
+                    rb.GetComponentInParent<SimObjPhysics>().inMotion = true;
+                    physicsSceneManager.isSceneAtRest = false;
+                }
+
             }
 
-            //if the object is in motion, set it, and also change isSceneAtRest to false
+            //this rigidbody is not a SimOBject, and might be a piece of a shattered sim object spawned in, or something
             else
             {
-                if(rb.GetComponentInParent<SimObjPhysics>())
+                //is the rigidbody at non zero velocity? then the scene is not at rest
+                if(!(Math.Abs(rb.angularVelocity.sqrMagnitude + 
+                rb.velocity.sqrMagnitude) < 0.001))
                 {
-                    rb.GetComponentInParent<SimObjPhysics>().inMotion = true;
                     physicsSceneManager.isSceneAtRest = false;
                 }
             }
@@ -299,7 +316,8 @@ public class AgentManager : MonoBehaviour
 			StartCoroutine (EmitFrame ());
 		}
 
-        //ok now if the scene is at rest, turn back on physics autosimulation
+        //ok now if the scene is at rest, turn back on physics autosimulation automatically
+        //note: you can do this earlier by manually using the UnpausePhysicsAutoSim() action found in PhysicsRemoteFPSAgentController
         if(physicsSceneManager.isSceneAtRest && 
         physicsSceneManager.physicsSimulationPaused && AdvancePhysicsStepCount > 0)
         {
@@ -457,10 +475,6 @@ public class AgentManager : MonoBehaviour
 		if (shouldRender) {
 			// we should only read the screen buffer after rendering is complete
 			yield return new WaitForEndOfFrame();
-			if (synchronousHttp) {
-				// must wait an additional frame when in synchronous mode otherwise the frame lags
-				yield return new WaitForEndOfFrame();
-			}
 		}
 
 		WWWForm form = new WWWForm();
@@ -549,6 +563,12 @@ public class AgentManager : MonoBehaviour
 
                 int sent = this.sock.Send(Encoding.ASCII.GetBytes(request));
                 sent = this.sock.Send(rawData);
+
+                // waiting for a frame here keeps the Unity window in sync visually
+                // its not strictly necessary, but allows the interact() command to work properly
+                // and does not reduce the overall FPS
+                yield return new WaitForEndOfFrame();
+
                 byte[] headerBuffer = new byte[1024];
                 int bytesReceived = 0;
                 byte[] bodyBuffer = null;
@@ -888,7 +908,8 @@ public class ServerAction
 	public int horizon;
 	public Vector3 rotation;
 	public Vector3 position;
-
+    public Vector3 direction;
+    public float handDistance;//used for max distance agent's hand can move
 	public List<Vector3> positions = null;
 	public bool standing = true;
 	public float fov = 60.0f;
