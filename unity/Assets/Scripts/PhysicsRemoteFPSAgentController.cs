@@ -927,7 +927,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         public override void RotateRight(ServerAction controlCommand) {
-            if (CheckIfAgentCanTurn(90)) {
+            if (CheckIfAgentCanTurn(90)||controlCommand.forceAction) {
                 DefaultAgentHand(controlCommand);
                 base.RotateRight(controlCommand);
             } else {
@@ -937,7 +937,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         public override void RotateLeft(ServerAction controlCommand) {
-            if (CheckIfAgentCanTurn(-90)) {
+            if (CheckIfAgentCanTurn(-90)||controlCommand.forceAction) {
                 DefaultAgentHand(controlCommand);
                 base.RotateLeft(controlCommand);
 
@@ -1769,7 +1769,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         //Luca's movement grid and valid position generation, simple transform setting is used for movement instead.
 
         //XXX revisit what movement means when we more clearly define what "continuous" movement is
-        protected bool moveInDirection(Vector3 direction, string uniqueId="", float maxDistanceToObject=-1.0f) {
+        protected bool moveInDirection(Vector3 direction, string uniqueId="", float maxDistanceToObject=-1.0f, bool forceAction = false) {
             Vector3 targetPosition = transform.position + direction;
             float angle = Vector3.Angle(transform.forward, Vector3.Normalize(direction));
 
@@ -1779,9 +1779,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
             int angleInt = Mathf.RoundToInt(angle) % 360;
 
-            if (checkIfSceneBoundsContainTargetPosition(targetPosition) &&
+            if ((checkIfSceneBoundsContainTargetPosition(targetPosition) &&
                 CheckIfItemBlocksAgentMovement(direction.magnitude, angleInt) &&
-                CheckIfAgentCanMove(direction.magnitude, angleInt)) {
+                CheckIfAgentCanMove(direction.magnitude, angleInt)) || forceAction == true) {
                 DefaultAgentHand();
                 Vector3 oldPosition = transform.position;
                 transform.position = targetPosition;
@@ -1810,7 +1810,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(moveInDirection(
                 -1 * transform.right * action.moveMagnitude,
                 action.objectId,
-                action.maxAgentsDistance
+                action.maxAgentsDistance, action.forceAction
             ));
         }
 
@@ -1819,7 +1819,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(moveInDirection(
                 transform.right * action.moveMagnitude,
                 action.objectId,
-                action.maxAgentsDistance
+                action.maxAgentsDistance, action.forceAction
             ));
         }
 
@@ -1828,7 +1828,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(moveInDirection(
                 transform.forward * action.moveMagnitude,
                 action.objectId,
-                action.maxAgentsDistance
+                action.maxAgentsDistance, action.forceAction
             ));
         }
 
@@ -1837,7 +1837,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(moveInDirection(
                 -1 * transform.forward * action.moveMagnitude,
                 action.objectId,
-                action.maxAgentsDistance
+                action.maxAgentsDistance, action.forceAction
             ));
         }
 
