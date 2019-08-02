@@ -285,7 +285,7 @@ public class AgentManager : MonoBehaviour
                 float currentVelocity = Math.Abs(rb.angularVelocity.sqrMagnitude + rb.velocity.sqrMagnitude);
                 float accel = (currentVelocity - sop.lastVelocity) / Time.fixedDeltaTime;
 
-                if(accel == 0)
+                if(accel < 0.001)
                 {
                     sop.inMotion = false;
                 }
@@ -307,6 +307,12 @@ public class AgentManager : MonoBehaviour
                 rb.velocity.sqrMagnitude) < 0.001))
                 {
                     physicsSceneManager.isSceneAtRest = false;
+                    //make sure the rb's drag values are not at 0 exactly
+                    if(rb.drag == 0)
+                    rb.drag = 0.01f;
+
+                    if(rb.angularDrag == 0)
+                    rb.angularDrag = 0.01f;
                 }
             }
         }
