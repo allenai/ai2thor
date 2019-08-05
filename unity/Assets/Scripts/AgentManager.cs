@@ -285,7 +285,7 @@ public class AgentManager : MonoBehaviour
                 float currentVelocity = Math.Abs(rb.angularVelocity.sqrMagnitude + rb.velocity.sqrMagnitude);
                 float accel = (currentVelocity - sop.lastVelocity) / Time.fixedDeltaTime;
 
-                if(accel < 0.001)
+                if(accel == 0)
                 {
                     sop.inMotion = false;
                 }
@@ -304,7 +304,7 @@ public class AgentManager : MonoBehaviour
             {
                 //is the rigidbody at non zero velocity? then the scene is not at rest
                 if(!(Math.Abs(rb.angularVelocity.sqrMagnitude + 
-                rb.velocity.sqrMagnitude) < 0.001))
+                rb.velocity.sqrMagnitude) < 0.01))
                 {
                     physicsSceneManager.isSceneAtRest = false;
                     //make sure the rb's drag values are not at 0 exactly
