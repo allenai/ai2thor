@@ -289,7 +289,7 @@ public class AgentManager : MonoBehaviour
                 {
                     sop.inMotion = false;
                     //print(sop.transform.name + " should be sleeping");
-                    rb.Sleep();
+                    //rb.Sleep(); maybe do something to ensure object has stopped moving, and reduce jitter
                 }
 
                 else
@@ -297,7 +297,7 @@ public class AgentManager : MonoBehaviour
                     //the rb's velocities are not 0, so it is in motion and the scene is not at rest
                     rb.GetComponentInParent<SimObjPhysics>().inMotion = true;
                     physicsSceneManager.isSceneAtRest = false;
-                    print(rb.GetComponentInParent<SimObjPhysics>().name);
+                    //print(rb.GetComponentInParent<SimObjPhysics>().name);
                 }
 
             }
@@ -317,11 +317,11 @@ public class AgentManager : MonoBehaviour
                     if(rb.angularDrag == 0)
                     rb.angularDrag = 0.01f;
 
-                    print(rb.transform.name);
+                    //print(rb.transform.name);
                 }
 
-                else
-                rb.Sleep();
+                //else
+                //rb.Sleep(); maybe do something to ensure object has stopped moving, and reduce jitter
             }
         }
 

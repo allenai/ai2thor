@@ -792,6 +792,10 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 	{
 		Vector3 dir = new Vector3(action.x, action.y, action.z);
 		Rigidbody myrb = gameObject.GetComponent<Rigidbody>();
+
+        if(myrb.IsSleeping())
+        myrb.WakeUp();
+        
 		myrb.isKinematic = false;
 		myrb.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
 		myrb.AddForce(dir * action.moveMagnitude);
@@ -800,7 +804,12 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
     //overload that doesn't use a server action
     public void ApplyForce(Vector3 dir, float magnitude)
     {
+
         Rigidbody myrb = gameObject.GetComponent<Rigidbody>();
+
+        if(myrb.IsSleeping())
+        myrb.WakeUp();
+
         myrb.isKinematic = false;
         myrb.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
         myrb.AddForce(dir * magnitude);

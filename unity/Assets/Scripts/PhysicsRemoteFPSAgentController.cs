@@ -2212,9 +2212,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         protected void sopApplyForce(ServerAction action, SimObjPhysics sop, float length)
         {
+            //print("running sopApplyForce");
             //apply force, return action finished immediately
             if(physicsSceneManager.physicsSimulationPaused)
             {
+                //print("autosimulation off");
                 sop.ApplyForce(action);
                 if(length != 0.0f)
                 {
@@ -2235,6 +2237,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             //if physics is automatically being simulated, use coroutine rather than returning actionFinished immediately
             else
             {
+                //print("autosimulation true");
                 sop.ApplyForce(action);
                 StartCoroutine(checkIfObjectHasStoppedMoving(sop, length));
             }
@@ -2785,6 +2788,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         //the sim object hit was not moveable or pickupable
                         WhatDidITouch feedback = new WhatDidITouch(){didHandTouchSomething = true, objectId = target.uniqueID, armsLength = hit.distance};
                         #if UNITY_EDITOR
+                        print("object touched was not moveable or pickupable");
                         print("didHandTouchSomething: " + feedback.didHandTouchSomething);
                         print("object id: " + feedback.objectId);
                         print("armslength: " + feedback.armsLength);
@@ -2811,6 +2815,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 {
                     WhatDidITouch feedback = new WhatDidITouch(){didHandTouchSomething = true, objectId = "structure", armsLength = hit.distance};
                     #if UNITY_EDITOR
+                    print("object touched was not a sim object at all");
                     print("didHandTouchSomething: " + feedback.didHandTouchSomething);
                     print("object id: " + feedback.objectId);
                     print("armslength: " + feedback.armsLength);
@@ -2837,6 +2842,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 //the nothing hit was not out of range, but still nothing was hit
                 WhatDidITouch feedback = new WhatDidITouch(){didHandTouchSomething = false, objectId = "", armsLength = action.handDistance};
                 #if UNITY_EDITOR
+                print("raycast did not hit anything, it only hit empty space");
                 print("didHandTouchSomething: " + feedback.didHandTouchSomething);
                 print("object id: " + feedback.objectId);
                 print("armslength: " + feedback.armsLength);
