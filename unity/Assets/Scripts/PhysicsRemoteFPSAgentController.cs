@@ -5177,6 +5177,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         //if you want to do something like throw objects to knock over other objects, use this action to set all objects to Kinematic false
         //otherwise objects will need to be hit multiple times in order to ensure kinematic false toggle
         //use this by initializing the scene, then calling randomize if desired, and then call this action to prepare the scene so all objects will react to others upon collision.
+        //note that SOMETIMES rigidbodies will continue to jitter or wiggle, especially if they are stacked against other rigidbodies.
+        //this means that the isSceneAtRest bool will always be false
         public void MakeAllObjectsMoveable(ServerAction action)
         {
             foreach (SimObjPhysics sop in GameObject.FindObjectsOfType<SimObjPhysics>()) {

@@ -297,7 +297,7 @@ public class AgentManager : MonoBehaviour
                     //the rb's velocities are not 0, so it is in motion and the scene is not at rest
                     rb.GetComponentInParent<SimObjPhysics>().inMotion = true;
                     physicsSceneManager.isSceneAtRest = false;
-                    //print(rb.GetComponentInParent<SimObjPhysics>().name);
+                    print(rb.GetComponentInParent<SimObjPhysics>().name + " is still in motion!");
                 }
 
             }
@@ -311,17 +311,18 @@ public class AgentManager : MonoBehaviour
                 {
                     physicsSceneManager.isSceneAtRest = false;
                     //make sure the rb's drag values are not at 0 exactly
-                    if(rb.drag == 0)
-                    rb.drag = 0.01f;
+                    if(rb.drag < 0.1f)
+                    rb.drag = 1f;
 
-                    if(rb.angularDrag == 0)
-                    rb.angularDrag = 0.01f;
+                    if(rb.angularDrag < 0.1f)
+                    rb.angularDrag = 1f;
 
-                    //print(rb.transform.name);
+                    print(rb.transform.name + " is still in motion!");
                 }
 
-                //else
-                //rb.Sleep(); maybe do something to ensure object has stopped moving, and reduce jitter
+                //the velocities are small enough, assume object has come to rest and force this one to sleep
+                else
+                rb.Sleep(); //maybe do something to ensure object has stopped moving, and reduce jitter
             }
         }
 
