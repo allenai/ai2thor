@@ -288,6 +288,8 @@ public class AgentManager : MonoBehaviour
                 if(accel == 0)
                 {
                     sop.inMotion = false;
+                    //print(sop.transform.name + " should be sleeping");
+                    rb.Sleep();
                 }
 
                 else
@@ -295,6 +297,7 @@ public class AgentManager : MonoBehaviour
                     //the rb's velocities are not 0, so it is in motion and the scene is not at rest
                     rb.GetComponentInParent<SimObjPhysics>().inMotion = true;
                     physicsSceneManager.isSceneAtRest = false;
+                    print(rb.GetComponentInParent<SimObjPhysics>().name);
                 }
 
             }
@@ -313,7 +316,12 @@ public class AgentManager : MonoBehaviour
 
                     if(rb.angularDrag == 0)
                     rb.angularDrag = 0.01f;
+
+                    print(rb.transform.name);
                 }
+
+                else
+                rb.Sleep();
             }
         }
 

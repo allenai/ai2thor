@@ -498,30 +498,30 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
     {
 		contactPointsDictionary[col.collider] = col.contacts;
 		
-		//this is to enable kinematics if this object hits another object that isKinematic but needs to activate
-		//physics uppon being touched/collided
+		// //this is to enable kinematics if this object hits another object that isKinematic but needs to activate
+		// //physics uppon being touched/collided
 
-		if(col.transform.GetComponentInParent<SimObjPhysics>())
-		{
-			//add a check for if this is the handheld object, in which case dont't do this!
-			GameObject agent = GameObject.Find("FPSController");
-			if(!agent.transform.GetComponent<PhysicsRemoteFPSAgentController>().WhatAmIHolding() == this.transform)
-			{
-				//if this object is pickupable or moveable
-				if(PrimaryProperty == SimObjPrimaryProperty.CanPickup || PrimaryProperty == SimObjPrimaryProperty.Moveable)
-				{
-					//only do this if other object that hit this object is moving
-					if(col.impulse.magnitude > 0)
-					{
-						//print(col.transform.GetComponentInParent<SimObjPhysics>().transform.name);
-						Rigidbody rb = gameObject.transform.GetComponent<Rigidbody>();
-						rb.isKinematic = false;
-						rb.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
-					}
-				}
-			}
+		// if(col.transform.GetComponentInParent<SimObjPhysics>())
+		// {
+		// 	//add a check for if this is the handheld object, in which case dont't do this!
+		// 	GameObject agent = GameObject.Find("FPSController");
+		// 	if(!agent.transform.GetComponent<PhysicsRemoteFPSAgentController>().WhatAmIHolding() == this.transform)
+		// 	{
+		// 		//if this object is pickupable or moveable
+		// 		if(PrimaryProperty == SimObjPrimaryProperty.CanPickup || PrimaryProperty == SimObjPrimaryProperty.Moveable)
+		// 		{
+		// 			//only do this if other object that hit this object is moving
+		// 			if(col.impulse.magnitude > 0)
+		// 			{
+		// 				//print(col.transform.GetComponentInParent<SimObjPhysics>().transform.name);
+		// 				Rigidbody rb = gameObject.transform.GetComponent<Rigidbody>();
+		// 				rb.isKinematic = false;
+		// 				rb.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
+		// 			}
+		// 		}
+		// 	}
 
-		}
+		// }
 	}
 	void OnCollisionExit (Collision col)	
     {
