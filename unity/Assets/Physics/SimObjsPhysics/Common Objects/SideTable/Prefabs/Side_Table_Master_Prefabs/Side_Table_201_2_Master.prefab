@@ -2375,12 +2375,6 @@ MonoBehaviour:
   - {fileID: 4747992003907953536}
   - {fileID: 4748743653353118360}
   - {fileID: 4748599998279336450}
-  - {fileID: 4748754209773401018}
-  - {fileID: 4748652475849410418}
-  - {fileID: 4748896097910627254}
-  - {fileID: 4748665976411224894}
-  - {fileID: 4748525007609807838}
-  - {fileID: 4748510438914547906}
   HFdynamicfriction: 1
   HFstaticfriction: 1
   HFbounciness: 0
@@ -2543,6 +2537,8 @@ GameObject:
   - component: {fileID: 4654578323804973278}
   - component: {fileID: 4655588734968571282}
   - component: {fileID: 4742055063680399800}
+  - component: {fileID: 6411843771820728535}
+  - component: {fileID: 3892015675393348814}
   m_Layer: 8
   m_Name: Drawer
   m_TagString: SimObjPhysics
@@ -2669,6 +2665,46 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
+--- !u!114 &6411843771820728535
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4687117991590788890}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9c309bad17f9d440784734c019a3a674, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  myColliders: []
+  objectToIgnoreCollisionsWith: {fileID: 4687054500088583246}
+--- !u!1773428102 &3892015675393348814
+ParentConstraint:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4687117991590788890}
+  m_Enabled: 1
+  m_Weight: 1
+  m_TranslationAtRest: {x: 0, y: 0.6524466, z: 0.07050785}
+  m_RotationAtRest: {x: 0, y: 0, z: 0}
+  m_TranslationOffsets:
+  - {x: 0, y: 0.6524466, z: 0.07050785}
+  m_RotationOffsets:
+  - {x: 0, y: 0, z: 0}
+  m_AffectTranslationX: 0
+  m_AffectTranslationY: 0
+  m_AffectTranslationZ: 0
+  m_AffectRotationX: 1
+  m_AffectRotationY: 1
+  m_AffectRotationZ: 1
+  m_IsContraintActive: 1
+  m_IsLocked: 0
+  m_Sources:
+  - sourceTransform: {fileID: 4692286174162949082}
+    weight: 1
 --- !u!1 &4687545114061386536
 GameObject:
   m_ObjectHideFlags: 0
