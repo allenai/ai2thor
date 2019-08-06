@@ -1189,7 +1189,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         action.y = 0.5f;
                         action.handDistance = 5.0f;
                         action.direction = new Vector3(0, 1, 1);
-                        action.moveMagnitude = 500f;
+                        action.moveMagnitude = 800f;
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }
