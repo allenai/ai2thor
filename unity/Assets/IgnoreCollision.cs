@@ -21,8 +21,10 @@ public class IgnoreCollision : MonoBehaviour
         if(objectToIgnoreCollisionsWith != null)
         otherCollidersToIgnore = objectToIgnoreCollisionsWith.GetComponent<SimObjPhysics>().MyColliders;
 
+        #if UNITY_EDITOR
         else
         Debug.LogError("IgnoreCollision on " + gameObject.transform.name + " is missing an objectToIgnoreCollisionsWith!");
+        #endif
         // //otherwise, default to finding the SimObjPhysics component in the nearest parent to use as the object to ignore
         // else
         // otherCollidersToIgnore = gameObject.GetComponentInParent<SimObjPhysics>().MyColliders;

@@ -2221,9 +2221,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 if(length != 0.0f)
                 {
                     WhatDidITouch feedback = new WhatDidITouch(){didHandTouchSomething = true, objectId = sop.uniqueID, armsLength = length};
+                    #if UNITY_EDITOR
                     print("didHandTouchSomething: " + feedback.didHandTouchSomething);
                     print("object id: " + feedback.objectId);
                     print("armslength: " + feedback.armsLength);
+                    #endif
                     actionFinished(true, feedback);
                 }
 

@@ -297,7 +297,9 @@ public class AgentManager : MonoBehaviour
                     //the rb's velocities are not 0, so it is in motion and the scene is not at rest
                     rb.GetComponentInParent<SimObjPhysics>().inMotion = true;
                     physicsSceneManager.isSceneAtRest = false;
+                    #if UNITY_EDITOR
                     print(rb.GetComponentInParent<SimObjPhysics>().name + " is still in motion!");
+                    #endif
                 }
 
             }
@@ -317,11 +319,13 @@ public class AgentManager : MonoBehaviour
                     if(rb.angularDrag < 0.1f)
                     rb.angularDrag = 1f;
 
+                    #if UNITY_EDITOR
                     print(rb.transform.name + " is still in motion!");
+                    #endif
                 }
 
                 //the velocities are small enough, assume object has come to rest and force this one to sleep
-                else
+                else if (!rb.IsSleeping())
                 rb.Sleep(); //maybe do something to ensure object has stopped moving, and reduce jitter
             }
         }
