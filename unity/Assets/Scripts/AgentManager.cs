@@ -45,6 +45,8 @@ public class AgentManager : MonoBehaviour
     private PhysicsSceneManager physicsSceneManager;
     public int AdvancePhysicsStepCount = 0;
 
+    public List<Rigidbody> rbsInScene = null;
+
 	void Awake() {
 
         tex = new Texture2D(UnityEngine.Screen.width, UnityEngine.Screen.height, TextureFormat.RGB24, false);
@@ -85,6 +87,10 @@ public class AgentManager : MonoBehaviour
 		this.agents.Add (primaryAgent);
 
         physicsSceneManager = GameObject.Find("PhysicsSceneManager").GetComponent<PhysicsSceneManager>();
+
+        //cache all rigidbodies that are in the scene by default
+        //NOTE: any rigidbodies created from actions such as Slice/Break or spawned in should be added to this!
+        rbsInScene = new List<Rigidbody>(FindObjectsOfType<Rigidbody>());
 	}
 
 	private void initializePrimaryAgent() {
@@ -113,6 +119,17 @@ public class AgentManager : MonoBehaviour
 		StartCoroutine (addAgents (action));
 
 	}
+
+    //used to add a reference to a rigidbody created after the scene was started
+    public void AddToRBSInScene(Rigidbody rb)
+    {
+        rbsInScene.Add(rb);
+    }
+
+    public void RemoveFromRBSInScene(Rigidbody rb)
+    {
+        rbsInScene.Remove(rb);
+    }
 
     //return reference to primary agent in case we need a reference to the primary
     public BaseFPSAgentController ReturnPrimaryAgent()
@@ -273,13 +290,12 @@ public class AgentManager : MonoBehaviour
 		}
 
         //check what objects in the scene are currently in motion
-        Rigidbody[] rbs = FindObjectsOfType(typeof(Rigidbody)) as Rigidbody[];
-        foreach(Rigidbody rb in rbs)
+        //Rigidbody[] rbs = FindObjectsOfType(typeof(Rigidbody)) as Rigidbody[];
+        foreach(Rigidbody rb in rbsInScene)
         {
             //if this rigidbody is part of a SimObject, calculate rest using lastVelocity/currentVelocity comparisons
-            if(rb.GetComponentInParent<SimObjPhysics>())
+            if(rb.GetComponentInParent<SimObjPhysics>() && rb.transform.gameObject.activeSelf) // make sure the object is actually active, otherwise skip the check
             {
-                
                 SimObjPhysics sop = rb.GetComponentInParent<SimObjPhysics>();
                 
                 float currentVelocity = Math.Abs(rb.angularVelocity.sqrMagnitude + rb.velocity.sqrMagnitude);
@@ -301,32 +317,45 @@ public class AgentManager : MonoBehaviour
                     print(rb.GetComponentInParent<SimObjPhysics>().name + " is still in motion!");
                     #endif
                 }
-
             }
 
             //this rigidbody is not a SimOBject, and might be a piece of a shattered sim object spawned in, or something
             else
             {
-                //is the rigidbody at non zero velocity? then the scene is not at rest
-                if(!(Math.Abs(rb.angularVelocity.sqrMagnitude + 
-                rb.velocity.sqrMagnitude) < 0.01))
+                if(rb.transform.gameObject.activeSelf)
                 {
-                    physicsSceneManager.isSceneAtRest = false;
-                    //make sure the rb's drag values are not at 0 exactly
-                    if(rb.drag < 0.1f)
-                    rb.drag = 1f;
+                    //is the rigidbody at non zero velocity? then the scene is not at rest
+                    if(!(Math.Abs(rb.angularVelocity.sqrMagnitude + 
+                    rb.velocity.sqrMagnitude) < 0.01))
+                    {
+                        physicsSceneManager.isSceneAtRest = false;
+                        //make sure the rb's drag values are not at 0 exactly
+                        //if(rb.drag < 0.1f)
+                        rb.drag += 0.01f;
 
-                    if(rb.angularDrag < 0.1f)
-                    rb.angularDrag = 1f;
+                        //if(rb.angularDrag < 0.1f)
+                        //rb.angularDrag = 1.5f;
+                        rb.angularDrag += 0.01f;
 
-                    #if UNITY_EDITOR
-                    print(rb.transform.name + " is still in motion!");
-                    #endif
+                        #if UNITY_EDITOR
+                        print(rb.transform.name + " is still in motion!");
+                        #endif
+                    }
+
+                    //the velocities are small enough, assume object has come to rest and force this one to sleep
+                    else
+                    {
+                        rb.drag = 1.0f;
+                        rb.angularDrag = 1.0f;
+                    }
+
+                    //if the shard/broken piece gets out of bounds somehow and begins falling forever, get rid of it with this check
+                    if(rb.transform.position.y < -50f)
+                    {
+                        rb.transform.gameObject.SetActive(false);
+                        //note: we might want to remove these from the list of rbs at some point but for now it'll be fine
+                    }
                 }
-
-                //the velocities are small enough, assume object has come to rest and force this one to sleep
-                else if (!rb.IsSleeping())
-                rb.Sleep(); //maybe do something to ensure object has stopped moving, and reduce jitter
             }
         }
 
