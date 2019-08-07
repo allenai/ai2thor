@@ -355,7 +355,9 @@ public class CanOpen_Object : MonoBehaviour
 
     private void setisOpen()
 	{
+        //print("isOpen was " + isOpen);
 		isOpen = !isOpen;
+        //print("isOpen is now " + isOpen);
         UpdateOpenOrCloseBoundingBox();
 	}
 
@@ -443,6 +445,7 @@ public class CanOpen_Object : MonoBehaviour
 		{
 			//Interact();
 
+            print("we are calling Reset() now");
             //we are still open, trying to close, but hit something - reset to open
 			if(isOpen)
 			{
