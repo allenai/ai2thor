@@ -262,6 +262,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             objMeta.openable = simObj.IsOpenable;
             if (objMeta.openable) {
                 objMeta.isOpen = simObj.IsOpen;
+                // if(simObj.Type == SimObjType.Microwave)
+                // {
+                //     print("generating object metadata which means actionFinished should have been called!");
+                //     print("microwave is open? " + objMeta.isOpen);
+                // }
             }
 
             objMeta.toggleable = simObj.IsToggleable;
@@ -4521,6 +4526,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             for (int i = 0; i < 1000; i++) {
                 if (coo != null && coo.GetiTweenCount() == 0) {
                     success = true;
+                    yield return null;
                     break;
                 }
                 yield return null;
@@ -4532,12 +4538,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                 if (isAgentCapsuleCollidingWith(openedObject) || isHandObjectCollidingWith(openedObject)) {
                     success = false;
-
                     if (coo != null) {
                         coo.Interact();
                     }
                     for (int i = 0; i < 1000; i++) {
                         if (coo != null && coo.GetiTweenCount() == 0) {
+                            yield return null;
                             break;
                         }
                         yield return null;
@@ -4551,7 +4557,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             if (!success) {
                 errorMessage = "Object failed to open/close successfully.";
             }
-
+            //print("actionFinished now");
             actionFinished(success);
         }
 
@@ -4702,23 +4708,22 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         public void ToggleObjectOn(ServerAction action)
         {
-            bool result = ToggleObject(action, true, action.forceAction);
-            actionFinished(result);
+            ToggleObject(action, true, action.forceAction);
         }
 
         public void ToggleObjectOff(ServerAction action)
         {
-            bool result = ToggleObject(action, false, action.forceAction);
-            actionFinished(result);
+            ToggleObject(action, false, action.forceAction);
         }
 
 
-        public bool ToggleObject(ServerAction action, bool toggleOn, bool forceAction)
+        public void ToggleObject(ServerAction action, bool toggleOn, bool forceAction)
         {
             if (action.objectId == null)
             {
                 errorMessage = "objectId required for ToggleObject";
-                return false;
+                actionFinished(false);
+                //return false;
             }
 
             SimObjPhysics target = null;
@@ -4736,9 +4741,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                 //target not found in currently visible objects, report not found
                 errorMessage = "object not found: " + action.objectId;
-                return false;
+                actionFinished(false);
             }
-            return ToggleObject(target, toggleOn, forceAction);
+            
+            ToggleObject(target, toggleOn, forceAction);
         }
 
         public bool ToggleObject(SimObjPhysics target, bool toggleOn, bool forceAction)
@@ -4746,6 +4752,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             if (!forceAction && target.isInteractable == false)
             {
                 errorMessage = "object is visible but occluded by something: " + target.UniqueID;
+                actionFinished(false);
                 return false;
             }
 
@@ -4756,6 +4763,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 if (!ctof.ReturnSelfControlled())
                 {
                     errorMessage = "target object is controlled by another sim object. target object cannot be turned on/off directly";
+                    actionFinished(false);
                     return false;
                 }
 
@@ -4771,6 +4779,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                     }
 
+                    actionFinished(false);
                     return false;
                 }
                 //check if this object needs to be closed in order to turn on
@@ -4779,19 +4788,51 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     if (target.GetComponent<CanOpen_Object>().isOpen)
                     {
                         errorMessage = "Target must be closed to Toggle On!";
+                        actionFinished(false);
                         return false;
                     }
                 }
 
-                ctof.Toggle();
+                //interact then wait
+                StartCoroutine(ToggleAndWait(ctof));
                 return true;
-
+                
             }
             else
             {
                 errorMessage = "object is not toggleable.";
+                actionFinished(false);
                 return false;
             }
+        }
+
+        protected IEnumerator ToggleAndWait(CanToggleOnOff ctof)
+        {
+            if(ctof != null)
+            ctof.Toggle();
+
+            bool success = false;
+
+            for (int i = 0; i < 1000; i++)
+            {
+                if(ctof != null && ctof.GetiTweenCount() == 0)
+                {
+                    success = true;
+                    yield return null;
+                    break;
+                }
+                //wait a frame
+                yield return null;
+            }
+
+            if (!success)
+            {
+                errorMessage = "object could not be toggled on/off succesfully";
+            }
+
+            //only return ActionFinished once the object is completely done animating.
+            //print(ctof.isOn);
+            actionFinished(success);
         }
 
         public void OpenObject(ServerAction action) {
