@@ -58,8 +58,14 @@ class PhysicsSettler
                 {
                     //ok now make sure that the sim object is moveable or pickupable
                     SimObjPhysics sop = rb.GetComponentInParent<SimObjPhysics>();
+
                     if(sop.PrimaryProperty == SimObjPrimaryProperty.Moveable || sop.PrimaryProperty == SimObjPrimaryProperty.CanPickup)
-                    filter.Add(rb);
+                    {
+                        //don't add object if it's in an object specific receptacle-so things like towels and toilet paper that are mounted by default
+                        if(sop.transform.parent.name != "AttachPoint")
+                        filter.Add(rb);
+                        
+                    }
                 }
             }
 
