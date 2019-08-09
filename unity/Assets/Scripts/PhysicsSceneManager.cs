@@ -179,7 +179,10 @@ public class PhysicsSceneManager : MonoBehaviour
 						continue;
 					}
 					Contains c = go.GetComponent<Contains>();
-					if (c == null) {
+                    c.CurrentlyContainedObjects().Clear();
+                    c.GetComponent<Collider>().enabled = false;
+                    c.GetComponent<Collider>().enabled = true;
+                    if (c == null) {
 						Debug.LogWarning(sop.gameObject + " is missing a contains script on one of its receptacle boxes.");
 						continue;
 					}
