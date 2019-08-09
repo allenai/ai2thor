@@ -17,6 +17,7 @@ public class InstantiatePrefabTest : MonoBehaviour
 	Vector3 gizmoscale;
 	Quaternion gizmoquaternion;
 
+
     private float yoffset = 0.005f; //y axis offset of placing objects, useful to allow objects to fall just a tiny bit to allow physics to resolve consistently
 
     // public GameObject TestPlaceObject;
@@ -193,7 +194,11 @@ public class InstantiatePrefabTest : MonoBehaviour
             #endif
             return false; //uh, there was nothing in the List for some reason, so failed to spawn
         }
-    
+        if (rsps.Count == 0)
+        {
+            return false;
+        }
+
         List<ReceptacleSpawnPoint> goodRsps = new List<ReceptacleSpawnPoint>();
         foreach (ReceptacleSpawnPoint p in rsps) {
             if(!p.ParentSimObjPhys.GetComponent<SimObjPhysics>().DoesThisObjectHaveThisSecondaryProperty
@@ -202,12 +207,8 @@ public class InstantiatePrefabTest : MonoBehaviour
             }
         }
 
-        if(rsps.Count == 0)
-        {
-            return false;
-        }
-
-        goodRsps.Shuffle_();
+        int seed = rsps.Count + goodRsps.Count + sop.UniqueID.GetHashCode();
+        goodRsps.Shuffle_(seed);
         int tries = 0;
         foreach (ReceptacleSpawnPoint p in goodRsps)
         {
