@@ -206,7 +206,7 @@ public class InstantiatePrefabTest : MonoBehaviour
                 goodRsps.Add(p);
             }
         }
-
+        // Make a seed that is pseudo-random (different for different objects even in the same area) but also reproducible.
         int seed = rsps.Count + goodRsps.Count + sop.UniqueID.GetHashCode();
         goodRsps.Shuffle_(seed);
         int tries = 0;
