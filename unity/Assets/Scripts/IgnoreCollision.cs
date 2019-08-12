@@ -10,7 +10,18 @@ public class IgnoreCollision : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        if(gameObject.GetComponentInParent<SimObjPhysics>())
+        SetupIgnoreCollision();
+    }
+
+    // Update is called once per frame
+    void Update()
+    {
+        
+    }
+
+    public void SetupIgnoreCollision()
+    {
+        if(gameObject.GetComponentInParent<SimObjPhysics>() && myColliders.Length == 0)
         {
             myColliders = gameObject.GetComponentInParent<SimObjPhysics>().MyColliders;
         }
@@ -37,11 +48,5 @@ public class IgnoreCollision : MonoBehaviour
                 Physics.IgnoreCollision(col, otherCol);
             }
         }
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        
     }
 }

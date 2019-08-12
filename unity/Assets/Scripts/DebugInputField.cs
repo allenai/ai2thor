@@ -1190,6 +1190,11 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         action.handDistance = 5.0f;
                         action.direction = new Vector3(0, 1, 1);
                         action.moveMagnitude = 800f;
+
+                        if(splitcommand.Length > 1)
+                        {
+                            action.moveMagnitude = float.Parse(splitcommand[1]);
+                        }
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }

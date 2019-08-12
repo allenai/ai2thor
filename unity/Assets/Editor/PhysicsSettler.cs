@@ -64,7 +64,12 @@ class PhysicsSettler
                         //don't add object if it's in an object specific receptacle-so things like towels and toilet paper that are mounted by default
                         if(sop.transform.parent.name != "AttachPoint")
                         filter.Add(rb);
-                        
+                    }
+
+                    IgnoreCollision[] ignoreCollisionObjects = sop.GetComponentsInChildren<IgnoreCollision>();
+                    foreach(IgnoreCollision ic in ignoreCollisionObjects)
+                    {
+                        ic.SetupIgnoreCollision();
                     }
                 }
             }
