@@ -118,7 +118,7 @@ Transform:
   m_LocalScale: {x: 1.1282842, y: 1.4778754, z: 1.1282841}
   m_Children: []
   m_Father: {fileID: 4481655068413788}
-  m_RootOrder: 1
+  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1207536238640772
 GameObject:
@@ -196,7 +196,11 @@ MonoBehaviour:
   isVisible: 0
   isInteractable: 0
   isInAgentHand: 0
-  MyColliders: []
+  MyColliders:
+  - {fileID: 65586519224190014}
+  - {fileID: 65066218306699106}
+  - {fileID: 65373186996368108}
+  - {fileID: 65043682674632412}
   HFdynamicfriction: 1
   HFstaticfriction: 1
   HFbounciness: 0
@@ -503,7 +507,7 @@ Transform:
   m_LocalScale: {x: 1.1282842, y: 1.4778754, z: 1.1282841}
   m_Children: []
   m_Father: {fileID: 4481655068413788}
-  m_RootOrder: 0
+  m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1420379240331098
 GameObject:
@@ -592,8 +596,8 @@ Transform:
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
-  - {fileID: 4623747173068954}
   - {fileID: 4602137218819594}
+  - {fileID: 4623747173068954}
   - {fileID: 4058790960698358}
   - {fileID: 4324654963178806}
   - {fileID: 4867454744337078}
@@ -1261,6 +1265,21 @@ Transform:
   m_Father: {fileID: 4481655068413788}
   m_RootOrder: 6
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &5843362229600942696
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4571145975152316906}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9c309bad17f9d440784734c019a3a674, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  myColliders:
+  - {fileID: 4571145975152316909}
+  objectToIgnoreCollisionsWith: {fileID: 1207536238640772}
 --- !u!1001 &5470149162390354790
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -1276,7 +1295,7 @@ PrefabInstance:
     - target: {fileID: 8396441049647835788, guid: 89a0464aabe374f16bde3f8e779b3830,
         type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 8396441049647835780, guid: 89a0464aabe374f16bde3f8e779b3830,
         type: 3}
@@ -1345,9 +1364,21 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 89a0464aabe374f16bde3f8e779b3830, type: 3}
+--- !u!1 &4571145975152316906 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 8396441049647835788, guid: 89a0464aabe374f16bde3f8e779b3830,
+    type: 3}
+  m_PrefabInstance: {fileID: 5470149162390354790}
+  m_PrefabAsset: {fileID: 0}
 --- !u!4 &4571145975152316898 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 8396441049647835780, guid: 89a0464aabe374f16bde3f8e779b3830,
+    type: 3}
+  m_PrefabInstance: {fileID: 5470149162390354790}
+  m_PrefabAsset: {fileID: 0}
+--- !u!65 &4571145975152316909 stripped
+BoxCollider:
+  m_CorrespondingSourceObject: {fileID: 8396441049647835787, guid: 89a0464aabe374f16bde3f8e779b3830,
     type: 3}
   m_PrefabInstance: {fileID: 5470149162390354790}
   m_PrefabAsset: {fileID: 0}

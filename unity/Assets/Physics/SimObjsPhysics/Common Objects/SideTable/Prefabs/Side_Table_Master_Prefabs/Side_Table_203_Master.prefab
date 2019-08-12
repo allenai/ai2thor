@@ -86,6 +86,8 @@ GameObject:
   - component: {fileID: 62446983}
   - component: {fileID: 62446982}
   - component: {fileID: 62446981}
+  - component: {fileID: 9039679358218927563}
+  - component: {fileID: 2148110733130440943}
   m_Layer: 0
   m_Name: Drawer
   m_TagString: SimObjPhysics
@@ -212,6 +214,46 @@ MonoBehaviour:
   movementType: 0
   OpenBoundingBox: {fileID: 0}
   ClosedBoundingBox: {fileID: 0}
+--- !u!114 &9039679358218927563
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 62446979}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9c309bad17f9d440784734c019a3a674, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  myColliders: []
+  objectToIgnoreCollisionsWith: {fileID: 1441522848}
+--- !u!1773428102 &2148110733130440943
+ParentConstraint:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 62446979}
+  m_Enabled: 1
+  m_Weight: 1
+  m_TranslationAtRest: {x: -0.000071, y: 0.7747902, z: 0.06420408}
+  m_RotationAtRest: {x: 0, y: 0, z: 0}
+  m_TranslationOffsets:
+  - {x: -0.000071, y: 0.7747902, z: 0.06420408}
+  m_RotationOffsets:
+  - {x: 0, y: 0, z: 0}
+  m_AffectTranslationX: 0
+  m_AffectTranslationY: 0
+  m_AffectTranslationZ: 0
+  m_AffectRotationX: 1
+  m_AffectRotationY: 1
+  m_AffectRotationZ: 1
+  m_IsContraintActive: 1
+  m_IsLocked: 0
+  m_Sources:
+  - sourceTransform: {fileID: 1441522851}
+    weight: 1
 --- !u!1 &79819459
 GameObject:
   m_ObjectHideFlags: 0

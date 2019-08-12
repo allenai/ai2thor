@@ -884,7 +884,8 @@ MonoBehaviour:
   isVisible: 0
   isInteractable: 0
   isInAgentHand: 0
-  MyColliders: []
+  MyColliders:
+  - {fileID: 65663634110609304}
   HFdynamicfriction: 1
   HFstaticfriction: 1
   HFbounciness: 0
@@ -1037,6 +1038,21 @@ Transform:
   m_Father: {fileID: 4773293195660256}
   m_RootOrder: 7
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &8610943667564631470
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6710397677361817798}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9c309bad17f9d440784734c019a3a674, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  myColliders:
+  - {fileID: 6710397677361817793}
+  objectToIgnoreCollisionsWith: {fileID: 1831968051464942}
 --- !u!1001 &3001149456239657546
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -1121,9 +1137,21 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 89a0464aabe374f16bde3f8e779b3830, type: 3}
+--- !u!1 &6710397677361817798 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 8396441049647835788, guid: 89a0464aabe374f16bde3f8e779b3830,
+    type: 3}
+  m_PrefabInstance: {fileID: 3001149456239657546}
+  m_PrefabAsset: {fileID: 0}
 --- !u!4 &6710397677361817806 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 8396441049647835780, guid: 89a0464aabe374f16bde3f8e779b3830,
+    type: 3}
+  m_PrefabInstance: {fileID: 3001149456239657546}
+  m_PrefabAsset: {fileID: 0}
+--- !u!65 &6710397677361817793 stripped
+BoxCollider:
+  m_CorrespondingSourceObject: {fileID: 8396441049647835787, guid: 89a0464aabe374f16bde3f8e779b3830,
     type: 3}
   m_PrefabInstance: {fileID: 3001149456239657546}
   m_PrefabAsset: {fileID: 0}
