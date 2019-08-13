@@ -61,9 +61,12 @@ class PhysicsSettler
 
                     if(sop.PrimaryProperty == SimObjPrimaryProperty.Moveable || sop.PrimaryProperty == SimObjPrimaryProperty.CanPickup)
                     {
-                        //don't add object if it's in an object specific receptacle-so things like towels and toilet paper that are mounted by default
-                        if(sop.transform.parent.name != "AttachPoint")
-                        filter.Add(rb);
+                        if(!rb.GetComponent<DecalCollision>())
+                        {
+                            //don't add object if it's in an object specific receptacle-so things like towels and toilet paper that are mounted by default
+                            if(sop.transform.parent.name != "AttachPoint")
+                            filter.Add(rb);
+                        }
                     }
 
                     IgnoreCollision[] ignoreCollisionObjects = sop.GetComponentsInChildren<IgnoreCollision>();
