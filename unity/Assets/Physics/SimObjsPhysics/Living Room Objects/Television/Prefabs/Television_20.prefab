@@ -593,7 +593,18 @@ MonoBehaviour:
   isVisible: 0
   isInteractable: 0
   isInAgentHand: 0
-  MyColliders: []
+  MyColliders:
+  - {fileID: 65426500819948706}
+  - {fileID: 65785663343456526}
+  - {fileID: 65641944888716920}
+  - {fileID: 65671254314617142}
+  - {fileID: 65738101872981910}
+  - {fileID: 65495327001114368}
+  - {fileID: 65498679824477436}
+  - {fileID: 65900291330715844}
+  - {fileID: 65110422657947128}
+  - {fileID: 65016487577852008}
+  - {fileID: 65142699266159502}
   HFdynamicfriction: 1
   HFstaticfriction: 1
   HFbounciness: 0
@@ -2051,6 +2062,21 @@ BoxCollider:
   serializedVersion: 2
   m_Size: {x: 1.240041, y: 0.74065346, z: 0.07719395}
   m_Center: {x: 0, y: 0.005964709, z: 0.0451262}
+--- !u!114 &8112159774514791433
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9165661643621694520}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9c309bad17f9d440784734c019a3a674, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  myColliders:
+  - {fileID: 9165661643621694527}
+  objectToIgnoreCollisionsWith: {fileID: 1441481544804484}
 --- !u!1001 &843543216341522100
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -2066,7 +2092,7 @@ PrefabInstance:
     - target: {fileID: 8396441049647835788, guid: 89a0464aabe374f16bde3f8e779b3830,
         type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 8396441049647835780, guid: 89a0464aabe374f16bde3f8e779b3830,
         type: 3}
@@ -2135,9 +2161,21 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 89a0464aabe374f16bde3f8e779b3830, type: 3}
+--- !u!1 &9165661643621694520 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 8396441049647835788, guid: 89a0464aabe374f16bde3f8e779b3830,
+    type: 3}
+  m_PrefabInstance: {fileID: 843543216341522100}
+  m_PrefabAsset: {fileID: 0}
 --- !u!4 &9165661643621694512 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 8396441049647835780, guid: 89a0464aabe374f16bde3f8e779b3830,
+    type: 3}
+  m_PrefabInstance: {fileID: 843543216341522100}
+  m_PrefabAsset: {fileID: 0}
+--- !u!65 &9165661643621694527 stripped
+BoxCollider:
+  m_CorrespondingSourceObject: {fileID: 8396441049647835787, guid: 89a0464aabe374f16bde3f8e779b3830,
     type: 3}
   m_PrefabInstance: {fileID: 843543216341522100}
   m_PrefabAsset: {fileID: 0}
