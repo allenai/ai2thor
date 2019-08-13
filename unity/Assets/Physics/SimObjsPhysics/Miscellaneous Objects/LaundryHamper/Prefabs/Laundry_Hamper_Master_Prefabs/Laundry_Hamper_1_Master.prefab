@@ -462,7 +462,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b439f6e4ef5714ee2a3643acf37b7a9d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  uniqueID: LaundryHamper|-01.44|+00.15|+00.97
+  uniqueID: LaundryHamper|-00.36|-00.34|-02.96
   Type: 98
   PrimaryProperty: 1
   SecondaryProperties: 0700000008000000
@@ -478,6 +478,11 @@ MonoBehaviour:
   - {fileID: 3088695792151931439}
   - {fileID: 3088695791997585701}
   - {fileID: 3088695792621981414}
+  - {fileID: 3088695792075302433}
+  - {fileID: 3088695792385489691}
+  - {fileID: 3088695791221424571}
+  - {fileID: 3088695792328595008}
+  - {fileID: 3088695791418969179}
   ReceptacleTriggerBoxes:
   - {fileID: 3087613491176081041}
   - {fileID: 3087613491391362856}
@@ -506,11 +511,11 @@ MonoBehaviour:
   - {fileID: 3088695791284828497}
   - {fileID: 3088695792375295203}
   - {fileID: 3088695791770338088}
-  HFdynamicfriction: 1
-  HFstaticfriction: 1
+  HFdynamicfriction: 0.6
+  HFstaticfriction: 0.6
   HFbounciness: 0
-  HFrbdrag: 1
-  HFrbangulardrag: 1
+  HFrbdrag: 0.4
+  HFrbangulardrag: 0.2
   salientMaterials: 06000000
   CurrentTemperature: 0
   HowManySecondsUntilRoomTemp: 10
@@ -525,9 +530,9 @@ Rigidbody:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 3088695791209658569}
   serializedVersion: 2
-  m_Mass: 9
-  m_Drag: 0
-  m_AngularDrag: 0.05
+  m_Mass: 1.55
+  m_Drag: 0.2
+  m_AngularDrag: 0.1
   m_UseGravity: 1
   m_IsKinematic: 0
   m_Interpolate: 0
@@ -781,8 +786,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 3088695791506675469}
-  - component: {fileID: 3088695791506675472}
-  - component: {fileID: 3088695791506675475}
   m_Layer: 8
   m_Name: LaundryHamperLid
   m_TagString: SimObjPhysics
@@ -808,66 +811,6 @@ Transform:
   m_Father: {fileID: 3088695791209658572}
   m_RootOrder: 8
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &3088695791506675472
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3088695791506675468}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b439f6e4ef5714ee2a3643acf37b7a9d, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  uniqueID: LaundryHamperLid|-01.43|+00.66|+00.79
-  Type: 99
-  PrimaryProperty: 1
-  SecondaryProperties: 08000000
-  BoundingBox: {fileID: 0}
-  VisibilityPoints:
-  - {fileID: 3088695792075302433}
-  - {fileID: 3088695792385489691}
-  - {fileID: 3088695791221424571}
-  - {fileID: 3088695792328595008}
-  - {fileID: 3088695791418969179}
-  ReceptacleTriggerBoxes: []
-  isVisible: 0
-  isInteractable: 0
-  isInAgentHand: 0
-  MyColliders:
-  - {fileID: 3088695792338431469}
-  - {fileID: 3088695792137826459}
-  - {fileID: 3088695791284828497}
-  - {fileID: 3088695792375295203}
-  - {fileID: 3088695791770338088}
-  HFdynamicfriction: 0
-  HFstaticfriction: 0
-  HFbounciness: 0
-  HFrbdrag: 0
-  HFrbangulardrag: 0
-  salientMaterials: 
-  CurrentTemperature: 0
-  HowManySecondsUntilRoomTemp: 10
-  inMotion: 0
-  lastVelocity: 0
-  ContainedObjectReferences: []
---- !u!54 &3088695791506675475
-Rigidbody:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3088695791506675468}
-  serializedVersion: 2
-  m_Mass: 1
-  m_Drag: 0
-  m_AngularDrag: 0.05
-  m_UseGravity: 1
-  m_IsKinematic: 1
-  m_Interpolate: 0
-  m_Constraints: 0
-  m_CollisionDetection: 0
 --- !u!1 &3088695791636718328
 GameObject:
   m_ObjectHideFlags: 0
@@ -2230,15 +2173,15 @@ PrefabInstance:
       objectReference: {fileID: 3088695791209658569}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 6877aba5a696347dbb6c01f851f2da28, type: 3}
---- !u!4 &3085628522441070931 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 4251536333782420, guid: 6877aba5a696347dbb6c01f851f2da28,
-    type: 3}
-  m_PrefabInstance: {fileID: 3088695790768841927}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1 &3087613491176081041 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 1170333579371094, guid: 6877aba5a696347dbb6c01f851f2da28,
+    type: 3}
+  m_PrefabInstance: {fileID: 3088695790768841927}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &3085628522441070931 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 4251536333782420, guid: 6877aba5a696347dbb6c01f851f2da28,
     type: 3}
   m_PrefabInstance: {fileID: 3088695790768841927}
   m_PrefabAsset: {fileID: 0}
@@ -2332,15 +2275,15 @@ PrefabInstance:
       objectReference: {fileID: 3088695791209658569}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 6877aba5a696347dbb6c01f851f2da28, type: 3}
---- !u!4 &3085628522555582698 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 4251536333782420, guid: 6877aba5a696347dbb6c01f851f2da28,
-    type: 3}
-  m_PrefabInstance: {fileID: 3088695790891275646}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1 &3087613491391362856 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 1170333579371094, guid: 6877aba5a696347dbb6c01f851f2da28,
+    type: 3}
+  m_PrefabInstance: {fileID: 3088695790891275646}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &3085628522555582698 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 4251536333782420, guid: 6877aba5a696347dbb6c01f851f2da28,
     type: 3}
   m_PrefabInstance: {fileID: 3088695790891275646}
   m_PrefabAsset: {fileID: 0}
@@ -2434,15 +2377,15 @@ PrefabInstance:
       objectReference: {fileID: 3088695791209658569}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 6877aba5a696347dbb6c01f851f2da28, type: 3}
---- !u!1 &3087613491319338640 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 1170333579371094, guid: 6877aba5a696347dbb6c01f851f2da28,
-    type: 3}
-  m_PrefabInstance: {fileID: 3088695790912050374}
-  m_PrefabAsset: {fileID: 0}
 --- !u!4 &3085628522566396242 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 4251536333782420, guid: 6877aba5a696347dbb6c01f851f2da28,
+    type: 3}
+  m_PrefabInstance: {fileID: 3088695790912050374}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1 &3087613491319338640 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 1170333579371094, guid: 6877aba5a696347dbb6c01f851f2da28,
     type: 3}
   m_PrefabInstance: {fileID: 3088695790912050374}
   m_PrefabAsset: {fileID: 0}
