@@ -3982,20 +3982,20 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         {
                             //if this object is sliced, don't pick it up because it is effectively disabled
                             if(sop.GetComponent<SliceObject>().IsSliced())
-                            continue;
+                            {
+                                target.RemoveFromContainedObjectReferences(sop);
+                                break;
+                            }
                         }
 
-                        else
-                        {
-                            sop.transform.Find("Colliders").gameObject.SetActive(false);
-                            Rigidbody soprb = sop.GetComponent<Rigidbody>();
-                            soprb.collisionDetectionMode = CollisionDetectionMode.Discrete;
-                            soprb.isKinematic = true;
-                            sop.transform.SetParent(target.transform);
-                            target.AddToContainedObjectReferences(sop);
-                            target.GetComponent<SimObjPhysics>().isInAgentHand = true;//agent hand flag
-                        }
-
+                        sop.transform.Find("Colliders").gameObject.SetActive(false);
+                        Rigidbody soprb = sop.GetComponent<Rigidbody>();
+                        soprb.collisionDetectionMode = CollisionDetectionMode.Discrete;
+                        soprb.isKinematic = true;
+                        sop.transform.SetParent(target.transform);
+                        target.AddToContainedObjectReferences(sop);
+                        target.GetComponent<SimObjPhysics>().isInAgentHand = true;//agent hand flag
+                        
                     }
 
                 }

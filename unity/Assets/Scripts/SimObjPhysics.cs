@@ -125,8 +125,13 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 
 	public void AddToContainedObjectReferences(SimObjPhysics t)
 	{
-			ContainedObjectReferences.Add(t);
+        ContainedObjectReferences.Add(t);
 	}
+
+    public void RemoveFromContainedObjectReferences(SimObjPhysics t)
+    {
+        ContainedObjectReferences.Remove(t);
+    }
 
 	public void ClearContainedObjectReferences()
 	{
@@ -860,6 +865,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 					{
 						if(!objs.Contains(sop))
 						{
+                            //print(sop.transform.name);
 							objs.Add(sop);
 						}
 					}
