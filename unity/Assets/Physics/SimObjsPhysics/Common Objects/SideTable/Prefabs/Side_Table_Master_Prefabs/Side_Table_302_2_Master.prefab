@@ -1004,6 +1004,8 @@ GameObject:
   - component: {fileID: 9015984549005062551}
   - component: {fileID: 9015984549005062548}
   - component: {fileID: 9015984549005062549}
+  - component: {fileID: 1077779341492388422}
+  - component: {fileID: 7099277503198013654}
   m_Layer: 8
   m_Name: Drawer
   m_TagString: SimObjPhysics
@@ -1122,6 +1124,46 @@ MonoBehaviour:
   movementType: 0
   OpenBoundingBox: {fileID: 0}
   ClosedBoundingBox: {fileID: 0}
+--- !u!114 &1077779341492388422
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9015984549005062571}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9c309bad17f9d440784734c019a3a674, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  myColliders: []
+  objectToIgnoreCollisionsWith: {fileID: 9015984549405169897}
+--- !u!1773428102 &7099277503198013654
+ParentConstraint:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9015984549005062571}
+  m_Enabled: 1
+  m_Weight: 1
+  m_TranslationAtRest: {x: 0.0022279024, y: 0.5318, z: 0.1307888}
+  m_RotationAtRest: {x: 0, y: 0, z: 0}
+  m_TranslationOffsets:
+  - {x: 0.0022279024, y: 0.5318, z: 0.1307888}
+  m_RotationOffsets:
+  - {x: 0, y: 0, z: 0}
+  m_AffectTranslationX: 0
+  m_AffectTranslationY: 0
+  m_AffectTranslationZ: 0
+  m_AffectRotationX: 1
+  m_AffectRotationY: 1
+  m_AffectRotationZ: 1
+  m_IsContraintActive: 1
+  m_IsLocked: 0
+  m_Sources:
+  - sourceTransform: {fileID: 9015984549405169896}
+    weight: 1
 --- !u!1 &9015984549018635009
 GameObject:
   m_ObjectHideFlags: 0
@@ -1501,7 +1543,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   uniqueID: SideTable|+00.41|+00.00|-01.68
   Type: 129
-  PrimaryProperty: 1
+  PrimaryProperty: 2
   SecondaryProperties: 07000000
   BoundingBox: {fileID: 9015984548956961146}
   VisibilityPoints:
@@ -1528,12 +1570,6 @@ MonoBehaviour:
   - {fileID: 9015984548318679037}
   - {fileID: 9015984549883539666}
   - {fileID: 9015984549373211732}
-  - {fileID: 9015984548863517727}
-  - {fileID: 9015984548593296794}
-  - {fileID: 9015984548484038488}
-  - {fileID: 9015984548133787339}
-  - {fileID: 9015984549464373121}
-  - {fileID: 9015984549092411532}
   HFdynamicfriction: 1.2
   HFstaticfriction: 1.2
   HFbounciness: 0
@@ -1557,7 +1593,7 @@ Rigidbody:
   m_Drag: 0.1
   m_AngularDrag: 0.05
   m_UseGravity: 1
-  m_IsKinematic: 1
+  m_IsKinematic: 0
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
@@ -2349,15 +2385,15 @@ PrefabInstance:
       objectReference: {fileID: 9015984549405169897}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 6877aba5a696347dbb6c01f851f2da28, type: 3}
---- !u!1 &9014832357766598521 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 1170333579371094, guid: 6877aba5a696347dbb6c01f851f2da28,
-    type: 3}
-  m_PrefabInstance: {fileID: 9015984549395721519}
-  m_PrefabAsset: {fileID: 0}
 --- !u!4 &9011751861015335099 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 4251536333782420, guid: 6877aba5a696347dbb6c01f851f2da28,
+    type: 3}
+  m_PrefabInstance: {fileID: 9015984549395721519}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1 &9014832357766598521 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 1170333579371094, guid: 6877aba5a696347dbb6c01f851f2da28,
     type: 3}
   m_PrefabInstance: {fileID: 9015984549395721519}
   m_PrefabAsset: {fileID: 0}
@@ -2452,15 +2488,15 @@ PrefabInstance:
       objectReference: {fileID: 9015984549005062571}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 6877aba5a696347dbb6c01f851f2da28, type: 3}
---- !u!4 &9011751860166807944 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 4251536333782420, guid: 6877aba5a696347dbb6c01f851f2da28,
-    type: 3}
-  m_PrefabInstance: {fileID: 9015984550179367964}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1 &9014832358542380618 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 1170333579371094, guid: 6877aba5a696347dbb6c01f851f2da28,
+    type: 3}
+  m_PrefabInstance: {fileID: 9015984550179367964}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &9011751860166807944 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 4251536333782420, guid: 6877aba5a696347dbb6c01f851f2da28,
     type: 3}
   m_PrefabInstance: {fileID: 9015984550179367964}
   m_PrefabAsset: {fileID: 0}

@@ -1646,6 +1646,8 @@ GameObject:
   - component: {fileID: 2960480605108446005}
   - component: {fileID: 2960480605108446010}
   - component: {fileID: 2960480605108446011}
+  - component: {fileID: 580279769917688627}
+  - component: {fileID: 4243526915107960007}
   m_Layer: 8
   m_Name: Drawer (1)
   m_TagString: SimObjPhysics
@@ -1753,9 +1755,9 @@ MonoBehaviour:
   MovingParts:
   - {fileID: 2960480605108446009}
   openPositions:
-  - {x: 0, y: -0.2917, z: -0.19}
+  - {x: 0.0002789171, y: 0.16529, z: 0.2616}
   closedPositions:
-  - {x: 0, y: -0.2917, z: 0}
+  - {x: 0.0002789171, y: 0.16529, z: 0.06681345}
   animationTime: 0.2
   openPercentage: 1
   IgnoreTheseObjects:
@@ -1765,6 +1767,46 @@ MonoBehaviour:
   movementType: 0
   OpenBoundingBox: {fileID: 0}
   ClosedBoundingBox: {fileID: 0}
+--- !u!114 &580279769917688627
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2960480605108446009}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9c309bad17f9d440784734c019a3a674, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  myColliders: []
+  objectToIgnoreCollisionsWith: {fileID: 2960480605273649759}
+--- !u!1773428102 &4243526915107960007
+ParentConstraint:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2960480605108446009}
+  m_Enabled: 1
+  m_Weight: 1
+  m_TranslationAtRest: {x: 0.00027891714, y: 0.16529004, z: 0.06681345}
+  m_RotationAtRest: {x: 0, y: 0, z: 0}
+  m_TranslationOffsets:
+  - {x: 0.00027891994, y: 0.16529006, z: 0.06681347}
+  m_RotationOffsets:
+  - {x: 0, y: 0, z: 0}
+  m_AffectTranslationX: 0
+  m_AffectTranslationY: 0
+  m_AffectTranslationZ: 0
+  m_AffectRotationX: 1
+  m_AffectRotationY: 1
+  m_AffectRotationZ: 1
+  m_IsContraintActive: 1
+  m_IsLocked: 0
+  m_Sources:
+  - sourceTransform: {fileID: 2960480605273649758}
+    weight: 1
 --- !u!1 &2960480605126274723
 GameObject:
   m_ObjectHideFlags: 0
@@ -2005,7 +2047,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   uniqueID: SideTable|+00.31|+00.46|+01.23
   Type: 129
-  PrimaryProperty: 1
+  PrimaryProperty: 2
   SecondaryProperties: 07000000
   BoundingBox: {fileID: 2960480605434033277}
   VisibilityPoints:
@@ -2031,18 +2073,6 @@ MonoBehaviour:
   - {fileID: 2960480605355285992}
   - {fileID: 2960480603934938836}
   - {fileID: 2960480605465231599}
-  - {fileID: 2960480605892033907}
-  - {fileID: 2960480605491222904}
-  - {fileID: 2960480605020376275}
-  - {fileID: 2960480604276561500}
-  - {fileID: 2960480604925827550}
-  - {fileID: 2960480604865428912}
-  - {fileID: 2960480605538085095}
-  - {fileID: 2960480605801877034}
-  - {fileID: 2960480604243843982}
-  - {fileID: 2960480605599017842}
-  - {fileID: 2960480603847309996}
-  - {fileID: 2960480604915113027}
   HFdynamicfriction: 1.2
   HFstaticfriction: 1.2
   HFbounciness: 0
@@ -2066,7 +2096,7 @@ Rigidbody:
   m_Drag: 0.1
   m_AngularDrag: 0.05
   m_UseGravity: 1
-  m_IsKinematic: 1
+  m_IsKinematic: 0
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
@@ -2933,6 +2963,8 @@ GameObject:
   - component: {fileID: 2960480605848848351}
   - component: {fileID: 2960480605848848348}
   - component: {fileID: 2960480605848848349}
+  - component: {fileID: 1335894982826725586}
+  - component: {fileID: 8917866465972859920}
   m_Layer: 8
   m_Name: Drawer
   m_TagString: SimObjPhysics
@@ -3040,9 +3072,9 @@ MonoBehaviour:
   MovingParts:
   - {fileID: 2960480605848848355}
   openPositions:
-  - {x: 0, y: 0, z: -0.19}
+  - {x: 0.0002789379, y: 0.4575836, z: 0.2616}
   closedPositions:
-  - {x: 0, y: 0, z: 0}
+  - {x: 0.0002789379, y: 0.4575836, z: 0.06681348}
   animationTime: 0.2
   openPercentage: 1
   IgnoreTheseObjects:
@@ -3052,6 +3084,46 @@ MonoBehaviour:
   movementType: 0
   OpenBoundingBox: {fileID: 0}
   ClosedBoundingBox: {fileID: 0}
+--- !u!114 &1335894982826725586
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2960480605848848355}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9c309bad17f9d440784734c019a3a674, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  myColliders: []
+  objectToIgnoreCollisionsWith: {fileID: 2960480605273649759}
+--- !u!1773428102 &8917866465972859920
+ParentConstraint:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2960480605848848355}
+  m_Enabled: 1
+  m_Weight: 1
+  m_TranslationAtRest: {x: 0.00027893792, y: 0.45758358, z: 0.06681348}
+  m_RotationAtRest: {x: 0, y: 0, z: 0}
+  m_TranslationOffsets:
+  - {x: 0.00027894974, y: 0.4575836, z: 0.06681347}
+  m_RotationOffsets:
+  - {x: 0, y: 0, z: 0}
+  m_AffectTranslationX: 0
+  m_AffectTranslationY: 0
+  m_AffectTranslationZ: 0
+  m_AffectRotationX: 1
+  m_AffectRotationY: 1
+  m_AffectRotationZ: 1
+  m_IsContraintActive: 1
+  m_IsLocked: 0
+  m_Sources:
+  - sourceTransform: {fileID: 2960480605273649758}
+    weight: 1
 --- !u!1 &2960480605892033905
 GameObject:
   m_ObjectHideFlags: 0
