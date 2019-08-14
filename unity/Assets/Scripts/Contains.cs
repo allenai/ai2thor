@@ -170,18 +170,45 @@ public class Contains : MonoBehaviour
 	//report back what is currently inside this receptacle
 	public List<SimObjPhysics> CurrentlyContainedObjects()
 	{
+        List<SimObjPhysics> cleanedList = new List<SimObjPhysics>(CurrentlyContains);
+
+        foreach(SimObjPhysics sop in CurrentlyContains)
+        {
+            if(sop.GetComponent<SliceObject>())
+            {
+                if(sop.GetComponent<SliceObject>().IsSliced())
+                cleanedList.Remove(sop);
+            }
+        }
+
+        CurrentlyContains = cleanedList;
 		return CurrentlyContains;
 	}
 
 	//report back a list of unique id of objects currently inside this receptacle
 	public List<string> CurrentlyContainedUniqueIDs()
 	{
+        List<SimObjPhysics> cleanedList = new List<SimObjPhysics>(CurrentlyContains);
+
 		List<string> ids = new List<string>();
 
 		foreach (SimObjPhysics sop in CurrentlyContains)
 		{
-			ids.Add(sop.UniqueID);
+            if(sop.GetComponent<SliceObject>())
+            {
+                if(sop.GetComponent<SliceObject>().IsSliced())
+                {
+                    cleanedList.Remove(sop);
+                }
+            }
 		}
+
+        CurrentlyContains = cleanedList;
+
+        foreach (SimObjPhysics sop in CurrentlyContains)
+        {
+            ids.Add(sop.UniqueID);
+        }
 
 		return ids;
 	}
