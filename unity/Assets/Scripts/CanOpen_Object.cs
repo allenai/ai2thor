@@ -545,7 +545,10 @@ public class CanOpen_Object : MonoBehaviour
 
 	public void OnTriggerEnter(Collider other)
 	{
-		//print(other.name);
+		if(other.CompareTag("Receptacle"))
+        {
+            return;
+        }
 		//note: Normally rigidbodies set to Kinematic will never call the OnTriggerX events
 		//when colliding with another rigidbody that is kinematic. For some reason, if the other object
 		//has a trigger collider even though THIS object only has a kinematic rigidbody, this
