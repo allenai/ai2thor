@@ -1054,7 +1054,7 @@ ParentConstraint:
   m_TranslationAtRest: {x: -0.00012545168, y: 0.27541444, z: -0.2456208}
   m_RotationAtRest: {x: 0, y: 0, z: 0}
   m_TranslationOffsets:
-  - {x: -0.00012543797, y: 0.27541444, z: -0.24562079}
+  - {x: -0.00012545288, y: 0.27541444, z: -0.2456208}
   m_RotationOffsets:
   - {x: 0, y: 0, z: 0}
   m_AffectTranslationX: 0
@@ -2248,7 +2248,7 @@ ParentConstraint:
   m_TranslationAtRest: {x: -0.00013051924, y: 0.2762704, z: 0.2456209}
   m_RotationAtRest: {x: 0, y: 0, z: 0}
   m_TranslationOffsets:
-  - {x: -0.00013050437, y: 0.2762704, z: 0.2456209}
+  - {x: -0.00013051927, y: 0.2762704, z: 0.2456209}
   m_RotationOffsets:
   - {x: 0, y: 0, z: 0}
   m_AffectTranslationX: 0
@@ -3482,7 +3482,7 @@ ParentConstraint:
   m_TranslationAtRest: {x: -0.00013051924, y: 0.17198311, z: 0.24562094}
   m_RotationAtRest: {x: 0, y: 0, z: 0}
   m_TranslationOffsets:
-  - {x: -0.00013050437, y: 0.17198311, z: 0.24562094}
+  - {x: -0.00013051927, y: 0.1719831, z: 0.24562094}
   m_RotationOffsets:
   - {x: 0, y: 0, z: 0}
   m_AffectTranslationX: 0
@@ -4515,7 +4515,7 @@ ParentConstraint:
   m_TranslationAtRest: {x: -0.00013041924, y: 0.067695744, z: 0.24562094}
   m_RotationAtRest: {x: 0, y: 0, z: 0}
   m_TranslationOffsets:
-  - {x: -0.00013041496, y: 0.06769574, z: 0.24562094}
+  - {x: -0.00013041496, y: 0.067695744, z: 0.24562094}
   m_RotationOffsets:
   - {x: 0, y: 0, z: 0}
   m_AffectTranslationX: 0
@@ -5651,7 +5651,7 @@ ParentConstraint:
   m_TranslationAtRest: {x: -0.00012536347, y: 0.06683978, z: -0.24562082}
   m_RotationAtRest: {x: 0, y: 0, z: 0}
   m_TranslationOffsets:
-  - {x: -0.00012534857, y: 0.066839784, z: -0.24562082}
+  - {x: -0.00012536347, y: 0.06683978, z: -0.2456208}
   m_RotationOffsets:
   - {x: 0, y: 0, z: 0}
   m_AffectTranslationX: 0
@@ -6110,11 +6110,11 @@ MonoBehaviour:
   - {fileID: 591979568030775683}
   - {fileID: 591979567373338505}
   - {fileID: 591979568559410871}
-  HFdynamicfriction: 1
-  HFstaticfriction: 1
+  HFdynamicfriction: 1.2
+  HFstaticfriction: 1.2
   HFbounciness: 0
-  HFrbdrag: 1
-  HFrbangulardrag: 1
+  HFrbdrag: 0.4
+  HFrbangulardrag: 0.15
   salientMaterials: 01000000
   CurrentTemperature: 0
   HowManySecondsUntilRoomTemp: 10
@@ -6129,8 +6129,8 @@ Rigidbody:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 591979567935119386}
   serializedVersion: 2
-  m_Mass: 14
-  m_Drag: 0
+  m_Mass: 11
+  m_Drag: 0.1
   m_AngularDrag: 0.05
   m_UseGravity: 1
   m_IsKinematic: 0
@@ -6395,7 +6395,7 @@ ParentConstraint:
   m_TranslationAtRest: {x: -0.00012545168, y: 0.17112717, z: -0.24562082}
   m_RotationAtRest: {x: 0, y: 0, z: 0}
   m_TranslationOffsets:
-  - {x: -0.00012543797, y: 0.17112717, z: -0.24562082}
+  - {x: -0.00012545288, y: 0.17112717, z: -0.2456208}
   m_RotationOffsets:
   - {x: 0, y: 0, z: 0}
   m_AffectTranslationX: 0
@@ -8829,15 +8829,15 @@ PrefabInstance:
       objectReference: {fileID: 591979567277636385}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 6877aba5a696347dbb6c01f851f2da28, type: 3}
---- !u!4 &592285990543312619 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 4251536333782420, guid: 6877aba5a696347dbb6c01f851f2da28,
-    type: 3}
-  m_PrefabInstance: {fileID: 591979566896708479}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1 &590827169109678377 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 1170333579371094, guid: 6877aba5a696347dbb6c01f851f2da28,
+    type: 3}
+  m_PrefabInstance: {fileID: 591979566896708479}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &592285990543312619 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 4251536333782420, guid: 6877aba5a696347dbb6c01f851f2da28,
     type: 3}
   m_PrefabInstance: {fileID: 591979566896708479}
   m_PrefabAsset: {fileID: 0}
@@ -8944,15 +8944,15 @@ PrefabInstance:
       objectReference: {fileID: 591979567844431347}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 6877aba5a696347dbb6c01f851f2da28, type: 3}
---- !u!1 &590827169284405547 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 1170333579371094, guid: 6877aba5a696347dbb6c01f851f2da28,
-    type: 3}
-  m_PrefabInstance: {fileID: 591979566937725821}
-  m_PrefabAsset: {fileID: 0}
 --- !u!4 &592285990571239145 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 4251536333782420, guid: 6877aba5a696347dbb6c01f851f2da28,
+    type: 3}
+  m_PrefabInstance: {fileID: 591979566937725821}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1 &590827169284405547 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 1170333579371094, guid: 6877aba5a696347dbb6c01f851f2da28,
     type: 3}
   m_PrefabInstance: {fileID: 591979566937725821}
   m_PrefabAsset: {fileID: 0}
@@ -9388,15 +9388,15 @@ PrefabInstance:
       objectReference: {fileID: 591979567935119386}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 6877aba5a696347dbb6c01f851f2da28, type: 3}
---- !u!1 &590827170660198555 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 1170333579371094, guid: 6877aba5a696347dbb6c01f851f2da28,
-    type: 3}
-  m_PrefabInstance: {fileID: 591979568313518797}
-  m_PrefabAsset: {fileID: 0}
 --- !u!4 &592285989262686041 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 4251536333782420, guid: 6877aba5a696347dbb6c01f851f2da28,
+    type: 3}
+  m_PrefabInstance: {fileID: 591979568313518797}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1 &590827170660198555 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 1170333579371094, guid: 6877aba5a696347dbb6c01f851f2da28,
     type: 3}
   m_PrefabInstance: {fileID: 591979568313518797}
   m_PrefabAsset: {fileID: 0}
@@ -9503,15 +9503,15 @@ PrefabInstance:
       objectReference: {fileID: 591979566597928960}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 6877aba5a696347dbb6c01f851f2da28, type: 3}
---- !u!1 &590827170555268644 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 1170333579371094, guid: 6877aba5a696347dbb6c01f851f2da28,
-    type: 3}
-  m_PrefabInstance: {fileID: 591979568351210610}
-  m_PrefabAsset: {fileID: 0}
 --- !u!4 &592285989291971046 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 4251536333782420, guid: 6877aba5a696347dbb6c01f851f2da28,
+    type: 3}
+  m_PrefabInstance: {fileID: 591979568351210610}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1 &590827170555268644 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 1170333579371094, guid: 6877aba5a696347dbb6c01f851f2da28,
     type: 3}
   m_PrefabInstance: {fileID: 591979568351210610}
   m_PrefabAsset: {fileID: 0}
