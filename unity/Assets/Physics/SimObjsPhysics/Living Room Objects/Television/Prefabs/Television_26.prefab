@@ -1051,7 +1051,15 @@ MonoBehaviour:
   isVisible: 0
   isInteractable: 0
   isInAgentHand: 0
-  MyColliders: []
+  MyColliders:
+  - {fileID: 65236306597967234}
+  - {fileID: 65972318617310206}
+  - {fileID: 65221822776800078}
+  - {fileID: 65584347857101384}
+  - {fileID: 65178936004103576}
+  - {fileID: 65147565607455762}
+  - {fileID: 65182845821213746}
+  - {fileID: 65526264903379140}
   HFdynamicfriction: 1
   HFstaticfriction: 1
   HFbounciness: 0
@@ -1653,6 +1661,21 @@ BoxCollider:
   serializedVersion: 2
   m_Size: {x: 0.1, y: 0.21423303, z: 0.08083687}
   m_Center: {x: 0, y: 0.014708838, z: 0.0034461333}
+--- !u!114 &2881394372162903385
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3009714857781097696}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9c309bad17f9d440784734c019a3a674, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  myColliders:
+  - {fileID: 3009714857781097703}
+  objectToIgnoreCollisionsWith: {fileID: 1551971208327904}
 --- !u!1001 &6720075510187400812
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -1668,7 +1691,7 @@ PrefabInstance:
     - target: {fileID: 8396441049647835788, guid: 89a0464aabe374f16bde3f8e779b3830,
         type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 8396441049647835780, guid: 89a0464aabe374f16bde3f8e779b3830,
         type: 3}
@@ -1737,9 +1760,21 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 89a0464aabe374f16bde3f8e779b3830, type: 3}
+--- !u!1 &3009714857781097696 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 8396441049647835788, guid: 89a0464aabe374f16bde3f8e779b3830,
+    type: 3}
+  m_PrefabInstance: {fileID: 6720075510187400812}
+  m_PrefabAsset: {fileID: 0}
 --- !u!4 &3009714857781097704 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 8396441049647835780, guid: 89a0464aabe374f16bde3f8e779b3830,
+    type: 3}
+  m_PrefabInstance: {fileID: 6720075510187400812}
+  m_PrefabAsset: {fileID: 0}
+--- !u!65 &3009714857781097703 stripped
+BoxCollider:
+  m_CorrespondingSourceObject: {fileID: 8396441049647835787, guid: 89a0464aabe374f16bde3f8e779b3830,
     type: 3}
   m_PrefabInstance: {fileID: 6720075510187400812}
   m_PrefabAsset: {fileID: 0}
