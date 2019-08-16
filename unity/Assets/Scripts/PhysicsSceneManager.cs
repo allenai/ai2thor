@@ -510,6 +510,7 @@ public class PhysicsSceneManager : MonoBehaviour
 					//remove from list if receptacle isn't in this scene
 					//compare to receptacles that exist in scene, get the ones that are the same
 					
+                    // Todo: make a copy of receptacles and remove the ones where things can't be placed. Then clean up the placement code.
 					foreach(SimObjPhysics sop in ReceptaclesInScene)
 					{
 						// don't random spawn in objects that are pickupable to prevent Egg spawning in Plate with the plate spawned in Cabinet....
@@ -536,7 +537,7 @@ public class PhysicsSceneManager : MonoBehaviour
 					}
 				}
 
-				//not found indictionary!
+				//not found in dictionary!
 				else
 				{
 					#if UNITY_EDITOR
