@@ -713,6 +713,11 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 				Debug.LogError(this.name + " is missing Salient Materials array!");
 			}
 		}
+
+        if(this.transform.localScale != new Vector3(1, 1, 1))
+        {
+            Debug.LogError(this.name + " is not at uniform scale! Set scale to (1, 1, 1)!!!");
+        }
 #endif
 		//end debug setup stuff
 
