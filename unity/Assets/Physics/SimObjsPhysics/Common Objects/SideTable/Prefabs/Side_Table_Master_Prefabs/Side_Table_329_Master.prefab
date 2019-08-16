@@ -830,7 +830,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   uniqueID: SideTable|+01.00|+00.01|-02.47
   Type: 129
-  PrimaryProperty: 1
+  PrimaryProperty: 2
   SecondaryProperties: 07000000
   BoundingBox: {fileID: 6487954788606400836}
   VisibilityPoints:
@@ -858,24 +858,12 @@ MonoBehaviour:
   - {fileID: 6487954787864742644}
   - {fileID: 6487954788100076053}
   - {fileID: 6487954788003562121}
-  - {fileID: 6487954788171447170}
-  - {fileID: 6487954787647380107}
-  - {fileID: 6487954788285505914}
-  - {fileID: 6487954787351241724}
-  - {fileID: 6487954787482062198}
-  - {fileID: 6487954788678903216}
-  - {fileID: 6487954787648426319}
-  - {fileID: 6487954786794415051}
-  - {fileID: 6487954787494115190}
-  - {fileID: 6487954787460687570}
-  - {fileID: 6487954787037289504}
-  - {fileID: 6487954786930384249}
   HFdynamicfriction: 1.2
   HFstaticfriction: 1.2
   HFbounciness: 0
   HFrbdrag: 0.4
   HFrbangulardrag: 0.15
-  salientMaterials: 
+  salientMaterials: 01000000
   CurrentTemperature: 0
   HowManySecondsUntilRoomTemp: 10
   inMotion: 0
@@ -893,7 +881,7 @@ Rigidbody:
   m_Drag: 0.1
   m_AngularDrag: 0.05
   m_UseGravity: 1
-  m_IsKinematic: 1
+  m_IsKinematic: 0
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
@@ -2392,6 +2380,8 @@ GameObject:
   - component: {fileID: 6487954788159192678}
   - component: {fileID: 6487954788159192681}
   - component: {fileID: 6487954788159192680}
+  - component: {fileID: 2855763560515827078}
+  - component: {fileID: 2613149983192969200}
   m_Layer: 8
   m_Name: Drawer (1)
   m_TagString: SimObjPhysics
@@ -2499,9 +2489,9 @@ MonoBehaviour:
   MovingParts:
   - {fileID: 6487954788159192682}
   openPositions:
-  - {x: 0, y: 0.1638999, z: 0.2804999}
+  - {x: 0, y: 0.1638999, z: 0.264}
   closedPositions:
-  - {x: 0, y: 0.1638999, z: 0.08240032}
+  - {x: 0, y: 0.1638999, z: 0.067}
   animationTime: 0.2
   openPercentage: 1
   IgnoreTheseObjects: []
@@ -2510,6 +2500,46 @@ MonoBehaviour:
   movementType: 0
   OpenBoundingBox: {fileID: 0}
   ClosedBoundingBox: {fileID: 0}
+--- !u!114 &2855763560515827078
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6487954788159192682}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9c309bad17f9d440784734c019a3a674, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  myColliders: []
+  objectToIgnoreCollisionsWith: {fileID: 6487954786771213172}
+--- !u!1773428102 &2613149983192969200
+ParentConstraint:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6487954788159192682}
+  m_Enabled: 1
+  m_Weight: 1
+  m_TranslationAtRest: {x: 0, y: 0.1638999, z: 0.067}
+  m_RotationAtRest: {x: 0, y: 0, z: 0}
+  m_TranslationOffsets:
+  - {x: 0, y: 0.1638999, z: 0.06699991}
+  m_RotationOffsets:
+  - {x: 0, y: 0, z: 0}
+  m_AffectTranslationX: 0
+  m_AffectTranslationY: 0
+  m_AffectTranslationZ: 0
+  m_AffectRotationX: 1
+  m_AffectRotationY: 1
+  m_AffectRotationZ: 1
+  m_IsContraintActive: 1
+  m_IsLocked: 0
+  m_Sources:
+  - sourceTransform: {fileID: 6487954786771213173}
+    weight: 1
 --- !u!1 &6487954788171447172
 GameObject:
   m_ObjectHideFlags: 0
@@ -3137,6 +3167,8 @@ GameObject:
   - component: {fileID: 6487954788805710289}
   - component: {fileID: 6487954788805710288}
   - component: {fileID: 6487954788805710291}
+  - component: {fileID: 6345896542889379204}
+  - component: {fileID: 8662364757109237559}
   m_Layer: 8
   m_Name: Drawer
   m_TagString: SimObjPhysics
@@ -3244,9 +3276,9 @@ MonoBehaviour:
   MovingParts:
   - {fileID: 6487954788805710293}
   openPositions:
-  - {x: 0, y: 0.4555998, z: 0.2804999}
+  - {x: 0, y: 0.4555998, z: 0.264}
   closedPositions:
-  - {x: 0, y: 0.45559978, z: 0.08240032}
+  - {x: 0, y: 0.45559978, z: 0.06699991}
   animationTime: 0.2
   openPercentage: 1
   IgnoreTheseObjects: []
@@ -3255,6 +3287,46 @@ MonoBehaviour:
   movementType: 0
   OpenBoundingBox: {fileID: 0}
   ClosedBoundingBox: {fileID: 0}
+--- !u!114 &6345896542889379204
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6487954788805710293}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9c309bad17f9d440784734c019a3a674, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  myColliders: []
+  objectToIgnoreCollisionsWith: {fileID: 6487954786771213172}
+--- !u!1773428102 &8662364757109237559
+ParentConstraint:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6487954788805710293}
+  m_Enabled: 1
+  m_Weight: 1
+  m_TranslationAtRest: {x: 0, y: 0.45559978, z: 0.06699991}
+  m_RotationAtRest: {x: 0, y: 0, z: 0}
+  m_TranslationOffsets:
+  - {x: 0, y: 0.45559978, z: 0.06699991}
+  m_RotationOffsets:
+  - {x: 0, y: 0, z: 0}
+  m_AffectTranslationX: 0
+  m_AffectTranslationY: 0
+  m_AffectTranslationZ: 0
+  m_AffectRotationX: 1
+  m_AffectRotationY: 1
+  m_AffectRotationZ: 1
+  m_IsContraintActive: 1
+  m_IsLocked: 0
+  m_Sources:
+  - sourceTransform: {fileID: 6487954786771213173}
+    weight: 1
 --- !u!1 &6487954788807848861
 GameObject:
   m_ObjectHideFlags: 0
@@ -3573,15 +3645,15 @@ PrefabInstance:
       objectReference: {fileID: 6487954786771213172}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 6877aba5a696347dbb6c01f851f2da28, type: 3}
---- !u!1 &6489107519512149876 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 1170333579371094, guid: 6877aba5a696347dbb6c01f851f2da28,
-    type: 3}
-  m_PrefabInstance: {fileID: 6487954786842975522}
-  m_PrefabAsset: {fileID: 0}
 --- !u!4 &6487085888919478454 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 4251536333782420, guid: 6877aba5a696347dbb6c01f851f2da28,
+    type: 3}
+  m_PrefabInstance: {fileID: 6487954786842975522}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1 &6489107519512149876 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 1170333579371094, guid: 6877aba5a696347dbb6c01f851f2da28,
     type: 3}
   m_PrefabInstance: {fileID: 6487954786842975522}
   m_PrefabAsset: {fileID: 0}
@@ -3681,15 +3753,15 @@ PrefabInstance:
       objectReference: {fileID: 6487954788805710293}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 6877aba5a696347dbb6c01f851f2da28, type: 3}
---- !u!1 &6489107519776724801 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 1170333579371094, guid: 6877aba5a696347dbb6c01f851f2da28,
-    type: 3}
-  m_PrefabInstance: {fileID: 6487954787116512535}
-  m_PrefabAsset: {fileID: 0}
 --- !u!4 &6487085888646105219 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 4251536333782420, guid: 6877aba5a696347dbb6c01f851f2da28,
+    type: 3}
+  m_PrefabInstance: {fileID: 6487954787116512535}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1 &6489107519776724801 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 1170333579371094, guid: 6877aba5a696347dbb6c01f851f2da28,
     type: 3}
   m_PrefabInstance: {fileID: 6487954787116512535}
   m_PrefabAsset: {fileID: 0}
@@ -3789,15 +3861,15 @@ PrefabInstance:
       objectReference: {fileID: 6487954788159192682}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 6877aba5a696347dbb6c01f851f2da28, type: 3}
---- !u!4 &6487085888147681278 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 4251536333782420, guid: 6877aba5a696347dbb6c01f851f2da28,
-    type: 3}
-  m_PrefabInstance: {fileID: 6487954787681784426}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1 &6489107520350924860 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 1170333579371094, guid: 6877aba5a696347dbb6c01f851f2da28,
+    type: 3}
+  m_PrefabInstance: {fileID: 6487954787681784426}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &6487085888147681278 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 4251536333782420, guid: 6877aba5a696347dbb6c01f851f2da28,
     type: 3}
   m_PrefabInstance: {fileID: 6487954787681784426}
   m_PrefabAsset: {fileID: 0}

@@ -596,7 +596,7 @@ public class CanOpen_Object : MonoBehaviour
 				{
 					//print(other.GetComponentInParent<CanOpen>().transform.name);
                     #if UNITY_EDITOR
-					Debug.Log(gameObject.name + " hit " + other.name + " Resetting position");
+					Debug.Log(gameObject.name + " hit " + other.name + " on "+ other.GetComponentInParent<SimObjPhysics>().transform.name + " Resetting position");
                     #endif
 					canReset = false;
 					Reset();
