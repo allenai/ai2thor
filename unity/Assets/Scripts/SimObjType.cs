@@ -321,7 +321,7 @@ public static class ReceptacleRestrictions
 		SimObjType.Pot, SimObjType.Pan, SimObjType.Bowl, SimObjType.Plate, SimObjType.Bread, SimObjType.Cup, SimObjType.Mug, SimObjType.Laptop,
 		SimObjType.SaltShaker, SimObjType.PepperShaker, SimObjType.AlarmClock, SimObjType.Box, SimObjType.SoapBottle, SimObjType.SoapBottleFilled, SimObjType.Kettle,
 		SimObjType.Glassbottle, SimObjType.CreditCard, SimObjType.RemoteControl, SimObjType.Candle, SimObjType.SprayBottle, SimObjType.Statue, SimObjType.Vase, 
-		SimObjType.KeyChain, SimObjType.CD, SimObjType.Book, SimObjType.EggCracked
+		SimObjType.KeyChain, SimObjType.CD, SimObjType.Book, SimObjType.EggCracked, SimObjType.Dumbbell, SimObjType.TableTopDecor
 	};
 
 	//Each sim object type keeps track of what sort of Receptacles it can be placed in
@@ -639,6 +639,18 @@ public static class ReceptacleRestrictions
 		//WINE BOTTLE
 		{SimObjType.WineBottle, new List<SimObjType>()
 		{SimObjType.Fridge, SimObjType.Dresser, SimObjType.Desk, SimObjType.Cabinet, SimObjType.DiningTable, SimObjType.TVStand, SimObjType.CoffeeTable, SimObjType.SideTable, SimObjType.CounterTop, SimObjType.Shelf, SimObjType.GarbageCan}},
+
+		//DUMBBELL
+		{SimObjType.Dumbbell, new List<SimObjType>()
+		{SimObjType.Dresser, SimObjType.Desk, SimObjType.Cabinet, SimObjType.DiningTable, SimObjType.TVStand, SimObjType.CoffeeTable, SimObjType.SideTable, SimObjType.CounterTop, SimObjType.Shelf, SimObjType.Bed, SimObjType.Chair, SimObjType.ArmChair, SimObjType.Sofa}},
+
+		//ALUMINUMFOIL
+		{SimObjType.AluminumFoil, new List<SimObjType>()
+		{SimObjType.Dresser, SimObjType.Drawer, SimObjType.Desk, SimObjType.Cabinet, SimObjType.DiningTable, SimObjType.TVStand, SimObjType.CoffeeTable, SimObjType.SideTable, SimObjType.CounterTop, SimObjType.Shelf}},
+
+		//TABLETOP DECOR
+		{SimObjType.TableTopDecor, new List<SimObjType>()
+		{SimObjType.Dresser, SimObjType.Desk, SimObjType.Cabinet, SimObjType.DiningTable, SimObjType.TVStand, SimObjType.CoffeeTable, SimObjType.SideTable, SimObjType.CounterTop, SimObjType.Shelf}},
 
 	};
 
