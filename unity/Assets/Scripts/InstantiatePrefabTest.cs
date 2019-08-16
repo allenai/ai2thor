@@ -16,6 +16,7 @@ public class InstantiatePrefabTest : MonoBehaviour
 	Vector3 gizmopos;
 	Vector3 gizmoscale;
 	Quaternion gizmoquaternion;
+    AgentManager agentManager;
 
 
     private float yoffset = 0.005f; //y axis offset of placing objects, useful to allow objects to fall just a tiny bit to allow physics to resolve consistently
@@ -46,11 +47,12 @@ public class InstantiatePrefabTest : MonoBehaviour
 	// Use this for initialization
 	void Start()
 	{
-		//m_Started = true;
-	}
+         agentManager = GameObject.Find("PhysicsSceneManager").GetComponentInChildren<AgentManager>();
+        //m_Started = true;
+    }
 
-	// Update is called once per frame
-	void Update()
+    // Update is called once per frame
+    void Update()
 	{
 
 	}
@@ -207,8 +209,17 @@ public class InstantiatePrefabTest : MonoBehaviour
             }
         }
         // Make a seed that is pseudo-random (different for different objects even in the same area) but also reproducible.
-        int seed = rsps.Count + goodRsps.Count + sop.UniqueID.GetHashCode();
-        goodRsps.Shuffle_(seed);
+        //int seed = rsps.Count + goodRsps.Count + sop.UniqueID.GetHashCode();
+        if (maxPlacementAttempts > 0)
+        {
+            goodRsps.Shuffle_();
+        }
+        else
+        {
+            Vector3 agentPosition = agentManager.ReturnPrimaryAgent().m_Camera.transform.position;
+            goodRsps.Sort((rsp1, rsp2) => Vector3.Distance(rsp1.Point, agentPosition).CompareTo(Vector3.Distance(rsp2.Point, agentPosition)));
+        }
+
         int tries = 0;
         foreach (ReceptacleSpawnPoint p in goodRsps)
         {
@@ -228,7 +239,7 @@ public class InstantiatePrefabTest : MonoBehaviour
                 return true;
             }
             tries += 1;
-            if (tries > maxPlacementAttempts)
+            if (maxPlacementAttempts > 0 && tries > maxPlacementAttempts)
             {
                 break;
             }
