@@ -3683,8 +3683,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         {
             PhysicsSceneManager script = GameObject.Find("PhysicsSceneManager").GetComponent<PhysicsSceneManager>();
             bool success = script.SetObjectToggles(action.objectToggles);
-            actionFinished(success);
-
+            if (!success)
+            {
+                // In true case, the ToggleAndWait will trigger the actionFinished call.
+                actionFinished(false);
+            }
         }
 
         public void PutObject(ServerAction action) {
