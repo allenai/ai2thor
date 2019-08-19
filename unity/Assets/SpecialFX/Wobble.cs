@@ -12,8 +12,8 @@ public class Wobble : MonoBehaviour
     public float MaxWobble = 0.03f;
     public float WobbleSpeed = 1f;
     public float Recovery = 1f;
-    float wobbleAmountX;
-    float wobbleAmountZ;
+    public float wobbleAmountX;
+    public float wobbleAmountZ;
     float wobbleAmountToAddX;
     float wobbleAmountToAddZ;
     float pulse;
