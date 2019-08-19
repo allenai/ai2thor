@@ -91,11 +91,17 @@ public class LiquidPourEdge : MonoBehaviour
         transferer.liquidVolumeLiters -= liters;
         transferer.normalizedCurrentFill = transferer.liquidVolumeLiters / transferer.containerMaxVolumeLiters;
 
-        liquidVolumeLiters += liters;
-        Debug.Log("Transfering liquid volume from " +  this.gameObject.name + " to  " + transferer.gameObject.name + " amount " + liters);
+        this.liquidVolumeLiters += liters;
+        Debug.Log("Transfering liquid volume from " +  this.gameObject.name + " to  " + transferer.gameObject.name + " amount " + liters + " total in new " + liquidVolumeLiters);
 
-        normalizedCurrentFill = liquidVolumeLiters / containerMaxVolumeLiters;
+        this.normalizedCurrentFill = this.liquidVolumeLiters / this.containerMaxVolumeLiters;
         this.SetFillAmount(normalizedCurrentFill);
+    }
+
+     void LoseLiquidVolume(float liters) {
+        // TODO: Calculate correctly how much this gets filled based on the transferer properties
+        this.liquidVolumeLiters -= liters;
+        this.normalizedCurrentFill = this.liquidVolumeLiters / this.containerMaxVolumeLiters;
     }
 
     // Update is called once per frame
@@ -115,7 +121,7 @@ public class LiquidPourEdge : MonoBehaviour
             var edgeLiquidDifference = waterLevelWorld.y - edgeLowestWorld.y;
             if (edgeLiquidDifference > 0) {
                 var containerRotationRadians = Mathf.Acos(Vector3.Dot(Vector3.up, up));
-                Debug.Log("Release liquid " + edgeLiquidDifference  + " water level  " + waterLevelWorld.y + " cup edge lowest "+ edgeLowestWorld.y + " container angle " + (180.0f/Mathf.PI) * containerRotationRadians) ;
+                Debug.Log("Release liquid edge diff: " + edgeLiquidDifference  + " water level:  " + waterLevelWorld.y + " cup edge lowest: "+ edgeLowestWorld.y + " container angle: " + (180.0f/Mathf.PI) * containerRotationRadians) ;
                 
                 ReleaseLiquid(edgeLiquidDifference, edgeLowestWorld, containerRotationRadians);
             }
@@ -145,12 +151,20 @@ public class LiquidPourEdge : MonoBehaviour
 
         activeFlow.transform.rotation = Quaternion.identity;
 
-        var normalizedFillDifference = edgeDifference / (emptyValue - fullValue);
+        const float liquidTransferConstant = 1f;
+        var normalizedFillDifference = liquidTransferConstant * edgeDifference / (emptyValue - fullValue);
         // var normalizedNew = (emptyValue - edgeDifference) / (emptyValue - fullValue);
        
 
-       
-        
+        var edgeLowesPosXZ = edgePositionWorld;
+        edgeLowesPosXZ.y = 0;
+        var posXZ = this.transform.position;
+        posXZ.y = 0;
+
+        var lenXZ = (edgeLowesPosXZ - posXZ).magnitude;
+        var angleDiff = Mathf.Atan2(edgeDifference, lenXZ);
+
+        Debug.Log(" Angle Diff " + angleDiff * 180.0f / Mathf.PI + " lenxz: " + lenXZ + " normdiff " + normalizedFillDifference);
 
         var mr = this.transform.GetComponentInParent<MeshRenderer>();
         var currentFill = mr.material.GetFloat("_FillAmount");
@@ -168,6 +182,11 @@ public class LiquidPourEdge : MonoBehaviour
 
         var newLiters = liquidVolumeLiters - litersTransfer;
 
+        // var ratio = containerRotationRadians / (Mathf.PI / 2.0f);
+       
+        // litersTransfer = ratio * liquidVolumeLiters;
+        //  Debug.Log("Rotation radians " + containerRotationRadians + " ratio " + ratio + " liters transfer " + litersTransfer);
+
         //var ratio = containerRotationRadians / (Mathf.PI / 2.0f);
         // litersTransfer = ratio * liquidVolumeLiters;
         // normalizedFillDifference = litersTransfer / containerMaxVolumeLiters;
@@ -176,20 +195,26 @@ public class LiquidPourEdge : MonoBehaviour
         
 
         if (litersTransfer > liquidVolumeLiters) {
+             Debug.Log("------- Liters transfer > than available liters " + litersTransfer);
             if (Mathf.Abs(containerRotationRadians) - 0.001f < (Mathf.PI / 2.0f)) {
                 var ratio = containerRotationRadians / (Mathf.PI / 2.0f);
                 litersTransfer = ratio * liquidVolumeLiters;
+                Debug.Log("-------- Aproximate transfer of " + litersTransfer + " for angle " + containerRotationRadians * 180.0f / Mathf.PI);
                 
             //  newFill = emptyValue + 1.0f;
             //  litersTransfer = liquidVolumeLiters;
             }
             else {
-
-
                 newFill = emptyValue + 1.0f;
                 litersTransfer = liquidVolumeLiters;
             }
             // edgeDifference = (liquidVolumeLiters / containerMaxVolumeLiters) * (emptyValue - fullValue);
+        }
+
+        // If there is too little liquid left
+        if (liquidVolumeLiters < 0.001f) {
+            newFill = emptyValue + 1.0f;
+            litersTransfer = liquidVolumeLiters;
         }
 
         
@@ -224,8 +249,12 @@ public class LiquidPourEdge : MonoBehaviour
                     // Debug.Log("Fluid transfer");
                 }
             }
+            else {
+                this.LoseLiquidVolume(litersTransfer);
+            }
         }
         else {
+            this.LoseLiquidVolume(litersTransfer);
             Debug.Log("Raycast fail");
         }
 
@@ -343,13 +372,25 @@ public class LiquidPourEdge : MonoBehaviour
 
 
 #if UNITY_EDITOR
-	
-	[UnityEditor.MenuItem("Thor/Set Liquid Shader Constants")]
-	public static void AddLiquidContainer()
+
+[UnityEditor.MenuItem("Thor/Set Liquid Component")]
+	public static void SetLiquidComponent()
 	{
-		GameObject prefabRoot = Selection.activeGameObject;
-        // Selection.gameO
-        var liquidEdge = prefabRoot.GetComponentInChildren<LiquidPourEdge>();
+        GameObject prefabRoot = Selection.activeGameObject;
+        GameObject circularPourEdge = GameObject.Instantiate(UnityEditor.AssetDatabase.LoadAssetAtPath("Assets/Prefabs/Systems/CircularLiquidPourEdge.prefab",typeof(GameObject)) as GameObject);
+        circularPourEdge.transform.parent = prefabRoot.transform;
+
+        var material = UnityEditor.AssetDatabase.LoadAssetAtPath("Assets/SpecialFX/DynamicMixLiquidVolume.mat",typeof(Material)) as Material;
+
+        prefabRoot.GetComponent<MeshRenderer>().material = material;
+        var wobble = prefabRoot.AddComponent<Wobble>();
+        wobble.MaxWobble = 0.03f;
+        wobble.Recovery = 1;
+        wobble.WobbleSpeed = 1;
+        wobble.wobbleAmountX = 0;
+        wobble.wobbleAmountZ = 0;
+        
+        var liquidEdge = circularPourEdge.GetComponent<LiquidPourEdge>();
         var worldOrigin = prefabRoot.transform.position;
 
 		Mesh mesh = liquidEdge.GetComponentInParent<MeshFilter>().sharedMesh;
@@ -367,24 +408,18 @@ public class LiquidPourEdge : MonoBehaviour
         var offset = (maxY - minY) * 0.00001f;
         var volume = mesh_volume_calculator.VolumeOfMesh(mesh);
 
-        GameObject waterStream = UnityEditor.AssetDatabase.LoadAssetAtPath("Assets/Physics/Scene Setup Prefabs/WaterPourParticle.prefab",typeof(GameObject)) as GameObject;
-        Debug.Log("Object " + waterStream);
-
         liquidEdge.emptyValue = 0.5f - minY - offset;
         liquidEdge.fullValue = 0.5f - maxY + offset;
-
-        liquidEdge.waterEmiter = waterStream;
 
         var floatVolume = ((float) volume) * 1000.0f;
         liquidEdge.containerMaxVolumeLiters = floatVolume;
 
         mr.enabled = false;
 
+        circularPourEdge.transform.localPosition = new Vector3(0, maxY, 0);
 
         Debug.Log("Constants, empty: " + liquidEdge.emptyValue + " full: " + liquidEdge.fullValue + "maxVolume liters: " + floatVolume + " minY: " + minY + " maxY: " + maxY + " maxY - minY: " + (maxY - minY));
 	}
-
-	
 
 #endif
 
