@@ -1,15 +1,17 @@
-﻿Shader "Unlit/SpecialFX/Liquid"
+﻿Shader "Unlit/SpecialFX/TransparentLiquidMix"
 {
     Properties
     {
         _Tint ("Tint", Color) = (1,1,1,1)
+        _MixTint ("MixTint", Color) = (1,1,1,1)
+        
         _MainTex ("Texture", 2D) = "white" {}
         _FillAmount ("Fill Amount", Range(-10,10)) = 0.0
+        _MixRim ("Mix Line Width", Range(0,1.0)) = 0.0
         [HideInInspector] _WobbleX ("WobbleX", Range(-1,1)) = 0.0
         [HideInInspector] _WobbleZ ("WobbleZ", Range(-1,1)) = 0.0
         _TopColor ("Top Color", Color) = (1,1,1,1)
-        _FoamColor ("Foam Line Color", Color) = (1,1,1,1)
-        _Rim ("Foam Line Width", Range(0,0.1)) = 0.0    
+            
         _RimColor ("Rim Color", Color) = (1,1,1,1)
         _RimPower ("Rim Power", Range(0,10)) = 0.0
         
@@ -18,26 +20,20 @@
     SubShader
     {
         Tags {
-          "Queue"="Transparent" 
-        //   "DisableBatching" = "True"
-        //   "LightMode" = "ForwardBase"
+          "Queue"="Transparent"
         }
  
         Pass
         {
-         //Zwrite On
-         Cull Off // we want the front and back faces
-         AlphaToMask On // transparency
+         Cull Off
+         AlphaToMask On
          Blend SrcAlpha OneMinusSrcAlpha
-        //  Blend DstColor Zero
  
          CGPROGRAM
  
  
          #pragma vertex vert
          #pragma fragment frag
-         // make fog work
-         #pragma multi_compile_fog
            
          #include "UnityCG.cginc"
  
@@ -51,7 +47,6 @@
          struct v2f
          {
             float2 uv : TEXCOORD0;
-            UNITY_FOG_COORDS(1)
             float4 vertex : SV_POSITION;
             float3 viewDir : COLOR;
             float3 normal : COLOR2;    
@@ -61,14 +56,13 @@
          sampler2D _MainTex;
          float4 _MainTex_ST;
          float _FillAmount, _WobbleX, _WobbleZ;
-         float4 _TopColor, _RimColor, _FoamColor, _Tint;
-         float _Rim, _RimPower;
+         float4 _TopColor, _RimColor, _Tint, _MixTint;
+         float _MixRim, _RimPower;
            
-         float4 RotateAroundYInDegrees (float4 vertex, float degrees)
+         float4 RotateAroundY (float4 vertex, float angleRadians)
          {
-            float alpha = degrees * UNITY_PI / 180;
             float sina, cosa;
-            sincos(alpha, sina, cosa);
+            sincos(angleRadians, sina, cosa);
             float2x2 m = float2x2(cosa, sina, -sina, cosa);
             return float4(vertex.yz , mul(m, vertex.xz)).xzyw ;            
          }
@@ -82,20 +76,24 @@
             //vert.y += sin(_Time.y * 0.001);
 
             o.vertex = UnityObjectToClipPos(vert);
-            o.uv = TRANSFORM_TEX(v.uv, _MainTex);
-            UNITY_TRANSFER_FOG(o,o.vertex);        
+            o.uv = TRANSFORM_TEX(v.uv, _MainTex);   
             // get world position of the vertex
  
-            float3 worldPos = mul (unity_ObjectToWorld, vert.xyz);  
+            float3 worldPos = mul (unity_ObjectToWorld, vert.xyz); 
+
+            // float3 fillAmountWorld = mul (unity_ObjectToWorld, float3(0, _FillAmount, 0)); 
+
             // rotate it around XY
-            float3 worldPosX= RotateAroundYInDegrees(float4(worldPos,0),360);
+            float3 worldPosX= RotateAroundY(float4(worldPos,0), 2 * UNITY_PI);
             // rotate around XZ
             float3 worldPosZ = float3 (worldPosX.y, worldPosX.z, worldPosX.x);     
             // combine rotations with worldPos, based on sine wave from script
-            float3 worldPosAdjusted = worldPos + (worldPosX  * _WobbleX)+ (worldPosZ* _WobbleZ);
-            // worldPosAdjusted.y += sin((_Time.y) + worldPosAdjusted.x * 2000)  * 0.009;
+            float3 worldPosAdjusted = worldPos + (worldPosX  * _WobbleX)+ (worldPosZ * _WobbleZ);
+            //worldPosAdjusted.y += sin(_Time.y + worldPosAdjusted.z * 2000)  * 0.009;
  
             // how high up the liquid is
+            // o.fillEdge =  worldPosAdjusted.y + fillAmountWorld.y;
+
             o.fillEdge =  worldPosAdjusted.y + _FillAmount;
  
             o.viewDir = normalize(ObjSpaceViewDir(vert));
@@ -107,8 +105,6 @@
          {
            // sample the texture
            fixed4 col = tex2D(_MainTex, i.uv) * _Tint;
-           // apply fog
-           UNITY_APPLY_FOG(i.fogCoord, col);
            
            // rim light
            float dotProduct = 1 - pow(dot(i.normal, i.viewDir), _RimPower);
@@ -116,23 +112,32 @@
            RimResult *= _RimColor;
  
            // foam edge
-           float4 foam = ( step(i.fillEdge, 0.5) - step(i.fillEdge, (0.5 - _Rim)))  ;
-           float4 foamColored = foam * (_FoamColor * 0.9);
+           //float4 foam = ( step(i.fillEdge, 0.5) - step(i.fillEdge, (0.5 - _Rim)));
+
+           float4 diff = _Tint - _MixTint;
+           float disctinct = dot(diff, diff); 
+           float disctinctCutoff = step(0.001, disctinct);
+
+           float4 foam = (step(i.fillEdge, 0.5) - smoothstep(i.fillEdge, i.fillEdge + _MixRim, 0.5)) * disctinctCutoff;
+           float4 foamColored = foam * (_MixTint * 0.9);
            // rest of the liquid
+
            float4 result = step(i.fillEdge, 0.5) - foam;
            float4 resultColored = result * col;
-           // both together, with the texture
-           float4 finalResult = resultColored + foamColored;               
+
+           
+           // Main color and mix color
+           float4 finalResult = resultColored + foamColored;  
+
+           //finalResult = (resultColored + foamColored ) * 0.5;  
+
+           // Multiplicative mixing
+           //finalResult = float4((resultColored.rgb*resultColored.a+foamColored.rgb*foamColored.a),resultColored.a+foamColored.a);           
            finalResult.rgb += RimResult;
  
            // color of backfaces/ top
            float4 topColor = _TopColor * (foam + result) + RimResult;
            //VFACE returns positive for front facing, negative for backfacing
-
-           // Fix for mac?? 
-          // if (finalResult.r - 0.0001 < 0.0) {
-          //   discard;
-          // }
 
            clip(finalResult - 0.0001);
 

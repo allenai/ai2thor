@@ -6,7 +6,7 @@
     }
     SubShader
     {
-        Tags {"Queue"="Opaque"}
+        Tags {"Queue"="Geometry"}
         Zwrite On
         Cull Off // we want the front and back faces
         AlphaToMask On // transparency
