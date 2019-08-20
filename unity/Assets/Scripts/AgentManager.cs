@@ -814,6 +814,13 @@ public class HandMetadata {
 }
 
 [Serializable]
+public class ObjectTypeCount
+{
+    public string objectType;
+    public int count;
+}
+
+[Serializable]
 public class ObjectPose
 {
     public string objectName;
@@ -927,7 +934,7 @@ public class ServerAction
 	public bool continuousMode; //i don't think this is used right now? also how is this different from the continuous bool above?
 	public bool uniquePickupableObjectTypes; // only allow one of each object type to be visible
 	public float removeProb;
-	public int maxNumRepeats;
+	public int numPlacementAttempts;
 	public bool randomizeObjectAppearance;
 	public bool renderImage = true;
 	public bool renderDepthImage;
@@ -943,7 +950,8 @@ public class ServerAction
 	public bool allowDecayTemperature = true; //set to true if temperature should decay over time, set to false if temp changes should not decay, defaulted true
 	public string StateChange;//a string that specifies which state change to randomly toggle
     public float timeStep = 0.01f;
-
+    public ObjectTypeCount[] numRepeats;
+    public ObjectTypeCount[] minFreePerReceptacleType;
     public ObjectPose[] objectPoses;
     public ObjectToggle[] objectToggles;
 
