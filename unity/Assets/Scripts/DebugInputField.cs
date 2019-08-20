@@ -442,7 +442,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         {
                             action.randomSeed = int.Parse(splitcommand[1]);
                             action.forceVisible = false;
-                            action.maxNumRepeats = 5;
+                            action.numPlacementAttempts = 5;
                         }
 
                         //should objects be spawned only in immediately visible areas?
@@ -467,14 +467,14 @@ namespace UnityStandardAssets.Characters.FirstPerson
                             if(splitcommand[2] == "f") 
                             action.forceVisible = false;
 
-                            action.maxNumRepeats = int.Parse(splitcommand[3]);
+                            action.numPlacementAttempts = int.Parse(splitcommand[3]);
                         }
 
                         else
                         {
                             action.randomSeed = 0;
                             action.forceVisible = false;//true;
-                            action.maxNumRepeats = 5;
+                            action.numPlacementAttempts = 5;
                         }
 
                         action.placeStationary = true;//set to false to spawn with kinematic = false, set to true to spawn everything kinematic true and they won't roll around
@@ -1730,7 +1730,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                             action.objectId = splitcommand[1];
 
                             //count of objects to spawn in
-                            action.maxNumRepeats = int.Parse(splitcommand[2]);
+                            action.numPlacementAttempts = int.Parse(splitcommand[2]);
 
                             //type of object
                             action.objectType = splitcommand[3];
@@ -1756,7 +1756,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                             //ID of spawner
                             action.objectId = splitcommand[1];
                             //count of objects to spawn
-                            action.maxNumRepeats = int.Parse(splitcommand[2]);
+                            action.numPlacementAttempts = int.Parse(splitcommand[2]);
                             //delay between spawns
                             action.moveMagnitude = float.Parse(splitcommand[3]);
 
@@ -1780,7 +1780,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                             action.objectId = splitcommand[1];
 
                             //count of objects to spawn
-                            action.maxNumRepeats = int.Parse(splitcommand[2]);
+                            action.numPlacementAttempts = int.Parse(splitcommand[2]);
 
                             //delay between spawns
                             action.moveMagnitude = float.Parse(splitcommand[3]);
@@ -1806,7 +1806,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                             action.agentCount = int.Parse(splitcommand[2]);
 
                             //maximum range of how many bjects to spawn
-                            action.maxNumRepeats = int.Parse(splitcommand[3]);
+                            action.numPlacementAttempts = int.Parse(splitcommand[3]);
 
                             //type of object
                             action.objectType = splitcommand[4];
@@ -1835,7 +1835,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                             action.agentCount = int.Parse(splitcommand[2]);
 
                             //maximum range of how many objects to spawn
-                            action.maxNumRepeats = int.Parse(splitcommand[3]);
+                            action.numPlacementAttempts = int.Parse(splitcommand[3]);
 
                             //delay between spawns
                             action.moveMagnitude = float.Parse(splitcommand[4]);
@@ -1861,7 +1861,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                             action.agentCount = int.Parse(splitcommand[2]);
 
                             //maximum range of how many objects to spawn
-                            action.maxNumRepeats = int.Parse(splitcommand[3]);
+                            action.numPlacementAttempts = int.Parse(splitcommand[3]);
 
                             //delay between spawns
                             action.moveMagnitude = float.Parse(splitcommand[4]);

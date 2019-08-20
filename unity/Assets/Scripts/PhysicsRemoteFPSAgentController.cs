@@ -3655,12 +3655,19 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
 
             //default repeats if no value is passed in.
-            if (action.maxNumRepeats == 0)
-                action.maxNumRepeats = 5;
+            if (action.numPlacementAttempts == 0)
+                action.numPlacementAttempts = 5;
 
             PhysicsSceneManager script = GameObject.Find("PhysicsSceneManager").GetComponent<PhysicsSceneManager>();
 
-            bool success = script.RandomSpawnRequiredSceneObjects(action.randomSeed, action.forceVisible, action.maxNumRepeats, action.placeStationary);
+            bool success = script.RandomSpawnRequiredSceneObjects(
+                action.randomSeed,
+                action.forceVisible,
+                action.numPlacementAttempts,
+                action.placeStationary,
+                action.numRepeats,
+                action.minFreePerReceptacleType
+                );
             physicsSceneManager.ResetUniqueIdToSimObjPhysics();
             actionFinished(success);
         }
@@ -3676,8 +3683,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         {
             PhysicsSceneManager script = GameObject.Find("PhysicsSceneManager").GetComponent<PhysicsSceneManager>();
             bool success = script.SetObjectToggles(action.objectToggles);
-            actionFinished(success);
-
+            if (!success)
+            {
+                // In true case, the ToggleAndWait will trigger the actionFinished call.
+                actionFinished(false);
+            }
         }
 
         public void PutObject(ServerAction action) {
@@ -3837,7 +3847,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 randomizedSpawnPoints.Shuffle_(action.randomSeed);
                 spawnPoints = randomizedSpawnPoints;
             }
-            if (script.PlaceObjectReceptacle(spawnPoints, ItemInHand.GetComponent<SimObjPhysics>(), action.placeStationary, 100, 90, placeUpright)) {
+            if (script.PlaceObjectReceptacle(spawnPoints, ItemInHand.GetComponent<SimObjPhysics>(), action.placeStationary, -1, 90, placeUpright, null)) {
                 ItemInHand = null;
                 DefaultAgentHand();
                 actionFinished(true);
