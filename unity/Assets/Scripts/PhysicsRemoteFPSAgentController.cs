@@ -85,6 +85,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             new Vector3(-float.PositiveInfinity, -float.PositiveInfinity, -float.PositiveInfinity)
         );
 
+        public GameObject[] TargetCircles = null;
+
         //change visibility check to use this distance when looking down
         //protected float DownwardViewDistance = 2.0f;
 
@@ -3543,6 +3545,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             //switch for which kind of state change is going to be toggled?
             switch(sosp)
             {
+                //XXX TODO: Might need to turn this one into a coroutine since CanOpen() requires varying amounts of time to complete if moving parts are involved
                 case SimObjSecondaryProperty.CanOpen:
                 {
                     foreach(SimObjPhysics sop in simObjectsOfType)
@@ -3557,6 +3560,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     break;
                 }
 
+                //XXX TODO: Might need to turn this one into a coroutine since Toggle() requires varying amounts of time to complete if moving parts are involved
                 case SimObjSecondaryProperty.CanToggleOnOff:
                 {
                     foreach(SimObjPhysics sop in simObjectsOfType)
@@ -3657,6 +3661,99 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
 
+        //instantiate a target circle, and then place it in a "SpawnOnlyOUtsideReceptacle" that is also within camera view
+        //If fails, return actionFinished(false) and despawn target circle
+        public void SpawnTargetCircle(ServerAction action)
+        {
+            print(action.forceVisible);
+            //instantiate a target circle
+            GameObject targetCircle = Instantiate(TargetCircles[action.objectVariation], new Vector3(0, 100, 0), Quaternion.identity);
+            List<SimObjPhysics> targetReceptacles = new List<SimObjPhysics>();
+            InstantiatePrefabTest ipt = physicsSceneManager.GetComponent<InstantiatePrefabTest>();
+
+            //only spawn target circle in visible receptacles
+            if(action.forceVisible)
+            {
+                //get all visible receptacles in current view
+                foreach(SimObjPhysics sop in VisibleSimObjs(action))
+                {
+                    if(sop.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.Receptacle))
+                    {
+                        ///one more check, make sure this receptacle
+                        if(ReceptacleRestrictions.SpawnOnlyOutsideReceptacles.Contains(sop.ObjType))
+                        targetReceptacles.Add(sop);
+                    }
+                }
+            }
+
+            //spawn target circle in any valid "outside" receptacle in the scene
+            else
+            {
+                //targetReceptacles.AddRange(physicsSceneManager.ReceptaclesInScene); 
+                foreach(SimObjPhysics sop in physicsSceneManager.ReceptaclesInScene)
+                {
+                    if(ReceptacleRestrictions.SpawnOnlyOutsideReceptacles.Contains(sop.ObjType))
+                    targetReceptacles.Add(sop);
+                }               
+            }
+
+
+            //ok now use the seed to shuffle either the list of receptacles in view/ the list of all "outside" receptacles in the scene
+            if(action.randomSeed != 0)
+            {
+                targetReceptacles.Shuffle_(action.randomSeed);
+            }
+
+            bool succesfulSpawn = false;
+            //ok we have a shuffled list of receptacles that is picked based on the seed.... so noooooow
+            foreach(SimObjPhysics sop in targetReceptacles)
+            {
+                //for every receptacle, we will get a returned list of receptacle spawn points, and then try placeObjectReceptacle
+                List<ReceptacleSpawnPoint> rsps = new List<ReceptacleSpawnPoint>();
+
+                //by default, only return spawn points that are visible to the agent's camera
+                bool returnOnlyVisiblePoints = false;
+
+                if(action.forceVisible == true)
+                {
+                    returnOnlyVisiblePoints = true;
+                }
+
+                rsps = sop.ReturnMySpawnPoints(returnOnlyVisiblePoints);
+                rsps.Shuffle_(action.randomSeed);
+
+                if(ipt.PlaceObjectReceptacle(rsps, targetCircle.GetComponent<SimObjPhysics>(), true, 20, 90, true))
+                {
+                    succesfulSpawn = true;
+                    break;
+                }
+            }
+
+            //hey it found a spot! we did it!
+            if(succesfulSpawn)
+            {
+                //if image synthesis is active, make sure to update the renderers for image synthesis since now there are new objects with renderes in the scene
+                BaseFPSAgentController primaryAgent = GameObject.Find("PhysicsSceneManager").GetComponent<AgentManager>().ReturnPrimaryAgent();
+                if(primaryAgent.imageSynthesis)
+                {
+                    if(primaryAgent.imageSynthesis.enabled)
+                    primaryAgent.imageSynthesis.OnSceneChange();
+                }
+
+                SimObjPhysics targetSOP = targetCircle.GetComponent<SimObjPhysics>();
+                physicsSceneManager.Generate_UniqueID(targetSOP);
+                physicsSceneManager.AddToObjectsInScene(targetSOP);
+                actionFinished(true);
+            }
+
+            else
+            {   
+                Destroy(targetCircle);
+                errorMessage = "No free spawn points could be found to spawn target circle";
+                actionFinished(false);
+            }
+        }
+
         //randomly repositions sim objects in the current scene
         public void InitialRandomSpawn(ServerAction action) {
             //something is in our hand AND we are trying to spawn it. Quick drop the object
@@ -3685,24 +3782,24 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             if (action.maxNumRepeats == 0)
                 action.maxNumRepeats = 5;
 
-            PhysicsSceneManager script = GameObject.Find("PhysicsSceneManager").GetComponent<PhysicsSceneManager>();
+            //PhysicsSceneManager script = GameObject.Find("PhysicsSceneManager").GetComponent<PhysicsSceneManager>();
 
-            bool success = script.RandomSpawnRequiredSceneObjects(action.randomSeed, action.forceVisible, action.maxNumRepeats, action.placeStationary);
+            bool success = physicsSceneManager.RandomSpawnRequiredSceneObjects(action.randomSeed, action.forceVisible, action.maxNumRepeats, action.placeStationary);
             physicsSceneManager.ResetUniqueIdToSimObjPhysics();
             actionFinished(success);
         }
 
         public void SetObjectPoses(ServerAction action)
         {
-            PhysicsSceneManager script = GameObject.Find("PhysicsSceneManager").GetComponent<PhysicsSceneManager>();
-            bool success = script.SetObjectPoses(action.objectPoses);
+            //PhysicsSceneManager script = GameObject.Find("PhysicsSceneManager").GetComponent<PhysicsSceneManager>();
+            bool success = physicsSceneManager.SetObjectPoses(action.objectPoses);
             actionFinished(success);
         }
 
         public void SetObjectToggles(ServerAction action)
         {
-            PhysicsSceneManager script = GameObject.Find("PhysicsSceneManager").GetComponent<PhysicsSceneManager>();
-            bool success = script.SetObjectToggles(action.objectToggles);
+            //PhysicsSceneManager script = GameObject.Find("PhysicsSceneManager").GetComponent<PhysicsSceneManager>();
+            bool success = physicsSceneManager.SetObjectToggles(action.objectToggles);
             actionFinished(success);
 
         }
@@ -3773,8 +3870,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     //check spawn area specifically if it's a stove top we are trying to place something in because
                     //they are close together and can overlap and are weird
                     if (osr.GetComponent<SimObjPhysics>().Type == SimObjType.StoveBurner) {
-                        PhysicsSceneManager psm = GameObject.Find("PhysicsSceneManager").GetComponent<PhysicsSceneManager>();
-                        if (psm.StoveTopCheckSpawnArea(ItemInHand.GetComponent<SimObjPhysics>(), osr.attachPoint.transform.position,
+                        //PhysicsSceneManager psm = GameObject.Find("PhysicsSceneManager").GetComponent<PhysicsSceneManager>();
+                        if (physicsSceneManager.StoveTopCheckSpawnArea(ItemInHand.GetComponent<SimObjPhysics>(), osr.attachPoint.transform.position,
                                 osr.attachPoint.transform.rotation, false) == false) {
                             errorMessage = "another object's collision is blocking held object from being placed";
                             actionFinished(false);
@@ -3846,7 +3943,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
 
             //ok we are holding something, time to try and place it
-            InstantiatePrefabTest script = GameObject.Find("PhysicsSceneManager").GetComponent<InstantiatePrefabTest>();
+            InstantiatePrefabTest script = physicsSceneManager.GetComponent<InstantiatePrefabTest>();
             //set degreeIncrement to 90 for placing held objects to check for vertical angles
             List<ReceptacleSpawnPoint> spawnPoints = targetReceptacle.ReturnMySpawnPoints(onlyPointsCloseToAgent);
             if (action.randomSeed != 0) {
@@ -3997,7 +4094,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         target.GetComponent<SimObjPhysics>().isInAgentHand = true;//agent hand flag
                         
                     }
-
                 }
             }
         }
@@ -6556,7 +6652,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         public void CreateObjectOnFloor(ServerAction action) {
-            InstantiatePrefabTest script = GameObject.Find("PhysicsSceneManager").GetComponent<InstantiatePrefabTest>();
+            InstantiatePrefabTest script = physicsSceneManager.GetComponent<InstantiatePrefabTest>();
             Bounds b = script.BoundsOfObject(action.objectType, 1);
             if (b.min.x == float.PositiveInfinity) {
                 errorMessage = "Could not get bounds for the object to be created on the floor";
@@ -6609,7 +6705,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         protected SimObjPhysics randomlyCreateAndPlaceObjectOnFloor(string objectType, int objectVariation, Vector3[] candidatePositions) {
-            InstantiatePrefabTest script = GameObject.Find("PhysicsSceneManager").GetComponent<InstantiatePrefabTest>();
+            InstantiatePrefabTest script = physicsSceneManager.GetComponent<InstantiatePrefabTest>();
             Bounds b = script.BoundsOfObject(objectType, 1);
             if (b.min.x != float.PositiveInfinity) {
                 errorMessage = "Could not get bounds of object with type " + objectType;
@@ -6975,17 +7071,17 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public void RandomizeHideSeekObjects(ServerAction action) {
             System.Random rnd = new System.Random(action.randomSeed);
 
-            PhysicsSceneManager psm = GameObject.Find("PhysicsSceneManager").GetComponent<PhysicsSceneManager>();
-            if (!psm.ToggleHideAndSeek(true)) {
+            //PhysicsSceneManager psm = GameObject.Find("PhysicsSceneManager").GetComponent<PhysicsSceneManager>();
+            if (!physicsSceneManager.ToggleHideAndSeek(true)) {
                 errorMessage = "Hide and Seek object reference not set, nothing to randomize.";
                 actionFinished(false);
                 return;
             }
 
-            foreach (Transform child in psm.HideAndSeek.transform) {
+            foreach (Transform child in physicsSceneManager.HideAndSeek.transform) {
                 child.gameObject.SetActive(rnd.NextDouble() > action.removeProb);
             }
-            psm.SetupScene();
+            physicsSceneManager.SetupScene();
             physicsSceneManager.ResetUniqueIdToSimObjPhysics();
 
             snapToGrid(); // This snapping seems necessary for some reason, really doesn't make any sense.
@@ -7510,7 +7606,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             float yMax = b.max.y - 0.2f;
             float xRoomSize = b.max.x - b.min.x;
             float zRoomSize = b.max.z - b.min.z;
-            InstantiatePrefabTest script = GameObject.Find("PhysicsSceneManager").GetComponent<InstantiatePrefabTest>();
+            InstantiatePrefabTest script = physicsSceneManager.GetComponent<InstantiatePrefabTest>();
             SimObjPhysics objForBounds = script.SpawnObject(prefab, false, objectVariation, new Vector3(0.0f, b.max.y + 10.0f, 0.0f), transform.eulerAngles, false, true);
 
             Bounds objBounds = new Bounds(
@@ -7656,7 +7752,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             );
 
             float yMax = b.max.y - 0.2f;
-            InstantiatePrefabTest script = GameObject.Find("PhysicsSceneManager").GetComponent<InstantiatePrefabTest>();
+            InstantiatePrefabTest script = physicsSceneManager.GetComponent<InstantiatePrefabTest>();
 
             List<Bounds> objsBounds = new List<Bounds>();
             List<Vector3> objsCenterRelPos = new List<Vector3>();

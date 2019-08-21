@@ -262,7 +262,9 @@ public enum SimObjType : int
     RoomDecor = 154, //for display pieces that are mean to go on the floor of rooms, like the decorative sticks
 	Stool = 155,
     GarbageBag = 156,
-    Desktop = 157
+    Desktop = 157,
+    TargetCircle = 158,
+    Floor = 159,
 }
 
 public static class ReceptacleRestrictions
@@ -284,7 +286,7 @@ public static class ReceptacleRestrictions
     //things like a tall cup to have the top half of it sticking out of the receptacle box when placed on a table without requiring the table's receptacle box to be gigantic and unweildy
     public static List<SimObjType> OnReceptacles = new List <SimObjType>()
     {SimObjType.DiningTable, SimObjType.TVStand, SimObjType.CoffeeTable, SimObjType.SideTable, SimObjType.Desk, SimObjType.Dresser, SimObjType.CounterTop, SimObjType.Shelf, SimObjType.ArmChair,
-     SimObjType.Sofa, SimObjType.Ottoman, SimObjType.StoveBurner,SimObjType.Bathtub, SimObjType.Plate};
+     SimObjType.Sofa, SimObjType.Ottoman, SimObjType.StoveBurner,SimObjType.Bathtub, SimObjType.Plate, SimObjType.Floor};
 
     //Objects are "placed into/placed in" to these receptacles
     //while these receptacles have things placed "in" them, they use the logic of OnReceptacles - Only the bottom 4 corners must be within the
@@ -298,7 +300,7 @@ public static class ReceptacleRestrictions
 	{
 		SimObjType.DiningTable, SimObjType.TVStand, SimObjType.CoffeeTable, SimObjType.SideTable, SimObjType.Desk, SimObjType.Dresser, SimObjType.CounterTop, SimObjType.Sofa, SimObjType.Bench, SimObjType.Bed,
 		SimObjType.Ottoman, SimObjType.StoveBurner, SimObjType.Shelf, SimObjType.Bathtub, SimObjType.Sink, SimObjType.BathtubBasin, SimObjType.SinkBasin,
-		SimObjType.CoffeeMachine, SimObjType.ToiletPaperHanger, SimObjType.Toilet,
+		SimObjType.CoffeeMachine, SimObjType.ToiletPaperHanger, SimObjType.Toilet, SimObjType.Floor
 	};
 
 	//objects in this list should always return all spawn points inside of it when trying to place an object from the hand into the object
@@ -651,6 +653,9 @@ public static class ReceptacleRestrictions
 		//TABLETOP DECOR
 		{SimObjType.TableTopDecor, new List<SimObjType>()
 		{SimObjType.Dresser, SimObjType.Desk, SimObjType.Cabinet, SimObjType.DiningTable, SimObjType.TVStand, SimObjType.CoffeeTable, SimObjType.SideTable, SimObjType.CounterTop, SimObjType.Shelf}},
+
+        {SimObjType.TargetCircle, new List<SimObjType>()
+        {SimObjType.Dresser, SimObjType.Desk, SimObjType.DiningTable, SimObjType.TVStand, SimObjType.CoffeeTable, SimObjType.SideTable,SimObjType.CounterTop, SimObjType.Shelf, SimObjType.Floor}},
 
 	};
 

@@ -163,6 +163,35 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         break;
                     }
 
+                case "stc":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "SpawnTargetCircle";
+                        if (splitcommand.Length > 1) 
+                        {
+                            if(int.Parse(splitcommand[1]) == 0)
+                            {
+                                action.objectVariation = 0;
+                            }
+
+                            if(int.Parse(splitcommand[1]) == 1)
+                            {
+                                action.objectVariation = 1;
+                            }
+
+                            if(int.Parse(splitcommand[1]) == 2)
+                            {
+                                action.objectVariation = 2;
+                            }
+                        }
+
+                        //set to true if only receptacles in view should be target spawn points for the targetcircle
+                        action.forceVisible = true;
+
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
                 case "pp":
                     {
                         ServerAction action = new ServerAction();
@@ -261,18 +290,18 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     action.forceAction = true;
                     action.action = "SetStateOfAllObjects";
 
-                     if (splitcommand.Length > 1) 
-                     {
-                        if(splitcommand[1] == "t")
-                        {
-                            action.forceAction = true;
-                        }
+                    if (splitcommand.Length > 1) 
+                    {
+                    if(splitcommand[1] == "t")
+                    {
+                        action.forceAction = true;
+                    }
 
-                        if(splitcommand[1] == "f")
-                        {
-                            action.forceAction = false;
-                        }
-                     }
+                    if(splitcommand[1] == "f")
+                    {
+                        action.forceAction = false;
+                    }
+                    }
                     PhysicsController.ProcessControlCommand(action);
                         
                     break;
