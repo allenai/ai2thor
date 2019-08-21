@@ -36,7 +36,7 @@ public class Contains : MonoBehaviour
 
 	//if the sim object is one of these properties, do not add it to the Currently Contains list.
 	private List<SimObjPrimaryProperty> PropertiesToIgnore = new List<SimObjPrimaryProperty>(new SimObjPrimaryProperty[] {SimObjPrimaryProperty.Wall,
-		SimObjPrimaryProperty.Floor, SimObjPrimaryProperty.Ceiling}); //should we ignore SimObjPrimaryProperty.Static?
+		SimObjPrimaryProperty.Floor, SimObjPrimaryProperty.Ceiling, SimObjPrimaryProperty.Static}); //should we ignore SimObjPrimaryProperty.Static?
 
 	public bool occupied = false;
 
