@@ -1253,14 +1253,14 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		ReceptacleTriggerBoxes = recepboxes.ToArray();
 	}
 
-	[ContextMenu("Laptop")]
-	void LaptopSetupContext()
+	[ContextMenu("Setup Floor")]
+	void FloorSetupContext()
 	{
-		this.Type = SimObjType.Laptop;
-		this.PrimaryProperty = SimObjPrimaryProperty.CanPickup;
+		this.Type = SimObjType.Floor;
+		this.PrimaryProperty = SimObjPrimaryProperty.Static;
 
 		this.SecondaryProperties = new SimObjSecondaryProperty[] 
-		{SimObjSecondaryProperty.CanOpen, SimObjSecondaryProperty.CanToggleOnOff};
+		{SimObjSecondaryProperty.Receptacle};
 
 		if (!gameObject.GetComponent<Rigidbody>())
 			gameObject.AddComponent<Rigidbody>();
@@ -1270,58 +1270,6 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		List<Transform> vpoints = new List<Transform>();
 
 		ContextSetUpSimObjPhysics();
-
-		if(!gameObject.GetComponent<CanOpen_Object>())
-		{
-			//CanOpen_Object coo = 
-			gameObject.AddComponent<CanOpen_Object>();
-			
-		}
-
-		if(!gameObject.GetComponent<CanToggleOnOff>())
-		{
-			//CanToggleOnOff ctoo = 
-			gameObject.AddComponent<CanToggleOnOff>();
-		}
-		// if(!gameObject.transform.Find("AttachPoint"))
-		// {
-		// 	GameObject ap = new GameObject("AttachPoint");
-		// 	ap.transform.position = gameObject.transform.position;
-		// 	ap.transform.SetParent(gameObject.transform);
-			
-		// }	
-				
-		// ObjectSpecificReceptacle osr;
-		// if(!gameObject.GetComponent<ObjectSpecificReceptacle>())
-		// {
-		// 	osr = gameObject.AddComponent<ObjectSpecificReceptacle>();
-		// 	osr.SpecificTypes = new SimObjType[] {SimObjType.Mug};
-		// }
-
-		// else
-		// {
-		// 	osr = gameObject.GetComponent<ObjectSpecificReceptacle>();
-		// }
-
-		foreach(Transform child in gameObject.transform)
-		{
-
-			if (child.name == "VisibilityPoints")
-			{
-				foreach (Transform col in child)
-				{
-					if (!vpoints.Contains(col.transform))
-						vpoints.Add(col.transform);
-				}
-			}
-
-			// if(child.name == "AttachPoint")
-			// {
-			// 	osr.attachPoint = child.transform;
-			// }
-		}
-
-		VisibilityPoints = vpoints.ToArray();
 	}
 
 	[ContextMenu("Drawer")]
