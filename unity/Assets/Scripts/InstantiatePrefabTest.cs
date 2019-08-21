@@ -222,6 +222,7 @@ public class InstantiatePrefabTest : MonoBehaviour
                 return true;
             }
         }
+
         //couldn't find valid places to spawn
         return false;
        
@@ -484,16 +485,15 @@ public class InstantiatePrefabTest : MonoBehaviour
                 }
                 sop.isInAgentHand = false;//set agent hand flag
 
-                #if UNITY_EDITOR
-                //Debug.Log(sop.name + " succesfully spawned in " +rsp.ParentSimObjPhys.name + " at coordinate " + rsp.Point);
-                #endif
+                // #if UNITY_EDITOR
+                // Debug.Log(sop.name + " succesfully spawned in " +rsp.ParentSimObjPhys.name + " at coordinate " + rsp.Point);
+                // #endif
 
                 return true;
             }
         }
        
         //reset rotation if no valid spawns found
-        //sop.transform.rotation = originalRot;
         //oh now we couldn't spawn it, all the spawn areas were not clear
         sop.transform.rotation = originalRot;
         sop.transform.position = originalPos;

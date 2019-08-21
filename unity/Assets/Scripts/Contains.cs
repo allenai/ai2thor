@@ -36,9 +36,11 @@ public class Contains : MonoBehaviour
 
 	//if the sim object is one of these properties, do not add it to the Currently Contains list.
 	private List<SimObjPrimaryProperty> PropertiesToIgnore = new List<SimObjPrimaryProperty>(new SimObjPrimaryProperty[] {SimObjPrimaryProperty.Wall,
-		SimObjPrimaryProperty.Floor, SimObjPrimaryProperty.Ceiling, SimObjPrimaryProperty.Moveable}); //should we ignore SimObjPrimaryProperty.Static?
+		SimObjPrimaryProperty.Floor, SimObjPrimaryProperty.Ceiling}); //should we ignore SimObjPrimaryProperty.Static?
 
 	public bool occupied = false;
+
+    //List<ReceptacleSpawnPoint> validpointlist = new List<ReceptacleSpawnPoint>();
 
 	//world coordinates of the Corners of this object's receptacles in case we need it for something
 	//public List<Vector3> Corners = new List<Vector3>();
@@ -327,7 +329,7 @@ public class Contains : MonoBehaviour
 			//}
 		}
 
-		// //****** */debug draw the spawn points as well
+		//****** */debug draw the spawn points as well
 		// #if UNITY_EDITOR
 		// validpointlist = PossibleSpawnPoints;
 		// #endif
