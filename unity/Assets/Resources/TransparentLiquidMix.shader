@@ -5,7 +5,6 @@
         _Tint ("Tint", Color) = (1,1,1,1)
         _MixTint ("MixTint", Color) = (1,1,1,1)
         
-        _MainTex ("Texture", 2D) = "white" {}
         _FillAmount ("Fill Amount", Range(-10,10)) = 0.0
         _MixRim ("Mix Line Width", Range(0,1.0)) = 0.0
         [HideInInspector] _WobbleX ("WobbleX", Range(-1,1)) = 0.0
@@ -40,20 +39,17 @@
          struct appdata
          {
            float4 vertex : POSITION;
-           float2 uv : TEXCOORD0;
            float3 normal : NORMAL; 
          };
  
          struct v2f
          {
-            float2 uv : TEXCOORD0;
             float4 vertex : SV_POSITION;
             float3 viewDir : COLOR;
             float3 normal : COLOR2;    
             float fillEdge : TEXCOORD2;
          };
  
-         sampler2D _MainTex;
          float4 _MainTex_ST;
          float _FillAmount, _WobbleX, _WobbleZ;
          float4 _TopColor, _RimColor, _Tint, _MixTint;
@@ -76,7 +72,6 @@
             //vert.y += sin(_Time.y * 0.001);
 
             o.vertex = UnityObjectToClipPos(vert);
-            o.uv = TRANSFORM_TEX(v.uv, _MainTex);   
             // get world position of the vertex
  
             float3 worldPos = mul (unity_ObjectToWorld, vert.xyz); 
@@ -104,7 +99,7 @@
          fixed4 frag (v2f i, fixed facing : VFACE) : SV_Target
          {
            // sample the texture
-           fixed4 col = tex2D(_MainTex, i.uv) * _Tint;
+           fixed4 col = _Tint;
            
            // rim light
            float dotProduct = 1 - pow(dot(i.normal, i.viewDir), _RimPower);
@@ -118,25 +113,24 @@
            float disctinct = dot(diff, diff); 
            float disctinctCutoff = step(0.001, disctinct);
 
-           float4 foam = (step(i.fillEdge, 0.5) - smoothstep(i.fillEdge, i.fillEdge + _MixRim, 0.5)) * disctinctCutoff;
-           float4 foamColored = foam * (_MixTint * 0.9);
+           float4 mix = (step(i.fillEdge, 0.5) - smoothstep(i.fillEdge, i.fillEdge + _MixRim, 0.5)) * disctinctCutoff;
+           float4 mixColored = mix * (_MixTint * 0.9);
            // rest of the liquid
 
-           float4 result = step(i.fillEdge, 0.5) - foam;
+           float4 result = step(i.fillEdge, 0.5) - mix;
            float4 resultColored = result * col;
-
            
            // Main color and mix color
-           float4 finalResult = resultColored + foamColored;  
+           float4 finalResult = resultColored + mixColored;  
 
-           //finalResult = (resultColored + foamColored ) * 0.5;  
+           //finalResult = (resultColored + mixColored ) * 0.5;  
 
            // Multiplicative mixing
-           //finalResult = float4((resultColored.rgb*resultColored.a+foamColored.rgb*foamColored.a),resultColored.a+foamColored.a);           
+           // finalResult = float4((resultColored.rgb*resultColored.a+mixColored.rgb*mixColored.a),resultColored.a+mixColored.a);           
            finalResult.rgb += RimResult;
  
            // color of backfaces/ top
-           float4 topColor = _TopColor * (foam + result) + RimResult;
+           float4 topColor = _TopColor * (mix + result) + RimResult;
            //VFACE returns positive for front facing, negative for backfacing
 
            clip(finalResult - 0.0001);
