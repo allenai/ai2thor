@@ -3665,7 +3665,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         //If fails, return actionFinished(false) and despawn target circle
         public void SpawnTargetCircle(ServerAction action)
         {
-            print(action.forceVisible);
             //instantiate a target circle
             GameObject targetCircle = Instantiate(TargetCircles[action.objectVariation], new Vector3(0, 100, 0), Quaternion.identity);
             List<SimObjPhysics> targetReceptacles = new List<SimObjPhysics>();
