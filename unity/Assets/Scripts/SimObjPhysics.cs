@@ -1267,8 +1267,6 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 
 		this.GetComponent<Rigidbody>().isKinematic = true;
 		
-		List<Transform> vpoints = new List<Transform>();
-
 		ContextSetUpSimObjPhysics();
 	}
 
