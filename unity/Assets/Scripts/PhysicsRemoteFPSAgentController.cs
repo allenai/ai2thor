@@ -788,11 +788,16 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                 float raycastDistance = Vector3.Distance(point.position, m_Camera.transform.position) + 1.0f;
 
+                if(raycastDistance > maxVisibleDistance)
+                {
+                    raycastDistance = maxVisibleDistance + 1.0f;
+                }
+
                 //check raycast against both visible and invisible layers, to check against ReceptacleTriggerBoxes which are normally
                 //ignored by the other raycast
                 if (includeInvisible) {
                     if (Physics.Raycast(agentCamera.transform.position, point.position - agentCamera.transform.position, out hit,
-                            100f, (1 << 8) | (1 << 9) | (1 << 10))) {
+                            raycastDistance, (1 << 8) | (1 << 9) | (1 << 10))) {
                         if (hit.transform != sop.transform) {
                             result = false;
                         }
@@ -3674,6 +3679,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             if(action.forceVisible)
             {
                 //get all visible receptacles in current view
+                //note this is using the above action's ForceVisible value... so right now VisibleSimObjs() is returning all objects and then
+                //SpawnOnlyOUtsideReceptacles and other checks are narrowing down the spawn positions
                 foreach(SimObjPhysics sop in VisibleSimObjs(action))
                 {
                     if(sop.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.Receptacle))
