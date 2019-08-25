@@ -218,6 +218,7 @@ public class InstantiatePrefabTest : MonoBehaviour
 
             if(PlaceObject(sop, p, PlaceStationary, degreeIncrement, AlwaysPlaceUpright))
             {
+                //print("placing "+ sop.transform.name + " on " +p.ParentSimObjPhys.transform.name);
                 //found a place to spawn! neato, return success
                 return true;
             }
@@ -575,7 +576,7 @@ public class InstantiatePrefabTest : MonoBehaviour
         //we need the center of the box collider in world space, we need the box collider size/2, we need the rotation to set the box at, layermask, querytrigger
         Collider[] hitColliders = Physics.OverlapBox(bbCenterTransformPoint,
                                                      bbcol.size / 2.0f, simObj.transform.rotation, 
-                                                     layermask, QueryTriggerInteraction.Ignore);
+                                                     layermask, QueryTriggerInteraction.Collide);//make sure all ReceptacleTriggers are set to SimOBjInvisible layer!
         // print("trying to place " + simObj.transform.name + ", hitCollider length is: " + hitColliders.Length);                                             
         // foreach(Collider c in hitColliders)
         // {
