@@ -345,17 +345,52 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             objMeta.isMoving = simObj.inMotion;//keep track of if this object is actively moving
 
-            // TODO: bounds necessary?
-            // Bounds bounds = simObj.Bounds;
-            // this.bounds3D = new [] {
-            //     bounds.min.x,
-            //     bounds.min.y,
-            //     bounds.min.z,
-            //     bounds.max.x,
-            //     bounds.max.y,
-            //     bounds.max.z,
-            // };
+            if(simObj.PrimaryProperty == SimObjPrimaryProperty.CanPickup || simObj.PrimaryProperty == SimObjPrimaryProperty.Moveable)
+            objMeta.objectBounds = WorldCoordinatesOfBoundingBox(simObj);
+
             return objMeta;
+        }
+
+        public WorldSpaceBounds WorldCoordinatesOfBoundingBox(SimObjPhysics sop)
+        {
+            WorldSpaceBounds b = new WorldSpaceBounds();
+
+            if(sop.BoundingBox== null)
+            {
+                Debug.LogError(sop.transform.name + " is missing BoundingBox reference!");
+                return b;
+            }
+
+            BoxCollider col = sop.BoundingBox.GetComponent<BoxCollider>();
+            List<Vector3> corners = new List<Vector3>();
+            
+            var pos = col.transform.position;
+            var f = col.transform.forward;
+            var r = col.transform.right;
+            var u = col.transform.up;
+            var min = col.transform.TransformPoint(col.center - col.size * 0.5f) - pos;
+            var max = col.transform.TransformPoint(col.center + col.size * 0.5f) - pos;
+            var p0 = pos + r * min.x + u * min.y + f * min.z;
+            var p1 = pos + r * min.x + u * min.y + f * max.z;
+            var p2 = pos + r * min.x + u * max.y + f * min.z;
+            var p3 = pos + r * min.x + u * max.y + f * max.z;
+            var p4 = pos + r * max.x + u * min.y + f * min.z;
+            var p5 = pos + r * max.x + u * min.y + f * max.z;
+            var p6 = pos + r * max.x + u * max.y + f * min.z;
+            var p7 = pos + r * max.x + u * max.y + f * max.z;
+
+            corners.Add(p0);
+            corners.Add(p1);
+            corners.Add(p2);
+            corners.Add(p3);
+            corners.Add(p4);
+            corners.Add(p5);
+            corners.Add(p6);
+            corners.Add(p7);
+
+            b.objectBoundsCorners = corners.ToArray();
+
+            return b;
         }
         public override ObjectMetadata[] generateObjectMetadata() {
             SimObjPhysics[] visibleSimObjs = VisibleSimObjs(false); // Update visibility for all sim objects for this agent
@@ -3711,7 +3746,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
 
             bool succesfulSpawn = false;
-            //ok we have a shuffled list of receptacles that is picked based on the seed.... so noooooow
+            //ok we have a shuffled list of receptacles that is picked based on the seed....
+
             foreach(SimObjPhysics sop in targetReceptacles)
             {
                 //for every receptacle, we will get a returned list of receptacle spawn points, and then try placeObjectReceptacle
@@ -3724,8 +3760,25 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 {
                     returnOnlyVisiblePoints = true;
                 }
-
                 rsps = sop.ReturnMySpawnPoints(returnOnlyVisiblePoints);
+
+                //if visibilityDistance was passed in, remove spawn points beyond the max distance specified
+                if(action.visibilityDistance > 0.0f)
+                {
+                    List<ReceptacleSpawnPoint> editedRsps = new List<ReceptacleSpawnPoint>();
+                    foreach(ReceptacleSpawnPoint p in rsps)
+                    {
+                        //check distance from agent's transform to spawnpoint
+                        //if the distance isn't bigger than visibility distance, go ahead and do it
+                        if(!(Vector3.Distance(p.Point, transform.position) > action.visibilityDistance))
+                        {
+                            editedRsps.Add(p);
+                        }
+                    }
+
+                    rsps = editedRsps;
+                }
+
                 rsps.Shuffle_(action.randomSeed);
 
                 if(ipt.PlaceObjectReceptacle(rsps, targetCircle.GetComponent<SimObjPhysics>(), true, 20, 90, true))

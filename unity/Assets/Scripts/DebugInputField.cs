@@ -186,8 +186,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         }
 
                         //set to true if only receptacles in view should be target spawn points for the targetcircle
-                        action.forceVisible = true;
-
+                        action.forceVisible = false;
+                        action.visibilityDistance = 1.0f;
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }

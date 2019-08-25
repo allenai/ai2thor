@@ -286,22 +286,21 @@ public class Contains : MonoBehaviour
 
 		foreach(Vector3 point in gridpoints)
 		{
-			//debug draw the gridpoints if you wanna see em
-			// #if UNITY_EDITOR
-			// Debug.DrawLine(point, point + -(ydir * ydist), Color.red, 100f);
-			// #endif
+            // print("checking point in gridpoints on " + myParent.transform.name);
 
 			// //quick test to see if this point on the grid is blocked by anything by raycasting down
 			// //toward it
 			RaycastHit hit;
-			if(Physics.Raycast(point, -ydir, out hit, ydist, 1 << 8, QueryTriggerInteraction.Ignore))
+			if(Physics.Raycast(point, -ydir, out hit, ydist, 1 << 8, QueryTriggerInteraction.Collide))//NOTE: QueryTriggerInteraction was previously Ignore
 			{
+                //print("trying raycast on " + myParent.transform.name);
 				//if this hits anything except the parent object, this spot is blocked by something
 
 				//IMPORTANT NOTE: For objects like Sinks and Bathtubs where the interior simobject (SinkBasin, BathtubBasin) are children, make sure the interior Contains scripts have their 'myParent' field
 				//set to the PARENT object of the sim object, not the sim object itself ie: SinkBasin's myParent = Sink
 				if(hit.transform == myParent.transform)
 				{
+                    //print("raycast hit: " + hit.transform.name);
 					if(!ReturnPointsCloseToAgent)
 					{
 						PossibleSpawnPoints.Add(new ReceptacleSpawnPoint(hit.point, b, this, myParent.GetComponent<SimObjPhysics>()));
@@ -311,14 +310,18 @@ public class Contains : MonoBehaviour
 					{
 						PossibleSpawnPoints.Add(new ReceptacleSpawnPoint(hit.point, b, this, myParent.GetComponent<SimObjPhysics>()));
 					}
+
+                    // //debug draw the gridpoints if you wanna see em
+                    // #if UNITY_EDITOR
+                    // Debug.DrawLine(point, point + -(ydir * ydist), Color.red, 100f);
+                    // #endif
 				}
+
+                //print("the raycat hit: "+ hit.transform.name);
 			}
 
 			Vector3 BottomPoint = point + -(ydir * ydist);
 			//didn't hit anything that could obstruct, so this point is good to go
-			//do additional checks here tos ee if the point is valid
-			// else
-			// 
 			if(!ReturnPointsCloseToAgent)
 			{
 				PossibleSpawnPoints.Add(new ReceptacleSpawnPoint(BottomPoint, b, this, myParent.GetComponent<SimObjPhysics>()));
@@ -326,7 +329,6 @@ public class Contains : MonoBehaviour
 
 			else if(NarrowDownValidSpawnPoints(BottomPoint))
 				PossibleSpawnPoints.Add(new ReceptacleSpawnPoint(BottomPoint, b, this, myParent.GetComponent<SimObjPhysics>()));
-			//}
 		}
 
 		//****** */debug draw the spawn points as well
