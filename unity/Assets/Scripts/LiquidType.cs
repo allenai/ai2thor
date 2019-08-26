@@ -1,8 +1,8 @@
-using System.Collections;
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-
+[Serializable]
 public enum LiquidType {
     none = 0,
     water,
