@@ -13,7 +13,7 @@ public class LiquidPourRectangleEdge : LiquidPourEdge
     public float width = 1.0f;
     public float depth = 1.0f;
 
-    protected override Vector3 getLowestEdgePointWorld(Vector3 up, bool withOffset = false) {
+    protected override Vector3 getEdgeLowestPointWorldSpace(Vector3 up, bool withOffset = false) {
         var upXZ = new Vector3(up.x, 0, up.z);
 
         var parentRot = this.transform.parent.rotation;
@@ -63,7 +63,7 @@ public class LiquidPourRectangleEdge : LiquidPourEdge
         }
     }
 
-    protected override void OnDrawGizmos() {
+    void OnDrawGizmos() {
        
         UnityEditor.Handles.color  = Color.red;
 
@@ -84,14 +84,14 @@ public class LiquidPourRectangleEdge : LiquidPourEdge
         // UnityEditor.Handles.color  = Color.yellow;
         // UnityEditor.Handles.DrawWireDisc(this.transform.position, up, this.radius + this.radiusRaycastOffset);
 
-        var circleLowestWorld = getLowestEdgePointWorld(up);
+        var circleLowestWorld = getEdgeLowestPointWorldSpace(up);
 
         Gizmos.color = Color.red;
         Gizmos.DrawSphere(circleLowestWorld, (width + depth) / 40.0f);
         UnityEditor.Handles.DrawSolidRectangleWithOutline(rectVerts, new Color(1, 0, 0, 0.0f),  Color.red);
 
 
-        var circleLowestWorldWithOffset = getLowestEdgePointWorld(up, true);
+        var circleLowestWorldWithOffset = getEdgeLowestPointWorldSpace(up, true);
 
         Gizmos.color = Color.green;
         Gizmos.DrawSphere(circleLowestWorldWithOffset, (width + depth) / 40.0f);
@@ -129,5 +129,12 @@ public class LiquidPourRectangleEdge : LiquidPourEdge
             this.transform.localToWorldMatrix.MultiplyPoint(new Vector3(localPos.x + width/2.0f + offset, 0, localPos.z - depth/2.0f - offset))
         };
     }
+
+    #if UNITY_EDITOR
+        [UnityEditor.MenuItem("Thor/Set Rectangular Liquid Component")]
+        public static void SetCircularLiquidComponent() {
+            LiquidPourEdge.SetLiquidComponent("Assets/Prefabs/Systems/RectangularLiquidPourEdge.prefab");
+        }
+    #endif
 
 }

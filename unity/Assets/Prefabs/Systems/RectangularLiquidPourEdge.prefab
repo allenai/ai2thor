@@ -1,6 +1,6 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
---- !u!1 &5030608130901892512
+--- !u!1 &4468667033777709365
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -8,58 +8,45 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 5030608130901892515}
-  - component: {fileID: 5030608130901892517}
-  - component: {fileID: 528760008233743119}
+  - component: {fileID: 4468667033777709364}
+  - component: {fileID: 4468667033777709387}
+  - component: {fileID: 2227570591236702513}
   m_Layer: 0
-  m_Name: CircularLiquidPourEdge
+  m_Name: RectangularLiquidPourEdge
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &5030608130901892515
+--- !u!4 &4468667033777709364
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5030608130901892512}
+  m_GameObject: {fileID: 4468667033777709365}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: 0, y: 0.1395, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!65 &5030608130901892517
-BoxCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5030608130901892512}
-  m_Material: {fileID: 0}
-  m_IsTrigger: 0
-  m_Enabled: 1
-  serializedVersion: 2
-  m_Size: {x: 0.2, y: 0.03, z: 0.2}
-  m_Center: {x: 0, y: 0, z: 0}
---- !u!114 &528760008233743119
+--- !u!114 &4468667033777709387
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5030608130901892512}
+  m_GameObject: {fileID: 4468667033777709365}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9ebf3aa59c3644cc991026f0e62ce9f7, type: 3}
+  m_Script: {fileID: 11500000, guid: 329a44ab7c4f24017ad642d4332ab4c2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  radiusRaycastOffset: 0.034
+  radiusRaycastOffset: 0.014
   threshold: 0.0001
-  debugQuad: {fileID: 10210, guid: 0000000000000000e000000000000000, type: 0}
+  debugQuad: {fileID: 0}
   renderDebugLevelPlane: 0
   waterEmiter: {fileID: 7512453883984051218, guid: be7b29598428faa4eb652e670725ee33,
     type: 3}
@@ -70,4 +57,18 @@ MonoBehaviour:
   containerMaxLiters: 1
   shaderFill: 0
   normalizedCurrentFill: 0
-  radius: 0.1
+  width: 0.17
+  depth: 0.17
+--- !u!65 &2227570591236702513
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4468667033777709365}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Size: {x: 0.18, y: 0.03, z: 0.18}
+  m_Center: {x: 0, y: 0, z: 0}
