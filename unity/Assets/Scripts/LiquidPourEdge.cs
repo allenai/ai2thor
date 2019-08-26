@@ -33,7 +33,6 @@ using UnityEditor;
 public abstract class LiquidPourEdge : MonoBehaviour
 {
     public float radiusRaycastOffset = 0.03f;
-    public float threshold = 1e-4f;
     public Mesh debugQuad = null;
     public bool renderDebugLevelPlane = false;
     public GameObject waterEmiter = null;
@@ -46,7 +45,7 @@ public abstract class LiquidPourEdge : MonoBehaviour
     [ReadOnly] public float normalizedCurrentFill = 0.0f;
     protected Wobble wobbleComponent = null;
     private GameObject activeFlow = null;
-    private Dictionary<LiquidType, float> solutionLiters = new Dictionary<LiquidType, float>();
+    private Dictionary<LiquidType, float> solutionPercentages = new Dictionary<LiquidType, float>();
     private bool setupColor = false;
     private float secondsMix = 3.0f;
     private float currentTimeSeconds = 0f;
@@ -61,12 +60,12 @@ public abstract class LiquidPourEdge : MonoBehaviour
         foreach (var typeObj in LiquidType.GetValues(typeof(LiquidType))) {
             LiquidType liquidType = (LiquidType) typeObj;
             if (liquidType != LiquidType.none) {
-                solutionLiters.Add(liquidType, 0);
+                solutionPercentages.Add(liquidType, 0);
             }
         }
 
         if (initialLiquidType != LiquidType.none) {
-            solutionLiters[initialLiquidType] = liquidVolumeLiters > 0 ? 1.0f : 0;
+            solutionPercentages[initialLiquidType] = liquidVolumeLiters > 0 ? 1.0f : 0;
 
             Liquid liquid = LiquidProperties.liquids[initialLiquidType];
 
@@ -85,12 +84,25 @@ public abstract class LiquidPourEdge : MonoBehaviour
         }
     }
 
-    public Dictionary<LiquidType, float> GetSolutionPrecentages() {
-        var result = new Dictionary<LiquidType, float>();
-        foreach (KeyValuePair<LiquidType, float> entry in solutionLiters) {
-            result.Add(entry.Key, entry.Value / containerMaxLiters);
+    public Dictionary<string, float> GetSolutionPrecentages() {
+        var result = new Dictionary<string, float>();
+        foreach (KeyValuePair<LiquidType, float> entry in solutionPercentages) {
+            result.Add(entry.Key.ToString(), entry.Value);
         }
         return result;
+    }
+
+    public bool isFilled() {
+        return liquidVolumeLiters > 0;
+    }
+
+    public LiquidMetadata getLiquidMetadata() {
+         return new LiquidMetadata() {
+            isFilled = this.isFilled(),
+            solutionPercentages = this.GetSolutionPrecentages(),
+            totalLiters = this.liquidVolumeLiters,
+            maxLiters = this.containerMaxLiters
+        };
     }
 
     void SetFillAmount(float normalizedFill, Color mixColor, float liters) {
@@ -126,15 +138,15 @@ public abstract class LiquidPourEdge : MonoBehaviour
         Color transferColor = transferer.getLiquidColor();
 
         // Update target solution
-        foreach(KeyValuePair<LiquidType, float> transferSolutionEntry in transferer.solutionLiters)
+        foreach(KeyValuePair<LiquidType, float> transferSolutionEntry in transferer.solutionPercentages)
         {
-            this.solutionLiters[transferSolutionEntry.Key] = ((transferSolutionEntry.Value * liters) + (this.solutionLiters[transferSolutionEntry.Key] * liquidVolumeLiters)) / (this.liquidVolumeLiters + liters);
+            this.solutionPercentages[transferSolutionEntry.Key] = ((transferSolutionEntry.Value * liters) + (this.solutionPercentages[transferSolutionEntry.Key] * liquidVolumeLiters)) / (this.liquidVolumeLiters + liters);
         }
 
         this.liquidVolumeLiters += liters;
 
         var solutionString = "";
-        foreach (KeyValuePair<LiquidType, float> entry in solutionLiters) {
+        foreach (KeyValuePair<LiquidType, float> entry in solutionPercentages) {
             solutionString += entry.Key.ToString() + " : " + entry.Value + ", ";
         }
         Debug.Log("Transfering liquid volume from " +  this.gameObject.name + " to  " + transferer.gameObject.name + " amount " + liters + " total in new " + liquidVolumeLiters + " str " + solutionString);
@@ -184,7 +196,7 @@ public abstract class LiquidPourEdge : MonoBehaviour
                 // var containerRotationRadians = Mathf.Acos(Vector3.Dot(Vector3.up, up));
                 // activeFlow.transform.localRotation = Quaternion.AngleAxis(containerRotationRadians * 180.0f /  Mathf.PI , Vector3.up);
                 // activeFlow.transform.rotation = 
-                activeFlow.SetActive(false);
+                // activeFlow.SetActive(false);
             }
         // }
     }
@@ -243,11 +255,11 @@ public abstract class LiquidPourEdge : MonoBehaviour
 
             
 
-            activeFlow.transform.localRotation = Quaternion.AngleAxis((edgeAngle * 180.0f /  Mathf.PI), Vector3.up);
+            activeFlow.transform.rotation = Quaternion.AngleAxis((edgeAngle * 180.0f /  Mathf.PI), Vector3.up);
         }
         else {
             activeFlow.SetActive(true);
-            activeFlow.transform.localRotation = Quaternion.AngleAxis((edgeAngle * 180.0f /  Mathf.PI) , Vector3.up);
+            activeFlow.transform.rotation = Quaternion.AngleAxis((edgeAngle * 180.0f /  Mathf.PI) , Vector3.up);
             // activeFlow.transform.rotation = Quaternion.Inverse(this.transform.parent.rotation);
         }
 
@@ -330,6 +342,20 @@ public abstract class LiquidPourEdge : MonoBehaviour
         Debug.DrawRay(fromRay, Vector3.down, Color.green, 2f);
         if (raycastTrue) {
              Debug.Log("Fluid transfer before to game object " + hit.collider.gameObject.name);
+
+            var particleSystem = activeFlow.GetComponent<ParticleSystem>();
+            //Time.deltaTime
+            Debug.Log("***************** Curve max " + particleSystem.main.startSpeed.curveMultiplier);
+            //particleSystem.Stop();
+            var psMain = particleSystem.main;
+            //psMain.duration = 4f;
+            
+            Debug.Log("Lifetime " + psMain.startLifetime.constant);
+            psMain.startLifetime = hit.distance / particleSystem.main.startSpeed.curveMultiplier;
+            //particleSystem.Play();
+            // particleSystem.main.startLifetime.constant = hit.distance / particleSystem.main.startSpeed.constantMin; 
+            // hit.distance
+
             var otherLiquidEdge = hit.collider.GetComponent<LiquidPourEdge>();
            
             if (otherLiquidEdge) {

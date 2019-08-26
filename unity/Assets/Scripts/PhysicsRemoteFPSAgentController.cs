@@ -275,8 +275,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
 
             objMeta.canFillWithLiquid = simObj.IsFillable;
-            if (objMeta.canFillWithLiquid) {
+            if (objMeta.canFillWithLiquid) { 
                 objMeta.isFilledWithLiquid = simObj.IsFilled;
+                var dynamicLiquidComponent = simObj.GetComponentInChildren<LiquidPourEdge>();
+                if (dynamicLiquidComponent) {
+                    objMeta.liquidMetadata = dynamicLiquidComponent.getLiquidMetadata();
+                }
             }
 
             objMeta.dirtyable = simObj.IsDirtyable;
