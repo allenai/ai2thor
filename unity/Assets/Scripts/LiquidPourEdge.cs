@@ -30,92 +30,144 @@ using UnityEditor;
      }
  }
  
-public class LiquidPourEdge : MonoBehaviour
+public abstract class LiquidPourEdge : MonoBehaviour
 {
-    public float radius = 1.0f;
     public float radiusRaycastOffset = 0.03f;
     public float threshold = 1e-4f;
     public Mesh debugQuad = null;
-
     public bool renderDebugLevelPlane = false;
-
     public GameObject waterEmiter = null;
-
     public float liquidVolumeLiters = 0f; 
-
+    public LiquidType initialLiquidType = LiquidType.none;
     [ReadOnly] public float emptyValue = 0.6f;
-
     [ReadOnly] public float fullValue = 0.4f;
-
-    [ReadOnly] public float containerMaxVolumeLiters = 1f;
-
+    [ReadOnly] public float containerMaxLiters = 1f;
     [ReadOnly] public float shaderFill = 0.0f;
-
     [ReadOnly] public float normalizedCurrentFill = 0.0f;
+    protected Wobble wobbleComponent = null;
     private GameObject activeFlow = null;
+    private Dictionary<LiquidType, float> solutionLiters = new Dictionary<LiquidType, float>();
+    private bool setupColor = false;
+    private float secondsMix = 3.0f;
+    private float currentTimeSeconds = 0f;
 
-    private Wobble wobbleComponent = null;
-    
-    
+    protected abstract Vector3 getEdgeLowestPointWorldSpace(Vector3 up, bool withOffset = false);
+
     // Start is called before the first frame update
     void Start()
     {
         wobbleComponent = this.GetComponentInParent<Wobble>();
-
-        var mr = this.transform.GetComponentInParent<MeshRenderer>();
-        normalizedCurrentFill = liquidVolumeLiters / containerMaxVolumeLiters;
-        if (normalizedCurrentFill > 0.0001f) {
-            mr.enabled = true;
-        }
-        shaderFill = emptyValue - (emptyValue - fullValue) * (normalizedCurrentFill);
-        mr.material.SetFloat("_FillAmount", shaderFill);
         
+        foreach (var typeObj in LiquidType.GetValues(typeof(LiquidType))) {
+            LiquidType liquidType = (LiquidType) typeObj;
+            if (liquidType != LiquidType.none) {
+                solutionLiters.Add(liquidType, 0);
+            }
+        }
+
+        if (initialLiquidType != LiquidType.none) {
+            solutionLiters[initialLiquidType] = liquidVolumeLiters > 0 ? 1.0f : 0;
+
+            Liquid liquid = LiquidProperties.liquids[initialLiquidType];
+
+            var mr = this.transform.GetComponentInParent<MeshRenderer>();
+
+            //Debug.Log(" Setting tint for " + initialLiquidType + " to " + liquid.color);
+            mr.material.SetColor("_Tint", liquid.color);
+            mr.material.SetColor("_MixTint", liquid.color);
+
+            normalizedCurrentFill = liquidVolumeLiters / containerMaxLiters;
+            if (normalizedCurrentFill > 0.0001f) {
+                mr.enabled = true;
+            }
+            shaderFill = emptyValue - (emptyValue - fullValue) * (normalizedCurrentFill);
+            mr.material.SetFloat("_FillAmount", shaderFill);
+        }
     }
 
-    void SetFillAmount(float normalizedFill) {
+    public Dictionary<LiquidType, float> GetSolutionPrecentages() {
+        var result = new Dictionary<LiquidType, float>();
+        foreach (KeyValuePair<LiquidType, float> entry in solutionLiters) {
+            result.Add(entry.Key, entry.Value / containerMaxLiters);
+        }
+        return result;
+    }
+
+    void SetFillAmount(float normalizedFill, Color mixColor, float liters) {
         normalizedCurrentFill = normalizedFill;
         var mr = this.transform.GetComponentInParent<MeshRenderer>();
         shaderFill = emptyValue - (emptyValue - fullValue) * (normalizedCurrentFill);
         mr.material.SetFloat("_FillAmount", shaderFill);
+
+        var currentMixTint = mr.material.GetColor("_MixTint");
+        mr.material.SetColor("_MixTint", mixColor);
+        var currentRim = mr.material.GetFloat("_MixRim");
+
+        var tintDiff = currentMixTint - mixColor;
+        var dot = Vector4.Dot(tintDiff, tintDiff);
+        if (dot > 0.1) {
+            
+            // TODO use solution to calculate mix
+            var currentColor = mr.material.GetColor("_Tint");
+            mr.material.SetColor("_Tint", (currentColor * (1.0f - 2*currentRim) + currentMixTint * 2*currentRim) );
+            currentRim = 0;
+        }
+       
+        var worldSpaceDiff = (emptyValue - fullValue) * (liters / containerMaxLiters);
+        Debug.Log("^^^^^^^ liters " + liters + " woldSPace val " + worldSpaceDiff);
+        mr.material.SetFloat("_MixRim", currentRim + worldSpaceDiff * 2);
     }
 
-    void TransferLiquid(float normalizedDelta, LiquidPourEdge transferer) {
+     void TransferLiquidVolume(float liters, LiquidPourEdge transferer, float deltaEdgeDifference) {
         // TODO: Calculate correctly how much this gets filled based on the transferer properties
-        Debug.Log("Transfering liquid from " +  this.gameObject.name + " to  " + transferer.gameObject.name + " amount " + normalizedDelta);
-        this.SetFillAmount(normalizedCurrentFill + normalizedDelta);
-    }
-
-     void TransferLiquidVolume(float liters, LiquidPourEdge transferer) {
-        // TODO: Calculate correctly how much this gets filled based on the transferer properties
-
         transferer.liquidVolumeLiters -= liters;
-        transferer.normalizedCurrentFill = transferer.liquidVolumeLiters / transferer.containerMaxVolumeLiters;
+        transferer.normalizedCurrentFill = transferer.liquidVolumeLiters / transferer.containerMaxLiters;
+
+        Color transferColor = transferer.getLiquidColor();
+
+        // Update target solution
+        foreach(KeyValuePair<LiquidType, float> transferSolutionEntry in transferer.solutionLiters)
+        {
+            this.solutionLiters[transferSolutionEntry.Key] = ((transferSolutionEntry.Value * liters) + (this.solutionLiters[transferSolutionEntry.Key] * liquidVolumeLiters)) / (this.liquidVolumeLiters + liters);
+        }
 
         this.liquidVolumeLiters += liters;
-        Debug.Log("Transfering liquid volume from " +  this.gameObject.name + " to  " + transferer.gameObject.name + " amount " + liters + " total in new " + liquidVolumeLiters);
 
-        this.normalizedCurrentFill = this.liquidVolumeLiters / this.containerMaxVolumeLiters;
-        this.SetFillAmount(normalizedCurrentFill);
+        var solutionString = "";
+        foreach (KeyValuePair<LiquidType, float> entry in solutionLiters) {
+            solutionString += entry.Key.ToString() + " : " + entry.Value + ", ";
+        }
+        Debug.Log("Transfering liquid volume from " +  this.gameObject.name + " to  " + transferer.gameObject.name + " amount " + liters + " total in new " + liquidVolumeLiters + " str " + solutionString);
+
+        this.normalizedCurrentFill = this.liquidVolumeLiters / this.containerMaxLiters;
+        this.SetFillAmount(normalizedCurrentFill, transferColor, liters);
     }
 
      void LoseLiquidVolume(float liters) {
         // TODO: Calculate correctly how much this gets filled based on the transferer properties
         this.liquidVolumeLiters -= liters;
-        this.normalizedCurrentFill = this.liquidVolumeLiters / this.containerMaxVolumeLiters;
+        this.normalizedCurrentFill = this.liquidVolumeLiters / this.containerMaxLiters;
     }
 
     // Update is called once per frame
     void Update()
     {
 
+        // if (!setupColor) {
+        //     setupColor = true;
+        //     this.transform.parent.GetComponent<MeshRenderer>().sharedMaterial.SetColor("_Tint", new Color(0, 100, 0, 120));
+        // }
         // var mr = this.transform.GetComponentInParent<MeshRenderer>();
         // shaderFill = emptyValue - (emptyValue - fullValue) * (normalizedCurrentFill);
         // Debug.Log("fullValue " + fullValue + ", emptyValue ," + emptyValue + " normalizedCurrentFill " + normalizedCurrentFill);
         // mr.material.SetFloat("_FillAmount", shaderFill);
 
+        MixSolution();
+        
+
         // if (liquidVolumeLiters > 0) {
             var up = this.transform.parent.up;
-            var edgeLowestWorld = getLowestEdgePointWorld(up);
+            var edgeLowestWorld = getEdgeLowestPointWorldSpace(up);
             var waterLevelWorld = getWaterLevelPositionWorld();
 
             var edgeLiquidDifference = waterLevelWorld.y - edgeLowestWorld.y;
@@ -129,13 +181,58 @@ public class LiquidPourEdge : MonoBehaviour
             {
                 // Make flow smaller do not turn off
                 activeFlow.transform.position = edgeLowestWorld;
+                // var containerRotationRadians = Mathf.Acos(Vector3.Dot(Vector3.up, up));
+                // activeFlow.transform.localRotation = Quaternion.AngleAxis(containerRotationRadians * 180.0f /  Mathf.PI , Vector3.up);
+                // activeFlow.transform.rotation = 
                 activeFlow.SetActive(false);
             }
         // }
     }
 
+    protected void MixSolution() {
+        var mr = this.transform.parent.GetComponent<MeshRenderer>();
+        if (mr) {
+            var mixRim = mr.material.GetFloat("_MixRim");
+            var mixTint = mr.material.GetColor("_MixTint");
+            var mixColor = mr.material.GetColor("_Tint");
+
+            var diff = mixColor - mixTint;
+            var dot = Vector4.Dot(diff, diff);
+            if (dot > 0.08) { // mixRim > 0.001f &&
+
+                var alphaRatio = mixTint.a / mixColor.a;
+                var speedDividerSlow = 45.0f;
+                var speedDividerFast = 20.0f;
+                // var speedDividerSlow = speedDividerFast * alphaRatio * alphaRatio;
+
+                var mainColorDivide = mixColor.a > mixTint.a ? speedDividerSlow : speedDividerFast;
+                var mixColorDivide = mixTint.a > mixColor.a ? speedDividerSlow : speedDividerFast;
+                
+                // var targetColor = (alphaRatio * mixTint + mixColor) / (alphaRatio + 1);
+                var colorVelocityDelta = (Time.deltaTime / mainColorDivide);
+                var targetColor = (mixColor + mixTint * colorVelocityDelta) / (1.0f + colorVelocityDelta);
+
+                colorVelocityDelta = (Time.deltaTime / mixColorDivide);
+                var targetMixColor = (mixTint + mixColor * colorVelocityDelta) / (1.0f + colorVelocityDelta);
+
+                 // Debug.Log("****** Target Mix " + targetColor + " obj: " + this.transform.parent.parent.gameObject.name + " dotRaw: " + speedDividerSlow + " dot: " + dot + " lenmix: " + lenMix + " lenCol "+ lenCol);
+                mr.material.SetColor("_Tint", targetColor);
+                // mr.material.SetFloat("_MixRim", mixRim - (Time.deltaTime / 500.0f));
+                mr.material.SetColor("_MixTint", targetMixColor);
+            }
+            // else {
+            //     mr.material.SetFloat("_MixRim", 0.0f);
+            // }
+        }
+    }
+
     protected void ReleaseLiquid(float edgeDifference, Vector3 edgePositionWorld, float containerRotationRadians) {
         //Debug.Log("Fluid out!!!! " + edgeDifference);
+        // var edgeLocalSpace = this.transform.InverseTransformPoint(edgePositionWorld);
+
+        var centerToEdge = edgePositionWorld - this.transform.position;
+        // var edgeLocalSpace = this.transform.worldToLocalMatrix.MultiplyPoint(edgePositionWorld);
+        var edgeAngle = Mathf.Atan2(centerToEdge.x, centerToEdge.z);
         if (activeFlow == null) {
             activeFlow = Object.Instantiate(
                 this.waterEmiter,
@@ -143,13 +240,18 @@ public class LiquidPourEdge : MonoBehaviour
                 Quaternion.identity,
                 this.transform.parent
             );
+
+            
+
+            activeFlow.transform.localRotation = Quaternion.AngleAxis((edgeAngle * 180.0f /  Mathf.PI), Vector3.up);
         }
         else {
             activeFlow.SetActive(true);
-            //activeFlow.transform.rotation = Quaternion.Inverse(this.transform.parent.rotation);
+            activeFlow.transform.localRotation = Quaternion.AngleAxis((edgeAngle * 180.0f /  Mathf.PI) , Vector3.up);
+            // activeFlow.transform.rotation = Quaternion.Inverse(this.transform.parent.rotation);
         }
 
-        activeFlow.transform.rotation = Quaternion.identity;
+       // activeFlow.transform.rotation = Quaternion.identity;
 
         const float liquidTransferConstant = 1f;
         var normalizedFillDifference = liquidTransferConstant * edgeDifference / (emptyValue - fullValue);
@@ -164,7 +266,7 @@ public class LiquidPourEdge : MonoBehaviour
         var lenXZ = (edgeLowesPosXZ - posXZ).magnitude;
         var angleDiff = Mathf.Atan2(edgeDifference, lenXZ);
 
-        Debug.Log(" Angle Diff " + angleDiff * 180.0f / Mathf.PI + " lenxz: " + lenXZ + " normdiff " + normalizedFillDifference);
+        Debug.Log(" Angle Diff " + angleDiff * 180.0f / Mathf.PI   + " lenxz: " + lenXZ + " normdiff " + normalizedFillDifference +  " edge local " + centerToEdge + " edge angle " + edgeAngle * 180.0f / Mathf.PI);
 
         var mr = this.transform.GetComponentInParent<MeshRenderer>();
         var currentFill = mr.material.GetFloat("_FillAmount");
@@ -178,7 +280,7 @@ public class LiquidPourEdge : MonoBehaviour
 
         // var newCurrentNormalizedFill = (emptyValue - currentFill) / (emptyValue - fullValue);
 
-        var litersTransfer = normalizedFillDifference * containerMaxVolumeLiters;
+        var litersTransfer = normalizedFillDifference * containerMaxLiters;
 
         var newLiters = liquidVolumeLiters - litersTransfer;
 
@@ -222,7 +324,7 @@ public class LiquidPourEdge : MonoBehaviour
         //LayerMask.GetMask("SimObjVisible"); 
         RaycastHit hit;
 
-        var fromRay  = this.getLowestEdgePointWorld(this.getUpVector(), true);
+        var fromRay  = this.getEdgeLowestPointWorldSpace(this.getUpVector(), true);
         var raycastTrue = Physics.Raycast(fromRay, Vector3.down, out hit, 100, Physics.AllLayers & ~LayerMask.GetMask("SimObjInVisible"));
 
         Debug.DrawRay(fromRay, Vector3.down, Color.green, 2f);
@@ -235,7 +337,7 @@ public class LiquidPourEdge : MonoBehaviour
 
                 //otherLiquidEdge.TransferLiquid(normalizedFillDifference, this);
 
-                otherLiquidEdge.TransferLiquidVolume(litersTransfer, this);
+                otherLiquidEdge.TransferLiquidVolume(litersTransfer, this, edgeDifference);
 
                 Debug.Log("Transfered " + edgeDifference);
                 
@@ -262,17 +364,15 @@ public class LiquidPourEdge : MonoBehaviour
         
     }
 
-    private IEnumerator DecrementWaterValue(float waitTime, MeshRenderer mr, float newFill)
-    {
-        while (true)
-        {
-            yield return new WaitForSeconds(waitTime);
-            print("WaitAndPrint " + Time.time);
-            mr.material.SetFloat("_FillAmount", newFill);
+    private Color getLiquidColor() {
+        var mr = this.transform.parent.GetComponent<MeshRenderer>();
+        if (mr) {
+            return mr.material.GetColor("_Tint");
         }
+        return Color.magenta;
     }
 
-    private Vector3 getUpVector() {
+    protected Vector3 getUpVector() {
         var up = this.transform.parent.up;
         // if (wobbleComponent == null) {
         //     wobbleComponent = this.transform.GetComponentInParent<Wobble>();
@@ -285,26 +385,6 @@ public class LiquidPourEdge : MonoBehaviour
         return up;
     }
 
-    protected Vector3 getLowestEdgePointWorld(Vector3 up, bool withOffset = false) {
-        var upXZ = new Vector3(up.x, 0, up.z);
-
-        var parentRot = this.transform.parent.rotation;
-        parentRot.x = 0;
-        parentRot.z = 0;
-
-        // Quat
-        
-        // upXZ = Quaternion.AngleAxis(-this.transform.parent.eulerAngles.y, Vector3.up) * upXZ.normalized;
-        upXZ = Quaternion.Inverse(parentRot).normalized * upXZ.normalized;
-        // Debug.Log("up xz " + upXZ);
-        // Debug.Log("Local Pos " + this.transform.localPosition);
-        var calculatedRadius = withOffset ? this.radius + this.radiusRaycastOffset : this.radius;
-        var circleLowestLocal = Vector3.zero + calculatedRadius * upXZ;
-        // var circleLowestWorld = this.transform.TransformPoint(circleLowestLocal);
-        var circleLowestWorld = this.transform.TransformPoint(circleLowestLocal);
-
-        return circleLowestWorld;
-    }
 
     protected Vector3 getWaterLevelPositionWorld() {
         var mr = this.transform.GetComponentInParent<MeshRenderer>();
@@ -323,62 +403,12 @@ public class LiquidPourEdge : MonoBehaviour
         return Vector3.zero;
     }
 
-    void OnDrawGizmos() {
-       
-        UnityEditor.Handles.color  = Color.red;
-
-        var up =  getUpVector();
-        
-        UnityEditor.Handles.DrawWireDisc(this.transform.position, up, this.radius);
-
-        // UnityEditor.Handles.color  = new Color(1.0f, 0.1f, 0.1f, 0.4f);
-
-        UnityEditor.Handles.color  = Color.yellow;
-        UnityEditor.Handles.DrawWireDisc(this.transform.position, up, this.radius + this.radiusRaycastOffset);
-
-        var circleLowestWorld = getLowestEdgePointWorld(up);
-
-        Gizmos.color = Color.red;
-        Gizmos.DrawSphere(circleLowestWorld, radius / 10.0f);
-
-
-        var circleLowestWorldWithOffset = getLowestEdgePointWorld(up, true);
-
-        Gizmos.color = Color.yellow;
-        Gizmos.DrawSphere(circleLowestWorldWithOffset, radius / 10.0f);
-
-        Gizmos.color = new Color(1f, 1f, 0.0f, 0.7f);
-
-        if (renderDebugLevelPlane) {
-            var pos = getWaterLevelPositionWorld();
-
-            var rot = Quaternion.identity;
-            if (wobbleComponent == null) {
-                wobbleComponent = this.transform.GetComponentInParent<Wobble>();
-            }
-
-            //rot = Quaternion.Euler(-wobbleComponent.wobbleAmountX * 360, 0, -wobbleComponent.wobbleAmountZ * 360); 
-               // Debug.Log("Wobble " + wobbleComponent.wobbleAmountX + wobbleComponent.wobbleAmountZ )
-
-            Gizmos.DrawMesh(this.debugQuad, pos, Quaternion.Euler(90, 0, 0) * rot, new Vector3(0.5f, 0.5f, 0.5f));
-        }
-
-        // Gizmos.color = new Color(1f, 0f, 0.0f, 0.5f);
-        // var bounds = this.GetComponentInParent<MeshRenderer>().bounds;
-        // Gizmos.DrawCube(this.transform.parent.position, bounds.size);
-
-
-    }
-
 
 #if UNITY_EDITOR
-
-[UnityEditor.MenuItem("Thor/Set Liquid Component")]
-	public static void SetLiquidComponent()
-	{
+    public static void SetLiquidComponent(string liquidPoutPrefabPath) {
         GameObject prefabRoot = Selection.activeGameObject;
-        GameObject circularPourEdge = GameObject.Instantiate(UnityEditor.AssetDatabase.LoadAssetAtPath("Assets/Prefabs/Systems/CircularLiquidPourEdge.prefab",typeof(GameObject)) as GameObject);
-        circularPourEdge.transform.parent = prefabRoot.transform;
+        GameObject liquidPourEdge = GameObject.Instantiate(UnityEditor.AssetDatabase.LoadAssetAtPath(liquidPoutPrefabPath, typeof(GameObject)) as GameObject);
+        liquidPourEdge.transform.parent = prefabRoot.transform;
 
         var material = UnityEditor.AssetDatabase.LoadAssetAtPath("Assets/SpecialFX/DynamicMixLiquidVolume.mat",typeof(Material)) as Material;
 
@@ -390,7 +420,7 @@ public class LiquidPourEdge : MonoBehaviour
         wobble.wobbleAmountX = 0;
         wobble.wobbleAmountZ = 0;
         
-        var liquidEdge = circularPourEdge.GetComponent<LiquidPourEdge>();
+        var liquidEdge = liquidPourEdge.GetComponent<LiquidPourEdge>();
         var worldOrigin = prefabRoot.transform.position;
 
 		Mesh mesh = liquidEdge.GetComponentInParent<MeshFilter>().sharedMesh;
@@ -412,15 +442,16 @@ public class LiquidPourEdge : MonoBehaviour
         liquidEdge.fullValue = 0.5f - maxY + offset;
 
         var floatVolume = ((float) volume) * 1000.0f;
-        liquidEdge.containerMaxVolumeLiters = floatVolume;
+        liquidEdge.containerMaxLiters = floatVolume;
 
         mr.enabled = false;
 
-        circularPourEdge.transform.localPosition = new Vector3(0, maxY, 0);
+        liquidPourEdge.transform.localPosition = new Vector3(0, maxY, 0);
+        liquidPourEdge.transform.localScale = new Vector3(1, 1 , 1);
 
         Debug.Log("Constants, empty: " + liquidEdge.emptyValue + " full: " + liquidEdge.fullValue + "maxVolume liters: " + floatVolume + " minY: " + minY + " maxY: " + maxY + " maxY - minY: " + (maxY - minY));
-	}
 
+    }
 #endif
 
 }
