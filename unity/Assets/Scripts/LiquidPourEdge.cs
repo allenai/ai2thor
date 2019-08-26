@@ -74,6 +74,7 @@ public abstract class LiquidPourEdge : MonoBehaviour
             //Debug.Log(" Setting tint for " + initialLiquidType + " to " + liquid.color);
             mr.material.SetColor("_Tint", liquid.color);
             mr.material.SetColor("_MixTint", liquid.color);
+            mr.material.SetColor("_TopColor", liquid.topColor);
 
             normalizedCurrentFill = liquidVolumeLiters / containerMaxLiters;
             if (normalizedCurrentFill > 0.0001f) {
@@ -103,6 +104,15 @@ public abstract class LiquidPourEdge : MonoBehaviour
             totalLiters = this.liquidVolumeLiters,
             maxLiters = this.containerMaxLiters
         };
+    }
+
+    public Color getAverageFlowColor() {
+        Color mixColor = Vector4.zero;
+        foreach (KeyValuePair<LiquidType, float> entry in solutionPercentages) {
+            var color = LiquidProperties.liquids[entry.Key].flowColor;
+            mixColor += entry.Value * color;
+        }
+        return mixColor;
     }
 
     void SetFillAmount(float normalizedFill, Color mixColor, float liters) {
@@ -196,7 +206,7 @@ public abstract class LiquidPourEdge : MonoBehaviour
                 // var containerRotationRadians = Mathf.Acos(Vector3.Dot(Vector3.up, up));
                 // activeFlow.transform.localRotation = Quaternion.AngleAxis(containerRotationRadians * 180.0f /  Mathf.PI , Vector3.up);
                 // activeFlow.transform.rotation = 
-                // activeFlow.SetActive(false);
+                activeFlow.SetActive(false);
             }
         // }
     }
@@ -339,22 +349,38 @@ public abstract class LiquidPourEdge : MonoBehaviour
         var fromRay  = this.getEdgeLowestPointWorldSpace(this.getUpVector(), true);
         var raycastTrue = Physics.Raycast(fromRay, Vector3.down, out hit, 100, Physics.AllLayers & ~LayerMask.GetMask("SimObjInVisible"));
 
-        Debug.DrawRay(fromRay, Vector3.down, Color.green, 2f);
+        
         if (raycastTrue) {
              Debug.Log("Fluid transfer before to game object " + hit.collider.gameObject.name);
+             Debug.DrawRay(fromRay, Vector3.down, Color.green,  hit.distance);
 
-            var particleSystem = activeFlow.GetComponent<ParticleSystem>();
-            //Time.deltaTime
-            Debug.Log("***************** Curve max " + particleSystem.main.startSpeed.curveMultiplier);
-            //particleSystem.Stop();
-            var psMain = particleSystem.main;
-            //psMain.duration = 4f;
+            // TODO set lifetime
+            // var particleSystem = activeFlow.GetComponent<ParticleSystem>();
+            // //Time.deltaTime
+            // Debug.Log("***************** Curve max " + particleSystem.main.startSpeed.curveMultiplier);
+            // //particleSystem.Stop();
+            // var psMain = particleSystem.main;
+            // //psMain.duration = 4f;
             
-            Debug.Log("Lifetime " + psMain.startLifetime.constant);
-            psMain.startLifetime = hit.distance / particleSystem.main.startSpeed.curveMultiplier;
-            //particleSystem.Play();
-            // particleSystem.main.startLifetime.constant = hit.distance / particleSystem.main.startSpeed.constantMin; 
-            // hit.distance
+            // Debug.Log("Lifetime " + psMain.startLifetime.constant);
+            // psMain.startLifetime = hit.distance / particleSystem.main.startSpeed.curveMultiplier;
+
+
+            var averageColor = this.getAverageFlowColor();
+
+            var ps = activeFlow.GetComponent<ParticleSystem>();
+            if (ps) {
+                var rend = ps.GetComponent<ParticleSystemRenderer>();
+                Debug.Log(" Material " +  rend.material.name);
+                var currCol = rend.material.GetColor("_Color");
+                var diff = currCol - averageColor;
+                if (Vector4.Dot(diff, diff) > 0.1) {
+                    Debug.Log("Curr color of particles " + currCol.r + " " + currCol.g + " " + currCol.b + " " + currCol.a);
+                    rend.material.SetColor("_Color", averageColor);
+                }
+                
+            }
+            
 
             var otherLiquidEdge = hit.collider.GetComponent<LiquidPourEdge>();
            
