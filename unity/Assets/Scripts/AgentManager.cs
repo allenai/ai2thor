@@ -707,8 +707,17 @@ public class ObjectMetadata
 	public string parentReceptacle;
 	public string[] parentReceptacles;
 	public float currentTime;
-
+    public LiquidMetadata liquidMetadata;
 	public ObjectMetadata() { }
+}
+
+[Serializable]
+public class LiquidMetadata
+{
+    public bool isFilled;
+	public Dictionary<string, float> solutionPercentages;
+    public float totalLiters;
+	public float maxLiters;
 }
 
 [Serializable]
