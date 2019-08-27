@@ -20,9 +20,9 @@ public class LiquidProperties {
     public static Dictionary<LiquidType, Liquid> liquids = new Dictionary<LiquidType, Liquid>() {
         {
             LiquidType.water, new Liquid {
-                color = new Color(95 / 255.0f, 200 / 255.0f, 255 / 255.0f, 134 / 255.0f),
+                color = new Color(201 / 255.0f, 255 / 255.0f, 255 / 255.0f, 128 / 255.0f),
                 flowColor = new Color(201 / 255.0f, 255 / 255.0f, 255 / 255.0f, 125 / 255.0f),
-                topColor = new Color(95 / 255.0f, 200 / 255.0f, 255 / 255.0f, 134 / 255.0f)
+                topColor = new Color(201 / 255.0f, 255 / 255.0f, 255 / 255.0f, 128 / 255.0f)
              }
         },
         {
