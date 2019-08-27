@@ -815,6 +815,8 @@ public class ObjectMetadata
 	public bool pickupable;
 	public bool isPickedUp;//if the pickupable object is actively being held by the agent
 
+    public bool moveable;//if the object is moveable, able to be pushed/affected by physics, but is too big to be picked up
+
 	public float mass;//mass is only for moveable and pickupable objects
 
 	//salient materials are only for pickupable and moveable objects, for now static only objects do not report material back since we have to assign them manually

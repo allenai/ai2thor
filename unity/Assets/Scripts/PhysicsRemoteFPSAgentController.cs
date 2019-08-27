@@ -374,6 +374,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             objMeta.pickupable = simObj.PrimaryProperty == SimObjPrimaryProperty.CanPickup;//can this object be picked up?
             objMeta.isPickedUp = simObj.isPickedUp;//returns true for if this object is currently being held by the agent
 
+            objMeta.moveable = simObj.PrimaryProperty == SimObjPrimaryProperty.Moveable;
+
             objMeta.objectId = simObj.UniqueID;
 
             // TODO: using the isVisible flag on the object causes weird problems
