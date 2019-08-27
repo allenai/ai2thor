@@ -51,6 +51,27 @@ class NumpyAwareEncoder(json.JSONEncoder):
             return np.asscalar(obj)
         return super(NumpyAwareEncoder, self).default(obj)
 
+class BufferedIO:
+    def __init__(self, wfile):
+        self.wfile = wfile
+        self.data = []
+
+    def write(self, output):
+        self.data.append(output)
+
+    def flush(self):
+        self.wfile.write(b"".join(self.data))
+        self.wfile.flush()
+
+
+class ThorRequestHandler(werkzeug.serving.WSGIRequestHandler):
+    def run_wsgi(self):
+        old_wfile = self.wfile
+        self.wfile = BufferedIO(self.wfile)
+        result = super().run_wsgi()
+        self.wfile = old_wfile
+        return result
+
 class MultiAgentEvent(object):
 
     def __init__(self, active_agent_id, events):
@@ -342,7 +363,7 @@ class Server(object):
         self.frame_counter = 0
         self.debug_frames_per_interval = 50
         self.xwindow_id = None
-        self.wsgi_server = werkzeug.serving.make_server(host, self.port, self.app, threaded=threaded)
+        self.wsgi_server = werkzeug.serving.make_server(host, self.port, self.app, threaded=threaded, request_handler=ThorRequestHandler)
         # used to ensure that we are receiving frames for the action we sent
         self.sequence_id = 0
         self.last_event = None
