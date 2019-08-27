@@ -401,20 +401,15 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             BoxCollider col = sop.BoundingBox.GetComponent<BoxCollider>();
             List<Vector3> corners = new List<Vector3>();
             
-            var pos = col.transform.position;
-            var f = col.transform.forward;
-            var r = col.transform.right;
-            var u = col.transform.up;
-            var min = col.transform.TransformPoint(col.center - col.size * 0.5f) - pos;
-            var max = col.transform.TransformPoint(col.center + col.size * 0.5f) - pos;
-            var p0 = pos + r * min.x + u * min.y + f * min.z;
-            var p1 = pos + r * min.x + u * min.y + f * max.z;
-            var p2 = pos + r * min.x + u * max.y + f * min.z;
-            var p3 = pos + r * min.x + u * max.y + f * max.z;
-            var p4 = pos + r * max.x + u * min.y + f * min.z;
-            var p5 = pos + r * max.x + u * min.y + f * max.z;
-            var p6 = pos + r * max.x + u * max.y + f * min.z;
-            var p7 = pos + r * max.x + u * max.y + f * max.z;
+            Vector3 p0 = col.transform.TransformPoint(col.center + new Vector3(col.size.x, -col.size.y, col.size.z) * 0.5f);
+            Vector3 p1 = col.transform.TransformPoint(col.center + new Vector3(-col.size.x, -col.size.y, col.size.z) * 0.5f);
+            Vector3 p2 = col.transform.TransformPoint(col.center + new Vector3(-col.size.x, -col.size.y, -col.size.z) * 0.5f);
+            Vector3 p3 = col.transform.TransformPoint(col.center + new Vector3(col.size.x, -col.size.y, -col.size.z) * 0.5f);
+            Vector3 p4 = col.transform.TransformPoint(col.center + new Vector3(col.size.x, col.size.y, col.size.z) * 0.5f);
+            Vector3 p5 = col.transform.TransformPoint(col.center + new Vector3(-col.size.x, col.size.y, col.size.z) * 0.5f);
+            Vector3 p6 = col.transform.TransformPoint(col.center + new Vector3(-col.size.x, +col.size.y, -col.size.z) * 0.5f);
+            Vector3 p7 = col.transform.TransformPoint(col.center + new Vector3(col.size.x, col.size.y, -col.size.z) * 0.5f);
+
 
             corners.Add(p0);
             corners.Add(p1);
@@ -426,9 +421,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             corners.Add(p7);
 
             b.objectBoundsCorners = corners.ToArray();
-
+            
             return b;
         }
+        
         public override ObjectMetadata[] generateObjectMetadata() {
             SimObjPhysics[] visibleSimObjs = VisibleSimObjs(false); // Update visibility for all sim objects for this agent
             HashSet<SimObjPhysics> visibleSimObjsHash = new HashSet<SimObjPhysics>();
