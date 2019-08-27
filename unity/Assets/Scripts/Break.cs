@@ -24,6 +24,9 @@ public class Break : MonoBehaviour
     [SerializeField]
     protected bool broken;
 
+    //if set to true, all breakable objects cannot be broken automatically. Instaed, only the Break() action targeting specific objects will allow them to be broken.
+    public bool Unbreakable = false;
+
     //what does this object need to do when it is in the broken state? 
     //Some need a decal to show a cracked screen on the surface, others need a prefab swap to shattered pieces
     protected enum BreakType {PrefabSwap, MaterialSwap, Decal};
@@ -170,6 +173,13 @@ public class Break : MonoBehaviour
 
     void OnCollisionEnter(Collision col)
     {
+
+        //do nothing if this specific breakable sim objects has been set to unbreakable
+        if(Unbreakable)
+        {
+            return;
+        }
+        
         //first see if the object (col) or this object is in the list of objects that are too small or too soft
         // if(TooSmalOrSoftToBreakOtherObjects.Contains(gameObject.GetComponent<SimObjPhysics>().Type))
         // {
