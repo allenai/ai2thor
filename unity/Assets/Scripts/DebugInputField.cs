@@ -163,6 +163,15 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         break;
                     }
 
+                case "crazydiamond":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "MakeObjectsOfTypeUnbreakable";
+                        action.objectType = "Egg";
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }                   
+
                 case "pp":
                     {
                         ServerAction action = new ServerAction();

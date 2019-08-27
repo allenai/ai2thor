@@ -3672,6 +3672,29 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(success);
         }
 
+        public void MakeObjectsOfTypeUnbreakable(ServerAction action)
+        {
+            if(action.objectType == null)
+            {
+                errorMessage = "no object type specified for MakeOBjectsOfTypeUnbreakable()";
+                actionFinished(false);
+            }
+
+            SimObjPhysics[] simObjs= GameObject.FindObjectsOfType(typeof(SimObjPhysics)) as SimObjPhysics[];
+            foreach(SimObjPhysics sop in simObjs)
+            {
+                if(sop.Type.ToString() == action.objectType) 
+                {
+                    if(sop.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanBreak))
+                    {
+                        sop.GetComponent<Break>().Unbreakable = true;
+                    }
+                }
+            }
+
+            actionFinished(true);
+        }
+
         public void SetObjectPoses(ServerAction action)
         {
             PhysicsSceneManager script = GameObject.Find("PhysicsSceneManager").GetComponent<PhysicsSceneManager>();
