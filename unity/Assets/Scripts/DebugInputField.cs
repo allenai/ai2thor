@@ -192,6 +192,18 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         break;
                     }
 
+                case "smp":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "SetMassProperties";
+                        action.objectId = "Pot|+00.30|+00.96|+01.35";
+                        action.x = 100;
+                        action.y = 100;
+                        action.z = 100;
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
                 case "pp":
                     {
                         ServerAction action = new ServerAction();
