@@ -187,6 +187,43 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true);
         }
 
+        //change the mass/drag/angular drag values of a simobjphys that is pickupable or moveable
+        public void SetMassProperties(ServerAction action)
+        {
+            if(action.objectId == null)
+            {
+                errorMessage = "please give valid UniqueID for SetMassProperties() action";
+                actionFinished(false);
+                return;
+            }
+
+            SimObjPhysics[] simObjects = GameObject.FindObjectsOfType<SimObjPhysics>();
+            foreach(SimObjPhysics sop in simObjects)
+            {
+                if(sop.uniqueID == action.objectId)
+                {
+                    if(sop.PrimaryProperty == SimObjPrimaryProperty.Moveable || sop.PrimaryProperty == SimObjPrimaryProperty.CanPickup)
+                    {
+                        Rigidbody rb = sop.GetComponent<Rigidbody>();
+                        rb.mass = action.x;
+                        rb.drag = action.y;
+                        rb.angularDrag = action.z;
+                        
+                        actionFinished(true);
+                        return;
+                    }
+
+                    errorMessage = "object with UniqueID: " + action.objectId + ", is not Moveable or Pickupable, and the Mass Properties cannot be changed";
+                    actionFinished(false);
+                    return;
+                }
+            }
+
+            errorMessage = "object with UniqueID: " + action.objectId + ", could not be found in this scene";
+            actionFinished(false);
+            return;
+        }
+
         //sets whether this scene should allow objects to decay temperature to room temp over time or not
         public void SetDecayTemperatureBool(ServerAction action)
         {
