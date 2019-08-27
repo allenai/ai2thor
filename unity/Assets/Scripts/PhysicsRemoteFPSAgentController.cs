@@ -348,18 +348,49 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             objMeta.isMoving = simObj.inMotion;//keep track of if this object is actively moving
 
-            // TODO: bounds necessary?
-            // Bounds bounds = simObj.Bounds;
-            // this.bounds3D = new [] {
-            //     bounds.min.x,
-            //     bounds.min.y,
-            //     bounds.min.z,
-            //     bounds.max.x,
-            //     bounds.max.y,
-            //     bounds.max.z,
-            // };
+            if(simObj.PrimaryProperty == SimObjPrimaryProperty.CanPickup || simObj.PrimaryProperty == SimObjPrimaryProperty.Moveable)
+            objMeta.objectBounds = WorldCoordinatesOfBoundingBox(simObj);
+
             return objMeta;
         }
+
+        public WorldSpaceBounds WorldCoordinatesOfBoundingBox(SimObjPhysics sop)
+        {
+            WorldSpaceBounds b = new WorldSpaceBounds();
+
+            if(sop.BoundingBox== null)
+            {
+                Debug.LogError(sop.transform.name + " is missing BoundingBox reference!");
+                return b;
+            }
+
+            BoxCollider col = sop.BoundingBox.GetComponent<BoxCollider>();
+            List<Vector3> corners = new List<Vector3>();
+            
+            Vector3 p0 = col.transform.TransformPoint(col.center + new Vector3(col.size.x, -col.size.y, col.size.z) * 0.5f);
+            Vector3 p1 = col.transform.TransformPoint(col.center + new Vector3(-col.size.x, -col.size.y, col.size.z) * 0.5f);
+            Vector3 p2 = col.transform.TransformPoint(col.center + new Vector3(-col.size.x, -col.size.y, -col.size.z) * 0.5f);
+            Vector3 p3 = col.transform.TransformPoint(col.center + new Vector3(col.size.x, -col.size.y, -col.size.z) * 0.5f);
+            Vector3 p4 = col.transform.TransformPoint(col.center + new Vector3(col.size.x, col.size.y, col.size.z) * 0.5f);
+            Vector3 p5 = col.transform.TransformPoint(col.center + new Vector3(-col.size.x, col.size.y, col.size.z) * 0.5f);
+            Vector3 p6 = col.transform.TransformPoint(col.center + new Vector3(-col.size.x, +col.size.y, -col.size.z) * 0.5f);
+            Vector3 p7 = col.transform.TransformPoint(col.center + new Vector3(col.size.x, col.size.y, -col.size.z) * 0.5f);
+
+
+            corners.Add(p0);
+            corners.Add(p1);
+            corners.Add(p2);
+            corners.Add(p3);
+            corners.Add(p4);
+            corners.Add(p5);
+            corners.Add(p6);
+            corners.Add(p7);
+
+            b.objectBoundsCorners = corners.ToArray();
+            
+            return b;
+        }
+
         public override ObjectMetadata[] generateObjectMetadata() {
             SimObjPhysics[] visibleSimObjs = VisibleSimObjs(false); // Update visibility for all sim objects for this agent
             HashSet<SimObjPhysics> visibleSimObjsHash = new HashSet<SimObjPhysics>();
