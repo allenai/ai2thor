@@ -1267,6 +1267,19 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		this.GetComponent<Rigidbody>().isKinematic = true;
 		
 		ContextSetUpSimObjPhysics();
+
+        BoxCollider col = MyColliders[0].GetComponent<BoxCollider>();
+        BoxCollider meshbox = gameObject.transform.Find("mesh").GetComponent<BoxCollider>();
+        col.center = meshbox.center;
+        col.size = meshbox.size;
+
+        MeshRenderer r = meshbox.GetComponent<MeshRenderer>();
+        BoxCollider bb = BoundingBox.GetComponent<BoxCollider>();
+        bb.center = r.bounds.center;
+        bb.size = r.bounds.size * 1.1f;
+
+        meshbox.enabled = false;
+
 	}
 
 	[ContextMenu("Drawer")]
