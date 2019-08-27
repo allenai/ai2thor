@@ -783,7 +783,15 @@ public class ObjectMetadata
 	public float currentTime;
     public bool isMoving;//true if this game object currently has a non-zero velocity
 
+    public WorldSpaceBounds objectBounds;
 	public ObjectMetadata() { }
+}
+
+[Serializable]
+public class WorldSpaceBounds
+{
+    //8 corners of the box that bounds a sim object
+    public Vector3[] objectBoundsCorners;
 }
 
 [Serializable]
