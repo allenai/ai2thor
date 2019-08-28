@@ -1030,7 +1030,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 
 	//CONTEXT MENU STUFF FOR SETTING UP SIM OBJECTS
 	//RIGHT CLICK this script in the inspector to reveal these options
-	[ContextMenu("Cabinet")]
+	//[ContextMenu("Cabinet")]
 	void SetUpCabinet()
 	{
 		Type = SimObjType.Cabinet;
@@ -1215,7 +1215,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 
 		//this.GetComponent<CanOpen>().SetMovementToRotate();
 	}
-	[ContextMenu("Table")]
+	//[ContextMenu("Table")]
 	void SetUpTable()
 	{
 		this.Type = SimObjType.DiningTable;
@@ -1282,7 +1282,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 
 	}
 
-	[ContextMenu("Drawer")]
+	//[ContextMenu("Drawer")]
 	void SetUpDrawer()
 	{
 		this.Type = SimObjType.Drawer;
@@ -1480,7 +1480,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		}
 	}
 
-	[ContextMenu("Static Mesh Collider with Receptacle")]
+	//[ContextMenu("Static Mesh Collider with Receptacle")]
 	void SetUpSimObjWithStaticMeshCollider()
 	{
 		if (this.Type == SimObjType.Undefined || this.PrimaryProperty == SimObjPrimaryProperty.Undefined)
