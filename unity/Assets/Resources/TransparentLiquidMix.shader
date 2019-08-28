@@ -133,7 +133,7 @@
            float4 topColor = _TopColor * (mix + result) + RimResult;
            //VFACE returns positive for front facing, negative for backfacing
 
-           clip(finalResult - 0.0001);
+           clip(finalResult.a - 0.0001);
 
            return facing > 0 ? finalResult: topColor; 
                

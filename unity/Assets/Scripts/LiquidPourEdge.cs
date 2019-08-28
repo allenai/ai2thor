@@ -142,6 +142,7 @@ public abstract class LiquidPourEdge : MonoBehaviour
 
         var currentMixTint = mr.material.GetColor("_MixTint");
         mr.material.SetColor("_MixTint", mixColor);
+        mr.material.SetColor("_TopColor", mixColor);
         var currentRim = mr.material.GetFloat("_MixRim");
 
         var tintDiff = currentMixTint - mixColor;
@@ -250,6 +251,7 @@ public abstract class LiquidPourEdge : MonoBehaviour
                 var targetMixColor = (mixTint + mixColor * colorVelocityDelta) / (1.0f + colorVelocityDelta);
                 mr.material.SetColor("_Tint", targetColor);
                 mr.material.SetColor("_MixTint", targetMixColor);
+                 mr.material.SetColor("_TopColor", targetMixColor);
             }
         }
     }

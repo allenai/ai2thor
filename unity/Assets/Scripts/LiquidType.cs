@@ -36,8 +36,9 @@ public class LiquidProperties {
             }
         },
         {
+            // color = new Color(51 / 255.0f, 0 / 255.0f, 5 / 255.0f, 255 / 255.0f),
             LiquidType.wine, new Liquid {
-                color = new Color(51 / 255.0f, 0 / 255.0f, 5 / 255.0f, 255 / 255.0f),
+                color = new Color(51 / 255.0f, 0.0f, 5 / 255.0f, 255 / 255.0f),
                 flowColor =  new Color(106 / 255.0f, 0 / 255.0f, 0 / 255.0f, 230 / 255.0f),
                 topColor = new Color(51 / 255.0f, 0 / 255.0f, 5 / 255.0f, 255 / 255.0f),
                 temperature = Temperature.RoomTemp
