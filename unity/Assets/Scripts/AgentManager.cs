@@ -678,7 +678,7 @@ public class ObjectMetadata
 	// public bool isabletocook;//object is in contact with a "fire" tagged source (stove burner), if this is heated any object cookable object touching it will be switched to cooked - again use for Pots/Pans
 	//
 	//temperature placeholder values, might get more specific later with degrees but for now just track these three states
-	public enum Temperature { RoomTemp, Hot, Cold};
+	public Temperature Temperature;
 	public string ObjectTemperature;//return current abstracted temperature of object as a string (RoomTemp, Hot, Cold)
 	//
 	public bool canChangeTempToHot;//can change other object temp to hot
@@ -718,6 +718,13 @@ public class LiquidMetadata
 	public Dictionary<string, float> solutionPercentages;
     public float totalLiters;
 	public float maxLiters;
+}
+
+[Serializable]
+public enum Temperature { 
+    RoomTemp,
+    Hot,
+    Cold
 }
 
 [Serializable]
@@ -855,9 +862,11 @@ public class ServerAction
 	public bool placeStationary = true; //when placing/spawning an object, do we spawn it stationary (kinematic true) or spawn and let physics resolve final position
 	public string ssao = "default";
 	public string fillLiquid; //string to indicate what kind of liquid this object should be filled with. Water, Coffee, Wine etc.
+    public float liquidPercentage; // 0 to 1 float to indicate amount of liquid to fill
 	public float TimeUntilRoomTemp;
 	public bool allowDecayTemperature = true; //set to true if temperature should decay over time, set to false if temp changes should not decay, defaulted true
 	public string StateChange;//a string that specifies which state change to randomly toggle
+
 	public SimObjType ReceptableSimObjType()
 	{
 		if (string.IsNullOrEmpty(receptacleObjectType))

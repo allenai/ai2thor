@@ -6930,6 +6930,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
 
+        // Deprecated
         //fill an object with a liquid specified by action.fillLiquid - coffee, water, soap, wine, etc
         public void FillObjectWithLiquid(ServerAction action)
         {
@@ -7014,8 +7015,100 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
 
+        public void FillObjectWithLiquidPercentage(ServerAction action) {
+            //pass name of object in from action.objectId
+            if (action.objectId == null) 
+            {
+                errorMessage = "objectId required for FillObject action";
+                actionFinished(false);
+                return;
+            }
+
+            if(action.fillLiquid == null)
+            {
+                errorMessage = "Missing Liquid string for FillObject action";
+                actionFinished(false);
+            }
+
+            SimObjPhysics target = null;
+
+            if (action.forceAction) 
+            {
+                action.forceVisible = true;
+            }
+
+            foreach (SimObjPhysics sop in VisibleSimObjs(action)) 
+            {
+                target = sop;
+            }
+
+            if(target)
+            {
+                SimObjPhysics sop = target.GetComponent<SimObjPhysics>();
+                if(sop.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanBeFilled))
+                {
+
+                    var liquidEdge = target.GetComponentInChildren<LiquidPourEdge>();
+
+                    Debug.Log("Liquid edge " + liquidEdge);
+
+                    var valid = true;
+                    LiquidType liquidType = LiquidType.none;
+
+                    if (liquidEdge != null) {
+
+                        try {
+                            liquidType = (LiquidType) Enum.Parse(typeof(LiquidType), action.fillLiquid);
+                        }
+                        catch (ArgumentException e) {
+                            valid = false;
+                        }
+
+                        if (!valid) {
+                            errorMessage = action.fillLiquid + " is not a valid Liquid Type";
+                            actionFinished(false);
+                            return;
+                        }
+                        if (liquidType == LiquidType.none) {
+                            errorMessage = "Liquid Type can not be 'none'";
+                            actionFinished(false);
+                            return;
+                        }
+                    }
+                    else {
+                        errorMessage = "";
+                        actionFinished(false);
+                        return;
+                    }
+
+
+                    sop.CurrentTemperature = LiquidProperties.liquids[liquidType].temperature;
+                    if(sop.HowManySecondsUntilRoomTemp != sop.GetTimerResetValue()) {
+                        sop.HowManySecondsUntilRoomTemp = sop.GetTimerResetValue();
+                    }
+                    sop.SetStartRoomTempTimer(false);
+
+                    liquidEdge.Fill(liquidType, action.liquidPercentage * liquidEdge.containerMaxLiters);
+                }
+
+                else 
+                {
+                    errorMessage = target.transform.name + " does not have CanBeFilled property!";
+                    actionFinished(false);
+                    return;
+                }
+            }
+
+            else
+            {
+                errorMessage = "object not found: " + action.objectId;
+                actionFinished(false);
+            }
+        }
+
         public void EmptyLiquidFromObject(ServerAction action)
         {
+            // Deprecate Non-dynamic liquids
             //pass name of object in from action.objectId
             if (action.objectId == null) 
             {
@@ -7041,22 +7134,38 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 if(target.GetComponent<SimObjPhysics>().DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanBeFilled))
                 {
                     Fill fil = target.GetComponent<Fill>();
+                    var dynamicLiquid = target.GetComponentInChildren<LiquidPourEdge>();        
 
-                    if(fil.IsFilled())
-                    {
-                        fil.EmptyObject();
-                        actionFinished(true);
-                        return;
+                    
+                    if (dynamicLiquid != null) {
+                        if (dynamicLiquid.isFilled()) {
+                            dynamicLiquid.Empty();
+                            actionFinished(true);
+                            return;
+                        }
+                        else {
+                            errorMessage = "object already empty";
+                            actionFinished(false);
+                            return;
+                        }
+                    }
+                    else if (fil != null) {
+                        if(fil.IsFilled())
+                        {
+                            fil.EmptyObject();
+                            actionFinished(true);
+                            return;
+                        }
+                        else
+                        {
+                            errorMessage = "object already empty";
+                            actionFinished(false);
+                            return;
+                        }
                     }
 
-                    else
-                    {
-                        errorMessage = "object already empty";
-                        actionFinished(false);
-                        return;
-                    }
+                    
                 }
-
                 else 
                 {
                     errorMessage = target.transform.name + " does not have CanBeFilled property!";

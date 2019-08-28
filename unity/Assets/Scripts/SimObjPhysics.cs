@@ -74,7 +74,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 	List<ReceptacleSpawnPoint> MySpawnPoints = new List<ReceptacleSpawnPoint>();
 
 	//keep track of this object's current temperature (abstracted to three states, RoomTemp/Hot/Cold)
-	public ObjectMetadata.Temperature CurrentTemperature = ObjectMetadata.Temperature.RoomTemp;
+	public Temperature CurrentTemperature = Temperature.RoomTemp;
 
 	//value for how long it should take this object to get back to room temperature from hot/cold
 	public float HowManySecondsUntilRoomTemp = 10f;
@@ -416,7 +416,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 	/// end placeholder stuff
 
 	//return temperature enum here
-	public ObjectMetadata.Temperature CurrentObjTemp
+	public Temperature CurrentObjTemp
 	{
 		get
 		{
@@ -741,12 +741,12 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		if(sceneManager.AllowDecayTemperature)//only do this if the scene is initialized to use Temperature decay over time
 		{
 			//if this object is either hot or col, begin a timer that counts until the object becomes room temperature again
-			if(CurrentTemperature != ObjectMetadata.Temperature.RoomTemp && StartRoomTempTimer == true)
+			if(CurrentTemperature != Temperature.RoomTemp && StartRoomTempTimer == true)
 			{
 				HowManySecondsUntilRoomTemp -= Time.deltaTime;
 				if(HowManySecondsUntilRoomTemp < 0)
 				{
-					CurrentTemperature = ObjectMetadata.Temperature.RoomTemp;
+					CurrentTemperature = Temperature.RoomTemp;
 					HowManySecondsUntilRoomTemp = TimerResetValue;
 				}
 			}

@@ -485,6 +485,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 					Debug.LogError(errorMessage);
 					actionFinished(false);
 				} else {
+                    Debug.Log(" METHODDD " + method);
 					method.Invoke(this, new object[] { controlCommand });
 				}
 			}

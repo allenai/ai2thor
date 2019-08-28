@@ -988,6 +988,32 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }
+
+                case "fill":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "FillObjectWithLiquidPercentage";
+                        // var liquidType = "none";
+                        float percent = 0; 
+
+						if(splitcommand.Length > 2)
+						{
+                            action.fillLiquid = splitcommand[1];
+                            percent = float.Parse(splitcommand[2]);
+						}
+                        action.liquidPercentage = percent;
+
+                        if (splitcommand.Length > 3) {
+                            action.objectId = splitcommand[3];
+                        }
+                        else
+                        {
+                            action.objectId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().UniqueIDOfClosestVisibleObject();
+                        }
+
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }    
                 case "emptyliquid":
                     {
                         ServerAction action = new ServerAction();

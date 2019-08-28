@@ -22,7 +22,7 @@ public class ColdZone : MonoBehaviour
         if(other.GetComponentInParent<SimObjPhysics>())
         {
             SimObjPhysics sop = other.GetComponentInParent<SimObjPhysics>();
-            sop.CurrentTemperature = ObjectMetadata.Temperature.Cold;
+            sop.CurrentTemperature = Temperature.Cold;
 
             if(sop.HowManySecondsUntilRoomTemp != sop.GetTimerResetValue())
             sop.HowManySecondsUntilRoomTemp = sop.GetTimerResetValue();
