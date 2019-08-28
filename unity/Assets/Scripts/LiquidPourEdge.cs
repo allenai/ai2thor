@@ -134,7 +134,7 @@ public abstract class LiquidPourEdge : MonoBehaviour
         return mixColor;
     }
 
-    void SetFillAmount(float normalizedFill, Color mixColor, float liters) {
+    void SetFillAmount(float normalizedFill, Color mixColor, float liters, bool wasEmpty) {
         normalizedCurrentFill = normalizedFill;
         var mr = this.transform.GetComponentInParent<MeshRenderer>();
         shaderFill = emptyValue - (emptyValue - fullValue) * (normalizedCurrentFill);
@@ -144,6 +144,8 @@ public abstract class LiquidPourEdge : MonoBehaviour
         mr.material.SetColor("_MixTint", mixColor);
         mr.material.SetColor("_TopColor", mixColor);
         var currentRim = mr.material.GetFloat("_MixRim");
+
+         
 
         var tintDiff = currentMixTint - mixColor;
         var dot = Vector4.Dot(tintDiff, tintDiff);
@@ -157,6 +159,11 @@ public abstract class LiquidPourEdge : MonoBehaviour
        
         var worldSpaceDiff = (emptyValue - fullValue) * (liters / containerMaxLiters);
         mr.material.SetFloat("_MixRim", currentRim + worldSpaceDiff * 2);
+
+        if (wasEmpty) {
+            mr.material.SetColor("_Tint", mixColor);
+            mr.material.SetFloat("_MixRim", 0);
+        }
     }
 
      void TransferLiquidVolume(float liters, LiquidPourEdge transferer, float deltaEdgeDifference) {
@@ -171,6 +178,7 @@ public abstract class LiquidPourEdge : MonoBehaviour
         {
             this.solutionPercentages[transferSolutionEntry.Key] = ((transferSolutionEntry.Value * liters) + (this.solutionPercentages[transferSolutionEntry.Key] * liquidVolumeLiters)) / (this.liquidVolumeLiters + liters);
         }
+        var wasEmpty = !this.isFilled();
 
         this.liquidVolumeLiters += liters;
 
@@ -181,7 +189,7 @@ public abstract class LiquidPourEdge : MonoBehaviour
         //  Debug.Log("Transfering liquid volume from " +  this.gameObject.name + " to  " + transferer.gameObject.name + " amount " + liters + " total in new " + liquidVolumeLiters + " str " + solutionString);
 
         this.normalizedCurrentFill = this.liquidVolumeLiters / this.containerMaxLiters;
-        this.SetFillAmount(normalizedCurrentFill, transferColor, liters);
+        this.SetFillAmount(normalizedCurrentFill, transferColor, liters, wasEmpty);
     }
 
      void LoseLiquidVolume(float liters) {
