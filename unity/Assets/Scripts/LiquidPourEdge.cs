@@ -55,6 +55,8 @@ public abstract class LiquidPourEdge : MonoBehaviour
 
     private float flowEmissionRate;
 
+    private Color topColorOffset = new Color(0.08f, 0.08f, 0.08f, 0);
+
     protected abstract Vector3 getEdgeLowestPointWorldSpace(Vector3 up, bool withOffset = false);
 
     // Start is called before the first frame update
@@ -142,7 +144,7 @@ public abstract class LiquidPourEdge : MonoBehaviour
 
         var currentMixTint = mr.material.GetColor("_MixTint");
         mr.material.SetColor("_MixTint", mixColor);
-        mr.material.SetColor("_TopColor", mixColor);
+        mr.material.SetColor("_TopColor", mixColor + topColorOffset);
         var currentRim = mr.material.GetFloat("_MixRim");
 
          
@@ -259,7 +261,7 @@ public abstract class LiquidPourEdge : MonoBehaviour
                 var targetMixColor = (mixTint + mixColor * colorVelocityDelta) / (1.0f + colorVelocityDelta);
                 mr.material.SetColor("_Tint", targetColor);
                 mr.material.SetColor("_MixTint", targetMixColor);
-                 mr.material.SetColor("_TopColor", targetMixColor);
+                mr.material.SetColor("_TopColor", targetMixColor + topColorOffset);
             }
         }
     }
