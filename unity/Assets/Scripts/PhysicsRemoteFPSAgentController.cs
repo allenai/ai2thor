@@ -205,9 +205,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     if(sop.PrimaryProperty == SimObjPrimaryProperty.Moveable || sop.PrimaryProperty == SimObjPrimaryProperty.CanPickup)
                     {
                         Rigidbody rb = sop.GetComponent<Rigidbody>();
-                        rb.mass = action.x;
-                        rb.drag = action.y;
-                        rb.angularDrag = action.z;
+                        rb.mass = action.mass;
+                        rb.drag = action.drag;
+                        rb.angularDrag = action.angularDrag;
                         
                         actionFinished(true);
                         return;

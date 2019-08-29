@@ -1001,6 +1001,9 @@ public class ServerAction
 	public bool allowDecayTemperature = true; //set to true if temperature should decay over time, set to false if temp changes should not decay, defaulted true
 	public string StateChange;//a string that specifies which state change to randomly toggle
     public float timeStep = 0.01f;
+    public float mass;
+    public float drag;
+    public float angularDrag;
 
     public ObjectPose[] objectPoses;
     public ObjectToggle[] objectToggles;
