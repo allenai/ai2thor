@@ -55,7 +55,7 @@ public abstract class LiquidPourEdge : MonoBehaviour
 
     private float flowEmissionRate;
 
-    private Color topColorOffset = new Color(0.08f, 0.08f, 0.08f, 0);
+    private Color topColorOffset = new Color(0.16f, 0.16f, 0.16f, 0);
 
     protected abstract Vector3 getEdgeLowestPointWorldSpace(Vector3 up, bool withOffset = false);
 
