@@ -88,7 +88,7 @@ public abstract class LiquidPourEdge : MonoBehaviour
             //Debug.Log(" Setting tint for " + liquidType + " to " + liquid.color);
             mr.material.SetColor("_Tint", liquid.color);
             mr.material.SetColor("_MixTint", liquid.color);
-            mr.material.SetColor("_TopColor", liquid.topColor);
+            mr.material.SetColor("_TopColor", liquid.topColor + topColorOffset);
 
             normalizedCurrentFill = liquidVolumeLiters / containerMaxLiters;
             if (normalizedCurrentFill > 0.0001f) {
