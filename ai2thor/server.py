@@ -51,7 +51,7 @@ class NumpyAwareEncoder(json.JSONEncoder):
             return np.asscalar(obj)
         return super(NumpyAwareEncoder, self).default(obj)
 
-class BufferedIO:
+class BufferedIO(object):
     def __init__(self, wfile):
         self.wfile = wfile
         self.data = []
@@ -63,12 +63,19 @@ class BufferedIO:
         self.wfile.write(b"".join(self.data))
         self.wfile.flush()
 
+    def close(self):
+        return self.wfile.close()
+
+    @property
+    def closed(self):
+        return self.wfile.closed
+
 
 class ThorRequestHandler(werkzeug.serving.WSGIRequestHandler):
     def run_wsgi(self):
         old_wfile = self.wfile
         self.wfile = BufferedIO(self.wfile)
-        result = super().run_wsgi()
+        result = super(ThorRequestHandler, self).run_wsgi()
         self.wfile = old_wfile
         return result
 
