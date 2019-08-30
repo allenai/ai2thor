@@ -196,10 +196,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     {
                         ServerAction action = new ServerAction();
                         action.action = "SetMassProperties";
-                        action.objectId = "Pot|+00.30|+00.96|+01.35";
-                        action.x = 100;
-                        action.y = 100;
-                        action.z = 100;
+                        action.objectId = "Box|+02.51|+00.13|-01.09";
+                        action.mass = 100;
+                        action.drag = 0.5f;
+                        action.angularDrag = 0.5f;
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }
