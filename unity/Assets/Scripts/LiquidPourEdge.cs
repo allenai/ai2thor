@@ -59,6 +59,8 @@ public abstract class LiquidPourEdge : MonoBehaviour
 
     protected abstract Vector3 getEdgeLowestPointWorldSpace(Vector3 up, bool withOffset = false);
 
+    protected abstract ParticleSystem.MinMaxCurve GetFlowSize(float edgeDifference);
+
     // Start is called before the first frame update
     void Start()
     {
@@ -279,6 +281,9 @@ public abstract class LiquidPourEdge : MonoBehaviour
             flowEmissionRate = activeFlow.GetComponent<ParticleSystem>().emission.rateOverTime.constant;
             activeFlow.transform.rotation = Quaternion.AngleAxis((edgeAngle * 180.0f /  Mathf.PI), Vector3.up);
             flowTimer = Time.time;
+            var e = activeFlow.GetComponent<ParticleSystem>().main;
+            e.startSize = this.GetFlowSize(edgeDifference);
+            // e.startSize = 
         }
         else {
             var e = activeFlow.GetComponent<ParticleSystem>().emission;

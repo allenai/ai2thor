@@ -13,6 +13,8 @@ public class LiquidPourRectangleEdge : LiquidPourEdge
     public float width = 1.0f;
     public float depth = 1.0f;
 
+    private bool inEdge = false;
+
     protected override Vector3 getEdgeLowestPointWorldSpace(Vector3 up, bool withOffset = false) {
         var upXZ = new Vector3(up.x, 0, up.z);
 
@@ -53,6 +55,8 @@ public class LiquidPourRectangleEdge : LiquidPourEdge
             // linear interpolator between 0 and 1
             alpha = (alpha + 1.0f) / 2.0f; 
 
+            inEdge = true;
+
             return verts[indices[0]] * (1.0f - alpha) + verts[indices[1]] * (alpha);
 
             // Simpler model just line between vertices when they are at the same height within the threshold
@@ -61,6 +65,15 @@ public class LiquidPourRectangleEdge : LiquidPourEdge
         else {
             return verts[indices[0]];
         }
+    }
+
+
+    protected override ParticleSystem.MinMaxCurve GetFlowSize(float edgeDifference) {
+        var sizeMult = inEdge ? 0.25f : 0.1f;
+        // return new ParticleSystem.MinMaxCurve(sizeMult * width, (sizeMult + 0.5f) * width );
+
+        // return new ParticleSystem.MinMaxCurve(0.01f, 0.03f );
+        return new ParticleSystem.MinMaxCurve(sizeMult * width, (sizeMult + 0.05f) * width );
     }
 
     void OnDrawGizmos() {

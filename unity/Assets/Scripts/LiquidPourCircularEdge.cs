@@ -32,6 +32,10 @@ public class LiquidPourCircularEdge : LiquidPourEdge
         return circleLowestWorld;
     }
 
+    protected override ParticleSystem.MinMaxCurve GetFlowSize(float edgeDifference) {
+        return new ParticleSystem.MinMaxCurve(radius * 0.8f, radius * 1f);
+    }
+
     void OnDrawGizmos() {
        
       
