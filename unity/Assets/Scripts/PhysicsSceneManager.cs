@@ -471,7 +471,7 @@ public class PhysicsSceneManager : MonoBehaviour
 			
 					//each sop here is a valid receptacle
 					bool spawned = false;
-					foreach(SimObjPhysics sop in ShuffleSimObjPhysicsDictList(AllowedToSpawnInAndExistsInScene))
+					foreach(SimObjPhysics sop in ShuffleSimObjPhysicsDictList(AllowedToSpawnInAndExistsInScene, seed))
 					{
 						//targetReceptacle = sop;
 
@@ -562,11 +562,11 @@ public class PhysicsSceneManager : MonoBehaviour
 							break;
 						} 
 
-						// #if UNITY_EDITOR
-						// // watch.Stop();
-						// // var elapsedMs = watch.ElapsedMilliseconds;
-						// // print("time for trying, but FAILING, to place " + go.transform.name+ " in " + sop.transform.name + ": " + elapsedMs + " ms");
-						// #endif
+						#if UNITY_EDITOR
+						// watch.Stop();
+						// var elapsedMs = watch.ElapsedMilliseconds;
+						// print("time for trying, but FAILING, to place " + go.transform.name+ " in " + sop.transform.name + ": " + elapsedMs + " ms");
+						#endif
 					}
 					
 					if (!spawned) {
@@ -812,7 +812,7 @@ public class PhysicsSceneManager : MonoBehaviour
 		return result;//we are good to spawn, return true
 	}
 
-	public List<SimObjPhysics> ShuffleSimObjPhysicsDictList(Dictionary<SimObjType, List<SimObjPhysics>> dict)
+	public List<SimObjPhysics> ShuffleSimObjPhysicsDictList(Dictionary<SimObjType, List<SimObjPhysics>> dict, int seed)
 	{
 		List<SimObjType> types = new List<SimObjType>();
 		Dictionary<SimObjType, int> indDict = new Dictionary<SimObjType, int>();
@@ -821,9 +821,9 @@ public class PhysicsSceneManager : MonoBehaviour
 			indDict[pair.Key] = pair.Value.Count - 1;
 		}
 		types.Sort();
-		types.Shuffle_();
+		types.Shuffle_(seed);
 		foreach (SimObjType t in types) {
-			dict[t].Shuffle_();
+			dict[t].Shuffle_(seed);
 		}
 
 		bool changed = true;
