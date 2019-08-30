@@ -471,6 +471,15 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         break;
                     }
 
+                //tests the Reset function on AgentManager.cs, adding a path to it from the PhysicsController
+                case "reset":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "Reset";
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
                 //set forceVisible to true if you want objects to not spawn inside receptacles and only out in the open
                 //set forceAction to true to spawn with kinematic = true to more closely resemble pivot functionality
                 case "irs":
@@ -513,12 +522,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
                         else
                         {
-                            action.randomSeed = 0;
-                            action.forceVisible = false;//true;
-                            action.maxNumRepeats = 5;
+                            action.randomSeed = 1;
+                            action.forceVisible = true;
+                            action.maxNumRepeats = 10;
                         }
 
-                        action.placeStationary = true;//set to false to spawn with kinematic = false, set to true to spawn everything kinematic true and they won't roll around
+                        //action.placeStationary = true;//set to false to spawn with kinematic = false, set to true to spawn everything kinematic true and they won't roll around
                         PhysicsController.ProcessControlCommand(action);
 
                         break;

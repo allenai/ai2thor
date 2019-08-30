@@ -3848,6 +3848,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
 
+        #if UNITY_EDITOR
+        //for use in Editor to test the Reset function.
+        public void Reset(ServerAction action)
+        {
+           physicsSceneManager.GetComponent<AgentManager>().Reset(action);
+        }
+        #endif
+
         //randomly repositions sim objects in the current scene
         public void InitialRandomSpawn(ServerAction action) {
             //something is in our hand AND we are trying to spawn it. Quick drop the object

@@ -540,13 +540,13 @@ public class PhysicsSceneManager : MonoBehaviour
 						targetReceptacleSpawnPoints = sop.ReturnMySpawnPoints(false);
 
 						//first shuffle the list so it's raaaandom
-						targetReceptacleSpawnPoints.Shuffle_();
+						targetReceptacleSpawnPoints.Shuffle_(seed);
 						
 						//try to spawn it, and if it succeeds great! if not uhhh...
 
-						#if UNITY_EDITOR
-						// var watch = System.Diagnostics.Stopwatch.StartNew();
-						#endif
+						// #if UNITY_EDITOR
+						// // var watch = System.Diagnostics.Stopwatch.StartNew();
+						// #endif
 
 						if(spawner.PlaceObjectReceptacle(targetReceptacleSpawnPoints, go.GetComponent<SimObjPhysics>(), StaticPlacement, maxcount, 90, true)) //we spawn them stationary so things don't fall off of ledges
 						{
@@ -562,11 +562,11 @@ public class PhysicsSceneManager : MonoBehaviour
 							break;
 						} 
 
-						#if UNITY_EDITOR
-						// watch.Stop();
-						// var elapsedMs = watch.ElapsedMilliseconds;
-						// print("time for trying, but FAILING, to place " + go.transform.name+ " in " + sop.transform.name + ": " + elapsedMs + " ms");
-						#endif
+						// #if UNITY_EDITOR
+						// // watch.Stop();
+						// // var elapsedMs = watch.ElapsedMilliseconds;
+						// // print("time for trying, but FAILING, to place " + go.transform.name+ " in " + sop.transform.name + ": " + elapsedMs + " ms");
+						// #endif
 					}
 					
 					if (!spawned) {
