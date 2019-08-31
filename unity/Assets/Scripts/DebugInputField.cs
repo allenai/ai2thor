@@ -479,6 +479,16 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }
+                    
+                case "poap":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "PlaceObjectAtPoint";
+                        action.position = new Vector3(-0.85f, 0, 0.2f);
+                        action.objectId = "TargetCircle|+00.26|+01.22|+00.64";
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
 
                 //set forceVisible to true if you want objects to not spawn inside receptacles and only out in the open
                 //set forceAction to true to spawn with kinematic = true to more closely resemble pivot functionality

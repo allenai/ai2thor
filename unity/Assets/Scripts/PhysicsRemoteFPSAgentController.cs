@@ -3736,6 +3736,63 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
 
+        //pass in a Vector3, presumably from GetReachablePositions, and try to place a specific Sim Object there
+        //unlike PlaceHeldObject or InitialRandomSpawn, this won't be limited by a Receptacle, but only
+        //limited by collision
+        public void PlaceObjectAtPoint(ServerAction action)
+        {
+            if(action.objectId == null)
+            {
+                errorMessage = "please give valid objectId for PlaceObjectAtPoint action";
+                actionFinished(false);
+                return;
+            }
+
+            SimObjPhysics target = null;
+            foreach(SimObjPhysics sop in VisibleSimObjs(true))
+            {
+                if(sop.uniqueID == action.objectId)
+                {
+                    target = sop;
+                }
+            }
+
+            if(target == null)
+            {
+                errorMessage = "no object with id: "+ 
+                action.objectId+ " could be found during PlaceObjectAtPoint";
+                actionFinished(false);
+                return;
+            }
+            //ok let's get the distance from the simObj to the bottom most part of its colliders
+            Vector3 targetNegY = target.transform.position + new Vector3(0, -1, 0);
+            BoxCollider b = target.BoundingBox.GetComponent<BoxCollider>();
+
+            b.enabled = true;
+            Vector3 bottomPoint = b.ClosestPoint(targetNegY);
+            b.enabled = false;
+
+            float distFromSopToBottomPoint = Vector3.Distance(bottomPoint, target.transform.position);
+
+            float offset = distFromSopToBottomPoint + 0.01f;
+
+            print("offset is: "+ offset);
+
+            Vector3 finalPos = action.position +  new Vector3(0, offset, 0);
+
+
+            //check spawn area here
+            InstantiatePrefabTest ipt = physicsSceneManager.GetComponent<InstantiatePrefabTest>();
+            if(ipt.CheckSpawnArea(target, finalPos, target.transform.rotation, false))
+            {
+                target.transform.position = finalPos;
+                actionFinished(true);
+                return;
+            }
+
+            actionFinished(false);
+        }
+
         //instantiate a target circle, and then place it in a "SpawnOnlyOUtsideReceptacle" that is also within camera view
         //If fails, return actionFinished(false) and despawn target circle
         public void SpawnTargetCircle(ServerAction action)
@@ -3837,7 +3894,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 SimObjPhysics targetSOP = targetCircle.GetComponent<SimObjPhysics>();
                 physicsSceneManager.Generate_UniqueID(targetSOP);
                 physicsSceneManager.AddToObjectsInScene(targetSOP);
-                actionFinished(true);
+                actionFinished(true, targetSOP.uniqueID);//return the UniqueId of circle spawned for easy reference
             }
 
             else

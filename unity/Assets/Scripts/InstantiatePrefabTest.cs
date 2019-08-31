@@ -506,7 +506,7 @@ public class InstantiatePrefabTest : MonoBehaviour
     //All adjustments to the Bounding Box must be done on the collider only using the
     //"Edit Collider" button if you need to change the size
     //this assumes that the BoundingBox transform is zeroed out according to the root transform of the prefab
-    private bool CheckSpawnArea(SimObjPhysics simObj, Vector3 position, Quaternion rotation, bool spawningInHand)
+    public bool CheckSpawnArea(SimObjPhysics simObj, Vector3 position, Quaternion rotation, bool spawningInHand)
     {
 		int layermask;
 
