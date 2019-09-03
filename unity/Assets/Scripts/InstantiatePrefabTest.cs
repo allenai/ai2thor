@@ -521,7 +521,7 @@ public class InstantiatePrefabTest : MonoBehaviour
         //oh we are spawning it somehwere in the environment, we do need to make sure not to spawn inside the agent or the environment
 		else
 		{
-			layermask = (1 << 8) | (1 << 10);
+			layermask = (1 << 8) | (1 << 10);//this is checking against SimObjVisible and Agent layers...
 		}
 
 
@@ -577,17 +577,26 @@ public class InstantiatePrefabTest : MonoBehaviour
         Collider[] hitColliders = Physics.OverlapBox(bbCenterTransformPoint,
                                                      bbcol.size / 2.0f, simObj.transform.rotation, 
                                                      layermask, QueryTriggerInteraction.Collide);//make sure all ReceptacleTriggers are set to SimOBjInvisible layer!
-        // print("trying to place " + simObj.transform.name + ", hitCollider length is: " + hitColliders.Length);                                             
-        // foreach(Collider c in hitColliders)
-        // {
-        //     if(c.GetComponentInParent<Rigidbody>())
-        //     print(c.GetComponentInParent<Rigidbody>().transform.name);
-        // }
+
+        int colliderCount = 0;
         //if a collider was hit, then the space is not clear to spawn
 		if (hitColliders.Length > 0)
 		{
-			return false;
+            //filter out any AgentTriggerBoxes because those should be ignored now
+            foreach(Collider c in hitColliders)
+            {
+                if(c.isTrigger && c.GetComponentInParent<PhysicsRemoteFPSAgentController>())
+                continue;
+
+                else
+                colliderCount++;
+            }
+
+            if(colliderCount > 0)
+            return false;
 		}
+
+        //nothing was hit, we are good!
 		return true;
 	}
 

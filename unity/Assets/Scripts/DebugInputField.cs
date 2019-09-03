@@ -484,8 +484,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     {
                         ServerAction action = new ServerAction();
                         action.action = "PlaceObjectAtPoint";
-                        action.position = new Vector3(-0.85f, 0, 0.2f);
-                        action.objectId = "TargetCircle|+00.26|+01.22|+00.64";
+                        action.position = GameObject.Find("TestPosition").transform.position;
+                        action.objectId = "TargetCircle|+01.23|+00.33|+01.68";
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }

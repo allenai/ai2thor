@@ -3776,8 +3776,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             float offset = distFromSopToBottomPoint + 0.01f;
 
-            print("offset is: "+ offset);
-
             Vector3 finalPos = action.position +  new Vector3(0, offset, 0);
 
 
