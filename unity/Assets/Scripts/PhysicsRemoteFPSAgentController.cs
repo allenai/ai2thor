@@ -2748,18 +2748,18 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         public void ResetAgentHandPosition(ServerAction action = null) {
             AgentHand.transform.position = DefaultHandPosition.transform.position;
-            SimObjPhysics sop = AgentHand.GetComponentInChildren<SimObjPhysics>();
-            if (sop != null) {
-                sop.gameObject.transform.localPosition = Vector3.zero;
-            }
+            // SimObjPhysics sop = AgentHand.GetComponentInChildren<SimObjPhysics>();
+            // if (sop != null) {
+            //     sop.gameObject.transform.localPosition = Vector3.zero;
+            // }
         }
 
         public void ResetAgentHandRotation(ServerAction action = null) {
             AgentHand.transform.localRotation = Quaternion.Euler(Vector3.zero);
-            SimObjPhysics sop = AgentHand.GetComponentInChildren<SimObjPhysics>();
-            if (sop != null) {
-                sop.gameObject.transform.rotation = transform.rotation;
-            }
+            // SimObjPhysics sop = AgentHand.GetComponentInChildren<SimObjPhysics>();
+            // if (sop != null) {
+            //     sop.gameObject.transform.rotation = transform.rotation;
+            // }
         }
 
         public void DefaultAgentHand(ServerAction action = null) {
