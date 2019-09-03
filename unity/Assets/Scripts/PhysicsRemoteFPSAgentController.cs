@@ -2809,18 +2809,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         public void ResetAgentHandPosition(ServerAction action = null) {
             AgentHand.transform.position = DefaultHandPosition.transform.position;
-            SimObjPhysics sop = AgentHand.GetComponentInChildren<SimObjPhysics>();
-            if (sop != null) {
-                sop.gameObject.transform.localPosition = Vector3.zero;
-            }
         }
 
         public void ResetAgentHandRotation(ServerAction action = null) {
             AgentHand.transform.localRotation = Quaternion.Euler(Vector3.zero);
-            SimObjPhysics sop = AgentHand.GetComponentInChildren<SimObjPhysics>();
-            if (sop != null) {
-                sop.gameObject.transform.rotation = transform.rotation;
-            }
         }
 
         public void DefaultAgentHand(ServerAction action = null) {
@@ -2938,89 +2930,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             public string objectId;//id of object touched, if it is a sim object
             public float armsLength;//the amount the hand moved from it's starting position to hit the object touched
         }
-
-        //moves the agent hand to a target xyz position, then apply a force of a given magnitude to any objects in a specific direction
-        // public void MoveHandThenApplyForce(ServerAction action)
-        // {
-        //     //default hand to be safe
-        //     DefaultAgentHand();
-        //     Vector3 targetPosition = AgentHand.transform.localPosition + action.position;
-
-
-        //     //check if the agent's hand can actually move to targetPosition without problems
-        //     if(CheckIfAgentCanMoveEmptyHand(AgentHand.transform.TransformPoint(targetPosition)))
-        //     {
-        //         //move the hand
-        //         AgentHand.transform.localPosition = targetPosition;
-
-        //         //raycast out from targetPosition to direction
-        //         RaycastHit hit;
-
-        //         // Debug.DrawRay(AgentHand.transform.position, 
-        //         // m_Camera.transform.TransformDirection(action.direction), Color.yellow, 5.0f);
-
-        //         //raycast from hand in action.direction a max distance of 2m
-        //         if(Physics.Raycast(AgentHand.transform.position, 
-        //         m_Camera.transform.TransformDirection(action.direction), 
-        //         out hit, 2.0f, 1 << 0 |1 << 8| 1<<10, QueryTriggerInteraction.Ignore))
-        //         {
-        //             //print(hit.transform);
-        //             if(hit.transform.GetComponent<SimObjPhysics>())
-        //             {
-        //                 //if the object is a sim object, apply force now!
-        //                 SimObjPhysics target = hit.transform.GetComponent<SimObjPhysics>();
-        //                 bool canbepushed = false;
-
-        //                 if (target.PrimaryProperty == SimObjPrimaryProperty.CanPickup ||
-        //                     target.PrimaryProperty == SimObjPrimaryProperty.Moveable)
-        //                     canbepushed = true;
-
-        //                 if (!canbepushed) 
-        //                 {
-        //                     //the sim object hit was not moveable or pickupable, but we still hit something so return handTouchedSomething = true
-        //                     bool handTouchedSomething = true;
-        //                     Debug.Log("hand touched something that can't be pushed: " + hit.transform.name);
-        //                     actionFinished(true, handTouchedSomething);
-        //                     return;
-        //                 }
-
-        //                 ServerAction apply = new ServerAction();
-        //                 apply.moveMagnitude = action.moveMagnitude;
-        //                 apply.x = action.direction.x;
-        //                 apply.y = action.direction.y;
-        //                 apply.z = action.direction.z;
-        //                 sopApplyForce(apply, target);
-        //                 //sopApplyForce uses a coroutine to return actionFinished()
-        //             }
-
-        //             else
-        //             {
-        //                     //something that was not a sim object was touched
-        //                     bool handTouchedSomething = true;
-        //                     Debug.Log("hand touched something that was not a sim object");
-        //                     actionFinished(true, handTouchedSomething);
-        //                     return;
-        //             }
-        //         }
-
-        //         //raycast didn't hit any objects
-        //         else
-        //         {
-        //             errorMessage = "no objects were hit by the hand";
-        //             Debug.Log(errorMessage);
-        //             actionFinished(false);
-        //             return;
-        //         }
-
-        //     }
-
-        //     //target location to move hand to was not valid (probably obstructed)
-        //     else
-        //     {
-        //         actionFinished(false);
-        //         return;
-        //     }
-        // }
 
         //checks if the target position in space is within the agent's current viewport
         public bool CheckIfTargetPositionIsInViewportRange(Vector3 targetPosition)
