@@ -463,7 +463,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
                 //make all pickupable objects kinematic false so that they will react to collisions. Otherwise, some objects might be defaulted to kinematic true, or
                 //if they were placed with placeStationary true, then they will not interact with outside collisions immediately.
-                case "kinematicfalse":
+                case "maom":
                     {
                         ServerAction action = new ServerAction();
                         action.action = "MakeAllObjectsMoveable";
