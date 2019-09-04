@@ -59,32 +59,17 @@ public class PhysicsSceneManager : MonoBehaviour
 		//on enable, set the ssao on the camera according to the current quality setting. Disable on lower quality for performance
 		//need to adjust this value if the number of Quality Settings change
 		//right now only Very High and Ultra will have ssao on by default.
-		if(QualitySettings.GetQualityLevel() < 5)
-		{
-			if(GameObject.Find("FirstPersonCharacter").GetComponent<ScreenSpaceAmbientOcclusion>())
-			GameObject.Find("FirstPersonCharacter").GetComponent<ScreenSpaceAmbientOcclusion>().enabled = false;
-		}
-
-		else
-		{
-			if(GameObject.Find("FirstPersonCharacter").GetComponent<ScreenSpaceAmbientOcclusion>())
-			GameObject.Find("FirstPersonCharacter").GetComponent<ScreenSpaceAmbientOcclusion>().enabled = true;
-		}
-
-		//use this block to check if any SpawnedObjects/RequiredObjects arrays have anything null in them
-		// #if UNITY_EDITOR
-		// //just loop through it to see if there is a null reference somewhere
-		// foreach(GameObject go in SpawnedObjects)
+		// if(QualitySettings.GetQualityLevel() < 5)
 		// {
-		// 	string s = go.name;
+		// 	if(GameObject.Find("FirstPersonCharacter").GetComponent<ScreenSpaceAmbientOcclusion>())
+		// 	GameObject.Find("FirstPersonCharacter").GetComponent<ScreenSpaceAmbientOcclusion>().enabled = false;
 		// }
 
-		// //just loop through it and see if there is a null reference somewhere
-		// foreach(GameObject go in RequiredObjects)
+		// else
 		// {
-		// 	string s = go.name;
+		// 	if(GameObject.Find("FirstPersonCharacter").GetComponent<ScreenSpaceAmbientOcclusion>())
+		// 	GameObject.Find("FirstPersonCharacter").GetComponent<ScreenSpaceAmbientOcclusion>().enabled = true;
 		// }
-		// #endif
 	}
 
 	public void SetupScene()

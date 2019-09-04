@@ -485,7 +485,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         ServerAction action = new ServerAction();
                         action.action = "PlaceObjectAtPoint";
                         action.position = GameObject.Find("TestPosition").transform.position;
-                        action.objectId = "TargetCircle|+01.23|+00.33|+01.68";
+                        action.objectId = "Chair|-03.54|+00.02|+02.01";
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }
