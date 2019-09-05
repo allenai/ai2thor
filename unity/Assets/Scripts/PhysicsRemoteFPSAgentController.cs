@@ -807,6 +807,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         //use this to check if any given Vector3 coordinate is within the agent's viewport and also not obstructed
+        //note this is used for any given VEctor3 coordiante, not for visibility points
         public bool CheckIfPointIsInViewport(Vector3 point) {
             Vector3 viewPoint = m_Camera.WorldToViewportPoint(point);
 
@@ -839,7 +840,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         //check if the visibility point on a sim object, sop, is within the viewport
         //has a inclueInvisible bool to check against triggerboxes as well, to check for visibility with things like Cabinets/Drawers
-        protected bool CheckIfVisibilityPointInViewport(SimObjPhysics sop, Transform point, Camera agentCamera, bool includeInvisible) {
+        protected bool CheckIfVisibilityPointInViewport(SimObjPhysics sop, Transform point, Camera agentCamera, bool includeInvisible) 
+        {
             bool result = false;
 
             Vector3 viewPoint = agentCamera.WorldToViewportPoint(point.position);
@@ -856,45 +858,60 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 //now cast a ray out toward the point, if anything occludes this point, that point is not visible
                 RaycastHit hit;
 
-                float raycastDistance = Vector3.Distance(point.position, m_Camera.transform.position) + 1.0f;
+                float distFromPointToCamera = Vector3.Distance(point.position, m_Camera.transform.position);
+
+                float raycastDistance = distFromPointToCamera + 0.5f;
 
                 if(raycastDistance > maxVisibleDistance)
                 {
-                    raycastDistance = maxVisibleDistance + 1.0f;
+                    raycastDistance = maxVisibleDistance + 0.5f;
                 }
+
+                LayerMask mask = (1 << 8) | (1 << 9) | (1 << 10);
+
+                //change mask if its a floor so it ignores the receptacle trigger boxes on the floor
+                if(sop.Type == SimObjType.Floor)
+                mask = (1 << 8) | (1 << 10);
+
 
                 //check raycast against both visible and invisible layers, to check against ReceptacleTriggerBoxes which are normally
                 //ignored by the other raycast
-                if (includeInvisible) {
-                    if (Physics.Raycast(agentCamera.transform.position, point.position - agentCamera.transform.position, out hit,
-                            raycastDistance, (1 << 8) | (1 << 9) | (1 << 10))) {
-                        if (hit.transform != sop.transform) {
+                if (includeInvisible) 
+                {
+                    if (Physics.Raycast(agentCamera.transform.position, point.position - agentCamera.transform.position, out hit, raycastDistance, mask)) 
+                    {
+                        if (hit.transform != sop.transform) 
+                        {
                             result = false;
                         }
 
                         //if this line is drawn, then this visibility point is in camera frame and not occluded
                         //might want to use this for a targeting check as well at some point....
-                        else {
+                        else 
+                        {
                             result = true;
                             sop.isInteractable = true;
 
-#if UNITY_EDITOR
+                            #if UNITY_EDITOR
                             Debug.DrawLine(agentCamera.transform.position, point.position, Color.cyan);
-#endif
+                            #endif
                         }
                     }
                 }
 
                 //only check against the visible layer, ignore the invisible layer
                 //so if an object ONLY has colliders on it that are not on layer 8, this raycast will go through them 
-                else {
-                    if (Physics.Raycast(agentCamera.transform.position, point.position - agentCamera.transform.position, out hit,
-                            raycastDistance, (1 << 8) | (1 << 10))) {
-                        if (hit.transform != sop.transform) {
+                else 
+                {
+                    if (Physics.Raycast(agentCamera.transform.position, point.position - agentCamera.transform.position, out hit, raycastDistance, (1 << 8) | (1 << 10))) 
+                    {
+                        if (hit.transform != sop.transform) 
+                        {
                             //we didn't directly hit the sop we are checking for with this cast, 
                             //check if it's because we hit something see-through
                             SimObjPhysics hitSop = hit.transform.GetComponent<SimObjPhysics>();
-                            if (hitSop != null && hitSop.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanSeeThrough)) {
+                            if (hitSop != null && hitSop.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanSeeThrough)) 
+                            {
                                 //we hit something see through, so now find all objects in the path between
                                 //the sop and the camera
                                 RaycastHit[] hits;
@@ -902,31 +919,39 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                                     raycastDistance, (1 << 8), QueryTriggerInteraction.Ignore);
 
                                 float[] hitDistances = new float[hits.Length];
-                                for (int i = 0; i < hitDistances.Length; i++) {
+                                for (int i = 0; i < hitDistances.Length; i++) 
+                                {
                                     hitDistances[i] = hits[i].distance; //Vector3.Distance(hits[i].transform.position, m_Camera.transform.position);
                                 }
 
                                 Array.Sort(hitDistances, hits);
 
-                                foreach (RaycastHit h in hits) {
+                                foreach (RaycastHit h in hits) 
+                                {
 
-                                    if (h.transform == sop.transform) {
+                                    if (h.transform == sop.transform) 
+                                    {
                                         //found the object we are looking for, great!
                                         result = true;
                                         break;
-                                    } else {
+                                    } 
+                                    
+                                    else 
+                                    {
                                         // Didn't find it, continue on only if the hit object was translucent
                                         SimObjPhysics sopHitOnPath = null;
                                         sopHitOnPath = h.transform.GetComponentInParent<SimObjPhysics>();
-                                        if (sopHitOnPath == null ||
-                                            !sopHitOnPath.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanSeeThrough)) {
-                                            //print("this is blocking: " + sopHitOnPath.name);
+                                        if (sopHitOnPath == null || !sopHitOnPath.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanSeeThrough)) 
+                                        {
                                             break;
                                         }
                                     }
                                 }
                             }
-                        } else {
+                        } 
+                        
+                        else 
+                        {
                             //if this line is drawn, then this visibility point is in camera frame and not occluded
                             //might want to use this for a targeting check as well at some point....
                             result = true;
@@ -934,16 +959,16 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         }
                     }
                 }
-            }
+             }
 
-#if UNITY_EDITOR
-            if (result == true) {
+            #if UNITY_EDITOR
+            if (result == true) 
+            {
                 Debug.DrawLine(agentCamera.transform.position, point.position, Color.cyan);
             }
-#endif
+            #endif
 
             return result;
-
         }
 
         public override void LookDown(ServerAction response) {
