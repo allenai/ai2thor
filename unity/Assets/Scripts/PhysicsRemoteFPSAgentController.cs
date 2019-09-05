@@ -8085,7 +8085,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                 else 
                 {
-                    errorMessage = target.transform.name + " does not have CanBeDirty property!";
+                    errorMessage = target.transform.name + " does not have dirtyable property!";
                     actionFinished(false);
                     return;
                 }
