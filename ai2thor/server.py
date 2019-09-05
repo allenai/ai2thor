@@ -70,7 +70,6 @@ class BufferedIO(object):
     def closed(self):
         return self.wfile.closed
 
-
 class ThorRequestHandler(werkzeug.serving.WSGIRequestHandler):
     def run_wsgi(self):
         old_wfile = self.wfile
