@@ -6,6 +6,8 @@
 [AI2-THOR (The House Of inteRactions)](https://ai2thor.allenai.org/) is a near photo-realistic interactable framework for AI agents.
 
 ## News
+* (9/2019) Version 2.1.0 update of the framework has been added. New object types have been added. New Initialization actions have been added. Segmentation image generation has been improved in all scenes. 
+
 * (6/2019) Version 2.0 update of the AI2-THOR framework is now live! We have over quadrupled our action and object states, adding new actions that allow visually distinct state changes such as broken screens on electronics, shattered windows, breakable dishware, liquid fillable containers, cleanable dishware, messy and made beds and more! Along with these new state changes, objects have more physical properties like Temperature, Mass, and Salient Materials that are all reported back in object metadata. To combine all of these new properties and actions, new context sensitive interactions can now automatically change object states. This includes interactions like placing a dirty bowl under running sink water to clean it, placing a mug in a coffee machine to automatically fill it with coffee, putting out a lit candle by placing it in water, or placing an object over an active stove burner or in the fridge to change its temperature.  Please see the [full 2.0 release notes here](doc/static/ReleaseNotes/ReleaseNotes_2.0.md) to view details on all the changes and new features.
 
 * (3/2019) Introducing Version 1.0 of the AI2-THOR framework! This release includes a full rework of all Sim Objects and Scenes to have additional physics functionality and improved fidelity. Physics based interactions can now be modeled in the THOR environment in realistic ways like never before! Object collision when placed in receptacles, moveable receptacles that contain other objects, collision based object position randomization, Multi-Agent support— these are a few of the many exciting new features that come with this update. Please check the [full 1.0 release notes here](doc/static/ReleaseNotes/ReleaseNotes_1.0.md) to view details on all the changes and new features.
@@ -24,42 +26,7 @@
 
 ## Documentation
 
-Please refer to the [documentation page on the AI2-THOR website](http://ai2thor.allenai.org/documentation/) for information on installation, API, metadata, actions, object properties and other important framework information.
-
-## Installation
-
-```bash
-pip install ai2thor
-```
-Once installed you can launch the framework. **Make sure X server with OpenGL extensions is running before running the following commands. You can check by running ```glxinfo``` or ```glxgears```.**
-
-```python
-import ai2thor.controller
-controller = ai2thor.controller.Controller()
-controller.start()
-# Kitchens:       FloorPlan1 - FloorPlan30
-# Living rooms:   FloorPlan201 - FloorPlan230
-# Bedrooms:       FloorPlan301 - FloorPlan330
-# Bathrooms:      FloorPLan401 - FloorPlan430
-controller.reset('FloorPlan28')
-# gridSize specifies the coarseness of the grid that the agent navigates on
-controller.step(dict(action='Initialize', gridSize=0.25))
-event = controller.step(dict(action='MoveAhead'))
-```
-Upon executing the ```controller.start()``` a window should appear on screen with a view of the room FloorPlan28.
-
-Each call to ```controller.step()``` returns an instance of an Event. The Event object contains a screen capture from the point the last action completed as well as metadata about each object within the scene.
-
-```python
-event = controller.step(dict(action=MoveAhead))
-# Numpy Array - shape (width, height, channels), channels are in RGB order
-event.frame
-# byte[] PNG image
-event.image
-# current metadata dictionary that includes the state of the scene
-event.metadata
-```
-
+Please refer to the [Documentation Page on the AI2-THOR website](http://ai2thor.allenai.org/documentation/) for information on Installation, API, Metadata, actions, object properties and other important framework information.
 ## Unity Development
 
 If you wish to make changes to the Unity scenes/assets you will need to install Unity Editor version 2018.3.6 for OSX (Linux Editor is currently in Beta) from [Unity Download Archive](https://unity3d.com/get-unity/download/archive).  After making your desired changes using the Unity Editor you will need to build.  To do this you must first exit the editor, then run the following commands from the ai2thor base directory. Individual scenes (the 3D models) can be found beneath the unity/Assets/Scenes directory - scenes are named FloorPlan###.

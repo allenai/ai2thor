@@ -548,7 +548,7 @@ def build_log_push(build_info):
 def archive_push(unity_path, build_path, build_dir, build_info):
     threading.current_thread().success = False
     archive_name = os.path.join(unity_path, build_path)
-    zipf = zipfile.ZipFile(archive_name, "w", zipfile.ZIP_STORED)
+    zipf = zipfile.ZipFile(archive_name, 'w', zipfile.ZIP_DEFLATED)
     add_files(zipf, os.path.join(unity_path, build_dir))
     zipf.close()
 
@@ -792,6 +792,7 @@ def interact(
 
     env = ai2thor.controller.Controller()
     if local_build:
+        print("Executing from local build at {} ".format( _local_build_path()))
         env.local_executable_path = _local_build_path()
     if editor_mode:
         env.start(8200, False, player_screen_width=600, player_screen_height=600)
@@ -805,7 +806,7 @@ def interact(
             gridSize=0.25,
             renderObjectImage=object_image,
             renderClassImage=class_image,
-            renderDepthImage=False,
+            renderDepthImage=depth_image
         )
     )
     env.interact()

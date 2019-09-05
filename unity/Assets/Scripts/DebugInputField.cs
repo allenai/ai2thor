@@ -145,8 +145,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         // action.renderDepthImage = true;
                         // action.renderClassImage = true;
                         // action.renderObjectImage = true;
+                        // action.renderFlowImage = true;
 
-                        action.continuous = true;//testing what continuous mode true does...
+                        //action.continuous = true;//turn on continuous to test multiple emit frames after a single action
 
 						PhysicsController.actionComplete = false;
                         action.ssao = "default";
@@ -159,6 +160,82 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         // AgentManager am = physicsSceneManager.GetComponent<AgentManager>();
                         // Debug.Log(am);
       			        // am.Initialize(action);
+                        break;
+                    }
+
+                case "crazydiamond":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "MakeObjectsOfTypeUnbreakable";
+                        action.objectType = "Egg";
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }                   
+
+                case "pp":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "PausePhysicsAutoSim";
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
+                case "ap":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "AdvancePhysicsStep";
+                        action.timeStep = 0.02f; //max 0.05, min 0.01
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+                    
+                case "up":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "UnpausePhysicsAutoSim";
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+                    
+                case "its":
+                    {
+                        ServerAction action = new ServerAction();
+
+                        action.action = "InitializeTableSetting";
+                        if (splitcommand.Length > 1) {
+                            action.objectVariation = int.Parse(splitcommand[1]);
+                        }
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
+                case "pfrat":
+                    {
+                        ServerAction action = new ServerAction();
+
+                        action.action = "PlaceFixedReceptacleAtLocation";
+                        if (splitcommand.Length > 1) {
+                            action.objectVariation = int.Parse(splitcommand[1]);
+                            action.x = float.Parse(splitcommand[2]);
+                            action.y = float.Parse(splitcommand[3]);
+                            action.z = float.Parse(splitcommand[4]);
+                        }
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+                case "pbwal":
+                    {
+                        ServerAction action = new ServerAction();
+
+                        action.action = "PlaceBookWallAtLocation";
+                        if (splitcommand.Length > 1) {
+                            action.objectVariation = int.Parse(splitcommand[1]);
+                            action.x = float.Parse(splitcommand[2]);
+                            action.y = float.Parse(splitcommand[3]);
+                            action.z = float.Parse(splitcommand[4]);
+                            action.rotation = new Vector3(0f, float.Parse(splitcommand[5]), 0f);
+                        }
+                        PhysicsController.ProcessControlCommand(action);
                         break;
                     }
 
@@ -184,6 +261,32 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         break;
                     }
 
+                //set state of all objects that have a state
+                case "ssa":
+                {
+                    ServerAction action = new ServerAction();
+
+                    action.StateChange = "CanBeDirty";
+                    action.forceAction = true;
+                    action.action = "SetStateOfAllObjects";
+
+                     if (splitcommand.Length > 1) 
+                     {
+                        if(splitcommand[1] == "t")
+                        {
+                            action.forceAction = true;
+                        }
+
+                        if(splitcommand[1] == "f")
+                        {
+                            action.forceAction = false;
+                        }
+                     }
+                    PhysicsController.ProcessControlCommand(action);
+                        
+                    break;
+                }
+
                 case "initsynth":
                     {
 						ServerAction action = new ServerAction();
@@ -192,6 +295,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         action.renderDepthImage = true;
                         action.renderClassImage = true;
                         action.renderObjectImage = true;
+                        action.renderFlowImage = true;
 
 						PhysicsController.actionComplete = false;
                         action.ssao = "default";
@@ -256,6 +360,24 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         break;
                     }
 
+                case "putr":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "PutObject";
+                        action.receptacleObjectId = PhysicsController.UniqueIDOfClosestReceptacleObject();
+                        action.randomSeed = int.Parse(splitcommand[1]);
+                            
+                        //set this to false if we want to place it and let physics resolve by having it fall a short distance into position
+
+                        //set true to place with kinematic = true so that it doesn't fall or roll in place - making placement more consistant and not physics engine reliant - this more closely mimics legacy pivot placement behavior
+                        action.placeStationary = false; 
+
+                        //set this true to ignore Placement Restrictions
+                        action.forceAction = true;
+
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
                 case "put":
                     {
                         ServerAction action = new ServerAction();
@@ -329,7 +451,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         {
                             action.randomSeed = int.Parse(splitcommand[1]);
                             action.forceVisible = false;
-                            action.maxNumRepeats = 5;
+                            action.numPlacementAttempts = 5;
                         }
 
                         //should objects be spawned only in immediately visible areas?
@@ -354,14 +476,14 @@ namespace UnityStandardAssets.Characters.FirstPerson
                             if(splitcommand[2] == "f") 
                             action.forceVisible = false;
 
-                            action.maxNumRepeats = int.Parse(splitcommand[3]);
+                            action.numPlacementAttempts = int.Parse(splitcommand[3]);
                         }
 
                         else
                         {
                             action.randomSeed = 0;
                             action.forceVisible = false;//true;
-                            action.maxNumRepeats = 5;
+                            action.numPlacementAttempts = 5;
                         }
 
                         action.placeStationary = true;//set to false to spawn with kinematic = false, set to true to spawn everything kinematic true and they won't roll around
@@ -1066,7 +1188,20 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         action.action = "DefaultAgentHand";
                         PhysicsController.ProcessControlCommand(action);
                         break;
-                    }   
+                    }
+
+                case "tta":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "TouchThenApplyForce";
+                        action.x = 0.5f;
+                        action.y = 0.5f;
+                        action.handDistance = 5.0f;
+                        action.direction = new Vector3(0, 1, 0);
+                        action.moveMagnitude = 200f;
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
 
                     //move hand ahead, forward relative to agent's facing
                     //pass in move magnitude or default is 0.25 units
@@ -1309,6 +1444,29 @@ namespace UnityStandardAssets.Characters.FirstPerson
 							
                         //action.moveMagnitude = 200f;//4000f;
                         action.z = -1;
+						PhysicsController.ProcessControlCommand(action);                  
+						break;
+					}
+
+                case "dirpush":
+					{
+						ServerAction action = new ServerAction();
+						action.action = "DirectionalPush";
+
+                        if (splitcommand.Length > 1 && splitcommand.Length < 3)
+                        {
+                            action.objectId = splitcommand[1];
+                            action.moveMagnitude = 10f;//4000f;
+                        }
+
+                        else if(splitcommand.Length > 2)
+                        {
+                            action.objectId = splitcommand[1];
+                            action.moveMagnitude = float.Parse(splitcommand[2]);
+                        }
+
+                        action.pushAngle = 279f;
+
 						PhysicsController.ProcessControlCommand(action);                  
 						break;
 					}
@@ -1581,7 +1739,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                             action.objectId = splitcommand[1];
 
                             //count of objects to spawn in
-                            action.maxNumRepeats = int.Parse(splitcommand[2]);
+                            action.numPlacementAttempts = int.Parse(splitcommand[2]);
 
                             //type of object
                             action.objectType = splitcommand[3];
@@ -1607,7 +1765,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                             //ID of spawner
                             action.objectId = splitcommand[1];
                             //count of objects to spawn
-                            action.maxNumRepeats = int.Parse(splitcommand[2]);
+                            action.numPlacementAttempts = int.Parse(splitcommand[2]);
                             //delay between spawns
                             action.moveMagnitude = float.Parse(splitcommand[3]);
 
@@ -1631,7 +1789,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                             action.objectId = splitcommand[1];
 
                             //count of objects to spawn
-                            action.maxNumRepeats = int.Parse(splitcommand[2]);
+                            action.numPlacementAttempts = int.Parse(splitcommand[2]);
 
                             //delay between spawns
                             action.moveMagnitude = float.Parse(splitcommand[3]);
@@ -1657,7 +1815,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                             action.agentCount = int.Parse(splitcommand[2]);
 
                             //maximum range of how many bjects to spawn
-                            action.maxNumRepeats = int.Parse(splitcommand[3]);
+                            action.numPlacementAttempts = int.Parse(splitcommand[3]);
 
                             //type of object
                             action.objectType = splitcommand[4];
@@ -1686,7 +1844,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                             action.agentCount = int.Parse(splitcommand[2]);
 
                             //maximum range of how many objects to spawn
-                            action.maxNumRepeats = int.Parse(splitcommand[3]);
+                            action.numPlacementAttempts = int.Parse(splitcommand[3]);
 
                             //delay between spawns
                             action.moveMagnitude = float.Parse(splitcommand[4]);
@@ -1712,7 +1870,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                             action.agentCount = int.Parse(splitcommand[2]);
 
                             //maximum range of how many objects to spawn
-                            action.maxNumRepeats = int.Parse(splitcommand[3]);
+                            action.numPlacementAttempts = int.Parse(splitcommand[3]);
 
                             //delay between spawns
                             action.moveMagnitude = float.Parse(splitcommand[4]);

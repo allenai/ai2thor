@@ -150,6 +150,18 @@ public class CanToggleOnOff : MonoBehaviour
         // #endif
 	}
 
+    public int GetiTweenCount()
+    {
+		//the number of iTween instances running on all doors managed by this fridge
+		int count = 0;
+
+		foreach (GameObject go in MovingParts)
+        {
+			count += iTween.Count(go);
+        }
+		return count;//iTween.Count(this.transform.gameObject);
+    }
+    
 	public void Toggle()
 	{
 		//if this object is controlled by another object, do nothing and report failure?

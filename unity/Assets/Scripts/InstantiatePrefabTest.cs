@@ -17,6 +17,7 @@ public class InstantiatePrefabTest : MonoBehaviour
 	Vector3 gizmoscale;
 	Quaternion gizmoquaternion;
 
+
     private float yoffset = 0.005f; //y axis offset of placing objects, useful to allow objects to fall just a tiny bit to allow physics to resolve consistently
 
     // public GameObject TestPlaceObject;
@@ -45,11 +46,11 @@ public class InstantiatePrefabTest : MonoBehaviour
 	// Use this for initialization
 	void Start()
 	{
-		//m_Started = true;
-	}
+        //m_Started = true;
+    }
 
-	// Update is called once per frame
-	void Update()
+    // Update is called once per frame
+    void Update()
 	{
 
 	}
@@ -183,7 +184,7 @@ public class InstantiatePrefabTest : MonoBehaviour
     //The ReceptacleSpawnPoint list should be sorted based on what we are doing. If placing from the agent's hand, the list
     //should be sorted by distance to agent so the closest points are checked first. If used for Random Initial Spawn, it should
     //be randomized so that the random spawn is... random
-    public bool PlaceObjectReceptacle(List<ReceptacleSpawnPoint> rsps, SimObjPhysics sop, bool PlaceStationary, int maxcount, int degreeIncrement, bool AlwaysPlaceUpright)
+    public bool PlaceObjectReceptacle(List<ReceptacleSpawnPoint> rsps, SimObjPhysics sop, bool PlaceStationary, int maxPlacementAttempts, int degreeIncrement, bool AlwaysPlaceUpright, Dictionary<SimObjType, int> minFreePerReceptacleType)
     {
         
         if(rsps == null)
@@ -193,33 +194,43 @@ public class InstantiatePrefabTest : MonoBehaviour
             #endif
             return false; //uh, there was nothing in the List for some reason, so failed to spawn
         }
-    
+        if (rsps.Count == 0)
+        {
+            return false;
+        }
+
         List<ReceptacleSpawnPoint> goodRsps = new List<ReceptacleSpawnPoint>();
         foreach (ReceptacleSpawnPoint p in rsps) {
             if(!p.ParentSimObjPhys.GetComponent<SimObjPhysics>().DoesThisObjectHaveThisSecondaryProperty
                 (SimObjSecondaryProperty.ObjectSpecificReceptacle)) {
                 goodRsps.Add(p);
             }
-            if (goodRsps.Count == maxcount) {
-                break;
-            }
         }
+        // Make a seed that is pseudo-random (different for different objects even in the same area) but also reproducible.
+        //int seed = rsps.Count + goodRsps.Count + sop.UniqueID.GetHashCode();
 
-        if(rsps.Count == 0)
-        {
-            return false;
-        }
-
+        int tries = 0;
         foreach (ReceptacleSpawnPoint p in goodRsps)
         {
+            SimObjType parentType = p.ParentSimObjPhys.ObjType;
+            if (minFreePerReceptacleType != null && minFreePerReceptacleType.ContainsKey(parentType) && goodRsps.Count < minFreePerReceptacleType[parentType])
+            {
+                return false;
+            }
+
             //if this is an Object Specific Receptacle, stop this check right now! I mean it!
             //Placing objects in/on an Object Specific Receptacle uses different logic to place the
             //object at the Attachemnet point rather than in the spawn area, so stop this right now!
 
-            if(PlaceObject(sop, p, PlaceStationary, degreeIncrement, AlwaysPlaceUpright))
+            if (PlaceObject(sop, p, PlaceStationary, degreeIncrement, AlwaysPlaceUpright))
             {
                 //found a place to spawn! neato, return success
                 return true;
+            }
+            tries += 1;
+            if (maxPlacementAttempts > 0 && tries > maxPlacementAttempts)
+            {
+                break;
             }
         }
         //couldn't find valid places to spawn

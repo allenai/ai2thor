@@ -2128,6 +2128,8 @@ MonoBehaviour:
   salientMaterials: 
   CurrentTemperature: 0
   HowManySecondsUntilRoomTemp: 10
+  inMotion: 0
+  lastVelocity: 0
   ContainedObjectReferences: []
 --- !u!114 &114068352748923062
 MonoBehaviour:
@@ -2205,9 +2207,6 @@ MonoBehaviour:
     - {fileID: 2100000, guid: c418b039e2ba24f7589ac5b27b437e3f, type: 2}
     - {fileID: 2100000, guid: 0bf0a8ed0195d494d889e1ea1c32ccab, type: 2}
     - {fileID: 2100000, guid: 003621805dd474f5bb45ac33a2699365, type: 2}
-  - MyObject: {fileID: 0}
-    OnMaterials: []
-    OffMaterials: []
   LightSources:
   - {fileID: 1657200549820769702}
   OnPositions: []
@@ -2519,11 +2518,6 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 963986966543660729, guid: 4744e610a62c12c469020c63d73628bb,
-        type: 3}
-      propertyPath: CanToastBread
-      value: 0
-      objectReference: {fileID: 0}
     - target: {fileID: 1593878209617170076, guid: 4744e610a62c12c469020c63d73628bb,
         type: 3}
       propertyPath: m_Size.x
@@ -2553,6 +2547,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Center.z
       value: -0.0022926927
+      objectReference: {fileID: 0}
+    - target: {fileID: 963986966543660729, guid: 4744e610a62c12c469020c63d73628bb,
+        type: 3}
+      propertyPath: CanToastBread
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 4744e610a62c12c469020c63d73628bb, type: 3}

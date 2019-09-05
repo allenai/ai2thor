@@ -355,7 +355,9 @@ public class CanOpen_Object : MonoBehaviour
 
     private void setisOpen()
 	{
+        //print("isOpen was " + isOpen);
 		isOpen = !isOpen;
+        //print("isOpen is now " + isOpen);
         UpdateOpenOrCloseBoundingBox();
 	}
 
@@ -384,11 +386,12 @@ public class CanOpen_Object : MonoBehaviour
                     agent.SetUpRotationBoxChecks();
                 }
             }
-
+            #if UNITY_EDITOR
             else
             {
                 Debug.Log("Closed/Open Bounding box references are null!");
             }
+            #endif
         }
         //check if this object is in the ResetPositionIfPickupableAndOpenable list
         //also check if the ClosedBoundingBox and OpenBoundingBox fields are null or not
@@ -442,6 +445,7 @@ public class CanOpen_Object : MonoBehaviour
 		{
 			//Interact();
 
+            print("we are calling Reset() now");
             //we are still open, trying to close, but hit something - reset to open
 			if(isOpen)
 			{

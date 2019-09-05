@@ -525,18 +525,25 @@ class Controller(object):
             frame_writes = [
                 ('instance_segmentation.jpeg',
                  instance_segmentation_frame,
-                 lambda event: event.instance_segmentation_frame),
+                 lambda event: event.instance_segmentation_frame,
+                 lambda x: x
+                 ),
                 ('class_segmentation.jpeg',
                  class_segmentation_frame,
-                 lambda event: event.class_segmentation_frame),
+                 lambda event: event.class_segmentation_frame,
+                 lambda x: x
+                 ),
                 ('depth.jpeg',
                  depth_frame,
-                 lambda event: event.depth_frame)
+                 lambda event: event.depth_frame,
+                 lambda data: (255.0 / data.max() * (data - data.min())).astype(np.uint8)
+                 )
             ]
 
-            for frame_filename, condition, frame_func in frame_writes:
+            for frame_filename, condition, frame_func, transform in frame_writes:
                 frame = frame_func(event)
                 if frame is not None:
+                    frame = transform(frame)
                     im = Image.fromarray(frame)
                     im.save(frame_filename)
                 else:
@@ -588,6 +595,22 @@ class Controller(object):
                     command_info.append("%s: %s" % (a, av))
 
                 print(' '.join(command_info))
+
+    def multi_step_physics(self, action, timeStep=0.05, max_steps=20):
+        events = []
+        self.step(action=dict(action='PausePhysicsAutoSim'), raise_for_failure=True)
+        events.append(self.step(action))
+        while not self.last_event.metadata['isSceneAtRest']:
+            events.append(
+                self.step(action=dict(
+                    action='AdvancePhysicsStep',
+                    timeStep=timeStep), raise_for_failure=True))
+
+            if len(events) == (max_steps - 1):
+                events.append(self.step(action=dict(action='UnpausePhysicsAutoSim'), raise_for_failure=True))
+                break
+
+        return events
 
     def step(self, action, raise_for_failure=False):
         if self.headless:
@@ -709,7 +732,8 @@ class Controller(object):
             url = None
             sha256_build = None
             try:
-                for commit_id in subprocess.check_output('git log -n 10 --format=%H', shell=True).decode('ascii').strip().split("\n"):
+                git_dir = os.path.normpath(os.path.dirname(os.path.realpath(__file__)) + "/../.git")
+                for commit_id in subprocess.check_output('git --git-dir=' + git_dir + ' log -n 10 --format=%H', shell=True).decode('ascii').strip().split("\n"):
                     arch = arch_platform_map[platform.system()]
 
                     if ai2thor.downloader.commit_build_exists(arch, commit_id):

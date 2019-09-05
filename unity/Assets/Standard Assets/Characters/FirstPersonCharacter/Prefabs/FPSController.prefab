@@ -221,6 +221,7 @@ MonoBehaviour:
   standingLocalCameraPosition: {x: 0, y: 0, z: 0}
   crouchingLocalCameraPosition: {x: 0, y: 0, z: 0}
   reachablePositions: []
+  alwaysReturnVisibleRange: 0
   ScreenFaces:
   - {fileID: 2100000, guid: 3244a00d10815aa4b8ca6f11febd11f9, type: 2}
   - {fileID: 2100000, guid: 7b776d33d2e7db4499b93e29978400ea, type: 2}
@@ -328,8 +329,8 @@ Camera:
   m_Depth: 0
   m_CullingMask:
     serializedVersion: 2
-    m_Bits: 4294967295
-  m_RenderingPath: 3
+    m_Bits: 1847
+  m_RenderingPath: -1
   m_TargetTexture: {fileID: 0}
   m_TargetDisplay: 0
   m_TargetEye: 3
@@ -380,11 +381,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6b7e9fcb795b84664bfc1ac40799a68f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  uberReplacementShader: {fileID: 4800000, guid: 171e6e515a12e4a298dce708924e98ba,
-    type: 3}
-  opticalFlowShader: {fileID: 4800000, guid: 2a970eca3c9e84f13b5b616e530a7919, type: 3}
-  depthShader: {fileID: 4800000, guid: cdf4223aff4114212bb5196565b0abce, type: 3}
-  positionShader: {fileID: 0}
   opticalFlowSensitivity: 0
   sentColorCorrespondence: 0
   tex: {fileID: 0}
@@ -441,6 +437,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 181cb022eb181f047b9a3b6c23af0e80, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  StopCullingThingsForASecond: 0
   RenderersToHide:
   - {fileID: 4611790702069519613}
   - {fileID: 4611790702069519607}
@@ -3500,7 +3497,7 @@ GameObject:
   - component: {fileID: 6730861878266071194}
   - component: {fileID: 6658936314799432396}
   - component: {fileID: 2484649586323972911}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: agent_neck_1 (shadows)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -3578,7 +3575,7 @@ GameObject:
   - component: {fileID: 4174984958803194406}
   - component: {fileID: 7384839220926720175}
   - component: {fileID: 3156304069723285385}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: agent_neck_2 (shadows)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -3656,7 +3653,7 @@ GameObject:
   - component: {fileID: 6830164829252987603}
   - component: {fileID: 8033278494300759651}
   - component: {fileID: 7510460319996053304}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: agent_arm_r (shadows)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -3731,7 +3728,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 6920467188468016547}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: NeckAndHead
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -3763,7 +3760,7 @@ GameObject:
   - component: {fileID: 4412711732925182785}
   - component: {fileID: 8525379835287530448}
   - component: {fileID: 2607591342015420286}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: agent_body (shadows)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -3842,7 +3839,7 @@ GameObject:
   - component: {fileID: 4611790702070519351}
   - component: {fileID: 4611790702069519607}
   - component: {fileID: 1222124215346671134}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: agent_trackball
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -3934,7 +3931,7 @@ GameObject:
   - component: {fileID: 4611790702070519359}
   - component: {fileID: 4611790702069519615}
   - component: {fileID: 5362166296789562024}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: agent_head
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -4017,6 +4014,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   WhichTransformPropertyAmITracking: 0
   ThingIamTracking: {fileID: 100002}
+  StopSyncingForASecond: 0
 --- !u!1 &4611790702071712307
 GameObject:
   m_ObjectHideFlags: 0
@@ -4028,7 +4026,7 @@ GameObject:
   - component: {fileID: 4611790702071289363}
   - component: {fileID: 4611790702070519345}
   - component: {fileID: 4611790702069519601}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: agent_neck_1
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -4108,7 +4106,7 @@ GameObject:
   - component: {fileID: 4611790702071289365}
   - component: {fileID: 4611790702070519347}
   - component: {fileID: 4611790702069519603}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: agent_neck_2
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -4188,7 +4186,7 @@ GameObject:
   - component: {fileID: 4611790702071289367}
   - component: {fileID: 4611790702070519349}
   - component: {fileID: 4611790702069519605}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: agent_shoulders
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -4268,7 +4266,7 @@ GameObject:
   - component: {fileID: 4611790702071289369}
   - component: {fileID: 4611790702070519353}
   - component: {fileID: 4611790702069519609}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: agent_arm_l
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -4346,7 +4344,7 @@ GameObject:
   - component: {fileID: 4611790702071289371}
   - component: {fileID: 4611790702070519355}
   - component: {fileID: 4611790702069519611}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: agent_arm_r
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -4424,7 +4422,7 @@ GameObject:
   - component: {fileID: 4611790702071289373}
   - component: {fileID: 4611790702070519357}
   - component: {fileID: 4611790702069519613}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: agent_body
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -4501,7 +4499,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 4611790702071289375}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: agent_grp
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -4537,7 +4535,7 @@ GameObject:
   - component: {fileID: 4611790702071289393}
   - component: {fileID: 4611790702070519331}
   - component: {fileID: 4611790702069519587}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: agent_neck_3
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -4618,7 +4616,7 @@ GameObject:
   - component: {fileID: 8230644150443541468}
   - component: {fileID: 8604555962189110508}
   - component: {fileID: 3619339649289733316}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: agent_neck_3 (shadows)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -4696,7 +4694,7 @@ GameObject:
   - component: {fileID: 5423930522860348065}
   - component: {fileID: 3022925172916416636}
   - component: {fileID: 6631548368013354833}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: agent_shoulders (shadows)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -4774,7 +4772,7 @@ GameObject:
   - component: {fileID: 3475634296836140580}
   - component: {fileID: 3702886149553929464}
   - component: {fileID: 8990130711738329586}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: agent_head (shadows)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -4856,6 +4854,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   WhichTransformPropertyAmITracking: 0
   ThingIamTracking: {fileID: 100002}
+  StopSyncingForASecond: 0
 --- !u!1 &8668031331251325921
 GameObject:
   m_ObjectHideFlags: 0
@@ -4868,7 +4867,7 @@ GameObject:
   - component: {fileID: 4700316574195487936}
   - component: {fileID: 6528987253167178412}
   - component: {fileID: 2864093239282251032}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: agent_trackball (shadows)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -4958,7 +4957,7 @@ GameObject:
   - component: {fileID: 4431950480876802870}
   - component: {fileID: 820850817055786932}
   - component: {fileID: 2494911605579502244}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: agent_arm_l (shadows)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -5034,7 +5033,7 @@ GameObject:
   m_Component:
   - component: {fileID: 6693490630546055585}
   - component: {fileID: 7110750669029732074}
-  m_Layer: 0
+  m_Layer: 10
   m_Name: NeckAndShoulders
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -5070,3 +5069,4 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   WhichTransformPropertyAmITracking: 1
   ThingIamTracking: {fileID: 100002}
+  StopSyncingForASecond: 0
