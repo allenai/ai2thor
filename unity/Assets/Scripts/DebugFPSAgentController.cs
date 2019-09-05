@@ -197,7 +197,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     action = "InitialRandomSpawn",
                     randomSeed = 0,
                     forceVisible = false,
-                    numRepeats = 5,
+                    numPlacementAttempts = 5,
                     placeStationary = true
                 };
                 PhysicsController.ProcessControlCommand(action);
