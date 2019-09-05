@@ -3870,12 +3870,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
 
             //default repeats if no value is passed in.
-            if (action.maxNumRepeats == 0)
-                action.maxNumRepeats = 5;
+            if (action.numRepeats == 0)
+                action.numRepeats = 5;
 
             //PhysicsSceneManager script = GameObject.Find("PhysicsSceneManager").GetComponent<PhysicsSceneManager>();
 
-            bool success = physicsSceneManager.RandomSpawnRequiredSceneObjects(action.randomSeed, action.forceVisible, action.maxNumRepeats, action.placeStationary);
+            bool success = physicsSceneManager.RandomSpawnRequiredSceneObjects(action.randomSeed, action.forceVisible, action.numRepeats, action.placeStationary);
             physicsSceneManager.ResetUniqueIdToSimObjPhysics();
             actionFinished(success);
         }

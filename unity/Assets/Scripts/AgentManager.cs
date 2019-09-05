@@ -985,7 +985,7 @@ public class ServerAction
 	public bool continuousMode; //i don't think this is used right now? also how is this different from the continuous bool above?
 	public bool uniquePickupableObjectTypes; // only allow one of each object type to be visible
 	public float removeProb;
-	public int maxNumRepeats;
+	public int numRepeats;
 	public bool randomizeObjectAppearance;
 	public bool renderImage = true;
 	public bool renderDepthImage;
