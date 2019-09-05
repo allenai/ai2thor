@@ -101,10 +101,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		public System.Object actionReturn;
 
 
-		// Vector3 m_OriginalCameraPosition;
+        // Vector3 m_OriginalCameraPosition;
 
 
-		public float maxVisibleDistance = 1.5f; //changed from 1.0f to account for objects randomly spawned far away on tables/countertops, which would be not visible at 1.0f
+        public float maxVisibleDistance = 1.5f; //changed from 1.0f to account for objects randomly spawned far away on tables/countertops, which would be not visible at 1.0f
 
 		// initial states
 		protected Vector3 init_position;
@@ -175,6 +175,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 			agentManager = GameObject.Find("PhysicsSceneManager").GetComponentInChildren<AgentManager>();
 
+			//disabling in editor by default so performance in editor isn't garbage all the time. Enable this from the DebugInputField -InitSynth
+            // #if UNITY_EDITOR
+            //     this.enableImageSynthesis();
+            // #endif
 			//allowNodes = false;
 		}
 
@@ -234,10 +238,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 			this.continuousMode = action.continuous;
 
-			if (action.renderDepthImage || action.renderClassImage || action.renderObjectImage || action.renderNormalsImage) 
+            if (action.renderDepthImage || action.renderClassImage || action.renderObjectImage || action.renderNormalsImage) 
             {
-				this.enableImageSynthesis ();
-			}
+    			this.enableImageSynthesis ();
+    		}
 
 			if (action.visibilityDistance > 0.0f) {
 				this.maxVisibleDistance = action.visibilityDistance;
@@ -497,11 +501,11 @@ namespace UnityStandardAssets.Characters.FirstPerson
 				actionFinished(false);
 			}
 
-			#if UNITY_EDITOR
+#if UNITY_EDITOR
 			if (errorMessage != "") {
 				Debug.Log(errorMessage);
 			}
-			#endif
+#endif
 
 			agentManager.setReadyToEmit(true);
 		}
@@ -514,8 +518,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
 				return;
 			}
 
-			if (hit.gameObject.name.Equals("Floor"))
+			if (hit.gameObject.GetComponent<StructureObject>())
 			{
+                if(hit.gameObject.GetComponent<StructureObject>().WhatIsMyStructureObjectTag == StructureObjectTag.Floor)
 				return;
 			}
 
@@ -605,11 +610,13 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			// StartCoroutine(checkMoveAction(action));
 		}
 
+        //this is not currently used by the Physics agent. Physics agent now checks the final movement position first before moving, so collision checks after trying to move are no longer needed
 		virtual protected IEnumerator checkMoveAction(ServerAction action)
 		{
 
 			yield return null;
 
+    
 			if (continuousMode)
 			{
 				actionFinished(true);

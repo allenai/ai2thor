@@ -7,6 +7,7 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityStandardAssets.CrossPlatformInput;
 using UnityStandardAssets.Utility;
+using System.Reflection;
 public static class UtilityFunctions {
     private static IEnumerable<int[]> Combinations(int m, int n) {
         // Enumerate all possible m-size combinations of [0, 1, ..., n-1] array
@@ -149,6 +150,50 @@ public static class UtilityFunctions {
             }
         }
         return hits.ToArray();
+    }
+
+    //get a copy of a specific component and apply it to another object at runtime
+    //usage: var copy = myComp.GetCopyOf(someOtherComponent);
+    public static T GetCopyOf<T>(this Component comp, T other) where T : Component
+    {
+        Type type = comp.GetType();
+        if (type != other.GetType()) return null; // type mis-match
+        BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Default | BindingFlags.DeclaredOnly;
+        PropertyInfo[] pinfos = type.GetProperties(flags);
+        foreach (var pinfo in pinfos) {
+            if (pinfo.CanWrite) {
+                try {
+                    pinfo.SetValue(comp, pinfo.GetValue(other, null), null);
+                }
+                catch { } // In case of NotImplementedException being thrown. For some reason specifying that exception didn't seem to catch it, so I didn't catch anything specific.
+            }
+        }
+        FieldInfo[] finfos = type.GetFields(flags);
+        foreach (var finfo in finfos) {
+            finfo.SetValue(comp, finfo.GetValue(other));
+        }
+        return comp as T;
+    }
+
+    //usage: Health myHealth = gameObject.AddComponent<Health>(enemy.health); or something like that
+    public static T AddComponent<T>(this GameObject go, T toAdd) where T : Component
+    {
+        return go.AddComponent<T>().GetCopyOf(toAdd) as T;
+    }
+
+
+    // Taken from https://answers.unity.com/questions/589983/using-mathfround-for-a-vector3.html
+    public static Vector3 Round(this Vector3 vector3, int decimalPlaces = 2)
+    {
+         float multiplier = 1;
+         for (int i = 0; i < decimalPlaces; i++)
+         {
+             multiplier *= 10f;
+         }
+         return new Vector3(
+             Mathf.Round(vector3.x * multiplier) / multiplier,
+             Mathf.Round(vector3.y * multiplier) / multiplier,
+             Mathf.Round(vector3.z * multiplier) / multiplier);
     }
 
 }

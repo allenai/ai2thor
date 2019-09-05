@@ -145,7 +145,6 @@ public class DecalCollision : Break
     }
 
     private void spawnDecal(Vector3 position, Quaternion rotation, Vector3 scale, DecalRotationAxis randomRotationAxis = DecalRotationAxis.NONE, int index = -1) {
-
         var minimumScale = this.transform.localScale;
         var decalScale = scale;
         if (minimumScale.x < scale.x || minimumScale.y < scale.y) {

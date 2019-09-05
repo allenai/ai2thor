@@ -28,11 +28,10 @@ public class AgentManager : MonoBehaviour
 	private bool renderClassImage;
 	private bool renderObjectImage;
 	private bool renderNormalsImage;
+    private bool renderFlowImage;
 	private bool synchronousHttp = true;
 	private Socket sock = null;
 	private List<Camera> thirdPartyCameras = new List<Camera>();
-	
-
 	private bool readyToEmit;
 
 	private Color[] agentColors = new Color[]{Color.blue, Color.yellow, Color.green, Color.red, Color.magenta, Color.grey};
@@ -42,6 +41,9 @@ public class AgentManager : MonoBehaviour
 	private BaseFPSAgentController primaryAgent;
 
     private JavaScriptInterface jsInterface;
+
+    private PhysicsSceneManager physicsSceneManager;
+    public int AdvancePhysicsStepCount = 0;
 
 	void Awake() {
 
@@ -56,17 +58,11 @@ public class AgentManager : MonoBehaviour
             Debug.unityLogger.logEnabled = false;
         #endif
 
-
-
         QualitySettings.vSyncCount = 0;
 		robosimsPort = LoadIntVariable (robosimsPort, "PORT");
 		robosimsHost = LoadStringVariable(robosimsHost, "HOST");
-        #if UNITY_EDITOR
-            serverSideScreenshot = true;
-        #else
-            serverSideScreenshot = LoadBoolVariable (serverSideScreenshot, "SERVER_SIDE_SCREENSHOT");
-        #endif
-        robosimsClientToken = LoadStringVariable (robosimsClientToken, "CLIENT_TOKEN");
+		serverSideScreenshot = LoadBoolVariable (serverSideScreenshot, "SERVER_SIDE_SCREENSHOT");
+		robosimsClientToken = LoadStringVariable (robosimsClientToken, "CLIENT_TOKEN");
 		bool trainPhase = true;
 		trainPhase = LoadBoolVariable(trainPhase, "TRAIN_PHASE");
 
@@ -87,6 +83,8 @@ public class AgentManager : MonoBehaviour
 		readyToEmit = true;
 		Debug.Log("Graphics Tier: " + Graphics.activeTier);
 		this.agents.Add (primaryAgent);
+
+        physicsSceneManager = GameObject.Find("PhysicsSceneManager").GetComponent<PhysicsSceneManager>();
 	}
 
 	private void initializePrimaryAgent() {
@@ -108,12 +106,19 @@ public class AgentManager : MonoBehaviour
 		this.renderDepthImage = action.renderDepthImage;
 		this.renderNormalsImage = action.renderNormalsImage;
 		this.renderObjectImage = action.renderObjectImage;
+        this.renderFlowImage = action.renderFlowImage;
 		if (action.alwaysReturnVisibleRange) {
 			((PhysicsRemoteFPSAgentController) primaryAgent).alwaysReturnVisibleRange = action.alwaysReturnVisibleRange;
 		}
 		StartCoroutine (addAgents (action));
 
 	}
+
+    //return reference to primary agent in case we need a reference to the primary
+    public BaseFPSAgentController ReturnPrimaryAgent()
+    {
+        return primaryAgent;
+    }
 
 	private IEnumerator addAgents(ServerAction action) {
 		yield return null;
@@ -138,7 +143,7 @@ public class AgentManager : MonoBehaviour
 		gameObject.AddComponent(typeof(Camera));
 		Camera camera = gameObject.GetComponentInChildren<Camera>();
 
-		if (this.renderDepthImage || this.renderClassImage || this.renderObjectImage || this.renderNormalsImage) 
+		if (this.renderDepthImage || this.renderClassImage || this.renderObjectImage || this.renderNormalsImage || this.renderFlowImage) 
 		{
 			gameObject.AddComponent(typeof(ImageSynthesis));
 		}
@@ -160,6 +165,9 @@ public class AgentManager : MonoBehaviour
 
 	private void addAgent(ServerAction action) {
 		Vector3 clonePosition = new Vector3(action.x, action.y, action.z);
+
+		//disable ambient occlusion on primary agetn because it causes issues with multiple main cameras
+		primaryAgent.GetComponent<PhysicsRemoteFPSAgentController>().DisableScreenSpaceAmbientOcclusion();
 
 		BaseFPSAgentController clone = UnityEngine.Object.Instantiate (primaryAgent);
 		clone.IsVisible = action.makeAgentsVisible;
@@ -251,7 +259,10 @@ public class AgentManager : MonoBehaviour
     // Decide whether agent has stopped actions
     // And if we need to capture a new frame
 
-
+    private void Update()
+    {
+        physicsSceneManager.isSceneAtRest = true;//assume the scene is at rest by default
+    }
 
     private void LateUpdate() {
 		int completeCount = 0;
@@ -260,16 +271,61 @@ public class AgentManager : MonoBehaviour
 				completeCount++;
 			}
 		}
-		// if (completeCount == agents.Count) {
-		// 	Physics.autoSimulation = false;
-		// } else {
-		// 	Physics.Simulate(0.02f);
-		// }
+
+        //check what objects in the scene are currently in motion
+        Rigidbody[] rbs = FindObjectsOfType(typeof(Rigidbody)) as Rigidbody[];
+        foreach(Rigidbody rb in rbs)
+        {
+            //if this rigidbody is part of a SimObject, calculate rest using lastVelocity/currentVelocity comparisons
+            if(rb.GetComponentInParent<SimObjPhysics>())
+            {
+                
+                SimObjPhysics sop = rb.GetComponentInParent<SimObjPhysics>();
+                
+                float currentVelocity = Math.Abs(rb.angularVelocity.sqrMagnitude + rb.velocity.sqrMagnitude);
+                float accel = (currentVelocity - sop.lastVelocity) / Time.fixedDeltaTime;
+
+                if(accel == 0)
+                {
+                    sop.inMotion = false;
+                }
+
+                else
+                {
+                    //the rb's velocities are not 0, so it is in motion and the scene is not at rest
+                    rb.GetComponentInParent<SimObjPhysics>().inMotion = true;
+                    physicsSceneManager.isSceneAtRest = false;
+                }
+
+            }
+
+            //this rigidbody is not a SimOBject, and might be a piece of a shattered sim object spawned in, or something
+            else
+            {
+                //is the rigidbody at non zero velocity? then the scene is not at rest
+                if(!(Math.Abs(rb.angularVelocity.sqrMagnitude + 
+                rb.velocity.sqrMagnitude) < 0.001))
+                {
+                    physicsSceneManager.isSceneAtRest = false;
+                }
+            }
+        }
 
 		if (completeCount == agents.Count && completeCount > 0 && readyToEmit) {
 			readyToEmit = false;
 			StartCoroutine (EmitFrame ());
 		}
+
+        //ok now if the scene is at rest, turn back on physics autosimulation automatically
+        //note: you can do this earlier by manually using the UnpausePhysicsAutoSim() action found in PhysicsRemoteFPSAgentController
+        if(physicsSceneManager.isSceneAtRest && 
+        physicsSceneManager.physicsSimulationPaused && AdvancePhysicsStepCount > 0)
+        {
+            //print("soshite toki wa ugoki desu");
+            Physics.autoSimulation = true;
+            physicsSceneManager.physicsSimulationPaused = false;
+            AdvancePhysicsStepCount = 0;
+        }
 
 	}
 
@@ -409,19 +465,16 @@ public class AgentManager : MonoBehaviour
 	}
 
 
-	private IEnumerator EmitFrame() {
+	public IEnumerator EmitFrame() {
 
 
 		frameCounter += 1;
-        bool shouldRender = this.renderImage && serverSideScreenshot;
 
-        if (shouldRender) {
+		bool shouldRender = this.renderImage && serverSideScreenshot;
+
+		if (shouldRender) {
 			// we should only read the screen buffer after rendering is complete
 			yield return new WaitForEndOfFrame();
-			if (synchronousHttp) {
-				// must wait an additional frame when in synchronous mode otherwise the frame lags
-				yield return new WaitForEndOfFrame();
-			}
 		}
 
 		WWWForm form = new WWWForm();
@@ -449,6 +502,7 @@ public class AgentManager : MonoBehaviour
                 addImageSynthesisImageForm(form, imageSynthesis, this.renderNormalsImage, "_normals", "image_thirdParty_normals");
                 addImageSynthesisImageForm(form, imageSynthesis, this.renderObjectImage, "_id", "image_thirdParty_image_ids");
                 addImageSynthesisImageForm(form, imageSynthesis, this.renderClassImage, "_class", "image_thirdParty_classes");
+                addImageSynthesisImageForm(form, imageSynthesis, this.renderClassImage, "_flow", "image_thirdParty_flow");//XXX fix this in a bit
             }
         }
 
@@ -463,6 +517,8 @@ public class AgentManager : MonoBehaviour
                 addImageSynthesisImageForm(form, agent.imageSynthesis, this.renderNormalsImage, "_normals", "image_normals");
                 addObjectImageForm (form, agent, ref metadata);
                 addImageSynthesisImageForm(form, agent.imageSynthesis, this.renderClassImage, "_class", "image_classes");
+                addImageSynthesisImageForm(form, agent.imageSynthesis, this.renderFlowImage, "_flow", "image_flow");
+
                 metadata.thirdPartyCameras = cameraMetadata;
             }
             multiMeta.agents [i] = metadata;
@@ -476,30 +532,25 @@ public class AgentManager : MonoBehaviour
         form.AddField("metadata", Newtonsoft.Json.JsonConvert.SerializeObject(multiMeta));
         form.AddField("token", robosimsClientToken);
 
-        #if !UNITY_WEBGL
-            if (synchronousHttp) {
+        #if !UNITY_WEBGL 
+		if (synchronousHttp) {
 
-                if (this.sock == null) {
-                    // Debug.Log("connecting to host: " + robosimsHost);
-                    IPAddress host = IPAddress.Parse(robosimsHost);
-                    IPEndPoint hostep = new IPEndPoint(host, robosimsPort);
-                    try 
-                    {
-                        Socket s = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-                        s.Connect(hostep);
-                        this.sock = s;
-                    } 
-                    catch (SocketException ex) 
-                    {
-                        # if UNITY_EDITOR
-                        // swallowing the error since its fine to run without the Python side with the editor
-                        yield break;
-                        # else
-                        throw ex;
-                        # endif
-                    }
+
+			if (this.sock == null) {
+				// Debug.Log("connecting to host: " + robosimsHost);
+				IPAddress host = IPAddress.Parse(robosimsHost);
+				IPEndPoint hostep = new IPEndPoint(host, robosimsPort);
+				this.sock = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+                try {
+				    this.sock.Connect(hostep);
                 }
+                catch (SocketException e) {
+                    Debug.Log("Socket exception: " + e.ToString());
+                }
+			}
+            
 
+            if (this.sock != null && this.sock.Connected) {
                 byte[] rawData = form.data;
 
                 string request = "POST /train HTTP/1.1\r\n" +
@@ -512,6 +563,12 @@ public class AgentManager : MonoBehaviour
 
                 int sent = this.sock.Send(Encoding.ASCII.GetBytes(request));
                 sent = this.sock.Send(rawData);
+
+                // waiting for a frame here keeps the Unity window in sync visually
+                // its not strictly necessary, but allows the interact() command to work properly
+                // and does not reduce the overall FPS
+                yield return new WaitForEndOfFrame();
+
                 byte[] headerBuffer = new byte[1024];
                 int bytesReceived = 0;
                 byte[] bodyBuffer = null;
@@ -520,7 +577,7 @@ public class AgentManager : MonoBehaviour
 
                 // read header
                 while (true) {
-                    int received = this.sock.Receive(headerBuffer, bytesReceived, headerBuffer.Length - bytesReceived, SocketFlags.None);
+                    int received = this.sock.Receive(headerBuffer, bytesReceived, headerBuffer.Length - bytesReceived, SocketFlags.None);	
                     if (received == 0) {
                         Debug.LogError("0 bytes received attempting to read header - connection closed");
                         break;
@@ -541,7 +598,7 @@ public class AgentManager : MonoBehaviour
                 // read body
                 while (bodyBytesReceived < contentLength) {
                     // check for 0 bytes received
-                    int received = this.sock.Receive(bodyBuffer, bodyBytesReceived, bodyBuffer.Length - bodyBytesReceived, SocketFlags.None);   
+                    int received = this.sock.Receive(bodyBuffer, bodyBytesReceived, bodyBuffer.Length - bodyBytesReceived, SocketFlags.None);	
                     if (received == 0) {
                         Debug.LogError("0 bytes received attempting to read body - connection closed");
                         break;
@@ -552,24 +609,22 @@ public class AgentManager : MonoBehaviour
                 }
 
                 string msg = Encoding.ASCII.GetString(bodyBuffer, 0, bodyBytesReceived);
-
                 ProcessControlCommand(msg);
             }
-            else
-            {
+		} else {
 
-                using (var www = UnityWebRequest.Post("http://" + robosimsHost + ":" + robosimsPort + "/train", form))
-                {
-                    yield return www.SendWebRequest();
+			using (var www = UnityWebRequest.Post("http://" + robosimsHost + ":" + robosimsPort + "/train", form))
+			{
+				yield return www.SendWebRequest();
 
-                    if (www.isNetworkError || www.isHttpError)
-                    {
-                        Debug.Log("Error: " + www.error);
-                        yield break;
-                    }
-                    ProcessControlCommand(www.downloadHandler.text);
-                }
-            }
+				if (www.isNetworkError || www.isHttpError)
+				{
+					Debug.Log("Error: " + www.error);
+					yield break;
+				}
+				ProcessControlCommand(www.downloadHandler.text);
+			}
+		}
         #endif
     }
 	private int parseContentLength(string header) {
@@ -589,22 +644,13 @@ public class AgentManager : MonoBehaviour
 		return this.agents.ToArray () [activeAgentId];
 	}
 
-    private void ProcessControlCommand(string msg)
-    {
-        ServerAction controlCommand = new ServerAction();
-        try
-        {
-            JsonUtility.FromJsonOverwrite(msg, controlCommand);
-            ProcessControlCommand(controlCommand);
-
-        }
-        catch (JsonException e)
-        {
-            Debug.LogError(e.Message);
-        }
-    }
-    private void ProcessControlCommand(ServerAction controlCommand)
+	private void ProcessControlCommand(string msg)
 	{
+
+		ServerAction controlCommand = new ServerAction();
+
+		JsonUtility.FromJsonOverwrite(msg, controlCommand);
+
 		this.currentSequenceId = controlCommand.sequenceId;
 		this.renderImage = controlCommand.renderImage;
 		activeAgentId = controlCommand.agentId;
@@ -735,8 +781,17 @@ public class ObjectMetadata
 	public string parentReceptacle;
 	public string[] parentReceptacles;
 	public float currentTime;
+    public bool isMoving;//true if this game object currently has a non-zero velocity
 
+    public WorldSpaceBounds objectBounds;
 	public ObjectMetadata() { }
+}
+
+[Serializable]
+public class WorldSpaceBounds
+{
+    //8 corners of the box that bounds a sim object
+    public Vector3[] objectBoundsCorners;
 }
 
 [Serializable]
@@ -767,9 +822,32 @@ public class HandMetadata {
 }
 
 [Serializable]
+public class ObjectTypeCount
+{
+    public string objectType;
+    public int count;
+}
+
+[Serializable]
+public class ObjectPose
+{
+    public string objectName;
+    public Vector3 position;
+    public Vector3 rotation;
+}
+
+[Serializable]
+public class ObjectToggle
+{
+    public string objectType;
+    public bool isOn;
+}
+
+[Serializable]
 public struct MetadataWrapper
 {
 	public ObjectMetadata[] objects;
+    public bool isSceneAtRest;//set true if all objects in the scene are at rest (or very very close to 0 velocity)
 	public ObjectMetadata agent;
 	public HandMetadata hand;
 	public float fov;
@@ -834,10 +912,12 @@ public class ServerAction
 	public float fieldOfView = 60f;
 	public float x;
 	public float z;
+    public float pushAngle;
 	public int horizon;
 	public Vector3 rotation;
 	public Vector3 position;
-
+    public Vector3 direction;
+    public float handDistance;//used for max distance agent's hand can move
 	public List<Vector3> positions = null;
 	public bool standing = true;
 	public float fov = 60.0f;
@@ -857,19 +937,19 @@ public class ServerAction
 	public bool randomizeOpen;
 	public int randomSeed;
 	public float moveMagnitude;
-
 	public bool autoSimulation = true;
 	public float visibilityDistance;
-	public bool continuousMode;
+	public bool continuousMode; //i don't think this is used right now? also how is this different from the continuous bool above?
 	public bool uniquePickupableObjectTypes; // only allow one of each object type to be visible
 	public float removeProb;
-	public int maxNumRepeats;
+	public int numPlacementAttempts;
 	public bool randomizeObjectAppearance;
 	public bool renderImage = true;
 	public bool renderDepthImage;
 	public bool renderClassImage;
 	public bool renderObjectImage;
 	public bool renderNormalsImage;
+    public bool renderFlowImage;
 	public float cameraY;
 	public bool placeStationary = true; //when placing/spawning an object, do we spawn it stationary (kinematic true) or spawn and let physics resolve final position
 	public string ssao = "default";
@@ -877,7 +957,13 @@ public class ServerAction
 	public float TimeUntilRoomTemp;
 	public bool allowDecayTemperature = true; //set to true if temperature should decay over time, set to false if temp changes should not decay, defaulted true
 	public string StateChange;//a string that specifies which state change to randomly toggle
-	public SimObjType ReceptableSimObjType()
+    public float timeStep = 0.01f;
+    public ObjectTypeCount[] numRepeats;
+    public ObjectTypeCount[] minFreePerReceptacleType;
+    public ObjectPose[] objectPoses;
+    public ObjectToggle[] objectToggles;
+
+    public SimObjType ReceptableSimObjType()
 	{
 		if (string.IsNullOrEmpty(receptacleObjectType))
 		{
