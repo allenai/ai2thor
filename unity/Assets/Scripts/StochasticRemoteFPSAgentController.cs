@@ -17,6 +17,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
     [RequireComponent(typeof(CharacterController))]
     public class StochasticRemoteFPSAgentController : PhysicsRemoteFPSAgentController {
         [SerializeField]
+        public bool HasMovementNoise = false;
+        [SerializeField]
         public float GaussianMu = 0.0f;
 
         [SerializeField]
