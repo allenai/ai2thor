@@ -3826,7 +3826,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                 rsps.Shuffle_(action.randomSeed);
 
-                if(ipt.PlaceObjectReceptacle(rsps, targetCircle.GetComponent<SimObjPhysics>(), true, 20, 90, true))
+                if(ipt.PlaceObjectReceptacle(rsps, targetCircle.GetComponent<SimObjPhysics>(), true, 20, 90, true, null))
                 {
                     succesfulSpawn = true;
                     break;
@@ -3884,11 +3884,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             //default repeats if no value is passed in.
             if (action.numPlacementAttempts == 0)
+            {
                 action.numPlacementAttempts = 5;
-
-            //PhysicsSceneManager script = GameObject.Find("PhysicsSceneManager").GetComponent<PhysicsSceneManager>();
-
-            bool success = script.RandomSpawnRequiredSceneObjects(
+            }
+            
+            bool success = physicsSceneManager.RandomSpawnRequiredSceneObjects(
                 action.randomSeed,
                 action.forceVisible,
                 action.numPlacementAttempts,
