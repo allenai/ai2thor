@@ -83,7 +83,7 @@ public class AgentManager : MonoBehaviour
 		initializePrimaryAgent();
         primaryAgent.actionDuration = this.actionDuration;
 		readyToEmit = true;
-		Debug.Log("Graphics Tier: " + Graphics.activeTier);
+		//Debug.Log("Graphics Tier: " + Graphics.activeTier);
 		this.agents.Add (primaryAgent);
 
         physicsSceneManager = GameObject.Find("PhysicsSceneManager").GetComponent<PhysicsSceneManager>();
@@ -814,6 +814,7 @@ public class ObjectMetadata
 	///
 	public bool pickupable;
 	public bool isPickedUp;//if the pickupable object is actively being held by the agent
+    public bool moveable;//if the object is moveable, able to be pushed/affected by physics but is too big to pick up
 
 	public float mass;//mass is only for moveable and pickupable objects
 
@@ -1006,6 +1007,9 @@ public class ServerAction
 	public bool allowDecayTemperature = true; //set to true if temperature should decay over time, set to false if temp changes should not decay, defaulted true
 	public string StateChange;//a string that specifies which state change to randomly toggle
     public float timeStep = 0.01f;
+    public float mass;
+    public float drag;
+    public float angularDrag;
     public ObjectTypeCount[] numRepeats;
     public ObjectTypeCount[] minFreePerReceptacleType;
     public ObjectPose[] objectPoses;

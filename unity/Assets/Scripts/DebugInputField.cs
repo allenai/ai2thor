@@ -45,7 +45,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
         void Start()
         {
             #if UNITY_EDITOR || UNITY_WEBGL
-                Debug.Log("Unity editor");
+                Debug.Log("In Unity editor, init DebugInputField");
                 this.InitializeUserControl();
 
             #endif
@@ -53,16 +53,16 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
         void SelectPlayerControl() {
             #if UNITY_EDITOR
-                Debug.Log("Editor control");
+                Debug.Log("Player Control Set To: Editor control");
                 setControlMode(ControlMode.DEBUG_TEXT_INPUT);
             #endif
             #if UNITY_WEBGL
-                Debug.Log("Webgl");
+                Debug.Log("Player Control Set To:Webgl");
                 setControlMode(ControlMode.FPS);
                 PhysicsController.GetComponent<JavaScriptInterface>().enabled = true;
             #endif
             #if TURK_TASK
-                Debug.Log("TURK");
+                Debug.Log("Player Control Set To: TURK");
                 setControlMode(ControlMode.DISCRETE_POINT_CLICK);
             #endif
         }
@@ -195,7 +195,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
                         //set to true if only receptacles in view should be target spawn points for the targetcircle
                         action.forceVisible = true;
-                        action.visibilityDistance = 2.0f;
+                        action.visibilityDistance = 3.0f;
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }
@@ -471,10 +471,29 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
                 //make all pickupable objects kinematic false so that they will react to collisions. Otherwise, some objects might be defaulted to kinematic true, or
                 //if they were placed with placeStationary true, then they will not interact with outside collisions immediately.
-                case "kinematicfalse":
+                case "maom":
                     {
                         ServerAction action = new ServerAction();
                         action.action = "MakeAllObjectsMoveable";
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
+                //tests the Reset function on AgentManager.cs, adding a path to it from the PhysicsController
+                case "reset":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "Reset";
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+                    
+                case "poap":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "PlaceObjectAtPoint";
+                        action.position = GameObject.Find("TestPosition").transform.position;
+                        action.objectId = "TargetCircle|-00.06|+01.11|+00.25";
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }
@@ -1112,25 +1131,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }
-
-                // case "fillsoap":
-                //     {
-                //         ServerAction action = new ServerAction();
-                //         action.action = "FillObjectWithLiquid";
-				// 		if(splitcommand.Length > 1)
-				// 		{
-				// 			action.objectId = splitcommand[1];
-				// 		}
-
-                //         else
-                //         {
-                //             action.objectId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().UniqueIDOfClosestVisibleObject();
-                //         }
-
-                //         action.fillLiquid = "soap";
-                //         PhysicsController.ProcessControlCommand(action);
-                //         break;
-                //     }
 
                 case "fillwine":
                     {

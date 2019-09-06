@@ -517,7 +517,7 @@ public class InstantiatePrefabTest : MonoBehaviour
     //All adjustments to the Bounding Box must be done on the collider only using the
     //"Edit Collider" button if you need to change the size
     //this assumes that the BoundingBox transform is zeroed out according to the root transform of the prefab
-    private bool CheckSpawnArea(SimObjPhysics simObj, Vector3 position, Quaternion rotation, bool spawningInHand)
+    public bool CheckSpawnArea(SimObjPhysics simObj, Vector3 position, Quaternion rotation, bool spawningInHand)
     {
 		int layermask;
 
@@ -588,17 +588,26 @@ public class InstantiatePrefabTest : MonoBehaviour
         Collider[] hitColliders = Physics.OverlapBox(bbCenterTransformPoint,
                                                      bbcol.size / 2.0f, simObj.transform.rotation, 
                                                      layermask, QueryTriggerInteraction.Collide);//make sure all ReceptacleTriggers are set to SimOBjInvisible layer!
-        // print("trying to place " + simObj.transform.name + ", hitCollider length is: " + hitColliders.Length);                                             
-        // foreach(Collider c in hitColliders)
-        // {
-        //     if(c.GetComponentInParent<Rigidbody>())
-        //     print(c.GetComponentInParent<Rigidbody>().transform.name);
-        // }
+
+        int colliderCount = 0;
         //if a collider was hit, then the space is not clear to spawn
 		if (hitColliders.Length > 0)
 		{
-			return false;
+            //filter out any AgentTriggerBoxes because those should be ignored now
+            foreach(Collider c in hitColliders)
+            {
+                if(c.isTrigger && c.GetComponentInParent<PhysicsRemoteFPSAgentController>())
+                continue;
+
+                else
+                colliderCount++;
+            }
+
+            if(colliderCount > 0)
+            return false;
 		}
+
+        //nothing was hit, we are good!
 		return true;
 	}
 
@@ -632,89 +641,5 @@ public class InstantiatePrefabTest : MonoBehaviour
         }
     }
 #endif
-
-
-    // private bool CheckSpawnAreaOLD(SimObjPhysics simObj, Vector3 position, Quaternion rotation, bool spawningInHand)
-    // {
-    //     //create a dummy gameobject that is instantiated then rotated to get the actual
-    //     //location and orientation of the spawn area
-    //     Transform placeholderPosition = new GameObject("placeholderPosition").transform;
-
-    //     //this is now in the exact position the object will spawn at
-    //     placeholderPosition.transform.position = position;
-
-    //     GameObject placeBox = Instantiate(simObj.BoundingBox, position /*+ OffsetPos*/, placeholderPosition.transform.rotation);
-    //     placeBox.transform.SetParent(placeholderPosition);
-    //     placeBox.transform.localPosition = simObj.BoundingBox.transform.localPosition;
-
-    //     //rotate it after creating the offset so that the offset's local position is maintained
-    //     placeholderPosition.transform.rotation = rotation;
-
-
-	// 	int layermask;
-
-	// 	//first do a check to see if the area is clear
-
-    //     //if spawning in the agent's hand, ignore collisions with the Agent
-	// 	if(spawningInHand)
-	// 	{
-	// 		layermask = 1 << 8;
-	// 	}
-
-    //     //oh we are spawning it somehwere in the environment, we do need to make sure not to spawn inside the agent or the environment
-	// 	else
-	// 	{
-	// 		layermask = (1 << 8) | (1 << 10);
-	// 	}
-
-    //     BoxCollider pbbc = placeBox.GetComponent<BoxCollider>();
-    //     pbbc.isTrigger = true;
-
-    //     Collider[] hitColliders = Physics.OverlapBox(placeBox.transform.TransformPoint(pbbc.center)/* placeBox.transform.position*/,
-    //                                                  placeBox.GetComponent<BoxCollider>().size / 2.0f, placeholderPosition.transform.rotation,
-    //                                                  layermask, QueryTriggerInteraction.Ignore);
-
-    //     //keep track of all 8 corners of the OverlapBox
-    //     List<Vector3> corners = new List<Vector3>();
-    //     //bottom forward right
-    //     corners.Add(placeBox.transform.TransformPoint(pbbc.center + new Vector3(pbbc.size.x, -pbbc.size.y, pbbc.size.z) * 0.5f));
-    //     //bottom forward left
-    //     corners.Add(placeBox.transform.TransformPoint(pbbc.center + new Vector3(-pbbc.size.x, -pbbc.size.y, pbbc.size.z) * 0.5f));
-    //     //bottom back left
-    //     corners.Add(placeBox.transform.TransformPoint(pbbc.center + new Vector3(-pbbc.size.x, -pbbc.size.y, -pbbc.size.z) * 0.5f));
-    //     //bottom back right
-    //     corners.Add(placeBox.transform.TransformPoint(pbbc.center+ new Vector3(pbbc.size.x, -pbbc.size.y, -pbbc.size.z) * 0.5f));
-
-    //     //top forward right
-    //     corners.Add(placeBox.transform.TransformPoint(pbbc.center + new Vector3(pbbc.size.x, pbbc.size.y, pbbc.size.z) * 0.5f));
-    //     //top forward left
-    //     corners.Add(placeBox.transform.TransformPoint(pbbc.center + new Vector3(-pbbc.size.x, pbbc.size.y, pbbc.size.z) * 0.5f));
-    //     //top back left
-    //     corners.Add(placeBox.transform.TransformPoint(pbbc.center + new Vector3(-pbbc.size.x, pbbc.size.y, -pbbc.size.z) * 0.5f));
-    //     //top back right
-    //     corners.Add(placeBox.transform.TransformPoint(pbbc.center+ new Vector3(pbbc.size.x, pbbc.size.y, -pbbc.size.z) * 0.5f));
-
-    //     SpawnCorners = corners;
-
-    //     #if UNITY_EDITOR
-	// 	m_Started = true;     
-    //     gizmopos = placeBox.transform.TransformPoint(pbbc.center); 
-    //     //gizmopos = inst.transform.position;
-    //     gizmoscale = pbbc.size;
-    //     //gizmoscale = simObj.BoundingBox.GetComponent<BoxCollider>().size;
-    //     gizmoquaternion = placeholderPosition.transform.rotation;
-    //     #endif
-
-    //     //destroy the dummy object, we don't need it anymore
-    //     Destroy(placeholderPosition.gameObject);
-
-    //     //if a collider was hit, then the space is not clear to spawn
-	// 	if (hitColliders.Length > 0)
-	// 	{
-	// 		return false;
-	// 	}
-
-	// 	return true;
-	// }
 
 }

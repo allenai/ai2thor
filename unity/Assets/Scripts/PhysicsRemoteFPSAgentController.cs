@@ -205,9 +205,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     if(sop.PrimaryProperty == SimObjPrimaryProperty.Moveable || sop.PrimaryProperty == SimObjPrimaryProperty.CanPickup)
                     {
                         Rigidbody rb = sop.GetComponent<Rigidbody>();
-                        rb.mass = action.x;
-                        rb.drag = action.y;
-                        rb.angularDrag = action.z;
+                        rb.mass = action.mass;
+                        rb.drag = action.drag;
+                        rb.angularDrag = action.angularDrag;
                         
                         actionFinished(true);
                         return;
@@ -378,6 +378,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             objMeta.pickupable = simObj.PrimaryProperty == SimObjPrimaryProperty.CanPickup;//can this object be picked up?
             objMeta.isPickedUp = simObj.isPickedUp;//returns true for if this object is currently being held by the agent
+
+            objMeta.moveable = simObj.PrimaryProperty == SimObjPrimaryProperty.Moveable;
 
             objMeta.objectId = simObj.UniqueID;
 
@@ -844,7 +846,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         //check if the visibility point on a sim object, sop, is within the viewport
         //has a inclueInvisible bool to check against triggerboxes as well, to check for visibility with things like Cabinets/Drawers
-        protected bool CheckIfVisibilityPointInViewport(SimObjPhysics sop, Transform point, Camera agentCamera, bool includeInvisible) {
+        protected bool CheckIfVisibilityPointInViewport(SimObjPhysics sop, Transform point, Camera agentCamera, bool includeInvisible) 
+        {
             bool result = false;
 
             Vector3 viewPoint = agentCamera.WorldToViewportPoint(point.position);
@@ -861,45 +864,60 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 //now cast a ray out toward the point, if anything occludes this point, that point is not visible
                 RaycastHit hit;
 
-                float raycastDistance = Vector3.Distance(point.position, m_Camera.transform.position) + 1.0f;
+                float distFromPointToCamera = Vector3.Distance(point.position, m_Camera.transform.position);
+
+                float raycastDistance = distFromPointToCamera + 0.5f;
 
                 if(raycastDistance > maxVisibleDistance)
                 {
-                    raycastDistance = maxVisibleDistance + 1.0f;
+                    raycastDistance = maxVisibleDistance + 0.5f;
                 }
+
+                LayerMask mask = (1 << 8) | (1 << 9) | (1 << 10);
+
+                //change mask if its a floor so it ignores the receptacle trigger boxes on the floor
+                if(sop.Type == SimObjType.Floor)
+                mask = (1 << 8) | (1 << 10);
+
 
                 //check raycast against both visible and invisible layers, to check against ReceptacleTriggerBoxes which are normally
                 //ignored by the other raycast
-                if (includeInvisible) {
-                    if (Physics.Raycast(agentCamera.transform.position, point.position - agentCamera.transform.position, out hit,
-                            raycastDistance, (1 << 8) | (1 << 9) | (1 << 10))) {
-                        if (hit.transform != sop.transform) {
+                if (includeInvisible) 
+                {
+                    if (Physics.Raycast(agentCamera.transform.position, point.position - agentCamera.transform.position, out hit, raycastDistance, mask)) 
+                    {
+                        if (hit.transform != sop.transform) 
+                        {
                             result = false;
                         }
 
                         //if this line is drawn, then this visibility point is in camera frame and not occluded
                         //might want to use this for a targeting check as well at some point....
-                        else {
+                        else 
+                        {
                             result = true;
                             sop.isInteractable = true;
 
-#if UNITY_EDITOR
+                            #if UNITY_EDITOR
                             Debug.DrawLine(agentCamera.transform.position, point.position, Color.cyan);
-#endif
+                            #endif
                         }
                     }
                 }
 
                 //only check against the visible layer, ignore the invisible layer
                 //so if an object ONLY has colliders on it that are not on layer 8, this raycast will go through them 
-                else {
-                    if (Physics.Raycast(agentCamera.transform.position, point.position - agentCamera.transform.position, out hit,
-                            raycastDistance, (1 << 8) | (1 << 10))) {
-                        if (hit.transform != sop.transform) {
+                else 
+                {
+                    if (Physics.Raycast(agentCamera.transform.position, point.position - agentCamera.transform.position, out hit, raycastDistance, (1 << 8) | (1 << 10))) 
+                    {
+                        if (hit.transform != sop.transform) 
+                        {
                             //we didn't directly hit the sop we are checking for with this cast, 
                             //check if it's because we hit something see-through
                             SimObjPhysics hitSop = hit.transform.GetComponent<SimObjPhysics>();
-                            if (hitSop != null && hitSop.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanSeeThrough)) {
+                            if (hitSop != null && hitSop.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanSeeThrough)) 
+                            {
                                 //we hit something see through, so now find all objects in the path between
                                 //the sop and the camera
                                 RaycastHit[] hits;
@@ -907,31 +925,39 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                                     raycastDistance, (1 << 8), QueryTriggerInteraction.Ignore);
 
                                 float[] hitDistances = new float[hits.Length];
-                                for (int i = 0; i < hitDistances.Length; i++) {
+                                for (int i = 0; i < hitDistances.Length; i++) 
+                                {
                                     hitDistances[i] = hits[i].distance; //Vector3.Distance(hits[i].transform.position, m_Camera.transform.position);
                                 }
 
                                 Array.Sort(hitDistances, hits);
 
-                                foreach (RaycastHit h in hits) {
+                                foreach (RaycastHit h in hits) 
+                                {
 
-                                    if (h.transform == sop.transform) {
+                                    if (h.transform == sop.transform) 
+                                    {
                                         //found the object we are looking for, great!
                                         result = true;
                                         break;
-                                    } else {
+                                    } 
+                                    
+                                    else 
+                                    {
                                         // Didn't find it, continue on only if the hit object was translucent
                                         SimObjPhysics sopHitOnPath = null;
                                         sopHitOnPath = h.transform.GetComponentInParent<SimObjPhysics>();
-                                        if (sopHitOnPath == null ||
-                                            !sopHitOnPath.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanSeeThrough)) {
-                                            //print("this is blocking: " + sopHitOnPath.name);
+                                        if (sopHitOnPath == null || !sopHitOnPath.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanSeeThrough)) 
+                                        {
                                             break;
                                         }
                                     }
                                 }
                             }
-                        } else {
+                        } 
+                        
+                        else 
+                        {
                             //if this line is drawn, then this visibility point is in camera frame and not occluded
                             //might want to use this for a targeting check as well at some point....
                             result = true;
@@ -939,16 +965,16 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         }
                     }
                 }
-            }
+             }
 
-#if UNITY_EDITOR
-            if (result == true) {
+            #if UNITY_EDITOR
+            if (result == true) 
+            {
                 Debug.DrawLine(agentCamera.transform.position, point.position, Color.cyan);
             }
-#endif
+            #endif
 
             return result;
-
         }
 
         public override void LookDown(ServerAction response) {
@@ -2037,6 +2063,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
 
+        #if UNITY_EDITOR
+        //for use in Editor to test the Reset function.
+        public void Reset(ServerAction action)
+        {
+           physicsSceneManager.GetComponent<AgentManager>().Reset(action);
+        }
+        #endif
+
         //a no op action used to return metadata via actionFinished call, but not actually doing anything to interact with the scene or manipulate the Agent
         public void NoOp(ServerAction action)
         {
@@ -2949,89 +2983,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             public float armsLength;//the amount the hand moved from it's starting position to hit the object touched
         }
 
-        //moves the agent hand to a target xyz position, then apply a force of a given magnitude to any objects in a specific direction
-        // public void MoveHandThenApplyForce(ServerAction action)
-        // {
-        //     //default hand to be safe
-        //     DefaultAgentHand();
-        //     Vector3 targetPosition = AgentHand.transform.localPosition + action.position;
-
-
-        //     //check if the agent's hand can actually move to targetPosition without problems
-        //     if(CheckIfAgentCanMoveEmptyHand(AgentHand.transform.TransformPoint(targetPosition)))
-        //     {
-        //         //move the hand
-        //         AgentHand.transform.localPosition = targetPosition;
-
-        //         //raycast out from targetPosition to direction
-        //         RaycastHit hit;
-
-        //         // Debug.DrawRay(AgentHand.transform.position, 
-        //         // m_Camera.transform.TransformDirection(action.direction), Color.yellow, 5.0f);
-
-        //         //raycast from hand in action.direction a max distance of 2m
-        //         if(Physics.Raycast(AgentHand.transform.position, 
-        //         m_Camera.transform.TransformDirection(action.direction), 
-        //         out hit, 2.0f, 1 << 0 |1 << 8| 1<<10, QueryTriggerInteraction.Ignore))
-        //         {
-        //             //print(hit.transform);
-        //             if(hit.transform.GetComponent<SimObjPhysics>())
-        //             {
-        //                 //if the object is a sim object, apply force now!
-        //                 SimObjPhysics target = hit.transform.GetComponent<SimObjPhysics>();
-        //                 bool canbepushed = false;
-
-        //                 if (target.PrimaryProperty == SimObjPrimaryProperty.CanPickup ||
-        //                     target.PrimaryProperty == SimObjPrimaryProperty.Moveable)
-        //                     canbepushed = true;
-
-        //                 if (!canbepushed) 
-        //                 {
-        //                     //the sim object hit was not moveable or pickupable, but we still hit something so return handTouchedSomething = true
-        //                     bool handTouchedSomething = true;
-        //                     Debug.Log("hand touched something that can't be pushed: " + hit.transform.name);
-        //                     actionFinished(true, handTouchedSomething);
-        //                     return;
-        //                 }
-
-        //                 ServerAction apply = new ServerAction();
-        //                 apply.moveMagnitude = action.moveMagnitude;
-        //                 apply.x = action.direction.x;
-        //                 apply.y = action.direction.y;
-        //                 apply.z = action.direction.z;
-        //                 sopApplyForce(apply, target);
-        //                 //sopApplyForce uses a coroutine to return actionFinished()
-        //             }
-
-        //             else
-        //             {
-        //                     //something that was not a sim object was touched
-        //                     bool handTouchedSomething = true;
-        //                     Debug.Log("hand touched something that was not a sim object");
-        //                     actionFinished(true, handTouchedSomething);
-        //                     return;
-        //             }
-        //         }
-
-        //         //raycast didn't hit any objects
-        //         else
-        //         {
-        //             errorMessage = "no objects were hit by the hand";
-        //             Debug.Log(errorMessage);
-        //             actionFinished(false);
-        //             return;
-        //         }
-
-        //     }
-
-        //     //target location to move hand to was not valid (probably obstructed)
-        //     else
-        //     {
-        //         actionFinished(false);
-        //         return;
-        //     }
-        // }
-
         //checks if the target position in space is within the agent's current viewport
         public bool CheckIfTargetPositionIsInViewportRange(Vector3 targetPosition)
         {
@@ -3746,6 +3697,61 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
 
+        //pass in a Vector3, presumably from GetReachablePositions, and try to place a specific Sim Object there
+        //unlike PlaceHeldObject or InitialRandomSpawn, this won't be limited by a Receptacle, but only
+        //limited by collision
+        public void PlaceObjectAtPoint(ServerAction action)
+        {
+            if(action.objectId == null)
+            {
+                errorMessage = "please give valid objectId for PlaceObjectAtPoint action";
+                actionFinished(false);
+                return;
+            }
+
+            SimObjPhysics target = null;
+            foreach(SimObjPhysics sop in VisibleSimObjs(true))
+            {
+                if(sop.uniqueID == action.objectId)
+                {
+                    target = sop;
+                }
+            }
+
+            if(target == null)
+            {
+                errorMessage = "no object with id: "+ 
+                action.objectId+ " could be found during PlaceObjectAtPoint";
+                actionFinished(false);
+                return;
+            }
+            //ok let's get the distance from the simObj to the bottom most part of its colliders
+            Vector3 targetNegY = target.transform.position + new Vector3(0, -1, 0);
+            BoxCollider b = target.BoundingBox.GetComponent<BoxCollider>();
+
+            b.enabled = true;
+            Vector3 bottomPoint = b.ClosestPoint(targetNegY);
+            b.enabled = false;
+
+            float distFromSopToBottomPoint = Vector3.Distance(bottomPoint, target.transform.position);
+
+            float offset = distFromSopToBottomPoint + 0.01f;
+
+            Vector3 finalPos = action.position +  new Vector3(0, offset, 0);
+
+
+            //check spawn area here
+            InstantiatePrefabTest ipt = physicsSceneManager.GetComponent<InstantiatePrefabTest>();
+            if(ipt.CheckSpawnArea(target, finalPos, target.transform.rotation, false))
+            {
+                target.transform.position = finalPos;
+                actionFinished(true);
+                return;
+            }
+
+            actionFinished(false);
+        }
+
         //instantiate a target circle, and then place it in a "SpawnOnlyOUtsideReceptacle" that is also within camera view
         //If fails, return actionFinished(false) and despawn target circle
         public void SpawnTargetCircle(ServerAction action)
@@ -3847,7 +3853,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 SimObjPhysics targetSOP = targetCircle.GetComponent<SimObjPhysics>();
                 physicsSceneManager.Generate_UniqueID(targetSOP);
                 physicsSceneManager.AddToObjectsInScene(targetSOP);
-                actionFinished(true);
+                actionFinished(true, targetSOP.uniqueID);//return the UniqueId of circle spawned for easy reference
             }
 
             else
@@ -5451,30 +5457,23 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         //this means that the isSceneAtRest bool will always be false
         public void MakeAllObjectsMoveable(ServerAction action)
         {
-            foreach (SimObjPhysics sop in GameObject.FindObjectsOfType<SimObjPhysics>()) {
-                if (sop.PrimaryProperty == SimObjPrimaryProperty.CanPickup || sop.PrimaryProperty == SimObjPrimaryProperty.Moveable) {
-                    Rigidbody rb = sop.GetComponent<Rigidbody>();
-                    //XXX we might need to add something here to account for objects that have other sim objects as children (dresser-drawer)
-                    rb.isKinematic = false;
-                    rb.collisionDetectionMode = CollisionDetectionMode.ContinuousSpeculative;
-                }
-            }
-            actionFinished(true);
-        }
-
-        public void HideBlueObjects(ServerAction action) {
-            foreach (Renderer r in UnityEngine.Object.FindObjectsOfType<Renderer>()) {
-                foreach (Material m in r.materials) {
-                    if (m.name.Contains("BLUE")) {
-                        r.enabled = false;
-                        break;
+            foreach (SimObjPhysics sop in GameObject.FindObjectsOfType<SimObjPhysics>()) 
+            {
+                //check if the sopType is something that can be hung
+                if(sop.Type == SimObjType.Towel || sop.Type == SimObjType.HandTowel || sop.Type == SimObjType.ToiletPaper)
+                {
+                    //if this object is actively hung on its corresponding object specific receptacle... skip it so it doesn't fall on the floor
+                    if(sop.GetComponentInParent<ObjectSpecificReceptacle>())
+                    {
+                        continue;
                     }
                 }
-            }
 
-            foreach (GameObject go in Resources.FindObjectsOfTypeAll<GameObject>()) {
-                if (go.name.Contains("BlueCube")) {
-                    UpdateDisplayGameObject(go, true);
+                if (sop.PrimaryProperty == SimObjPrimaryProperty.CanPickup || sop.PrimaryProperty == SimObjPrimaryProperty.Moveable) 
+                {
+                    Rigidbody rb = sop.GetComponent<Rigidbody>();
+                    rb.isKinematic = false;
+                    rb.collisionDetectionMode = CollisionDetectionMode.ContinuousSpeculative;
                 }
             }
             actionFinished(true);
