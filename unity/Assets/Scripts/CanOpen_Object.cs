@@ -165,7 +165,6 @@ public class CanOpen_Object : MonoBehaviour
         //if this object is pickupable AND it's trying to open (book, box, laptop, etc)
         //before trying to open or close, these objects must have kinematic = false otherwise it might clip through other objects
         SimObjPhysics sop = gameObject.GetComponent<SimObjPhysics>();
-
         if(sop.PrimaryProperty == SimObjPrimaryProperty.CanPickup && sop.isInAgentHand == false)
         {
             gameObject.GetComponent<Rigidbody>().isKinematic = false;
@@ -416,13 +415,20 @@ public class CanOpen_Object : MonoBehaviour
     }
 
     //for use in OnTriggerEnter ignore check
+    //return true if it should ignore the object hit. Return false to cause this object to reset to the original position
     public bool IsInIgnoreArray(Collider other, GameObject[] arrayOfCol)
     {
         for (int i = 0; i < arrayOfCol.Length; i++)
         {
-            if (other.GetComponentInParent<CanOpen_Object>().transform ==
-                arrayOfCol[i].GetComponentInParent<CanOpen_Object>().transform)
-                return true;
+            if(other.GetComponentInParent<CanOpen_Object>().transform)
+            {
+                if (other.GetComponentInParent<CanOpen_Object>().transform ==
+                    arrayOfCol[i].transform)
+                    return true;
+            }
+
+            else
+            return true;
         }
         return false;
     }
@@ -542,7 +548,10 @@ public class CanOpen_Object : MonoBehaviour
 
 	public void OnTriggerEnter(Collider other)
 	{
-		//print(other.name);
+		if(other.CompareTag("Receptacle"))
+        {
+            return;
+        }
 		//note: Normally rigidbodies set to Kinematic will never call the OnTriggerX events
 		//when colliding with another rigidbody that is kinematic. For some reason, if the other object
 		//has a trigger collider even though THIS object only has a kinematic rigidbody, this
@@ -556,7 +565,9 @@ public class CanOpen_Object : MonoBehaviour
         //..., reset position and report failed action
 		if (other.name == "FPSController" && canReset == true && !gameObject.GetComponentInParent<PhysicsRemoteFPSAgentController>())
 		{
+            #if UNITY_EDITOR
 			Debug.Log(gameObject.name + " hit " + other.name + " Resetting position");
+            #endif
 			canReset = false;
 			Reset();
 		}
@@ -587,7 +598,9 @@ public class CanOpen_Object : MonoBehaviour
                     && other.GetComponentInParent<SimObjPhysics>().PrimaryProperty == SimObjPrimaryProperty.Static)//check this so that objects that are openable & pickupable don't prevent drawers/cabinets from animating
 				{
 					//print(other.GetComponentInParent<CanOpen>().transform.name);
-					Debug.Log(gameObject.name + " hit " + other.name + " Resetting position");
+                    #if UNITY_EDITOR
+					Debug.Log(gameObject.name + " hit " + other.name + " on "+ other.GetComponentInParent<SimObjPhysics>().transform.name + " Resetting position");
+                    #endif
 					canReset = false;
 					Reset();
 				}

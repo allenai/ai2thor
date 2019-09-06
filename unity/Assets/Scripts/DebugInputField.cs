@@ -171,6 +171,46 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }                   
+                case "stc":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "SpawnTargetCircle";
+                        if (splitcommand.Length > 1) 
+                        {
+                            if(int.Parse(splitcommand[1]) == 0)
+                            {
+                                action.objectVariation = 0;
+                            }
+
+                            if(int.Parse(splitcommand[1]) == 1)
+                            {
+                                action.objectVariation = 1;
+                            }
+
+                            if(int.Parse(splitcommand[1]) == 2)
+                            {
+                                action.objectVariation = 2;
+                            }
+                        }
+
+                        //set to true if only receptacles in view should be target spawn points for the targetcircle
+                        action.forceVisible = true;
+                        action.visibilityDistance = 2.0f;
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
+                case "smp":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "SetMassProperties";
+                        action.objectId = "Pot|+00.30|+00.96|+01.35";
+                        action.x = 100;
+                        action.y = 100;
+                        action.z = 100;
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
 
                 case "pp":
                     {
@@ -270,18 +310,18 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     action.forceAction = true;
                     action.action = "SetStateOfAllObjects";
 
-                     if (splitcommand.Length > 1) 
-                     {
-                        if(splitcommand[1] == "t")
-                        {
-                            action.forceAction = true;
-                        }
+                    if (splitcommand.Length > 1) 
+                    {
+                    if(splitcommand[1] == "t")
+                    {
+                        action.forceAction = true;
+                    }
 
-                        if(splitcommand[1] == "f")
-                        {
-                            action.forceAction = false;
-                        }
-                     }
+                    if(splitcommand[1] == "f")
+                    {
+                        action.forceAction = false;
+                    }
+                    }
                     PhysicsController.ProcessControlCommand(action);
                         
                     break;
@@ -434,7 +474,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 case "kinematicfalse":
                     {
                         ServerAction action = new ServerAction();
-                        action.action = "MakeAllPickupableObjectsMoveable";
+                        action.action = "MakeAllObjectsMoveable";
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }
@@ -1197,8 +1237,13 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         action.x = 0.5f;
                         action.y = 0.5f;
                         action.handDistance = 5.0f;
-                        action.direction = new Vector3(0, 1, 0);
-                        action.moveMagnitude = 200f;
+                        action.direction = new Vector3(0, 1, 1);
+                        action.moveMagnitude = 800f;
+
+                        if(splitcommand.Length > 1)
+                        {
+                            action.moveMagnitude = float.Parse(splitcommand[1]);
+                        }
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }
@@ -1396,6 +1441,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
 						ServerAction action = new ServerAction();
 						action.action = "PushObject";
 
+                        action.moveMagnitude = 2000f;
+
                         if (splitcommand.Length > 1 && splitcommand.Length < 3)
                         {
                             action.objectId = splitcommand[1];
@@ -1410,7 +1457,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
                         else
                         {
-                            action.objectId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().UniqueIDOfClosestVisibleObject();
+                            action.objectId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().UniqueIDOfClosestPickupableOrMoveableObject();
                             //action.moveMagnitude = 200f;//4000f;
                         }
 							
@@ -1424,6 +1471,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
 						ServerAction action = new ServerAction();
 						action.action = "PullObject";
 
+                        action.moveMagnitude = 2000f;
+
                         if (splitcommand.Length > 1 && splitcommand.Length < 3)
                         {
                             action.objectId = splitcommand[1];
@@ -1438,7 +1487,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
                         else
                         {
-                            action.objectId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().UniqueIDOfClosestVisibleObject();
+                            action.objectId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().UniqueIDOfClosestPickupableOrMoveableObject();
                             //action.moveMagnitude = 200f;//4000f;
                         }
 							
