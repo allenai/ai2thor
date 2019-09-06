@@ -199,7 +199,7 @@ GameObject:
   - component: {fileID: 7299570}
   - component: {fileID: 7299569}
   m_Layer: 8
-  m_Name: NightTable (1)
+  m_Name: SideTable_3981fcc1
   m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -253,7 +253,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b439f6e4ef5714ee2a3643acf37b7a9d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  uniqueID: NightStand|-01.60|-00.01|+01.48
+  uniqueID: SideTable|-01.60|-00.01|+01.48
   Type: 129
   PrimaryProperty: 1
   SecondaryProperties: 07000000
@@ -286,6 +286,8 @@ MonoBehaviour:
   salientMaterials: 
   CurrentTemperature: 0
   HowManySecondsUntilRoomTemp: 10
+  inMotion: 0
+  lastVelocity: 0
   ContainedObjectReferences: []
 --- !u!1 &11051677
 GameObject:
@@ -666,6 +668,10 @@ PrefabInstance:
     - target: {fileID: 1725319191968864, guid: e102aabaf6b1a9a4abfea8f748883b2c, type: 3}
       propertyPath: m_StaticEditorFlags
       value: 64
+      objectReference: {fileID: 0}
+    - target: {fileID: 1725319191968864, guid: e102aabaf6b1a9a4abfea8f748883b2c, type: 3}
+      propertyPath: m_Name
+      value: BaseballBat_5a388b63
       objectReference: {fileID: 0}
     - target: {fileID: 4677459721401140, guid: e102aabaf6b1a9a4abfea8f748883b2c, type: 3}
       propertyPath: m_LocalPosition.x
@@ -1121,7 +1127,7 @@ GameObject:
   - component: {fileID: 53493602}
   - component: {fileID: 53493601}
   m_Layer: 8
-  m_Name: Drawer (2)
+  m_Name: Drawer_235ae0c2
   m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1235,6 +1241,8 @@ MonoBehaviour:
   salientMaterials: 
   CurrentTemperature: 0
   HowManySecondsUntilRoomTemp: 10
+  inMotion: 0
+  lastVelocity: 0
   ContainedObjectReferences: []
 --- !u!1 &54778823
 GameObject:
@@ -2163,6 +2171,10 @@ PrefabInstance:
       propertyPath: m_StaticEditorFlags
       value: 64
       objectReference: {fileID: 0}
+    - target: {fileID: 1059182458350842, guid: bc989ef2ea0fce2489051cd3c4b1ca3d, type: 3}
+      propertyPath: m_Name
+      value: Laptop_fb6464f8
+      objectReference: {fileID: 0}
     - target: {fileID: 4813428099601778, guid: bc989ef2ea0fce2489051cd3c4b1ca3d, type: 3}
       propertyPath: m_LocalPosition.x
       value: 2.750284
@@ -2322,7 +2334,7 @@ GameObject:
   - component: {fileID: 153919695}
   - component: {fileID: 153919694}
   m_Layer: 8
-  m_Name: Drawer
+  m_Name: Drawer_0b6a8906
   m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -2436,6 +2448,8 @@ MonoBehaviour:
   salientMaterials: 
   CurrentTemperature: 0
   HowManySecondsUntilRoomTemp: 10
+  inMotion: 0
+  lastVelocity: 0
   ContainedObjectReferences: []
 --- !u!1 &155084959
 GameObject:
@@ -3704,7 +3718,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 1966051829726316, guid: 1f43f52f2282447e6b1cbbcafe25f5cb, type: 3}
       propertyPath: m_Name
-      value: Desk_Lamp_13 (1)
+      value: Lamp_515c959f
       objectReference: {fileID: 0}
     - target: {fileID: 1966051829726316, guid: 1f43f52f2282447e6b1cbbcafe25f5cb, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -3742,11 +3756,6 @@ PrefabInstance:
       propertyPath: m_RootOrder
       value: 18
       objectReference: {fileID: 0}
-    - target: {fileID: 114856764649877286, guid: 1f43f52f2282447e6b1cbbcafe25f5cb,
-        type: 3}
-      propertyPath: isOn
-      value: 0
-      objectReference: {fileID: 0}
     - target: {fileID: 1229189224139248, guid: 1f43f52f2282447e6b1cbbcafe25f5cb, type: 3}
       propertyPath: m_StaticEditorFlags
       value: 64
@@ -3771,11 +3780,6 @@ PrefabInstance:
       propertyPath: m_StaticEditorFlags
       value: 64
       objectReference: {fileID: 0}
-    - target: {fileID: 23197009213837350, guid: 1f43f52f2282447e6b1cbbcafe25f5cb,
-        type: 3}
-      propertyPath: m_Materials.Array.data[0]
-      value: 
-      objectReference: {fileID: 2100000, guid: 18346d834075a4faa94a76a8a6d7eaf9, type: 2}
     - target: {fileID: 1156544512909636, guid: 1f43f52f2282447e6b1cbbcafe25f5cb, type: 3}
       propertyPath: m_StaticEditorFlags
       value: 64
@@ -3844,6 +3848,16 @@ PrefabInstance:
       propertyPath: m_StaticEditorFlags
       value: 64
       objectReference: {fileID: 0}
+    - target: {fileID: 114856764649877286, guid: 1f43f52f2282447e6b1cbbcafe25f5cb,
+        type: 3}
+      propertyPath: isOn
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 23197009213837350, guid: 1f43f52f2282447e6b1cbbcafe25f5cb,
+        type: 3}
+      propertyPath: m_Materials.Array.data[0]
+      value: 
+      objectReference: {fileID: 2100000, guid: 18346d834075a4faa94a76a8a6d7eaf9, type: 2}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 1f43f52f2282447e6b1cbbcafe25f5cb, type: 3}
 --- !u!114 &292622295 stripped
@@ -5119,6 +5133,10 @@ PrefabInstance:
       propertyPath: m_StaticEditorFlags
       value: 64
       objectReference: {fileID: 0}
+    - target: {fileID: 1390284152631254, guid: 0a2b804887c705f45902252f1ca8f586, type: 3}
+      propertyPath: m_Name
+      value: CreditCard_dcbdc277
+      objectReference: {fileID: 0}
     - target: {fileID: 4841032344502528, guid: 0a2b804887c705f45902252f1ca8f586, type: 3}
       propertyPath: m_LocalPosition.x
       value: 2.546363
@@ -6354,7 +6372,7 @@ GameObject:
   - component: {fileID: 516582844}
   - component: {fileID: 516582843}
   m_Layer: 8
-  m_Name: Cabinet
+  m_Name: Cabinet_02af33d0
   m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -6463,6 +6481,8 @@ MonoBehaviour:
   salientMaterials: 
   CurrentTemperature: 0
   HowManySecondsUntilRoomTemp: 10
+  inMotion: 0
+  lastVelocity: 0
   ContainedObjectReferences: []
 --- !u!4 &517286634 stripped
 Transform:
@@ -8783,7 +8803,7 @@ GameObject:
   - component: {fileID: 703728907}
   - component: {fileID: 703728906}
   m_Layer: 8
-  m_Name: Drawer (3)
+  m_Name: Drawer_f6e13565
   m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -8897,6 +8917,8 @@ MonoBehaviour:
   salientMaterials: 
   CurrentTemperature: 0
   HowManySecondsUntilRoomTemp: 10
+  inMotion: 0
+  lastVelocity: 0
   ContainedObjectReferences: []
 --- !u!1 &713537222
 GameObject:
@@ -9012,6 +9034,10 @@ PrefabInstance:
     - target: {fileID: 1510443389152286, guid: 533a8f056aebb5d4794cbe6c83bc2498, type: 3}
       propertyPath: m_StaticEditorFlags
       value: 64
+      objectReference: {fileID: 0}
+    - target: {fileID: 1510443389152286, guid: 533a8f056aebb5d4794cbe6c83bc2498, type: 3}
+      propertyPath: m_Name
+      value: Pillow_2ebb2348
       objectReference: {fileID: 0}
     - target: {fileID: 4276396386679332, guid: 533a8f056aebb5d4794cbe6c83bc2498, type: 3}
       propertyPath: m_LocalPosition.x
@@ -9810,6 +9836,10 @@ PrefabInstance:
       propertyPath: m_StaticEditorFlags
       value: 64
       objectReference: {fileID: 0}
+    - target: {fileID: 1311486330139196, guid: 2a7a5bafc8b121140ae29584f252a5ef, type: 3}
+      propertyPath: m_Name
+      value: KeyChain_de93154e
+      objectReference: {fileID: 0}
     - target: {fileID: 4488735721250736, guid: 2a7a5bafc8b121140ae29584f252a5ef, type: 3}
       propertyPath: m_LocalPosition.x
       value: -1.5097473
@@ -10263,6 +10293,10 @@ PrefabInstance:
       propertyPath: m_StaticEditorFlags
       value: 64
       objectReference: {fileID: 0}
+    - target: {fileID: 1331804271121034, guid: 072516a6e78ab6544bb4236db592fa28, type: 3}
+      propertyPath: m_Name
+      value: Pencil_367f76c6
+      objectReference: {fileID: 0}
     - target: {fileID: 4054814378190610, guid: 072516a6e78ab6544bb4236db592fa28, type: 3}
       propertyPath: m_LocalPosition.x
       value: 2.798
@@ -10428,7 +10462,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 1510443389152286, guid: 533a8f056aebb5d4794cbe6c83bc2498, type: 3}
       propertyPath: m_Name
-      value: pillow_22 (1)
+      value: Pillow_0f29a798
       objectReference: {fileID: 0}
     - target: {fileID: 1510443389152286, guid: 533a8f056aebb5d4794cbe6c83bc2498, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -10760,6 +10794,10 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 1479248231}
     m_Modifications:
+    - target: {fileID: 1378539535980264, guid: 7d4bdba7aca5f4a3d88ae1cad3d8a3d5, type: 3}
+      propertyPath: m_Name
+      value: LightSwitch_d3e63a26
+      objectReference: {fileID: 0}
     - target: {fileID: 4926194660291014, guid: 7d4bdba7aca5f4a3d88ae1cad3d8a3d5, type: 3}
       propertyPath: m_LocalPosition.x
       value: 1.317
@@ -11190,6 +11228,10 @@ PrefabInstance:
     - target: {fileID: 1359258109653644, guid: bd6aa56c8fb12d5479173a7fb661542d, type: 3}
       propertyPath: m_StaticEditorFlags
       value: 64
+      objectReference: {fileID: 0}
+    - target: {fileID: 1359258109653644, guid: bd6aa56c8fb12d5479173a7fb661542d, type: 3}
+      propertyPath: m_Name
+      value: AlarmClock_ca7072bf
       objectReference: {fileID: 0}
     - target: {fileID: 4509346982730820, guid: bd6aa56c8fb12d5479173a7fb661542d, type: 3}
       propertyPath: m_LocalPosition.x
@@ -11778,7 +11820,7 @@ GameObject:
   - component: {fileID: 924161594}
   - component: {fileID: 924161593}
   m_Layer: 8
-  m_Name: NightTable
+  m_Name: SideTable_bb13f637
   m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -11832,7 +11874,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b439f6e4ef5714ee2a3643acf37b7a9d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  uniqueID: NightStand|-01.60|-00.01|-01.25
+  uniqueID: SideTable|-01.60|-00.01|-01.25
   Type: 129
   PrimaryProperty: 1
   SecondaryProperties: 07000000
@@ -11865,6 +11907,8 @@ MonoBehaviour:
   salientMaterials: 
   CurrentTemperature: 0
   HowManySecondsUntilRoomTemp: 10
+  inMotion: 0
+  lastVelocity: 0
   ContainedObjectReferences: []
 --- !u!1 &929752075
 GameObject:
@@ -12288,7 +12332,7 @@ GameObject:
   - component: {fileID: 973559561}
   - component: {fileID: 973559560}
   m_Layer: 8
-  m_Name: Curtains
+  m_Name: Curtains_4ea1488e
   m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -12387,6 +12431,8 @@ MonoBehaviour:
   salientMaterials: 
   CurrentTemperature: 0
   HowManySecondsUntilRoomTemp: 10
+  inMotion: 0
+  lastVelocity: 0
   ContainedObjectReferences: []
 --- !u!1 &973726389
 GameObject:
@@ -12593,7 +12639,7 @@ GameObject:
   - component: {fileID: 1018764174}
   - component: {fileID: 1018764173}
   m_Layer: 8
-  m_Name: Drawer (1)
+  m_Name: Drawer_2003b1c5
   m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -12707,6 +12753,8 @@ MonoBehaviour:
   salientMaterials: 
   CurrentTemperature: 0
   HowManySecondsUntilRoomTemp: 10
+  inMotion: 0
+  lastVelocity: 0
   ContainedObjectReferences: []
 --- !u!1 &1022522966
 GameObject:
@@ -12761,7 +12809,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 360949563, guid: 4ea1d22bbbf7d944ab89fcdd0c25b32c, type: 3}
       propertyPath: m_Name
-      value: Book_22
+      value: Book_d7ca8482
       objectReference: {fileID: 0}
     - target: {fileID: 360949566, guid: 4ea1d22bbbf7d944ab89fcdd0c25b32c, type: 3}
       propertyPath: m_LocalPosition.x
@@ -12984,7 +13032,7 @@ GameObject:
   - component: {fileID: 1078220740}
   - component: {fileID: 1078220739}
   m_Layer: 8
-  m_Name: Cabinet
+  m_Name: Cabinet_725832b4
   m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -13075,6 +13123,8 @@ MonoBehaviour:
   salientMaterials: 
   CurrentTemperature: 0
   HowManySecondsUntilRoomTemp: 10
+  inMotion: 0
+  lastVelocity: 0
   ContainedObjectReferences: []
 --- !u!4 &1078220742
 Transform:
@@ -13463,7 +13513,7 @@ GameObject:
   - component: {fileID: 1125589017}
   - component: {fileID: 1125589016}
   m_Layer: 8
-  m_Name: Drawer
+  m_Name: Drawer_ff6d048c
   m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -13577,6 +13627,8 @@ MonoBehaviour:
   salientMaterials: 
   CurrentTemperature: 0
   HowManySecondsUntilRoomTemp: 10
+  inMotion: 0
+  lastVelocity: 0
   ContainedObjectReferences: []
 --- !u!1 &1129793875
 GameObject:
@@ -14123,7 +14175,7 @@ GameObject:
   - component: {fileID: 1177896240}
   - component: {fileID: 1177896239}
   m_Layer: 8
-  m_Name: ArmChair
+  m_Name: ArmChair_6f4f1c82
   m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -14187,6 +14239,8 @@ MonoBehaviour:
   salientMaterials: 
   CurrentTemperature: 0
   HowManySecondsUntilRoomTemp: 10
+  inMotion: 0
+  lastVelocity: 0
   ContainedObjectReferences: []
 --- !u!4 &1177896241
 Transform:
@@ -14249,7 +14303,7 @@ GameObject:
   - component: {fileID: 1190047768}
   - component: {fileID: 1190047767}
   m_Layer: 8
-  m_Name: Cabinet
+  m_Name: Cabinet_7303fc40
   m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -14359,6 +14413,8 @@ MonoBehaviour:
   salientMaterials: 
   CurrentTemperature: 0
   HowManySecondsUntilRoomTemp: 10
+  inMotion: 0
+  lastVelocity: 0
   ContainedObjectReferences: []
 --- !u!1 &1191255655
 GameObject:
@@ -14641,7 +14697,7 @@ GameObject:
   - component: {fileID: 1224429440}
   - component: {fileID: 1224429439}
   m_Layer: 8
-  m_Name: Cabinet
+  m_Name: Cabinet_759851ac
   m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -14749,6 +14805,8 @@ MonoBehaviour:
   salientMaterials: 
   CurrentTemperature: 0
   HowManySecondsUntilRoomTemp: 10
+  inMotion: 0
+  lastVelocity: 0
   ContainedObjectReferences: []
 --- !u!1 &1224614279
 GameObject:
@@ -14936,6 +14994,10 @@ PrefabInstance:
     - target: {fileID: 1349736331792804, guid: 6d83e03c67a44ed44963bec2eb54f849, type: 3}
       propertyPath: m_StaticEditorFlags
       value: 64
+      objectReference: {fileID: 0}
+    - target: {fileID: 1349736331792804, guid: 6d83e03c67a44ed44963bec2eb54f849, type: 3}
+      propertyPath: m_Name
+      value: Pen_679f38ce
       objectReference: {fileID: 0}
     - target: {fileID: 4930544032749934, guid: 6d83e03c67a44ed44963bec2eb54f849, type: 3}
       propertyPath: m_LocalPosition.x
@@ -15127,7 +15189,7 @@ GameObject:
   - component: {fileID: 1244859084}
   - component: {fileID: 1244859083}
   m_Layer: 8
-  m_Name: Dresser (1)
+  m_Name: Dresser_5de614c8
   m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -15201,6 +15263,8 @@ MonoBehaviour:
   salientMaterials: 
   CurrentTemperature: 0
   HowManySecondsUntilRoomTemp: 10
+  inMotion: 0
+  lastVelocity: 0
   ContainedObjectReferences: []
 --- !u!4 &1244859085
 Transform:
@@ -15574,41 +15638,9 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 1479248231}
     m_Modifications:
-    - target: {fileID: 114823215995113828, guid: a0713e70eb98b4605a748746484ec09b,
-        type: 3}
-      propertyPath: SecondaryProperties.Array.size
-      value: 2
-      objectReference: {fileID: 0}
-    - target: {fileID: 114823215995113828, guid: a0713e70eb98b4605a748746484ec09b,
-        type: 3}
-      propertyPath: uniqueID
-      value: Mirror|+00.58|+01.35|+02.20
-      objectReference: {fileID: 0}
-    - target: {fileID: 114823215995113828, guid: a0713e70eb98b4605a748746484ec09b,
-        type: 3}
-      propertyPath: SecondaryProperties.Array.data[0]
-      value: 4
-      objectReference: {fileID: 0}
-    - target: {fileID: 114823215995113828, guid: a0713e70eb98b4605a748746484ec09b,
-        type: 3}
-      propertyPath: SecondaryProperties.Array.data[1]
-      value: 11
-      objectReference: {fileID: 0}
-    - target: {fileID: 4514985786920714, guid: a0713e70eb98b4605a748746484ec09b, type: 3}
-      propertyPath: m_LocalScale.z
-      value: 0.4265625
-      objectReference: {fileID: 0}
-    - target: {fileID: 4514985786920714, guid: a0713e70eb98b4605a748746484ec09b, type: 3}
-      propertyPath: m_LocalScale.x
-      value: 0.975
-      objectReference: {fileID: 0}
-    - target: {fileID: 4514985786920714, guid: a0713e70eb98b4605a748746484ec09b, type: 3}
-      propertyPath: m_LocalPosition.z
-      value: -0.0232
-      objectReference: {fileID: 0}
-    - target: {fileID: 4514985786920714, guid: a0713e70eb98b4605a748746484ec09b, type: 3}
-      propertyPath: m_LocalPosition.x
-      value: -0
+    - target: {fileID: 1047898511289064, guid: a0713e70eb98b4605a748746484ec09b, type: 3}
+      propertyPath: m_Name
+      value: Mirror_784ccf2b
       objectReference: {fileID: 0}
     - target: {fileID: 4888713481689978, guid: a0713e70eb98b4605a748746484ec09b, type: 3}
       propertyPath: m_LocalPosition.x
@@ -15645,6 +15677,42 @@ PrefabInstance:
     - target: {fileID: 4888713481689978, guid: a0713e70eb98b4605a748746484ec09b, type: 3}
       propertyPath: m_LocalEulerAnglesHint.y
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 114823215995113828, guid: a0713e70eb98b4605a748746484ec09b,
+        type: 3}
+      propertyPath: SecondaryProperties.Array.size
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 114823215995113828, guid: a0713e70eb98b4605a748746484ec09b,
+        type: 3}
+      propertyPath: uniqueID
+      value: Mirror|+00.58|+01.35|+02.20
+      objectReference: {fileID: 0}
+    - target: {fileID: 114823215995113828, guid: a0713e70eb98b4605a748746484ec09b,
+        type: 3}
+      propertyPath: SecondaryProperties.Array.data[0]
+      value: 4
+      objectReference: {fileID: 0}
+    - target: {fileID: 114823215995113828, guid: a0713e70eb98b4605a748746484ec09b,
+        type: 3}
+      propertyPath: SecondaryProperties.Array.data[1]
+      value: 11
+      objectReference: {fileID: 0}
+    - target: {fileID: 4514985786920714, guid: a0713e70eb98b4605a748746484ec09b, type: 3}
+      propertyPath: m_LocalScale.z
+      value: 0.4265625
+      objectReference: {fileID: 0}
+    - target: {fileID: 4514985786920714, guid: a0713e70eb98b4605a748746484ec09b, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 0.975
+      objectReference: {fileID: 0}
+    - target: {fileID: 4514985786920714, guid: a0713e70eb98b4605a748746484ec09b, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: -0.0232
+      objectReference: {fileID: 0}
+    - target: {fileID: 4514985786920714, guid: a0713e70eb98b4605a748746484ec09b, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: -0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: a0713e70eb98b4605a748746484ec09b, type: 3}
@@ -15877,7 +15945,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 1348780056058702, guid: c8e7076580ab08641bb1a5caa216f490, type: 3}
       propertyPath: m_Name
-      value: Cellphone_6
+      value: CellPhone_c0c82f9a
       objectReference: {fileID: 0}
     - target: {fileID: 4411696184822962, guid: c8e7076580ab08641bb1a5caa216f490, type: 3}
       propertyPath: m_LocalPosition.x
@@ -17002,6 +17070,10 @@ PrefabInstance:
       propertyPath: m_StaticEditorFlags
       value: 64
       objectReference: {fileID: 0}
+    - target: {fileID: 1966051829726316, guid: 1f43f52f2282447e6b1cbbcafe25f5cb, type: 3}
+      propertyPath: m_Name
+      value: Lamp_e9c71c88
+      objectReference: {fileID: 0}
     - target: {fileID: 4178782687297680, guid: 1f43f52f2282447e6b1cbbcafe25f5cb, type: 3}
       propertyPath: m_LocalPosition.x
       value: -1.6190124
@@ -17034,11 +17106,6 @@ PrefabInstance:
       propertyPath: m_RootOrder
       value: 17
       objectReference: {fileID: 0}
-    - target: {fileID: 114856764649877286, guid: 1f43f52f2282447e6b1cbbcafe25f5cb,
-        type: 3}
-      propertyPath: isOn
-      value: 0
-      objectReference: {fileID: 0}
     - target: {fileID: 1229189224139248, guid: 1f43f52f2282447e6b1cbbcafe25f5cb, type: 3}
       propertyPath: m_StaticEditorFlags
       value: 64
@@ -17063,11 +17130,6 @@ PrefabInstance:
       propertyPath: m_StaticEditorFlags
       value: 64
       objectReference: {fileID: 0}
-    - target: {fileID: 23197009213837350, guid: 1f43f52f2282447e6b1cbbcafe25f5cb,
-        type: 3}
-      propertyPath: m_Materials.Array.data[0]
-      value: 
-      objectReference: {fileID: 2100000, guid: 18346d834075a4faa94a76a8a6d7eaf9, type: 2}
     - target: {fileID: 1156544512909636, guid: 1f43f52f2282447e6b1cbbcafe25f5cb, type: 3}
       propertyPath: m_StaticEditorFlags
       value: 64
@@ -17136,6 +17198,16 @@ PrefabInstance:
       propertyPath: m_StaticEditorFlags
       value: 64
       objectReference: {fileID: 0}
+    - target: {fileID: 114856764649877286, guid: 1f43f52f2282447e6b1cbbcafe25f5cb,
+        type: 3}
+      propertyPath: isOn
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 23197009213837350, guid: 1f43f52f2282447e6b1cbbcafe25f5cb,
+        type: 3}
+      propertyPath: m_Materials.Array.data[0]
+      value: 
+      objectReference: {fileID: 2100000, guid: 18346d834075a4faa94a76a8a6d7eaf9, type: 2}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 1f43f52f2282447e6b1cbbcafe25f5cb, type: 3}
 --- !u!114 &1407462543 stripped
@@ -17641,7 +17713,7 @@ GameObject:
   - component: {fileID: 1458200602}
   - component: {fileID: 1458200601}
   m_Layer: 8
-  m_Name: Drawer
+  m_Name: Drawer_aee6a50e
   m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -17755,6 +17827,8 @@ MonoBehaviour:
   salientMaterials: 
   CurrentTemperature: 0
   HowManySecondsUntilRoomTemp: 10
+  inMotion: 0
+  lastVelocity: 0
   ContainedObjectReferences: []
 --- !u!1 &1462607168
 GameObject:
@@ -18858,6 +18932,10 @@ PrefabInstance:
       propertyPath: m_StaticEditorFlags
       value: 64
       objectReference: {fileID: 0}
+    - target: {fileID: 1446328506187470, guid: f8b3f72950526c24994e0edbb09f7012, type: 3}
+      propertyPath: m_Name
+      value: CD_e652db95
+      objectReference: {fileID: 0}
     - target: {fileID: 4207494368448068, guid: f8b3f72950526c24994e0edbb09f7012, type: 3}
       propertyPath: m_LocalPosition.x
       value: 2.8712306
@@ -18982,6 +19060,10 @@ PrefabInstance:
     - target: {fileID: 1831750474358618, guid: baa6cd2c17e4a4d448ef35a79fba9f16, type: 3}
       propertyPath: m_StaticEditorFlags
       value: 64
+      objectReference: {fileID: 0}
+    - target: {fileID: 1831750474358618, guid: baa6cd2c17e4a4d448ef35a79fba9f16, type: 3}
+      propertyPath: m_Name
+      value: Cloth_3f92dde4
       objectReference: {fileID: 0}
     - target: {fileID: 4745199825687848, guid: baa6cd2c17e4a4d448ef35a79fba9f16, type: 3}
       propertyPath: m_LocalPosition.x
@@ -19497,7 +19579,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 1797535045128248, guid: 95c88002134d45c469f0547ad741bd69, type: 3}
       propertyPath: m_Name
-      value: BaseballBat_4
+      value: BaseballBat_8659ff3f
       objectReference: {fileID: 0}
     - target: {fileID: 4783780092914654, guid: 95c88002134d45c469f0547ad741bd69, type: 3}
       propertyPath: m_LocalPosition.x
@@ -20950,6 +21032,10 @@ PrefabInstance:
       propertyPath: m_StaticEditorFlags
       value: 64
       objectReference: {fileID: 0}
+    - target: {fileID: 1230739655177108, guid: 902247b6c8d50443380408ee830f0d37, type: 3}
+      propertyPath: m_Name
+      value: GarbageCan_b94fa1cf
+      objectReference: {fileID: 0}
     - target: {fileID: 4488527898083510, guid: 902247b6c8d50443380408ee830f0d37, type: 3}
       propertyPath: m_LocalPosition.x
       value: 1.3527997
@@ -21993,7 +22079,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 999676726, guid: f68a48e6ac22b9c4783521796dc3e27a, type: 3}
       propertyPath: m_Name
-      value: Bed_22
+      value: Bed_1c977312
       objectReference: {fileID: 0}
     - target: {fileID: 999676727, guid: f68a48e6ac22b9c4783521796dc3e27a, type: 3}
       propertyPath: m_LocalPosition.x
@@ -23274,7 +23360,7 @@ PrefabInstance:
     - target: {fileID: 2367096899194431217, guid: 516db061633ca4ad5ac050fcb7316e73,
         type: 3}
       propertyPath: m_Name
-      value: Mug_3
+      value: Mug_781a5acc
       objectReference: {fileID: 0}
     - target: {fileID: 2365502302183138545, guid: 516db061633ca4ad5ac050fcb7316e73,
         type: 3}
@@ -24650,7 +24736,7 @@ GameObject:
   - component: {fileID: 114742399088276265}
   - component: {fileID: 54585797306839635}
   m_Layer: 8
-  m_Name: Painting
+  m_Name: Painting_170d1051
   m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -24876,7 +24962,7 @@ GameObject:
   - component: {fileID: 114947106589576729}
   - component: {fileID: 54463593201874591}
   m_Layer: 8
-  m_Name: WindowLarge
+  m_Name: Window_c6742d09
   m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -26174,6 +26260,8 @@ MonoBehaviour:
   salientMaterials: 
   CurrentTemperature: 0
   HowManySecondsUntilRoomTemp: 10
+  inMotion: 0
+  lastVelocity: 0
   ContainedObjectReferences: []
 --- !u!114 &114947106589576729
 MonoBehaviour:
@@ -26232,6 +26320,8 @@ MonoBehaviour:
   salientMaterials: 
   CurrentTemperature: 0
   HowManySecondsUntilRoomTemp: 10
+  inMotion: 0
+  lastVelocity: 0
   ContainedObjectReferences: []
 --- !u!23 &7562676019472261717
 MeshRenderer:
