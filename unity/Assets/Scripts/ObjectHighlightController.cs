@@ -285,7 +285,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             if (DisplayTargetText && TargetText != null)
             {
-                this.TargetText.text = text;
+                this.TargetText.text = text.Split('_')[0];
             }
 
         }

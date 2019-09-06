@@ -3,9 +3,11 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityStandardAssets.Characters.FirstPerson;
+using UnityEngine.SceneManagement;
 
 #if UNITY_EDITOR
 using UnityEditor;
+using UnityEditor.SceneManagement;
 #endif
 
 public class SimObjPhysics : MonoBehaviour, SimpleSimObj
@@ -530,6 +532,19 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 
 #if UNITY_EDITOR
 
+    [UnityEditor.MenuItem("Thor/Add GUID to Object Names")]
+    public static void AddGUIDToSimObjPhys()
+    {
+		SimObjPhysics[] objects = GameObject.FindObjectsOfType<SimObjPhysics>();//Resources.FindObjectsOfTypeAll(typeof(GameObject)) as GameObject[];
+        foreach(SimObjPhysics sop in objects)
+        {
+            Guid g;
+            g = Guid.NewGuid();
+            sop.name = sop.GetComponent<SimObjPhysics>().Type.ToString()+ "_" + g.ToString("N").Substring(0, 8);
+        }
+
+        EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene());
+    }
 	
 	[UnityEditor.MenuItem("SimObjectPhysics/Create RB Collider")]
 	public static void CreateRBCollider()
