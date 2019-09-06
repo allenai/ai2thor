@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 1.0556761, g: 1.0321307, b: 1.0089895, a: 1}
+  m_IndirectSpecularColor: {r: 1.0555702, g: 1.0319636, b: 1.0084823, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -572,6 +572,10 @@ PrefabInstance:
       propertyPath: m_StaticEditorFlags
       value: 64
       objectReference: {fileID: 0}
+    - target: {fileID: 1446328506187470, guid: f8b3f72950526c24994e0edbb09f7012, type: 3}
+      propertyPath: m_Name
+      value: CD_1c1c51ee
+      objectReference: {fileID: 0}
     - target: {fileID: 4207494368448068, guid: f8b3f72950526c24994e0edbb09f7012, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0.146
@@ -1037,7 +1041,7 @@ GameObject:
   - component: {fileID: 168780225}
   - component: {fileID: 168780224}
   m_Layer: 8
-  m_Name: Chair
+  m_Name: Chair_647ecfd9
   m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1135,6 +1139,8 @@ MonoBehaviour:
   salientMaterials: 0000000006000000
   CurrentTemperature: 0
   HowManySecondsUntilRoomTemp: 10
+  inMotion: 0
+  lastVelocity: 0
   ContainedObjectReferences: []
 --- !u!4 &177798270 stripped
 Transform:
@@ -1263,37 +1269,9 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 1938123490}
     m_Modifications:
-    - target: {fileID: 4514985786920714, guid: a0713e70eb98b4605a748746484ec09b, type: 3}
-      propertyPath: m_LocalScale.z
-      value: 0.4165625
-      objectReference: {fileID: 0}
-    - target: {fileID: 4514985786920714, guid: a0713e70eb98b4605a748746484ec09b, type: 3}
-      propertyPath: m_LocalPosition.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4514985786920714, guid: a0713e70eb98b4605a748746484ec09b, type: 3}
-      propertyPath: m_LocalPosition.z
-      value: -0.0225
-      objectReference: {fileID: 0}
-    - target: {fileID: 114823215995113828, guid: a0713e70eb98b4605a748746484ec09b,
-        type: 3}
-      propertyPath: SecondaryProperties.Array.size
-      value: 2
-      objectReference: {fileID: 0}
-    - target: {fileID: 114823215995113828, guid: a0713e70eb98b4605a748746484ec09b,
-        type: 3}
-      propertyPath: uniqueID
-      value: Mirror|+02.82|+01.22|-00.07
-      objectReference: {fileID: 0}
-    - target: {fileID: 114823215995113828, guid: a0713e70eb98b4605a748746484ec09b,
-        type: 3}
-      propertyPath: SecondaryProperties.Array.data[0]
-      value: 4
-      objectReference: {fileID: 0}
-    - target: {fileID: 114823215995113828, guid: a0713e70eb98b4605a748746484ec09b,
-        type: 3}
-      propertyPath: SecondaryProperties.Array.data[1]
-      value: 11
+    - target: {fileID: 1047898511289064, guid: a0713e70eb98b4605a748746484ec09b, type: 3}
+      propertyPath: m_Name
+      value: Mirror_935f03f5
       objectReference: {fileID: 0}
     - target: {fileID: 4888713481689978, guid: a0713e70eb98b4605a748746484ec09b, type: 3}
       propertyPath: m_LocalPosition.x
@@ -1330,6 +1308,38 @@ PrefabInstance:
     - target: {fileID: 4888713481689978, guid: a0713e70eb98b4605a748746484ec09b, type: 3}
       propertyPath: m_LocalEulerAnglesHint.y
       value: -270
+      objectReference: {fileID: 0}
+    - target: {fileID: 114823215995113828, guid: a0713e70eb98b4605a748746484ec09b,
+        type: 3}
+      propertyPath: SecondaryProperties.Array.size
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 114823215995113828, guid: a0713e70eb98b4605a748746484ec09b,
+        type: 3}
+      propertyPath: uniqueID
+      value: Mirror|+02.82|+01.22|-00.07
+      objectReference: {fileID: 0}
+    - target: {fileID: 114823215995113828, guid: a0713e70eb98b4605a748746484ec09b,
+        type: 3}
+      propertyPath: SecondaryProperties.Array.data[0]
+      value: 4
+      objectReference: {fileID: 0}
+    - target: {fileID: 114823215995113828, guid: a0713e70eb98b4605a748746484ec09b,
+        type: 3}
+      propertyPath: SecondaryProperties.Array.data[1]
+      value: 11
+      objectReference: {fileID: 0}
+    - target: {fileID: 4514985786920714, guid: a0713e70eb98b4605a748746484ec09b, type: 3}
+      propertyPath: m_LocalScale.z
+      value: 0.4165625
+      objectReference: {fileID: 0}
+    - target: {fileID: 4514985786920714, guid: a0713e70eb98b4605a748746484ec09b, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4514985786920714, guid: a0713e70eb98b4605a748746484ec09b, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: -0.0225
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: a0713e70eb98b4605a748746484ec09b, type: 3}
@@ -2024,6 +2034,10 @@ PrefabInstance:
       propertyPath: m_StaticEditorFlags
       value: 64
       objectReference: {fileID: 0}
+    - target: {fileID: 1305480283125312, guid: f75d654b2cb204ea4baa7e439856d3d0, type: 3}
+      propertyPath: m_Name
+      value: GarbageCan_30e74df8
+      objectReference: {fileID: 0}
     - target: {fileID: 4047267321239326, guid: f75d654b2cb204ea4baa7e439856d3d0, type: 3}
       propertyPath: m_LocalPosition.x
       value: 2.657
@@ -2490,7 +2504,7 @@ GameObject:
   - component: {fileID: 368041667}
   - component: {fileID: 368041666}
   m_Layer: 8
-  m_Name: NightStand
+  m_Name: SideTable_ddcbd91a
   m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -2524,7 +2538,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b439f6e4ef5714ee2a3643acf37b7a9d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  uniqueID: NightStand|+00.15|+00.45|-01.64
+  uniqueID: SideTable|+00.15|+00.45|-01.64
   Type: 129
   PrimaryProperty: 1
   SecondaryProperties: 07000000
@@ -2545,6 +2559,8 @@ MonoBehaviour:
   salientMaterials: 
   CurrentTemperature: 0
   HowManySecondsUntilRoomTemp: 10
+  inMotion: 0
+  lastVelocity: 0
   ContainedObjectReferences: []
 --- !u!4 &368041668
 Transform:
@@ -2900,7 +2916,7 @@ GameObject:
   - component: {fileID: 395886168}
   - component: {fileID: 395886167}
   m_Layer: 8
-  m_Name: Drawer
+  m_Name: Drawer_dfd7bcd8
   m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -2996,6 +3012,8 @@ MonoBehaviour:
   salientMaterials: 
   CurrentTemperature: 0
   HowManySecondsUntilRoomTemp: 10
+  inMotion: 0
+  lastVelocity: 0
   ContainedObjectReferences: []
 --- !u!4 &395886170
 Transform:
@@ -3130,6 +3148,10 @@ PrefabInstance:
     - target: {fileID: 1061243055886482, guid: b1a98681e2a5fbc4b9b31540aa08cc37, type: 3}
       propertyPath: m_StaticEditorFlags
       value: 64
+      objectReference: {fileID: 0}
+    - target: {fileID: 1061243055886482, guid: b1a98681e2a5fbc4b9b31540aa08cc37, type: 3}
+      propertyPath: m_Name
+      value: KeyChain_27f895fd
       objectReference: {fileID: 0}
     - target: {fileID: 4880737830871528, guid: b1a98681e2a5fbc4b9b31540aa08cc37, type: 3}
       propertyPath: m_LocalPosition.x
@@ -5774,6 +5796,10 @@ PrefabInstance:
       propertyPath: m_StaticEditorFlags
       value: 64
       objectReference: {fileID: 0}
+    - target: {fileID: 1702258450416948, guid: e22705a1970a51749a40b21afa270d64, type: 3}
+      propertyPath: m_Name
+      value: CreditCard_e685a6d8
+      objectReference: {fileID: 0}
     - target: {fileID: 4365371897338800, guid: e22705a1970a51749a40b21afa270d64, type: 3}
       propertyPath: m_LocalPosition.x
       value: 1.74
@@ -5866,6 +5892,10 @@ PrefabInstance:
     - target: {fileID: 1958043394320590, guid: c2176409541e3e44bad4874774442b90, type: 3}
       propertyPath: m_StaticEditorFlags
       value: 64
+      objectReference: {fileID: 0}
+    - target: {fileID: 1958043394320590, guid: c2176409541e3e44bad4874774442b90, type: 3}
+      propertyPath: m_Name
+      value: Pen_3d901579
       objectReference: {fileID: 0}
     - target: {fileID: 4879567409817434, guid: c2176409541e3e44bad4874774442b90, type: 3}
       propertyPath: m_LocalPosition.x
@@ -6370,6 +6400,10 @@ PrefabInstance:
       propertyPath: m_StaticEditorFlags
       value: 64
       objectReference: {fileID: 0}
+    - target: {fileID: 1629117529192158, guid: 66e89da96037bed4dacb00086a104e18, type: 3}
+      propertyPath: m_Name
+      value: Pillow_2c7eb05a
+      objectReference: {fileID: 0}
     - target: {fileID: 4152492147959726, guid: 66e89da96037bed4dacb00086a104e18, type: 3}
       propertyPath: m_LocalPosition.x
       value: -1.154
@@ -6871,7 +6905,7 @@ GameObject:
   - component: {fileID: 951338811}
   - component: {fileID: 951338810}
   m_Layer: 8
-  m_Name: Drawer (1)
+  m_Name: Drawer_00d2da4e
   m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -6986,6 +7020,8 @@ MonoBehaviour:
   salientMaterials: 
   CurrentTemperature: 0
   HowManySecondsUntilRoomTemp: 10
+  inMotion: 0
+  lastVelocity: 0
   ContainedObjectReferences: []
 --- !u!1 &971318763
 GameObject:
@@ -7516,6 +7552,10 @@ PrefabInstance:
       propertyPath: m_StaticEditorFlags
       value: 64
       objectReference: {fileID: 0}
+    - target: {fileID: 1172870154670504, guid: 14c700ebdcbb06a4298ab013ed129b41, type: 3}
+      propertyPath: m_Name
+      value: Laptop_22052687
+      objectReference: {fileID: 0}
     - target: {fileID: 4164732606714696, guid: 14c700ebdcbb06a4298ab013ed129b41, type: 3}
       propertyPath: m_LocalPosition.x
       value: -0.794
@@ -7920,7 +7960,7 @@ GameObject:
   - component: {fileID: 1085514464}
   - component: {fileID: 1085514463}
   m_Layer: 8
-  m_Name: Desk
+  m_Name: Desk_93ee6003
   m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -8020,6 +8060,8 @@ MonoBehaviour:
   salientMaterials: 
   CurrentTemperature: 0
   HowManySecondsUntilRoomTemp: 10
+  inMotion: 0
+  lastVelocity: 0
   ContainedObjectReferences: []
 --- !u!1 &1091158371
 GameObject:
@@ -9880,6 +9922,10 @@ PrefabInstance:
       propertyPath: m_StaticEditorFlags
       value: 64
       objectReference: {fileID: 0}
+    - target: {fileID: 1731066694227140, guid: 74a5733d507e0764b88c14c2430a16f7, type: 3}
+      propertyPath: m_Name
+      value: BasketBall_959a461d
+      objectReference: {fileID: 0}
     - target: {fileID: 4516281269509590, guid: 74a5733d507e0764b88c14c2430a16f7, type: 3}
       propertyPath: m_LocalPosition.x
       value: 1.144
@@ -11163,7 +11209,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 227835510, guid: 7cf06fda498e07f4dbf0aeca99d63bc5, type: 3}
       propertyPath: m_Name
-      value: Book_12
+      value: Book_e77861cf
       objectReference: {fileID: 0}
     - target: {fileID: 227835513, guid: 7cf06fda498e07f4dbf0aeca99d63bc5, type: 3}
       propertyPath: m_LocalPosition.x
@@ -12687,6 +12733,10 @@ PrefabInstance:
       propertyPath: m_StaticEditorFlags
       value: 64
       objectReference: {fileID: 0}
+    - target: {fileID: 1363727635086454, guid: 501c1262731e04930bd3a4ff85ce902d, type: 3}
+      propertyPath: m_Name
+      value: Lamp_4736526d
+      objectReference: {fileID: 0}
     - target: {fileID: 4786745389311922, guid: 501c1262731e04930bd3a4ff85ce902d, type: 3}
       propertyPath: m_LocalPosition.x
       value: -0
@@ -13902,7 +13952,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 658504304, guid: e9e4a0ff2067c23469bee8a31bc94231, type: 3}
       propertyPath: m_Name
-      value: Bed_12
+      value: Bed_c27bd881
       objectReference: {fileID: 0}
     - target: {fileID: 658504311, guid: e9e4a0ff2067c23469bee8a31bc94231, type: 3}
       propertyPath: m_LocalPosition.x
@@ -14067,6 +14117,10 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 1938123490}
     m_Modifications:
+    - target: {fileID: 1615634427657312, guid: 58b5b4277707c44ee9a12abc3467e013, type: 3}
+      propertyPath: m_Name
+      value: LightSwitch_217cabda
+      objectReference: {fileID: 0}
     - target: {fileID: 4166146477350078, guid: 58b5b4277707c44ee9a12abc3467e013, type: 3}
       propertyPath: m_LocalPosition.x
       value: -0.606
@@ -14402,6 +14456,10 @@ PrefabInstance:
     - target: {fileID: 1860373293558596, guid: 18c4a4ef91cdf834fbea9fb262369b9a, type: 3}
       propertyPath: m_StaticEditorFlags
       value: 64
+      objectReference: {fileID: 0}
+    - target: {fileID: 1860373293558596, guid: 18c4a4ef91cdf834fbea9fb262369b9a, type: 3}
+      propertyPath: m_Name
+      value: AlarmClock_58acb825
       objectReference: {fileID: 0}
     - target: {fileID: 4407375627846170, guid: 18c4a4ef91cdf834fbea9fb262369b9a, type: 3}
       propertyPath: m_LocalPosition.x
@@ -15333,6 +15391,10 @@ PrefabInstance:
       propertyPath: m_StaticEditorFlags
       value: 64
       objectReference: {fileID: 0}
+    - target: {fileID: 1586557403262550, guid: 5f991331fc5174444ae76fd35797818a, type: 3}
+      propertyPath: m_Name
+      value: Pencil_29205f97
+      objectReference: {fileID: 0}
     - target: {fileID: 4308104262045242, guid: 5f991331fc5174444ae76fd35797818a, type: 3}
       propertyPath: m_LocalPosition.x
       value: 2.432574
@@ -15841,7 +15903,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 1883156348559814, guid: 0be9f5a439796f3499624355bccbd204, type: 3}
       propertyPath: m_Name
-      value: Cellphone_4
+      value: CellPhone_e1c9676e
       objectReference: {fileID: 0}
     - target: {fileID: 4657079740071546, guid: 0be9f5a439796f3499624355bccbd204, type: 3}
       propertyPath: m_LocalPosition.x
@@ -16635,7 +16697,7 @@ GameObject:
   - component: {fileID: 114395952833901711}
   - component: {fileID: 54549515012394167}
   m_Layer: 8
-  m_Name: Shelf (2)
+  m_Name: Shelf_cd5856e7
   m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -16653,7 +16715,7 @@ GameObject:
   - component: {fileID: 114395952956479752}
   - component: {fileID: 54549515250000176}
   m_Layer: 8
-  m_Name: Shelf (1)
+  m_Name: Shelf_87374f0f
   m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -16671,7 +16733,7 @@ GameObject:
   - component: {fileID: 114395952995837839}
   - component: {fileID: 54549515173945271}
   m_Layer: 8
-  m_Name: Shelf
+  m_Name: Shelf_30c447ef
   m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -16689,7 +16751,7 @@ GameObject:
   - component: {fileID: 114395953297438163}
   - component: {fileID: 54549514536275435}
   m_Layer: 8
-  m_Name: Shelf (3)
+  m_Name: Shelf_955e3d99
   m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -16707,7 +16769,7 @@ GameObject:
   - component: {fileID: 114395951752130629}
   - component: {fileID: 54549516195350653}
   m_Layer: 8
-  m_Name: Shelf (7)
+  m_Name: Shelf_b20f371a
   m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -16725,7 +16787,7 @@ GameObject:
   - component: {fileID: 114395951697778334}
   - component: {fileID: 54549516139081382}
   m_Layer: 8
-  m_Name: Shelf (5)
+  m_Name: Shelf_50625ffc
   m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -16743,7 +16805,7 @@ GameObject:
   - component: {fileID: 114395951693350717}
   - component: {fileID: 54549516153470725}
   m_Layer: 8
-  m_Name: Shelf (6)
+  m_Name: Shelf_84994bed
   m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -16761,7 +16823,7 @@ GameObject:
   - component: {fileID: 114395952103064787}
   - component: {fileID: 54549515470601451}
   m_Layer: 8
-  m_Name: Shelf (4)
+  m_Name: Shelf_a377dc08
   m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -18355,7 +18417,7 @@ GameObject:
   - component: {fileID: 114947105549474889}
   - component: {fileID: 54463592161502415}
   m_Layer: 8
-  m_Name: WindowLarge
+  m_Name: Window_7847feab
   m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -21244,6 +21306,8 @@ MonoBehaviour:
   salientMaterials: 
   CurrentTemperature: 0
   HowManySecondsUntilRoomTemp: 10
+  inMotion: 0
+  lastVelocity: 0
   ContainedObjectReferences: []
 --- !u!114 &114395951697778334
 MonoBehaviour:
@@ -21286,6 +21350,8 @@ MonoBehaviour:
   salientMaterials: 
   CurrentTemperature: 0
   HowManySecondsUntilRoomTemp: 10
+  inMotion: 0
+  lastVelocity: 0
   ContainedObjectReferences: []
 --- !u!114 &114395951752130629
 MonoBehaviour:
@@ -21328,6 +21394,8 @@ MonoBehaviour:
   salientMaterials: 
   CurrentTemperature: 0
   HowManySecondsUntilRoomTemp: 10
+  inMotion: 0
+  lastVelocity: 0
   ContainedObjectReferences: []
 --- !u!114 &114395952103064787
 MonoBehaviour:
@@ -21370,6 +21438,8 @@ MonoBehaviour:
   salientMaterials: 
   CurrentTemperature: 0
   HowManySecondsUntilRoomTemp: 10
+  inMotion: 0
+  lastVelocity: 0
   ContainedObjectReferences: []
 --- !u!114 &114395952833901711
 MonoBehaviour:
@@ -21412,6 +21482,8 @@ MonoBehaviour:
   salientMaterials: 
   CurrentTemperature: 0
   HowManySecondsUntilRoomTemp: 10
+  inMotion: 0
+  lastVelocity: 0
   ContainedObjectReferences: []
 --- !u!114 &114395952956479752
 MonoBehaviour:
@@ -21454,6 +21526,8 @@ MonoBehaviour:
   salientMaterials: 
   CurrentTemperature: 0
   HowManySecondsUntilRoomTemp: 10
+  inMotion: 0
+  lastVelocity: 0
   ContainedObjectReferences: []
 --- !u!114 &114395952995837839
 MonoBehaviour:
@@ -21496,6 +21570,8 @@ MonoBehaviour:
   salientMaterials: 
   CurrentTemperature: 0
   HowManySecondsUntilRoomTemp: 10
+  inMotion: 0
+  lastVelocity: 0
   ContainedObjectReferences: []
 --- !u!114 &114395953297438163
 MonoBehaviour:
@@ -21538,6 +21614,8 @@ MonoBehaviour:
   salientMaterials: 
   CurrentTemperature: 0
   HowManySecondsUntilRoomTemp: 10
+  inMotion: 0
+  lastVelocity: 0
   ContainedObjectReferences: []
 --- !u!114 &114661962626604675
 MonoBehaviour:
@@ -21716,6 +21794,8 @@ MonoBehaviour:
   salientMaterials: 
   CurrentTemperature: 0
   HowManySecondsUntilRoomTemp: 10
+  inMotion: 0
+  lastVelocity: 0
   ContainedObjectReferences: []
 --- !u!33 &7352361338825962781
 MeshFilter:
