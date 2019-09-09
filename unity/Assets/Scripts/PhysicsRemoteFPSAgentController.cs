@@ -91,7 +91,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         // Use this for initialization
         protected override void Start() {
             base.Start();
-
             //below, enable all the GameObjects on the Agent that Physics Mode requires
             if (PhysicsAgentSkinWidth < 0.0f) {
                 Debug.LogError("Agent skin width must be > 0.0f, please set it in the editor. Forcing it to equal 0.01f for now.");
@@ -1821,7 +1820,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 DefaultAgentHand();
                 Vector3 oldPosition = transform.position;
                 transform.position = targetPosition;
-                this.snapToGrid();
+                if (!continuousMode) {
+                    this.snapToGrid();
+                }
 
                 if (uniqueId != "" && maxDistanceToObject > 0.0f) {
                     if (!physicsSceneManager.UniqueIdToSimObjPhysics.ContainsKey(uniqueId)) {

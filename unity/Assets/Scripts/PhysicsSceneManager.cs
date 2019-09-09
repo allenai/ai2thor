@@ -157,8 +157,8 @@ public class PhysicsSceneManager : MonoBehaviour
 
 			AddToObjectsInScene(o);
 		}
-		
-		PhysicsRemoteFPSAgentController fpsController = GameObject.Find("FPSController").GetComponent<PhysicsRemoteFPSAgentController>();
+
+		BaseFPSAgentController fpsController =  GameObject.FindObjectOfType<BaseFPSAgentController>();
 		if (fpsController.imageSynthesis != null) {
 			fpsController.imageSynthesis.OnSceneChange();
 		}
