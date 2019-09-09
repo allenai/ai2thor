@@ -506,8 +506,8 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		if(col.transform.GetComponentInParent<SimObjPhysics>())
 		{
 			//add a check for if this is the handheld object, in which case dont't do this!
-			GameObject agent = GameObject.Find("FPSController");
-			if(!agent.transform.GetComponent<PhysicsRemoteFPSAgentController>().WhatAmIHolding() == this.transform)
+			GameObject agent =  GameObject.FindObjectOfType<PhysicsRemoteFPSAgentController>().gameObject;
+			if(!agent.GetComponent<PhysicsRemoteFPSAgentController>().WhatAmIHolding() == this.transform)
 			{
 				//if this object is pickupable or moveable
 				if(PrimaryProperty == SimObjPrimaryProperty.CanPickup || PrimaryProperty == SimObjPrimaryProperty.Moveable)

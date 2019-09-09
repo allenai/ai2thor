@@ -69,8 +69,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
         void InitializeUserControl()
         {
-            Agent = GameObject.Find("FPSController");
-            PhysicsController = Agent.GetComponent<PhysicsRemoteFPSAgentController>();
+            PhysicsController = GameObject.FindObjectOfType<PhysicsRemoteFPSAgentController>();
+            Agent = PhysicsController.gameObject;
             AManager = GameObject.Find("PhysicsSceneManager").GetComponentInChildren<AgentManager>();
             
            SelectPlayerControl();

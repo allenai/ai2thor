@@ -3,6 +3,7 @@ using System;
 using System.IO;
 using System.Collections;
 using System.Collections.Generic;
+using System.Reflection;
 using UnityStandardAssets.CrossPlatformInput;
 using UnityStandardAssets.Utility;
 using UnityEngine;
@@ -277,7 +278,19 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			} else {
 				throw new NotImplementedException("ssao must be one of 'on', 'off' or 'default'.");
 			}			
-			
+
+            if (action.controllerInitialization != null) {
+                foreach (KeyValuePair<string, TypedVariable> entry in action.controllerInitialization.variableInitializations) {
+                    Type t = Type.GetType(entry.Value.type);
+                    FieldInfo field = t.GetField(entry.Key, BindingFlags.Public | BindingFlags.Instance);
+                    field.SetValue(this, entry.Value);
+                }
+                InitializeController(action);
+            }
+        }
+
+        public virtual void InitializeController(ServerAction action) {
+            
         }
 
         public IEnumerator checkInitializeAgentLocationAction()
@@ -571,6 +584,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		//move in cardinal directions
 		virtual protected void moveCharacter(ServerAction action, int targetOrientation)
 		{
+            // TODO: Simplify this???
 			//resetHand(); when I looked at this resetHand in DiscreteRemoteFPSAgent was just commented out doing nothing so...
 			moveMagnitude = gridSize;
 			if (action.moveMagnitude > 0)
@@ -715,6 +729,14 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			moveCharacter(action, 180);
 		}
 
+        public virtual void MoveRelative(ServerAction action) {
+            var moveLocal = new Vector3(action.x, 0, action.z);
+            Vector3 moveWorldSpace = transform.rotation * moveLocal;
+            moveWorldSpace.y = Physics.gravity.y * this.m_GravityMultiplier;
+			m_CharacterController.Move(moveWorldSpace);
+			actionFinished(true);
+        }
+
 		//free move
 		public virtual void Move(ServerAction action)
 		{
@@ -766,7 +788,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		}
 
 		//free rotate, change forward facing of Agent
-		public void Rotate(ServerAction response)
+		public virtual void Rotate(ServerAction response)
 		{
 			transform.rotation = Quaternion.Euler(new Vector3(0.0f, response.rotation.y, 0.0f));
 			actionFinished(true);

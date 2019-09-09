@@ -89,8 +89,8 @@ public class AgentManager : MonoBehaviour
 
 	private void initializePrimaryAgent() {
 
-		GameObject fpsController = GameObject.Find("FPSController");
-		PhysicsRemoteFPSAgentController physicsAgent = fpsController.GetComponent<PhysicsRemoteFPSAgentController>();
+		GameObject fpsController = GameObject.FindObjectOfType<BaseFPSAgentController>().gameObject;
+		var physicsAgent = fpsController.GetComponent<BaseFPSAgentController>();
 		primaryAgent = physicsAgent;
 		primaryAgent.agentManager = this;
 		primaryAgent.enabled = true;
@@ -962,6 +962,8 @@ public class ServerAction
     public ObjectTypeCount[] minFreePerReceptacleType;
     public ObjectPose[] objectPoses;
     public ObjectToggle[] objectToggles;
+    public float noise;
+    public ControllerInitialization controllerInitialization = null;
 
     public SimObjType ReceptableSimObjType()
 	{
@@ -981,8 +983,6 @@ public class ServerAction
 		}
 		return (SimObjType)Enum.Parse(typeof(SimObjType), objectType);
 	}
-
-
 }
 
 
@@ -1001,4 +1001,18 @@ public enum ServerActionErrorCode  {
 	LookUpCantExceedMax,
 	LookDownCantExceedMin,
 	InvalidAction
+}
+
+
+
+[Serializable]
+public class ControllerInitialization {
+    public Dictionary<string, TypedVariable> variableInitializations;
+}
+
+
+[Serializable]
+public class TypedVariable {
+    public string type;
+    public object value;
 }
