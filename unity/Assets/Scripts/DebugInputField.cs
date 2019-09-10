@@ -168,14 +168,16 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         ServerAction action = new ServerAction();
                         action.action = "SetObjectToggles";
                         action.objectToggles = new ObjectToggle[2];
-                        ObjectToggle lamps = new ObjectToggle();
-                        ObjectToggle lightswitches = new ObjectToggle();
-                        lamps.objectType = "FloorLamp";
-                        lamps.isOn = false;
-                        lightswitches.objectType = "LightSwitch";
-                        lightswitches.isOn = false;
-                        action.objectToggles[0] = lamps;
-                        action.objectToggles[1] = lightswitches;
+                        ObjectToggle obj1 = new ObjectToggle();
+                        ObjectToggle obj2 = new ObjectToggle();
+
+                        obj1.objectType = "Toaster";
+                        obj1.isOn = true;
+
+                        obj2.objectType = "LightSwitch";
+                        obj2.isOn = false;
+                        action.objectToggles[0] = obj1;
+                        action.objectToggles[1] = obj2;
 
 
                         PhysicsController.ProcessControlCommand(action);

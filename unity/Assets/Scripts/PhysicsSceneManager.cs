@@ -55,36 +55,6 @@ public class PhysicsSceneManager : MonoBehaviour
 			GameObject c = new GameObject("Objects");
 			Debug.Log(c.transform.name + " was missing and is now added");
 		}
-
-		//on enable, set the ssao on the camera according to the current quality setting. Disable on lower quality for performance
-		//need to adjust this value if the number of Quality Settings change
-		//right now only Very High and Ultra will have ssao on by default.
-		// if(QualitySettings.GetQualityLevel() < 5)
-		// {
-		// 	if(GameObject.Find("FirstPersonCharacter").GetComponent<ScreenSpaceAmbientOcclusion>())
-		// 	GameObject.Find("FirstPersonCharacter").GetComponent<ScreenSpaceAmbientOcclusion>().enabled = false;
-		// }
-
-		// else
-		// {
-		// 	if(GameObject.Find("FirstPersonCharacter").GetComponent<ScreenSpaceAmbientOcclusion>())
-		// 	GameObject.Find("FirstPersonCharacter").GetComponent<ScreenSpaceAmbientOcclusion>().enabled = true;
-		// }
-
-		//use this block to check if any SpawnedObjects/RequiredObjects arrays have anything null in them
-		// #if UNITY_EDITOR
-		// //just loop through it to see if there is a null reference somewhere
-		// foreach(GameObject go in SpawnedObjects)
-		// {
-		// 	string s = go.name;
-		// }
-
-		// //just loop through it and see if there is a null reference somewhere
-		// foreach(GameObject go in RequiredObjects)
-		// {
-		// 	string s = go.name;
-		// }
-		// #endif
 	}
 
 	public void SetupScene()
@@ -266,35 +236,6 @@ public class PhysicsSceneManager : MonoBehaviour
 	{
 		RequiredObjects.Remove(sop.gameObject);
 	}
-
-    public bool SetObjectToggles(ObjectToggle[] objectToggles)
-    {
-        bool shouldFail = false;
-        if (objectToggles != null && objectToggles.Length > 0)
-        {
-            // Perform object toggle state sets.
-            SimObjPhysics[] simObjs = GameObject.FindObjectsOfType(typeof(SimObjPhysics)) as SimObjPhysics[];
-            Dictionary<SimObjType, bool> toggles = new Dictionary<SimObjType, bool>();
-            foreach (ObjectToggle objectToggle in objectToggles)
-            {
-                SimObjType objType = (SimObjType)System.Enum.Parse(typeof(SimObjType), objectToggle.objectType);
-                toggles[objType] = objectToggle.isOn;
-            }
-            PhysicsRemoteFPSAgentController fpsController = GameObject.Find("FPSController").GetComponent<PhysicsRemoteFPSAgentController>();
-            foreach (SimObjPhysics sop in simObjs)
-            {
-                if (toggles.ContainsKey(sop.ObjType))
-                {
-                    bool success = fpsController.ToggleObject(sop, toggles[sop.ObjType], true);
-                    if (!success)
-                    {
-                        shouldFail = true;
-                    }
-                }
-            }
-        }
-        return !shouldFail;
-    }
 
     public bool SetObjectPoses(ObjectPose[] objectPoses)
     {

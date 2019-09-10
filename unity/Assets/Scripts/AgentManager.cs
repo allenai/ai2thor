@@ -313,9 +313,9 @@ public class AgentManager : MonoBehaviour
                     //the rb's velocities are not 0, so it is in motion and the scene is not at rest
                     rb.GetComponentInParent<SimObjPhysics>().inMotion = true;
                     physicsSceneManager.isSceneAtRest = false;
-                    #if UNITY_EDITOR
-                    print(rb.GetComponentInParent<SimObjPhysics>().name + " is still in motion!");
-                    #endif
+                    // #if UNITY_EDITOR
+                    // print(rb.GetComponentInParent<SimObjPhysics>().name + " is still in motion!");
+                    // #endif
                 }
             }
 

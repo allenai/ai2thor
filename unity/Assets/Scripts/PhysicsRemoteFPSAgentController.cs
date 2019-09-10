@@ -87,9 +87,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         public GameObject[] TargetCircles = null;
 
-        //change visibility check to use this distance when looking down
-        //protected float DownwardViewDistance = 2.0f;
-
         // Use this for initialization
         protected override void Start() {
             base.Start();
@@ -3938,11 +3935,76 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         public void SetObjectToggles(ServerAction action)
         {
-            bool success = physicsSceneManager.SetObjectToggles(action.objectToggles);
-            if (!success)
+            StartCoroutine(SetObjectTogglesForLotsOfObjects(action.objectToggles));
+        }
+
+        protected IEnumerator SetObjectTogglesForLotsOfObjects(ObjectToggle[] objectToggles)
+        {
+            if(objectToggles == null || objectToggles.Length <= 0)
             {
-                // In true case, the ToggleAndWait will trigger the actionFinished call.
+                errorMessage = "action.objectToggles is null or not initialized!";
                 actionFinished(false);
+                yield break;
+            }
+
+            else
+            {
+                Dictionary<SimObjType, bool> thingsToToggle = new Dictionary<SimObjType, bool>();
+
+                foreach(ObjectToggle ot in objectToggles)
+                {
+                    SimObjType sot = (SimObjType)System.Enum.Parse(typeof(SimObjType), ot.objectType);
+                    thingsToToggle[sot] = ot.isOn;
+                }
+
+                List<CanToggleOnOff> toggling = new List<CanToggleOnOff>();
+
+                foreach(SimObjPhysics sop in VisibleSimObjs(true))
+                {
+                    //see if its one of the types we need to toggle
+                    if(thingsToToggle.ContainsKey(sop.ObjType))
+                    {
+                        //error and action finished false if the object is for some reason not toggleable
+                        if(!sop.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanToggleOnOff))
+                        {
+                            errorMessage = "a sim object in action.objectToggles is not Toggleable: " + sop.uniqueID;
+                            actionFinished(false);
+                            yield break;
+                        }
+
+                        //ok it is toggleable, so start another coroutine that will toggle it
+                        StartCoroutine(ToggleObject(sop, thingsToToggle[sop.ObjType]));
+                        toggling.Add(sop.GetComponent<CanToggleOnOff>());
+                    }
+                }
+
+                if(toggling.Count > 0)
+                {
+                    //we have now started the toggle for all objects in the objectToggles array
+                    int numStillGoing= toggling.Count;
+                    while(numStillGoing > 0)
+                    {
+                        //hold your horses, wait a frame so we don't miss the timing
+                        yield return null;
+
+                        foreach(CanToggleOnOff ctoo in toggling)
+                        {
+                            //if this object has finished animating....
+                            if(ctoo.GetiTweenCount() == 0)
+                            {
+                                numStillGoing--;
+                            }
+                        }
+
+                        //someone is still animating
+                        if(numStillGoing > 0)
+                        {
+                            numStillGoing = toggling.Count;
+                        }
+                    }
+                }
+                //ok none of the objects that were actively toggling have any itweens going, so we are done!
+                actionFinished(true);
             }
         }
 
@@ -5012,6 +5074,38 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             ToggleObject(target, toggleOn, forceAction);
         }
 
+        //specific ToggleObject that is used for SetObjectTogglesForLotsOfObjects
+        public IEnumerator ToggleObject(SimObjPhysics target, bool toggleOn)
+        {
+            if(target.GetComponent<CanToggleOnOff>())
+            {
+                //get CanToggleOnOff component from target
+                CanToggleOnOff ctof = target.GetComponent<CanToggleOnOff>();
+
+                if(!ctof.ReturnSelfControlled())
+                {
+                    yield break;
+                }
+
+                //if the object is already in the state specified by the toggleOn bool, do nothing
+                if(ctof.isOn == toggleOn)
+                {
+                    yield break;
+                }
+
+                //if object needs to be closed to turn on...
+                if(toggleOn && ctof.ReturnMustBeClosedToTurnOn().Contains(target.Type))
+                {
+                    //if the object is open and we are trying to turn it on, do nothing because it can't
+                    if(target.GetComponent<CanOpen_Object>().isOpen)
+                    yield break;
+                }
+
+                //waitUntil function that returns true only when this object is done opening/closing
+                ctof.Toggle();
+            }
+        }
+
         public bool ToggleObject(SimObjPhysics target, bool toggleOn, bool forceAction)
         {
             if (!forceAction && target.isInteractable == false)
@@ -5041,7 +5135,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     else
                     {
                         errorMessage = "can't toggle object off if it's already off!";
-
                     }
 
                     actionFinished(false);
@@ -5080,18 +5173,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             
             yield return new WaitUntil( () => (ctof != null && ctof.GetiTweenCount() == 0));
             success = true;
-            
-            // for (int i = 0; i < 1000; i++)
-            // {
-            //     if(ctof != null && ctof.GetiTweenCount() == 0)
-            //     {
-            //         success = true;
-            //         yield return null;
-            //         break;
-            //     }
-            //     //wait a frame
-            //     yield return null;
-            // }
 
             if (!success)
             {
