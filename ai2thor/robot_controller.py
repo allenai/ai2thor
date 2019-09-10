@@ -1,0 +1,123 @@
+import os
+import time
+import msgpack
+import numpy as np
+import requests
+import cv2
+from pprint import pprint
+import copy
+
+import ai2thor.docker
+import ai2thor.downloader
+import ai2thor.server
+from ai2thor.server import queue_get
+from ai2thor._builds import BUILDS
+from ai2thor._quality_settings import QUALITY_SETTINGS, DEFAULT_QUALITY
+from ai2thor.server import Event, MultiAgentEvent
+
+class ClientController(object):
+
+    def __init__(self, headless=False):
+        self.host = ''
+        self.port = 0
+        self.headless = headless
+        self.last_event = {}
+        self.last_action = {}
+        self.sequence_id = 0
+        self.agent_id = 0
+
+    def start(
+            self,
+            port=9200,
+            player_screen_width=300,
+            player_screen_height=300,
+            host='127.0.0.1',
+            agent_id=0,
+            **kwargs
+    ):
+        self.host = host
+        self.port = port
+        self.agent_id = agent_id
+        self.screen_width = player_screen_width
+        self.screen_height = player_screen_height
+        response_payload = self._post_event('start')
+        pprint('-- Start:')
+        pprint(response_payload)
+
+    def reset(self, scene_name=None):
+        if not scene_name.endswith('_physics'):
+            scene_name = scene_name + "_physics"
+        self.sequence_id = 0
+        response_payload = self._post_event(
+            'reset', dict(action='Reset', sceneName=scene_name, sequenceId=self.sequence_id)
+        )
+        pprint('-- Reset:')
+        pprint(response_payload)
+
+        return self.last_event
+
+    def step(self, action, raise_for_failure=False):
+        # prevent changes to the action from leaking
+        action = copy.deepcopy(action)
+
+        if self.headless:
+            action["renderImage"] = False
+
+        action['sequenceId'] = self.sequence_id
+        action['agentId'] = self.agent_id
+        action['lastAction'] = self.last_action
+
+        self.last_action = action
+
+        rotation = action.get('rotation')
+        if rotation is not None and type(rotation) != dict:
+            action['rotation'] = {}
+            action['rotation']['y'] = rotation
+
+        payload = self._post_event('step', action)
+        events = []
+        for i, agent_metadata in enumerate(payload['metadata']['agents']):
+            event = Event(agent_metadata)
+            image_mapping = dict(
+                image=event.add_image,
+                image_depth=event.add_image_depth
+            )
+            for key in image_mapping.keys():
+                if key in payload and len(payload[key]) > i:
+                    image_mapping[key](payload[key][i])
+            events.append(event)
+
+        if len(events) > 1:
+            self.last_event = MultiAgentEvent(self.agent_id, events)
+        else:
+            self.last_event = events[0]
+
+        if not self.last_event.metadata['lastActionSuccess'] and self.last_event.metadata['errorCode'] == 'InvalidAction':
+            raise ValueError(self.last_event.metadata['errorMessage'])
+
+        if raise_for_failure:
+            assert self.last_event.metadata['lastActionSuccess']
+
+        ClientController._display_step_event(self.last_event)
+
+        return self.last_event
+
+    @staticmethod
+    def _display_step_event(event):
+        metadata = event.metadata
+        image = event.frame
+        pprint(metadata)
+        cv2.imshow('aoeu', image)
+        cv2.waitKey(1000)
+
+    def _post_event(self, route='', data=None):
+        r = requests.post(self._get_url(route), json=data)
+        s = time.time()
+        return msgpack.unpackb(r.content, raw=False)
+
+    def _get_url(self, route=''):
+        return 'http://{}:{}{}'.format(
+            self.host,
+            self.port,
+            '/{}'.format(route) if route != '' else ''
+        )

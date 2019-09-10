@@ -173,7 +173,7 @@ class Event(object):
                 obj['visibleBounds2D'] = (obj['visible'] and obj['objectId'] in self.instance_detections2D)
 
     def process_colors(self):
-        if self.metadata['colors']:
+        if 'colors' in self.metadata and self.metadata['colors']:
             for color_data in self.metadata['colors']:
                 name = color_data['name']
                 c_key = tuple(color_data['color'])
