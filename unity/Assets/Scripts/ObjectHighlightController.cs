@@ -116,7 +116,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                             ServerAction action = new ServerAction
                             {
                                 action = actionName,
-                                objectId = closestObj.uniqueID
+                                uniqueId = closestObj.uniqueID
                             };
                             this.PhysicsController.ProcessControlCommand(action);
                         }

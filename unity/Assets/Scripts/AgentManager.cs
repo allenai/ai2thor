@@ -823,10 +823,10 @@ public class ObjectMetadata
 
 	public string [] salientMaterials; //salient materials that this object is made of as strings (see enum above). This is only for objects that are Pickupable or Moveable
 	///
-	public string[] receptacleObjectIds;
+	public string[] receptacleUniqueIds;
 	public float distance;
 	public String objectType;
-	public string objectId;
+	public string uniqueId;
 	public string parentReceptacle;
 	public string[] parentReceptacles;
 	public float currentTime;
@@ -951,10 +951,10 @@ public class ServerAction
 	public string objectType;
 	public int objectVariation;
 	public string receptacleObjectType;
-	public string receptacleObjectId;
+	public string receptacleUniqueId;
 	public float gridSize;
 	public string[] excludeObjectIds;
-	public string objectId;
+	public string uniqueId;
 	public int agentId;
 	public int thirdPartyCameraId;
 	public float y;
