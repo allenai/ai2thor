@@ -32,21 +32,36 @@ class MockServer(object):
         def ping():
             return make_response('PONG')
 
+        @app.route('/start', methods=['POST'])
+        def start():
+            return make_response(msgpack.packb({'status': 200}, use_bin_type=True))
+
+        @app.route('/reset', methods=['POST'])
+        def reset():
+            return make_response(msgpack.packb({'status': 200}, use_bin_type=True))
 
         @app.route('/step', methods=['POST'])
         def step():
             content = request.json
 
             metadata = {
-                u'sequenceId':content['sequenceId'],
-                u'agents':[{u'agentId':0, u'screenHeight': self.height, u'screenWidth': self.width, u'lastAction': content['action'], u'lastActionSuccess': True}]
+                u'sequenceId': content['sequenceId'],
+                u'agents': [{
+                    u'agentId': 0,
+                    u'screenHeight': self.height,
+                    u'screenWidth': self.width,
+                    u'lastAction': content['action'],
+                    u'lastActionSuccess': True
+                }]
             }
 
-            result = {u'frames':[random_image(self.height, self.width).tostring()], u'metadata':metadata}
+            result = {
+                u'image': [random_image(self.height, self.width).tostring()],
+                u'image_depth': [],
+                u'metadata': metadata}
             out = msgpack.packb(result, use_bin_type=True)
 
             return make_response(out)
-
 
         self.host = '127.0.0.1'
         self.port = 9200

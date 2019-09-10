@@ -9,6 +9,7 @@ using UnityStandardAssets.Utility;
 using UnityEngine;
 using Random = UnityEngine.Random;
 using UnityStandardAssets.ImageEffects;
+using System.Linq;	
 
 namespace UnityStandardAssets.Characters.FirstPerson
 {
@@ -277,10 +278,14 @@ namespace UnityStandardAssets.Characters.FirstPerson
 				// Do nothing
 			} else {
 				throw new NotImplementedException("ssao must be one of 'on', 'off' or 'default'.");
-			}			
+			}	
+            	
 
-            if (action.controllerInitialization != null) {
+            // Debug.Log("Object " + action.controllerInitialization.ToString() + " dict "  + (action.controllerInitialization.variableInitializations == null));//+ string.Join(";", action.controllerInitialization.variableInitializations.Select(x => x.Key + "=" + x.Value).ToArray()));
+
+            if (action.controllerInitialization != null && action.controllerInitialization.variableInitializations != null) {
                 foreach (KeyValuePair<string, TypedVariable> entry in action.controllerInitialization.variableInitializations) {
+                    Debug.Log(" Key " + entry.Value.type + " field " + entry.Key);
                     Type t = Type.GetType(entry.Value.type);
                     FieldInfo field = t.GetField(entry.Key, BindingFlags.Public | BindingFlags.Instance);
                     field.SetValue(this, entry.Value);

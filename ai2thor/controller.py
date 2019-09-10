@@ -362,6 +362,19 @@ def distance(point1, point2):
 def key_for_point(x, z):
     return "%0.1f %0.1f" % (x, z)
 
+#
+# class AbstractController(object):
+#     @object.abstractmethod
+#     def start(
+#             self,
+#             port=0,
+#             start_unity=True,
+#             player_screen_width=300,
+#             player_screen_height=300,
+#             x_display=None,
+#             host='127.0.0.1'):
+#         pass
+
 class Controller(object):
 
     def __init__(self, quality=DEFAULT_QUALITY, fullscreen=False, headless=False):
@@ -653,6 +666,9 @@ class Controller(object):
         self.response_queue.put_nowait(action)
         self.last_event = queue_get(self.request_queue)
 
+        from pprint import pprint
+        pprint(self.last_event)
+
         if not self.last_event.metadata['lastActionSuccess'] and self.last_event.metadata['errorCode'] == 'InvalidAction':
             raise ValueError(self.last_event.metadata['errorMessage'])
 
@@ -805,7 +821,8 @@ class Controller(object):
             start_unity=True,
             player_screen_width=300,
             player_screen_height=300,
-            x_display=None):
+            x_display=None,
+            host='127.0.0.1'):
 
         if 'AI2THOR_VISIBILITY_DISTANCE' in os.environ:
             import warnings
@@ -821,7 +838,6 @@ class Controller(object):
         env = os.environ.copy()
 
         image_name = None
-        host = '127.0.0.1'
 
         if self.docker_enabled:
             self.check_docker()
