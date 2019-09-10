@@ -34,7 +34,8 @@ setup(name='ai2thor',
           'numpy',
           'pyyaml',
           'requests',
-          'progressbar2'
+          'progressbar2',
+          'msgpack'
       ],
       setup_requires=['pytest-runner'],
       tests_require=['pytest', 'pytest-cov'],
