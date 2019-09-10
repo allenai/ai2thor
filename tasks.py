@@ -1234,3 +1234,29 @@ def webgl_deploy_all(ctx, verbose=False, individual_rooms=False):
         else:
             webgl_build(ctx, room_ranges=range_str, directory=build_dir)
             webgl_deploy(ctx, source_dir=build_dir, target_dir=key, verbose=verbose)
+
+@task
+def mock_client_request(context):
+    import time
+    import msgpack
+    import numpy as np
+    import requests
+    import cv2
+    from pprint import pprint
+
+    r = requests.post('http://127.0.0.1:9200/step', json=dict(action='MoveAhead', sequenceId=1))
+    s = time.time()
+    payload = msgpack.unpackb(r.content, raw=False)
+    metadata = payload['metadata']['agents'][0]
+    image = np.frombuffer(payload['frames'][0], dtype=np.uint8).reshape(metadata['screenHeight'], metadata['screenWidth'], 3)
+    pprint(metadata)
+    cv2.imshow('aoeu', image)
+    cv2.waitKey(1000)
+
+@task
+def start_mock_real_server(context):
+    import ai2thor.mock_real_server
+
+    m = ai2thor.mock_real_server.MockServer(height=300, width=300)
+    print("Started mock server on port: http://" + m.host + ":" + str(m.port))
+    m.start()
