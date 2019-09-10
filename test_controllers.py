@@ -9,7 +9,7 @@ fps = ["FloorPlan311"]
 
 runs = [
     {'id': 'unity', 'port': 8200, 'controller': ai2thor.controller.Controller()},
-    {'id': 'robot', 'port': 9200, 'controller': ai2thor.robot_controller.ClientController()}
+    {'id': 'robot', 'port': 9200, 'controller': ai2thor.robot_controller.Controller()}
 ]
 
 for run_config in runs:
