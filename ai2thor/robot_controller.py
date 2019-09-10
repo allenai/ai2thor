@@ -15,7 +15,7 @@ from ai2thor._builds import BUILDS
 from ai2thor._quality_settings import QUALITY_SETTINGS, DEFAULT_QUALITY
 from ai2thor.server import Event, MultiAgentEvent
 
-class ClientController(object):
+class Controller(object):
 
     def __init__(self, headless=False):
         self.host = ''
@@ -98,7 +98,7 @@ class ClientController(object):
         if raise_for_failure:
             assert self.last_event.metadata['lastActionSuccess']
 
-        ClientController._display_step_event(self.last_event)
+        Controller._display_step_event(self.last_event)
 
         return self.last_event
 
