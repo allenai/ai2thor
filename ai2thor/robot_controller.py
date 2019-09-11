@@ -110,6 +110,7 @@ class Controller(object):
         if raise_for_failure:
             assert self.last_event.metadata['lastActionSuccess']
 
+        pprint("Display event:")
         Controller._display_step_event(self.last_event)
 
         return self.last_event
@@ -132,7 +133,7 @@ class Controller(object):
         pprint('ACTION "{}"'.format(data['action']))
         pprint("POST")
         # pprint(r.content)
-        # pprint(r.status_code)
+        pprint(r.status_code)
         return msgpack.unpackb(r.content, raw=False)
 
     def _get_url(self, route=''):
@@ -147,5 +148,5 @@ class Controller(object):
         metadata = event.metadata
         image = event.frame
         pprint(metadata)
-        cv2.imshow('aoeu', image)
+        cv2.imshow('aoeu', event.cv2img)
         cv2.waitKey(1000)
