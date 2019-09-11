@@ -677,9 +677,6 @@ class Controller(object):
         self.response_queue.put_nowait(action)
         self.last_event = queue_get(self.request_queue)
 
-        from pprint import pprint
-        pprint(self.last_event)
-
         if not self.last_event.metadata['lastActionSuccess'] and self.last_event.metadata['errorCode'] == 'InvalidAction':
             raise ValueError(self.last_event.metadata['errorMessage'])
 
