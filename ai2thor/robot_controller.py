@@ -91,8 +91,8 @@ class Controller(object):
         for i, agent_metadata in enumerate(payload['metadata']['agents']):
             event = Event(agent_metadata)
             image_mapping = dict(
-                image=event.add_image,
-                image_depth=event.add_image_depth
+                image=lambda x: event.add_image(x, flip=False),
+                image_depth=lambda x: event.add_image_depth(x, flip=False)
             )
             for key in image_mapping.keys():
                 if key in payload and len(payload[key]) > i:
@@ -130,9 +130,9 @@ class Controller(object):
         r = requests.post(self._get_url(route), json=data)
         s = time.time()
         pprint('ACTION "{}"'.format(data['action']))
-        # pprint("POST")
+        pprint("POST")
         # pprint(r.content)
-        pprint(r.status_code)
+        # pprint(r.status_code)
         return msgpack.unpackb(r.content, raw=False)
 
     def _get_url(self, route=''):
