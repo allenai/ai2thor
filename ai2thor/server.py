@@ -96,14 +96,22 @@ class MultiAgentEvent(object):
     def add_third_party_camera_image(self, third_party_image_data):
         self.third_party_camera_frames.append(read_buffer_image(third_party_image_data, self.screen_width, self.screen_height))
 
-def read_buffer_image(buf, width, height):
+
+def read_buffer_image(buf, width, height, flip=True):
 
     if sys.version_info.major < 3:
         # support for Python 2.7 - can't handle memoryview in Python2.7 and Numpy frombuffer
         return np.flip(np.frombuffer(
-            buf.tobytes(), dtype=np.uint8).reshape(height, width, -1), axis=0)
+            buf.tobytes(), dtype=np.uint8).reshape(height, width, -1), axis=0) if flip \
+            else np.frombuffer(
+                buf.tobytes(), dtype=np.uint8).reshape(height, width, -1)
+
     else:
-        return np.flip(np.frombuffer(buf, dtype=np.uint8).reshape(height, width, -1), axis=0)
+        return \
+            np.flip(np.frombuffer(buf, dtype=np.uint8).reshape(height, width, -1), axis=0) \
+            if flip else \
+            np.frombuffer(buf, dtype=np.uint8).reshape(height, width, -1)
+
 
 def unique_rows(arr, return_index=False, return_inverse=False):
     arr = np.ascontiguousarray(arr).copy()
@@ -222,8 +230,8 @@ class Event(object):
                 else:
                     self.class_masks[cls] = np.logical_or(self.class_masks[cls], unique_masks[color_ind, ...])
 
-    def _image_depth(self, image_depth_data):
-        image_depth = read_buffer_image(image_depth_data, self.screen_width, self.screen_height)
+    def _image_depth(self, image_depth_data, flip=True):
+        image_depth = read_buffer_image(image_depth_data, self.screen_width, self.screen_height, flip=flip)
         max_spots = image_depth[:,:,0] == 255
         image_depth_out = image_depth[:,:,0] + image_depth[:,:,1] / np.float32(256) + image_depth[:,:,2] / np.float32(256 ** 2)
         image_depth_out[max_spots] = 256
@@ -233,8 +241,8 @@ class Event(object):
         return image_depth_out.astype(np.float32)
 
 
-    def add_image_depth(self, image_depth_data):
-        self.depth_frame = self._image_depth(image_depth_data)
+    def add_image_depth(self, image_depth_data, flip=True):
+        self.depth_frame = self._image_depth(image_depth_data, flip=flip)
 
     def add_third_party_image_depth(self, image_depth_data):
         self.third_party_depth_frames.append(self._image_depth(image_depth_data))
@@ -254,8 +262,8 @@ class Event(object):
     def add_third_party_camera_image(self, third_party_image_data):
         self.third_party_camera_frames.append(read_buffer_image(third_party_image_data, self.screen_width, self.screen_height))
 
-    def add_image(self, image_data):
-        self.frame = read_buffer_image(image_data, self.screen_width, self.screen_height)
+    def add_image(self, image_data, flip=True):
+        self.frame = read_buffer_image(image_data, self.screen_width, self.screen_height, flip=flip)
 
     def add_image_ids(self, image_ids_data):
         self.instance_segmentation_frame = read_buffer_image(image_ids_data, self.screen_width, self.screen_height)
