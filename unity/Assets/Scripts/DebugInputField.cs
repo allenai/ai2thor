@@ -163,22 +163,16 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         break;
                     }
 
-                case "SetObjectToggles":
+                case "ssbot":
                     {
                         ServerAction action = new ServerAction();
-                        action.action = "SetObjectToggles";
-                        action.objectToggles = new ObjectToggle[2];
-                        ObjectToggle obj1 = new ObjectToggle();
-                        ObjectToggle obj2 = new ObjectToggle();
+                        action.action = "SetStatesByObjectType";
+                        SetObjectStates obj1 = new SetObjectStates();
 
                         obj1.objectType = "Toaster";
-                        obj1.isOn = true;
+                        obj1.isToggled = true;
 
-                        obj2.objectType = "LightSwitch";
-                        obj2.isOn = false;
-                        action.objectToggles[0] = obj1;
-                        action.objectToggles[1] = obj2;
-
+                        action.SetObjectStates = obj1;
 
                         PhysicsController.ProcessControlCommand(action);
                         break;

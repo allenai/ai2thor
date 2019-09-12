@@ -885,11 +885,23 @@ public class ObjectPose
     public Vector3 rotation;
 }
 
+//set object states either by Type or by compatible State
+//"slice all objects of type Apple"
+//"slice all objects that have the sliceable property"
+//also used to randomly do this ie: randomly slice all objects of type apple, randomly slice all objects that have sliceable property
 [Serializable]
-public class ObjectToggle
+public class SetObjectStates
 {
-    public string objectType;
-    public bool isOn;
+    public string objectType = null; //valid strings are any Object Type listed in documentation (ie: AlarmClock, Apple, etc)
+    public string stateChange = null; //valid strings are: openable, toggleable, breakable, canFillWithLiquid, dirtyable, cookable, sliceable, canBeUsedUp
+    public bool isOpen;
+    public bool isToggled;
+    public bool isBroken;
+    public bool isFilledWithLiquid;
+    public bool isDirty;
+    public bool isCooked;
+    public bool isSliced;
+    public bool isUsedUp;
 }
 
 [Serializable]
@@ -1013,7 +1025,7 @@ public class ServerAction
     public ObjectTypeCount[] numRepeats;
     public ObjectTypeCount[] minFreePerReceptacleType;
     public ObjectPose[] objectPoses;
-    public ObjectToggle[] objectToggles;
+    public SetObjectStates SetObjectStates;
 
     public SimObjType ReceptableSimObjType()
 	{

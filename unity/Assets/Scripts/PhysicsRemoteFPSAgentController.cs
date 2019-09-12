@@ -3283,416 +3283,240 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         //set the state of all objects of a given state change type to either "true" or "false"
-        public void SetStateOfAllObjects(ServerAction action)
-        {
-            if(action.StateChange == null)
-            {
-                errorMessage = "Missing State parameter. Please use valid State";
-                actionFinished(false);
-            }
+        // public void SetStateOfAllObjects(ServerAction action)
+        // {
+        //     if(action.StateChange == null)
+        //     {
+        //         errorMessage = "Missing State parameter. Please use valid State";
+        //         actionFinished(false);
+        //     }
 
-            SimObjSecondaryProperty state = (SimObjSecondaryProperty)System.Enum.Parse
-            (typeof(SimObjSecondaryProperty), action.StateChange);
+        //     SimObjSecondaryProperty state = (SimObjSecondaryProperty)System.Enum.Parse
+        //     (typeof(SimObjSecondaryProperty), action.StateChange);
 
-            //if the state is not defined in the SimObjSecondaryProperty enum... false finish
-            if(!SimObjSecondaryProperty.IsDefined(typeof(SimObjSecondaryProperty), state))
-            {
-                errorMessage = "State is not defined. Please check if state matches SimObjSecondaryProperty";
-                actionFinished(false);
-            }
+        //     //if the state is not defined in the SimObjSecondaryProperty enum... false finish
+        //     if(!SimObjSecondaryProperty.IsDefined(typeof(SimObjSecondaryProperty), state))
+        //     {
+        //         errorMessage = "State is not defined. Please check if state matches SimObjSecondaryProperty";
+        //         actionFinished(false);
+        //     }
 
-            //use forceAction = true to set all to true, use forceAction = false to set all to false
-            SetAllStateChangeObjectsToBool(action.forceAction, state);   
-            actionFinished(true);
-        }
+        //     //use forceAction = true to set all to true, use forceAction = false to set all to false
+        //     SetAllStateChangeObjectsToBool(action.forceAction, state);   
+        //     actionFinished(true);
+        // }
 
-        public void SetAllStateChangeObjectsToBool(bool b, SimObjSecondaryProperty sosp)
-        {
-            SimObjPhysics[] simObjects = GameObject.FindObjectsOfType<SimObjPhysics>();
-            List<SimObjPhysics> simObjectsOfType = new List<SimObjPhysics>();
+        // public void SetAllStateChangeObjectsToBool(bool b, SimObjSecondaryProperty sosp)
+        // {
+        //     SimObjPhysics[] simObjects = GameObject.FindObjectsOfType<SimObjPhysics>();
+        //     List<SimObjPhysics> simObjectsOfType = new List<SimObjPhysics>();
 
-            foreach (SimObjPhysics sop in simObjects)
-            {
-                if(sop.DoesThisObjectHaveThisSecondaryProperty(sosp))
-                {
-                    simObjectsOfType.Add(sop);
-                }
-            }
+        //     foreach (SimObjPhysics sop in simObjects)
+        //     {
+        //         if(sop.DoesThisObjectHaveThisSecondaryProperty(sosp))
+        //         {
+        //             simObjectsOfType.Add(sop);
+        //         }
+        //     }
 
-            //switch for which kind of state change is going to be toggled?
-            switch(sosp)
-            {
-                case SimObjSecondaryProperty.CanOpen:
-                {
-                    foreach(SimObjPhysics sop in simObjectsOfType)
-                    {
-                        var obj = sop.GetComponent<CanOpen_Object>();
+        //     //switch for which kind of state change is going to be toggled?
+        //     switch(sosp)
+        //     {
+        //         case SimObjSecondaryProperty.CanOpen:
+        //         {
+        //             foreach(SimObjPhysics sop in simObjectsOfType)
+        //             {
+        //                 var obj = sop.GetComponent<CanOpen_Object>();
 
-                        //open all objects
-                        if(b)
-                        {
-                            if(!obj.isOpen)
-                            {
-                                obj.Interact();
-                            }
-                        }
+        //                 //open all objects
+        //                 if(b)
+        //                 {
+        //                     if(!obj.isOpen)
+        //                     {
+        //                         obj.Interact();
+        //                     }
+        //                 }
 
-                        //close all objects
-                        else
-                        {
-                            if(obj.isOpen)
-                            {
-                                obj.Interact();
-                            }
-                        }
-                    }
+        //                 //close all objects
+        //                 else
+        //                 {
+        //                     if(obj.isOpen)
+        //                     {
+        //                         obj.Interact();
+        //                     }
+        //                 }
+        //             }
 
-                    break;
-                }
+        //             break;
+        //         }
 
-                case SimObjSecondaryProperty.CanToggleOnOff:
-                {
-                    foreach(SimObjPhysics sop in simObjectsOfType)
-                    {
-                        var obj = sop.GetComponent<CanToggleOnOff>();
+        //         case SimObjSecondaryProperty.CanToggleOnOff:
+        //         {
+        //             foreach(SimObjPhysics sop in simObjectsOfType)
+        //             {
+        //                 var obj = sop.GetComponent<CanToggleOnOff>();
 
-                        //turn all objects on
-                        if(b)
-                        {
-                            if(!obj.isOn)
-                            {
-                                obj.Toggle();
-                            }
-                        }
+        //                 //turn all objects on
+        //                 if(b)
+        //                 {
+        //                     if(!obj.isOn)
+        //                     {
+        //                         obj.Toggle();
+        //                     }
+        //                 }
 
-                        //turn all objects off
-                        else
-                        {
-                            if(obj.isOn)
-                            {
-                                obj.Toggle();
-                            }
-                        }
-                    }
+        //                 //turn all objects off
+        //                 else
+        //                 {
+        //                     if(obj.isOn)
+        //                     {
+        //                         obj.Toggle();
+        //                     }
+        //                 }
+        //             }
 
-                    break;
-                }
+        //             break;
+        //         }
 
-                case SimObjSecondaryProperty.CanBeFilled:
-                {
-                    foreach(SimObjPhysics sop in simObjectsOfType)
-                    {
-                        var obj = sop.GetComponent<Fill>();
+        //         case SimObjSecondaryProperty.CanBeFilled:
+        //         {
+        //             foreach(SimObjPhysics sop in simObjectsOfType)
+        //             {
+        //                 var obj = sop.GetComponent<Fill>();
 
-                        //fill object with liquid
-                        if(b)
-                        {
-                            if(!obj.IsFilled())
-                            {
-                                obj.FillObjectRandomLiquid();
-                            }
-                        }
+        //                 //fill object with liquid
+        //                 if(b)
+        //                 {
+        //                     if(!obj.IsFilled())
+        //                     {
+        //                         obj.FillObjectRandomLiquid();
+        //                     }
+        //                 }
 
-                        //empty object
-                        else
-                        {
-                            if(obj.IsFilled())
-                            {
-                                obj.EmptyObject();
-                            }
-                        }
-                    }
+        //                 //empty object
+        //                 else
+        //                 {
+        //                     if(obj.IsFilled())
+        //                     {
+        //                         obj.EmptyObject();
+        //                     }
+        //                 }
+        //             }
 
-                    break;
-                }
+        //             break;
+        //         }
 
-                case SimObjSecondaryProperty.CanBeSliced:
-                {
-                    foreach(SimObjPhysics sop in simObjectsOfType)
-                    {
-                        var obj = sop.GetComponent<SliceObject>();
+        //         case SimObjSecondaryProperty.CanBeSliced:
+        //         {
+        //             foreach(SimObjPhysics sop in simObjectsOfType)
+        //             {
+        //                 var obj = sop.GetComponent<SliceObject>();
 
-                        //slice the object
-                        if(b)
-                        {
-                            if(!obj.IsSliced())
-                            {
-                                obj.Slice();
-                            }
-                        }
+        //                 //slice the object
+        //                 if(b)
+        //                 {
+        //                     if(!obj.IsSliced())
+        //                     {
+        //                         obj.Slice();
+        //                     }
+        //                 }
 
-                        //uh, there is no un slicing the object so um... hmm nothing to do if forceAction = false
-                    }
+        //                 //uh, there is no un slicing the object so um... hmm nothing to do if forceAction = false
+        //             }
 
-                    break;
-                }
+        //             break;
+        //         }
 
-                case SimObjSecondaryProperty.CanBeCooked:
-                {
-                    foreach(SimObjPhysics sop in simObjectsOfType)
-                    {
-                        var obj = sop.GetComponent<CookObject>();
+        //         case SimObjSecondaryProperty.CanBeCooked:
+        //         {
+        //             foreach(SimObjPhysics sop in simObjectsOfType)
+        //             {
+        //                 var obj = sop.GetComponent<CookObject>();
 
-                        //cook all uncooked objects
-                        if(b)
-                        {
-                            if(!obj.IsCooked())
-                            {
-                                obj.Cook();
-                            }
-                        }
+        //                 //cook all uncooked objects
+        //                 if(b)
+        //                 {
+        //                     if(!obj.IsCooked())
+        //                     {
+        //                         obj.Cook();
+        //                     }
+        //                 }
 
-                        //uh, there is no un-cooking an object so skip!
-                    }
+        //                 //uh, there is no un-cooking an object so skip!
+        //             }
 
-                    break;
-                }
+        //             break;
+        //         }
 
-                case SimObjSecondaryProperty.CanBreak:
-                {
-                    foreach(SimObjPhysics sop in simObjectsOfType)
-                    {
-                        var obj = sop.GetComponentInChildren<Break>(); //remember to get in child cause WINDOWS ARE WEIRD and have the break script on their children
-                        //if not broken already, break the object.
-                        if(b)
-                        {
-                            if(!obj.isBroken())
-                            {
-                                obj.BreakObject(null);
-                            }
-                        }
+        //         case SimObjSecondaryProperty.CanBreak:
+        //         {
+        //             foreach(SimObjPhysics sop in simObjectsOfType)
+        //             {
+        //                 var obj = sop.GetComponentInChildren<Break>(); //remember to get in child cause WINDOWS ARE WEIRD and have the break script on their children
+        //                 //if not broken already, break the object.
+        //                 if(b)
+        //                 {
+        //                     if(!obj.isBroken())
+        //                     {
+        //                         obj.BreakObject(null);
+        //                     }
+        //                 }
 
-                        //uh, there is no un-breaking the object so um... hmm nothing to do if forceAction = false
-                    }
-                    break;
-                }
+        //                 //uh, there is no un-breaking the object so um... hmm nothing to do if forceAction = false
+        //             }
+        //             break;
+        //         }
 
-                case SimObjSecondaryProperty.CanBeDirty:
-                {
-                    foreach(SimObjPhysics sop in simObjectsOfType)
-                    {
-                        var obj = sop.GetComponent<Dirty>();
+        //         case SimObjSecondaryProperty.CanBeDirty:
+        //         {
+        //             foreach(SimObjPhysics sop in simObjectsOfType)
+        //             {
+        //                 var obj = sop.GetComponent<Dirty>();
 
-                        //dirty object if it is not dirty
-                        if(b)
-                        {
-                            if(!obj.IsDirty())
-                            {
-                                obj.ToggleCleanOrDirty();
-                            }
-                        }
+        //                 //dirty object if it is not dirty
+        //                 if(b)
+        //                 {
+        //                     if(!obj.IsDirty())
+        //                     {
+        //                         obj.ToggleCleanOrDirty();
+        //                     }
+        //                 }
 
-                        //clean object if it is not clean
-                        else
-                        {
-                            if(obj.IsDirty())
-                            {
-                                obj.ToggleCleanOrDirty();
-                            }
-                        }
-                    }
+        //                 //clean object if it is not clean
+        //                 else
+        //                 {
+        //                     if(obj.IsDirty())
+        //                     {
+        //                         obj.ToggleCleanOrDirty();
+        //                     }
+        //                 }
+        //             }
 
-                    break;
-                }
+        //             break;
+        //         }
 
-                case SimObjSecondaryProperty.CanBeUsedUp:
-                {
-                    foreach(SimObjPhysics sop in simObjectsOfType)
-                    {
-                        var obj = sop.GetComponent<UsedUp>();
+        //         case SimObjSecondaryProperty.CanBeUsedUp:
+        //         {
+        //             foreach(SimObjPhysics sop in simObjectsOfType)
+        //             {
+        //                 var obj = sop.GetComponent<UsedUp>();
 
-                        //use up object if it isn't
-                        if(b)
-                        {
-                            if(!obj.isUsedUp)
-                            {
-                                obj.UseUp();
-                            }
-                        }
+        //                 //use up object if it isn't
+        //                 if(b)
+        //                 {
+        //                     if(!obj.isUsedUp)
+        //                     {
+        //                         obj.UseUp();
+        //                     }
+        //                 }
 
-                        //uh, there is no un-using the object so um... hmm nothing to do if forceAction = false
-                    }
+        //                 //uh, there is no un-using the object so um... hmm nothing to do if forceAction = false
+        //             }
 
-                    break;
-                }
-            }
-        }
-
-        //use a seed value to randomly change the starting state of sim objects in scene that have state changes
-        //USE THIS AFTER INITIALIZING THE SCENE FIRST
-        //NOTE: SOME OF THESE STATE CHANGES ARE DESTRUCTIVE AND CANNOT BE REVERSED WITHOUT A SCENE RESET
-        public void RandomToggleStateOfAllObjects(ServerAction action)
-        {
-            RandomToggleState(action.randomSeed, SimObjSecondaryProperty.CanOpen); //coroutine actionFinished
-            RandomToggleState(action.randomSeed, SimObjSecondaryProperty.CanToggleOnOff); //coroutine actionFinished
-            RandomToggleState(action.randomSeed, SimObjSecondaryProperty.CanBeFilled);
-            RandomToggleState(action.randomSeed, SimObjSecondaryProperty.CanBeSliced);
-            RandomToggleState(action.randomSeed, SimObjSecondaryProperty.CanBeCooked);
-            RandomToggleState(action.randomSeed, SimObjSecondaryProperty.CanBreak);
-            RandomToggleState(action.randomSeed, SimObjSecondaryProperty.CanBeDirty);
-            RandomToggleState(action.randomSeed, SimObjSecondaryProperty.CanBeUsedUp);
-
-            actionFinished(true);
-        }
-
-        //random toggle the state of all objects with a specified State
-        public void RandomToggleSpecificState(ServerAction action)
-        {
-            if(action.StateChange == null)
-            {
-                errorMessage = "Missing State parameter. Please use valid State";
-                actionFinished(false);
-            }
-
-            //action.StateChange == 
-            SimObjSecondaryProperty state = (SimObjSecondaryProperty)System.Enum.Parse
-            (typeof(SimObjSecondaryProperty), action.StateChange);
-
-            //if the state is not defined in the SimObjSecondaryProperty enum... false finish
-            if(!SimObjSecondaryProperty.IsDefined(typeof(SimObjSecondaryProperty), state))
-            {
-                errorMessage = "State is not defined. Please check if state matches SimObjSecondaryProperty";
-                actionFinished(false);
-            }
-            
-            RandomToggleState(action.randomSeed, state);
-            actionFinished(true);
-        }
-
-        public void RandomToggleState(int seed, SimObjSecondaryProperty sosp)
-        {
-
-            UnityEngine.Random.InitState(seed);
-
-            SimObjPhysics[] simObjects = GameObject.FindObjectsOfType<SimObjPhysics>();
-            List<SimObjPhysics> simObjectsOfType = new List<SimObjPhysics>();
-
-            foreach (SimObjPhysics sop in simObjects)
-            {
-                if(sop.DoesThisObjectHaveThisSecondaryProperty(sosp))
-                {
-                    simObjectsOfType.Add(sop);
-                }
-            }
-
-            //switch for which kind of state change is going to be toggled?
-            switch(sosp)
-            {
-                //XXX TODO: Might need to turn this one into a coroutine since CanOpen() requires varying amounts of time to complete if moving parts are involved
-                case SimObjSecondaryProperty.CanOpen:
-                {
-                    foreach(SimObjPhysics sop in simObjectsOfType)
-                    {
-                        int rollForInitiative = UnityEngine.Random.Range(1, 20);
-                        if(rollForInitiative > 10.5)
-                        {
-                            sop.GetComponent<CanOpen_Object>().Interact();
-                        }
-                    }
-
-                    break;
-                }
-
-                //XXX TODO: Might need to turn this one into a coroutine since Toggle() requires varying amounts of time to complete if moving parts are involved
-                case SimObjSecondaryProperty.CanToggleOnOff:
-                {
-                    foreach(SimObjPhysics sop in simObjectsOfType)
-                    {
-                        int rollForInitiative = UnityEngine.Random.Range(1, 20);
-                        if(rollForInitiative > 10.5)
-                        {
-                            sop.GetComponent<CanToggleOnOff>().Toggle();
-                        }
-                    }
-
-                    break;
-                }
-
-                case SimObjSecondaryProperty.CanBeFilled:
-                {
-                    foreach(SimObjPhysics sop in simObjectsOfType)
-                    {
-                        int rollForInitiative = UnityEngine.Random.Range(1, 20);
-                        if(rollForInitiative > 10.5)
-                        {
-                            sop.GetComponent<Fill>().FillObjectRandomLiquid();
-                        }
-                    }
-
-                    break;
-                }
-
-                case SimObjSecondaryProperty.CanBeSliced:
-                {
-                    foreach(SimObjPhysics sop in simObjectsOfType)
-                    {
-                        int rollForInitiative = UnityEngine.Random.Range(1, 20);
-                        if(rollForInitiative > 10.5)
-                        {
-                            sop.GetComponent<SliceObject>().Slice();
-                        }
-                    }
-
-                    break;
-                }
-
-                case SimObjSecondaryProperty.CanBeCooked:
-                {
-                    foreach(SimObjPhysics sop in simObjectsOfType)
-                    {
-                        int rollForInitiative = UnityEngine.Random.Range(1, 20);
-                        if(rollForInitiative > 10.5)
-                        {
-                            sop.GetComponent<CookObject>().Cook();
-                        }
-                    }
-
-                    break;
-                }
-
-                case SimObjSecondaryProperty.CanBreak:
-                {
-                    foreach(SimObjPhysics sop in simObjectsOfType)
-                    {
-                        int rollForInitiative = UnityEngine.Random.Range(1, 20);
-                        if(rollForInitiative > 10.5)
-                        {
-                            sop.GetComponentInChildren<Break>().BreakObject(null);
-                        }
-                    }
-
-                    break;
-                }
-
-                case SimObjSecondaryProperty.CanBeDirty:
-                {
-                    foreach(SimObjPhysics sop in simObjectsOfType)
-                    {
-                        int rollForInitiative = UnityEngine.Random.Range(1, 20);
-                        if(rollForInitiative > 10.5)
-                        {
-                            sop.GetComponent<Dirty>().ToggleCleanOrDirty();
-                        }
-                    }
-
-                    break;
-                }
-
-                case SimObjSecondaryProperty.CanBeUsedUp:
-                {
-                    foreach(SimObjPhysics sop in simObjectsOfType)
-                    {
-                        int rollForInitiative = UnityEngine.Random.Range(1, 20);
-                        if(rollForInitiative > 10.5)
-                        {
-                            sop.GetComponent<UsedUp>().UseUp();
-                        }
-                    }
-
-                    break;
-                }
-            }
-        }
+        //             break;
+        //         }
+        //     }
+        // }
 
         //pass in a Vector3, presumably from GetReachablePositions, and try to place a specific Sim Object there
         //unlike PlaceHeldObject or InitialRandomSpawn, this won't be limited by a Receptacle, but only
@@ -3933,79 +3757,405 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(success);
         }
 
-        public void SetObjectToggles(ServerAction action)
+
+        //set all objects objects of a given type to a specific state, if that object has that state
+        //ie: All objects of type Bowl that have the state property breakable, set isBroken = true
+        public void SetObjectStates(ServerAction action)
         {
-            StartCoroutine(SetObjectTogglesForLotsOfObjects(action.objectToggles));
+            if(action.SetObjectStates == null)
+            {
+                errorMessage = "action.SetObjectStates is null or not initialized!";
+                actionFinished(false);
+                return;
+            }
+
+            //if both the objectType and stateChange members are null, params not set correctly
+            if(action.SetObjectStates.objectType == null && action.SetObjectStates.stateChange == null)
+            {
+                errorMessage = "action.SetObjectStates has objectType and stateChange strings null. Please pass in valid strings.";
+                actionFinished(false);
+                return;
+            }
+
+            //if you pass in an ObjectType, you must also pass in which stateChange of that object you are trying to Set
+            if(action.SetObjectStates.objectType != null && action.SetObjectStates.stateChange == null)
+            {
+                errorMessage = "action.SetObjectStates is missing stateChange string. If setting objects by objectType, Please specify both an objectType and a stateChange compatible with that objectType to set.";
+                actionFinished(false);
+                return;
+            }
+            
+            //call a coroutine to return actionFinished for all objects that have animation time
+            if(action.SetObjectStates.stateChange == "toggleable" || action.SetObjectStates.stateChange == "openable")
+            {
+                StartCoroutine(SetStateOfAnimatedObjects(action.SetObjectStates));
+            }
+
+            //these object change states instantly, so no need for coroutine
+            //the function called will handle the actionFinished() return;
+            else
+            {
+                SetStateOfObjectsThatDontHaveAnimationTime(action.SetObjectStates);
+            }
         }
 
-        protected IEnumerator SetObjectTogglesForLotsOfObjects(ObjectToggle[] objectToggles)
+        //find all objects in scene of type specified by SetObjectStates.objectType
+        //toggle them to the bool if applicable: isOpen, isToggled, isBroken etc.
+        protected IEnumerator SetStateOfAnimatedObjects(SetObjectStates SetObjectStates)
         {
-            if(objectToggles == null || objectToggles.Length <= 0)
+            List<SimObjPhysics> animating = new List<SimObjPhysics>();
+
+            //if the state change we are trying to set is neither of the two that have animations over time... skip!
+            if(!(SetObjectStates.stateChange == "toggleable" || SetObjectStates.stateChange == "openable"))
             {
-                errorMessage = "action.objectToggles is null or not initialized!";
-                actionFinished(false);
+                //break here so actionFinished isn't called
                 yield break;
             }
 
-            else
+            //in this case, we will try and set isToggled for all toggleable objects in the entire scene
+            if(SetObjectStates.objectType == null)
             {
-                Dictionary<SimObjType, bool> thingsToToggle = new Dictionary<SimObjType, bool>();
-
-                foreach(ObjectToggle ot in objectToggles)
-                {
-                    SimObjType sot = (SimObjType)System.Enum.Parse(typeof(SimObjType), ot.objectType);
-                    thingsToToggle[sot] = ot.isOn;
-                }
-
-                List<CanToggleOnOff> toggling = new List<CanToggleOnOff>();
-
                 foreach(SimObjPhysics sop in VisibleSimObjs(true))
                 {
-                    //see if its one of the types we need to toggle
-                    if(thingsToToggle.ContainsKey(sop.ObjType))
+                    if(SetObjectStates.stateChange == "toggleable")
                     {
-                        //error and action finished false if the object is for some reason not toggleable
-                        if(!sop.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanToggleOnOff))
+                        if(sop.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanToggleOnOff) && sop.GetComponent<CanToggleOnOff>())
                         {
-                            errorMessage = "a sim object in action.objectToggles is not Toggleable: " + sop.uniqueID;
-                            actionFinished(false);
-                            yield break;
+                            StartCoroutine(ToggleObject(sop, SetObjectStates.isToggled));
+                            animating.Add(sop);
                         }
+                    }
 
-                        //ok it is toggleable, so start another coroutine that will toggle it
-                        StartCoroutine(ToggleObject(sop, thingsToToggle[sop.ObjType]));
-                        toggling.Add(sop.GetComponent<CanToggleOnOff>());
+                    if(SetObjectStates.stateChange == "openable")
+                    {
+                        if(sop.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanOpen) && sop.GetComponent<CanOpen_Object>())
+                        {
+                            StartCoroutine(OpenObject(sop, SetObjectStates.isOpen));
+                            animating.Add(sop);
+                        }
                     }
                 }
+            }
 
-                if(toggling.Count > 0)
+            //in this case, we will only try and set states for objects of the specified objectType
+            else
+            {
+                SimObjType sot = (SimObjType)System.Enum.Parse(typeof(SimObjType), SetObjectStates.objectType);
+
+                //for every sim obj in scene, find objects of type specified first
+                foreach(SimObjPhysics sop in VisibleSimObjs(true))
                 {
-                    //we have now started the toggle for all objects in the objectToggles array
-                    int numStillGoing= toggling.Count;
-                    while(numStillGoing > 0)
+                    //ok we found an object with type specified, now toggle it 
+                    if(sop.ObjType == sot)
                     {
-                        //hold your horses, wait a frame so we don't miss the timing
-                        yield return null;
-
-                        foreach(CanToggleOnOff ctoo in toggling)
+                        if(SetObjectStates.stateChange == "toggleable")
                         {
-                            //if this object has finished animating....
-                            if(ctoo.GetiTweenCount() == 0)
+                            if(sop.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanToggleOnOff) && sop.GetComponent<CanToggleOnOff>())
                             {
-                                numStillGoing--;
+                                StartCoroutine(ToggleObject(sop, SetObjectStates.isToggled));
+                                animating.Add(sop);
                             }
                         }
 
-                        //someone is still animating
-                        if(numStillGoing > 0)
+                        if(SetObjectStates.stateChange == "openable")
                         {
-                            numStillGoing = toggling.Count;
+                            if(sop.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanOpen) && sop.GetComponent<CanOpen_Object>())
+                            {
+                                StartCoroutine(OpenObject(sop, SetObjectStates.isOpen));
+                                animating.Add(sop);
+                            }  
                         }
                     }
                 }
-                //ok none of the objects that were actively toggling have any itweens going, so we are done!
-                actionFinished(true);
             }
+
+            if(animating.Count > 0)
+            {
+                //we have now started the toggle for all objects in the ObjectStates array
+                int numStillGoing= animating.Count;
+                while(numStillGoing > 0)
+                {
+                    //hold your horses, wait a frame so we don't miss the timing
+                    yield return null;
+
+                    foreach(SimObjPhysics sop in animating)
+                    {
+                        if(sop.GetComponent<CanOpen_Object>())
+                        {   
+                            if(sop.GetComponent<CanOpen_Object>().GetiTweenCount() == 0)
+                            numStillGoing--;
+                        }
+
+                        if(sop.GetComponent<CanToggleOnOff>())
+                        {
+                            if(sop.GetComponent<CanToggleOnOff>().GetiTweenCount() == 0)
+                            numStillGoing--;
+                        }
+                    }
+
+                    //someone is still animating
+                    if(numStillGoing > 0)
+                    {
+                        numStillGoing = animating.Count;
+                    }
+                }
+            }
+
+            //ok none of the objects that were actively toggling have any itweens going, so we are done!
+            actionFinished(true);
+        }
+    
+        //for setting object states that don't have an animation time, which means they don't require coroutines yeah!
+        protected void SetStateOfObjectsThatDontHaveAnimationTime(SetObjectStates SetObjectStates)
+        {   
+
+            //ok what state are we lookin at here
+            switch(SetObjectStates.stateChange)
+            {
+                case "breakable":
+                {
+                    foreach(SimObjPhysics sop in VisibleSimObjs(true))
+                    {
+                        if(sop.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanBreak))
+                        {
+                            //only break objects that are not already broken
+                            Break b = sop.GetComponent<Break>();
+
+                            //only actually do stuff is the object is not broken and we are trying to break it
+                            if(!b.isBroken() && SetObjectStates.isBroken)
+                            {
+
+                                //oh we have a specific object type?
+                                if(SetObjectStates.objectType != null)
+                                {
+                                    if(sop.Type == (SimObjType)System.Enum.Parse(typeof(SimObjType), SetObjectStates.objectType))
+                                    {
+                                        b.BreakObject(null);
+                                    }
+
+                                    else
+                                    continue;
+                                }
+
+                                else
+                                b.BreakObject(null);
+                            }
+                        }
+                    }
+
+                    break;
+                }
+
+                case "canFillWithLiquid":
+                {
+                    foreach(SimObjPhysics sop in VisibleSimObjs(true))
+                    {
+                        //only proceed if the sop is fillable
+                        if(sop.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanBeFilled))
+                        {
+                            Fill fil = sop.GetComponent<Fill>();
+
+                            //object is empty and trying to fill it
+                            if(!fil.IsFilled() && SetObjectStates.isFilledWithLiquid)
+                            {
+                                //oh, we have a specific object type?
+                                if(SetObjectStates.objectType != null)
+                                {
+                                    //we found an object of the type we want to set
+                                    if(sop.Type == (SimObjType)System.Enum.Parse(typeof(SimObjType), SetObjectStates.objectType))
+                                    fil.FillObject("water");
+
+                                    //doesn't match objectType, continue to next object
+                                    else
+                                    continue;
+                                }
+
+                                else
+                                {
+                                    fil.FillObject("water");
+                                }
+                            }
+
+                            //object is full of some liquid, and trying to empty it
+                            else if(fil.IsFilled() && !SetObjectStates.isFilledWithLiquid)
+                            {
+                                //oh, we have a specific object type?
+                                if(SetObjectStates.objectType != null)
+                                {
+                                    //we found an object of the type we want to set
+                                    if(sop.Type == (SimObjType)System.Enum.Parse(typeof(SimObjType), SetObjectStates.objectType))
+                                    fil.EmptyObject();
+
+                                    //doesn't match objectType, continue to next object
+                                    else
+                                    continue;
+                                }
+
+                                else
+                                {
+                                    fil.EmptyObject();
+                                }
+                            }
+                        }
+                    }
+
+                    break;
+                }
+
+                case "dirtyable":
+                {
+                    foreach(SimObjPhysics sop in VisibleSimObjs(true))
+                    {
+                        //only proceed if the sop is dirtyable
+                        if(sop.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanBeDirty))
+                        {
+                            Dirty deedsDoneDirtCheap = sop.GetComponent<Dirty>();
+
+                            //object is clean and we are trying to dirty it
+                            if(!deedsDoneDirtCheap.IsDirty() && SetObjectStates.isDirty)
+                            {
+                                //oh, we have a specific object type?
+                                if(SetObjectStates.objectType != null)
+                                {
+                                    //we found an object of the type we want to set
+                                    if(sop.Type == (SimObjType)System.Enum.Parse(typeof(SimObjType), SetObjectStates.objectType))
+                                    deedsDoneDirtCheap.ToggleCleanOrDirty();
+
+                                    //doesn't match objectType, continue to next object
+                                    else
+                                    continue;
+                                }
+
+                                else
+                                {
+                                    deedsDoneDirtCheap.ToggleCleanOrDirty();
+                                }
+                            }
+
+                            //object is dirty and we are trying to clean it
+                            else if(deedsDoneDirtCheap.IsDirty() && !SetObjectStates.isDirty)
+                            {
+                                //oh, we have a specific object type?
+                                if(SetObjectStates.objectType != null)
+                                {
+                                    //we found an object of the type we want to set
+                                    if(sop.Type == (SimObjType)System.Enum.Parse(typeof(SimObjType), SetObjectStates.objectType))
+                                    deedsDoneDirtCheap.ToggleCleanOrDirty();
+
+                                    //doesn't match objectType, continue to next object
+                                    else
+                                    continue;
+                                }
+
+                                else
+                                {
+                                    deedsDoneDirtCheap.ToggleCleanOrDirty();
+                                }
+                            }
+                        }
+                    }
+
+                    break;
+                }
+
+                //one way
+                case "cookable":
+                {
+                    foreach(SimObjPhysics sop in VisibleSimObjs(true))
+                    {
+                        if(sop.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanBeCooked))
+                        {
+                            CookObject c = sop.GetComponent<CookObject>();
+
+                            //only do stuff if object is not cooked and we are trying to cook it
+                            if(!c.IsCooked() && SetObjectStates.isCooked)
+                            {
+                                if(SetObjectStates.objectType != null)
+                                {
+                                    if(sop.Type == (SimObjType)System.Enum.Parse(typeof(SimObjType), SetObjectStates.objectType))
+                                    {
+                                        c.Cook();
+                                    }
+
+                                    else
+                                    continue;
+                                }
+
+                                else
+                                c.Cook();
+                            }
+                        }
+                    }
+
+                    break;
+                }
+
+                //one way
+                case "sliceable":
+                {
+                    foreach(SimObjPhysics sop in VisibleSimObjs(true))
+                    {
+                        if(sop.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanBeSliced))
+                        {
+                            SliceObject s = sop.GetComponent<SliceObject>();
+
+                            //only do stuff if object is unsliced and we are trying to slice it
+                            if(!s.IsSliced() && SetObjectStates.isSliced)
+                            {
+                                if(SetObjectStates.objectType != null)
+                                {
+                                    if(sop.Type == (SimObjType)System.Enum.Parse(typeof(SimObjType), SetObjectStates.objectType))
+                                    {
+                                        s.Slice();
+                                    }
+
+                                    else
+                                    continue;
+                                }
+
+                                else
+                                s.Slice();
+                            }
+                        }
+                    }
+                    
+                    break;
+                }
+
+                //one way
+                case "canBeUsedUp":
+                {
+                    foreach(SimObjPhysics sop in VisibleSimObjs(true))
+                    {
+                        if(sop.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanBeUsedUp))
+                        {
+                            UsedUp u = sop.GetComponent<UsedUp>();
+
+                            //only do stuff if object is not used up and we are trying to use it up
+                            if(!u.isUsedUp && SetObjectStates.isUsedUp)
+                            {
+                                if(SetObjectStates.objectType != null)
+                                {
+                                    if(sop.Type == (SimObjType)System.Enum.Parse(typeof(SimObjType), SetObjectStates.objectType))
+                                    {
+                                        u.UseUp();
+                                    }
+
+                                    else
+                                    continue;
+                                }
+
+                                else
+                                u.UseUp();
+                            }
+                        }
+                    }
+                    
+                    break;
+                }
+            }
+
+            actionFinished(true);
         }
 
         public void PutObject(ServerAction action) {
@@ -4850,14 +5000,18 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             if (coo != null) {
                 coo.Interact();
             }
-            for (int i = 0; i < 1000; i++) {
-                if (coo != null && coo.GetiTweenCount() == 0) {
-                    success = true;
-                    yield return null;
-                    break;
-                }
-                yield return null;
-            }
+
+            yield return new WaitUntil( () => (coo != null && coo.GetiTweenCount() == 0));
+            success = true;
+            yield return null;
+            // for (int i = 0; i < 1000; i++) {
+            //     if (coo != null && coo.GetiTweenCount() == 0) {
+            //         success = true;
+            //         yield return null;
+            //         break;
+            //     }
+            //     yield return null;
+            // }
 
             if (ignoreAgentInTransition) {
                 GameObject openedObject = null;
@@ -4868,14 +5022,18 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     if (coo != null) {
                         coo.Interact();
                     }
-                    for (int i = 0; i < 1000; i++) {
-                        if (coo != null && coo.GetiTweenCount() == 0) {
-                            yield return null;
-                            break;
-                        }
-                        yield return null;
-                    }
+
+                    yield return new WaitUntil( () => (coo != null && coo.GetiTweenCount() == 0));
+                    yield return null;
+                    // for (int i = 0; i < 1000; i++) {
+                    //     if (coo != null && coo.GetiTweenCount() == 0) {
+                    //         yield return null;
+                    //         break;
+                    //     }
+                    //     yield return null;
+                    // }
                 }
+
                 foreach (Collider c in collidersDisabled) {
                     c.enabled = true;
                 }
@@ -5074,7 +5232,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             ToggleObject(target, toggleOn, forceAction);
         }
 
-        //specific ToggleObject that is used for SetObjectTogglesForLotsOfObjects
+        //specific ToggleObject that is used for SetObjectStatesForLotsOfObjects
         public IEnumerator ToggleObject(SimObjPhysics target, bool toggleOn)
         {
             if(target.GetComponent<CanToggleOnOff>())
@@ -5101,7 +5259,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     yield break;
                 }
 
-                //waitUntil function that returns true only when this object is done opening/closing
                 ctof.Toggle();
             }
         }
@@ -5256,6 +5413,31 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             else {
                 errorMessage = "object not found: " + action.uniqueId;
                 actionFinished(false);
+            }
+        }
+
+        //open an object without returning actionFinished since this is used in the setup function
+        public IEnumerator OpenObject(SimObjPhysics target, bool open)
+        {
+            if(target.GetComponent<CanOpen_Object>())
+            {
+                CanOpen_Object coo = target.GetComponent<CanOpen_Object>();
+
+                //skip if it's already in the specified state
+                if(coo.isOpen == open)
+                {
+                    yield break;
+                }
+
+                //if object needs to be in the Off toggle state to open...
+                if(open && coo.WhatReceptaclesMustBeOffToOpen().Contains(target.Type))
+                {
+                    //if the object is on and we are trying to open it.. do nothing
+                    if(target.GetComponent<CanToggleOnOff>().isOn)
+                    yield break;
+                }
+
+                coo.Interact();
             }
         }
 
