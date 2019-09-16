@@ -704,7 +704,7 @@ def poll_ci_build(context):
         .decode("ascii")
         .strip()
     )
-    for i in range(60):
+    for i in range(360):
         missing = False
         for arch in platform_map.keys():
             if (i % 5) == 0:
@@ -715,7 +715,7 @@ def poll_ci_build(context):
                 missing = True
         if not missing:
             break
-        time.sleep(30)
+        time.sleep(10)
 
     for arch in platform_map.keys():
         if not ai2thor.downloader.commit_build_exists(arch, commit_id):
