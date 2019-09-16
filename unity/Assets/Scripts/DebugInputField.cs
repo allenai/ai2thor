@@ -153,6 +153,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         action.ssao = "default";
 
                         action.action = "Initialize";
+                        action.fieldOfView = 90;
+                        action.gridSize = 0.25f;
                         AManager.Initialize(action);
                         // AgentManager am = PhysicsController.gameObject.FindObjectsOfType<AgentManager>()[0];
                         // Debug.Log("Physics scene manager = ...");
@@ -509,7 +511,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         ServerAction action = new ServerAction();
                         action.action = "PlaceObjectAtPoint";
                         action.position = GameObject.Find("TestPosition").transform.position;
-                        action.uniqueId = "ToiletPaper|-00.10|+01.03|-00.39";
+                        action.uniqueId = "Laptop|+01.81|+00.47|+00.50";
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }
@@ -1251,9 +1253,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         ServerAction action = new ServerAction();
                         action.action = "TouchThenApplyForce";
                         action.x = 0.5f;
-                        action.y = 0.5f;
-                        action.handDistance = 5.0f;
-                        action.direction = new Vector3(0, 1, 1);
+                        action.y = 0.8f;
+                        action.handDistance = 2.0f;
+                        action.direction = new Vector3(0, 0, 1);
                         action.moveMagnitude = 800f;
 
                         if(splitcommand.Length > 1)

@@ -2364,7 +2364,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             sopApplyForce(action, sop, 0.0f);
         }
 
-        //used to check if an specified sim object has come to rest, max time of 4 seconds
+        //used to check if an specified sim object has come to rest, max time of 40 seconds
         private IEnumerator checkIfObjectHasStoppedMoving(SimObjPhysics sop, float length)
         {
             yield return null;
@@ -3566,7 +3566,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             if(ipt.CheckSpawnArea(target, finalPos, target.transform.rotation, false))
             {
                 target.transform.position = finalPos;
-                actionFinished(true);
+                StartCoroutine(checkIfObjectHasStoppedMoving(target, 0));
+                //actionFinished(true);
                 return;
             }
 
