@@ -301,7 +301,7 @@ public class AgentManager : MonoBehaviour
                 float currentVelocity = Math.Abs(rb.angularVelocity.sqrMagnitude + rb.velocity.sqrMagnitude);
                 float accel = (currentVelocity - sop.lastVelocity) / Time.fixedDeltaTime;
 
-                if(accel == 0)
+                if(Mathf.Abs(accel) <= 0.0001f)
                 {
                     sop.inMotion = false;
                     //print(sop.transform.name + " should be sleeping");
@@ -936,7 +936,7 @@ public struct MetadataWrapper
 	public float[] distances;
 	public float[] normals;
 	public bool[] isOpenableGrid;
-	public string[] segmentedObjectIds;
+	public string[] segmentedUniqueIds;
 	public string[] objectIdsInBox;
 
 	public int actionIntReturn;

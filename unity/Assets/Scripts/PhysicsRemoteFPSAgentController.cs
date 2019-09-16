@@ -61,7 +61,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         protected float[, ] distances = new float[0, 0];
         protected float[, , ] normals = new float[0, 0, 0];
         protected bool[, ] isOpenableGrid = new bool[0, 0];
-        protected string[] segmentedObjectIds = new string[0];
+        protected string[] segmentedUniqueIds = new string[0];
         protected int actionIntReturn;
         protected float actionFloatReturn;
         protected bool actionBoolReturn;
@@ -532,7 +532,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             metaMessage.distances = flatten2DimArray(distances);
             metaMessage.normals = flatten3DimArray(normals);
             metaMessage.isOpenableGrid = flatten2DimArray(isOpenableGrid);
-            metaMessage.segmentedObjectIds = segmentedObjectIds;
+            metaMessage.segmentedUniqueIds = segmentedUniqueIds;
             metaMessage.objectIdsInBox = objectIdsInBox;
             metaMessage.actionIntReturn = actionIntReturn;
             metaMessage.actionFloatReturn = actionFloatReturn;
@@ -553,7 +553,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             distances = new float[0, 0];
             normals = new float[0, 0, 0];
             isOpenableGrid = new bool[0, 0];
-            segmentedObjectIds = new string[0];
+            segmentedUniqueIds = new string[0];
             objectIdsInBox = new string[0];
             actionIntReturn = 0;
             actionFloatReturn = 0.0f;
@@ -2331,12 +2331,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             {
                 //print("autosimulation off");
                 sop.ApplyForce(action);
-                if(length != 0.0f)
+                if(length >= 0.00001f)
                 {
-                    WhatDidITouch feedback = new WhatDidITouch(){didHandTouchSomething = true, objectId = sop.uniqueID, armsLength = length};
+                    WhatDidITouch feedback = new WhatDidITouch(){didHandTouchSomething = true, uniqueId = sop.uniqueID, armsLength = length};
                     #if UNITY_EDITOR
                     print("didHandTouchSomething: " + feedback.didHandTouchSomething);
-                    print("object id: " + feedback.objectId);
+                    print("object id: " + feedback.uniqueId);
                     print("armslength: " + feedback.armsLength);
                     #endif
                     actionFinished(true, feedback);
@@ -2367,7 +2367,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         //used to check if an specified sim object has come to rest, max time of 40 seconds
         private IEnumerator checkIfObjectHasStoppedMoving(SimObjPhysics sop, float length)
         {
-            yield return null;
+            //yield for the physics update to make sure this yield is consistent regardless of framerate
+            yield return new WaitForFixedUpdate();
+
             float startTime = Time.time;
             if(sop != null)
             {
@@ -2381,24 +2383,25 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     float currentVelocity = Math.Abs(rb.angularVelocity.sqrMagnitude + rb.velocity.sqrMagnitude);
                     float accel = (currentVelocity - sop.lastVelocity) / Time.fixedDeltaTime;
 
-                    if(accel == 0)
+                    //print("accel at time: "+ (Time.time - startTime)+ ": " + accel);
+                    if(Mathf.Abs(accel) <= 0.0001f)
                     {
                         break;
                     }
 
                     else
-                    yield return null;
+                    yield return new WaitForFixedUpdate();
                 }
             }
 
             //return to metadatawrapper.actionReturn if an object was touched during this interaction
             if(length != 0.0f)
             {
-                WhatDidITouch feedback = new WhatDidITouch(){didHandTouchSomething = true, objectId = sop.uniqueID, armsLength = length};
+                WhatDidITouch feedback = new WhatDidITouch(){didHandTouchSomething = true, uniqueId = sop.uniqueID, armsLength = length};
 
                 #if UNITY_EDITOR
                 print("didHandTouchSomething: " + feedback.didHandTouchSomething);
-                print("object id: " + feedback.objectId);
+                print("object id: " + feedback.uniqueId);
                 print("armslength: " + feedback.armsLength);
                 #endif
 
@@ -2409,7 +2412,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             else
             {
                 DefaultAgentHand();
-                actionFinished(true);
+                //print("----- Timie: " + (Time.time - startTime));
+                actionFinished(true, "object settled after: " + (Time.time - startTime));
             }
 
         }
@@ -2890,7 +2894,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     if(!CheckIfTargetPositionIsInViewportRange(hit.point))
                     {
                         errorMessage = "Object succesfully hit, but it is outside of the Agent's interaction range";
-                        WhatDidITouch errorFeedback = new WhatDidITouch(){didHandTouchSomething = false, objectId = "", armsLength = action.handDistance};
+                        WhatDidITouch errorFeedback = new WhatDidITouch(){didHandTouchSomething = false, uniqueId = "", armsLength = action.handDistance};
                         actionFinished(false, errorFeedback);
                         return;
                     }
@@ -2906,11 +2910,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     if (!canbepushed) 
                     {
                         //the sim object hit was not moveable or pickupable
-                        WhatDidITouch feedback = new WhatDidITouch(){didHandTouchSomething = true, objectId = target.uniqueID, armsLength = hit.distance};
+                        WhatDidITouch feedback = new WhatDidITouch(){didHandTouchSomething = true, uniqueId = target.uniqueID, armsLength = hit.distance};
                         #if UNITY_EDITOR
                         print("object touched was not moveable or pickupable");
                         print("didHandTouchSomething: " + feedback.didHandTouchSomething);
-                        print("object id: " + feedback.objectId);
+                        print("object id: " + feedback.uniqueId);
                         print("armslength: " + feedback.armsLength);
                         #endif
                         actionFinished(true, feedback);
@@ -2933,11 +2937,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 //raycast hit something but it wasn't a sim object
                 else
                 {
-                    WhatDidITouch feedback = new WhatDidITouch(){didHandTouchSomething = true, objectId = "structure", armsLength = hit.distance};
+                    WhatDidITouch feedback = new WhatDidITouch(){didHandTouchSomething = true, uniqueId = "not a sim object, a structure was touched", armsLength = hit.distance};
                     #if UNITY_EDITOR
                     print("object touched was not a sim object at all");
                     print("didHandTouchSomething: " + feedback.didHandTouchSomething);
-                    print("object id: " + feedback.objectId);
+                    print("object id: " + feedback.uniqueId);
                     print("armslength: " + feedback.armsLength);
                     #endif
                     actionFinished(true, feedback);
@@ -2954,17 +2958,17 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 if(!CheckIfTargetPositionIsInViewportRange(testPosition))
                 {
                     errorMessage = "the position the hand would have moved to is outside the agent's max interaction range";
-                    WhatDidITouch errorFeedback = new WhatDidITouch(){didHandTouchSomething = false, objectId = "", armsLength = action.handDistance};
+                    WhatDidITouch errorFeedback = new WhatDidITouch(){didHandTouchSomething = false, uniqueId = "", armsLength = action.handDistance};
                     actionFinished(false, errorFeedback);
                     return;
                 }
 
                 //the nothing hit was not out of range, but still nothing was hit
-                WhatDidITouch feedback = new WhatDidITouch(){didHandTouchSomething = false, objectId = "", armsLength = action.handDistance};
+                WhatDidITouch feedback = new WhatDidITouch(){didHandTouchSomething = false, uniqueId = "", armsLength = action.handDistance};
                 #if UNITY_EDITOR
                 print("raycast did not hit anything, it only hit empty space");
                 print("didHandTouchSomething: " + feedback.didHandTouchSomething);
-                print("object id: " + feedback.objectId);
+                print("object id: " + feedback.uniqueId);
                 print("armslength: " + feedback.armsLength);
                 #endif
                 actionFinished(true,feedback);
@@ -2976,7 +2980,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public struct WhatDidITouch
         {
             public bool didHandTouchSomething;//did the hand touch something or did it hit nothing?
-            public string objectId;//id of object touched, if it is a sim object
+            public string uniqueId;//id of object touched, if it is a sim object
             public float armsLength;//the amount the hand moved from it's starting position to hit the object touched
         }
 
@@ -3525,7 +3529,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         {
             if(action.uniqueId == null)
             {
-                errorMessage = "please give valid objectId for PlaceObjectAtPoint action";
+                errorMessage = "please give valid uniqueId for PlaceObjectAtPoint action";
                 actionFinished(false);
                 return;
             }
@@ -3542,7 +3546,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             if(target == null)
             {
                 errorMessage = "no object with id: "+ 
-                action.uniqueId+ " could be found during PlaceObjectAtPoint";
+                action.uniqueId + " could be found during PlaceObjectAtPoint";
                 actionFinished(false);
                 return;
             }
@@ -3566,6 +3570,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             if(ipt.CheckSpawnArea(target, finalPos, target.transform.rotation, false))
             {
                 target.transform.position = finalPos;
+                
                 StartCoroutine(checkIfObjectHasStoppedMoving(target, 0));
                 //actionFinished(true);
                 return;
@@ -6025,7 +6030,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 uniqueIds.Add(so.UniqueID);
                 k++;
             }
-            segmentedObjectIds = uniqueIds.ToArray();
+            segmentedUniqueIds = uniqueIds.ToArray();
 
             if (ItemInHand != null) {
                 toggleColliders(ItemInHand.GetComponentsInChildren<Collider>());
