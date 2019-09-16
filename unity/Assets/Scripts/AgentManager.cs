@@ -83,7 +83,7 @@ public class AgentManager : MonoBehaviour
 		initializePrimaryAgent();
         primaryAgent.actionDuration = this.actionDuration;
 		readyToEmit = true;
-		Debug.Log("Graphics Tier: " + Graphics.activeTier);
+		//Debug.Log("Graphics Tier: " + Graphics.activeTier);
 		this.agents.Add (primaryAgent);
 
         physicsSceneManager = GameObject.Find("PhysicsSceneManager").GetComponent<PhysicsSceneManager>();
@@ -313,9 +313,9 @@ public class AgentManager : MonoBehaviour
                     //the rb's velocities are not 0, so it is in motion and the scene is not at rest
                     rb.GetComponentInParent<SimObjPhysics>().inMotion = true;
                     physicsSceneManager.isSceneAtRest = false;
-                    #if UNITY_EDITOR
-                    print(rb.GetComponentInParent<SimObjPhysics>().name + " is still in motion!");
-                    #endif
+                    // #if UNITY_EDITOR
+                    // print(rb.GetComponentInParent<SimObjPhysics>().name + " is still in motion!");
+                    // #endif
                 }
             }
 
@@ -814,6 +814,7 @@ public class ObjectMetadata
 	///
 	public bool pickupable;
 	public bool isPickedUp;//if the pickupable object is actively being held by the agent
+    public bool moveable;//if the object is moveable, able to be pushed/affected by physics but is too big to pick up
 
 	public float mass;//mass is only for moveable and pickupable objects
 
@@ -822,10 +823,10 @@ public class ObjectMetadata
 
 	public string [] salientMaterials; //salient materials that this object is made of as strings (see enum above). This is only for objects that are Pickupable or Moveable
 	///
-	public string[] receptacleObjectIds;
+	public string[] receptacleUniqueIds;
 	public float distance;
 	public String objectType;
-	public string objectId;
+	public string uniqueId;
 	public string parentReceptacle;
 	public string[] parentReceptacles;
 	public float currentTime;
@@ -884,11 +885,23 @@ public class ObjectPose
     public Vector3 rotation;
 }
 
+//set object states either by Type or by compatible State
+//"slice all objects of type Apple"
+//"slice all objects that have the sliceable property"
+//also used to randomly do this ie: randomly slice all objects of type apple, randomly slice all objects that have sliceable property
 [Serializable]
-public class ObjectToggle
+public class SetObjectStates
 {
-    public string objectType;
-    public bool isOn;
+    public string objectType = null; //valid strings are any Object Type listed in documentation (ie: AlarmClock, Apple, etc)
+    public string stateChange = null; //valid strings are: openable, toggleable, breakable, canFillWithLiquid, dirtyable, cookable, sliceable, canBeUsedUp
+    public bool isOpen;
+    public bool isToggled;
+    public bool isBroken;
+    public bool isFilledWithLiquid;
+    public bool isDirty;
+    public bool isCooked;
+    public bool isSliced;
+    public bool isUsedUp;
 }
 
 [Serializable]
@@ -950,10 +963,10 @@ public class ServerAction
 	public string objectType;
 	public int objectVariation;
 	public string receptacleObjectType;
-	public string receptacleObjectId;
+	public string receptacleUniqueId;
 	public float gridSize;
 	public string[] excludeObjectIds;
-	public string objectId;
+	public string uniqueId;
 	public int agentId;
 	public int thirdPartyCameraId;
 	public float y;
@@ -1006,10 +1019,13 @@ public class ServerAction
 	public bool allowDecayTemperature = true; //set to true if temperature should decay over time, set to false if temp changes should not decay, defaulted true
 	public string StateChange;//a string that specifies which state change to randomly toggle
     public float timeStep = 0.01f;
+    public float mass;
+    public float drag;
+    public float angularDrag;
     public ObjectTypeCount[] numRepeats;
     public ObjectTypeCount[] minFreePerReceptacleType;
     public ObjectPose[] objectPoses;
-    public ObjectToggle[] objectToggles;
+    public SetObjectStates SetObjectStates;
 
     public SimObjType ReceptableSimObjType()
 	{
