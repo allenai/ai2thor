@@ -1589,6 +1589,23 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         break;
                     }
 
+                case "sos":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "SetObjectStates";
+                        action.SetObjectStates = new SetObjectStates()
+                        {
+                            //objectType = "LightSwitch",
+                            stateChange = "openable",
+                            objectType = "Cabinet",
+                            isOpen = true
+                        };
+
+                        PhysicsController.ProcessControlCommand(action);
+
+                        break;
+                    }
+
                     //opens given object the given percent, default is 100% open
                     //open <object ID> percent
 				case "open":
