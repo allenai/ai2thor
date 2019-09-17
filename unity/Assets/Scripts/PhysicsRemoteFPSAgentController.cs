@@ -3836,7 +3836,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     {
                         if(sop.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanOpen) && sop.GetComponent<CanOpen_Object>())
                         {
-                            StartCoroutine(OpenObject(sop, SetObjectStates.isOpen));
+                            StartCoroutine(openObject(sop, SetObjectStates.isOpen));
                             animating.Add(sop);
                         }
                     }
@@ -3867,7 +3867,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         {
                             if(sop.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanOpen) && sop.GetComponent<CanOpen_Object>())
                             {
-                                StartCoroutine(OpenObject(sop, SetObjectStates.isOpen));
+                                StartCoroutine(openObject(sop, SetObjectStates.isOpen));
                                 animating.Add(sop);
                             }  
                         }
@@ -4737,32 +4737,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true);
         }
 
-        private bool closeObject(SimObjPhysics target) {
-            CanOpen_Object codd = target.GetComponent<CanOpen_Object>();
-
-            if (codd) {
-                //if object is open, close it
-                if (codd.isOpen) {
-                    codd.Interact();
-                    return true;
-                }
-            }
-            return false;
-        }
-
-        private bool openObject(SimObjPhysics target) {
-            CanOpen_Object codd = target.GetComponent<CanOpen_Object>();
-
-            if (codd) {
-                //if object is open, close it
-                if (!codd.isOpen) {
-                    codd.Interact();
-                    return true;
-                }
-            }
-            return false;
-        }
-
         public void CloseVisibleObjects(ServerAction action) {
             List<CanOpen_Object> coos = new List<CanOpen_Object>();
             foreach (SimObjPhysics so in GetAllVisibleSimObjPhysics(m_Camera, maxVisibleDistance)) {
@@ -5405,14 +5379,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         }
                     }
 
-                    //XXX: So if we want to generate metadata at specific parts of the animation, this
-                    //coroutine will need some tweaking. Basically we need to send emit frames after some number of yield
-                    //return null calls in the loop that's tracking iTween instances? We will figure that out later but
-                    //for future notice I'm leaving this note.
                     StartCoroutine(InteractAndWait(codd));
-
                 }
-
             }
 
             //target not found in currently visible objects, report not found
@@ -5423,7 +5391,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         //open an object without returning actionFinished since this is used in the setup function
-        public IEnumerator OpenObject(SimObjPhysics target, bool open)
+        public IEnumerator openObject(SimObjPhysics target, bool open)
         {
             if(target.GetComponent<CanOpen_Object>())
             {
