@@ -4450,7 +4450,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         soprb.collisionDetectionMode = CollisionDetectionMode.Discrete;
                         soprb.isKinematic = true;
                         sop.transform.SetParent(target.transform);
+
+                        //used to reference objects in the receptacle that is being picked up without having to search through all children
                         target.AddToContainedObjectReferences(sop);
+                        
                         target.GetComponent<SimObjPhysics>().isInAgentHand = true;//agent hand flag
                         
                     }
