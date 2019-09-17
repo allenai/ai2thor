@@ -130,6 +130,11 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 			ContainedObjectReferences.Add(t);
 	}
 
+    public void RemoveFromContainedObjectReferences(SimObjPhysics t)
+    {
+        ContainedObjectReferences.Remove(t);
+    }
+
 	public void ClearContainedObjectReferences()
 	{
 			ContainedObjectReferences.Clear();
