@@ -178,7 +178,15 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
                         PhysicsController.ProcessControlCommand(action);
                         break;
-                    }  
+                    } 
+                case "spawnabove":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "ReturnSpawnCoordinatesAboveTarget";
+                        action.uniqueId = "Bowl|+00.27|+01.10|-00.75";
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    } 
 
                 case "crazydiamond":
                     {

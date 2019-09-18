@@ -3343,6 +3343,37 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(false);
         }
 
+        //return a bunch of vector3
+        public void ReturnSpawnCoordinatesAboveTarget(ServerAction action)
+        {
+            if (!physicsSceneManager.UniqueIdToSimObjPhysics.ContainsKey(action.uniqueId)) 
+            {
+                errorMessage = "Object ID appears to be invalid.";
+                actionFinished(false);
+                return;
+            }
+
+            SimObjPhysics target = null;
+            //find our target receptacle
+            foreach (SimObjPhysics sop in VisibleSimObjs(true))
+            {
+                if(action.uniqueId == sop.UniqueID)
+                {
+                    target = sop;
+                }
+            }
+
+            if(target == null)
+            {
+                errorMessage = "No valid Receptacle found in scene";
+                Debug.Log(errorMessage);
+                actionFinished(false);
+                return;
+            }
+
+            actionFinished(true, target.FindMySpawnPointsFromTopOfTriggerBox());
+        }
+
         //instantiate a target circle, and then place it in a "SpawnOnlyOUtsideReceptacle" that is also within camera view
         //If fails, return actionFinished(false) and despawn target circle
         public void SpawnTargetCircle(ServerAction action)

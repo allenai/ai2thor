@@ -488,6 +488,17 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		MySpawnPoints = temp;
 	}
 
+    public List<Vector3> FindMySpawnPointsFromTopOfTriggerBox()
+    {
+        List<Vector3> points = new List<Vector3>();
+        foreach(GameObject rtb in ReceptacleTriggerBoxes)
+        {
+            points.AddRange(rtb.GetComponent<Contains>().GetValidSpawnPointsFromTopOfTriggerBox());
+        }
+
+        return points;
+    }
+
 	//set ReturnPointsCloseToAgent to true if only points near the agent are wanted
 	//set to false if all potential points on the object are wanted
 	public List<ReceptacleSpawnPoint> ReturnMySpawnPoints(bool ReturnPointsCloseToAgent)
