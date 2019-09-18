@@ -2346,7 +2346,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 {
                     actionFinished(true);
                 }
-
             }
 
             //if physics is automatically being simulated, use coroutine rather than returning actionFinished immediately
@@ -2365,17 +2364,25 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         //used to check if an specified sim object has come to rest, max time of 40 seconds
-        private IEnumerator checkIfObjectHasStoppedMoving(SimObjPhysics sop, float length)
+        private IEnumerator checkIfObjectHasStoppedMoving(SimObjPhysics sop, float length, bool useTimeout = false)
         {
             //yield for the physics update to make sure this yield is consistent regardless of framerate
             yield return new WaitForFixedUpdate();
 
             float startTime = Time.time;
+            float waitTime = 20f;
+
+            if(useTimeout)
+            {
+                waitTime = 1.0f;
+            }
+
             if(sop != null)
             {
                 Rigidbody rb = sop.GetComponentInChildren<Rigidbody>();
+                bool stoppedMoving = false;
 
-                while(Time.time - startTime < 40)
+                while(Time.time - startTime < waitTime)
                 {
                     if(sop == null)
                     break;
@@ -2384,13 +2391,22 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     float accel = (currentVelocity - sop.lastVelocity) / Time.fixedDeltaTime;
 
                     //print("accel at time: "+ (Time.time - startTime)+ ": " + accel);
-                    if(Mathf.Abs(accel) <= 0.0001f)
+                    if(Mathf.Abs(accel) <= 0.001f)
                     {
+                        stoppedMoving = true;
                         break;
                     }
 
                     else
                     yield return new WaitForFixedUpdate();
+                }
+
+                //so we never stopped moving and we are using the timeout
+                if(!stoppedMoving && useTimeout)
+                {
+                    errorMessage = "object couldn't come to rest";
+                    actionFinished(false);
+                    yield break;
                 }
             }
 
@@ -2417,32 +2433,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
 
         }
-
-        // private IEnumerator emitFrameOverTimeAfterApplyForce(SimObjPhysics sop)
-        // {
-        //     Rigidbody rb = sop.GetComponentInChildren<Rigidbody>();
-        //     Physics.autoSimulation = false;
-        //     yield return null;
-
-        //     for(int i = 0; i < 100; i++)
-        //     {
-        //         Physics.Simulate(0.04f);
-        //         //emit frame now!
-        //         yield return StartCoroutine(agentManager.EmitFrame());
-
-        //         #if UNITY_EDITOR
-        //         yield return null;
-        //         #endif
-
-        //         //stop stepwise simulation once object comes to rest
-        //         if (Math.Abs(rb.angularVelocity.sqrMagnitude + rb.velocity.sqrMagnitude) < 0.00001) 
-        //         {
-        //             break;
-        //         }
-        //     }
-        //     Physics.autoSimulation = true;
-        //     actionFinished(true);
-        // }
 
         //Sweeptest to see if the object Agent is holding will prohibit movement
         public bool CheckIfItemBlocksAgentMovement(float moveMagnitude, int orientation, bool forceAction = false) {
@@ -3333,11 +3323,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             {
                 target.transform.position = finalPos;
                 
-                StartCoroutine(checkIfObjectHasStoppedMoving(target, 0));
-                //actionFinished(true);
+                StartCoroutine(checkIfObjectHasStoppedMoving(target, 0, true));
                 return;
             }
 
+            errorMessage = "spawn area not clear, can't place object at that point";
             actionFinished(false);
         }
 

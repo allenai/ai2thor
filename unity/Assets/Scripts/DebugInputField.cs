@@ -220,7 +220,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
                             }
                         }
 
-                        //set to true if only receptacles in view should be target spawn points for the targetcircle
                         action.forceVisible = false;
                         action.visibilityDistance = 3.0f;
                         //action.uniqueId = "CounterTop|-00.08|+01.15|00.00";
@@ -521,7 +520,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         ServerAction action = new ServerAction();
                         action.action = "PlaceObjectAtPoint";
                         action.position = GameObject.Find("TestPosition").transform.position;
-                        action.uniqueId = "Laptop|+01.81|+00.47|+00.50";
+                        action.uniqueId = "Pan|-02.45|+00.93|+02.02";
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }

@@ -40,7 +40,7 @@ public class Contains : MonoBehaviour
 
 	public bool occupied = false;
 
-    private List<Vector3> validpointlist = new List<Vector3>();
+    //private List<Vector3> validpointlist = new List<Vector3>();
 
 	//world coordinates of the Corners of this object's receptacles in case we need it for something
 	//public List<Vector3> Corners = new List<Vector3>();
