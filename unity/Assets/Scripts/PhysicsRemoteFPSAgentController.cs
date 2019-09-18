@@ -3287,6 +3287,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
 
             SimObjPhysics target = null;
+            //find the object in the scene, disregard visibility
             foreach(SimObjPhysics sop in VisibleSimObjs(true))
             {
                 if(sop.uniqueID == action.uniqueId)
@@ -3336,7 +3337,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         //return a bunch of vector3 points above a target receptacle
         //if forceVisible = true, return points regardless of where receptacle is
         //if forceVisible = false, only return points that are also within view of the Agent camera
-        public void ReturnSpawnCoordinatesAboveTarget(ServerAction action)
+        public void GetSpawnCoordinatesAboveObject(ServerAction action)
         {
             if (!physicsSceneManager.UniqueIdToSimObjPhysics.ContainsKey(action.uniqueId)) 
             {
@@ -3347,9 +3348,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             SimObjPhysics target = null;
             //find our target receptacle
-            //if forceVisible False (default) this should only return objects that are visible
-            //if forceVisible true, return for any object no matter where it is
-            foreach (SimObjPhysics sop in VisibleSimObjs(action))
+            //if action.anywhere False (default) this should only return objects that are visible
+            //if action.anywhere true, return for any object no matter where it is
+            foreach (SimObjPhysics sop in VisibleSimObjs(action.anywhere))
             {
                 if(action.uniqueId == sop.UniqueID)
                 {
@@ -3359,7 +3360,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             if(target == null)
             {
-                if(action.forceVisible)
+                if(action.anywhere)
                 errorMessage = "No valid Receptacle found in scene";
 
                 else
@@ -3373,8 +3374,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             List<Vector3> targetPoints = new List<Vector3>();
             targetPoints = target.FindMySpawnPointsFromTopOfTriggerBox();
 
-            //by default, forceAction = false, so remove all targetPoints that are outside of agent's view
-            if(!action.forceVisible)
+            //by default, action.anywhere = false, so remove all targetPoints that are outside of agent's view
+            //if anywhere true, don't do this and just return all points we got from above
+            if(!action.anywhere)
             {
                 List<Vector3> filteredTargetPoints = new List<Vector3>();
                 foreach(Vector3 v in targetPoints)
@@ -3393,7 +3395,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             #endif
 
             actionFinished(true, targetPoints);
-
         }
 
         //instantiate a target circle, and then place it in a "SpawnOnlyOUtsideReceptacle" that is also within camera view
@@ -3406,10 +3407,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             InstantiatePrefabTest ipt = physicsSceneManager.GetComponent<InstantiatePrefabTest>();
 
             //this is the default, only spawn circles in objects that are in view
-            if(!action.forceVisible)
+            if(!action.anywhere)
             {
                 //get all visible receptacles in current view
-                foreach(SimObjPhysics sop in VisibleSimObjs(action))
+                foreach(SimObjPhysics sop in VisibleSimObjs(false))
                 {
                     if(sop.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.Receptacle))
                     {
@@ -3469,23 +3470,24 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 //by default, only return spawn points that are visible to the agent's camera
                 bool returnOnlyVisiblePoints = true;
 
-                //if forceVisible true, return all spawn points
-                if(action.forceVisible)
+                //if anywhere true, return all spawn points no matter if object not in view
+                if(action.anywhere)
                 {
                     returnOnlyVisiblePoints = false;
                 }
                 rsps = sop.ReturnMySpawnPoints(returnOnlyVisiblePoints);
 
-                //if visibilityDistance was passed in, remove spawn points beyond the max distance specified
-                if(action.visibilityDistance > 0.0f)
+                //if visibilityDistance was passed in, only use spawn points that are at least minDistance away from agent
+                if(action.minDistance > 0.0f)
                 {
                     List<ReceptacleSpawnPoint> editedRsps = new List<ReceptacleSpawnPoint>();
                     foreach(ReceptacleSpawnPoint p in rsps)
                     {
                         //check distance from agent's transform to spawnpoint
                         //if the distance isn't bigger than visibility distance, go ahead and do it
-                        if(!(Vector3.Distance(p.Point, transform.position) > action.visibilityDistance))
+                        if((Vector3.Distance(p.Point, transform.position) >= action.minDistance))
                         {
+                            print(Vector3.Distance(p.Point, transform.position));
                             editedRsps.Add(p);
                         }
                     }
@@ -3528,9 +3530,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         //randomly repositions sim objects in the current scene
-        public void InitialRandomSpawn(ServerAction action) {
+        public void InitialRandomSpawn(ServerAction action) 
+        {
             //something is in our hand AND we are trying to spawn it. Quick drop the object
-            if (ItemInHand != null) {
+            if (ItemInHand != null) 
+            {
                 Rigidbody rb = ItemInHand.GetComponent<Rigidbody>();
                 rb.isKinematic = false;
                 rb.constraints = RigidbodyConstraints.None;
@@ -3538,9 +3542,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 rb.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
 
                 GameObject topObject = GameObject.Find("Objects");
-                if (topObject != null) {
+                if (topObject != null) 
+                {
                     ItemInHand.transform.parent = topObject.transform;
-                } else {
+                } 
+
+                else 
+                {
                     ItemInHand.transform.parent = null;
                 }
 
@@ -3588,7 +3596,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     }
                 }
             }
-
             actionFinished(true);
         }
 

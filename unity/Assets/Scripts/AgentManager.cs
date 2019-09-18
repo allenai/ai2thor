@@ -995,6 +995,7 @@ public class ServerAction
 	public string sceneName;
 	public bool rotateOnTeleport;
 	public bool forceVisible;
+    public bool anywhere;//used for SpawnTargetCircle, GetSpawnCoordinatesAboveObject for if anywhere or only in agent view 
 	public bool randomizeOpen;
 	public int randomSeed;
 	public float moveMagnitude;
@@ -1026,6 +1027,8 @@ public class ServerAction
     public ObjectTypeCount[] minFreePerReceptacleType;
     public ObjectPose[] objectPoses;
     public SetObjectStates SetObjectStates;
+
+    public float minDistance;//used for target circle spawning function
 
     public SimObjType ReceptableSimObjType()
 	{

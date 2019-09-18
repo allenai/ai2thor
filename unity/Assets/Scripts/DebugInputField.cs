@@ -179,12 +179,13 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     } 
+
                 case "spawnabove":
                     {
                         ServerAction action = new ServerAction();
-                        action.action = "ReturnSpawnCoordinatesAboveTarget";
+                        action.action = "GetSpawnCoordinatesAboveObject";
                         action.uniqueId = "CounterTop|-00.08|+01.15|00.00";
-                        action.forceVisible = true;//false means only points in view returned, true means all points returned
+                        action.anywhere = false;
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     } 
@@ -220,9 +221,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
                             }
                         }
 
-                        action.forceVisible = false;
-                        action.visibilityDistance = 3.0f;
-                        //action.uniqueId = "CounterTop|-00.08|+01.15|00.00";
+                        action.anywhere = false;
+                        action.minDistance = 1.2f;
+                        action.uniqueId = "CounterTop|-00.08|+01.15|00.00";
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }

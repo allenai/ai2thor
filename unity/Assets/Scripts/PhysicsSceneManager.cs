@@ -385,7 +385,6 @@ public class PhysicsSceneManager : MonoBehaviour
 
             foreach (SimObjType sopType in typeToObjectList.Keys)
             {
-
                 if (requestedNumRepeats.ContainsKey(sopType) &&
                     requestedNumRepeats[sopType] > typeToObjectList[sopType].Count)
                 {
@@ -397,7 +396,6 @@ public class PhysicsSceneManager : MonoBehaviour
 
                     for (int j = 0; j < numExtra; j++)
                     {
-
                         // Add a copy of the item.
                         SimObjPhysics gop = typeToObjectList[sopType][UnityEngine.Random.Range(0, typeToObjectList[sopType].Count - 1)];
                         SimObjPhysics copy = Instantiate(gop);
@@ -407,6 +405,7 @@ public class PhysicsSceneManager : MonoBehaviour
                         simObjectCopies.Add(copy.gameObject);
                     }
                 }
+
                 else
                 {
                     foreach (SimObjPhysics gop in typeToObjectList[sopType])
@@ -446,17 +445,20 @@ public class PhysicsSceneManager : MonoBehaviour
 									allowed = true;
 								}
 							}
+
 							else if(TypesOfObjectsPrefabIsAllowedToSpawnIn.Contains(sop.ObjType))
 							{
 								allowed = true;
 							}
 						}
+
 						if (allowed) 
                         {
 							if (!AllowedToSpawnInAndExistsInScene.ContainsKey(sop.ObjType)) 
                             {
 								AllowedToSpawnInAndExistsInScene[sop.ObjType] = new List<SimObjPhysics>();
 							}
+                            
 							AllowedToSpawnInAndExistsInScene[sop.ObjType].Add(sop);
 						}
 					}
