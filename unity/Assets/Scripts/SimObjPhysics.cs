@@ -488,7 +488,8 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		MySpawnPoints = temp;
 	}
 
-    public List<Vector3> FindMySpawnPointsFromTopOfTriggerBox()
+    //return spawn points for this receptacle objects based on the top part of all trigger boxes
+    public List<Vector3> FindMySpawnPointsFromTopOfTriggerBox(bool forceVisible = false)
     {
         List<Vector3> points = new List<Vector3>();
         foreach(GameObject rtb in ReceptacleTriggerBoxes)

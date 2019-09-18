@@ -2995,7 +2995,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             if (Vector3.Distance(tmp, targetPosition) > maxVisibleDistance) // + 0.3)
             {
-                errorMessage = "The position the hand would have moved to is outside the agent's max visible distance.";
                 result = false;
             }
 
@@ -3003,7 +3002,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             Vector3 vp = m_Camera.WorldToViewportPoint(targetPosition);
             if(vp.z < 0 || vp.x > 1.0f || vp.y < 0.0f || vp.y > 1.0f || vp.y < 0.0f)
             {
-                errorMessage = "The position the hand would have moved to is outside the agent's camera viewport";
                 result = false;
             }
 
@@ -3343,7 +3341,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(false);
         }
 
-        //return a bunch of vector3
+        private List<Vector3> validpointlist = new List<Vector3>();
+
+        //return a bunch of vector3 points above a target receptacle
+        //if forceVisible = true, return points regardless of where receptacle is
+        //if forceVisible = false, only return points that are also within view of the Agent camera
         public void ReturnSpawnCoordinatesAboveTarget(ServerAction action)
         {
             if (!physicsSceneManager.UniqueIdToSimObjPhysics.ContainsKey(action.uniqueId)) 
@@ -3355,7 +3357,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             SimObjPhysics target = null;
             //find our target receptacle
-            foreach (SimObjPhysics sop in VisibleSimObjs(true))
+            //if forceVisible False (default) this should only return objects that are visible
+            //if forceVisible true, return for any object no matter where it is
+            foreach (SimObjPhysics sop in VisibleSimObjs(action))
             {
                 if(action.uniqueId == sop.UniqueID)
                 {
@@ -3365,13 +3369,41 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             if(target == null)
             {
+                if(action.forceVisible)
                 errorMessage = "No valid Receptacle found in scene";
-                Debug.Log(errorMessage);
+
+                else
+                errorMessage = "No valid Receptacle found in view";
+
                 actionFinished(false);
                 return;
             }
 
-            actionFinished(true, target.FindMySpawnPointsFromTopOfTriggerBox());
+            //ok now get spawn points from target
+            List<Vector3> targetPoints = new List<Vector3>();
+            targetPoints = target.FindMySpawnPointsFromTopOfTriggerBox();
+
+            //by default, forceAction = false, so remove all targetPoints that are outside of agent's view
+            if(!action.forceVisible)
+            {
+                List<Vector3> filteredTargetPoints = new List<Vector3>();
+                foreach(Vector3 v in targetPoints)
+                {
+                    if(CheckIfTargetPositionIsInViewportRange(v))
+                    {
+                        filteredTargetPoints.Add(v);
+                    }
+                }
+
+                targetPoints = filteredTargetPoints;
+            }
+
+            #if UNITY_EDITOR
+            validpointlist = targetPoints;
+            #endif
+
+            actionFinished(true, targetPoints);
+
         }
 
         //instantiate a target circle, and then place it in a "SpawnOnlyOUtsideReceptacle" that is also within camera view
@@ -3383,12 +3415,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             List<SimObjPhysics> targetReceptacles = new List<SimObjPhysics>();
             InstantiatePrefabTest ipt = physicsSceneManager.GetComponent<InstantiatePrefabTest>();
 
-            //only spawn target circle in visible receptacles
-            if(action.forceVisible)
+            //this is the default, only spawn circles in objects that are in view
+            if(!action.forceVisible)
             {
                 //get all visible receptacles in current view
-                //note this is using the above action's ForceVisible value... so right now VisibleSimObjs() is returning all objects and then
-                //SpawnOnlyOUtsideReceptacles and other checks are narrowing down the spawn positions
                 foreach(SimObjPhysics sop in VisibleSimObjs(action))
                 {
                     if(sop.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.Receptacle))
@@ -3400,7 +3430,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 }
             }
 
-            //spawn target circle in any valid "outside" receptacle in the scene
+            //spawn target circle in any valid "outside" receptacle in the scene even if not in veiw
             else
             {
                 //targetReceptacles.AddRange(physicsSceneManager.ReceptaclesInScene); 
@@ -3412,6 +3442,20 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
 
 
+            //if we passed in a uniqueId, see if it is in the list of targetReceptacles found so far
+            if(action.uniqueId != null)
+            {
+                List<SimObjPhysics> filteredTargetReceptacleList = new List<SimObjPhysics>();
+                foreach(SimObjPhysics sop in targetReceptacles)
+                {
+                    if(sop.uniqueID == action.uniqueId)
+                    filteredTargetReceptacleList.Add(sop);
+                }
+
+                targetReceptacles = filteredTargetReceptacleList;
+            }
+
+
             //ok now use the seed to shuffle either the list of receptacles in view/ the list of all "outside" receptacles in the scene
             if(action.randomSeed != 0)
             {
@@ -3419,19 +3463,26 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
 
             bool succesfulSpawn = false;
-            //ok we have a shuffled list of receptacles that is picked based on the seed....
 
+            if(targetReceptacles.Count <= 0)
+            {
+                errorMessage = "for some reason, no receptacles were found in the scene!";
+                actionFinished(false);
+                return;
+            }
+            //ok we have a shuffled list of receptacles that is picked based on the seed....
             foreach(SimObjPhysics sop in targetReceptacles)
             {
                 //for every receptacle, we will get a returned list of receptacle spawn points, and then try placeObjectReceptacle
                 List<ReceptacleSpawnPoint> rsps = new List<ReceptacleSpawnPoint>();
 
                 //by default, only return spawn points that are visible to the agent's camera
-                bool returnOnlyVisiblePoints = false;
+                bool returnOnlyVisiblePoints = true;
 
-                if(action.forceVisible == true)
+                //if forceVisible true, return all spawn points
+                if(action.forceVisible)
                 {
-                    returnOnlyVisiblePoints = true;
+                    returnOnlyVisiblePoints = false;
                 }
                 rsps = sop.ReturnMySpawnPoints(returnOnlyVisiblePoints);
 
@@ -8692,7 +8743,18 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 }
             }
         }
+
+        void OnDrawGizmos()
+        {
+            Gizmos.color = Color.magenta;
+            if(validpointlist.Count > 0)
+            {
+                foreach(Vector3 yes in validpointlist)
+                {
+                    Gizmos.DrawCube(yes, new Vector3(0.01f, 0.01f, 0.01f));
+                }
+            }
+        }
 #endif
     }
-
 }

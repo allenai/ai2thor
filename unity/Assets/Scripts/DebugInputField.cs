@@ -183,7 +183,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     {
                         ServerAction action = new ServerAction();
                         action.action = "ReturnSpawnCoordinatesAboveTarget";
-                        action.uniqueId = "Bowl|+00.27|+01.10|-00.75";
+                        action.uniqueId = "CounterTop|-00.08|+01.15|00.00";
+                        action.forceVisible = true;//false means only points in view returned, true means all points returned
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     } 
@@ -220,8 +221,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         }
 
                         //set to true if only receptacles in view should be target spawn points for the targetcircle
-                        action.forceVisible = true;
+                        action.forceVisible = false;
                         action.visibilityDistance = 3.0f;
+                        //action.uniqueId = "CounterTop|-00.08|+01.15|00.00";
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }
