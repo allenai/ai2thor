@@ -184,7 +184,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     {
                         ServerAction action = new ServerAction();
                         action.action = "GetSpawnCoordinatesAboveObject";
-                        action.uniqueId = "CounterTop|-00.08|+01.15|00.00";
+                        action.objectId = "CounterTop|-00.08|+01.15|00.00";
                         action.anywhere = false;
                         PhysicsController.ProcessControlCommand(action);
                         break;
@@ -224,7 +224,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         action.anywhere = false;//false, only recepatcle objects in viewport used
                         action.minDistance = 1.8f;
                         action.maxDistance = 2.5f;
-                        action.uniqueId = "Floor|+00.00|+00.00|+00.00";
+                        action.objectId = "Floor|+00.00|+00.00|+00.00";
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }
@@ -233,7 +233,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     {
                         ServerAction action = new ServerAction();
                         action.action = "SetMassProperties";
-                        action.uniqueId = "Pot|+00.30|+00.96|+01.35";
+                        action.objectId = "Pot|+00.30|+00.96|+01.35";
                         action.x = 100;
                         action.y = 100;
                         action.z = 100;
@@ -377,7 +377,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     {
                         ServerAction action = new ServerAction();
                         action.action = "TeleportObject";
-                        action.uniqueId = splitcommand[1];
+                        action.objectId = splitcommand[1];
                         action.x = float.Parse(splitcommand[2]);
                         action.y = float.Parse(splitcommand[3]);
                         action.z = float.Parse(splitcommand[4]);
@@ -388,7 +388,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     {
                         ServerAction action = new ServerAction();
                         action.action = "DisableAllObjectsOfType";
-                        action.uniqueId = splitcommand[1];
+                        action.objectId = splitcommand[1];
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }
@@ -422,7 +422,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         
                         if(splitcommand.Length == 2)
                         {
-                            action.uniqueId = splitcommand[1];
+                            action.objectId = splitcommand[1];
                         }
 
                         PhysicsController.ProcessControlCommand(action);
@@ -433,7 +433,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     {
                         ServerAction action = new ServerAction();
                         action.action = "PutObject";
-                        action.receptacleUniqueId = PhysicsController.UniqueIDOfClosestReceptacleObject();
+                        action.receptacleObjectId = PhysicsController.ObjectIdOfClosestReceptacleObject();
                         action.randomSeed = int.Parse(splitcommand[1]);
                             
                         //set this to false if we want to place it and let physics resolve by having it fall a short distance into position
@@ -454,11 +454,11 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         
                         if(splitcommand.Length == 2)
                         {
-                            action.receptacleUniqueId = splitcommand[1];
+                            action.receptacleObjectId = splitcommand[1];
                         }
 
                         else
-                            action.receptacleUniqueId = PhysicsController.UniqueIDOfClosestReceptacleObject();
+                            action.receptacleObjectId = PhysicsController.ObjectIdOfClosestReceptacleObject();
                             
                         //set this to false if we want to place it and let physics resolve by having it fall a short distance into position
 
@@ -480,11 +480,11 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         
                         if(splitcommand.Length == 2)
                         {
-                            action.receptacleUniqueId = splitcommand[1];
+                            action.receptacleObjectId = splitcommand[1];
                         }
 
                         else
-                            action.receptacleUniqueId = PhysicsController.UniqueIDOfClosestReceptacleObject();
+                            action.receptacleObjectId = PhysicsController.ObjectIdOfClosestReceptacleObject();
                             
                         //set this to false if we want to place it and let physics resolve by having it fall a short distance into position
 
@@ -522,7 +522,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         ServerAction action = new ServerAction();
                         action.action = "PlaceObjectAtPoint";
                         action.position = GameObject.Find("TestPosition").transform.position;
-                        action.uniqueId = "Pan|-02.45|+00.93|+02.02";
+                        action.objectId = "Pan|-02.45|+00.93|+02.02";
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }
@@ -802,7 +802,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         ServerAction action = new ServerAction();
                         action.action = "OpenObject";
                         action.forceAction = true;
-                        action.uniqueId = splitcommand[1];
+                        action.objectId = splitcommand[1];
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }
@@ -813,7 +813,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         ServerAction action = new ServerAction();
                         action.action = "CloseObject";
                         action.forceAction = true;
-                        action.uniqueId = splitcommand[1];
+                        action.objectId = splitcommand[1];
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }
@@ -843,7 +843,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     {
                         ServerAction action = new ServerAction();
                         action.action = "PickupObject";
-                        action.uniqueId = splitcommand[1];
+                        action.objectId = splitcommand[1];
                         action.forceAction = true;
                         PhysicsController.ProcessControlCommand(action);
                         break;
@@ -1039,12 +1039,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         action.action = "PickupObject";
 						if(splitcommand.Length > 1)
 						{
-							action.uniqueId = splitcommand[1];
+							action.objectId = splitcommand[1];
 						}
 
 						else
 						{
-							action.uniqueId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().UniqueIDOfClosestVisibleObject();
+							action.objectId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().ObjectIdOfClosestVisibleObject();
 						}
 
                         PhysicsController.ProcessControlCommand(action);
@@ -1057,12 +1057,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         action.action = "SliceObject";
 						if(splitcommand.Length > 1)
 						{
-							action.uniqueId = splitcommand[1];
+							action.objectId = splitcommand[1];
 						}
 
                         else
                         {
-                            action.uniqueId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().UniqueIDOfClosestVisibleObject();
+                            action.objectId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().ObjectIdOfClosestVisibleObject();
                         }
 
                         PhysicsController.ProcessControlCommand(action);
@@ -1075,12 +1075,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         action.action = "BreakObject";
 						if(splitcommand.Length > 1)
 						{
-							action.uniqueId = splitcommand[1];
+							action.objectId = splitcommand[1];
 						}
 
                         else
                         {
-                            action.uniqueId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().UniqueIDOfClosestVisibleObject();
+                            action.objectId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().ObjectIdOfClosestVisibleObject();
                         }
 
                         PhysicsController.ProcessControlCommand(action);
@@ -1093,12 +1093,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         action.action = "DirtyObject";
 						if(splitcommand.Length > 1)
 						{
-							action.uniqueId = splitcommand[1];
+							action.objectId = splitcommand[1];
 						}
 
                         else
                         {
-                            action.uniqueId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().UniqueIDOfClosestVisibleObject();
+                            action.objectId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().ObjectIdOfClosestVisibleObject();
                         }
 
                         PhysicsController.ProcessControlCommand(action);
@@ -1111,12 +1111,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         action.action = "CleanObject";
 						if(splitcommand.Length > 1)
 						{
-							action.uniqueId = splitcommand[1];
+							action.objectId = splitcommand[1];
 						}
 
                         else
                         {
-                            action.uniqueId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().UniqueIDOfClosestVisibleObject();
+                            action.objectId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().ObjectIdOfClosestVisibleObject();
                         }
 
                         PhysicsController.ProcessControlCommand(action);
@@ -1129,12 +1129,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         action.action = "FillObjectWithLiquid";
 						if(splitcommand.Length > 1)
 						{
-							action.uniqueId = splitcommand[1];
+							action.objectId = splitcommand[1];
 						}
 
                         else
                         {
-                            action.uniqueId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().UniqueIDOfClosestVisibleObject();
+                            action.objectId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().ObjectIdOfClosestVisibleObject();
                         }
 
                         action.fillLiquid = "water";
@@ -1148,12 +1148,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         action.action = "FillObjectWithLiquid";
 						if(splitcommand.Length > 1)
 						{
-							action.uniqueId = splitcommand[1];
+							action.objectId = splitcommand[1];
 						}
 
                         else
                         {
-                            action.uniqueId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().UniqueIDOfClosestVisibleObject();
+                            action.objectId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().ObjectIdOfClosestVisibleObject();
                         }
 
                         action.fillLiquid = "coffee";
@@ -1167,12 +1167,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         action.action = "FillObjectWithLiquid";
 						if(splitcommand.Length > 1)
 						{
-							action.uniqueId = splitcommand[1];
+							action.objectId = splitcommand[1];
 						}
 
                         else
                         {
-                            action.uniqueId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().UniqueIDOfClosestVisibleObject();
+                            action.objectId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().ObjectIdOfClosestVisibleObject();
                         }
 
                         action.fillLiquid = "wine";
@@ -1185,12 +1185,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         action.action = "EmptyLiquidFromObject";
 						if(splitcommand.Length > 1)
 						{
-							action.uniqueId = splitcommand[1];
+							action.objectId = splitcommand[1];
 						}
 
                         else
                         {
-                            action.uniqueId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().UniqueIDOfClosestVisibleObject();
+                            action.objectId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().ObjectIdOfClosestVisibleObject();
                         }
 
                         PhysicsController.ProcessControlCommand(action);
@@ -1203,12 +1203,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         action.action = "UseUpObject";
 						if(splitcommand.Length > 1)
 						{
-							action.uniqueId = splitcommand[1];
+							action.objectId = splitcommand[1];
 						}
 
                         else
                         {
-                            action.uniqueId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().UniqueIDOfClosestVisibleObject();
+                            action.objectId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().ObjectIdOfClosestVisibleObject();
                         }
 
                         PhysicsController.ProcessControlCommand(action);
@@ -1474,19 +1474,19 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
                         if (splitcommand.Length > 1 && splitcommand.Length < 3)
                         {
-                            action.uniqueId = splitcommand[1];
+                            action.objectId = splitcommand[1];
                             action.moveMagnitude = 200f;//4000f;
                         }
 
                         else if(splitcommand.Length > 2)
                         {
-                            action.uniqueId = splitcommand[1];
+                            action.objectId = splitcommand[1];
                             action.moveMagnitude = float.Parse(splitcommand[2]);
                         }
 
                         else
                         {
-                            action.uniqueId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().UniqueIDOfClosestPickupableOrMoveableObject();
+                            action.objectId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().ObjectIdOfClosestPickupableOrMoveableObject();
                             //action.moveMagnitude = 200f;//4000f;
                         }
 							
@@ -1504,19 +1504,19 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
                         if (splitcommand.Length > 1 && splitcommand.Length < 3)
                         {
-                            action.uniqueId = splitcommand[1];
+                            action.objectId = splitcommand[1];
                             action.moveMagnitude = 200f;//4000f;
                         }
 
                         else if(splitcommand.Length > 2)
                         {
-                            action.uniqueId = splitcommand[1];
+                            action.objectId = splitcommand[1];
                             action.moveMagnitude = float.Parse(splitcommand[2]);
                         }
 
                         else
                         {
-                            action.uniqueId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().UniqueIDOfClosestPickupableOrMoveableObject();
+                            action.objectId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().ObjectIdOfClosestPickupableOrMoveableObject();
                             //action.moveMagnitude = 200f;//4000f;
                         }
 							
@@ -1533,13 +1533,13 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
                         if (splitcommand.Length > 1 && splitcommand.Length < 3)
                         {
-                            action.uniqueId = splitcommand[1];
+                            action.objectId = splitcommand[1];
                             action.moveMagnitude = 10f;//4000f;
                         }
 
                         else if(splitcommand.Length > 2)
                         {
-                            action.uniqueId = splitcommand[1];
+                            action.objectId = splitcommand[1];
                             action.moveMagnitude = float.Parse(splitcommand[2]);
                         }
 
@@ -1555,12 +1555,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         action.action = "ToggleObjectOn";
                         if (splitcommand.Length > 1)
                         {
-                            action.uniqueId = splitcommand[1];
+                            action.objectId = splitcommand[1];
                         }
 
                         else
                         {
-                            action.uniqueId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().UniqueIDOfClosestToggleObject();
+                            action.objectId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().ObjectIdOfClosestToggleObject();
                         }
 
                         PhysicsController.ProcessControlCommand(action);
@@ -1574,11 +1574,11 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         action.action = "ToggleObjectOff";
                         if (splitcommand.Length > 1)
                         {
-                            action.uniqueId = splitcommand[1];
+                            action.objectId = splitcommand[1];
                         }
                         else
                         {
-                            action.uniqueId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().UniqueIDOfClosestToggleObject();
+                            action.objectId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().ObjectIdOfClosestToggleObject();
                         }
 
                         PhysicsController.ProcessControlCommand(action);
@@ -1592,7 +1592,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         action.action = "CookObject";
                         if (splitcommand.Length > 1)
                         {
-                            action.uniqueId = splitcommand[1];
+                            action.objectId = splitcommand[1];
                         }
 
                         PhysicsController.ProcessControlCommand(action);
@@ -1627,19 +1627,19 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         //default open 100%
 						if (splitcommand.Length > 1 && splitcommand.Length < 3)
                         {
-                            action.uniqueId = splitcommand[1];
+                            action.objectId = splitcommand[1];
                         }
 
 						//give the open percentage as 3rd param, from 0.0 to 1.0
 						else if(splitcommand.Length > 2)
 						{
-							action.uniqueId = splitcommand[1];
+							action.objectId = splitcommand[1];
 							action.moveMagnitude = float.Parse(splitcommand[2]);
 						}
 
 						else
 						{
-                           action.uniqueId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().UniqueIDOfClosestVisibleOpenableObject();
+                           action.objectId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().ObjectIdOfClosestVisibleOpenableObject();
 						}
 
 						PhysicsController.ProcessControlCommand(action);                  
@@ -1654,12 +1654,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
                         if (splitcommand.Length > 1)
                         {
-                            action.uniqueId = splitcommand[1];
+                            action.objectId = splitcommand[1];
                         }
                   
                         else
                         {
-                            action.uniqueId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().UniqueIDOfClosestVisibleOpenableObject();
+                            action.objectId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().ObjectIdOfClosestVisibleOpenableObject();
                         }
 
                         PhysicsController.ProcessControlCommand(action);
@@ -1676,7 +1676,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
                         if (splitcommand.Length > 1)
                         {
-                            action.uniqueId = splitcommand[1];
+                            action.objectId = splitcommand[1];
                         }
 
                         PhysicsController.ProcessControlCommand(action);
@@ -1697,7 +1697,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
                         if (splitcommand.Length > 1)
                         {
-                            action.uniqueId = splitcommand[1];
+                            action.objectId = splitcommand[1];
                         }
 
                         PhysicsController.ProcessControlCommand(action);
@@ -1712,7 +1712,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
                         if (splitcommand.Length > 1)
                         {
-                            action.uniqueId = splitcommand[1];
+                            action.objectId = splitcommand[1];
                         }
 
                         PhysicsController.ProcessControlCommand(action);
@@ -1727,7 +1727,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
                         if (splitcommand.Length > 1)
                         {
-                            action.uniqueId = splitcommand[1];
+                            action.objectId = splitcommand[1];
                         }
 
                         PhysicsController.ProcessControlCommand(action);
@@ -1742,7 +1742,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
                         if (splitcommand.Length > 1)
                         {
-                            action.uniqueId = splitcommand[1];
+                            action.objectId = splitcommand[1];
                         }
 
                         PhysicsController.ProcessControlCommand(action);
@@ -1757,7 +1757,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
                         if (splitcommand.Length > 1)
                         {
-                            action.uniqueId = splitcommand[1];
+                            action.objectId = splitcommand[1];
                         }
 
                         PhysicsController.ProcessControlCommand(action);
@@ -1772,7 +1772,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
                         if (splitcommand.Length > 1)
                         {
-                            action.uniqueId = splitcommand[1];
+                            action.objectId = splitcommand[1];
                         }
 
                         PhysicsController.ProcessControlCommand(action);
@@ -1794,7 +1794,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         if (splitcommand.Length > 1)
                         {
                             //ID of spawner
-                            action.uniqueId = splitcommand[1];
+                            action.objectId = splitcommand[1];
 
                             //type of object to spawn, selected from {bread, tomato, egg, potato, lettuce, apple}
                             action.objectType = splitcommand[2];
@@ -1814,7 +1814,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         if (splitcommand.Length > 1)
                         {
                             //ID of spawner
-                            action.uniqueId = splitcommand[1];
+                            action.objectId = splitcommand[1];
                         }
 
                         PhysicsController.ProcessControlCommand(action);
@@ -1831,7 +1831,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         if (splitcommand.Length > 1)
                         {
                             //ID of spawner
-                            action.uniqueId = splitcommand[1];
+                            action.objectId = splitcommand[1];
 
                             //count of objects to spawn in
                             action.numPlacementAttempts = int.Parse(splitcommand[2]);
@@ -1858,7 +1858,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         if (splitcommand.Length > 1)
                         {
                             //ID of spawner
-                            action.uniqueId = splitcommand[1];
+                            action.objectId = splitcommand[1];
                             //count of objects to spawn
                             action.numPlacementAttempts = int.Parse(splitcommand[2]);
                             //delay between spawns
@@ -1881,7 +1881,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         if (splitcommand.Length > 1)
                         {
                             //ID of spawner
-                            action.uniqueId = splitcommand[1];
+                            action.objectId = splitcommand[1];
 
                             //count of objects to spawn
                             action.numPlacementAttempts = int.Parse(splitcommand[2]);
@@ -1904,7 +1904,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         if (splitcommand.Length > 1)
                         {
                             //ID of spawner
-                            action.uniqueId = splitcommand[1];
+                            action.objectId = splitcommand[1];
 
                             //minimum range of how many objects to spawn
                             action.agentCount = int.Parse(splitcommand[2]);
@@ -1933,7 +1933,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         if (splitcommand.Length > 1)
                         {
                             //ID of spawner
-                            action.uniqueId = splitcommand[1];
+                            action.objectId = splitcommand[1];
 
                             //minimum range of how many objects to spawn
                             action.agentCount = int.Parse(splitcommand[2]);
@@ -1959,7 +1959,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         if (splitcommand.Length > 1)
                         {
                             //ID of spawner
-                            action.uniqueId = splitcommand[1];
+                            action.objectId = splitcommand[1];
 
                             //minimum range of how many objects to spawn
                             action.agentCount = int.Parse(splitcommand[2]);
@@ -1980,7 +1980,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         ServerAction action = new ServerAction();
                         action.action = splitcommand[0];
                         if (splitcommand.Length == 2) {
-                            action.uniqueId = splitcommand[1];
+                            action.objectId = splitcommand[1];
                         } else if (splitcommand.Length == 3) {
                             action.x = float.Parse(splitcommand[1]);
                             action.z = float.Parse(splitcommand[2]);

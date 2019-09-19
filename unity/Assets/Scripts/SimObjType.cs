@@ -270,10 +270,10 @@ public enum SimObjType : int
 public static class ReceptacleRestrictions
 {
 
-	//these objects generate UniqueIDs based on their parent object to show that they are related. ie: "Bathtub|1|1|1|" has a child sim object BathtubBasin with the ID "Bathtub|1|1|1|BathtubBasin"
+	//these objects generate ObjectIDs based on their parent object to show that they are related. ie: "Bathtub|1|1|1|" has a child sim object BathtubBasin with the ID "Bathtub|1|1|1|BathtubBasin"
 	//this is specifically used for objects that have distinct zones that should be individually interactable (outer part vs inner part) but share the same geometry, like a bathtub.
 	//Objets like a Coffeetable with inset Drawers should NOT be on this list because those objects do not share geometry (table vs drawer)
-	public static List<SimObjType> UseParentUniqueIDasPrefix = new List<SimObjType>()
+	public static List<SimObjType> UseParentObjectIDasPrefix = new List<SimObjType>()
 	{SimObjType.BathtubBasin,SimObjType.SinkBasin};
 
     //Objects are "placed into/placed in" these receptacles

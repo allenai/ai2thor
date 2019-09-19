@@ -187,8 +187,8 @@ public class Contains : MonoBehaviour
 		return CurrentlyContains;
 	}
 
-	//report back a list of unique id of objects currently inside this receptacle
-	public List<string> CurrentlyContainedUniqueIDs()
+	//report back a list of object ids of objects currently inside this receptacle
+	public List<string> CurrentlyContainedObjectIDs()
 	{
         List<SimObjPhysics> cleanedList = new List<SimObjPhysics>(CurrentlyContains);
 
@@ -209,7 +209,7 @@ public class Contains : MonoBehaviour
 
         foreach (SimObjPhysics sop in CurrentlyContains)
         {
-            ids.Add(sop.UniqueID);
+            ids.Add(sop.ObjectID);
         }
 
 		return ids;

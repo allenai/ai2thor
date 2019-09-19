@@ -119,7 +119,7 @@ public class TestCabinetVisibility : MonoBehaviour {
 				//look around the world in 60-degree increments
 				EditorUtility.DisplayProgressBar (
 					"Testing " + cabinets.Count.ToString () + " cabinets",
-					currentCabinet.UniqueID + " (position " + i.ToString () + ")",
+					currentCabinet.ObjectID + " (position " + i.ToString () + ")",
 					((float)cabinetNum / cabinets.Count) + (((float)i / ChecksPerCabinet) * progressInterval));
 				for (int j = 0; j < horizonAngles.Length; j++) {
 					float horizonAngle = horizonAngles [j];

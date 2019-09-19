@@ -116,7 +116,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                             ServerAction action = new ServerAction
                             {
                                 action = actionName,
-                                uniqueId = closestObj.uniqueID
+                                objectId = closestObj.objectID
                             };
                             this.PhysicsController.ProcessControlCommand(action);
                         }
@@ -143,7 +143,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 dothis.moveMagnitude = 2000f;
 
                 // dothis.action = "SliceObject";
-                // dothis.objectId = PhysicsController.GetComponent<PhysicsRemoteFPSAgentController>().UniqueIDOfClosestVisibleObject();
+                // dothis.objectId = PhysicsController.GetComponent<PhysicsRemoteFPSAgentController>().ObjectIdOfClosestVisibleObject();
 
                 PhysicsController.ProcessControlCommand(dothis);
             }
@@ -159,7 +159,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 dothis.moveMagnitude = 15000f;
                 
                 // dothis.action = "PutObject";
-                // dothis.receptacleObjectId = PhysicsController.UniqueIDOfClosestReceptacleObject();
+                // dothis.receptacleObjectId = PhysicsController.ObjectIdOfClosestReceptacleObject();
 
                 PhysicsController.ProcessControlCommand(dothis);
             }
@@ -247,7 +247,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 };
                 if (simObj != null && validObjectLazy())
                 {
-                    var withinReach = PhysicsController.FindObjectInVisibleSimObjPhysics(simObj.uniqueID) != null;
+                    var withinReach = PhysicsController.FindObjectInVisibleSimObjPhysics(simObj.objectID) != null;
                     setTargetText(simObj.name, withinReach);
                     newHighlightedObject = simObj;
                     var mRenderer = newHighlightedObject.GetComponentInChildren<MeshRenderer>();

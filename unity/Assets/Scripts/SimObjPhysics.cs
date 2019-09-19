@@ -12,9 +12,9 @@ using UnityEditor.SceneManagement;
 
 public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 {
-	[Header("String ID of this Object")]
+	[Header("Unique String ID of this Object")]
 	[SerializeField]
-	public string uniqueID = string.Empty;
+	public string objectID = string.Empty;
 
 	[Header("Object Type")]
 	[SerializeField]
@@ -140,16 +140,16 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 			ContainedObjectReferences.Clear();
 	}
 
-	public string UniqueID
+	public string ObjectID
 	{
 		get
 		{
-			return uniqueID;
+			return objectID;
 		}
 
 		set
 		{
-			uniqueID = value;
+			objectID = value;
 		}
 	}
 
@@ -169,7 +169,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		}
 	}
 
-	//get all the UniqueID strings of all objects contained by this receptacle object
+	//get all the ObjectID strings of all objects contained by this receptacle object
 	public List<string> ReceptacleObjectIds
 	{
 		get
@@ -867,7 +867,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 				//do this once per ReceptacleTriggerBox referenced by this object
 				foreach (GameObject rtb in ReceptacleTriggerBoxes)
 				{
-					//now go through every object each ReceptacleTriggerBox is keeping track of and add their string UniqueID to objs
+					//now go through every object each ReceptacleTriggerBox is keeping track of and add their string ObjectID to objs
 					foreach (SimObjPhysics sop in rtb.GetComponent<Contains>().CurrentlyContainedObjects())
 					{
 						//don't add repeats
@@ -925,38 +925,15 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 				//do this once per ReceptacleTriggerBox referenced by this object
 				foreach (GameObject rtb in ReceptacleTriggerBoxes)
 				{
-					//now go through every object each ReceptacleTriggerBox is keeping track of and add their string UniqueID to objs
-					foreach (string id in rtb.GetComponent<Contains>().CurrentlyContainedUniqueIDs())
+					//now go through every object each ReceptacleTriggerBox is keeping track of and add their string ObjectID to objs
+					foreach (string id in rtb.GetComponent<Contains>().CurrentlyContainedObjectIDs())
 					{
 						//don't add repeats
 						if (!objs.Contains(id))
 							objs.Add(id);
 					}
-					//objs.Add(rtb.GetComponent<Contains>().CurrentlyContainedUniqueIDs()); 
 				}
 
-				/////UNCOMMENT BELOW if you want a list of what receptacles contian what objects on start
-				// #if UNITY_EDITOR
-
-				// if (objs.Count != 0)
-				// {
-				// 	//print the objs for now just to check in editor
-				// 	string result = UniqueID + " contains: ";
-
-				// 	foreach (string s in objs)
-				// 	{
-				// 		result += s + ", ";
-				// 	}
-
-				// 	Debug.Log(result);
-				// }
-
-				// else
-				// {
-				// 	Debug.Log(UniqueID + " is empty");
-				// }
-				// #endif
-				
 				return objs;
 			}
 

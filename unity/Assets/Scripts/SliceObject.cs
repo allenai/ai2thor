@@ -119,7 +119,7 @@ public class SliceObject : MonoBehaviour
                 foreach (Transform t in resultObject.transform)
                 {
                     SimObjPhysics tsop = t.GetComponent<SimObjPhysics>();
-                    psm.Generate_InheritedUniqueID(gameObject.GetComponent<SimObjPhysics>(), tsop, count);
+                    psm.Generate_InheritedObjectID(gameObject.GetComponent<SimObjPhysics>(), tsop, count);
                     count++;
 
                     //also turn on the kinematics of this object
@@ -142,7 +142,7 @@ public class SliceObject : MonoBehaviour
                 }
 
                 SimObjPhysics resultsop = resultObject.GetComponent<SimObjPhysics>();
-                psm.Generate_InheritedUniqueID(gameObject.GetComponent<SimObjPhysics>(), resultsop, 0);
+                psm.Generate_InheritedObjectID(gameObject.GetComponent<SimObjPhysics>(), resultsop, 0);
 
                 Rigidbody resultrb = resultsop.GetComponent<Rigidbody>();
                 resultrb.collisionDetectionMode = CollisionDetectionMode.ContinuousSpeculative;

@@ -64,7 +64,7 @@ public class ImageSynthesis : MonoBehaviour {
 
 	public float opticalFlowSensitivity;
 
-	private Dictionary<int, string> nonSimObjUniqueIds = new Dictionary<int, string>();
+	private Dictionary<int, string> nonSimObjObjectIds = new Dictionary<int, string>();
 
 	// cached materials
 	private Material opticalFlowMaterial;
@@ -265,19 +265,19 @@ public class ImageSynthesis : MonoBehaviour {
 	}
 
 
-	private string getUniqueId(GameObject gameObject) {
-		// the uniqueid is generated this way to handle the edge case
+	private string getObjectId(GameObject gameObject) {
+		// the object id is generated this way to handle the edge case
 		// where a non-simobject could get moved from its initial position 
-		// during a simulation.  This forces the uniqueId to get generated once
+		// during a simulation.  This forces the objectId to get generated once
 		// on scene startup
 		int key = gameObject.GetInstanceID();
-		if (nonSimObjUniqueIds.ContainsKey(key)) {
-			return nonSimObjUniqueIds[key];
+		if (nonSimObjObjectIds.ContainsKey(key)) {
+			return nonSimObjObjectIds[key];
 		} else {
 			Transform t = gameObject.transform;
-			string uniqueId = gameObject.name + "|" + t.position.x + "|" + t.position.y + "|" + t.position.z;
-			nonSimObjUniqueIds[key] = uniqueId;
-			return uniqueId;
+			string objectId = gameObject.name + "|" + t.position.x + "|" + t.position.y + "|" + t.position.z;
+			nonSimObjObjectIds[key] = objectId;
+			return objectId;
 		}
 	}
 
@@ -297,7 +297,7 @@ public class ImageSynthesis : MonoBehaviour {
 			// var tag = r.gameObject.tag;
 
 			string classTag = r.name;
-			string objTag = getUniqueId(r.gameObject);
+			string objTag = getObjectId(r.gameObject);
 
 			StructureObject so = r.gameObject.GetComponent<StructureObject> ();
 			if (so == null) 
@@ -317,7 +317,7 @@ public class ImageSynthesis : MonoBehaviour {
 			if (sop != null) 
 			{
 				classTag = "" + sop.Type;
-				objTag = sop.UniqueID;
+				objTag = sop.ObjectID;
 			}
 
 

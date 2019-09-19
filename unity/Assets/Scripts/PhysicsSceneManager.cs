@@ -18,7 +18,7 @@ public class PhysicsSceneManager : MonoBehaviour
 
 	//get references to the spawned Required objects after spawning them for the first time.
 	public List<GameObject> SpawnedObjects = new List<GameObject>();
-	public Dictionary<string, SimObjPhysics> UniqueIdToSimObjPhysics = new Dictionary<string, SimObjPhysics>();
+	public Dictionary<string, SimObjPhysics> ObjectIdToSimObjPhysics = new Dictionary<string, SimObjPhysics>();
 	public List<SimObjPhysics> ReceptaclesInScene = new List<SimObjPhysics>();
 
 	public GameObject HideAndSeek;
@@ -60,7 +60,7 @@ public class PhysicsSceneManager : MonoBehaviour
 	public void SetupScene()
 	{
 		ReceptaclesInScene.Clear();
-		UniqueIdToSimObjPhysics.Clear();
+		ObjectIdToSimObjPhysics.Clear();
 		GatherSimObjPhysInScene();
 		GatherAllReceptaclesInScene();
 	}
@@ -96,10 +96,10 @@ public class PhysicsSceneManager : MonoBehaviour
 		}
 	}
 
-	public void ResetUniqueIdToSimObjPhysics() {
-            UniqueIdToSimObjPhysics.Clear();
+	public void ResetObjectIdToSimObjPhysics() {
+            ObjectIdToSimObjPhysics.Clear();
             foreach (SimObjPhysics so in GameObject.FindObjectsOfType<SimObjPhysics>()) {
-                UniqueIdToSimObjPhysics[so.UniqueID] = so;
+                ObjectIdToSimObjPhysics[so.ObjectID] = so;
             }
         }
 
@@ -112,13 +112,13 @@ public class PhysicsSceneManager : MonoBehaviour
 
 		foreach(SimObjPhysics o in allPhysObjects)
 		{
-			Generate_UniqueID(o);
+			Generate_ObjectID(o);
 
 			///debug in editor, make sure no two object share ids for some reason
 			#if UNITY_EDITOR
-			if (CheckForDuplicateUniqueIDs(o))
+			if (CheckForDuplicateObjectIDs(o))
 			{
-				Debug.Log("Yo there are duplicate UniqueIDs! Check" + o.UniqueID);	
+				Debug.Log("Yo there are duplicate ObjectIDs! Check" + o.ObjectID);	
 			} else {
 				AddToObjectsInScene(o);
 				continue;
@@ -136,7 +136,7 @@ public class PhysicsSceneManager : MonoBehaviour
 
 	public void GatherAllReceptaclesInScene()
 	{
-		foreach(SimObjPhysics sop in UniqueIdToSimObjPhysics.Values)
+		foreach(SimObjPhysics sop in ObjectIdToSimObjPhysics.Values)
 		{
 			if(sop.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.Receptacle))
 			{
@@ -165,29 +165,29 @@ public class PhysicsSceneManager : MonoBehaviour
 		ReceptaclesInScene.Sort((r0, r1) => (r0.gameObject.GetInstanceID().CompareTo(r1.gameObject.GetInstanceID())));
 	}
     
-	public void Generate_UniqueID(SimObjPhysics o)
+	public void Generate_ObjectID(SimObjPhysics o)
     {
-		//check if this object require's it's parent simObj's UniqueID as a prefix
-		if(ReceptacleRestrictions.UseParentUniqueIDasPrefix.Contains(o.Type))
+		//check if this object require's it's parent simObj's ObjectID as a prefix
+		if(ReceptacleRestrictions.UseParentObjectIDasPrefix.Contains(o.Type))
 		{
 			SimObjPhysics parent = o.transform.parent.GetComponent<SimObjPhysics>();
 			if (parent == null) {
 				Debug.LogWarning("Object " + o + " requires a SimObjPhysics " +
-				"parent to create its unique ID but none exists. Using 'None' instead.");
-				o.UniqueID = "None|" + o.Type.ToString();
+				"parent to create its object ID but none exists. Using 'None' instead.");
+				o.ObjectID = "None|" + o.Type.ToString();
 				return;
 			}
 
-			if(parent.UniqueID == null)
+			if(parent.ObjectID == null)
 			{
 				Vector3 ppos = parent.transform.position;
 				string xpPos = (ppos.x >= 0 ? "+" : "") + ppos.x.ToString("00.00");
 				string ypPos = (ppos.y >= 0 ? "+" : "") + ppos.y.ToString("00.00");
 				string zpPos = (ppos.z >= 0 ? "+" : "") + ppos.z.ToString("00.00");
-				parent.UniqueID = parent.Type.ToString() + "|" + xpPos + "|" + ypPos + "|" + zpPos;
+				parent.ObjectID = parent.Type.ToString() + "|" + xpPos + "|" + ypPos + "|" + zpPos;
 			}
 
-			o.UniqueID = parent.UniqueID + "|" + o.Type.ToString();
+			o.ObjectID = parent.ObjectID + "|" + o.Type.ToString();
 			return;
 
 		}
@@ -196,19 +196,19 @@ public class PhysicsSceneManager : MonoBehaviour
         string xPos = (pos.x >= 0 ? "+" : "") + pos.x.ToString("00.00");
         string yPos = (pos.y >= 0 ? "+" : "") + pos.y.ToString("00.00");
         string zPos = (pos.z >= 0 ? "+" : "") + pos.z.ToString("00.00");
-        o.UniqueID = o.Type.ToString() + "|" + xPos + "|" + yPos + "|" + zPos;
+        o.ObjectID = o.Type.ToString() + "|" + xPos + "|" + yPos + "|" + zPos;
     }
 
-	//used to create unique id for an object created as result of a state change of another object ie: bread - >breadslice1, breadslice 2 etc
-	public void Generate_InheritedUniqueID(SimObjPhysics sourceObject, SimObjPhysics createdObject, int count)
+	//used to create object id for an object created as result of a state change of another object ie: bread - >breadslice1, breadslice 2 etc
+	public void Generate_InheritedObjectID(SimObjPhysics sourceObject, SimObjPhysics createdObject, int count)
 	{
-		createdObject.UniqueID = sourceObject.UniqueID + "|" + createdObject.ObjType + "_" + count;
+		createdObject.ObjectID = sourceObject.ObjectID + "|" + createdObject.ObjType + "_" + count;
 		AddToObjectsInScene(createdObject);
 	}
     
-	private bool CheckForDuplicateUniqueIDs(SimObjPhysics sop)
+	private bool CheckForDuplicateObjectIDs(SimObjPhysics sop)
 	{
-		if (UniqueIdToSimObjPhysics.ContainsKey(sop.UniqueID))
+		if (ObjectIdToSimObjPhysics.ContainsKey(sop.ObjectID))
 			return true;
 
 		else
@@ -217,13 +217,13 @@ public class PhysicsSceneManager : MonoBehaviour
 
 	public void AddToObjectsInScene(SimObjPhysics sop)
 	{
-		UniqueIdToSimObjPhysics[sop.UniqueID] = sop;
+		ObjectIdToSimObjPhysics[sop.ObjectID] = sop;
 	}
 
 	public void RemoveFromObjectsInScene(SimObjPhysics sop)
 	{
-		if (UniqueIdToSimObjPhysics.ContainsKey(sop.UniqueID)) {
-			UniqueIdToSimObjPhysics.Remove(sop.UniqueID);
+		if (ObjectIdToSimObjPhysics.ContainsKey(sop.ObjectID)) {
+			ObjectIdToSimObjPhysics.Remove(sop.ObjectID);
 		}
 	}
 
@@ -272,8 +272,8 @@ public class PhysicsSceneManager : MonoBehaviour
                 {
                     copy = Instantiate(existingSOP);
                     copy.name += "_copy_" + ii;
-                    copy.UniqueID = existingSOP.UniqueID + "_copy_" + ii;
-                    copy.uniqueID = copy.UniqueID;
+                    copy.ObjectID = existingSOP.ObjectID + "_copy_" + ii;
+                    copy.objectID = copy.ObjectID;
                 } else
                 {
                     copy = existingSOP;
@@ -400,8 +400,8 @@ public class PhysicsSceneManager : MonoBehaviour
                         SimObjPhysics gop = typeToObjectList[sopType][UnityEngine.Random.Range(0, typeToObjectList[sopType].Count - 1)];
                         SimObjPhysics copy = Instantiate(gop);
                         copy.name += "_random_copy_" + j;
-                        copy.UniqueID = gop.UniqueID + "_copy_" + j;
-                        copy.uniqueID = copy.UniqueID;
+                        copy.ObjectID = gop.ObjectID + "_copy_" + j;
+                        copy.objectID = copy.ObjectID;
                         simObjectCopies.Add(copy.gameObject);
                     }
                 }

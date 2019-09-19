@@ -49,7 +49,7 @@ public class InstantiatePrefabTest : MonoBehaviour
 					so = go.GetComponentInChildren<SimObjPhysics>();
 				}
 
-				so.UniqueID = objectId;
+				so.ObjectID = objectId;
 				return so;
 			}
 		}
@@ -148,7 +148,7 @@ public class InstantiatePrefabTest : MonoBehaviour
         //ok make sure we did actually spawn something now, and give it an Id number
         if (simObj)
         {
-            simObj.uniqueID = objectType + "|" + spawnCount.ToString();
+            simObj.objectID = objectType + "|" + spawnCount.ToString();
             return simObj;
         }
 

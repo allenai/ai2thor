@@ -10,7 +10,7 @@ public class SimObjectEditor : Editor
 
 		if (SimUtil.ShowIDs) {
 			Handles.color = Color.white;
-			Handles.Label ((simObj.transform.position + Vector3.up * 0.1f), simObj.Type.ToString() + " : " + simObj.UniqueID.ToString (), EditorStyles.miniButton);
+			Handles.Label ((simObj.transform.position + Vector3.up * 0.1f), simObj.Type.ToString() + " : " + simObj.ObjectID.ToString (), EditorStyles.miniButton);
 		}
 		if (SimUtil.ShowBasePivots) {
 			Handles.color = Color.white;
@@ -29,12 +29,12 @@ public class SimObjectEditor : Editor
 		GUI.color = Color.white;
 		EditorGUILayout.LabelField ("Properties:", EditorStyles.miniLabel);
 		if (!EditorUtility.IsPersistent (simObj)) {
-			if (!SimUtil.IsUniqueIDValid (simObj.UniqueID)) {
+			if (!SimUtil.IsObjectIDValid (simObj.ObjectID)) {
 				GUI.color = Color.Lerp (Color.yellow, Color.white, 0.5f);
-				EditorGUILayout.LabelField ("This object has no Unique ID. Use SceneManager to gather / generate SimObj IDs.");
+				EditorGUILayout.LabelField ("This object has no Object ID. Use SceneManager to gather / generate SimObj IDs.");
 			} else {
 				GUI.color = Color.white;
-				EditorGUILayout.TextField ("Unique ID:", simObj.UniqueID.ToString ());
+				EditorGUILayout.TextField ("Object ID:", simObj.ObjectID.ToString ());
 			}
 		}
 		GUI.color = Color.white;
