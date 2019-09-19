@@ -222,9 +222,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         }
 
                         action.anywhere = false;//false, only recepatcle objects in viewport used
-                        action.minDistance = 1.8f;
-                        action.maxDistance = 2.5f;
-                        action.objectId = "Floor|+00.00|+00.00|+00.00";
+                        //action.minDistance = 1.8f;
+                        //action.maxDistance = 2.5f;
+                        //action.objectId = "Floor|+00.00|+00.00|+00.00";
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }
