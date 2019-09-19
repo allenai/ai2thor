@@ -3462,6 +3462,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             if(targetReceptacles.Count <= 0)
             {
                 errorMessage = "for some reason, no receptacles were found in the scene!";
+                Destroy(targetCircle);
                 actionFinished(false);
                 return;
             }
