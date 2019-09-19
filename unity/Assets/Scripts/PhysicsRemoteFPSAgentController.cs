@@ -3461,6 +3461,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 actionFinished(false);
                 return;
             }
+
             //ok we have a shuffled list of receptacles that is picked based on the seed....
             foreach(SimObjPhysics sop in targetReceptacles)
             {
@@ -3477,17 +3478,20 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 }
                 rsps = sop.ReturnMySpawnPoints(returnOnlyVisiblePoints);
 
-                //if visibilityDistance was passed in, only use spawn points that are at least minDistance away from agent
+                //if visibilityDistance was passed in, only use spawn points that are at least minDistance radius away from agent
                 if(action.minDistance > 0.0f)
                 {
                     List<ReceptacleSpawnPoint> editedRsps = new List<ReceptacleSpawnPoint>();
                     foreach(ReceptacleSpawnPoint p in rsps)
                     {
+                        //get rid of differences in y values for points
+                        Vector3 normalizedPosition = new Vector3(transform.position.x, 0, transform.position.z);
+                        Vector3 normalizedPoint = new Vector3(p.Point.x, 0, p.Point.z);
+
                         //check distance from agent's transform to spawnpoint
-                        //if the distance isn't bigger than visibility distance, go ahead and do it
-                        if((Vector3.Distance(p.Point, transform.position) >= action.minDistance))
+                        if((Vector3.Distance(normalizedPoint, normalizedPosition) >= action.minDistance))
                         {
-                            print(Vector3.Distance(p.Point, transform.position));
+                            //print(Vector3.Distance(normalizedPoint, normalizedPosition));
                             editedRsps.Add(p);
                         }
                     }
