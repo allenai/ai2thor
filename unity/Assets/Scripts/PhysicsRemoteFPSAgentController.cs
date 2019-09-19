@@ -3409,14 +3409,20 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             //this is the default, only spawn circles in objects that are in view
             if(!action.anywhere)
             {
-                //get all visible receptacles in current view
-                foreach(SimObjPhysics sop in VisibleSimObjs(false))
+                //check every sim object and see if it is within the viewport
+                foreach(SimObjPhysics sop in VisibleSimObjs(true))
                 {
                     if(sop.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.Receptacle))
                     {
                         ///one more check, make sure this receptacle
                         if(ReceptacleRestrictions.SpawnOnlyOutsideReceptacles.Contains(sop.ObjType))
-                        targetReceptacles.Add(sop);
+                        {
+                            //ok now check if the object is for real in the viewport
+                            if(objectIsWithinViewport(sop))
+                            {
+                                targetReceptacles.Add(sop);
+                            }
+                        }
                     }
                 }
             }
@@ -3446,12 +3452,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 targetReceptacles = filteredTargetReceptacleList;
             }
 
-
-            //ok now use the seed to shuffle either the list of receptacles in view/ the list of all "outside" receptacles in the scene
-            if(action.randomSeed != 0)
-            {
-                targetReceptacles.Shuffle_(action.randomSeed);
-            }
+            // if(action.randomSeed != 0)
+            // {
+            //     targetReceptacles.Shuffle_(action.randomSeed);
+            // }
 
             bool succesfulSpawn = false;
 
@@ -3468,47 +3472,84 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 //for every receptacle, we will get a returned list of receptacle spawn points, and then try placeObjectReceptacle
                 List<ReceptacleSpawnPoint> rsps = new List<ReceptacleSpawnPoint>();
 
-                //by default, only return spawn points that are visible to the agent's camera
-                bool returnOnlyVisiblePoints = true;
+                rsps = sop.ReturnMySpawnPoints(false);
+                List<ReceptacleSpawnPoint> editedRsps = new List<ReceptacleSpawnPoint>();
+                bool constraintsUsed = false;//only set rsps to editedRsps if constraints were passed in
 
-                //if anywhere true, return all spawn points no matter if object not in view
-                if(action.anywhere)
+                //only do further constraint checks if defaults are overwritten
+                if(!(action.minDistance == 0 && action.maxDistance == 0))
                 {
-                    returnOnlyVisiblePoints = false;
-                }
-                rsps = sop.ReturnMySpawnPoints(returnOnlyVisiblePoints);
-
-                //if visibilityDistance was passed in, only use spawn points that are at least minDistance radius away from agent
-                if(action.minDistance > 0.0f)
-                {
-                    List<ReceptacleSpawnPoint> editedRsps = new List<ReceptacleSpawnPoint>();
                     foreach(ReceptacleSpawnPoint p in rsps)
                     {
                         //get rid of differences in y values for points
                         Vector3 normalizedPosition = new Vector3(transform.position.x, 0, transform.position.z);
                         Vector3 normalizedPoint = new Vector3(p.Point.x, 0, p.Point.z);
 
-                        //check distance from agent's transform to spawnpoint
-                        if((Vector3.Distance(normalizedPoint, normalizedPosition) >= action.minDistance))
+                        if(action.minDistance == 0 && action.maxDistance > 0)
                         {
-                            //print(Vector3.Distance(normalizedPoint, normalizedPosition));
-                            editedRsps.Add(p);
+                            //check distance from agent's transform to spawnpoint
+                            if((Vector3.Distance(normalizedPoint, normalizedPosition) <= action.maxDistance))
+                            {
+                                editedRsps.Add(p);
+                            }
+
+                            constraintsUsed = true;
+                        }
+
+                        //min distance passed in, no max distance
+                        if(action.maxDistance == 0 && action.minDistance > 0)
+                        {
+                            //check distance from agent's transform to spawnpoint
+                            if((Vector3.Distance(normalizedPoint, normalizedPosition) >= action.minDistance))
+                            {
+                                editedRsps.Add(p);
+                            }
+
+                            constraintsUsed = true;
+                        }
+
+                        else
+                        {
+                            //these are default so don't filter by distance
+                            //check distance from agent's transform to spawnpoint
+                            if((Vector3.Distance(normalizedPoint, normalizedPosition) >= action.minDistance 
+                            && Vector3.Distance(normalizedPoint, normalizedPosition) <= action.maxDistance))
+                            {
+                                editedRsps.Add(p);
+                            }
+
+                            constraintsUsed = true;
                         }
                     }
-
-                    rsps = editedRsps;
                 }
+
+                if(constraintsUsed)
+                rsps = editedRsps;
 
                 rsps.Shuffle_(action.randomSeed);
 
-                if(ipt.PlaceObjectReceptacle(rsps, targetCircle.GetComponent<SimObjPhysics>(), true, 20, 90, true, null))
+                //only place in viewport
+                if(!action.anywhere)
                 {
-                    succesfulSpawn = true;
-                    break;
+                    if(ipt.PlaceObjectReceptacleInViewport(rsps, targetCircle.GetComponent<SimObjPhysics>(), true, 500, 90, true, null))
+                    {
+                        //make sure target circle is within viewport
+                        succesfulSpawn = true;
+                        break;
+                    }
+                }
+                //place anywhere
+                else
+                {
+                    if(ipt.PlaceObjectReceptacle(rsps, targetCircle.GetComponent<SimObjPhysics>(), true, 500, 90, true, null))
+                    {
+                        //make sure target circle is within viewport
+                        succesfulSpawn = true;
+                        break;
+                    }               
                 }
             }
 
-            //hey it found a spot! we did it!
             if(succesfulSpawn)
             {
                 //if image synthesis is active, make sure to update the renderers for image synthesis since now there are new objects with renderes in the scene
@@ -3528,7 +3569,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             else
             {   
                 Destroy(targetCircle);
-                errorMessage = "No free spawn points could be found to spawn target circle";
+                errorMessage = "circle failed to spawn";
                 actionFinished(false);
             }
         }
@@ -5992,7 +6033,63 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true);
         }
 
-        protected bool objectIsWithinViewport(SimObjPhysics sop) {
+        //this is a combination of objectIsWithinViewport and objectIsCurrentlyVisible, specifically to check
+        //if a single sim object is on screen regardless of agent visibility maxDistance
+        //DO NOT USE THIS FOR ALL OBJECTS cause it's going to be soooo expensive
+        public bool objectIsOnScreen(SimObjPhysics sop)
+        {
+            bool result = false;
+            if (sop.VisibilityPoints.Length > 0) 
+            {
+                Transform[] visPoints = sop.VisibilityPoints;
+                foreach (Transform point in visPoints) 
+                {
+                    Vector3 viewPoint = m_Camera.WorldToViewportPoint(point.position);
+                    float ViewPointRangeHigh = 1.0f;
+                    float ViewPointRangeLow = 0.0f;
+
+                    //first make sure the vis point is within the viewport at all
+                    if (viewPoint.z > 0 &&
+                        viewPoint.x < ViewPointRangeHigh && viewPoint.x > ViewPointRangeLow && //within x bounds of viewport
+                        viewPoint.y < ViewPointRangeHigh && viewPoint.y > ViewPointRangeLow //within y bounds of viewport
+                    ) 
+                    {
+                        //ok so it is within the viewport, not lets do a raycast to see if we can see the vis point
+                        updateAllAgentCollidersForVisibilityCheck(false);
+                        //raycast from agentcamera to point, ignore triggers, use layers 8 and 10
+                        RaycastHit hit;
+
+                        if(Physics.Raycast(m_Camera.transform.position, 
+                        (point.position - m_Camera.transform.position), 
+                        out hit, Mathf.Infinity, (1 << 8) | (1 << 10)))
+                        {
+                            if(hit.transform != sop.transform)
+                            result = false;
+
+                            else
+                            {
+                                result = true;
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                updateAllAgentCollidersForVisibilityCheck(true);
+                return result;
+            }
+
+            else 
+            {
+                #if UNITY_EDITOR
+                Debug.Log("Error! Set at least 1 visibility point on SimObjPhysics prefab!");
+                #endif
+            }
+            
+            return false;
+        }
+
+        public bool objectIsWithinViewport(SimObjPhysics sop) {
             if (sop.VisibilityPoints.Length > 0) {
                 Transform[] visPoints = sop.VisibilityPoints;
                 foreach (Transform point in visPoints) {
@@ -6014,7 +6111,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
             return false;
         }
-        protected bool objectIsCurrentlyVisible(SimObjPhysics sop, float maxDistance) {
+
+        public bool objectIsCurrentlyVisible(SimObjPhysics sop, float maxDistance) {
             if (sop.VisibilityPoints.Length > 0) {
                 Transform[] visPoints = sop.VisibilityPoints;
                 updateAllAgentCollidersForVisibilityCheck(false);

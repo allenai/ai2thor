@@ -221,9 +221,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
                             }
                         }
 
-                        action.anywhere = true;
-                        //action.minDistance = 2.0f;
-                        //action.uniqueId = "CounterTop|-00.08|+01.15|00.00";
+                        action.anywhere = false;//false, only recepatcle objects in viewport used
+                        action.minDistance = 1.8f;
+                        action.maxDistance = 2.5f;
+                        action.uniqueId = "Floor|+00.00|+00.00|+00.00";
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }

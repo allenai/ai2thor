@@ -8,40 +8,15 @@ using System.Linq;
 //this script manages the spawning/placing of sim objects in the scene
 public class InstantiatePrefabTest : MonoBehaviour
 {
-
 	public GameObject[] prefabs = null;
 	private int spawnCount = 0;
-
 	private bool m_Started = false;
 	Vector3 gizmopos;
 	Vector3 gizmoscale;
 	Quaternion gizmoquaternion;
-
-
     private float yoffset = 0.005f; //y axis offset of placing objects, useful to allow objects to fall just a tiny bit to allow physics to resolve consistently
 
-    // public GameObject TestPlaceObject;
-    // public Contains Testreceptbox;
-
     private List<Vector3> SpawnCorners = new List<Vector3>();
-
-    // //uses the PlaceIn action
-    // //The object placed must have the entirety of it's object oriented bounding box (all 8 corners) enclosed within the Receptacle's Box
-    // private List<SimObjType> InReceptacles = new List<SimObjType>() 
-    // {SimObjType.Drawer, SimObjType.Cabinet, SimObjType.Closet, SimObjType.Fridge, SimObjType.Microwave};
-
-    // //uses the PlaceOn action
-    // //the object placed only needs the bottom most 4 corners within the Receptacle Box to be placed validly, this allows
-    // //things like a tall cup to have the top half of it sticking out of the receptacle box when placed on a table
-    // private List<SimObjType> OnReceptacles = new List <SimObjType>()
-    // {SimObjType.TableTop, SimObjType.Dresser, SimObjType.CounterTop, SimObjType.Shelf, SimObjType.ArmChair,
-    //  SimObjType.Sofa, SimObjType.Ottoman, SimObjType.StoveBurner};
-
-    // //Uses the PlaceIn action
-    // //while these receptacles have things placed "in" them, they use the logic of OnReceptacles - Only the bottom 4 corners must be within the
-    // //receptacle box for the placement to be valid. This means we can have a Spoon placed IN a cup, but the top half of the spoon is still allowed to stick out
-    // private List<SimObjType> InReceptaclesThatOnlyCheckBottomFourCorners = new List <SimObjType>()
-    // { SimObjType.Cup, SimObjType.Bowl, SimObjType.GarbageCan, SimObjType.Box, SimObjType.Sink,};
 
 	// Use this for initialization
 	void Start()
@@ -206,8 +181,6 @@ public class InstantiatePrefabTest : MonoBehaviour
                 goodRsps.Add(p);
             }
         }
-        // Make a seed that is pseudo-random (different for different objects even in the same area) but also reproducible.
-        //int seed = rsps.Count + goodRsps.Count + sop.UniqueID.GetHashCode();
 
         int tries = 0;
         foreach (ReceptacleSpawnPoint p in goodRsps)
@@ -237,8 +210,68 @@ public class InstantiatePrefabTest : MonoBehaviour
 
         //couldn't find valid places to spawn
         return false;
-       
     }
+
+    //same as PlaceObjectReceptacle but instead only succeeds if final placed object is within viewport
+
+    public bool PlaceObjectReceptacleInViewport(List<ReceptacleSpawnPoint> rsps, SimObjPhysics sop, bool PlaceStationary, int maxPlacementAttempts, int degreeIncrement, bool AlwaysPlaceUpright, Dictionary<SimObjType, int> minFreePerReceptacleType)
+    {
+        
+        if(rsps == null)
+        {
+            #if UNITY_EDITOR
+            Debug.Log("Null list of points to check, please pass in populated list of <ReceptacleSpawnPoint>?");
+            #endif
+            return false; //uh, there was nothing in the List for some reason, so failed to spawn
+        }
+
+        if (rsps.Count == 0)
+        {
+            return false;
+        }
+
+        List<ReceptacleSpawnPoint> goodRsps = new List<ReceptacleSpawnPoint>();
+        foreach (ReceptacleSpawnPoint p in rsps) {
+            if(!p.ParentSimObjPhys.GetComponent<SimObjPhysics>().DoesThisObjectHaveThisSecondaryProperty
+                (SimObjSecondaryProperty.ObjectSpecificReceptacle)) {
+                goodRsps.Add(p);
+            }
+        }
+
+        int tries = 0;
+        foreach (ReceptacleSpawnPoint p in goodRsps)
+        {
+            SimObjType parentType = p.ParentSimObjPhys.ObjType;
+            if (minFreePerReceptacleType != null && minFreePerReceptacleType.ContainsKey(parentType) && goodRsps.Count < minFreePerReceptacleType[parentType])
+            {
+                return false;
+            }
+
+            //if this is an Object Specific Receptacle, stop this check right now! I mean it!
+            //Placing objects in/on an Object Specific Receptacle uses different logic to place the
+            //object at the Attachemnet point rather than in the spawn area, so stop this right now!
+
+            if (PlaceObject(sop, p, PlaceStationary, degreeIncrement, AlwaysPlaceUpright))
+            {
+                //check to make sure the placed object is within the viewport
+                BaseFPSAgentController primaryAgent = GameObject.Find("PhysicsSceneManager").GetComponent<AgentManager>().ReturnPrimaryAgent();
+                if(primaryAgent.GetComponent<PhysicsRemoteFPSAgentController>().objectIsOnScreen(sop))
+                {
+                    return true;
+                }
+            }
+
+            tries += 1;
+            if (maxPlacementAttempts > 0 && tries > maxPlacementAttempts)
+            {
+                break;
+            }
+        }
+
+        //couldn't find valid places to spawn
+        return false;
+    }
+
 
     //use this to keep track of a Rotation and Distance for use in PlaceObject
     public class RotationAndDistanceValues

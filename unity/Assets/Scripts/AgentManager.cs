@@ -1028,7 +1028,8 @@ public class ServerAction
     public ObjectPose[] objectPoses;
     public SetObjectStates SetObjectStates;
 
-    public float minDistance;//used for target circle spawning function
+    public float minDistance;//used in target circle spawning function
+    public float maxDistance;//used in target circle spawning function
 
     public SimObjType ReceptableSimObjType()
 	{
