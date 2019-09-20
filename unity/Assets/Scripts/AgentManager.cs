@@ -701,6 +701,7 @@ public class AgentManager : MonoBehaviour
 
 		this.currentSequenceId = controlCommand.sequenceId;
 		this.renderImage = controlCommand.renderImage;
+
 		activeAgentId = controlCommand.agentId;
 		if (controlCommand.action == "Reset") {
 			this.Reset (controlCommand);
@@ -711,8 +712,17 @@ public class AgentManager : MonoBehaviour
 		} else if (controlCommand.action == "UpdateThirdPartyCamera") {
 			this.UpdateThirdPartyCamera(controlCommand);
 		} else {
+            bool globalRenderObjectImage = this.renderObjectImage;
+            // we only allow renderObjectImage to be flipped on 
+            // on a per step() basis, since by default the param is false
+            // so we don't know if a request is meant to turn the param off
+            // or if it is just the value by default
+            if (controlCommand.renderObjectImage) {
+                this.renderObjectImage = True;
+            }
 			this.activeAgent().ProcessControlCommand (controlCommand);
 			readyToEmit = true;
+            this.renderObjectImage = globalRenderObjectImage;
 		}
 	}
 
