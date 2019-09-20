@@ -718,7 +718,7 @@ public class AgentManager : MonoBehaviour
             // so we don't know if a request is meant to turn the param off
             // or if it is just the value by default
             if (controlCommand.renderObjectImage) {
-                this.renderObjectImage = True;
+                this.renderObjectImage = true;
             }
 			this.activeAgent().ProcessControlCommand (controlCommand);
 			readyToEmit = true;
