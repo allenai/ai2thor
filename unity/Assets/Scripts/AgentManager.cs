@@ -723,7 +723,7 @@ public class AgentManager : MonoBehaviour
                 this.renderObjectImage = true;
             }
 
-            this.activeAgent().updateImageSynthesis(this.renderObjectImage);
+            this.activeAgent().updateImageSynthesis(this.renderDepthImage || this.renderClassImage || this.renderObjectImage || this.renderNormalsImage);
 			this.activeAgent().ProcessControlCommand (controlCommand);
 			readyToEmit = true;
 		}
