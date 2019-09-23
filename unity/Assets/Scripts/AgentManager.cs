@@ -27,6 +27,7 @@ public class AgentManager : MonoBehaviour
 	private bool renderDepthImage;
 	private bool renderClassImage;
 	private bool renderObjectImage;
+    private bool defaultRenderObjectImage;
 	private bool renderNormalsImage;
     private bool renderFlowImage;
 	private bool synchronousHttp = true;
@@ -111,7 +112,7 @@ public class AgentManager : MonoBehaviour
 		this.renderClassImage = action.renderClassImage;
 		this.renderDepthImage = action.renderDepthImage;
 		this.renderNormalsImage = action.renderNormalsImage;
-		this.renderObjectImage = action.renderObjectImage;
+		this.renderObjectImage = this.defaultRenderObjectImage = action.renderObjectImage;
         this.renderFlowImage = action.renderFlowImage;
 		if (action.alwaysReturnVisibleRange) {
 			((PhysicsRemoteFPSAgentController) primaryAgent).alwaysReturnVisibleRange = action.alwaysReturnVisibleRange;
@@ -695,6 +696,8 @@ public class AgentManager : MonoBehaviour
 	private void ProcessControlCommand(string msg)
 	{
 
+        this.renderObjectImage = this.defaultRenderObjectImage;
+
 		ServerAction controlCommand = new ServerAction();
 
 		JsonUtility.FromJsonOverwrite(msg, controlCommand);
@@ -712,7 +715,6 @@ public class AgentManager : MonoBehaviour
 		} else if (controlCommand.action == "UpdateThirdPartyCamera") {
 			this.UpdateThirdPartyCamera(controlCommand);
 		} else {
-            bool globalRenderObjectImage = this.renderObjectImage;
             // we only allow renderObjectImage to be flipped on 
             // on a per step() basis, since by default the param is false
             // so we don't know if a request is meant to turn the param off
@@ -720,9 +722,10 @@ public class AgentManager : MonoBehaviour
             if (controlCommand.renderObjectImage) {
                 this.renderObjectImage = true;
             }
+
+            this.activeAgent().updateImageSynthesis(this.renderObjectImage);
 			this.activeAgent().ProcessControlCommand (controlCommand);
 			readyToEmit = true;
-            this.renderObjectImage = globalRenderObjectImage;
 		}
 	}
 

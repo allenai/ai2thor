@@ -240,7 +240,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
             if (action.renderDepthImage || action.renderClassImage || action.renderObjectImage || action.renderNormalsImage) 
             {
-    			this.enableImageSynthesis ();
+    			this.updateImageSynthesis(true);
     		}
 
 			if (action.visibilityDistance > 0.0f) {
@@ -461,11 +461,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			return new SimObj[]{} as SimpleSimObj[];
 		}
 
-		private void enableImageSynthesis() {
-			imageSynthesis = this.gameObject.GetComponentInChildren<ImageSynthesis> () as ImageSynthesis;
-			imageSynthesis.enabled = true;			
+		public void updateImageSynthesis(bool status) {
+            if (this.imageSynthesis == null) {
+                imageSynthesis = this.gameObject.GetComponentInChildren<ImageSynthesis> () as ImageSynthesis;
+            }
+			imageSynthesis.enabled = status;
 		}
-
 
 		public void ProcessControlCommand(ServerAction controlCommand)
 		{
