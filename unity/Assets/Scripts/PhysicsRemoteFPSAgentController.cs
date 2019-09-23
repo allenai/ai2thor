@@ -2505,14 +2505,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         continue;
                     }
 
-                    if (res.transform.GetComponent<PhysicsRemoteFPSAgentController>()) {
+                    if (res.transform.gameObject != this.gameObject && res.transform.GetComponent<PhysicsRemoteFPSAgentController>()) {
+
                         PhysicsRemoteFPSAgentController maybeOtherAgent = res.transform.GetComponent<PhysicsRemoteFPSAgentController>();
-                        if (maybeOtherAgent != this) {
-                            int thisAgentNum = agentManager.agents.IndexOf(this);
-                            int otherAgentNum = agentManager.agents.IndexOf(maybeOtherAgent);
-                            errorMessage = "Agent " + otherAgentNum.ToString() + " is blocking Agent " + thisAgentNum.ToString() + " from moving " + orientation;
-                            return false;
-                        }
+                        int thisAgentNum = agentManager.agents.IndexOf(this);
+                        int otherAgentNum = agentManager.agents.IndexOf(maybeOtherAgent);
+                        errorMessage = "Agent " + otherAgentNum.ToString() + " is blocking Agent " + thisAgentNum.ToString() + " from moving " + orientation;
+                        return false;
                     }
 
                     //including "Untagged" tag here so that the agent can't move through objects that are transparent
