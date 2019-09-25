@@ -90,16 +90,30 @@ public class AgentManager : MonoBehaviour
 	private void initializePrimaryAgent() {
 
 		GameObject fpsController = GameObject.FindObjectOfType<BaseFPSAgentController>().gameObject;
-		var physicsAgent = fpsController.GetComponent<BaseFPSAgentController>();
-		primaryAgent = physicsAgent;
+		primaryAgent = fpsController.GetComponent<PhysicsRemoteFPSAgentController>();
+		primaryAgent.enabled = false;
 		primaryAgent.agentManager = this;
-		primaryAgent.enabled = true;
 		primaryAgent.actionComplete = true;
 
 	}
 	
 	public void Initialize(ServerAction action)
 	{
+        if (action.agentType != null && action.agentType.ToLower() == "stochastic") {
+            this.agents.Clear();
+            GameObject fpsController = GameObject.FindObjectOfType<BaseFPSAgentController>().gameObject;
+            primaryAgent.enabled = false;
+
+            primaryAgent = fpsController.GetComponent<StochasticRemoteFPSAgentController>();
+            primaryAgent.agentManager = this;
+            primaryAgent.enabled = true;
+            // must manually call start here since it this only gets called before Update() is called
+            primaryAgent.Start();
+            this.agents.Add(primaryAgent);
+        }
+
+
+
 		primaryAgent.ProcessControlCommand (action);
 		primaryAgent.IsVisible = action.makeAgentsVisible;
 		this.renderClassImage = action.renderClassImage;
@@ -964,6 +978,7 @@ public class ServerAction
     public ObjectToggle[] objectToggles;
     public float noise;
     public ControllerInitialization controllerInitialization = null;
+    public string agentType;
 
     public SimObjType ReceptableSimObjType()
 	{

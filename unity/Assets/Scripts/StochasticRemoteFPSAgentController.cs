@@ -17,18 +17,18 @@ namespace UnityStandardAssets.Characters.FirstPerson {
     [RequireComponent(typeof(CharacterController))]
     public class StochasticRemoteFPSAgentController : PhysicsRemoteFPSAgentController {
         [SerializeField]
-        public bool ApplyActionNoise = false;
+        public bool ApplyActionNoise = true;
         [SerializeField]
         public float MovementGaussianMu = 0.0f;
 
         [SerializeField]
-        public float MovementGaussianSigma = 1.0f;
+        public float MovementGaussianSigma = 0.05f;
 
         [SerializeField]
         public float RotateGaussianMu = 0.0f;
 
         [SerializeField]
-        public float RotateGaussianSigma = 1.0f;
+        public float RotateGaussianSigma = 0.01f;
 
         [SerializeField]
         public bool AllowHorizontalMovement = false;
@@ -43,6 +43,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 var moveLocalNorm = moveLocal / moveMagnitude;
                 action.moveMagnitude = moveMagnitude;
                 var magnitudeWithNoise = GetMoveMagnitudeWithNoise(action);
+
                 actionFinished(moveInDirection(
                     this.transform.rotation * (moveLocalNorm * magnitudeWithNoise),
                     action.objectId,
@@ -57,6 +58,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
          public override void Rotate(ServerAction action) {
             DefaultAgentHand(action);
             var rotateAmountDegrees = GetRotateMagnitudeWithNoise(action);
+
             transform.rotation = transform.rotation * Quaternion.Euler(new Vector3(0.0f, rotateAmountDegrees, 0.0f));
 			actionFinished(true);
         }

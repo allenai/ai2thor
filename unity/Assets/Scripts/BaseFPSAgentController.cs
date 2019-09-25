@@ -158,7 +158,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 
 		// Use this for initialization
-		protected virtual void Start()
+		public virtual void Start()
 		{
 			m_Camera = this.gameObject.GetComponentInChildren<Camera>();
 			//m_OriginalCameraPosition = m_Camera.transform.localPosition;
