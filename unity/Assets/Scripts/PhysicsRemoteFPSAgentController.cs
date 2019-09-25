@@ -89,7 +89,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         //protected float DownwardViewDistance = 2.0f;
 
         // Use this for initialization
-        protected override void Start() {
+        public override void Start() {
             base.Start();
             //below, enable all the GameObjects on the Agent that Physics Mode requires
             if (PhysicsAgentSkinWidth < 0.0f) {
