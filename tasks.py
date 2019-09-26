@@ -9,6 +9,7 @@ import pprint
 from invoke import task
 import boto3
 
+
 S3_BUCKET = "ai2-thor"
 UNITY_VERSION = "2018.3.6f1"
 
