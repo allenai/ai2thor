@@ -522,7 +522,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         ServerAction action = new ServerAction();
                         action.action = "PlaceObjectAtPoint";
                         action.position = GameObject.Find("TestPosition").transform.position;
-                        action.objectId = "Pan|-02.45|+00.93|+02.02";
+                        action.objectId = "Toaster|-01.84|+00.90|+00.13";
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }

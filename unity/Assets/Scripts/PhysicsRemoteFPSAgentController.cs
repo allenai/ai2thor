@@ -2370,7 +2370,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             yield return new WaitForFixedUpdate();
 
             float startTime = Time.time;
-            float waitTime = 20f;
+            float waitTime = 2.0f;
 
             if(useTimeout)
             {
@@ -2390,10 +2390,15 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     float currentVelocity = Math.Abs(rb.angularVelocity.sqrMagnitude + rb.velocity.sqrMagnitude);
                     float accel = (currentVelocity - sop.lastVelocity) / Time.fixedDeltaTime;
 
-                    //print("accel at time: "+ (Time.time - startTime)+ ": " + accel);
+                    //ok the accel is basically zero, so it has stopped moving
                     if(Mathf.Abs(accel) <= 0.001f)
                     {
                         stoppedMoving = true;
+
+                        //force the rb to stop moving just to be safe
+                        rb.velocity = Vector3.zero;
+                        rb.angularVelocity = Vector3.zero;
+
                         break;
                     }
 
@@ -2405,31 +2410,45 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 if(!stoppedMoving && useTimeout)
                 {
                     errorMessage = "object couldn't come to rest";
+                    //print(errorMessage);
                     actionFinished(false);
                     yield break;
                 }
+
+                //we are past the wait time threshold, so force object to stop moving before
+                //returning actionFinished (true)
+
+                //return to metadatawrapper.actionReturn if an object was touched during this interaction
+                if(length != 0.0f)
+                {
+                    WhatDidITouch feedback = new WhatDidITouch(){didHandTouchSomething = true, objectId = sop.objectID, armsLength = length};
+
+                    #if UNITY_EDITOR
+                    print("yield timed out");
+                    // print("didHandTouchSomething: " + feedback.didHandTouchSomething);
+                    // print("object id: " + feedback.objectId);
+                    // print("armslength: " + feedback.armsLength);
+                    #endif
+
+                    //force objec to stop moving 
+                    rb.velocity = Vector3.zero;
+                    rb.angularVelocity = Vector3.zero;
+                    actionFinished(true, feedback);
+                }
+
+                //if passed in length is 0, don't return feedback cause not all actions need that
+                else
+                {
+                    DefaultAgentHand();
+                    //print("----- Timie: " + (Time.time - startTime));
+                    actionFinished(true, "object settled after: " + (Time.time - startTime));
+                }
             }
 
-            //return to metadatawrapper.actionReturn if an object was touched during this interaction
-            if(length != 0.0f)
-            {
-                WhatDidITouch feedback = new WhatDidITouch(){didHandTouchSomething = true, objectId = sop.objectID, armsLength = length};
-
-                #if UNITY_EDITOR
-                print("didHandTouchSomething: " + feedback.didHandTouchSomething);
-                print("object id: " + feedback.objectId);
-                print("armslength: " + feedback.armsLength);
-                #endif
-
-                actionFinished(true, feedback);
-            }
-
-            //if passed in length is 0, don't return feedback cause not all actions need that
             else
             {
-                DefaultAgentHand();
-                //print("----- Timie: " + (Time.time - startTime));
-                actionFinished(true, "object settled after: " + (Time.time - startTime));
+                errorMessage = "null reference sim obj in checkIfObjectHasStoppedMoving call";
+                actionFinished(false);
             }
 
         }
