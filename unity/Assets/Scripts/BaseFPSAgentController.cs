@@ -146,7 +146,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             // character controller parameters
             m_CharacterController = GetComponent<CharacterController>();
 			//float radius = m_CharacterController.radius;
-			m_CharacterController.radius = 0.2f;
+			//m_CharacterController.radius = 0.2f;
 			// using default for now to remain consistent with generated points
 			//m_CharacterController.height = LoadFloatVariable (height, "AGENT_HEIGHT");
 			this.m_WalkSpeed = 2;

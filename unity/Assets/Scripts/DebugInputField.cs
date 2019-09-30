@@ -152,9 +152,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 						PhysicsController.actionComplete = false;
                         action.ssao = "default";
-
-                        //action.makeAgentsVisible = false;
-
+                        //action.snapToGrid = true;
+                        action.makeAgentsVisible = false;
+                
                         action.action = "Initialize";
                         AManager.Initialize(action);
                         // AgentManager am = PhysicsController.gameObject.FindObjectsOfType<AgentManager>()[0];
