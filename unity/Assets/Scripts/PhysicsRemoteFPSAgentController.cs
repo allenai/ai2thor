@@ -527,6 +527,15 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return Time.time;
         }
 
+        //change the radius of the agent's capsule on the char controller component, and the capsule collider component
+        public void SetAgentRadius(ServerAction action)
+        {
+            m_CharacterController.radius = action.agentRadius;
+            CapsuleCollider cap = GetComponent<CapsuleCollider>();
+            cap.radius = action.agentRadius;
+            actionFinished(true);
+        }
+
         //return ID of closest CanPickup object by distance
         public string UniqueIDOfClosestVisibleObject() {
             string objectID = null;
