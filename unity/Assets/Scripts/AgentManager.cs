@@ -91,7 +91,7 @@ public class AgentManager : MonoBehaviour
 
 		GameObject fpsController = GameObject.FindObjectOfType<BaseFPSAgentController>().gameObject;
 		primaryAgent = fpsController.GetComponent<PhysicsRemoteFPSAgentController>();
-		primaryAgent.enabled = false;
+		primaryAgent.enabled = true;
 		primaryAgent.agentManager = this;
 		primaryAgent.actionComplete = true;
 
