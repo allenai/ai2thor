@@ -513,7 +513,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 			//add a check for if this is the handheld object, in which case dont't do this!
 
             var fpsController = GameObject.FindObjectOfType<PhysicsRemoteFPSAgentController>();
-            Debug.Log("FPS " + (fpsController == null));
+            //Debug.Log("FPS " + (fpsController == null));
 			
 			if(fpsController != null && !fpsController.WhatAmIHolding() == this.transform)
 			{
