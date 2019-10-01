@@ -21,6 +21,7 @@ import shlex
 import signal
 import subprocess
 import shutil
+import re
 import threading
 import os
 import platform
@@ -401,7 +402,7 @@ class Controller(object):
         )
 
     def reset(self, scene_name=None):
-        if not scene_name.endswith('_physics'):
+        if re.match(r'^FloorPlan[0-9]+$', scene_name):
             scene_name = scene_name + "_physics"
 
         self.response_queue.put_nowait(dict(action='Reset', sceneName=scene_name, sequenceId=0))
