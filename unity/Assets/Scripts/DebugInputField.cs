@@ -166,6 +166,15 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         break;
                     }
 
+                case "rad":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "SetAgentRadius";
+                        action.agentRadius = 0.35f;
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }   
+
                 case "crazydiamond":
                     {
                         ServerAction action = new ServerAction();

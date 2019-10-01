@@ -980,6 +980,8 @@ public class ServerAction
     public ControllerInitialization controllerInitialization = null;
     public string agentType;
 
+    public float agentRadius = 2.0f;
+
     public SimObjType ReceptableSimObjType()
 	{
 		if (string.IsNullOrEmpty(receptacleObjectType))
