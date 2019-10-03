@@ -5966,8 +5966,21 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             SimObjPhysics theObject = physicsSceneManager.UniqueIdToSimObjPhysics[action.objectId];
 
+            // Don't want to consider all positions in the scene, just those from which the object
+            // is plausibly visible. The following computes a "fudgeFactor" (radius of the object)
+            // which is then used to filter the set of all reachable positions to just those plausible positions.
+            Bounds objectBounds = new Bounds(
+                new Vector3(float.PositiveInfinity, float.PositiveInfinity, float.PositiveInfinity),
+                new Vector3(-float.PositiveInfinity, -float.PositiveInfinity, -float.PositiveInfinity)
+            );
+            objectBounds.Encapsulate(theObject.transform.position);
+            foreach (Transform vp in theObject.VisibilityPoints) {
+                objectBounds.Encapsulate(vp.position);
+            }
+            float fudgeFactor = objectBounds.extents.magnitude;
+
             List<Vector3> filteredPositions = positions.Where(
-                p => (Vector3.Distance(p, theObject.transform.position) <= maxVisibleDistance + 0.5f)
+                p => (Vector3.Distance(p, theObject.transform.position) <= maxVisibleDistance + fudgeFactor + gridSize)
             ).ToList();
 
             Dictionary<string, List<float>> goodLocationsDict = new Dictionary<string, List<float>>();
@@ -5996,6 +6009,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                                 goodLocationsDict["rotation"].Add(90.0f * i);
                                 goodLocationsDict["standing"].Add((1 - j) * 1.0f);
                                 goodLocationsDict["horizon"].Add(m_Camera.transform.localEulerAngles.x);
+
+#if UNITY_EDITOR
+                                // In the editor, draw lines indicating from where the object was visible.
+                                Debug.DrawLine(p, p + transform.forward * (gridSize * 0.5f), Color.red, 20f);
+#endif
                             }
                         }
                     }
@@ -6281,7 +6299,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             Vector3 startPos = sop.transform.position;
             Quaternion startRot = sop.transform.rotation;
 
-            Bounds b = new Bounds();
+            Bounds b = new Bounds(
+                new Vector3(float.PositiveInfinity, float.PositiveInfinity, float.PositiveInfinity),
+                new Vector3(-float.PositiveInfinity, -float.PositiveInfinity, -float.PositiveInfinity)
+            );
             foreach (Vector3 p in getReachablePositions()) {
                 b.Encapsulate(p);
             }
