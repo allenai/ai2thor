@@ -233,7 +233,7 @@ public class Contains : MonoBehaviour
 		p4 = transform.TransformPoint(b.center + new Vector3(b.size.x, b.size.y, -b.size.z) * 0.5f);
 
 		//so lets make a grid, we can parametize the gridsize value later, for now we'll adjust it here
-		int gridsize = 8; //number of grid boxes we want, reduce this to SPEED THINGS UP but also GET WAY MORE INACCURATE
+		int gridsize = 20; //number of grid boxes we want, reduce this to SPEED THINGS UP but also GET WAY MORE INACCURATE
 		int linepoints = gridsize + 1; //number of points on the line we need to make the number of grid boxes
 		float lineincrement =  1.0f / gridsize; //increment on the line to distribute the gridpoints
 

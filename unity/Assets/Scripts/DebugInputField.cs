@@ -184,7 +184,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     {
                         ServerAction action = new ServerAction();
                         action.action = "GetSpawnCoordinatesAboveObject";
-                        action.objectId = "CounterTop|-00.08|+01.15|00.00";
+                        action.objectId = "Floor|+00.00|+00.00|+00.00";
                         action.anywhere = false;
                         PhysicsController.ProcessControlCommand(action);
                         break;
