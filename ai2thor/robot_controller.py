@@ -38,6 +38,9 @@ class Controller(object):
             has_object_actions=False
         )
 
+    def stop(self):
+        pass
+
     def start(
             self,
             port=9200,
