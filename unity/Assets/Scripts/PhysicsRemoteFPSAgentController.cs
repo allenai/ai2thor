@@ -4316,7 +4316,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 float midX = (b.max.x + b.min.x) / 2.0f;
                 float midZ = (b.max.z + b.min.z) / 2.0f;
                 m_Camera.transform.rotation = Quaternion.Euler(90.0f, 0.0f, 0.0f);
-                m_Camera.transform.position = new Vector3(midX, b.max.y, midZ);
+                m_Camera.transform.position = new Vector3(midX, b.max.y + 5, midZ);
                 m_Camera.orthographic = true;
 
                 m_Camera.orthographicSize = Math.Max((b.max.x - b.min.x) / 2f, (b.max.z - b.min.z) / 2f);
