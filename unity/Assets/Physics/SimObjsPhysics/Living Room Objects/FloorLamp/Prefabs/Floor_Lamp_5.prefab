@@ -1243,13 +1243,19 @@ MonoBehaviour:
   ReceptacleTriggerBoxes: []
   isVisible: 0
   isInteractable: 0
-  isColliding: 0
+  isInAgentHand: 0
   MyColliders: []
   HFdynamicfriction: 0
   HFstaticfriction: 0
   HFbounciness: 0
   HFrbdrag: 0
   HFrbangulardrag: 0
+  salientMaterials: 
+  CurrentTemperature: 0
+  HowManySecondsUntilRoomTemp: 10
+  inMotion: 0
+  lastVelocity: 0
+  ContainedObjectReferences: []
 --- !u!54 &54826847176711858
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -1284,12 +1290,12 @@ MonoBehaviour:
     OnMaterials:
     - {fileID: 2100000, guid: b60b5ea0416a363438d171aced316c06, type: 2}
     - {fileID: 2100000, guid: aa4c1c4fe0614f44ab2267dba56ad292, type: 2}
-    - {fileID: 2100000, guid: ac3ebf17ddc7c4446bfbd2e23d062ba7, type: 2}
+    - {fileID: 2100000, guid: f712b9e5dc2554c42989334d0e5dae7d, type: 2}
     - {fileID: 2100000, guid: 33d953343dddb0b41aa2bf6ecc8ec882, type: 2}
     OffMaterials:
     - {fileID: 2100000, guid: b60b5ea0416a363438d171aced316c06, type: 2}
     - {fileID: 2100000, guid: aa4c1c4fe0614f44ab2267dba56ad292, type: 2}
-    - {fileID: 2100000, guid: f712b9e5dc2554c42989334d0e5dae7d, type: 2}
+    - {fileID: 2100000, guid: ac3ebf17ddc7c4446bfbd2e23d062ba7, type: 2}
     - {fileID: 2100000, guid: 33d953343dddb0b41aa2bf6ecc8ec882, type: 2}
   LightSources:
   - {fileID: 1934997098922968}
@@ -1298,6 +1304,8 @@ MonoBehaviour:
   animationTime: 0.05
   isOn: 1
   movementType: 0
+  SelfControlled: 1
+  ControlledSimObjects: []
 --- !u!1 &1273102622392248
 GameObject:
   m_ObjectHideFlags: 0
