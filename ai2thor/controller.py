@@ -29,6 +29,8 @@ import uuid
 import tty
 import sys
 import termios
+import requests
+import requests.exceptions
 try:
     from queue import Queue
 except ImportError:
@@ -756,36 +758,43 @@ class Controller(object):
         else:
             url = None
             sha256_build = None
-            try:
-                git_dir = os.path.normpath(os.path.dirname(os.path.realpath(__file__)) + "/../.git")
-                for commit_id in subprocess.check_output('git --git-dir=' + git_dir + ' log -n 10 --format=%H', shell=True).decode('ascii').strip().split("\n"):
-                    arch = arch_platform_map[platform.system()]
+            git_dir = os.path.normpath(os.path.dirname(os.path.realpath(__file__)) + "/../.git")
+            for commit_id in subprocess.check_output('git --git-dir=' + git_dir + ' log -n 10 --format=%H', shell=True).decode('ascii').strip().split("\n"):
+                arch = arch_platform_map[platform.system()]
 
-                    if ai2thor.downloader.commit_build_exists(arch, commit_id):
-                        url = ai2thor.downloader.commit_build_url(arch, commit_id)
-                        sha256_build = ai2thor.downloader.commit_build_sha256(arch, commit_id)
-                        print("Got build for %s: " % (arch, url))
+                try:
+                    u = ai2thor.downloader.commit_build_url(arch, commit_id)
+                    if os.path.isfile(self.executable_path(url=u)):
+                        # don't need sha256 since we aren't going to download
+                        url = u
                         break
-
-            except Exception:
-                pass
+                    elif ai2thor.downloader.commit_build_exists(arch, commit_id):
+                        sha256_build = ai2thor.downloader.commit_build_sha256(arch, commit_id)
+                        url = u
+                        break
+                except (requests.exceptions.ConnectionError, requests.exceptions.HTTPError):
+                    pass
 
             if url is None:
                 raise Exception("Couldn't find a suitable build url for platform: %s" % platform.system())
 
+            print("Got build for %s: " % (url))
+
             return (url, sha256_build)
 
-    def build_name(self):
-        return os.path.splitext(os.path.basename(self.build_url()[0]))[0]
+    def build_name(self, url=None):
+        if url is None:
+            url, _ = self.build_url()
+        return os.path.splitext(os.path.basename(url))[0]
 
-    def executable_path(self):
+    def executable_path(self, url=None):
 
         if self.local_executable_path is not None:
             return self.local_executable_path
 
         target_arch = platform.system()
 
-        bn = self.build_name()
+        bn = self.build_name(url)
         if target_arch == 'Linux':
             return os.path.join(self.releases_dir(), bn, bn)
         elif target_arch == 'Darwin':
@@ -802,7 +811,7 @@ class Controller(object):
         if platform.architecture()[0] != '64bit':
             raise Exception("Only 64bit currently supported")
 
-        url,sha256_build = self.build_url()
+        url, sha256_build = self.build_url()
         tmp_dir = os.path.join(self.base_dir(), 'tmp')
         makedirs(self.releases_dir())
         makedirs(tmp_dir)
