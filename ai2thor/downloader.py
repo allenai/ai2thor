@@ -22,9 +22,7 @@ def commit_build_sha256_url(arch, commit_id):
 
 
 def commit_build_exists(arch, commit_id):
-    res = requests.head(commit_build_url(arch, commit_id))
-    res.raise_for_status()
-    return res.status_code == 200
+    return requests.head(commit_build_url(arch, commit_id)).status_code == 200
 
 
 def commit_build_log_exists(arch, commit_id):

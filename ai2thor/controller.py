@@ -29,8 +29,6 @@ import uuid
 import tty
 import sys
 import termios
-import requests
-import requests.exceptions
 try:
     from queue import Queue
 except ImportError:
@@ -772,7 +770,7 @@ class Controller(object):
                         sha256_build = ai2thor.downloader.commit_build_sha256(arch, commit_id)
                         url = u
                         break
-                except (requests.exceptions.ConnectionError, requests.exceptions.HTTPError):
+                except Exception:
                     pass
 
             if url is None:
