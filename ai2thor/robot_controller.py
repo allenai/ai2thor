@@ -114,8 +114,8 @@ class Controller(object):
         if raise_for_failure:
             assert self.last_event.metadata['lastActionSuccess']
 
-        pprint("Display event:")
-        Controller._display_step_event(self.last_event)
+        # pprint("Display event:")
+        # Controller._display_step_event(self.last_event)
 
         return self.last_event
 
