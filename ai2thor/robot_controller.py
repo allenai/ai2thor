@@ -33,7 +33,9 @@ class Controller(object):
                 DefaultActions.MoveAhead,
                 DefaultActions.MoveBack,
                 DefaultActions.RotateLeft,
-                DefaultActions.RotateRight
+                DefaultActions.RotateRight,
+                DefaultActions.LookUp,
+                DefaultActions.LookDown
             ],
             has_object_actions=False
         )
@@ -80,7 +82,6 @@ class Controller(object):
 
         action['sequenceId'] = self.sequence_id
         action['agentId'] = self.agent_id
-        action['lastAction'] = self.last_action
 
         self.last_action = action
 
