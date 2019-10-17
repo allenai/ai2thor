@@ -776,7 +776,7 @@ class Controller(object):
             if url is None:
                 raise Exception("Couldn't find a suitable build url for platform: %s" % platform.system())
 
-            print("Got build for %s: " % (url))
+            # print("Got build for %s: " % (url))
 
             return (url, sha256_build)
 
