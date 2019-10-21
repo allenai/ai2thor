@@ -5610,7 +5610,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             } else {
                 m_Camera.transform.localPosition = new Vector3(
                     standingLocalCameraPosition.x,
-                    0.0f,
+                    -0.2911f,
                     standingLocalCameraPosition.z
                 );
                 SetUpRotationBoxChecks();
