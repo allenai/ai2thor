@@ -979,8 +979,8 @@ public class ServerAction
     public float noise;
     public ControllerInitialization controllerInitialization = null;
     public string agentType;
-
     public float agentRadius = 2.0f;
+    public int maxStepCount;
 
     public SimObjType ReceptableSimObjType()
 	{
