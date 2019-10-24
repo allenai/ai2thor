@@ -13,4 +13,10 @@ mergeInto(LibraryManager.library, {
     }
   },
 
+   SendMetadata: function(str) {
+    if (window.onUnityMetadata && typeof window.onUnityMetadata === "function") {
+        window.onUnityMetadata(Pointer_stringify(str));
+    }
+  },
+
 });
