@@ -54,12 +54,20 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         // Optimization
         private bool softHighlight = true;
 
+        private bool highlightWhileHolding = false;
+
+        private string onlyPickableObjectId = null;
+
+        private bool disableHighlightShaderForObject = false;
+
+
         public ObjectHighlightController(
             PhysicsRemoteFPSAgentController physicsController,
             float minHighlightDistance,
             bool throwEnabled = true,
             float maxThrowForce = 1000.0f,
             float maxChargeThrowSeconds = 1.4f,
+            bool highlightWhileHolding = false,
             HighlightConfig highlightConfig = null
         )   
         {
@@ -67,6 +75,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             this.MinHighlightDistance = minHighlightDistance;
             this.MaxThrowForce = maxThrowForce;
             this.MaxChargeThrowSeconds = maxChargeThrowSeconds;
+            this.highlightWhileHolding = highlightWhileHolding;
             if (highlightConfig != null) {
                 this.HighlightParams = highlightConfig;
             }
@@ -81,9 +90,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             this.highlightShader = Shader.Find("Custom/TransparentOutline");
         }
         
-        public void ToggleDisplayTargetText(bool display)
+        public void SetDisplayTargetText(bool display)
         {
             this.DisplayTargetText = display;
+        }
+
+        public void SetOnlyPickableId(string objectId, bool disableHighlightShaderForObject = false) {
+            this.onlyPickableObjectId = objectId;
+            this.disableHighlightShaderForObject = disableHighlightShaderForObject;
         }
 
         public void MouseControls()
@@ -97,7 +111,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     if (closestObj != null)
                     {
                         var actionName = "";
-                        if (closestObj.PrimaryProperty == SimObjPrimaryProperty.CanPickup)
+                        if (closestObj.PrimaryProperty == SimObjPrimaryProperty.CanPickup && (onlyPickableObjectId == null || onlyPickableObjectId == closestObj.uniqueID))
                         {
                             pickupState = true;
                             actionName = "PickupObject";
@@ -126,6 +140,31 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 {
                     this.mouseDownThrow = true;
                     this.timerAtPress = Time.time;
+                }
+
+                if (highlightWhileHolding && this.highlightedObject != null && this.PhysicsController.WhatAmIHolding() != this.highlightedObject.gameObject && this.PhysicsController.actionComplete) {
+                     var closestObj = this.highlightedObject;
+                    if (closestObj != null)
+                    {
+                        var actionName = "";
+                        if (closestObj.GetComponent<CanOpen_Object>())
+                        {
+                            actionName = closestObj.GetComponent<CanOpen_Object>().isOpen ? "CloseObject" : "OpenObject";
+                        }
+
+                        if (actionName != "")
+                        {
+                            ServerAction action = new ServerAction
+                            {
+                                action = actionName,
+                                objectId = closestObj.uniqueID
+                            };
+                            this.PhysicsController.ProcessControlCommand(action);
+                        }
+                    }
+                    // else if (highlightWhileHolding && this.PhysicsController.WhatAmIHolding() == this.highlightedObject) {
+
+                    // }
                 }
             }
 
@@ -157,7 +196,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         var clampedForceTime = Mathf.Min(diff * diff, MaxChargeThrowSeconds);
                         var force = clampedForceTime * MaxThrowForce / MaxChargeThrowSeconds;
 
-                        if (this.PhysicsController.actionComplete)
+                        if (this.PhysicsController.actionComplete && (!this.highlightWhileHolding || (highlightedObject != null && this.PhysicsController.WhatAmIHolding() == highlightedObject.gameObject)))
                         {
                             ServerAction action;
                             if (throwEnabled) {
@@ -199,13 +238,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             if (hit.transform != null 
                 && hit.transform.tag == "SimObjPhysics"
-                && this.PhysicsController.WhatAmIHolding() == null
+                && (this.PhysicsController.WhatAmIHolding() == null || this.highlightWhileHolding)
                )
             {
                 softHighlight = true;
                 var simObj = hit.transform.GetComponent<SimObjPhysics>();
                 Func<bool> validObjectLazy = () => { 
-                    return simObj.PrimaryProperty == SimObjPrimaryProperty.CanPickup ||
+                    return (simObj.PrimaryProperty == SimObjPrimaryProperty.CanPickup && (this.onlyPickableObjectId == null || this.onlyPickableObjectId == simObj.uniqueID)) ||
                                   simObj.GetComponent<CanOpen_Object>() ||
                                   simObj.GetComponent<CanToggleOnOff>();
                 };
@@ -215,10 +254,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     setTargetText(simObj.name, withinReach);
                     newHighlightedObject = simObj;
                     var mRenderer = newHighlightedObject.GetComponentInChildren<MeshRenderer>();
+
+                    var useHighlightShader = !(disableHighlightShaderForObject && simObj.uniqueID == this.onlyPickableObjectId);
                     
-                    if (mRenderer != null)
+                    if (mRenderer != null && useHighlightShader)
                     {
-                        
                         if (this.highlightedObject != newHighlightedObject) {
                             newPreviousShader = mRenderer.material.shader;
                             this.previousRenderQueueValue = mRenderer.material.renderQueue;
@@ -250,15 +290,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     var mRenderer = this.highlightedObject.GetComponentInChildren<MeshRenderer>();
 
                     setTargetText("");
+                    var useHighlightShader = !(disableHighlightShaderForObject && highlightedObject.uniqueID == this.onlyPickableObjectId);
 
-                    if (mRenderer != null)
+                    if (mRenderer != null && useHighlightShader)
                     {
                         mRenderer.material.shader = this.previousShader;
                         // TODO unity has a bug for transparent objects they disappear when shader swapping, so we reset the previous shader's render queue value to render it appropiately.
                         mRenderer.material.renderQueue = this.previousRenderQueueValue;
                     }
-                    
-                   
             }
             
             if (newPreviousShader != null) {
@@ -285,7 +324,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             if (DisplayTargetText && TargetText != null)
             {
-                this.TargetText.text = text.Split('_')[0];
+                this.TargetText.text = text;
             }
 
         }
