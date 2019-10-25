@@ -19,7 +19,7 @@ inv webgl-build -s=FloorPlan8_physics
 
 The build should be written under `unity/builds/thor-local-WebGL`.
 
-You can read the log of the build under the repo's root directory with the name `thor-local-WebGL.log`.
+You can read the log file `thor-local-WebGL.log` under the root directory.
 
 If it fails make sure Unity is closed, in Windows the process may be hanging so make sure Unity is not running. In Windows after opeing and closing Unity you may also need to restart you machine.
 
