@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <title>Unity WebGL Player | AI2-Thor</title>
+      <script>
+        window.game_build = ".";
+        window.game_url =  "%UNITY_WEBGL_BUILD_URL%";
+      </script>
+    <link rel="shortcut icon" href="TemplateData/favicon.ico">
+    <link rel="stylesheet" href="TemplateData/style.css">
+    <script src="TemplateData/UnityProgress.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script src="TemplateData/script.js"></script>
+
+  </head>
+  <body>
+    <div class="main">
+       <div class="submit-container">
+             <p class="instructions-title submit">&nbsp Submit</p>
+        <div class="finish">
+              <button class="finish-btn" id="finish-hit" disabled="true" >
+                Finish
+              </button>
+        </div>
+        <div>
+              <button class="reset-btn" id="reset-hit" disabled="true" >
+                Reset
+              </button>
+        </div>
+
+            <div>
+
+        </div>
+        <div>
+        <p id="message-text" hidden="true"></p>
+        </div>
+        <div>
+        <p class="action-text" id="last-action-text" hidden="true"></p>
+        </div>
+
+           <div class="instructions">
+            <p class="instructions-title">&nbsp Instructions</p>
+            <div class="instruction-section">
+
+                <div class="instruction-line extra-margin">
+                    <p id="instruction-text"></p>
+                </div>
+
+                 <div class="instruction-line extra-margin">
+                    <p id="instruction-2"/>
+                </div>
+
+                 <div class="instruction-line extra-margin">
+                    <p id="instruction-3"/>
+                </div>
+
+                 <div class="instruction-line">
+                    <p id="instruction-4"/>
+                </div>
+                 <div class="instruction-line">
+                    <p id="instruction-5"/>
+                </div>
+
+                  <div class="instruction-line">
+                    <p id="instruction-6"/>
+                </div>
+            </div>
+        </div>
+
+      </div>
+      <div class="webgl-content">
+        <div id="gameContainer" style="width: 75vmin; height: 75vmin"></div>
+        <div class="footer">
+           <div class="webgl-logo"></div>
+          <!-- <div class="fullscreen" onclick="gameInstance.SetFullscreen(1)"></div> -->
+          <div class="title">AI2-Thor</div>
+        </div>
+      </div>
+
+
+        <div class="instructions" id="instructions-seeker" hidden="true">
+            <p class="instructions-title">&nbsp Controls</p>
+            <div class="instruction-section">
+
+                <div class="instruction-line">
+                    <p><img src="TemplateData/images/WASD.png" class="tutorial-img-large"/></p>
+                    <p>Keys to move.</p>
+                </div>
+
+                <div class="instruction-line">
+                     <p><img src="TemplateData/images/arrowkeys.png" class="tutorial-img-large"/></p>
+                     <p>Left and Right arrows to turn.</p>
+                </div>
+
+                <div class="instruction-line">
+                    <p><img src="TemplateData/images/mouselook.png" class="tutorial-img-large"/></p>
+                      <p style="font-size: 30px"> &nbsp;&nbsp; </p>
+                    <p><img src="TemplateData/images/leftclick.png" class="mouse-img1"/></p>
+                    <p>Move your mouse and <strong>Left Click</strong> on doors and drawers to open or close them. </br></br><strong>Left Click</strong> on the object you have to find.</p>
+                </div>
+
+                <div class="instruction-line">
+                    <p><img src="TemplateData/images/Control.png" class="r-key-img"/></p>
+                    <p>To crouch and stand.</p>
+                </div>
+
+            </div>
+        </div>
+
+         <div class="instructions" id="instructions-hider" hidden="true">
+            <p class="instructions-title">&nbsp Controls</p>
+            <div class="instruction-section">
+
+                <div class="instruction-line">
+                    <p><img src="TemplateData/images/WASD.png" class="tutorial-img-large"/></p>
+                    <p style="margin-left: 5px">Keys to move.</p>
+                    <p><img src="TemplateData/images/arrowkeys.png" class="tutorial-img-large"/></p>
+                    <p><strong>Left</strong> and <strong>Right</strong> arrows to turn.</p>
+                </div>
+
+                <div class="instruction-line">
+                    <p><img src="TemplateData/images/mouselook.png" class="tutorial-img-large"/></p>
+                      <p style="font-size: 30px"> &nbsp;&nbsp; </p>
+                    <p><img src="TemplateData/images/leftclick.png" class="mouse-img1"/></p>
+                    <p>Move your mouse and <strong>Left Click</strong> on doors and drawers to open or close them. </br></br><strong>Left Click</strong> on the object to drop it or pick it up.</p>
+                </div>
+
+                <div class="instruction-line">
+                    <p><img src="TemplateData/images/Control.png" class="r-key-img"/></p>
+                    <p>To crouch and stand.</p>
+                </div>
+
+                <div class="instruction-line">
+                    <p><img src="TemplateData/images/Shift.png" class="r-key-img"/></p>
+                      <p style="font-size: 30px">  &nbsp;+&nbsp;  </p>
+                    <p><img src="TemplateData/images/WASD.png" class="tutorial-img-large"/></p>
+                    <p> to move the object up, down, left and right</p>
+                </div>
+                 <div class="instruction-line">
+                    <p><img src="TemplateData/images/Shift.png" class="r-key-img"/></p>
+                      <p style="font-size: 30px">  &nbsp;+&nbsp; </p>
+                    <p><img src="TemplateData/images/arrowkeys.png" class="tutorial-img-large"/></p>
+                     <p> To move the object forwards, backwards, left and right</p>
+                </div>
+                 <div class="instruction-line">
+                    <p><img src="TemplateData/images/Shift.png" class="r-key-img"/></p>
+                      <p style="font-size: 30px"> &nbsp;+&nbsp; </p>
+                    <p><img src="TemplateData/images/Space.png" class="r-key-img"/></p>
+                     <p> to drop or pickup the object (object MUST to be visible)</p>
+                </div>
+
+                 <div class="instruction-line">
+                    <p><img src="TemplateData/images/Space.png" class="r-key-img"/></p>
+                     <p> Toggle to make the object visible or invisible.</p>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+
+
+    <div id="turk-form">
+      <form id="mturk_form" method="POST" action='https://www.mturk.com/mturk/externalSubmit'>
+          <input type="hidden" id="assignmentId" name="assignmentId"/>
+          <input type="hidden" id="data" name="data"/>
+          <!-- <script language='Javascript'>turkSetAssignmentID();</script> -->
+      </form>
+    </div>
+  </body>
+</html>

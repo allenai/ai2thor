@@ -1,4 +1,5 @@
 import os
+import sys
 import datetime
 import zipfile
 import threading
@@ -59,12 +60,16 @@ def _webgl_local_build_path(prefix, source_dir="builds"):
 
 def _build(unity_path, arch, build_dir, build_name, env={}):
     project_path = os.path.join(os.getcwd(), unity_path)
-    unity_hub_path = "/Applications/Unity/Hub/Editor/{}/Unity.app/Contents/MacOS/Unity".format(
-        UNITY_VERSION
-    )
-    standalone_path = "/Applications/Unity-{}/Unity.app/Contents/MacOS/Unity".format(
-        UNITY_VERSION
-    )
+    if sys.platform.startswith('darwin'):
+        unity_hub_path = "/Applications/Unity/Hub/Editor/{}/Unity.app/Contents/MacOS/Unity".format(
+            UNITY_VERSION
+        )
+        standalone_path = "/Applications/Unity-{}/Unity.app/Contents/MacOS/Unity".format(UNITY_VERSION)
+    elif 'win' in sys.platform:
+        unity_hub_path = "C:/PROGRA~1/Unity/Hub/Editor/{}/Editor/Unity.exe".format(UNITY_VERSION)
+        # TODO: Verify windows unity standalone path
+        standalone_path = "C:/PROGRA~1/{}/Editor/Unity.exe".format(UNITY_VERSION)
+
     if os.path.exists(standalone_path):
         unity_path = standalone_path
     else:
@@ -321,14 +326,14 @@ def local_build(context, prefix="local", arch="OSXIntel64"):
 
 @task
 def webgl_build(
-    context,
-    scenes="",
-    room_ranges=None,
-    directory="builds",
-    prefix="local",
-    verbose=False,
-    content_addressable=False,
-    turk_build=False,
+        context,
+        scenes="",
+        room_ranges=None,
+        directory="builds",
+        prefix='local',
+        verbose=False,
+        content_addressable=False,
+        crowdsource_build=False
 ):
     """
     Creates a WebGL build
@@ -349,14 +354,17 @@ def webgl_build(
         file_name = path_split[1]
 
         print("File name {} ".format(file_name))
-        with open(file_path, "rb") as f:
+        with open(file_path, 'rb') as f:
             h = hashlib.md5()
             h.update(f.read())
             md5_id = h.hexdigest()
         new_file_name = "{}_{}".format(md5_id, file_name)
-        os.rename(file_path, os.path.join(directory, new_file_name))
+        os.rename(
+            file_path,
+            os.path.join(directory, new_file_name)
+        )
 
-        with open(json_metadata_file_path, "r+") as f:
+        with open(json_metadata_file_path, 'r+') as f:
             unity_json = json.load(f)
             print("UNITY json {}".format(unity_json))
             unity_json[json_key] = new_file_name
@@ -366,31 +374,28 @@ def webgl_build(
             f.seek(0)
             json.dump(unity_json, f, indent=4)
 
-    arch = "WebGL"
+    arch = 'WebGL'
     build_name = local_build_name(prefix, arch)
     if room_ranges is not None:
-        floor_plans = [
-            "FloorPlan{}_physics".format(i)
-            for i in reduce(
+        floor_plans = ["FloorPlan{}_physics".format(i) for i in
+            reduce(
                 lambda x, y: x + y,
                 map(
                     lambda x: x + [x[-1] + 1],
-                    [
-                        list(range(*tuple(int(y) for y in x.split("-"))))
-                        for x in room_ranges.split(",")
-                    ],
-                ),
+                    [list(range(*tuple(int(y) for y in x.split("-"))))
+                        for x in room_ranges.split(",")]
+                )
             )
-        ]
+         ]
 
         scenes = ",".join(floor_plans)
     if verbose:
         print(scenes)
 
     env = dict(SCENE=scenes)
-    if turk_build:
-        env["DEFINES"] = "TURK_TASK"
-    if _build("unity", arch, directory, build_name, env=env):
+    if crowdsource_build:
+        env['DEFINES'] = 'CROWDSOURCE_TASK'
+    if _build('unity', arch, directory, build_name, env=env):
         print("Build Successful")
     else:
         print("Build Failure")
@@ -398,11 +403,26 @@ def webgl_build(
     build_path = _webgl_local_build_path(prefix, directory)
 
     rooms = {
-        "kitchens": {"name": "Kitchens", "roomRanges": range(1, 31)},
-        "livingRooms": {"name": "Living Rooms", "roomRanges": range(201, 231)},
-        "bedrooms": {"name": "Bedrooms", "roomRanges": range(301, 331)},
-        "bathrooms": {"name": "Bathrooms", "roomRanges": range(401, 431)},
-        "foyers": {"name": "Foyers", "roomRanges": range(501, 531)},
+        "kitchens": {
+            "name": "Kitchens",
+            "roomRanges": range(1, 31)
+        },
+        "livingRooms": {
+            "name": "Living Rooms",
+            "roomRanges": range(201, 231)
+        },
+        "bedrooms": {
+            "name": "Bedrooms",
+            "roomRanges": range(301, 331)
+        },
+        "bathrooms": {
+            "name": "Bathrooms",
+            "roomRanges": range(401, 431)
+        },
+        "foyers": {
+            "name": "Foyers",
+            "roomRanges": range(501, 531)
+        }
     }
 
     room_type_by_id = {}
@@ -410,14 +430,17 @@ def webgl_build(
     for room_type, room_data in rooms.items():
         for room_num in room_data["roomRanges"]:
             room_id = "FloorPlan{}_physics".format(room_num)
-            room_type_by_id[room_id] = {"type": room_type, "name": room_data["name"]}
+            room_type_by_id[room_id] = {
+                "type": room_type,
+                "name": room_data["name"]
+            }
 
     for scene_name in scenes.split(","):
         room_type = room_type_by_id[scene_name]
         if room_type["type"] not in scene_metadata:
             scene_metadata[room_type["type"]] = {
                 "scenes": [],
-                "name": room_type["name"],
+                "name": room_type["name"]
             }
 
         scene_metadata[room_type["type"]]["scenes"].append(scene_name)
@@ -426,18 +449,18 @@ def webgl_build(
         print(scene_metadata)
 
     to_content_addressable = [
-        ("{}.data.unityweb".format(build_name), "dataUrl"),
-        ("{}.wasm.code.unityweb".format(build_name), "wasmCodeUrl"),
-        ("{}.wasm.framework.unityweb".format(build_name), "wasmFrameworkUrl"),
+        ('{}.data.unityweb'.format(build_name), 'dataUrl'),
+        ('{}.wasm.code.unityweb'.format(build_name), 'wasmCodeUrl'),
+        ('{}.wasm.framework.unityweb'.format(build_name), 'wasmFrameworkUrl')
     ]
     for file_name, key in to_content_addressable:
         file_to_content_addressable(
             os.path.join(build_path, "Build/{}".format(file_name)),
             os.path.join(build_path, "Build/{}.json".format(build_name)),
-            key,
+            key
         )
 
-    with open(os.path.join(build_path, "scenes.json"), "w") as f:
+    with open(os.path.join(build_path, "scenes.json"), 'w') as f:
         f.write(json.dumps(scene_metadata, sort_keys=False, indent=4))
 
 
@@ -1054,46 +1077,62 @@ def s3_etag_data(data):
 
 
 cache_seconds = 31536000
-
-
 @task
-def webgl_deploy(
-    ctx, prefix="local", source_dir="builds", target_dir="", verbose=False, force=False
-):
-
+def webgl_deploy(ctx, bucket='ai2-thor-webgl', prefix='local', source_dir='builds', target_dir='', verbose=False, force=False, extensions_no_cache=''):
+    from pathlib import Path
     from os.path import isfile, join, isdir
 
     content_types = {
-        ".js": "application/javascript; charset=utf-8",
-        ".html": "text/html; charset=utf-8",
-        ".ico": "image/x-icon",
-        ".svg": "image/svg+xml; charset=utf-8",
-        ".css": "text/css; charset=utf-8",
-        ".png": "image/png",
-        ".txt": "text/plain",
-        ".jpg": "image/jpeg",
-        ".unityweb": "application/octet-stream",
-        ".json": "application/json",
+        '.js': 'application/javascript; charset=utf-8',
+        '.html': 'text/html; charset=utf-8',
+        '.ico': 'image/x-icon',
+        '.svg': 'image/svg+xml; charset=utf-8',
+        '.css': 'text/css; charset=utf-8',
+        '.png': 'image/png',
+        '.txt': 'text/plain',
+        '.jpg': 'image/jpeg',
+        '.unityweb': 'application/octet-stream',
+        '.json': 'application/json'
     }
 
-    content_encoding = {".unityweb": "gzip"}
+    content_encoding = {
+        '.unityweb': 'gzip'
+    }
 
-    bucket_name = "ai2-thor-webgl"
-    s3 = boto3.resource("s3")
+    bucket_name = bucket
+    s3 = boto3.resource('s3')
 
     current_objects = list_objects_with_metadata(bucket_name)
 
-    no_cache_extensions = {".txt", ".html", ".json", ".js"}
+    no_cache_extensions = {
+        ".txt",
+        ".html",
+        ".json",
+        ".js"
+    }
+
+    no_cache_extensions.union(set(extensions_no_cache.split(',')))
 
     if verbose:
-        print("Deploying to: {}/{}".format(bucket_name, target_dir))
+        session = boto3.Session()
+        credentials = session.get_credentials()
 
-    def walk_recursive(path, func, parent_dir=""):
+        # Credentials are refreshable, so accessing your access key / secret key
+        # separately can lead to a race condition. Use this to get an actual matched
+        # set.
+        credentials = credentials.get_frozen_credentials()
+        access_key = credentials.access_key
+        secret_key = credentials.secret_key
+        # print("key:  {} pass: {}".format(access_key, secret_key))
+        # print("Deploying to: {}/{}".format(bucket_name, target_dir))
+
+    def walk_recursive(path, func, parent_dir=''):
         for file_name in os.listdir(path):
             f_path = join(path, file_name)
             relative_path = join(parent_dir, file_name)
             if isfile(f_path):
-                func(f_path, join(target_dir, relative_path))
+                key = Path(join(target_dir, relative_path))
+                func(f_path, key.as_posix())
             elif isdir(f_path):
                 walk_recursive(f_path, func, relative_path)
 
@@ -1102,34 +1141,25 @@ def webgl_deploy(
         if verbose:
             print("'{}'".format(key))
 
-        with open(f_path, "rb") as f:
+        with open(f_path, 'rb') as f:
             file_data = f.read()
             etag = s3_etag_data(file_data)
             kwargs = {}
             if ext in content_encoding:
-                kwargs["ContentEncoding"] = content_encoding[ext]
+                kwargs['ContentEncoding'] = content_encoding[ext]
 
-            if (
-                not force
-                and key in current_objects
-                and etag == current_objects[key]["ETag"]
-            ):
+            if not force and key in current_objects and etag == current_objects[key]['ETag']:
                 if verbose:
                     print("ETag match - skipping %s" % key)
                 return
 
             if ext in content_types:
-                cache = (
-                    "no-cache, no-store, must-revalidate"
-                    if ext in no_cache_extensions
-                    else "public, max-age={}".format(cache_seconds)
+                cache = 'no-cache, no-store, must-revalidate' if ext in no_cache_extensions else 'public, max-age={}'.format(
+                    cache_seconds
                 )
                 now = datetime.datetime.utcnow()
-                expires = (
-                    now
-                    if ext == ".html" or ext == ".txt"
-                    else now + datetime.timedelta(seconds=cache_seconds)
-                )
+                expires = now if ext == '.html' or ext == '.txt' else now + datetime.timedelta(
+                    seconds=cache_seconds)
                 s3.Object(bucket_name, key).put(
                     Body=file_data,
                     ACL="public-read",
@@ -1140,13 +1170,16 @@ def webgl_deploy(
                 )
             else:
                 if verbose:
-                    print(
-                        "Warning: Content type for extension '{}' not defined,"
-                        " uploading with no content type".format(ext)
-                    )
-                s3.Object(bucket_name, key).put(Body=f.read(), ACL="public-read")
+                    print("Warning: Content type for extension '{}' not defined,"
+                          " uploading with no content type".format(ext))
+                s3.Object(bucket_name, key).put(
+                    Body=f.read(),
+                    ACL="public-read")
 
-    build_path = _webgl_local_build_path(prefix, source_dir)
+    if prefix is not None:
+        build_path = _webgl_local_build_path(prefix, source_dir)
+    else:
+        build_path = source_dir
     if verbose:
         print("Build path: '{}'".format(build_path))
         print("Uploading...")
@@ -1234,3 +1267,68 @@ def webgl_deploy_all(ctx, verbose=False, individual_rooms=False):
         else:
             webgl_build(ctx, room_ranges=range_str, directory=build_dir)
             webgl_deploy(ctx, source_dir=build_dir, target_dir=key, verbose=verbose)
+
+
+
+@task
+def webgl_s3_deploy(ctx, bucket, target_dir, scenes='', verbose=False, all=False, deploy_skip=False):
+    """
+    Builds and deploys a WebGL unity site
+    :param context:
+    :param target_dir: Target s3 bucket
+    :param target_dir: Target directory in bucket
+    :param scenes: String of scene numbers to include in the build as a comma separated list e.g. "4,6,230"
+    :param verbose: verbose build
+    :param all: overrides 'scenes' parameter and builds and deploys all separate rooms
+    :param deploy_skip: Whether to skip deployment and do build only.
+    :return:
+    """
+    rooms = {
+        "kitchens": (1, 30),
+        "livingRooms": (201, 230),
+        "bedrooms": (301, 330),
+        "bathrooms": (401, 430)
+    }
+
+    if all:
+        flatten = lambda l: [item for sublist in l for item in sublist]
+        room_numbers = flatten([[i for i in range(room_range[0], room_range[1])] for key, room_range in rooms.items()])
+    else:
+        room_numbers = [s.strip() for s in scenes.split(",")]
+
+    if verbose:
+        print("Rooms in build: '{}'".format(room_numbers))
+
+    for i in room_numbers:
+        floor_plan_name = "FloorPlan{}_physics".format(i)
+        if verbose:
+            print("Building room '{}'...".format(floor_plan_name))
+        target_s3_dir = "{}/{}".format(target_dir, floor_plan_name)
+        build_dir = "builds/{}".format(target_s3_dir)
+
+        webgl_build(ctx, scenes=floor_plan_name, directory=build_dir, crowdsource_build=True)
+        if verbose:
+            print("Deploying room '{}'...".format(floor_plan_name))
+        if not deploy_skip:
+            webgl_deploy(ctx, bucket=bucket,  source_dir=build_dir, target_dir=target_s3_dir, verbose=verbose, extensions_no_cache='.css')
+
+
+@task
+def webgl_site_deploy(context, template_name, output_dir, bucket, unity_build_dir='', s3_target_dir='', force=False, verbose=False):
+    from pathlib import Path
+    from os.path import isfile, join, isdir
+    template_dir = Path("unity/Assets/WebGLTemplates/{}".format(template_name))
+
+    if os.path.exists(output_dir):
+        shutil.rmtree(output_dir)
+    # os.mkdir(output_dir)
+
+    ignore_func = lambda d, files: [f for f in files if isfile(join(d, f)) and f.endswith('.meta')]
+
+    if unity_build_dir != '':
+        shutil.copytree(unity_build_dir, output_dir, ignore=ignore_func)
+        # shutil.copytree(os.path.join(unity_build_dir, "Build"), os.path.join(output_dir, "Build"), ignore=ignore_func)
+    else:
+        shutil.copytree(template_dir, output_dir, ignore=ignore_func)
+
+    webgl_deploy(context, bucket=bucket, prefix=None, source_dir=output_dir,  target_dir=s3_target_dir, verbose=verbose, force=force, extensions_no_cache='.css')

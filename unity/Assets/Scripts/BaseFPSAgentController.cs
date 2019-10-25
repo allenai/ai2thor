@@ -784,29 +784,22 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		//rotates 90 degrees left w/ respect to current forward
 		public virtual void RotateLeft(ServerAction controlCommand)
 		{
-			int index = currentHeadingAngleIndex() - 1;
-			if (index < 0)
-			{
-				index = headingAngles.Length - 1;
-			}
-			float targetRotation = headingAngles[index];
-			transform.rotation = Quaternion.Euler(new Vector3(0.0f, targetRotation, 0.0f));
+			transform.rotation = GetRotateQuaternion(-1);
 			actionFinished(true);
 
+		}
+
+        public virtual Quaternion GetRotateQuaternion(int headIndex)
+		{
+			int index = (headingAngles.Length + (currentHeadingAngleIndex() + headIndex)) % headingAngles.Length;
+			float targetRotation = headingAngles[index];
+			return Quaternion.Euler(new Vector3(0.0f, targetRotation, 0.0f));
 		}
 
 		//rotates 90 degrees right w/ respect to current forward
 		public virtual void RotateRight(ServerAction controlCommand)
 		{
-
-			int index = currentHeadingAngleIndex() + 1;
-			if (index == headingAngles.Length)
-			{
-				index = 0;
-			}
-
-			float targetRotation = headingAngles[index];
-			transform.rotation = Quaternion.Euler(new Vector3(0.0f, targetRotation, 0.0f));
+			transform.rotation = transform.rotation = GetRotateQuaternion(1);
 			actionFinished(true);
 		}
 

@@ -17,7 +17,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
         private Dictionary<KeyCode, ControlMode> debugKeyToController = new Dictionary<KeyCode, ControlMode>{
             {KeyCode.Alpha1, ControlMode.DEBUG_TEXT_INPUT},
             {KeyCode.BackQuote, ControlMode.FPS},
-            {KeyCode.Alpha2, ControlMode.DISCRETE_POINT_CLICK}
+            {KeyCode.Alpha2, ControlMode.DISCRETE_POINT_CLICK},
+            {KeyCode.Alpha3, ControlMode.DISCRETE_HIDE_N_SEEK}
         };
 
         private bool setEnabledControlComponent(ControlMode mode, bool enabled) {
@@ -25,12 +26,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
             var success = PlayerControllers.controlModeToComponent.TryGetValue(mode, out componentType);
             if (success) {
                 var previousComponent = Agent.GetComponent(componentType) as MonoBehaviour;
-                if (previousComponent != null) {
-                    previousComponent.enabled = enabled;
+                if (previousComponent == null) {
+                    previousComponent = Agent.AddComponent(componentType) as MonoBehaviour; 
                 }
-                else {
-                    success = false;
-                }
+                previousComponent.enabled = enabled;
             }
             return success;
         }
@@ -61,9 +60,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 setControlMode(ControlMode.FPS);
                 PhysicsController.GetComponent<JavaScriptInterface>().enabled = true;
             #endif
-            #if TURK_TASK
-                Debug.Log("TURK");
-                setControlMode(ControlMode.DISCRETE_POINT_CLICK);
+            #if CROWDSOURCE_TASK
+                Debug.Log("CROWDSOURCE_TASK");
+                setControlMode(ControlMode.DISCRETE_HIDE_N_SEEK);
             #endif
         }
 
@@ -87,6 +86,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 foreach (KeyValuePair<KeyCode, ControlMode> entry in debugKeyToController) {
                     if (Input.GetKeyDown(entry.Key)) {
                         if (controlMode != entry.Value) {
+
+                            // GameObject.Find("DebugCanvasPhysics").GetComponentInChildren<DebugInputField>().setControlMode(entry.Value);
                             setControlMode(entry.Value);
                             break;
                         }
