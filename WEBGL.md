@@ -2,7 +2,7 @@
 
 Using Unity's support for WebGL builds AI2-THOR offers an easy way to create web interfaces that communicate with the game and viceversa.
 
-This can be useful for getting data from human interactions in AI2-THOR and large scale crowdsourcing.
+This can be useful for getting data from human interactions in AI2-THOR and for large scale crowdsourcing.
 
 ## Requirements
 
