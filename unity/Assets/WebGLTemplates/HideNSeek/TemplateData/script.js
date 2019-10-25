@@ -63,90 +63,6 @@ $(
       lastMetadadta = jsonMeta;
     };
 
-    window.onUnityMetadata = function(metadata) {
-
-      let jsonMeta = JSON.parse(metadata);
-
-      let actionSuccess = jsonMeta.agents[0].lastActionSuccess;
-
-      // First initialization action
-      if (jsonMeta.agents[0].lastAction === null) {
-
-        console.log("--- ", jsonMeta.agents[0].sceneName);
-        outputData['scene'] = jsonMeta.agents[0].sceneName;
-        outputData['trayectory'] = [];
-        outputData['actions'] = [];
-
-        gameInstance.SendMessage ('FPSController', 'Step', JSON.stringify({
-          action: "RandomizeHideSeekObjects",
-          randomSeed: objectsRandomSeed,
-          removeProb: 0.0,
-        }));
-
-        ["Cup", "Mug", "Bread", "Tomato", "Plunger", "Knife"]
-          .forEach(
-            k => gameInstance.SendMessage(
-              'FPSController',
-              'Step',
-              JSON.stringify({action: "DisableAllObjectsOfType", objectId: k})
-            )
-          );
-
-        if (hider) {
-          gameInstance.SendMessage('FPSController', 'SpawnAgent', spawnRandomSeed);
-        }
-        else {
-          gameInstance.SendMessage('FPSController', 'Step', JSON.stringify({
-            action: "TeleportFull",
-            x: gameConfig.agent_start_location.x,
-            y: gameConfig.agent_start_location.y,
-            z: gameConfig.agent_start_location.z,
-            horizon:  gameConfig.agent_start_location.horizon,
-            rotation: {x: 0.0, y: gameConfig.agent_start_location.rotation, z: 0.0},
-            standing: gameConfig.agent_start_location.standing
-          }));
-          gameInstance.SendMessage('FPSController', 'Step', JSON.stringify({
-            action: "CreateObjectAtLocation",
-            position: gameConfig.object_position,
-            rotation: gameConfig.object_rotation,
-            forceAction: true,
-            objectType: gameConfig.object_type,
-            objectVariation: gameConfig.object_variation,
-            randomizeObjectAppearance: false
-          }));
-        }
-      }
-      else {
-        if (jsonMeta.agents[0].lastAction === "CreateObject" && !actionSuccess) {
-          throw `Action '${jsonMeta.agents[0].lastAction}' failed with error: "${jsonMeta.agents[0].errorMessage}"' `
-        }
-      }
-      let agentMetadata = jsonMeta.agents[0];
-      let agent = agentMetadata.agent;
-      outputData.actions.push({
-        lastAction: agentMetadata.lastAction,
-        lastActionSuccess: agentMetadata.lastActionSuccess,
-        agent: {
-          x: agent.position.x,
-          y: agent.position.y,
-          z: agent.position.z,
-          rotation: agent.rotation.y,
-          horizon: agent.cameraHorizon,
-          standing: agentMetadata.isStanding
-        }
-      });
-
-      let className = actionSuccess ? 'green-text' : 'red-text';
-      let lastActionStatus = actionSuccess ? "Succeeded" : "Failed";
-      $("#last-action-text").html(`Action ${lastActionStatus}: <strong class="${className}">${jsonMeta.agents[0].lastAction}</strong>`).show();
-      if (!actionSuccess) {
-        console.log(jsonMeta)
-      }
-
-      handleEvent(jsonMeta);
-      lastMetadadta = jsonMeta;
-    };
-
     window.onUnityEvent = function(event) {
       // Logic for handling unity events
     };
@@ -392,6 +308,20 @@ $(
       if (handler !== undefined) {
         handler(metadata);
       }
+      let agentMetadata = metadata.agents[0];
+      let agent = agentMetadata.agent;
+      outputData.actions.push({
+        lastAction: agentMetadata.lastAction,
+        lastActionSuccess: agentMetadata.lastActionSuccess,
+        agent: {
+          x: agent.position.x,
+          y: agent.position.y,
+          z: agent.position.z,
+          rotation: agent.rotation.y,
+          horizon: agent.cameraHorizon,
+          standing: agentMetadata.isStanding
+        }
+      });
     }
 
 

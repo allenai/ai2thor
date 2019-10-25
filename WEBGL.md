@@ -77,7 +77,7 @@ window.onUnityMetadata = function(metadataString) {
 
 See [AgentManager.cs](unity/Assets/Scripts/AgentManager.cs) for the json schemas.
 
-You can look at [script.js](unity/Assets/WebGLTemplate/HideNSeek/TemplateData/script.js) to see an example of a metadata callback registered with different handlers.
+You can look at [script.js](unity/Assets/WebGLTemplates/HideNSeek/TemplateData/script.js) to see an example of a metadata callback registered with different handlers.
 
 ### Controller step
 
