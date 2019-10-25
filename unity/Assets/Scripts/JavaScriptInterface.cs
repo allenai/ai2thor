@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 using System.Runtime.InteropServices;
 using UnityStandardAssets.Characters.FirstPerson;
 
@@ -6,6 +7,7 @@ using UnityStandardAssets.Characters.FirstPerson;
 public class JavaScriptInterface : MonoBehaviour {
 
     private PhysicsRemoteFPSAgentController PhysicsController;
+    private DebugInputField inputField;
 
     [DllImport("__Internal")]
     private static extern void Init();
@@ -32,15 +34,34 @@ public class JavaScriptInterface : MonoBehaviour {
     void Start()
     {
         PhysicsController = gameObject.GetComponent<PhysicsRemoteFPSAgentController>();
+        inputField = GameObject.Find("DebugCanvasPhysics").GetComponentInChildren<DebugInputField>();//FindObjectOfType<DebugInputField>();
+        //GameObject.Find("DebugCanvas").GetComponentInChildren<AgentManager>();
         Init();
 
         Debug.Log("Calling store data");
     }
 
-     public void Step(string serverAction)
-		{
-			ServerAction controlCommand = new ServerAction();
-			JsonUtility.FromJsonOverwrite(serverAction, controlCommand);
-			PhysicsController.ProcessControlCommand(controlCommand);
-		}
+    public void SetController(string controlModeEnumString) 
+    {
+        ControlMode controlMode = (ControlMode) Enum.Parse(typeof(ControlMode), controlModeEnumString, true);
+        //inputField.setControlMode(controlMode);
+
+        Type componentType;
+        var success = PlayerControllers.controlModeToComponent.TryGetValue(controlMode, out componentType);
+        var Agent = PhysicsController.gameObject;
+        if (success) {
+            var previousComponent = Agent.GetComponent(componentType) as MonoBehaviour;
+            if (previousComponent == null) {
+                previousComponent = Agent.AddComponent(componentType) as MonoBehaviour; 
+            }
+            previousComponent.enabled = true;
+        }
+    }
+
+    public void Step(string serverAction)
+    {
+        ServerAction controlCommand = new ServerAction();
+        JsonUtility.FromJsonOverwrite(serverAction, controlCommand);
+        PhysicsController.ProcessControlCommand(controlCommand);
+    }
 }

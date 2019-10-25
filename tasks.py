@@ -333,7 +333,7 @@ def webgl_build(
         prefix='local',
         verbose=False,
         content_addressable=False,
-        turk_build=False
+        crowdsource_build=False
 ):
     """
     Creates a WebGL build
@@ -393,8 +393,8 @@ def webgl_build(
         print(scenes)
 
     env = dict(SCENE=scenes)
-    if turk_build:
-        env['DEFINES'] = 'TURK_TASK'
+    if crowdsource_build:
+        env['DEFINES'] = 'CROWDSOURCE_TASK'
     if _build('unity', arch, directory, build_name, env=env):
         print("Build Successful")
     else:
@@ -1306,7 +1306,7 @@ def webgl_s3_deploy(ctx, bucket, target_dir, scenes='', verbose=False, all=False
         target_s3_dir = "{}/{}".format(target_dir, floor_plan_name)
         build_dir = "builds/{}".format(target_s3_dir)
 
-        webgl_build(ctx, scenes=floor_plan_name, directory=build_dir, turk_build=True)
+        webgl_build(ctx, scenes=floor_plan_name, directory=build_dir, crowdsource_build=True)
         if verbose:
             print("Deploying room '{}'...".format(floor_plan_name))
         if not deploy_skip:
@@ -1314,7 +1314,7 @@ def webgl_s3_deploy(ctx, bucket, target_dir, scenes='', verbose=False, all=False
 
 
 @task
-def turk_site_deploy(context, template_name, output_dir, bucket, unity_build_dir='', force=False, verbose=False):
+def webgl_site_deploy(context, template_name, output_dir, bucket, unity_build_dir='', s3_target_dir='', force=False, verbose=False):
     from pathlib import Path
     from os.path import isfile, join, isdir
     template_dir = Path("unity/Assets/WebGLTemplates/{}".format(template_name))
@@ -1325,20 +1325,10 @@ def turk_site_deploy(context, template_name, output_dir, bucket, unity_build_dir
 
     ignore_func = lambda d, files: [f for f in files if isfile(join(d, f)) and f.endswith('.meta')]
 
-    shutil.copytree(template_dir, output_dir, ignore=ignore_func)
-
     if unity_build_dir != '':
-        shutil.copytree(os.path.join(unity_build_dir, "Build"), os.path.join(output_dir, "Build"), ignore=ignore_func)
+        shutil.copytree(unity_build_dir, output_dir, ignore=ignore_func)
+        # shutil.copytree(os.path.join(unity_build_dir, "Build"), os.path.join(output_dir, "Build"), ignore=ignore_func)
+    else:
+        shutil.copytree(template_dir, output_dir, ignore=ignore_func)
 
-    # def walk_recursive(path, target_dir, func, parent_dir=''):
-    #     for file_name in os.listdir(path):
-    #         f_path = join(path, file_name)
-    #         relative_path = join(parent_dir, file_name)
-    #         if isfile(f_path):
-    #             key = Path(join(target_dir, relative_path))
-    #             func(f_path, key.as_posix())
-    #         elif isdir(f_path):
-    #             walk_recursive(f_path, func, relative_path)
-    #
-    # walk_recursive(template_dir, target_dir)
-    webgl_deploy(context, bucket=bucket, prefix=None, source_dir=output_dir,  target_dir='test', verbose=verbose, force=force, extensions_no_cache='.css')
+    webgl_deploy(context, bucket=bucket, prefix=None, source_dir=output_dir,  target_dir=s3_target_dir, verbose=verbose, force=force, extensions_no_cache='.css')

@@ -487,6 +487,7 @@ public class AgentManager : MonoBehaviour
 
 		ThirdPartyCameraMetadata[] cameraMetadata = new ThirdPartyCameraMetadata[this.thirdPartyCameras.Count];
 		RenderTexture currentTexture = null;
+        JavaScriptInterface jsInterface = null;
         if (shouldRender) {
             currentTexture = RenderTexture.active;
             for (int i = 0; i < this.thirdPartyCameras.Count; i++) {
@@ -508,6 +509,7 @@ public class AgentManager : MonoBehaviour
 
         for (int i = 0; i < this.agents.Count; i++) {
             BaseFPSAgentController agent = this.agents.ToArray () [i];
+            jsInterface = agent.GetComponent<JavaScriptInterface>();
             MetadataWrapper metadata = agent.generateMetadataWrapper ();
             metadata.agentId = i;
             // we don't need to render the agent's camera for the first agent
@@ -528,8 +530,18 @@ public class AgentManager : MonoBehaviour
             RenderTexture.active = currentTexture;
         }
 
+        var serializedMetadata = Newtonsoft.Json.JsonConvert.SerializeObject(multiMeta);
+		#if UNITY_WEBGL
+
+				// JavaScriptInterface jsI =  FindObjectOfType<JavaScriptInterface>();
+				// jsInterface.SendAction(new ServerAction(){action = "Test"});
+                if (jsInterface != null) {
+					jsInterface.SendActionMetadata(serializedMetadata);
+				}
+        #endif
+
         //form.AddField("metadata", JsonUtility.ToJson(multiMeta));
-        form.AddField("metadata", Newtonsoft.Json.JsonConvert.SerializeObject(multiMeta));
+        form.AddField("metadata", serializedMetadata);
         form.AddField("token", robosimsClientToken);
 
         #if !UNITY_WEBGL 
