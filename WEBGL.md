@@ -31,7 +31,9 @@ We include a demo template used for a crowdsourcing task, which is a great start
 
 ### Runing the demo Hide N Seek template
 
-In Unity open the AI2-THOR project and select the WebGL Template called `HideNSeek`. [How to do this.](https://docs.unity3d.com/Manual/webgl-templates.html)
+In Unity open the AI2-THOR project and select the WebGL Template called [HideNSeek](unity/Assets/WebGLTemplates/HideNSeek).
+
+[How to do this.](https://docs.unity3d.com/Manual/webgl-templates.html)
 
 From the build menu in Unity switch the target platform to WebGL/HTML5 and build. Unity launches a small server with the site. Make sure the address has the following get parameters:
 
@@ -40,6 +42,7 @@ From the build menu in Unity switch the target platform to WebGL/HTML5 and build
 The `object` parameter can be `Tomato`, `Bread`, `Plunger`, `Cup`, or `Knife` with the same casing, and leave `variation` to be 0.
 
 * After the template is selected, you can close Unity and call the `webgl-build` command to make builds of different scenes that use the template.
+* You can create your own template under `unity/Assets/WebGLTemplates` and build.
 
 ## Custom Interface
 
