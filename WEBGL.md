@@ -1,6 +1,4 @@
-[AI2-THOR (The House Of inteRactions)](https://ai2thor.allenai.org/) is a near photo-realistic interactable framework for AI agents.
-
-## WebGL Builds
+# WebGL Builds
 
 Using Unity's support for WebGL builds AI2-THOR offers an easy way to create web interfaces that communicate with the game and viceversa.
 
