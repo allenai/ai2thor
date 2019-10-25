@@ -97,20 +97,20 @@ class MultiAgentEvent(object):
         self.third_party_camera_frames.append(read_buffer_image(third_party_image_data, self.screen_width, self.screen_height))
 
 
-def read_buffer_image(buf, width, height, flip=True):
+def read_buffer_image(buf, width, height, flip=True, dtype=np.uint8):
 
     if sys.version_info.major < 3:
         # support for Python 2.7 - can't handle memoryview in Python2.7 and Numpy frombuffer
         return np.flip(np.frombuffer(
-            buf.tobytes(), dtype=np.uint8).reshape(height, width, -1), axis=0) if flip \
+            buf.tobytes(), dtype=dtype).reshape(height, width, -1), axis=0) if flip \
             else np.frombuffer(
-                buf.tobytes(), dtype=np.uint8).reshape(height, width, -1)
+                buf.tobytes(), dtype=dtype).reshape(height, width, -1)
 
     else:
         return \
-            np.flip(np.frombuffer(buf, dtype=np.uint8).reshape(height, width, -1), axis=0) \
+            np.flip(np.frombuffer(buf, dtype=dtype).reshape(height, width, -1), axis=0) \
             if flip else \
-            np.frombuffer(buf, dtype=np.uint8).reshape(height, width, -1)
+            np.frombuffer(buf, dtype=dtype).reshape(height, width, -1)
 
 
 def unique_rows(arr, return_index=False, return_inverse=False):
@@ -240,6 +240,11 @@ class Event(object):
 
         return image_depth_out.astype(np.float32)
 
+
+    def add_image_depth_meters(self, image_depth_data, flip=True, dtype=np.float64):
+        # read image depth and convert to mm
+        image_depth = read_buffer_image(image_depth_data, self.screen_width, self.screen_height, flip=flip, dtype=dtype).reshape(self.screen_height, self.screen_width) * 1000.0
+        self.depth_frame = image_depth.astype(np.float32)
 
     def add_image_depth(self, image_depth_data, flip=True):
         self.depth_frame = self._image_depth(image_depth_data, flip=flip)
