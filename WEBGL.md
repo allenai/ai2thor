@@ -42,7 +42,7 @@ From the build menu in Unity switch the target platform to WebGL/HTML5 and build
 The `object` parameter can be `Tomato`, `Bread`, `Plunger`, `Cup`, or `Knife` with the same casing, and leave `variation` to be 0.
 
 * After the template is selected, you can close Unity and call the `webgl-build` command to make builds of different scenes that use the template.
-* You can create your own template under `unity/Assets/WebGLTemplates` and build.
+* You can create your own template under `unity/Assets/WebGLTemplates`.
 
 ## Custom Interface
 
