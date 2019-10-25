@@ -97,7 +97,7 @@ Call on your `gameInstance` in javascript.
 ### Custom Controller
 
 The easiest way to do this is to write a new Unity component `MonoBehaviour` that acts as a controller for the agent and handles user input through Unity's functions. See [DiscretePointClickAgentController.cs](unity/Assets/Scripts/DiscretePointClickAgentController.cs) as an example. This has the convenience of developing and testing this input system within Unity. 
-When you're done register your component in the script [PlayerControllers.cs](https://github.com/allenai/ai2thor/blob/master/unity/Assets/Scripts/PlayerControllers.cs), adding it both to the `ControlMode` Enum and the `PlayerControllers` class dictionary with the Enum value as key and your Script type as the value.
+When you're done register your component in the script [PlayerControllers.cs](https://github.com/allenai/ai2thor/blob/master/unity/Assets/Scripts/PlayerControllers.cs), adding it both to the `ControlMode` Enum and the `PlayerControllers` class dictionary; with the Enum value as key and your Script type as the value.
 
 #### Activating Controller
 
@@ -107,7 +107,7 @@ In javascript call on your game instance after the scene has loaded:
   gameInstance.SendMessage('FPSController', 'SetController', 'DISCRETE_HIDE_N_SEEK');
 ```
 
-The third argument in this case `"DISCRETE_HIDE_N_SEEK"`, should be the enum string name in the `ControlMode` enum, you mapped your controller to in [PlayerControllers.cs](https://github.com/allenai/ai2thor/blob/master/unity/Assets/Scripts/PlayerControllers.cs), adding it both to the `ControlMode` Enum and the `PlayerControllers` class dictionary with the Enum value as key and your Script type as the value.
+The third argument in this case `"DISCRETE_HIDE_N_SEEK"`, should be the enum string name in the `ControlMode` enum, you mapped your controller to in [PlayerControllers.cs](https://github.com/allenai/ai2thor/blob/master/unity/Assets/Scripts/PlayerControllers.cs).
 
 #### Alternate Controller
 
