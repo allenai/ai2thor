@@ -47,7 +47,7 @@ $(
 
     /////////////////////
     ///// Unity callbacks
-    window.game_init = function() {
+    window.onGameLoaded = function() {
       if (!gameInitialized) {
         if ('scene' in getParams && getParams['scene']) {
           gameInstance.SendMessage('PhysicsSceneManager', 'SwitchScene', getParams['scene']);

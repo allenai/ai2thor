@@ -60,15 +60,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 setControlMode(ControlMode.FPS);
                 PhysicsController.GetComponent<JavaScriptInterface>().enabled = true;
             #endif
-            #if TURK_TASK
-                Debug.Log("TURK");
-                setControlMode(ControlMode.DISCRETE_POINT_CLICK);
+            #if CROWDSOURCE_TASK
+                Debug.Log("CROWDSOURCE_TASK");
+                setControlMode(ControlMode.DISCRETE_HIDE_N_SEEK);
             #endif
-        }
-
-        void SetController(string controlModeEnumString) {
-            ControlMode controlMode = (ControlMode) Enum.Parse(typeof(ControlMode), "Active", true);
-            setControlMode(controlMode);
         }
 
         void InitializeUserControl()
@@ -91,6 +86,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 foreach (KeyValuePair<KeyCode, ControlMode> entry in debugKeyToController) {
                     if (Input.GetKeyDown(entry.Key)) {
                         if (controlMode != entry.Value) {
+
+                            // GameObject.Find("DebugCanvasPhysics").GetComponentInChildren<DebugInputField>().setControlMode(entry.Value);
                             setControlMode(entry.Value);
                             break;
                         }

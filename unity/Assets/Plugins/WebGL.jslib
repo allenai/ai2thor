@@ -2,8 +2,8 @@ mergeInto(LibraryManager.library, {
 
   Init: function () {
     // window.alert("Init test!");
-    if (window.game_init && typeof(window.game_init) === 'function') {
-        window.game_init();
+    if (window.onGameLoaded && typeof(window.onGameLoaded) === 'function') {
+        window.onGameLoaded();
     }
   },
   
