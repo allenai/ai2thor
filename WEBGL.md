@@ -115,7 +115,7 @@ You can also handle user input in javascript and call `Step` on the controller t
 
 ### Deploying your Site to S3
 
-An easy way to have access to your interface is to deploy host it on AWS S3 service, we provide an invoke task that does this for you:
+An easy way to have access to your interface is to host it on AWS S3 service, we provide an invoke task that does this for you:
 
 ```
 inv webgl-s3-deploy -b=<s3_bucket> -t=<target_dir_in_s3> -s=8 -v
