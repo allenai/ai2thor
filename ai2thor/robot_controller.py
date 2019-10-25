@@ -96,7 +96,7 @@ class Controller(object):
             event = Event(agent_metadata)
             image_mapping = dict(
                 image=lambda x: event.add_image(x, flip=False),
-                image_depth=lambda x: event.add_image_depth(x, flip=False)
+                image_depth=lambda x: event.add_image_depth_meters(x, flip=False, dtype=np.float64)
             )
             for key in image_mapping.keys():
                 if key in payload and len(payload[key]) > i:
