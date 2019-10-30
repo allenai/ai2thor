@@ -41,6 +41,11 @@ public class JavaScriptInterface : MonoBehaviour {
         Debug.Log("Calling store data");
     }
 
+    public void GetRenderPath()
+    {
+        SendMetadata("" + GetComponentInChildren<Camera>().actualRenderingPath);
+    }
+
     public void SetController(string controlModeEnumString) 
     {
         ControlMode controlMode = (ControlMode) Enum.Parse(typeof(ControlMode), controlModeEnumString, true);
