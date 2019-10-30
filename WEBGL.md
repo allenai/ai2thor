@@ -2,7 +2,7 @@
 
 Using Unity's support for WebGL builds AI2-THOR offers an easy way to create web interfaces that communicate with the game and viceversa.
 
-This can be useful for getting data from human interactions in AI2-THOR and large scale crowdsourcing.
+This can be useful for getting data from human interactions in AI2-THOR and for large scale crowdsourcing.
 
 ## Requirements
 
@@ -19,7 +19,7 @@ inv webgl-build -s=FloorPlan8_physics
 
 The build should be written under `unity/builds/thor-local-WebGL`.
 
-You can read the log of the build under the repo's root directory with the name `thor-local-WebGL.log`.
+You can read the log file `thor-local-WebGL.log` under the root directory.
 
 If it fails make sure Unity is closed, in Windows the process may be hanging so make sure Unity is not running. In Windows after opeing and closing Unity you may also need to restart you machine.
 
@@ -97,7 +97,7 @@ Call on your `gameInstance` in javascript.
 ### Custom Controller
 
 The easiest way to do this is to write a new Unity component `MonoBehaviour` that acts as a controller for the agent and handles user input through Unity's functions. See [DiscretePointClickAgentController.cs](unity/Assets/Scripts/DiscretePointClickAgentController.cs) as an example. This has the convenience of developing and testing this input system within Unity. 
-When you're done register your component in the script [PlayerControllers.cs](https://github.com/allenai/ai2thor/blob/master/unity/Assets/Scripts/PlayerControllers.cs), adding it both to the `ControlMode` Enum and the `PlayerControllers` class dictionary with the Enum value as key and your Script type as the value.
+When you're done register your component in the script [PlayerControllers.cs](https://github.com/allenai/ai2thor/blob/master/unity/Assets/Scripts/PlayerControllers.cs), adding it both to the `ControlMode` Enum and the `PlayerControllers` class dictionary; with the Enum value as key and your Script type as the value.
 
 #### Activating Controller
 
@@ -107,7 +107,7 @@ In javascript call on your game instance after the scene has loaded:
   gameInstance.SendMessage('FPSController', 'SetController', 'DISCRETE_HIDE_N_SEEK');
 ```
 
-The third argument in this case `"DISCRETE_HIDE_N_SEEK"`, should be the enum string name in the `ControlMode` enum, you mapped your controller to in [PlayerControllers.cs](https://github.com/allenai/ai2thor/blob/master/unity/Assets/Scripts/PlayerControllers.cs), adding it both to the `ControlMode` Enum and the `PlayerControllers` class dictionary with the Enum value as key and your Script type as the value.
+The third argument in this case `"DISCRETE_HIDE_N_SEEK"`, should be the enum string name in the `ControlMode` enum, you mapped your controller to in [PlayerControllers.cs](https://github.com/allenai/ai2thor/blob/master/unity/Assets/Scripts/PlayerControllers.cs).
 
 #### Alternate Controller
 
@@ -115,7 +115,7 @@ You can also handle user input in javascript and call `Step` on the controller t
 
 ### Deploying your Site to S3
 
-An easy way to have access to your interface is to deploy host it on AWS S3 service, we provide an invoke task that does this for you:
+An easy way to have access to your interface is to host it on AWS S3 service, we provide an invoke task that does this for you:
 
 ```
 inv webgl-s3-deploy -b=<s3_bucket> -t=<target_dir_in_s3> -s=8 -v
