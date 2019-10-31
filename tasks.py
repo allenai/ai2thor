@@ -785,12 +785,14 @@ def interact(
     scene,
     editor_mode=False,
     local_build=False,
+    color_image=False,
     depth_image=False,
     class_image=False,
     object_image=False,
     robot=False,
     port=8200,
-    host='127.0.0.1'
+    host='127.0.0.1',
+    image_directory='.'
 ):
     import ai2thor.controller
     import ai2thor.robot_controller
@@ -798,7 +800,10 @@ def interact(
     if not robot:
         env = ai2thor.controller.Controller()
     else:
-        env = ai2thor.robot_controller.Controller()
+        env = ai2thor.robot_controller.Controller(
+            image_dir=image_directory,
+            save_image_per_frame=True
+        )
 
     if local_build:
         print("Executing from local build at {} ".format( _local_build_path()))
@@ -829,7 +834,12 @@ def interact(
             renderDepthImage=depth_image
         )
     )
-    env.interact()
+    env.interact(
+        class_segmentation_frame=class_image,
+        instance_segmentation_frame=object_image,
+        depth_frame=depth_image,
+        color_frame=color_image
+    )
     env.stop()
 
 

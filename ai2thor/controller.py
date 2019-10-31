@@ -502,13 +502,15 @@ class Controller(object):
     def interact(self,
                  class_segmentation_frame=False,
                  instance_segmentation_frame=False,
-                 depth_frame=False
+                 depth_frame=False,
+                 color_frame=False
                  ):
         self.interactive_controller.interact(
             self,
             class_segmentation_frame,
             instance_segmentation_frame,
-            depth_frame
+            depth_frame,
+            color_frame
         )
         # from PIL import Image
         # if not sys.stdout.isatty():
