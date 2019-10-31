@@ -791,7 +791,8 @@ def interact(
     object_image=False,
     robot=False,
     port=8200,
-    host='127.0.0.1'
+    host='127.0.0.1',
+    image_directory='.'
 ):
     import ai2thor.controller
     import ai2thor.robot_controller
@@ -799,7 +800,10 @@ def interact(
     if not robot:
         env = ai2thor.controller.Controller()
     else:
-        env = ai2thor.robot_controller.Controller(image_dir='images', save_image_per_frame=True)
+        env = ai2thor.robot_controller.Controller(
+            image_dir=image_directory,
+            save_image_per_frame=True
+        )
 
     if local_build:
         print("Executing from local build at {} ".format( _local_build_path()))

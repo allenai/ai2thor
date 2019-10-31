@@ -29,13 +29,10 @@ class Controller(object):
         self.sequence_id = 0
         self.agent_id = 0
 
-        if os.path.exists(image_dir):
-            shutil.rmtree(image_dir)
-
         if image_dir != '.':
+            if os.path.exists(image_dir):
+                shutil.rmtree(image_dir)
             os.makedirs(image_dir)
-
-
 
         self.interactive_controller = InteractiveControllerPrompt(
             [
@@ -107,7 +104,7 @@ class Controller(object):
             image_mapping = dict(
                 image=lambda x: event.add_image(x, flip_y=False),
                 image_depth=lambda x: event.add_image_depth_meters(
-                    x, flip_y=False, flip_x=True, dtype=np.float64
+                    x, flip_y=False, dtype=np.float64
                 )
             )
             for key in image_mapping.keys():
