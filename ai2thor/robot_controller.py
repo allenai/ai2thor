@@ -5,6 +5,7 @@ import numpy as np
 import requests
 import cv2
 from pprint import pprint
+import shutil
 import copy
 
 import ai2thor.docker
@@ -19,7 +20,7 @@ from ai2thor.interact import InteractiveControllerPrompt, DefaultActions
 
 class Controller(object):
 
-    def __init__(self, headless=False):
+    def __init__(self, headless=False, image_dir='.', save_image_per_frame=False):
         self.host = ''
         self.port = 0
         self.headless = headless
@@ -27,6 +28,11 @@ class Controller(object):
         self.last_action = {}
         self.sequence_id = 0
         self.agent_id = 0
+
+        if image_dir != '.':
+            if os.path.exists(image_dir):
+                shutil.rmtree(image_dir)
+            os.makedirs(image_dir)
 
         self.interactive_controller = InteractiveControllerPrompt(
             [
@@ -37,7 +43,8 @@ class Controller(object):
                 DefaultActions.LookUp,
                 DefaultActions.LookDown
             ],
-            has_object_actions=False
+            image_dir=image_dir,
+            image_per_frame=save_image_per_frame
         )
 
     def stop(self):
@@ -102,8 +109,10 @@ class Controller(object):
         for i, agent_metadata in enumerate(payload['metadata']['agents']):
             event = Event(agent_metadata)
             image_mapping = dict(
-                image=lambda x: event.add_image(x, flip=False),
-                image_depth=lambda x: event.add_image_depth_meters(x, flip=False, dtype=np.float64)
+                image=lambda x: event.add_image(x, flip_y=False),
+                image_depth=lambda x: event.add_image_depth_meters(
+                    x, flip_y=False, dtype=np.float64
+                )
             )
             for key in image_mapping.keys():
                 if key in payload and len(payload[key]) > i:
@@ -129,7 +138,8 @@ class Controller(object):
     def interact(self,
                  class_segmentation_frame=False,
                  instance_segmentation_frame=False,
-                 depth_frame=False
+                 depth_frame=False,
+                 color_frame=False
                  ):
         self.interactive_controller.interact(
             self,

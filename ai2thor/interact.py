@@ -2,6 +2,8 @@ import tty
 import sys
 import termios
 from PIL import Image
+import numpy as np
+import os
 
 from enum import Enum
 
@@ -44,9 +46,12 @@ def get_term_character():
 
 
 class InteractiveControllerPrompt(object):
-    def __init__(self, default_actions, has_object_actions=True):
+    def __init__(self, default_actions, has_object_actions=True, image_dir='.', image_per_frame=False):
         self.default_actions = default_actions
         self.has_object_actions = has_object_actions
+        self.image_per_frame = image_per_frame
+        self.image_dir = image_dir
+        self.counter = 0
 
         default_interact_commands = {
             '\x1b[C': dict(action='MoveRight', moveMagnitude=0.25),
@@ -72,7 +77,8 @@ class InteractiveControllerPrompt(object):
                  controller,
                  class_segmentation_frame=False,
                  instance_segmentation_frame=False,
-                 depth_frame=False
+                 depth_frame=False,
+                 color_frame=False
                  ):
 
         if not sys.stdout.isatty():
@@ -99,17 +105,22 @@ class InteractiveControllerPrompt(object):
             # check inventory
             visible_objects = []
             frame_writes = [
-                ('instance_segmentation.jpeg',
+                ('color',
+                 color_frame,
+                 lambda event: event.frame,
+                 lambda x: x
+                 ),
+                ('instance_segmentation',
                  instance_segmentation_frame,
                  lambda event: event.instance_segmentation_frame,
                  lambda x: x
                  ),
-                ('class_segmentation.jpeg',
+                ('class_segmentation',
                  class_segmentation_frame,
                  lambda event: event.class_segmentation_frame,
                  lambda x: x
                  ),
-                ('depth.jpeg',
+                ('depth',
                  depth_frame,
                  lambda event: event.depth_frame,
                  lambda data: (255.0 / data.max() * (data - data.min())).astype(np.uint8)
@@ -121,10 +132,22 @@ class InteractiveControllerPrompt(object):
                 if frame is not None:
                     frame = transform(frame)
                     im = Image.fromarray(frame)
-                    im.save(frame_filename)
+                    image_name = os.path.join(
+                            self.image_dir,
+                            "{}{}.jpeg"
+                                .format(
+                                    frame_filename,
+                                    "{}".format(self.counter) if self.image_per_frame else ""
+                                )
+                        )
+                    print("Image {}".format(image_name))
+                    im.save(
+                        image_name
+                    )
                 else:
                     print("No frame present, call initialize with the right parameters")
 
+            self.counter += 1
             if self.has_object_actions:
                 for o in event.metadata['objects']:
                     if o['visible']:
