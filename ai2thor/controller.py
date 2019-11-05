@@ -1413,12 +1413,10 @@ class BFSController(Controller):
             y=search_point.start_position['y'],
             z=search_point.start_position['z']))
 
-        assert event.metadata['lastActionSuccess']
-        move_vec = search_point.move_vector
-        move_vec['moveMagnitude'] = self.grid_size
-        event = self.step(dict(action='Move', **move_vec))
-
         if event.metadata['lastActionSuccess']:
+            move_vec = search_point.move_vector
+            move_vec['moveMagnitude'] = self.grid_size
+            event = self.step(dict(action='Move', **move_vec))
             if event.metadata['agent']['position']['y'] > 1.3:
                 #pprint(search_point.start_position)
                 #pprint(search_point.move_vector)
