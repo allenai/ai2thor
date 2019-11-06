@@ -1892,6 +1892,33 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         break;
                     }
 
+                    case "shortest_path":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "GetShortestPath";
+
+                        //pass in a min range, max range, delay
+                        if (splitcommand.Length > 1)
+                        {
+                            //ID of spawner
+                            action.objectId = splitcommand[1];
+
+                            if (splitcommand.Length == 5) {
+                                //minimum range of how many objects to spawn
+                                action.x = float.Parse(splitcommand[2]);
+
+                                //maximum range of how many objects to spawn
+                                action.y = float.Parse(splitcommand[3]);
+
+                                //delay between spawns
+                                action.z = float.Parse(splitcommand[4]);
+                            }
+                        }
+
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
 				default:
                     {   
                         ServerAction action = new ServerAction();

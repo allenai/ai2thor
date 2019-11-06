@@ -13,6 +13,7 @@ using UnityEngine.SceneManagement;
 using UnityStandardAssets.CrossPlatformInput;
 using UnityStandardAssets.ImageEffects;
 using UnityStandardAssets.Utility;
+using UnityEngine.AI;
 
 namespace UnityStandardAssets.Characters.FirstPerson {
     [RequireComponent(typeof(CharacterController))]
@@ -638,6 +639,70 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
 
+        public List<SimObjPhysics> GetAllVisibleSimObjPhysics(float maxDistance) {
+            List<SimObjPhysics> currentlyVisibleItems = new List<SimObjPhysics>();
+
+            CapsuleCollider agentCapsuleCollider = this.GetComponent<CapsuleCollider>();
+            var camera = this.GetComponentInChildren<Camera>();
+            Vector3 point0, point1;
+            float radius;
+            agentCapsuleCollider.ToWorldSpaceCapsule(out point0, out point1, out radius);
+            if (point0.y <= point1.y) {
+                point1.y += maxDistance;
+            } else {
+                point0.y += maxDistance;
+            }
+
+            this.updateAllAgentCollidersForVisibilityCheck(false);
+            Collider[] colliders_in_view = Physics.OverlapCapsule(point0, point1, maxDistance, 1 << 8, QueryTriggerInteraction.Collide);
+
+            if (colliders_in_view != null) {
+                HashSet<SimObjPhysics> testedSops = new HashSet<SimObjPhysics>();
+                foreach (Collider item in colliders_in_view) {
+                    SimObjPhysics sop = ancestorSimObjPhysics(item.gameObject);
+                    //now we have a reference to our sim object 
+                    if (sop != null && !testedSops.Contains(sop)) {
+                        testedSops.Add(sop);
+                        //check against all visibility points, accumulate count. If at least one point is visible, set object to visible
+                        if (sop.VisibilityPoints == null || sop.VisibilityPoints.Length > 0) {
+                            Transform[] visPoints = sop.VisibilityPoints;
+                            int visPointCount = 0;
+
+                            foreach (Transform point in visPoints) {
+
+                                //if this particular point is in view...
+                                if (CheckIfVisibilityPointInViewport(sop, point, camera, false)) {
+                                    visPointCount++;
+                                    #if !UNITY_EDITOR
+                                    // If we're in the unity editor then don't break on finding a visible
+                                    // point as we want to draw lines to each visible point.
+                                    break;
+                                    #endif
+                                }
+                            }
+
+                            //if we see at least one vis point, the object is "visible"
+                            if (visPointCount > 0) {
+                                #if UNITY_EDITOR
+                                sop.isVisible = true;
+                                #endif
+                                if (!currentlyVisibleItems.Contains(sop)) {
+                                    currentlyVisibleItems.Add(sop);
+                                }
+                            }
+                        } else {
+                            Debug.Log("Error! Set at least 1 visibility point on SimObjPhysics " + sop + ".");
+                        }
+
+                    }
+                }
+            }
+
+            this.updateAllAgentCollidersForVisibilityCheck(true);
+
+            return currentlyVisibleItems;
+        }
+
         protected SimObjPhysics[] GetAllVisibleSimObjPhysics(Camera agentCamera, float maxDistance) {
             #if UNITY_EDITOR        
             foreach (KeyValuePair<string, SimObjPhysics> pair in physicsSceneManager.UniqueIdToSimObjPhysics) {
@@ -797,7 +862,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         //check if the visibility point on a sim object, sop, is within the viewport
         //has a inclueInvisible bool to check against triggerboxes as well, to check for visibility with things like Cabinets/Drawers
-        protected bool CheckIfVisibilityPointInViewport(SimObjPhysics sop, Transform point, Camera agentCamera, bool includeInvisible) {
+        protected static bool CheckIfVisibilityPointInViewport(SimObjPhysics sop, Transform point, Camera agentCamera, bool includeInvisible) {
             bool result = false;
 
             Vector3 viewPoint = agentCamera.WorldToViewportPoint(point.position);
@@ -814,7 +879,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 //now cast a ray out toward the point, if anything occludes this point, that point is not visible
                 RaycastHit hit;
 
-                float raycastDistance = Vector3.Distance(point.position, m_Camera.transform.position) + 1.0f;
+                float raycastDistance = Vector3.Distance(point.position, agentCamera.transform.position) + 1.0f;
 
                 //check raycast against both visible and invisible layers, to check against ReceptacleTriggerBoxes which are normally
                 //ignored by the other raycast
@@ -896,7 +961,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 #endif
 
             return result;
-
         }
 
         public override void LookDown(ServerAction response) {
@@ -4437,7 +4501,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
 
-        private SimObjPhysics ancestorSimObjPhysics(GameObject go) {
+        private static SimObjPhysics ancestorSimObjPhysics(GameObject go) {
             if (go == null) {
                 return null;
             }
@@ -8336,6 +8400,79 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 actionFinished(false);
             }
         }
+
+        public void GetShortestPath(ServerAction action) {
+            SimObjPhysics sop = physicsSceneManager.UniqueIdToSimObjPhysics[action.objectId];
+            if (sop == null) {
+                errorMessage = "Cannot find sim object with id '" + action.objectId + "'";
+                actionFinished(false);
+            }
+            var path = GetSimObjectNavMeshTarget(sop);
+            if (path.status == NavMeshPathStatus.PathComplete) {
+                actionFinished(true, path);
+            }
+            else {
+                errorMessage = "Path to target could not be found";
+                actionFinished(false);
+            }
+        }
+
+        private NavMeshPath GetSimObjectNavMeshTarget(SimObjPhysics targetSOP) {
+            var targetTransform = targetSOP.transform;
+            var targetPosition = new Vector3(targetTransform.position.x, targetTransform.position.y, targetTransform.position.z); 
+            var targetSimObject = targetTransform.GetComponentInChildren<SimObjPhysics>();
+            var PhysicsController = this;
+            var agentTransform = PhysicsController.transform;
+
+            var reachaBlePositions = PhysicsController.getReachablePositions();
+            var sortedPositions = reachaBlePositions.OrderBy(pos => (pos - agentTransform.position).sqrMagnitude ).ThenBy( pos => (targetPosition - pos).sqrMagnitude);
+            var capsuleCollider = PhysicsController.GetComponent<CapsuleCollider>();
+            var agentCamera = PhysicsController.GetComponentInChildren<Camera>();
+        
+            // var originalCamera = new Camera().CopyFrom(agentCamera);
+            var camera = new Camera();
+            var originalAgentPosition = agentTransform.position;
+            var orignalAgentRotation = agentTransform.rotation;
+
+            var targetPositionYAgent = targetPosition;
+            targetPositionYAgent.y = agentTransform.position.y;
+            Vector3 fixedPosition = new Vector3(float.MinValue, float.MinValue, float.MinValue);
+            bool success = false;
+            foreach (var pos in sortedPositions) {
+                agentTransform.position = pos;
+                agentTransform.LookAt(targetPosition);
+
+                var visibleSimObjects = PhysicsController.GetAllVisibleSimObjPhysics(PhysicsController.maxVisibleDistance);
+                if (visibleSimObjects.Any(sop => sop.uniqueID == targetSimObject.uniqueID)) {
+                    fixedPosition = pos;
+                    success = true;
+                    break;
+                }
+            }
+
+            agentTransform.position = originalAgentPosition;
+            agentTransform.rotation = orignalAgentRotation;
+
+            // if (success) {
+            //     // navMeshAgent.destination = fixedPosition;
+            // }
+
+            var path = new NavMeshPath();
+            bool pathSuccess = NavMesh.CalculatePath(agentTransform.position, fixedPosition,  NavMesh.AllAreas, path);
+            Debug.Log(" succ " + pathSuccess + " status " + path.status);
+        
+            var pathDistance = 0.0;
+            for (int i = 0; i < path.corners.Length - 1; i++) {
+                Debug.DrawLine(path.corners[i], path.corners[i + 1], Color.red, 10.0f);
+                Debug.Log("P i:" + i + " : " + path.corners[i] + " i+1:" + i + 1 + " : " + path.corners[i]);
+                pathDistance += Vector3.Distance(path.corners[i], path.corners[i + 1]);
+            }
+            // NavMesh.SamplePosition(pos, out hit, 1.0f, NavMesh.AllAreas)
+            // Debug.Log("Walkable " + (1 << NavMesh.GetAreaFromName("Walkable")) + " pos " + targetPosition);
+
+            return path;
+        }
+
         protected bool objectIsOfIntoType(SimObjPhysics so) {
             return so.ReceptacleTriggerBoxes != null &&
                 so.ReceptacleTriggerBoxes.Length != 0 &&

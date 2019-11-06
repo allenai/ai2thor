@@ -256,6 +256,40 @@ public static class PhysicsExtensions
         point1 = center - dir * (height * 0.5f - radius);
     }
 
+    public static void ToWorldSpaceCapsule(Vector3 worldSpaceCenter, CapsuleCollider capsule, out Vector3 point0, out Vector3 point1, out float radius)
+    {
+        var center = worldSpaceCenter;
+        radius = 0f;
+        float height = 0f;
+        Vector3 lossyScale = AbsVec3(capsule.transform.lossyScale);
+        Vector3 dir = Vector3.zero;
+
+        switch (capsule.direction) {
+        case 0: // x
+            radius = Mathf.Max(lossyScale.y, lossyScale.z) * capsule.radius;
+            height = lossyScale.x * capsule.height;
+            dir = capsule.transform.TransformDirection(Vector3.right);
+            break;
+        case 1: // y
+            radius = Mathf.Max(lossyScale.x, lossyScale.z) * capsule.radius;
+            height = lossyScale.y * capsule.height;
+            dir = capsule.transform.TransformDirection(Vector3.up);
+            break;
+        case 2: // z
+            radius = Mathf.Max(lossyScale.x, lossyScale.y) * capsule.radius;
+            height = lossyScale.z * capsule.height;
+            dir = capsule.transform.TransformDirection(Vector3.forward);
+            break;
+        }
+
+        if (height < radius*2f) {
+            dir = Vector3.zero;
+        }
+
+        point0 = center + dir * (height * 0.5f - radius);
+        point1 = center - dir * (height * 0.5f - radius);
+    }
+
     //  
     // Util
     //
