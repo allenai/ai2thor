@@ -80,9 +80,16 @@ class Controller(object):
 
         return self.last_event
 
-    def step(self, action, raise_for_failure=False):
-        # prevent changes to the action from leaking
-        action = copy.deepcopy(action)
+    def step(self, action=None, **action_args):
+
+        if type(action) is dict:
+            action = copy.deepcopy(action) # prevent changes from leaking
+        else:
+            action = dict(action=action)
+
+        raise_for_failure = action_args.pop('raise_for_failure', False)
+
+        action.update(action_args)
 
         if self.headless:
             action["renderImage"] = False

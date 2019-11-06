@@ -273,6 +273,19 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         break;
                     }
 
+                case "l":
+                {
+                    ServerAction action = new ServerAction();
+                    action.action = "ChangeLightSet";
+                    if(splitcommand.Length == 2)
+                    {
+                        action.objectVariation = int.Parse(splitcommand[1]);
+                    }
+
+                    PhysicsController.ProcessControlCommand(action);
+                    break;
+                }
+
                 //set state of all objects that have a state
                 case "ssa":
                 {

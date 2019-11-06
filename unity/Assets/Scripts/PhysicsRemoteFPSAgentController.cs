@@ -7975,6 +7975,20 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(false);
         }
 
+        public void ChangeLightSet(ServerAction action)
+        {
+            if(action.objectVariation > 10 || action.objectVariation < 1)
+            {
+                errorMessage = "Please use value between 1 and 10";
+                actionFinished(false);
+                return;
+            }
+
+            GameObject lightTransform = GameObject.Find("Lighting");
+            lightTransform.GetComponent<ChangeLighting>().SetLights(action.objectVariation);
+            actionFinished(true);
+        }
+
         public void SliceObject(ServerAction action) {
             //pass name of object in from action.objectId
             if (action.objectId == null) {

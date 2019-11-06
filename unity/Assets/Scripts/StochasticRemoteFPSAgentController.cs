@@ -13,9 +13,11 @@ using UnityStandardAssets.ImageEffects;
 using UnityStandardAssets.Utility;
 using RandomExtensions;
 
-namespace UnityStandardAssets.Characters.FirstPerson {
+namespace UnityStandardAssets.Characters.FirstPerson
+{
     [RequireComponent(typeof(CharacterController))]
-    public class StochasticRemoteFPSAgentController : PhysicsRemoteFPSAgentController {
+    public class StochasticRemoteFPSAgentController : PhysicsRemoteFPSAgentController
+    {
         [SerializeField]
         public bool ApplyActionNoise = true;
         [SerializeField]
@@ -33,15 +35,33 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         [SerializeField]
         public bool AllowHorizontalMovement = false;
 
-        public override void MoveRelative(ServerAction action) {
-            if (!AllowHorizontalMovement && Math.Abs(action.x) > 0) {
+        public override void MoveRelative(ServerAction action)
+        {
+            if (!AllowHorizontalMovement && Math.Abs(action.x) > 0)
+            {
                 throw new InvalidOperationException("Controller does not support horizontal movement. Set AllowHorizontalMovement to true on the Controller.");
             }
             var moveLocal = new Vector3(action.x, 0, action.z);
             var moveMagnitude = moveLocal.magnitude;
-            if (moveMagnitude > 0.00001) {
+            if (moveMagnitude > 0.00001)
+            {
+                //random.NextGaussian(RotateGaussianMu, RotateGaussianSigma);
+                var random = new System.Random();
+                var rotateNoise = (float)random.NextGaussian(RotateGaussianMu, RotateGaussianSigma / 2.0f);
+
+                // rotate a small amount with every movement since robot doesn't always move perfectly straight
+                transform.rotation = transform.rotation * Quaternion.Euler(new Vector3(0.0f, rotateNoise, 0.0f));
+
                 var moveLocalNorm = moveLocal / moveMagnitude;
-                action.moveMagnitude = moveMagnitude;
+                if (action.moveMagnitude > 0.0)
+                {
+                    action.moveMagnitude = moveMagnitude * action.moveMagnitude;
+                }
+                else
+                {
+                    action.moveMagnitude = moveMagnitude * gridSize;
+                }
+
                 var magnitudeWithNoise = GetMoveMagnitudeWithNoise(action);
 
                 actionFinished(moveInDirection(
@@ -50,43 +70,51 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     action.maxAgentsDistance, action.forceAction
                 ));
             }
-            else {
+            else
+            {
                 actionFinished(false);
             }
         }
 
-         public override void Rotate(ServerAction action) {
+        public override void Rotate(ServerAction action)
+        {
             DefaultAgentHand(action);
             var rotateAmountDegrees = GetRotateMagnitudeWithNoise(action);
 
             transform.rotation = transform.rotation * Quaternion.Euler(new Vector3(0.0f, rotateAmountDegrees, 0.0f));
-			actionFinished(true);
+            actionFinished(true);
         }
 
-         public override void RotateRight(ServerAction action) {
-            Rotate(new ServerAction() { rotation = new Vector3(0, 90.0f, 0)});
+        public override void RotateRight(ServerAction action)
+        {
+            Rotate(new ServerAction() { rotation = new Vector3(0, 90.0f, 0) });
         }
 
-        public override void RotateLeft(ServerAction action) {
-            Rotate(new ServerAction() { rotation = new Vector3(0, -90.0f, 0)});
+        public override void RotateLeft(ServerAction action)
+        {
+            Rotate(new ServerAction() { rotation = new Vector3(0, -90.0f, 0) });
         }
 
-        public override void MoveAhead(ServerAction action) {
+        public override void MoveAhead(ServerAction action)
+        {
             action.x = 0.0f;
             action.y = 0;
             action.z = 1.0f;
             MoveRelative(action);
         }
 
-        public override void MoveBack(ServerAction action) {
+        public override void MoveBack(ServerAction action)
+        {
             action.x = 0.0f;
             action.y = 0;
             action.z = -1.0f;
             MoveRelative(action);
         }
 
-        public override void MoveRight(ServerAction action) {
-             if (!AllowHorizontalMovement) {
+        public override void MoveRight(ServerAction action)
+        {
+            if (!AllowHorizontalMovement)
+            {
                 throw new InvalidOperationException("Controller does not support horizontal movement by default. Set AllowHorizontalMovement to true on the Controller.");
             }
             action.x = 1.0f;
@@ -95,8 +123,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             MoveRelative(action);
         }
 
-        public override void MoveLeft(ServerAction action) {
-            if (!AllowHorizontalMovement) {
+        public override void MoveLeft(ServerAction action)
+        {
+            if (!AllowHorizontalMovement)
+            {
                 throw new InvalidOperationException("Controller does not support horizontal movement. Set AllowHorizontalMovement to true on the Controller.");
             }
             action.x = -1.0f;
@@ -105,16 +135,18 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             MoveRelative(action);
         }
 
-        private float GetMoveMagnitudeWithNoise(ServerAction action) {
+        private float GetMoveMagnitudeWithNoise(ServerAction action)
+        {
             var random = new System.Random();
             var noise = ApplyActionNoise ? random.NextGaussian(MovementGaussianMu, MovementGaussianSigma) : 0;
-            return action.moveMagnitude + action.noise + (float) noise;
-        } 
+            return action.moveMagnitude + action.noise + (float)noise;
+        }
 
-        private float GetRotateMagnitudeWithNoise(ServerAction action) {
+        private float GetRotateMagnitudeWithNoise(ServerAction action)
+        {
             var random = new System.Random();
             var noise = ApplyActionNoise ? random.NextGaussian(RotateGaussianMu, RotateGaussianSigma) : 0;
-            return action.rotation.y + action.noise + (float) noise;
-        } 
+            return action.rotation.y + action.noise + (float)noise;
+        }
     }
 }
