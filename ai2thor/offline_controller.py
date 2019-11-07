@@ -2,6 +2,7 @@ import copy
 import glob
 import shutil
 import json
+import pickle
 import numpy as np
 import cv2
 from ai2thor.controller import key_for_point
@@ -36,9 +37,8 @@ class Controller(object):
                 pos = j['agent']['position']
                 key = key_for_point(pos['x'], pos['z'])
                 pos_id = os.path.splitext(os.path.basename(g))[0]
-                img_path = os.path.join('%s/%s/images/%s.png' % (self.base_dir, self.scene_name, pos_id))
-                depth_img_path = os.path.join('%s/%s/depth_images/%s.npy' % (self.base_dir, self.scene_name, pos_id))
-                self.positions[key].append({'image':img_path, 'depth_image': depth_img_path, 'metadata': j})
+                event_path = os.path.join('%s/%s/events/%s.pickle' % (self.base_dir, self.scene_name, pos_id))
+                self.positions[key].append({'event': event_path, 'metadata': j})
 
         p = self.positions[list(self.positions.keys())[50]][0]
         self.last_event = self.load_event(p)
@@ -63,9 +63,8 @@ class Controller(object):
         pass
     
     def load_event(self, pos):
-        e = Event(pos['metadata'])
-        e.frame = cv2.imread(pos['image'])[...,::-1]
-        e.depth_frame = np.load(pos['depth_image'])
+        with open(pos['event'], 'rb') as f:
+            e = pickle.load(f)
         return e
 
     def find_position(self, x, z, rotation, camera_horizon):
@@ -154,15 +153,18 @@ def write_frame(event, base_dir, scene_name, frame_name):
     import cv2
     import os
     import json
-    images_dir = "%s/%s/images" % (base_dir, scene_name)
+    events_dir = "%s/%s/events" % (base_dir, scene_name)
     met_dir = "%s/%s/metadata" % (base_dir, scene_name)
-    depth_images_dir = "%s/%s/depth_images" % (base_dir, scene_name)
-    os.makedirs(images_dir, exist_ok=True)
     os.makedirs(met_dir, exist_ok=True)
-    os.makedirs(depth_images_dir, exist_ok=True)
+    os.makedirs(events_dir, exist_ok=True)
 
-    cv2.imwrite(images_dir + "/%03d.png" % frame_name, event.cv2img)
-    np.save(depth_images_dir + "/%03d.npy" % frame_name, event.depth_frame)
+    #cv2.imwrite(images_dir + "/%03d.png" % frame_name, event.cv2img)
+    #np.save(depth_images_dir + "/%03d.npy" % frame_name, event.depth_frame)
+
+
+
+    with open(events_dir + "/%03d.pickle" % frame_name, "wb") as f:
+        pickle.dump(event, f)
 
     with open(met_dir + "/%03d.json" % frame_name, "w") as f:
         f.write(json.dumps(event.metadata))
@@ -178,7 +180,7 @@ def look_up_down_write(controller, base_dir, fc, scene_name):
     controller.step(action='LookUp')
 
 
-def dump_scene(scene_name, base_dir):
+def dump_scene(scene_name, base_dir, renderObjectImage=False, renderDepthImage=False, renderClassImage=False):
     controller = ai2thor.controller.Controller()
     controller.start(player_screen_height=448, player_screen_width=448)
     fc = FrameCounter()
@@ -186,7 +188,7 @@ def dump_scene(scene_name, base_dir):
     shutil.rmtree("%s/%s" % (base_dir, scene_name), ignore_errors=True)
 
     controller.reset(scene_name) 
-    event = controller.step(dict(action='Initialize', gridSize=0.25, fieldOfView=90, renderDepthImage=True))
+    event = controller.step(dict(action='Initialize', gridSize=0.25, fieldOfView=90, renderDepthImage=renderDepthImage, renderObjectImage=renderObjectImage, renderClassImage=renderClassImage))
     event = controller.step(action='GetReachablePositions')
     for p in event.metadata['reachablePositions']:
         action = copy.deepcopy(p)
