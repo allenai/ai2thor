@@ -984,6 +984,8 @@ public class ServerAction
 
     public float rotateStepDegrees = 90.0f;
 
+    public bool useAgentTransform = false;
+
     public SimObjType ReceptableSimObjType()
 	{
 		if (string.IsNullOrEmpty(receptacleObjectType))

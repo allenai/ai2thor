@@ -6534,6 +6534,183 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return reachablePos;
         }
 
+        public bool getReachablePositionToObjectVisible(SimObjPhysics targetSOP, out Vector3 pos, float gridMultiplier = 1.0f, int maxStepCount = 10000) {
+
+CapsuleCollider cc = GetComponent<CapsuleCollider>();
+
+            float sw = m_CharacterController.skinWidth;
+            Queue<Vector3> pointsQueue = new Queue<Vector3>();
+            pointsQueue.Enqueue(transform.position);
+
+            //float dirSkinWidthMultiplier = 1.0f + sw;
+            Vector3[] directions = {
+                new Vector3(1.0f, 0.0f, 0.0f),
+                new Vector3(0.0f, 0.0f, 1.0f),
+                new Vector3(-1.0f, 0.0f, 0.0f),
+                new Vector3(0.0f, 0.0f, -1.0f)
+            };
+            Quaternion originalRot = transform.rotation;
+
+            HashSet<Vector3> goodPoints = new HashSet<Vector3>();
+            int layerMask = 1 << 8;
+            int stepsTaken = 0;
+            pos = Vector3.negativeInfinity;
+            while (pointsQueue.Count != 0) {
+                stepsTaken += 1;
+                Vector3 p = pointsQueue.Dequeue();
+                if (!goodPoints.Contains(p)) {
+                    goodPoints.Add(p);
+                    transform.position = p;
+                    var rot = transform.rotation;
+                    transform.LookAt(targetSOP.transform, transform.up);
+
+                    var visibleSimObjects = this.GetAllVisibleSimObjPhysics(this.maxVisibleDistance);
+                    transform.rotation = rot;
+                    if (visibleSimObjects.Any(sop => sop.uniqueID == targetSOP.uniqueID)) {
+                        pos = p;
+                        return true;
+                    }
+                    
+                    
+                    HashSet<Collider> objectsAlreadyColliding = new HashSet<Collider>(objectsCollidingWithAgent());
+                    foreach (Vector3 d in directions) {
+                        RaycastHit[] hits = capsuleCastAllForAgent(
+                            cc,
+                            sw,
+                            p,
+                            d,
+                            (gridSize * gridMultiplier),
+                            layerMask
+                        );
+
+                        bool shouldEnqueue = true;
+                        foreach (RaycastHit hit in hits) {
+                            if (hit.transform.gameObject.name != "Floor" &&
+                                !ancestorHasName(hit.transform.gameObject, "FPSController") &&
+                                !objectsAlreadyColliding.Contains(hit.collider)
+                            ) {
+                                shouldEnqueue = false;
+                                break;
+                            }
+                        }
+                        Vector3 newPosition = p + d * gridSize * gridMultiplier;
+                        bool inBounds = sceneBounds.Contains(newPosition);
+                        if (errorMessage == "" && !inBounds) {
+                            errorMessage = "In " +
+                                UnityEngine.SceneManagement.SceneManager.GetActiveScene().name +
+                                ", position " + newPosition.ToString() +
+                                " can be reached via capsule cast but is beyond the scene bounds.";
+                        }
+
+                        shouldEnqueue = shouldEnqueue && inBounds && (
+                            handObjectCanFitInPosition(newPosition, 0.0f) ||
+                            handObjectCanFitInPosition(newPosition, 90.0f) ||
+                            handObjectCanFitInPosition(newPosition, 180.0f) ||
+                            handObjectCanFitInPosition(newPosition, 270.0f)
+                        );
+                        if (shouldEnqueue) {
+                            pointsQueue.Enqueue(newPosition);
+#if UNITY_EDITOR
+                            Debug.DrawLine(p, newPosition, Color.cyan, 100000f);
+#endif
+                        }
+                    }
+                }
+                if (stepsTaken > maxStepCount) {
+                    errorMessage = "Too many steps taken in GetReachablePositions.";
+                    break;
+                }
+            }
+
+            Vector3[] reachablePos = new Vector3[goodPoints.Count];
+            goodPoints.CopyTo(reachablePos);
+#if UNITY_EDITOR
+            Debug.Log(reachablePos.Length);
+#endif
+            // pos = reachablePos[0];
+            return false;
+//             CapsuleCollider cc = GetComponent<CapsuleCollider>();
+
+//             float sw = m_CharacterController.skinWidth;
+//             Queue<Vector3> pointsQueue = new Queue<Vector3>();
+//             pointsQueue.Enqueue(transform.position);
+
+//             //float dirSkinWidthMultiplier = 1.0f + sw;
+//             Vector3[] directions = {
+//                 new Vector3(1.0f, 0.0f, 0.0f),
+//                 new Vector3(0.0f, 0.0f, 1.0f),
+//                 new Vector3(-1.0f, 0.0f, 0.0f),
+//                 new Vector3(0.0f, 0.0f, -1.0f)
+//             };
+
+//             HashSet<Vector3> goodPoints = new HashSet<Vector3>();
+//             int layerMask = 1 << 8;
+//             int stepsTaken = 0;
+//             while (pointsQueue.Count != 0) {
+//                 stepsTaken += 1;
+//                 Vector3 p = pointsQueue.Dequeue();
+//                 if (!goodPoints.Contains(p)) {
+//                     transform.position = p;
+//                     transform.LookAt(targetSOP.transform);
+
+//                     var visibleSimObjects = this.GetAllVisibleSimObjPhysics(this.maxVisibleDistance);
+//                     if (visibleSimObjects.Any(sop => sop.uniqueID == targetSOP.uniqueID)) {
+//                         pos = p;
+//                         return true;
+//                     }
+//                     HashSet<Collider> objectsAlreadyColliding = new HashSet<Collider>(objectsCollidingWithAgent());
+//                     foreach (Vector3 d in directions) {
+//                         RaycastHit[] hits = capsuleCastAllForAgent(
+//                             cc,
+//                             sw,
+//                             p,
+//                             d,
+//                             (gridSize * gridMultiplier),
+//                             layerMask
+//                         );
+
+//                         bool shouldEnqueue = true;
+//                         foreach (RaycastHit hit in hits) {
+//                             if (hit.transform.gameObject.name != "Floor" &&
+//                                 !ancestorHasName(hit.transform.gameObject, "FPSController") &&
+//                                 !objectsAlreadyColliding.Contains(hit.collider)
+//                             ) {
+//                                 shouldEnqueue = false;
+//                                 break;
+//                             }
+//                         }
+//                         Vector3 newPosition = p + d * gridSize * gridMultiplier;
+//                         bool inBounds = sceneBounds.Contains(newPosition);
+//                         if (errorMessage == "" && !inBounds) {
+//                             errorMessage = "In " +
+//                                 UnityEngine.SceneManagement.SceneManager.GetActiveScene().name +
+//                                 ", position " + newPosition.ToString() +
+//                                 " can be reached via capsule cast but is beyond the scene bounds.";
+//                         }
+
+//                         shouldEnqueue = shouldEnqueue && inBounds && (
+//                             handObjectCanFitInPosition(newPosition, 0.0f) ||
+//                             handObjectCanFitInPosition(newPosition, 90.0f) ||
+//                             handObjectCanFitInPosition(newPosition, 180.0f) ||
+//                             handObjectCanFitInPosition(newPosition, 270.0f)
+//                         );
+//                         if (shouldEnqueue) {
+//                             pointsQueue.Enqueue(newPosition);
+// #if UNITY_EDITOR
+//                             Debug.DrawLine(p, newPosition, Color.cyan, 100000f);
+// #endif
+//                         }
+//                     }
+//                 }
+//                 if (stepsTaken > maxStepCount) {
+//                     errorMessage = "Too many steps taken in GetReachablePositions.";
+//                     break;
+//                 }
+//             }
+//             pos = Vector3.negativeInfinity;
+//             return false;
+        }
+
         public void GetReachablePositions(ServerAction action) {
             if(action.maxStepCount != 0) {
                 reachablePositions = getReachablePositions(1.0f, action.maxStepCount);
@@ -8421,7 +8598,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 errorMessage = "Cannot find sim object with id '" + action.objectId + "'";
                 actionFinished(false);
             }
-            var path = GetSimObjectNavMeshTarget(sop);
+            var startPosition = this.transform.position;
+            var startRotation = this.transform.rotation;
+            if (!action.useAgentTransform) {
+                startPosition = action.position;
+                startRotation = Quaternion.Euler(action.rotation);
+            }
+
+            var path = GetSimObjectNavMeshTarget(sop, startPosition, startRotation);
             if (path.status == NavMeshPathStatus.PathComplete) {
                 actionFinished(true, path);
             }
@@ -8431,56 +8615,135 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
 
-        private NavMeshPath GetSimObjectNavMeshTarget(SimObjPhysics targetSOP) {
-            var targetTransform = targetSOP.transform;
-            var targetPosition = new Vector3(targetTransform.position.x, targetTransform.position.y, targetTransform.position.z); 
-            var targetSimObject = targetTransform.GetComponentInChildren<SimObjPhysics>();
-            var PhysicsController = this;
-            var agentTransform = PhysicsController.transform;
-
-            var reachaBlePositions = PhysicsController.getReachablePositions();
-            var sortedPositions = reachaBlePositions.OrderBy(pos => (pos - agentTransform.position).sqrMagnitude ).ThenBy( pos => (targetPosition - pos).sqrMagnitude);
-            var capsuleCollider = PhysicsController.GetComponent<CapsuleCollider>();
-            var agentCamera = PhysicsController.GetComponentInChildren<Camera>();
-        
-            // var originalCamera = new Camera().CopyFrom(agentCamera);
-            var camera = new Camera();
-            var originalAgentPosition = agentTransform.position;
-            var orignalAgentRotation = agentTransform.rotation;
-
-            var targetPositionYAgent = targetPosition;
-            targetPositionYAgent.y = agentTransform.position.y;
+        private bool GetPathFromReachablePositions(
+            IEnumerable<Vector3> sortedPositions,
+            Vector3 targetPosition,
+            Transform agentTransform,
+            string targetSimObjectId,
+            NavMeshPath path) {
+                
             Vector3 fixedPosition = new Vector3(float.MinValue, float.MinValue, float.MinValue);
             bool success = false;
+            var PhysicsController = this;
             foreach (var pos in sortedPositions) {
                 agentTransform.position = pos;
                 agentTransform.LookAt(targetPosition);
 
                 var visibleSimObjects = PhysicsController.GetAllVisibleSimObjPhysics(PhysicsController.maxVisibleDistance);
-                if (visibleSimObjects.Any(sop => sop.uniqueID == targetSimObject.uniqueID)) {
+                if (visibleSimObjects.Any(sop => sop.uniqueID == targetSimObjectId)) {
                     fixedPosition = pos;
                     success = true;
                     break;
                 }
             }
 
-            agentTransform.position = originalAgentPosition;
-            agentTransform.rotation = orignalAgentRotation;
+            var pathSuccess =  NavMesh.CalculatePath(agentTransform.position, fixedPosition,  NavMesh.AllAreas, path);
+            return pathSuccess;
+        }
 
-            // if (success) {
-            //     // navMeshAgent.destination = fixedPosition;
+        private NavMeshPath GetSimObjectNavMeshTarget(SimObjPhysics targetSOP, Vector3 initialPosition, Quaternion initialRotation) {
+            var targetTransform = targetSOP.transform;
+            Debug.Log("start Pos " + initialPosition);
+            var targetPosition = new Vector3(targetTransform.position.x, targetTransform.position.y, targetTransform.position.z); 
+            var targetSimObject = targetTransform.GetComponentInChildren<SimObjPhysics>();
+            var PhysicsController = this;
+            var agentTransform = PhysicsController.transform;
+
+            // var reachablePositions = PhysicsController.getReachablePositions();
+            // //var sortedPositions = reachaBlePositions.OrderBy(pos => (pos - agentTransform.position).sqrMagnitude ).ThenBy( pos => (targetPosition - pos).sqrMagnitude);
+            // var sortedPositions = reachablePositions.OrderBy( pos => (targetPosition - pos).sqrMagnitude).ThenBy(pos => (pos - agentTransform.position).sqrMagnitude );
+
+            // var capsuleCollider = PhysicsController.GetComponent<CapsuleCollider>();
+            // var agentCamera = PhysicsController.GetComponentInChildren<Camera>();
+        
+            // // var originalCamera = new Camera().CopyFrom(agentCamera);
+            // var camera = new Camera();
+            var originalAgentPosition = agentTransform.position;
+            var orignalAgentRotation = agentTransform.rotation;
+
+            // var targetPositionYAgent = targetPosition;
+            // targetPositionYAgent.y = agentTransform.position.y;
+            // Vector3 fixedPosition = new Vector3(float.MinValue, float.MinValue, float.MinValue);
+            // bool success = false;
+            // foreach (var pos in sortedPositions) {
+            //     agentTransform.position = pos;
+            //     agentTransform.LookAt(targetPosition);
+
+            //     var visibleSimObjects = PhysicsController.GetAllVisibleSimObjPhysics(PhysicsController.maxVisibleDistance);
+            //     if (visibleSimObjects.Any(sop => sop.uniqueID == targetSimObject.uniqueID)) {
+            //         fixedPosition = pos;
+            //         success = true;
+            //         break;
+            //     }
             // }
 
-            var path = new NavMeshPath();
-            bool pathSuccess = NavMesh.CalculatePath(agentTransform.position, fixedPosition,  NavMesh.AllAreas, path);
-            Debug.Log(" succ " + pathSuccess + " status " + path.status);
+            // // var path = new NavMeshPath();
+            // // bool pathSuccess = GetPathFromReachablePositions(
+            // //     sortedPositions,
+            // //     targetPosition,
+            // //     agentTransform,
+            // //     targetSimObject.uniqueID,
+            // //     path
+            // // );
+
+            // agentTransform.position = originalAgentPosition;
+            // agentTransform.rotation = orignalAgentRotation;
+
+            // // if (success) {
+            // //     // navMeshAgent.destination = fixedPosition;
+            // // }
+
+            // var path = new NavMeshPath();
+            // bool pathSuccess = NavMesh.CalculatePath(agentTransform.position, fixedPosition,  NavMesh.AllAreas, path);
+            // Debug.Log(" succ " + pathSuccess + " status " + path.status);
         
-            var pathDistance = 0.0;
-            for (int i = 0; i < path.corners.Length - 1; i++) {
+            // var pathDistance = 0.0;
+            // for (int i = 0; i < path.corners.Length - 1; i++) {
+            //     Debug.DrawLine(path.corners[i], path.corners[i + 1], Color.green, 10.0f);
+            //     Debug.Log("P i:" + i + " : " + path.corners[i] + " i+1:" + i + 1 + " : " + path.corners[i]);
+            //     pathDistance += Vector3.Distance(path.corners[i], path.corners[i + 1]);
+            // }
+
+            // Debug.Log(" Distance " + pathDistance);
+            // sortedPositions = reachablePositions.OrderBy( pos => (path.corners[path.corners.Length - 2] - pos).sqrMagnitude);
+            // fixedPosition = new Vector3(float.MinValue, float.MinValue, float.MinValue);
+            // foreach (var pos in sortedPositions) {
+            //     agentTransform.position = pos;
+            //     agentTransform.LookAt(targetPosition);
+
+            //     var visibleSimObjects = PhysicsController.GetAllVisibleSimObjPhysics(PhysicsController.maxVisibleDistance);
+            //     if (visibleSimObjects.Any(sop => sop.uniqueID == targetSimObject.uniqueID)) {
+            //         fixedPosition = pos;
+            //         success = true;
+            //         break;
+            //     }
+            // }
+
+            // agentTransform.position = originalAgentPosition;
+            // agentTransform.rotation = orignalAgentRotation;
+
+            var fixedPosition = Vector3.negativeInfinity;
+
+            agentTransform.position = initialPosition;
+            agentTransform.rotation = initialRotation;
+            var successReach = getReachablePositionToObjectVisible(targetSimObject, out fixedPosition);
+            agentTransform.position = originalAgentPosition;
+            agentTransform.rotation = orignalAgentRotation;
+            Debug.Log("Can reach object? " + successReach);
+            var path = new NavMeshPath();
+            bool pathSuccess = NavMesh.CalculatePath(initialPosition, fixedPosition,  NavMesh.AllAreas, path);
+            Debug.Log(" 2 succ " + pathSuccess + " status " + path.status);
+        
+        var pathDistance = 0.0f;
+        for (int i = 0; i < path.corners.Length - 1; i++) {
                 Debug.DrawLine(path.corners[i], path.corners[i + 1], Color.red, 10.0f);
-                Debug.Log("P i:" + i + " : " + path.corners[i] + " i+1:" + i + 1 + " : " + path.corners[i]);
+                // Debug.Log("P 2 i:" + i + " : " + path.corners[i] + " i+1:" + i + 1 + " : " + path.corners[i]);
                 pathDistance += Vector3.Distance(path.corners[i], path.corners[i + 1]);
             }
+
+
+            Debug.Log("2 Distance " + pathDistance);
+
             // NavMesh.SamplePosition(pos, out hit, 1.0f, NavMesh.AllAreas)
             // Debug.Log("Walkable " + (1 << NavMesh.GetAreaFromName("Walkable")) + " pos " + targetPosition);
 
