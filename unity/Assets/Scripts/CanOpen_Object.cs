@@ -354,10 +354,12 @@ public class CanOpen_Object : MonoBehaviour
 
     private void setisOpen()
 	{
-        //print("isOpen was " + isOpen);
 		isOpen = !isOpen;
-        //print("isOpen is now " + isOpen);
+
+        //this updates bounding boxes as well as some Agent rotation box checkers if agent is holding an object that can open and close.
         UpdateOpenOrCloseBoundingBox();
+        SwitchActiveBoundingBox();
+
 	}
 
     private void UpdateOpenOrCloseBoundingBox()
@@ -366,17 +368,7 @@ public class CanOpen_Object : MonoBehaviour
         {
             if(ClosedBoundingBox!= null && OpenBoundingBox != null)
             {
-                SimObjPhysics sop = gameObject.GetComponent<SimObjPhysics>();
-
-                if(isOpen)
-                {
-                    sop.BoundingBox = OpenBoundingBox;
-                }
-
-                else
-                {
-                    sop.BoundingBox = ClosedBoundingBox;
-                }
+                //SwitchActiveBoundingBox();
 
                 PhysicsRemoteFPSAgentController agent = GameObject.Find("FPSController").GetComponent<PhysicsRemoteFPSAgentController>();
                 //if the agent is holding this object RIGHT NOW, then update the rotation box checkers
@@ -394,6 +386,26 @@ public class CanOpen_Object : MonoBehaviour
         }
         //check if this object is in the ResetPositionIfPickupableAndOpenable list
         //also check if the ClosedBoundingBox and OpenBoundingBox fields are null or not
+    }
+
+    private void SwitchActiveBoundingBox()
+    {
+        if(OpenBoundingBox == null || ClosedBoundingBox == null)
+        {
+            return;
+        }
+
+        SimObjPhysics sop = gameObject.GetComponent<SimObjPhysics>();
+
+        if(isOpen)
+        {
+            sop.BoundingBox = OpenBoundingBox;
+        }
+
+        else
+        {
+            sop.BoundingBox = ClosedBoundingBox;
+        }
     }
 
     public float GetOpenPercent()
@@ -607,26 +619,7 @@ public class CanOpen_Object : MonoBehaviour
 
 			}
 		}
-
-        //if this object is a book/laptop/box or other moveable object that can open/close, if it hits another sim object
-        //it should reset and report failure because something was in the way
-        // if (other.GetComponentInParent<SimObjPhysics>() && canReset == true && ResetPositionIfPickupableAndOpenable.Contains(gameObject.GetComponent<SimObjPhysics>().Type) 
-        //     && other.isTrigger == false)
-        // {
-        //     Debug.Log(gameObject.name + " hit " + other.name + " Resetting position");
-        //     canReset = false;
-        //     Reset();
-        // }
 	}
-
-	// public void OnTriggerExit(Collider other)
-    // {
-    //     if (other.name == "FPSController" || other.GetComponentInParent<CanOpen_Object>() || other.GetComponentInParent<SimObjPhysics>())
-    //     {
-    //         canReset = true;
-    //         print("TRIGGER EXIT-" + "hit " + other.name);
-    //     }
-    // }
 
     // resets the CanReset boolean once the reset tween is done. This checks for iTween instanes, once there are none this object can be used again
     IEnumerator CanResetToggle()
