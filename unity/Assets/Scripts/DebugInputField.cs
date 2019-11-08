@@ -1917,14 +1917,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
                             action.objectId = splitcommand[1];
 
                             if (splitcommand.Length == 5) {
-                                // //minimum range of how many objects to spawn
-                                // action.x = float.Parse(splitcommand[2]);
-
-                                // //maximum range of how many objects to spawn
-                                // action.y = float.Parse(splitcommand[3]);
-
-                                // //delay between spawns
-                                // action.z = float.Parse(splitcommand[4]);
                                 action.position = new Vector3(
                                     float.Parse(splitcommand[2]),
                                     float.Parse(splitcommand[3]), 
@@ -1937,6 +1929,19 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         }
 
                         PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
+                    case "get_object_type_ids":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "ObjectTypeToObjectIds";
+                        if (splitcommand.Length > 1)
+                        {
+                            action.objectType = splitcommand[1];
+                        }
+
+                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }
 

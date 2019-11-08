@@ -8530,6 +8530,23 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
 
+        public void ObjectTypeToObjectIds(ServerAction action) {
+            try {
+                SimObjType objectType = (SimObjType) Enum.Parse(typeof(SimObjType), action.objectType, true);
+                List<string> objectIds = new List<string>();
+                foreach (var s in physicsSceneManager.UniqueIdToSimObjPhysics) {
+                    if (s.Value.ObjType == objectType) {
+                        objectIds.Add(s.Value.uniqueID);
+                    }
+                }
+                actionFinished(true, objectIds.ToArray());
+            }   
+            catch (ArgumentException exception) {
+                errorMessage = "Invalid object type '" + action.objectType + "'. " + exception.Message;
+                actionFinished(false);
+            }
+        }
+
         private bool GetPathFromReachablePositions(
             IEnumerable<Vector3> sortedPositions,
             Vector3 targetPosition,
