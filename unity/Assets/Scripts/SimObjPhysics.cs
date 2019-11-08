@@ -744,6 +744,11 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
         {
             Debug.LogError(this.name + " is not at uniform scale! Set scale to (1, 1, 1)!!!");
         }
+
+        // if(BoundingBox == null)
+        // {
+        //     Debug.LogError(this.name + "AAAAAAAHHH NO BOX");
+        // }
 #endif
 		//end debug setup stuff
 
