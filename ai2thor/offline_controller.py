@@ -74,7 +74,7 @@ class Controller(object):
         return e
 
     def find_position(self, x, z, rotation, camera_horizon):
-        for p in self.positions[key_for_point(x, z)]:
+        for p in self.positions.get(key_for_point(x, z), []):
             if abs(p['rotation'] - rotation) < 1.0 and abs(p['cameraHorizon'] - camera_horizon) < 1.0:
                 event = self.load_event(p)
                 return event
