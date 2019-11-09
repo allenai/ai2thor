@@ -217,6 +217,9 @@ def dump_scene(scene_name, base_dir, renderObjectImage=False, renderDepthImage=F
             for i in range(3):
                 event = controller.step(action='RotateRight')
                 look_up_down_write(controller, base_dir, fc, scene_name)
-
+        
+        if fc.counter > 10:
+            break
 
     index_metadata(base_dir, scene_name)
+    controller.stop()
