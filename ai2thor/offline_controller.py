@@ -202,7 +202,7 @@ def dump_scene(scene_name, base_dir, renderObjectImage=False, renderDepthImage=F
     shutil.rmtree("%s/%s" % (base_dir, scene_name), ignore_errors=True)
 
     controller.reset(scene_name) 
-    event = controller.step(dict(action='Initialize', gridSize=0.25, renderDepthImage=renderDepthImage, renderObjectImage=renderObjectImage, renderClassImage=renderClassImage))
+    event = controller.step(dict(action='Initialize', fieldOfView=90, gridSize=0.25, renderDepthImage=renderDepthImage, renderObjectImage=renderObjectImage, renderClassImage=renderClassImage))
     event = controller.step(action='GetReachablePositions')
     for p in event.metadata['reachablePositions']:
         action = copy.deepcopy(p)
