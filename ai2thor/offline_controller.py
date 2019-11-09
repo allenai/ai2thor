@@ -219,7 +219,6 @@ def dump_scene_controller(base_dir, controller):
                 look_up_down_write(controller, base_dir, fc, scene_name)
         
 
-    controller.stop()
     index_metadata(base_dir, scene_name)
 
 
@@ -229,3 +228,5 @@ def dump_scene(scene_name, base_dir, renderObjectImage=False, renderDepthImage=F
     controller.reset(scene_name) 
     event = controller.step(dict(action='Initialize', fieldOfView=90, gridSize=0.25, renderDepthImage=renderDepthImage, renderObjectImage=renderObjectImage, renderClassImage=renderClassImage))
     dump_scene_controller(base_dir, controller)
+    controller.stop()
+
