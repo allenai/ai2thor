@@ -194,15 +194,15 @@ def index_metadata(base_dir, scene_name):
         f.write(json.dumps(positions_index))
 
 
-def dump_scene(scene_name, base_dir, renderObjectImage=False, renderDepthImage=False, renderClassImage=False):
-    controller = ai2thor.controller.Controller()
-    controller.start(player_screen_height=448, player_screen_width=448)
+def dump_scene_controller(base_dir, controller):
+    if controller.last_event is None:
+        raise Exception("Controller must be reset and intialized to a scene")
+    
+    scene_name = controller.last_event.metadata['sceneName']
     fc = FrameCounter()
 
     shutil.rmtree("%s/%s" % (base_dir, scene_name), ignore_errors=True)
 
-    controller.reset(scene_name) 
-    event = controller.step(dict(action='Initialize', fieldOfView=90, gridSize=0.25, renderDepthImage=renderDepthImage, renderObjectImage=renderObjectImage, renderClassImage=renderClassImage))
     event = controller.step(action='GetReachablePositions')
     for p in event.metadata['reachablePositions']:
         action = copy.deepcopy(p)
@@ -218,8 +218,14 @@ def dump_scene(scene_name, base_dir, renderObjectImage=False, renderDepthImage=F
                 event = controller.step(action='RotateRight')
                 look_up_down_write(controller, base_dir, fc, scene_name)
         
-        if fc.counter > 10:
-            break
 
-    index_metadata(base_dir, scene_name)
     controller.stop()
+    index_metadata(base_dir, scene_name)
+
+
+def dump_scene(scene_name, base_dir, renderObjectImage=False, renderDepthImage=False, renderClassImage=False):
+    controller = ai2thor.controller.Controller()
+    controller.start(player_screen_height=448, player_screen_width=448)
+    controller.reset(scene_name) 
+    event = controller.step(dict(action='Initialize', fieldOfView=90, gridSize=0.25, renderDepthImage=renderDepthImage, renderObjectImage=renderObjectImage, renderClassImage=renderClassImage))
+    dump_scene_controller(base_dir, controller)
