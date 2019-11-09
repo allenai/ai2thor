@@ -1,4 +1,5 @@
 import copy
+
 import glob
 import shutil
 import json
@@ -30,18 +31,23 @@ class Controller(object):
 
     def reset(self, scene_name):
         self.scene_name = scene_name
-        self.positions = defaultdict(list)
-        for g in glob.glob('%s/%s/metadata/*.json' % (self.base_dir,self.scene_name)):
-            with open(g) as f:
-                j = json.loads(f.read())
-                pos = j['agent']['position']
-                key = key_for_point(pos['x'], pos['z'])
-                pos_id = os.path.splitext(os.path.basename(g))[0]
-                event_path = os.path.join('%s/%s/events/%s.pickle' % (self.base_dir, self.scene_name, pos_id))
-                self.positions[key].append({'event': event_path, 'metadata': j})
+        with open('%s/%s/index.json' % (self.base_dir,self.scene_name)) as f:
+            self.positions = json.loads(f.read())
 
-        p = self.positions[list(self.positions.keys())[50]][0]
-        self.last_event = self.load_event(p)
+        #for g in glob.glob('%s/%s/metadata/*.json' % (self.base_dir,self.scene_name)):
+        #    with open(g) as f:
+        #        j = json.loads(f.read())
+        #        pos = j['agent']['position']
+        #        key = key_for_point(pos['x'], pos['z'])
+        #        pos_id = os.path.splitext(os.path.basename(g))[0]
+        #        event_path = os.path.join('%s/%s/events/%s.pickle' % (self.base_dir, self.scene_name, pos_id))
+        #        self.positions[key].append({'event': event_path, 'metadata': j})
+
+        #import random
+        #total = len(self.positions)
+        
+        #p = self.positions[list(self.positions.keys())[random.randint(0, total - 1)]][3]
+        #self.last_event = self.load_event(p)
 
     @property
     def position_x(self):
@@ -69,9 +75,7 @@ class Controller(object):
 
     def find_position(self, x, z, rotation, camera_horizon):
         for p in self.positions[key_for_point(x, z)]:
-            met = p['metadata']
-            if abs(met['agent']['rotation']['y'] - rotation) < 1.0 and abs(met['agent']['cameraHorizon'] - camera_horizon) < 1.0:
-
+            if abs(p['rotation'] - rotation) < 1.0 and abs(p['cameraHorizon'] - camera_horizon) < 1.0:
                 event = self.load_event(p)
                 return event
 
@@ -158,11 +162,6 @@ def write_frame(event, base_dir, scene_name, frame_name):
     os.makedirs(met_dir, exist_ok=True)
     os.makedirs(events_dir, exist_ok=True)
 
-    #cv2.imwrite(images_dir + "/%03d.png" % frame_name, event.cv2img)
-    #np.save(depth_images_dir + "/%03d.npy" % frame_name, event.depth_frame)
-
-
-
     with open(events_dir + "/%03d.pickle" % frame_name, "wb") as f:
         pickle.dump(event, f)
 
@@ -179,6 +178,21 @@ def look_up_down_write(controller, base_dir, fc, scene_name):
     write_frame(controller.step(action='LookDown'), base_dir, scene_name, fc.counter)
     controller.step(action='LookUp')
 
+def index_metadata(base_dir, scene_name):
+    positions_index = defaultdict(list)
+    for g in glob.glob('%s/%s/metadata/*.json' % (base_dir, scene_name)):
+        with open(g) as f:
+            j = json.loads(f.read())
+            agent = j['agent']
+            pos = agent['position']
+            key = key_for_point(pos['x'], pos['z'])
+            pos_id = os.path.splitext(os.path.basename(g))[0]
+            event_path = os.path.join('%s/%s/events/%s.pickle' % (base_dir, scene_name, pos_id))
+            positions_index[key].append(
+                    {'event': event_path, 'rotation': agent['rotation']['y'], 'cameraHorizon': agent['cameraHorizon']})
+    with open("%s/%s/index.json" % (base_dir, scene_name), "w") as f:
+        f.write(json.dumps(positions_index))
+
 
 def dump_scene(scene_name, base_dir, renderObjectImage=False, renderDepthImage=False, renderClassImage=False):
     controller = ai2thor.controller.Controller()
@@ -188,7 +202,7 @@ def dump_scene(scene_name, base_dir, renderObjectImage=False, renderDepthImage=F
     shutil.rmtree("%s/%s" % (base_dir, scene_name), ignore_errors=True)
 
     controller.reset(scene_name) 
-    event = controller.step(dict(action='Initialize', gridSize=0.25, fieldOfView=90, renderDepthImage=renderDepthImage, renderObjectImage=renderObjectImage, renderClassImage=renderClassImage))
+    event = controller.step(dict(action='Initialize', gridSize=0.25, renderDepthImage=renderDepthImage, renderObjectImage=renderObjectImage, renderClassImage=renderClassImage))
     event = controller.step(action='GetReachablePositions')
     for p in event.metadata['reachablePositions']:
         action = copy.deepcopy(p)
@@ -204,3 +218,5 @@ def dump_scene(scene_name, base_dir, renderObjectImage=False, renderDepthImage=F
                 event = controller.step(action='RotateRight')
                 look_up_down_write(controller, base_dir, fc, scene_name)
 
+
+    index_metadata(base_dir, scene_name)
