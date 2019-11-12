@@ -936,6 +936,12 @@ public class ServerAction
 	public bool standing = true;
 	public float fov = 60.0f;
 	public bool forceAction;
+    public bool applyActionNoise = true;
+    public float movementGaussianMu;
+    public float movementGaussianSigma;
+    public float rotateGaussianMu;
+    public float rotateGaussianSigma;
+
 
 	public bool forceKinematic;
 
