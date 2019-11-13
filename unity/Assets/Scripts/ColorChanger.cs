@@ -23,6 +23,18 @@ public class ColorChanger : MonoBehaviour
     public Material[] statueMaterials;
     public Material[] watchMaterials;
 
+    public Material[] armchairMaterials;
+    public Material[] bedMaterials;
+    public Material[] chairMaterials;
+    public Material[] coffeeTableMaterials;
+    public Material[] deskMaterials;
+    public Material[] diningTableMaterials;
+    public Material[] dresserMaterials;
+    public Material[] officeChairMaterials;
+    public Material[] shelvingUnitMaterials;
+    public Material[] sideTableMaterials;
+    public Material[] sofaMaterials;
+
     public Material[] ceramicMaterials;
     public Material[] fabricMaterials;
     public Material[] glassMaterials;
@@ -34,6 +46,7 @@ public class ColorChanger : MonoBehaviour
 
     Material[] targetMaterials;
     Material[] backgroundMaterials;
+    Material[] furnitureMaterials;
     Material[] quickMaterials;
 
     Material[] allMaterials;
@@ -41,10 +54,11 @@ public class ColorChanger : MonoBehaviour
     public void Start()
     {
         targetMaterials = alarmClockMaterials.Concat(appleMaterials).Concat(basketballMaterials).Concat(bowlMaterials).Concat(garbageBinMaterials).Concat(houseplantMaterials).Concat(pillowMaterials).Concat(sprayBottleMaterials).ToArray();
-        backgroundMaterials = boxMaterials.Concat(cellphoneMaterials).Concat(cupMaterials).Concat(floorLampMaterials).Concat(penPencilMaterials).Concat(plateMaterials).Concat(potMaterials).Concat(statueMaterials).Concat(watchMaterials).ToArray();
+        backgroundMaterials = bedMaterials.Concat(boxMaterials).Concat(cellphoneMaterials).Concat(cupMaterials).Concat(floorLampMaterials).Concat(penPencilMaterials).Concat(plateMaterials).Concat(potMaterials).Concat(statueMaterials).Concat(watchMaterials).ToArray();
+        furnitureMaterials = armchairMaterials.Concat(bedMaterials).Concat(chairMaterials).Concat(coffeeTableMaterials).Concat(deskMaterials).Concat(diningTableMaterials).Concat(dresserMaterials).Concat(officeChairMaterials).Concat(shelvingUnitMaterials).Concat(sideTableMaterials).Concat(sofaMaterials).ToArray();
         quickMaterials = ceramicMaterials.Concat(fabricMaterials).Concat(glassMaterials).Concat(lightMaterials).Concat(metalMaterials).Concat(miscMaterials).Concat(plasticMaterials).Concat(woodMaterials).ToArray();
 
-        allMaterials = targetMaterials.Concat(backgroundMaterials).Concat(quickMaterials).ToArray();
+        allMaterials = targetMaterials.Concat(backgroundMaterials).Concat(furnitureMaterials).Concat(quickMaterials).ToArray();
         //print(allMaterials[allMaterials.Length - 1]);
     }
 
