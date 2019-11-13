@@ -94,12 +94,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     }
                 }
 
-            if (Input.GetKeyDown(KeyCode.K))
-            {
-                //do the thing
-                ColorChanger ColorChangeComponent = GameObject.Find("PhysicsSceneManager").GetComponent<ColorChanger>();
-                ColorChangeComponent.RandomizeColor();
-            }
             #endif
         }
 
