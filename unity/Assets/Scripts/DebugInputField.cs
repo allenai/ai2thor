@@ -184,9 +184,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
                 case "color":
                     {
-                        ServerAction yes = new ServerAction();
-                        yes.action = "ChangeColorOfMaterials";
-                        PhysicsController.ProcessControlCommand(yes);
+                        ServerAction action = new ServerAction();
+                        action.action = "ChangeColorOfMaterials";
+                        PhysicsController.ProcessControlCommand(action);
                         break;
                     }
 
