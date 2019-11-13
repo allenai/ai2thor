@@ -536,6 +536,16 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true);
         }
 
+        public void ChangeColorOfMaterials(ServerAction action)
+        {
+            //do the stuff
+            //find color changer component on scene manager
+            //call RandomizeColor()
+            ColorChanger ColorChangeComponent = GameObject.Find("PhysicsSceneManager").GetComponent<ColorChanger>();
+            ColorChangeComponent.RandomizeColor();
+            actionFinished(true);
+        }
+
         //return ID of closest CanPickup object by distance
         public string UniqueIDOfClosestVisibleObject() {
             string objectID = null;

@@ -93,6 +93,13 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         }
                     }
                 }
+
+            if (Input.GetKeyDown(KeyCode.K))
+            {
+                //do the thing
+                ColorChanger ColorChangeComponent = GameObject.Find("PhysicsSceneManager").GetComponent<ColorChanger>();
+                ColorChangeComponent.RandomizeColor();
+            }
             #endif
         }
 
@@ -173,7 +180,15 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         action.agentRadius = 0.35f;
                         PhysicsController.ProcessControlCommand(action);
                         break;
-                    }   
+                    }
+
+                case "color":
+                    {
+                        ServerAction yes = new ServerAction();
+                        yes.action = "ChangeColorOfMaterials";
+                        PhysicsController.ProcessControlCommand(yes);
+                        break;
+                    }
 
                 case "crazydiamond":
                     {
