@@ -104,7 +104,18 @@ public class AgentManager : MonoBehaviour
         if (action.agentType != null && action.agentType.ToLower() == "stochastic") {
             this.agents.Clear();
             GameObject fpsController = GameObject.FindObjectOfType<PhysicsRemoteFPSAgentController>().gameObject;
+            // Destroy(GameObject.FindObjectOfType<PhysicsRemoteFPSAgentController>());
+            // TODO Fix with multiple remote controllers, the reference to this is null when calling reflection
+            // var stochastic = fpsController.GetComponent<StochasticRemoteFPSAgentController>();
+            // foreach (var comp in fpsController.GetComponents<PhysicsRemoteFPSAgentController>()) {
+            //     if (comp != stochastic) {
+                    
+            //         Destroy(comp);
+            //     }
+            // }
             primaryAgent.enabled = false;
+           
+            //primaryAgent.gameObject.RemoveCo
 
             primaryAgent = fpsController.GetComponent<StochasticRemoteFPSAgentController>();
             primaryAgent.agentManager = this;
