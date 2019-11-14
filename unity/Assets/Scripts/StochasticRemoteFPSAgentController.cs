@@ -25,9 +25,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
         protected float rotateGaussianSigma = 0.5f;
 
         protected bool allowHorizontalMovement = false;
+
+        private float angleStep = 0.0f;
         public void Initialize(ServerAction action)
         {
-
             this.applyActionNoise = action.applyActionNoise;
 
             if (action.movementGaussianMu > 0.0f)
@@ -53,8 +54,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
             Debug.Log("MoveNoise: " + movementGaussianMu + " mu, " + movementGaussianSigma + " sigma");
             Debug.Log("RotateNoise: " + rotateGaussianMu + " mu, " + rotateGaussianSigma + " sigma");
             Debug.Log("applynoise:" + applyActionNoise);
+            Debug.Log("Finish Inititalize");
+
+            angleStep = action.rotateStepDegrees;
 
             base.Initialize(action);
+            //Debug.Log("Target rot  from " + string.Join(",", headingAngles.Select(x => x.ToString()).ToArray()));
         }
 
         public override void MoveRelative(ServerAction action)
@@ -98,24 +103,35 @@ namespace UnityStandardAssets.Characters.FirstPerson
             }
         }
 
-    public override void Rotate(ServerAction action)
-    {
-        DefaultAgentHand(action);
-        var rotateAmountDegrees = GetRotateMagnitudeWithNoise(action);
+    // public override void Rotate(ServerAction action)
+    // {
+    //     DefaultAgentHand(action);
+    //     var rotateAmountDegrees = GetRotateMagnitudeWithNoise(action);
 
-        transform.rotation = transform.rotation * Quaternion.Euler(new Vector3(0.0f, rotateAmountDegrees, 0.0f));
-        actionFinished(true);
-    }
+    //     transform.rotation = transform.rotation * Quaternion.Euler(new Vector3(0.0f, rotateAmountDegrees, 0.0f));
+    //     actionFinished(true);
+    // }
 
-    public override void RotateRight(ServerAction action)
-    {
-        Rotate(new ServerAction() { rotation = new Vector3(0, 90.0f, 0) });
-    }
+    // public override void RotateRight(ServerAction action)
+    // {
+    //     Debug.Log("-------- Rotate RIGHT new");
+    //     // base.RotateRight(action);
+    //     // Rotate(new ServerAction() { rotation = new Vector3(0, 90.0f, 0) });
+    // }
 
-    public override void RotateLeft(ServerAction action)
-    {
-        Rotate(new ServerAction() { rotation = new Vector3(0, -90.0f, 0) });
-    }
+    // public override void RotateRight(ServerAction action)
+    // {
+    //     // Debug.Log("-------- Rotate RIGHT new" + angleStep);
+    //     // base.RotateRight(action);
+    //     // Rotate(new ServerAction() { rotation = new Vector3(0, 90.0f, 0) });
+    // }
+
+    // public override void RotateLeft(ServerAction action)
+    // {
+    //     Debug.Log("-------- Rotate Left new");
+    //     // base.RotateLeft(action);
+    //     // Rotate(new ServerAction() { rotation = new Vector3(0, -90.0f, 0) });
+    // }
 
     public override void MoveAhead(ServerAction action)
     {
