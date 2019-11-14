@@ -34,6 +34,8 @@ public class AgentManager : MonoBehaviour
 	private List<Camera> thirdPartyCameras = new List<Camera>();
 	private bool readyToEmit;
 
+    public float rotateStepDegrees = 90.0f;
+
 	private Color[] agentColors = new Color[]{Color.blue, Color.yellow, Color.green, Color.red, Color.magenta, Color.grey};
 
 	public int actionDuration = 3;
@@ -101,7 +103,7 @@ public class AgentManager : MonoBehaviour
 	{
         if (action.agentType != null && action.agentType.ToLower() == "stochastic") {
             this.agents.Clear();
-            GameObject fpsController = GameObject.FindObjectOfType<BaseFPSAgentController>().gameObject;
+            GameObject fpsController = GameObject.FindObjectOfType<PhysicsRemoteFPSAgentController>().gameObject;
             primaryAgent.enabled = false;
 
             primaryAgent = fpsController.GetComponent<StochasticRemoteFPSAgentController>();
@@ -113,7 +115,7 @@ public class AgentManager : MonoBehaviour
         }
 
 
-
+        this.rotateStepDegrees = action.rotateStepDegrees;
 		primaryAgent.ProcessControlCommand (action);
 		primaryAgent.IsVisible = action.makeAgentsVisible;
 		this.renderClassImage = action.renderClassImage;

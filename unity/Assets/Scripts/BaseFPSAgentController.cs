@@ -36,6 +36,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		private List<Renderer> capsuleRenderers = null;
 
         private bool isVisible = true;
+
         public bool IsVisible
         {
 			get { return isVisible; }
@@ -130,6 +131,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
         private JavaScriptInterface jsInterface;
         private ServerAction currentServerAction;
 
+        private float angleStepDegrees = 90.0f;
 		public Quaternion TargetRotation
 		{
 			get { return targetRotation; }
@@ -281,10 +283,15 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     actionFinished(false);
                 }
                 else {
+                    Debug.Log("Setting heading angles with " + action.rotateStepDegrees);
                     this.headingAngles = new float[angleStepNumber];
                     for (int i = 0; i < angleStepNumber; i++) {
                         headingAngles[i] = i * action.rotateStepDegrees;
                     }
+
+                    this.angleStepDegrees = action.rotateStepDegrees;
+
+                    Debug.Log("Total "  + string.Join(",", headingAngles.Select(x => x.ToString()).ToArray()));
                 }
             }
 
@@ -312,6 +319,34 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 }
                 InitializeController(action);
             }
+        }
+
+        public bool SetHeadingAngles(float rotateStepDegrees) {
+            var epsilon = 1e-4;
+            var epsilonBig = 1e-3;
+            if (Mathf.Abs(rotateStepDegrees - 90.0f) > epsilonBig) {
+                var ratio = 360.0f / rotateStepDegrees;
+                var angleStepNumber = Mathf.RoundToInt(ratio);
+                
+                if (Mathf.Abs(ratio - angleStepNumber) > epsilon) {
+                    errorMessage = "Invalid argument 'rotateStepDegrees': 360 should be divisible by 'rotateStepDegrees'.";
+                    Debug.Log(errorMessage);
+                    return false;
+                }
+                else {
+                    // Debug.Log("Setting heading angles with " + rotateStepDegrees);
+                    this.headingAngles = new float[angleStepNumber];
+                    for (int i = 0; i < angleStepNumber; i++) {
+                        headingAngles[i] = i * rotateStepDegrees;
+                    }
+
+                    this.angleStepDegrees = rotateStepDegrees;
+
+                    // Debug.Log("Total "  + string.Join(",", headingAngles.Select(x => x.ToString()).ToArray()));
+                    return true;
+                }
+            }
+            return true;
         }
 
         public virtual void InitializeController(ServerAction action) {
@@ -518,6 +553,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			lastPosition = new Vector3(transform.position.x, transform.position.y, transform.position.z);
 			System.Reflection.MethodInfo method = this.GetType().GetMethod(controlCommand.action);
 			
+            // TODO Remove hack, for some reason  heading angles are reset after initialize to default values for SochasticAgent, it must be being destroyed and constructed again
+            var agentManagerStepDegrees = GameObject.FindObjectOfType<AgentManager>().rotateStepDegrees;
+            if (Mathf.Abs(agentManagerStepDegrees - this.angleStepDegrees) > 1e-5) {
+                // Debug.Log("Setting angle step to " + agentManagerStepDegrees);
+                this.SetHeadingAngles(agentManagerStepDegrees);
+            }
 			this.actionComplete = false;
 			try
 			{
@@ -832,6 +873,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		{
 			int index = (headingAngles.Length + (currentHeadingAngleIndex() + headIndex)) % headingAngles.Length;
 			float targetRotation = headingAngles[index];
+            // Debug.Log("Target rot " + targetRotation + " from " + string.Join(",", headingAngles.Select(x => x.ToString()).ToArray()) + " Step " + angleStepDegrees);
 			return Quaternion.Euler(new Vector3(0.0f, targetRotation, 0.0f));
 		}
 
