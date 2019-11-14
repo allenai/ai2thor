@@ -216,7 +216,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 
 			// make fov backwards compatible
-			if (action.fov != 60f && action.fieldOfView == 60f) {
+			if (action.fov != 42.5f && action.fieldOfView == 42.5f) {
 				action.fieldOfView = action.fov;
 			}
 
