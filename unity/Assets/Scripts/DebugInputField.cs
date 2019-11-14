@@ -1905,33 +1905,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         break;
                     }
 
-                    case "shortest_path":
-                    {
-                        ServerAction action = new ServerAction();
-                        action.action = "GetShortestPath";
-
-                        //pass in a min range, max range, delay
-                        if (splitcommand.Length > 1)
-                        {
-                            //ID of spawner
-                            action.objectId = splitcommand[1];
-
-                            if (splitcommand.Length == 5) {
-                                action.position = new Vector3(
-                                    float.Parse(splitcommand[2]),
-                                    float.Parse(splitcommand[3]), 
-                                    float.Parse(splitcommand[4])
-                                );
-                            }
-                            else {
-                                action.useAgentTransform = true;
-                            }
-                        }
-
-                        PhysicsController.ProcessControlCommand(action);
-                        break;
-                    }
-
                     case "get_object_type_ids":
                     {
                         ServerAction action = new ServerAction();

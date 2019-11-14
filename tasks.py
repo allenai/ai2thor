@@ -831,7 +831,8 @@ def interact(
             gridSize=0.25,
             renderObjectImage=object_image,
             renderClassImage=class_image,
-            renderDepthImage=depth_image
+            renderDepthImage=depth_image,
+            rotateStepDegrees=45
         )
     )
     env.interact(
