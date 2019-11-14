@@ -1035,6 +1035,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         public override void RotateRight(ServerAction controlCommand) {
+            // TODO change this function to take values other than 90 or -90
             if (CheckIfAgentCanTurn(90)||controlCommand.forceAction) {
                 DefaultAgentHand(controlCommand);
                 base.RotateRight(controlCommand);
@@ -1045,6 +1046,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         public override void RotateLeft(ServerAction controlCommand) {
+            // TODO change this function to take values other than 90 or -90
             if (CheckIfAgentCanTurn(-90)||controlCommand.forceAction) {
                 DefaultAgentHand(controlCommand);
                 base.RotateLeft(controlCommand);

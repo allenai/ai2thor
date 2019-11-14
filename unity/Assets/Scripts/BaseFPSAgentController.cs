@@ -112,6 +112,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		protected Vector3 init_position;
 		protected Quaternion init_rotation;
 
+        protected float rotateStepDegrees = 90.0f;
+
 		// server controls
 		// agent movement parameters
 		//public float forwardVelocity = 2.0f;
@@ -129,6 +131,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
         // Javascript communication
         private JavaScriptInterface jsInterface;
         private ServerAction currentServerAction;
+        
 
 		public Quaternion TargetRotation
 		{
@@ -285,6 +288,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     for (int i = 0; i < angleStepNumber; i++) {
                         headingAngles[i] = i * action.rotateStepDegrees;
                     }
+                    this.rotateStepDegrees = action.rotateStepDegrees;
                 }
             }
 

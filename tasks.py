@@ -795,7 +795,10 @@ def interact(
     image_directory='.'
 ):
     import ai2thor.controller
+    from pprint import pprint
+
     import ai2thor.robot_controller
+    from ai2thor.interact import InteractiveControllerPrompt
 
     if not robot:
         env = ai2thor.controller.Controller()
@@ -805,6 +808,11 @@ def interact(
             save_image_per_frame=True
         )
 
+    if image_directory != '.':
+        if os.path.exists(image_directory):
+            shutil.rmtree(image_directory)
+        os.makedirs(image_directory)
+
     if local_build:
         print("Executing from local build at {} ".format( _local_build_path()))
         env.local_executable_path = _local_build_path()
@@ -813,27 +821,61 @@ def interact(
             host=host,
             port=port,
             start_unity=False,
-            player_screen_width=600,
-            player_screen_height=600
+            player_screen_width=300,
+            player_screen_height=300
         )
     else:
         env.start(
             host=host,
             port=port,
-            player_screen_width=600,
-            player_screen_height=600
+            player_screen_width=300,
+            player_screen_height=300
         )
-
+    import json
     env.reset(scene)
-    env.step(
+    event = env.step(
         dict(
             action="Initialize",
             gridSize=0.25,
+            angleStepDegrees=20,
             renderObjectImage=object_image,
             renderClassImage=class_image,
-            renderDepthImage=depth_image
+            renderDepthImage=depth_image,
+            fieldOfView=42.5
         )
     )
+
+    pprint(event.metadata)
+
+    #event.metadata.acction
+
+    # event = env.step(dict(
+    #             action='TeleportFull',
+    #             x=3.2226958464199997,
+    #             y=0.9,
+    #             z=-2.78506724429,
+    #             # horizon=gameConfig.agent_start_location.horizon,
+    #             rotation = {'x': 0.0, 'y': 90, 'z': 0.0},
+    #             standing=False))
+    #event.metadata.objects
+    pprint(event.metadata)
+    # with open("{}/initialize.json".format(image_directory), 'w') as f:
+    #     json.dump(event.metadata, f)
+    InteractiveControllerPrompt.write_image(
+        event,
+        image_directory,
+        0,
+        image_per_frame=True,
+        class_segmentation_frame=class_image,
+        instance_segmentation_frame=object_image,
+        color_frame=color_image,
+        depth_frame=depth_image
+    )
+    import time
+    # time.sleep(4)
+
+
+    # pprint(event.frame)
     env.interact(
         class_segmentation_frame=class_image,
         instance_segmentation_frame=object_image,
