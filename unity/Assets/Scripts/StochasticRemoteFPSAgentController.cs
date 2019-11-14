@@ -103,21 +103,22 @@ namespace UnityStandardAssets.Characters.FirstPerson
             }
         }
 
-    // public override void Rotate(ServerAction action)
-    // {
-    //     DefaultAgentHand(action);
-    //     var rotateAmountDegrees = GetRotateMagnitudeWithNoise(action);
+    public override void Rotate(ServerAction action)
+    {
+        DefaultAgentHand(action);
+        var rotateAmountDegrees = GetRotateMagnitudeWithNoise(action);
 
-    //     transform.rotation = transform.rotation * Quaternion.Euler(new Vector3(0.0f, rotateAmountDegrees, 0.0f));
-    //     actionFinished(true);
-    // }
+        transform.rotation = transform.rotation * Quaternion.Euler(new Vector3(0.0f, rotateAmountDegrees, 0.0f));
+        actionFinished(true);
+    }
 
-    // public override void RotateRight(ServerAction action)
-    // {
-    //     Debug.Log("-------- Rotate RIGHT new");
-    //     // base.RotateRight(action);
-    //     // Rotate(new ServerAction() { rotation = new Vector3(0, 90.0f, 0) });
-    // }
+    public override void RotateRight(ServerAction action)
+    {
+        // Debug.Log("-------- Rotate RIGHT new");
+        // base.RotateRight(action);
+        // Debug.Log("Rotate degree" + this.angleStepDegrees);
+        Rotate(new ServerAction() { rotation = new Vector3(0, this.angleStepDegrees, 0) });
+    }
 
     // public override void RotateRight(ServerAction action)
     // {
@@ -126,12 +127,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
     //     // Rotate(new ServerAction() { rotation = new Vector3(0, 90.0f, 0) });
     // }
 
-    // public override void RotateLeft(ServerAction action)
-    // {
-    //     Debug.Log("-------- Rotate Left new");
-    //     // base.RotateLeft(action);
-    //     // Rotate(new ServerAction() { rotation = new Vector3(0, -90.0f, 0) });
-    // }
+    public override void RotateLeft(ServerAction action)
+    {
+        // Debug.Log("-------- Rotate Left new");
+        // base.RotateLeft(action);
+        Rotate(new ServerAction() { rotation = new Vector3(0, -this.angleStepDegrees, 0) });
+    }
 
     public override void MoveAhead(ServerAction action)
     {

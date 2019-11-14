@@ -131,7 +131,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
         private JavaScriptInterface jsInterface;
         private ServerAction currentServerAction;
 
-        private float angleStepDegrees = 90.0f;
+        protected float angleStepDegrees = 90.0f;
 		public Quaternion TargetRotation
 		{
 			get { return targetRotation; }
@@ -551,12 +551,13 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			lastAction = controlCommand.action;
 			lastActionSuccess = false;
 			lastPosition = new Vector3(transform.position.x, transform.position.y, transform.position.z);
+            // this is always a reference to PhysicsFPSAgentController even when trying to use the Stochastic, is null if destroyed in initialize see AgentManager Initialize, Fix This
 			System.Reflection.MethodInfo method = this.GetType().GetMethod(controlCommand.action);
 			
             // TODO Remove hack, for some reason  heading angles are reset after initialize to default values for SochasticAgent, it must be being destroyed and constructed again
             var agentManagerStepDegrees = GameObject.FindObjectOfType<AgentManager>().rotateStepDegrees;
             if (Mathf.Abs(agentManagerStepDegrees - this.angleStepDegrees) > 1e-5) {
-                // Debug.Log("Setting angle step to " + agentManagerStepDegrees);
+                 Debug.Log("Setting angle step to " + agentManagerStepDegrees);
                 this.SetHeadingAngles(agentManagerStepDegrees);
             }
 			this.actionComplete = false;
