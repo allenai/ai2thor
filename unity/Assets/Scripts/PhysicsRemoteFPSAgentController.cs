@@ -990,6 +990,25 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
 
+         public void RotateRightSmooth(ServerAction controlCommand) {
+            if (CheckIfAgentCanTurn(90)) {
+                DefaultAgentHand(controlCommand);
+                StartCoroutine(InterpolateRotation(this.GetRotateQuaternion(1), controlCommand.timeStep));
+            } else {
+                actionFinished(false);
+            }
+
+        }
+
+        public void RotateLeftSmooth(ServerAction controlCommand) {
+            if (CheckIfAgentCanTurn(-90)) {
+                DefaultAgentHand(controlCommand);
+                StartCoroutine(InterpolateRotation(this.GetRotateQuaternion(-1), controlCommand.timeStep));
+            } else {
+                actionFinished(false);
+            }
+        }
+
         //checks if agent is clear to rotate left/right without object in hand hitting anything
         public bool CheckIfAgentCanTurn(int direction) {
             bool result = true;
@@ -4268,7 +4287,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true);
         }
 
-        private void UpdateDisplayGameObject(GameObject go, bool display) {
+        public void UpdateDisplayGameObject(GameObject go, bool display) {
             if (go != null) {
                 foreach (MeshRenderer mr in go.GetComponentsInChildren<MeshRenderer>() as MeshRenderer[]) {
                     if (!initiallyDisabledRenderers.Contains(mr.GetInstanceID())) {
@@ -4645,6 +4664,22 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 }
             }
             return anyStillRunning;
+        }
+
+         protected IEnumerator InterpolateRotation(Quaternion targetRotation, float seconds) {
+            var time = Time.time;
+            var newTime = time;
+            while (newTime - time < seconds) {
+                yield return null;
+                newTime = Time.time;
+                var diffSeconds = newTime - time;
+                var alpha = Mathf.Min(diffSeconds / seconds, 1.0f);
+                this.transform.rotation = Quaternion.Lerp(this.transform.rotation, targetRotation, alpha);
+                
+            }
+            Debug.Log("Rotate action finished! " + (newTime - time) );
+            //  this.transform.rotation = targetRotation;
+            actionFinished(true);
         }
 
         protected IEnumerator InteractAndWait(List<CanOpen_Object> coos) {
@@ -5583,7 +5618,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         ///// Crouch and Stand /////
         ////////////////////////////
 
-        protected bool isStanding() {
+        public bool isStanding() {
             return standingLocalCameraPosition == m_Camera.transform.localPosition;
         }
 
@@ -6288,6 +6323,40 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 return (float) Math.Floor(mFactor * x) / mFactor;
             }
         }
+
+        public void RandomlyMoveAgent(ServerAction action) {
+            reachablePositions = getReachablePositions();
+            var orientations = new float[]{
+                0,
+                90,
+                180,
+                270
+            };
+            orientations.Shuffle_(action.randomSeed);
+            reachablePositions.Shuffle_(action.randomSeed);
+
+            bool success = false;
+            foreach (Vector3 position in reachablePositions) {
+                foreach (float rotation in orientations) {
+                    if (handObjectCanFitInPosition(position, rotation)) {
+                        this.transform.position = position;
+                        this.transform.rotation = Quaternion.Euler(0.0f, rotation, 0.0f);
+                        success = true;
+                        break;
+                    }
+                }
+            }
+
+            if (errorMessage != "") {
+                actionFinished(false);
+            } else if (!success) {
+                errorMessage = "Could not find a position in which the agent and object fit.";
+                actionFinished(false);
+            } else {
+                actionFinished(true, reachablePositions);
+            }
+        }
+
         public void GetReachablePositionsForObject(ServerAction action) {
             if (!physicsSceneManager.UniqueIdToSimObjPhysics.ContainsKey(action.objectId)) {
                 errorMessage = "Object " + action.objectId + " does not seem to exist.";

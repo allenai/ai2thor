@@ -44,6 +44,10 @@ controller.local_executable_path = "<BASE_DIR>/unity/builds/local-build/thor-loc
 controller.start()
 ```
 
+## Browser Build
+
+[Please read](WEBGL.md)
+
 ## Citation
 
     @article{ai2thor,
