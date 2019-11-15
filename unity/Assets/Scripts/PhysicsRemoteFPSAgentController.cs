@@ -89,9 +89,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         //protected float DownwardViewDistance = 2.0f;
 
         // Use this for initialization
-        protected override void Start() {
+        public override void Start() {
             base.Start();
-
             //below, enable all the GameObjects on the Agent that Physics Mode requires
             if (PhysicsAgentSkinWidth < 0.0f) {
                 Debug.LogError("Agent skin width must be > 0.0f, please set it in the editor. Forcing it to equal 0.01f for now.");
@@ -526,6 +525,15 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         public float TimeSinceStart() {
             return Time.time;
+        }
+
+        //change the radius of the agent's capsule on the char controller component, and the capsule collider component
+        public void SetAgentRadius(ServerAction action)
+        {
+            m_CharacterController.radius = action.agentRadius;
+            CapsuleCollider cap = GetComponent<CapsuleCollider>();
+            cap.radius = action.agentRadius;
+            actionFinished(true);
         }
 
         //return ID of closest CanPickup object by distance
@@ -1840,7 +1848,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 DefaultAgentHand();
                 Vector3 oldPosition = transform.position;
                 transform.position = targetPosition;
-                this.snapToGrid();
+                if (!continuousMode) {
+                    this.snapToGrid();
+                }
 
                 if (uniqueId != "" && maxDistanceToObject > 0.0f) {
                     if (!physicsSceneManager.UniqueIdToSimObjPhysics.ContainsKey(uniqueId)) {
@@ -2523,14 +2533,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         continue;
                     }
 
-                    if (res.transform.GetComponent<PhysicsRemoteFPSAgentController>()) {
+                    if (res.transform.gameObject != this.gameObject && res.transform.GetComponent<PhysicsRemoteFPSAgentController>()) {
+
                         PhysicsRemoteFPSAgentController maybeOtherAgent = res.transform.GetComponent<PhysicsRemoteFPSAgentController>();
-                        if (maybeOtherAgent != this) {
-                            int thisAgentNum = agentManager.agents.IndexOf(this);
-                            int otherAgentNum = agentManager.agents.IndexOf(maybeOtherAgent);
-                            errorMessage = "Agent " + otherAgentNum.ToString() + " is blocking Agent " + thisAgentNum.ToString() + " from moving " + orientation;
-                            return false;
-                        }
+                        int thisAgentNum = agentManager.agents.IndexOf(this);
+                        int otherAgentNum = agentManager.agents.IndexOf(maybeOtherAgent);
+                        errorMessage = "Agent " + otherAgentNum.ToString() + " is blocking Agent " + thisAgentNum.ToString() + " from moving " + orientation;
+                        return false;
                     }
 
                     //including "Untagged" tag here so that the agent can't move through objects that are transparent
@@ -4326,7 +4335,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 float midX = (b.max.x + b.min.x) / 2.0f;
                 float midZ = (b.max.z + b.min.z) / 2.0f;
                 m_Camera.transform.rotation = Quaternion.Euler(90.0f, 0.0f, 0.0f);
-                m_Camera.transform.position = new Vector3(midX, b.max.y, midZ);
+                m_Camera.transform.position = new Vector3(midX, b.max.y + 5, midZ);
                 m_Camera.orthographic = true;
 
                 m_Camera.orthographicSize = Math.Max((b.max.x - b.min.x) / 2f, (b.max.z - b.min.z) / 2f);
@@ -5636,7 +5645,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             } else {
                 m_Camera.transform.localPosition = new Vector3(
                     standingLocalCameraPosition.x,
-                    0.0f,
+                    -0.2911f,
                     standingLocalCameraPosition.z
                 );
                 SetUpRotationBoxChecks();
@@ -5992,8 +6001,21 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             SimObjPhysics theObject = physicsSceneManager.UniqueIdToSimObjPhysics[action.objectId];
 
+            // Don't want to consider all positions in the scene, just those from which the object
+            // is plausibly visible. The following computes a "fudgeFactor" (radius of the object)
+            // which is then used to filter the set of all reachable positions to just those plausible positions.
+            Bounds objectBounds = new Bounds(
+                new Vector3(float.PositiveInfinity, float.PositiveInfinity, float.PositiveInfinity),
+                new Vector3(-float.PositiveInfinity, -float.PositiveInfinity, -float.PositiveInfinity)
+            );
+            objectBounds.Encapsulate(theObject.transform.position);
+            foreach (Transform vp in theObject.VisibilityPoints) {
+                objectBounds.Encapsulate(vp.position);
+            }
+            float fudgeFactor = objectBounds.extents.magnitude;
+
             List<Vector3> filteredPositions = positions.Where(
-                p => (Vector3.Distance(p, theObject.transform.position) <= maxVisibleDistance + 0.5f)
+                p => (Vector3.Distance(p, theObject.transform.position) <= maxVisibleDistance + fudgeFactor + gridSize)
             ).ToList();
 
             Dictionary<string, List<float>> goodLocationsDict = new Dictionary<string, List<float>>();
@@ -6022,6 +6044,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                                 goodLocationsDict["rotation"].Add(90.0f * i);
                                 goodLocationsDict["standing"].Add((1 - j) * 1.0f);
                                 goodLocationsDict["horizon"].Add(m_Camera.transform.localEulerAngles.x);
+
+#if UNITY_EDITOR
+                                // In the editor, draw lines indicating from where the object was visible.
+                                Debug.DrawLine(p, p + transform.forward * (gridSize * 0.5f), Color.red, 20f);
+#endif
                             }
                         }
                     }
@@ -6341,7 +6368,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             Vector3 startPos = sop.transform.position;
             Quaternion startRot = sop.transform.rotation;
 
-            Bounds b = new Bounds();
+            Bounds b = new Bounds(
+                new Vector3(float.PositiveInfinity, float.PositiveInfinity, float.PositiveInfinity),
+                new Vector3(-float.PositiveInfinity, -float.PositiveInfinity, -float.PositiveInfinity)
+            );
             foreach (Vector3 p in getReachablePositions()) {
                 b.Encapsulate(p);
             }
@@ -6428,7 +6458,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             );
         }
 
-        override public Vector3[] getReachablePositions(float gridMultiplier = 1.0f) {
+        override public Vector3[] getReachablePositions(float gridMultiplier = 1.0f, int maxStepCount = 10000) {
             CapsuleCollider cc = GetComponent<CapsuleCollider>();
 
             float sw = m_CharacterController.skinWidth;
@@ -6495,7 +6525,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         }
                     }
                 }
-                if (stepsTaken > 10000) {
+                if (stepsTaken > maxStepCount) {
                     errorMessage = "Too many steps taken in GetReachablePositions.";
                     break;
                 }
@@ -6510,7 +6540,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         public void GetReachablePositions(ServerAction action) {
-            reachablePositions = getReachablePositions();
+            if(action.maxStepCount != 0) {
+                reachablePositions = getReachablePositions(1.0f, action.maxStepCount);
+            } else {
+                reachablePositions = getReachablePositions();
+            }
+
             if (errorMessage != "") {
                 actionFinished(false);
             } else {
@@ -7943,6 +7978,20 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             errorMessage = action.objectId + " could not be found in this scene, so it can't be removed";
             actionFinished(false);
+        }
+
+        public void ChangeLightSet(ServerAction action)
+        {
+            if(action.objectVariation > 10 || action.objectVariation < 1)
+            {
+                errorMessage = "Please use value between 1 and 10";
+                actionFinished(false);
+                return;
+            }
+
+            GameObject lightTransform = GameObject.Find("Lighting");
+            lightTransform.GetComponent<ChangeLighting>().SetLights(action.objectVariation);
+            actionFinished(true);
         }
 
         public void SliceObject(ServerAction action) {

@@ -68,8 +68,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
         void InitializeUserControl()
         {
-            Agent = GameObject.Find("FPSController");
-            PhysicsController = Agent.GetComponent<PhysicsRemoteFPSAgentController>();
+            GameObject fpsController = GameObject.FindObjectOfType<BaseFPSAgentController>().gameObject;
+            PhysicsController = fpsController.GetComponent<PhysicsRemoteFPSAgentController>();
+            Agent = PhysicsController.gameObject;
             AManager = GameObject.Find("PhysicsSceneManager").GetComponentInChildren<AgentManager>();
             
            SelectPlayerControl();
@@ -142,6 +143,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
                             action.makeAgentsVisible = int.Parse(splitcommand[3]) == 1;
                         }
 
+                        // action.rotateStepDegrees = 45;
+                        // action.agentType = "stochastic";
+
                         // action.renderNormalsImage = true;
                         // action.renderDepthImage = true;
                         // action.renderClassImage = true;
@@ -152,7 +156,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 						PhysicsController.actionComplete = false;
                         action.ssao = "default";
-
+                        //action.snapToGrid = true;
+                        action.makeAgentsVisible = false;
+                
                         action.action = "Initialize";
                         AManager.Initialize(action);
                         // AgentManager am = PhysicsController.gameObject.FindObjectsOfType<AgentManager>()[0];
@@ -163,6 +169,15 @@ namespace UnityStandardAssets.Characters.FirstPerson
       			        // am.Initialize(action);
                         break;
                     }
+
+                case "rad":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "SetAgentRadius";
+                        action.agentRadius = 0.35f;
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }   
 
                 case "crazydiamond":
                     {
@@ -261,6 +276,19 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }
+
+                case "l":
+                {
+                    ServerAction action = new ServerAction();
+                    action.action = "ChangeLightSet";
+                    if(splitcommand.Length == 2)
+                    {
+                        action.objectVariation = int.Parse(splitcommand[1]);
+                    }
+
+                    PhysicsController.ProcessControlCommand(action);
+                    break;
+                }
 
                 //set state of all objects that have a state
                 case "ssa":
@@ -1878,6 +1906,19 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         }
 
                         PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
+                    case "get_object_type_ids":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "ObjectTypeToObjectIds";
+                        if (splitcommand.Length > 1)
+                        {
+                            action.objectType = splitcommand[1];
+                        }
+
+                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }
 

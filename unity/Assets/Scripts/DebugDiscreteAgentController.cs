@@ -120,7 +120,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                             else
                             {
                                 action.action = "MoveBack";
-                                action.moveMagnitude = WalkMagnitude;		
+                                action.moveMagnitude = WalkMagnitude;	
                                 PhysicsController.ProcessControlCommand(action);
                             }
                         }
@@ -138,7 +138,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                             else
                             {
                                 action.action = "MoveLeft";
-                                action.moveMagnitude = WalkMagnitude;		
+                                action.moveMagnitude = WalkMagnitude;	
                                 PhysicsController.ProcessControlCommand(action);
                             }
                         }
@@ -156,7 +156,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                             else
                             {
                                 action.action = "MoveRight";
-                                action.moveMagnitude = WalkMagnitude;		
+                                action.moveMagnitude = WalkMagnitude;	
                                 PhysicsController.ProcessControlCommand(action);
                             }
                         }

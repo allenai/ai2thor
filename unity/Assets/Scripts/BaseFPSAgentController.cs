@@ -3,11 +3,13 @@ using System;
 using System.IO;
 using System.Collections;
 using System.Collections.Generic;
+using System.Reflection;
 using UnityStandardAssets.CrossPlatformInput;
 using UnityStandardAssets.Utility;
 using UnityEngine;
 using Random = UnityEngine.Random;
 using UnityStandardAssets.ImageEffects;
+using System.Linq;
 
 namespace UnityStandardAssets.Characters.FirstPerson
 {
@@ -34,6 +36,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		private List<Renderer> capsuleRenderers = null;
 
         private bool isVisible = true;
+
         public bool IsVisible
         {
 			get { return isVisible; }
@@ -128,6 +131,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
         private JavaScriptInterface jsInterface;
         private ServerAction currentServerAction;
 
+        protected float angleStepDegrees = 90.0f;
 		public Quaternion TargetRotation
 		{
 			get { return targetRotation; }
@@ -144,7 +148,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             // character controller parameters
             m_CharacterController = GetComponent<CharacterController>();
 			//float radius = m_CharacterController.radius;
-			m_CharacterController.radius = 0.2f;
+			//m_CharacterController.radius = 0.2f;
 			// using default for now to remain consistent with generated points
 			//m_CharacterController.height = LoadFloatVariable (height, "AGENT_HEIGHT");
 			this.m_WalkSpeed = 2;
@@ -156,7 +160,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 
 		// Use this for initialization
-		protected virtual void Start()
+		public virtual void Start()
 		{
 			m_Camera = this.gameObject.GetComponentInChildren<Camera>();
 			//m_OriginalCameraPosition = m_Camera.transform.localPosition;
@@ -203,7 +207,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			targetTeleport = Vector3.zero;
 		}
 
-		abstract public Vector3[] getReachablePositions(float gridMultiplier=1.0f);
+		abstract public Vector3[] getReachablePositions(float gridMultiplier=1.0f, int maxStepCount = 10000);
 
 		public void Initialize(ServerAction action)
         {
@@ -266,6 +270,31 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 StartCoroutine(checkInitializeAgentLocationAction());
             }
 
+            // Rotation
+            var epsilon = 1e-4;
+            var epsilonBig = 1e-3;
+            if (Mathf.Abs(action.rotateStepDegrees - 90.0f) > epsilonBig) {
+                var ratio = 360.0f / action.rotateStepDegrees;
+                var angleStepNumber = Mathf.RoundToInt(ratio);
+                
+                if (Mathf.Abs(ratio - angleStepNumber) > epsilon) {
+                    errorMessage = "Invalid argument 'rotateStepDegrees': 360 should be divisible by 'rotateStepDegrees'.";
+                    Debug.Log(errorMessage);
+                    actionFinished(false);
+                }
+                else {
+                    Debug.Log("Setting heading angles with " + action.rotateStepDegrees);
+                    this.headingAngles = new float[angleStepNumber];
+                    for (int i = 0; i < angleStepNumber; i++) {
+                        headingAngles[i] = i * action.rotateStepDegrees;
+                    }
+
+                    this.angleStepDegrees = action.rotateStepDegrees;
+
+                    Debug.Log("Total "  + string.Join(",", headingAngles.Select(x => x.ToString()).ToArray()));
+                }
+            }
+
 			//override default ssao settings when using init
 			string ssao = action.ssao.ToLower().Trim();
 			if (ssao == "on") {
@@ -276,8 +305,52 @@ namespace UnityStandardAssets.Characters.FirstPerson
 				// Do nothing
 			} else {
 				throw new NotImplementedException("ssao must be one of 'on', 'off' or 'default'.");
-			}			
-			
+			}	
+            	
+
+            // Debug.Log("Object " + action.controllerInitialization.ToString() + " dict "  + (action.controllerInitialization.variableInitializations == null));//+ string.Join(";", action.controllerInitialization.variableInitializations.Select(x => x.Key + "=" + x.Value).ToArray()));
+
+            if (action.controllerInitialization != null && action.controllerInitialization.variableInitializations != null) {
+                foreach (KeyValuePair<string, TypedVariable> entry in action.controllerInitialization.variableInitializations) {
+                    Debug.Log(" Key " + entry.Value.type + " field " + entry.Key);
+                    Type t = Type.GetType(entry.Value.type);
+                    FieldInfo field = t.GetField(entry.Key, BindingFlags.Public | BindingFlags.Instance);
+                    field.SetValue(this, entry.Value);
+                }
+                InitializeController(action);
+            }
+        }
+
+        public bool SetHeadingAngles(float rotateStepDegrees) {
+            var epsilon = 1e-4;
+            var epsilonBig = 1e-3;
+            if (Mathf.Abs(rotateStepDegrees - 90.0f) > epsilonBig) {
+                var ratio = 360.0f / rotateStepDegrees;
+                var angleStepNumber = Mathf.RoundToInt(ratio);
+                
+                if (Mathf.Abs(ratio - angleStepNumber) > epsilon) {
+                    errorMessage = "Invalid argument 'rotateStepDegrees': 360 should be divisible by 'rotateStepDegrees'.";
+                    Debug.Log(errorMessage);
+                    return false;
+                }
+                else {
+                    // Debug.Log("Setting heading angles with " + rotateStepDegrees);
+                    this.headingAngles = new float[angleStepNumber];
+                    for (int i = 0; i < angleStepNumber; i++) {
+                        headingAngles[i] = i * rotateStepDegrees;
+                    }
+
+                    this.angleStepDegrees = rotateStepDegrees;
+
+                    // Debug.Log("Total "  + string.Join(",", headingAngles.Select(x => x.ToString()).ToArray()));
+                    return true;
+                }
+            }
+            return true;
+        }
+
+        public virtual void InitializeController(ServerAction action) {
+            
         }
 
         public IEnumerator checkInitializeAgentLocationAction()
@@ -478,8 +551,15 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			lastAction = controlCommand.action;
 			lastActionSuccess = false;
 			lastPosition = new Vector3(transform.position.x, transform.position.y, transform.position.z);
+            // this is always a reference to PhysicsFPSAgentController even when trying to use the Stochastic, is null if destroyed in initialize see AgentManager Initialize, Fix This
 			System.Reflection.MethodInfo method = this.GetType().GetMethod(controlCommand.action);
 			
+            // TODO Remove hack, for some reason  heading angles are reset after initialize to default values for SochasticAgent, it must be being destroyed and constructed again
+            var agentManagerStepDegrees = GameObject.FindObjectOfType<AgentManager>().rotateStepDegrees;
+            if (Mathf.Abs(agentManagerStepDegrees - this.angleStepDegrees) > 1e-5) {
+                 Debug.Log("Setting angle step to " + agentManagerStepDegrees);
+                this.SetHeadingAngles(agentManagerStepDegrees);
+            }
 			this.actionComplete = false;
 			try
 			{
@@ -571,6 +651,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		//move in cardinal directions
 		virtual protected void moveCharacter(ServerAction action, int targetOrientation)
 		{
+            // TODO: Simplify this???
 			//resetHand(); when I looked at this resetHand in DiscreteRemoteFPSAgent was just commented out doing nothing so...
 			moveMagnitude = gridSize;
 			if (action.moveMagnitude > 0)
@@ -715,6 +796,14 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			moveCharacter(action, 180);
 		}
 
+        public virtual void MoveRelative(ServerAction action) {
+            var moveLocal = new Vector3(action.x, 0, action.z);
+            Vector3 moveWorldSpace = transform.rotation * moveLocal;
+            moveWorldSpace.y = Physics.gravity.y * this.m_GravityMultiplier;
+			m_CharacterController.Move(moveWorldSpace);
+			actionFinished(true);
+        }
+
 		//free move
 		public virtual void Move(ServerAction action)
 		{
@@ -766,7 +855,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		}
 
 		//free rotate, change forward facing of Agent
-		public void Rotate(ServerAction response)
+		public virtual void Rotate(ServerAction response)
 		{
 			transform.rotation = Quaternion.Euler(new Vector3(0.0f, response.rotation.y, 0.0f));
 			actionFinished(true);
@@ -781,12 +870,19 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 		}
 
+        public virtual Quaternion GetRotateQuaternion(int headIndex)
+		{
+			int index = (headingAngles.Length + (currentHeadingAngleIndex() + headIndex)) % headingAngles.Length;
+			float targetRotation = headingAngles[index];
+            // Debug.Log("Target rot " + targetRotation + " from " + string.Join(",", headingAngles.Select(x => x.ToString()).ToArray()) + " Step " + angleStepDegrees);
+			return Quaternion.Euler(new Vector3(0.0f, targetRotation, 0.0f));
+		}
+
 		//rotates 90 degrees left w/ respect to current forward
 		public virtual void RotateLeft(ServerAction controlCommand)
 		{
 			transform.rotation = GetRotateQuaternion(-1);
 			actionFinished(true);
-
 		}
 
         public virtual Quaternion GetRotateQuaternion(int headIndex)

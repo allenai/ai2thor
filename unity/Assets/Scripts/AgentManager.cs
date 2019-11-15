@@ -34,6 +34,8 @@ public class AgentManager : MonoBehaviour
 	private List<Camera> thirdPartyCameras = new List<Camera>();
 	private bool readyToEmit;
 
+    public float rotateStepDegrees = 90.0f;
+
 	private Color[] agentColors = new Color[]{Color.blue, Color.yellow, Color.green, Color.red, Color.magenta, Color.grey};
 
 	public int actionDuration = 3;
@@ -89,17 +91,42 @@ public class AgentManager : MonoBehaviour
 
 	private void initializePrimaryAgent() {
 
-		GameObject fpsController = GameObject.Find("FPSController");
-		PhysicsRemoteFPSAgentController physicsAgent = fpsController.GetComponent<PhysicsRemoteFPSAgentController>();
-		primaryAgent = physicsAgent;
-		primaryAgent.agentManager = this;
+		GameObject fpsController = GameObject.FindObjectOfType<BaseFPSAgentController>().gameObject;
+		primaryAgent = fpsController.GetComponent<PhysicsRemoteFPSAgentController>();
 		primaryAgent.enabled = true;
+		primaryAgent.agentManager = this;
 		primaryAgent.actionComplete = true;
 
 	}
 	
 	public void Initialize(ServerAction action)
 	{
+        if (action.agentType != null && action.agentType.ToLower() == "stochastic") {
+            this.agents.Clear();
+            GameObject fpsController = GameObject.FindObjectOfType<PhysicsRemoteFPSAgentController>().gameObject;
+            // Destroy(GameObject.FindObjectOfType<PhysicsRemoteFPSAgentController>());
+            // TODO Fix with multiple remote controllers, the reference to this is null when calling reflection
+            // var stochastic = fpsController.GetComponent<StochasticRemoteFPSAgentController>();
+            // foreach (var comp in fpsController.GetComponents<PhysicsRemoteFPSAgentController>()) {
+            //     if (comp != stochastic) {
+                    
+            //         Destroy(comp);
+            //     }
+            // }
+            primaryAgent.enabled = false;
+           
+            //primaryAgent.gameObject.RemoveCo
+
+            primaryAgent = fpsController.GetComponent<StochasticRemoteFPSAgentController>();
+            primaryAgent.agentManager = this;
+            primaryAgent.enabled = true;
+            // must manually call start here since it this only gets called before Update() is called
+            primaryAgent.Start();
+            this.agents.Add(primaryAgent);
+        }
+
+
+        this.rotateStepDegrees = action.rotateStepDegrees;
 		primaryAgent.ProcessControlCommand (action);
 		primaryAgent.IsVisible = action.makeAgentsVisible;
 		this.renderClassImage = action.renderClassImage;
@@ -934,6 +961,12 @@ public class ServerAction
 	public bool standing = true;
 	public float fov = 60.0f;
 	public bool forceAction;
+    public bool applyActionNoise = true;
+    public float movementGaussianMu;
+    public float movementGaussianSigma;
+    public float rotateGaussianMu;
+    public float rotateGaussianSigma;
+
 
 	public bool forceKinematic;
 
@@ -974,6 +1007,13 @@ public class ServerAction
     public ObjectTypeCount[] minFreePerReceptacleType;
     public ObjectPose[] objectPoses;
     public ObjectToggle[] objectToggles;
+    public float noise;
+    public ControllerInitialization controllerInitialization = null;
+    public string agentType;
+    public float agentRadius = 2.0f;
+    public int maxStepCount;
+
+    public float rotateStepDegrees = 90.0f;
 
     public SimObjType ReceptableSimObjType()
 	{
@@ -993,8 +1033,6 @@ public class ServerAction
 		}
 		return (SimObjType)Enum.Parse(typeof(SimObjType), objectType);
 	}
-
-
 }
 
 
@@ -1013,4 +1051,18 @@ public enum ServerActionErrorCode  {
 	LookUpCantExceedMax,
 	LookDownCantExceedMin,
 	InvalidAction
+}
+
+
+
+[Serializable]
+public class ControllerInitialization {
+    public Dictionary<string, TypedVariable> variableInitializations;
+}
+
+
+[Serializable]
+public class TypedVariable {
+    public string type;
+    public object value;
 }
