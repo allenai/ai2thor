@@ -1039,6 +1039,20 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 
 	//CONTEXT MENU STUFF FOR SETTING UP SIM OBJECTS
 	//RIGHT CLICK this script in the inspector to reveal these options
+    [ContextMenu("BoundingBox")]
+    void ContextCreateBoundingBox()
+    {
+        GameObject bb = new GameObject("BoundingBox");
+        bb.transform.position = gameObject.transform.position;
+        bb.transform.SetParent(gameObject.transform);
+        bb.AddComponent<BoxCollider>();
+        bb.GetComponent<BoxCollider>().enabled = false;
+        bb.tag = "Untagged";
+        bb.layer = 9;
+
+        BoundingBox = bb;
+    }
+
 	[ContextMenu("Cabinet")]
 	void SetUpCabinet()
 	{
