@@ -109,12 +109,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
     public override void RotateRight(ServerAction action)
     {
-        Rotate(new ServerAction() { rotation = new Vector3(0, 90.0f, 0) });
+        Rotate(new ServerAction() { rotation = new Vector3(0, this.rotateStepDegrees, 0) });
     }
 
     public override void RotateLeft(ServerAction action)
     {
-        Rotate(new ServerAction() { rotation = new Vector3(0, -90.0f, 0) });
+        Rotate(new ServerAction() { rotation = new Vector3(0, -1.0f * this.rotateStepDegrees, 0) });
     }
 
     public override void MoveAhead(ServerAction action)
