@@ -93,6 +93,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         }
                     }
                 }
+
             #endif
         }
 
@@ -173,7 +174,15 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         action.agentRadius = 0.35f;
                         PhysicsController.ProcessControlCommand(action);
                         break;
-                    }   
+                    }
+
+                case "color":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "ChangeColorOfMaterials";
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
 
                 case "crazydiamond":
                     {
