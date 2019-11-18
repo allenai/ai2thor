@@ -43,9 +43,9 @@ public int objectVariation;
             InputMode_Text = GameObject.Find("DebugCanvasPhysics/InputModeText");
             throwForceBar = GameObject.Find("DebugCanvasPhysics/ThrowForceBar");
             var camera =  GetComponentInChildren<Camera>();
-            camera.fieldOfView = 90.0f;
+            // camera.fieldOfView = 90.0f;
             // camera.transform.rotation = Quaternion.Euler(30, 0, 0);
-             camera.transform.Rotate(30, 0, 0);
+            //  camera.transform.Rotate(30, 0, 0);
             if (InputMode_Text) {
                 InputMode_Text.GetComponent<Text>().text = "Point and Click Mode";
             }
@@ -156,7 +156,7 @@ public int objectVariation;
                         float FlyMagnitude = 1.0f;
                         float WalkMagnitude = 0.25f;
                         if (!handMode && !hidingPhase) {
-                            if(Input.GetKeyDown(KeyCode.W))
+                            if(Input.GetKeyDown(KeyCode.W) || Input.GetKeyDown(KeyCode.UpArrow))
                             {
                                 ServerAction action = new ServerAction();
                                 if(PhysicsController.FlightMode)
@@ -174,7 +174,7 @@ public int objectVariation;
                                 }
                             }
 
-                            if(Input.GetKeyDown(KeyCode.S))
+                            if(Input.GetKeyDown(KeyCode.S) || Input.GetKeyDown(KeyCode.DownArrow))
                             {
                                 ServerAction action = new ServerAction();
                                 if(PhysicsController.FlightMode)

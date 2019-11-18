@@ -885,12 +885,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			actionFinished(true);
 		}
 
-        public virtual Quaternion GetRotateQuaternion(int headIndex)
-		{
-			int index = (headingAngles.Length + (currentHeadingAngleIndex() + headIndex)) % headingAngles.Length;
-			float targetRotation = headingAngles[index];
-			return Quaternion.Euler(new Vector3(0.0f, targetRotation, 0.0f));
-		}
 
 		//rotates 90 degrees right w/ respect to current forward
 		public virtual void RotateRight(ServerAction controlCommand)
@@ -937,6 +931,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 				actionFinished(false);
 			}
 		}
+        
 
 		//public virtual void P(ServerAction action)//use
 		//{

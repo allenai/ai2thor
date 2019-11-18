@@ -8419,6 +8419,23 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 actionFinished(false);
             }
         }
+
+         public void ObjectTypeToObjectIds(ServerAction action) {
+            try {
+                SimObjType objectType = (SimObjType) Enum.Parse(typeof(SimObjType), action.objectType, true);
+                List<string> objectIds = new List<string>();
+                foreach (var s in physicsSceneManager.UniqueIdToSimObjPhysics) {
+                    if (s.Value.ObjType == objectType) {
+                        objectIds.Add(s.Value.uniqueID);
+                    }
+                }
+                actionFinished(true, objectIds.ToArray());
+            }   
+            catch (ArgumentException exception) {
+                errorMessage = "Invalid object type '" + action.objectType + "'. " + exception.Message;
+                actionFinished(false);
+            }
+        }
         protected bool objectIsOfIntoType(SimObjPhysics so) {
             return so.ReceptacleTriggerBoxes != null &&
                 so.ReceptacleTriggerBoxes.Length != 0 &&

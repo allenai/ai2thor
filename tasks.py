@@ -437,14 +437,15 @@ def webgl_build(
             }
 
     for scene_name in scenes.split(","):
-        room_type = room_type_by_id[scene_name]
-        if room_type["type"] not in scene_metadata:
-            scene_metadata[room_type["type"]] = {
-                "scenes": [],
-                "name": room_type["name"]
-            }
-
-        scene_metadata[room_type["type"]]["scenes"].append(scene_name)
+        if scene_name in room_type_by_id:
+            room_type = room_type_by_id[scene_name]
+            if room_type["type"] not in scene_metadata:
+                scene_metadata[room_type["type"]] = {
+                    "scenes": [],
+                    "name": room_type["name"]
+                }
+        if scene_name  in room_type_by_id:
+            scene_metadata[room_type["type"]]["scenes"].append(scene_name)
 
     if verbose:
         print(scene_metadata)
@@ -1353,11 +1354,13 @@ def webgl_s3_deploy(ctx, bucket, target_dir, scenes='', verbose=False, all=False
     else:
         room_numbers = [s.strip() for s in scenes.split(",")]
 
+
     if verbose:
         print("Rooms in build: '{}'".format(room_numbers))
 
+    room_numbers = ["1_1", "1_2", "2_1", "2_2"]
     for i in room_numbers:
-        floor_plan_name = "FloorPlan{}_physics".format(i)
+        floor_plan_name = "FloorPlan_RVal{}".format(i)
         if verbose:
             print("Building room '{}'...".format(floor_plan_name))
         target_s3_dir = "{}/{}".format(target_dir, floor_plan_name)
