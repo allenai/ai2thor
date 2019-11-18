@@ -30,6 +30,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		protected static float gridSize = 0.25f;
 		protected float moveMagnitude;
 
+        protected float rotateStepDegrees = 90.0f;
 		protected bool continuousMode;
 		public ImageSynthesis imageSynthesis;
 
@@ -216,9 +217,13 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 
 			// make fov backwards compatible
-			if (action.fov != 60f && action.fieldOfView == 60f) {
+			if (action.fov != 42.5f && action.fieldOfView == 42.5f) {
 				action.fieldOfView = action.fov;
 			}
+
+            if (action.rotateStepDegrees > 0.0) {
+                this.rotateStepDegrees = action.rotateStepDegrees;
+            }
 
 			if (action.fieldOfView > 0 && action.fieldOfView < 180) {
 				m_Camera.fieldOfView = action.fieldOfView;
