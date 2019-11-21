@@ -6383,7 +6383,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             float moveMagnitude,
             int layerMask
             ) {
-            Vector3 center = cc.transform.position;
+            Vector3 center = cc.transform.position + cc.center;//make sure to offset this by cc.center since we shrank the capsule size
             float radius = cc.radius + skinWidth;
             float innerHeight = cc.height / 2.0f - radius;
             Vector3 point1 = new Vector3(startPosition.x, center.y + innerHeight, startPosition.z);
