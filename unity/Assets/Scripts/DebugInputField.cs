@@ -747,6 +747,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     {
                         ServerAction action = new ServerAction();
                         action.action = "GetReachablePositions";
+                        //action.maxStepCount = 10;
                         PhysicsController.ProcessControlCommand(action);
                         Debug.Log(PhysicsController.reachablePositions.Length);
                         break;

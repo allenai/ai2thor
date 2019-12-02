@@ -1044,6 +1044,8 @@ public class ServerAction
     public float minDistance;//used in target circle spawning function
     public float maxDistance;//used in target circle spawning function
 
+    public int maxStepCount;
+
     public SimObjType ReceptableSimObjType()
 	{
 		if (string.IsNullOrEmpty(receptacleObjectType))

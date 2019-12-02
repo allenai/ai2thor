@@ -6785,7 +6785,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
 
-        override public Vector3[] getReachablePositions(float gridMultiplier = 1.0f) {
+        override public Vector3[] getReachablePositions(float gridMultiplier = 1.0f, int maxStepCount = 10000) {
             CapsuleCollider cc = GetComponent<CapsuleCollider>();
 
             float sw = m_CharacterController.skinWidth;
@@ -6852,7 +6852,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         }
                     }
                 }
-                if (stepsTaken > 10000) {
+                if (stepsTaken > maxStepCount) {
                     errorMessage = "Too many steps taken in GetReachablePositions.";
                     break;
                 }
@@ -6867,7 +6867,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         public void GetReachablePositions(ServerAction action) {
-            reachablePositions = getReachablePositions();
+            if(action.maxStepCount != 0) {
+                reachablePositions = getReachablePositions(1.0f, action.maxStepCount);
+            } else {
+                reachablePositions = getReachablePositions();
+            }
+
             if (errorMessage != "") {
                 actionFinished(false);
             } else {
