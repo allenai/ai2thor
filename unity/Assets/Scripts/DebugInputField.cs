@@ -152,10 +152,11 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         //action.continuous = true;//turn on continuous to test multiple emit frames after a single action
 
 						PhysicsController.actionComplete = false;
-                        action.ssao = "default";
+                        //action.ssao = "default";
                         //action.snapToGrid = true;
-                        action.makeAgentsVisible = false;
-                
+                        //action.makeAgentsVisible = false;
+                        action.agentMode = agentMode.Bot;
+
                         action.action = "Initialize";
                         AManager.Initialize(action);
                         // AgentManager am = PhysicsController.gameObject.FindObjectsOfType<AgentManager>()[0];
@@ -332,7 +333,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         action.renderFlowImage = true;
 
 						PhysicsController.actionComplete = false;
-                        action.ssao = "default";
+                        //action.ssao = "default";
 
                         action.action = "Initialize";
                         AManager.Initialize(action);

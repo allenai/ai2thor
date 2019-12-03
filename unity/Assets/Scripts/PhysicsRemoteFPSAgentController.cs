@@ -69,8 +69,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         protected Vector3[] actionVector3sReturn;
         protected string[] actionStringsReturn;
-        [SerializeField] protected Vector3 standingLocalCameraPosition;
-        [SerializeField] protected Vector3 crouchingLocalCameraPosition;
         protected HashSet<int> initiallyDisabledRenderers = new HashSet<int>();
         public Vector3[] reachablePositions = new Vector3[0];
 
@@ -110,9 +108,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 m_CharacterController.Move(movement);
             }
 
-            standingLocalCameraPosition = m_Camera.transform.localPosition;
-            crouchingLocalCameraPosition = m_Camera.transform.localPosition;
-            crouchingLocalCameraPosition.y = 0.0f;
+            //standingLocalCameraPosition = m_Camera.transform.localPosition;
 
             // Recordining initially disabled renderers and scene bounds 
             foreach (Renderer r in GameObject.FindObjectsOfType<Renderer>()) {
@@ -5597,10 +5593,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return standingLocalCameraPosition == m_Camera.transform.localPosition;
         }
 
-        protected void crouch() {
+        protected void crouch() {            
             m_Camera.transform.localPosition = new Vector3(
                 standingLocalCameraPosition.x,
-                0.0f,
+                crouchingLocalCameraPosition.y,
                 standingLocalCameraPosition.z
             );
             SetUpRotationBoxChecks();
@@ -5620,7 +5616,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             } else {
                 m_Camera.transform.localPosition = new Vector3(
                     standingLocalCameraPosition.x,
-                    -0.2911f,
+                    crouchingLocalCameraPosition.y,
                     standingLocalCameraPosition.z
                 );
                 SetUpRotationBoxChecks();
@@ -5683,25 +5679,25 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 }
             }
 
-            ScreenSpaceAmbientOcclusion script = GameObject.Find("FirstPersonCharacter").GetComponent<ScreenSpaceAmbientOcclusion>();
-            if (action.quality == "Low" || action.quality == "Very Low") {
-                script.enabled = false;
-            } else {
-                script.enabled = true;
-            }
+            // ScreenSpaceAmbientOcclusion script = GameObject.Find("FirstPersonCharacter").GetComponent<ScreenSpaceAmbientOcclusion>();
+            // if (action.quality == "Low" || action.quality == "Very Low") {
+            //     script.enabled = false;
+            // } else {
+            //     script.enabled = true;
+            // }
             actionFinished(true);
         }
 
-        public void DisableScreenSpaceAmbientOcclusion(ServerAction action) {
-            ScreenSpaceAmbientOcclusion script = GameObject.Find("FirstPersonCharacter").GetComponent<ScreenSpaceAmbientOcclusion>();
-            script.enabled = false;
-            actionFinished(true);
-        }
+        // public void DisableScreenSpaceAmbientOcclusion(ServerAction action) {
+        //     ScreenSpaceAmbientOcclusion script = GameObject.Find("FirstPersonCharacter").GetComponent<ScreenSpaceAmbientOcclusion>();
+        //     script.enabled = false;
+        //     actionFinished(true);
+        // }
 
-        public void DisableScreenSpaceAmbientOcclusion() {
-            ScreenSpaceAmbientOcclusion script = GameObject.Find("FirstPersonCharacter").GetComponent<ScreenSpaceAmbientOcclusion>();
-            script.enabled = false;
-        }
+        // public void DisableScreenSpaceAmbientOcclusion() {
+        //     ScreenSpaceAmbientOcclusion script = GameObject.Find("FirstPersonCharacter").GetComponent<ScreenSpaceAmbientOcclusion>();
+        //     script.enabled = false;
+        // }
 
         public void ChangeTimeScale(ServerAction action) {
             if (action.timeScale > 0) {
