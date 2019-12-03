@@ -294,14 +294,14 @@ public class PhysicsSceneManager : MonoBehaviour
     //set forceVisible to true for if you want objects to only spawn in immediately visible receptacles.
     public bool RandomSpawnRequiredSceneObjects(ServerAction action)
 	{
-        return RandomSpawnRequiredSceneObjects(action.randomSeed, action.forceVisible, action.numPlacementAttempts, action.placeStationary, action.numRepeats, action.minFreePerReceptacleType);
+        return RandomSpawnRequiredSceneObjects(action.randomSeed, action.forceVisible, action.numPlacementAttempts, action.placeStationary, action.numDuplicatesOfType, action.excludedReceptacles);
 	}
 
-	//if no values passed in, default to system random based on ticks
-	public void RandomSpawnRequiredSceneObjects()
-	{
-		RandomSpawnRequiredSceneObjects(System.Environment.TickCount, false, 50, false, null, null);
-	}
+	// //a default in case no ServerAction is passed in? Probably don't need
+	// public void RandomSpawnRequiredSceneObjects()
+	// {
+	// 	RandomSpawnRequiredSceneObjects(System.Environment.TickCount, false, 50, false, null, null);
+	// }
 
 	//place each object in the array of objects that should appear in this scene randomly in valid receptacles
 	//a seed of 0 is the default positions placed by hand(?)
@@ -310,8 +310,8 @@ public class PhysicsSceneManager : MonoBehaviour
 		bool SpawnOnlyOutside,
 		int maxPlacementAttempts,
 		bool StaticPlacement,
-        ObjectTypeCount[] numRepeats,
-        ObjectTypeCount[] emptyReceptacleSpots
+        ObjectTypeCount[] numDuplicatesOfType,
+        ObjectTypeCount[] excludedReceptacles
     )
     {
 		#if UNITY_EDITOR
@@ -342,83 +342,99 @@ public class PhysicsSceneManager : MonoBehaviour
 
             Dictionary<SimObjType, List<SimObjPhysics>> typeToObjectList = new Dictionary<SimObjType, List<SimObjPhysics>>();
 
-            List<GameObject> simObjectCopies = new List<GameObject>();
-            List<GameObject> unduplicatedSimObjects = new List<GameObject>();
-            Dictionary<SimObjType, int> requestedNumRepeats = new Dictionary<SimObjType, int>();
-            Dictionary<SimObjType, int> minFreePerReceptacleType = new Dictionary<SimObjType, int>();
+            Dictionary<SimObjType, int> requestednumDuplicatesOfType = new Dictionary<SimObjType, int>();
+            List<SimObjType> listOfExcludedReceptacles = new List<SimObjType>();
             HashSet<GameObject> originalObjects = new HashSet<GameObject>(SpawnedObjects);
 
-            if (numRepeats == null)
+            if (numDuplicatesOfType == null)
             {
-                numRepeats = new ObjectTypeCount[0];
+                numDuplicatesOfType = new ObjectTypeCount[0];
             }
-            foreach (ObjectTypeCount repeatCount in numRepeats)
+            foreach (ObjectTypeCount repeatCount in numDuplicatesOfType)
             {
                 SimObjType objType = (SimObjType)System.Enum.Parse(typeof(SimObjType), repeatCount.objectType);
-                requestedNumRepeats[objType] = repeatCount.count;
+                requestednumDuplicatesOfType[objType] = repeatCount.count;
             }
 
-            if (emptyReceptacleSpots == null)
+            if (excludedReceptacles == null)
             {
-                emptyReceptacleSpots = new ObjectTypeCount[0];
+                excludedReceptacles = new ObjectTypeCount[0];
             }
-            foreach (ObjectTypeCount emptyReceptacleSpot in emptyReceptacleSpots)
+            foreach (ObjectTypeCount receptacleType in excludedReceptacles)
             {
-                SimObjType objType = (SimObjType)System.Enum.Parse(typeof(SimObjType), emptyReceptacleSpot.objectType);
-                minFreePerReceptacleType[objType] = emptyReceptacleSpot.count;
+                //print(receptacleType.objectType + " should be excluded");
+                SimObjType objType = (SimObjType)System.Enum.Parse(typeof(SimObjType), receptacleType.objectType);
+                listOfExcludedReceptacles.Add(objType);
             }
 
+            //now lets go through all pickupable sim objects that are in the current scene
             foreach (GameObject go in SpawnedObjects)
             {
-                SimObjPhysics gop = null;
-                gop = go.GetComponent<SimObjPhysics>();
-                if (!typeToObjectList.ContainsKey(gop.ObjType))
+                SimObjPhysics sop = null;
+                sop = go.GetComponent<SimObjPhysics>();
+
+                //add object types in the current scene to the typeToObjectList if not already on it
+                if (!typeToObjectList.ContainsKey(sop.ObjType))
                 {
-                    typeToObjectList[gop.ObjType] = new List<SimObjPhysics>();
+                    typeToObjectList[sop.ObjType] = new List<SimObjPhysics>();
                 }
-                if (!requestedNumRepeats.ContainsKey(gop.ObjType) ||
-                    (typeToObjectList[gop.ObjType].Count < requestedNumRepeats[gop.ObjType]))
+
+                //Add this sim object to the list if the sim object's type matches the key in typeToObjectList
+                if (!requestednumDuplicatesOfType.ContainsKey(sop.ObjType) ||
+                    (typeToObjectList[sop.ObjType].Count < requestednumDuplicatesOfType[sop.ObjType]))
                 {
-                    typeToObjectList[gop.ObjType].Add(gop);
+                    typeToObjectList[sop.ObjType].Add(sop);
                 }
             }
 
+            //keep track of the sim objects we are making duplicates of
+            List<GameObject> simObjectDuplicates = new List<GameObject>();
+            //keep track of the sim objects that have not been duplicated
+            List<GameObject> unduplicatedSimObjects = new List<GameObject>();
+
+            //ok now lets go through each object type in the dictionary
             foreach (SimObjType sopType in typeToObjectList.Keys)
             {
-                if (requestedNumRepeats.ContainsKey(sopType) &&
-                    requestedNumRepeats[sopType] > typeToObjectList[sopType].Count)
+                //we found a matching SimObjType and the requested count of duplicates is bigger than how many of that
+                //object are currently in the scene
+                if (requestednumDuplicatesOfType.ContainsKey(sopType) &&
+                    requestednumDuplicatesOfType[sopType] > typeToObjectList[sopType].Count)
                 {
-                    foreach (SimObjPhysics gop in typeToObjectList[sopType])
+                    foreach (SimObjPhysics sop in typeToObjectList[sopType])
                     {
-                        simObjectCopies.Add(gop.gameObject);
+                        simObjectDuplicates.Add(sop.gameObject);
                     }
-                    int numExtra = requestedNumRepeats[sopType] - typeToObjectList[sopType].Count;
 
+                    int numExtra = requestednumDuplicatesOfType[sopType] - typeToObjectList[sopType].Count;
+
+                    //let's instantiate the duplicates now
                     for (int j = 0; j < numExtra; j++)
                     {
-                        // Add a copy of the item.
-                        SimObjPhysics gop = typeToObjectList[sopType][UnityEngine.Random.Range(0, typeToObjectList[sopType].Count - 1)];
-                        SimObjPhysics copy = Instantiate(gop);
+                        // Add a copy of the item to try and match the requested number of duplicates
+                        SimObjPhysics sop = typeToObjectList[sopType][UnityEngine.Random.Range(0, typeToObjectList[sopType].Count - 1)];
+                        SimObjPhysics copy = Instantiate(sop);
                         copy.name += "_random_copy_" + j;
-                        copy.ObjectID = gop.ObjectID + "_copy_" + j;
+                        copy.ObjectID = sop.ObjectID + "_copy_" + j;
                         copy.objectID = copy.ObjectID;
-                        simObjectCopies.Add(copy.gameObject);
+                        simObjectDuplicates.Add(copy.gameObject);
                     }
                 }
 
+                //this object is not one that needs duplicates, so just add it to the unduplicatedSimObjects list
                 else
                 {
-                    foreach (SimObjPhysics gop in typeToObjectList[sopType])
+                    foreach (SimObjPhysics sop in typeToObjectList[sopType])
                     {
-                        unduplicatedSimObjects.Add(gop.gameObject);
+                        unduplicatedSimObjects.Add(sop.gameObject);
                     }
                 }
             }
 
             unduplicatedSimObjects.Shuffle_(seed);
-            simObjectCopies.AddRange(unduplicatedSimObjects);
+            simObjectDuplicates.AddRange(unduplicatedSimObjects);
 
-            foreach (GameObject go in simObjectCopies)
+            //ok now simObjectDuplicates should have all the game objects, duplicated and unduplicated
+            foreach (GameObject go in simObjectDuplicates)
 			{
 				AllowedToSpawnInAndExistsInScene = new Dictionary<SimObjType, List<SimObjPhysics>>();
 
@@ -485,6 +501,12 @@ public class PhysicsSceneManager : MonoBehaviour
 					bool spawned = false;
 					foreach(SimObjPhysics sop in ShuffleSimObjPhysicsDictList(AllowedToSpawnInAndExistsInScene, seed))
 					{
+                        //if the receptacle, sop, is in the list of receptacles to exclude, skip over it and try the other Receptacles
+                        if(listOfExcludedReceptacles.Contains(sop.Type))
+                        {
+                            continue;
+                        }
+
 						//check if the target Receptacle is an ObjectSpecificReceptacle
 						//if so, if this game object is compatible with the ObjectSpecific restrictions, place it!
 						//this is specifically for things like spawning a mug inside a coffee maker
@@ -546,7 +568,7 @@ public class PhysicsSceneManager : MonoBehaviour
 						//first shuffle the list so it's raaaandom
 						targetReceptacleSpawnPoints.Shuffle_(seed);
 
-                        if (spawner.PlaceObjectReceptacle(targetReceptacleSpawnPoints, go.GetComponent<SimObjPhysics>(), StaticPlacement, maxPlacementAttempts, 90, true, minFreePerReceptacleType))
+                        if (spawner.PlaceObjectReceptacle(targetReceptacleSpawnPoints, go.GetComponent<SimObjPhysics>(), StaticPlacement, maxPlacementAttempts, 90, true))
                         {
                             HowManyCouldntSpawn--;
 							spawned = true;

@@ -574,6 +574,19 @@ namespace UnityStandardAssets.Characters.FirstPerson
                             action.numPlacementAttempts = 5;
                         }
 
+                        // ObjectTypeCount otc = new ObjectTypeCount();
+                        // otc.objectType = "Mug";
+                        // otc.count = 20;
+                        // ObjectTypeCount[] count = new ObjectTypeCount[1];
+                        // count[0] = otc;
+                        // action.numDuplicatesOfType = count;
+
+                        ObjectTypeCount exclude = new ObjectTypeCount();
+                        exclude.objectType = "SinkBasin";
+                        ObjectTypeCount[] excludeThese = new ObjectTypeCount[1];
+                        excludeThese[0] = exclude;
+                        action.excludedReceptacles = excludeThese;
+
                         action.placeStationary = true;//set to false to spawn with kinematic = false, set to true to spawn everything kinematic true and they won't roll around
                         PhysicsController.ProcessControlCommand(action);
 

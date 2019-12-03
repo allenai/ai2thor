@@ -886,8 +886,8 @@ public class HandMetadata {
 [Serializable]
 public class ObjectTypeCount
 {
-    public string objectType;
-    public int count;
+    public string objectType; //specify object by type in scene
+    public int count; //the total count of objects of type objectType that we will try to make exist in the scene
 }
 
 [Serializable]
@@ -1036,8 +1036,10 @@ public class ServerAction
     public float mass;
     public float drag;
     public float angularDrag;
-    public ObjectTypeCount[] numRepeats;
-    public ObjectTypeCount[] minFreePerReceptacleType;
+    public ObjectTypeCount[] numDuplicatesOfType; //specify, by object Type, how many duplicates of that given object type to try and spawn
+    
+    //use only the objectType class member to specify which receptacle objects should be excluded from the valid receptacles to spawn objects in
+    public ObjectTypeCount[] excludedReceptacles; 
     public ObjectPose[] objectPoses;
     public SetObjectStates SetObjectStates;
 

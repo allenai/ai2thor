@@ -3551,7 +3551,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 //only place in viewport
                 if(!action.anywhere)
                 {
-                    if(ipt.PlaceObjectReceptacleInViewport(rsps, targetCircle.GetComponent<SimObjPhysics>(), true, 500, 90, true, null))
+                    if(ipt.PlaceObjectReceptacleInViewport(rsps, targetCircle.GetComponent<SimObjPhysics>(), true, 500, 90, true))
                     {
                         //make sure target circle is within viewport
                         succesfulSpawn = true;
@@ -3561,7 +3561,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 //place anywhere
                 else
                 {
-                    if(ipt.PlaceObjectReceptacle(rsps, targetCircle.GetComponent<SimObjPhysics>(), true, 500, 90, true, null))
+                    if(ipt.PlaceObjectReceptacle(rsps, targetCircle.GetComponent<SimObjPhysics>(), true, 500, 90, true))
                     {
                         //make sure target circle is within viewport
                         succesfulSpawn = true;
@@ -3635,8 +3635,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 action.forceVisible,
                 action.numPlacementAttempts,
                 action.placeStationary,
-                action.numRepeats,
-                action.minFreePerReceptacleType
+                action.numDuplicatesOfType,
+                action.excludedReceptacles
                 );
             physicsSceneManager.ResetObjectIdToSimObjPhysics();
             actionFinished(success);
@@ -4233,7 +4233,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 randomizedSpawnPoints.Shuffle_(action.randomSeed);
                 spawnPoints = randomizedSpawnPoints;
             }
-            if (script.PlaceObjectReceptacle(spawnPoints, ItemInHand.GetComponent<SimObjPhysics>(), action.placeStationary, -1, 90, placeUpright, null)) {
+            if (script.PlaceObjectReceptacle(spawnPoints, ItemInHand.GetComponent<SimObjPhysics>(), action.placeStationary, -1, 90, placeUpright)) {
                 ItemInHand = null;
                 DefaultAgentHand();
                 actionFinished(true);
