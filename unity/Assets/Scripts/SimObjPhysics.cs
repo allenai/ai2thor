@@ -745,10 +745,10 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
             Debug.LogError(this.name + " is not at uniform scale! Set scale to (1, 1, 1)!!!");
         }
 
-        // if(BoundingBox == null)
-        // {
-        //     Debug.LogError(this.name + "AAAAAAAHHH NO BOX");
-        // }
+        if(BoundingBox == null)
+        {
+            Debug.LogError(this.name + "AAAAAAAHHH NO BOX");
+        }
 #endif
 		//end debug setup stuff
 
@@ -1045,10 +1045,24 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
         GameObject bb = new GameObject("BoundingBox");
         bb.transform.position = gameObject.transform.position;
         bb.transform.SetParent(gameObject.transform);
+        //bb.transform.localRotation = Quaternion.identity;//zero out rotation?
         bb.AddComponent<BoxCollider>();
         bb.GetComponent<BoxCollider>().enabled = false;
         bb.tag = "Untagged";
         bb.layer = 9;
+
+        //add box collider to the First mesh renderer found on the object i guess
+        MeshRenderer mr = this.GetComponentInChildren<MeshRenderer>();
+        BoxCollider tempBox = mr.transform.gameObject.AddComponent<BoxCollider>();
+
+        bb.transform.localPosition = mr.transform.localPosition;//move it so it's in line with the mesh?
+        bb.transform.localRotation = mr.transform.localRotation;
+
+        BoxCollider thisbox = bb.GetComponent<BoxCollider>();
+        thisbox.size = tempBox.size * 1.05f;//+ new Vector3(0.1f, 0.1f, 0.1f);
+        thisbox.center = tempBox.center;
+        DestroyImmediate(tempBox);
+
 
         BoundingBox = bb;
     }

@@ -390,6 +390,8 @@ public class CanOpen_Object : MonoBehaviour
 
     private void SwitchActiveBoundingBox()
     {
+        //some things that open and close don't need to switch bounding boxes- drawers for example, only things like
+        //cabinets that are not self contained need to switch between open/close bounding box references (ie: books, cabinets, microwave, etc)
         if(OpenBoundingBox == null || ClosedBoundingBox == null)
         {
             return;
