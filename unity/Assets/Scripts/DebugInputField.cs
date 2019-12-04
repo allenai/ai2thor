@@ -165,21 +165,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         break;
                     }
 
-                case "ssbot":
-                    {
-                        ServerAction action = new ServerAction();
-                        action.action = "SetStatesByObjectType";
-                        SetObjectStates obj1 = new SetObjectStates();
-
-                        obj1.objectType = "Toaster";
-                        obj1.isToggled = true;
-
-                        action.SetObjectStates = obj1;
-
-                        PhysicsController.ProcessControlCommand(action);
-                        break;
-                    } 
-
                 case "spawnabove":
                     {
                         ServerAction action = new ServerAction();
@@ -307,54 +292,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }
-
-                //random toggle state of all objects
-                case "rts":
-                    {
-                        ServerAction action = new ServerAction();
-
-                        action.randomSeed = 0;
-                        action.action = "RandomToggleStateOfAllObjects";
-                        PhysicsController.ProcessControlCommand(action);
-                        break;
-                    }
-
-                case "rtss":
-                    {
-                        ServerAction action = new ServerAction();
-
-                        action.randomSeed = 0;
-                        action.StateChange = "CanOpen";
-                        action.action = "RandomToggleSpecificState";
-                        PhysicsController.ProcessControlCommand(action);
-                        break;
-                    }
-
-                //set state of all objects that have a state
-                case "ssa":
-                {
-                    ServerAction action = new ServerAction();
-
-                    action.StateChange = "CanBeDirty";
-                    action.forceAction = true;
-                    action.action = "SetStateOfAllObjects";
-
-                    if (splitcommand.Length > 1) 
-                    {
-                    if(splitcommand[1] == "t")
-                    {
-                        action.forceAction = true;
-                    }
-
-                    if(splitcommand[1] == "f")
-                    {
-                        action.forceAction = false;
-                    }
-                    }
-                    PhysicsController.ProcessControlCommand(action);
-                        
-                    break;
-                }
 
                 case "initsynth":
                     {
