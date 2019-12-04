@@ -111,9 +111,7 @@ public class AgentManager : MonoBehaviour
             primaryAgent.Start();
             this.agents.Add(primaryAgent);
         }
-
-
-
+        
 		primaryAgent.ProcessControlCommand (action);
 		primaryAgent.IsVisible = action.makeAgentsVisible;
 		this.renderClassImage = action.renderClassImage;
@@ -181,7 +179,7 @@ public class AgentManager : MonoBehaviour
 		Vector3 clonePosition = new Vector3(action.x, action.y, action.z);
 
 		//disable ambient occlusion on primary agetn because it causes issues with multiple main cameras
-		primaryAgent.GetComponent<PhysicsRemoteFPSAgentController>().DisableScreenSpaceAmbientOcclusion();
+		//primaryAgent.GetComponent<PhysicsRemoteFPSAgentController>().DisableScreenSpaceAmbientOcclusion();
 
 		BaseFPSAgentController clone = UnityEngine.Object.Instantiate (primaryAgent);
 		clone.IsVisible = action.makeAgentsVisible;
@@ -858,6 +856,10 @@ public class ObjectToggle
 }
 
 [Serializable]
+public enum agentMode : int {Tall, Bot};//different modes for the FPSController to be initialized into
+
+
+[Serializable]
 public struct MetadataWrapper
 {
 	public ObjectMetadata[] objects;
@@ -909,6 +911,7 @@ public struct MetadataWrapper
 public class ServerAction
 {
 	public string action;
+    public agentMode agentMode = agentMode.Tall; //default to Tall version of Agent
 	public int agentCount = 1;
 	public string quality;
 	public bool makeAgentsVisible = true;
@@ -923,7 +926,7 @@ public class ServerAction
 	public int agentId;
 	public int thirdPartyCameraId;
 	public float y;
-	public float fieldOfView = 60f;
+	public float fieldOfView = 42.5f;
 	public float x;
 	public float z;
     public float pushAngle;
@@ -934,8 +937,14 @@ public class ServerAction
     public float handDistance;//used for max distance agent's hand can move
 	public List<Vector3> positions = null;
 	public bool standing = true;
-	public float fov = 60.0f;
+	public float fov = 42.5f;
 	public bool forceAction;
+    public bool applyActionNoise = true;
+    public float movementGaussianMu;
+    public float movementGaussianSigma;
+    public float rotateGaussianMu;
+    public float rotateGaussianSigma;
+
 
 	public bool forceKinematic;
 
@@ -966,7 +975,7 @@ public class ServerAction
     public bool renderFlowImage;
 	public float cameraY;
 	public bool placeStationary = true; //when placing/spawning an object, do we spawn it stationary (kinematic true) or spawn and let physics resolve final position
-	public string ssao = "default";
+	//public string ssao = "default";
 	public string fillLiquid; //string to indicate what kind of liquid this object should be filled with. Water, Coffee, Wine etc.
 	public float TimeUntilRoomTemp;
 	public bool allowDecayTemperature = true; //set to true if temperature should decay over time, set to false if temp changes should not decay, defaulted true
