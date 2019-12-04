@@ -143,9 +143,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
                             action.makeAgentsVisible = int.Parse(splitcommand[3]) == 1;
                         }
 
-                        action.rotateStepDegrees = 45;
-                        action.agentType = "stochastic";
-
                         // action.renderNormalsImage = true;
                         // action.renderDepthImage = true;
                         // action.renderClassImage = true;
@@ -1917,8 +1914,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }
-                    // Re-enable when navmesh shortest path is set up
-                    /* 
+                    // Will fail if navmeshes are not setup
                     case "shortest_path":
                     {
                         ServerAction action = new ServerAction();
@@ -1945,7 +1941,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }
-                    */
 
                     case "get_object_type_ids":
                     {
