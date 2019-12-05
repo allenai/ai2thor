@@ -645,6 +645,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
 
+        // On demand public function for getting what sim objects are visible at that moment 
         public List<SimObjPhysics> GetAllVisibleSimObjPhysics(float maxDistance) {
             List<SimObjPhysics> currentlyVisibleItems = new List<SimObjPhysics>();
 
