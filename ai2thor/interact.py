@@ -102,50 +102,17 @@ class InteractiveControllerPrompt(object):
                     cc['counter'] += 1
 
             event = controller.step(a)
-            # check inventory
             visible_objects = []
-            frame_writes = [
-                ('color',
-                 color_frame,
-                 lambda event: event.frame,
-                 lambda x: x
-                 ),
-                ('instance_segmentation',
-                 instance_segmentation_frame,
-                 lambda event: event.instance_segmentation_frame,
-                 lambda x: x
-                 ),
-                ('class_segmentation',
-                 class_segmentation_frame,
-                 lambda event: event.class_segmentation_frame,
-                 lambda x: x
-                 ),
-                ('depth',
-                 depth_frame,
-                 lambda event: event.depth_frame,
-                 lambda data: (255.0 / data.max() * (data - data.min())).astype(np.uint8)
-                 )
-            ]
-
-            for frame_filename, condition, frame_func, transform in frame_writes:
-                frame = frame_func(event)
-                if frame is not None:
-                    frame = transform(frame)
-                    im = Image.fromarray(frame)
-                    image_name = os.path.join(
-                            self.image_dir,
-                            "{}{}.jpeg"
-                                .format(
-                                    frame_filename,
-                                    "{}".format(self.counter) if self.image_per_frame else ""
-                                )
-                        )
-                    print("Image {}".format(image_name))
-                    im.save(
-                        image_name
-                    )
-                else:
-                    print("No frame present, call initialize with the right parameters")
+            InteractiveControllerPrompt.write_image(
+                event,
+                self.image_dir,
+                self.counter,
+                image_per_frame=self.image_per_frame,
+                class_segmentation_frame=class_segmentation_frame,
+                instance_segmentation_frame=instance_segmentation_frame,
+                color_frame=color_frame,
+                depth_frame=depth_frame
+            )
 
             self.counter += 1
             if self.has_object_actions:
@@ -179,6 +146,7 @@ class InteractiveControllerPrompt(object):
             self._interact_commands = default_interact_commands.copy()
             self._interact_commands.update(new_commands)
 
+            print("Position: {}".format(event.metadata['agent']['position']))
             print(command_message)
             print("Visible Objects:\n" + "\n".join(sorted(visible_objects)))
 
@@ -216,3 +184,60 @@ class InteractiveControllerPrompt(object):
 
                 if not match:
                     current_buffer = ''
+
+    @classmethod
+    def write_image(
+            cls,
+            event,
+            image_dir,
+            suffix,
+            image_per_frame=False,
+            class_segmentation_frame=False,
+            instance_segmentation_frame=False,
+            depth_frame=False,
+            color_frame=False):
+        visible_objects = []
+        from pprint import pprint
+        #pprint(event.me)
+        frame_writes = [
+            ('color',
+             color_frame,
+             lambda event: event.frame,
+             lambda x: x
+             ),
+            ('instance_segmentation',
+             instance_segmentation_frame,
+             lambda event: event.instance_segmentation_frame,
+             lambda x: x
+             ),
+            ('class_segmentation',
+             class_segmentation_frame,
+             lambda event: event.class_segmentation_frame,
+             lambda x: x
+             ),
+            ('depth',
+             depth_frame,
+             lambda event: event.depth_frame,
+             lambda data: (255.0 / data.max() * (data - data.min())).astype(np.uint8)
+             )
+        ]
+
+        for frame_filename, condition, frame_func, transform in frame_writes:
+            frame = frame_func(event)
+            if frame is not None:
+                frame = transform(frame)
+                im = Image.fromarray(frame)
+                image_name = os.path.join(
+                    image_dir,
+                    "{}{}.jpeg"
+                        .format(
+                        frame_filename,
+                        "{}".format(suffix) if image_per_frame else ""
+                    )
+                )
+                print("Image {}".format(image_name))
+                im.save(
+                    image_name
+                )
+            else:
+                print("No frame present, call initialize with the right parameters")

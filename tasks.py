@@ -785,7 +785,7 @@ def interact(
     scene,
     editor_mode=False,
     local_build=False,
-    color_image=False,
+    image=False,
     depth_image=False,
     class_image=False,
     object_image=False,
@@ -804,6 +804,11 @@ def interact(
             image_dir=image_directory,
             save_image_per_frame=True
         )
+
+    if image_directory != '.':
+        if os.path.exists(image_directory):
+            shutil.rmtree(image_directory)
+        os.makedirs(image_directory)
 
     if local_build:
         print("Executing from local build at {} ".format( _local_build_path()))
@@ -825,7 +830,7 @@ def interact(
         )
 
     env.reset(scene)
-    env.step(
+    initialize_event = env.step(
         dict(
             action="Initialize",
             gridSize=0.25,
@@ -834,11 +839,24 @@ def interact(
             renderDepthImage=depth_image
         )
     )
+
+    from ai2thor.interact import InteractiveControllerPrompt
+    InteractiveControllerPrompt.write_image(
+        initialize_event,
+        image_directory,
+        '_init',
+        image_per_frame=True,
+        class_segmentation_frame=class_image,
+        instance_segmentation_frame=object_image,
+        color_frame=image,
+        depth_frame=depth_image
+    )
+
     env.interact(
         class_segmentation_frame=class_image,
         instance_segmentation_frame=object_image,
         depth_frame=depth_image,
-        color_frame=color_image
+        color_frame=image
     )
     env.stop()
 
