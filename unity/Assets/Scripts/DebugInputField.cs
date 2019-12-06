@@ -68,8 +68,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
         void InitializeUserControl()
         {
-            Agent = GameObject.Find("FPSController");
-            PhysicsController = Agent.GetComponent<PhysicsRemoteFPSAgentController>();
+            GameObject fpsController = GameObject.FindObjectOfType<BaseFPSAgentController>().gameObject;
+            PhysicsController = fpsController.GetComponent<PhysicsRemoteFPSAgentController>();
+            Agent = PhysicsController.gameObject;
             AManager = GameObject.Find("PhysicsSceneManager").GetComponentInChildren<AgentManager>();
             
            SelectPlayerControl();
@@ -93,6 +94,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         }
                     }
                 }
+
             #endif
         }
 
@@ -151,7 +153,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         //action.continuous = true;//turn on continuous to test multiple emit frames after a single action
 
 						PhysicsController.actionComplete = false;
-                        action.ssao = "default";
+                        //action.ssao = "default";
+                        //action.snapToGrid = true;
+                        //action.makeAgentsVisible = false;
+                        action.agentMode = agentMode.Bot;
 
                         action.action = "Initialize";
                         AManager.Initialize(action);
@@ -161,6 +166,23 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         // AgentManager am = physicsSceneManager.GetComponent<AgentManager>();
                         // Debug.Log(am);
       			        // am.Initialize(action);
+                        break;
+                    }
+
+                case "rad":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "SetAgentRadius";
+                        action.agentRadius = 0.35f;
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
+                case "color":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "ChangeColorOfMaterials";
+                        PhysicsController.ProcessControlCommand(action);
                         break;
                     }
 
@@ -262,6 +284,19 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         break;
                     }
 
+                case "l":
+                {
+                    ServerAction action = new ServerAction();
+                    action.action = "ChangeLightSet";
+                    if(splitcommand.Length == 2)
+                    {
+                        action.objectVariation = int.Parse(splitcommand[1]);
+                    }
+
+                    PhysicsController.ProcessControlCommand(action);
+                    break;
+                }
+
                 //set state of all objects that have a state
                 case "ssa":
                 {
@@ -299,7 +334,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         action.renderFlowImage = true;
 
 						PhysicsController.actionComplete = false;
-                        action.ssao = "default";
+                        //action.ssao = "default";
 
                         action.action = "Initialize";
                         AManager.Initialize(action);
@@ -1878,6 +1913,46 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         }
 
                         PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+                    // Will fail if navmeshes are not setup
+                    case "shortest_path":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "GetShortestPath";
+
+                        //pass in a min range, max range, delay
+                        if (splitcommand.Length > 1)
+                        {
+                            //ID of spawner
+                            action.objectId = splitcommand[1];
+
+                            if (splitcommand.Length == 5) {
+                                action.position = new Vector3(
+                                    float.Parse(splitcommand[2]),
+                                    float.Parse(splitcommand[3]), 
+                                    float.Parse(splitcommand[4])
+                                );
+                            }
+                            else {
+                                action.useAgentTransform = true;
+                            }
+                        }
+
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
+                    case "get_object_type_ids":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "ObjectTypeToObjectIds";
+                        if (splitcommand.Length > 1)
+                        {
+                            action.objectType = splitcommand[1];
+                        }
+
+                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }
 

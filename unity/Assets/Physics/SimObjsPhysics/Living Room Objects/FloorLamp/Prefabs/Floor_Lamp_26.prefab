@@ -1131,16 +1131,67 @@ MonoBehaviour:
   - {fileID: 4166069288781900}
   - {fileID: 4230256418923844}
   - {fileID: 4525553060621452}
+  - {fileID: 1835082967571629746}
   ReceptacleTriggerBoxes: []
   isVisible: 0
   isInteractable: 0
-  isColliding: 0
-  MyColliders: []
+  isInAgentHand: 0
+  MyColliders:
+  - {fileID: 65873420420966808}
+  - {fileID: 65460494107728960}
+  - {fileID: 65067359644204150}
+  - {fileID: 65755817105573326}
+  - {fileID: 65293528951168938}
+  - {fileID: 65888070694683770}
+  - {fileID: 65843270856043376}
+  - {fileID: 65113715107785104}
+  - {fileID: 65174529989755066}
+  - {fileID: 65883674726095236}
+  - {fileID: 65580562466679866}
+  - {fileID: 65549749241688608}
+  - {fileID: 65637297989483860}
+  - {fileID: 65866333594262450}
+  - {fileID: 65029751620426508}
+  - {fileID: 65522779815272922}
+  - {fileID: 65529939689767860}
+  - {fileID: 65303524789673916}
+  - {fileID: 65892551992140642}
+  - {fileID: 65045280687850404}
+  - {fileID: 65027440876184608}
+  - {fileID: 65148632109041268}
+  - {fileID: 65791432795283474}
+  - {fileID: 65834588175033010}
+  - {fileID: 65868141035638804}
+  - {fileID: 65574573044505226}
+  - {fileID: 65860282595539196}
+  - {fileID: 65286556921644662}
+  - {fileID: 65625914338336694}
+  - {fileID: 65416874426737896}
+  - {fileID: 65787191310881054}
+  - {fileID: 65498067883984566}
+  - {fileID: 65480689541327892}
+  - {fileID: 65749113037287248}
+  - {fileID: 65489870305562346}
+  - {fileID: 136386493124021600}
+  - {fileID: 65845375969885080}
+  - {fileID: 65205295247431706}
+  - {fileID: 65114451911408922}
+  - {fileID: 136143480885973030}
+  - {fileID: 65411549345315566}
+  - {fileID: 65949437841419846}
+  - {fileID: 65067572331453028}
+  - {fileID: 65552604119574538}
   HFdynamicfriction: 0
   HFstaticfriction: 0
   HFbounciness: 0
   HFrbdrag: 0
   HFrbangulardrag: 0
+  salientMaterials: 
+  CurrentTemperature: 0
+  HowManySecondsUntilRoomTemp: 10
+  inMotion: 0
+  lastVelocity: 0
+  ContainedObjectReferences: []
 --- !u!54 &54608505359304324
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -1189,6 +1240,8 @@ MonoBehaviour:
   animationTime: 0.05
   isOn: 1
   movementType: 0
+  SelfControlled: 1
+  ControlledSimObjects: []
 --- !u!1 &1232394895239172
 GameObject:
   m_ObjectHideFlags: 0
@@ -3022,7 +3075,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1571050208083206}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0.20957947, y: 1.3771992, z: -0.064631}
+  m_LocalPosition: {x: 0.21, y: 1.3771992, z: 0.0683}
   m_LocalScale: {x: 0.21471, y: 0.10284, z: 0.034988504}
   m_Children: []
   m_Father: {fileID: 4594026926765312}
@@ -3200,7 +3253,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1623304916078822}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -0.20800018, y: 1.3771992, z: -0.064631}
+  m_LocalPosition: {x: -0.20757975, y: 1.3771992, z: 0.06830006}
   m_LocalScale: {x: 0.21471, y: 0.10284, z: 0.034988504}
   m_Children: []
   m_Father: {fileID: 4594026926765312}
@@ -4935,6 +4988,7 @@ Transform:
   - {fileID: 4166069288781900}
   - {fileID: 4230256418923844}
   - {fileID: 4525553060621452}
+  - {fileID: 1835082967571629746}
   m_Father: {fileID: 4379814836205164}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -5258,3 +5312,33 @@ Light:
   m_UseColorTemperature: 0
   m_ShadowRadius: 0
   m_ShadowAngle: 0
+--- !u!1 &3609064462435301671
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1835082967571629746}
+  m_Layer: 8
+  m_Name: vPoint (70)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1835082967571629746
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3609064462435301671}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0.001, y: 1.3771992, z: -0.062}
+  m_LocalScale: {x: 0.10284, y: 0.10284, z: 0.034988504}
+  m_Children: []
+  m_Father: {fileID: 4594026926765312}
+  m_RootOrder: 28
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}

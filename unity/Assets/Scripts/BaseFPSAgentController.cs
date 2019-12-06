@@ -3,11 +3,14 @@ using System;
 using System.IO;
 using System.Collections;
 using System.Collections.Generic;
+using System.Reflection;
 using UnityStandardAssets.CrossPlatformInput;
 using UnityStandardAssets.Utility;
 using UnityEngine;
 using Random = UnityEngine.Random;
 using UnityStandardAssets.ImageEffects;
+using System.Linq;
+using UnityEngine.Rendering.PostProcessing;
 
 namespace UnityStandardAssets.Characters.FirstPerson
 {
@@ -28,29 +31,50 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		protected static float gridSize = 0.25f;
 		protected float moveMagnitude;
 
+        protected float rotateStepDegrees = 90.0f;
 		protected bool continuousMode;
 		public ImageSynthesis imageSynthesis;
 
-		private List<Renderer> capsuleRenderers = null;
+		//private List<Renderer> capsuleRenderers = null;
 
+        public GameObject VisibilityCapsule = null;
+        public GameObject TallVisCap;
+        public GameObject BotVisCap;
+        public agentMode currentAgentMode = agentMode.Tall;
         private bool isVisible = true;
         public bool IsVisible
         {
 			get { return isVisible; }
 			set {
-				if (capsuleRenderers == null) {
-					GameObject visCapsule = this.transform.Find ("VisibilityCapsule").gameObject;
-					capsuleRenderers = new List<Renderer>();
-					foreach (Renderer r in visCapsule.GetComponentsInChildren<Renderer>()) {
-						if (r.enabled) {
-							capsuleRenderers.Add(r);
-						}
-					}
-				}
-				// DO NOT DISABLE THE VIS CAPSULE, instead disable the renderers below.
-				foreach (Renderer r in capsuleRenderers) {
-					r.enabled = value;
-				}
+                //first default all Vis capsules of all modes to not enabled
+                foreach(Renderer r in TallVisCap.GetComponentsInChildren<Renderer>())
+                {
+                    if(r.enabled)
+                    {
+                        r.enabled = false;
+                    }
+                }
+
+                foreach(Renderer r in BotVisCap.GetComponentsInChildren<Renderer>())
+                {
+                    if(r.enabled)
+                    {
+                        r.enabled = false;
+                    }
+                }
+
+                //The VisibilityCapsule will be set to either Tall or Bot 
+                //from the SetAgentMode call in BaseFPSAgentController's Initialize()
+                //capsuleRenderers = new List<Renderer>();
+                foreach (Renderer r in VisibilityCapsule.GetComponentsInChildren<Renderer>()) 
+                {
+                    r.enabled = value;
+                }
+				
+				// // DO NOT DISABLE THE VIS CAPSULE, instead disable the renderers below.
+				// foreach (Renderer r in capsuleRenderers) {
+				// 	r.enabled = value;
+				// }
 				isVisible = value;
 			}
         }
@@ -78,9 +102,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		protected Vector3 targetTeleport;
         public AgentManager agentManager;
 
-
-
-
 		public string[] excludeObjectIds = new string[0];
 		public Camera m_Camera;
 		//protected bool m_Jump;
@@ -100,9 +121,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		public bool actionComplete;
 		public System.Object actionReturn;
 
-
-        // Vector3 m_OriginalCameraPosition;
-
+        [SerializeField] protected Vector3 standingLocalCameraPosition;
+        [SerializeField] protected Vector3 crouchingLocalCameraPosition;//get rid of this probably
 
         public float maxVisibleDistance = 1.5f; //changed from 1.0f to account for objects randomly spawned far away on tables/countertops, which would be not visible at 1.0f
 
@@ -144,7 +164,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             // character controller parameters
             m_CharacterController = GetComponent<CharacterController>();
 			//float radius = m_CharacterController.radius;
-			m_CharacterController.radius = 0.2f;
+			//m_CharacterController.radius = 0.2f;
 			// using default for now to remain consistent with generated points
 			//m_CharacterController.height = LoadFloatVariable (height, "AGENT_HEIGHT");
 			this.m_WalkSpeed = 2;
@@ -156,7 +176,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 
 		// Use this for initialization
-		protected virtual void Start()
+		public virtual void Start()
 		{
 			m_Camera = this.gameObject.GetComponentInChildren<Camera>();
 			//m_OriginalCameraPosition = m_Camera.transform.localPosition;
@@ -203,20 +223,26 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			targetTeleport = Vector3.zero;
 		}
 
-		abstract public Vector3[] getReachablePositions(float gridMultiplier=1.0f);
+		abstract public Vector3[] getReachablePositions(float gridMultiplier=1.0f, int maxStepCount = 10000);
 
 		public void Initialize(ServerAction action)
         {
+            //set agent mode to Tall or Bot accordingly
+            SetAgentMode(action.agentMode);
+
             if (action.gridSize == 0)
             {
                 action.gridSize = 0.25f;
             }
 
-
 			// make fov backwards compatible
-			if (action.fov != 60f && action.fieldOfView == 60f) {
+			if (action.fov != 42.5f && action.fieldOfView == 42.5f) {
 				action.fieldOfView = action.fov;
 			}
+
+            if (action.rotateStepDegrees > 0.0) {
+                this.rotateStepDegrees = action.rotateStepDegrees;
+            }
 
 			if (action.fieldOfView > 0 && action.fieldOfView < 180) {
 				m_Camera.fieldOfView = action.fieldOfView;
@@ -266,18 +292,116 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 StartCoroutine(checkInitializeAgentLocationAction());
             }
 
+            // Rotation
+            var epsilon = 1e-4;
+            var epsilonBig = 1e-3;
+            if (Mathf.Abs(action.rotateStepDegrees - 90.0f) > epsilonBig) {
+                var ratio = 360.0f / action.rotateStepDegrees;
+                var angleStepNumber = Mathf.RoundToInt(ratio);
+                
+                if (Mathf.Abs(ratio - angleStepNumber) > epsilon) {
+                    errorMessage = "Invalid argument 'rotateStepDegrees': 360 should be divisible by 'rotateStepDegrees'.";
+                    Debug.Log(errorMessage);
+                    actionFinished(false);
+                }
+                else {
+                    this.headingAngles = new float[angleStepNumber];
+                    for (int i = 0; i < angleStepNumber; i++) {
+                        headingAngles[i] = i * action.rotateStepDegrees;
+                    }
+                }
+            }
+
 			//override default ssao settings when using init
-			string ssao = action.ssao.ToLower().Trim();
-			if (ssao == "on") {
-				m_Camera.GetComponent<ScreenSpaceAmbientOcclusion>().enabled = true;
-			} else if (ssao == "off") {
-				m_Camera.GetComponent<ScreenSpaceAmbientOcclusion>().enabled = false;
-			} else if (ssao == "default") {
-				// Do nothing
-			} else {
-				throw new NotImplementedException("ssao must be one of 'on', 'off' or 'default'.");
-			}			
-			
+			// string ssao = action.ssao.ToLower().Trim();
+			// if (ssao == "on") {
+			// 	m_Camera.GetComponent<ScreenSpaceAmbientOcclusion>().enabled = true;
+			// } else if (ssao == "off") {
+			// 	m_Camera.GetComponent<ScreenSpaceAmbientOcclusion>().enabled = false;
+			// } else if (ssao == "default") {
+			// 	// Do nothing
+			// } else {
+			// 	throw new NotImplementedException("ssao must be one of 'on', 'off' or 'default'.");
+			// }	
+            	
+
+            // Debug.Log("Object " + action.controllerInitialization.ToString() + " dict "  + (action.controllerInitialization.variableInitializations == null));//+ string.Join(";", action.controllerInitialization.variableInitializations.Select(x => x.Key + "=" + x.Value).ToArray()));
+
+            if (action.controllerInitialization != null && action.controllerInitialization.variableInitializations != null) {
+                foreach (KeyValuePair<string, TypedVariable> entry in action.controllerInitialization.variableInitializations) {
+                    Debug.Log(" Key " + entry.Value.type + " field " + entry.Key);
+                    Type t = Type.GetType(entry.Value.type);
+                    FieldInfo field = t.GetField(entry.Key, BindingFlags.Public | BindingFlags.Instance);
+                    field.SetValue(this, entry.Value);
+                }
+                InitializeController(action);
+            }
+        }
+
+        //
+        public void SetAgentMode(agentMode mode)
+        {
+            currentAgentMode = mode;
+
+            FirstPersonCharacterCull fpcc = m_Camera.GetComponent<FirstPersonCharacterCull>();
+
+            //determine if we are in Tall or Bot mode (or other modes as we go on)
+            if(mode == agentMode.Tall)
+            {
+                //toggle FirstPersonCharacterCull
+                fpcc.SwitchRenderersToHide(mode);
+
+                VisibilityCapsule = TallVisCap;
+                m_CharacterController.center = new Vector3(0, 0, 0);
+                m_CharacterController.radius = 0.2f;
+                m_CharacterController.height = 1.8f;
+
+                CapsuleCollider cc = this.GetComponent<CapsuleCollider>();
+                cc.center = m_CharacterController.center;
+                cc.radius = m_CharacterController.radius;
+                cc.height = m_CharacterController.height;
+
+                m_Camera.GetComponent<PostProcessVolume>().enabled = false;
+                m_Camera.GetComponent<PostProcessLayer>().enabled = false;
+
+                //camera position
+                m_Camera.transform.localPosition = new Vector3(0, 0.675f, 0);
+
+                //set camera stand/crouch local positions for Tall mode
+                standingLocalCameraPosition = m_Camera.transform.localPosition;
+                crouchingLocalCameraPosition = m_Camera.transform.localPosition + new Vector3(0, -0.675f, 0);// bigger y offset if tall
+
+            }
+
+            else if(mode == agentMode.Bot)
+            {
+                //toggle FirstPersonCharacterCull
+                fpcc.SwitchRenderersToHide(mode);
+
+                VisibilityCapsule = BotVisCap;
+                m_CharacterController.center = new Vector3(0, -0.45f, 0);
+                m_CharacterController.radius = 0.175f;
+                m_CharacterController.height = 0.9f;
+
+                CapsuleCollider cc = this.GetComponent<CapsuleCollider>();
+                cc.center = m_CharacterController.center;
+                cc.radius = m_CharacterController.radius;
+                cc.height = m_CharacterController.height;
+
+                m_Camera.GetComponent<PostProcessVolume>().enabled = true;
+                m_Camera.GetComponent<PostProcessLayer>().enabled = true;
+
+                //camera position
+                m_Camera.transform.localPosition = new Vector3(0, -0.0705f, 0);
+
+                //set camera stand/crouch local positions for Tall mode
+                standingLocalCameraPosition = m_Camera.transform.localPosition;
+                crouchingLocalCameraPosition = m_Camera.transform.localPosition + new Vector3(0, -0.2206f, 0);//smaller y offset if Bot
+            }
+        }
+
+        public virtual void InitializeController(ServerAction action) {
+            
         }
 
         public IEnumerator checkInitializeAgentLocationAction()
@@ -571,6 +695,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		//move in cardinal directions
 		virtual protected void moveCharacter(ServerAction action, int targetOrientation)
 		{
+            // TODO: Simplify this???
 			//resetHand(); when I looked at this resetHand in DiscreteRemoteFPSAgent was just commented out doing nothing so...
 			moveMagnitude = gridSize;
 			if (action.moveMagnitude > 0)
@@ -715,6 +840,14 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			moveCharacter(action, 180);
 		}
 
+        public virtual void MoveRelative(ServerAction action) {
+            var moveLocal = new Vector3(action.x, 0, action.z);
+            Vector3 moveWorldSpace = transform.rotation * moveLocal;
+            moveWorldSpace.y = Physics.gravity.y * this.m_GravityMultiplier;
+			m_CharacterController.Move(moveWorldSpace);
+			actionFinished(true);
+        }
+
 		//free move
 		public virtual void Move(ServerAction action)
 		{
@@ -766,7 +899,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		}
 
 		//free rotate, change forward facing of Agent
-		public void Rotate(ServerAction response)
+		public virtual void Rotate(ServerAction response)
 		{
 			transform.rotation = Quaternion.Euler(new Vector3(0.0f, response.rotation.y, 0.0f));
 			actionFinished(true);
@@ -781,12 +914,18 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 		}
 
+        public virtual Quaternion GetRotateQuaternion(int headIndex)
+		{
+			int index = (headingAngles.Length + (currentHeadingAngleIndex() + headIndex)) % headingAngles.Length;
+			float targetRotation = headingAngles[index];
+			return Quaternion.Euler(new Vector3(0.0f, targetRotation, 0.0f));
+		}
+
 		//rotates 90 degrees left w/ respect to current forward
 		public virtual void RotateLeft(ServerAction controlCommand)
 		{
 			transform.rotation = GetRotateQuaternion(-1);
 			actionFinished(true);
-
 		}
 
         public virtual Quaternion GetRotateQuaternion(int headIndex)

@@ -10,6 +10,7 @@ import pprint
 from invoke import task
 import boto3
 
+
 S3_BUCKET = "ai2-thor"
 UNITY_VERSION = "2018.3.6f1"
 
@@ -807,23 +808,52 @@ def interact(
     scene,
     editor_mode=False,
     local_build=False,
+    image=False,
     depth_image=False,
     class_image=False,
     object_image=False,
+    robot=False,
+    port=8200,
+    host='127.0.0.1',
+    image_directory='.'
 ):
     import ai2thor.controller
+    import ai2thor.robot_controller
 
-    env = ai2thor.controller.Controller()
+    if not robot:
+        env = ai2thor.controller.Controller()
+    else:
+        env = ai2thor.robot_controller.Controller(
+            image_dir=image_directory,
+            save_image_per_frame=True
+        )
+
+    if image_directory != '.':
+        if os.path.exists(image_directory):
+            shutil.rmtree(image_directory)
+        os.makedirs(image_directory)
+
     if local_build:
         print("Executing from local build at {} ".format( _local_build_path()))
         env.local_executable_path = _local_build_path()
     if editor_mode:
-        env.start(8200, False, player_screen_width=600, player_screen_height=600)
+        env.start(
+            host=host,
+            port=port,
+            start_unity=False,
+            player_screen_width=600,
+            player_screen_height=600
+        )
     else:
-        env.start(player_screen_width=600, player_screen_height=600)
+        env.start(
+            host=host,
+            port=port,
+            player_screen_width=600,
+            player_screen_height=600
+        )
 
     env.reset(scene)
-    env.step(
+    initialize_event = env.step(
         dict(
             action="Initialize",
             gridSize=0.25,
@@ -832,7 +862,25 @@ def interact(
             renderDepthImage=depth_image
         )
     )
-    env.interact()
+
+    from ai2thor.interact import InteractiveControllerPrompt
+    InteractiveControllerPrompt.write_image(
+        initialize_event,
+        image_directory,
+        '_init',
+        image_per_frame=True,
+        class_segmentation_frame=class_image,
+        instance_segmentation_frame=object_image,
+        color_frame=image,
+        depth_frame=depth_image
+    )
+
+    env.interact(
+        class_segmentation_frame=class_image,
+        instance_segmentation_frame=object_image,
+        depth_frame=depth_image,
+        color_frame=image
+    )
     env.stop()
 
 
@@ -1332,3 +1380,28 @@ def webgl_site_deploy(context, template_name, output_dir, bucket, unity_build_di
         shutil.copytree(template_dir, output_dir, ignore=ignore_func)
 
     webgl_deploy(context, bucket=bucket, prefix=None, source_dir=output_dir,  target_dir=s3_target_dir, verbose=verbose, force=force, extensions_no_cache='.css')
+@task
+def mock_client_request(context):
+    import time
+    import msgpack
+    import numpy as np
+    import requests
+    import cv2
+    from pprint import pprint
+
+    r = requests.post('http://127.0.0.1:9200/step', json=dict(action='MoveAhead', sequenceId=1))
+    s = time.time()
+    payload = msgpack.unpackb(r.content, raw=False)
+    metadata = payload['metadata']['agents'][0]
+    image = np.frombuffer(payload['frames'][0], dtype=np.uint8).reshape(metadata['screenHeight'], metadata['screenWidth'], 3)
+    pprint(metadata)
+    cv2.imshow('aoeu', image)
+    cv2.waitKey(1000)
+
+@task
+def start_mock_real_server(context):
+    import ai2thor.mock_real_server
+
+    m = ai2thor.mock_real_server.MockServer(height=300, width=300)
+    print("Started mock server on port: http://" + m.host + ":" + str(m.port))
+    m.start()
