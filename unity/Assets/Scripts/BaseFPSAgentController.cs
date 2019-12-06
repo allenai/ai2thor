@@ -235,10 +235,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 action.gridSize = 0.25f;
             }
 
-			// make fov backwards compatible
-			if (action.fov != 42.5f && action.fieldOfView == 42.5f) {
-				action.fieldOfView = action.fov;
-			}
+			// // make fov backwards compatible
+			// if (action.fov != 42.5f && action.fieldOfView == 42.5f) {
+			// 	action.fieldOfView = action.fov;
+			// }
 
             if (action.rotateStepDegrees > 0.0) {
                 this.rotateStepDegrees = action.rotateStepDegrees;
@@ -246,10 +246,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 			if (action.fieldOfView > 0 && action.fieldOfView < 180) {
 				m_Camera.fieldOfView = action.fieldOfView;
-			} else {
-				errorMessage = "fov must be in (0, 180) noninclusive.";
+			} 
+            else if(action.fieldOfView < 0 || action.fieldOfView >= 180) {
+				errorMessage = "fov must be set to (0, 180) noninclusive.";
                 Debug.Log(errorMessage);
                 actionFinished(false);
+                return;
 			}
 
 			if (action.timeScale > 0) {
@@ -260,6 +262,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 errorMessage = "Time scale must be >0";
                 Debug.Log(errorMessage);
                 actionFinished(false);
+                return;
             }
 
 			this.continuousMode = action.continuous;
@@ -285,6 +288,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 errorMessage = "grid size must be in the range (0,5]";
                 Debug.Log(errorMessage);
                 actionFinished(false);
+                return;
             }
             else
             {
@@ -303,6 +307,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     errorMessage = "Invalid argument 'rotateStepDegrees': 360 should be divisible by 'rotateStepDegrees'.";
                     Debug.Log(errorMessage);
                     actionFinished(false);
+                    return;
                 }
                 else {
                     this.headingAngles = new float[angleStepNumber];
@@ -367,6 +372,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 //camera position
                 m_Camera.transform.localPosition = new Vector3(0, 0.675f, 0);
 
+                //camera FOV
+                m_Camera.fieldOfView = 90f;
+
                 //set camera stand/crouch local positions for Tall mode
                 standingLocalCameraPosition = m_Camera.transform.localPosition;
                 crouchingLocalCameraPosition = m_Camera.transform.localPosition + new Vector3(0, -0.675f, 0);// bigger y offset if tall
@@ -393,6 +401,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
                 //camera position
                 m_Camera.transform.localPosition = new Vector3(0, -0.0705f, 0);
+
+                //camera FOV
+                m_Camera.fieldOfView = 42.5f;
 
                 //set camera stand/crouch local positions for Tall mode
                 standingLocalCameraPosition = m_Camera.transform.localPosition;
@@ -912,13 +923,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			m_Camera.transform.localEulerAngles = new Vector3(response.horizon, 0.0f, 0.0f);
 			actionFinished(true);
 
-		}
-
-        public virtual Quaternion GetRotateQuaternion(int headIndex)
-		{
-			int index = (headingAngles.Length + (currentHeadingAngleIndex() + headIndex)) % headingAngles.Length;
-			float targetRotation = headingAngles[index];
-			return Quaternion.Euler(new Vector3(0.0f, targetRotation, 0.0f));
 		}
 
 		//rotates 90 degrees left w/ respect to current forward

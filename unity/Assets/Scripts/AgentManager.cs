@@ -938,7 +938,7 @@ public class ServerAction
 	public int agentId;
 	public int thirdPartyCameraId;
 	public float y;
-	public float fieldOfView = 42.5f;
+	public float fieldOfView;
 	public float x;
 	public float z;
     public float pushAngle;
@@ -949,7 +949,6 @@ public class ServerAction
     public float handDistance;//used for max distance agent's hand can move
 	public List<Vector3> positions = null;
 	public bool standing = true;
-	public float fov = 42.5f;
 	public bool forceAction;
     public bool applyActionNoise = true;
     public float movementGaussianMu;

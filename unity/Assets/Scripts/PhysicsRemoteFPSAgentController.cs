@@ -5743,9 +5743,22 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         ///// MISC /////
         ////////////////
 
-        public void ChangeFOV(ServerAction action) {
-            m_Camera.fieldOfView = action.fov;
-            actionFinished(true);
+        public void ChangeFOV(ServerAction action) 
+        {
+
+            if(action.fieldOfView > 0 && action.fieldOfView < 180)
+            {
+                m_Camera.fieldOfView = action.fieldOfView;
+                actionFinished(true);
+            }
+
+            else
+            {
+                errorMessage = "fov must be in (0, 180) noninclusive.";
+                Debug.Log(errorMessage);
+                actionFinished(false);
+            }
+
         }
 
         // public IEnumerator WaitOnResolutionChange(int width, int height) {
@@ -8633,7 +8646,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             NavMeshPath path) {
                 
             Vector3 fixedPosition = new Vector3(float.MinValue, float.MinValue, float.MinValue);
-            bool success = false;
+            //bool success = false;
             var PhysicsController = this;
             foreach (var pos in sortedPositions) {
                 agentTransform.position = pos;
@@ -8642,7 +8655,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 var visibleSimObjects = PhysicsController.GetAllVisibleSimObjPhysics(PhysicsController.maxVisibleDistance);
                 if (visibleSimObjects.Any(sop => sop.uniqueID == targetSimObjectId)) {
                     fixedPosition = pos;
-                    success = true;
+                    //success = true;
                     break;
                 }
             }
@@ -8653,7 +8666,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         private NavMeshPath GetSimObjectNavMeshTarget(SimObjPhysics targetSOP, Vector3 initialPosition, Quaternion initialRotation) {
             var targetTransform = targetSOP.transform;
-            var targetPosition = new Vector3(targetTransform.position.x, targetTransform.position.y, targetTransform.position.z); 
+            //var targetPosition = new Vector3(targetTransform.position.x, targetTransform.position.y, targetTransform.position.z); 
             var targetSimObject = targetTransform.GetComponentInChildren<SimObjPhysics>();
             var PhysicsController = this;
             var agentTransform = PhysicsController.transform;
@@ -8670,7 +8683,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             agentTransform.rotation = orignalAgentRotation;
             Debug.Log("Shortest Path: Can reach object? " + successReach);
             var path = new NavMeshPath();
-            bool pathSuccess = NavMesh.CalculatePath(initialPosition, fixedPosition,  NavMesh.AllAreas, path);
+            //bool pathSuccess = NavMesh.CalculatePath(initialPosition, fixedPosition,  NavMesh.AllAreas, path);
         
         var pathDistance = 0.0f;
         for (int i = 0; i < path.corners.Length - 1; i++) {
