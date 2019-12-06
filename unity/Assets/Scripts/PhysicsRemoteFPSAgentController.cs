@@ -87,6 +87,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         public GameObject[] TargetCircles = null;
 
+        #if UNITY_EDITOR
+        //for debug draw of axis aligned bounds for sim objects
+        private List<Bounds> gizmobounds = new List<Bounds>();
+        #endif
+
         // Use this for initialization
         protected override void Start() {
             base.Start();
@@ -456,9 +461,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return b;
         }
 
-        //for debug draw of axis aligned bounds for sim objects
-        // List<Bounds> gizmobounds = new List<Bounds>();
-
         //generates a world space bounding box that enncapsulates all active Colliders (trigger and non trigger) for a sim obj
         public AxisAlignedBoundingBox GenerateAxisAlignedBoundingBox(SimObjPhysics sop)
         {
@@ -482,9 +484,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 bounding.Encapsulate(c.bounds);
             }
 
-            // //debug draw stuff
-            // if(!gizmobounds.Contains(bounding))
-            // gizmobounds.Add(bounding);
+            #if UNITY_EDITOR
+            //debug draw stuff
+            if(!gizmobounds.Contains(bounding))
+            gizmobounds.Add(bounding);
+            #endif
 
             //ok now we have a bounds that encapsulates all the colliders of the object, including trigger colliders
             b.cornerPoints[0,0] = bounding.center.x + bounding.size.x/2f;
@@ -537,6 +541,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             int numObj = simObjects.Length;
             List<ObjectMetadata> metadata = new List<ObjectMetadata>();
             Dictionary<string, List<string>> parentReceptacles = new Dictionary<string, List<string>>();
+            
+            #if UNITY_EDITOR
+            //debug draw bounds reset list
+            gizmobounds.Clear();
+            #endif
+
             for (int k = 0; k < numObj; k++) {
                 SimObjPhysics simObj = simObjects[k];
                 if (this.excludeObject(simObj.ObjectID)) {
@@ -5297,6 +5307,19 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     }
                 }
 
+                //check if this object is broken, it should not be able to be turned on
+                if(toggleOn && target.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanBreak))
+                {
+                    //if this breakable object is broken, we can't turn it on
+                    if(target.IsBroken)
+                    {
+                        errorMessage = "Target is broken and cannot be Toggled On!";
+                        actionFinished(false);
+                        return false;
+                    }
+
+                }
+
                 //interact then wait
                 StartCoroutine(ToggleAndWait(ctof));
                 return true;
@@ -8951,15 +8974,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 }
             }
 
-            // if(gizmobounds != null)
-            // {
-            //     Gizmos.color = Color.yellow;
-            //     foreach(Bounds g in gizmobounds)
-            //     {
-            //         Gizmos.DrawWireCube(g.center, g.size);
-            //     }
-            // }
-
+            if(gizmobounds != null)
+            {
+                Gizmos.color = Color.yellow;
+                foreach(Bounds g in gizmobounds)
+                {
+                    Gizmos.DrawWireCube(g.center, g.size);
+                }
+            }
         }
 #endif
     }
