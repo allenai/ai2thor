@@ -844,16 +844,37 @@ public class ObjectMetadata
 	public string[] parentReceptacles;
 	public float currentTime;
     public bool isMoving;//true if this game object currently has a non-zero velocity
-
-    public WorldSpaceBounds objectBounds;
+    public AxisAlignedBoundingBox axisAlignedBoundingBox;
+    public ObjectOrientedBoundingBox objectOrientedBoundingBox;
+    
 	public ObjectMetadata() { }
 }
 
+//for returning a world axis aligned bounding box
+//if an object is rotated, the dimensions of this box are subject to change
 [Serializable]
-public class WorldSpaceBounds
+public class AxisAlignedBoundingBox
 {
-    //8 corners of the box that bounds a sim object
-    public Vector3[] objectBoundsCorners;
+    //8 corners of the world axis aligned box that bounds a sim object
+    //8 rows - 8 corners, one per row
+    //3 columns - x, y, z of each corner respectively
+    public float[,] cornerPoints = new float[8,3];
+
+    //center of the bounding box of this object in worldspace coordinates
+    public Vector3 center;
+
+    //the size of the bounding box in worldspace coordinates (world x, y, z)
+    public Vector3 size;
+}
+
+//for returning an object oriented bounds not locked to world axes
+//if an object is rotated, this object oriented box will not change dimensions
+[Serializable]
+public class ObjectOrientedBoundingBox
+{
+    //probably return these from the BoundingBox component of the object for now?
+    //this means that it will only work for Pickupable objects at the moment
+    public float[,] cornerPoints = new float[8,3];
 }
 
 [Serializable]
