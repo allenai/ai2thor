@@ -163,6 +163,22 @@ public class AgentManager : MonoBehaviour
 		this.thirdPartyCameras.Add(camera);
 		gameObject.transform.eulerAngles = action.rotation;
 		gameObject.transform.position = action.position;
+
+        float fov;
+
+        if(action.fieldOfView <= 0 || action.fieldOfView > 180)
+        {
+            //default to 60 fov on third party camera if nothing passed in, or if value is too large
+            fov = 60f;
+        }
+        
+        else
+        {
+            fov = action.fieldOfView;
+        }
+
+        camera.fieldOfView = fov;
+
 		readyToEmit = true;
 	}
 
