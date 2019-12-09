@@ -227,6 +227,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 		public void Initialize(ServerAction action)
         {
+			if (action.cameraY > 0.0) 
+            {
+				Vector3 pos = m_Camera.transform.localPosition;
+				m_Camera.transform.localPosition = new Vector3 (pos.x, action.cameraY, pos.z);
+			}
+
             //set agent mode to Tall or Bot accordingly
             SetAgentMode(action.agentMode);
 
@@ -235,16 +241,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 action.gridSize = 0.25f;
             }
 
-			// // make fov backwards compatible
-			// if (action.fov != 42.5f && action.fieldOfView == 42.5f) {
-			// 	action.fieldOfView = action.fov;
-			// }
-
             if (action.rotateStepDegrees > 0.0) {
                 this.rotateStepDegrees = action.rotateStepDegrees;
             }
 
-            print("action.fieldOfView value is: " + action.fieldOfView);
 			if (action.fieldOfView > 0 && action.fieldOfView < 180) {
 				m_Camera.fieldOfView = action.fieldOfView;
 			} 
@@ -276,13 +276,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			if (action.visibilityDistance > 0.0f) {
 				this.maxVisibleDistance = action.visibilityDistance;
 			}
-
-			if (action.cameraY > 0.0) 
-            {
-				Vector3 pos = m_Camera.transform.localPosition;
-				m_Camera.transform.localPosition = new Vector3 (pos.x, action.cameraY, pos.z);
-			}
-
 
             if (action.gridSize <= 0 || action.gridSize > 5)
             {
