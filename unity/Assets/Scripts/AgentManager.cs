@@ -168,8 +168,8 @@ public class AgentManager : MonoBehaviour
 
         if(action.fieldOfView <= 0 || action.fieldOfView > 180)
         {
-            //default to 60 fov on third party camera if nothing passed in, or if value is too large
-            fov = 60f;
+            //default to 90 fov on third party camera if nothing passed in, or if value is too large
+            fov = 90f;
         }
         
         else

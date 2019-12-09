@@ -157,6 +157,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         //action.snapToGrid = true;
                         //action.makeAgentsVisible = false;
                         //action.agentMode = agentMode.Bot;
+                        //action.fieldOfView = 120f;
 
                         action.action = "Initialize";
                         AManager.Initialize(action);

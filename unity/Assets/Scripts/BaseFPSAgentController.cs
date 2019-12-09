@@ -244,6 +244,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 this.rotateStepDegrees = action.rotateStepDegrees;
             }
 
+            print("action.fieldOfView value is: " + action.fieldOfView);
 			if (action.fieldOfView > 0 && action.fieldOfView < 180) {
 				m_Camera.fieldOfView = action.fieldOfView;
 			} 
@@ -373,7 +374,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 m_Camera.transform.localPosition = new Vector3(0, 0.675f, 0);
 
                 //camera FOV
-                m_Camera.fieldOfView = 60f;
+                m_Camera.fieldOfView = 90f;
 
                 //set camera stand/crouch local positions for Tall mode
                 standingLocalCameraPosition = m_Camera.transform.localPosition;
