@@ -379,7 +379,18 @@ def key_for_point(x, z):
 
 class Controller(object):
 
-    def __init__(self, quality=DEFAULT_QUALITY, fullscreen=False, headless=False):
+    def __init__(self,
+            quality=DEFAULT_QUALITY,
+            fullscreen=False,
+            headless=False,
+            port=0,
+            start_unity=True,
+            player_screen_width=300,
+            player_screen_height=300,
+            x_display=None,
+            host='127.0.0.1',
+            scene_name='FloorPlan_Train1_1',
+            **unity_initialization_parameters):
         self.request_queue = Queue(maxsize=1)
         self.response_queue = Queue(maxsize=1)
         self.receptacle_nearest_pivot_points = {}
@@ -401,7 +412,23 @@ class Controller(object):
             has_object_actions=True
         )
 
+        self.start(
+            port=port,
+            start_unity=start_unity,
+            player_screen_width=player_screen_width,
+            player_screen_height=player_screen_height,
+            x_display=x_display,
+            host=host
+        )
+
+        self.reset(scene_name)
+        self.step(action='Initialize', **unity_initialization_parameters)
+
+
     def reset(self, scene_name=None):
+        if scene_name not in self.scene_names() and scene_name not in self.robothor_scenes(types={'test', 'val', 'train'}):
+            raise ValueError('Invalid scene_name')
+
         if re.match(r'^FloorPlan[0-9]+$', scene_name):
             scene_name = scene_name + "_physics"
 
@@ -450,6 +477,25 @@ class Controller(object):
             for i in range(low, high):
                 scenes.append('FloorPlan%s_physics' % i)
 
+        return scenes
+
+    def robothor_scenes(self, types={'val', 'train'}):
+        assert 'train' in types or 'test' in types or 'val' in types
+        # scene types -> [wall configurations, layouts per configuration]
+        scene_types = {'train': [15, 2],
+                       'val': [2, 2],
+                       'test': [5, 2]}
+        scenes = []
+        for scene_type in types:
+            name = scene_type
+            name = name.title()
+            if name == 'Val':
+                name = 'RVal'
+            if name == 'Test':
+                name = 'RTest'
+            for wall_config in range(1, scene_types[scene_type][0] + 1):
+                for layouts in range(1, scene_types[scene_type][1] + 1):
+                    scenes.append('FloorPlan_{}{}_{}'.format(name, wall_config, layouts))
         return scenes
 
     def unlock_release(self):
@@ -860,7 +906,11 @@ class Controller(object):
             raise Exception("Screen resolution must be >= 300x300")
 
         if self.server_thread is not None:
-            raise Exception("server has already been started - cannot start more than once")
+            print('start() method depreciated. The server has already started when Controller was initialized.')
+
+            # Stops the current server and creates a new one. This is done so
+            # that the arguments passed in will be used on the server.
+            self.stop() 
 
         env = os.environ.copy()
 
