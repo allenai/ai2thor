@@ -6544,7 +6544,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             );
         }
 
-        override public Vector3[] getReachablePositions(float gridMultiplier = 1.0f, int maxStepCount = 10000) {
+        override public Vector3[] getReachablePositions(float gridMultiplier = 1.0f, int maxStepCount = 100000) {
             CapsuleCollider cc = GetComponent<CapsuleCollider>();
 
             float sw = m_CharacterController.skinWidth;
