@@ -389,7 +389,7 @@ class Controller(object):
             player_screen_height=300,
             x_display=None,
             host='127.0.0.1',
-            scene_name='FloorPlan_Train1_1',
+            scene='FloorPlan_Train1_1',
             **unity_initialization_parameters):
         self.request_queue = Queue(maxsize=1)
         self.response_queue = Queue(maxsize=1)
@@ -421,18 +421,18 @@ class Controller(object):
             host=host
         )
 
-        self.reset(scene_name)
+        self.reset(scene)
         self.step(action='Initialize', **unity_initialization_parameters)
 
 
-    def reset(self, scene_name=None):
-        if scene_name not in self.scene_names() and scene_name not in self.robothor_scenes(types={'test', 'val', 'train'}):
-            raise ValueError('Invalid scene_name')
+    def reset(self, scene=None):
+        if scene not in self.scene_names() and scene not in self.robothor_scenes(types={'test', 'val', 'train'}):
+            raise ValueError('Invalid scene')
 
-        if re.match(r'^FloorPlan[0-9]+$', scene_name):
-            scene_name = scene_name + "_physics"
+        if re.match(r'^FloorPlan[0-9]+$', scene):
+            scene = scene + "_physics"
 
-        self.response_queue.put_nowait(dict(action='Reset', sceneName=scene_name, sequenceId=0))
+        self.response_queue.put_nowait(dict(action='Reset', sceneName=scene, sequenceId=0))
         self.last_event = queue_get(self.request_queue)
 
         return self.last_event
