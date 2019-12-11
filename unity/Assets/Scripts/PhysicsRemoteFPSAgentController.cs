@@ -4372,7 +4372,19 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         public void ToggleMapView(ServerAction action) {
 
+            print("we are in toggle map view");
             SyncTransform[] syncInChildren;
+
+            List<StructureObject> structureObjsList = new List<StructureObject>();
+            StructureObject[] structureObjs = FindObjectsOfType(typeof(StructureObject)) as StructureObject[];
+
+            foreach(StructureObject so in structureObjs)
+            {
+                if(so.WhatIsMyStructureObjectTag == StructureObjectTag.Ceiling)
+                {
+                    structureObjsList.Add(so);
+                }
+            }
 
             if (inTopLevelView) {
                 inTopLevelView = false;
@@ -4388,9 +4400,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     sync.StopSyncingForASecond = false;
                 }
 
-
-                UpdateDisplayGameObject(GameObject.Find("Ceiling"), true);
-            } else {
+                foreach(StructureObject so in structureObjsList)
+                {
+                    UpdateDisplayGameObject(so.gameObject, true);
+                }
+            } 
+            
+            else {
 
                 //stop culling the agent's body so it's visible from the top?
                 m_Camera.transform.GetComponent<FirstPersonCharacterCull>().StopCullingThingsForASecond = true;
@@ -4414,8 +4430,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 m_Camera.orthographicSize = Math.Max((b.max.x - b.min.x) / 2f, (b.max.z - b.min.z) / 2f);
 
                 cameraOrthSize = m_Camera.orthographicSize;
-                UpdateDisplayGameObject(GameObject.Find("Ceiling"), false);
-            }
+                foreach(StructureObject so in structureObjsList)
+                {
+                    UpdateDisplayGameObject(so.gameObject, false);
+                }            }
             actionFinished(true);
         }
 
