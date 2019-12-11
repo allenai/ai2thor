@@ -4372,7 +4372,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         public void ToggleMapView(ServerAction action) {
 
-            print("we are in toggle map view");
             SyncTransform[] syncInChildren;
 
             List<StructureObject> structureObjsList = new List<StructureObject>();
