@@ -6544,7 +6544,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             );
         }
 
-        override public Vector3[] getReachablePositions(float gridMultiplier = 1.0f, int maxStepCount = 100000) {
+        override public Vector3[] getReachablePositions(float gridMultiplier = 1.0f, int maxStepCount = 10000) { //max step count represents a 100m * 100m room. Adjust this value later if we end up making bigger rooms?
             CapsuleCollider cc = GetComponent<CapsuleCollider>();
 
             float sw = m_CharacterController.skinWidth;
@@ -6611,7 +6611,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         }
                     }
                 }
-                if (stepsTaken > maxStepCount) {
+                //default maxStepCount to scale based on gridSize
+                if (stepsTaken > Math.Floor(maxStepCount/gridSize * gridSize)) {
                     errorMessage = "Too many steps taken in GetReachablePositions.";
                     break;
                 }
