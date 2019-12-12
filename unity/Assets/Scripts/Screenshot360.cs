@@ -7,7 +7,7 @@ using UnityEngine.SceneManagement;
 public class Screenshot360 : MonoBehaviour
 {
     
-    [MenuItem("GameObject/Take 360 Screenshot %p")]
+    [MenuItem("GameObject/Take 360 Screenshot")]
     private static void Generate360Screenshot()
     {
         int imageWidth = 4096;
