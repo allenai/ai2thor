@@ -1,13 +1,17 @@
 ﻿using System;
 using System.IO;
-using UnityEditor;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
+
 public class Screenshot360 : MonoBehaviour
 {
-    
+    #if UNITY_EDITOR
     [MenuItem("GameObject/Take 360 Screenshot")]
+    #endif
     private static void Generate360Screenshot()
     {
         int imageWidth = 4096;
