@@ -14,6 +14,7 @@ public class GetAllScenesInstanceCount : MonoBehaviour
 
         for (int i = 0; i < UnityEngine.SceneManagement.SceneManager.sceneCountInBuildSettings; i++)
         {
+            //Be sure to have the scenes you want to check for instances (and ONLY those scenes) int the build settings!
             UnityEditor.SceneManagement.EditorSceneManager.OpenScene(SceneUtility.GetScenePathByBuildIndex(i), OpenSceneMode.Single);
 
             //We'll need to expand this if objects ever have children objects of their own (ex: fork inside drawer)
