@@ -425,7 +425,7 @@ class Controller(object):
         self.reset(scene)
 
 
-    def reset(self, scene=None):
+    def reset(self, scene='FloorPlan_Train1_1'):
         if scene not in self.scene_names() and scene not in self.robothor_scenes(types={'test', 'val', 'train'}):
             raise ValueError('Invalid scene')
 
