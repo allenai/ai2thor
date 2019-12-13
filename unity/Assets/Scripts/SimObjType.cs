@@ -347,22 +347,22 @@ public static class ReceptacleRestrictions
 
 		//BASEBALL BAT
 		{SimObjType.BaseballBat, new List<SimObjType>()
-		{SimObjType.Bed, SimObjType.DiningTable, SimObjType.TVStand, SimObjType.CoffeeTable, SimObjType.SideTable, SimObjType.Desk, SimObjType.CounterTop,}}, ///place on floor? 
+		{SimObjType.Bed, SimObjType.DiningTable, SimObjType.TVStand, SimObjType.CoffeeTable, SimObjType.SideTable, SimObjType.Desk, SimObjType.CounterTop, SimObjType.Floor}}, ///place on floor? 
 
 		//BASKETBALL
 		{SimObjType.BasketBall, new List<SimObjType>()
 		{SimObjType.Sofa, SimObjType.ArmChair, SimObjType.Dresser, SimObjType.Desk, SimObjType.Bed, SimObjType.DiningTable,SimObjType.TVStand, SimObjType.CoffeeTable, SimObjType.SideTable, SimObjType.CounterTop,
-		 SimObjType.Stool, SimObjType.Chair}},
+		 SimObjType.Stool, SimObjType.Chair, SimObjType.Floor}},
 
 		//BOOK 
 		{SimObjType.Book, new List<SimObjType>()
 		{SimObjType.Sofa, SimObjType.ArmChair, SimObjType.Box, SimObjType.Ottoman, SimObjType.Dresser, SimObjType.Desk, SimObjType.Bed, SimObjType.Cabinet, SimObjType.DiningTable,SimObjType.TVStand, SimObjType.CoffeeTable, SimObjType.SideTable,
-		 SimObjType.CounterTop, SimObjType.Shelf, SimObjType.Drawer, SimObjType.Stool, SimObjType.Chair}},
+		 SimObjType.CounterTop, SimObjType.Shelf, SimObjType.Drawer, SimObjType.Stool, SimObjType.Chair, SimObjType.Floor}},
 
 		//BOOTS
 		{SimObjType.Boots, new List<SimObjType>()
 		{
-			//nothing yet? put on floor?
+			SimObjType.Floor//nothing yet? put on floor?
 		}},
 
 		//BOTTLE (Glassbottle)
@@ -380,7 +380,7 @@ public static class ReceptacleRestrictions
 		//BOX
 		{SimObjType.Box, new List<SimObjType>()
 		{SimObjType.Sofa, SimObjType.ArmChair, SimObjType.Dresser, SimObjType.Desk, SimObjType.Cabinet, SimObjType.DiningTable, SimObjType.TVStand, SimObjType.CoffeeTable, SimObjType.SideTable, SimObjType.CounterTop, SimObjType.Shelf, SimObjType.Ottoman
-		,SimObjType.Stool, SimObjType.Chair
+		,SimObjType.Stool, SimObjType.Chair, SimObjType.Floor
 		}},
 
 		//BREAD
@@ -417,7 +417,7 @@ public static class ReceptacleRestrictions
 		{SimObjType.Cloth, new List<SimObjType>()
 		{SimObjType.Sofa, SimObjType.ArmChair, SimObjType.Box, SimObjType.Ottoman, SimObjType.Dresser, SimObjType.LaundryHamper, SimObjType.Desk, SimObjType.Toilet, SimObjType.Cart,
 		 SimObjType.BathtubBasin, SimObjType.Bathtub, SimObjType.Sink, SimObjType.SinkBasin, SimObjType.Cabinet, SimObjType.DiningTable, SimObjType.TVStand, SimObjType.CoffeeTable, SimObjType.SideTable,  
-         SimObjType.CounterTop, SimObjType.Shelf, SimObjType.Drawer, SimObjType.GarbageCan, SimObjType.Stool, SimObjType.Chair, SimObjType.Footstool
+         SimObjType.CounterTop, SimObjType.Shelf, SimObjType.Drawer, SimObjType.GarbageCan, SimObjType.Stool, SimObjType.Chair, SimObjType.Footstool, SimObjType.Floor
          }},
 
 		//CREDIT CARD
@@ -504,7 +504,6 @@ public static class ReceptacleRestrictions
 		{SimObjType.PaperTowelRoll, new List<SimObjType>()
 		{SimObjType.Box, SimObjType.Toilet, SimObjType.Cart, SimObjType.Bathtub, SimObjType.DiningTable, SimObjType.TVStand, SimObjType.CoffeeTable, SimObjType.SideTable, SimObjType.CounterTop, SimObjType.Shelf, SimObjType.GarbageCan}},
 
-
 		//PEN
 		{SimObjType.Pen, new List<SimObjType>()
 		{SimObjType.Mug, SimObjType.Box, SimObjType.Dresser, SimObjType.Desk, SimObjType.DiningTable, SimObjType.TVStand, SimObjType.CoffeeTable, SimObjType.SideTable, SimObjType.CounterTop, SimObjType.Shelf, SimObjType.Drawer, SimObjType.GarbageCan,
@@ -531,7 +530,7 @@ public static class ReceptacleRestrictions
 
 		//PLUNGER
 		{SimObjType.Plunger, new List<SimObjType>()
-		{SimObjType.Cart, SimObjType.Cabinet}},
+		{SimObjType.Cart, SimObjType.Cabinet, SimObjType.Floor}},
 
 		//POT
 		{SimObjType.Pot, new List<SimObjType>()
@@ -645,7 +644,7 @@ public static class ReceptacleRestrictions
 		//DUMBBELL
 		{SimObjType.Dumbbell, new List<SimObjType>()
 		{SimObjType.Dresser, SimObjType.Desk, SimObjType.Cabinet, SimObjType.DiningTable, SimObjType.TVStand, SimObjType.CoffeeTable, SimObjType.SideTable, SimObjType.CounterTop, SimObjType.Shelf, SimObjType.Bed, SimObjType.Chair, SimObjType.ArmChair, 
-        SimObjType.Sofa, SimObjType.Stool, SimObjType.Footstool}},
+        SimObjType.Sofa, SimObjType.Stool, SimObjType.Footstool, SimObjType.Floor}},
 
 		//ALUMINUMFOIL
 		{SimObjType.AluminumFoil, new List<SimObjType>()
@@ -655,6 +654,7 @@ public static class ReceptacleRestrictions
 		{SimObjType.TableTopDecor, new List<SimObjType>()
 		{SimObjType.Dresser, SimObjType.Desk, SimObjType.Cabinet, SimObjType.DiningTable, SimObjType.TVStand, SimObjType.CoffeeTable, SimObjType.SideTable, SimObjType.CounterTop, SimObjType.Shelf}},
 
+        //TARGET CIRCLE - for Moveable test and use with SpawnTargetCircles
         {SimObjType.TargetCircle, new List<SimObjType>()
         {SimObjType.Dresser, SimObjType.Desk, SimObjType.DiningTable, SimObjType.TVStand, SimObjType.CoffeeTable, SimObjType.SideTable,SimObjType.CounterTop, SimObjType.Shelf, SimObjType.Floor}},
 
