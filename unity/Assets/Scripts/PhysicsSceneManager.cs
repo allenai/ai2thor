@@ -7,6 +7,7 @@ using UnityStandardAssets.Characters.FirstPerson;
 using System;
 using System.Linq;
 using UnityStandardAssets.ImageEffects;
+using UnityEngine.SceneManagement;
 
 [ExecuteInEditMode]
 
@@ -118,7 +119,7 @@ public class PhysicsSceneManager : MonoBehaviour
 			#if UNITY_EDITOR
 			if (CheckForDuplicateObjectIDs(o))
 			{
-				Debug.Log("Yo there are duplicate ObjectIDs! Check" + o.ObjectID);	
+				Debug.Log("Yo there are duplicate ObjectIDs! Check" + o.ObjectID + "in scene "+ UnityEngine.SceneManagement.SceneManager.GetActiveScene().name);	
 			} else {
 				AddToObjectsInScene(o);
 				continue;
