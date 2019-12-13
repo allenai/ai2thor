@@ -421,8 +421,8 @@ class Controller(object):
             host=host
         )
 
+        self.initialization_parameters = unity_initialization_parameters
         self.reset(scene)
-        self.step(action='Initialize', **unity_initialization_parameters)
 
 
     def reset(self, scene=None):
@@ -434,6 +434,7 @@ class Controller(object):
 
         self.response_queue.put_nowait(dict(action='Reset', sceneName=scene, sequenceId=0))
         self.last_event = queue_get(self.request_queue)
+        self.step(action='Initialize', **self.initialization_parameters)
 
         return self.last_event
 
