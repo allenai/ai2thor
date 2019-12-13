@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using System.IO;
+using System;
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -110,6 +111,26 @@ public class GetObjectTypesInAllScenes : MonoBehaviour
         create.WriteLine("------------------------------------------------------");
 
         create.WriteLine("The total number of sim objects in all scenes is " + totalInstanceCount);
+
+        create.Close();
+    }
+
+    [MenuItem("SimObjectPhysics/Export Placement Restrictions to Text File")]
+    private static void ExportPlacementRestrictionsToTextFile()
+    {
+        var file = "PlacementRestrictions.txt";
+
+        var create = File.CreateText("Assets/DebugTextFiles/" + file);
+        
+        foreach (KeyValuePair<SimObjType, List<SimObjType>> kvp in ReceptacleRestrictions.PlacementRestrictions)
+        {
+            create.WriteLine("PickupableObject: " + kvp.Key.ToString() + "\n");
+            foreach(SimObjType sop in kvp.Value)
+            {
+                create.Write(sop.ToString() + ", ");
+            }
+            create.WriteLine("\n");
+        }
 
         create.Close();
     }
