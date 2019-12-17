@@ -429,9 +429,6 @@ class Controller(object):
         if re.match(r'^FloorPlan[0-9]+$', scene):
             scene = scene + "_physics"
 
-        if scene not in self.scene_names() and scene not in self.robothor_scenes(types={'test', 'val', 'train'}):
-            raise ValueError('Invalid scene')
-
         self.response_queue.put_nowait(dict(action='Reset', sceneName=scene, sequenceId=0))
         self.last_event = queue_get(self.request_queue)  # can this be deleted?
         self.last_event = self.step(action='Initialize', **self.initialization_parameters)
