@@ -480,7 +480,7 @@ class Controller(object):
     def robothor_scenes(self, types={'val', 'train'}):
         assert 'train' in types or 'test' in types or 'val' in types
         # scene types -> [wall configurations, layouts per configuration]
-        scene_types = {'train': [15, 2],
+        scene_types = {'train': [15, 5],
                        'val': [2, 2],
                        'test': [5, 2]}
         scenes = []
