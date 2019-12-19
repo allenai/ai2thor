@@ -385,6 +385,7 @@ class Controller(object):
             headless=False,
             port=0,
             start_unity=True,
+            local_executable_path=None,
             player_screen_width=300,
             player_screen_height=300,
             x_display=None,
@@ -398,7 +399,7 @@ class Controller(object):
         self.unity_pid = None
         self.docker_enabled = False
         self.container_id = None
-        self.local_executable_path = None
+        self.local_executable_path = local_executable_path
         self.last_event = None
         self.server_thread = None
         self.killing_unity = False
