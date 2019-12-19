@@ -156,7 +156,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         //action.ssao = "default";
                         //action.snapToGrid = true;
                         //action.makeAgentsVisible = false;
-                        //action.agentMode = agentMode.Bot;
+                        //action.agentMode = "bot";
                         //action.fieldOfView = 120f;
 
                         action.action = "Initialize";
@@ -203,7 +203,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         //action.ssao = "default";
                         //action.snapToGrid = true;
                         //action.makeAgentsVisible = false;
-                        action.agentMode = agentMode.Bot;
+                        action.agentMode = "bot";
 
                         action.action = "Initialize";
                         AManager.Initialize(action);

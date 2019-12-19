@@ -15,12 +15,12 @@ public class FirstPersonCharacterCull : MonoBehaviour
     //references to renderers for when the Agent is in Bot mode
     public MeshRenderer [] BotRenderers;
 
-    public void SwitchRenderersToHide(agentMode mode)
+    public void SwitchRenderersToHide(string mode)
     {
-        if(mode == agentMode.Tall)
+        if(mode == "tall")
         RenderersToHide = TallRenderers;
 
-        else if(mode == agentMode.Bot)
+        else if(mode == "bot")
         RenderersToHide = BotRenderers;
     }
 

@@ -884,10 +884,6 @@ public class ObjectToggle
 }
 
 [Serializable]
-public enum agentMode : int {Tall, Bot};//different modes for the FPSController to be initialized into
-
-
-[Serializable]
 public struct MetadataWrapper
 {
 	public ObjectMetadata[] objects;
@@ -939,7 +935,7 @@ public struct MetadataWrapper
 public class ServerAction
 {
 	public string action;
-    public agentMode agentMode = agentMode.Tall; //default to Tall version of Agent
+    public string agentMode = "tall"; //default to Tall version of Agent
 	public int agentCount = 1;
 	public string quality;
 	public bool makeAgentsVisible = true;

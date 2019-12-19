@@ -40,7 +40,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
         public GameObject VisibilityCapsule = null;
         public GameObject TallVisCap;
         public GameObject BotVisCap;
-        public agentMode currentAgentMode = agentMode.Tall;
         private bool isVisible = true;
         public bool IsVisible
         {
@@ -233,8 +232,20 @@ namespace UnityStandardAssets.Characters.FirstPerson
 				m_Camera.transform.localPosition = new Vector3 (pos.x, action.cameraY, pos.z);
 			}
 
-            //set agent mode to Tall or Bot accordingly
-            SetAgentMode(action.agentMode);
+            if(action.agentMode.ToLower() == "tall" || action.agentMode.ToLower() == "bot")
+            {
+                //set agent mode to Tall or Bot accordingly
+                SetAgentMode(action.agentMode);
+            }
+            
+            else
+            {
+                print("the agent mode is set to: " + action.agentMode.ToLower());
+                errorMessage = "agentMode must be set to 'bot' or 'tall'";
+                Debug.Log(errorMessage);
+                actionFinished(false);
+                return;
+            }
 
             if (action.gridSize == 0)
             {
@@ -338,17 +349,18 @@ namespace UnityStandardAssets.Characters.FirstPerson
         }
 
         //
-        public void SetAgentMode(agentMode mode)
+        public void SetAgentMode(string mode)
         {
-            currentAgentMode = mode;
+            string whichMode;
+            whichMode = mode.ToLower();
 
             FirstPersonCharacterCull fpcc = m_Camera.GetComponent<FirstPersonCharacterCull>();
 
             //determine if we are in Tall or Bot mode (or other modes as we go on)
-            if(mode == agentMode.Tall)
+            if(whichMode == "tall")
             {
                 //toggle FirstPersonCharacterCull
-                fpcc.SwitchRenderersToHide(mode);
+                fpcc.SwitchRenderersToHide(whichMode);
 
                 VisibilityCapsule = TallVisCap;
                 m_CharacterController.center = new Vector3(0, 0, 0);
@@ -375,10 +387,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
             }
 
-            else if(mode == agentMode.Bot)
+            else if(whichMode == "bot")
             {
                 //toggle FirstPersonCharacterCull
-                fpcc.SwitchRenderersToHide(mode);
+                fpcc.SwitchRenderersToHide(whichMode);
 
                 VisibilityCapsule = BotVisCap;
                 m_CharacterController.center = new Vector3(0, -0.45f, 0);
