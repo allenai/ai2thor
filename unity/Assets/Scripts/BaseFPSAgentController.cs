@@ -240,7 +240,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
             
             else
             {
-                print("the agent mode is set to: " + action.agentMode.ToLower());
                 errorMessage = "agentMode must be set to 'bot' or 'tall'";
                 Debug.Log(errorMessage);
                 actionFinished(false);
