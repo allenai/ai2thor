@@ -89,17 +89,29 @@ public class AgentManager : MonoBehaviour
 
 	private void initializePrimaryAgent() {
 
-		GameObject fpsController = GameObject.Find("FPSController");
-		PhysicsRemoteFPSAgentController physicsAgent = fpsController.GetComponent<PhysicsRemoteFPSAgentController>();
-		primaryAgent = physicsAgent;
-		primaryAgent.agentManager = this;
+		GameObject fpsController = GameObject.FindObjectOfType<BaseFPSAgentController>().gameObject;
+		primaryAgent = fpsController.GetComponent<PhysicsRemoteFPSAgentController>();
 		primaryAgent.enabled = true;
+		primaryAgent.agentManager = this;
 		primaryAgent.actionComplete = true;
 
 	}
 	
 	public void Initialize(ServerAction action)
 	{
+        if (action.agentType != null && action.agentType.ToLower() == "stochastic") {
+            this.agents.Clear();
+            GameObject fpsController = GameObject.FindObjectOfType<BaseFPSAgentController>().gameObject;
+            primaryAgent.enabled = false;
+
+            primaryAgent = fpsController.GetComponent<StochasticRemoteFPSAgentController>();
+            primaryAgent.agentManager = this;
+            primaryAgent.enabled = true;
+            // must manually call start here since it this only gets called before Update() is called
+            primaryAgent.Start();
+            this.agents.Add(primaryAgent);
+        }
+        
 		primaryAgent.ProcessControlCommand (action);
 		primaryAgent.IsVisible = action.makeAgentsVisible;
 		this.renderClassImage = action.renderClassImage;
@@ -151,6 +163,22 @@ public class AgentManager : MonoBehaviour
 		this.thirdPartyCameras.Add(camera);
 		gameObject.transform.eulerAngles = action.rotation;
 		gameObject.transform.position = action.position;
+
+        float fov;
+
+        if(action.fieldOfView <= 0 || action.fieldOfView > 180)
+        {
+            //default to 90 fov on third party camera if nothing passed in, or if value is too large
+            fov = 90f;
+        }
+        
+        else
+        {
+            fov = action.fieldOfView;
+        }
+
+        camera.fieldOfView = fov;
+
 		readyToEmit = true;
 	}
 
@@ -167,7 +195,7 @@ public class AgentManager : MonoBehaviour
 		Vector3 clonePosition = new Vector3(action.x, action.y, action.z);
 
 		//disable ambient occlusion on primary agetn because it causes issues with multiple main cameras
-		primaryAgent.GetComponent<PhysicsRemoteFPSAgentController>().DisableScreenSpaceAmbientOcclusion();
+		//primaryAgent.GetComponent<PhysicsRemoteFPSAgentController>().DisableScreenSpaceAmbientOcclusion();
 
 		BaseFPSAgentController clone = UnityEngine.Object.Instantiate (primaryAgent);
 		clone.IsVisible = action.makeAgentsVisible;
@@ -907,6 +935,7 @@ public struct MetadataWrapper
 public class ServerAction
 {
 	public string action;
+    public string agentMode = "tall"; //default to Tall version of Agent
 	public int agentCount = 1;
 	public string quality;
 	public bool makeAgentsVisible = true;
@@ -921,7 +950,7 @@ public class ServerAction
 	public int agentId;
 	public int thirdPartyCameraId;
 	public float y;
-	public float fieldOfView = 60f;
+	public float fieldOfView;
 	public float x;
 	public float z;
     public float pushAngle;
@@ -932,8 +961,13 @@ public class ServerAction
     public float handDistance;//used for max distance agent's hand can move
 	public List<Vector3> positions = null;
 	public bool standing = true;
-	public float fov = 60.0f;
 	public bool forceAction;
+    public bool applyActionNoise = true;
+    public float movementGaussianMu;
+    public float movementGaussianSigma;
+    public float rotateGaussianMu;
+    public float rotateGaussianSigma;
+
 
 	public bool forceKinematic;
 
@@ -964,7 +998,7 @@ public class ServerAction
     public bool renderFlowImage;
 	public float cameraY;
 	public bool placeStationary = true; //when placing/spawning an object, do we spawn it stationary (kinematic true) or spawn and let physics resolve final position
-	public string ssao = "default";
+	//public string ssao = "default";
 	public string fillLiquid; //string to indicate what kind of liquid this object should be filled with. Water, Coffee, Wine etc.
 	public float TimeUntilRoomTemp;
 	public bool allowDecayTemperature = true; //set to true if temperature should decay over time, set to false if temp changes should not decay, defaulted true
@@ -974,6 +1008,15 @@ public class ServerAction
     public ObjectTypeCount[] minFreePerReceptacleType;
     public ObjectPose[] objectPoses;
     public ObjectToggle[] objectToggles;
+    public float noise;
+    public ControllerInitialization controllerInitialization = null;
+    public string agentType;
+    public float agentRadius = 2.0f;
+    public int maxStepCount;
+
+    public float rotateStepDegrees = 90.0f;
+
+    public bool useAgentTransform = false;
 
     public SimObjType ReceptableSimObjType()
 	{
@@ -993,8 +1036,6 @@ public class ServerAction
 		}
 		return (SimObjType)Enum.Parse(typeof(SimObjType), objectType);
 	}
-
-
 }
 
 
@@ -1013,4 +1054,18 @@ public enum ServerActionErrorCode  {
 	LookUpCantExceedMax,
 	LookDownCantExceedMin,
 	InvalidAction
+}
+
+
+
+[Serializable]
+public class ControllerInitialization {
+    public Dictionary<string, TypedVariable> variableInitializations;
+}
+
+
+[Serializable]
+public class TypedVariable {
+    public string type;
+    public object value;
 }

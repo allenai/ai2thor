@@ -9,6 +9,21 @@ public class FirstPersonCharacterCull : MonoBehaviour
     public MeshRenderer [] RenderersToHide; //Mesh renderer that you want this script's camera to cull
     public PhysicsRemoteFPSAgentController FPSController;
 
+
+    //references to renderers for when Agent is in Tall mode
+    public MeshRenderer [] TallRenderers;
+    //references to renderers for when the Agent is in Bot mode
+    public MeshRenderer [] BotRenderers;
+
+    public void SwitchRenderersToHide(string mode)
+    {
+        if(mode == "tall")
+        RenderersToHide = TallRenderers;
+
+        else if(mode == "bot")
+        RenderersToHide = BotRenderers;
+    }
+
     void OnPreRender() //Just before this camera starts to render...
     {
         if(!StopCullingThingsForASecond)
