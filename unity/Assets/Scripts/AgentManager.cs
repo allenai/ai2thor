@@ -101,6 +101,11 @@ public class AgentManager : MonoBehaviour
 	{
         if (action.agentType != null && action.agentType.ToLower() == "stochastic") {
             this.agents.Clear();
+
+            // stochastic must have these set to work properly
+            action.continuous = true;
+            action.snapToGrid = false;
+
             GameObject fpsController = GameObject.FindObjectOfType<BaseFPSAgentController>().gameObject;
             primaryAgent.enabled = false;
 
