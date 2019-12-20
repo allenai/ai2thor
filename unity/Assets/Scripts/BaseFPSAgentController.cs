@@ -226,11 +226,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 		public void Initialize(ServerAction action)
         {
-			if (action.cameraY > 0.0) 
-            {
-				Vector3 pos = m_Camera.transform.localPosition;
-				m_Camera.transform.localPosition = new Vector3 (pos.x, action.cameraY, pos.z);
-			}
 
             if(action.agentMode.ToLower() == "tall" || action.agentMode.ToLower() == "bot")
             {
@@ -264,6 +259,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 Debug.Log(errorMessage);
                 actionFinished(false);
                 return;
+			}
+
+			if (action.cameraY > 0.0) 
+            {
+				Vector3 pos = m_Camera.transform.localPosition;
+				m_Camera.transform.localPosition = new Vector3 (pos.x, action.cameraY, pos.z);
 			}
 
 			if (action.timeScale > 0) {
