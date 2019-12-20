@@ -158,6 +158,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         //action.makeAgentsVisible = false;
                         //action.agentMode = "bot";
                         //action.fieldOfView = 120f;
+                        //action.cameraY = 2.0f;
 
                         action.action = "Initialize";
                         AManager.Initialize(action);

@@ -261,10 +261,11 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 return;
 			}
 
-			if (action.cameraY > 0.0) 
+            //amount in the positive or negative Y axis to offset the current camera position
+			if (action.cameraY != 0.0) 
             {
 				Vector3 pos = m_Camera.transform.localPosition;
-				m_Camera.transform.localPosition = new Vector3 (pos.x, action.cameraY, pos.z);
+				m_Camera.transform.localPosition = new Vector3 (pos.x, pos.y + action.cameraY, pos.z);
 			}
 
 			if (action.timeScale > 0) {
