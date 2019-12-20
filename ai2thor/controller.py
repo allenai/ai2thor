@@ -386,8 +386,8 @@ class Controller(object):
             port=0,
             start_unity=True,
             local_executable_path=None,
-            player_screen_width=300,
-            player_screen_height=300,
+            width=300,
+            height=300,
             x_display=None,
             host='127.0.0.1',
             scene='FloorPlan_Train1_1',
@@ -416,8 +416,8 @@ class Controller(object):
         self.start(
             port=port,
             start_unity=start_unity,
-            player_screen_width=player_screen_width,
-            player_screen_height=player_screen_height,
+            player_screen_width=width,
+            player_screen_height=height,
             x_display=x_display,
             host=host
         )
@@ -444,7 +444,6 @@ class Controller(object):
             exclude_receptacle_object_pairs=[],
             max_num_repeats=1,
             remove_prob=0.5):
-
 
         if random_seed is None:
             random_seed = random.randint(0, 2**32)
