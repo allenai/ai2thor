@@ -425,6 +425,11 @@ class Controller(object):
         self.initialization_parameters = unity_initialization_parameters
         self.reset(scene)
 
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *args):
+        self.stop()
 
     def reset(self, scene='FloorPlan_Train1_1'):
         if re.match(r'^FloorPlan[0-9]+$', scene):
