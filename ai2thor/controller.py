@@ -469,6 +469,35 @@ class Controller(object):
             removeProb=remove_prob,
             randomSeed=random_seed))
 
+    def reinitialize(self, **kwargs):
+        """Reinitializes the controller with new input parameters."""
+        # this method simply delegates work to the start, reset and step(action='Initialize') methods.
+        start_params = ['port', 'start_unity', 'width', 'height', 'x_display', 'host']
+        reset_params = ['scene']
+
+        start_kwargs = dict()
+        reset_kwargs = dict()
+
+        # remove and store all start parameters
+        for param in start_params:
+            if param in kwargs:
+                start_kwargs[param] = kwargs[param]
+                del kwargs[param]
+
+        # remove and store all reset parameters
+        for param in reset_kwargs:
+            if param in kwargs:
+                reset_kwargs[param] = kwargs[param]
+                del kwargs[param]
+
+        if start_kwargs:
+            self.start(**start_kwargs)
+        if reset_kwargs:
+            self.reset(**reset_kwargs)
+        if kwargs:
+            self.step(action='Initialize', **kwargs)
+            self.initialization_parameters = kwargs
+
     def scene_names(self):
         scenes = []
         for low, high in [(1,31), (201, 231), (301, 331), (401, 431)]:
@@ -692,6 +721,11 @@ class Controller(object):
 
         raise_for_failure = action_args.pop('raise_for_failure', False)
         action.update(action_args)
+
+        if action['action'] == 'Initialize':
+            print('Initialize is now depreciated and handled in the controller.reset() method.',
+                'Please use controller.reinitialize(<initialize **kwargs>)',
+                'to change the Controller initialization parameters.', sep='\n')
 
         if self.headless:
             action["renderImage"] = False
