@@ -261,12 +261,28 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 return;
 			}
 
-            //amount in the positive or negative Y axis to offset the current camera position
-			if (action.cameraY != 0.0) 
-            {
-				Vector3 pos = m_Camera.transform.localPosition;
-				m_Camera.transform.localPosition = new Vector3 (pos.x, pos.y + action.cameraY, pos.z);
+			//if defaulted to "tall" agentMode, we assume cameraY default is 0.675f
+			if(action.agentMode.ToLower() == "tall")
+			{
+				//if camera height is not the default value
+				if(action.cameraY != 0.675f)
+				{
+			 		Vector3 pos = m_Camera.transform.localPosition;
+			 		m_Camera.transform.localPosition = new Vector3 (pos.x, pos.y + action.cameraY, pos.z);
+
+					//set camera stand/crouch local positions for Tall mode
+                	standingLocalCameraPosition = m_Camera.transform.localPosition;
+                	crouchingLocalCameraPosition = m_Camera.transform.localPosition + new Vector3(0, -0.675f, 0);// bigger y offset if tall
+
+				}
 			}
+
+            // //amount in the positive or negative Y axis to offset the current camera position
+			// if (action.cameraY != 0.0) 
+            // {
+			// 	Vector3 pos = m_Camera.transform.localPosition;
+			// 	m_Camera.transform.localPosition = new Vector3 (pos.x, pos.y + action.cameraY, pos.z);
+			// }
 
 			if (action.timeScale > 0) {
 				if (Time.timeScale != action.timeScale) {
