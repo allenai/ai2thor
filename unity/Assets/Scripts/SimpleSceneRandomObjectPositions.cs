@@ -8,6 +8,7 @@ public class SimpleSceneRandomObjectPositions : MonoBehaviour
 {
     public GameObject[] prefabs;
     public GameObject robot;
+    public GameObject objectsParent;
 
 	// get the bounds of the scene
     public GameObject maxXWall;
@@ -18,9 +19,6 @@ public class SimpleSceneRandomObjectPositions : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        string text = "Testing This";
-        Debug.Log(text.Contains("Testing"));
-        Debug.Log("Hello" + text);
         int maxX = Mathf.FloorToInt(maxXWall.transform.position.x) - 1;
         int maxZ = Mathf.FloorToInt(maxZWall.transform.position.z) - 1;
         int minX = Mathf.CeilToInt(minXWall.transform.position.x) + 1;
@@ -47,10 +45,11 @@ public class SimpleSceneRandomObjectPositions : MonoBehaviour
         foreach (GameObject prefab in prefabs) {
             int[] nextPos = (int[]) pairs[0];
 
-            Instantiate(prefab,
+            var newObject = Instantiate(prefab,
                 new Vector3(nextPos[0], prefab.transform.position.y, nextPos[1]),
                 Quaternion.Euler(new Vector3(prefab.transform.rotation.x, UnityEngine.Random.Range(0, 4) * 90, prefab.transform.rotation.z))
-		);
+			);
+            newObject.transform.parent = objectsParent.transform;
             pairs.RemoveAt(0);
 		}
         int[] lastPos = (int[]) pairs[0];
