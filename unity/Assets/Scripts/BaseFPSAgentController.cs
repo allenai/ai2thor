@@ -34,33 +34,19 @@ namespace UnityStandardAssets.Characters.FirstPerson
         protected float rotateStepDegrees = 90.0f;
 		protected bool continuousMode;
 		public ImageSynthesis imageSynthesis;
-
-		//private List<Renderer> capsuleRenderers = null;
-
         public GameObject VisibilityCapsule = null;
         public GameObject TallVisCap;
         public GameObject BotVisCap;
         private bool isVisible = true;
         public bool IsVisible
         {
-			get { return isVisible; }
-			set {
-                //first default all Vis capsules of all modes to not enabled
-                foreach(Renderer r in TallVisCap.GetComponentsInChildren<Renderer>())
-                {
-                    if(r.enabled)
-                    {
-                        r.enabled = false;
-                    }
-                }
+			get 
+            { return isVisible; }
 
-                foreach(Renderer r in BotVisCap.GetComponentsInChildren<Renderer>())
-                {
-                    if(r.enabled)
-                    {
-                        r.enabled = false;
-                    }
-                }
+			set 
+            {
+                //first default all Vis capsules of all modes to not enabled
+                HideAllAgentRenderers();
 
                 //The VisibilityCapsule will be set to either Tall or Bot 
                 //from the SetAgentMode call in BaseFPSAgentController's Initialize()
@@ -70,10 +56,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     r.enabled = value;
                 }
 				
-				// // DO NOT DISABLE THE VIS CAPSULE, instead disable the renderers below.
-				// foreach (Renderer r in capsuleRenderers) {
-				// 	r.enabled = value;
-				// }
 				isVisible = value;
 			}
         }
@@ -90,7 +72,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		//protected LerpControlledBob m_JumpBob = new LerpControlledBob();
 		//[SerializeField]
 		//private float m_StepInterval;
-
 
 		protected float[] headingAngles = new float[] { 0.0f, 90.0f, 180.0f, 270.0f };
 		protected float[] horizonAngles = new float[] { 60.0f, 30.0f, 0.0f, 330.0f };
@@ -188,6 +169,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			collidedObjects = new string[0];
 			collisionsInAction = new List<string>();
 
+            //set agent default mode to tall, setting default renderer settings
+            //this hides renderers not used in tall mode, and also sets renderer
+            //culling in FirstPersonCharacterCull.cs to ignore tall mode renderers
+            HideAllAgentRenderers();
+            SetAgentMode("tall");
+
 			// record initial positions and rotations
 			init_position = transform.position;
 			init_rotation = transform.rotation;
@@ -200,6 +187,26 @@ namespace UnityStandardAssets.Characters.FirstPerson
             // #endif
 			//allowNodes = false;
 		}
+
+        //defaults all agent renderers, both Tall and Bot, to hidden for initialization default
+        private void HideAllAgentRenderers()
+        {
+            foreach(Renderer r in TallVisCap.GetComponentsInChildren<Renderer>())
+            {
+                if(r.enabled)
+                {
+                    r.enabled = false;
+                }
+            }
+
+            foreach(Renderer r in BotVisCap.GetComponentsInChildren<Renderer>())
+            {
+                if(r.enabled)
+                {
+                    r.enabled = false;
+                }
+            }
+        }
 
 		public void actionFinished(bool success, System.Object actionReturn=null) 
 		{
