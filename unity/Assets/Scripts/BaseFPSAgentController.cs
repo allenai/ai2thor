@@ -35,33 +35,19 @@ namespace UnityStandardAssets.Characters.FirstPerson
         protected float rotateStepDegrees = 90.0f;
 		protected bool continuousMode;
 		public ImageSynthesis imageSynthesis;
-
-		//private List<Renderer> capsuleRenderers = null;
-
         public GameObject VisibilityCapsule = null;
         public GameObject TallVisCap;
         public GameObject BotVisCap;
         private bool isVisible = true;
         public bool IsVisible
         {
-			get { return isVisible; }
-			set {
-                //first default all Vis capsules of all modes to not enabled
-                foreach(Renderer r in TallVisCap.GetComponentsInChildren<Renderer>())
-                {
-                    if(r.enabled)
-                    {
-                        r.enabled = false;
-                    }
-                }
+			get 
+            { return isVisible; }
 
-                foreach(Renderer r in BotVisCap.GetComponentsInChildren<Renderer>())
-                {
-                    if(r.enabled)
-                    {
-                        r.enabled = false;
-                    }
-                }
+			set 
+            {
+                //first default all Vis capsules of all modes to not enabled
+                HideAllAgentRenderers();
 
                 //The VisibilityCapsule will be set to either Tall or Bot 
                 //from the SetAgentMode call in BaseFPSAgentController's Initialize()
@@ -71,10 +57,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     r.enabled = value;
                 }
 				
-				// // DO NOT DISABLE THE VIS CAPSULE, instead disable the renderers below.
-				// foreach (Renderer r in capsuleRenderers) {
-				// 	r.enabled = value;
-				// }
 				isVisible = value;
 			}
         }
@@ -91,7 +73,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		//protected LerpControlledBob m_JumpBob = new LerpControlledBob();
 		//[SerializeField]
 		//private float m_StepInterval;
-
 
 		protected float[] headingAngles = new float[] { 0.0f, 90.0f, 180.0f, 270.0f };
 		protected float[] horizonAngles = new float[] { 60.0f, 30.0f, 0.0f, 330.0f };
@@ -189,6 +170,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			collidedObjects = new string[0];
 			collisionsInAction = new List<string>();
 
+            //set agent default mode to tall, setting default renderer settings
+            //this hides renderers not used in tall mode, and also sets renderer
+            //culling in FirstPersonCharacterCull.cs to ignore tall mode renderers
+            HideAllAgentRenderers();
+            SetAgentMode("tall");
+
 			// record initial positions and rotations
 			init_position = transform.position;
 			init_rotation = transform.rotation;
@@ -201,6 +188,26 @@ namespace UnityStandardAssets.Characters.FirstPerson
             // #endif
 			//allowNodes = false;
 		}
+
+        //defaults all agent renderers, both Tall and Bot, to hidden for initialization default
+        private void HideAllAgentRenderers()
+        {
+            foreach(Renderer r in TallVisCap.GetComponentsInChildren<Renderer>())
+            {
+                if(r.enabled)
+                {
+                    r.enabled = false;
+                }
+            }
+
+            foreach(Renderer r in BotVisCap.GetComponentsInChildren<Renderer>())
+            {
+                if(r.enabled)
+                {
+                    r.enabled = false;
+                }
+            }
+        }
 
 		public void actionFinished(bool success, System.Object actionReturn=null) 
 		{
@@ -262,12 +269,28 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 return;
 			}
 
-            //amount in the positive or negative Y axis to offset the current camera position
-			if (action.cameraY != 0.0) 
-            {
-				Vector3 pos = m_Camera.transform.localPosition;
-				m_Camera.transform.localPosition = new Vector3 (pos.x, pos.y + action.cameraY, pos.z);
+			//if defaulted to "tall" agentMode, we assume cameraY default is 0.675f
+			if(action.agentMode.ToLower() == "tall")
+			{
+				//if camera height is not the default value
+				if(action.cameraY != 0.675f)
+				{
+			 		Vector3 pos = m_Camera.transform.localPosition;
+			 		m_Camera.transform.localPosition = new Vector3 (pos.x, pos.y + action.cameraY, pos.z);
+
+					//set camera stand/crouch local positions for Tall mode
+                	standingLocalCameraPosition = m_Camera.transform.localPosition;
+                	crouchingLocalCameraPosition = m_Camera.transform.localPosition + new Vector3(0, -0.675f, 0);// bigger y offset if tall
+
+				}
 			}
+
+            // //amount in the positive or negative Y axis to offset the current camera position
+			// if (action.cameraY != 0.0) 
+            // {
+			// 	Vector3 pos = m_Camera.transform.localPosition;
+			// 	m_Camera.transform.localPosition = new Vector3 (pos.x, pos.y + action.cameraY, pos.z);
+			// }
 
 			if (action.timeScale > 0) {
 				if (Time.timeScale != action.timeScale) {
