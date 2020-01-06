@@ -972,6 +972,7 @@ public class ServerAction
     public float movementGaussianSigma;
     public float rotateGaussianMu;
     public float rotateGaussianSigma;
+    public float rotateDegrees;
 
 	public bool forceKinematic;
 

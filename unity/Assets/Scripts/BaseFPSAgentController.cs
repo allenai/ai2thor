@@ -964,16 +964,17 @@ namespace UnityStandardAssets.Characters.FirstPerson
             actionFinished(true);
 		}
 
-        public virtual void RotateDegrees(ServerAction controlCommand) {
-            //transform.rotation =
-		}
-
         public virtual Quaternion GetRotateQuaternion(int headIndex)
 		{
 			int index = (headingAngles.Length + (currentHeadingAngleIndex() + headIndex)) % headingAngles.Length;
             float targetRotation = headingAngles[index];
             return Quaternion.Euler(new Vector3(0.0f, targetRotation, 0.0f));
 		}
+
+        public virtual void RotateDegrees(ServerAction controlCommand) {
+            Debug.Log(transform.eulerAngles.y);
+            transform.rotation = Quaternion.Euler(new Vector3(0.0f, transform.eulerAngles.y + controlCommand.rotateDegrees, 0.0f));
+        }
 
 		//rotates 90 degrees right w/ respect to current forward
 		public virtual void RotateRight(ServerAction controlCommand)

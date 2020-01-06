@@ -7,6 +7,9 @@ using System;
 public class SimpleSceneRandomObjectPositions : MonoBehaviour
 {
     public GameObject[] prefabs;
+    public GameObject apple;
+    public GameObject pit;
+    public GameObject interiorWall;
     public GameObject robot;
     public GameObject objectsParent;
 
@@ -19,7 +22,7 @@ public class SimpleSceneRandomObjectPositions : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        UnityEngine.Random.InitState(42);
+        //UnityEngine.Random.InitState(42);
         int maxX = Mathf.FloorToInt(maxXWall.transform.position.x) - 1;
         int maxZ = Mathf.FloorToInt(maxZWall.transform.position.z) - 1;
         int minX = Mathf.CeilToInt(minXWall.transform.position.x) + 1;
@@ -36,7 +39,8 @@ public class SimpleSceneRandomObjectPositions : MonoBehaviour
 
         // generate the random int positions
         ArrayList pairs = new ArrayList();
-        System.Random rand = new System.Random(42);
+        //System.Random rand = new System.Random(42);
+        System.Random rand = new System.Random();
         for (int i = 0; i < prefabs.Length + 1; i++) {
             int nextIdx = (int) rand.Next(0, combinations.Count);
             pairs.Add(combinations[nextIdx]);
