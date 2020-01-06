@@ -29,6 +29,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		protected float m_GravityMultiplier;
 
 		protected static float gridSize = 0.25f;
+ 
 		protected float moveMagnitude;
 
         protected float rotateStepDegrees = 90.0f;
@@ -936,15 +937,19 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		//rotates 90 degrees left w/ respect to current forward
 		public virtual void RotateLeft(ServerAction controlCommand)
 		{
-			transform.rotation = GetRotateQuaternion(-1);
-			actionFinished(true);
+            transform.rotation = GetRotateQuaternion(-1);
+            actionFinished(true);
+		}
+
+        public virtual void RotateDegrees(ServerAction controlCommand) {
+            //transform.rotation =
 		}
 
         public virtual Quaternion GetRotateQuaternion(int headIndex)
 		{
 			int index = (headingAngles.Length + (currentHeadingAngleIndex() + headIndex)) % headingAngles.Length;
-			float targetRotation = headingAngles[index];
-			return Quaternion.Euler(new Vector3(0.0f, targetRotation, 0.0f));
+            float targetRotation = headingAngles[index];
+            return Quaternion.Euler(new Vector3(0.0f, targetRotation, 0.0f));
 		}
 
 		//rotates 90 degrees right w/ respect to current forward

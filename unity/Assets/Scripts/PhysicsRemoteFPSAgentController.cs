@@ -1084,7 +1084,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         //checks if agent is clear to rotate left/right without object in hand hitting anything
         public bool CheckIfAgentCanTurn(int direction) {
-            bool result = true;
 
             if (ItemInHand == null) {
                 //Debug.Log("Rotation check passed: nothing in Agent Hand");
@@ -1116,7 +1115,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 }
             }
 
-            return result;
+            return true;
         }
 
         public void TeleportObject(ServerAction action) {

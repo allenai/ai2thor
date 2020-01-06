@@ -19,6 +19,7 @@ public class SimpleSceneRandomObjectPositions : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        UnityEngine.Random.InitState(42);
         int maxX = Mathf.FloorToInt(maxXWall.transform.position.x) - 1;
         int maxZ = Mathf.FloorToInt(maxZWall.transform.position.z) - 1;
         int minX = Mathf.CeilToInt(minXWall.transform.position.x) + 1;
@@ -35,15 +36,17 @@ public class SimpleSceneRandomObjectPositions : MonoBehaviour
 
         // generate the random int positions
         ArrayList pairs = new ArrayList();
-        System.Random rand = new System.Random();
+        System.Random rand = new System.Random(42);
         for (int i = 0; i < prefabs.Length + 1; i++) {
-            int nextIdx = rand.Next(0, combinations.Count);
+            int nextIdx = (int) rand.Next(0, combinations.Count);
             pairs.Add(combinations[nextIdx]);
             combinations.RemoveAt(nextIdx);
 		}
 
         foreach (GameObject prefab in prefabs) {
             int[] nextPos = (int[]) pairs[0];
+            Debug.Log(nextPos[0]);
+            Debug.Log(nextPos[1]);
 
             var newObject = Instantiate(prefab,
                 new Vector3(nextPos[0], prefab.transform.position.y, nextPos[1]),

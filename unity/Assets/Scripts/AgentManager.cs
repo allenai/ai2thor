@@ -973,7 +973,6 @@ public class ServerAction
     public float rotateGaussianMu;
     public float rotateGaussianSigma;
 
-
 	public bool forceKinematic;
 
 	public float maxAgentsDistance = -1.0f;

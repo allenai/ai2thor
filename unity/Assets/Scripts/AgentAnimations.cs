@@ -3,25 +3,49 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityStandardAssets.Characters.FirstPerson;
 
-public class AgentAnimations : MonoBehaviour
+public class AgentAnimations : PhysicsRemoteFPSAgentController
 {
 
-	public PhysicsRemoteFPSAgentController agent;
+    [SerializeField] private PhysicsRemoteFPSAgentController agent;
+    [SerializeField] private ServerAction a;
+	public GameObject gridLine;
 
 	// Start is called before the first frame update
 	void Start()
     {
-		Debug.Log(agent);
-		Debug.Log(agent.sceneBounds);
-		Debug.Log(agent.AgentHandLocation());
+		a = new ServerAction();
+		a.moveMagnitude = 0.1f;
+		gridSize = 0.01f;
+		//agent.LookUp(a);
+        for (int i = 0; i < 11; i++) {
+            GameObject newLine = Instantiate(gridLine, new Vector3(5, 0, -i + 0.5f), gridLine.transform.rotation);
+			newLine.transform.localScale = new Vector3(10, newLine.transform.localScale.y, newLine.transform.localScale.z);
+		}
+
+        for (int i = 0; i < 11; i++) {
+            GameObject newLine = Instantiate(gridLine, new Vector3(i + 0.5f, 0, -5),
+				Quaternion.Euler(new Vector3(gridLine.transform.rotation.x, 90, gridLine.transform.rotation.z)));
+			newLine.transform.localScale = new Vector3(10, newLine.transform.localScale.y, newLine.transform.localScale.z);
+        }
     }
+
+	int i = 0;
 
     // Update is called once per frame
     void Update()
     {
-	    transform.Translate(Vector3.forward * Time.deltaTime * 0.2f);
-        if (((int) Time.deltaTime ) % 4 == 0) {
-			//agent.AgentHandLocations();
-		}
+        //if (i == 5) {
+            //MA();
+		//}
+        //if (i < 10) {
+            //agent.actionComplete = false;
+			//agent.MoveAhead(a);
+		//}
+        //i++;
+		//agent.actionComplete = false;
+		//agent.MoveAhead(a);
+		//agent.MoveAhead(a);
+		//agent.actionComplete = false;
     }
+
 }
