@@ -196,4 +196,47 @@ public static class UtilityFunctions {
              Mathf.Round(vector3.z * multiplier) / multiplier);
     }
 
+    //for use with each of the 8 corners of a picked up object's bounding box - returns an array of Vector3 points along the arc of the rotation for a given starting point
+    //given a starting Vector3, rotate about an origin point for a total given angle. maxIncrementAngle is the maximum value of the increment between points on the arc. 
+    //pivot is true - rotate around Y (rotate left/right), false - rotate around X (look up/down)
+    static Vector3[] GenerateArcPoints(Vector3 startingPoint, Vector3 origin, float angle, float maxIncrementAngle, bool pivot)
+    {
+
+        //Define number of bounding boxes that will be used, based on the user-defined maximum increment angle
+        float incrementAngle = angle * (Mathf.PI / 180) / Mathf.Ceil(Mathf.Abs(angle / maxIncrementAngle));
+        Vector3[] arcPoints = new Vector3[Mathf.CeilToInt(Mathf.Abs(angle / maxIncrementAngle))];
+        float currentIncrementAngle;
+
+        if (pivot) //Yawing (Rotating across XZ plane around Y-pivot)
+        {
+            float newX;
+            float newZ;
+
+            for (int i = 0; i < arcPoints.Length; i++)
+            {
+                currentIncrementAngle = (i + 1) * incrementAngle;
+                newX = Mathf.Cos(currentIncrementAngle) * (startingPoint.x - origin.x) - Mathf.Sin(currentIncrementAngle) * (startingPoint.z - origin.z) + origin.x;
+                newZ = Mathf.Sin(currentIncrementAngle) * (startingPoint.x - origin.x) + Mathf.Cos(currentIncrementAngle) * (startingPoint.z - origin.z) + origin.z;
+                arcPoints[i] = new Vector3(newX, startingPoint.y, newZ);
+            }
+
+            return arcPoints;
+        }
+
+        else //Pitching (Rotating across YZ plane around X-pivot)
+        {
+            float newY;
+            float newZ;
+
+            for (int i = 0; i < arcPoints.Length; i++)
+            {
+                currentIncrementAngle = (i + 1) * incrementAngle;
+                newY = Mathf.Cos(currentIncrementAngle) * (startingPoint.y - origin.y) - Mathf.Sin(currentIncrementAngle) * (startingPoint.z - origin.z) + origin.y;
+                newZ = Mathf.Sin(currentIncrementAngle) * (startingPoint.y - origin.y) + Mathf.Cos(currentIncrementAngle) * (startingPoint.z - origin.z) + origin.z;
+                arcPoints[i] = new Vector3(startingPoint.x, newY, newZ);
+            }
+
+            return arcPoints;
+        }
+    }
 }
