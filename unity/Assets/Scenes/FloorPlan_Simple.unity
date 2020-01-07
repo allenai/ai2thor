@@ -1774,7 +1774,7 @@ GameObject:
   - component: {fileID: 106153911}
   - component: {fileID: 106153912}
   m_Layer: 8
-  m_Name: Col
+  m_Name: YouveActivatedMyTrapCard
   m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1805,8 +1805,8 @@ BoxCollider:
   m_IsTrigger: 1
   m_Enabled: 1
   serializedVersion: 2
-  m_Size: {x: 1, y: 1, z: 1}
-  m_Center: {x: 0, y: 0, z: 0}
+  m_Size: {x: 0.53285253, y: 1.3123562, z: 0.5501782}
+  m_Center: {x: 0, y: 0.15617812, z: 0}
 --- !u!1 &168939403
 GameObject:
   m_ObjectHideFlags: 0
@@ -17612,6 +17612,7 @@ MonoBehaviour:
     useAgentTransform: 0
   gridLine: {fileID: 3381957051335233118, guid: be5ba68408e0b453e9e806e7eb76c2b3,
     type: 3}
+  yugi: 0
 --- !u!114 &1916272636 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 114749714472260818, guid: 5e9e851c0e142814dac026a256ba2ac0,
@@ -17619,7 +17620,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 2007864987}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1916272631}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 2d22dfd375bd14529b5d465c7b493eb0, type: 3}
   m_Name: 
@@ -18399,13 +18400,18 @@ PrefabInstance:
       propertyPath: m_IsActive
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 114749714472260818, guid: 5e9e851c0e142814dac026a256ba2ac0,
+        type: 3}
+      propertyPath: m_Enabled
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 400000, guid: 5e9e851c0e142814dac026a256ba2ac0, type: 3}
       propertyPath: m_LocalPosition.x
       value: 5.08
       objectReference: {fileID: 0}
     - target: {fileID: 400000, guid: 5e9e851c0e142814dac026a256ba2ac0, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 1.02
+      value: 1.531
       objectReference: {fileID: 0}
     - target: {fileID: 400000, guid: 5e9e851c0e142814dac026a256ba2ac0, type: 3}
       propertyPath: m_LocalPosition.z
@@ -19576,6 +19582,10 @@ MonoBehaviour:
   isInAgentHand: 0
   MyColliders:
   - {fileID: 1247159202}
+  - {fileID: 295738136}
+  - {fileID: 1663976933}
+  - {fileID: 1827448610}
+  - {fileID: 1467490744}
   HFdynamicfriction: 0
   HFstaticfriction: 0
   HFbounciness: 0

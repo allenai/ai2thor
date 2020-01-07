@@ -3,12 +3,14 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityStandardAssets.Characters.FirstPerson;
 
-public class AgentAnimations : PhysicsRemoteFPSAgentController
+public class AgentAnimations : PhysicsRemoteFPSAgentController 
 {
 
     [SerializeField] private PhysicsRemoteFPSAgentController agent;
     [SerializeField] private ServerAction a;
 	public GameObject gridLine;
+
+    public bool yugi = false;
 
 	// Start is called before the first frame update
 	void Start()
@@ -17,6 +19,9 @@ public class AgentAnimations : PhysicsRemoteFPSAgentController
 		a.moveMagnitude = 0.1f;
 		gridSize = 0.01f;
         a.rotateDegrees = 5.0f;
+
+        collisionsInAction = new List<string>();
+
 		//agent.LookUp(a);
         /*
         for (int i = 0; i < 11; i++) {
@@ -67,6 +72,13 @@ public class AgentAnimations : PhysicsRemoteFPSAgentController
 // Update is called once per frame
 void Update()
     {
+        if(yugi)
+        {
+            Vector3 moveDirection = Vector3.zero;
+            moveDirection.y -= (-Physics.gravity.y * Time.deltaTime * m_GravityMultiplier);
+            
+            m_CharacterController.Move(moveDirection * Time.deltaTime);
+        }
         //a.rotateDegrees = a.rotateDegrees + 5.0f;
         //Debug.Log(a.rotateDegrees);
         //agent.RotateDegrees(a);
@@ -83,6 +95,15 @@ void Update()
         //agent.MoveAhead(a);
         //agent.MoveAhead(a);
         //agent.actionComplete = false;
+    }
+
+    void OnTriggerStay(Collider other)
+    {
+        if(other.name == "YouveActivatedMyTrapCard" && yugi == false)
+        {
+            yugi = true;
+            other.gameObject.SetActive(false);
+        }
     }
 
 }
