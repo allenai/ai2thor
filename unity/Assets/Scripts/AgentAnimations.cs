@@ -18,15 +18,18 @@ public class AgentAnimations : PhysicsRemoteFPSAgentController
 		gridSize = 0.01f;
         a.rotateDegrees = 5.0f;
         //agent.LookUp(a);
-        for (int i = -1; i <= 11; i++) {
+        for (int i = 0; i <= 10; i++) {
             GameObject newLine = Instantiate(gridLine, new Vector3(5, 0, -i), gridLine.transform.rotation);
-			newLine.transform.localScale = new Vector3(11, newLine.transform.localScale.y, newLine.transform.localScale.z);
+			//newLine.transform.localScale = new Vector3(11, newLine.transform.localScale.y, newLine.transform.localScale.z);
+			//newLine.transform.localScale = new Vector3(11, newLine.transform.localScale.y, newLine.transform.localScale.z);
+			newLine.transform.localScale = new Vector3(newLine.transform.localScale.x, 5, newLine.transform.localScale.z);
 		}
 
-        for (int i = -1; i <= 11; i++) {
+        for (int i = 0; i <= 10; i++) {
             GameObject newLine = Instantiate(gridLine, new Vector3(i, 0, -5),
-				Quaternion.Euler(new Vector3(gridLine.transform.rotation.x, 90, gridLine.transform.rotation.z)));
-			newLine.transform.localScale = new Vector3(11, newLine.transform.localScale.y, newLine.transform.localScale.z);
+				Quaternion.Euler(new Vector3(90, 0, 0)));
+			//newLine.transform.localScale = new Vector3(11, newLine.transform.localScale.y, newLine.transform.localScale.z);
+			newLine.transform.localScale = new Vector3(newLine.transform.localScale.x, 5, newLine.transform.localScale.z);
         }
 
     }
