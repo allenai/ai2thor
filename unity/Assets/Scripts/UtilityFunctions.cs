@@ -198,23 +198,23 @@ public static class UtilityFunctions {
 
     //for use with each of the 8 corners of a picked up object's bounding box - returns an array of Vector3 points along the arc of the rotation for a given starting point
     //given a starting Vector3, rotate about an origin point for a total given angle. maxIncrementAngle is the maximum value of the increment between points on the arc. 
-    //pivot is true - rotate around Y (rotate left/right), false - rotate around X (look up/down)
-    static Vector3[] GenerateArcPoints(Vector3 startingPoint, Vector3 origin, float angle, float maxIncrementAngle, bool pivot)
+    //if leftOrRight is true - rotate around Y (rotate left/right), false - rotate around X (look up/down)
+    public static Vector3[] GenerateArcPoints(Vector3 startingPoint, Vector3 origin, float angle, float maxIncrementAngle, bool leftOrRight)
     {
 
         //Define number of bounding boxes that will be used, based on the user-defined maximum increment angle
         float incrementAngle = angle * (Mathf.PI / 180) / Mathf.Ceil(Mathf.Abs(angle / maxIncrementAngle));
-        Vector3[] arcPoints = new Vector3[Mathf.CeilToInt(Mathf.Abs(angle / maxIncrementAngle))];
+        Vector3[] arcPoints = new Vector3[Mathf.CeilToInt(Mathf.Abs(angle / maxIncrementAngle)) + 1];
         float currentIncrementAngle;
 
-        if (pivot) //Yawing (Rotating across XZ plane around Y-pivot)
+        if (leftOrRight) //Yawing (Rotating across XZ plane around Y-pivot)
         {
             float newX;
             float newZ;
 
             for (int i = 0; i < arcPoints.Length; i++)
             {
-                currentIncrementAngle = (i + 1) * incrementAngle;
+                currentIncrementAngle = i * -incrementAngle;//opposite angle because the y axis is weird
                 newX = Mathf.Cos(currentIncrementAngle) * (startingPoint.x - origin.x) - Mathf.Sin(currentIncrementAngle) * (startingPoint.z - origin.z) + origin.x;
                 newZ = Mathf.Sin(currentIncrementAngle) * (startingPoint.x - origin.x) + Mathf.Cos(currentIncrementAngle) * (startingPoint.z - origin.z) + origin.z;
                 arcPoints[i] = new Vector3(newX, startingPoint.y, newZ);
@@ -230,7 +230,7 @@ public static class UtilityFunctions {
 
             for (int i = 0; i < arcPoints.Length; i++)
             {
-                currentIncrementAngle = (i + 1) * incrementAngle;
+                currentIncrementAngle = i * incrementAngle;
                 newY = Mathf.Cos(currentIncrementAngle) * (startingPoint.y - origin.y) - Mathf.Sin(currentIncrementAngle) * (startingPoint.z - origin.z) + origin.y;
                 newZ = Mathf.Sin(currentIncrementAngle) * (startingPoint.y - origin.y) + Mathf.Cos(currentIncrementAngle) * (startingPoint.z - origin.z) + origin.z;
                 arcPoints[i] = new Vector3(startingPoint.x, newY, newZ);
@@ -238,5 +238,22 @@ public static class UtilityFunctions {
 
             return arcPoints;
         }
+    }
+
+    public static Vector3[] CornerCoordinatesOfBoxColliderToWorld(BoxCollider b)
+    {
+        Vector3[] corners = new Vector3[8];
+
+        corners[0] = b.transform.TransformPoint(b.center + new Vector3(b.size.x, -b.size.y, b.size.z) * 0.5f);
+        corners[1] = b.transform.TransformPoint(b.center + new Vector3(-b.size.x, -b.size.y, b.size.z) * 0.5f);
+        corners[2] = b.transform.TransformPoint(b.center + new Vector3(-b.size.x, -b.size.y, -b.size.z) * 0.5f);
+        corners[3] = b.transform.TransformPoint(b.center + new Vector3(b.size.x, -b.size.y, -b.size.z) * 0.5f);
+
+        corners[4] = b.transform.TransformPoint(b.center + new Vector3(b.size.x, b.size.y, b.size.z) * 0.5f);
+        corners[5] = b.transform.TransformPoint(b.center + new Vector3(-b.size.x, b.size.y, b.size.z) * 0.5f);
+        corners[6] = b.transform.TransformPoint(b.center + new Vector3(-b.size.x, b.size.y, -b.size.z) * 0.5f);
+        corners[7] = b.transform.TransformPoint(b.center + new Vector3(b.size.x, b.size.y, -b.size.z) * 0.5f);
+
+        return corners;
     }
 }

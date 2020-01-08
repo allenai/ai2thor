@@ -785,39 +785,25 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		//rotates 90 degrees left w/ respect to current forward
 		public virtual void RotateLeft(ServerAction controlCommand)
 		{
-			int index = currentHeadingAngleIndex() - 1;
-			if (index < 0)
-			{
-				index = headingAngles.Length - 1;
-			}
-			float targetRotation = headingAngles[index];
-			transform.rotation = Quaternion.Euler(new Vector3(0.0f, targetRotation, 0.0f));
+            transform.Rotate(0, controlCommand.degrees, 0);
 			actionFinished(true);
-
 		}
 
 		//rotates 90 degrees right w/ respect to current forward
 		public virtual void RotateRight(ServerAction controlCommand)
 		{
-
-			int index = currentHeadingAngleIndex() + 1;
-			if (index == headingAngles.Length)
-			{
-				index = 0;
-			}
-
-			float targetRotation = headingAngles[index];
-			transform.rotation = Quaternion.Euler(new Vector3(0.0f, targetRotation, 0.0f));
+            transform.Rotate(0, controlCommand.degrees, 0);
 			actionFinished(true);
 		}
 
 		//iterates to next allowed downward horizon angle for AgentCamera (max 60 degrees down)
-		public virtual void LookDown(ServerAction response)
+		public virtual void LookDown(ServerAction controlCommand)
 		{
 			if (currentHorizonAngleIndex() > 0)
 			{
-				float targetHorizon = horizonAngles[currentHorizonAngleIndex() - 1];
-				m_Camera.transform.localEulerAngles = new Vector3(targetHorizon, 0.0f, 0.0f);
+				// float targetHorizon = horizonAngles[currentHorizonAngleIndex() - 1];
+				// m_Camera.transform.localEulerAngles = new Vector3(targetHorizon, 0.0f, 0.0f);
+                m_Camera.transform.Rotate(controlCommand.degrees, 0, 0);
 				actionFinished(true);
 
 			}
@@ -836,8 +822,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 			if (currentHorizonAngleIndex() < horizonAngles.Length - 1)
 			{
-				float targetHorizon = horizonAngles[currentHorizonAngleIndex() + 1];
-				m_Camera.transform.localEulerAngles = new Vector3(targetHorizon, 0.0f, 0.0f);
+				// float targetHorizon = horizonAngles[currentHorizonAngleIndex() + 1];
+				// m_Camera.transform.localEulerAngles = new Vector3(targetHorizon, 0.0f, 0.0f);
+                m_Camera.transform.Rotate(controlCommand.degrees, 0, 0);
 				actionFinished(true);
 			}
 

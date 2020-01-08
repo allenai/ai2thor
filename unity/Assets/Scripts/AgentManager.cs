@@ -1074,16 +1074,14 @@ public class ServerAction
     public float drag;
     public float angularDrag;
     public ObjectTypeCount[] numDuplicatesOfType; //specify, by object Type, how many duplicates of that given object type to try and spawn
-    
     //use only the objectType class member to specify which receptacle objects should be excluded from the valid receptacles to spawn objects in
     public ObjectTypeCount[] excludedReceptacles; 
     public ObjectPose[] objectPoses;
     public SetObjectStates SetObjectStates;
-
     public float minDistance;//used in target circle spawning function
     public float maxDistance;//used in target circle spawning function
-
     public int maxStepCount;
+    public float degrees;//for rotate let/right/up/down
 
     public SimObjType ReceptableSimObjType()
 	{

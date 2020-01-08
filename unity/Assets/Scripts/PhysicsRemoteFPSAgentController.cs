@@ -1078,44 +1078,67 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return result;
         }
 
-        public override void LookDown(ServerAction response) {
+        public override void LookDown(ServerAction response) 
+        {
+            if(response.degrees == 0)
+            {
+                response.degrees = -30f;
+            }
+
             float targetHorizon = 0.0f;
 
-            if (currentHorizonAngleIndex() > 0) {
+            if (currentHorizonAngleIndex() > 0) 
+            {
                 targetHorizon = horizonAngles[currentHorizonAngleIndex() - 1];
             }
 
             int down = -1;
 
-            if (CheckIfAgentCanLook(targetHorizon, down)) {
+            if (CheckIfAgentCanLook(targetHorizon, down)) 
+            {
                 DefaultAgentHand(response);
                 base.LookDown(response);
-            } else {
+            } 
+            
+            else 
+            {
                 actionFinished(false);
             }
 
             SetUpRotationBoxChecks();
         }
 
-        public override void LookUp(ServerAction controlCommand) {
+        public override void LookUp(ServerAction controlCommand) 
+        {
+            if(controlCommand.degrees == 0)
+            {
+                controlCommand.degrees = 30f;
+            }
+
             float targetHorizon = 0.0f;
 
-            if (currentHorizonAngleIndex() < horizonAngles.Length - 1) {
+            if (currentHorizonAngleIndex() < horizonAngles.Length - 1) 
+            {
                 targetHorizon = horizonAngles[currentHorizonAngleIndex() + 1];
             }
 
             int up = 1;
 
-            if (CheckIfAgentCanLook(targetHorizon, up)) {
+            if (CheckIfAgentCanLook(targetHorizon, up)) 
+            {
                 DefaultAgentHand(controlCommand);
                 base.LookUp(controlCommand);
-            } else {
+            } 
+            
+            else 
+            {
                 actionFinished(false);
             }
 
             SetUpRotationBoxChecks();
         }
 
+        //GOING TO REPLACE THIS WITH CheckIfAgentCanRotate
         public bool CheckIfAgentCanLook(float targetAngle, int updown) {
             //print(targetAngle);
             if (ItemInHand == null) {
@@ -1148,61 +1171,138 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             return result;
         }
+        ///////////////////
 
-        public override void RotateRight(ServerAction controlCommand) {
-            if (CheckIfAgentCanTurn(90)||controlCommand.forceAction) {
+        public override void RotateRight(ServerAction controlCommand) 
+        {
+            //if controlCommand.degrees is default (0), rotate 90 by default
+            if(controlCommand.degrees == 0f)
+            controlCommand.degrees = 90f;
+
+            if (CheckIfAgentCanRotate("right", controlCommand.degrees)||controlCommand.forceAction) 
+            {
                 DefaultAgentHand(controlCommand);
+                //change controlCommand.
                 base.RotateRight(controlCommand);
-            } else {
+            } 
+
+            else 
+            {
+                errorMessage = "a held item will collide with something if agent rotates Right" + controlCommand.degrees+ " degrees";
                 actionFinished(false);
             }
 
         }
 
-        public override void RotateLeft(ServerAction controlCommand) {
-            if (CheckIfAgentCanTurn(-90)||controlCommand.forceAction) {
+        public override void RotateLeft(ServerAction controlCommand) 
+        {
+            //if controlCommand.degrees is default (0), rotate 90 by default
+            if(controlCommand.degrees == 0f)
+            controlCommand.degrees = -90f;
+
+            if (CheckIfAgentCanRotate("left", controlCommand.degrees)||controlCommand.forceAction) 
+            {
                 DefaultAgentHand(controlCommand);
                 base.RotateLeft(controlCommand);
 
-            } else {
+            } 
+
+            else 
+            {
+                errorMessage = "a held item will collid with something if the gaent rotates Left " + controlCommand.degrees + " degrees";
                 actionFinished(false);
             }
         }
 
-        //checks if agent is clear to rotate left/right without object in hand hitting anything
-        public bool CheckIfAgentCanTurn(int direction) {
-            bool result = true;
+        //checks if agent is clear to rotate left/right/up/down some number of degrees while holding an object
+        public bool CheckIfAgentCanRotate(string direction, float degrees) {
 
             if (ItemInHand == null) {
                 //Debug.Log("Rotation check passed: nothing in Agent Hand");
                 return true;
             }
 
-            if (direction != 90 && direction != -90) {
-                Debug.Log("Please give -90(left) or 90(right) as direction parameter");
-                return false;
-            }
+            bool result = true;
 
-            //if turning right, check first 3 in array (30R, 60R, 90R)
-            if (direction > 0) {
-                for (int i = 0; i < 6; i++) {
-                    if (RotateRLTriggerBoxes[i].GetComponent<RotationTriggerCheck>().isColliding == true) {
-                        Debug.Log("Can't rotate right");
-                        return false;
+            BoxCollider bb = ItemInHand.GetComponent<SimObjPhysics>().BoundingBox.GetComponent<BoxCollider>();
+
+            //get world coordinates of object in hand's bounding box corners
+            Vector3[] corners = UtilityFunctions.CornerCoordinatesOfBoxColliderToWorld(bb);
+
+            //ok now we have each corner, let's rotate them the specified direction
+            if(direction == "right")
+            {
+                //generate arc points in the positive y axis rotation
+                foreach(Vector3 v in corners)
+                {
+                    Vector3[] pointsOnArc = UtilityFunctions.GenerateArcPoints(v, m_Camera.transform.position, degrees, degrees/10f, true);
+
+                    //raycast from first point in pointsOnArc, stepwise to the last point. If any collisions are hit, immediately return
+                    for(int i = 0; i < 7; i++)
+                    {
+                        if(Physics.Linecast(pointsOnArc[i], pointsOnArc[i+1], 1 << 8 | 1 << 10, QueryTriggerInteraction.Ignore))
+                        {
+                            result = false;
+                        }
                     }
                 }
             }
 
-            //if turning left, check last 3 in array (30L, 60L, 90L)
-            else {
-                for (int i = 6; i < 11; i++) {
-                    if (RotateRLTriggerBoxes[i].GetComponent<RotationTriggerCheck>().isColliding == true) {
-                        Debug.Log("Can't rotate left");
-                        return false;
+            else if(direction == "left")
+            {
+                //generate arc points in the positive y axis rotation
+                foreach(Vector3 v in corners)
+                {
+                    Vector3[] pointsOnArc = UtilityFunctions.GenerateArcPoints(v, m_Camera.transform.position, degrees, degrees/10f, true);
+
+                    //raycast from first point in pointsOnArc, stepwise to the last point. If any collisions are hit, immediately return
+                    for(int i = 0; i < 7; i++)
+                    {
+                        if(Physics.Linecast(pointsOnArc[i], pointsOnArc[i+1], 1 << 8 | 1 << 10, QueryTriggerInteraction.Ignore))
+                        {
+                            result = false;
+                        }
                     }
                 }
             }
 
+            else if(direction == "up")
+            {
+                //generate arc points in the positive x axis rotation
+                foreach(Vector3 v in corners)
+                {
+                    Vector3[] pointsOnArc = UtilityFunctions.GenerateArcPoints(v, m_Camera.transform.position, degrees, degrees/10f, false);
+
+                    //raycast from first point in pointsOnArc, stepwise to the last point. If any collisions are hit, immediately return
+                    for(int i = 0; i < 7; i++)
+                    {
+                        if(Physics.Linecast(pointsOnArc[i], pointsOnArc[i+1], 1 << 8 | 1 << 10, QueryTriggerInteraction.Ignore))
+                        {
+                            result = false;
+                        }
+                    }
+                }
+            }
+
+            else if(direction == "down")
+            {
+                //generate arc points in the negative x axis rotation
+                foreach(Vector3 v in corners)
+                {
+                    Vector3[] pointsOnArc = UtilityFunctions.GenerateArcPoints(v, m_Camera.transform.position, degrees, degrees/10f, false);
+
+                    //raycast from first point in pointsOnArc, stepwise to the last point. If any collisions are hit, immediately return
+                    for(int i = 0; i < 7; i++)
+                    {
+                        if(Physics.Linecast(pointsOnArc[i], pointsOnArc[i+1], 1 << 8 | 1 << 10, QueryTriggerInteraction.Ignore))
+                        {
+                            result = false;
+                        }
+                    }
+                }
+            }
+
+            //no checks flagged anything, good to go, return true i guess
             return result;
         }
 
