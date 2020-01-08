@@ -17,25 +17,24 @@ public class AgentAnimations : PhysicsRemoteFPSAgentController
 		a.moveMagnitude = 0.1f;
 		gridSize = 0.01f;
         a.rotateDegrees = 5.0f;
-		//agent.LookUp(a);
-        /*
-        for (int i = 0; i < 11; i++) {
-            GameObject newLine = Instantiate(gridLine, new Vector3(5, 0, -i + 0.5f), gridLine.transform.rotation);
-			newLine.transform.localScale = new Vector3(10, newLine.transform.localScale.y, newLine.transform.localScale.z);
+        //agent.LookUp(a);
+        for (int i = -1; i <= 11; i++) {
+            GameObject newLine = Instantiate(gridLine, new Vector3(5, 0, -i), gridLine.transform.rotation);
+			newLine.transform.localScale = new Vector3(11, newLine.transform.localScale.y, newLine.transform.localScale.z);
 		}
 
-        for (int i = 0; i < 11; i++) {
-            GameObject newLine = Instantiate(gridLine, new Vector3(i + 0.5f, 0, -5),
+        for (int i = -1; i <= 11; i++) {
+            GameObject newLine = Instantiate(gridLine, new Vector3(i, 0, -5),
 				Quaternion.Euler(new Vector3(gridLine.transform.rotation.x, 90, gridLine.transform.rotation.z)));
-			newLine.transform.localScale = new Vector3(10, newLine.transform.localScale.y, newLine.transform.localScale.z);
-        }*/
+			newLine.transform.localScale = new Vector3(11, newLine.transform.localScale.y, newLine.transform.localScale.z);
+        }
 
-}
+    }
 
-//int i = 0;
+    //int i = 0;
 
-// Update is called once per frame
-void Update()
+    // Update is called once per frame
+    void Update()
     {
         //a.rotateDegrees = a.rotateDegrees + 5.0f;
         //Debug.Log(a.rotateDegrees);
