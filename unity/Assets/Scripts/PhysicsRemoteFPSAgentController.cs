@@ -1078,138 +1078,91 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return result;
         }
 
-        public override void LookDown(ServerAction response) 
+        public override void LookDown(ServerAction action) 
         {
-            if(response.degrees == 0)
+            //default degree increment to 30
+            if(action.degrees == 0)
             {
-                response.degrees = -30f;
+                action.degrees = -30f;
             }
 
-            float targetHorizon = 0.0f;
-
-            if (currentHorizonAngleIndex() > 0) 
+            if (CheckIfAgentCanRotate("down", action.degrees)) 
             {
-                targetHorizon = horizonAngles[currentHorizonAngleIndex() - 1];
-            }
-
-            int down = -1;
-
-            if (CheckIfAgentCanLook(targetHorizon, down)) 
-            {
-                DefaultAgentHand(response);
-                base.LookDown(response);
+                DefaultAgentHand(action);
+                //base.LookDown(action);
             } 
             
             else 
             {
-                actionFinished(false);
+                errorMessage = "can't look down below the minimum angle (-60)";
+			 	errorCode = ServerActionErrorCode.LookDownCantExceedMin;
+			 	actionFinished(false);
             }
 
-            SetUpRotationBoxChecks();
+            //SetUpRotationBoxChecks();
         }
 
-        public override void LookUp(ServerAction controlCommand) 
+        public override void LookUp(ServerAction action) 
         {
-            if(controlCommand.degrees == 0)
+            //default degree increment to 30
+            if(action.degrees == 0)
             {
-                controlCommand.degrees = 30f;
+                action.degrees = 30f;
             }
 
-            float targetHorizon = 0.0f;
-
-            if (currentHorizonAngleIndex() < horizonAngles.Length - 1) 
+            if (CheckIfAgentCanRotate("up", action.degrees)) 
             {
-                targetHorizon = horizonAngles[currentHorizonAngleIndex() + 1];
-            }
-
-            int up = 1;
-
-            if (CheckIfAgentCanLook(targetHorizon, up)) 
-            {
-                DefaultAgentHand(controlCommand);
-                base.LookUp(controlCommand);
+                DefaultAgentHand(action);
+                //base.LookUp(action);
             } 
             
             else 
             {
-                actionFinished(false);
+                errorMessage = "can't look above the maximum angle (60)";
+			 	errorCode = ServerActionErrorCode.LookDownCantExceedMin;
+			 	actionFinished(false);
             }
 
-            SetUpRotationBoxChecks();
+            //SetUpRotationBoxChecks();
         }
 
-        //GOING TO REPLACE THIS WITH CheckIfAgentCanRotate
-        public bool CheckIfAgentCanLook(float targetAngle, int updown) {
-            //print(targetAngle);
-            if (ItemInHand == null) {
-                //Debug.Log("Look check passed: nothing in Agent Hand to prevent Angle change");
-                return true;
-            }
-
-            //returns true if Rotation is allowed
-            bool result = true;
-
-            //check if we can look up without hitting something
-            if (updown > 0) {
-                for (int i = 0; i < 3; i++) {
-                    if (LookUDTriggerBoxes[i].GetComponent<RotationTriggerCheck>().isColliding == true) {
-                        Debug.Log("Object In way, Can't Look Up");
-                        return false;
-                    }
-                }
-            }
-
-            //check if we can look down without hitting something
-            if (updown < 0) {
-                for (int i = 3; i < 6; i++) {
-                    if (LookUDTriggerBoxes[i].GetComponent<RotationTriggerCheck>().isColliding == true) {
-                        Debug.Log("Object in way, Can't Look down");
-                        return false;
-                    }
-                }
-            }
-
-            return result;
-        }
-        ///////////////////
-
-        public override void RotateRight(ServerAction controlCommand) 
+        public override void RotateRight(ServerAction action) 
         {
             //if controlCommand.degrees is default (0), rotate 90 by default
-            if(controlCommand.degrees == 0f)
-            controlCommand.degrees = 90f;
+            if(action.degrees == 0f)
+            action.degrees = 90f;
 
-            if (CheckIfAgentCanRotate("right", controlCommand.degrees)||controlCommand.forceAction) 
+            if (CheckIfAgentCanRotate("right", action.degrees)||action.forceAction) 
             {
-                DefaultAgentHand(controlCommand);
+                DefaultAgentHand(action);
                 //change controlCommand.
-                base.RotateRight(controlCommand);
+                base.RotateRight(action);
             } 
 
             else 
             {
-                errorMessage = "a held item will collide with something if agent rotates Right" + controlCommand.degrees+ " degrees";
+                errorMessage = "a held item will collide with something if agent rotates Right" + action.degrees+ " degrees";
                 actionFinished(false);
             }
 
         }
 
-        public override void RotateLeft(ServerAction controlCommand) 
+        public override void RotateLeft(ServerAction action) 
         {
             //if controlCommand.degrees is default (0), rotate 90 by default
-            if(controlCommand.degrees == 0f)
-            controlCommand.degrees = -90f;
+            if(action.degrees == 0f)
+            action.degrees = -90f;
 
-            if (CheckIfAgentCanRotate("left", controlCommand.degrees)||controlCommand.forceAction) 
+            if (CheckIfAgentCanRotate("left", action.degrees)||action.forceAction) 
             {
-                DefaultAgentHand(controlCommand);
-                base.RotateLeft(controlCommand);
+                DefaultAgentHand(action);
+                base.RotateLeft(action);
 
             } 
 
             else 
             {
-                errorMessage = "a held item will collid with something if the gaent rotates Left " + controlCommand.degrees + " degrees";
+                errorMessage = "a held item will collid with something if the agent rotates Left " + action.degrees + " degrees";
                 actionFinished(false);
             }
         }
@@ -1276,6 +1229,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     //raycast from first point in pointsOnArc, stepwise to the last point. If any collisions are hit, immediately return
                     for(int i = 0; i < 7; i++)
                     {
+                        GameObject Sphere = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+                        Sphere.transform.position = pointsOnArc[i];
+                        Sphere.transform.localScale = new Vector3(0.02f, 0.02f, 0.02f);
+                        Sphere.GetComponent<SphereCollider>().enabled = false;
+
                         if(Physics.Linecast(pointsOnArc[i], pointsOnArc[i+1], 1 << 8 | 1 << 10, QueryTriggerInteraction.Ignore))
                         {
                             result = false;
@@ -1294,6 +1252,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     //raycast from first point in pointsOnArc, stepwise to the last point. If any collisions are hit, immediately return
                     for(int i = 0; i < 7; i++)
                     {
+
+                        GameObject Sphere = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+                        Sphere.transform.position = pointsOnArc[i];
+                        Sphere.transform.localScale = new Vector3(0.02f, 0.02f, 0.02f);
+                        Sphere.GetComponent<SphereCollider>().enabled = false;
+
                         if(Physics.Linecast(pointsOnArc[i], pointsOnArc[i+1], 1 << 8 | 1 << 10, QueryTriggerInteraction.Ignore))
                         {
                             result = false;
@@ -2108,6 +2072,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 DefaultAgentHand();
                 Vector3 oldPosition = transform.position;
                 transform.position = targetPosition;
+
+                //ignore snap to grid if forceAction = true, this allows true diagonal movement off the grid if rotated at non-orthogonal angles
+                if(!forceAction)
                 this.snapToGrid();
 
                 if (objectId != "" && maxDistanceToObject > 0.0f) {

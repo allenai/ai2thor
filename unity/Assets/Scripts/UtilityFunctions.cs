@@ -230,7 +230,7 @@ public static class UtilityFunctions {
 
             for (int i = 0; i < arcPoints.Length; i++)
             {
-                currentIncrementAngle = i * incrementAngle;
+                currentIncrementAngle = i * -incrementAngle;
                 newY = Mathf.Cos(currentIncrementAngle) * (startingPoint.y - origin.y) - Mathf.Sin(currentIncrementAngle) * (startingPoint.z - origin.z) + origin.y;
                 newZ = Mathf.Sin(currentIncrementAngle) * (startingPoint.y - origin.y) + Mathf.Cos(currentIncrementAngle) * (startingPoint.z - origin.z) + origin.z;
                 arcPoints[i] = new Vector3(startingPoint.x, newY, newZ);
