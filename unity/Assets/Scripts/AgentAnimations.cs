@@ -10,8 +10,10 @@ public class AgentAnimations : PhysicsRemoteFPSAgentController
     [SerializeField] private ServerAction a;
 	public GameObject gridLine;
 
-	// Start is called before the first frame update
-	void Start()
+    public bool yugi = false;
+
+    // Start is called before the first frame update
+    void Start()
     {
 		a = new ServerAction();
 		a.moveMagnitude = 0.1f;
@@ -39,6 +41,12 @@ public class AgentAnimations : PhysicsRemoteFPSAgentController
     // Update is called once per frame
     void Update()
     {
+        if (yugi) {
+            Vector3 moveDirection = Vector3.zero;
+            moveDirection.y -= (-Physics.gravity.y * Time.deltaTime * m_GravityMultiplier);
+
+            m_CharacterController.Move(moveDirection * Time.deltaTime);
+        }
         //a.rotateDegrees = a.rotateDegrees + 5.0f;
         //Debug.Log(a.rotateDegrees);
         //agent.RotateDegrees(a);
@@ -55,6 +63,15 @@ public class AgentAnimations : PhysicsRemoteFPSAgentController
         //agent.MoveAhead(a);
         //agent.MoveAhead(a);
         //agent.actionComplete = false;
+    }
+
+    void OnTriggerStay(Collider other)
+    {
+        if (other.name == "YouveActivatedMyTrapCard" && yugi == false)
+        {
+            yugi = true;
+            other.gameObject.SetActive(false);
+        }
     }
 
 }
