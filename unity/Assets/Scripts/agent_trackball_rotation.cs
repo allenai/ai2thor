@@ -1,7 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-public class agent_trackball_rotation : MonoBehaviour
+public class Agent_Trackball_Rotation : MonoBehaviour
 {
     float ballPositionToRotationRatio = 3 * Mathf.PI / 1200; //Circumference over 360 euler degrees
     float changeInPosition; //How far agent has moved
