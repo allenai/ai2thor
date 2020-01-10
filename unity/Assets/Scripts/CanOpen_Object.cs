@@ -49,8 +49,8 @@ public class CanOpen_Object : MonoBehaviour
     //these objects, when hitting another sim object, should reset their state because it would cause clipping. Specifically used
     //for things like Laptops or Books that can open but are also pickupable and moveable. This should not include static
     //things in the scene like cabinets or drawers that have fixed positions
-    private List<SimObjType> ResetPositionIfPickupableAndOpenable = new List<SimObjType>()
-    {SimObjType.Book, SimObjType.Laptop};
+    // private List<SimObjType> ResetPositionIfPickupableAndOpenable = new List<SimObjType>()
+    // {SimObjType.Book, SimObjType.Laptop};
 
 
     [Header("References for the Open or Closed bounding box for openable and pickupable objects")]
@@ -357,36 +357,36 @@ public class CanOpen_Object : MonoBehaviour
 		isOpen = !isOpen;
 
         //this updates bounding boxes as well as some Agent rotation box checkers if agent is holding an object that can open and close.
-        UpdateOpenOrCloseBoundingBox();
+        //UpdateOpenOrCloseBoundingBox();
         SwitchActiveBoundingBox();
 
 	}
 
-    private void UpdateOpenOrCloseBoundingBox()
-    {
-        if(ResetPositionIfPickupableAndOpenable.Contains(gameObject.GetComponent<SimObjPhysics>().Type))
-        {
-            if(ClosedBoundingBox!= null && OpenBoundingBox != null)
-            {
-                //SwitchActiveBoundingBox();
+    // private void UpdateOpenOrCloseBoundingBox()
+    // {
+    //     if(ResetPositionIfPickupableAndOpenable.Contains(gameObject.GetComponent<SimObjPhysics>().Type))
+    //     {
+    //         if(ClosedBoundingBox!= null && OpenBoundingBox != null)
+    //         {
+    //             //SwitchActiveBoundingBox();
 
-                PhysicsRemoteFPSAgentController agent = GameObject.Find("FPSController").GetComponent<PhysicsRemoteFPSAgentController>();
-                //if the agent is holding this object RIGHT NOW, then update the rotation box checkers
-                if(agent.WhatAmIHolding() == gameObject)
-                {
-                    agent.SetUpRotationBoxChecks();
-                }
-            }
-            #if UNITY_EDITOR
-            else
-            {
-                Debug.Log("Closed/Open Bounding box references are null!");
-            }
-            #endif
-        }
-        //check if this object is in the ResetPositionIfPickupableAndOpenable list
-        //also check if the ClosedBoundingBox and OpenBoundingBox fields are null or not
-    }
+    //             PhysicsRemoteFPSAgentController agent = GameObject.Find("FPSController").GetComponent<PhysicsRemoteFPSAgentController>();
+    //             //if the agent is holding this object RIGHT NOW, then update the rotation box checkers
+    //             if(agent.WhatAmIHolding() == gameObject)
+    //             {
+    //                 agent.SetUpRotationBoxChecks();
+    //             }
+    //         }
+    //         #if UNITY_EDITOR
+    //         else
+    //         {
+    //             Debug.Log("Closed/Open Bounding box references are null!");
+    //         }
+    //         #endif
+    //     }
+    //     //check if this object is in the ResetPositionIfPickupableAndOpenable list
+    //     //also check if the ClosedBoundingBox and OpenBoundingBox fields are null or not
+    // }
 
     private void SwitchActiveBoundingBox()
     {

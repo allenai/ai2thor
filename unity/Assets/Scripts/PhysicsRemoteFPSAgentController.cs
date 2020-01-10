@@ -25,11 +25,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         [SerializeField] protected GameObject DefaultHandPosition = null;
         [SerializeField] protected GameObject ItemInHand = null; //current object in inventory
 
-        [SerializeField] protected GameObject[] RotateRLPivots = null;
-        [SerializeField] protected GameObject[] RotateRLTriggerBoxes = null;
+        // [SerializeField] protected GameObject[] RotateRLPivots = null;
+        // [SerializeField] protected GameObject[] RotateRLTriggerBoxes = null;
 
-        [SerializeField] protected GameObject[] LookUDPivots = null;
-        [SerializeField] protected GameObject[] LookUDTriggerBoxes = null;
+        // [SerializeField] protected GameObject[] LookUDPivots = null;
+        // [SerializeField] protected GameObject[] LookUDTriggerBoxes = null;
+
+        [SerializeField] protected Transform rotPoint;
 
         [SerializeField] protected SimObjPhysics[] VisibleSimObjPhysics; //all SimObjPhysics that are within camera viewport and range dictated by MaxViewDistancePhysics
 
@@ -1089,7 +1091,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             if (CheckIfAgentCanRotate("down", action.degrees)) 
             {
                 DefaultAgentHand(action);
-                //base.LookDown(action);
+                base.LookDown(action);
             } 
             
             else 
@@ -1098,8 +1100,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 			 	errorCode = ServerActionErrorCode.LookDownCantExceedMin;
 			 	actionFinished(false);
             }
-
-            //SetUpRotationBoxChecks();
         }
 
         public override void LookUp(ServerAction action) 
@@ -1113,7 +1113,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             if (CheckIfAgentCanRotate("up", action.degrees)) 
             {
                 DefaultAgentHand(action);
-                //base.LookUp(action);
+                base.LookUp(action);
             } 
             
             else 
@@ -1122,8 +1122,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 			 	errorCode = ServerActionErrorCode.LookDownCantExceedMin;
 			 	actionFinished(false);
             }
-
-            //SetUpRotationBoxChecks();
         }
 
         public override void RotateRight(ServerAction action) 
@@ -1135,7 +1133,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             if (CheckIfAgentCanRotate("right", action.degrees)||action.forceAction) 
             {
                 DefaultAgentHand(action);
-                //change controlCommand.
                 base.RotateRight(action);
             } 
 
@@ -1144,7 +1141,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 errorMessage = "a held item will collide with something if agent rotates Right" + action.degrees+ " degrees";
                 actionFinished(false);
             }
-
         }
 
         public override void RotateLeft(ServerAction action) 
@@ -1157,7 +1153,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             {
                 DefaultAgentHand(action);
                 base.RotateLeft(action);
-
             } 
 
             else 
@@ -1166,6 +1161,100 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 actionFinished(false);
             }
         }
+
+        private bool checkArcForCollisions(Vector3[] corners, Vector3 origin, float degrees, bool rightOrLeft)
+        {
+            bool result = true;
+            
+            //generate arc points in the positive y axis rotation
+            foreach(Vector3 v in corners)
+            {
+                Vector3[] pointsOnArc = GenerateArcPoints(v, origin, degrees, rightOrLeft);
+
+                //raycast from first point in pointsOnArc, stepwise to the last point. If any collisions are hit, immediately return
+                for(int i = 0; i < pointsOnArc.Length; i++)
+                {
+                    // //debug draw spheres to show path of arc
+                    // GameObject Sphere = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+                    // Sphere.transform.position = pointsOnArc[i];
+                    // Sphere.transform.localScale = new Vector3(0.02f, 0.02f, 0.02f);
+                    // Sphere.GetComponent<SphereCollider>().enabled = false;
+                    
+                    RaycastHit hit;
+
+                    //do linecasts from the first point, sequentially, to the last
+                    if(i < pointsOnArc.Length - 1)
+                    {
+                        if(Physics.Linecast(pointsOnArc[i], pointsOnArc[i+1], out hit, 1 << 8 | 1 << 10, QueryTriggerInteraction.Ignore))
+                        {
+                            if(hit.transform.GetComponent<SimObjPhysics>())
+                            {
+                                //if we hit the item in our hand, skip
+                                if(hit.transform.GetComponent<SimObjPhysics>().transform == ItemInHand.transform)
+                                continue;
+                            }
+
+                            if(hit.transform == this.transform)
+                            {
+                                //don't worry about clipping the object into this agent
+                                continue;
+                            }
+
+                            result = false;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            return result;
+        }
+
+    //for use with each of the 8 corners of a picked up object's bounding box - returns an array of Vector3 points along the arc of the rotation for a given starting point
+    //given a starting Vector3, rotate about an origin point for a total given angle. maxIncrementAngle is the maximum value of the increment between points on the arc. 
+    //if leftOrRight is true - rotate around Y (rotate left/right), false - rotate around X (look up/down)
+    private Vector3[] GenerateArcPoints(Vector3 startingPoint, Vector3 origin, float angle, bool leftOrRight)
+    {
+        float incrementAngle = angle/10f; //divide the total amount we are rotating by 10 to get 10 points on the arc
+        Vector3[] arcPoints = new Vector3[10]; //we just always want 10 points to check against per corner
+        print("increment angle is: " + incrementAngle);
+        float currentIncrementAngle;
+
+        if (leftOrRight) //Yawing (Rotating across XZ plane around Y-pivot)
+        {
+            for (int i = 0; i < arcPoints.Length; i++)
+            {
+                currentIncrementAngle = i * incrementAngle;
+                //move the rotPoint to the current corner's position
+                rotPoint.transform.position = startingPoint;
+                //rotate the rotPoint around the origin the current increment's angle, relative to the correct axis
+                rotPoint.transform.RotateAround(origin, transform.up, currentIncrementAngle);
+                //set the current arcPoint's vector3 to the rotated point
+                arcPoints[i] = rotPoint.transform.position;
+                //arcPoints[i] = RotatePointAroundPivot(startingPoint, origin, new Vector3(0, currentIncrementAngle, 0));
+            }
+
+            return arcPoints;
+        }
+
+        else //Pitching (Rotating across YZ plane around X-pivot)
+        {
+            for (int i = 0; i < arcPoints.Length; i++)
+            {
+                //reverse the increment angle because of the right handedness orientation of the local x-axis
+                currentIncrementAngle = i * -incrementAngle;
+                //move the rotPoint to the current corner's position
+                rotPoint.transform.position = startingPoint;
+                //rotate the rotPoint around the origin the current increment's angle, relative to the correct axis
+                rotPoint.transform.RotateAround(origin, transform.right, currentIncrementAngle);
+                //set the current arcPoint's vector3 to the rotated point
+                arcPoints[i] = rotPoint.transform.position;
+                //arcPoints[i] = RotatePointAroundPivot(startingPoint, origin, new Vector3(0, currentIncrementAngle, 0));
+            }
+
+            return arcPoints;
+        }
+    }
 
         //checks if agent is clear to rotate left/right/up/down some number of degrees while holding an object
         public bool CheckIfAgentCanRotate(string direction, float degrees) {
@@ -1183,87 +1272,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             Vector3[] corners = UtilityFunctions.CornerCoordinatesOfBoxColliderToWorld(bb);
 
             //ok now we have each corner, let's rotate them the specified direction
-            if(direction == "right")
+            if(direction == "right" || direction == "left")
             {
-                //generate arc points in the positive y axis rotation
-                foreach(Vector3 v in corners)
-                {
-                    Vector3[] pointsOnArc = UtilityFunctions.GenerateArcPoints(v, m_Camera.transform.position, degrees, degrees/10f, true);
-
-                    //raycast from first point in pointsOnArc, stepwise to the last point. If any collisions are hit, immediately return
-                    for(int i = 0; i < 7; i++)
-                    {
-                        if(Physics.Linecast(pointsOnArc[i], pointsOnArc[i+1], 1 << 8 | 1 << 10, QueryTriggerInteraction.Ignore))
-                        {
-                            result = false;
-                        }
-                    }
-                }
+                result = checkArcForCollisions(corners, m_CharacterController.transform.position, degrees, true);
             }
 
-            else if(direction == "left")
+            else if(direction == "up" || direction =="down")
             {
-                //generate arc points in the positive y axis rotation
-                foreach(Vector3 v in corners)
-                {
-                    Vector3[] pointsOnArc = UtilityFunctions.GenerateArcPoints(v, m_Camera.transform.position, degrees, degrees/10f, true);
-
-                    //raycast from first point in pointsOnArc, stepwise to the last point. If any collisions are hit, immediately return
-                    for(int i = 0; i < 7; i++)
-                    {
-                        if(Physics.Linecast(pointsOnArc[i], pointsOnArc[i+1], 1 << 8 | 1 << 10, QueryTriggerInteraction.Ignore))
-                        {
-                            result = false;
-                        }
-                    }
-                }
-            }
-
-            else if(direction == "up")
-            {
-                //generate arc points in the positive x axis rotation
-                foreach(Vector3 v in corners)
-                {
-                    Vector3[] pointsOnArc = UtilityFunctions.GenerateArcPoints(v, m_Camera.transform.position, degrees, degrees/10f, false);
-
-                    //raycast from first point in pointsOnArc, stepwise to the last point. If any collisions are hit, immediately return
-                    for(int i = 0; i < 7; i++)
-                    {
-                        GameObject Sphere = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-                        Sphere.transform.position = pointsOnArc[i];
-                        Sphere.transform.localScale = new Vector3(0.02f, 0.02f, 0.02f);
-                        Sphere.GetComponent<SphereCollider>().enabled = false;
-
-                        if(Physics.Linecast(pointsOnArc[i], pointsOnArc[i+1], 1 << 8 | 1 << 10, QueryTriggerInteraction.Ignore))
-                        {
-                            result = false;
-                        }
-                    }
-                }
-            }
-
-            else if(direction == "down")
-            {
-                //generate arc points in the negative x axis rotation
-                foreach(Vector3 v in corners)
-                {
-                    Vector3[] pointsOnArc = UtilityFunctions.GenerateArcPoints(v, m_Camera.transform.position, degrees, degrees/10f, false);
-
-                    //raycast from first point in pointsOnArc, stepwise to the last point. If any collisions are hit, immediately return
-                    for(int i = 0; i < 7; i++)
-                    {
-
-                        GameObject Sphere = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-                        Sphere.transform.position = pointsOnArc[i];
-                        Sphere.transform.localScale = new Vector3(0.02f, 0.02f, 0.02f);
-                        Sphere.GetComponent<SphereCollider>().enabled = false;
-
-                        if(Physics.Linecast(pointsOnArc[i], pointsOnArc[i+1], 1 << 8 | 1 << 10, QueryTriggerInteraction.Ignore))
-                        {
-                            result = false;
-                        }
-                    }
-                }
+                result = checkArcForCollisions(corners, m_Camera.transform.position, degrees, false);
             }
 
             //no checks flagged anything, good to go, return true i guess
@@ -2932,7 +2948,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             rb.velocity = new Vector3(0f, 0f, 0f);
             rb.angularVelocity = new Vector3(0f, 0f, 0f);
 
-            SetUpRotationBoxChecks();
+            //SetUpRotationBoxChecks();
             IsHandDefault = false;
 
             Physics.Simulate(0.1f);
@@ -3051,7 +3067,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public void DefaultAgentHand(ServerAction action = null) {
             ResetAgentHandPosition(action);
             ResetAgentHandRotation(action);
-            SetUpRotationBoxChecks();
+            //SetUpRotationBoxChecks();
             IsHandDefault = true;
         }
 
@@ -3278,7 +3294,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     AgentHand.transform.position = oldPosition;
                     return false;
                 } else {
-                    SetUpRotationBoxChecks();
+                    //SetUpRotationBoxChecks();
                     IsHandDefault = false;
                     return true;
                 }
@@ -3450,7 +3466,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             if (CheckIfAgentCanRotateHand()) {
                 Vector3 vec = new Vector3(action.x, action.y, action.z);
                 AgentHand.transform.localRotation = Quaternion.Euler(vec);
-                SetUpRotationBoxChecks();
+                //SetUpRotationBoxChecks();
 
                 //if this is rotated too much, drop any contained object if held item is a receptacle
                 if (Vector3.Angle(ItemInHand.transform.up, Vector3.up) > 95)
@@ -4498,7 +4514,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 return;
             }
 
-            SetUpRotationBoxChecks();
+            //SetUpRotationBoxChecks();
 
             //we have succesfully picked up something! 
             target.GetComponent<SimObjPhysics>().isInAgentHand = true;
@@ -5566,75 +5582,75 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
 
-        public void SetUpRotationBoxChecks() {
-            if (ItemInHand == null) {
-                //Debug.Log("no need to set up boxes if nothing in hand");
-                return;
+        // public void SetUpRotationBoxChecks() {
+        //     if (ItemInHand == null) {
+        //         //Debug.Log("no need to set up boxes if nothing in hand");
+        //         return;
 
-            }
+        //     }
 
-            BoxCollider HeldItemBox = ItemInHand.GetComponent<SimObjPhysics>().BoundingBox.GetComponent<BoxCollider>();
+        //     BoxCollider HeldItemBox = ItemInHand.GetComponent<SimObjPhysics>().BoundingBox.GetComponent<BoxCollider>();
 
-            //rotate all pivots to 0, move all box colliders to the position of the box collider of item in hand
-            //change each box collider's size and center
-            //rotate all pivots to where they need to go
+        //     //rotate all pivots to 0, move all box colliders to the position of the box collider of item in hand
+        //     //change each box collider's size and center
+        //     //rotate all pivots to where they need to go
 
-            //////////////Left/Right stuff first
+        //     //////////////Left/Right stuff first
 
-            //zero out everything first
-            for (int i = 0; i < RotateRLPivots.Length; i++) {
-                RotateRLPivots[i].transform.localRotation = Quaternion.Euler(Vector3.zero);
-            }
+        //     //zero out everything first
+        //     for (int i = 0; i < RotateRLPivots.Length; i++) {
+        //         RotateRLPivots[i].transform.localRotation = Quaternion.Euler(Vector3.zero);
+        //     }
 
-            //set the size of all RotateRL trigger boxes to the Rotate Agent Collider's dimesnions
-            for (int i = 0; i < RotateRLTriggerBoxes.Length; i++) {
-                RotateRLTriggerBoxes[i].transform.position = HeldItemBox.transform.position;
-                RotateRLTriggerBoxes[i].transform.rotation = HeldItemBox.transform.rotation;
-                RotateRLTriggerBoxes[i].transform.localScale = HeldItemBox.transform.localScale;
+        //     //set the size of all RotateRL trigger boxes to the Rotate Agent Collider's dimesnions
+        //     for (int i = 0; i < RotateRLTriggerBoxes.Length; i++) {
+        //         RotateRLTriggerBoxes[i].transform.position = HeldItemBox.transform.position;
+        //         RotateRLTriggerBoxes[i].transform.rotation = HeldItemBox.transform.rotation;
+        //         RotateRLTriggerBoxes[i].transform.localScale = HeldItemBox.transform.localScale;
 
-                RotateRLTriggerBoxes[i].GetComponent<BoxCollider>().size = HeldItemBox.size;
-                RotateRLTriggerBoxes[i].GetComponent<BoxCollider>().center = HeldItemBox.center;
-            }
+        //         RotateRLTriggerBoxes[i].GetComponent<BoxCollider>().size = HeldItemBox.size;
+        //         RotateRLTriggerBoxes[i].GetComponent<BoxCollider>().center = HeldItemBox.center;
+        //     }
 
-            int deg = -90;
+        //     int deg = -90;
 
-            //set all pivots to their corresponding rotations
-            for (int i = 0; i < RotateRLTriggerBoxes.Length; i++) {
-                if (deg == 0) {
-                    deg = 15;
-                }
+        //     //set all pivots to their corresponding rotations
+        //     for (int i = 0; i < RotateRLTriggerBoxes.Length; i++) {
+        //         if (deg == 0) {
+        //             deg = 15;
+        //         }
 
-                RotateRLPivots[i].transform.localRotation = Quaternion.Euler(new Vector3(0, deg, 0));
-                deg += 15;
-            }
+        //         RotateRLPivots[i].transform.localRotation = Quaternion.Euler(new Vector3(0, deg, 0));
+        //         deg += 15;
+        //     }
 
-            //////////////////Up/Down stuff now
+        //     //////////////////Up/Down stuff now
 
-            //zero out everything first
-            for (int i = 0; i < LookUDPivots.Length; i++) {
-                LookUDPivots[i].transform.localRotation = Quaternion.Euler(Vector3.zero);
-            }
+        //     //zero out everything first
+        //     for (int i = 0; i < LookUDPivots.Length; i++) {
+        //         LookUDPivots[i].transform.localRotation = Quaternion.Euler(Vector3.zero);
+        //     }
 
-            for (int i = 0; i < LookUDTriggerBoxes.Length; i++) {
-                LookUDTriggerBoxes[i].transform.position = HeldItemBox.transform.position;
-                LookUDTriggerBoxes[i].transform.rotation = HeldItemBox.transform.rotation;
-                LookUDTriggerBoxes[i].transform.localScale = HeldItemBox.transform.localScale;
+        //     for (int i = 0; i < LookUDTriggerBoxes.Length; i++) {
+        //         LookUDTriggerBoxes[i].transform.position = HeldItemBox.transform.position;
+        //         LookUDTriggerBoxes[i].transform.rotation = HeldItemBox.transform.rotation;
+        //         LookUDTriggerBoxes[i].transform.localScale = HeldItemBox.transform.localScale;
 
-                LookUDTriggerBoxes[i].GetComponent<BoxCollider>().size = HeldItemBox.size;
-                LookUDTriggerBoxes[i].GetComponent<BoxCollider>().center = HeldItemBox.center;
-            }
+        //         LookUDTriggerBoxes[i].GetComponent<BoxCollider>().size = HeldItemBox.size;
+        //         LookUDTriggerBoxes[i].GetComponent<BoxCollider>().center = HeldItemBox.center;
+        //     }
 
-            int otherdeg = -30;
+        //     int otherdeg = -30;
 
-            for (int i = 0; i < LookUDPivots.Length; i++) {
-                if (otherdeg == 0) {
-                    otherdeg = 10;
-                }
-                LookUDPivots[i].transform.localRotation = Quaternion.Euler(new Vector3(otherdeg, 0, 0)); //30 up
-                otherdeg += 10;
-                //print(otherdeg);
-            }
-        }
+        //     for (int i = 0; i < LookUDPivots.Length; i++) {
+        //         if (otherdeg == 0) {
+        //             otherdeg = 10;
+        //         }
+        //         LookUDPivots[i].transform.localRotation = Quaternion.Euler(new Vector3(otherdeg, 0, 0)); //30 up
+        //         otherdeg += 10;
+        //         //print(otherdeg);
+        //     }
+        // }
         public SimObjPhysics[] VisibleSimObjs(bool forceVisible) {
             if (forceVisible) {
                 return GameObject.FindObjectsOfType(typeof(SimObjPhysics)) as SimObjPhysics[];
@@ -6133,12 +6149,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 0.0f,
                 standingLocalCameraPosition.z
             );
-            SetUpRotationBoxChecks();
+            //SetUpRotationBoxChecks();
         }
 
         protected void stand() {
             m_Camera.transform.localPosition = standingLocalCameraPosition;
-            SetUpRotationBoxChecks();
+            //SetUpRotationBoxChecks();
         }
 
         public void Crouch(ServerAction action) {
@@ -6153,7 +6169,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     0.0f,
                     standingLocalCameraPosition.z
                 );
-                SetUpRotationBoxChecks();
+                //BoxChecks();
                 actionFinished(true);
             }
         }
@@ -6166,7 +6182,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 actionFinished(false);
             } else {
                 m_Camera.transform.localPosition = standingLocalCameraPosition;
-                SetUpRotationBoxChecks();
+                //SetUpRotationBoxChecks();
                 actionFinished(true);
             }
         }
