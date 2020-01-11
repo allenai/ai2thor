@@ -798,7 +798,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		//iterates to next allowed downward horizon angle for AgentCamera (max 60 degrees down)
 		public virtual void LookDown(ServerAction controlCommand)
 		{
-			m_Camera.transform.Rotate(-controlCommand.degrees, 0, 0);
+			m_Camera.transform.Rotate(controlCommand.degrees, 0, 0);
 			actionFinished(true);
 		}
 

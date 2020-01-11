@@ -1085,21 +1085,30 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             //default degree increment to 30
             if(action.degrees == 0)
             {
-                action.degrees = -30f;
+                action.degrees = 30f;
+            }
+
+            if(!checkForUpDownAngleLimit("down", action.degrees))
+            {
+                errorMessage = "can't look down below the minimum angle (60)";
+			 	errorCode = ServerActionErrorCode.LookDownCantExceedMin;
+			 	actionFinished(false);
+                return;
             }
 
             if (CheckIfAgentCanRotate("down", action.degrees)) 
             {
                 DefaultAgentHand(action);
                 base.LookDown(action);
+                return;
             } 
-            
-            else 
+
+            else
             {
-                errorMessage = "can't look down below the minimum angle (-60)";
-			 	errorCode = ServerActionErrorCode.LookDownCantExceedMin;
-			 	actionFinished(false);
-            }
+                errorMessage = "a held item: " + ItemInHand.transform.GetComponent<SimObjPhysics>().objectID + " will collide with something if agent rotates down " + action.degrees+ " degrees";
+                actionFinished(false);
+            } 
+        
         }
 
         public override void LookUp(ServerAction action) 
@@ -1110,18 +1119,25 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 action.degrees = 30f;
             }
 
+            if(!checkForUpDownAngleLimit("up", action.degrees))
+            {
+                errorMessage = "can't look up above the minimum angle (30)";
+			 	errorCode = ServerActionErrorCode.LookDownCantExceedMin;
+			 	actionFinished(false);
+                return;
+            }
+
             if (CheckIfAgentCanRotate("up", action.degrees)) 
             {
                 DefaultAgentHand(action);
                 base.LookUp(action);
-            } 
-            
-            else 
-            {
-                errorMessage = "can't look above the maximum angle (60)";
-			 	errorCode = ServerActionErrorCode.LookDownCantExceedMin;
-			 	actionFinished(false);
             }
+
+            else
+            {
+                errorMessage = "a held item: " + ItemInHand.transform.GetComponent<SimObjPhysics>().objectID + " will collide with something if agent rotates up " + action.degrees+ " degrees";
+                actionFinished(false);
+            } 
         }
 
         public override void RotateRight(ServerAction action) 
@@ -1138,7 +1154,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             else 
             {
-                errorMessage = "a held item will collide with something if agent rotates Right" + action.degrees+ " degrees";
+                errorMessage = "a held item: " + ItemInHand.transform.name + " with something if agent rotates Right " + action.degrees+ " degrees";
                 actionFinished(false);
             }
         }
@@ -1157,7 +1173,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             else 
             {
-                errorMessage = "a held item will collid with something if the agent rotates Left " + action.degrees + " degrees";
+                errorMessage = "a held item: " + ItemInHand.transform.name + " with something if agent rotates Left " + action.degrees+ " degrees";
                 actionFinished(false);
             }
         }
@@ -1174,7 +1190,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 //raycast from first point in pointsOnArc, stepwise to the last point. If any collisions are hit, immediately return
                 for(int i = 0; i < pointsOnArc.Length; i++)
                 {
-                    // //debug draw spheres to show path of arc
+                    //debug draw spheres to show path of arc
                     // GameObject Sphere = GameObject.CreatePrimitive(PrimitiveType.Sphere);
                     // Sphere.transform.position = pointsOnArc[i];
                     // Sphere.transform.localScale = new Vector3(0.02f, 0.02f, 0.02f);
@@ -1185,6 +1201,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     //do linecasts from the first point, sequentially, to the last
                     if(i < pointsOnArc.Length - 1)
                     {
+                        //Debug.DrawLine(pointsOnArc[i], pointsOnArc[i+1], Color.magenta, 50f);
+
                         if(Physics.Linecast(pointsOnArc[i], pointsOnArc[i+1], out hit, 1 << 8 | 1 << 10, QueryTriggerInteraction.Ignore))
                         {
                             if(hit.transform.GetComponent<SimObjPhysics>())
@@ -1216,8 +1234,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
     private Vector3[] GenerateArcPoints(Vector3 startingPoint, Vector3 origin, float angle, bool leftOrRight)
     {
         float incrementAngle = angle/10f; //divide the total amount we are rotating by 10 to get 10 points on the arc
-        Vector3[] arcPoints = new Vector3[10]; //we just always want 10 points to check against per corner
-        print("increment angle is: " + incrementAngle);
+        Vector3[] arcPoints = new Vector3[11]; //we just always want 10 points in addition to our starting corner position (11 total) to check against per corner
         float currentIncrementAngle;
 
         if (leftOrRight) //Yawing (Rotating across XZ plane around Y-pivot)
@@ -1277,12 +1294,46 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 result = checkArcForCollisions(corners, m_CharacterController.transform.position, degrees, true);
             }
 
-            else if(direction == "up" || direction =="down")
+            else if(direction == "up" || direction == "down")
             {
                 result = checkArcForCollisions(corners, m_Camera.transform.position, degrees, false);
             }
-
             //no checks flagged anything, good to go, return true i guess
+            return result;
+        }
+
+        private bool checkForUpDownAngleLimit(string direction, float degrees)
+        {   
+            bool result = true;
+            //check the angle between the agent's forward vector and the proposed rotation vector
+            //if it exceeds the min/max based on if we are rotating up or down, return false
+
+            //first move the rotPoint to the camera
+            rotPoint.transform.position = m_Camera.transform.position;
+            //zero out the rotation first
+            rotPoint.transform.rotation = m_Camera.transform.rotation;
+
+
+            //print(Vector3.Angle(rotPoint.transform.forward, m_CharacterController.transform.forward));
+            if(direction == "down")
+            {
+                rotPoint.Rotate(new Vector3(degrees, 0, 0));
+
+                if(Mathf.Round(Vector3.Angle(rotPoint.transform.forward, m_CharacterController.transform.forward)) > 60)
+                {
+                    result = false;
+                }
+            }
+
+            if(direction == "up")
+            {
+                rotPoint.Rotate(new Vector3(-degrees, 0, 0));
+
+                if(Mathf.Round(Vector3.Angle(rotPoint.transform.forward, m_CharacterController.transform.forward)) > 60)
+                {
+                    result = false;
+                }
+            }
             return result;
         }
 
