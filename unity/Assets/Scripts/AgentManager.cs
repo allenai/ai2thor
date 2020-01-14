@@ -34,7 +34,7 @@ public class AgentManager : MonoBehaviour
 	private List<Camera> thirdPartyCameras = new List<Camera>();
 	private bool readyToEmit;
 
-	private Color[] agentColors = new Color[]{Color.blue, Color.yellow, Color.green, Color.red, Color.magenta, Color.grey};
+    private Color[] agentColors = new Color[]{Color.blue, Color.yellow, Color.green, Color.red, Color.magenta, Color.grey};
 
 	public int actionDuration = 3;
 
@@ -914,8 +914,12 @@ public struct MetadataWrapper
 	public ColorId [] colors;
 	public ColorBounds[] colorBounds;
 
-	// Extras
-	public Vector3[] reachablePositions;
+    // simple scene
+    public static bool capturedApple;
+    public static bool inPitt;
+
+    // Extras
+    public Vector3[] reachablePositions;
 	public float[] flatSurfacesOnGrid;
 	public float[] distances;
 	public float[] normals;

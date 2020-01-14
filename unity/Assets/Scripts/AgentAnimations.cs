@@ -70,7 +70,16 @@ public class AgentAnimations : PhysicsRemoteFPSAgentController
         if (other.name == "YouveActivatedMyTrapCard" && yugi == false)
         {
             yugi = true;
+            MetadataWrapper.inPitt = true;
             other.gameObject.SetActive(false);
+        }
+    }
+
+    private void OnTriggerEnter(Collider other)
+    {
+        if (other.gameObject.name == "apple_1") {
+            Destroy(other.gameObject);
+            MetadataWrapper.capturedApple = true;
         }
     }
 

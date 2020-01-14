@@ -92,11 +92,15 @@ public class SimpleSceneRandomObjectPositions : MonoBehaviour
     void Update()
     {
         float speed = 0.1f;
-        appleInstance.transform.position = new Vector3(
-			appleInstance.transform.position.x,
-			1.25f + 0.2f * (float) Math.Sin(speed * frame),
-			appleInstance.transform.position.z);
-        frame++;
+        try {
+			appleInstance.transform.position = new Vector3(
+				appleInstance.transform.position.x,
+				1.25f + 0.2f * (float) Math.Sin(speed * frame),
+				appleInstance.transform.position.z);
+			frame++;
+        } catch (Exception E) {
+            // apple already destroyed, don't transform
+		}
         //appleInstance.transform.position = new Vector3(0, 0, 0);
     }
 }

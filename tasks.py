@@ -664,7 +664,8 @@ def ci_build(context):
 
         fcntl.flock(lock_f, fcntl.LOCK_UN)
 
-    except BlockingIOError as e:
+    # except BlockingIOError as e:
+    except
         pass
 
     lock_f.close()
