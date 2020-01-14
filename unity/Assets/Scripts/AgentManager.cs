@@ -128,7 +128,6 @@ public class AgentManager : MonoBehaviour
 			((PhysicsRemoteFPSAgentController) primaryAgent).alwaysReturnVisibleRange = action.alwaysReturnVisibleRange;
 		}
 		StartCoroutine (addAgents (action));
-
 	}
 
     //return reference to primary agent in case we need a reference to the primary
@@ -285,7 +284,7 @@ public class AgentManager : MonoBehaviour
         return false;
     }
 
-	public void setReadyToEmit(bool readyToEmit) {
+	public virtual void setReadyToEmit(bool readyToEmit) {
 		this.readyToEmit = readyToEmit;
 	}
 

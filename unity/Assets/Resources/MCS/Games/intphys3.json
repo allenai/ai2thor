@@ -1,0 +1,109 @@
+﻿{
+    "ceilingMaterial": "Materials/Walls/WallDrywallWhite",
+    "floorMaterial": "Materials/Fabrics/RUG4",
+    "wallMaterial": "Materials/Walls/YellowDrywall",
+    "objects": [{
+        "id": "testOccluder1",
+        "type": "cube",
+        "materialFile": "Materials/SourceTextures/Materials/RedBricks",
+        "nullParent": {
+            "position": {
+                "x": -2,
+                "y": 0.1,
+                "z": 6
+            }
+        },
+        "shows": [{
+            "stepBegin": 0,
+            "position": {
+                "x": 0,
+                "y": 1,
+                "z": 0
+            },
+            "scale": {
+                "x": 2,
+                "y": 2,
+                "z": 0.1
+            }
+        }],
+        "rotates": [{
+            "stepBegin": 1,
+            "stepEnd": 9,
+            "vector": {
+                "x": -10,
+                "y": 0,
+                "z": 0
+            }
+        }, {
+            "stepBegin": 11,
+            "stepEnd": 19,
+            "vector": {
+                "x": 10,
+                "y": 0,
+                "z": 0
+            }
+        }]
+    }, {
+        "id": "testOccluder2",
+        "type": "cube",
+        "materialFile": "Materials/SourceTextures/Materials/RedBricks",
+        "nullParent": {
+            "position": {
+                "x": 2,
+                "y": 0.1,
+                "z": 6
+            }
+        },
+        "shows": [{
+            "stepBegin": 0,
+            "position": {
+                "x": 0,
+                "y": 1,
+                "z": 0
+            },
+            "scale": {
+                "x": 2,
+                "y": 2,
+                "z": 0.1
+            }
+        }],
+        "rotates": [{
+            "stepBegin": 1,
+            "stepEnd": 9,
+            "vector": {
+                "x": -10,
+                "y": 0,
+                "z": 0
+            }
+        }, {
+            "stepBegin": 11,
+            "stepEnd": 19,
+            "vector": {
+                "x": 10,
+                "y": 0,
+                "z": 0
+            }
+        }]
+    }, {
+        "id": "testBall",
+        "type": "sphere",
+        "materialFile": "Materials/Plastics/BlueRubber",
+        "shows": [{
+            "stepBegin": 20,
+            "position": {
+                "x": 2,
+                "y": 1,
+                "z": 8
+            }
+        }],
+        "moves": [{
+            "stepBegin": 21,
+            "stepEnd": 28,
+            "vector": {
+                "x": 2,
+                "y": 0,
+                "z": 0
+            }
+        }]
+    }]
+}

@@ -226,6 +226,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
                             }
                         }
 
+                        if (Input.GetKeyDown(KeyCode.Escape)) {
+                            ServerAction action = new ServerAction();
+                            action.action = "Pass";
+                            PhysicsController.ProcessControlCommand(action);
+                        }
+
                         if(Input.GetKeyDown(KeyCode.O))
                         {
                             if(PhysicsController.FlightMode)
