@@ -388,6 +388,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 fpcc.SwitchRenderersToHide(whichMode);
 
                 VisibilityCapsule = TallVisCap;
+                /*
                 m_CharacterController.center = new Vector3(0, 0, 0);
                 m_CharacterController.radius = 0.2f;
                 m_CharacterController.height = 1.8f;
@@ -396,15 +397,16 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 cc.center = m_CharacterController.center;
                 cc.radius = m_CharacterController.radius;
                 cc.height = m_CharacterController.height;
+                */
 
                 m_Camera.GetComponent<PostProcessVolume>().enabled = false;
                 m_Camera.GetComponent<PostProcessLayer>().enabled = false;
 
                 //camera position
-                m_Camera.transform.localPosition = new Vector3(0, 0.675f, 0);
+                //m_Camera.transform.localPosition = new Vector3(0, 0.675f, 0);
 
                 //camera FOV
-                m_Camera.fieldOfView = 90f;
+                //m_Camera.fieldOfView = 90f;
 
                 //set camera stand/crouch local positions for Tall mode
                 standingLocalCameraPosition = m_Camera.transform.localPosition;
@@ -418,6 +420,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 fpcc.SwitchRenderersToHide(whichMode);
 
                 VisibilityCapsule = BotVisCap;
+                /*
                 m_CharacterController.center = new Vector3(0, -0.45f, 0);
                 m_CharacterController.radius = 0.175f;
                 m_CharacterController.height = 0.9f;
@@ -426,15 +429,16 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 cc.center = m_CharacterController.center;
                 cc.radius = m_CharacterController.radius;
                 cc.height = m_CharacterController.height;
+                */
 
                 m_Camera.GetComponent<PostProcessVolume>().enabled = true;
                 m_Camera.GetComponent<PostProcessLayer>().enabled = true;
 
                 //camera position
-                m_Camera.transform.localPosition = new Vector3(0, -0.0705f, 0);
+                //m_Camera.transform.localPosition = new Vector3(0, -0.0705f, 0);
 
                 //camera FOV
-                m_Camera.fieldOfView = 42.5f;
+                //m_Camera.fieldOfView = 42.5f;
 
                 //set camera stand/crouch local positions for Tall mode
                 standingLocalCameraPosition = m_Camera.transform.localPosition;
