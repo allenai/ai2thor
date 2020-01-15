@@ -1178,14 +1178,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
 
-        private bool checkArcForCollisions(Vector3[] corners, Vector3 origin, float degrees, bool rightOrLeft)
+        private bool checkArcForCollisions(Vector3[] corners, Vector3 origin, float degrees, string dir)
         {
             bool result = true;
             
             //generate arc points in the positive y axis rotation
             foreach(Vector3 v in corners)
             {
-                Vector3[] pointsOnArc = GenerateArcPoints(v, origin, degrees, rightOrLeft);
+                Vector3[] pointsOnArc = GenerateArcPoints(v, origin, degrees, dir);
 
                 //raycast from first point in pointsOnArc, stepwise to the last point. If any collisions are hit, immediately return
                 for(int i = 0; i < pointsOnArc.Length; i++)
@@ -1231,13 +1231,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
     //for use with each of the 8 corners of a picked up object's bounding box - returns an array of Vector3 points along the arc of the rotation for a given starting point
     //given a starting Vector3, rotate about an origin point for a total given angle. maxIncrementAngle is the maximum value of the increment between points on the arc. 
     //if leftOrRight is true - rotate around Y (rotate left/right), false - rotate around X (look up/down)
-    private Vector3[] GenerateArcPoints(Vector3 startingPoint, Vector3 origin, float angle, bool leftOrRight)
+    private Vector3[] GenerateArcPoints(Vector3 startingPoint, Vector3 origin, float angle, string dir)
     {
         float incrementAngle = angle/10f; //divide the total amount we are rotating by 10 to get 10 points on the arc
         Vector3[] arcPoints = new Vector3[11]; //we just always want 10 points in addition to our starting corner position (11 total) to check against per corner
         float currentIncrementAngle;
 
-        if (leftOrRight) //Yawing (Rotating across XZ plane around Y-pivot)
+        if (dir == "left" || dir == "right") //Yawing (Rotating across XZ plane around Y-pivot)
         {
             for (int i = 0; i < arcPoints.Length; i++)
             {
@@ -1250,11 +1250,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 arcPoints[i] = rotPoint.transform.position;
                 //arcPoints[i] = RotatePointAroundPivot(startingPoint, origin, new Vector3(0, currentIncrementAngle, 0));
             }
-
-            return arcPoints;
         }
 
-        else //Pitching (Rotating across YZ plane around X-pivot)
+        else if(dir =="up") //Pitching up(Rotating across YZ plane around X-pivot)
         {
             for (int i = 0; i < arcPoints.Length; i++)
             {
@@ -1268,9 +1266,25 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 arcPoints[i] = rotPoint.transform.position;
                 //arcPoints[i] = RotatePointAroundPivot(startingPoint, origin, new Vector3(0, currentIncrementAngle, 0));
             }
-
-            return arcPoints;
         }
+
+        else if(dir == "down") //Pitching down (Rotating across YZ plane around X-pivot)
+        {
+            for (int i = 0; i < arcPoints.Length; i++)
+            {
+                //reverse the increment angle because of the right handedness orientation of the local x-axis
+                currentIncrementAngle = i * incrementAngle;
+                //move the rotPoint to the current corner's position
+                rotPoint.transform.position = startingPoint;
+                //rotate the rotPoint around the origin the current increment's angle, relative to the correct axis
+                rotPoint.transform.RotateAround(origin, transform.right, currentIncrementAngle);
+                //set the current arcPoint's vector3 to the rotated point
+                arcPoints[i] = rotPoint.transform.position;
+                //arcPoints[i] = RotatePointAroundPivot(startingPoint, origin, new Vector3(0, currentIncrementAngle, 0));
+            }
+        }
+
+        return arcPoints;
     }
 
         //checks if agent is clear to rotate left/right/up/down some number of degrees while holding an object
@@ -1291,12 +1305,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             //ok now we have each corner, let's rotate them the specified direction
             if(direction == "right" || direction == "left")
             {
-                result = checkArcForCollisions(corners, m_CharacterController.transform.position, degrees, true);
+                result = checkArcForCollisions(corners, m_CharacterController.transform.position, degrees, direction);
             }
 
             else if(direction == "up" || direction == "down")
             {
-                result = checkArcForCollisions(corners, m_Camera.transform.position, degrees, false);
+                result = checkArcForCollisions(corners, m_Camera.transform.position, degrees, direction);
             }
             //no checks flagged anything, good to go, return true i guess
             return result;
@@ -3904,7 +3918,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         public void SetObjectPoses(ServerAction action)
         {
-            //PhysicsSceneManager script = GameObject.Find("PhysicsSceneManager").GetComponent<PhysicsSceneManager>();
+            //make sure objectPoses and also the Object Pose elements inside are initialized correctly
+            if(action.objectPoses == null || action.objectPoses[0] == null)
+            {
+                errorMessage = "objectPoses was not initialized correctly. Please make sure each element in the objectPoses list is initialized.";
+                actionFinished(false);
+                return;
+            }
+
             bool success = physicsSceneManager.SetObjectPoses(action.objectPoses);
             actionFinished(success);
         }

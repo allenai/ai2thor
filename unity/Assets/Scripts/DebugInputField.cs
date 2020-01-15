@@ -1592,6 +1592,24 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         break;
                     }
 
+                case "pose":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "SetObjectPoses";
+                        action.objectPoses = new ObjectPose[1];
+
+                        action.objectPoses[0] = new ObjectPose();
+
+                        action.objectPoses[0].objectName = "Potato_bb7defe9";
+                        action.objectPoses[0].position = new Vector3(0, 0, 0);
+                        action.objectPoses[0].rotation = new Vector3(0, 0, 0);
+
+
+                        PhysicsController.ProcessControlCommand(action);
+
+                        break;
+                    }
+
                     //opens given object the given percent, default is 100% open
                     //open <object ID> percent
 				case "open":
