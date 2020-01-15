@@ -120,17 +120,16 @@ class InteractiveControllerPrompt(object):
                     if o['visible']:
                         visible_objects.append(o['objectId'])
                         if o['openable']:
-                            if o['isOpen']:
+                            if o['isopen']:
                                 add_command(command_counter, 'CloseObject', objectId=o['objectId'])
                             else:
                                 add_command(command_counter, 'OpenObject', objectId=o['objectId'])
-
-                        if o['toggleable']:
+                        if 'toggleable' in o and o['toggleable']:
                             add_command(command_counter, 'ToggleObjectOff', objectId=o['objectId'])
 
                         if len(event.metadata['inventoryObjects']) > 0:
                             inventoryObjectId = event.metadata['inventoryObjects'][0]['objectId']
-                            if o['receptacle'] and (not o['openable'] or o['isOpen']) and inventoryObjectId != o['objectId']:
+                            if o['receptacle'] and (not o['openable'] or o['isopen']) and inventoryObjectId != o['objectId']:
                                 add_command(command_counter, 'PutObject', objectId=inventoryObjectId, receptacleObjectId=o['objectId'])
                                 add_command(command_counter, 'MoveHandAhead', moveMagnitude=0.1)
                                 add_command(command_counter, 'MoveHandBack', moveMagnitude=0.1)

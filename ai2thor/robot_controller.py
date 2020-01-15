@@ -20,14 +20,26 @@ from ai2thor.interact import InteractiveControllerPrompt, DefaultActions
 
 class Controller(object):
 
-    def __init__(self, headless=False, image_dir='.', save_image_per_frame=False):
-        self.host = ''
-        self.port = 0
+    def __init__(
+            self,
+            headless=False,
+            host='127.0.0.1',
+            port=0,
+            width=300,
+            height=300,
+            agent_id=0,
+            image_dir='.',
+            save_image_per_frame=False
+    ):
+        self.host = host
+        self.port = port
         self.headless = headless
         self.last_event = {}
         self.last_action = {}
         self.sequence_id = 0
-        self.agent_id = 0
+        self.agent_id = agent_id
+        self.screen_width = width
+        self.screen_height = height
 
         if image_dir != '.':
             if os.path.exists(image_dir):
@@ -47,14 +59,18 @@ class Controller(object):
             image_per_frame=save_image_per_frame
         )
 
+        self.start(
+            port,
+            host,
+            agent_id=agent_id
+        )
+
     def stop(self):
         pass
 
     def start(
             self,
             port=9200,
-            player_screen_width=300,
-            player_screen_height=300,
             host='127.0.0.1',
             agent_id=0,
             **kwargs
@@ -62,8 +78,7 @@ class Controller(object):
         self.host = host
         self.port = port
         self.agent_id = agent_id
-        self.screen_width = player_screen_width
-        self.screen_height = player_screen_height
+
         # response_payload = self._post_event('start')
         pprint('-- Start:')
         # pprint(response_payload)
