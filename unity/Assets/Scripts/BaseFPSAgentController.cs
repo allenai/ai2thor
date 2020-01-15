@@ -784,7 +784,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		//rotates controlCommand.degrees degrees left w/ respect to current forward
 		public virtual void RotateLeft(ServerAction controlCommand)
 		{
-            transform.Rotate(0, controlCommand.degrees, 0);
+            transform.Rotate(0, -controlCommand.degrees, 0);
 			actionFinished(true);
 		}
 

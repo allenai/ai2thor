@@ -1163,7 +1163,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         {
             //if controlCommand.degrees is default (0), rotate 90 by default
             if(action.degrees == 0f)
-            action.degrees = -90f;
+            action.degrees = 90f;
 
             if (CheckIfAgentCanRotate("left", action.degrees)||action.forceAction) 
             {
@@ -1237,7 +1237,22 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         Vector3[] arcPoints = new Vector3[11]; //we just always want 10 points in addition to our starting corner position (11 total) to check against per corner
         float currentIncrementAngle;
 
-        if (dir == "left" || dir == "right") //Yawing (Rotating across XZ plane around Y-pivot)
+        if (dir == "left") //Yawing left (Rotating across XZ plane around Y-pivot)
+        {
+            for (int i = 0; i < arcPoints.Length; i++)
+            {
+                currentIncrementAngle = i * -incrementAngle;
+                //move the rotPoint to the current corner's position
+                rotPoint.transform.position = startingPoint;
+                //rotate the rotPoint around the origin the current increment's angle, relative to the correct axis
+                rotPoint.transform.RotateAround(origin, transform.up, currentIncrementAngle);
+                //set the current arcPoint's vector3 to the rotated point
+                arcPoints[i] = rotPoint.transform.position;
+                //arcPoints[i] = RotatePointAroundPivot(startingPoint, origin, new Vector3(0, currentIncrementAngle, 0));
+            }
+        }
+
+        if (dir == "right") //Yawing right (Rotating across XZ plane around Y-pivot)
         {
             for (int i = 0; i < arcPoints.Length; i++)
             {
@@ -9146,14 +9161,15 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 }
             }
 
-            if(gizmobounds != null)
-            {
-                Gizmos.color = Color.yellow;
-                foreach(Bounds g in gizmobounds)
-                {
-                    Gizmos.DrawWireCube(g.center, g.size);
-                }
-            }
+            // //draw bounds of objects
+            // if(gizmobounds != null)
+            // {
+            //     Gizmos.color = Color.yellow;
+            //     foreach(Bounds g in gizmobounds)
+            //     {
+            //         Gizmos.DrawWireCube(g.center, g.size);
+            //     }
+            // }
         }
 #endif
     }

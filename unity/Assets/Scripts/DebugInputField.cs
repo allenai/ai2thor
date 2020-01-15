@@ -888,6 +888,86 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         break;
                     }
 
+                    //move ahead, force action true
+                case "maf":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "MoveAhead";
+
+						if (splitcommand.Length > 1)
+						{
+							action.moveMagnitude = float.Parse(splitcommand[1]);
+						}
+						else
+                        action.moveMagnitude = 0.25f;
+
+                        action.forceAction = true;
+						
+                        PhysicsController.ProcessControlCommand(action);
+
+                        break;
+                    }
+
+                    //move backward, force action true
+                case "mbf":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "MoveBack";     
+
+                        if (splitcommand.Length > 1)
+                        {
+                            action.moveMagnitude = float.Parse(splitcommand[1]);
+                        }
+
+						else
+                        action.moveMagnitude = 0.25f;
+
+                        action.forceAction = true;
+						
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
+                    //move left, force action true
+                case "mlf":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "MoveLeft";
+
+                        if (splitcommand.Length > 1)
+                        {
+                            action.moveMagnitude = float.Parse(splitcommand[1]);
+                        }
+
+						else
+                        action.moveMagnitude = 0.25f;
+
+                        action.forceAction = true;
+						
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
+                    //move right, force action true
+                case "mrf":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "MoveRight";
+
+                        if (splitcommand.Length > 1)
+                        {
+                            action.moveMagnitude = float.Parse(splitcommand[1]);
+                        }
+
+						else
+                        action.moveMagnitude = 0.25f;
+
+                        action.forceAction = true;
+						
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
                 case "fu":
                     {
                         ServerAction action = new ServerAction();
