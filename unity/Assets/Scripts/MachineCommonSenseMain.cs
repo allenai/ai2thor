@@ -36,6 +36,11 @@ public class MachineCommonSenseMain : MonoBehaviour {
         AssignMaterial(GameObject.Find("Wall Left"), gameConfig.wallMaterial);
         AssignMaterial(GameObject.Find("Wall Right"), gameConfig.wallMaterial);
 
+        if (gameConfig.performerStart != null) {
+            GameObject controller = GameObject.Find("FPSController");
+            controller.transform.position = new Vector3(gameConfig.performerStart.x, gameConfig.performerStart.y, gameConfig.performerStart.z);
+        }
+
         this.performerManager = GameObject.Find("PhysicsSceneManager").GetComponentInChildren<MachineCommonSensePerformerManager>();
     }
 
@@ -414,6 +419,7 @@ class FileConfigGame {
     public String ceilingMaterial;
     public String floorMaterial;
     public String wallMaterial;
+    public ConfigVector performerStart;
     public List<ConfigGameObject> objects;
 }
 
