@@ -1,11 +1,12 @@
 ﻿{
-    "ceilingMaterial": "Materials/Walls/WallDrywallWhite",
-    "floorMaterial": "Materials/Fabrics/RUG4",
-    "wallMaterial": "Materials/Walls/YellowDrywall",
+    "ceilingMaterial": "Walls/WallDrywallWhite",
+    "floorMaterial": "Fabrics/RUG4",
+    "wallMaterial": "Walls/YellowDrywall",
     "objects": [{
         "id": "testOccluder1",
         "type": "cube",
-        "materialFile": "Materials/SourceTextures/Materials/RedBricks",
+        "structure": true,
+        "materialFile": "SourceTextures/Materials/RedBricks",
         "nullParent": {
             "position": {
                 "x": -0.5,
@@ -46,7 +47,8 @@
     }, {
         "id": "testOccluder2",
         "type": "cube",
-        "materialFile": "Materials/SourceTextures/Materials/RedBricks",
+        "structure": true,
+        "materialFile": "SourceTextures/Materials/RedBricks",
         "nullParent": {
             "position": {
                 "x": 0.5,
@@ -87,9 +89,21 @@
     }, {
         "id": "testBall",
         "type": "sphere",
-        "materialFile": "Materials/Plastics/BlueRubber",
+        "materialFile": "Plastics/BlueRubber",
         "shows": [{
-            "stepBegin": 30,
+            "stepBegin": 0,
+            "position": {
+                "x": -3,
+                "y": 0.25,
+                "z": 3
+            },
+            "scale": {
+                "x": 0.25,
+                "y": 0.25,
+                "z": 0.25
+            }
+        }, {
+            "stepBegin": 10,
             "position": {
                 "x": 0.75,
                 "y": 0.25,
@@ -101,9 +115,12 @@
                 "z": 0.25
             }
         }],
+        "hides": [{
+            "stepBegin": 10
+        }],
         "moves": [{
-            "stepBegin": 31,
-            "stepEnd": 39,
+            "stepBegin": 1,
+            "stepEnd": 9,
             "vector": {
                 "x": 0.25,
                 "y": 0,

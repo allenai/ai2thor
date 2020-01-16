@@ -7,11 +7,13 @@ using UnityStandardAssets.Characters.FirstPerson;
 using System.Text;
 
 public class MachineCommonSenseMain : MonoBehaviour {
-    public static bool enableVerboseLog = false;
-    public static int physicsFrameDuration = 10;
+    public string defaultSceneFile = "";
+    public bool enableVerboseLog = false;
+    public string objectRegistryFile = "object_registry";
+    public int physicsFrameDuration = 10;
 
-    private FileConfigGame gameConfig;
-    private FileConfigObjectList objectConfig;
+    private MachineCommonSenseConfigScene currentScene;
+    private MachineCommonSenseConfigObjectRegistry objectRegistry;
 
     private int lastPhysicsFrame = -1;
     private int lastStep = -1;
@@ -20,28 +22,15 @@ public class MachineCommonSenseMain : MonoBehaviour {
 
     // Unity's Start method is called before the first frame update
     void Start() {
-        TextAsset mainConfigFile = Resources.Load<TextAsset>("MCS/config");
-        Debug.Log(mainConfigFile == null ? "Config file config.json is null!" : mainConfigFile.text);
-        FileConfigMain mainConfig = JsonUtility.FromJson<FileConfigMain>(mainConfigFile.text);
-
-        gameConfig = LoadGameConfig(mainConfig);
-        objectConfig = LoadObjectConfig(mainConfig);
-
-        gameConfig.objects.ForEach(InitializeGameObject);
-
-        AssignMaterial(GameObject.Find("Ceiling"), gameConfig.ceilingMaterial);
-        AssignMaterial(GameObject.Find("Floor"), gameConfig.floorMaterial);
-        AssignMaterial(GameObject.Find("Wall Back"), gameConfig.wallMaterial);
-        AssignMaterial(GameObject.Find("Wall Front"), gameConfig.wallMaterial);
-        AssignMaterial(GameObject.Find("Wall Left"), gameConfig.wallMaterial);
-        AssignMaterial(GameObject.Find("Wall Right"), gameConfig.wallMaterial);
-
-        if (gameConfig.performerStart != null) {
-            GameObject controller = GameObject.Find("FPSController");
-            controller.transform.position = new Vector3(gameConfig.performerStart.x, gameConfig.performerStart.y, gameConfig.performerStart.z);
-        }
-
         this.performerManager = GameObject.Find("PhysicsSceneManager").GetComponentInChildren<MachineCommonSensePerformerManager>();
+
+        this.objectRegistry = LoadObjectRegistryFromFile(this.objectRegistryFile);
+
+        if (!this.defaultSceneFile.Equals("")) {
+            this.currentScene = LoadCurrentSceneFromFile(this.defaultSceneFile);
+            this.currentScene.id = ((this.currentScene.id == null || this.currentScene.id.Equals("")) ? this.defaultSceneFile : this.currentScene.id);
+            ChangeCurrentScene(this.currentScene);
+        }
     }
 
     // Unity's Update method is called once per frame
@@ -55,21 +44,73 @@ public class MachineCommonSenseMain : MonoBehaviour {
             this.lastPhysicsFrame = Time.frameCount;
             LogVerbose("Run Step " + this.lastStep + " and Unpause Game Physics at Frame " + Time.frameCount);
             Time.timeScale = 1;
-            gameConfig.objects.Where(item => item.GetGameObject() != null).ToList().ForEach(item => UpdateGameObjectForFrame(item, this.lastStep));
+            if (this.currentScene != null && this.currentScene.objects != null) {
+                this.currentScene.objects.Where(item => item.GetGameObject() != null).ToList().ForEach(item => {
+                    bool objectsWereShown = UpdateGameObjectOnStep(item, this.lastStep);
+                    if (objectsWereShown) {
+                        ImageSynthesis imageSynthesis = GameObject.Find("FPSController").GetComponentInChildren<ImageSynthesis>();
+                        if (imageSynthesis != null && imageSynthesis.enabled) {
+                            imageSynthesis.OnSceneChange();
+                        }
+                    }
+                });
+            }
         }
-        if (Time.timeScale == 1 && Time.frameCount == (this.lastPhysicsFrame + MachineCommonSenseMain.physicsFrameDuration)) {
+        if (Time.timeScale == 1 && Time.frameCount >= (this.lastPhysicsFrame + this.physicsFrameDuration)) {
             LogVerbose("Pause Game Physics at Frame " + Time.frameCount);
             Time.timeScale = 0;
             this.performerManager.FinalizeEmit();
         }
     }
-    
+
     // Custom Methods
 
-    private GameObject AssignProperties(GameObject gameObject, ConfigGameObject item) {
+    public void ChangeCurrentScene(MachineCommonSenseConfigScene scene) {
+        if (scene == null) {
+            Debug.LogError("MCS:  Cannot change the MCS scene to null... Keeping the current MCS scene.");
+            return;
+        }
+
+        this.currentScene = scene;
+
+        Debug.Log("MCS:  Changing the current MCS scene to " + scene.id);
+
+        this.currentScene.objects.ForEach(InitializeGameObject);
+
+        AssignMaterial(GameObject.Find("Ceiling"), this.currentScene.ceilingMaterial);
+        AssignMaterial(GameObject.Find("Floor"), this.currentScene.floorMaterial);
+        AssignMaterial(GameObject.Find("Wall Back"), this.currentScene.wallMaterial);
+        AssignMaterial(GameObject.Find("Wall Front"), this.currentScene.wallMaterial);
+        AssignMaterial(GameObject.Find("Wall Left"), this.currentScene.wallMaterial);
+        AssignMaterial(GameObject.Find("Wall Right"), this.currentScene.wallMaterial);
+
+        if (this.currentScene.performerStart != null) {
+            GameObject controller = GameObject.Find("FPSController");
+            controller.transform.position = new Vector3(this.currentScene.performerStart.x, this.currentScene.performerStart.y, this.currentScene.performerStart.z);
+        }
+
+        this.lastStep = -1;
+        GameObject.Find("PhysicsSceneManager").GetComponent<PhysicsSceneManager>().SetupScene();
+    }
+
+    private GameObject AssignProperties(GameObject gameObject, MachineCommonSenseConfigGameObject item, String type) {
+        gameObject.name = item.id;
+        gameObject.tag = "SimObj"; // AI2-THOR Tag
+        gameObject.layer = 8; // AI2-THOR Layer SimObjVisible
+
+        LogVerbose("CREATE " + type.ToUpper() + " GAME OBJECT " + gameObject.name);
+
+        if (item.structure) {
+            gameObject.isStatic = true;
+            gameObject.tag = "Structure"; // AI2-THOR Tag
+            StructureObject structureObject = gameObject.AddComponent<StructureObject>();
+            structureObject.WhatIsMyStructureObjectTag = StructureObjectTag.Wall; // TODO
+        }
+
         if (item.physics) {
             Rigidbody rigidbody = gameObject.AddComponent<Rigidbody>();
             rigidbody.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
+            // TODO Is SimObjPhysics correct here?
             gameObject.tag = "SimObjPhysics"; // AI2-THOR Tag
             LogVerbose("ASSIGN RIGID BODY TO GAME OBJECT " + gameObject.name);
         }
@@ -79,7 +120,7 @@ public class MachineCommonSenseMain : MonoBehaviour {
         return gameObject;
     }
 
-    private void AssignCollider(GameObject gameObject, ConfigColliderDefinition collider) {
+    private void AssignCollider(GameObject gameObject, MachineCommonSenseConfigColliderDefinition collider) {
         if (collider.type.Equals("box")) {
             BoxCollider boxCollider = gameObject.AddComponent<BoxCollider>();
             boxCollider.center = new Vector3(collider.center.x, collider.center.y, collider.center.z);
@@ -103,47 +144,50 @@ public class MachineCommonSenseMain : MonoBehaviour {
     private void AssignMaterial(GameObject gameObject, String materialFile) {
         Renderer renderer = gameObject.GetComponent<Renderer>();
         if (materialFile != null && !materialFile.Equals("")) {
-            Material material = Resources.Load<Material>("MCS/" + materialFile);
-            LogVerbose("LOAD OF MATERIAL FILE " + materialFile + (material == null ? " IS NULL" : " IS DONE"));
+            Material material = Resources.Load<Material>("MCS/Materials/" + materialFile);
+            LogVerbose("LOAD OF MATERIAL FILE Assets/Resources/MCS/Materials/" + materialFile + (material == null ? " IS NULL" : " IS DONE"));
             if (material != null) {
                 renderer.material = material;
-                LogVerbose("ASSIGN MATERIAL TO GAME OBJECT " + gameObject.name);
+                LogVerbose("ASSIGN MATERIAL " + materialFile + " TO GAME OBJECT " + gameObject.name);
             }
         }
     }
         
-    private GameObject CreateCustomGameObject(ConfigGameObject item, ConfigObjectDefinition definition) {
-        GameObject gameObject = Instantiate(Resources.Load("MCS/" + definition.resourceFile, typeof(GameObject))) as GameObject;
-        LogVerbose("CREATE CUSTOM GAME OBJECT " + gameObject.name + " FROM FILE " + definition.resourceFile);
+    private GameObject CreateCustomGameObject(MachineCommonSenseConfigGameObject item, MachineCommonSenseConfigObjectDefinition definition) {
+        GameObject gameObject = Instantiate(Resources.Load("MCS/Objects/" + definition.resourceFile, typeof(GameObject))) as GameObject;
+
+        LogVerbose("LOAD CUSTOM GAME OBJECT Assets/Resources/MCS/Objects/" + definition.id + " FROM FILE " + definition.resourceFile + (gameObject == null ? " IS NULL" : " IS DONE"));
+
+        gameObject = AssignProperties(gameObject, item, "custom");
 
         // Set animations.
         if (definition.actions.Any((action) => action.animationFile != null && !action.animationFile.Equals(""))) {
             Animation animation = gameObject.GetComponent<Animation>();
             if (animation == null) {
                 animation = gameObject.AddComponent<Animation>();
-                LogVerbose("ASSIGN ANIMATION TO GAME OBJECT " + gameObject.name);
+                LogVerbose("ASSIGN NEW ANIMATION TO GAME OBJECT " + gameObject.name);
             }
             definition.actions.ForEach((action) => {
                 if (action.animationFile != null && !action.animationFile.Equals("")) {
-                    AnimationClip clip = Resources.Load<AnimationClip>("MCS/" + action.animationFile);
-                    LogVerbose("LOAD OF ANIMATION CLIP FILE " + action.animationFile + (clip == null ? " IS NULL" : " IS DONE"));
+                    AnimationClip clip = Resources.Load<AnimationClip>("MCS/Animations/" + action.animationFile);
+                    LogVerbose("LOAD OF ANIMATION CLIP FILE Assets/Resources/MCS/Animations/" + action.animationFile + (clip == null ? " IS NULL" : " IS DONE"));
                     animation.AddClip(clip, action.id);
-                    LogVerbose("ASSIGN ANIMATION CLIP TO ACTION " + action.id);
+                    LogVerbose("ASSIGN ANIMATION CLIP " + action.animationFile + " TO ACTION " + action.id);
                 }
             });
         }
     
         // Set animation controller.
         if (item.controller != null && !item.controller.Equals("")) {
-            ConfigControllerDefinition controller = definition.controllers.Where(cont => cont.id.Equals(item.controller)).ToList().First();
+            MachineCommonSenseConfigControllerDefinition controller = definition.controllers.Where(cont => cont.id.Equals(item.controller)).ToList().First();
             if (controller.controllerFile != null && !controller.controllerFile.Equals("")) {
                 Animator animator = gameObject.GetComponent<Animator>();
                 if (animator == null) {
                     animator = gameObject.AddComponent<Animator>();
-                    LogVerbose("ASSIGN ANIMATOR CONTROLLER TO GAME OBJECT " + gameObject.name);
+                    LogVerbose("ASSIGN NEW ANIMATOR CONTROLLER TO GAME OBJECT " + gameObject.name);
                 }
-                RuntimeAnimatorController animatorController = Resources.Load<RuntimeAnimatorController>("MCS/" + controller.controllerFile);
-                LogVerbose("LOAD OF ANIMATOR CONTROLLER FILE " + controller.controllerFile + (animatorController == null ? " IS NULL" : " IS DONE"));
+                RuntimeAnimatorController animatorController = Resources.Load<RuntimeAnimatorController>("MCS/Animators/" + controller.controllerFile);
+                LogVerbose("LOAD OF ANIMATOR CONTROLLER FILE Assets/Resources/MCS/Animators/" + controller.controllerFile + (animatorController == null ? " IS NULL" : " IS DONE"));
                 animator.runtimeAnimatorController = animatorController;
             }
         }
@@ -153,29 +197,29 @@ public class MachineCommonSenseMain : MonoBehaviour {
             AssignCollider(gameObject, definition.collider);
         }
 
-        return AssignProperties(gameObject, item);
+        return gameObject;
     }
 
-    private GameObject CreateGameObject(ConfigGameObject item) {
+    private GameObject CreateGameObject(MachineCommonSenseConfigGameObject item) {
         switch (item.type) {
             case "capsule":
-                return AssignProperties(GameObject.CreatePrimitive(PrimitiveType.Capsule), item);
+                return AssignProperties(GameObject.CreatePrimitive(PrimitiveType.Capsule), item, "capsule");
             case "cube":
-                return AssignProperties(GameObject.CreatePrimitive(PrimitiveType.Cube), item);
+                return AssignProperties(GameObject.CreatePrimitive(PrimitiveType.Cube), item, "cube");
             case "cylinder":
-                return AssignProperties(GameObject.CreatePrimitive(PrimitiveType.Cylinder), item);
+                return AssignProperties(GameObject.CreatePrimitive(PrimitiveType.Cylinder), item, "cylinder");
             case "plane":
-                return AssignProperties(GameObject.CreatePrimitive(PrimitiveType.Plane), item);
+                return AssignProperties(GameObject.CreatePrimitive(PrimitiveType.Plane), item, "plane");
             case "quad":
-                return AssignProperties(GameObject.CreatePrimitive(PrimitiveType.Quad), item);
+                return AssignProperties(GameObject.CreatePrimitive(PrimitiveType.Quad), item, "quad");
             case "sphere":
-                return AssignProperties(GameObject.CreatePrimitive(PrimitiveType.Sphere), item);
+                return AssignProperties(GameObject.CreatePrimitive(PrimitiveType.Sphere), item, "sphere");
         }
-        ConfigObjectDefinition definition = objectConfig.prefabs.Where(prefab => prefab.id.Equals(item.type)).ToList().First();
+        MachineCommonSenseConfigObjectDefinition definition = this.objectRegistry.prefabs.Where(prefab => prefab.id.Equals(item.type)).ToList().First();
         return definition != null ? CreateCustomGameObject(item, definition) : null;
     }
     
-    private GameObject CreateNullParentObjectIfNeeded(ConfigGameObject item) {
+    private GameObject CreateNullParentObjectIfNeeded(MachineCommonSenseConfigGameObject item) {
         // Null parents are useful if we want to rotate an object but don't want to pivot the object around its center point.
         if (item.nullParent != null && (item.nullParent.position != null || item.nullParent.rotation != null)) {
             GameObject parentObject = new GameObject();
@@ -192,40 +236,41 @@ public class MachineCommonSenseMain : MonoBehaviour {
         return null;
     }
 
-    private void InitializeGameObject(ConfigGameObject item) {
+    private void InitializeGameObject(MachineCommonSenseConfigGameObject item) {
         try {
             GameObject gameObject = CreateGameObject(item);
             item.SetGameObject(gameObject);
             if (gameObject != null) {
-                gameObject.name = item.id;
                 GameObject parentObject = CreateNullParentObjectIfNeeded(item);
-                // Hide the object until the frame defined in ConfigGameObject.shows
+                // Hide the object until the frame defined in MachineCommonSenseConfigGameObject.shows
                 (parentObject ?? gameObject).SetActive(false);
             }
         } catch (Exception e) {
-            Debug.LogError(e);
+            Debug.LogError("MCS:  " + e);
         }
     }
 
-    private FileConfigGame LoadGameConfig(FileConfigMain mainConfig) {
-        TextAsset gameConfigFile = Resources.Load<TextAsset>("MCS/" + mainConfig.gameFile);
-        Debug.Log(gameConfigFile == null ? "Config file " + mainConfig.gameFile + ".json is null!" : gameConfigFile.text);
-        return JsonUtility.FromJson<FileConfigGame>(gameConfigFile.text);
+    private MachineCommonSenseConfigScene LoadCurrentSceneFromFile(String filePath) {
+        TextAsset currentSceneFile = Resources.Load<TextAsset>("MCS/Scenes/" + filePath);
+        Debug.Log("MCS:  Config file Assets/Resources/MCS/Scenes/" + filePath + ".json" + (currentSceneFile == null ? " is null!" : (":\n" + currentSceneFile.text)));
+        return JsonUtility.FromJson<MachineCommonSenseConfigScene>(currentSceneFile.text);
     }
 
-    private FileConfigObjectList LoadObjectConfig(FileConfigMain mainConfig) {
-        TextAsset objectConfigFile = Resources.Load<TextAsset>("MCS/" + mainConfig.objectFile);
-        Debug.Log(objectConfigFile == null ? "Config file " + mainConfig.objectFile + ".json is null!" : objectConfigFile.text);
-        return JsonUtility.FromJson<FileConfigObjectList>(objectConfigFile.text);
+    private MachineCommonSenseConfigObjectRegistry LoadObjectRegistryFromFile(String filePath) {
+        TextAsset objectRegistryFile = Resources.Load<TextAsset>("MCS/" + filePath);
+        Debug.Log("MCS:  Config file Assets/Resources/MCS/" + filePath + ".json" + (objectRegistryFile == null ? " is null!" : (":\n" + objectRegistryFile.text)));
+        return JsonUtility.FromJson<MachineCommonSenseConfigObjectRegistry>(objectRegistryFile.text);
     }
 
     private void LogVerbose(String text) {
-        if (MachineCommonSenseMain.enableVerboseLog) {
-            Debug.Log(text);
+        if (this.enableVerboseLog) {
+            Debug.Log("MCS:  " + text);
         }
     }
 
-    private void UpdateGameObjectForFrame(ConfigGameObject item, int step) {
+    private bool UpdateGameObjectOnStep(MachineCommonSenseConfigGameObject item, int step) {
+        bool objectsWereShown = false;
+
         GameObject gameOrParentObject = item.GetParentObject() ?? item.GetGameObject();
 
         // Do the hides before the shows so any teleports work as expected.
@@ -245,6 +290,7 @@ public class MachineCommonSenseMain : MonoBehaviour {
                 item.GetGameObject().transform.localScale = new Vector3(show.scale.GetX(), show.scale.GetY(), show.scale.GetZ());
             }
             gameOrParentObject.SetActive(true);
+            objectsWereShown = true;
         });
 
         item.resizes.Where(resize => resize.stepBegin <= step && resize.stepEnd >= step && resize.size != null).ToList().ForEach((resize) => {
@@ -277,51 +323,54 @@ public class MachineCommonSenseMain : MonoBehaviour {
                 item.GetGameObject().GetComponent<Animation>().Play(action.id);
             }
         });
+
+        return objectsWereShown;
     }
 }
 
 // Definitions of serializable objects from JSON config files.
 
 [Serializable]
-class ConfigAction : ConfigStepBegin {
+public class MachineCommonSenseConfigAction : MachineCommonSenseConfigStepBegin {
     public string id;
 }
 
 [Serializable]
-class ConfigActionDefinition {
+public class MachineCommonSenseConfigActionDefinition {
     public string id;
     public string animationFile;
 }
 
 [Serializable]
-class ConfigColliderDefinition {
+public class MachineCommonSenseConfigColliderDefinition {
     public string type;
-    public ConfigVector center;
+    public MachineCommonSenseConfigVector center;
     public float radius;
-    public ConfigSize size;
+    public MachineCommonSenseConfigSize size;
 }
 
 [Serializable]
-class ConfigControllerDefinition {
+public class MachineCommonSenseConfigControllerDefinition {
     public string id;
     public string controllerFile;
 }
 
 [Serializable]
-class ConfigGameObject {
+public class MachineCommonSenseConfigGameObject {
     public string id;
     public string controller;
     public string materialFile;
     public bool physics;
+    public bool structure;
     public string type;
-    public List<ConfigAction> actions;
-    public List<ConfigMove> forces;
-    public List<ConfigStepBegin> hides;
-    public List<ConfigMove> moves;
-    public ConfigParentObject nullParent;
-    public List<ConfigResize> resizes;
-    public List<ConfigMove> rotates;
-    public List<ConfigShow> shows;
+    public List<MachineCommonSenseConfigAction> actions;
+    public List<MachineCommonSenseConfigMove> forces;
+    public List<MachineCommonSenseConfigStepBegin> hides;
+    public List<MachineCommonSenseConfigMove> moves;
+    public MachineCommonSenseConfigParentObject nullParent = null;
+    public List<MachineCommonSenseConfigResize> resizes;
+    public List<MachineCommonSenseConfigMove> rotates;
+    public List<MachineCommonSenseConfigShow> shows;
 
     private GameObject gameObject;
     private GameObject parentObject;
@@ -344,39 +393,39 @@ class ConfigGameObject {
 }
 
 [Serializable]
-class ConfigMove : ConfigStepBeginEnd {
-    public ConfigVector vector;
+public class MachineCommonSenseConfigMove : MachineCommonSenseConfigStepBeginEnd {
+    public MachineCommonSenseConfigVector vector;
 }
 
 [Serializable]
-class ConfigObjectDefinition {
+public class MachineCommonSenseConfigObjectDefinition {
     public string id;
     public string resourceFile;
-    public ConfigColliderDefinition collider;
-    public List<ConfigActionDefinition> actions;
-    public List<ConfigControllerDefinition> controllers;
+    public MachineCommonSenseConfigColliderDefinition collider;
+    public List<MachineCommonSenseConfigActionDefinition> actions;
+    public List<MachineCommonSenseConfigControllerDefinition> controllers;
 }
 
 [Serializable]
-class ConfigParentObject {
-    public ConfigVector position;
-    public ConfigVector rotation;
+public class MachineCommonSenseConfigParentObject {
+    public MachineCommonSenseConfigVector position;
+    public MachineCommonSenseConfigVector rotation;
 }
 
 [Serializable]
-class ConfigResize : ConfigStepBeginEnd {
-    public ConfigSize size;
+public class MachineCommonSenseConfigResize : MachineCommonSenseConfigStepBeginEnd {
+    public MachineCommonSenseConfigSize size;
 }
 
 [Serializable]
-class ConfigShow : ConfigStepBegin {
-    public ConfigVector position;
-    public ConfigVector rotation;
-    public ConfigSize scale;
+public class MachineCommonSenseConfigShow : MachineCommonSenseConfigStepBegin {
+    public MachineCommonSenseConfigVector position;
+    public MachineCommonSenseConfigVector rotation;
+    public MachineCommonSenseConfigSize scale;
 }
 
 [Serializable]
-class ConfigSize {
+public class MachineCommonSenseConfigSize {
     [SerializeField]
     private float x;
     [SerializeField]
@@ -398,38 +447,33 @@ class ConfigSize {
 }
 
 [Serializable]
-class ConfigStepBegin {
+public class MachineCommonSenseConfigStepBegin {
     public int stepBegin;
 }
 
 [Serializable]
-class ConfigStepBeginEnd : ConfigStepBegin {
+public class MachineCommonSenseConfigStepBeginEnd : MachineCommonSenseConfigStepBegin {
     public int stepEnd;
 }
 
 [Serializable]
-class ConfigVector {
+public class MachineCommonSenseConfigVector {
     public float x;
     public float y;
     public float z;
 }
 
 [Serializable]
-class FileConfigGame {
+public class MachineCommonSenseConfigScene {
+    public String id;
     public String ceilingMaterial;
     public String floorMaterial;
     public String wallMaterial;
-    public ConfigVector performerStart;
-    public List<ConfigGameObject> objects;
+    public MachineCommonSenseConfigVector performerStart;
+    public List<MachineCommonSenseConfigGameObject> objects;
 }
 
 [Serializable]
-class FileConfigMain {
-    public string gameFile;
-    public string objectFile;
-}
-
-[Serializable]
-class FileConfigObjectList {
-    public List<ConfigObjectDefinition> prefabs;
+public class MachineCommonSenseConfigObjectRegistry {
+    public List<MachineCommonSenseConfigObjectDefinition> prefabs;
 }

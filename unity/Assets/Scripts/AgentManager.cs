@@ -97,7 +97,7 @@ public class AgentManager : MonoBehaviour
 
 	}
 	
-	public void Initialize(ServerAction action)
+	public virtual void Initialize(ServerAction action)
 	{
         if (action.agentType != null && action.agentType.ToLower() == "stochastic") {
             this.agents.Clear();
@@ -1021,6 +1021,10 @@ public class ServerAction
     public float rotateStepDegrees = 90.0f;
 
     public bool useAgentTransform = false;
+
+    // Machine Common Sense Additions
+    public bool logs = false;
+    public MachineCommonSenseConfigScene sceneConfig;
 
     public SimObjType ReceptableSimObjType()
 	{
