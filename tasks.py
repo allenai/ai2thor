@@ -9,6 +9,7 @@ import subprocess
 import pprint
 from invoke import task
 import boto3
+import io
 
 
 S3_BUCKET = "ai2-thor"
@@ -664,7 +665,7 @@ def ci_build(context):
 
         fcntl.flock(lock_f, fcntl.LOCK_UN)
 
-    except BlockingIOError as e:
+    except io.BlockingIOError as e:
         pass
 
     lock_f.close()
