@@ -909,7 +909,8 @@ class Controller(object):
             raise Exception("Screen resolution must be >= 300x300")
 
         if self.server_thread is not None:
-            print('start() method depreciated. The server has already started when Controller was initialized.')
+            import warnings
+            warnings.warn('start method depreciated. The server started when the Controller was initialized.')
 
             # Stops the current server and creates a new one. This is done so
             # that the arguments passed in will be used on the server.
