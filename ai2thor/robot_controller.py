@@ -25,8 +25,8 @@ class Controller(object):
             headless=False,
             host='127.0.0.1',
             port=0,
-            width=300,
-            height=300,
+            player_screen_width=300,
+            player_screen_height=300,
             agent_id=0,
             image_dir='.',
             save_image_per_frame=False
@@ -38,8 +38,8 @@ class Controller(object):
         self.last_action = {}
         self.sequence_id = 0
         self.agent_id = agent_id
-        self.screen_width = width
-        self.screen_height = height
+        self.screen_width = player_screen_width
+        self.screen_height = player_screen_height
 
         if image_dir != '.':
             if os.path.exists(image_dir):
@@ -124,7 +124,7 @@ class Controller(object):
         for i, agent_metadata in enumerate(payload['metadata']['agents']):
             event = Event(agent_metadata)
             image_mapping = dict(
-                image=lambda x: event.add_image(x, flip_y=False),
+                image=lambda x: event.add_image(x, flip_y=False, flip_rb_colors=True),
                 image_depth=lambda x: event.add_image_depth_meters(
                     x, flip_y=False, dtype=np.float64
                 )

@@ -56,7 +56,7 @@ class InteractiveControllerPrompt(object):
         default_interact_commands = {
             '\x1b[C': dict(action='MoveRight', moveMagnitude=0.25),
             '\x1b[D': dict(action='MoveLeft', moveMagnitude=0.25),
-            '\x1b[A': dict(action='MoveAhead', moveMagnitude=0.25),
+            '\x1b[A': dict(action='MoveAhead', moveMagnitude=0.0),
             '\x1b[B': dict(action='MoveBack', moveMagnitude=0.25),
             '\x1b[1;2A': dict(action='LookUp'),
             '\x1b[1;2B': dict(action='LookDown'),
@@ -228,7 +228,7 @@ class InteractiveControllerPrompt(object):
                 im = Image.fromarray(frame)
                 image_name = os.path.join(
                     image_dir,
-                    "{}{}.jpeg"
+                    "{}{}.png"
                         .format(
                         frame_filename,
                         "{}".format(suffix) if image_per_frame else ""

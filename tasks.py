@@ -846,7 +846,7 @@ def interact(
             image_dir=image_directory,
             save_image_per_frame=True
         )
-        
+
     env.reset(scene)
     initialize_event = env.step(
         dict(
@@ -876,6 +876,128 @@ def interact(
         depth_frame=depth_image,
         color_frame=image
     )
+    env.stop()
+
+
+@task
+def get_depth(
+        ctx,
+        scene=None,
+        image=False,
+        depth_image=False,
+        class_image=False,
+        object_image=False,
+        port=8200,
+        host='127.0.0.1',
+        image_directory='.',
+        number=1,
+        local_build=False
+    ):
+    import ai2thor.controller
+    import ai2thor.robot_controller
+
+    print("local {}".format(local_build))
+    print("local p {}".format(_local_build_path()))
+
+    if image_directory != '.':
+        if os.path.exists(image_directory):
+            shutil.rmtree(image_directory)
+        os.makedirs(image_directory)
+
+    if scene is None:
+
+        env = ai2thor.robot_controller.Controller(
+            host=host,
+            port=port,
+            player_screen_width=600,
+            player_screen_height=600,
+            image_dir=image_directory,
+            save_image_per_frame=True
+
+        )
+    else:
+        env = ai2thor.controller.Controller(
+            player_screen_width=600,
+            player_screen_height=600,
+            local_executable_path=_local_build_path() if local_build else None
+        )
+
+    env.reset(scene)
+    initialize_event = env.step(
+        dict(
+            action="Initialize",
+            gridSize=0.25,
+            renderObjectImage=object_image,
+            renderClassImage=class_image,
+            renderDepthImage=depth_image,
+            agentMode="Bot",
+            fieldOfView=42.5,
+            continuous=True,
+            snapToGrid=False
+        )
+    )
+
+    from ai2thor.interact import InteractiveControllerPrompt
+    if scene is not None:
+        evt = env.step(
+            dict(
+                action="TeleportFull",
+                x=9.125,
+                y=0.9009997,
+                z=-3.48,
+                rotation=dict(x=0, y=180, z=0)
+            )
+        )
+
+        InteractiveControllerPrompt.write_image(
+            evt,
+            image_directory,
+            '_{}'.format('teleport'),
+            image_per_frame=True,
+            class_segmentation_frame=class_image,
+            instance_segmentation_frame=object_image,
+            color_frame=image,
+            depth_frame=depth_image
+        )
+
+    from pprint import pprint
+    print("METADATA")
+
+    pprint(evt.metadata)
+
+    InteractiveControllerPrompt.write_image(
+        initialize_event,
+        image_directory,
+        '_init',
+        image_per_frame=True,
+        class_segmentation_frame=class_image,
+        instance_segmentation_frame=object_image,
+        color_frame=image,
+        depth_frame=depth_image
+    )
+
+    # env.interact(
+    #     class_segmentation_frame=class_image,
+    #     instance_segmentation_frame=object_image,
+    #     depth_frame=depth_image,
+    #     color_frame=image
+    # )
+    for i in range(number):
+        event = env.step(action='MoveAhead', moveMagnitude=0.0)
+
+        from pprint import pprint
+        pprint(event.metadata)
+
+        InteractiveControllerPrompt.write_image(
+            event,
+            image_directory,
+            '_{}'.format(i),
+            image_per_frame=True,
+            class_segmentation_frame=class_image,
+            instance_segmentation_frame=object_image,
+            color_frame=image,
+            depth_frame=depth_image
+        )
     env.stop()
 
 
