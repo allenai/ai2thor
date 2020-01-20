@@ -633,6 +633,7 @@ def pending_travis_build():
 @task
 def ci_build(context):
     import fcntl
+    import io
 
     lock_f = open(os.path.join(os.environ["HOME"], ".ci-build.lock"), "w")
 
@@ -664,7 +665,7 @@ def ci_build(context):
 
         fcntl.flock(lock_f, fcntl.LOCK_UN)
 
-    except BlockingIOError as e:
+    except io.BlockingIOError as e:
         pass
 
     lock_f.close()
