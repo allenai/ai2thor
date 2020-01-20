@@ -430,10 +430,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 m_Camera.GetComponent<PostProcessLayer>().enabled = true;
 
                 //camera position
-                m_Camera.transform.localPosition = new Vector3(0, -0.0705f, 0);
+                m_Camera.transform.localPosition = new Vector3(0, -0.0312f, 0);
 
                 //camera FOV
-                m_Camera.fieldOfView = 42.5f;
+                m_Camera.fieldOfView = 59f;
 
                 //set camera stand/crouch local positions for Tall mode
                 standingLocalCameraPosition = m_Camera.transform.localPosition;
