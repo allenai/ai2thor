@@ -821,9 +821,6 @@ def interact(
     import ai2thor.controller
     import ai2thor.robot_controller
 
-    print("local {}".format(local_build))
-    print("local p {}".format( _local_build_path()))
-
     if image_directory != '.':
         if os.path.exists(image_directory):
             shutil.rmtree(image_directory)
@@ -836,6 +833,7 @@ def interact(
             player_screen_width=600,
             player_screen_height=600,
             local_executable_path=_local_build_path() if local_build else None,
+            image_dir=image_directory,
             start_unity=False if editor_mode else True
         )
     else:
@@ -878,193 +876,6 @@ def interact(
         color_frame=image
     )
     env.stop()
-
-
-@task
-def get_depth(
-        ctx,
-        scene=None,
-        image=False,
-        depth_image=False,
-        class_image=False,
-        object_image=False,
-        port=8200,
-        host='127.0.0.1',
-        image_directory='.',
-        number=1,
-        local_build=False
-    ):
-    import ai2thor.controller
-    import ai2thor.robot_controller
-
-    print("local {}".format(local_build))
-    print("local p {}".format(_local_build_path()))
-
-    if image_directory != '.':
-        if os.path.exists(image_directory):
-            shutil.rmtree(image_directory)
-        os.makedirs(image_directory)
-
-    if scene is None:
-
-        env = ai2thor.robot_controller.Controller(
-            host=host,
-            port=port,
-            player_screen_width=600,
-            player_screen_height=600,
-            image_dir=image_directory,
-            save_image_per_frame=True
-
-        )
-    else:
-        env = ai2thor.controller.Controller(
-            player_screen_width=600,
-            player_screen_height=600,
-            local_executable_path=_local_build_path() if local_build else None
-        )
-
-    if scene is not None:
-        env.reset(scene)
-
-    initialize_event = env.step(
-        dict(
-            action="Initialize",
-            gridSize=0.25,
-            renderObjectImage=object_image,
-            renderClassImage=class_image,
-            renderDepthImage=depth_image,
-            agentMode="Bot",
-            fieldOfView=42.5,
-            continuous=True,
-            snapToGrid=False
-        )
-    )
-
-    from ai2thor.interact import InteractiveControllerPrompt
-    if scene is not None:
-        evt = env.step(
-            dict(
-                action="TeleportFull",
-
-                x=2.774,
-                y=0.9009997,
-                z=-2.805,
-                rotation=dict(x=0, y=90, z=0)
-            )
-        )
-
-        InteractiveControllerPrompt.write_image(
-            evt,
-            image_directory,
-            '_{}'.format('teleport'),
-            image_per_frame=True,
-            class_segmentation_frame=class_image,
-            instance_segmentation_frame=object_image,
-            color_frame=image,
-            depth_frame=depth_image
-        )
-
-    InteractiveControllerPrompt.write_image(
-        initialize_event,
-        image_directory,
-        '_init',
-        image_per_frame=True,
-        class_segmentation_frame=class_image,
-        instance_segmentation_frame=object_image,
-        color_frame=image,
-        depth_frame=depth_image
-    )
-
-    import cv2
-
-
-    # from pprint import pprint
-    # print("METADATA")
-    #
-    # pprint(evt.metadata)
-
-
-
-    # env.interact(
-    #     class_segmentation_frame=class_image,
-    #     instance_segmentation_frame=object_image,
-    #     depth_frame=depth_image,
-    #     color_frame=image
-    # )
-    for i in range(number):
-        event = env.step(action='MoveAhead', moveMagnitude=0.0)
-
-        from pprint import pprint
-        pprint(event.metadata)
-
-        InteractiveControllerPrompt.write_image(
-            event,
-            image_directory,
-            '_{}'.format(i),
-            image_per_frame=True,
-            class_segmentation_frame=class_image,
-            instance_segmentation_frame=object_image,
-            color_frame=image,
-            depth_frame=depth_image
-        )
-
-        # cv2.imshow("test_{}".format(i), event.cv2img)
-
-        # cv2.waitKey(0)
-    env.stop()
-
-@task
-def inspect_depth(ctx, directory, index, jet=False, under_score=False):
-    import numpy as np
-    import cv2
-    depth_filename = os.path.join(directory, "depth_{}.png".format(index))
-    depth_raw_filename = os.path.join(directory, "depth_raw{}{}.npy".format("_" if under_score else "", index))
-    raw_depth = np.load(depth_raw_filename)
-
-    if jet:
-        mn = np.min(raw_depth)
-        mx = np.max(raw_depth)
-        print("min depth value: {}, max depth: {}".format(mn, mx))
-        norm = (((raw_depth - mn).astype(np.float32) / (mx - mn)) * 255.0).astype(np.uint8)
-
-        img = cv2.applyColorMap(norm, cv2.COLORMAP_JET)
-    else:
-        grayscale = (255.0 / raw_depth.max() * (raw_depth - raw_depth.min())).astype(np.uint8)
-        print("max {} min {}".format(raw_depth.max(), raw_depth.min()))
-        img = grayscale
-
-    # img = cv2.imread(depth_filename)
-
-
-
-    print(raw_depth.shape)
-
-    def inspect_pixel(event, x, y, flags, param):
-        if event == cv2.EVENT_LBUTTONDOWN:
-            refPt = [(x, y)]
-            cropping = True
-
-            # print(raw_depth)
-            print("Pixel at x: {}, y: {} ".format(y, x))
-            print(raw_depth[y][x])
-            # print(raw_depth[y])
-            # print("gray: {} ".format(img[y][x]))
-
-
-
-    # cv2.startWindowThread()
-    cv2.namedWindow("image")
-    cv2.setMouseCallback("image", inspect_pixel)
-
-    cv2.imshow('image', img)
-
-    res = cv2.waitKey(0)
-    # print('You pressed %d (0x%x), LSB: %d (%s)' % (res, res, res % 256,
-    #                                                repr(chr(
-    #                                                    res % 256)) if res % 256 < 128 else '?'))
-    cv2.destroyAllWindows()
-    # cv2.waitKey(1)
-
 
 @task
 def release(ctx):

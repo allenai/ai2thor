@@ -229,41 +229,20 @@ class Event(object):
                 else:
                     self.class_masks[cls] = np.logical_or(self.class_masks[cls], unique_masks[color_ind, ...])
 
-    # def _image_depth(self, image_depth_data, **kwargs):
-    #     image_depth = read_buffer_image(image_depth_data, self.screen_width, self.screen_height, **kwargs)
-    #     max_spots = image_depth[:,:,0] == 255
-    #     image_depth_out = image_depth[:,:,0] + image_depth[:,:,1] / np.float32(256) + image_depth[:,:,2] / np.float32(256 ** 2)
-    #     # image_depth_out[max_spots] = 256
-    #     print("Max spots ", max_spots)
-    #     image_depth_out *= 10.0 / 256.0  # converts to meters then to mm
-    #     # image_depth_out[image_depth_out > MAX_DEPTH] = MAX_DEPTH
-    #     print(image_depth_out)
-    #     print(max([item for sublist in image_depth_out for item in sublist]))
-    #     return image_depth_out.astype(np.float32)
-
     def _image_depth(self, image_depth_data, **kwargs):
         image_depth = read_buffer_image(image_depth_data, self.screen_width, self.screen_height, **kwargs)
         max_spots = image_depth[:,:,0] == 255
         image_depth_out = image_depth[:,:,0] + image_depth[:,:,1] / np.float32(256) + image_depth[:,:,2] / np.float32(256 ** 2)
-        # image_depth_out[max_spots] = 256
-        print("Max spots ", max_spots)
-        image_depth_out *= 10.0 / 256.0  # converts to meters then to mm
-        # image_depth_out[image_depth_out > MAX_DEPTH] = MAX_DEPTH
-        print(image_depth_out)
-        print(max([item for sublist in image_depth_out for item in sublist]))
-
-        np.save("test", image_depth_out.astype(np.float32))
+        image_depth_out[max_spots] = 256
+        image_depth_out *= 10.0 / 256.0 * 1000  # converts to meters then to mm
+        image_depth_out[image_depth_out > MAX_DEPTH] = MAX_DEPTH
 
         return image_depth_out.astype(np.float32)
 
-
     def add_image_depth_meters(self, image_depth_data, **kwargs):
         # read image depth and convert to mm
-        image_depth = read_buffer_image(image_depth_data, self.screen_width, self.screen_height, **kwargs).reshape(self.screen_height, self.screen_width) # * 1000.0
+        image_depth = read_buffer_image(image_depth_data, self.screen_width, self.screen_height, **kwargs).reshape(self.screen_height, self.screen_width) * 1000.0
         self.depth_frame = image_depth.astype(np.float32)
-
-        print(self.depth_frame)
-        print(max([item for sublist in self.depth_frame for item in sublist]))
 
     def add_image_depth(self, image_depth_data, **kwargs):
         self.depth_frame = self._image_depth(image_depth_data, **kwargs)

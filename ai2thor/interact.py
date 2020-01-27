@@ -120,16 +120,17 @@ class InteractiveControllerPrompt(object):
                     if o['visible']:
                         visible_objects.append(o['objectId'])
                         if o['openable']:
-                            if o['isopen']:
+                            if o['isOpen']:
                                 add_command(command_counter, 'CloseObject', objectId=o['objectId'])
                             else:
                                 add_command(command_counter, 'OpenObject', objectId=o['objectId'])
-                        if 'toggleable' in o and o['toggleable']:
+
+                        if o['toggleable']:
                             add_command(command_counter, 'ToggleObjectOff', objectId=o['objectId'])
 
                         if len(event.metadata['inventoryObjects']) > 0:
                             inventoryObjectId = event.metadata['inventoryObjects'][0]['objectId']
-                            if o['receptacle'] and (not o['openable'] or o['isopen']) and inventoryObjectId != o['objectId']:
+                            if o['receptacle'] and (not o['openable'] or o['isOpen']) and inventoryObjectId != o['objectId']:
                                 add_command(command_counter, 'PutObject', objectId=inventoryObjectId, receptacleObjectId=o['objectId'])
                                 add_command(command_counter, 'MoveHandAhead', moveMagnitude=0.1)
                                 add_command(command_counter, 'MoveHandBack', moveMagnitude=0.1)
@@ -195,9 +196,9 @@ class InteractiveControllerPrompt(object):
             instance_segmentation_frame=False,
             depth_frame=False,
             color_frame=False):
-        visible_objects = []
 
         def save_image(name, image, flip_br=False):
+            # TODO try to use PIL which did not work with RGBA
             # image.save(
             #     name
             # )
@@ -208,10 +209,8 @@ class InteractiveControllerPrompt(object):
             cv2.imwrite(name, img)
 
         def array_to_image(arr, mode=None):
-            # return Image.fromarray(arr, mode=mode)
             return arr
-        from pprint import pprint
-        #pprint(event.me)
+
         frame_writes = [
             ('color',
              color_frame,
@@ -236,14 +235,17 @@ class InteractiveControllerPrompt(object):
              lambda event: event.depth_frame,
              lambda data: array_to_image(
                  (255.0 / data.max() * (data - data.min())).astype(np.uint8)
-                ),
+             ),
              save_image
              ),
             ('depth_raw',
              depth_frame,
              lambda event: event.depth_frame,
              lambda x: x,
-             lambda name, x: np.save(name.strip('.png'), x.astype(np.float32))
+             lambda name, x: np.save(
+                 name.strip('.png').strip('./') if image_dir is '.' else name.strip('.png'),
+                 x.astype(np.float32)
+             )
              )
         ]
 
@@ -252,11 +254,6 @@ class InteractiveControllerPrompt(object):
             if frame is not None:
                 print(frame.shape)
                 frame = transform(frame)
-                # print(frame.shape)
-                # if frame_filename == 'color':
-                #     im = Image.fromarray(frame, 'RGB')
-                # else:
-                #     im = Image.fromarray(frame)
                 image_name = os.path.join(
                     image_dir,
                     "{}{}.png"
@@ -265,7 +262,7 @@ class InteractiveControllerPrompt(object):
                         "{}".format(suffix) if image_per_frame else ""
                     )
                 )
-                print("Image {}".format(image_name))
+                print("Image {}, {}".format(image_name, image_dir))
                 save(image_name, frame)
 
             else:
