@@ -720,7 +720,7 @@ class Controller(object):
                 should_fail = True
 
             obj_metadata = self.last_event.get_object(action['objectId'])
-            if obj_metadata is None or ('isopen' in obj_metadata and obj_metadata['isopen'] == (action['action'] == 'OpenObject')):
+            if obj_metadata is None or obj_metadata['isOpen'] == (action['action'] == 'OpenObject'):
                 should_fail = True
 
 
@@ -1427,7 +1427,7 @@ class BFSController(Controller):
             for oid in obj['receptacleObjectIds']:
                 self.object_receptacle[oid] = obj
 
-            is_open[obj['objectId']] = (obj['openable'] and obj['isopen'])
+            is_open[obj['objectId']] = (obj['openable'] and obj['isOpen'])
 
         for obj in filter(lambda x: x['receptacle'], self.last_event.metadata['objects']):
             for oid in obj['receptacleObjectIds']:
