@@ -124,7 +124,7 @@ class Controller(object):
         for i, agent_metadata in enumerate(payload['metadata']['agents']):
             event = Event(agent_metadata)
             image_mapping = dict(
-                image=lambda x: event.add_image(x, flip_y=False, flip_rb_colors=True),
+                image=lambda x: event.add_image(x, flip_y=False, flip_rb_colors=False),
                 image_depth=lambda x: event.add_image_depth_meters(
                     x, flip_y=False, dtype=np.float64
                 )

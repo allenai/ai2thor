@@ -56,7 +56,7 @@ class InteractiveControllerPrompt(object):
         default_interact_commands = {
             '\x1b[C': dict(action='MoveRight', moveMagnitude=0.25),
             '\x1b[D': dict(action='MoveLeft', moveMagnitude=0.25),
-            '\x1b[A': dict(action='MoveAhead', moveMagnitude=0.0),
+            '\x1b[A': dict(action='MoveAhead', moveMagnitude=0.25),
             '\x1b[B': dict(action='MoveBack', moveMagnitude=0.25),
             '\x1b[1;2A': dict(action='LookUp'),
             '\x1b[1;2B': dict(action='LookDown'),
@@ -196,36 +196,67 @@ class InteractiveControllerPrompt(object):
             depth_frame=False,
             color_frame=False):
         visible_objects = []
+
+        def save_image(name, image, flip_br=False):
+            # image.save(
+            #     name
+            # )
+            import cv2
+            img = image
+            if flip_br:
+                img = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+            cv2.imwrite(name, img)
+
+        def array_to_image(arr, mode=None):
+            # return Image.fromarray(arr, mode=mode)
+            return arr
         from pprint import pprint
         #pprint(event.me)
         frame_writes = [
             ('color',
              color_frame,
              lambda event: event.frame,
-             lambda x: x
+             array_to_image,
+             lambda x, y: save_image(x, y, flip_br=True)
              ),
             ('instance_segmentation',
              instance_segmentation_frame,
              lambda event: event.instance_segmentation_frame,
-             lambda x: x
+             array_to_image,
+             save_image
              ),
             ('class_segmentation',
              class_segmentation_frame,
              lambda event: event.class_segmentation_frame,
-             lambda x: x
+             array_to_image,
+             save_image
              ),
             ('depth',
              depth_frame,
              lambda event: event.depth_frame,
-             lambda data: (255.0 / data.max() * (data - data.min())).astype(np.uint8)
+             lambda data: array_to_image(
+                 (255.0 / data.max() * (data - data.min())).astype(np.uint8)
+                ),
+             save_image
+             ),
+            ('depth_raw',
+             depth_frame,
+             lambda event: event.depth_frame,
+             lambda x: x,
+             lambda name, x: np.save(name.strip('.png'), x.astype(np.float32))
              )
         ]
 
-        for frame_filename, condition, frame_func, transform in frame_writes:
+        for frame_filename, condition, frame_func, transform, save in frame_writes:
             frame = frame_func(event)
             if frame is not None:
+                print(frame.shape)
                 frame = transform(frame)
-                im = Image.fromarray(frame)
+                # print(frame.shape)
+                # if frame_filename == 'color':
+                #     im = Image.fromarray(frame, 'RGB')
+                # else:
+                #     im = Image.fromarray(frame)
                 image_name = os.path.join(
                     image_dir,
                     "{}{}.png"
@@ -235,8 +266,7 @@ class InteractiveControllerPrompt(object):
                     )
                 )
                 print("Image {}".format(image_name))
-                im.save(
-                    image_name
-                )
+                save(image_name, frame)
+
             else:
                 print("No frame present, call initialize with the right parameters")

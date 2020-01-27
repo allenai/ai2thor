@@ -923,7 +923,9 @@ def get_depth(
             local_executable_path=_local_build_path() if local_build else None
         )
 
-    env.reset(scene)
+    if scene is not None:
+        env.reset(scene)
+
     initialize_event = env.step(
         dict(
             action="Initialize",
@@ -943,10 +945,11 @@ def get_depth(
         evt = env.step(
             dict(
                 action="TeleportFull",
-                x=9.125,
+
+                x=2.774,
                 y=0.9009997,
-                z=-3.48,
-                rotation=dict(x=0, y=180, z=0)
+                z=-2.805,
+                rotation=dict(x=0, y=90, z=0)
             )
         )
 
@@ -961,11 +964,6 @@ def get_depth(
             depth_frame=depth_image
         )
 
-    from pprint import pprint
-    print("METADATA")
-
-    pprint(evt.metadata)
-
     InteractiveControllerPrompt.write_image(
         initialize_event,
         image_directory,
@@ -976,6 +974,16 @@ def get_depth(
         color_frame=image,
         depth_frame=depth_image
     )
+
+    import cv2
+
+
+    # from pprint import pprint
+    # print("METADATA")
+    #
+    # pprint(evt.metadata)
+
+
 
     # env.interact(
     #     class_segmentation_frame=class_image,
@@ -999,7 +1007,63 @@ def get_depth(
             color_frame=image,
             depth_frame=depth_image
         )
+
+        # cv2.imshow("test_{}".format(i), event.cv2img)
+
+        # cv2.waitKey(0)
     env.stop()
+
+@task
+def inspect_depth(ctx, directory, index, jet=False, under_score=False):
+    import numpy as np
+    import cv2
+    depth_filename = os.path.join(directory, "depth_{}.png".format(index))
+    depth_raw_filename = os.path.join(directory, "depth_raw{}{}.npy".format("_" if under_score else "", index))
+    raw_depth = np.load(depth_raw_filename)
+
+    if jet:
+        mn = np.min(raw_depth)
+        mx = np.max(raw_depth)
+        print("min depth value: {}, max depth: {}".format(mn, mx))
+        norm = (((raw_depth - mn).astype(np.float32) / (mx - mn)) * 255.0).astype(np.uint8)
+
+        img = cv2.applyColorMap(norm, cv2.COLORMAP_JET)
+    else:
+        grayscale = (255.0 / raw_depth.max() * (raw_depth - raw_depth.min())).astype(np.uint8)
+        print("max {} min {}".format(raw_depth.max(), raw_depth.min()))
+        img = grayscale
+
+    # img = cv2.imread(depth_filename)
+
+
+
+    print(raw_depth.shape)
+
+    def inspect_pixel(event, x, y, flags, param):
+        if event == cv2.EVENT_LBUTTONDOWN:
+            refPt = [(x, y)]
+            cropping = True
+
+            # print(raw_depth)
+            print("Pixel at x: {}, y: {} ".format(y, x))
+            print(raw_depth[y][x])
+            # print(raw_depth[y])
+            # print("gray: {} ".format(img[y][x]))
+
+
+
+    # cv2.startWindowThread()
+    cv2.namedWindow("image")
+    cv2.setMouseCallback("image", inspect_pixel)
+
+    cv2.imshow('image', img)
+
+    res = cv2.waitKey(0)
+    # print('You pressed %d (0x%x), LSB: %d (%s)' % (res, res, res % 256,
+    #                                                repr(chr(
+    #                                                    res % 256)) if res % 256 < 128 else '?'))
+    cv2.destroyAllWindows()
+    # cv2.waitKey(1)
 
 
 @task
