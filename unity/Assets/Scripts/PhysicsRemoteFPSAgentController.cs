@@ -4402,9 +4402,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 {
                     UpdateDisplayGameObject(so.gameObject, true);
                 }
-            } 
-            
-            else {
+                actionFinished(true);
+            } else {
 
                 //stop culling the agent's body so it's visible from the top?
                 m_Camera.transform.GetComponent<FirstPersonCharacterCull>().StopCullingThingsForASecond = true;
@@ -4431,8 +4430,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 foreach(StructureObject so in structureObjsList)
                 {
                     UpdateDisplayGameObject(so.gameObject, false);
-                }            }
-            actionFinished(true);
+                }
+
+                // returns the mid x, z values and max y value
+                Vector3 ret = new Vector3(midX, b.max.y, midZ);
+                actionFinished(true, ret);
+            }
+            
         }
 
         private bool closeObject(SimObjPhysics target) {

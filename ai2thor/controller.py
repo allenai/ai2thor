@@ -408,6 +408,10 @@ class Controller(object):
         self.fullscreen = fullscreen
         self.headless = headless
 
+        # save the height and width as defaults for the reset call
+        self.height = height
+        self.width = width
+
         self.interactive_controller = InteractiveControllerPrompt(
             list(DefaultActions),
             has_object_actions=True
@@ -431,13 +435,28 @@ class Controller(object):
     def __exit__(self, *args):
         self.stop()
 
-    def reset(self, scene='FloorPlan_Train1_1'):
+    def reset(self, scene='FloorPlan_Train1_1', width=None, height=None, **init_parameters):
         if re.match(r'^FloorPlan[0-9]+$', scene):
             scene = scene + "_physics"
 
+        if width or height:
+            if width and height:
+                assert type(width) is int or type(height) is int
+                assert width > 0 or height > 0
+                self.step(action='ChangeResolution', x=width, y=height)
+            elif height:
+                assert height > 0 and type(height) is int
+                self.step(action='ChangeResolution', x=self.width, y=height)
+            elif width:
+                assert width > 0 and type(width) is int
+                self.step(action='ChangeResolution', x=width, y=self.height)
+
         self.response_queue.put_nowait(dict(action='Reset', sceneName=scene, sequenceId=0))
         self.last_event = queue_get(self.request_queue)  # can this be deleted?
-        self.last_event = self.step(action='Initialize', **self.initialization_parameters)
+        if not init_parameters:
+            self.last_event = self.step(action='Initialize', **self.initialization_parameters)
+        else:
+            self.last_event = self.step(action='Initialize', **init_parameters)
 
         return self.last_event
 

@@ -151,7 +151,7 @@ public class ImageSynthesis : MonoBehaviour {
 		cam.AddCommandBuffer(CameraEvent.BeforeForwardOpaque, cb);
 		cam.AddCommandBuffer(CameraEvent.BeforeFinalPass, cb);
 		cam.SetReplacementShader(shader, "");
-		cam.backgroundColor = Color.black;
+		cam.backgroundColor = Color.white;
 		cam.clearFlags = CameraClearFlags.SolidColor;
 	}
 

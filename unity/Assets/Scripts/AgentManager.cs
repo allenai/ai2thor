@@ -183,6 +183,8 @@ public class AgentManager : MonoBehaviour
         }
 
         camera.fieldOfView = fov;
+        camera.clearFlags = CameraClearFlags.SolidColor;
+        camera.backgroundColor = Color.white;
 
 		readyToEmit = true;
 	}
