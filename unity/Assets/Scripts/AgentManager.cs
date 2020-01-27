@@ -185,6 +185,9 @@ public class AgentManager : MonoBehaviour
         Camera agentCam = primaryAgent.m_Camera.GetComponent<Camera>();
         camera.cullingMask = agentCam.cullingMask;
 
+        if(action.makeAgentsVisible == false)
+        camera.cullingMask = camera.cullingMask & ~(1 << 10);
+
         camera.fieldOfView = fov;
         camera.clearFlags = CameraClearFlags.SolidColor;
         camera.backgroundColor = Color.white;

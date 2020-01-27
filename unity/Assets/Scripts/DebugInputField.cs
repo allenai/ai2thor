@@ -288,9 +288,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 //         action.action = "AddThirdPartyCamera";
 
                 //         action.position = new Vector3(0, 1.3f, 0);
-                //         action.rotation = new Vector3(0, 90, 0);
+                //         action.rotation = new Vector3(0, -60, 0);
                 //         action.fieldOfView = 60f;
 
+                //         action.makeAgentsVisible = false;
                 //         AgentManager agentManager = GameObject.Find("PhysicsSceneManager").GetComponent<AgentManager>();
                 //         agentManager.ProcessControlCommand(action);
                 //         break;
