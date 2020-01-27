@@ -182,6 +182,9 @@ public class AgentManager : MonoBehaviour
             fov = action.fieldOfView;
         }
 
+        Camera agentCam = primaryAgent.m_Camera.GetComponent<Camera>();
+        camera.cullingMask = agentCam.cullingMask;
+
         camera.fieldOfView = fov;
         camera.clearFlags = CameraClearFlags.SolidColor;
         camera.backgroundColor = Color.white;
@@ -690,6 +693,12 @@ public class AgentManager : MonoBehaviour
 	private BaseFPSAgentController activeAgent() {
 		return this.agents.ToArray () [activeAgentId];
 	}
+
+    //this is used to test adding third party cameras from DebugInputField in-editor test script
+    // public void ProcessControlCommand(ServerAction action)
+    // {
+    //     AddThirdPartyCamera(action);
+    // }
 
 	private void ProcessControlCommand(string msg)
 	{

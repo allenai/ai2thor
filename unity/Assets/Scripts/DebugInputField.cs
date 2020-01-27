@@ -280,6 +280,22 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         break;
                     }
 
+                //make sure to uncomment the public AddThirdPartyCamera on the AgentManager script to test this correctly in-editor
+                // case "tpcam":
+                //     {
+                //         ServerAction action = new ServerAction();
+
+                //         action.action = "AddThirdPartyCamera";
+
+                //         action.position = new Vector3(0, 1.3f, 0);
+                //         action.rotation = new Vector3(0, 90, 0);
+                //         action.fieldOfView = 60f;
+
+                //         AgentManager agentManager = GameObject.Find("PhysicsSceneManager").GetComponent<AgentManager>();
+                //         agentManager.ProcessControlCommand(action);
+                //         break;
+                //     }
+
                 case "pfrat":
                     {
                         ServerAction action = new ServerAction();
