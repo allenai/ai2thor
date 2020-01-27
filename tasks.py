@@ -12,7 +12,7 @@ import boto3
 
 
 S3_BUCKET = "ai2-thor"
-UNITY_VERSION = "2018.3.6f1"
+UNITY_VERSION = "2018.4.15f1"
 
 
 def add_files(zipf, start_dir):
@@ -821,36 +821,29 @@ def interact(
     import ai2thor.controller
     import ai2thor.robot_controller
 
-    if not robot:
-        env = ai2thor.controller.Controller()
-    else:
-        env = ai2thor.robot_controller.Controller(
-            image_dir=image_directory,
-            save_image_per_frame=True
-        )
-
     if image_directory != '.':
         if os.path.exists(image_directory):
             shutil.rmtree(image_directory)
         os.makedirs(image_directory)
 
-    if local_build:
-        print("Executing from local build at {} ".format( _local_build_path()))
-        env.local_executable_path = _local_build_path()
-    if editor_mode:
-        env.start(
+    if not robot:
+        env = ai2thor.controller.Controller(
             host=host,
             port=port,
-            start_unity=False,
             player_screen_width=600,
-            player_screen_height=600
+            player_screen_height=600,
+            local_executable_path=_local_build_path() if local_build else None,
+            image_dir=image_directory,
+            start_unity=False if editor_mode else True
         )
     else:
-        env.start(
+        env = ai2thor.robot_controller.Controller(
             host=host,
             port=port,
             player_screen_width=600,
-            player_screen_height=600
+            player_screen_height=600,
+            image_dir=image_directory,
+            save_image_per_frame=True
         )
 
     env.reset(scene)
@@ -883,7 +876,6 @@ def interact(
         color_frame=image
     )
     env.stop()
-
 
 @task
 def release(ctx):

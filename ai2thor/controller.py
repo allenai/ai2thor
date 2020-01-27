@@ -391,6 +391,7 @@ class Controller(object):
             x_display=None,
             host='127.0.0.1',
             scene='FloorPlan_Train1_1',
+            image_dir='.',
             **unity_initialization_parameters):
         self.request_queue = Queue(maxsize=1)
         self.response_queue = Queue(maxsize=1)
@@ -410,7 +411,8 @@ class Controller(object):
 
         self.interactive_controller = InteractiveControllerPrompt(
             list(DefaultActions),
-            has_object_actions=True
+            has_object_actions=True,
+            image_dir=image_dir
         )
 
         self.start(
@@ -914,7 +916,7 @@ class Controller(object):
 
             # Stops the current server and creates a new one. This is done so
             # that the arguments passed in will be used on the server.
-            self.stop() 
+            self.stop()
 
         env = os.environ.copy()
 
