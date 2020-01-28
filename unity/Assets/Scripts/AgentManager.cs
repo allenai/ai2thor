@@ -172,7 +172,7 @@ public class AgentManager : MonoBehaviour
         float fov;
 
         if(action.fieldOfView <= 0 || action.fieldOfView > 180)
-        {
+        {	
             //default to 90 fov on third party camera if nothing passed in, or if value is too large
             fov = 90f;
         }
@@ -190,7 +190,7 @@ public class AgentManager : MonoBehaviour
 
         camera.fieldOfView = fov;
         camera.clearFlags = CameraClearFlags.SolidColor;
-        camera.backgroundColor = Color.white;
+        camera.backgroundColor = Color.black;
 
 		readyToEmit = true;
 	}

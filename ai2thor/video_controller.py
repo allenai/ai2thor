@@ -1,6 +1,7 @@
 import ai2thor.controller
 import cv2
 import os
+from PIL import Image
 
 from queue import Queue
 
@@ -148,3 +149,12 @@ class VideoController(ai2thor.controller.Controller):
 				video.write(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
 			video.release()
 			print('done')
+
+	def exportFrames(self, path):
+		# path = path if path[:-4] == '.jpg' else path + '.jpg'
+		for i in range(len(self.saved_frames)):
+			p = os.path.join(path, f'{i}.jpg')
+			if os.path.exists(p):
+				os.remove(p)
+			Image.fromarray(self.saved_frames[i]).save(p)
+		print('done')
