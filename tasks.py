@@ -12,7 +12,7 @@ import boto3
 
 
 S3_BUCKET = "ai2-thor"
-UNITY_VERSION = "2018.4.15f1"
+UNITY_VERSION = "2018.4.16f1"
 
 
 def add_files(zipf, start_dir):
