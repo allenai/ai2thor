@@ -57,7 +57,7 @@ public class Build
     {
         return Environment.GetEnvironmentVariable("SCENE").Split(',').Select(
             x => "Assets/Scenes/" + x + ".unity"
-        ).Where(x => x.Contains("RVal2_2"));
+        );
     }
 
     private static string GetDefineSymbolsFromEnv()

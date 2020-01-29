@@ -236,7 +236,6 @@ class Event(object):
         depth_format = kwargs['depth_format']
         image_depth_out = image_depth[:,:,0] + image_depth[:,:,1] / np.float32(256) + image_depth[:,:,2] / np.float32(256 ** 2)
         multiplier = 1.0
-        print(" Format {} plane {}, {}".format(depth_format,kwargs['camera_far_plane'], kwargs['camera_near_plane']))
         if depth_format != DepthFormat.Normalized:
             multiplier = kwargs['camera_far_plane'] - kwargs['camera_near_plane']
         elif depth_format == DepthFormat.Millimeters:

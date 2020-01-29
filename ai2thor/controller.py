@@ -434,7 +434,7 @@ class Controller(object):
             init_return = event.metadata['actionReturn']
             self.server.set_init_params(init_return)
 
-            print("CAMERA PARAMS: {}".format(init_return))
+            print("Initialize return: {}".format(init_return))
         else:
             raise RuntimeError('Initialize action failure: {}'.format(
                 event.metadata['errorMessage'])

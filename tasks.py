@@ -895,9 +895,6 @@ def get_depth(
     import ai2thor.controller
     import ai2thor.robot_controller
 
-    print("local {}".format(local_build))
-    print("local p {}".format(_local_build_path()))
-
     if image_directory != '.':
         if os.path.exists(image_directory):
             shutil.rmtree(image_directory)
