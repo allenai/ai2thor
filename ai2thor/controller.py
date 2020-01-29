@@ -416,7 +416,7 @@ class Controller(object):
             list(DefaultActions),
             has_object_actions=True,
             image_dir=image_dir,
-            image_per_frame=image_dir
+            image_per_frame=image_per_frame
         )
 
         self.start(
