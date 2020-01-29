@@ -1043,7 +1043,12 @@ public class ServerAction
 	}
 }
 
-
+[Serializable]
+public class InitializeReturn
+{
+	public float cameraNearPlane;
+    public float cameraFarPlane;
+}
 
 public enum ServerActionErrorCode  {
 	Undefined,
@@ -1060,7 +1065,6 @@ public enum ServerActionErrorCode  {
 	LookDownCantExceedMin,
 	InvalidAction
 }
-
 
 
 [Serializable]

@@ -366,7 +366,7 @@ public class ImageSynthesis : MonoBehaviour {
 		}
 	}
 
-    public byte[] Encode(string passName, int width = -1, int height = -1, bool jpg = false) 
+    public byte[] Encode(string passName, RenderTextureFormat format = RenderTextureFormat.Default, int width = -1, int height = -1, bool jpg = false) 
     {
         // Must be called after end of Frame
 
@@ -379,7 +379,7 @@ public class ImageSynthesis : MonoBehaviour {
 
 		foreach (var pass in capturePasses)
             if(pass.name == passName)
-                return Encode(pass.camera, width, height, pass.supportsAntialiasing, pass.needsRescale, jpg);
+                return Encode(pass.camera, width, height, pass.supportsAntialiasing, pass.needsRescale, jpg, format);
 
 		return(new byte[0]);
     }
@@ -416,12 +416,11 @@ public class ImageSynthesis : MonoBehaviour {
 			Save(pass.camera, filenameWithoutExtension + pass.name + filenameExtension, width, height, pass.supportsAntialiasing, pass.needsRescale);
 	}
 
-	private byte[] Encode(Camera cam, int width, int height, bool supportsAntialiasing, bool needsRescale, bool jpg = false)
+	private byte[] Encode(Camera cam, int width, int height, bool supportsAntialiasing, bool needsRescale, bool jpg = false, RenderTextureFormat format = RenderTextureFormat.Default)
 	{
 		var mainCamera = GetComponent<Camera>();
 		var depth = 24;
-		var format = RenderTextureFormat.Default;
-		var readWrite = RenderTextureReadWrite.Default;
+		var readWrite = format == RenderTextureFormat.RFloat ? RenderTextureReadWrite.Linear : RenderTextureReadWrite.Default;
 		var antiAliasing = (supportsAntialiasing) ? Mathf.Max(1, QualitySettings.antiAliasing) : 1;
 
 		var finalRT =

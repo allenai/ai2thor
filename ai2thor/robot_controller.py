@@ -14,7 +14,7 @@ import ai2thor.server
 from ai2thor.server import queue_get
 from ai2thor._builds import BUILDS
 from ai2thor._quality_settings import QUALITY_SETTINGS, DEFAULT_QUALITY
-from ai2thor.server import Event, MultiAgentEvent
+from ai2thor.server import Event, MultiAgentEvent, DepthFormat
 from ai2thor.interact import InteractiveControllerPrompt, DefaultActions
 
 
@@ -29,7 +29,10 @@ class Controller(object):
             player_screen_height=300,
             agent_id=0,
             image_dir='.',
-            save_image_per_frame=False
+            save_image_per_frame=False,
+            depth_format=DepthFormat.Meters,
+            camera_near_plane=0.1,
+            camera_far_plane=20
     ):
         self.host = host
         self.port = port
@@ -40,6 +43,9 @@ class Controller(object):
         self.agent_id = agent_id
         self.screen_width = player_screen_width
         self.screen_height = player_screen_height
+        self.depth_format = depth_format
+        self.camera_near_plane = camera_near_plane,
+        self.camera_far_plane = camera_far_plane
 
         if image_dir != '.':
             if os.path.exists(image_dir):
@@ -126,7 +132,12 @@ class Controller(object):
             image_mapping = dict(
                 image=lambda x: event.add_image(x, flip_y=False, flip_rb_colors=False),
                 image_depth=lambda x: event.add_image_depth_meters(
-                    x, flip_y=False, dtype=np.float64
+                    x,
+                    self.depth_format,
+                    camera_near_plane=self.camera_near_plane,
+                    camera_far_plane=self.camera_far_plane,
+                    flip_y=False,
+                    dtype=np.float64
                 )
             )
             for key in image_mapping.keys():

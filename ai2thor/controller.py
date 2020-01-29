@@ -42,7 +42,7 @@ import ai2thor.docker
 import ai2thor.downloader
 import ai2thor.server
 from ai2thor.interact import InteractiveControllerPrompt, DefaultActions
-from ai2thor.server import queue_get
+from ai2thor.server import queue_get, DepthFormat
 from ai2thor._builds import BUILDS
 from ai2thor._quality_settings import QUALITY_SETTINGS, DEFAULT_QUALITY
 
@@ -392,6 +392,8 @@ class Controller(object):
             host='127.0.0.1',
             scene='FloorPlan_Train1_1',
             image_dir='.',
+            image_per_frame=False,
+            depth_format=DepthFormat.Normalized,
             **unity_initialization_parameters):
         self.request_queue = Queue(maxsize=1)
         self.response_queue = Queue(maxsize=1)
@@ -408,11 +410,13 @@ class Controller(object):
         self.lock_file = None
         self.fullscreen = fullscreen
         self.headless = headless
+        self.depth_format = depth_format
 
         self.interactive_controller = InteractiveControllerPrompt(
             list(DefaultActions),
             has_object_actions=True,
-            image_dir=image_dir
+            image_dir=image_dir,
+            image_per_frame=image_dir
         )
 
         self.start(
@@ -425,7 +429,16 @@ class Controller(object):
         )
 
         self.initialization_parameters = unity_initialization_parameters
-        self.reset(scene)
+        event = self.reset(scene)
+        if event.metadata['lastActionSuccess']:
+            init_return = event.metadata['actionReturn']
+            self.server.set_init_params(init_return)
+
+            print("CAMERA PARAMS: {}".format(init_return))
+        else:
+            raise RuntimeError('Initialize action failure: {}'.format(
+                event.metadata['errorMessage'])
+            )
 
     def __enter__(self):
         return self
@@ -563,116 +576,6 @@ class Controller(object):
             depth_frame,
             color_frame
         )
-        # from PIL import Image
-        # if not sys.stdout.isatty():
-        #     raise RuntimeError("controller.interact() must be run from a terminal")
-        #
-        # default_interact_commands = {
-        #     '\x1b[C': dict(action='MoveRight', moveMagnitude=0.25),
-        #     '\x1b[D': dict(action='MoveLeft', moveMagnitude=0.25),
-        #     '\x1b[A': dict(action='MoveAhead', moveMagnitude=0.25),
-        #     '\x1b[B': dict(action='MoveBack', moveMagnitude=0.25),
-        #     '\x1b[1;2A': dict(action='LookUp'),
-        #     '\x1b[1;2B': dict(action='LookDown'),
-        #     'i': dict(action='LookUp'),
-        #     'k': dict(action='LookDown'),
-        #     'l': dict(action='RotateRight'),
-        #     'j': dict(action='RotateLeft'),
-        #     '\x1b[1;2C': dict(action='RotateRight'),
-        #     '\x1b[1;2D': dict(action='RotateLeft')
-        # }
-        #
-        # self._interact_commands = default_interact_commands.copy()
-        #
-        # command_message = u"Enter a Command: Move \u2190\u2191\u2192\u2193, Rotate/Look Shift + \u2190\u2191\u2192\u2193, Quit 'q' or Ctrl-C"
-        # print(command_message)
-        # for a in self.next_interact_command():
-        #     new_commands = {}
-        #     command_counter = dict(counter=1)
-        #
-        #     def add_command(cc, action, **args):
-        #         if cc['counter'] < 15:
-        #             com = dict(action=action)
-        #             com.update(args)
-        #             new_commands[str(cc['counter'])] = com
-        #             cc['counter'] += 1
-        #
-        #     event = self.step(a)
-        #     # check inventory
-        #     visible_objects = []
-        #     frame_writes = [
-        #         ('instance_segmentation.jpeg',
-        #          instance_segmentation_frame,
-        #          lambda event: event.instance_segmentation_frame,
-        #          lambda x: x
-        #          ),
-        #         ('class_segmentation.jpeg',
-        #          class_segmentation_frame,
-        #          lambda event: event.class_segmentation_frame,
-        #          lambda x: x
-        #          ),
-        #         ('depth.jpeg',
-        #          depth_frame,
-        #          lambda event: event.depth_frame,
-        #          lambda data: (255.0 / data.max() * (data - data.min())).astype(np.uint8)
-        #          )
-        #     ]
-        #
-        #     for frame_filename, condition, frame_func, transform in frame_writes:
-        #         frame = frame_func(event)
-        #         if frame is not None:
-        #             frame = transform(frame)
-        #             im = Image.fromarray(frame)
-        #             im.save(frame_filename)
-        #         else:
-        #             print("No frame present, call initialize with the right parameters")
-        #
-        #     for o in event.metadata['objects']:
-        #         if o['visible']:
-        #             visible_objects.append(o['objectId'])
-        #             if o['openable']:
-        #                 if o['isOpen']:
-        #                     add_command(command_counter, 'CloseObject', objectId=o['objectId'])
-        #                 else:
-        #                     add_command(command_counter, 'OpenObject', objectId=o['objectId'])
-        #
-        #             if o['toggleable']:
-        #                 add_command(command_counter, 'ToggleObjectOff', objectId=o['objectId'])
-        #
-        #             if len(event.metadata['inventoryObjects']) > 0:
-        #                 inventoryObjectId = event.metadata['inventoryObjects'][0]['objectId']
-        #                 if o['receptacle'] and (not o['openable'] or o['isOpen']) and inventoryObjectId != o['objectId']:
-        #                     add_command(command_counter, 'PutObject', objectId=inventoryObjectId, receptacleObjectId=o['objectId'])
-        #                     add_command(command_counter, 'MoveHandAhead', moveMagnitude=0.1)
-        #                     add_command(command_counter, 'MoveHandBack', moveMagnitude=0.1)
-        #                     add_command(command_counter, 'MoveHandRight', moveMagnitude=0.1)
-        #                     add_command(command_counter, 'MoveHandLeft', moveMagnitude=0.1)
-        #                     add_command(command_counter, 'MoveHandUp', moveMagnitude=0.1)
-        #                     add_command(command_counter, 'MoveHandDown', moveMagnitude=0.1)
-        #                     add_command(command_counter, 'DropHandObject')
-        #
-        #             elif o['pickupable']:
-        #                 add_command(command_counter, 'PickupObject', objectId=o['objectId'])
-        #
-        #     self._interact_commands = default_interact_commands.copy()
-        #     self._interact_commands.update(new_commands)
-        #
-        #     print(command_message)
-        #     print("Visible Objects:\n" + "\n".join(sorted(visible_objects)))
-        #
-        #     skip_keys = ['action', 'objectId']
-        #     for k in sorted(new_commands.keys()):
-        #         v = new_commands[k]
-        #         command_info = [k + ")", v['action']]
-        #         if 'objectId' in v:
-        #             command_info.append(v['objectId'])
-        #
-        #         for a, av in v.items():
-        #             if a in skip_keys:
-        #                 continue
-        #             command_info.append("%s: %s" % (a, av))
-        #
-        #         print(' '.join(command_info))
 
     def multi_step_physics(self, action, timeStep=0.05, max_steps=20):
         events = []
@@ -930,7 +833,9 @@ class Controller(object):
             self.request_queue,
             self.response_queue,
             host,
-            port=port)
+            port=port,
+            depth_format=self.depth_format
+        )
 
         _, port = self.server.wsgi_server.socket.getsockname()
 
