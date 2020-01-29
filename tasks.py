@@ -878,8 +878,6 @@ def interact(
     )
     env.stop()
 
-
-
 @task
 def get_depth(
         ctx,
@@ -974,22 +972,6 @@ def get_depth(
         depth_frame=depth_image
     )
 
-    import cv2
-
-
-    # from pprint import pprint
-    # print("METADATA")
-    #
-    # pprint(evt.metadata)
-
-
-
-    # env.interact(
-    #     class_segmentation_frame=class_image,
-    #     instance_segmentation_frame=object_image,
-    #     depth_frame=depth_image,
-    #     color_frame=image
-    # )
     for i in range(number):
         event = env.step(action='MoveAhead', moveMagnitude=0.0)
 
@@ -1006,10 +988,6 @@ def get_depth(
             color_frame=image,
             depth_frame=depth_image
         )
-
-        # cv2.imshow("test_{}".format(i), event.cv2img)
-
-        # cv2.waitKey(0)
     env.stop()
 
 @task
@@ -1032,38 +1010,20 @@ def inspect_depth(ctx, directory, index, jet=False, under_score=False):
         print("max {} min {}".format(raw_depth.max(), raw_depth.min()))
         img = grayscale
 
-    # img = cv2.imread(depth_filename)
-
-
-
     print(raw_depth.shape)
 
     def inspect_pixel(event, x, y, flags, param):
         if event == cv2.EVENT_LBUTTONDOWN:
             refPt = [(x, y)]
             cropping = True
-
-            # print(raw_depth)
             print("Pixel at x: {}, y: {} ".format(y, x))
             print(raw_depth[y][x])
-            # print(raw_depth[y])
-            # print("gray: {} ".format(img[y][x]))
 
-
-
-    # cv2.startWindowThread()
     cv2.namedWindow("image")
     cv2.setMouseCallback("image", inspect_pixel)
 
     cv2.imshow('image', img)
-
-    res = cv2.waitKey(0)
-    # print('You pressed %d (0x%x), LSB: %d (%s)' % (res, res, res % 256,
-    #                                                repr(chr(
-    #                                                    res % 256)) if res % 256 < 128 else '?'))
-    cv2.destroyAllWindows()
-    # cv2.waitKey(1)
-
+    cv2.waitKey(0)
 
 @task
 def release(ctx):
