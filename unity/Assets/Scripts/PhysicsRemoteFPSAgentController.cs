@@ -32,7 +32,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         [SerializeField] protected GameObject[] LookUDPivots = null;
         [SerializeField] protected GameObject[] LookUDTriggerBoxes = null;
 
-        [SerializeField] protected SimObjPhysics[] VisibleSimObjPhysics; //all SimObjPhysics that are within camera viewport and range dictated by MaxViewDistancePhysics
+        [SerializeField] public SimObjPhysics[] VisibleSimObjPhysics {
+            get;
+            protected set;
+        } //all SimObjPhysics that are within camera viewport and range dictated by MaxViewDistancePhysics
 
         [SerializeField] protected bool IsHandDefault = true;
 
@@ -8785,67 +8788,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
             actionFinished(true);
         }
-
-#if UNITY_EDITOR
-
-        // Taken from https://answers.unity.com/questions/1144378/copy-to-clipboard-with-a-button-unity-53-solution.html
-        public static void CopyToClipboard(string s) {
-            TextEditor te = new TextEditor();
-            te.text = s;
-            te.SelectAll();
-            te.Copy();
-        }
-
-        //used to show what's currently visible on the top left of the screen
-        void OnGUI() {
-            if (VisibleSimObjPhysics != null) {
-                if (VisibleSimObjPhysics.Length > 10) {
-                    int horzIndex = -1;
-                    GUILayout.BeginHorizontal();
-                    foreach (SimObjPhysics o in VisibleSimObjPhysics) {
-                        horzIndex++;
-                        if (horzIndex >= 3) {
-                            GUILayout.EndHorizontal();
-                            GUILayout.BeginHorizontal();
-                            horzIndex = 0;
-                        }
-                        GUILayout.Button(o.UniqueID, UnityEditor.EditorStyles.miniButton, GUILayout.MaxWidth(200f));
-                    }
-
-                    GUILayout.EndHorizontal();
-                } else {
-                    //Plane[] planes = GeometryUtility.CalculateFrustumPlanes(m_Camera);
-
-                    //int position_number = 0;
-                    foreach (SimObjPhysics o in VisibleSimObjPhysics) {
-                        string suffix = "";
-                        // Bounds bounds = new Bounds(o.gameObject.transform.position, new Vector3(0.05f, 0.05f, 0.05f));
-                        // if (GeometryUtility.TestPlanesAABB(planes, bounds)) {
-                        //     //position_number += 1;
-
-                        //     //if (o.GetComponent<SimObj>().Manipulation == SimObjManipProperty.Inventory)
-                        //     //    suffix += " VISIBLE: " + "Press '" + position_number + "' to pick up";
-
-                        //     //else
-                        //     //suffix += " VISIBLE";
-                        //     //if(!IgnoreInteractableFlag)
-                        //     //{
-                        //     // if (o.isInteractable == true)
-                        //     // {
-                        //     //     suffix += " INTERACTABLE";
-                        //     // }
-                        //     //}
-
-                        // }
-
-                        if (GUILayout.Button(o.UniqueID + suffix, UnityEditor.EditorStyles.miniButton, GUILayout.MinWidth(100f))) {
-                            CopyToClipboard(o.UniqueID);
-                        }
-                    }
-                }
-            }
-        }
-#endif
     }
 
 }

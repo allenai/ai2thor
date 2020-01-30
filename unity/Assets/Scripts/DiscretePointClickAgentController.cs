@@ -22,7 +22,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             Cursor.lockState = CursorLockMode.None;
             Debug_Canvas.GetComponent<Canvas>().enabled = true; 
 
-            highlightController = new ObjectHighlightController(PhysicsController, PhysicsController.maxVisibleDistance, false);
+            highlightController = new ObjectHighlightController(PhysicsController, PhysicsController.maxVisibleDistance, true, false);
         }
 
         public void OnEnable() {
