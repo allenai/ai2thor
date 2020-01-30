@@ -228,3 +228,15 @@ class VideoController(ai2thor.controller.Controller):
 				os.remove(p)
 			Image.fromarray(self.saved_frames[i]).save(p)
 		print('done')
+
+	def mergeVideo(self, otherVideoPath):
+		import cv2
+		vidcap = cv2.VideoCapture('../Place_Kettle.mp4')
+		success, image = vidcap.read()
+		i = 0
+		while success:
+			if i % 2 == 0:
+				rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+				self.saved_frames.append(rgb)
+			success, image = vidcap.read()
+			i += 1
