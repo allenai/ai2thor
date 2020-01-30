@@ -51,7 +51,7 @@ Shader "Hidden/Depth" {
              fixed4 frag(output o) : COLOR
              {
                  //depth01 = pow(LinearEyeDepth(depth01), _DepthLevel);
-                 float depth01 = LinearEyeDepth(UNITY_SAMPLE_DEPTH(tex2D(_CameraDepthTexture, o.uv))) / 10;
+                 float depth01 = Linear01Depth(UNITY_SAMPLE_DEPTH(tex2D(_CameraDepthTexture, o.uv)));
 
                  //float lowBits = depth01 / 2;
                  //float medBits = depth01 / 4;

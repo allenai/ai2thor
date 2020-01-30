@@ -507,7 +507,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
                 m_CharacterController.Move(firstMove);
                 snapToGrid();
-                actionFinished(true);
+                actionFinished(true, new InitializeReturn{
+                    cameraNearPlane = m_Camera.nearClipPlane,
+                    cameraFarPlane = m_Camera.farClipPlane
+                });
             }
 
             else

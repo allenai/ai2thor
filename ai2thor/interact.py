@@ -106,7 +106,7 @@ class InteractiveControllerPrompt(object):
             InteractiveControllerPrompt.write_image(
                 event,
                 self.image_dir,
-                self.counter,
+                "_{}".format(self.counter),
                 image_per_frame=self.image_per_frame,
                 class_segmentation_frame=class_segmentation_frame,
                 instance_segmentation_frame=instance_segmentation_frame,

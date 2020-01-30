@@ -397,7 +397,7 @@ public class AgentManager : MonoBehaviour
 				Debug.LogError ("Depth image not available - returning empty image");
 			}
 
-			byte[] bytes = agent.imageSynthesis.Encode ("_depth");
+			byte[] bytes = agent.imageSynthesis.Encode ("_depth", RenderTextureFormat.Default, RenderTextureReadWrite.Linear);
 			form.AddBinaryData ("image_depth", bytes);
 		}
 	}
@@ -1043,7 +1043,12 @@ public class ServerAction
 	}
 }
 
-
+[Serializable]
+public class InitializeReturn
+{
+	public float cameraNearPlane;
+    public float cameraFarPlane;
+}
 
 public enum ServerActionErrorCode  {
 	Undefined,
@@ -1060,7 +1065,6 @@ public enum ServerActionErrorCode  {
 	LookDownCantExceedMin,
 	InvalidAction
 }
-
 
 
 [Serializable]
