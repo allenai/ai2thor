@@ -9,6 +9,7 @@ import subprocess
 import pprint
 from invoke import task
 import boto3
+import platform
 
 
 S3_BUCKET = "ai2-thor"
@@ -45,11 +46,22 @@ def push_build(build_archive_name, archive_sha256):
 
 
 def _local_build_path(prefix="local"):
+    if platform.system() == "Darwin":
+        suffix = "OSXIntel64.app"
+        build_path = "unity/builds/thor-{}-{}/Contents/MacOS/thor-local-OSXIntel64".format(
+            prefix,
+            suffix
+        )
+    elif platform.system() == "Linux":
+        suffix = "Linux64"
+        build_path = "unity/builds/thor-{}-{}".format(prefix, suffix)
+    else:
+        raise RuntimeError("Unsupported platform '{}'. Only '{}' and '{}' supported".format(
+            platform.system(), "Linux", "Darwin")
+        )
     return os.path.join(
         os.getcwd(),
-        "unity/builds/thor-{}-OSXIntel64.app/Contents/MacOS/thor-local-OSXIntel64".format(
-            prefix
-        ),
+        build_path
     )
 
 

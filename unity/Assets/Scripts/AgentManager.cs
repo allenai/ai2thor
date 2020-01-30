@@ -397,7 +397,7 @@ public class AgentManager : MonoBehaviour
 				Debug.LogError ("Depth image not available - returning empty image");
 			}
 
-			byte[] bytes = agent.imageSynthesis.Encode ("_depth");
+			byte[] bytes = agent.imageSynthesis.Encode ("_depth", RenderTextureFormat.Default, RenderTextureReadWrite.Linear);
 			form.AddBinaryData ("image_depth", bytes);
 		}
 	}
