@@ -1007,14 +1007,28 @@ def inspect_depth(ctx, directory, indices=None, jet=False, under_score=False):
     import re
 
     under_prefix = "_" if under_score else ""
+    regex_str = "depth{}(.*)\.png".format(under_prefix)
+
+    def sort_key_function(name):
+        x = re.search(regex_str, name).group(1)
+        try:
+            val = int(x)
+            return val
+        except ValueError:
+            return -1
+
     if indices is None:
-        images = glob.glob("{}/depth{}*.png".format(directory, under_prefix))
+        images = sorted(
+            glob.glob("{}/depth{}*.png".format(directory, under_prefix)),
+            key=sort_key_function
+        )
     else:
         images = ["depth{}{}.png".format(under_prefix, i) for i in indices.split(",")]
 
     for depth_filename in images:
         # depth_filename = os.path.join(directory, "depth_{}.png".format(index))
-        index = re.search("depth_(.*)\.png", depth_filename).group(1)
+
+        index = re.search(regex_str, depth_filename).group(1)
         print("Inspecting: '{}'".format(depth_filename))
         depth_raw_filename = os.path.join(directory, "depth_raw{}{}.npy".format("_" if under_score else "", index))
         raw_depth = np.load(depth_raw_filename)
@@ -1035,8 +1049,6 @@ def inspect_depth(ctx, directory, indices=None, jet=False, under_score=False):
 
         def inspect_pixel(event, x, y, flags, param):
             if event == cv2.EVENT_LBUTTONDOWN:
-                refPt = [(x, y)]
-                cropping = True
                 print("Pixel at x: {}, y: {} ".format(y, x))
                 print(raw_depth[y][x])
 
