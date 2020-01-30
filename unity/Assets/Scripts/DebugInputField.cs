@@ -18,7 +18,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
             {KeyCode.Alpha1, ControlMode.DEBUG_TEXT_INPUT},
             {KeyCode.BackQuote, ControlMode.FPS},
             {KeyCode.Alpha2, ControlMode.DISCRETE_POINT_CLICK},
-            {KeyCode.Alpha3, ControlMode.DISCRETE_HIDE_N_SEEK}
+            {KeyCode.Alpha3, ControlMode.DISCRETE_HIDE_N_SEEK},
+            {KeyCode.Alpha4, ControlMode.MINIMAL_FPS}
         };
 
         private bool setEnabledControlComponent(ControlMode mode, bool enabled) {
@@ -2037,7 +2038,66 @@ namespace UnityStandardAssets.Characters.FirstPerson
 				yield return null;
             }
 		}
+#if UNITY_EDITOR
 
+        // Taken from https://answers.unity.com/questions/1144378/copy-to-clipboard-with-a-button-unity-53-solution.html
+        public static void CopyToClipboard(string s) {
+            TextEditor te = new TextEditor();
+            te.text = s;
+            te.SelectAll();
+            te.Copy();
+        }
+
+        //used to show what's currently visible on the top left of the screen
+        void OnGUI() {
+            if (PhysicsController.VisibleSimObjPhysics != null && this.controlMode != ControlMode.MINIMAL_FPS) {
+                if (PhysicsController.VisibleSimObjPhysics.Length > 10) {
+                    int horzIndex = -1;
+                    GUILayout.BeginHorizontal();
+                    foreach (SimObjPhysics o in PhysicsController.VisibleSimObjPhysics) {
+                        horzIndex++;
+                        if (horzIndex >= 3) {
+                            GUILayout.EndHorizontal();
+                            GUILayout.BeginHorizontal();
+                            horzIndex = 0;
+                        }
+                        GUILayout.Button(o.UniqueID, UnityEditor.EditorStyles.miniButton, GUILayout.MaxWidth(200f));
+                    }
+
+                    GUILayout.EndHorizontal();
+                } else {
+                    //Plane[] planes = GeometryUtility.CalculateFrustumPlanes(m_Camera);
+
+                    //int position_number = 0;
+                    foreach (SimObjPhysics o in PhysicsController.VisibleSimObjPhysics) {
+                        string suffix = "";
+                        // Bounds bounds = new Bounds(o.gameObject.transform.position, new Vector3(0.05f, 0.05f, 0.05f));
+                        // if (GeometryUtility.TestPlanesAABB(planes, bounds)) {
+                        //     //position_number += 1;
+
+                        //     //if (o.GetComponent<SimObj>().Manipulation == SimObjManipProperty.Inventory)
+                        //     //    suffix += " VISIBLE: " + "Press '" + position_number + "' to pick up";
+
+                        //     //else
+                        //     //suffix += " VISIBLE";
+                        //     //if(!IgnoreInteractableFlag)
+                        //     //{
+                        //     // if (o.isInteractable == true)
+                        //     // {
+                        //     //     suffix += " INTERACTABLE";
+                        //     // }
+                        //     //}
+
+                        // }
+
+                        if (GUILayout.Button(o.UniqueID + suffix, UnityEditor.EditorStyles.miniButton, GUILayout.MinWidth(100f))) {
+                            CopyToClipboard(o.UniqueID);
+                        }
+                    }
+                }
+            }
+        }
+#endif
 
     }
 }

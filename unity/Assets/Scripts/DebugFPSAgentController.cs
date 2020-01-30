@@ -17,17 +17,17 @@ namespace UnityStandardAssets.Characters.FirstPerson
     public class DebugFPSAgentController : MonoBehaviour
 	{
         //for use with mouse/keyboard input
-		[SerializeField] private bool m_IsWalking;
-		[SerializeField] private float m_WalkSpeed;
-		[SerializeField] private float m_RunSpeed;
+		[SerializeField] protected bool m_IsWalking;
+		[SerializeField] protected float m_WalkSpeed;
+		[SerializeField] protected float m_RunSpeed;
 
-		[SerializeField] private float m_GravityMultiplier;
-		[SerializeField] private MouseLook m_MouseLook;
+		[SerializeField] protected float m_GravityMultiplier;
+		[SerializeField] protected MouseLook m_MouseLook;
 
-        [SerializeField] private GameObject Debug_Canvas = null;
+        [SerializeField] protected GameObject Debug_Canvas = null;
 //        [SerializeField] private GameObject Inventory_Text = null;
-		[SerializeField] private GameObject InputMode_Text = null;
-        [SerializeField] private float MaxViewDistance = 5.0f;
+		[SerializeField] protected GameObject InputMode_Text = null;
+        [SerializeField] protected float MaxViewDistance = 5.0f;
         [SerializeField] private float MaxChargeThrowSeconds = 1.4f;
         [SerializeField] private float MaxThrowForce = 1000.0f;
         public bool FlightMode = false;
@@ -44,6 +44,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
         private PhysicsRemoteFPSAgentController PhysicsController;
         private bool scroll2DEnabled = true;
 
+        protected bool enableHighlightShader = true;
+
         private void Start()
         {
             m_CharacterController = GetComponent<CharacterController>();
@@ -57,7 +59,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             InputFieldObj = GameObject.Find("DebugCanvasPhysics/InputField");
             PhysicsController = gameObject.GetComponent<PhysicsRemoteFPSAgentController>();
 
-            highlightController = new ObjectHighlightController(PhysicsController, MaxViewDistance, true, MaxThrowForce, MaxChargeThrowSeconds);
+            highlightController = new ObjectHighlightController(PhysicsController, MaxViewDistance, enableHighlightShader, true, MaxThrowForce, MaxChargeThrowSeconds);
 
             //if this component is enabled, turn on the targeting reticle and target text
             if (this.isActiveAndEnabled)
