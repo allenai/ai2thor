@@ -3,7 +3,12 @@ import cv2
 import os
 from PIL import Image
 
+# for smooth non-linear animations
+import scipy.stats as st
+
 from queue import Queue
+
+import math
 
 # store a queue for future camera animation updates so they can be interleaved with changing the 
 
@@ -19,8 +24,8 @@ from queue import Queue
 # save third party frames and agent frames and then give an option of which, or both, to render.
 
 class VideoController(ai2thor.controller.Controller):
-	def __init__(self, **controller_kwargs):
-		super().__init__(**controller_kwargs)
+	def __init__(self, orbit_degrees_per_frame=0.5, **controller_kwargs):
+		super().__init__(continuous=True, **controller_kwargs)
 		# super().__init__(**controller_kwargs)
 
 		# add 3rd party camera... todo: make adding a 3rd party camera an action
@@ -31,6 +36,8 @@ class VideoController(ai2thor.controller.Controller):
 			fieldOfView=60)
 
 		self.saved_frames = []
+		self.ceiling_off = False
+		self.orbit_degrees_per_frame = orbit_degrees_per_frame
 
 	def transform(self, *action_generators: list):
 		# action_generators should be a list of generators (e.g., moveAhead(<Params>))
@@ -38,46 +45,102 @@ class VideoController(ai2thor.controller.Controller):
 		
 		while True:
 			# execute next actions if available
+			# if self.ceiling_off: self.step(action='ToggleMapView')
 			next_actions = [next(generator, False) for generator in action_generators]
+			# if self.ceiling_off: self.step(action='ToggleMapView')
 
 			# add the frame to the saved frames after all actions execute
 			self.saved_frames.append(self.last_event.third_party_camera_frames[0])
 
 			# remove actions with finished iterators
 			next_actions = [action for action in next_actions if action != False]
-			# print('|', end='')
+
 			if not next_actions:
-				# all generators have finished
+				# exit after all generators have finished
 				break
-		# print()
 
-	def moveAhead(self, moveMagnitude=1, frames=60):
-		for _ in range(frames):
-			yield self.step(action='MoveAhead', moveMagnitude=moveMagnitude / frames)
+	def toggleCeiling(self):
+		self.ceiling_off = not self.ceiling_off
+		return self.step(action='ToggleMapView')
 
-	def moveBack(self, moveMagnitude=1, frames=60):
-		for _ in range(frames):
-			yield self.step(action='MoveBack', moveMagnitude=moveMagnitude / frames)
+	def _linear_to_smooth(self, curr_frame, total_frames, std=0.5, min_val=3):
+		# start at -3 STD on a normal gaussian, to to 3 STD on gaussian
+		# curr frame should be 1 indexed, and end with total_frames
+		assert min_val > 0, "Min val should be > 0"
 
-	def moveLeft(self, moveMagnitude=1, frames=60):
-		for _ in range(frames):
-			yield self.step(action='MoveLeft', moveMagnitude=moveMagnitude / frames)
+		distribution = st.norm(0, std)
 
-	def moveRight(self, moveMagnitude=1, frames=60):
-		for _ in range(frames):
-			yield self.step(action='MoveRight', moveMagnitude=moveMagnitude / frames)
+		if curr_frame == total_frames:
+			# removes drifting
+			return 1
 
-	def rotateRight(self, rotateDegrees=90, frames=60):
+		return distribution.cdf(- min_val + 2 * min_val * (curr_frame / total_frames))
+
+	def _move(self, actionName, moveMagnitude, frames, smoothAnimation):
+		"""General move command for MoveAhead, MoveRight, MoveLeft, MoveBack."""
+		last_moveMag = 0
+		for i in range(frames):
+			# smoothAnimation = False => linear animation
+			if smoothAnimation:
+				next_moveMag = self._linear_to_smooth(i + 1, frames, std=1) * moveMagnitude
+				yield self.step(action=actionName, moveMagnitude=next_moveMag - last_moveMag)
+				last_moveMag = next_moveMag
+			else:
+				yield self.step(action=actionName, moveMagnitude=moveMagnitude / frames)
+
+	def _rotate(self, direction, rotateDegrees, frames, smoothAnimation):
+		# make it work for left and right rotations
+		direction = direction.lower()
+		assert direction == 'left' or direction == 'right'
+		if direction == 'left': rotateDegrees *= -1
+
+		# get the initial rotation
+		y0 = self.last_event.metadata['agent']['rotation']['y']
+		for i in range(frames):
+			# keep the position the same
+			p = self.last_event.metadata['agent']['position']
+			if smoothAnimation:
+				yield self.step(action='TeleportFull', rotation=y0 + rotateDegrees * self._linear_to_smooth(i + 1, frames, std=1), **p)
+			else:
+				yield self.step(action='TeleportFull', rotation=y0 + rotateDegrees * ((i + 1) / frames), **p)
+
+	def moveAhead(self, moveMagnitude=1, frames=60, smoothAnimation=True):
+		return self._move('MoveAhead', moveMagnitude, frames, smoothAnimation)
+
+	def moveBack(self, moveMagnitude=1, frames=60, smoothAnimation=True):
+		return self._move('MoveBack', moveMagnitude, frames, smoothAnimation)
+
+	def moveLeft(self, moveMagnitude=1, frames=60, smoothAnimation=True):
+		return self._move('MoveLeft', moveMagnitude, frames, smoothAnimation)
+
+	def moveRight(self, moveMagnitude=1, frames=60, smoothAnimation=True):
+		return self._move('MoveRight', moveMagnitude, frames, smoothAnimation)
+
+	def rotateRight(self, rotateDegrees=90, frames=60, smoothAnimation=True):
 		# do incremental teleporting
-		pass
+		return self._rotate('right', rotateDegrees, frames, smoothAnimation)
 
-	def rotateLeft(self, rotateDegrees=90, frames=60):
+	def rotateLeft(self, rotateDegrees=90, frames=60, smoothAnimation=True):
 		# do incremental teleporting
-		pass
+		return self._rotate('left', rotateDegrees, frames, smoothAnimation)
 
 	def Pass(self, frames=60):
 		for _ in range(frames):
 			yield self.step(action='Pass')
+
+	def orbitCameraAnimation(self, centerX, centerZ, posY, dx=6, dz=6, xAngle=55, frames=60):
+		degrees = frames * self.orbit_degrees_per_frame
+		rot0 = self.last_event.metadata['thirdPartyCameras'][0]['rotation']['y'] # starting angle
+		for frame in range(frames):
+			yAngle = rot0 + degrees * (frame + 1) / frames
+			yield self.step(action='UpdateThirdPartyCamera',
+							thirdPartyCameraId=0,
+							rotation={'x': xAngle,
+									  'y': yAngle,
+									  'z': 0},
+							position={'x': centerX - dx * math.sin(math.radians(yAngle)),
+									  'y': posY,
+									  'z': centerZ - dz * math.cos(math.radians(yAngle))})
 
 	def relativeCameraAnimation(self, px=0, py=0, pz=0, rx=0, ry=0, rz=0, frames=60):
 		"""px: position x, rx: rotation x"""
@@ -93,10 +156,17 @@ class VideoController(ai2thor.controller.Controller):
 									  'y': pos['y'] + py / frames,
 									  'z': pos['z'] + pz / frames})
 
-	def absoluteCameraAnimation(self, px=None, py=None, pz=None, rx=None, ry=None, rz=None, frames=60):
+	def absoluteCameraAnimation(self, px=None, py=None, pz=None, rx=None, ry=None, rz=None, frames=60, smartSkybox=True):
 		cam = self.last_event.metadata['thirdPartyCameras'][0]
 		p0, r0 = cam['position'], cam['rotation']
 
+		if smartSkybox:
+			e0 = self.step(action='ToggleMapView')
+			e1 = self.step(action='ToggleMapView')
+			if e0.metadata['actionReturn']:
+				maxY = e0.metadata['actionReturn']['y']
+			else:
+				maxY = e1.metadata['actionReturn']['y']
 		# makes math easier
 		if not px: px = 0
 		if not py: py = 0
@@ -105,12 +175,11 @@ class VideoController(ai2thor.controller.Controller):
 		if not ry: ry = 0
 		if not rz: rz = 0
 
-		# maybe drop this?
-		rx %= 360
-		ry %= 360
-		rz %= 360
-
 		for i in range(1, frames + 1):
+			if self.ceiling_off and maxY > p0['y'] + (py - p0['y']) / frames * i:
+				print('toggleCeiling!')
+				# turn ceiling on
+				self.toggleCeiling()
 			yield self.step(action='UpdateThirdPartyCamera',
 							thirdPartyCameraId=0,
 							rotation={'x': r0['x'] + (rx - r0['x']) / frames * i,
@@ -118,7 +187,8 @@ class VideoController(ai2thor.controller.Controller):
 									  'z': r0['z'] + (rz - r0['z']) / frames * i},
 							position={'x': p0['x'] + (px - p0['x']) / frames * i,
 									  'y': p0['y'] + (py - p0['y']) / frames * i,
-									  'z': p0['z'] + (pz - p0['z']) / frames * i})
+									  'z': p0['z'] + (pz - p0['z']) / frames * i},
+							showSkybox=smartSkybox and maxY > p0['y'] + (py - p0['y']) / frames * i)
 
 	def LookUp(self):
 		pass

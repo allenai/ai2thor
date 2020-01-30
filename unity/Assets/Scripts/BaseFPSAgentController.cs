@@ -728,6 +728,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 		protected void snapToGrid()
 		{
+            
 			float mult = 1 / gridSize;
 			float gridX = Convert.ToSingle(Math.Round(this.transform.position.x * mult) / mult);
 			float gridZ = Convert.ToSingle(Math.Round(this.transform.position.z * mult) / mult);
