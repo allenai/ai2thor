@@ -36,12 +36,12 @@ pip install invoke
 invoke local-build
 ```
 
-This will create a build beneath the directory 'unity/builds/local-build/thor-local-OSXIntel64.app'. To use this build in your code, make the following change:
+This will create a build beneath the directory 'unity/builds/thor-local-OSXIntel64.app'. To use this build in your code, make the following change:
 
 ```python
-controller = ai2thor.controller.Controller()
-controller.local_executable_path = "<BASE_DIR>/unity/builds/local-build/thor-local-OSXIntel64.app/Contents/MacOS/thor-local-OSXIntel64"
-controller.start()
+controller = ai2thor.controller.Controller(
+    local_executable_path="<BASE_DIR>/unity/builds/thor-local-OSXIntel64.app/Contents/MacOS/thor-local-OSXIntel64"
+)
 ```
 
 ## Browser Build
