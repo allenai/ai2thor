@@ -323,7 +323,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
             else
             {
                 gridSize = action.gridSize;
-                StartCoroutine(checkInitializeAgentLocationAction());
+                //StartCoroutine(checkInitializeAgentLocationAction());
+                snapToGrid();
+                actionFinished(true);
             }
 
             // Rotation

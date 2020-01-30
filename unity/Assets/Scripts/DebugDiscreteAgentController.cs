@@ -232,6 +232,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
                             PhysicsController.ProcessControlCommand(action);
                         }
 
+                        if (Input.GetKeyDown(KeyCode.Backspace)) {
+                            ServerAction action = new ServerAction();
+                            action.action = "Initialize";
+                            PhysicsController.ProcessControlCommand(action);
+                        }
+
                         if(Input.GetKeyDown(KeyCode.O))
                         {
                             if(PhysicsController.FlightMode)

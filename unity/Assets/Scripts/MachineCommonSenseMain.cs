@@ -10,7 +10,7 @@ public class MachineCommonSenseMain : MonoBehaviour {
     public string defaultSceneFile = "";
     public bool enableVerboseLog = false;
     public string objectRegistryFile = "object_registry";
-    public int physicsFrameDuration = 10;
+    public int physicsFrameDuration = 5;
 
     private MachineCommonSenseConfigScene currentScene;
     private MachineCommonSenseConfigObjectRegistry objectRegistry;
@@ -66,14 +66,24 @@ public class MachineCommonSenseMain : MonoBehaviour {
     // Custom Methods
 
     public void ChangeCurrentScene(MachineCommonSenseConfigScene scene) {
-        if (scene == null) {
-            Debug.LogError("MCS:  Cannot change the MCS scene to null... Keeping the current MCS scene.");
+        if (scene == null && this.currentScene == null) {
+            Debug.LogError("MCS:  Cannot switch the MCS scene to null... Keeping the current MCS scene.");
             return;
         }
 
-        this.currentScene = scene;
+        if (this.currentScene != null && this.currentScene.objects != null) {
+            this.currentScene.objects.ForEach(item => {
+                GameObject gameOrParentObject = item.GetParentObject() ?? item.GetGameObject();
+                Destroy(gameOrParentObject);
+            });
+        }
 
-        Debug.Log("MCS:  Changing the current MCS scene to " + scene.id);
+        if (scene != null) {
+            this.currentScene = scene;
+            Debug.Log("MCS:  Switching the current MCS scene to " + scene.id);
+        } else {
+            Debug.Log("MCS:  Resetting the current MCS scene of " + scene.id);
+        }
 
         this.currentScene.objects.ForEach(InitializeGameObject);
 

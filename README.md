@@ -1,6 +1,6 @@
 # Machine Common Sense Fork of AI2-THOR
 
-Original documentation:  https://github.com/NextCenturyCorporation/ai2thor
+Original documentation:  https://github.com/allenai/ai2thor
 
 ## Setup
 
@@ -55,8 +55,9 @@ Alternatively, if you want to build the Unity project via the command line, run 
   - Added `virtual` to `ResetCoroutine` and `setReadyToEmit`
 - Scripts/BaseFPSAgentController:
   - Removed the hard-coded camera properties in `SetAgentMode`
+  - Replaced the call to `checkInitializeAgentLocationAction` in `Initialize` with calls to `snapToGrid` and `actionFinished` so re-initialization doesn't cause the player to move for a few steps
 - Scripts/DebugDiscreteAgentController:
-  - Added a way to "Pass" on a step (with the "Escape" button) while playing the game in the Unity Editor
+  - Added a way to "Pass" (with the "Escape" button) or "Initialize" (with the "Backspace" button) on a step while playing the game in the Unity Editor
 - Shaders/DepthBW:
   - Changed the divisor to increase the effective depth of field for the depth masks.
 
