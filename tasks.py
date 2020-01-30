@@ -1000,39 +1000,51 @@ def get_depth(
     env.stop()
 
 @task
-def inspect_depth(ctx, directory, index, jet=False, under_score=False):
+def inspect_depth(ctx, directory, indices=None, jet=False, under_score=False):
     import numpy as np
     import cv2
-    depth_filename = os.path.join(directory, "depth_{}.png".format(index))
-    depth_raw_filename = os.path.join(directory, "depth_raw{}{}.npy".format("_" if under_score else "", index))
-    raw_depth = np.load(depth_raw_filename)
+    import glob
+    import re
 
-    if jet:
-        mn = np.min(raw_depth)
-        mx = np.max(raw_depth)
-        print("min depth value: {}, max depth: {}".format(mn, mx))
-        norm = (((raw_depth - mn).astype(np.float32) / (mx - mn)) * 255.0).astype(np.uint8)
-
-        img = cv2.applyColorMap(norm, cv2.COLORMAP_JET)
+    under_prefix = "_" if under_score else ""
+    if indices is None:
+        images = glob.glob("{}/depth{}*.png".format(directory, under_prefix))
     else:
-        grayscale = (255.0 / raw_depth.max() * (raw_depth - raw_depth.min())).astype(np.uint8)
-        print("max {} min {}".format(raw_depth.max(), raw_depth.min()))
-        img = grayscale
+        images = ["depth{}{}.png".format(under_prefix, i) for i in indices.split(",")]
 
-    print(raw_depth.shape)
+    for depth_filename in images:
+        # depth_filename = os.path.join(directory, "depth_{}.png".format(index))
+        index = re.search("depth_(.*)\.png", depth_filename).group(1)
+        print("Inspecting: '{}'".format(depth_filename))
+        depth_raw_filename = os.path.join(directory, "depth_raw{}{}.npy".format("_" if under_score else "", index))
+        raw_depth = np.load(depth_raw_filename)
 
-    def inspect_pixel(event, x, y, flags, param):
-        if event == cv2.EVENT_LBUTTONDOWN:
-            refPt = [(x, y)]
-            cropping = True
-            print("Pixel at x: {}, y: {} ".format(y, x))
-            print(raw_depth[y][x])
+        if jet:
+            mn = np.min(raw_depth)
+            mx = np.max(raw_depth)
+            print("min depth value: {}, max depth: {}".format(mn, mx))
+            norm = (((raw_depth - mn).astype(np.float32) / (mx - mn)) * 255.0).astype(np.uint8)
 
-    cv2.namedWindow("image")
-    cv2.setMouseCallback("image", inspect_pixel)
+            img = cv2.applyColorMap(norm, cv2.COLORMAP_JET)
+        else:
+            grayscale = (255.0 / raw_depth.max() * (raw_depth - raw_depth.min())).astype(np.uint8)
+            print("max {} min {}".format(raw_depth.max(), raw_depth.min()))
+            img = grayscale
 
-    cv2.imshow('image', img)
-    cv2.waitKey(0)
+        print(raw_depth.shape)
+
+        def inspect_pixel(event, x, y, flags, param):
+            if event == cv2.EVENT_LBUTTONDOWN:
+                refPt = [(x, y)]
+                cropping = True
+                print("Pixel at x: {}, y: {} ".format(y, x))
+                print(raw_depth[y][x])
+
+        cv2.namedWindow("image")
+        cv2.setMouseCallback("image", inspect_pixel)
+
+        cv2.imshow('image', img)
+        cv2.waitKey(0)
 
 @task
 def release(ctx):

@@ -393,7 +393,7 @@ class Controller(object):
             scene='FloorPlan_Train1_1',
             image_dir='.',
             save_image_per_frame=False,
-            depth_format=DepthFormat.Normalized,
+            depth_format=DepthFormat.Meters,
             **unity_initialization_parameters):
         self.request_queue = Queue(maxsize=1)
         self.response_queue = Queue(maxsize=1)
