@@ -242,7 +242,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
             
             else
             {
-                print("the agent mode is set to: " + action.agentMode.ToLower());
                 errorMessage = "agentMode must be set to 'bot' or 'tall'";
                 Debug.Log(errorMessage);
                 actionFinished(false);
@@ -431,10 +430,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 m_Camera.GetComponent<PostProcessLayer>().enabled = true;
 
                 //camera position
-                m_Camera.transform.localPosition = new Vector3(0, -0.0705f, 0);
+                m_Camera.transform.localPosition = new Vector3(0, -0.0312f, 0);
 
                 //camera FOV
-                m_Camera.fieldOfView = 42.5f;
+                m_Camera.fieldOfView = 60f;
 
                 //set camera stand/crouch local positions for Tall mode
                 standingLocalCameraPosition = m_Camera.transform.localPosition;

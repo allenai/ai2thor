@@ -330,7 +330,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             if (DisplayTargetText && TargetText != null)
             {
-                this.TargetText.text = text;
+                //concatenate the name so just the object type is displayed, not the ugly list of letters/numbers (the unique string) after
+                this.TargetText.text = text.Split('_')[0];
             }
 
         }
