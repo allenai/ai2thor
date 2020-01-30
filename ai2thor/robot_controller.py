@@ -14,20 +14,38 @@ import ai2thor.server
 from ai2thor.server import queue_get
 from ai2thor._builds import BUILDS
 from ai2thor._quality_settings import QUALITY_SETTINGS, DEFAULT_QUALITY
-from ai2thor.server import Event, MultiAgentEvent
+from ai2thor.server import Event, MultiAgentEvent, DepthFormat
 from ai2thor.interact import InteractiveControllerPrompt, DefaultActions
 
 
 class Controller(object):
 
-    def __init__(self, headless=False, image_dir='.', save_image_per_frame=False):
-        self.host = ''
-        self.port = 0
+    def __init__(
+            self,
+            headless=False,
+            host='127.0.0.1',
+            port=0,
+            player_screen_width=300,
+            player_screen_height=300,
+            agent_id=0,
+            image_dir='.',
+            save_image_per_frame=False,
+            depth_format=DepthFormat.Meters,
+            camera_near_plane=0.1,
+            camera_far_plane=20
+    ):
+        self.host = host
+        self.port = port
         self.headless = headless
         self.last_event = {}
         self.last_action = {}
         self.sequence_id = 0
-        self.agent_id = 0
+        self.agent_id = agent_id
+        self.screen_width = player_screen_width
+        self.screen_height = player_screen_height
+        self.depth_format = depth_format
+        self.camera_near_plane = camera_near_plane,
+        self.camera_far_plane = camera_far_plane
 
         if image_dir != '.':
             if os.path.exists(image_dir):
@@ -47,14 +65,18 @@ class Controller(object):
             image_per_frame=save_image_per_frame
         )
 
+        self.start(
+            port,
+            host,
+            agent_id=agent_id
+        )
+
     def stop(self):
         pass
 
     def start(
             self,
             port=9200,
-            player_screen_width=300,
-            player_screen_height=300,
             host='127.0.0.1',
             agent_id=0,
             **kwargs
@@ -62,8 +84,7 @@ class Controller(object):
         self.host = host
         self.port = port
         self.agent_id = agent_id
-        self.screen_width = player_screen_width
-        self.screen_height = player_screen_height
+
         # response_payload = self._post_event('start')
         pprint('-- Start:')
         # pprint(response_payload)
@@ -109,9 +130,14 @@ class Controller(object):
         for i, agent_metadata in enumerate(payload['metadata']['agents']):
             event = Event(agent_metadata)
             image_mapping = dict(
-                image=lambda x: event.add_image(x, flip_y=False),
+                image=lambda x: event.add_image(x, flip_y=False, flip_rb_colors=False),
                 image_depth=lambda x: event.add_image_depth_meters(
-                    x, flip_y=False, dtype=np.float64
+                    x,
+                    self.depth_format,
+                    camera_near_plane=self.camera_near_plane,
+                    camera_far_plane=self.camera_far_plane,
+                    flip_y=False,
+                    dtype=np.float64
                 )
             )
             for key in image_mapping.keys():

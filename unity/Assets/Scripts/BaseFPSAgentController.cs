@@ -507,7 +507,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
                 m_CharacterController.Move(firstMove);
                 snapToGrid();
-                actionFinished(true);
+                actionFinished(true, new InitializeReturn{
+                    cameraNearPlane = m_Camera.nearClipPlane,
+                    cameraFarPlane = m_Camera.farClipPlane
+                });
             }
 
             else
@@ -727,11 +730,13 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 		protected void snapToGrid()
 		{
-			float mult = 1 / gridSize;
-			float gridX = Convert.ToSingle(Math.Round(this.transform.position.x * mult) / mult);
-			float gridZ = Convert.ToSingle(Math.Round(this.transform.position.z * mult) / mult);
+            if (!this.continuousMode) {
+                float mult = 1 / gridSize;
+                float gridX = Convert.ToSingle(Math.Round(this.transform.position.x * mult) / mult);
+                float gridZ = Convert.ToSingle(Math.Round(this.transform.position.z * mult) / mult);
 
-			this.transform.position = new Vector3(gridX, transform.position.y, gridZ);
+                this.transform.position = new Vector3(gridX, transform.position.y, gridZ);
+            }
 		}
 
 		//move in cardinal directions

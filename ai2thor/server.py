@@ -27,6 +27,8 @@ import werkzeug.serving
 import werkzeug.http
 import numpy as np
 
+from enum import Enum
+
 logging.getLogger('werkzeug').setLevel(logging.ERROR)
 
 werkzeug.serving.WSGIRequestHandler.protocol_version = 'HTTP/1.1'
@@ -230,25 +232,37 @@ class Event(object):
                     self.class_masks[cls] = np.logical_or(self.class_masks[cls], unique_masks[color_ind, ...])
 
     def _image_depth(self, image_depth_data, **kwargs):
-        image_depth = read_buffer_image(image_depth_data, self.screen_width, self.screen_height, **kwargs)
-        max_spots = image_depth[:,:,0] == 255
+        image_depth = read_buffer_image(image_depth_data, self.screen_width, self.screen_height)
+        depth_format = kwargs['depth_format']
         image_depth_out = image_depth[:,:,0] + image_depth[:,:,1] / np.float32(256) + image_depth[:,:,2] / np.float32(256 ** 2)
-        image_depth_out[max_spots] = 256
-        image_depth_out *= 10.0 / 256.0 * 1000  # converts to meters then to mm
-        image_depth_out[image_depth_out > MAX_DEPTH] = MAX_DEPTH
+        multiplier = 1.0
+        if depth_format != DepthFormat.Normalized:
+            multiplier = kwargs['camera_far_plane'] - kwargs['camera_near_plane']
+        elif depth_format == DepthFormat.Millimeters:
+            multiplier *= 1000
+        image_depth_out *= multiplier / 256.0
 
         return image_depth_out.astype(np.float32)
 
-    def add_image_depth_meters(self, image_depth_data, **kwargs):
-        # read image depth and convert to mm
-        image_depth = read_buffer_image(image_depth_data, self.screen_width, self.screen_height, **kwargs).reshape(self.screen_height, self.screen_width) * 1000.0
+    def add_image_depth_meters(self, image_depth_data, depth_format, **kwargs):
+        multiplier = 1.0
+        camera_far_plane = kwargs.pop('camera_far_plane', 1)
+        camera_near_plane = kwargs.pop('camera_near_plane', 0)
+        if depth_format == DepthFormat.Normalized:
+            multiplier = 1.0 / (camera_far_plane - camera_near_plane)
+        elif depth_format == DepthFormat.Millimeters:
+            multiplier = 1000.0
+
+        image_depth = read_buffer_image(
+            image_depth_data, self.screen_width, self.screen_height, **kwargs
+        ).reshape(self.screen_height, self.screen_width) * multiplier
         self.depth_frame = image_depth.astype(np.float32)
 
     def add_image_depth(self, image_depth_data, **kwargs):
         self.depth_frame = self._image_depth(image_depth_data, **kwargs)
 
-    def add_third_party_image_depth(self, image_depth_data):
-        self.third_party_depth_frames.append(self._image_depth(image_depth_data))
+    def add_third_party_image_depth(self, image_depth_data, **kwargs):
+        self.third_party_depth_frames.append(self._image_depth(image_depth_data, **kwargs))
 
     def add_third_party_image_normals(self, normals_data):
         self.third_party_normals_frames.append(read_buffer_image(normals_data, self.screen_width, self.screen_height))
@@ -368,9 +382,22 @@ class MultipartFormParser(object):
                 self.form[cd_opts['name']].append(body)
 
 
+class DepthFormat(Enum):
+    Meters = 0,
+    Normalized = 1,
+    Millimeters = 2
+
 class Server(object):
 
-    def __init__(self, request_queue, response_queue, host, port=0, threaded=False):
+    def __init__(
+            self,
+            request_queue,
+            response_queue,
+            host,
+            port=0,
+            threaded=False,
+            depth_format=DepthFormat.Meters
+    ):
 
         app = Flask(__name__,
                     template_folder=os.path.realpath(
@@ -392,6 +419,9 @@ class Server(object):
         # used to ensure that we are receiving frames for the action we sent
         self.sequence_id = 0
         self.last_event = None
+        self.camera_near_plane = 0.1
+        self.camera_far_plane = 20.0
+        self.depth_format = depth_format
 
         @app.route('/ping', methods=['get'])
         def ping():
@@ -428,7 +458,12 @@ class Server(object):
                 e = Event(a)
                 image_mapping = dict(
                     image=e.add_image,
-                    image_depth=e.add_image_depth,
+                    image_depth=lambda x: e.add_image_depth(
+                        x,
+                        depth_format=self.depth_format,
+                        camera_near_plane=self.camera_near_plane,
+                        camera_far_plane=self.camera_far_plane
+                    ),
                     image_ids=e.add_image_ids,
                     image_classes=e.add_image_classes,
                     image_normals=e.add_image_normals,
@@ -441,7 +476,12 @@ class Server(object):
 
                 third_party_image_mapping = dict(
                     image=e.add_image,
-                    image_thirdParty_depth=e.add_third_party_image_depth,
+                    image_thirdParty_depth=lambda x: e.add_third_party_image_depth(
+                        x,
+                        depth_format=self.depth_format,
+                        camera_near_plane=self.camera_near_plane,
+                        camera_far_plane=self.camera_far_plane
+                    ),
                     image_thirdParty_image_ids=e.add_third_party_image_ids,
                     image_thirdParty_classes=e.add_third_party_image_classes,
                     image_thirdParty_normals=e.add_third_party_image_normals,
@@ -453,8 +493,6 @@ class Server(object):
                         for key in third_party_image_mapping.keys():
                             if key in form.files:
                                 third_party_image_mapping[key](form.files[key][ti])
-
-
                 events.append(e)
 
             if len(events) > 1:
@@ -482,3 +520,7 @@ class Server(object):
 
     def start(self):
         self.wsgi_server.serve_forever()
+
+    def set_init_params(self, init_params):
+        self.camera_near_plane = init_params['cameraNearPlane']
+        self.camera_far_plane = init_params['cameraFarPlane']
