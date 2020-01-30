@@ -392,7 +392,7 @@ class Controller(object):
             host='127.0.0.1',
             scene='FloorPlan_Train1_1',
             image_dir='.',
-            image_per_frame=False,
+            save_image_per_frame=False,
             depth_format=DepthFormat.Normalized,
             **unity_initialization_parameters):
         self.request_queue = Queue(maxsize=1)
@@ -416,7 +416,7 @@ class Controller(object):
             list(DefaultActions),
             has_object_actions=True,
             image_dir=image_dir,
-            image_per_frame=image_per_frame
+            image_per_frame=save_image_per_frame
         )
 
         self.start(
