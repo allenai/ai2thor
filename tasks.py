@@ -9,6 +9,7 @@ import subprocess
 import pprint
 from invoke import task
 import boto3
+import platform
 
 
 S3_BUCKET = "ai2-thor"
@@ -45,11 +46,22 @@ def push_build(build_archive_name, archive_sha256):
 
 
 def _local_build_path(prefix="local"):
+    if platform.system() == "Darwin":
+        suffix = "OSXIntel64.app"
+        build_path = "unity/builds/thor-{}-{}/Contents/MacOS/thor-local-OSXIntel64".format(
+            prefix,
+            suffix
+        )
+    elif platform.system() == "Linux":
+        suffix = "Linux64"
+        build_path = "unity/builds/thor-{}-{}".format(prefix, suffix)
+    else:
+        raise RuntimeError("Unsupported platform '{}'. Only '{}' and '{}' supported".format(
+            platform.system(), "Linux", "Darwin")
+        )
     return os.path.join(
         os.getcwd(),
-        "unity/builds/thor-{}-OSXIntel64.app/Contents/MacOS/thor-local-OSXIntel64".format(
-            prefix
-        ),
+        build_path
     )
 
 
@@ -988,39 +1000,63 @@ def get_depth(
     env.stop()
 
 @task
-def inspect_depth(ctx, directory, index, jet=False, under_score=False):
+def inspect_depth(ctx, directory, indices=None, jet=False, under_score=False):
     import numpy as np
     import cv2
-    depth_filename = os.path.join(directory, "depth_{}.png".format(index))
-    depth_raw_filename = os.path.join(directory, "depth_raw{}{}.npy".format("_" if under_score else "", index))
-    raw_depth = np.load(depth_raw_filename)
+    import glob
+    import re
 
-    if jet:
-        mn = np.min(raw_depth)
-        mx = np.max(raw_depth)
-        print("min depth value: {}, max depth: {}".format(mn, mx))
-        norm = (((raw_depth - mn).astype(np.float32) / (mx - mn)) * 255.0).astype(np.uint8)
+    under_prefix = "_" if under_score else ""
+    regex_str = "depth{}(.*)\.png".format(under_prefix)
 
-        img = cv2.applyColorMap(norm, cv2.COLORMAP_JET)
+    def sort_key_function(name):
+        x = re.search(regex_str, name).group(1)
+        try:
+            val = int(x)
+            return val
+        except ValueError:
+            return -1
+
+    if indices is None:
+        images = sorted(
+            glob.glob("{}/depth{}*.png".format(directory, under_prefix)),
+            key=sort_key_function
+        )
     else:
-        grayscale = (255.0 / raw_depth.max() * (raw_depth - raw_depth.min())).astype(np.uint8)
-        print("max {} min {}".format(raw_depth.max(), raw_depth.min()))
-        img = grayscale
+        images = ["depth{}{}.png".format(under_prefix, i) for i in indices.split(",")]
 
-    print(raw_depth.shape)
+    for depth_filename in images:
+        # depth_filename = os.path.join(directory, "depth_{}.png".format(index))
 
-    def inspect_pixel(event, x, y, flags, param):
-        if event == cv2.EVENT_LBUTTONDOWN:
-            refPt = [(x, y)]
-            cropping = True
-            print("Pixel at x: {}, y: {} ".format(y, x))
-            print(raw_depth[y][x])
+        index = re.search(regex_str, depth_filename).group(1)
+        print("Inspecting: '{}'".format(depth_filename))
+        depth_raw_filename = os.path.join(directory, "depth_raw{}{}.npy".format("_" if under_score else "", index))
+        raw_depth = np.load(depth_raw_filename)
 
-    cv2.namedWindow("image")
-    cv2.setMouseCallback("image", inspect_pixel)
+        if jet:
+            mn = np.min(raw_depth)
+            mx = np.max(raw_depth)
+            print("min depth value: {}, max depth: {}".format(mn, mx))
+            norm = (((raw_depth - mn).astype(np.float32) / (mx - mn)) * 255.0).astype(np.uint8)
 
-    cv2.imshow('image', img)
-    cv2.waitKey(0)
+            img = cv2.applyColorMap(norm, cv2.COLORMAP_JET)
+        else:
+            grayscale = (255.0 / raw_depth.max() * (raw_depth - raw_depth.min())).astype(np.uint8)
+            print("max {} min {}".format(raw_depth.max(), raw_depth.min()))
+            img = grayscale
+
+        print(raw_depth.shape)
+
+        def inspect_pixel(event, x, y, flags, param):
+            if event == cv2.EVENT_LBUTTONDOWN:
+                print("Pixel at x: {}, y: {} ".format(y, x))
+                print(raw_depth[y][x])
+
+        cv2.namedWindow("image")
+        cv2.setMouseCallback("image", inspect_pixel)
+
+        cv2.imshow('image', img)
+        cv2.waitKey(0)
 
 @task
 def release(ctx):
