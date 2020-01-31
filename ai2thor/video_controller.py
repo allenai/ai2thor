@@ -211,12 +211,14 @@ class VideoController(ai2thor.controller.Controller):
 			path = path if path[:-4] == '.mp4' else path + '.mp4'
 			if os.path.exists(path):
 				os.remove(path)
-			# sets the size of the video to (300, 300) -- TODO: make based on saved_frames[0].size
-			video = cv2.VideoWriter(path, cv2.VideoWriter_fourcc(*'avc1'), 30, (self.saved_frames[0].shape[1], self.saved_frames[0].shape[0]))
+			print((self.saved_frames[0].shape[1], self.saved_frames[0].shape[0]))
+			# 
+			video = cv2.VideoWriter(path, cv2.VideoWriter_fourcc(*'DIVX'), 30, (self.saved_frames[0].shape[1], self.saved_frames[0].shape[0]))
 			for i, frame in enumerate(self.saved_frames):
 				print(i, end=', ')
 				# assumes that the frames are RGB images. CV2 uses BGR.
 				video.write(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
+			cv2.destroyAllWindows()
 			video.release()
 			print('done')
 
