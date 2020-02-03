@@ -6,6 +6,7 @@ import numpy as np
 import os
 
 from enum import Enum
+import json
 
 
 class DefaultActions(Enum):
@@ -78,7 +79,8 @@ class InteractiveControllerPrompt(object):
                  class_segmentation_frame=False,
                  instance_segmentation_frame=False,
                  depth_frame=False,
-                 color_frame=False
+                 color_frame=False,
+                 metadata=False
                  ):
 
         if not sys.stdout.isatty():
@@ -111,7 +113,8 @@ class InteractiveControllerPrompt(object):
                 class_segmentation_frame=class_segmentation_frame,
                 instance_segmentation_frame=instance_segmentation_frame,
                 color_frame=color_frame,
-                depth_frame=depth_frame
+                depth_frame=depth_frame,
+                metadata=metadata
             )
 
             self.counter += 1
@@ -195,7 +198,9 @@ class InteractiveControllerPrompt(object):
             class_segmentation_frame=False,
             instance_segmentation_frame=False,
             depth_frame=False,
-            color_frame=False):
+            color_frame=False,
+            metadata=False
+    ):
 
         def save_image(name, image, flip_br=False):
             # TODO try to use PIL which did not work with RGBA
@@ -206,10 +211,14 @@ class InteractiveControllerPrompt(object):
             img = image
             if flip_br:
                 img = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-            cv2.imwrite(name, img)
+            cv2.imwrite("{}.png".format(name), img)
 
         def array_to_image(arr, mode=None):
             return arr
+
+        def json_write(name, obj):
+            with open("{}.json".format(name), 'w') as outfile:
+                json.dump(obj, outfile, indent=4, sort_keys=True)
 
         frame_writes = [
             ('color',
@@ -246,17 +255,22 @@ class InteractiveControllerPrompt(object):
                  name.strip('.png').strip('./') if image_dir is '.' else name.strip('.png'),
                  x.astype(np.float32)
              )
+             ),
+            ('metadata',
+             metadata,
+             lambda event: event.metadata,
+             lambda x: x,
+             json_write
              )
         ]
 
         for frame_filename, condition, frame_func, transform, save in frame_writes:
             frame = frame_func(event)
             if frame is not None:
-                print(frame.shape)
                 frame = transform(frame)
                 image_name = os.path.join(
                     image_dir,
-                    "{}{}.png"
+                    "{}{}"
                         .format(
                         frame_filename,
                         "{}".format(suffix) if image_per_frame else ""

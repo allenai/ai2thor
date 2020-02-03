@@ -26,8 +26,9 @@ import werkzeug
 import werkzeug.serving
 import werkzeug.http
 import numpy as np
-
 from enum import Enum
+
+from ai2thor.util.depth import apply_real_noise, generate_noise_indices
 
 logging.getLogger('werkzeug').setLevel(logging.ERROR)
 
@@ -242,9 +243,18 @@ class Event(object):
             multiplier *= 1000
         image_depth_out *= multiplier / 256.0
 
-        return image_depth_out.astype(np.float32)
+        depth_image_float = image_depth_out.astype(np.float32)
 
-    def add_image_depth_meters(self, image_depth_data, depth_format, **kwargs):
+        if 'add_noise' in kwargs and kwargs['add_noise']:
+            depth_image_float = apply_real_noise(
+                depth_image_float,
+                self.screen_width,
+                indices=kwargs['noise_indices']
+            )
+
+        return depth_image_float
+
+    def add_image_depth_robot(self, image_depth_data, depth_format, **kwargs):
         multiplier = 1.0
         camera_far_plane = kwargs.pop('camera_far_plane', 1)
         camera_near_plane = kwargs.pop('camera_near_plane', 0)
@@ -396,7 +406,10 @@ class Server(object):
             host,
             port=0,
             threaded=False,
-            depth_format=DepthFormat.Meters
+            depth_format=DepthFormat.Meters,
+            add_depth_noise=False,
+            player_screen_width=300,
+            player_screen_height=300
     ):
 
         app = Flask(__name__,
@@ -422,6 +435,13 @@ class Server(object):
         self.camera_near_plane = 0.1
         self.camera_far_plane = 20.0
         self.depth_format = depth_format
+        self.add_depth_noise = add_depth_noise
+        self.noise_indices = None
+
+        if add_depth_noise:
+            assert player_screen_width == player_screen_height,\
+                "Noise supported with square dimension images only."
+            self.noise_indices = generate_noise_indices(player_screen_width)
 
         @app.route('/ping', methods=['get'])
         def ping():
@@ -462,7 +482,9 @@ class Server(object):
                         x,
                         depth_format=self.depth_format,
                         camera_near_plane=self.camera_near_plane,
-                        camera_far_plane=self.camera_far_plane
+                        camera_far_plane=self.camera_far_plane,
+                        add_noise=self.add_depth_noise,
+                        noise_indices=self.noise_indices
                     ),
                     image_ids=e.add_image_ids,
                     image_classes=e.add_image_classes,

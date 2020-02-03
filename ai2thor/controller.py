@@ -395,6 +395,7 @@ class Controller(object):
             save_image_per_frame=False,
             docker_enabled=False,
             depth_format=DepthFormat.Meters,
+            add_depth_noise=False,
             **unity_initialization_parameters):
         self.request_queue = Queue(maxsize=1)
         self.response_queue = Queue(maxsize=1)
@@ -412,6 +413,7 @@ class Controller(object):
         self.fullscreen = fullscreen
         self.headless = headless
         self.depth_format = depth_format
+        self.add_depth_noise = add_depth_noise
 
         self.interactive_controller = InteractiveControllerPrompt(
             list(DefaultActions),
@@ -568,14 +570,16 @@ class Controller(object):
                  class_segmentation_frame=False,
                  instance_segmentation_frame=False,
                  depth_frame=False,
-                 color_frame=False
+                 color_frame=False,
+                 metadata=False
                  ):
         self.interactive_controller.interact(
             self,
             class_segmentation_frame,
             instance_segmentation_frame,
             depth_frame,
-            color_frame
+            color_frame,
+            metadata
         )
 
     def multi_step_physics(self, action, timeStep=0.05, max_steps=20):
@@ -835,7 +839,10 @@ class Controller(object):
             self.response_queue,
             host,
             port=port,
-            depth_format=self.depth_format
+            depth_format=self.depth_format,
+            add_depth_noise=self.add_depth_noise,
+            player_screen_width=player_screen_width,
+            player_screen_height=player_screen_height
         )
 
         _, port = self.server.wsgi_server.socket.getsockname()
