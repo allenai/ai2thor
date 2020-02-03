@@ -8,7 +8,7 @@ REAL_2_SIM_TRANSFORM = np.array([
 
 def transform_real_2_sim(real_position):
     """
-    Transform a position
+    Transforms a position from the 'real' coordinate system to the 'sim' coordinate system.
     :param real_position: dictionary with 'x', 'y' and 'z' keys to floating point values
     :return: position in sim space as dictionary with 'x', 'y' and 'z' keys to floating point values
     """

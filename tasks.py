@@ -1090,6 +1090,7 @@ def real_2_sim(ctx, source_dir, index, scene, output_dir, rotation=0, local_buil
     import json
     import numpy as np
     import cv2
+    from ai2thor.util.transforms import transform_real_2_sim
     depth_real_fn = os.path.join(source_dir, "depth_raw_{}.npy".format(index))
     depth_metadata_fn = depth_real = os.path.join(source_dir, "metadata_{}.json".format(index))
     color_real_fn = os.path.join(source_dir, "color_{}.png".format(index))
@@ -1099,19 +1100,12 @@ def real_2_sim(ctx, source_dir, index, scene, output_dir, rotation=0, local_buil
 
         pos = metadata['agent']['position']
 
-        transform = np.array([
-               [1.00854301, -0.0111386, 0.51920809],
-               [0.00316833, 0.97336625, -1.15532594]
-        ])
-        real_pos = np.array([pos['x'], pos['y'], 1])
+        sim_pos = transform_real_2_sim(pos)
 
-        sim_pos = np.dot(
-            transform,
-            real_pos
-        )
+        teleport_arg = "{},{},{}".format(sim_pos['x'], sim_pos['z'], sim_pos['y'])
 
         print(sim_pos)
-        print(",".join([str(x) for x in sim_pos]))
+        print(teleport_arg)
 
         inspect_depth(
             ctx,
@@ -1120,9 +1114,6 @@ def real_2_sim(ctx, source_dir, index, scene, output_dir, rotation=0, local_buil
             under_score=True,
             jet=jet
         )
-
-
-
 
         get_depth(
             ctx,
@@ -1135,7 +1126,7 @@ def real_2_sim(ctx, source_dir, index, scene, output_dir, rotation=0, local_buil
             image_directory=output_dir,
             number=1,
             local_build=local_build,
-            teleport=",".join([str(x) for x in sim_pos]),
+            teleport=teleport_arg,
             rotation=rotation
         )
 
@@ -1159,7 +1150,6 @@ def noise_depth(ctx, directory, show=False):
     import cv2
     import numpy as np
 
-
     def imshow_components(labels):
         # Map component labels to hue val
         label_hue = np.uint8(179 * labels / np.max(labels))
@@ -1179,7 +1169,6 @@ def noise_depth(ctx, directory, show=False):
     images = glob.glob("{}/depth_*.png".format(directory))
 
     indices = []
-    # for image_file in [img for img in images if '15 2' in img]:
     for image_file in images:
         print(image_file)
 
@@ -1193,14 +1182,12 @@ def noise_depth(ctx, directory, show=False):
         ret, labels = cv2.connectedComponents(img)
         print("Components: {}".format(ret))
         imshow_components(labels)
-
         print(img_size[0])
 
         indices_top_left = np.where(labels == labels[0][0])
         indices_top_right = np.where(labels == labels[0][img_size[1]-1])
         indices_bottom_left = np.where(labels == labels[img_size[0]-1][0])
         indices_bottom_right = np.where(labels == labels[img_size[0]-1][img_size[1] - 1])
-
 
         indices = [
              indices_top_left,
@@ -1209,8 +1196,8 @@ def noise_depth(ctx, directory, show=False):
              indices_bottom_right
         ]
 
-
         blank_image = np.zeros((300, 300, 1), np.uint8)
+
         blank_image.fill(255)
         blank_image[indices_top_left] = 0
         blank_image[indices_top_right] = 0
@@ -1225,73 +1212,9 @@ def noise_depth(ctx, directory, show=False):
     compressed = []
     for indices_arr in indices:
         unique_e, counts = np.unique(indices_arr[0], return_counts=True)
-        # print(counts)
         compressed.append(counts)
 
-    np.save("edges_comp", compressed)
-
-
-@task
-def test_noise(ctx, size):
-    import numpy as np
-    import math
-    size = int(size)
-    default_size = 300
-    corners = np.load("edges_comp.npy", allow_pickle=True)
-    for j, corner in enumerate(corners):
-        print("-----------Corner: {}".format(j))
-        height_indices = []
-        width_indices = []
-
-        if size != default_size:
-            idx = 0 if j <= 1 else len(corner) - 1
-            width = corner[idx]
-            height = len(corner)
-
-            w_ratio = width / default_size
-            h_ratio = height / default_size
-
-            width = int(round(w_ratio * size))
-            height = int(round(h_ratio * size))
-
-            m = (height - 0) / (0 - width)
-            print("m {} ".format(m))
-            b = height
-            print("w {} h {}".format(width, height))
-            t = []
-            for y in range(height):
-                x = (y - b) / m
-                # print("x {} y {} ".format(x, y))
-                t.append(int(round(x)))
-
-            t = list(reversed(t)) if j > 1 else t
-            print("t: {}".format(t))
-
-            corner = t
-
-        for i, c in enumerate(corner):
-            # print(c)
-
-            offset = 0
-            i_offset = 0
-            if j % 2 != 0:
-                offset = size - c
-            if j > 1:
-                # print(len(corner))
-                i_offset = size - len(corner)
-
-            # print("offsets {} {}".format(offset, i_offset))
-
-            # print(c)
-            x = np.repeat(i_offset + i, c)
-            height_indices = np.concatenate((height_indices, x))
-            y = list(range(offset, offset + c))
-            width_indices = np.concatenate((width_indices, y))
-            # print(x)
-            # print(y)
-            # print(list(range(c)))
-        print(height_indices)
-        print(width_indices)
+    np.save("depth_noise", compressed)
 
 @task
 def release(ctx):
