@@ -364,30 +364,18 @@ def distance(point1, point2):
 def key_for_point(x, z):
     return "%0.1f %0.1f" % (x, z)
 
-#
-# class AbstractController(object):
-#     @object.abstractmethod
-#     def start(
-#             self,
-#             port=0,
-#             start_unity=True,
-#             player_screen_width=300,
-#             player_screen_height=300,
-#             x_display=None,
-#             host='127.0.0.1'):
-#         pass
-
 class Controller(object):
 
-    def __init__(self,
+    def __init__(
+            self,
             quality=DEFAULT_QUALITY,
             fullscreen=False,
             headless=False,
             port=0,
             start_unity=True,
             local_executable_path=None,
-            width=300,
-            height=300,
+            player_screen_width=300,
+            player_screen_height=300,
             x_display=None,
             host='127.0.0.1',
             scene='FloorPlan_Train1_1',
@@ -396,7 +384,8 @@ class Controller(object):
             docker_enabled=False,
             depth_format=DepthFormat.Meters,
             add_depth_noise=False,
-            **unity_initialization_parameters):
+            **unity_initialization_parameters
+    ):
         self.request_queue = Queue(maxsize=1)
         self.response_queue = Queue(maxsize=1)
         self.receptacle_nearest_pivot_points = {}
@@ -425,8 +414,8 @@ class Controller(object):
         self.start(
             port=port,
             start_unity=start_unity,
-            player_screen_width=width,
-            player_screen_height=height,
+            player_screen_width=player_screen_width,
+            player_screen_height=player_screen_height,
             x_display=x_display,
             host=host
         )

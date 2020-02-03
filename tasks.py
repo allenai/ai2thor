@@ -846,8 +846,8 @@ def interact(
         env = ai2thor.controller.Controller(
             host=host,
             port=port,
-            width=width,
-            height=height,
+            player_screen_width=width,
+            player_screen_height=height,
             local_executable_path=_local_build_path() if local_build else None,
             image_dir=image_directory,
             start_unity=False if editor_mode else True,
@@ -858,8 +858,8 @@ def interact(
         env = ai2thor.robot_controller.Controller(
             host=host,
             port=port,
-            width=width,
-            height=height,
+            player_screen_width=width,
+            player_screen_height=height,
             image_dir=image_directory,
             save_image_per_frame=True
         )
@@ -927,8 +927,8 @@ def get_depth(
         env = ai2thor.robot_controller.Controller(
             host=host,
             port=port,
-            width=600,
-            height=600,
+            player_screen_width=600,
+            player_screen_height=600,
             image_dir=image_directory,
             save_image_per_frame=True
 
