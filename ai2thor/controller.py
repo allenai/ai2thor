@@ -364,22 +364,10 @@ def distance(point1, point2):
 def key_for_point(x, z):
     return "%0.1f %0.1f" % (x, z)
 
-#
-# class AbstractController(object):
-#     @object.abstractmethod
-#     def start(
-#             self,
-#             port=0,
-#             start_unity=True,
-#             player_screen_width=300,
-#             player_screen_height=300,
-#             x_display=None,
-#             host='127.0.0.1'):
-#         pass
-
 class Controller(object):
 
-    def __init__(self,
+    def __init__(
+            self,
             quality=DEFAULT_QUALITY,
             fullscreen=False,
             headless=False,
@@ -395,7 +383,9 @@ class Controller(object):
             save_image_per_frame=False,
             docker_enabled=False,
             depth_format=DepthFormat.Meters,
-            **unity_initialization_parameters):
+            add_depth_noise=False,
+            **unity_initialization_parameters
+    ):
         self.request_queue = Queue(maxsize=1)
         self.response_queue = Queue(maxsize=1)
         self.receptacle_nearest_pivot_points = {}
@@ -412,6 +402,7 @@ class Controller(object):
         self.fullscreen = fullscreen
         self.headless = headless
         self.depth_format = depth_format
+        self.add_depth_noise = add_depth_noise
 
         self.interactive_controller = InteractiveControllerPrompt(
             list(DefaultActions),
@@ -423,8 +414,8 @@ class Controller(object):
         self.start(
             port=port,
             start_unity=start_unity,
-            player_screen_width=width,
-            player_screen_height=height,
+            width=width,
+            height=height,
             x_display=x_display,
             host=host
         )
@@ -568,14 +559,16 @@ class Controller(object):
                  class_segmentation_frame=False,
                  instance_segmentation_frame=False,
                  depth_frame=False,
-                 color_frame=False
+                 color_frame=False,
+                 metadata=False
                  ):
         self.interactive_controller.interact(
             self,
             class_segmentation_frame,
             instance_segmentation_frame,
             depth_frame,
-            color_frame
+            color_frame,
+            metadata
         )
 
     def multi_step_physics(self, action, timeStep=0.05, max_steps=20):
@@ -801,17 +794,30 @@ class Controller(object):
             self,
             port=0,
             start_unity=True,
-            player_screen_width=300,
-            player_screen_height=300,
+            width=300,
+            height=300,
             x_display=None,
-            host='127.0.0.1'):
+            host='127.0.0.1',
+            player_screen_width=None,
+            player_screen_height=None
+    ):
 
         if 'AI2THOR_VISIBILITY_DISTANCE' in os.environ:
             import warnings
             warnings.warn("AI2THOR_VISIBILITY_DISTANCE environment variable is deprecated, use \
                 the parameter visibilityDistance parameter with the Initialize action instead")
 
-        if player_screen_height < 300 or player_screen_width < 300:
+        if player_screen_width is not None:
+            warnings.warn("'player_screen_width' parameter is deprecated, use the 'width'"
+                          " parameter instead.")
+            width = player_screen_width
+
+        if player_screen_height is not None:
+            warnings.warn("'player_screen_height' parameter is deprecated, use the 'height'"
+                          " parameter instead.")
+            height = player_screen_height
+
+        if height < 300 or width < 300:
             raise Exception("Screen resolution must be >= 300x300")
 
         if self.server_thread is not None:
@@ -835,7 +841,10 @@ class Controller(object):
             self.response_queue,
             host,
             port=port,
-            depth_format=self.depth_format
+            depth_format=self.depth_format,
+            add_depth_noise=self.add_depth_noise,
+            width=width,
+            height=height
         )
 
         _, port = self.server.wsgi_server.socket.getsockname()
@@ -866,7 +875,7 @@ class Controller(object):
 
             unity_thread = threading.Thread(
                 target=self._start_unity_thread,
-                args=(env, player_screen_width, player_screen_height, host, port, image_name))
+                args=(env, width, height, host, port, image_name))
             unity_thread.daemon = True
             unity_thread.start()
 

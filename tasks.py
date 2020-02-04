@@ -120,7 +120,7 @@ def class_dataset_images_for_scene(scene_name):
     # object must be at least 40% in view
     min_size = ((target_size * 0.4) / zoom_size) * player_size
 
-    env.start(player_screen_width=player_size, player_screen_height=player_size)
+    env.start(width=player_size, height=player_size)
     env.reset(scene_name)
     event = env.step(
         dict(
@@ -229,7 +229,7 @@ def class_dataset_images_for_scene(scene_name):
 
     env.stop()
     env = ai2thor.controller.Controller()
-    env.start(player_screen_width=zoom_size, player_screen_height=zoom_size)
+    env.start(width=zoom_size, height=zoom_size)
     env.reset(scene_name)
     event = env.step(dict(action="Initialize", gridSize=0.25))
 
@@ -825,10 +825,14 @@ def interact(
     depth_image=False,
     class_image=False,
     object_image=False,
+    metadata=False,
     robot=False,
     port=8200,
     host='127.0.0.1',
-    image_directory='.'
+    image_directory='.',
+    width=300,
+    height=300,
+    noise=False
 ):
     import ai2thor.controller
     import ai2thor.robot_controller
@@ -842,19 +846,20 @@ def interact(
         env = ai2thor.controller.Controller(
             host=host,
             port=port,
-            player_screen_width=600,
-            player_screen_height=600,
+            width=width,
+            height=height,
             local_executable_path=_local_build_path() if local_build else None,
             image_dir=image_directory,
             start_unity=False if editor_mode else True,
-            save_image_per_frame=True
+            save_image_per_frame=True,
+            add_depth_noise=noise
         )
     else:
         env = ai2thor.robot_controller.Controller(
             host=host,
             port=port,
-            player_screen_width=600,
-            player_screen_height=600,
+            width=width,
+            height=height,
             image_dir=image_directory,
             save_image_per_frame=True
         )
@@ -879,14 +884,16 @@ def interact(
         class_segmentation_frame=class_image,
         instance_segmentation_frame=object_image,
         color_frame=image,
-        depth_frame=depth_image
+        depth_frame=depth_image,
+        metadata=metadata
     )
 
     env.interact(
         class_segmentation_frame=class_image,
         instance_segmentation_frame=object_image,
         depth_frame=depth_image,
-        color_frame=image
+        color_frame=image,
+        metadata=metadata
     )
     env.stop()
 
@@ -898,11 +905,14 @@ def get_depth(
         depth_image=False,
         class_image=False,
         object_image=False,
+        metadata=False,
         port=8200,
         host='127.0.0.1',
         image_directory='.',
         number=1,
-        local_build=False
+        local_build=False,
+        teleport=None,
+        rotation=0
     ):
     import ai2thor.controller
     import ai2thor.robot_controller
@@ -917,16 +927,16 @@ def get_depth(
         env = ai2thor.robot_controller.Controller(
             host=host,
             port=port,
-            player_screen_width=600,
-            player_screen_height=600,
+            width=600,
+            height=600,
             image_dir=image_directory,
             save_image_per_frame=True
 
         )
     else:
         env = ai2thor.controller.Controller(
-            player_screen_width=600,
-            player_screen_height=600,
+            width=600,
+            height=600,
             local_executable_path=_local_build_path() if local_build else None
         )
 
@@ -941,7 +951,7 @@ def get_depth(
             renderClassImage=class_image,
             renderDepthImage=depth_image,
             agentMode="Bot",
-            fieldOfView=42.5,
+            fieldOfView=59,
             continuous=True,
             snapToGrid=False
         )
@@ -949,14 +959,24 @@ def get_depth(
 
     from ai2thor.interact import InteractiveControllerPrompt
     if scene is not None:
+        teleport_arg = dict(
+            action="TeleportFull",
+            y=0.9010001,
+            rotation=dict(x=0, y=rotation, z=0)
+        )
+        if teleport is not None:
+            teleport = [float(pos) for pos in teleport.split(',')]
+
+            t_size = len(teleport)
+            if 1 <= t_size:
+                teleport_arg['x'] = teleport[0]
+            if 2 <= t_size:
+                teleport_arg['z'] = teleport[1]
+            if 3 <= t_size:
+                teleport_arg['y'] = teleport[2]
+
         evt = env.step(
-            dict(
-                action="TeleportFull",
-                x=5.48,
-                y=0.9009997,
-                z=-23.021982,
-                rotation=dict(x=0, y=0, z=0)
-            )
+            teleport_arg
         )
 
         InteractiveControllerPrompt.write_image(
@@ -967,7 +987,8 @@ def get_depth(
             class_segmentation_frame=class_image,
             instance_segmentation_frame=object_image,
             color_frame=image,
-            depth_frame=depth_image
+            depth_frame=depth_image,
+            metadata=metadata
         )
 
     InteractiveControllerPrompt.write_image(
@@ -978,14 +999,12 @@ def get_depth(
         class_segmentation_frame=class_image,
         instance_segmentation_frame=object_image,
         color_frame=image,
-        depth_frame=depth_image
+        depth_frame=depth_image,
+        metadata=metadata
     )
 
     for i in range(number):
         event = env.step(action='MoveAhead', moveMagnitude=0.0)
-
-        from pprint import pprint
-        pprint(event.metadata)
 
         InteractiveControllerPrompt.write_image(
             event,
@@ -995,12 +1014,13 @@ def get_depth(
             class_segmentation_frame=class_image,
             instance_segmentation_frame=object_image,
             color_frame=image,
-            depth_frame=depth_image
+            depth_frame=depth_image,
+            metadata=metadata
         )
     env.stop()
 
 @task
-def inspect_depth(ctx, directory, indices=None, jet=False, under_score=False):
+def inspect_depth(ctx, directory, all=False, indices=None, jet=False, under_score=False):
     import numpy as np
     import cv2
     import glob
@@ -1010,25 +1030,29 @@ def inspect_depth(ctx, directory, indices=None, jet=False, under_score=False):
     regex_str = "depth{}(.*)\.png".format(under_prefix)
 
     def sort_key_function(name):
-        x = re.search(regex_str, name).group(1)
+        split_name = name.split("/")
+        x = re.search(regex_str, split_name[len(split_name) - 1]).group(1)
         try:
             val = int(x)
             return val
         except ValueError:
             return -1
 
-    if indices is None:
+    if indices is None or all:
         images = sorted(
             glob.glob("{}/depth{}*.png".format(directory, under_prefix)),
             key=sort_key_function
         )
+        print(images)
     else:
         images = ["depth{}{}.png".format(under_prefix, i) for i in indices.split(",")]
 
     for depth_filename in images:
         # depth_filename = os.path.join(directory, "depth_{}.png".format(index))
 
-        index = re.search(regex_str, depth_filename).group(1)
+        split_fn = depth_filename.split("/")
+        index = re.search(regex_str, split_fn[len(split_fn) - 1]).group(1)
+        print("index {}".format(index))
         print("Inspecting: '{}'".format(depth_filename))
         depth_raw_filename = os.path.join(directory, "depth_raw{}{}.npy".format("_" if under_score else "", index))
         raw_depth = np.load(depth_raw_filename)
@@ -1057,6 +1081,138 @@ def inspect_depth(ctx, directory, indices=None, jet=False, under_score=False):
 
         cv2.imshow('image', img)
         cv2.waitKey(0)
+
+
+@task
+def real_2_sim(ctx, source_dir, index, scene, output_dir, rotation=0, local_build=False, jet=False):
+    import json
+    import numpy as np
+    import cv2
+    from ai2thor.util.transforms import transform_real_2_sim
+    depth_real_fn = os.path.join(source_dir, "depth_raw_{}.npy".format(index))
+    depth_metadata_fn = depth_real = os.path.join(source_dir, "metadata_{}.json".format(index))
+    color_real_fn = os.path.join(source_dir, "color_{}.png".format(index))
+    color_sim_fn = os.path.join(output_dir, "color_teleport.png".format(index))
+    with open(depth_metadata_fn, 'r') as f:
+        metadata = json.load(f)
+
+        pos = metadata['agent']['position']
+
+        sim_pos = transform_real_2_sim(pos)
+
+        teleport_arg = "{},{},{}".format(sim_pos['x'], sim_pos['z'], sim_pos['y'])
+
+        print(sim_pos)
+        print(teleport_arg)
+
+        inspect_depth(
+            ctx,
+            source_dir,
+            indices=index,
+            under_score=True,
+            jet=jet
+        )
+
+        get_depth(
+            ctx,
+            scene=scene,
+            image=True,
+            depth_image=True,
+            class_image=False,
+            object_image=False,
+            metadata=True,
+            image_directory=output_dir,
+            number=1,
+            local_build=local_build,
+            teleport=teleport_arg,
+            rotation=rotation
+        )
+
+        im = cv2.imread(color_real_fn)
+        cv2.imshow("color_real.png", im)
+
+        im2 = cv2.imread(color_sim_fn)
+        cv2.imshow("color_sim.png", im2)
+
+        inspect_depth(
+            ctx,
+            output_dir,
+            indices="teleport",
+            under_score=True,
+            jet=jet
+        )
+
+@task
+def noise_depth(ctx, directory, show=False):
+    import glob
+    import cv2
+    import numpy as np
+
+    def imshow_components(labels):
+        # Map component labels to hue val
+        label_hue = np.uint8(179 * labels / np.max(labels))
+        blank_ch = 255 * np.ones_like(label_hue)
+        labeled_img = cv2.merge([label_hue, blank_ch, blank_ch])
+
+        # cvt to BGR for display
+        labeled_img = cv2.cvtColor(labeled_img, cv2.COLOR_HSV2BGR)
+
+        # set bg label to black
+        labeled_img[label_hue == 0] = 0
+
+        if show:
+            cv2.imshow('labeled.png', labeled_img)
+            cv2.waitKey()
+
+    images = glob.glob("{}/depth_*.png".format(directory))
+
+    indices = []
+    for image_file in images:
+        print(image_file)
+
+        grayscale_img = cv2.imread(image_file, 0)
+        img = grayscale_img
+
+        img_size = img.shape
+
+        img = cv2.threshold(img, 30, 255, cv2.THRESH_BINARY_INV)[1]
+
+        ret, labels = cv2.connectedComponents(img)
+        print("Components: {}".format(ret))
+        imshow_components(labels)
+        print(img_size[0])
+
+        indices_top_left = np.where(labels == labels[0][0])
+        indices_top_right = np.where(labels == labels[0][img_size[1]-1])
+        indices_bottom_left = np.where(labels == labels[img_size[0]-1][0])
+        indices_bottom_right = np.where(labels == labels[img_size[0]-1][img_size[1] - 1])
+
+        indices = [
+             indices_top_left,
+             indices_top_right,
+             indices_bottom_left,
+             indices_bottom_right
+        ]
+
+        blank_image = np.zeros((300, 300, 1), np.uint8)
+
+        blank_image.fill(255)
+        blank_image[indices_top_left] = 0
+        blank_image[indices_top_right] = 0
+        blank_image[indices_bottom_left] = 0
+        blank_image[indices_bottom_right] = 0
+
+        if show:
+            cv2.imshow('labeled.png', blank_image)
+            cv2.waitKey()
+        break
+
+    compressed = []
+    for indices_arr in indices:
+        unique_e, counts = np.unique(indices_arr[0], return_counts=True)
+        compressed.append(counts)
+
+    np.save("depth_noise", compressed)
 
 @task
 def release(ctx):
@@ -1212,11 +1368,11 @@ def benchmark(
         env.start(
             8200,
             False,
-            player_screen_width=screen_width,
-            player_screen_height=screen_height,
+            width=screen_width,
+            height=screen_height,
         )
     else:
-        env.start(player_screen_width=screen_width, player_screen_height=screen_height)
+        env.start(width=screen_width, height=screen_height)
     # Kitchens:       FloorPlan1 - FloorPlan30
     # Living rooms:   FloorPlan201 - FloorPlan230
     # Bedrooms:       FloorPlan301 - FloorPlan330

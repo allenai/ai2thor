@@ -25,8 +25,8 @@ class Controller(object):
             headless=False,
             host='127.0.0.1',
             port=0,
-            player_screen_width=300,
-            player_screen_height=300,
+            width=300,
+            height=300,
             agent_id=0,
             image_dir='.',
             save_image_per_frame=False,
@@ -41,8 +41,8 @@ class Controller(object):
         self.last_action = {}
         self.sequence_id = 0
         self.agent_id = agent_id
-        self.screen_width = player_screen_width
-        self.screen_height = player_screen_height
+        self.screen_width = width
+        self.screen_height = height
         self.depth_format = depth_format
         self.camera_near_plane = camera_near_plane,
         self.camera_far_plane = camera_far_plane
@@ -131,7 +131,7 @@ class Controller(object):
             event = Event(agent_metadata)
             image_mapping = dict(
                 image=lambda x: event.add_image(x, flip_y=False, flip_rb_colors=False),
-                image_depth=lambda x: event.add_image_depth_meters(
+                image_depth=lambda x: event.add_image_depth_robot(
                     x,
                     self.depth_format,
                     camera_near_plane=self.camera_near_plane,
