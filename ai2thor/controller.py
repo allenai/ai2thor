@@ -796,10 +796,11 @@ class Controller(object):
             start_unity=True,
             width=300,
             height=300,
-            player_screen_width=None,
-            player_screen_height=None,
             x_display=None,
-            host='127.0.0.1'):
+            host='127.0.0.1',
+            player_screen_width=None,
+            player_screen_height=None
+    ):
 
         if 'AI2THOR_VISIBILITY_DISTANCE' in os.environ:
             import warnings
