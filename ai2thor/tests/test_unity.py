@@ -28,7 +28,7 @@ def test_rectangle_aspect():
     controller = ai2thor.controller.Controller()
     controller.releases_dir = releases_dir.__get__(controller, ai2thor.controller.Controller)
     print("trying to start unity")
-    controller.start(player_screen_width=600, player_screen_height=300)
+    controller.start(width=600, height=300)
     print("started")
     controller.reset('FloorPlan28')
     event = controller.step(dict(action='Initialize', gridSize=0.25))

@@ -120,7 +120,7 @@ def class_dataset_images_for_scene(scene_name):
     # object must be at least 40% in view
     min_size = ((target_size * 0.4) / zoom_size) * player_size
 
-    env.start(player_screen_width=player_size, player_screen_height=player_size)
+    env.start(width=player_size, height=player_size)
     env.reset(scene_name)
     event = env.step(
         dict(
@@ -229,7 +229,7 @@ def class_dataset_images_for_scene(scene_name):
 
     env.stop()
     env = ai2thor.controller.Controller()
-    env.start(player_screen_width=zoom_size, player_screen_height=zoom_size)
+    env.start(width=zoom_size, height=zoom_size)
     env.reset(scene_name)
     event = env.step(dict(action="Initialize", gridSize=0.25))
 
@@ -846,8 +846,8 @@ def interact(
         env = ai2thor.controller.Controller(
             host=host,
             port=port,
-            player_screen_width=width,
-            player_screen_height=height,
+            width=width,
+            height=height,
             local_executable_path=_local_build_path() if local_build else None,
             image_dir=image_directory,
             start_unity=False if editor_mode else True,
@@ -858,8 +858,8 @@ def interact(
         env = ai2thor.robot_controller.Controller(
             host=host,
             port=port,
-            player_screen_width=width,
-            player_screen_height=height,
+            width=width,
+            height=height,
             image_dir=image_directory,
             save_image_per_frame=True
         )
@@ -927,16 +927,16 @@ def get_depth(
         env = ai2thor.robot_controller.Controller(
             host=host,
             port=port,
-            player_screen_width=600,
-            player_screen_height=600,
+            width=600,
+            height=600,
             image_dir=image_directory,
             save_image_per_frame=True
 
         )
     else:
         env = ai2thor.controller.Controller(
-            player_screen_width=600,
-            player_screen_height=600,
+            width=600,
+            height=600,
             local_executable_path=_local_build_path() if local_build else None
         )
 
@@ -975,8 +975,6 @@ def get_depth(
             if 3 <= t_size:
                 teleport_arg['y'] = teleport[2]
 
-        from pprint import pprint
-        pprint(teleport_arg)
         evt = env.step(
             teleport_arg
         )
@@ -1370,11 +1368,11 @@ def benchmark(
         env.start(
             8200,
             False,
-            player_screen_width=screen_width,
-            player_screen_height=screen_height,
+            width=screen_width,
+            height=screen_height,
         )
     else:
-        env.start(player_screen_width=screen_width, player_screen_height=screen_height)
+        env.start(width=screen_width, height=screen_height)
     # Kitchens:       FloorPlan1 - FloorPlan30
     # Living rooms:   FloorPlan201 - FloorPlan230
     # Bedrooms:       FloorPlan301 - FloorPlan330

@@ -374,8 +374,8 @@ class Controller(object):
             port=0,
             start_unity=True,
             local_executable_path=None,
-            player_screen_width=300,
-            player_screen_height=300,
+            width=300,
+            height=300,
             x_display=None,
             host='127.0.0.1',
             scene='FloorPlan_Train1_1',
@@ -414,8 +414,8 @@ class Controller(object):
         self.start(
             port=port,
             start_unity=start_unity,
-            player_screen_width=player_screen_width,
-            player_screen_height=player_screen_height,
+            width=width,
+            height=height,
             x_display=x_display,
             host=host
         )
@@ -794,8 +794,10 @@ class Controller(object):
             self,
             port=0,
             start_unity=True,
-            player_screen_width=300,
-            player_screen_height=300,
+            width=300,
+            height=300,
+            player_screen_width=None,
+            player_screen_height=None,
             x_display=None,
             host='127.0.0.1'):
 
@@ -804,7 +806,17 @@ class Controller(object):
             warnings.warn("AI2THOR_VISIBILITY_DISTANCE environment variable is deprecated, use \
                 the parameter visibilityDistance parameter with the Initialize action instead")
 
-        if player_screen_height < 300 or player_screen_width < 300:
+        if player_screen_width is not None:
+            warnings.warn("'player_screen_width' parameter is deprecated, use the 'width'"
+                          " parameter instead.")
+            width = player_screen_width
+
+        if player_screen_height is not None:
+            warnings.warn("'player_screen_height' parameter is deprecated, use the 'height'"
+                          " parameter instead.")
+            height = player_screen_height
+
+        if height < 300 or width < 300:
             raise Exception("Screen resolution must be >= 300x300")
 
         if self.server_thread is not None:
@@ -830,8 +842,8 @@ class Controller(object):
             port=port,
             depth_format=self.depth_format,
             add_depth_noise=self.add_depth_noise,
-            player_screen_width=player_screen_width,
-            player_screen_height=player_screen_height
+            width=width,
+            height=height
         )
 
         _, port = self.server.wsgi_server.socket.getsockname()
@@ -862,7 +874,7 @@ class Controller(object):
 
             unity_thread = threading.Thread(
                 target=self._start_unity_thread,
-                args=(env, player_screen_width, player_screen_height, host, port, image_name))
+                args=(env, width, height, host, port, image_name))
             unity_thread.daemon = True
             unity_thread.start()
 

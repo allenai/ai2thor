@@ -408,8 +408,8 @@ class Server(object):
             threaded=False,
             depth_format=DepthFormat.Meters,
             add_depth_noise=False,
-            player_screen_width=300,
-            player_screen_height=300
+            width=300,
+            height=300
     ):
 
         app = Flask(__name__,
@@ -439,9 +439,9 @@ class Server(object):
         self.noise_indices = None
 
         if add_depth_noise:
-            assert player_screen_width == player_screen_height,\
+            assert width == height,\
                 "Noise supported with square dimension images only."
-            self.noise_indices = generate_noise_indices(player_screen_width)
+            self.noise_indices = generate_noise_indices(width)
 
         @app.route('/ping', methods=['get'])
         def ping():
