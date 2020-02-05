@@ -30,7 +30,7 @@ Alternatively, if you want to build the Unity project via the command line, run 
 - [`unity/`](./unity)  The MCS Unity project.  Add this folder as a project in your Unity Hub.
 - `unity/Assets/Scenes/MCS.unity`  The MCS Unity Scene.  You can load and edit this in the Unity Editor.
 - [`unity/Assets/Scripts/MachineCommonSenseMain.cs`](./unity/Assets/Scripts/MachineCommonSenseMain.cs)  The main MCS Unity script that is imported into and runs within the Scene.
-- [`unity/Assets/Scripts/MachineCommonSensePerformerAgent.cs`](./unity/Assets/Scripts/MachineCommonSensePerformerAgent.cs)  A custom subclass extending AI2-THOR's [AgentManager](./unity/Assets/Scripts/AgentManager.cs) that handles all the communication between the Python API and the Unity Scene.
+- [`unity/Assets/Scripts/MachineCommonSensePerformerManager.cs`](./unity/Assets/Scripts/MachineCommonSensePerformerManager.cs)  A custom subclass extending AI2-THOR's [AgentManager](./unity/Assets/Scripts/AgentManager.cs) that handles all the communication between the Python API and the Unity Scene.
 - [`unity/Assets/Resources/MCS/`](./unity/Assets/Resources/MCS)  Folder containing all MCS runtime resources.
 - [`unity/Assets/Resources/MCS/object_registry.json`](./unity/Assets/Resources/MCS/object_registry.json)  Config file containing the MCS Scene's Game Objects that may be loaded at runtime. 
 - [`unity/Assets/Resources/MCS/Materials/`](./unity/Assets/Resources/MCS/Materials)  Copy of AI2-THOR's [`unity/Assets/QuickMaterials/`](./unity/Assets/QuickMaterials).  Must be in the `Resources` folder to access at runtime.
