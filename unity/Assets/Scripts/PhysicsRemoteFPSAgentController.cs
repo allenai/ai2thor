@@ -651,11 +651,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         // On demand public function for getting what sim objects are visible at that moment 
         public List<SimObjPhysics> GetAllVisibleSimObjPhysics(float maxDistance) {
             List<SimObjPhysics> currentlyVisibleItems = new List<SimObjPhysics>();
-
             CapsuleCollider agentCapsuleCollider = this.GetComponent<CapsuleCollider>();
             var camera = this.GetComponentInChildren<Camera>();
             Vector3 point0, point1;
             float radius;
+            
             agentCapsuleCollider.ToWorldSpaceCapsule(out point0, out point1, out radius);
             if (point0.y <= point1.y) {
                 point1.y += maxDistance;
@@ -8657,6 +8657,16 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 errorMessage = "Invalid object type '" + action.objectType + "'. " + exception.Message;
                 actionFinished(false);
             }
+        }
+
+        public void GetScenesInBuild(ServerAction action) {
+            int sceneCount = UnityEngine.SceneManagement.SceneManager.sceneCountInBuildSettings;
+            string[] scenes = new string[sceneCount];
+            for( int i = 0; i < sceneCount; i++ )
+            {
+             scenes[i] = System.IO.Path.GetFileNameWithoutExtension( UnityEngine.SceneManagement.SceneUtility.GetScenePathByBuildIndex( i ) );
+            }
+             actionFinished(true, scenes);
         }
 
         private bool GetPathFromReachablePositions(

@@ -18,6 +18,7 @@ GameObject:
   - component: {fileID: 114372750333748660}
   - component: {fileID: 136752831871764314}
   - component: {fileID: 2433281640897831673}
+  - component: {fileID: 4492823058425331622}
   m_Layer: 10
   m_Name: FPSController
   m_TagString: Player
@@ -216,7 +217,6 @@ MonoBehaviour:
   - {fileID: 1168458656442288}
   - {fileID: 1295174683097672}
   - {fileID: 1252970257981572}
-  VisibleSimObjPhysics: []
   IsHandDefault: 1
   FlightMode: 0
   FlightCameras: []
@@ -300,7 +300,6 @@ MonoBehaviour:
   RotateRLTriggerBoxes: []
   LookUDPivots: []
   LookUDTriggerBoxes: []
-  VisibleSimObjPhysics: []
   IsHandDefault: 1
   FlightMode: 0
   FlightCameras: []
@@ -320,6 +319,28 @@ MonoBehaviour:
   sceneBounds:
     m_Center: {x: Infinity, y: Infinity, z: Infinity}
     m_Extent: {x: -Infinity, y: -Infinity, z: -Infinity}
+--- !u!195 &4492823058425331622
+NavMeshAgent:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 100000}
+  m_Enabled: 1
+  m_AgentTypeID: 0
+  m_Radius: 0.175
+  m_Speed: 3.5
+  m_Acceleration: 60
+  avoidancePriority: 50
+  m_AngularSpeed: 200
+  m_StoppingDistance: 0.1
+  m_AutoTraverseOffMeshLink: 1
+  m_AutoBraking: 1
+  m_AutoRepath: 1
+  m_Height: 0.9
+  m_BaseOffset: 0.9
+  m_WalkableMask: 4294967295
+  m_ObstacleAvoidanceType: 4
 --- !u!1 &100002
 GameObject:
   m_ObjectHideFlags: 0

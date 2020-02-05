@@ -411,6 +411,7 @@ class Controller(object):
             image_per_frame=save_image_per_frame
         )
 
+        print("Before start")
         self.start(
             port=port,
             start_unity=start_unity,
@@ -419,8 +420,10 @@ class Controller(object):
             x_display=x_display,
             host=host
         )
+        print("After start")
 
         self.initialization_parameters = unity_initialization_parameters
+        print("Before reset")
         event = self.reset(scene)
         if event.metadata['lastActionSuccess']:
             init_return = event.metadata['actionReturn']
