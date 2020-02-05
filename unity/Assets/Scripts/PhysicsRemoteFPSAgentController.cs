@@ -1090,7 +1090,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             if(!checkForUpDownAngleLimit("down", action.degrees))
             {
-                errorMessage = "can't look down below the minimum angle (60)";
+                errorMessage = "can't look down below the minimum angle (60 below horizon)";
 			 	errorCode = ServerActionErrorCode.LookDownCantExceedMin;
 			 	actionFinished(false);
                 return;
@@ -1121,7 +1121,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             if(!checkForUpDownAngleLimit("up", action.degrees))
             {
-                errorMessage = "can't look up above the minimum angle (30)";
+                errorMessage = "can't look up above the maximum angle (60 above horizon)";
 			 	errorCode = ServerActionErrorCode.LookDownCantExceedMin;
 			 	actionFinished(false);
                 return;
