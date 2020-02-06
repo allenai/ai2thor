@@ -384,6 +384,7 @@ class Controller(object):
             docker_enabled=False,
             depth_format=DepthFormat.Meters,
             add_depth_noise=False,
+            download_only=False,
             **unity_initialization_parameters
     ):
         self.request_queue = Queue(maxsize=1)
@@ -411,26 +412,29 @@ class Controller(object):
             image_per_frame=save_image_per_frame
         )
 
-        self.start(
-            port=port,
-            start_unity=start_unity,
-            width=width,
-            height=height,
-            x_display=x_display,
-            host=host
-        )
-
-        self.initialization_parameters = unity_initialization_parameters
-        event = self.reset(scene)
-        if event.metadata['lastActionSuccess']:
-            init_return = event.metadata['actionReturn']
-            self.server.set_init_params(init_return)
-
-            print("Initialize return: {}".format(init_return))
+        if download_only:
+            self.download_binary()
         else:
-            raise RuntimeError('Initialize action failure: {}'.format(
-                event.metadata['errorMessage'])
+            self.start(
+                port=port,
+                start_unity=start_unity,
+                width=width,
+                height=height,
+                x_display=x_display,
+                host=host
             )
+
+            self.initialization_parameters = unity_initialization_parameters
+            event = self.reset(scene)
+            if event.metadata['lastActionSuccess']:
+                init_return = event.metadata['actionReturn']
+                self.server.set_init_params(init_return)
+
+                print("Initialize return: {}".format(init_return))
+            else:
+                raise RuntimeError('Initialize action failure: {}'.format(
+                    event.metadata['errorMessage'])
+                )
 
     def __enter__(self):
         return self
