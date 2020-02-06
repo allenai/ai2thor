@@ -1121,7 +1121,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             if(!checkForUpDownAngleLimit("up", action.degrees))
             {
-                errorMessage = "can't look up above the maximum angle (60 above horizon)";
+                errorMessage = "can't look up above the maximum angle (30 above horizon)";
 			 	errorCode = ServerActionErrorCode.LookDownCantExceedMin;
 			 	actionFinished(false);
                 return;
@@ -1347,8 +1347,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             if(direction == "down")
             {
                 rotPoint.Rotate(new Vector3(degrees, 0, 0));
-
-                if(Mathf.Round(Vector3.Angle(rotPoint.transform.forward, m_CharacterController.transform.forward)) > 60)
+                print("rotating down rounded: " + Mathf.Round(Vector3.SignedAngle(rotPoint.transform.forward, m_CharacterController.transform.forward, m_CharacterController.transform.right)));
+                print("rotating down exact: " + Vector3.SignedAngle(rotPoint.transform.forward, m_CharacterController.transform.forward, m_CharacterController.transform.right));
+                if(Mathf.Round(Vector3.SignedAngle(rotPoint.transform.forward, m_CharacterController.transform.forward, m_CharacterController.transform.right)) < -60)
                 {
                     result = false;
                 }
@@ -1357,8 +1358,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             if(direction == "up")
             {
                 rotPoint.Rotate(new Vector3(-degrees, 0, 0));
-
-                if(Mathf.Round(Vector3.Angle(rotPoint.transform.forward, m_CharacterController.transform.forward)) > 60)
+                print("rotating up rounded: " + Mathf.Round(Vector3.SignedAngle(rotPoint.transform.forward, m_CharacterController.transform.forward, m_CharacterController.transform.right)));
+                print("rotating up exact: " + Vector3.SignedAngle(rotPoint.transform.forward, m_CharacterController.transform.forward, m_CharacterController.transform.right));
+                if(Mathf.Round(Vector3.SignedAngle(rotPoint.transform.forward, m_CharacterController.transform.forward, m_CharacterController.transform.right)) > 30)
                 {
                     result = false;
                 }
