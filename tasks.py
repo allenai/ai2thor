@@ -652,7 +652,8 @@ def ci_build(context):
     try:
         fcntl.flock(lock_f, fcntl.LOCK_EX | fcntl.LOCK_NB)
         build = pending_travis_build()
-        if build:
+        blacklist_branches = ["vids"]
+        if build and build["branch"] not in blacklist_branches:
             clean()
             link_build_cache(build["branch"])
             subprocess.check_call("git fetch", shell=True)
