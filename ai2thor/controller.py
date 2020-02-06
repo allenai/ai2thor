@@ -412,6 +412,7 @@ class Controller(object):
             image_per_frame=save_image_per_frame
         )
 
+
         if download_only:
             self.download_binary()
         else:

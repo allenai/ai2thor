@@ -1736,3 +1736,102 @@ def start_mock_real_server(context):
     m = ai2thor.mock_real_server.MockServer(height=300, width=300)
     print("Started mock server on port: http://" + m.host + ":" + str(m.port))
     m.start()
+
+
+@task
+def create_dataset(context, local_build=False, editor_mode=False, width=300, height=300):
+    from pprint import pprint
+    import ai2thor.controller
+    import ai2thor.util.metrics as metrics
+
+    angle = 45
+    controller = ai2thor.controller.Controller(
+        width=width,
+        height=height,
+        local_executable_path=_local_build_path() if local_build else None,
+        start_unity=False if editor_mode else True,
+        gridSize=0.25,
+        fieldOfView=60,
+        rotateStepDegrees=angle
+    )
+
+    targets = [
+        "Apple",
+        "Baseball Bat",
+        "Basketball",
+        "Bowl",
+        "Garbage Can",
+        "House Plant",
+        "Laptop",
+        "Mug",
+        "Remote",
+        "Spray Bottle",
+        "Vase",
+        "Alarm Clock",
+        "Television",
+        "Pillow",
+        "Bottle"
+    ]
+
+    scene = 'FloorPlan_Train12_5'
+    def run(contoller):
+        pprint("demo")
+        episodes = [
+            {
+                'path': [
+                    {'x': 4.0, 'y': 0.02901104, 'z': -1.5},
+                    {'x': 2.275, 'y': 0.02901104, 'z': -1.750001},
+                    {'x': 2.1583333, 'y': 0.02901104, 'z': -1.86666679},
+                    {'x': 1.8083334, 'y': 0.02901104, 'z': -3.208334},
+                    {'x': 1.8083334, 'y': 0.02901104, 'z': -3.90833378},
+                    {'x': 1.925, 'y': 0.02901104, 'z': -4.02500057},
+                    {'x': 2.275, 'y': 0.02901104, 'z': -4.14166737},
+                    {'x': 5.425, 'y': 0.02901104, 'z': -4.14166737},
+                    {'x': 5.75, 'y': 0.02901104, 'z': -4.0}
+                ],
+                'target_object_id': 'Television|+07.63|+00.49|-03.77',
+                'initial_position': {'x': 4.17, 'y': 1.02, 'z': -1.328},
+                'initial_rotation': {'x': 0, 'y': 0, 'z': 0},
+                'success': True,
+                'scene': scene
+            }
+        ]
+
+        # initialize_func = lambda: controller.step(
+        #     dict(
+        #         action='Initialize',
+        #         gridSize=0.25,
+        #         fieldOfView=60,
+        #         rotateStepDegrees=angle
+        #     )
+        # )
+
+        # controller.reset(scene)
+
+        print("Before spl")
+
+        event = controller.step(
+            dict(
+                action='GetScenesInBuild',
+                gridSize=0.25,
+                fieldOfView=60,
+                rotateStepDegrees=angle
+            )
+        )
+
+        print("Scenes in build: {}".format(event.metadata['actionReturn']))
+
+
+
+        episodes_with_gold = metrics.get_episodes_with_shortest_paths(
+            controller,
+            episodes
+        )
+
+        pprint("SPL: {}".format(episodes_with_gold))
+        spl_val = metrics.compute_spl(episodes_with_gold)
+        pprint("SPL: {}".format(spl_val))
+
+        controller.stop()
+
+    run(controller)
