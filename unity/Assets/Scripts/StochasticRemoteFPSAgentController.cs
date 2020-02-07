@@ -98,6 +98,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
             }
         }
 
+
+    // NOOP action to allow evaluation to know that the episode has finished
+    public void Stop(ServerAction action) {
+        actionFinished(true);
+    }
+
     public override void Rotate(ServerAction action)
     {
         DefaultAgentHand(action);
