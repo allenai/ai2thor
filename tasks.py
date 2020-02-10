@@ -1739,20 +1739,34 @@ def start_mock_real_server(context):
 
 
 @task
-def create_dataset(context, local_build=False, editor_mode=False, width=300, height=300):
-    from pprint import pprint
+def create_dataset(
+        context,
+        local_build=False,
+        editor_mode=False,
+        width=300,
+        height=300,
+        output='robothor-dataset.json',
+        intermediate_directory='.'
+    ):
     import ai2thor.controller
     import ai2thor.util.metrics as metrics
+    import json
+    import re
 
+    scene = 'FloorPlan_Train1_1'
     angle = 45
+    gridSize = 0.25
     controller = ai2thor.controller.Controller(
         width=width,
         height=height,
         local_executable_path=_local_build_path() if local_build else None,
         start_unity=False if editor_mode else True,
-        gridSize=0.25,
+        gridSize=gridSize,
         fieldOfView=60,
-        rotateStepDegrees=angle
+        rotateStepDegrees=angle,
+        scene=scene,
+        port=8200,
+        host='127.0.0.1'
     )
 
     targets = [
@@ -1773,65 +1787,221 @@ def create_dataset(context, local_build=False, editor_mode=False, width=300, hei
         "Bottle"
     ]
 
-    scene = 'FloorPlan_Train12_5'
-    def run(contoller):
-        pprint("demo")
-        episodes = [
-            {
-                'path': [
-                    {'x': 4.0, 'y': 0.02901104, 'z': -1.5},
-                    {'x': 2.275, 'y': 0.02901104, 'z': -1.750001},
-                    {'x': 2.1583333, 'y': 0.02901104, 'z': -1.86666679},
-                    {'x': 1.8083334, 'y': 0.02901104, 'z': -3.208334},
-                    {'x': 1.8083334, 'y': 0.02901104, 'z': -3.90833378},
-                    {'x': 1.925, 'y': 0.02901104, 'z': -4.02500057},
-                    {'x': 2.275, 'y': 0.02901104, 'z': -4.14166737},
-                    {'x': 5.425, 'y': 0.02901104, 'z': -4.14166737},
-                    {'x': 5.75, 'y': 0.02901104, 'z': -4.0}
-                ],
-                'target_object_id': 'Television|+07.63|+00.49|-03.77',
-                'initial_position': {'x': 4.17, 'y': 1.02, 'z': -1.328},
-                'initial_rotation': {'x': 0, 'y': 0, 'z': 0},
-                'success': True,
-                'scene': scene
-            }
-        ]
+    desired_points = 30
+    event = controller.step(
+        dict(
+            action='GetScenesInBuild',
+        )
+    )
+    scenes_in_build = event.metadata['actionReturn']
 
-        # initialize_func = lambda: controller.step(
-        #     dict(
-        #         action='Initialize',
-        #         gridSize=0.25,
-        #         fieldOfView=60,
-        #         rotateStepDegrees=angle
-        #     )
-        # )
+    objects_types_in_scene = set()
 
-        # controller.reset(scene)
-
-        print("Before spl")
+    def get_points(contoller, object_type, scene):
+        print("Getting points in scene: '{}'...: ".format(scene))
 
         event = controller.step(
             dict(
-                action='GetScenesInBuild',
-                gridSize=0.25,
-                fieldOfView=60,
-                rotateStepDegrees=angle
+                action='ObjectTypeToObjectIds',
+                objectType=object_type.replace(" ", "")
             )
         )
 
-        print("Scenes in build: {}".format(event.metadata['actionReturn']))
-
-
-
-        episodes_with_gold = metrics.get_episodes_with_shortest_paths(
-            controller,
-            episodes
+        event_reachable = controller.step(
+            dict(
+                action='GetReachablePositions'
+            )
         )
 
-        pprint("SPL: {}".format(episodes_with_gold))
-        spl_val = metrics.compute_spl(episodes_with_gold)
-        pprint("SPL: {}".format(spl_val))
+        reachable_positions = event_reachable.metadata['actionReturn']
 
-        controller.stop()
+        reachable_pos_set = set([(pos['x'], pos['y'], pos['z']) for pos in reachable_positions])
 
-    run(controller)
+        def sqr_dist(a, b):
+            x = a[0] - b[0]
+            z = a[2] - b[2]
+            return x * x + z * z
+
+        def sqr_dist_dict(a, b):
+            x = a['x'] - b['x']
+            z = a['z'] - b['z']
+            return x * x + z * z
+
+        def filter_points(selected_points, point_set, minimum_distance):
+            result = set()
+            for selected in selected_points:
+                if selected in point_set:
+                    result.add(selected)
+                    remove_set = set(
+                        [p for p in point_set if sqr_dist(p, selected) <= minimum_distance * minimum_distance]
+                    )
+                    point_set = point_set.difference(remove_set)
+            return result
+
+        import random
+        points = random.sample(reachable_pos_set, desired_points * 4)
+
+        final_point_set = filter_points(points, reachable_pos_set, gridSize * 2)
+
+        print("Total number of points: {}".format(len(final_point_set)))
+
+        # import numpy as np
+        # reachable_grid = []
+        #
+        # eps = 0.001
+        #
+        # import math
+        # current_x = reachable_positions[0]['x']
+        # current_z = reachable_positions[0]['z']
+        # row = []
+        # for pos in reachable_positions:
+        #     if abs(pos['z'] - current_z) > eps:
+        #         current_z = pos['z']
+        #         reachable_grid.append(row)
+        #         row = []
+        #
+        #     row.append(pos)
+        #
+        # for row in reachable_grid:
+        #     print(len(row))
+        #
+        # # for
+        # print("Reachable sorted--- ")
+        # print(reachable_positions)
+        #
+        # print("rows ---- ")
+        # print("Len row {} row {}".format(len(reachable_grid), row))
+        #
+        # print("Return {}".format(len(event_reachable.metadata['actionReturn'])))
+
+        # for position in reachable_positions:
+
+        print("Id {}".format(event.metadata['actionReturn']))
+
+        object_ids = event.metadata['actionReturn']
+
+        if object_ids is None or len(object_ids) > 1 or len(object_ids) == 0:
+            print("Object type '{}' not available in scene.".format(object_type))
+            return None
+
+        objects_types_in_scene.add(object_type)
+        object_id = object_ids[0]
+
+        target_position = controller.step(action='GetObjectPosition', objectId=object_id).metadata['actionReturn']
+        point_objects = []
+
+        eps = 0.0001
+        for (x, y, z) in final_point_set:
+            possible_orientations = [0, 90, 180, 270]
+            pos_unity = dict(x=x, y=y, z=z)
+            try:
+                path = metrics.get_shortest_path_to_object(
+                    controller,
+                    object_id,
+                    pos_unity,
+                    {'x': 0, 'y': 0, 'z': 0}
+                )
+                minimum_path_length = metrics.path_distance(path)
+
+                rotation_allowed = False
+                while not rotation_allowed:
+                    if len(possible_orientations) == 0:
+                        break
+                    roatation_y = random.choice(possible_orientations)
+                    possible_orientations.remove(roatation_y)
+                    evt = controller.step(
+                        action="TeleportFull",
+                        x=pos_unity['x'],
+                        y=pos_unity['y'],
+                        z=pos_unity['z'],
+                        rotation=dict(x=0, y=roatation_y, z=0)
+                    )
+                    rotation_allowed = evt.metadata['lastActionSuccess']
+                    if not evt.metadata['lastActionSuccess']:
+                        print(evt.metadata['errorMessage'])
+                        print("--------- Rotation not allowed! for pos {} rot {} ".format(pos_unity, roatation_y))
+
+                if minimum_path_length > eps and rotation_allowed:
+                    point_objects.append({
+                        'scene': scene,
+                        'object_type': object_type,
+                        'object_id': object_id,
+                        'target_position': target_position,
+                        'initial_position': pos_unity,
+                        'initial_orientation': roatation_y,
+                        'shortest_path': path,
+                        'shortest_path_length': minimum_path_length
+                    })
+
+            except ValueError:
+                print("-----Invalid path discarding point...")
+
+
+        sorted_objs = sorted(point_objects,
+                             key=lambda m: sqr_dist_dict(m['initial_position'], m['target_position']))
+        third = int(len(sorted_objs) / 3.0)
+        # print('third {} len {}'.format(third, len(sorted_objs)))
+
+        for i, obj in enumerate(sorted_objs):
+            if i < third:
+                level = 'easy'
+            elif i < 2 * third:
+                level = 'medium'
+            else:
+                level = 'hard'
+
+            sorted_objs[i]['difficulty'] = level
+
+        return sorted_objs
+
+    dataset = {}
+    dataset_flat = []
+
+    if intermediate_directory is not None:
+        if intermediate_directory != '.':
+            if os.path.exists(intermediate_directory):
+                shutil.rmtree(intermediate_directory)
+            os.makedirs(intermediate_directory)
+    import re
+
+    def key_sort_func(scene_name):
+        m = re.search('FloorPlan_([a-zA-Z\-]*)([0-9]+)_([0-9]+)', scene_name)
+        return m.group(1), int(m.group(2)), int(m.group(3))
+
+    scenes = sorted(
+        [scene for scene in scenes_in_build if 'physics' not in scene],
+                    key=key_sort_func
+                    )
+
+    print("Sorted scenes: {}".format(scenes))
+
+    for scene in scenes:
+        dataset[scene] = {}
+        dataset['object_types'] = targets
+        objects = []
+
+        for objectType in targets:
+
+
+            dataset[scene][objectType] = []
+            obj = get_points(controller, objectType, scene)
+            if obj is not None:
+
+                objects = objects + obj
+
+        dataset_flat = dataset_flat + objects
+        if intermediate_directory != '.':
+            with open(os.path.join(intermediate_directory, '{}.json'.format(scene)), 'w') as f:
+                json.dump(obj, f, indent=4)
+
+
+    with open(os.path.join(intermediate_directory, output), 'w') as f:
+        # print(dataset)
+        json.dump(dataset_flat, f, indent=4)
+        # json.dumps(dataset, indent=4, sort_keys=True)
+
+    # print(dataset)
+
+    print("Object types in scene union: {}".format(objects_types_in_scene))
+
+    # run(controller)

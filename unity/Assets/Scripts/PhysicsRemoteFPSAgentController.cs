@@ -8620,20 +8620,42 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         public void GetShortestPath(ServerAction action) {
+            if (!physicsSceneManager.UniqueIdToSimObjPhysics.ContainsKey(action.objectId)) {
+                errorMessage = "Cannot find sim object with id '" + action.objectId + "'";
+                actionFinished(false);
+            }
             SimObjPhysics sop = physicsSceneManager.UniqueIdToSimObjPhysics[action.objectId];
             if (sop == null) {
-                errorMessage = "Cannot find sim object with id '" + action.objectId + "'";
+                errorMessage = "Object with id '" + action.objectId + "' is null";
                 actionFinished(false);
             }
             var startPosition = this.transform.position;
             var startRotation = this.transform.rotation;
+            Debug.Log("Source " + startPosition);
             if (!action.useAgentTransform) {
                 startPosition = action.position;
                 startRotation = Quaternion.Euler(action.rotation);
             }
 
+            // Debug.Log("Source " + startPosition);
             var path = GetSimObjectNavMeshTarget(sop, startPosition, startRotation);
+
+            
             if (path.status == NavMeshPathStatus.PathComplete) {
+                var pathDistance = 0.0;
+               
+
+                for (int i = 0; i < path.corners.Length - 1; i++) {
+                    Debug.DrawLine(path.corners[i], path.corners[i + 1], Color.red, 10.0f);
+                    Debug.Log("P i:" + i + " : " + path.corners[i] + " i+1:" + i + 1 + " : " + path.corners[i]);
+                    pathDistance += Vector3.Distance(path.corners[i], path.corners[i + 1]);
+                }
+
+                // if (pathDistance > 0.0001 ) {
+                //     var go = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+                //     go.transform.localScale = new Vector3(0.1f, 0.1f, 0.1f);
+                //     go.transform.position = startPosition;
+                // }
                 actionFinished(true, path);
             }
             else {
@@ -8644,8 +8666,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         public void ObjectTypeToObjectIds(ServerAction action) {
             try {
+                Debug.Log("Object type: " + action.objectType);
                 SimObjType objectType = (SimObjType) Enum.Parse(typeof(SimObjType), action.objectType, true);
                 List<string> objectIds = new List<string>();
+                Debug.Log("Enum type " + objectType);
                 foreach (var s in physicsSceneManager.UniqueIdToSimObjPhysics) {
                     if (s.Value.ObjType == objectType) {
                         objectIds.Add(s.Value.uniqueID);
@@ -8657,6 +8681,21 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 errorMessage = "Invalid object type '" + action.objectType + "'. " + exception.Message;
                 actionFinished(false);
             }
+        }
+
+        public void GetObjectPosition(ServerAction action) {
+
+                if (!physicsSceneManager.UniqueIdToSimObjPhysics.ContainsKey(action.objectId)) 
+                {
+                    errorMessage = "Cannot find sim object with id '" + action.objectId + "'";
+                    actionFinished(false);
+                }
+                SimObjPhysics sop = physicsSceneManager.UniqueIdToSimObjPhysics[action.objectId];
+                if (sop == null) {
+                    errorMessage = "Object with id '" + action.objectId + "' is null";
+                    actionFinished(false);
+                }
+                actionFinished(true, sop.transform.position);
         }
 
         public void GetScenesInBuild(ServerAction action) {
@@ -8696,6 +8735,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         private NavMeshPath GetSimObjectNavMeshTarget(SimObjPhysics targetSOP, Vector3 initialPosition, Quaternion initialRotation) {
+             Debug.Log("initial0 " + initialPosition);
             var targetTransform = targetSOP.transform;
             //var targetPosition = new Vector3(targetTransform.position.x, targetTransform.position.y, targetTransform.position.z); 
             var targetSimObject = targetTransform.GetComponentInChildren<SimObjPhysics>();
@@ -8709,20 +8749,23 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             agentTransform.position = initialPosition;
             agentTransform.rotation = initialRotation;
+            Debug.Log("initial " + initialPosition);
             var successReach = getReachablePositionToObjectVisible(targetSimObject, out fixedPosition);
             agentTransform.position = originalAgentPosition;
             agentTransform.rotation = orignalAgentRotation;
-            Debug.Log("Shortest Path: Can reach object? " + successReach);
+            Debug.Log("Shortest Path: Can reach object? " + successReach + " source " + initialPosition + " target: " + fixedPosition);
             var path = new NavMeshPath();
-            //bool pathSuccess = NavMesh.CalculatePath(initialPosition, fixedPosition,  NavMesh.AllAreas, path);
+            var sopPos = targetSOP.transform.position;
+            var target = new Vector3(sopPos.x, initialPosition.y, sopPos.z);
+            bool pathSuccess = NavMesh.CalculatePath(initialPosition, fixedPosition,  NavMesh.AllAreas, path);
         
-        var pathDistance = 0.0f;
-        for (int i = 0; i < path.corners.Length - 1; i++) {
+            var pathDistance = 0.0f;
+            for (int i = 0; i < path.corners.Length - 1; i++) {
                 Debug.DrawLine(path.corners[i], path.corners[i + 1], Color.red, 10.0f);
                 pathDistance += Vector3.Distance(path.corners[i], path.corners[i + 1]);
             }
 
-            Debug.Log("Shorrtest Path: Distance: " + pathDistance);
+            Debug.Log("Shorrtest Path: Distance: " + pathDistance + " path success " + path.status);
             return path;
         }
 
