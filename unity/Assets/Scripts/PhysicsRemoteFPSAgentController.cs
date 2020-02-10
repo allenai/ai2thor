@@ -8746,11 +8746,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             agentTransform.position = initialPosition;
             agentTransform.rotation = initialRotation;
-            Debug.Log("initial " + initialPosition);
             var successReach = getReachablePositionToObjectVisible(targetSimObject, out fixedPosition);
             agentTransform.position = originalAgentPosition;
             agentTransform.rotation = orignalAgentRotation;
-            Debug.Log("Shortest Path: Can reach object? " + successReach + " source " + initialPosition + " target: " + fixedPosition);
             var path = new NavMeshPath();
             var sopPos = targetSOP.transform.position;
             var target = new Vector3(sopPos.x, initialPosition.y, sopPos.z);
@@ -8761,8 +8759,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 Debug.DrawLine(path.corners[i], path.corners[i + 1], Color.red, 10.0f);
                 pathDistance += Vector3.Distance(path.corners[i], path.corners[i + 1]);
             }
-
-            Debug.Log("Shorrtest Path: Distance: " + pathDistance + " path success " + path.status);
             return path;
         }
 
