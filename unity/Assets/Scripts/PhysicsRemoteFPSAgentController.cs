@@ -8734,7 +8734,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         private NavMeshPath GetSimObjectNavMeshTarget(SimObjPhysics targetSOP, Vector3 initialPosition, Quaternion initialRotation) {
              Debug.Log("initial0 " + initialPosition);
             var targetTransform = targetSOP.transform;
-            //var targetPosition = new Vector3(targetTransform.position.x, targetTransform.position.y, targetTransform.position.z); 
             var targetSimObject = targetTransform.GetComponentInChildren<SimObjPhysics>();
             var PhysicsController = this;
             var agentTransform = PhysicsController.transform;
