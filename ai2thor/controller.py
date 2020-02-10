@@ -29,6 +29,7 @@ import uuid
 import tty
 import sys
 import termios
+import fcntl
 try:
     from queue import Queue
 except ImportError:
@@ -777,23 +778,30 @@ class Controller(object):
         tmp_dir = os.path.join(self.base_dir(), 'tmp')
         makedirs(self.releases_dir())
         makedirs(tmp_dir)
+        download_lf = open(os.path.join(tmp_dir, self.build_name(url) + ".lock"), "w")
+        try:
+            fcntl.flock(download_lf, fcntl.LOCK_EX)
 
-        if not os.path.isfile(self.executable_path()):
-            zip_data = ai2thor.downloader.download(
-                url,
-                self.build_name(),
-                sha256_build)
+            if not os.path.isfile(self.executable_path()):
+                zip_data = ai2thor.downloader.download(
+                    url,
+                    self.build_name(),
+                    sha256_build)
 
-            z = zipfile.ZipFile(io.BytesIO(zip_data))
-            # use tmpdir instead or a random number
-            extract_dir = os.path.join(tmp_dir, self.build_name())
-            logger.debug("Extracting zipfile %s" % os.path.basename(url))
-            z.extractall(extract_dir)
-            os.rename(extract_dir, os.path.join(self.releases_dir(), self.build_name()))
-            # we can lose the executable permission when unzipping a build
-            os.chmod(self.executable_path(), 0o755)
-        else:
-            logger.debug("%s exists - skipping download" % self.executable_path())
+                z = zipfile.ZipFile(io.BytesIO(zip_data))
+                # use tmpdir instead or a random number
+                extract_dir = os.path.join(tmp_dir, self.build_name())
+                logger.debug("Extracting zipfile %s" % os.path.basename(url))
+                z.extractall(extract_dir)
+                os.rename(extract_dir, os.path.join(self.releases_dir(), self.build_name()))
+                # we can lose the executable permission when unzipping a build
+                os.chmod(self.executable_path(), 0o755)
+            else:
+                logger.debug("%s exists - skipping download" % self.executable_path())
+
+        finally:
+            fcntl.flock(download_lf, fcntl.LOCK_UN)
+            download_lf.close()
 
     def start(
             self,
