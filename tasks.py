@@ -1845,37 +1845,6 @@ def create_dataset(
 
         print("Total number of points: {}".format(len(final_point_set)))
 
-        # import numpy as np
-        # reachable_grid = []
-        #
-        # eps = 0.001
-        #
-        # import math
-        # current_x = reachable_positions[0]['x']
-        # current_z = reachable_positions[0]['z']
-        # row = []
-        # for pos in reachable_positions:
-        #     if abs(pos['z'] - current_z) > eps:
-        #         current_z = pos['z']
-        #         reachable_grid.append(row)
-        #         row = []
-        #
-        #     row.append(pos)
-        #
-        # for row in reachable_grid:
-        #     print(len(row))
-        #
-        # # for
-        # print("Reachable sorted--- ")
-        # print(reachable_positions)
-        #
-        # print("rows ---- ")
-        # print("Len row {} row {}".format(len(reachable_grid), row))
-        #
-        # print("Return {}".format(len(event_reachable.metadata['actionReturn'])))
-
-        # for position in reachable_positions:
-
         print("Id {}".format(event.metadata['actionReturn']))
 
         object_ids = event.metadata['actionReturn']
@@ -1940,7 +1909,6 @@ def create_dataset(
         sorted_objs = sorted(point_objects,
                              key=lambda m: sqr_dist_dict(m['initial_position'], m['target_position']))
         third = int(len(sorted_objs) / 3.0)
-        # print('third {} len {}'.format(third, len(sorted_objs)))
 
         for i, obj in enumerate(sorted_objs):
             if i < third:
@@ -1996,12 +1964,5 @@ def create_dataset(
 
 
     with open(os.path.join(intermediate_directory, output), 'w') as f:
-        # print(dataset)
         json.dump(dataset_flat, f, indent=4)
-        # json.dumps(dataset, indent=4, sort_keys=True)
-
-    # print(dataset)
-
     print("Object types in scene union: {}".format(objects_types_in_scene))
-
-    # run(controller)
