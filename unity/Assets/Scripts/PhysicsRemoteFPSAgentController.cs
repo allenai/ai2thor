@@ -8619,6 +8619,24 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
 
+        private void VisualizePath(Vector3 startPosition, NavMeshPath path) {
+            var pathDistance = 0.0;
+
+            for (int i = 0; i < path.corners.Length - 1; i++) {
+                Debug.DrawLine(path.corners[i], path.corners[i + 1], Color.red, 10.0f);
+                Debug.Log("P i:" + i + " : " + path.corners[i] + " i+1:" + i + 1 + " : " + path.corners[i]);
+                pathDistance += Vector3.Distance(path.corners[i], path.corners[i + 1]);
+            }
+
+            if (pathDistance > 0.0001 ) {
+                // Better way to draw spheres
+                var go = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+                go.transform.localScale = new Vector3(0.1f, 0.1f, 0.1f);
+                go.GetComponent<Collider>().enabled = false;
+                go.transform.position = startPosition;
+            }
+        }
+
         public void GetShortestPath(ServerAction action) {
             if (!physicsSceneManager.UniqueIdToSimObjPhysics.ContainsKey(action.objectId)) {
                 errorMessage = "Cannot find sim object with id '" + action.objectId + "'";
@@ -8631,31 +8649,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
             var startPosition = this.transform.position;
             var startRotation = this.transform.rotation;
-            Debug.Log("Source " + startPosition);
             if (!action.useAgentTransform) {
                 startPosition = action.position;
                 startRotation = Quaternion.Euler(action.rotation);
             }
-
-            // Debug.Log("Source " + startPosition);
             var path = GetSimObjectNavMeshTarget(sop, startPosition, startRotation);
-
-            
             if (path.status == NavMeshPathStatus.PathComplete) {
-                var pathDistance = 0.0;
-               
-
-                for (int i = 0; i < path.corners.Length - 1; i++) {
-                    Debug.DrawLine(path.corners[i], path.corners[i + 1], Color.red, 10.0f);
-                    Debug.Log("P i:" + i + " : " + path.corners[i] + " i+1:" + i + 1 + " : " + path.corners[i]);
-                    pathDistance += Vector3.Distance(path.corners[i], path.corners[i + 1]);
-                }
-
-                // if (pathDistance > 0.0001 ) {
-                //     var go = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-                //     go.transform.localScale = new Vector3(0.1f, 0.1f, 0.1f);
-                //     go.transform.position = startPosition;
-                // }
                 actionFinished(true, path);
             }
             else {
@@ -8666,10 +8665,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         public void ObjectTypeToObjectIds(ServerAction action) {
             try {
-                Debug.Log("Object type: " + action.objectType);
                 SimObjType objectType = (SimObjType) Enum.Parse(typeof(SimObjType), action.objectType, true);
                 List<string> objectIds = new List<string>();
-                Debug.Log("Enum type " + objectType);
                 foreach (var s in physicsSceneManager.UniqueIdToSimObjPhysics) {
                     if (s.Value.ObjType == objectType) {
                         objectIds.Add(s.Value.uniqueID);
