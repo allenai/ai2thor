@@ -438,6 +438,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 //set camera stand/crouch local positions for Tall mode
                 standingLocalCameraPosition = m_Camera.transform.localPosition;
                 crouchingLocalCameraPosition = m_Camera.transform.localPosition + new Vector3(0, -0.2206f, 0);//smaller y offset if Bot
+
+                // limit camera from looking too far down
+                this.horizonAngles = new float[] { 30.0f, 0.0f, 330.0f };
             }
         }
 
