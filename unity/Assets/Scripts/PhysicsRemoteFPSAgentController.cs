@@ -664,7 +664,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
 
             this.updateAllAgentCollidersForVisibilityCheck(false);
-            Collider[] colliders_in_view = Physics.OverlapCapsule(point0, point1, maxDistance * 1, 1 << 8, QueryTriggerInteraction.Collide);
+            Collider[] colliders_in_view = Physics.OverlapCapsule(point0, point1, maxDistance, 1 << 8, QueryTriggerInteraction.Collide);
 
             if (colliders_in_view != null) {
                 HashSet<SimObjPhysics> testedSops = new HashSet<SimObjPhysics>();
