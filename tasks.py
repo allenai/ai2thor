@@ -1746,7 +1746,10 @@ def create_dataset(
         width=300,
         height=300,
         output='robothor-dataset.json',
-        intermediate_directory='.'
+        intermediate_directory='.',
+        visibility_distance=1,
+        objects=None,
+        scenes=None
     ):
     import ai2thor.controller
     import ai2thor.util.metrics as metrics
@@ -1756,17 +1759,22 @@ def create_dataset(
     scene = 'FloorPlan_Train1_1'
     angle = 45
     gridSize = 0.25
+    # Restrict points visibility_multiplier_filter * visibility_distance away from the target object
+    visibility_multiplier_filter = 2
     controller = ai2thor.controller.Controller(
         width=width,
         height=height,
         local_executable_path=_local_build_path() if local_build else None,
         start_unity=False if editor_mode else True,
+        scene=scene,
+        port=8200,
+        host='127.0.0.1',
+        # Unity params
         gridSize=gridSize,
         fieldOfView=60,
         rotateStepDegrees=angle,
-        scene=scene,
-        port=8200,
-        host='127.0.0.1'
+        agentMode='bot',
+        visibilityDistance=visibility_distance,
     )
 
     targets = [
@@ -1787,6 +1795,10 @@ def create_dataset(
         "Bottle"
     ]
 
+    if objects is not None:
+        obj_filter = set([o for o in objects.split[","]])
+        targets = [o for o in targets if o.replace(" ", "") in obj_filter]
+
     desired_points = 30
     event = controller.step(
         dict(
@@ -1797,6 +1809,16 @@ def create_dataset(
 
     objects_types_in_scene = set()
 
+    def sqr_dist(a, b):
+        x = a[0] - b[0]
+        z = a[2] - b[2]
+        return x * x + z * z
+
+    def sqr_dist_dict(a, b):
+        x = a['x'] - b['x']
+        z = a['z'] - b['z']
+        return x * x + z * z
+
     def get_points(contoller, object_type, scene):
         print("Getting points in scene: '{}'...: ".format(scene))
 
@@ -1806,6 +1828,14 @@ def create_dataset(
                 objectType=object_type.replace(" ", "")
             )
         )
+        object_ids = event.metadata['actionReturn']
+
+        if object_ids is None or len(object_ids) > 1 or len(object_ids) == 0:
+            print("Object type '{}' not available in scene.".format(object_type))
+            return None
+
+        objects_types_in_scene.add(object_type)
+        object_id = object_ids[0]
 
         event_reachable = controller.step(
             dict(
@@ -1813,19 +1843,17 @@ def create_dataset(
             )
         )
 
+
+        target_position = controller.step(action='GetObjectPosition', objectId=object_id).metadata['actionReturn']
+
         reachable_positions = event_reachable.metadata['actionReturn']
 
-        reachable_pos_set = set([(pos['x'], pos['y'], pos['z']) for pos in reachable_positions])
+        reachable_pos_set = set([
+            (pos['x'], pos['y'], pos['z']) for pos in reachable_positions
+            # if sqr_dist_dict(pos, target_position) >= visibility_distance * visibility_multiplier_filter
+        ])
 
-        def sqr_dist(a, b):
-            x = a[0] - b[0]
-            z = a[2] - b[2]
-            return x * x + z * z
 
-        def sqr_dist_dict(a, b):
-            x = a['x'] - b['x']
-            z = a['z'] - b['z']
-            return x * x + z * z
 
         def filter_points(selected_points, point_set, minimum_distance):
             result = set()
@@ -1847,16 +1875,9 @@ def create_dataset(
 
         print("Id {}".format(event.metadata['actionReturn']))
 
-        object_ids = event.metadata['actionReturn']
 
-        if object_ids is None or len(object_ids) > 1 or len(object_ids) == 0:
-            print("Object type '{}' not available in scene.".format(object_type))
-            return None
 
-        objects_types_in_scene.add(object_type)
-        object_id = object_ids[0]
 
-        target_position = controller.step(action='GetObjectPosition', objectId=object_id).metadata['actionReturn']
         point_objects = []
 
         eps = 0.0001
@@ -1943,13 +1964,15 @@ def create_dataset(
 
     print("Sorted scenes: {}".format(scenes))
 
+    scenes = scenes[:1]
+    targets = ["Bowl"]
     for scene in scenes:
         dataset[scene] = {}
         dataset['object_types'] = targets
         objects = []
 
+        # [t for t in targets if 'Basketball' in t]:
         for objectType in targets:
-
 
             dataset[scene][objectType] = []
             obj = get_points(controller, objectType, scene)
@@ -1966,3 +1989,139 @@ def create_dataset(
     with open(os.path.join(intermediate_directory, output), 'w') as f:
         json.dump(dataset_flat, f, indent=4)
     print("Object types in scene union: {}".format(objects_types_in_scene))
+    print("Total unique objects: {}".format(len(objects_types_in_scene)))
+    print("Total scenes: {}".format(len(scenes)))
+    print("Total datapoints: {}".format(len(dataset_flat)))
+
+
+@task
+def test_point(context, object="Baseball Bat", editor_mode=False, local_build=False, visibility_distance=1.0):
+    p = dict(x=2.25, y=0.9103442, z=-2)
+    # p = dict(x=6, y=0.9103442, z=-1.25)
+
+    import ai2thor.controller
+    import ai2thor.util.metrics as metrics
+    import json
+    import re
+
+    scene = 'FloorPlan_Train1_1'
+    angle = 45
+    gridSize = 0.25
+    controller = ai2thor.controller.Controller(
+        width=300,
+        height=300,
+        local_executable_path=_local_build_path() if local_build else None,
+        start_unity=False if editor_mode else True,
+        scene=scene,
+        port=8200,
+        host='127.0.0.1',
+        # Unity params
+        gridSize=gridSize,
+        fieldOfView=60,
+        rotateStepDegrees=angle,
+        agentMode='bot',
+        visibilityDistance=visibility_distance,
+    )
+
+    object_type = object
+
+    event = controller.step(
+        dict(
+            action='ObjectTypeToObjectIds',
+            objectType=object_type.replace(" ", "")
+        )
+    )
+
+    print("Id {}".format(event.metadata['actionReturn']))
+
+    object_id = event.metadata['actionReturn'][0]
+
+    # evt = controller.step(
+    #     action="TeleportFull",
+    #     x=p['x'],
+    #     y=p['y'],
+    #     z=p['z'],
+    #     rotation=dict(x=0, y=0, z=0)
+    # )
+
+    path = metrics.get_shortest_path_to_object(
+        controller,
+        object_id,
+        p,
+        {'x': 0, 'y': 0, 'z': 0}
+    )
+    minimum_path_length = metrics.path_distance(path)
+
+    print(path)
+    print(minimum_path_length)
+
+
+@task
+def filter_dataset(ctx, filename, filter, output_filename):
+    import json
+    from pprint import pprint
+    filter_set = filter.split(",")
+    with open(filename, 'r') as f:
+        obj = json.load(f)
+
+    targets = [
+        "Apple",
+        "Baseball Bat",
+        "Basketball",
+        "Bowl",
+        "Garbage Can",
+        "House Plant",
+        "Laptop",
+        "Mug",
+        "Remote",
+        "Spray Bottle",
+        "Vase",
+        "Alarm Clock",
+        "Television",
+        "Pillow",
+        "Bottle"
+    ]
+
+    counter = {}
+    for f in obj:
+        obj_type = f['object_type']
+
+        if f['scene'] not in counter:
+            counter[f['scene']] = {target: 0 for target in targets}
+        scene_counter = counter[f['scene']]
+        if obj_type not in scene_counter:
+            scene_counter[obj_type] = 1
+        else:
+            scene_counter[obj_type] += 1
+
+    # for f in obj:
+    #     obj_type = f['object_type']
+    #
+    #     if f['scene'] not in counter:
+    #         counter[f['scene']] = {}
+    #     scene_counter = counter[f['scene']]
+    #     if obj_type not in scene_counter:
+    #         scene_counter[obj_type] = 1
+    #     else:
+    #         scene_counter[obj_type] += 1
+
+    objects_with_zero = set()
+    objects_with_zero_by_obj = {}
+    for k, item in counter.items():
+        for obj_type, count in item.items():
+            if count == 0:
+                if obj_type not in objects_with_zero_by_obj:
+                    objects_with_zero_by_obj[obj_type] = set()
+                else:
+                    objects_with_zero_by_obj[obj_type].add(k)
+                objects_with_zero.add(obj_type)
+
+
+    print("Objects wuth zero: {}".format(objects_with_zero))
+    pprint(objects_with_zero_by_obj)
+    filtered = [o for o in obj if o['object_type'] not in objects_with_zero]
+
+
+    with open(output_filename, 'w') as f:
+        json.dump(filtered, f, indent=4)
+    # pprint("counts\n {}".format(counter))

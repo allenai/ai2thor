@@ -447,6 +447,24 @@ class Controller(object):
         if re.match(r'^FloorPlan[0-9]+$', scene):
             scene = scene + "_physics"
 
+        event = self.step(
+            dict(
+                action='GetScenesInBuild',
+            )
+        )
+        scenes_in_build = set(event.metadata['actionReturn'])
+        if scene not in scenes_in_build:
+            def key_sort_func(scene_name):
+                m = re.search('FloorPlan[_]?([a-zA-Z\-]*)([0-9]+)_?([0-9]+)?.*$', scene_name)
+                last_val = m.group(3) if m.group(3) is not None else -1
+                return m.group(1), int(m.group(2)), int(last_val)
+            raise ValueError(
+                "\nScene not contained in build (scene names are case sensitive)."
+                "\nPlease choose one of the following scene names:\n\n{}".format(
+                    ", ".join(sorted(list(scenes_in_build), key=key_sort_func))
+                )
+            )
+
         self.response_queue.put_nowait(dict(action='Reset', sceneName=scene, sequenceId=0))
         self.last_event = queue_get(self.request_queue)  # can this be deleted?
         self.last_event = self.step(action='Initialize', **self.initialization_parameters)

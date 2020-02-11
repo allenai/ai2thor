@@ -664,14 +664,16 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
 
             this.updateAllAgentCollidersForVisibilityCheck(false);
-            Collider[] colliders_in_view = Physics.OverlapCapsule(point0, point1, maxDistance, 1 << 8, QueryTriggerInteraction.Collide);
+            Collider[] colliders_in_view = Physics.OverlapCapsule(point0, point1, maxDistance * 1, 1 << 8, QueryTriggerInteraction.Collide);
 
             if (colliders_in_view != null) {
                 HashSet<SimObjPhysics> testedSops = new HashSet<SimObjPhysics>();
                 foreach (Collider item in colliders_in_view) {
                     SimObjPhysics sop = ancestorSimObjPhysics(item.gameObject);
+
                     //now we have a reference to our sim object 
                     if (sop != null && !testedSops.Contains(sop)) {
+                        // Debug.Log("Testing sop " + sop.uniqueID);
                         testedSops.Add(sop);
                         //check against all visibility points, accumulate count. If at least one point is visible, set object to visible
                         if (sop.VisibilityPoints == null || sop.VisibilityPoints.Length > 0) {
@@ -680,9 +682,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                             foreach (Transform point in visPoints) {
 
+                               
+
                                 //if this particular point is in view...
                                 if (CheckIfVisibilityPointInViewport(sop, point, camera, false)) {
                                     visPointCount++;
+                                   
                                     #if !UNITY_EDITOR
                                     // If we're in the unity editor then don't break on finding a visible
                                     // point as we want to draw lines to each visible point.
@@ -693,6 +698,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                             //if we see at least one vis point, the object is "visible"
                             if (visPointCount > 0) {
+                                //  Debug.Log("------ Visible " + sop.Type);
                                 #if UNITY_EDITOR
                                 sop.isVisible = true;
                                 #endif
@@ -876,6 +882,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             bool result = false;
 
             Vector3 viewPoint = agentCamera.WorldToViewportPoint(point.position);
+
+            if (sop.uniqueID == "Apple|+01.98|+00.77|-01.75") {
+                // Debug.DrawLine(agentCamera.transform.position, point.position, Color.yellow, 1000f);
+            }
 
             float ViewPointRangeHigh = 1.0f;
             float ViewPointRangeLow = 0.0f;
@@ -6646,7 +6656,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return reachablePos;
         }
 
-        public bool getReachablePositionToObjectVisible(SimObjPhysics targetSOP, out Vector3 pos, float gridMultiplier = 1.0f, int maxStepCount = 10000) {
+        public bool  getReachablePositionToObjectVisible(SimObjPhysics targetSOP, out Vector3 pos, float gridMultiplier = 1.0f, int maxStepCount = 10000) {
             CapsuleCollider cc = GetComponent<CapsuleCollider>();
             float sw = m_CharacterController.skinWidth;
             Queue<Vector3> pointsQueue = new Queue<Vector3>();
@@ -6670,11 +6680,23 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     goodPoints.Add(p);
                     transform.position = p;
                     var rot = transform.rotation;
+
+                    // var go = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+                    // go.transform.localScale = new Vector3(0.1f, 0.1f, 0.1f);
+                    // go.GetComponent<Collider>().enabled = false;
+                    // go.transform.position = p;
+
+                    // Debug.DrawLine(p, targetSOP.transform.position, Color.blue, 1000f);
+                    // Debug.Log("------- Point Distance " + Vector3.Distance(p, targetSOP.transform.position));
+
                     transform.LookAt(targetSOP.transform, transform.up);
 
                     var visibleSimObjects = this.GetAllVisibleSimObjPhysics(this.maxVisibleDistance);
+                    // Debug.Log("Visible obj " + String.Join(", ", visibleSimObjects.Select(x => x.uniqueID).ToArray()));
                     transform.rotation = rot;
+                    
                     if (visibleSimObjects.Any(sop => sop.uniqueID == targetSOP.uniqueID)) {
+                        
                         pos = p;
                         return true;
                     }
@@ -8624,7 +8646,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             for (int i = 0; i < path.corners.Length - 1; i++) {
                 Debug.DrawLine(path.corners[i], path.corners[i + 1], Color.red, 10.0f);
-                Debug.Log("P i:" + i + " : " + path.corners[i] + " i+1:" + i + 1 + " : " + path.corners[i]);
+                // Debug.Log("P i:" + i + " : " + path.corners[i] + " i+1:" + i + 1 + " : " + path.corners[i]);
                 pathDistance += Vector3.Distance(path.corners[i], path.corners[i + 1]);
             }
 
@@ -8638,6 +8660,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         public void GetShortestPath(ServerAction action) {
+            // Debug.Log("Max visible " + this.maxVisibleDistance);
             if (!physicsSceneManager.UniqueIdToSimObjPhysics.ContainsKey(action.objectId)) {
                 errorMessage = "Cannot find sim object with id '" + action.objectId + "'";
                 actionFinished(false);
@@ -8655,6 +8678,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
             var path = GetSimObjectNavMeshTarget(sop, startPosition, startRotation);
             if (path.status == NavMeshPathStatus.PathComplete) {
+                VisualizePath(startPosition, path);
                 actionFinished(true, path);
             }
             else {
@@ -8665,7 +8689,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         public void ObjectTypeToObjectIds(ServerAction action) {
             try {
-                SimObjType objectType = (SimObjType) Enum.Parse(typeof(SimObjType), action.objectType, true);
+                SimObjType objectType = (SimObjType) Enum.Parse(typeof(SimObjType), action.objectType.Replace(" ", String.Empty), true);
                 List<string> objectIds = new List<string>();
                 foreach (var s in physicsSceneManager.UniqueIdToSimObjPhysics) {
                     if (s.Value.ObjType == objectType) {
@@ -8732,7 +8756,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         private NavMeshPath GetSimObjectNavMeshTarget(SimObjPhysics targetSOP, Vector3 initialPosition, Quaternion initialRotation) {
-             Debug.Log("initial0 " + initialPosition);
             var targetTransform = targetSOP.transform;
             var targetSimObject = targetTransform.GetComponentInChildren<SimObjPhysics>();
             var PhysicsController = this;
