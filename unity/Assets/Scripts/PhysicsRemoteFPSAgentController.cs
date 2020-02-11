@@ -8678,7 +8678,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
             var path = GetSimObjectNavMeshTarget(sop, startPosition, startRotation);
             if (path.status == NavMeshPathStatus.PathComplete) {
-                VisualizePath(startPosition, path);
+                //VisualizePath(startPosition, path);
                 actionFinished(true, path);
             }
             else {

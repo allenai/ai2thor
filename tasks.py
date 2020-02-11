@@ -2121,7 +2121,8 @@ def filter_dataset(ctx, filename, filter, output_filename):
     pprint(objects_with_zero_by_obj)
     filtered = [o for o in obj if o['object_type'] not in objects_with_zero]
 
-
+    for i, o in enumerate(filtered):
+        o['id'] = i
     with open(output_filename, 'w') as f:
         json.dump(filtered, f, indent=4)
     # pprint("counts\n {}".format(counter))
