@@ -673,7 +673,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                     //now we have a reference to our sim object 
                     if (sop != null && !testedSops.Contains(sop)) {
-                        // Debug.Log("Testing sop " + sop.uniqueID);
                         testedSops.Add(sop);
                         //check against all visibility points, accumulate count. If at least one point is visible, set object to visible
                         if (sop.VisibilityPoints == null || sop.VisibilityPoints.Length > 0) {
@@ -882,10 +881,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             bool result = false;
 
             Vector3 viewPoint = agentCamera.WorldToViewportPoint(point.position);
-
-            if (sop.uniqueID == "Apple|+01.98|+00.77|-01.75") {
-                // Debug.DrawLine(agentCamera.transform.position, point.position, Color.yellow, 1000f);
-            }
 
             float ViewPointRangeHigh = 1.0f;
             float ViewPointRangeLow = 0.0f;
@@ -1704,12 +1699,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     float agentPriority = -agentMovePQ.GetPriority(nextAgent);
 
                     if (!objectMoved && agentPriority < objectPriority) {
-                        // Debug.Log("Object");
                         success = moveObject(objectToMove, objectToMove.transform.position + d, snapToGrid);
                         Physics.Simulate(0.04f);
                         objectMoved = true;
                     } else {
-                        // Debug.Log(nextAgent);
                         agentMovePQ.Dequeue();
                         success = nextAgent.moveInDirection(d);
                         Physics.Simulate(0.04f);
@@ -6680,19 +6673,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     goodPoints.Add(p);
                     transform.position = p;
                     var rot = transform.rotation;
-
-                    // var go = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-                    // go.transform.localScale = new Vector3(0.1f, 0.1f, 0.1f);
-                    // go.GetComponent<Collider>().enabled = false;
-                    // go.transform.position = p;
-
-                    // Debug.DrawLine(p, targetSOP.transform.position, Color.blue, 1000f);
-                    // Debug.Log("------- Point Distance " + Vector3.Distance(p, targetSOP.transform.position));
-
                     transform.LookAt(targetSOP.transform, transform.up);
 
                     var visibleSimObjects = this.GetAllVisibleSimObjPhysics(this.maxVisibleDistance);
-                    // Debug.Log("Visible obj " + String.Join(", ", visibleSimObjects.Select(x => x.uniqueID).ToArray()));
                     transform.rotation = rot;
                     
                     if (visibleSimObjects.Any(sop => sop.uniqueID == targetSOP.uniqueID)) {
@@ -8646,7 +8629,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             for (int i = 0; i < path.corners.Length - 1; i++) {
                 Debug.DrawLine(path.corners[i], path.corners[i + 1], Color.red, 10.0f);
-                // Debug.Log("P i:" + i + " : " + path.corners[i] + " i+1:" + i + 1 + " : " + path.corners[i]);
+                Debug.Log("P i:" + i + " : " + path.corners[i] + " i+1:" + i + 1 + " : " + path.corners[i]);
                 pathDistance += Vector3.Distance(path.corners[i], path.corners[i + 1]);
             }
 
@@ -8660,7 +8643,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         public void GetShortestPath(ServerAction action) {
-            // Debug.Log("Max visible " + this.maxVisibleDistance);
             if (!physicsSceneManager.UniqueIdToSimObjPhysics.ContainsKey(action.objectId)) {
                 errorMessage = "Cannot find sim object with id '" + action.objectId + "'";
                 actionFinished(false);
