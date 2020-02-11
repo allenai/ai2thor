@@ -397,6 +397,7 @@ class Controller(object):
         self.container_id = None
         self.local_executable_path = local_executable_path
         self.last_event = None
+        self._scenes_in_build = None
         self.server_thread = None
         self.killing_unity = False
         self.quality = quality
@@ -444,17 +445,22 @@ class Controller(object):
     def __exit__(self, *args):
         self.stop()
 
+    @property
+    def scenes_in_build(self):
+        if self._scenes_in_build:
+            return self._scenes_in_build
+
+        event = self.step(action='GetScenesInBuild')
+
+        self._scenes_in_build = set(event.metadata['actionReturn'])
+
+        return self._scenes_in_build
+
     def reset(self, scene='FloorPlan_Train1_1'):
         if re.match(r'^FloorPlan[0-9]+$', scene):
             scene = scene + "_physics"
 
-        event = self.step(
-            dict(
-                action='GetScenesInBuild',
-            )
-        )
-        scenes_in_build = set(event.metadata['actionReturn'])
-        if scene not in scenes_in_build:
+        if scene not in self.scenes_in_build:
             def key_sort_func(scene_name):
                 m = re.search('FloorPlan[_]?([a-zA-Z\-]*)([0-9]+)_?([0-9]+)?.*$', scene_name)
                 last_val = m.group(3) if m.group(3) is not None else -1
@@ -462,7 +468,7 @@ class Controller(object):
             raise ValueError(
                 "\nScene not contained in build (scene names are case sensitive)."
                 "\nPlease choose one of the following scene names:\n\n{}".format(
-                    ", ".join(sorted(list(scenes_in_build), key=key_sort_func))
+                    ", ".join(sorted(list(self.scenes_in_build), key=key_sort_func))
                 )
             )
 
