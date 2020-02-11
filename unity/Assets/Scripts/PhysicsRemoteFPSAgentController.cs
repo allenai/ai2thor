@@ -670,6 +670,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 HashSet<SimObjPhysics> testedSops = new HashSet<SimObjPhysics>();
                 foreach (Collider item in colliders_in_view) {
                     SimObjPhysics sop = ancestorSimObjPhysics(item.gameObject);
+
                     //now we have a reference to our sim object 
                     if (sop != null && !testedSops.Contains(sop)) {
                         testedSops.Add(sop);
@@ -680,9 +681,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                             foreach (Transform point in visPoints) {
 
+                               
+
                                 //if this particular point is in view...
                                 if (CheckIfVisibilityPointInViewport(sop, point, camera, false)) {
                                     visPointCount++;
+                                   
                                     #if !UNITY_EDITOR
                                     // If we're in the unity editor then don't break on finding a visible
                                     // point as we want to draw lines to each visible point.
@@ -693,6 +697,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                             //if we see at least one vis point, the object is "visible"
                             if (visPointCount > 0) {
+                                //  Debug.Log("------ Visible " + sop.Type);
                                 #if UNITY_EDITOR
                                 sop.isVisible = true;
                                 #endif
@@ -1694,12 +1699,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     float agentPriority = -agentMovePQ.GetPriority(nextAgent);
 
                     if (!objectMoved && agentPriority < objectPriority) {
-                        // Debug.Log("Object");
                         success = moveObject(objectToMove, objectToMove.transform.position + d, snapToGrid);
                         Physics.Simulate(0.04f);
                         objectMoved = true;
                     } else {
-                        // Debug.Log(nextAgent);
                         agentMovePQ.Dequeue();
                         success = nextAgent.moveInDirection(d);
                         Physics.Simulate(0.04f);
@@ -6646,7 +6649,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return reachablePos;
         }
 
-        public bool getReachablePositionToObjectVisible(SimObjPhysics targetSOP, out Vector3 pos, float gridMultiplier = 1.0f, int maxStepCount = 10000) {
+        public bool  getReachablePositionToObjectVisible(SimObjPhysics targetSOP, out Vector3 pos, float gridMultiplier = 1.0f, int maxStepCount = 10000) {
             CapsuleCollider cc = GetComponent<CapsuleCollider>();
             float sw = m_CharacterController.skinWidth;
             Queue<Vector3> pointsQueue = new Queue<Vector3>();
@@ -6674,7 +6677,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                     var visibleSimObjects = this.GetAllVisibleSimObjPhysics(this.maxVisibleDistance);
                     transform.rotation = rot;
+                    
                     if (visibleSimObjects.Any(sop => sop.uniqueID == targetSOP.uniqueID)) {
+                        
                         pos = p;
                         return true;
                     }
@@ -8619,10 +8624,32 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
 
+        private void VisualizePath(Vector3 startPosition, NavMeshPath path) {
+            var pathDistance = 0.0;
+
+            for (int i = 0; i < path.corners.Length - 1; i++) {
+                Debug.DrawLine(path.corners[i], path.corners[i + 1], Color.red, 10.0f);
+                Debug.Log("P i:" + i + " : " + path.corners[i] + " i+1:" + i + 1 + " : " + path.corners[i]);
+                pathDistance += Vector3.Distance(path.corners[i], path.corners[i + 1]);
+            }
+
+            if (pathDistance > 0.0001 ) {
+                // Better way to draw spheres
+                var go = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+                go.transform.localScale = new Vector3(0.1f, 0.1f, 0.1f);
+                go.GetComponent<Collider>().enabled = false;
+                go.transform.position = startPosition;
+            }
+        }
+
         public void GetShortestPath(ServerAction action) {
+            if (!physicsSceneManager.UniqueIdToSimObjPhysics.ContainsKey(action.objectId)) {
+                errorMessage = "Cannot find sim object with id '" + action.objectId + "'";
+                actionFinished(false);
+            }
             SimObjPhysics sop = physicsSceneManager.UniqueIdToSimObjPhysics[action.objectId];
             if (sop == null) {
-                errorMessage = "Cannot find sim object with id '" + action.objectId + "'";
+                errorMessage = "Object with id '" + action.objectId + "' is null";
                 actionFinished(false);
             }
             var startPosition = this.transform.position;
@@ -8631,9 +8658,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 startPosition = action.position;
                 startRotation = Quaternion.Euler(action.rotation);
             }
-
             var path = GetSimObjectNavMeshTarget(sop, startPosition, startRotation);
             if (path.status == NavMeshPathStatus.PathComplete) {
+                //VisualizePath(startPosition, path);
                 actionFinished(true, path);
             }
             else {
@@ -8644,7 +8671,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         public void ObjectTypeToObjectIds(ServerAction action) {
             try {
-                SimObjType objectType = (SimObjType) Enum.Parse(typeof(SimObjType), action.objectType, true);
+                SimObjType objectType = (SimObjType) Enum.Parse(typeof(SimObjType), action.objectType.Replace(" ", String.Empty), true);
                 List<string> objectIds = new List<string>();
                 foreach (var s in physicsSceneManager.UniqueIdToSimObjPhysics) {
                     if (s.Value.ObjType == objectType) {
@@ -8657,6 +8684,21 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 errorMessage = "Invalid object type '" + action.objectType + "'. " + exception.Message;
                 actionFinished(false);
             }
+        }
+
+        public void GetObjectPosition(ServerAction action) {
+
+                if (!physicsSceneManager.UniqueIdToSimObjPhysics.ContainsKey(action.objectId)) 
+                {
+                    errorMessage = "Cannot find sim object with id '" + action.objectId + "'";
+                    actionFinished(false);
+                }
+                SimObjPhysics sop = physicsSceneManager.UniqueIdToSimObjPhysics[action.objectId];
+                if (sop == null) {
+                    errorMessage = "Object with id '" + action.objectId + "' is null";
+                    actionFinished(false);
+                }
+                actionFinished(true, sop.transform.position);
         }
 
         public void GetScenesInBuild(ServerAction action) {
@@ -8697,7 +8739,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         private NavMeshPath GetSimObjectNavMeshTarget(SimObjPhysics targetSOP, Vector3 initialPosition, Quaternion initialRotation) {
             var targetTransform = targetSOP.transform;
-            //var targetPosition = new Vector3(targetTransform.position.x, targetTransform.position.y, targetTransform.position.z); 
             var targetSimObject = targetTransform.GetComponentInChildren<SimObjPhysics>();
             var PhysicsController = this;
             var agentTransform = PhysicsController.transform;
@@ -8712,17 +8753,16 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             var successReach = getReachablePositionToObjectVisible(targetSimObject, out fixedPosition);
             agentTransform.position = originalAgentPosition;
             agentTransform.rotation = orignalAgentRotation;
-            Debug.Log("Shortest Path: Can reach object? " + successReach);
             var path = new NavMeshPath();
-            //bool pathSuccess = NavMesh.CalculatePath(initialPosition, fixedPosition,  NavMesh.AllAreas, path);
+            var sopPos = targetSOP.transform.position;
+            var target = new Vector3(sopPos.x, initialPosition.y, sopPos.z);
+            bool pathSuccess = NavMesh.CalculatePath(initialPosition, fixedPosition,  NavMesh.AllAreas, path);
         
-        var pathDistance = 0.0f;
-        for (int i = 0; i < path.corners.Length - 1; i++) {
+            var pathDistance = 0.0f;
+            for (int i = 0; i < path.corners.Length - 1; i++) {
                 Debug.DrawLine(path.corners[i], path.corners[i + 1], Color.red, 10.0f);
                 pathDistance += Vector3.Distance(path.corners[i], path.corners[i + 1]);
             }
-
-            Debug.Log("Shorrtest Path: Distance: " + pathDistance);
             return path;
         }
 

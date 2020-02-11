@@ -1739,20 +1739,42 @@ def start_mock_real_server(context):
 
 
 @task
-def create_dataset(context, local_build=False, editor_mode=False, width=300, height=300):
-    from pprint import pprint
+def create_dataset(
+        context,
+        local_build=False,
+        editor_mode=False,
+        width=300,
+        height=300,
+        output='robothor-dataset.json',
+        intermediate_directory='.',
+        visibility_distance=1,
+        objects=None,
+        scenes=None
+    ):
     import ai2thor.controller
     import ai2thor.util.metrics as metrics
+    import json
+    import re
 
+    scene = 'FloorPlan_Train1_1'
     angle = 45
+    gridSize = 0.25
+    # Restrict points visibility_multiplier_filter * visibility_distance away from the target object
+    visibility_multiplier_filter = 2
     controller = ai2thor.controller.Controller(
         width=width,
         height=height,
         local_executable_path=_local_build_path() if local_build else None,
         start_unity=False if editor_mode else True,
-        gridSize=0.25,
+        scene=scene,
+        port=8200,
+        host='127.0.0.1',
+        # Unity params
+        gridSize=gridSize,
         fieldOfView=60,
-        rotateStepDegrees=angle
+        rotateStepDegrees=angle,
+        agentMode='bot',
+        visibilityDistance=visibility_distance,
     )
 
     targets = [
@@ -1773,65 +1795,334 @@ def create_dataset(context, local_build=False, editor_mode=False, width=300, hei
         "Bottle"
     ]
 
-    scene = 'FloorPlan_Train12_5'
-    def run(contoller):
-        pprint("demo")
-        episodes = [
-            {
-                'path': [
-                    {'x': 4.0, 'y': 0.02901104, 'z': -1.5},
-                    {'x': 2.275, 'y': 0.02901104, 'z': -1.750001},
-                    {'x': 2.1583333, 'y': 0.02901104, 'z': -1.86666679},
-                    {'x': 1.8083334, 'y': 0.02901104, 'z': -3.208334},
-                    {'x': 1.8083334, 'y': 0.02901104, 'z': -3.90833378},
-                    {'x': 1.925, 'y': 0.02901104, 'z': -4.02500057},
-                    {'x': 2.275, 'y': 0.02901104, 'z': -4.14166737},
-                    {'x': 5.425, 'y': 0.02901104, 'z': -4.14166737},
-                    {'x': 5.75, 'y': 0.02901104, 'z': -4.0}
-                ],
-                'target_object_id': 'Television|+07.63|+00.49|-03.77',
-                'initial_position': {'x': 4.17, 'y': 1.02, 'z': -1.328},
-                'initial_rotation': {'x': 0, 'y': 0, 'z': 0},
-                'success': True,
-                'scene': scene
-            }
-        ]
+    if objects is not None:
+        obj_filter = set([o for o in objects.split[","]])
+        targets = [o for o in targets if o.replace(" ", "") in obj_filter]
 
-        # initialize_func = lambda: controller.step(
-        #     dict(
-        #         action='Initialize',
-        #         gridSize=0.25,
-        #         fieldOfView=60,
-        #         rotateStepDegrees=angle
-        #     )
-        # )
+    desired_points = 30
+    event = controller.step(
+        dict(
+            action='GetScenesInBuild',
+        )
+    )
+    scenes_in_build = event.metadata['actionReturn']
 
-        # controller.reset(scene)
+    objects_types_in_scene = set()
 
-        print("Before spl")
+    def sqr_dist(a, b):
+        x = a[0] - b[0]
+        z = a[2] - b[2]
+        return x * x + z * z
+
+    def sqr_dist_dict(a, b):
+        x = a['x'] - b['x']
+        z = a['z'] - b['z']
+        return x * x + z * z
+
+    def get_points(contoller, object_type, scene):
+        print("Getting points in scene: '{}'...: ".format(scene))
 
         event = controller.step(
             dict(
-                action='GetScenesInBuild',
-                gridSize=0.25,
-                fieldOfView=60,
-                rotateStepDegrees=angle
+                action='ObjectTypeToObjectIds',
+                objectType=object_type.replace(" ", "")
+            )
+        )
+        object_ids = event.metadata['actionReturn']
+
+        if object_ids is None or len(object_ids) > 1 or len(object_ids) == 0:
+            print("Object type '{}' not available in scene.".format(object_type))
+            return None
+
+        objects_types_in_scene.add(object_type)
+        object_id = object_ids[0]
+
+        event_reachable = controller.step(
+            dict(
+                action='GetReachablePositions'
             )
         )
 
-        print("Scenes in build: {}".format(event.metadata['actionReturn']))
+
+        target_position = controller.step(action='GetObjectPosition', objectId=object_id).metadata['actionReturn']
+
+        reachable_positions = event_reachable.metadata['actionReturn']
+
+        reachable_pos_set = set([
+            (pos['x'], pos['y'], pos['z']) for pos in reachable_positions
+            # if sqr_dist_dict(pos, target_position) >= visibility_distance * visibility_multiplier_filter
+        ])
 
 
 
-        episodes_with_gold = metrics.get_episodes_with_shortest_paths(
-            controller,
-            episodes
+        def filter_points(selected_points, point_set, minimum_distance):
+            result = set()
+            for selected in selected_points:
+                if selected in point_set:
+                    result.add(selected)
+                    remove_set = set(
+                        [p for p in point_set if sqr_dist(p, selected) <= minimum_distance * minimum_distance]
+                    )
+                    point_set = point_set.difference(remove_set)
+            return result
+
+        import random
+        points = random.sample(reachable_pos_set, desired_points * 4)
+
+        final_point_set = filter_points(points, reachable_pos_set, gridSize * 2)
+
+        print("Total number of points: {}".format(len(final_point_set)))
+
+        print("Id {}".format(event.metadata['actionReturn']))
+
+
+
+
+        point_objects = []
+
+        eps = 0.0001
+        for (x, y, z) in final_point_set:
+            possible_orientations = [0, 90, 180, 270]
+            pos_unity = dict(x=x, y=y, z=z)
+            try:
+                path = metrics.get_shortest_path_to_object(
+                    controller,
+                    object_id,
+                    pos_unity,
+                    {'x': 0, 'y': 0, 'z': 0}
+                )
+                minimum_path_length = metrics.path_distance(path)
+
+                rotation_allowed = False
+                while not rotation_allowed:
+                    if len(possible_orientations) == 0:
+                        break
+                    roatation_y = random.choice(possible_orientations)
+                    possible_orientations.remove(roatation_y)
+                    evt = controller.step(
+                        action="TeleportFull",
+                        x=pos_unity['x'],
+                        y=pos_unity['y'],
+                        z=pos_unity['z'],
+                        rotation=dict(x=0, y=roatation_y, z=0)
+                    )
+                    rotation_allowed = evt.metadata['lastActionSuccess']
+                    if not evt.metadata['lastActionSuccess']:
+                        print(evt.metadata['errorMessage'])
+                        print("--------- Rotation not allowed! for pos {} rot {} ".format(pos_unity, roatation_y))
+
+                if minimum_path_length > eps and rotation_allowed:
+                    point_objects.append({
+                        'scene': scene,
+                        'object_type': object_type,
+                        'object_id': object_id,
+                        'target_position': target_position,
+                        'initial_position': pos_unity,
+                        'initial_orientation': roatation_y,
+                        'shortest_path': path,
+                        'shortest_path_length': minimum_path_length
+                    })
+
+            except ValueError:
+                print("-----Invalid path discarding point...")
+
+
+        sorted_objs = sorted(point_objects,
+                             key=lambda m: sqr_dist_dict(m['initial_position'], m['target_position']))
+        third = int(len(sorted_objs) / 3.0)
+
+        for i, obj in enumerate(sorted_objs):
+            if i < third:
+                level = 'easy'
+            elif i < 2 * third:
+                level = 'medium'
+            else:
+                level = 'hard'
+
+            sorted_objs[i]['difficulty'] = level
+
+        return sorted_objs
+
+    dataset = {}
+    dataset_flat = []
+
+    if intermediate_directory is not None:
+        if intermediate_directory != '.':
+            if os.path.exists(intermediate_directory):
+                shutil.rmtree(intermediate_directory)
+            os.makedirs(intermediate_directory)
+    import re
+
+    def key_sort_func(scene_name):
+        m = re.search('FloorPlan_([a-zA-Z\-]*)([0-9]+)_([0-9]+)', scene_name)
+        return m.group(1), int(m.group(2)), int(m.group(3))
+
+    scenes = sorted(
+        [scene for scene in scenes_in_build if 'physics' not in scene],
+                    key=key_sort_func
+                    )
+
+    print("Sorted scenes: {}".format(scenes))
+
+    scenes = scenes[:1]
+    targets = ["Bowl"]
+    for scene in scenes:
+        dataset[scene] = {}
+        dataset['object_types'] = targets
+        objects = []
+
+        # [t for t in targets if 'Basketball' in t]:
+        for objectType in targets:
+
+            dataset[scene][objectType] = []
+            obj = get_points(controller, objectType, scene)
+            if obj is not None:
+
+                objects = objects + obj
+
+        dataset_flat = dataset_flat + objects
+        if intermediate_directory != '.':
+            with open(os.path.join(intermediate_directory, '{}.json'.format(scene)), 'w') as f:
+                json.dump(obj, f, indent=4)
+
+
+    with open(os.path.join(intermediate_directory, output), 'w') as f:
+        json.dump(dataset_flat, f, indent=4)
+    print("Object types in scene union: {}".format(objects_types_in_scene))
+    print("Total unique objects: {}".format(len(objects_types_in_scene)))
+    print("Total scenes: {}".format(len(scenes)))
+    print("Total datapoints: {}".format(len(dataset_flat)))
+
+
+@task
+def test_point(context, object="Baseball Bat", editor_mode=False, local_build=False, visibility_distance=1.0):
+    p = dict(x=2.25, y=0.9103442, z=-2)
+    # p = dict(x=6, y=0.9103442, z=-1.25)
+
+    import ai2thor.controller
+    import ai2thor.util.metrics as metrics
+    import json
+    import re
+
+    scene = 'FloorPlan_Train1_1'
+    angle = 45
+    gridSize = 0.25
+    controller = ai2thor.controller.Controller(
+        width=300,
+        height=300,
+        local_executable_path=_local_build_path() if local_build else None,
+        start_unity=False if editor_mode else True,
+        scene=scene,
+        port=8200,
+        host='127.0.0.1',
+        # Unity params
+        gridSize=gridSize,
+        fieldOfView=60,
+        rotateStepDegrees=angle,
+        agentMode='bot',
+        visibilityDistance=visibility_distance,
+    )
+
+    object_type = object
+
+    event = controller.step(
+        dict(
+            action='ObjectTypeToObjectIds',
+            objectType=object_type.replace(" ", "")
         )
+    )
 
-        pprint("SPL: {}".format(episodes_with_gold))
-        spl_val = metrics.compute_spl(episodes_with_gold)
-        pprint("SPL: {}".format(spl_val))
+    print("Id {}".format(event.metadata['actionReturn']))
 
-        controller.stop()
+    object_id = event.metadata['actionReturn'][0]
 
-    run(controller)
+    # evt = controller.step(
+    #     action="TeleportFull",
+    #     x=p['x'],
+    #     y=p['y'],
+    #     z=p['z'],
+    #     rotation=dict(x=0, y=0, z=0)
+    # )
+
+    path = metrics.get_shortest_path_to_object(
+        controller,
+        object_id,
+        p,
+        {'x': 0, 'y': 0, 'z': 0}
+    )
+    minimum_path_length = metrics.path_distance(path)
+
+    print(path)
+    print(minimum_path_length)
+
+
+@task
+def filter_dataset(ctx, filename, filter, output_filename):
+    import json
+    from pprint import pprint
+    filter_set = filter.split(",")
+    with open(filename, 'r') as f:
+        obj = json.load(f)
+
+    targets = [
+        "Apple",
+        "Baseball Bat",
+        "Basketball",
+        "Bowl",
+        "Garbage Can",
+        "House Plant",
+        "Laptop",
+        "Mug",
+        "Remote",
+        "Spray Bottle",
+        "Vase",
+        "Alarm Clock",
+        "Television",
+        "Pillow",
+        "Bottle"
+    ]
+
+    counter = {}
+    for f in obj:
+        obj_type = f['object_type']
+
+        if f['scene'] not in counter:
+            counter[f['scene']] = {target: 0 for target in targets}
+        scene_counter = counter[f['scene']]
+        if obj_type not in scene_counter:
+            scene_counter[obj_type] = 1
+        else:
+            scene_counter[obj_type] += 1
+
+    # for f in obj:
+    #     obj_type = f['object_type']
+    #
+    #     if f['scene'] not in counter:
+    #         counter[f['scene']] = {}
+    #     scene_counter = counter[f['scene']]
+    #     if obj_type not in scene_counter:
+    #         scene_counter[obj_type] = 1
+    #     else:
+    #         scene_counter[obj_type] += 1
+
+    objects_with_zero = set()
+    objects_with_zero_by_obj = {}
+    for k, item in counter.items():
+        for obj_type, count in item.items():
+            if count == 0:
+                if obj_type not in objects_with_zero_by_obj:
+                    objects_with_zero_by_obj[obj_type] = set()
+                else:
+                    objects_with_zero_by_obj[obj_type].add(k)
+                objects_with_zero.add(obj_type)
+
+
+    print("Objects wuth zero: {}".format(objects_with_zero))
+    pprint(objects_with_zero_by_obj)
+    filtered = [o for o in obj if o['object_type'] not in objects_with_zero]
+
+    for i, o in enumerate(filtered):
+        o['id'] = i
+    with open(output_filename, 'w') as f:
+        json.dump(filtered, f, indent=4)
+    # pprint("counts\n {}".format(counter))

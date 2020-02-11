@@ -35,7 +35,7 @@ def compute_spl(episodes_with_golden):
     return eval_sum / N
 
 
-def get_shortest_path_to_object_in_current_context(
+def get_shortest_path_to_object(
         controller,
         object_id,
         initial_position,
@@ -66,7 +66,7 @@ def get_episodes_with_shortest_paths(controller, episodes, initialize_func=None)
             initialize_func()
 
         try:
-            episode['shortest_path'] = get_shortest_path_to_object_in_current_context(
+            episode['shortest_path'] = get_shortest_path_to_object(
                 controller,
                 episode['target_object_id'],
                 {

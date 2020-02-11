@@ -665,7 +665,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			}
 			catch (Exception e)
 			{
-				Debug.LogError("caught error with invoke");
+				Debug.LogError("Caught error with invoke for action: " + controlCommand.action);
+                Debug.LogError("Action error message: " + errorMessage);
 				Debug.LogError(e);
 
 				errorMessage += e.ToString();
