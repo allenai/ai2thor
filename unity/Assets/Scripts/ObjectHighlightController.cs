@@ -51,6 +51,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         private bool mouseDownThrow;
         private PhysicsRemoteFPSAgentController PhysicsController;
         private bool throwEnabled;
+
+        private float throwSliderValue = 0.0f;
         // Optimization
         private bool softHighlight = true;
 
@@ -60,10 +62,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         private bool disableHighlightShaderForObject = false;
 
+        private bool withHighlightShader = true;
+
 
         public ObjectHighlightController(
             PhysicsRemoteFPSAgentController physicsController,
             float minHighlightDistance,
+            bool highlightEnabled = true,
             bool throwEnabled = true,
             float maxThrowForce = 1000.0f,
             float maxChargeThrowSeconds = 1.4f,
@@ -74,6 +79,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             this.PhysicsController = physicsController;
             this.MinHighlightDistance = minHighlightDistance;
             this.MaxThrowForce = maxThrowForce;
+            this.withHighlightShader = highlightEnabled;
             this.MaxChargeThrowSeconds = maxChargeThrowSeconds;
             this.highlightWhileHolding = highlightWhileHolding;
             if (highlightConfig != null) {
@@ -86,7 +92,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             if (throwForceBar) {
                 ThrowForceBarSlider = throwForceBar.GetComponent<Slider>();
             }
-            this.throwEnabled = throwEnabled && throwForceBar != null;
+            this.throwEnabled = throwEnabled;
             this.highlightShader = Shader.Find("Custom/TransparentOutline");
         }
         
@@ -169,7 +175,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
 
             // Sets throw bar value
-            if (throwEnabled) {
+            if (throwEnabled && ThrowForceBarSlider != null) {
                 if (this.mouseDownThrow)
                 {
                     var diff = Time.time - this.timerAtPress;
@@ -255,7 +261,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     newHighlightedObject = simObj;
                     var mRenderer = newHighlightedObject.GetComponentInChildren<MeshRenderer>();
 
-                    var useHighlightShader = !(disableHighlightShaderForObject && simObj.uniqueID == this.onlyPickableObjectId);
+                    var useHighlightShader = !(disableHighlightShaderForObject && simObj.uniqueID == this.onlyPickableObjectId) && this.withHighlightShader;
                     
                     if (mRenderer != null && useHighlightShader)
                     {
@@ -290,7 +296,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     var mRenderer = this.highlightedObject.GetComponentInChildren<MeshRenderer>();
 
                     setTargetText("");
-                    var useHighlightShader = !(disableHighlightShaderForObject && highlightedObject.uniqueID == this.onlyPickableObjectId);
+                    var useHighlightShader = !(disableHighlightShaderForObject && highlightedObject.uniqueID == this.onlyPickableObjectId) && this.withHighlightShader;
 
                     if (mRenderer != null && useHighlightShader)
                     {
@@ -324,7 +330,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             if (DisplayTargetText && TargetText != null)
             {
-                this.TargetText.text = text;
+                //concatenate the name so just the object type is displayed, not the ugly list of letters/numbers (the unique string) after
+                this.TargetText.text = text.Split('_')[0];
             }
 
         }

@@ -224,7 +224,7 @@ def dump_scene_controller(base_dir, controller):
 
 def dump_scene(scene_name, base_dir, renderObjectImage=False, renderDepthImage=False, renderClassImage=False):
     controller = ai2thor.controller.Controller()
-    controller.start(player_screen_height=448, player_screen_width=448)
+    controller.start(height=448, width=448)
     controller.reset(scene_name) 
     event = controller.step(dict(action='Initialize', fieldOfView=90, gridSize=0.25, renderDepthImage=renderDepthImage, renderObjectImage=renderObjectImage, renderClassImage=renderClassImage))
     dump_scene_controller(base_dir, controller)

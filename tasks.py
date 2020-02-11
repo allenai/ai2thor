@@ -120,7 +120,7 @@ def class_dataset_images_for_scene(scene_name):
     # object must be at least 40% in view
     min_size = ((target_size * 0.4) / zoom_size) * player_size
 
-    env.start(player_screen_width=player_size, player_screen_height=player_size)
+    env.start(width=player_size, height=player_size)
     env.reset(scene_name)
     event = env.step(
         dict(
@@ -229,7 +229,7 @@ def class_dataset_images_for_scene(scene_name):
 
     env.stop()
     env = ai2thor.controller.Controller()
-    env.start(player_screen_width=zoom_size, player_screen_height=zoom_size)
+    env.start(width=zoom_size, height=zoom_size)
     env.reset(scene_name)
     event = env.step(dict(action="Initialize", gridSize=0.25))
 
@@ -652,7 +652,8 @@ def ci_build(context):
     try:
         fcntl.flock(lock_f, fcntl.LOCK_EX | fcntl.LOCK_NB)
         build = pending_travis_build()
-        if build:
+        blacklist_branches = ["vids"]
+        if build and build["branch"] not in blacklist_branches:
             clean()
             link_build_cache(build["branch"])
             subprocess.check_call("git fetch", shell=True)
@@ -825,10 +826,14 @@ def interact(
     depth_image=False,
     class_image=False,
     object_image=False,
+    metadata=False,
     robot=False,
     port=8200,
     host='127.0.0.1',
-    image_directory='.'
+    image_directory='.',
+    width=300,
+    height=300,
+    noise=False
 ):
     import ai2thor.controller
     import ai2thor.robot_controller
@@ -842,19 +847,20 @@ def interact(
         env = ai2thor.controller.Controller(
             host=host,
             port=port,
-            player_screen_width=600,
-            player_screen_height=600,
+            width=width,
+            height=height,
             local_executable_path=_local_build_path() if local_build else None,
             image_dir=image_directory,
             start_unity=False if editor_mode else True,
-            save_image_per_frame=True
+            save_image_per_frame=True,
+            add_depth_noise=noise
         )
     else:
         env = ai2thor.robot_controller.Controller(
             host=host,
             port=port,
-            player_screen_width=600,
-            player_screen_height=600,
+            width=width,
+            height=height,
             image_dir=image_directory,
             save_image_per_frame=True
         )
@@ -879,14 +885,16 @@ def interact(
         class_segmentation_frame=class_image,
         instance_segmentation_frame=object_image,
         color_frame=image,
-        depth_frame=depth_image
+        depth_frame=depth_image,
+        metadata=metadata
     )
 
     env.interact(
         class_segmentation_frame=class_image,
         instance_segmentation_frame=object_image,
         depth_frame=depth_image,
-        color_frame=image
+        color_frame=image,
+        metadata=metadata
     )
     env.stop()
 
@@ -898,11 +906,14 @@ def get_depth(
         depth_image=False,
         class_image=False,
         object_image=False,
+        metadata=False,
         port=8200,
         host='127.0.0.1',
         image_directory='.',
         number=1,
-        local_build=False
+        local_build=False,
+        teleport=None,
+        rotation=0
     ):
     import ai2thor.controller
     import ai2thor.robot_controller
@@ -917,16 +928,16 @@ def get_depth(
         env = ai2thor.robot_controller.Controller(
             host=host,
             port=port,
-            player_screen_width=600,
-            player_screen_height=600,
+            width=600,
+            height=600,
             image_dir=image_directory,
             save_image_per_frame=True
 
         )
     else:
         env = ai2thor.controller.Controller(
-            player_screen_width=600,
-            player_screen_height=600,
+            width=600,
+            height=600,
             local_executable_path=_local_build_path() if local_build else None
         )
 
@@ -941,7 +952,7 @@ def get_depth(
             renderClassImage=class_image,
             renderDepthImage=depth_image,
             agentMode="Bot",
-            fieldOfView=42.5,
+            fieldOfView=59,
             continuous=True,
             snapToGrid=False
         )
@@ -949,14 +960,24 @@ def get_depth(
 
     from ai2thor.interact import InteractiveControllerPrompt
     if scene is not None:
+        teleport_arg = dict(
+            action="TeleportFull",
+            y=0.9010001,
+            rotation=dict(x=0, y=rotation, z=0)
+        )
+        if teleport is not None:
+            teleport = [float(pos) for pos in teleport.split(',')]
+
+            t_size = len(teleport)
+            if 1 <= t_size:
+                teleport_arg['x'] = teleport[0]
+            if 2 <= t_size:
+                teleport_arg['z'] = teleport[1]
+            if 3 <= t_size:
+                teleport_arg['y'] = teleport[2]
+
         evt = env.step(
-            dict(
-                action="TeleportFull",
-                x=5.48,
-                y=0.9009997,
-                z=-23.021982,
-                rotation=dict(x=0, y=0, z=0)
-            )
+            teleport_arg
         )
 
         InteractiveControllerPrompt.write_image(
@@ -967,7 +988,8 @@ def get_depth(
             class_segmentation_frame=class_image,
             instance_segmentation_frame=object_image,
             color_frame=image,
-            depth_frame=depth_image
+            depth_frame=depth_image,
+            metadata=metadata
         )
 
     InteractiveControllerPrompt.write_image(
@@ -978,14 +1000,12 @@ def get_depth(
         class_segmentation_frame=class_image,
         instance_segmentation_frame=object_image,
         color_frame=image,
-        depth_frame=depth_image
+        depth_frame=depth_image,
+        metadata=metadata
     )
 
     for i in range(number):
         event = env.step(action='MoveAhead', moveMagnitude=0.0)
-
-        from pprint import pprint
-        pprint(event.metadata)
 
         InteractiveControllerPrompt.write_image(
             event,
@@ -995,12 +1015,13 @@ def get_depth(
             class_segmentation_frame=class_image,
             instance_segmentation_frame=object_image,
             color_frame=image,
-            depth_frame=depth_image
+            depth_frame=depth_image,
+            metadata=metadata
         )
     env.stop()
 
 @task
-def inspect_depth(ctx, directory, indices=None, jet=False, under_score=False):
+def inspect_depth(ctx, directory, all=False, indices=None, jet=False, under_score=False):
     import numpy as np
     import cv2
     import glob
@@ -1010,25 +1031,29 @@ def inspect_depth(ctx, directory, indices=None, jet=False, under_score=False):
     regex_str = "depth{}(.*)\.png".format(under_prefix)
 
     def sort_key_function(name):
-        x = re.search(regex_str, name).group(1)
+        split_name = name.split("/")
+        x = re.search(regex_str, split_name[len(split_name) - 1]).group(1)
         try:
             val = int(x)
             return val
         except ValueError:
             return -1
 
-    if indices is None:
+    if indices is None or all:
         images = sorted(
             glob.glob("{}/depth{}*.png".format(directory, under_prefix)),
             key=sort_key_function
         )
+        print(images)
     else:
         images = ["depth{}{}.png".format(under_prefix, i) for i in indices.split(",")]
 
     for depth_filename in images:
         # depth_filename = os.path.join(directory, "depth_{}.png".format(index))
 
-        index = re.search(regex_str, depth_filename).group(1)
+        split_fn = depth_filename.split("/")
+        index = re.search(regex_str, split_fn[len(split_fn) - 1]).group(1)
+        print("index {}".format(index))
         print("Inspecting: '{}'".format(depth_filename))
         depth_raw_filename = os.path.join(directory, "depth_raw{}{}.npy".format("_" if under_score else "", index))
         raw_depth = np.load(depth_raw_filename)
@@ -1057,6 +1082,138 @@ def inspect_depth(ctx, directory, indices=None, jet=False, under_score=False):
 
         cv2.imshow('image', img)
         cv2.waitKey(0)
+
+
+@task
+def real_2_sim(ctx, source_dir, index, scene, output_dir, rotation=0, local_build=False, jet=False):
+    import json
+    import numpy as np
+    import cv2
+    from ai2thor.util.transforms import transform_real_2_sim
+    depth_real_fn = os.path.join(source_dir, "depth_raw_{}.npy".format(index))
+    depth_metadata_fn = depth_real = os.path.join(source_dir, "metadata_{}.json".format(index))
+    color_real_fn = os.path.join(source_dir, "color_{}.png".format(index))
+    color_sim_fn = os.path.join(output_dir, "color_teleport.png".format(index))
+    with open(depth_metadata_fn, 'r') as f:
+        metadata = json.load(f)
+
+        pos = metadata['agent']['position']
+
+        sim_pos = transform_real_2_sim(pos)
+
+        teleport_arg = "{},{},{}".format(sim_pos['x'], sim_pos['z'], sim_pos['y'])
+
+        print(sim_pos)
+        print(teleport_arg)
+
+        inspect_depth(
+            ctx,
+            source_dir,
+            indices=index,
+            under_score=True,
+            jet=jet
+        )
+
+        get_depth(
+            ctx,
+            scene=scene,
+            image=True,
+            depth_image=True,
+            class_image=False,
+            object_image=False,
+            metadata=True,
+            image_directory=output_dir,
+            number=1,
+            local_build=local_build,
+            teleport=teleport_arg,
+            rotation=rotation
+        )
+
+        im = cv2.imread(color_real_fn)
+        cv2.imshow("color_real.png", im)
+
+        im2 = cv2.imread(color_sim_fn)
+        cv2.imshow("color_sim.png", im2)
+
+        inspect_depth(
+            ctx,
+            output_dir,
+            indices="teleport",
+            under_score=True,
+            jet=jet
+        )
+
+@task
+def noise_depth(ctx, directory, show=False):
+    import glob
+    import cv2
+    import numpy as np
+
+    def imshow_components(labels):
+        # Map component labels to hue val
+        label_hue = np.uint8(179 * labels / np.max(labels))
+        blank_ch = 255 * np.ones_like(label_hue)
+        labeled_img = cv2.merge([label_hue, blank_ch, blank_ch])
+
+        # cvt to BGR for display
+        labeled_img = cv2.cvtColor(labeled_img, cv2.COLOR_HSV2BGR)
+
+        # set bg label to black
+        labeled_img[label_hue == 0] = 0
+
+        if show:
+            cv2.imshow('labeled.png', labeled_img)
+            cv2.waitKey()
+
+    images = glob.glob("{}/depth_*.png".format(directory))
+
+    indices = []
+    for image_file in images:
+        print(image_file)
+
+        grayscale_img = cv2.imread(image_file, 0)
+        img = grayscale_img
+
+        img_size = img.shape
+
+        img = cv2.threshold(img, 30, 255, cv2.THRESH_BINARY_INV)[1]
+
+        ret, labels = cv2.connectedComponents(img)
+        print("Components: {}".format(ret))
+        imshow_components(labels)
+        print(img_size[0])
+
+        indices_top_left = np.where(labels == labels[0][0])
+        indices_top_right = np.where(labels == labels[0][img_size[1]-1])
+        indices_bottom_left = np.where(labels == labels[img_size[0]-1][0])
+        indices_bottom_right = np.where(labels == labels[img_size[0]-1][img_size[1] - 1])
+
+        indices = [
+             indices_top_left,
+             indices_top_right,
+             indices_bottom_left,
+             indices_bottom_right
+        ]
+
+        blank_image = np.zeros((300, 300, 1), np.uint8)
+
+        blank_image.fill(255)
+        blank_image[indices_top_left] = 0
+        blank_image[indices_top_right] = 0
+        blank_image[indices_bottom_left] = 0
+        blank_image[indices_bottom_right] = 0
+
+        if show:
+            cv2.imshow('labeled.png', blank_image)
+            cv2.waitKey()
+        break
+
+    compressed = []
+    for indices_arr in indices:
+        unique_e, counts = np.unique(indices_arr[0], return_counts=True)
+        compressed.append(counts)
+
+    np.save("depth_noise", compressed)
 
 @task
 def release(ctx):
@@ -1212,11 +1369,11 @@ def benchmark(
         env.start(
             8200,
             False,
-            player_screen_width=screen_width,
-            player_screen_height=screen_height,
+            width=screen_width,
+            height=screen_height,
         )
     else:
-        env.start(player_screen_width=screen_width, player_screen_height=screen_height)
+        env.start(width=screen_width, height=screen_height)
     # Kitchens:       FloorPlan1 - FloorPlan30
     # Living rooms:   FloorPlan201 - FloorPlan230
     # Bedrooms:       FloorPlan301 - FloorPlan330
@@ -1579,3 +1736,393 @@ def start_mock_real_server(context):
     m = ai2thor.mock_real_server.MockServer(height=300, width=300)
     print("Started mock server on port: http://" + m.host + ":" + str(m.port))
     m.start()
+
+
+@task
+def create_dataset(
+        context,
+        local_build=False,
+        editor_mode=False,
+        width=300,
+        height=300,
+        output='robothor-dataset.json',
+        intermediate_directory='.',
+        visibility_distance=1,
+        objects=None,
+        scenes=None
+    ):
+    import ai2thor.controller
+    import ai2thor.util.metrics as metrics
+    import json
+    import re
+
+    scene = 'FloorPlan_Train1_1'
+    angle = 45
+    gridSize = 0.25
+    # Restrict points visibility_multiplier_filter * visibility_distance away from the target object
+    visibility_multiplier_filter = 2
+    controller = ai2thor.controller.Controller(
+        width=width,
+        height=height,
+        local_executable_path=_local_build_path() if local_build else None,
+        start_unity=False if editor_mode else True,
+        scene=scene,
+        port=8200,
+        host='127.0.0.1',
+        # Unity params
+        gridSize=gridSize,
+        fieldOfView=60,
+        rotateStepDegrees=angle,
+        agentMode='bot',
+        visibilityDistance=visibility_distance,
+    )
+
+    targets = [
+        "Apple",
+        "Baseball Bat",
+        "Basketball",
+        "Bowl",
+        "Garbage Can",
+        "House Plant",
+        "Laptop",
+        "Mug",
+        "Remote",
+        "Spray Bottle",
+        "Vase",
+        "Alarm Clock",
+        "Television",
+        "Pillow",
+        "Bottle"
+    ]
+
+    if objects is not None:
+        obj_filter = set([o for o in objects.split[","]])
+        targets = [o for o in targets if o.replace(" ", "") in obj_filter]
+
+    desired_points = 30
+    event = controller.step(
+        dict(
+            action='GetScenesInBuild',
+        )
+    )
+    scenes_in_build = event.metadata['actionReturn']
+
+    objects_types_in_scene = set()
+
+    def sqr_dist(a, b):
+        x = a[0] - b[0]
+        z = a[2] - b[2]
+        return x * x + z * z
+
+    def sqr_dist_dict(a, b):
+        x = a['x'] - b['x']
+        z = a['z'] - b['z']
+        return x * x + z * z
+
+    def get_points(contoller, object_type, scene):
+        print("Getting points in scene: '{}'...: ".format(scene))
+
+        event = controller.step(
+            dict(
+                action='ObjectTypeToObjectIds',
+                objectType=object_type.replace(" ", "")
+            )
+        )
+        object_ids = event.metadata['actionReturn']
+
+        if object_ids is None or len(object_ids) > 1 or len(object_ids) == 0:
+            print("Object type '{}' not available in scene.".format(object_type))
+            return None
+
+        objects_types_in_scene.add(object_type)
+        object_id = object_ids[0]
+
+        event_reachable = controller.step(
+            dict(
+                action='GetReachablePositions'
+            )
+        )
+
+
+        target_position = controller.step(action='GetObjectPosition', objectId=object_id).metadata['actionReturn']
+
+        reachable_positions = event_reachable.metadata['actionReturn']
+
+        reachable_pos_set = set([
+            (pos['x'], pos['y'], pos['z']) for pos in reachable_positions
+            # if sqr_dist_dict(pos, target_position) >= visibility_distance * visibility_multiplier_filter
+        ])
+
+
+
+        def filter_points(selected_points, point_set, minimum_distance):
+            result = set()
+            for selected in selected_points:
+                if selected in point_set:
+                    result.add(selected)
+                    remove_set = set(
+                        [p for p in point_set if sqr_dist(p, selected) <= minimum_distance * minimum_distance]
+                    )
+                    point_set = point_set.difference(remove_set)
+            return result
+
+        import random
+        points = random.sample(reachable_pos_set, desired_points * 4)
+
+        final_point_set = filter_points(points, reachable_pos_set, gridSize * 2)
+
+        print("Total number of points: {}".format(len(final_point_set)))
+
+        print("Id {}".format(event.metadata['actionReturn']))
+
+
+
+
+        point_objects = []
+
+        eps = 0.0001
+        for (x, y, z) in final_point_set:
+            possible_orientations = [0, 90, 180, 270]
+            pos_unity = dict(x=x, y=y, z=z)
+            try:
+                path = metrics.get_shortest_path_to_object(
+                    controller,
+                    object_id,
+                    pos_unity,
+                    {'x': 0, 'y': 0, 'z': 0}
+                )
+                minimum_path_length = metrics.path_distance(path)
+
+                rotation_allowed = False
+                while not rotation_allowed:
+                    if len(possible_orientations) == 0:
+                        break
+                    roatation_y = random.choice(possible_orientations)
+                    possible_orientations.remove(roatation_y)
+                    evt = controller.step(
+                        action="TeleportFull",
+                        x=pos_unity['x'],
+                        y=pos_unity['y'],
+                        z=pos_unity['z'],
+                        rotation=dict(x=0, y=roatation_y, z=0)
+                    )
+                    rotation_allowed = evt.metadata['lastActionSuccess']
+                    if not evt.metadata['lastActionSuccess']:
+                        print(evt.metadata['errorMessage'])
+                        print("--------- Rotation not allowed! for pos {} rot {} ".format(pos_unity, roatation_y))
+
+                if minimum_path_length > eps and rotation_allowed:
+                    point_objects.append({
+                        'scene': scene,
+                        'object_type': object_type,
+                        'object_id': object_id,
+                        'target_position': target_position,
+                        'initial_position': pos_unity,
+                        'initial_orientation': roatation_y,
+                        'shortest_path': path,
+                        'shortest_path_length': minimum_path_length
+                    })
+
+            except ValueError:
+                print("-----Invalid path discarding point...")
+
+
+        sorted_objs = sorted(point_objects,
+                             key=lambda m: sqr_dist_dict(m['initial_position'], m['target_position']))
+        third = int(len(sorted_objs) / 3.0)
+
+        for i, obj in enumerate(sorted_objs):
+            if i < third:
+                level = 'easy'
+            elif i < 2 * third:
+                level = 'medium'
+            else:
+                level = 'hard'
+
+            sorted_objs[i]['difficulty'] = level
+
+        return sorted_objs
+
+    dataset = {}
+    dataset_flat = []
+
+    if intermediate_directory is not None:
+        if intermediate_directory != '.':
+            if os.path.exists(intermediate_directory):
+                shutil.rmtree(intermediate_directory)
+            os.makedirs(intermediate_directory)
+    import re
+
+    def key_sort_func(scene_name):
+        m = re.search('FloorPlan_([a-zA-Z\-]*)([0-9]+)_([0-9]+)', scene_name)
+        return m.group(1), int(m.group(2)), int(m.group(3))
+
+    scenes = sorted(
+        [scene for scene in scenes_in_build if 'physics' not in scene],
+                    key=key_sort_func
+                    )
+
+    print("Sorted scenes: {}".format(scenes))
+
+    scenes = scenes[:1]
+    targets = ["Bowl"]
+    for scene in scenes:
+        dataset[scene] = {}
+        dataset['object_types'] = targets
+        objects = []
+
+        # [t for t in targets if 'Basketball' in t]:
+        for objectType in targets:
+
+            dataset[scene][objectType] = []
+            obj = get_points(controller, objectType, scene)
+            if obj is not None:
+
+                objects = objects + obj
+
+        dataset_flat = dataset_flat + objects
+        if intermediate_directory != '.':
+            with open(os.path.join(intermediate_directory, '{}.json'.format(scene)), 'w') as f:
+                json.dump(obj, f, indent=4)
+
+
+    with open(os.path.join(intermediate_directory, output), 'w') as f:
+        json.dump(dataset_flat, f, indent=4)
+    print("Object types in scene union: {}".format(objects_types_in_scene))
+    print("Total unique objects: {}".format(len(objects_types_in_scene)))
+    print("Total scenes: {}".format(len(scenes)))
+    print("Total datapoints: {}".format(len(dataset_flat)))
+
+
+@task
+def test_point(context, object="Baseball Bat", editor_mode=False, local_build=False, visibility_distance=1.0):
+    p = dict(x=2.25, y=0.9103442, z=-2)
+    # p = dict(x=6, y=0.9103442, z=-1.25)
+
+    import ai2thor.controller
+    import ai2thor.util.metrics as metrics
+    import json
+    import re
+
+    scene = 'FloorPlan_Train1_1'
+    angle = 45
+    gridSize = 0.25
+    controller = ai2thor.controller.Controller(
+        width=300,
+        height=300,
+        local_executable_path=_local_build_path() if local_build else None,
+        start_unity=False if editor_mode else True,
+        scene=scene,
+        port=8200,
+        host='127.0.0.1',
+        # Unity params
+        gridSize=gridSize,
+        fieldOfView=60,
+        rotateStepDegrees=angle,
+        agentMode='bot',
+        visibilityDistance=visibility_distance,
+    )
+
+    object_type = object
+
+    event = controller.step(
+        dict(
+            action='ObjectTypeToObjectIds',
+            objectType=object_type.replace(" ", "")
+        )
+    )
+
+    print("Id {}".format(event.metadata['actionReturn']))
+
+    object_id = event.metadata['actionReturn'][0]
+
+    # evt = controller.step(
+    #     action="TeleportFull",
+    #     x=p['x'],
+    #     y=p['y'],
+    #     z=p['z'],
+    #     rotation=dict(x=0, y=0, z=0)
+    # )
+
+    path = metrics.get_shortest_path_to_object(
+        controller,
+        object_id,
+        p,
+        {'x': 0, 'y': 0, 'z': 0}
+    )
+    minimum_path_length = metrics.path_distance(path)
+
+    print(path)
+    print(minimum_path_length)
+
+
+@task
+def filter_dataset(ctx, filename, filter, output_filename):
+    import json
+    from pprint import pprint
+    filter_set = filter.split(",")
+    with open(filename, 'r') as f:
+        obj = json.load(f)
+
+    targets = [
+        "Apple",
+        "Baseball Bat",
+        "Basketball",
+        "Bowl",
+        "Garbage Can",
+        "House Plant",
+        "Laptop",
+        "Mug",
+        "Remote",
+        "Spray Bottle",
+        "Vase",
+        "Alarm Clock",
+        "Television",
+        "Pillow",
+        "Bottle"
+    ]
+
+    counter = {}
+    for f in obj:
+        obj_type = f['object_type']
+
+        if f['scene'] not in counter:
+            counter[f['scene']] = {target: 0 for target in targets}
+        scene_counter = counter[f['scene']]
+        if obj_type not in scene_counter:
+            scene_counter[obj_type] = 1
+        else:
+            scene_counter[obj_type] += 1
+
+    # for f in obj:
+    #     obj_type = f['object_type']
+    #
+    #     if f['scene'] not in counter:
+    #         counter[f['scene']] = {}
+    #     scene_counter = counter[f['scene']]
+    #     if obj_type not in scene_counter:
+    #         scene_counter[obj_type] = 1
+    #     else:
+    #         scene_counter[obj_type] += 1
+
+    objects_with_zero = set()
+    objects_with_zero_by_obj = {}
+    for k, item in counter.items():
+        for obj_type, count in item.items():
+            if count == 0:
+                if obj_type not in objects_with_zero_by_obj:
+                    objects_with_zero_by_obj[obj_type] = set()
+                else:
+                    objects_with_zero_by_obj[obj_type].add(k)
+                objects_with_zero.add(obj_type)
+
+
+    print("Objects wuth zero: {}".format(objects_with_zero))
+    pprint(objects_with_zero_by_obj)
+    filtered = [o for o in obj if o['object_type'] not in objects_with_zero]
+
+    for i, o in enumerate(filtered):
+        o['id'] = i
+    with open(output_filename, 'w') as f:
+        json.dump(filtered, f, indent=4)
+    # pprint("counts\n {}".format(counter))

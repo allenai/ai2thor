@@ -33,7 +33,7 @@ public int objectVariation;
             Cursor.lockState = CursorLockMode.None;
             Debug_Canvas.GetComponent<Canvas>().enabled = true; 
 
-            highlightController = new ObjectHighlightController(PhysicsController, PhysicsController.maxVisibleDistance, false, 0, 0, true);
+            highlightController = new ObjectHighlightController(PhysicsController, PhysicsController.maxVisibleDistance, true, false, 0, 0, true);
             highlightController.SetDisplayTargetText(false);
 
             // SpawnObjectToHide("{\"objectType\": \"Plunger\", \"objectVariation\": 1}");

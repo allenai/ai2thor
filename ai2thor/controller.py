@@ -29,6 +29,7 @@ import uuid
 import tty
 import sys
 import termios
+import fcntl
 try:
     from queue import Queue
 except ImportError:
@@ -364,22 +365,10 @@ def distance(point1, point2):
 def key_for_point(x, z):
     return "%0.1f %0.1f" % (x, z)
 
-#
-# class AbstractController(object):
-#     @object.abstractmethod
-#     def start(
-#             self,
-#             port=0,
-#             start_unity=True,
-#             player_screen_width=300,
-#             player_screen_height=300,
-#             x_display=None,
-#             host='127.0.0.1'):
-#         pass
-
 class Controller(object):
 
-    def __init__(self,
+    def __init__(
+            self,
             quality=DEFAULT_QUALITY,
             fullscreen=False,
             headless=False,
@@ -393,17 +382,22 @@ class Controller(object):
             scene='FloorPlan_Train1_1',
             image_dir='.',
             save_image_per_frame=False,
+            docker_enabled=False,
             depth_format=DepthFormat.Meters,
-            **unity_initialization_parameters):
+            add_depth_noise=False,
+            download_only=False,
+            **unity_initialization_parameters
+    ):
         self.request_queue = Queue(maxsize=1)
         self.response_queue = Queue(maxsize=1)
         self.receptacle_nearest_pivot_points = {}
         self.server = None
         self.unity_pid = None
-        self.docker_enabled = False
+        self.docker_enabled = docker_enabled
         self.container_id = None
         self.local_executable_path = local_executable_path
         self.last_event = None
+        self._scenes_in_build = None
         self.server_thread = None
         self.killing_unity = False
         self.quality = quality
@@ -411,6 +405,7 @@ class Controller(object):
         self.fullscreen = fullscreen
         self.headless = headless
         self.depth_format = depth_format
+        self.add_depth_noise = add_depth_noise
 
         self.interactive_controller = InteractiveControllerPrompt(
             list(DefaultActions),
@@ -419,26 +414,30 @@ class Controller(object):
             image_per_frame=save_image_per_frame
         )
 
-        self.start(
-            port=port,
-            start_unity=start_unity,
-            player_screen_width=width,
-            player_screen_height=height,
-            x_display=x_display,
-            host=host
-        )
 
-        self.initialization_parameters = unity_initialization_parameters
-        event = self.reset(scene)
-        if event.metadata['lastActionSuccess']:
-            init_return = event.metadata['actionReturn']
-            self.server.set_init_params(init_return)
-
-            print("Initialize return: {}".format(init_return))
+        if download_only:
+            self.download_binary()
         else:
-            raise RuntimeError('Initialize action failure: {}'.format(
-                event.metadata['errorMessage'])
+            self.start(
+                port=port,
+                start_unity=start_unity,
+                width=width,
+                height=height,
+                x_display=x_display,
+                host=host
             )
+
+            self.initialization_parameters = unity_initialization_parameters
+            event = self.reset(scene)
+            if event.metadata['lastActionSuccess']:
+                init_return = event.metadata['actionReturn']
+                self.server.set_init_params(init_return)
+
+                print("Initialize return: {}".format(init_return))
+            else:
+                raise RuntimeError('Initialize action failure: {}'.format(
+                    event.metadata['errorMessage'])
+                )
 
     def __enter__(self):
         return self
@@ -446,9 +445,32 @@ class Controller(object):
     def __exit__(self, *args):
         self.stop()
 
+    @property
+    def scenes_in_build(self):
+        if self._scenes_in_build:
+            return self._scenes_in_build
+
+        event = self.step(action='GetScenesInBuild')
+
+        self._scenes_in_build = set(event.metadata['actionReturn'])
+
+        return self._scenes_in_build
+
     def reset(self, scene='FloorPlan_Train1_1'):
         if re.match(r'^FloorPlan[0-9]+$', scene):
             scene = scene + "_physics"
+
+        if scene not in self.scenes_in_build:
+            def key_sort_func(scene_name):
+                m = re.search('FloorPlan[_]?([a-zA-Z\-]*)([0-9]+)_?([0-9]+)?.*$', scene_name)
+                last_val = m.group(3) if m.group(3) is not None else -1
+                return m.group(1), int(m.group(2)), int(last_val)
+            raise ValueError(
+                "\nScene not contained in build (scene names are case sensitive)."
+                "\nPlease choose one of the following scene names:\n\n{}".format(
+                    ", ".join(sorted(list(self.scenes_in_build), key=key_sort_func))
+                )
+            )
 
         self.response_queue.put_nowait(dict(action='Reset', sceneName=scene, sequenceId=0))
         self.last_event = queue_get(self.request_queue)  # can this be deleted?
@@ -567,14 +589,16 @@ class Controller(object):
                  class_segmentation_frame=False,
                  instance_segmentation_frame=False,
                  depth_frame=False,
-                 color_frame=False
+                 color_frame=False,
+                 metadata=False
                  ):
         self.interactive_controller.interact(
             self,
             class_segmentation_frame,
             instance_segmentation_frame,
             depth_frame,
-            color_frame
+            color_frame,
+            metadata
         )
 
     def multi_step_physics(self, action, timeStep=0.05, max_steps=20):
@@ -778,39 +802,59 @@ class Controller(object):
         tmp_dir = os.path.join(self.base_dir(), 'tmp')
         makedirs(self.releases_dir())
         makedirs(tmp_dir)
+        download_lf = open(os.path.join(tmp_dir, self.build_name(url) + ".lock"), "w")
+        try:
+            fcntl.flock(download_lf, fcntl.LOCK_EX)
 
-        if not os.path.isfile(self.executable_path()):
-            zip_data = ai2thor.downloader.download(
-                url,
-                self.build_name(),
-                sha256_build)
+            if not os.path.isfile(self.executable_path()):
+                zip_data = ai2thor.downloader.download(
+                    url,
+                    self.build_name(),
+                    sha256_build)
 
-            z = zipfile.ZipFile(io.BytesIO(zip_data))
-            # use tmpdir instead or a random number
-            extract_dir = os.path.join(tmp_dir, self.build_name())
-            logger.debug("Extracting zipfile %s" % os.path.basename(url))
-            z.extractall(extract_dir)
-            os.rename(extract_dir, os.path.join(self.releases_dir(), self.build_name()))
-            # we can lose the executable permission when unzipping a build
-            os.chmod(self.executable_path(), 0o755)
-        else:
-            logger.debug("%s exists - skipping download" % self.executable_path())
+                z = zipfile.ZipFile(io.BytesIO(zip_data))
+                # use tmpdir instead or a random number
+                extract_dir = os.path.join(tmp_dir, self.build_name())
+                logger.debug("Extracting zipfile %s" % os.path.basename(url))
+                z.extractall(extract_dir)
+                os.rename(extract_dir, os.path.join(self.releases_dir(), self.build_name()))
+                # we can lose the executable permission when unzipping a build
+                os.chmod(self.executable_path(), 0o755)
+            else:
+                logger.debug("%s exists - skipping download" % self.executable_path())
+
+        finally:
+            fcntl.flock(download_lf, fcntl.LOCK_UN)
+            download_lf.close()
 
     def start(
             self,
             port=0,
             start_unity=True,
-            player_screen_width=300,
-            player_screen_height=300,
+            width=300,
+            height=300,
             x_display=None,
-            host='127.0.0.1'):
+            host='127.0.0.1',
+            player_screen_width=None,
+            player_screen_height=None
+    ):
 
         if 'AI2THOR_VISIBILITY_DISTANCE' in os.environ:
             import warnings
             warnings.warn("AI2THOR_VISIBILITY_DISTANCE environment variable is deprecated, use \
                 the parameter visibilityDistance parameter with the Initialize action instead")
 
-        if player_screen_height < 300 or player_screen_width < 300:
+        if player_screen_width is not None:
+            warnings.warn("'player_screen_width' parameter is deprecated, use the 'width'"
+                          " parameter instead.")
+            width = player_screen_width
+
+        if player_screen_height is not None:
+            warnings.warn("'player_screen_height' parameter is deprecated, use the 'height'"
+                          " parameter instead.")
+            height = player_screen_height
+
+        if height < 300 or width < 300:
             raise Exception("Screen resolution must be >= 300x300")
 
         if self.server_thread is not None:
@@ -834,7 +878,10 @@ class Controller(object):
             self.response_queue,
             host,
             port=port,
-            depth_format=self.depth_format
+            depth_format=self.depth_format,
+            add_depth_noise=self.add_depth_noise,
+            width=width,
+            height=height
         )
 
         _, port = self.server.wsgi_server.socket.getsockname()
@@ -865,7 +912,7 @@ class Controller(object):
 
             unity_thread = threading.Thread(
                 target=self._start_unity_thread,
-                args=(env, player_screen_width, player_screen_height, host, port, image_name))
+                args=(env, width, height, host, port, image_name))
             unity_thread.daemon = True
             unity_thread.start()
 
