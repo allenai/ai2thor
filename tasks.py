@@ -1995,18 +1995,15 @@ def create_dataset(
 
 
 @task
-def test_point(context, object="Baseball Bat", editor_mode=False, local_build=False, visibility_distance=1.0):
-    p = dict(x=2.25, y=0.9103442, z=-2)
-    # p = dict(x=6, y=0.9103442, z=-1.25)
+def path_to_object(context, scene, object, x, z, y=0.9103442, rotation=0, editor_mode=False, local_build=False, visibility_distance=1.0, grid_size=0.25):
+    p = dict(x=x, y=y, z=z)
 
     import ai2thor.controller
     import ai2thor.util.metrics as metrics
-    import json
-    import re
 
-    scene = 'FloorPlan_Train1_1'
+    scene = scene
     angle = 45
-    gridSize = 0.25
+    gridSize = grid_size
     controller = ai2thor.controller.Controller(
         width=300,
         height=300,
@@ -2022,38 +2019,16 @@ def test_point(context, object="Baseball Bat", editor_mode=False, local_build=Fa
         agentMode='bot',
         visibilityDistance=visibility_distance,
     )
-
-    object_type = object
-
-    event = controller.step(
-        dict(
-            action='ObjectTypeToObjectIds',
-            objectType=object_type.replace(" ", "")
-        )
-    )
-
-    print("Id {}".format(event.metadata['actionReturn']))
-
-    object_id = event.metadata['actionReturn'][0]
-
-    # evt = controller.step(
-    #     action="TeleportFull",
-    #     x=p['x'],
-    #     y=p['y'],
-    #     z=p['z'],
-    #     rotation=dict(x=0, y=0, z=0)
-    # )
-
-    path = metrics.get_shortest_path_to_object(
+    path = metrics.get_shortest_path_to_object_type(
         controller,
-        object_id,
+        object,
         p,
         {'x': 0, 'y': 0, 'z': 0}
     )
     minimum_path_length = metrics.path_distance(path)
 
-    print(path)
-    print(minimum_path_length)
+    print("Path: {}".format(path))
+    print("Path lenght: {}".format(minimum_path_length))
 
 
 @task
