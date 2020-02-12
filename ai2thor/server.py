@@ -354,18 +354,19 @@ class MultipartFormParser(object):
         self.form = {}
         self.files = {}
 
-        full_boundary = b'\r\n--' + boundary
+        full_boundary = b'--' + boundary 
+        mid_boundary = b'\r\n' + full_boundary
         view = memoryview(data)
-        i = data.find(full_boundary)
+        i = data.find(full_boundary) + len(full_boundary)
         while i >= 0:
-            next_offset = data.find(full_boundary, i + len(full_boundary))
+            next_offset = data.find(mid_boundary, i)
             if next_offset < 0:
                 break
-            headers_offset = i + len(full_boundary) + 2
+            headers_offset = i + 2 # add 2 for CRLF
             body_offset = data.find(b'\r\n\r\n', headers_offset)
             raw_headers = view[headers_offset: body_offset]
             body = view[body_offset + 4: next_offset]
-            i = next_offset
+            i = next_offset + len(mid_boundary)
 
             headers = {}
             for header in raw_headers.tobytes().decode('ascii').strip().split("\r\n"):
