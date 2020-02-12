@@ -87,6 +87,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             new Vector3(-float.PositiveInfinity, -float.PositiveInfinity, -float.PositiveInfinity)
         );
 
+        public GameObject[] TargetCircles = null;
+
+        #if UNITY_EDITOR
+        private List<Bounds> gizmobounds = new List<Bounds>();
+        #endif
+
         //change visibility check to use this distance when looking down
         //protected float DownwardViewDistance = 2.0f;
 
@@ -347,15 +353,22 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             objMeta.isMoving = simObj.inMotion;//keep track of if this object is actively moving
 
-            if(simObj.PrimaryProperty == SimObjPrimaryProperty.CanPickup)// || simObj.PrimaryProperty == SimObjPrimaryProperty.Moveable)
-            objMeta.objectBounds = WorldCoordinatesOfBoundingBox(simObj);
+            if(simObj.PrimaryProperty == SimObjPrimaryProperty.CanPickup) //|| simObj.PrimaryProperty == SimObjPrimaryProperty.Moveable) 
+            {
+                objMeta.objectOrientedBoundingBox = GenerateObjectOrientedBoundingBox(simObj);
+            }
+            
+            //return world axis aligned bounds for this sim object
+            objMeta.axisAlignedBoundingBox = GenerateAxisAlignedBoundingBox(simObj);
 
             return objMeta;
         }
 
-        public WorldSpaceBounds WorldCoordinatesOfBoundingBox(SimObjPhysics sop)
+        //generates an object oriented bounding box that encapsulates the sim object
+        //currently only works for Pickupable sim objects
+        public ObjectOrientedBoundingBox GenerateObjectOrientedBoundingBox(SimObjPhysics sop)
         {
-            WorldSpaceBounds b = new WorldSpaceBounds();
+            ObjectOrientedBoundingBox b = new ObjectOrientedBoundingBox();
 
             if(sop.BoundingBox== null)
             {
@@ -364,7 +377,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
 
             BoxCollider col = sop.BoundingBox.GetComponent<BoxCollider>();
-            List<Vector3> corners = new List<Vector3>();
             
             Vector3 p0 = col.transform.TransformPoint(col.center + new Vector3(col.size.x, -col.size.y, col.size.z) * 0.5f);
             Vector3 p1 = col.transform.TransformPoint(col.center + new Vector3(-col.size.x, -col.size.y, col.size.z) * 0.5f);
@@ -375,18 +387,106 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             Vector3 p6 = col.transform.TransformPoint(col.center + new Vector3(-col.size.x, +col.size.y, -col.size.z) * 0.5f);
             Vector3 p7 = col.transform.TransformPoint(col.center + new Vector3(col.size.x, col.size.y, -col.size.z) * 0.5f);
 
+            b.cornerPoints[0,0] = p0.x;
+            b.cornerPoints[0,1] = p0.y;
+            b.cornerPoints[0,2] = p0.z;
 
-            corners.Add(p0);
-            corners.Add(p1);
-            corners.Add(p2);
-            corners.Add(p3);
-            corners.Add(p4);
-            corners.Add(p5);
-            corners.Add(p6);
-            corners.Add(p7);
+            b.cornerPoints[1,0] = p1.x;
+            b.cornerPoints[1,1] = p1.y;
+            b.cornerPoints[1,2] = p1.z;
 
-            b.objectBoundsCorners = corners.ToArray();
+            b.cornerPoints[2,0] = p2.x;
+            b.cornerPoints[2,1] = p2.y;
+            b.cornerPoints[2,2] = p2.z;
+
+            b.cornerPoints[3,0] = p3.x;
+            b.cornerPoints[3,1] = p3.y;
+            b.cornerPoints[3,2] = p3.z;
+
+            b.cornerPoints[4,0] = p4.x;
+            b.cornerPoints[4,1] = p4.y;
+            b.cornerPoints[4,2] = p4.z;
+
+            b.cornerPoints[5,0] = p5.x;
+            b.cornerPoints[5,1] = p5.y;
+            b.cornerPoints[5,2] = p5.z;
+
+            b.cornerPoints[6,0] = p6.x;
+            b.cornerPoints[6,1] = p6.y;
+            b.cornerPoints[6,2] = p6.z;
+
+            b.cornerPoints[7,0] = p7.x;
+            b.cornerPoints[7,1] = p7.y;
+            b.cornerPoints[7,2] = p7.z;
+
+            return b;
+        }
+
+        //generates a world space bounding box that enncapsulates all active Colliders (trigger and non trigger) for a sim obj
+        public AxisAlignedBoundingBox GenerateAxisAlignedBoundingBox(SimObjPhysics sop)
+        {
+
+            AxisAlignedBoundingBox b = new AxisAlignedBoundingBox();
+ 
+            //get all colliders on the sop, excluding colliders if they are not enabled
+            Collider[] cols = sop.GetComponentsInChildren<Collider>();
+
+            if(cols.Length == 0)
+            {
+                Debug.Log("Something went wrong, no Colliders were found on" + sop.name);
+                return b;
+            }
+
+            Bounds bounding = cols[0].bounds;//initialize the bounds to return with our first collider
+
+            foreach(Collider c in cols)
+            {
+                if(c.enabled)
+                bounding.Encapsulate(c.bounds);
+            }
+
+            #if UNITY_EDITOR
+            //debug draw stuff
+            if(!gizmobounds.Contains(bounding))
+            gizmobounds.Add(bounding);
+            #endif
+
+            //ok now we have a bounds that encapsulates all the colliders of the object, including trigger colliders
+            b.cornerPoints[0,0] = bounding.center.x + bounding.size.x/2f;
+            b.cornerPoints[0,1] = bounding.center.y + bounding.size.y/2f;
+            b.cornerPoints[0,2] = bounding.center.z + bounding.size.z/2f;
+
+            b.cornerPoints[1,0] = bounding.center.x + bounding.size.x/2f;
+            b.cornerPoints[1,1] = bounding.center.y + bounding.size.y/2f;
+            b.cornerPoints[1,2] = bounding.center.z - bounding.size.z/2f;
             
+            b.cornerPoints[2,0] = bounding.center.x + bounding.size.x/2f;
+            b.cornerPoints[2,1] = bounding.center.y - bounding.size.y/2f;
+            b.cornerPoints[2,2] = bounding.center.z + bounding.size.z/2f;
+
+            b.cornerPoints[3,0] = bounding.center.x + bounding.size.x/2f;
+            b.cornerPoints[3,1] = bounding.center.y - bounding.size.y/2f;
+            b.cornerPoints[3,2] = bounding.center.z - bounding.size.z/2f;
+
+            b.cornerPoints[4,0] = bounding.center.x - bounding.size.x/2f;
+            b.cornerPoints[4,1] = bounding.center.y + bounding.size.y/2f;
+            b.cornerPoints[4,2] = bounding.center.z + bounding.size.z/2f;
+    
+            b.cornerPoints[5,0] = bounding.center.x - bounding.size.x/2f;
+            b.cornerPoints[5,1] = bounding.center.y + bounding.size.y/2f;
+            b.cornerPoints[5,2] = bounding.center.z - bounding.size.z/2f;
+
+            b.cornerPoints[6,0] = bounding.center.x - bounding.size.x/2f;
+            b.cornerPoints[6,1] = bounding.center.y - bounding.size.y/2f;
+            b.cornerPoints[6,2] = bounding.center.z + bounding.size.z/2f;
+
+            b.cornerPoints[7,0] = bounding.center.x - bounding.size.x/2f;
+            b.cornerPoints[7,1] = bounding.center.y - bounding.size.y/2f;
+            b.cornerPoints[7,2] = bounding.center.z - bounding.size.z/2f;
+
+            b.center = bounding.center;//also return the center of this bounding box in world coordinates
+            b.size = bounding.size;//also return the size in the x, y, z axes of the bounding box in world coordinates
+
             return b;
         }
 
@@ -402,6 +502,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             int numObj = simObjects.Length;
             List<ObjectMetadata> metadata = new List<ObjectMetadata>();
             Dictionary<string, List<string>> parentReceptacles = new Dictionary<string, List<string>>();
+
+            #if UNITY_EDITOR
+            //debug draw bounds reset list
+            gizmobounds.Clear();
+            #endif
+
             for (int k = 0; k < numObj; k++) {
                 SimObjPhysics simObj = simObjects[k];
                 if (this.excludeObject(simObj.UniqueID)) {
@@ -8868,6 +8974,32 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
             actionFinished(true);
         }
+
+        #if UNITY_EDITOR
+        void OnDrawGizmos()
+        {
+            ////check for valid spawn points in GetSpawnCoordinatesAboveObject action
+            // Gizmos.color = Color.magenta;
+            // if(validpointlist.Count > 0)
+            // {
+            //     foreach(Vector3 yes in validpointlist)
+            //     {
+            //         Gizmos.DrawCube(yes, new Vector3(0.01f, 0.01f, 0.01f));
+            //     }
+            // }
+
+            //draw axis aligned bounds of objects after actionFinished() calls
+            if(gizmobounds != null)
+            {
+                Gizmos.color = Color.yellow;
+                foreach(Bounds g in gizmobounds)
+                {
+                    Gizmos.DrawWireCube(g.center, g.size);
+                }
+            }
+        }
+        #endif
+
     }
 
 }
