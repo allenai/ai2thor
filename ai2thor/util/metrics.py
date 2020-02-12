@@ -34,12 +34,12 @@ def compute_spl(episodes_with_golden):
         eval_sum += Si * (li / (max(pi, li)))
     return eval_sum / N
 
-
 def get_shortest_path_to_object(
         controller,
         object_id,
         initial_position,
-        initial_rotation):
+        initial_rotation
+    ):
     event = controller.step(
         dict(
             action='GetShortestPath',
@@ -56,6 +56,30 @@ def get_shortest_path_to_object(
                 object_id
             )
         )
+
+def get_shortest_path_to_object_type(
+        controller,
+        object_type,
+        initial_position,
+        initial_rotation
+):
+    event = controller.step(
+        dict(
+            action='GetShortestPath',
+            objectType=object_type,
+            position=initial_position,
+            roatation=initial_rotation
+        )
+    )
+    if event.metadata['lastActionSuccess']:
+        return event.metadata['actionReturn']['corners']
+    else:
+        raise ValueError(
+            "Unable to find shortest path for object type '{}'".format(
+                object_type
+            )
+        )
+
 
 
 def get_episodes_with_shortest_paths(controller, episodes, initialize_func=None):
