@@ -196,4 +196,20 @@ public static class UtilityFunctions {
              Mathf.Round(vector3.z * multiplier) / multiplier);
     }
 
+    public static Vector3[] CornerCoordinatesOfBoxColliderToWorld(BoxCollider b)
+    {
+        Vector3[] corners = new Vector3[8];
+
+        corners[0] = b.transform.TransformPoint(b.center + new Vector3(b.size.x, -b.size.y, b.size.z) * 0.5f);
+        corners[1] = b.transform.TransformPoint(b.center + new Vector3(-b.size.x, -b.size.y, b.size.z) * 0.5f);
+        corners[2] = b.transform.TransformPoint(b.center + new Vector3(-b.size.x, -b.size.y, -b.size.z) * 0.5f);
+        corners[3] = b.transform.TransformPoint(b.center + new Vector3(b.size.x, -b.size.y, -b.size.z) * 0.5f);
+
+        corners[4] = b.transform.TransformPoint(b.center + new Vector3(b.size.x, b.size.y, b.size.z) * 0.5f);
+        corners[5] = b.transform.TransformPoint(b.center + new Vector3(-b.size.x, b.size.y, b.size.z) * 0.5f);
+        corners[6] = b.transform.TransformPoint(b.center + new Vector3(-b.size.x, b.size.y, -b.size.z) * 0.5f);
+        corners[7] = b.transform.TransformPoint(b.center + new Vector3(b.size.x, b.size.y, -b.size.z) * 0.5f);
+
+        return corners;
+    }
 }

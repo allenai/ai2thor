@@ -1393,6 +1393,8 @@ MonoBehaviour:
   salientMaterials: 00000000
   CurrentTemperature: 0
   HowManySecondsUntilRoomTemp: 10
+  inMotion: 0
+  lastVelocity: 0
   ContainedObjectReferences: []
 --- !u!54 &54475193523946024
 Rigidbody:
@@ -1406,7 +1408,7 @@ Rigidbody:
   m_Drag: 0
   m_AngularDrag: 0
   m_UseGravity: 1
-  m_IsKinematic: 1
+  m_IsKinematic: 0
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
@@ -1427,6 +1429,7 @@ MonoBehaviour:
   DirtyPrefabToSwapTo: {fileID: 0}
   ImpulseThreshold: 4
   HighFrictionImpulseOffset: 2
+  readytobreak: 1
   broken: 0
   breakType: 0
   MaterialSwapObjects: []
@@ -2794,7 +2797,7 @@ GameObject:
   m_TagString: Structure
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
-  m_StaticEditorFlags: 4294967231
+  m_StaticEditorFlags: 0
   m_IsActive: 1
 --- !u!4 &4925504455527706
 Transform:

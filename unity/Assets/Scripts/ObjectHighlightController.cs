@@ -136,7 +136,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                             ServerAction action = new ServerAction
                             {
                                 action = actionName,
-                                objectId = closestObj.uniqueID
+                                objectId = closestObj.objectID
                             };
                             this.PhysicsController.ProcessControlCommand(action);
                         }
@@ -173,6 +173,42 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     // }
                 }
             }
+
+            //simulate TouchThenApply for in-editor debugging stuff
+            #if UNITY_EDITOR
+            if (Input.GetKeyDown(KeyCode.Mouse1)&& !Input.GetKey(KeyCode.LeftShift))
+            {
+                ServerAction dothis = new ServerAction();
+
+                dothis.action = "TouchThenApplyForce";
+                dothis.x = 0.5f;
+                dothis.y = 0.5f;
+                dothis.handDistance = 5.0f;
+                dothis.direction = new Vector3(0, 0.1f, 1);
+                dothis.moveMagnitude = 2000f;
+
+                // dothis.action = "SliceObject";
+                // dothis.objectId = PhysicsController.GetComponent<PhysicsRemoteFPSAgentController>().ObjectIdOfClosestVisibleObject();
+
+                PhysicsController.ProcessControlCommand(dothis);
+            }
+
+            if (Input.GetKeyDown(KeyCode.Mouse1) && Input.GetKey(KeyCode.LeftShift))
+            {
+                ServerAction dothis = new ServerAction();
+                dothis.action = "TouchThenApplyForce";
+                dothis.x = 0.5f;
+                dothis.y = 0.5f;
+                dothis.handDistance = 5.0f;
+                dothis.direction = new Vector3(0, 0.1f, 1);
+                dothis.moveMagnitude = 15000f;
+                
+                // dothis.action = "PutObject";
+                // dothis.receptacleObjectId = PhysicsController.ObjectIdOfClosestReceptacleObject();
+
+                PhysicsController.ProcessControlCommand(dothis);
+            }
+            #endif
 
             // Sets throw bar value
             if (throwEnabled && ThrowForceBarSlider != null) {
@@ -256,7 +292,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 };
                 if (simObj != null && validObjectLazy())
                 {
-                    var withinReach = PhysicsController.FindObjectInVisibleSimObjPhysics(simObj.uniqueID) != null;
+                    var withinReach = PhysicsController.FindObjectInVisibleSimObjPhysics(simObj.objectID) != null;
                     setTargetText(simObj.name, withinReach);
                     newHighlightedObject = simObj;
                     var mRenderer = newHighlightedObject.GetComponentInChildren<MeshRenderer>();

@@ -36,9 +36,11 @@ public class Contains : MonoBehaviour
 
 	//if the sim object is one of these properties, do not add it to the Currently Contains list.
 	private List<SimObjPrimaryProperty> PropertiesToIgnore = new List<SimObjPrimaryProperty>(new SimObjPrimaryProperty[] {SimObjPrimaryProperty.Wall,
-		SimObjPrimaryProperty.Floor, SimObjPrimaryProperty.Ceiling, SimObjPrimaryProperty.Moveable}); //should we ignore SimObjPrimaryProperty.Static?
+		SimObjPrimaryProperty.Floor, SimObjPrimaryProperty.Ceiling, SimObjPrimaryProperty.Static}); //should we ignore SimObjPrimaryProperty.Static?
 
 	public bool occupied = false;
+
+    //private List<Vector3> validpointlist = new List<Vector3>();
 
 	//world coordinates of the Corners of this object's receptacles in case we need it for something
 	//public List<Vector3> Corners = new List<Vector3>();
@@ -170,21 +172,99 @@ public class Contains : MonoBehaviour
 	//report back what is currently inside this receptacle
 	public List<SimObjPhysics> CurrentlyContainedObjects()
 	{
+        List<SimObjPhysics> cleanedList = new List<SimObjPhysics>(CurrentlyContains);
+
+        foreach(SimObjPhysics sop in CurrentlyContains)
+        {
+            if(sop.GetComponent<SliceObject>())
+            {
+                if(sop.GetComponent<SliceObject>().IsSliced())
+                cleanedList.Remove(sop);
+            }
+        }
+
+        CurrentlyContains = cleanedList;
 		return CurrentlyContains;
 	}
 
-	//report back a list of unique id of objects currently inside this receptacle
-	public List<string> CurrentlyContainedUniqueIDs()
+	//report back a list of object ids of objects currently inside this receptacle
+	public List<string> CurrentlyContainedObjectIDs()
 	{
+        List<SimObjPhysics> cleanedList = new List<SimObjPhysics>(CurrentlyContains);
+
 		List<string> ids = new List<string>();
 
 		foreach (SimObjPhysics sop in CurrentlyContains)
 		{
-			ids.Add(sop.UniqueID);
+            if(sop.GetComponent<SliceObject>())
+            {
+                if(sop.GetComponent<SliceObject>().IsSliced())
+                {
+                    cleanedList.Remove(sop);
+                }
+            }
 		}
+
+        CurrentlyContains = cleanedList;
+
+        foreach (SimObjPhysics sop in CurrentlyContains)
+        {
+            ids.Add(sop.ObjectID);
+        }
 
 		return ids;
 	}
+
+	//generate a grid of potential spawn points, set ReturnPointsClosestToAgent to true if
+	//the list of points should be filtered closest to agent, if false
+	//it will return all points on the receptacle regardless of agent proximity
+	public List<Vector3> GetValidSpawnPointsFromTopOfTriggerBox()
+	{
+		Vector3 p1, p2, p4; //in case we need all the corners later for something...
+
+		BoxCollider b = GetComponent<BoxCollider>();
+
+		//get all the corners of the box and convert to world coordinates
+		//top forward right
+		p1 = transform.TransformPoint(b.center + new Vector3(b.size.x, b.size.y, b.size.z) * 0.5f);
+		//top forward left
+		p2 = transform.TransformPoint(b.center + new Vector3(-b.size.x, b.size.y, b.size.z) * 0.5f);
+		//top back right
+		p4 = transform.TransformPoint(b.center + new Vector3(b.size.x, b.size.y, -b.size.z) * 0.5f);
+
+		//so lets make a grid, we can parametize the gridsize value later, for now we'll adjust it here
+		int gridsize = 20; //number of grid boxes we want, reduce this to SPEED THINGS UP but also GET WAY MORE INACCURATE
+		int linepoints = gridsize + 1; //number of points on the line we need to make the number of grid boxes
+		float lineincrement =  1.0f / gridsize; //increment on the line to distribute the gridpoints
+
+		Vector3[] PointsOnLineXdir = new Vector3[linepoints];
+
+		//these are all the points on the grid on the top of the receptacle box in local space
+		List<Vector3> gridpoints = new List<Vector3>();
+
+		Vector3 zdir = (p4 - p1).normalized; //direction in the -z direction to finish drawing grid
+		float zdist = Vector3.Distance(p4, p1);
+
+		for(int i = 0; i < linepoints; i++)
+		{
+			float x = p1.x + (p2.x - p1.x) * (lineincrement * i);
+			float y = p1.y + (p2.y - p1.y) * (lineincrement * i);
+			float z = p1.z + (p2.z - p1.z) * (lineincrement * i);
+
+			PointsOnLineXdir[i] = new Vector3 (x, y, z);
+
+			for(int j = 0; j < linepoints; j++)
+			{
+				gridpoints.Add(PointsOnLineXdir[i] + zdir * (zdist * (j*lineincrement)));
+			}
+		}
+		// //****** */debug draw the spawn points as well
+		// #if UNITY_EDITOR
+		// validpointlist = gridpoints;
+		// #endif
+
+        return gridpoints;
+    }
 
 	//generate a grid of potential spawn points, set ReturnPointsClosestToAgent to true if
 	//the list of points should be filtered closest to agent, if false
@@ -202,23 +282,11 @@ public class Contains : MonoBehaviour
 		p1 = transform.TransformPoint(b.center + new Vector3(b.size.x, b.size.y, b.size.z) * 0.5f);
 		//top forward left
 		p2 = transform.TransformPoint(b.center + new Vector3(-b.size.x, b.size.y, b.size.z) * 0.5f);
-		//top back left
-		//p3 = transform.TransformPoint(b.center + new Vector3(-b.size.x, b.size.y, -b.size.z) * 0.5f);
 		//top back right
 		p4 = transform.TransformPoint(b.center + new Vector3(b.size.x, b.size.y, -b.size.z) * 0.5f);
 
 		//bottom forward right
 		p5 = transform.TransformPoint(b.center + new Vector3(b.size.x, -b.size.y, b.size.z) * 0.5f);
-		//bottom forward left
-		//p6 = transform.TransformPoint(b.center + new Vector3(-b.size.x, -b.size.y, b.size.z) * 0.5f);
-		//bottom back left
-		//p7 = transform.TransformPoint(b.center + new Vector3(-b.size.x, -b.size.y, -b.size.z) * 0.5f);
-		//bottom back right
-		//p8 = transform.TransformPoint(b.center + new Vector3(b.size.x, -b.size.y, -b.size.z) * 0.5f);
-
-		// List<Vector3> crn = new List<Vector3>() {p1, p2, p3, p4, p5, p6, p7, p8};
-		// Corners = crn;
-
 
 		//so lets make a grid, we can parametize the gridsize value later, for now we'll adjust it here
 		int gridsize = 8; //number of grid boxes we want, reduce this to SPEED THINGS UP but also GET WAY MORE INACCURATE
@@ -249,30 +317,22 @@ public class Contains : MonoBehaviour
 				gridpoints.Add(PointsOnLineXdir[i] + zdir * (zdist * (j*lineincrement)));
 			}
 		}
-		
-		//****** */debug draw the grid points as gizmos
-		// #if UNITY_EDITOR
-		// gridVisual = gridpoints.ToArray();
-		// #endif
 
 		foreach(Vector3 point in gridpoints)
 		{
-			//debug draw the gridpoints if you wanna see em
-			// #if UNITY_EDITOR
-			// Debug.DrawLine(point, point + -(ydir * ydist), Color.red, 100f);
-			// #endif
+            // print("checking point in gridpoints on " + myParent.transform.name);
 
 			// //quick test to see if this point on the grid is blocked by anything by raycasting down
 			// //toward it
 			RaycastHit hit;
-			if(Physics.Raycast(point, -ydir, out hit, ydist, 1 << 8, QueryTriggerInteraction.Ignore))
+			if(Physics.Raycast(point, -ydir, out hit, ydist, 1 << 8, QueryTriggerInteraction.Collide))//NOTE: QueryTriggerInteraction was previously Ignore
 			{
-				//if this hits anything except the parent object, this spot is blocked by something
 
 				//IMPORTANT NOTE: For objects like Sinks and Bathtubs where the interior simobject (SinkBasin, BathtubBasin) are children, make sure the interior Contains scripts have their 'myParent' field
 				//set to the PARENT object of the sim object, not the sim object itself ie: SinkBasin's myParent = Sink
 				if(hit.transform == myParent.transform)
 				{
+                    //print("raycast hit: " + hit.transform.name);
 					if(!ReturnPointsCloseToAgent)
 					{
 						PossibleSpawnPoints.Add(new ReceptacleSpawnPoint(hit.point, b, this, myParent.GetComponent<SimObjPhysics>()));
@@ -282,14 +342,16 @@ public class Contains : MonoBehaviour
 					{
 						PossibleSpawnPoints.Add(new ReceptacleSpawnPoint(hit.point, b, this, myParent.GetComponent<SimObjPhysics>()));
 					}
+
+                    // //debug draw the gridpoints if you wanna see em
+                    // #if UNITY_EDITOR
+                    // Debug.DrawLine(point, point + -(ydir * ydist), Color.red, 100f);
+                    // #endif
 				}
 			}
 
 			Vector3 BottomPoint = point + -(ydir * ydist);
 			//didn't hit anything that could obstruct, so this point is good to go
-			//do additional checks here tos ee if the point is valid
-			// else
-			// 
 			if(!ReturnPointsCloseToAgent)
 			{
 				PossibleSpawnPoints.Add(new ReceptacleSpawnPoint(BottomPoint, b, this, myParent.GetComponent<SimObjPhysics>()));
@@ -297,10 +359,9 @@ public class Contains : MonoBehaviour
 
 			else if(NarrowDownValidSpawnPoints(BottomPoint))
 				PossibleSpawnPoints.Add(new ReceptacleSpawnPoint(BottomPoint, b, this, myParent.GetComponent<SimObjPhysics>()));
-			//}
 		}
 
-		// //****** */debug draw the spawn points as well
+		//****** */debug draw the spawn points as well
 		// #if UNITY_EDITOR
 		// validpointlist = PossibleSpawnPoints;
 		// #endif
@@ -429,12 +490,11 @@ public class Contains : MonoBehaviour
 		// Gizmos.color = Color.magenta;
 		// if(validpointlist.Count > 0)
 		// {
-		// 	foreach(ReceptacleSpawnPoint yes in validpointlist)
+		// 	foreach(Vector3 yes in validpointlist)
 		// 	{
-		// 		Gizmos.DrawCube(yes.Point, new Vector3(0.01f, 0.01f, 0.01f));
+		// 		Gizmos.DrawCube(yes, new Vector3(0.01f, 0.01f, 0.01f));
 		// 	}
 		// }
-
 	}
     #endif
 }

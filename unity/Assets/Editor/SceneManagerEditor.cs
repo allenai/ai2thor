@@ -74,7 +74,7 @@ public class SceneManagerEditor : Editor
 			}
 		}
 		GUI.color = Color.white;
-		if (GUILayout.Button ("Gather SimObjs and assign unique IDs", GUILayout.MaxWidth(300))) {
+		if (GUILayout.Button ("Gather SimObjs and assign object IDs", GUILayout.MaxWidth(300))) {
 			sm.GatherSimObjsInScene ();
 		}
 		if (GUILayout.Button ("Gather objects under parent folders", GUILayout.MaxWidth(300))) {
@@ -107,7 +107,7 @@ public class SceneManagerEditor : Editor
 				GUI.color = Color.Lerp (Color.white, Color.red, 0.5f);
 				EditorGUILayout.LabelField ("(None found)");
 			} else {
-				HashSet<string> uniqueIDsSoFar = new HashSet<string> ();
+				HashSet<string> objectIDsSoFar = new HashSet<string> ();
 				for (int i = 0; i < sm.ObjectsInScene.Count; i++) {
 					if (sm.ObjectsInScene [i] == null) {
 						Debug.Log ("Found null items in sm objects list, returning");
@@ -120,14 +120,14 @@ public class SceneManagerEditor : Editor
 						GUI.color = Color.white;
 					}
 					string buttonText = string.Empty;
-					if (!SimUtil.IsUniqueIDValid (sm.ObjectsInScene [i].UniqueID)) {
+					if (!SimUtil.IsObjectIDValid (sm.ObjectsInScene [i].ObjectID)) {
 						buttonText = sm.ObjectsInScene [i].Type.ToString () + ": (No ID)";
 					} else {
-						if (!uniqueIDsSoFar.Add (sm.ObjectsInScene [i].UniqueID)) {
+						if (!objectIDsSoFar.Add (sm.ObjectsInScene [i].ObjectID)) {
 							GUI.color = Color.Lerp (Color.red, Color.white, 0.5f);
-							buttonText = "ERROR: DUPLICATE ID! " + sm.ObjectsInScene [i].UniqueID;
+							buttonText = "ERROR: DUPLICATE ID! " + sm.ObjectsInScene [i].ObjectID;
 						} else {
-							buttonText = sm.ObjectsInScene [i].UniqueID;
+							buttonText = sm.ObjectsInScene [i].ObjectID;
 						}
 					}
 					if (GUILayout.Button (buttonText, EditorStyles.miniButton)) {

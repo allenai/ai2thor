@@ -51,7 +51,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 //    // print("pickup");
                 //     ServerAction action = new ServerAction();
                 //     action.action = "PickupObject";
-                //     action.objectId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().UniqueIDOfClosestVisibleObject();
+                //     action.objectId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().ObjectIdOfClosestVisibleObject();
                 //     PhysicsController.ProcessControlCommand(action);
                             
                 // }

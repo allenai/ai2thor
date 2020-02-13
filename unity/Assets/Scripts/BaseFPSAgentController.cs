@@ -304,7 +304,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
             if (action.renderDepthImage || action.renderClassImage || action.renderObjectImage || action.renderNormalsImage) 
             {
-    			this.enableImageSynthesis ();
+    			this.updateImageSynthesis(true);
     		}
 
 			if (action.visibilityDistance > 0.0f) {
@@ -521,14 +521,14 @@ namespace UnityStandardAssets.Characters.FirstPerson
             }
         }
 
-		public bool excludeObject(string uniqueId)
+		public bool excludeObject(string objectId)
 		{
-			return Array.IndexOf(this.excludeObjectIds, uniqueId) >= 0;
+			return Array.IndexOf(this.excludeObjectIds, objectId) >= 0;
 		}
 
 		public bool excludeObject(SimpleSimObj so)
 		{
-			return excludeObject(so.UniqueID);
+			return excludeObject(so.ObjectID);
 		}
 
 		protected bool closeSimObj(SimpleSimObj so)
@@ -631,11 +631,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			return new SimObj[]{} as SimpleSimObj[];
 		}
 
-		private void enableImageSynthesis() {
-			imageSynthesis = this.gameObject.GetComponentInChildren<ImageSynthesis> () as ImageSynthesis;
-			imageSynthesis.enabled = true;			
+		public void updateImageSynthesis(bool status) {
+            if (this.imageSynthesis == null) {
+                imageSynthesis = this.gameObject.GetComponentInChildren<ImageSynthesis> () as ImageSynthesis;
+            }
+			imageSynthesis.enabled = status;
 		}
-
 
 		public void ProcessControlCommand(ServerAction controlCommand)
 		{
@@ -954,78 +955,42 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			actionFinished(true);
 		}
 
-		//looks like thisfree rotates AND free changes camera look angle?
+		//looks like thisfree rotates AND free changes camera look angle? don't use this, very deprecated
 		public void RotateLook(ServerAction response)
 		{
 			transform.rotation = Quaternion.Euler(new Vector3(0.0f, response.rotation.y, 0.0f));
 			m_Camera.transform.localEulerAngles = new Vector3(response.horizon, 0.0f, 0.0f);
 			actionFinished(true);
-
 		}
 
-		//rotates 90 degrees left w/ respect to current forward
+		//rotates controlCommand.degrees degrees left w/ respect to current forward
 		public virtual void RotateLeft(ServerAction controlCommand)
 		{
-			transform.rotation = GetRotateQuaternion(-1);
+            transform.Rotate(0, -controlCommand.degrees, 0);
 			actionFinished(true);
 		}
 
-        public virtual Quaternion GetRotateQuaternion(int headIndex)
-		{
-			int index = (headingAngles.Length + (currentHeadingAngleIndex() + headIndex)) % headingAngles.Length;
-			float targetRotation = headingAngles[index];
-			return Quaternion.Euler(new Vector3(0.0f, targetRotation, 0.0f));
-		}
-
-		//rotates 90 degrees right w/ respect to current forward
+		//rotates controlCommand.degrees degrees right w/ respect to current forward
 		public virtual void RotateRight(ServerAction controlCommand)
 		{
-			transform.rotation = transform.rotation = GetRotateQuaternion(1);
+            transform.Rotate(0, controlCommand.degrees, 0);
 			actionFinished(true);
 		}
 
 		//iterates to next allowed downward horizon angle for AgentCamera (max 60 degrees down)
-		public virtual void LookDown(ServerAction response)
+		public virtual void LookDown(ServerAction controlCommand)
 		{
-			if (currentHorizonAngleIndex() > 0)
-			{
-				float targetHorizon = horizonAngles[currentHorizonAngleIndex() - 1];
-				m_Camera.transform.localEulerAngles = new Vector3(targetHorizon, 0.0f, 0.0f);
-				actionFinished(true);
-
-			}
-			else
-			{
-				errorMessage = "can't LookDown below the min horizon angle";
-				Debug.Log(errorMessage);
-				errorCode = ServerActionErrorCode.LookDownCantExceedMin;
-				actionFinished(false);
-			}
+			m_Camera.transform.Rotate(controlCommand.degrees, 0, 0);
+			actionFinished(true);
 		}
 
 		//iterates to next allowed upward horizon angle for agent camera (max 30 degrees up)
 		public virtual void LookUp(ServerAction controlCommand)
 		{
+			m_Camera.transform.Rotate(-controlCommand.degrees, 0, 0);
+			actionFinished(true);
 
-			if (currentHorizonAngleIndex() < horizonAngles.Length - 1)
-			{
-				float targetHorizon = horizonAngles[currentHorizonAngleIndex() + 1];
-				m_Camera.transform.localEulerAngles = new Vector3(targetHorizon, 0.0f, 0.0f);
-				actionFinished(true);
-			}
-
-			else
-			{
-				errorMessage = "can't LookUp beyond the max horizon angle";
-				Debug.Log(errorMessage);
-				errorCode = ServerActionErrorCode.LookUpCantExceedMax;
-				actionFinished(false);
-			}
 		}
 
-		//public virtual void P(ServerAction action)//use
-		//{
-
-		//}
 	}
 }
