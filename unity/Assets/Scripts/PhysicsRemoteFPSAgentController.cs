@@ -1317,98 +1317,99 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return result;
         }
 
-    //for use with each of the 8 corners of a picked up object's bounding box - returns an array of Vector3 points along the arc of the rotation for a given starting point
-    //given a starting Vector3, rotate about an origin point for a total given angle. maxIncrementAngle is the maximum value of the increment between points on the arc. 
-    //if leftOrRight is true - rotate around Y (rotate left/right), false - rotate around X (look up/down)
-    private Vector3[] GenerateArcPoints(Vector3 startingPoint, Vector3 origin, float angle, string dir)
-    {
-        float incrementAngle = angle/10f; //divide the total amount we are rotating by 10 to get 10 points on the arc
-        Vector3[] arcPoints = new Vector3[11]; //we just always want 10 points in addition to our starting corner position (11 total) to check against per corner
-        float currentIncrementAngle;
-
-        if (dir == "left") //Yawing left (Rotating across XZ plane around Y-pivot)
+        //for use with each of the 8 corners of a picked up object's bounding box - returns an array of Vector3 points along the arc of the rotation for a given starting point
+        //given a starting Vector3, rotate about an origin point for a total given angle. maxIncrementAngle is the maximum value of the increment between points on the arc. 
+        //if leftOrRight is true - rotate around Y (rotate left/right), false - rotate around X (look up/down)
+        private Vector3[] GenerateArcPoints(Vector3 startingPoint, Vector3 origin, float angle, string dir)
         {
-            for (int i = 0; i < arcPoints.Length; i++)
+            float incrementAngle = angle/10f; //divide the total amount we are rotating by 10 to get 10 points on the arc
+            Vector3[] arcPoints = new Vector3[11]; //we just always want 10 points in addition to our starting corner position (11 total) to check against per corner
+            float currentIncrementAngle;
+
+            if (dir == "left") //Yawing left (Rotating across XZ plane around Y-pivot)
             {
-                currentIncrementAngle = i * -incrementAngle;
-                //move the rotPoint to the current corner's position
-                rotPoint.transform.position = startingPoint;
-                //rotate the rotPoint around the origin the current increment's angle, relative to the correct axis
-                rotPoint.transform.RotateAround(origin, transform.up, currentIncrementAngle);
-                //set the current arcPoint's vector3 to the rotated point
-                arcPoints[i] = rotPoint.transform.position;
-                //arcPoints[i] = RotatePointAroundPivot(startingPoint, origin, new Vector3(0, currentIncrementAngle, 0));
+                for (int i = 0; i < arcPoints.Length; i++)
+                {
+                    currentIncrementAngle = i * -incrementAngle;
+                    //move the rotPoint to the current corner's position
+                    rotPoint.transform.position = startingPoint;
+                    //rotate the rotPoint around the origin the current increment's angle, relative to the correct axis
+                    rotPoint.transform.RotateAround(origin, transform.up, currentIncrementAngle);
+                    //set the current arcPoint's vector3 to the rotated point
+                    arcPoints[i] = rotPoint.transform.position;
+                    //arcPoints[i] = RotatePointAroundPivot(startingPoint, origin, new Vector3(0, currentIncrementAngle, 0));
+                }
             }
-        }
 
-        if (dir == "right") //Yawing right (Rotating across XZ plane around Y-pivot)
-        {
-            for (int i = 0; i < arcPoints.Length; i++)
+            if (dir == "right") //Yawing right (Rotating across XZ plane around Y-pivot)
             {
-                currentIncrementAngle = i * incrementAngle;
-                //move the rotPoint to the current corner's position
-                rotPoint.transform.position = startingPoint;
-                //rotate the rotPoint around the origin the current increment's angle, relative to the correct axis
-                rotPoint.transform.RotateAround(origin, transform.up, currentIncrementAngle);
-                //set the current arcPoint's vector3 to the rotated point
-                arcPoints[i] = rotPoint.transform.position;
-                //arcPoints[i] = RotatePointAroundPivot(startingPoint, origin, new Vector3(0, currentIncrementAngle, 0));
+                for (int i = 0; i < arcPoints.Length; i++)
+                {
+                    currentIncrementAngle = i * incrementAngle;
+                    //move the rotPoint to the current corner's position
+                    rotPoint.transform.position = startingPoint;
+                    //rotate the rotPoint around the origin the current increment's angle, relative to the correct axis
+                    rotPoint.transform.RotateAround(origin, transform.up, currentIncrementAngle);
+                    //set the current arcPoint's vector3 to the rotated point
+                    arcPoints[i] = rotPoint.transform.position;
+                    //arcPoints[i] = RotatePointAroundPivot(startingPoint, origin, new Vector3(0, currentIncrementAngle, 0));
+                }
             }
-        }
 
-        else if(dir =="up") //Pitching up(Rotating across YZ plane around X-pivot)
-        {
-            for (int i = 0; i < arcPoints.Length; i++)
+            else if(dir =="up") //Pitching up(Rotating across YZ plane around X-pivot)
             {
-                //reverse the increment angle because of the right handedness orientation of the local x-axis
-                currentIncrementAngle = i * -incrementAngle;
-                //move the rotPoint to the current corner's position
-                rotPoint.transform.position = startingPoint;
-                //rotate the rotPoint around the origin the current increment's angle, relative to the correct axis
-                rotPoint.transform.RotateAround(origin, transform.right, currentIncrementAngle);
-                //set the current arcPoint's vector3 to the rotated point
-                arcPoints[i] = rotPoint.transform.position;
-                //arcPoints[i] = RotatePointAroundPivot(startingPoint, origin, new Vector3(0, currentIncrementAngle, 0));
+                for (int i = 0; i < arcPoints.Length; i++)
+                {
+                    //reverse the increment angle because of the right handedness orientation of the local x-axis
+                    currentIncrementAngle = i * -incrementAngle;
+                    //move the rotPoint to the current corner's position
+                    rotPoint.transform.position = startingPoint;
+                    //rotate the rotPoint around the origin the current increment's angle, relative to the correct axis
+                    rotPoint.transform.RotateAround(origin, transform.right, currentIncrementAngle);
+                    //set the current arcPoint's vector3 to the rotated point
+                    arcPoints[i] = rotPoint.transform.position;
+                    //arcPoints[i] = RotatePointAroundPivot(startingPoint, origin, new Vector3(0, currentIncrementAngle, 0));
+                }
             }
-        }
 
-        else if(dir == "down") //Pitching down (Rotating across YZ plane around X-pivot)
-        {
-            for (int i = 0; i < arcPoints.Length; i++)
+            else if(dir == "down") //Pitching down (Rotating across YZ plane around X-pivot)
             {
-                //reverse the increment angle because of the right handedness orientation of the local x-axis
-                currentIncrementAngle = i * incrementAngle;
-                //move the rotPoint to the current corner's position
-                rotPoint.transform.position = startingPoint;
-                //rotate the rotPoint around the origin the current increment's angle, relative to the correct axis
-                rotPoint.transform.RotateAround(origin, transform.right, currentIncrementAngle);
-                //set the current arcPoint's vector3 to the rotated point
-                arcPoints[i] = rotPoint.transform.position;
-                //arcPoints[i] = RotatePointAroundPivot(startingPoint, origin, new Vector3(0, currentIncrementAngle, 0));
-            }
-        }
-
-        return arcPoints;
-    }
-
-         public void RotateRightSmooth(ServerAction controlCommand) {
-            if (CheckIfAgentCanTurn(90)) {
-                DefaultAgentHand(controlCommand);
-                StartCoroutine(InterpolateRotation(this.GetRotateQuaternion(1), controlCommand.timeStep));
-            } else {
-                actionFinished(false);
+                for (int i = 0; i < arcPoints.Length; i++)
+                {
+                    //reverse the increment angle because of the right handedness orientation of the local x-axis
+                    currentIncrementAngle = i * incrementAngle;
+                    //move the rotPoint to the current corner's position
+                    rotPoint.transform.position = startingPoint;
+                    //rotate the rotPoint around the origin the current increment's angle, relative to the correct axis
+                    rotPoint.transform.RotateAround(origin, transform.right, currentIncrementAngle);
+                    //set the current arcPoint's vector3 to the rotated point
+                    arcPoints[i] = rotPoint.transform.position;
+                    //arcPoints[i] = RotatePointAroundPivot(startingPoint, origin, new Vector3(0, currentIncrementAngle, 0));
+                }
             }
 
+            return arcPoints;
         }
 
-        public void RotateLeftSmooth(ServerAction controlCommand) {
-            if (CheckIfAgentCanTurn(-90)) {
-                DefaultAgentHand(controlCommand);
-                StartCoroutine(InterpolateRotation(this.GetRotateQuaternion(-1), controlCommand.timeStep));
-            } else {
-                actionFinished(false);
-            }
-        }
+
+        //TODO: I dunno who was using this or for what, but it doesn't play nice with the new rotate functions so please add back functionality later
+        //  public void RotateRightSmooth(ServerAction controlCommand) {
+        //     if (CheckIfAgentCanTurn(90)) {
+        //         DefaultAgentHand(controlCommand);
+        //         StartCoroutine(InterpolateRotation(this.GetRotateQuaternion(1), controlCommand.timeStep));
+        //     } else {
+        //         actionFinished(false);
+        //     }
+        // }
+
+        // public void RotateLeftSmooth(ServerAction controlCommand) {
+        //     if (CheckIfAgentCanTurn(-90)) {
+        //         DefaultAgentHand(controlCommand);
+        //         StartCoroutine(InterpolateRotation(this.GetRotateQuaternion(-1), controlCommand.timeStep));
+        //     } else {
+        //         actionFinished(false);
+        //     }
+        // }
 
         //checks if agent is clear to rotate left/right/up/down some number of degrees while holding an object
         public bool CheckIfAgentCanRotate(string direction, float degrees) {
@@ -7389,7 +7390,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     var visibleSimObjects = this.GetAllVisibleSimObjPhysics(this.maxVisibleDistance);
                     transform.rotation = rot;
                     
-                    if (visibleSimObjects.Any(sop => sop.uniqueID == targetSOP.uniqueID)) {
+                    if (visibleSimObjects.Any(sop => sop.objectID == targetSOP.objectID)) {
                         
                         pos = p;
                         return true;
@@ -9371,13 +9372,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 objectId = ids[0];
             }
 
-            if (!physicsSceneManager.UniqueIdToSimObjPhysics.ContainsKey(objectId)) {
+            if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
                 errorMessage = "Cannot find sim object with id '" + objectId + "'";
                 actionFinished(false);
                 return;
             }
            
-            SimObjPhysics sop = physicsSceneManager.UniqueIdToSimObjPhysics[objectId];
+            SimObjPhysics sop = physicsSceneManager.ObjectIdToSimObjPhysics[objectId];
             if (sop == null) {
                 errorMessage = "Object with id '" + objectId+ "' is null";
                 actionFinished(false);
@@ -9406,9 +9407,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             List<string> objectIds = new List<string>();
             try {
                 SimObjType objectType = (SimObjType) Enum.Parse(typeof(SimObjType), objectTypeString.Replace(" ", String.Empty), true);
-                foreach (var s in physicsSceneManager.UniqueIdToSimObjPhysics) {
+                foreach (var s in physicsSceneManager.ObjectIdToSimObjPhysics) {
                     if (s.Value.ObjType == objectType) {
-                        objectIds.Add(s.Value.uniqueID);
+                        objectIds.Add(s.Value.objectID);
                     }
                 }
             }   
@@ -9429,12 +9430,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         public void GetObjectPosition(ServerAction action) {
 
-                if (!physicsSceneManager.UniqueIdToSimObjPhysics.ContainsKey(action.objectId)) 
+                if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(action.objectId)) 
                 {
                     errorMessage = "Cannot find sim object with id '" + action.objectId + "'";
                     actionFinished(false);
                 }
-                SimObjPhysics sop = physicsSceneManager.UniqueIdToSimObjPhysics[action.objectId];
+                SimObjPhysics sop = physicsSceneManager.ObjectIdToSimObjPhysics[action.objectId];
                 if (sop == null) {
                     errorMessage = "Object with id '" + action.objectId + "' is null";
                     actionFinished(false);
@@ -9467,7 +9468,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 agentTransform.LookAt(targetPosition);
 
                 var visibleSimObjects = PhysicsController.GetAllVisibleSimObjPhysics(PhysicsController.maxVisibleDistance);
-                if (visibleSimObjects.Any(sop => sop.uniqueID == targetSimObjectId)) {
+                if (visibleSimObjects.Any(sop => sop.objectID == targetSimObjectId)) {
                     fixedPosition = pos;
                     //success = true;
                     break;

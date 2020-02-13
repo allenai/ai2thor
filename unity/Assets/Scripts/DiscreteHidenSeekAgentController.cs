@@ -104,11 +104,11 @@ public int objectVariation;
 
         public void DisableObjectCollisionWithAgent(string objectId) {
             var physicsSceneManager = FindObjectOfType<PhysicsSceneManager>();
-            if (!physicsSceneManager.UniqueIdToSimObjPhysics.ContainsKey(objectId)) {
+            if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
                 return;
             }
             
-            SimObjPhysics target = physicsSceneManager.UniqueIdToSimObjPhysics[objectId];
+            SimObjPhysics target = physicsSceneManager.ObjectIdToSimObjPhysics[objectId];
             disableCollistionWithPickupObject = true;
             foreach (Collider c0 in this.GetComponentsInChildren<Collider>()) {
                 foreach (Collider c1 in target.GetComponentsInChildren<Collider>()) {

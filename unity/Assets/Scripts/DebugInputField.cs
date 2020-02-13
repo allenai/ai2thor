@@ -2280,7 +2280,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                             GUILayout.BeginHorizontal();
                             horzIndex = 0;
                         }
-                        GUILayout.Button(o.UniqueID, UnityEditor.EditorStyles.miniButton, GUILayout.MaxWidth(200f));
+                        GUILayout.Button(o.ObjectID, UnityEditor.EditorStyles.miniButton, GUILayout.MaxWidth(200f));
                     }
 
                     GUILayout.EndHorizontal();
@@ -2309,8 +2309,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
                         // }
 
-                        if (GUILayout.Button(o.UniqueID + suffix, UnityEditor.EditorStyles.miniButton, GUILayout.MinWidth(100f))) {
-                            CopyToClipboard(o.UniqueID);
+                        if (GUILayout.Button(o.ObjectID + suffix, UnityEditor.EditorStyles.miniButton, GUILayout.MinWidth(100f))) {
+                            CopyToClipboard(o.ObjectID);
                         }
                     }
                 }

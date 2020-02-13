@@ -1067,12 +1067,8 @@ public class ServerAction
     public float movementGaussianSigma;
     public float rotateGaussianMu;
     public float rotateGaussianSigma;
-
-
 	public bool forceKinematic;
-
 	public float maxAgentsDistance = -1.0f;
-
 	public bool alwaysReturnVisibleRange = false;
 	public int sequenceId;
 	public bool snapToGrid = true;
@@ -1115,7 +1111,14 @@ public class ServerAction
     public SetObjectStates SetObjectStates;
     public float minDistance;//used in target circle spawning function
     public float maxDistance;//used in target circle spawning function
+    public float noise;
+    public ControllerInitialization controllerInitialization = null;
+    public string agentType;
+    public float agentRadius = 2.0f;
     public int maxStepCount;
+    public float rotateStepDegrees = 90.0f;
+
+    public bool useAgentTransform = false;
     public float degrees;//for rotate let/right/up/down
 
     public SimObjType ReceptableSimObjType()
