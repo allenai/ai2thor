@@ -182,25 +182,12 @@ public class InstantiatePrefabTest : MonoBehaviour
             }
         }
 
+        //try a number of spawnpoints in this specific receptacle up to the maxPlacementAttempts
         int tries = 0;
         foreach (ReceptacleSpawnPoint p in goodRsps)
         {
-            //does this spawn point belong to a parent that is the same type as one of the Receptacles that should be not have
-            //objects spawned inside it?
-            SimObjType parentType = p.ParentSimObjPhys.ObjType;
-            if(parentType == SimObjType.SinkBasin)
-            {
-                print("basin found");
-            }
-
-            //if this is an Object Specific Receptacle, stop this check right now! I mean it!
-            //Placing objects in/on an Object Specific Receptacle uses different logic to place the
-            //object at the Attachemnet point rather than in the spawn area, so stop this right now!
-
             if (PlaceObject(sop, p, PlaceStationary, degreeIncrement, AlwaysPlaceUpright))
             {
-                //print("placing "+ sop.transform.name + " on " +p.ParentSimObjPhys.transform.name);
-                //found a place to spawn! neato, return success
                 return true;
             }
             tries += 1;

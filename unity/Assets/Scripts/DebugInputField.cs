@@ -654,10 +654,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         // count[0] = otc;
                         // action.numDuplicatesOfType = count;
 
-                        ObjectTypeCount exclude = new ObjectTypeCount();
-                        exclude.objectType = "SinkBasin";
-                        ObjectTypeCount[] excludeThese = new ObjectTypeCount[1];
-                        excludeThese[0] = exclude;
+                        String[] excludeThese = new String[1];
+                        excludeThese[0] = "CounterTop";
                         action.excludedReceptacles = excludeThese;
 
                         action.placeStationary = true;//set to false to spawn with kinematic = false, set to true to spawn everything kinematic true and they won't roll around

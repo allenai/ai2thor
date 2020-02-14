@@ -292,27 +292,26 @@ public class PhysicsSceneManager : MonoBehaviour
     }
 
     //use action.randomseed for seed, use action.forceVisible for if objects shoudld ONLY spawn outside and not inside anything
-    //set forceVisible to true for if you want objects to only spawn in immediately visible receptacles.
-    public bool RandomSpawnRequiredSceneObjects(ServerAction action)
-	{
-        return RandomSpawnRequiredSceneObjects(action.randomSeed, action.forceVisible, action.numPlacementAttempts, action.placeStationary, action.numDuplicatesOfType, action.excludedReceptacles);
-	}
-
-	// //a default in case no ServerAction is passed in? Probably don't need
-	// public void RandomSpawnRequiredSceneObjects()
+    // //set forceVisible to true for if you want objects to only spawn in immediately visible receptacles.
+    // public bool RandomSpawnRequiredSceneObjects(ServerAction action)
 	// {
-	// 	RandomSpawnRequiredSceneObjects(System.Environment.TickCount, false, 50, false, null, null);
+    //     return RandomSpawnRequiredSceneObjects(action.randomSeed, action.forceVisible, action.numPlacementAttempts, action.placeStationary, action.numDuplicatesOfType, action.excludedReceptacles);
 	// }
 
 	//place each object in the array of objects that should appear in this scene randomly in valid receptacles
-	//a seed of 0 is the default positions placed by hand(?)
+	//seed- random seed used to pick locations
+    //SpawnOnlyOutside - set to true to use only receptacles that are open innately (ie: tables, countertops, sinks) and not ones that require actions to open (drawer, cabinet etc.)
+    //maxPlacementAttempts - the max number of times an object will attempt to be placed in within a receptacle
+    //StaticPlacement - set to true if objects should be placed so they don't roll around after being repositioned
+    //numDuplicatesOfType - used to duplicate the first instance of an object type found in a scene
+    //excludedReceptacles - 
 	public bool RandomSpawnRequiredSceneObjects(
 		int seed,
 		bool SpawnOnlyOutside,
 		int maxPlacementAttempts,
 		bool StaticPlacement,
         ObjectTypeCount[] numDuplicatesOfType,
-        ObjectTypeCount[] excludedReceptacles
+        List<SimObjType> excludedReceptacles
     )
     {
 		#if UNITY_EDITOR
@@ -328,6 +327,7 @@ public class PhysicsSceneManager : MonoBehaviour
 			return false;
 		}
 
+        //initialize Unity's random with seed
 		UnityEngine.Random.InitState(seed);
 
 
@@ -343,8 +343,8 @@ public class PhysicsSceneManager : MonoBehaviour
 
             Dictionary<SimObjType, List<SimObjPhysics>> typeToObjectList = new Dictionary<SimObjType, List<SimObjPhysics>>();
 
-            Dictionary<SimObjType, int> requestednumDuplicatesOfType = new Dictionary<SimObjType, int>();
-            List<SimObjType> listOfExcludedReceptacles = new List<SimObjType>();
+            Dictionary<SimObjType, int> requestedNumDuplicatesOfType = new Dictionary<SimObjType, int>();
+            //List<SimObjType> listOfExcludedReceptacles = new List<SimObjType>();
             HashSet<GameObject> originalObjects = new HashSet<GameObject>(SpawnedObjects);
 
             if (numDuplicatesOfType == null)
@@ -354,19 +354,19 @@ public class PhysicsSceneManager : MonoBehaviour
             foreach (ObjectTypeCount repeatCount in numDuplicatesOfType)
             {
                 SimObjType objType = (SimObjType)System.Enum.Parse(typeof(SimObjType), repeatCount.objectType);
-                requestednumDuplicatesOfType[objType] = repeatCount.count;
+                requestedNumDuplicatesOfType[objType] = repeatCount.count;
             }
 
-            if (excludedReceptacles == null)
-            {
-                excludedReceptacles = new ObjectTypeCount[0];
-            }
-            foreach (ObjectTypeCount receptacleType in excludedReceptacles)
-            {
-                //print(receptacleType.objectType + " should be excluded");
-                SimObjType objType = (SimObjType)System.Enum.Parse(typeof(SimObjType), receptacleType.objectType);
-                listOfExcludedReceptacles.Add(objType);
-            }
+            // if (excludedReceptacles == null)
+            // {
+            //     excludedReceptacles = new String[0];
+            // }
+
+            // foreach (SimObjType receptacleType in excludedReceptacles)
+            // {
+            //     //SimObjType objType = (SimObjType)System.Enum.Parse(typeof(SimObjType), receptacleType);
+            //     listOfExcludedReceptacles.Add(SimObjType);
+            // }
 
             //now lets go through all pickupable sim objects that are in the current scene
             foreach (GameObject go in SpawnedObjects)
@@ -381,8 +381,8 @@ public class PhysicsSceneManager : MonoBehaviour
                 }
 
                 //Add this sim object to the list if the sim object's type matches the key in typeToObjectList
-                if (!requestednumDuplicatesOfType.ContainsKey(sop.ObjType) ||
-                    (typeToObjectList[sop.ObjType].Count < requestednumDuplicatesOfType[sop.ObjType]))
+                if (!requestedNumDuplicatesOfType.ContainsKey(sop.ObjType) ||
+                    (typeToObjectList[sop.ObjType].Count < requestedNumDuplicatesOfType[sop.ObjType]))
                 {
                     typeToObjectList[sop.ObjType].Add(sop);
                 }
@@ -398,15 +398,15 @@ public class PhysicsSceneManager : MonoBehaviour
             {
                 //we found a matching SimObjType and the requested count of duplicates is bigger than how many of that
                 //object are currently in the scene
-                if (requestednumDuplicatesOfType.ContainsKey(sopType) &&
-                    requestednumDuplicatesOfType[sopType] > typeToObjectList[sopType].Count)
+                if (requestedNumDuplicatesOfType.ContainsKey(sopType) &&
+                    requestedNumDuplicatesOfType[sopType] > typeToObjectList[sopType].Count)
                 {
                     foreach (SimObjPhysics sop in typeToObjectList[sopType])
                     {
                         simObjectDuplicates.Add(sop.gameObject);
                     }
 
-                    int numExtra = requestednumDuplicatesOfType[sopType] - typeToObjectList[sopType].Count;
+                    int numExtra = requestedNumDuplicatesOfType[sopType] - typeToObjectList[sopType].Count;
 
                     //let's instantiate the duplicates now
                     for (int j = 0; j < numExtra; j++)
@@ -494,16 +494,14 @@ public class PhysicsSceneManager : MonoBehaviour
 				// of valid receptacles for this given game object "go" that we are currently checking this loop
 				if(AllowedToSpawnInAndExistsInScene.Count > 0)
 				{
-					//SimObjPhysics targetReceptacle;
 					InstantiatePrefabTest spawner = gameObject.GetComponent<InstantiatePrefabTest>();
 					List<ReceptacleSpawnPoint> targetReceptacleSpawnPoints;
 			
-					//each sop here is a valid receptacle
 					bool spawned = false;
 					foreach(SimObjPhysics sop in ShuffleSimObjPhysicsDictList(AllowedToSpawnInAndExistsInScene, seed))
 					{
                         //if the receptacle, sop, is in the list of receptacles to exclude, skip over it and try the other Receptacles
-                        if(listOfExcludedReceptacles.Contains(sop.Type))
+                        if(excludedReceptacles.Contains(sop.Type))
                         {
                             continue;
                         }

@@ -3997,19 +3997,44 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 ItemInHand = null;
             }
 
-            //default repeats if no value is passed in.
+            //default number of attempts if no value is passed in.
             if (action.numPlacementAttempts == 0)
             {
                 action.numPlacementAttempts = 5;
             }
-            
+
+            //default excludedReceptacles if null
+            if (action.excludedReceptacles == null)
+            {
+                action.excludedReceptacles = new String[0];
+            }
+
+            List<SimObjType> listOfExcludedReceptacles = new List<SimObjType>();
+
+            //check if strings used for excludedReceptacles are valid object types
+            foreach (string receptacleType in action.excludedReceptacles)
+            {
+                try
+                {
+                    SimObjType objType = (SimObjType)System.Enum.Parse(typeof(SimObjType), receptacleType);
+                    listOfExcludedReceptacles.Add(objType);
+                }
+
+                catch (Exception e)
+                {
+                    errorMessage = "invalid Object Type used in excludedReceptacles array: " + receptacleType;
+                    actionFinished(false);
+                    return;
+                }
+            }
+
             bool success = physicsSceneManager.RandomSpawnRequiredSceneObjects(
                 action.randomSeed,
                 action.forceVisible,
                 action.numPlacementAttempts,
                 action.placeStationary,
                 action.numDuplicatesOfType,
-                action.excludedReceptacles
+                listOfExcludedReceptacles
                 );
             physicsSceneManager.ResetObjectIdToSimObjPhysics();
             actionFinished(success);
