@@ -46,7 +46,7 @@ controller = ai2thor.controller.Controller(
 
 ## Browser Build
 
-For building for browser, please refer to the [this page](WEBGL.md).
+For building for browser, please refer to [this page](WEBGL.md).
 
 ## Citation
 
