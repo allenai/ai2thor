@@ -200,8 +200,11 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         // action.renderFlowImage = true;
 
                         //action.continuous = true;//turn on continuous to test multiple emit frames after a single action
-
+                        action.gridSize = 0.25f;
+                        action.visibilityDistance = 1.0f;
 						PhysicsController.actionComplete = false;
+                        action.fieldOfView = 60;
+                        action.rotateStepDegrees = 45;
                         //action.ssao = "default";
                         //action.snapToGrid = true;
                         //action.makeAgentsVisible = false;

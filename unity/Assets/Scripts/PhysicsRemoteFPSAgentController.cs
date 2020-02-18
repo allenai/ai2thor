@@ -6673,7 +6673,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     goodPoints.Add(p);
                     transform.position = p;
                     var rot = transform.rotation;
-                    transform.LookAt(targetSOP.transform, transform.up);
+                    //make sure to rotate just the Camera, not the whole agent
+                    m_Camera.transform.LookAt(targetSOP.transform, transform.up);
 
                     var visibleSimObjects = this.GetAllVisibleSimObjPhysics(this.maxVisibleDistance);
                     transform.rotation = rot;
@@ -8786,6 +8787,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             var path = new NavMeshPath();
             var sopPos = targetSOP.transform.position;
             var target = new Vector3(sopPos.x, initialPosition.y, sopPos.z);
+
+            //make sure navmesh agent is active
+            this.GetComponent<NavMeshAgent>().enabled = true;
             bool pathSuccess = NavMesh.CalculatePath(initialPosition, fixedPosition,  NavMesh.AllAreas, path);
         
             var pathDistance = 0.0f;
@@ -8793,6 +8797,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 Debug.DrawLine(path.corners[i], path.corners[i + 1], Color.red, 10.0f);
                 pathDistance += Vector3.Distance(path.corners[i], path.corners[i + 1]);
             }
+
+            //disable navmesh agent
+            this.GetComponent<NavMeshAgent>().enabled = false;
+
             return path;
         }
 

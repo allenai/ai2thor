@@ -13,7 +13,7 @@ public class NavMeshSetup : MonoBehaviour
     public Transform goal;
     private UnityEngine.AI.NavMeshAgent navMeshAgent;
     private Transform hitPos;
-    private PhysicsRemoteFPSAgentController PhysicsController = null;
+    //private PhysicsRemoteFPSAgentController PhysicsController = null;
 
     void Start()
     {
@@ -36,6 +36,16 @@ public class NavMeshSetup : MonoBehaviour
             selection.AddRange(testSceneNames);
             selection.AddRange(valSceneNames);
             selection.AddRange(trainSceneNames);
+            selection = new List<string>()
+            {
+                "Assets/Scenes/FloorPlan_Train12_3.unity",  
+                "Assets/Scenes/FloorPlan_Train2_5.unity", 
+                "Assets/Scenes/FloorPlan_Val1_3.unity", 
+                "Assets/Scenes/FloorPlan_Val1_5.unity", 
+                
+            };
+
+            print("selection is: " + selection.ToArray());
             selection.ToList().ForEach(sceneName => BuildNavmeshForScene(sceneName));
         }
 
@@ -65,6 +75,7 @@ public class NavMeshSetup : MonoBehaviour
             var agentController = FindObjectOfType<PhysicsRemoteFPSAgentController>();
             var capsuleCollider = agentController.GetComponent<CapsuleCollider>();
             var navmeshAgent = agentController.GetComponent<NavMeshAgent>();
+            navmeshAgent.enabled = true;
             // The Editor bake interface does not take with parameters and could not be modified as of 2018.3
             var buildSettings = new NavMeshBuildSettings() {
                 agentTypeID = navmeshAgent.agentTypeID,
