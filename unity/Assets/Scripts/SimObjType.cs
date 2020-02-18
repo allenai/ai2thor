@@ -254,6 +254,8 @@ public enum SimObjType : int
 	ShowerHead = 146,
     TVStand = 147,
     CoffeeTable = 148,
+
+    MachineCommonSenseObject = 999999999
 }
 
 public static class ReceptacleRestrictions

@@ -231,7 +231,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 		abstract public Vector3[] getReachablePositions(float gridMultiplier=1.0f, int maxStepCount = 10000);
 
-		public void Initialize(ServerAction action)
+		public virtual void Initialize(ServerAction action)
         {
 
             if(action.agentMode.ToLower() == "tall" || action.agentMode.ToLower() == "bot")
@@ -639,7 +639,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		}
 
 
-		public void ProcessControlCommand(ServerAction controlCommand)
+		public virtual void ProcessControlCommand(ServerAction controlCommand)
 		{
             currentServerAction = controlCommand;
 			
