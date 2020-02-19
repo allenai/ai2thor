@@ -33,15 +33,22 @@ public class NavMeshSetup : MonoBehaviour
             Debug.Log("Scenes: " + string.Join(",", trainSceneNames.ToArray()));
 
             var selection = new List<string>();
-            selection.AddRange(testSceneNames);
-            selection.AddRange(valSceneNames);
-            selection.AddRange(trainSceneNames);
+            //selection.AddRange(testSceneNames);
+            //selection.AddRange(valSceneNames);
+            //selection.AddRange(trainSceneNames);
             selection = new List<string>()
             {
-                "Assets/Scenes/FloorPlan_Train12_3.unity",  
+                "Assets/Scenes/FloorPlan_Train1_2.unity",  
+                "Assets/Scenes/FloorPlan_Train1_4.unity", 
                 "Assets/Scenes/FloorPlan_Train2_5.unity", 
-                "Assets/Scenes/FloorPlan_Val1_3.unity", 
+                "Assets/Scenes/FloorPlan_Train8_2.unity", 
+                "Assets/Scenes/FloorPlan_Train9_4.unity", 
+                "Assets/Scenes/FloorPlan_Train9_5.unity", 
+                "Assets/Scenes/FloorPlan_Val1_2.unity", 
+                "Assets/Scenes/FloorPlan_Val1_4.unity", 
                 "Assets/Scenes/FloorPlan_Val1_5.unity", 
+                "Assets/Scenes/FloorPlan_Val2_1.unity", 
+                "Assets/Scenes/FloorPlan_Val2_3.unity", 
                 
             };
 

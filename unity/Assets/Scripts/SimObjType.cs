@@ -137,7 +137,7 @@ public enum SimObjType : int
 	EggShell = 30,
 	EggCracked = 31,
 	StoveKnob = 32,
-	Container = 33, //for physics version - see GlassBottle
+	Container = 33, //for physics version - see Bottle
 	Cup = 34,
 	ButterKnife = 35,
 	PotatoSliced = 36,
@@ -198,7 +198,7 @@ public enum SimObjType : int
     BasketBall = 90,
     Faucet = 91,
     Boots = 92,
-    Glassbottle = 93,
+    Bottle = 93,
     DishSponge = 94,
     Drawer = 95,
     FloorLamp= 96,
@@ -311,7 +311,7 @@ public static class ReceptacleRestrictions
 	{
 		SimObjType.Pot, SimObjType.Pan, SimObjType.Bowl, SimObjType.Plate, SimObjType.Bread, SimObjType.Cup, SimObjType.Mug, SimObjType.Laptop,
 		SimObjType.SaltShaker, SimObjType.PepperShaker, SimObjType.AlarmClock, SimObjType.Box, SimObjType.SoapBottle, SimObjType.SoapBottleFilled, SimObjType.Kettle,
-		SimObjType.Glassbottle, SimObjType.CreditCard, SimObjType.RemoteControl, SimObjType.Candle, SimObjType.SprayBottle, SimObjType.Statue, SimObjType.Vase, 
+		SimObjType.Bottle, SimObjType.CreditCard, SimObjType.RemoteControl, SimObjType.Candle, SimObjType.SprayBottle, SimObjType.Statue, SimObjType.Vase, 
 		SimObjType.KeyChain, SimObjType.CD, SimObjType.Book, SimObjType.EggCracked
 	};
 
@@ -353,7 +353,7 @@ public static class ReceptacleRestrictions
 		}},
 
 		//BOTTLE (Glassbottle)
-		{SimObjType.Glassbottle, new List<SimObjType>()
+		{SimObjType.Bottle, new List<SimObjType>()
 		{SimObjType.Fridge, SimObjType.Box, SimObjType.Dresser, SimObjType.Desk, SimObjType.Sink, SimObjType.SinkBasin, SimObjType.Cabinet, SimObjType.DiningTable, SimObjType.TVStand, SimObjType.CoffeeTable, SimObjType.SideTable,
 		 SimObjType.CounterTop, SimObjType.Shelf, SimObjType.GarbageCan,
 		}},
