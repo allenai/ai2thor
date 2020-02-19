@@ -6673,7 +6673,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     goodPoints.Add(p);
                     transform.position = p;
                     var rot = transform.rotation;
-                    transform.LookAt(targetSOP.transform, transform.up);
+                    //make sure to rotate just the Camera, not the whole agent
+                    m_Camera.transform.LookAt(targetSOP.transform, transform.up);
 
                     var visibleSimObjects = this.GetAllVisibleSimObjPhysics(this.maxVisibleDistance);
                     transform.rotation = rot;
@@ -8643,14 +8644,34 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         public void GetShortestPath(ServerAction action) {
-            if (!physicsSceneManager.UniqueIdToSimObjPhysics.ContainsKey(action.objectId)) {
-                errorMessage = "Cannot find sim object with id '" + action.objectId + "'";
-                actionFinished(false);
+            var objectId = action.objectId;
+            if (!String.IsNullOrEmpty(action.objectType) && String.IsNullOrEmpty(action.objectId)) {
+                var ids = objectTypeToObjectIds(action.objectType);
+                if (ids.Length == 0) {
+                    errorMessage = "Object type '" + action.objectType + "' was not found in the scene.";
+                    actionFinished(false);
+                    return;
+                }
+                else if (ids.Length > 1) {
+                    errorMessage = "Multiple objects of type '" + action.objectType + "' were found in the scene, cannot disambiguate.";
+                    actionFinished(false);
+                    return;
+                }
+                
+                objectId = ids[0];
             }
-            SimObjPhysics sop = physicsSceneManager.UniqueIdToSimObjPhysics[action.objectId];
-            if (sop == null) {
-                errorMessage = "Object with id '" + action.objectId + "' is null";
+
+            if (!physicsSceneManager.UniqueIdToSimObjPhysics.ContainsKey(objectId)) {
+                errorMessage = "Cannot find sim object with id '" + objectId + "'";
                 actionFinished(false);
+                return;
+            }
+           
+            SimObjPhysics sop = physicsSceneManager.UniqueIdToSimObjPhysics[objectId];
+            if (sop == null) {
+                errorMessage = "Object with id '" + objectId+ "' is null";
+                actionFinished(false);
+                return;
             }
             var startPosition = this.transform.position;
             var startRotation = this.transform.rotation;
@@ -8662,22 +8683,32 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             if (path.status == NavMeshPathStatus.PathComplete) {
                 //VisualizePath(startPosition, path);
                 actionFinished(true, path);
+                return;
             }
             else {
                 errorMessage = "Path to target could not be found";
                 actionFinished(false);
+                return;
             }
         }
 
-        public void ObjectTypeToObjectIds(ServerAction action) {
+        private string[] objectTypeToObjectIds(string objectTypeString) {
+            List<string> objectIds = new List<string>();
             try {
-                SimObjType objectType = (SimObjType) Enum.Parse(typeof(SimObjType), action.objectType.Replace(" ", String.Empty), true);
-                List<string> objectIds = new List<string>();
+                SimObjType objectType = (SimObjType) Enum.Parse(typeof(SimObjType), objectTypeString.Replace(" ", String.Empty), true);
                 foreach (var s in physicsSceneManager.UniqueIdToSimObjPhysics) {
                     if (s.Value.ObjType == objectType) {
                         objectIds.Add(s.Value.uniqueID);
                     }
                 }
+            }   
+            catch (ArgumentException exception) {}
+            return objectIds.ToArray();
+        }
+
+        public void ObjectTypeToObjectIds(ServerAction action) {
+            try {
+                var objectIds = objectTypeToObjectIds(action.objectType);
                 actionFinished(true, objectIds.ToArray());
             }   
             catch (ArgumentException exception) {
@@ -8756,6 +8787,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             var path = new NavMeshPath();
             var sopPos = targetSOP.transform.position;
             var target = new Vector3(sopPos.x, initialPosition.y, sopPos.z);
+
+            //make sure navmesh agent is active
+            this.GetComponent<NavMeshAgent>().enabled = true;
             bool pathSuccess = NavMesh.CalculatePath(initialPosition, fixedPosition,  NavMesh.AllAreas, path);
         
             var pathDistance = 0.0f;
@@ -8763,6 +8797,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 Debug.DrawLine(path.corners[i], path.corners[i + 1], Color.red, 10.0f);
                 pathDistance += Vector3.Distance(path.corners[i], path.corners[i + 1]);
             }
+
+            //disable navmesh agent
+            this.GetComponent<NavMeshAgent>().enabled = false;
+
             return path;
         }
 

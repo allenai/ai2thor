@@ -13,7 +13,7 @@ public class NavMeshSetup : MonoBehaviour
     public Transform goal;
     private UnityEngine.AI.NavMeshAgent navMeshAgent;
     private Transform hitPos;
-    private PhysicsRemoteFPSAgentController PhysicsController = null;
+    //private PhysicsRemoteFPSAgentController PhysicsController = null;
 
     void Start()
     {
@@ -33,9 +33,26 @@ public class NavMeshSetup : MonoBehaviour
             Debug.Log("Scenes: " + string.Join(",", trainSceneNames.ToArray()));
 
             var selection = new List<string>();
-            selection.AddRange(testSceneNames);
-            selection.AddRange(valSceneNames);
-            selection.AddRange(trainSceneNames);
+            //selection.AddRange(testSceneNames);
+            //selection.AddRange(valSceneNames);
+            //selection.AddRange(trainSceneNames);
+            selection = new List<string>()
+            {
+                "Assets/Scenes/FloorPlan_Train1_2.unity",  
+                "Assets/Scenes/FloorPlan_Train1_4.unity", 
+                "Assets/Scenes/FloorPlan_Train2_5.unity", 
+                "Assets/Scenes/FloorPlan_Train8_2.unity", 
+                "Assets/Scenes/FloorPlan_Train9_4.unity", 
+                "Assets/Scenes/FloorPlan_Train9_5.unity", 
+                "Assets/Scenes/FloorPlan_Val1_2.unity", 
+                "Assets/Scenes/FloorPlan_Val1_4.unity", 
+                "Assets/Scenes/FloorPlan_Val1_5.unity", 
+                "Assets/Scenes/FloorPlan_Val2_1.unity", 
+                "Assets/Scenes/FloorPlan_Val2_3.unity", 
+                
+            };
+
+            print("selection is: " + selection.ToArray());
             selection.ToList().ForEach(sceneName => BuildNavmeshForScene(sceneName));
         }
 
@@ -65,6 +82,7 @@ public class NavMeshSetup : MonoBehaviour
             var agentController = FindObjectOfType<PhysicsRemoteFPSAgentController>();
             var capsuleCollider = agentController.GetComponent<CapsuleCollider>();
             var navmeshAgent = agentController.GetComponent<NavMeshAgent>();
+            navmeshAgent.enabled = true;
             // The Editor bake interface does not take with parameters and could not be modified as of 2018.3
             var buildSettings = new NavMeshBuildSettings() {
                 agentTypeID = navmeshAgent.agentTypeID,
