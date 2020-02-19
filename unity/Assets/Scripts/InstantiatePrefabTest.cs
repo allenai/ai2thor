@@ -175,6 +175,8 @@ public class InstantiatePrefabTest : MonoBehaviour
         }
 
         List<ReceptacleSpawnPoint> goodRsps = new List<ReceptacleSpawnPoint>();
+
+        //only add spawn points to try if the point's parent is not an object specific receptacle, that is handled in RandomSpawnRequiredSceneObjects
         foreach (ReceptacleSpawnPoint p in rsps) {
             if(!p.ParentSimObjPhys.GetComponent<SimObjPhysics>().DoesThisObjectHaveThisSecondaryProperty
                 (SimObjSecondaryProperty.ObjectSpecificReceptacle)) {
@@ -387,6 +389,11 @@ public class InstantiatePrefabTest : MonoBehaviour
             //if spawn area is clear, spawn it and return true that we spawned it
             if(CheckSpawnArea(sop, rsp.Point + rsp.ParentSimObjPhys.transform.up * (quat.distance + yoffset), quat.rotation, false))
             {
+
+                //translate position of the target sim object to the rsp.Point and offset in local y up
+                sop.transform.position = rsp.Point + rsp.ReceptacleBox.transform.up * (quat.distance + yoffset);//rsp.Point + sop.transform.up * DistanceFromBottomOfBoxToTransform;
+                sop.transform.rotation = quat.rotation;
+                
                 //now to do a check to make sure the sim object is contained within the Receptacle box, and doesn't have
                 //bits of it hanging out
 
@@ -461,10 +468,6 @@ public class InstantiatePrefabTest : MonoBehaviour
                         return false;
                     }
                 }
-
-                //translate position of the target sim object to the rsp.Point and offset in local y up
-                sop.transform.position = rsp.Point + rsp.ReceptacleBox.transform.up * (quat.distance + yoffset);//rsp.Point + sop.transform.up * DistanceFromBottomOfBoxToTransform;
-                sop.transform.rotation = quat.rotation;
 
                 //set true if we want objects to be stationary when placed. (if placed on uneven surface, object remains stationary)
                 //if false, once placed the object will resolve with physics (if placed on uneven surface object might slide or roll)
@@ -600,10 +603,10 @@ public class InstantiatePrefabTest : MonoBehaviour
         simObj.transform.position = originalPos;
         simObj.transform.rotation = originalRot;
 
-        //we need the center of the box collider in world space, we need the box collider size/2, we need the rotation to set the box at, layermask, querytrigger
+        //spawn overlap box
         Collider[] hitColliders = Physics.OverlapBox(bbCenterTransformPoint,
-                                                     bbcol.size / 2.0f, simObj.transform.rotation, 
-                                                     layermask, QueryTriggerInteraction.Collide);//make sure all ReceptacleTriggers are set to SimOBjInvisible layer!
+                                                     bbcol.size / 2.0f, rotation, 
+                                                     layermask, QueryTriggerInteraction.Collide);
 
         int colliderCount = 0;
         //if a collider was hit, then the space is not clear to spawn

@@ -357,17 +357,6 @@ public class PhysicsSceneManager : MonoBehaviour
                 requestedNumDuplicatesOfType[objType] = repeatCount.count;
             }
 
-            // if (excludedReceptacles == null)
-            // {
-            //     excludedReceptacles = new String[0];
-            // }
-
-            // foreach (SimObjType receptacleType in excludedReceptacles)
-            // {
-            //     //SimObjType objType = (SimObjType)System.Enum.Parse(typeof(SimObjType), receptacleType);
-            //     listOfExcludedReceptacles.Add(SimObjType);
-            // }
-
             //now lets go through all pickupable sim objects that are in the current scene
             foreach (GameObject go in SpawnedObjects)
             {
