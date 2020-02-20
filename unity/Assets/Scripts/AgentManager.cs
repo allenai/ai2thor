@@ -176,11 +176,14 @@ public class AgentManager : MonoBehaviour
             //default to 90 fov on third party camera if nothing passed in, or if value is too large
             fov = 90f;
         }
-        
         else
         {
             fov = action.fieldOfView;
         }
+        if (action.orthographic) {
+            camera.orthographicSize = action.fieldOfView;
+        }
+        camera.orthographic = action.orthographic;
 
         camera.fieldOfView = fov;
 
@@ -1022,6 +1025,10 @@ public class ServerAction
     public float rotateStepDegrees = 90.0f;
 
     public bool useAgentTransform = false;
+
+    public bool topView = false;
+
+    public bool orthographic = false;
 
     public SimObjType ReceptableSimObjType()
 	{

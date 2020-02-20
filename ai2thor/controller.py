@@ -414,7 +414,6 @@ class Controller(object):
             image_per_frame=save_image_per_frame
         )
 
-
         if download_only:
             self.download_binary()
         else:
@@ -466,8 +465,9 @@ class Controller(object):
                 last_val = m.group(3) if m.group(3) is not None else -1
                 return m.group(1), int(m.group(2)), int(last_val)
             raise ValueError(
-                "\nScene not contained in build (scene names are case sensitive)."
+                "\nScene '{}' not contained in build (scene names are case sensitive)."
                 "\nPlease choose one of the following scene names:\n\n{}".format(
+                    scene,
                     ", ".join(sorted(list(self.scenes_in_build), key=key_sort_func))
                 )
             )
