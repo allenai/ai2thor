@@ -1,3 +1,7 @@
+try:
+    from ai2thor._builds import BUILDS
+except ImportError:
+    BUILDS = {}
 
 platform_map = dict(Linux64="Linux", OSXIntel64="Darwin")
 

@@ -44,7 +44,7 @@ import ai2thor.downloader
 import ai2thor.server
 from ai2thor.interact import InteractiveControllerPrompt, DefaultActions
 from ai2thor.server import queue_get, DepthFormat
-from ai2thor._builds import BUILDS
+from ai2thor.build import BUILDS
 from ai2thor._quality_settings import QUALITY_SETTINGS, DEFAULT_QUALITY
 
 logger = logging.getLogger(__name__)
