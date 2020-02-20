@@ -1191,7 +1191,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             if(!checkForUpDownAngleLimit("down", action.degrees))
             {
-                errorMessage = "can't look down below the minimum angle (60 below horizon)";
+                errorMessage = "can't look down below the minimum angle:" + maxDownwardLookAngle;
 			 	errorCode = ServerActionErrorCode.LookDownCantExceedMin;
 			 	actionFinished(false);
                 return;
@@ -1222,7 +1222,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             if(!checkForUpDownAngleLimit("up", action.degrees))
             {
-                errorMessage = "can't look up above the maximum angle (30 above horizon)";
+                errorMessage = "can't look up above the maximum angle:" + maxUpwardLookAngle;
 			 	errorCode = ServerActionErrorCode.LookDownCantExceedMin;
 			 	actionFinished(false);
                 return;
@@ -1468,9 +1468,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             if(direction == "down")
             {
                 rotPoint.Rotate(new Vector3(degrees, 0, 0));
-                print("rotating down rounded: " + Mathf.Round(Vector3.SignedAngle(rotPoint.transform.forward, m_CharacterController.transform.forward, m_CharacterController.transform.right)));
-                print("rotating down exact: " + Vector3.SignedAngle(rotPoint.transform.forward, m_CharacterController.transform.forward, m_CharacterController.transform.right));
-                if(Mathf.Round(Vector3.SignedAngle(rotPoint.transform.forward, m_CharacterController.transform.forward, m_CharacterController.transform.right)) < -60)
+                //print("rotating down rounded: " + Mathf.Round(Vector3.SignedAngle(rotPoint.transform.forward, m_CharacterController.transform.forward, m_CharacterController.transform.right)));
+                //print("rotating down exact: " + Vector3.SignedAngle(rotPoint.transform.forward, m_CharacterController.transform.forward, m_CharacterController.transform.right));
+                if(Mathf.Round(Vector3.SignedAngle(rotPoint.transform.forward, m_CharacterController.transform.forward, m_CharacterController.transform.right)) < maxDownwardLookAngle)
                 {
                     result = false;
                 }
@@ -1479,9 +1479,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             if(direction == "up")
             {
                 rotPoint.Rotate(new Vector3(-degrees, 0, 0));
-                print("rotating up rounded: " + Mathf.Round(Vector3.SignedAngle(rotPoint.transform.forward, m_CharacterController.transform.forward, m_CharacterController.transform.right)));
-                print("rotating up exact: " + Vector3.SignedAngle(rotPoint.transform.forward, m_CharacterController.transform.forward, m_CharacterController.transform.right));
-                if(Mathf.Round(Vector3.SignedAngle(rotPoint.transform.forward, m_CharacterController.transform.forward, m_CharacterController.transform.right)) > 30)
+                //print("rotating up rounded: " + Mathf.Round(Vector3.SignedAngle(rotPoint.transform.forward, m_CharacterController.transform.forward, m_CharacterController.transform.right)));
+                //print("rotating up exact: " + Vector3.SignedAngle(rotPoint.transform.forward, m_CharacterController.transform.forward, m_CharacterController.transform.right));
+                if(Mathf.Round(Vector3.SignedAngle(rotPoint.transform.forward, m_CharacterController.transform.forward, m_CharacterController.transform.right)) > maxUpwardLookAngle)
                 {
                     result = false;
                 }

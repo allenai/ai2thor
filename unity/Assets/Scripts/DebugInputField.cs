@@ -213,6 +213,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         //action.snapToGrid = true;
                         //action.makeAgentsVisible = false;
                         action.agentMode = "bot";
+                        action.agentType = "stochastic";
 
                         action.action = "Initialize";
                         action.fieldOfView = 90;

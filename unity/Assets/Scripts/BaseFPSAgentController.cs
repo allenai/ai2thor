@@ -74,8 +74,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		//private float m_StepInterval;
 
 		protected float[] headingAngles = new float[] { 0.0f, 90.0f, 180.0f, 270.0f };
-		protected float[] horizonAngles = new float[] { 60.0f, 30.0f, 0.0f, 330.0f };
-
+		//protected float[] horizonAngles = new float[] { 60.0f, 30.0f, 0.0f, 330.0f };
+		protected float maxDownwardLookAngle = -60f;
+		protected float maxUpwardLookAngle = 30f;
 		//allow agent to push sim objects that can move, for physics
 		protected bool PushMode = false;
 		protected int actionCounter;
@@ -439,7 +440,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 crouchingLocalCameraPosition = m_Camera.transform.localPosition + new Vector3(0, -0.2206f, 0);//smaller y offset if Bot
 
                 // limit camera from looking too far down
-                this.horizonAngles = new float[] { 30.0f, 0.0f, 330.0f };
+				this.maxDownwardLookAngle = -30f;
+				this.maxUpwardLookAngle = 30f;
+                //this.horizonAngles = new float[] { 30.0f, 0.0f, 330.0f };
             }
         }
 
@@ -931,15 +934,15 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			return 0;
 		}
 
-		protected int currentHorizonAngleIndex()
-		{
-			return nearestAngleIndex(Quaternion.LookRotation(m_Camera.transform.forward).eulerAngles.x, horizonAngles);
-		}
+		// protected int currentHorizonAngleIndex()
+		// {
+		// 	return nearestAngleIndex(Quaternion.LookRotation(m_Camera.transform.forward).eulerAngles.x, horizonAngles);
+		// }
 
-		private int currentHeadingAngleIndex()
-		{
-			return nearestAngleIndex(Quaternion.LookRotation(transform.forward).eulerAngles.y, headingAngles);
-		}
+		// private int currentHeadingAngleIndex()
+		// {
+		// 	return nearestAngleIndex(Quaternion.LookRotation(transform.forward).eulerAngles.y, headingAngles);
+		// }
 
 		//free look, change up/down angle of camera view
 		public void Look(ServerAction response)
