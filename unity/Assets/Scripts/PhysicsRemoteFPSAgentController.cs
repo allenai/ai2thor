@@ -130,6 +130,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     sceneBounds.Encapsulate(r.bounds);
                 }
             }
+
+            //default nav mesh agent to false cause WHY DOES THIS BREAK THINGS I GUESS IT DOESN TLIKE TELEPORTING
+            this.GetComponent<NavMeshAgent>().enabled = false;
         }
 
         //forceVisible is true to activate, false to deactivate
