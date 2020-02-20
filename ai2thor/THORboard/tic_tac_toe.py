@@ -1,4 +1,5 @@
 import torch
+import numpy as np
 
 class TicTacToe:
     def __init__(self, starting_player=1):
