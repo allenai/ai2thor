@@ -1,6 +1,6 @@
 # offline (non-GUI) implementation of chess
 
-class chess:
+class Chess:
 	def __init__(self):
 		raise NotImplementedError()
 
