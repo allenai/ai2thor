@@ -39,7 +39,7 @@ class TicTacToe:
     def has_next_move(self):
         """
         example:
-            self.has_next_move
+            game.has_next_move
 
         description:
             Returns 1 or -1, depending on whose turn it is to play next on the
