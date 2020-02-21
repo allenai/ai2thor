@@ -89,12 +89,11 @@ class TicTacToe:
 
         description:
             Returns 1 if p1 wins, -1 if p2 wins, and 0 if game is not over.
-            Assumes only one player is the winner.
-            If the board is something like:
+            Raises an exception if there are multiple winners on the board,
+            e.g.,:
                  1 | _ | -1
                  1 | _ | -1
                  1 | _ | -1
-            there may be unexpected results.
         """
         b = self._board
 
@@ -113,17 +112,24 @@ class TicTacToe:
             else:
                 return -1
 
-        return (
-            max(-1,
-                min(1,
-                    determine_winner(b[:, 0]) +
-                    determine_winner(b[:, 1]) +
-                    determine_winner(b[:, 2]) +
-                    determine_winner(b[0, :]) +
-                    determine_winner(b[1, :]) +
-                    determine_winner(b[2, :]) +
-                    determine_winner(torch.diag(b)) +
-                    determine_winner(torch.tensor([b[0, 2], b[1, 1], b[2, 0]]))
-                )
-            )
-        )
+        tensor_results = [
+            determine_winner(b[:, 0]),
+            determine_winner(b[:, 1]),
+            determine_winner(b[:, 2]),
+            determine_winner(b[0, :]),
+            determine_winner(b[1, :]),
+            determine_winner(b[2, :]),
+            determine_winner(torch.diag(b)),
+            determine_winner(torch.tensor([b[0, 2], b[1, 1], b[2, 0]]))
+        ]
+
+        # rows of three where there would be a winner
+        nonzero_results = [result for result in tensor_results if result != 0]
+        if nonzero_results:
+            # asserts that both players are not winners on the board
+            if not all(result == nonzero_results[0] for result in nonzero_results):
+                raise Exception('Game contains multiple winners.')
+            else:
+                return nonzero_results[0]
+        else:
+            return 0
