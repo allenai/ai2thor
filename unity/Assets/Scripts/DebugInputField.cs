@@ -10,6 +10,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
     {
 		public GameObject Agent = null;
 		public PhysicsRemoteFPSAgentController PhysicsController = null;
+        public StochasticRemoteFPSAgentController StochasticController = null;
         public AgentManager AManager = null;
 
         private ControlMode controlMode;
@@ -75,6 +76,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
         {
             GameObject fpsController = GameObject.FindObjectOfType<BaseFPSAgentController>().gameObject;
             PhysicsController = fpsController.GetComponent<PhysicsRemoteFPSAgentController>();
+            StochasticController = fpsController.GetComponent<StochasticRemoteFPSAgentController>();
             Agent = PhysicsController.gameObject;
             AManager = GameObject.Find("PhysicsSceneManager").GetComponentInChildren<AgentManager>();
             
@@ -1209,6 +1211,21 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }
+
+                    //rotate left stochastic
+                case "rls":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "RotateLeft";
+
+						if(splitcommand.Length > 1)
+						{
+							action.degrees = float.Parse(splitcommand[1]);
+						}
+
+                        StochasticController.ProcessControlCommand(action);
+                        break;
+                    }
                 
                     //rotate right
                 case "rr":
@@ -1224,6 +1241,21 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }   
+
+                    //rotate right stochastic
+                case "rrs":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "RotateRight";
+
+						if(splitcommand.Length > 1)
+						{
+							action.degrees = float.Parse(splitcommand[1]);
+						}
+                        
+                        StochasticController.ProcessControlCommand(action);
+                        break;
+                    } 
 
                     //pickup object, if no specific object passed in, it will pick up the closest interactable simobj in the agent's viewport
 				case "pu":
