@@ -475,17 +475,22 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             //get all colliders on the sop, excluding colliders if they are not enabled
             Collider[] cols = sop.GetComponentsInChildren<Collider>();
 
+            //0 colliders mean the object is despawned, so this will cause objects broken into pieces to not generate an axis aligned box
             if(cols.Length == 0)
             {
                 if(sop.GetComponent<SimObjPhysics>().IsBroken)
                 {
+                    #if UNITY_EDITOR
                     Debug.Log("Object is broken in pieces, no AxisAligned box generated: " + sop.name);
+                    #endif
                     return b;
                 }
 
                 else
                 {
+                    #if UNITY_EDITOR
                     Debug.Log("Something went wrong, no Colliders were found on" + sop.name);
+                    #endif
                     return b;
                 }
             }
@@ -9640,14 +9645,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // }
 
             //draw axis aligned bounds of objects after actionFinished() calls
-            // if(gizmobounds != null)
-            // {
-            //     Gizmos.color = Color.yellow;
-            //     foreach(Bounds g in gizmobounds)
-            //     {
-            //         Gizmos.DrawWireCube(g.center, g.size);
-            //     }
-            // }
+            if(gizmobounds != null)
+            {
+                Gizmos.color = Color.yellow;
+                foreach(Bounds g in gizmobounds)
+                {
+                    Gizmos.DrawWireCube(g.center, g.size);
+                }
+            }
         }
         #endif
 
