@@ -17,10 +17,35 @@ class TicTacToe:
                 indicates which player has the starting move. | 1
         """
         assert starting_player == 1 or starting_player == -1
-        self.has_next_move = starting_player
+        self._has_next_move = starting_player
 
         # 8x8 game of checkers
-        self.board = torch.zeros((3, 3))
+        self._board = torch.zeros((3, 3))
+
+    @property
+    def board(self):
+        """
+        example:
+            game.board
+
+        description:
+            Returns a 3x3 PyTorch tensor of the current game board. Note:
+            1 denotes player 1 has played in a position, -1 denotes player 2 has
+            played in a position, and 0 denotes that the spot is empty.
+        """
+        return self._board
+
+    @property
+    def has_next_move(self):
+        """
+        example:
+            self.has_next_move
+
+        description:
+            Returns 1 or -1, depending on whose turn it is to play next on the
+            board.
+        """
+        return self._has_next_move
 
     def get_valid_actions(self):
         """
@@ -33,7 +58,7 @@ class TicTacToe:
         description:
             Extracts all board positions where the next player can play.
         """
-        positions = (self.board == 0).nonzero()
+        positions = (self._board == 0).nonzero()
         return [(int(p[0]), int(p[1])) for p in positions]
 
     def step(self, play_on: tuple):
@@ -52,10 +77,10 @@ class TicTacToe:
 
         # make move
         row, col = play_on
-        self.board[row, col] = self.has_next_move 
+        self._board[row, col] = self._has_next_move 
 
         # change the player
-        self.has_next_move *= -1
+        self._has_next_move *= -1
 
     def game_over(self):
         """
@@ -71,7 +96,7 @@ class TicTacToe:
                  1 | _ | -1
             there may be unexpected results.
         """
-        b = self.board
+        b = self._board
 
         def determine_winner(tensor):
             """
