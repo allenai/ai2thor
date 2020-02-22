@@ -493,7 +493,7 @@ public static class ReceptacleRestrictions
 		//NEWSPAPER
 		{SimObjType.Newspaper, new List<SimObjType>()
 		{SimObjType.Sofa, SimObjType.ArmChair, SimObjType.Ottoman, SimObjType.Dresser, SimObjType.Desk, SimObjType.Bed, SimObjType.Toilet, SimObjType.Cabinet, SimObjType.DiningTable, SimObjType.TVStand, SimObjType.CoffeeTable, SimObjType.SideTable, 
-		 SimObjType.CounterTop, SimObjType.Shelf, SimObjType.Drawer, SimObjType.GarbageCan, SimObjType.Stool, SimObjType.Chair, SimObjType.Footstool,
+		 SimObjType.CounterTop, SimObjType.Shelf, SimObjType.Drawer, SimObjType.GarbageCan, SimObjType.Stool, SimObjType.Chair, SimObjType.Footstool, SimObjType.Floor
 		}},
 
 		//PAN
@@ -591,7 +591,7 @@ public static class ReceptacleRestrictions
 
 		//TENNIS RACKET
 		{SimObjType.TennisRacket, new List<SimObjType>()
-		{SimObjType.Dresser, SimObjType.Desk, SimObjType.Bed, SimObjType.DiningTable, SimObjType.TVStand, SimObjType.CoffeeTable, SimObjType.SideTable, SimObjType.CounterTop, SimObjType.Stool, SimObjType.Chair}}, ///place on floor? 
+		{SimObjType.Dresser, SimObjType.Desk, SimObjType.Bed, SimObjType.DiningTable, SimObjType.TVStand, SimObjType.CoffeeTable, SimObjType.SideTable, SimObjType.CounterTop, SimObjType.Stool, SimObjType.Chair, SimObjType.Floor}}, ///place on floor? 
 	
 		//TISSUE BOX
 		{SimObjType.TissueBox, new List<SimObjType>()
@@ -635,7 +635,7 @@ public static class ReceptacleRestrictions
 
 		//WATERING CAN
 		{SimObjType.WateringCan, new List<SimObjType>()
-		{SimObjType.Dresser, SimObjType.Desk, SimObjType.Cabinet, SimObjType.DiningTable, SimObjType.TVStand, SimObjType.CoffeeTable, SimObjType.SideTable, SimObjType.CounterTop, SimObjType.Shelf, SimObjType.Drawer, SimObjType.Stool, SimObjType.Chair}},
+		{SimObjType.Dresser, SimObjType.Desk, SimObjType.Cabinet, SimObjType.DiningTable, SimObjType.TVStand, SimObjType.CoffeeTable, SimObjType.SideTable, SimObjType.CounterTop, SimObjType.Shelf, SimObjType.Drawer, SimObjType.Stool, SimObjType.Chair, SimObjType.Floor}},
 
 		//WINE BOTTLE
 		{SimObjType.WineBottle, new List<SimObjType>()
