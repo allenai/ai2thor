@@ -3746,7 +3746,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         //return a bunch of vector3 points above a target receptacle
         //if forceVisible = true, return points regardless of where receptacle is
         //if forceVisible = false, only return points that are also within view of the Agent camera
-        public void GetSpawnCoordinatesAboveObject(ServerAction action)
+        public void GetSpawnCoordinatesAboveReceptacle(ServerAction action)
         {
             if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(action.objectId)) 
             {
