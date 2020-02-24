@@ -38,26 +38,68 @@ Alternatively, if you want to build the Unity project via the command line, run 
 
 ## Differences from AI2-THOR Scenes
 
-- The "FPSController" object is mostly the same, but I made it smaller to simulate a baby.  This also allowed me to downscale the room which not only improves performance but also was necessary to get the depth masks to work (while standing at one end of the room, you still want to see the far wall in the depth masks).  Changes affected the "Transform", "Character Controller", and "Capsule Collider" in the "FPSController" and the "Transform" in the "FirstPersonCharacter" (camera) nested inside the "FPSController".
-- In the "PhysicsSceneManager" object, I replaced the "AgentManager" script with our "MachineCommonSensePerformerManager" script.
+- The `FPSController` object is mostly the same, but I made it smaller to simulate a baby.  This also allowed me to downscale the room which not only improves performance but also was necessary to get the depth masks to work (while standing at one end of the room, you still want to see the far wall in the depth masks).  Changes affected the `Transform`, `Character Controller`, and `Capsule Collider` in the `FPSController` and the `Transform` in the `FirstPersonCharacter` (camera) nested inside the `FPSController`.
+- In the `FPSController` object, I replaced the `PhysicsRemoteFPSAgentController` and `StochasticRemoteFPSAgentController` scripts with our `MachineCommonSensePerformerManager` script.
+- In the `PhysicsSceneManager` object, I replaced the `AgentManager` script with our `MachineCommonSensePerformerManager` script.
 - Added structural objects (walls, floor, ceiling).
-- Added the invisible "MCS" object containing our "MachineCommonSenseMain" script that runs in the background.
+- Added the invisible `MCS` object containing our `MachineCommonSenseMain` script that runs in the background.
+
+## Code Workflow
+
+### Shared Workflow:
+
+1. (Unity) `BaseFPSAgentController.ProcessControlCommand` will use `Invoke` to call the specific action function in `BaseFPSAgentController` or `PhysicsRemoteFPSAgentController` (like `MoveAhead` or `LookUp`)
+2. (Unity) The specific action function will call `BaseFPSAgentController.actionFinished()` to set `actionComplete` to `true`
+
+### Python API Workflow:
+
+1. (Python) **You** create a new Python AI2-THOR `Controller` object
+2. (Python) The `Controller` class constructor will automatically send a `Reset` action over the AI2-THOR socket to `AgentManager.ProcessControlCommand(string action)`
+3. (Unity) `AgentManager.ProcessControlCommand` will create a `ServerAction` from the action string and call `AgentManager.Reset(ServerAction action)` to load the MCS Unity scene
+4. (Python) **You** call `controller.step(dict action)` with an `Initialize` action to load new MCS scene configuration JSON data and re-initialize the player
+5. (Unity) The action is sent over the AI2-THOR socket to `AgentManager.ProcessControlCommand(string action)`
+6. (Unity) `AgentManager.ProcessControlCommand` will create a `ServerAction` from the action string and call `AgentManager.Initialize(ServerAction action)`
+7. (Unity) `AgentManager.Initialize` will call `AgentManager.addAgents(ServerAction action)`, then call `AgentManager.addAgent(ServerAction action)`, then call `BaseFPSAgentController.ProcessControlCommand(ServerAction action)` with the `Initialize` action
+8. (Unity) See the [**Shared Workflow**](#shared-workflow)
+9. (Python) **You** call `controller.step(dict action)` with a specific action
+10. (Unity) The action is sent over the AI2-THOR socket to `AgentManager.ProcessControlCommand(string action)`
+11. (Unity) `AgentManager.ProcessControlCommand` will create a `ServerAction` from the action string and call `BaseFPSAgentController.ProcessControlCommand(ServerAction action)` (except on `Reset` or `Initialize` actions)
+12. (Unity) See the [**Shared Workflow**](#shared-workflow)
+13. (Unity) `AgentManager.LateUpdate`, which is run every frame, will see `actionComplete` is `true` and call `AgentManager.EmitFrame()`
+14. (Unity) `AgentManager.EmitFrame` will return output to the Python API (`controller.step`) and await the next step
+
+### Unity Editor Workflow:
+
+1. (Unity) Loads the Unity scene
+2. (Editor) Waits until **you** press a key
+3. (Unity) `DebugDiscreteAgentController.Update`, which is run every frame, will create a `ServerAction` from the key you pressed and call `BaseFPSAgentController.ProcessControlCommand(SeverAction action)`
+4. (Unity) See the [**Shared Workflow**](#shared-workflow)
+5. (Unity) `DebugDiscreteAgentController.Update` will see `actionComplete` is `true` and then waits until **you** press another key
 
 ## Lessons Learned
 
-- Adding AI2-THOR's custom Tags and Layers to your Game Objects is needed for their scripts to work properly.  For example, if you don't tag the walls as "Structure", then the player can walk fully into them.
-- Fast moving objects that use Unity physics, as well as all structural objects, should have their "Collision Detection" (in their "Rigidbody") set to "Continuous".  With these changes, a fast moving object that tries to move from one side of a wall to the other side in a single frame will be stopped as expected.
+- Adding AI2-THOR's custom Tags and Layers to your Game Objects is needed for their scripts to work properly.  For example, if you don't tag the walls as `Structure`, then the player can walk fully into them.
+- Fast moving objects that use Unity physics, as well as all structural objects, should have their `Collision Detection` (in their `Rigidbody`) set to `Continuous`.  With these changes, a fast moving object that tries to move from one side of a wall to the other side in a single frame will be stopped as expected.
 
 ## Changelog of AI2-THOR Classes
 
-- Scripts/AgentManager:
-  - Added the `logs` and `sceneConfig` properties to `ServerAction`
-  - Added `virtual` to `ResetCoroutine` and `setReadyToEmit`
-- Scripts/BaseFPSAgentController:
-  - Removed the hard-coded camera properties in `SetAgentMode`
+- `Scripts/AgentManager`:
+  - Added the `logs` and `sceneConfig` properties to the `ServerAction` class
+  - Added `virtual` to the `Update` function
+  - Changed the `physicsSceneManager` variable from `private` to `protected` so we can access it from our subclasses
+- `Scripts/BaseFPSAgentController`:
+  - Added `virtual` to the `Initialize` and `ProcessControlCommand` functions
+  - Removed the hard-coded camera properties in the `SetAgentMode` function
   - Replaced the call to `checkInitializeAgentLocationAction` in `Initialize` with calls to `snapToGrid` and `actionFinished` so re-initialization doesn't cause the player to move for a few steps
-- Scripts/DebugDiscreteAgentController:
+- `Scripts/DebugDiscreteAgentController`:
+  - Calls `ProcessControlCommand` on the controller object with an "Initialize" action in its `Start` function (so the Unity Editor Workflow mimics the Python API Workflow)
   - Added a way to "Pass" (with the "Escape" button) or "Initialize" (with the "Backspace" button) on a step while playing the game in the Unity Editor
-- Shaders/DepthBW:
+- `Scripts/PhysicsRemoteFPSAgentController`:
+  - Changed the `physicsSceneManager` variable from `private` to `protected` so we can access it from our subclasses
+- `Scripts/SimObjPhysics`:
+  - Changed the `Start` function to `public` so we can call it from our scripts
+- `Scripts/SimObjType`:
+  - Added a `MachineCommonSenseObject` type
+- `Shaders/DepthBW`:
   - Changed the divisor to increase the effective depth of field for the depth masks.
 

@@ -10,22 +10,28 @@ public class MachineCommonSenseMain : MonoBehaviour {
     public string defaultSceneFile = "";
     public bool enableVerboseLog = false;
     public string objectRegistryFile = "object_registry";
-    public int physicsFrameDuration = 5;
 
     private MachineCommonSenseConfigScene currentScene;
     private MachineCommonSenseConfigObjectRegistry objectRegistry;
 
-    private int lastPhysicsFrame = -1;
     private int lastStep = -1;
 
-    private MachineCommonSensePerformerManager performerManager;
+    private MachineCommonSenseController agentController;
+    private PhysicsSceneManager physicsSceneManager;
 
     // Unity's Start method is called before the first frame update
     void Start() {
-        this.performerManager = GameObject.Find("PhysicsSceneManager").GetComponentInChildren<MachineCommonSensePerformerManager>();
+        this.agentController = GameObject.Find("FPSController").GetComponent<MachineCommonSenseController>();
+        this.physicsSceneManager = GameObject.Find("PhysicsSceneManager").GetComponent<PhysicsSceneManager>();
 
+        // Disable all physics simulation (we re-enable it on each step in MachineCommonSenseController).
+        Physics.autoSimulation = false;
+        this.physicsSceneManager.physicsSimulationPaused = true;
+
+        // Load the configurable prefab objects from our custom registry file.
         this.objectRegistry = LoadObjectRegistryFromFile(this.objectRegistryFile);
 
+        // Load the default MCS scene set in the Unity Editor.
         if (!this.defaultSceneFile.Equals("")) {
             this.currentScene = LoadCurrentSceneFromFile(this.defaultSceneFile);
             this.currentScene.id = ((this.currentScene.id == null || this.currentScene.id.Equals("")) ? this.defaultSceneFile : this.currentScene.id);
@@ -35,18 +41,15 @@ public class MachineCommonSenseMain : MonoBehaviour {
 
     // Unity's Update method is called once per frame
     void Update() {
-        if (Time.frameCount == 1) {
-            // Pause physics
-            Time.timeScale = 0;
-        }
-        if (this.lastStep < MachineCommonSensePerformerManager.step) {
+        // If the player made a step, update the scene based on the current configuration.
+        if (this.lastStep < agentController.step) {
             this.lastStep++;
-            this.lastPhysicsFrame = Time.frameCount;
-            LogVerbose("Run Step " + this.lastStep + " and Unpause Game Physics at Frame " + Time.frameCount);
-            Time.timeScale = 1;
+            LogVerbose("Run Step " + this.lastStep + " at Frame " + Time.frameCount);
             if (this.currentScene != null && this.currentScene.objects != null) {
+                // Loop over each configuration object in the scene and update if needed.
                 this.currentScene.objects.Where(item => item.GetGameObject() != null).ToList().ForEach(item => {
                     bool objectsWereShown = UpdateGameObjectOnStep(item, this.lastStep);
+                    // If new objects were added to the scene, notify ImageSynthesis so the objects will appear in the masks.
                     if (objectsWereShown) {
                         ImageSynthesis imageSynthesis = GameObject.Find("FPSController").GetComponentInChildren<ImageSynthesis>();
                         if (imageSynthesis != null && imageSynthesis.enabled) {
@@ -55,11 +58,6 @@ public class MachineCommonSenseMain : MonoBehaviour {
                     }
                 });
             }
-        }
-        if (Time.timeScale == 1 && Time.frameCount >= (this.lastPhysicsFrame + this.physicsFrameDuration)) {
-            LogVerbose("Pause Game Physics at Frame " + Time.frameCount);
-            Time.timeScale = 0;
-            this.performerManager.FinalizeEmit();
         }
     }
 
@@ -82,7 +80,7 @@ public class MachineCommonSenseMain : MonoBehaviour {
             this.currentScene = scene;
             Debug.Log("MCS:  Switching the current MCS scene to " + scene.id);
         } else {
-            Debug.Log("MCS:  Resetting the current MCS scene of " + scene.id);
+            Debug.Log("MCS:  Resetting the current MCS scene...");
         }
 
         this.currentScene.objects.ForEach(InitializeGameObject);
@@ -100,7 +98,7 @@ public class MachineCommonSenseMain : MonoBehaviour {
         }
 
         this.lastStep = -1;
-        GameObject.Find("PhysicsSceneManager").GetComponent<PhysicsSceneManager>().SetupScene();
+        this.physicsSceneManager.SetupScene();
     }
 
     private GameObject AssignProperties(GameObject gameObject, MachineCommonSenseConfigGameObject item, String type) {
@@ -113,16 +111,37 @@ public class MachineCommonSenseMain : MonoBehaviour {
         if (item.structure) {
             gameObject.isStatic = true;
             gameObject.tag = "Structure"; // AI2-THOR Tag
-            StructureObject structureObject = gameObject.AddComponent<StructureObject>();
-            structureObject.WhatIsMyStructureObjectTag = StructureObjectTag.Wall; // TODO
+            StructureObject ai2thorStructureScript = gameObject.AddComponent<StructureObject>();
+            ai2thorStructureScript.WhatIsMyStructureObjectTag = StructureObjectTag.Wall; // TODO Make configurable
         }
 
         if (item.physics) {
             Rigidbody rigidbody = gameObject.AddComponent<Rigidbody>();
             rigidbody.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
+            LogVerbose("ASSIGN RIGID BODY TO GAME OBJECT " + gameObject.name);
             // TODO Is SimObjPhysics correct here?
             gameObject.tag = "SimObjPhysics"; // AI2-THOR Tag
-            LogVerbose("ASSIGN RIGID BODY TO GAME OBJECT " + gameObject.name);
+            SimObjPhysics ai2thorPhysicsScript = gameObject.AddComponent<SimObjPhysics>();
+            ai2thorPhysicsScript.uniqueID = gameObject.name;
+            ai2thorPhysicsScript.Type = SimObjType.MachineCommonSenseObject; // TODO Make configurable
+            ai2thorPhysicsScript.PrimaryProperty = SimObjPrimaryProperty.Moveable; // TODO Make configurable
+            ai2thorPhysicsScript.isInteractable = true; // TODO Make configurable
+            // TODO We should probably use these properties
+            ai2thorPhysicsScript.SecondaryProperties = new List<SimObjSecondaryProperty>().ToArray();
+            ai2thorPhysicsScript.VisibilityPoints = new List<Transform>().ToArray();
+            ai2thorPhysicsScript.ReceptacleTriggerBoxes = new List<GameObject>().ToArray();
+            ai2thorPhysicsScript.MyColliders = new List<Collider>().ToArray();
+            ai2thorPhysicsScript.salientMaterials = new List<ObjectMetadata.ObjectSalientMaterial>().ToArray();
+            /* TODO We should probably set these properties
+            ai2thorPhysicsScript.BoundingBox
+            ai2thorPhysicsScript.HFdynamicfriction
+            ai2thorPhysicsScript.HFstaticfriction
+            ai2thorPhysicsScript.HFbounciness
+            ai2thorPhysicsScript.HFrbdrag
+            ai2thorPhysicsScript.HFrbangulardrag
+            */
+            // Call Start to initialize the script since it did not exist on game start.
+            ai2thorPhysicsScript.Start();
         }
 
         AssignMaterial(gameObject, item.materialFile);
