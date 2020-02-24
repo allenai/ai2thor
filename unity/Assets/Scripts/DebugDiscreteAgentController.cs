@@ -29,7 +29,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 Cursor.visible = true;
                 Cursor.lockState = CursorLockMode.None;
             }
-            
+
+            ServerAction action = new ServerAction();
+            action.action = "Initialize";
+            PhysicsController.ProcessControlCommand(action);
         }
 
         public void OnEnable() {

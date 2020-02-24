@@ -42,7 +42,7 @@ public class AgentManager : MonoBehaviour
 
     private JavaScriptInterface jsInterface;
 
-    private PhysicsSceneManager physicsSceneManager;
+    protected PhysicsSceneManager physicsSceneManager;
     public int AdvancePhysicsStepCount = 0;
 
 	void Awake() {
@@ -97,7 +97,7 @@ public class AgentManager : MonoBehaviour
 
 	}
 	
-	public virtual void Initialize(ServerAction action)
+	public void Initialize(ServerAction action)
 	{
         if (action.agentType != null && action.agentType.ToLower() == "stochastic") {
             this.agents.Clear();
@@ -284,14 +284,14 @@ public class AgentManager : MonoBehaviour
         return false;
     }
 
-	public virtual void setReadyToEmit(bool readyToEmit) {
+	public void setReadyToEmit(bool readyToEmit) {
 		this.readyToEmit = readyToEmit;
 	}
 
     // Decide whether agent has stopped actions
     // And if we need to capture a new frame
 
-    private void Update()
+    public virtual void Update()
     {
         physicsSceneManager.isSceneAtRest = true;//assume the scene is at rest by default
     }

@@ -698,7 +698,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 #endif
 
     // Use this for initialization
-    void Start()
+    public void Start()
 	{
 		//For debug in editor only
 #if UNITY_EDITOR

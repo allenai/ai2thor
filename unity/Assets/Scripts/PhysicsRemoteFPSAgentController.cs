@@ -43,7 +43,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         // Extra stuff
         private PhysicsSceneManager _physicsSceneManager = null;
-        private PhysicsSceneManager physicsSceneManager
+        protected PhysicsSceneManager physicsSceneManager
         {
             get {
                 if (_physicsSceneManager == null) {
