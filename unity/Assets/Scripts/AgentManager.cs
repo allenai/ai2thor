@@ -885,9 +885,9 @@ public class ObjectMetadata
 	public float distance;
 	public String objectType;
 	public string objectId;
-	public string parentReceptacle;
+	//public string parentReceptacle;
 	public string[] parentReceptacles;
-	public float currentTime;
+	//public float currentTime;
     public bool isMoving;//true if this game object currently has a non-zero velocity
     public AxisAlignedBoundingBox axisAlignedBoundingBox;
     public ObjectOrientedBoundingBox objectOrientedBoundingBox;
