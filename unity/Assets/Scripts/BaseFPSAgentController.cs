@@ -954,7 +954,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		}
 
 		//looks like thisfree rotates AND free changes camera look angle?
-		public void RotateLook(ServerAction response)
+		public virtual void RotateLook(ServerAction response)
 		{
 			transform.rotation = Quaternion.Euler(new Vector3(0.0f, response.rotation.y, 0.0f));
 			m_Camera.transform.localEulerAngles = new Vector3(response.horizon, 0.0f, 0.0f);
