@@ -6649,8 +6649,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                                 // gridLineRenderer.startWidth = 0.01f;
                                 // gridLineRenderer.endWidth = 0.01f;
                                 gridLineRenderer.SetPositions(new Vector3[] { 
-                                    new Vector3(p.x, 0.01f, p.z),
-                                    new Vector3(newPosition.x, 0.01f, newPosition.z)
+                                    new Vector3(p.x, 0.005f, p.z),
+                                    new Vector3(newPosition.x, 0.005f, newPosition.z)
                                 });
                             }
 #if UNITY_EDITOR
@@ -8720,8 +8720,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 var path = GetSimObjectNavMeshTarget(sop, pos, Quaternion.identity);
 
                 var lineRenderer = go.GetComponentInChildren<LineRenderer>();
-                lineRenderer.startWidth = 0.01f;
-                lineRenderer.endWidth = 0.01f;
+                lineRenderer.startWidth = 0.015f;
+                lineRenderer.endWidth = 0.015f;
 
                 if (path.status == NavMeshPathStatus.PathComplete) { 
                     // lineRenderer.size = path.corners.Length;

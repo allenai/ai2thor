@@ -1928,7 +1928,7 @@ def create_dataset(
 
 
         sorted_objs = sorted(point_objects,
-                             key=lambda m: sqr_dist_dict(m['initial_position'], m['target_position']))
+                             key=lambda m: m['shortest_path_length'])
         third = int(len(sorted_objs) / 3.0)
 
         for i, obj in enumerate(sorted_objs):
@@ -2675,7 +2675,6 @@ def visualize_points(ctx, dataset_path, width=300, height=300, editor_mode=False
         height=height,
         local_executable_path=_local_build_path() if local_build else None,
         start_unity=False if editor_mode else True,
-        scene=scenes,
         port=8200,
         host='127.0.0.1',
         # Unity params
@@ -2738,8 +2737,10 @@ def visualize_points(ctx, dataset_path, width=300, height=300, editor_mode=False
         datapoint = dataset_filtered[index]
         current_scene = datapoint['scene']
         current_object = datapoint['object_type']
+        # controller.reset(current_scene)
         while index < len(dataset_filtered):
             previous_index = index
+            controller.reset(current_scene)
             while current_scene == datapoint['scene'] and current_object == datapoint['object_type']:
                 index += 1
                 if index > len(dataset_filtered) - 1:
@@ -2748,7 +2749,8 @@ def visualize_points(ctx, dataset_path, width=300, height=300, editor_mode=False
 
             current_scene = datapoint['scene']
             current_object = datapoint['object_type']
-            controller.reset(current_scene)
+
+            print("Points for '{}' in scene '{}'...".format(current_object, current_scene))
             evt = controller.step(
                 action='AddThirdPartyCamera',
                 rotation=dict(x=90, y=0, z=0),
@@ -2757,18 +2759,18 @@ def visualize_points(ctx, dataset_path, width=300, height=300, editor_mode=False
                 orthographic=True
             )
 
-            print("{} u {}".format(previous_index, index))
+            # print("{} u {}".format(previous_index, index))
 
             sc = dataset_filtered[previous_index]['scene']
             obj_type = dataset_filtered[previous_index]['object_type']
             positions = [d['initial_position'] for d in dataset_filtered[previous_index:index]]
-            print("{} : {} : {}".format(sc, obj_type, positions))
+            # print("{} : {} : {}".format(sc, obj_type, positions))
             evt = controller.step(
                 action="VisualizePaths",
                 objectType=obj_type,
                 positions=positions
             )
-            print("Success: {}, error: {}".format(evt.metadata['lastActionSuccess'], evt.metadata['errorMessage']))
+            # print("Success: {}, error: {}".format(evt.metadata['lastActionSuccess'], evt.metadata['errorMessage']))
             im = Image.fromarray(evt.third_party_camera_frames[0])
             # im.save("your_file.jpeg")
             im.save(os.path.join(output_dir, "{}-{}.jpg".format(sc, obj_type)))
@@ -2930,6 +2932,72 @@ def test_teleport(ctx, editor_mode=False, local_build=False):
 
 
 
+@task
+def resort_dataset(ctx, dataset_path, output_path, editor_mode=False, local_build = True):
+    import json
+    import re
+    with open(dataset_path, 'r') as f:
+        dataset = json.load(f)
 
+    index = 0
+    previous_index = 0
+    datapoint = dataset[index]
+    current_scene = datapoint['scene']
+    current_object = datapoint['object_type']
+    # controller.reset(current_scene)
+    sum_t = 0
+    new_dataset = []
+    while index < len(dataset):
+        previous_index = index
+        while current_scene == datapoint['scene'] and current_object == datapoint['object_type']:
+            index += 1
+            if index > len(dataset) - 1:
+                break
+            datapoint = dataset[index]
+
+        current_scene = datapoint['scene']
+        current_object = datapoint['object_type']
+        #
+        # evt = controller.step(
+        #     action='AddThirdPartyCamera',
+        #     rotation=dict(x=90, y=0, z=0),
+        #     position=dict(x=5.40, y=3.25, z=-3.0),
+        #     fieldOfView=2.25,
+        #     orthographic=True
+        # )
+
+        print("Scene '{}'...".format(current_scene))
+        sorted_datapoints = sorted(
+            dataset[previous_index:index],
+            key=lambda dp: dp['shortest_path_length']
+        )
+        third = int(len(sorted_datapoints) / 3.0)
+        for i, obj in enumerate(sorted_datapoints):
+            if i < third:
+                level = 'easy'
+            elif i < 2 * third:
+                level = 'medium'
+            else:
+                level = 'hard'
+            sorted_datapoints[i]['difficulty'] = level
+            m = re.search('FloorPlan_([a-zA-Z\-]*)([0-9]+)_([0-9]+)', obj['scene'])
+            point_id = "{}_{}_{}_{}_{}".format(
+                m.group(1),
+                m.group(2),
+                m.group(3),
+                obj['object_type'],
+                i
+            )
+            sorted_datapoints[i]['id'] = point_id
+            sorted_datapoints[i]['difficulty'] = level
+        new_dataset = new_dataset + sorted_datapoints
+        sum_t += len(sorted_datapoints)
+
+    # new_dataset = sorted(dataset, key=lambda x: (x['']))
+
+    print("original len: {}, new len: {}".format(len(dataset), sum_t))
+
+    with open(output_path, 'w') as fw:
+        json.dump(new_dataset, fw, indent=4)
 
 
