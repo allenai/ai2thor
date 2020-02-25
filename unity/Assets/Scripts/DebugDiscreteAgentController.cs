@@ -10,6 +10,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
         public GameObject InputFieldObj = null;
         public PhysicsRemoteFPSAgentController PhysicsController = null;
         private InputField inputField;
+        public float angle = 0;
+        public float angleIncrement = 45.0f;
+        public int horizon = 0;
+        public int horizonIncrement = 30;
 
         [SerializeField] private GameObject InputMode_Text = null;
         // Start is called before the first frame update
@@ -249,6 +253,30 @@ namespace UnityStandardAssets.Characters.FirstPerson
                                 action.action = "CheckDroneCaught";
                                 PhysicsController.ProcessControlCommand(action);
                             }
+                        }
+
+                        if(Input.GetKeyDown(KeyCode.R))
+                        {
+                            ServerAction action = new ServerAction();
+
+                            // Limiting where to look based on realistic expectation (for instance, a person can't turn
+                            // their head 180 degrees)
+                            if (horizon == -90)
+                            {
+                                horizonIncrement = 30;
+                            }
+                            else if (horizon == 90)
+                            {
+                                horizonIncrement = -30;
+                            }
+
+                            horizon += horizonIncrement;
+                            angle += angleIncrement;
+                            action.rotation.y = angle;
+                            action.horizon = horizon;
+
+                            action.action = "RotateLook";
+                            PhysicsController.ProcessControlCommand(action);
                         }
                     }
             }
