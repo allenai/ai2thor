@@ -3810,6 +3810,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         //If fails, return actionFinished(false) and despawn target circle
         public void SpawnTargetCircle(ServerAction action)
         {
+            if(action.objectVariation > 2 || action.objectVariation < 0)
+            {
+                errorMessage = "Please use valid int for SpawnTargetCircleAction. Valid ints are: 0, 1, 2 for small, medium, large circles";
+                actionFinished(false);
+                return;
+            }
             //instantiate a target circle
             GameObject targetCircle = Instantiate(TargetCircles[action.objectVariation], new Vector3(0, 100, 0), Quaternion.identity);
             List<SimObjPhysics> targetReceptacles = new List<SimObjPhysics>();
