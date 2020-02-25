@@ -1069,6 +1069,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         public override void RotateLook(ServerAction response) {
+            // Need to calculate current rotation/horizon and increment by inputs given
             float updatedRotationValue = transform.localEulerAngles.y + response.rotation.y;
             int updatedHorizonValue = (int) m_Camera.transform.localEulerAngles.x + response.horizon;
 
