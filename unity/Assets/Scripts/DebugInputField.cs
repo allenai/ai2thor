@@ -2274,6 +2274,26 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }
+                     case "shortest_path_point":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "GetShortestPathToPoint";
+
+                        //pass in a min range, max range, delay
+                        if (splitcommand.Length > 1)
+                        {
+  
+                                action.x = float.Parse(splitcommand[1]);
+                                action.y = float.Parse(splitcommand[2]);
+                                action.z = float.Parse(splitcommand[3]);
+           
+                                action.useAgentTransform = true;
+                        }
+
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+                    
 
                     case "get_object_type_ids":
                     {
