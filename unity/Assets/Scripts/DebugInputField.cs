@@ -76,6 +76,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
             
            SelectPlayerControl();
 
+           //initialize because yes
+           ServerAction action = new ServerAction();
+           PhysicsController.actionComplete = false;
+           action.action = "Initialize";
+           AManager.Initialize(action);
+
            #if !UNITY_EDITOR
                HideHUD();
            #endif
