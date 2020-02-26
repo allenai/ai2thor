@@ -8762,6 +8762,32 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
 
+        public void GetShortestPathToPoint(ServerAction action) {
+            var startPosition = this.transform.position;
+            if (!action.useAgentTransform) {
+                startPosition = action.position;
+            }
+
+            var targetPosition = new Vector3(action.x, action.y, action.z);
+            Debug.Log("Target " + targetPosition);
+            Debug.Log("Source "+ startPosition);
+
+
+            var path = new NavMeshPath();
+            this.GetComponent<NavMeshAgent>().enabled = true;
+            bool pathSuccess = NavMesh.CalculatePath(startPosition, targetPosition,  NavMesh.AllAreas, path);
+            if (path.status == NavMeshPathStatus.PathComplete) {
+                // VisualizePath(startPosition, path);
+                actionFinished(true, path);
+                return;
+            }
+            else {
+                errorMessage = "Path to target could not be found";
+                actionFinished(false);
+                return;
+            }
+        }
+
         private string[] objectTypeToObjectIds(string objectTypeString) {
             List<string> objectIds = new List<string>();
             try {

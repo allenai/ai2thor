@@ -774,8 +774,8 @@ def build(context, local=False):
 
     builds = {"Docker": {"tag": version}}
     threads = []
-    dp = Process(target=build_docker, args=(version,))
-    dp.start()
+    # dp = Process(target=build_docker, args=(version,))
+    # dp.start()
 
     for arch in platform_map.keys():
         unity_path = "unity"
@@ -795,10 +795,10 @@ def build(context, local=False):
         t.start()
         threads.append(t)
 
-    dp.join()
+    # dp.join()
 
-    if dp.exitcode != 0:
-        raise Exception("Exception with docker build")
+    # if dp.exitcode != 0:
+    #    raise Exception("Exception with docker build")
 
     for t in threads:
         t.join()
