@@ -27,30 +27,30 @@ public class NavMeshSetup : MonoBehaviour
         public static void Build()
         {
             var testSceneNames = GetSceneNames(3, 5, "Val");
-            var valSceneNames = GetSceneNames(2, 2, "test-dev");
+            // var valSceneNames = GetSceneNames(2, 2, "test-dev");
             var trainSceneNames = GetSceneNames(12, 5, "Train");
 
             Debug.Log("Scenes: " + string.Join(",", trainSceneNames.ToArray()));
 
             var selection = new List<string>();
-            //selection.AddRange(testSceneNames);
+            selection.AddRange(testSceneNames);
             //selection.AddRange(valSceneNames);
-            //selection.AddRange(trainSceneNames);
-            selection = new List<string>()
-            {
-                "Assets/Scenes/FloorPlan_Train1_2.unity",  
-                "Assets/Scenes/FloorPlan_Train1_4.unity", 
-                "Assets/Scenes/FloorPlan_Train2_5.unity", 
-                "Assets/Scenes/FloorPlan_Train8_2.unity", 
-                "Assets/Scenes/FloorPlan_Train9_4.unity", 
-                "Assets/Scenes/FloorPlan_Train9_5.unity", 
-                "Assets/Scenes/FloorPlan_Val1_2.unity", 
-                "Assets/Scenes/FloorPlan_Val1_4.unity", 
-                "Assets/Scenes/FloorPlan_Val1_5.unity", 
-                "Assets/Scenes/FloorPlan_Val2_1.unity", 
-                "Assets/Scenes/FloorPlan_Val2_3.unity", 
+            selection.AddRange(trainSceneNames);
+            // selection = new List<string>()
+            // {
+            //     "Assets/Scenes/FloorPlan_Train1_2.unity",  
+            //     "Assets/Scenes/FloorPlan_Train1_4.unity", 
+            //     "Assets/Scenes/FloorPlan_Train2_5.unity", 
+            //     "Assets/Scenes/FloorPlan_Train8_2.unity", 
+            //     "Assets/Scenes/FloorPlan_Train9_4.unity", 
+            //     "Assets/Scenes/FloorPlan_Train9_5.unity", 
+            //     "Assets/Scenes/FloorPlan_Val1_2.unity", 
+            //     "Assets/Scenes/FloorPlan_Val1_4.unity", 
+            //     "Assets/Scenes/FloorPlan_Val1_5.unity", 
+            //     "Assets/Scenes/FloorPlan_Val2_1.unity", 
+            //     "Assets/Scenes/FloorPlan_Val2_3.unity", 
                 
-            };
+            // };
 
             print("selection is: " + selection.ToArray());
             selection.ToList().ForEach(sceneName => BuildNavmeshForScene(sceneName));
