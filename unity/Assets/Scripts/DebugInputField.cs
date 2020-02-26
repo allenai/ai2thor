@@ -1182,6 +1182,21 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         break;
                     }
 
+                    //stochastic look up
+                case "lus":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "LookUp";
+
+						if(splitcommand.Length > 1)
+						{
+							action.degrees = float.Parse(splitcommand[1]);
+						}
+
+                        StochasticController.ProcessControlCommand(action);
+                        break;
+                    }
+
                     //look down
                 case "ld":
                     {
@@ -1194,6 +1209,21 @@ namespace UnityStandardAssets.Characters.FirstPerson
 						}
 
                         PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
+                //stochastic look down
+                case "lds":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "LookDown";
+
+						if(splitcommand.Length > 1)
+						{
+							action.degrees = float.Parse(splitcommand[1]);
+						}
+
+                        StochasticController.ProcessControlCommand(action);
                         break;
                     }
 
