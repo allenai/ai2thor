@@ -84,11 +84,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             new Vector3(-float.PositiveInfinity, -float.PositiveInfinity, -float.PositiveInfinity)
         );
 
-        protected int minHorizon = -90;
-        protected int maxHorizon = 90;
-        protected float minRotation = -360f;
-        protected float maxRotation = 360f;
-
         //change visibility check to use this distance when looking down
         //protected float DownwardViewDistance = 2.0f;
 
@@ -1068,33 +1063,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
 
-        public override void RotateLook(ServerAction response) {
-            // Need to calculate current rotation/horizon and increment by inputs given
-            float updatedRotationValue = transform.localEulerAngles.y + response.rotation.y;
-            int updatedHorizonValue = (int) m_Camera.transform.localEulerAngles.x + response.horizon;
-
-            // Check to ensure rotation value stays between -360 and 360
-            while(updatedRotationValue >= maxRotation) {
-                updatedRotationValue -= maxRotation;
-            }
-
-            while(updatedRotationValue <= minRotation) {
-                updatedRotationValue += maxRotation;
-            }
-
-            // Limiting where to look based on realistic expectation (for instance, a person can't turn
-            // their head 180 degrees)
-            if (updatedHorizonValue > maxHorizon || updatedHorizonValue < minHorizon) {
-                Debug.Log("Value of horizon needs to be between " + minHorizon + " and " + maxHorizon +
-                    ". Setting value to 0.");
-                updatedHorizonValue = 0;
-            }
-
-            ServerAction action = new ServerAction();
-            action.rotation.y = updatedRotationValue;
-            action.horizon = updatedHorizonValue;
-            base.RotateLook(action);
-        }
 
         public void RotateRightSmooth(ServerAction controlCommand) {
             if (CheckIfAgentCanTurn(90)) {
