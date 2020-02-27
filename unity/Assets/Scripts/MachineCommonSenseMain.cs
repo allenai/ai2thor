@@ -108,8 +108,9 @@ public class MachineCommonSenseMain : MonoBehaviour {
 
         if (this.currentScene.performerStart != null) {
             GameObject controller = GameObject.Find("FPSController");
+            // Always keep the same Y position.
             controller.transform.position = new Vector3(this.currentScene.performerStart.x,
-                this.currentScene.performerStart.y, this.currentScene.performerStart.z);
+                controller.transform.position.y, this.currentScene.performerStart.z);
         }
 
         this.lastStep = -1;
