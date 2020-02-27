@@ -185,6 +185,11 @@ namespace UnityStandardAssets.Characters.FirstPerson
             //     this.enableImageSynthesis();
             // #endif
 			//allowNodes = false;
+
+            #if UNITY_EDITOR || UNITY_WEBGL
+            //if using editor mode or webgl demo, default to tall mode
+            SetAgentMode("tall");
+            #endif
 		}
 
         //defaults all agent renderers, both Tall and Bot, to hidden for initialization default

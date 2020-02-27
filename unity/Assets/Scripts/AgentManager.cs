@@ -94,14 +94,6 @@ public class AgentManager : MonoBehaviour
 		primaryAgent.enabled = true;
 		primaryAgent.agentManager = this;
 		primaryAgent.actionComplete = true;
-
-        #if UNITY_EDITOR || UNITY_WEBGL
-        //initialize because yes
-        ServerAction action = new ServerAction();
-        primaryAgent.actionComplete = false;
-        action.action = "Initialize";
-        Initialize(action);
-        #endif
 	}
 	
 	public void Initialize(ServerAction action)
