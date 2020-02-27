@@ -102,4 +102,5 @@ Alternatively, if you want to build the Unity project via the command line, run 
   - Added a `MachineCommonSenseObject` type
 - `Shaders/DepthBW`:
   - Changed the divisor to increase the effective depth of field for the depth masks.
-
+- `Scripts/MachineCommonSenseController`:
+  - Added custom `RotateLook` to use relative inputs instead of absolute values.

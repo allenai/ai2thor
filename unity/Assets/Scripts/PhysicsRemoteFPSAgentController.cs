@@ -1063,7 +1063,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
 
-         public void RotateRightSmooth(ServerAction controlCommand) {
+
+        public void RotateRightSmooth(ServerAction controlCommand) {
             if (CheckIfAgentCanTurn(90)) {
                 DefaultAgentHand(controlCommand);
                 StartCoroutine(InterpolateRotation(this.GetRotateQuaternion(1), controlCommand.timeStep));

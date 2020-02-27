@@ -10,6 +10,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
         public GameObject InputFieldObj = null;
         public PhysicsRemoteFPSAgentController PhysicsController = null;
         private InputField inputField;
+        public float rotationIncrement = 45.0f;
+        public int horizonIncrement = 30;
 
         [SerializeField] private GameObject InputMode_Text = null;
         // Start is called before the first frame update
@@ -249,6 +251,17 @@ namespace UnityStandardAssets.Characters.FirstPerson
                                 action.action = "CheckDroneCaught";
                                 PhysicsController.ProcessControlCommand(action);
                             }
+                        }
+
+                        if(Input.GetKeyDown(KeyCode.R))
+                        {
+                            ServerAction action = new ServerAction();
+
+                            action.rotation.y = rotationIncrement;
+                            action.horizon = horizonIncrement;
+
+                            action.action = "RotateLook";
+                            PhysicsController.ProcessControlCommand(action);
                         }
                     }
             }
