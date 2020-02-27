@@ -7,23 +7,26 @@ using UnityStandardAssets.Characters.FirstPerson;
 using System.Text;
 
 public class MachineCommonSenseMain : MonoBehaviour {
+    public static float CONTROLLER_Y = 0.4f;
     public string defaultSceneFile = "";
     public bool enableVerboseLog = false;
     public string mcsObjectRegistryFile = "mcs_object_registry";
     public string primitiveObjectRegistryFile = "primitive_object_registry";
 
     private MachineCommonSenseConfigScene currentScene;
+    private int lastStep = -1;
     private Dictionary<String, MachineCommonSenseConfigObjectDefinition> objectDictionary =
         new Dictionary<string, MachineCommonSenseConfigObjectDefinition>();
 
-    private int lastStep = -1;
-
+    // AI2-THOR Objects and Scripts
     private MachineCommonSenseController agentController;
+    private GameObject objectParent;
     private PhysicsSceneManager physicsSceneManager;
 
     // Unity's Start method is called before the first frame update
     void Start() {
         this.agentController = GameObject.Find("FPSController").GetComponent<MachineCommonSenseController>();
+        this.objectParent = GameObject.Find("Objects");
         this.physicsSceneManager = GameObject.Find("PhysicsSceneManager").GetComponent<PhysicsSceneManager>();
 
         // Disable all physics simulation (we re-enable it on each step in MachineCommonSenseController).
@@ -110,7 +113,7 @@ public class MachineCommonSenseMain : MonoBehaviour {
             GameObject controller = GameObject.Find("FPSController");
             // Always keep the same Y position.
             controller.transform.position = new Vector3(this.currentScene.performerStart.x,
-                controller.transform.position.y, this.currentScene.performerStart.z);
+                MachineCommonSenseMain.CONTROLLER_Y, this.currentScene.performerStart.z);
         }
 
         this.lastStep = -1;
@@ -191,6 +194,8 @@ public class MachineCommonSenseMain : MonoBehaviour {
         gameObject.name = objectConfig.id;
         gameObject.tag = "SimObj"; // AI2-THOR Tag
         gameObject.layer = 8; // AI2-THOR Layer SimObjVisible
+        // Add all new objects to the "Objects" object because the AI2-THOR SceneManager seems to care.
+        gameObject.transform.parent = this.objectParent.transform;
 
         LogVerbose("CREATE " + objectDefinition.id.ToUpper() + " GAME OBJECT " + gameObject.name);
 
