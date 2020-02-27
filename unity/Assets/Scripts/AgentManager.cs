@@ -104,7 +104,7 @@ public class AgentManager : MonoBehaviour
 
             // stochastic must have these set to work properly
             action.continuous = true;
-            action.snapToGrid = false;
+            action.grid = false;
 
             GameObject fpsController = GameObject.FindObjectOfType<BaseFPSAgentController>().gameObject;
             primaryAgent.enabled = false;
@@ -1029,6 +1029,8 @@ public class ServerAction
     public bool topView = false;
 
     public bool orthographic = false;
+
+    public bool grid = false;
 
     public SimObjType ReceptableSimObjType()
 	{

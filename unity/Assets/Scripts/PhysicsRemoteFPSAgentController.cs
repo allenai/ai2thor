@@ -8699,7 +8699,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return sop;
         }
 
-        public void VisualizePaths(ServerAction action) {
+        public void VisualizeShortestPaths(ServerAction action) {
             
             SimObjPhysics sop = getSimObjectFromTypeOrId(action);
             if (sop == null) {
@@ -8710,7 +8710,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             var reachablePos = getReachablePositions(1.0f, 10000, true);
 
             var go1 = Instantiate(DebugTargetPointPrefab, sop.transform.position, Quaternion.identity);
-
+            var results = new List<bool>();
             for (var i = 0; i < action.positions.Count; i++) {
                 var pos = action.positions[i];
                 var go = Instantiate(DebugPointPrefab, pos, Quaternion.identity);
@@ -8723,6 +8723,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 lineRenderer.startWidth = 0.015f;
                 lineRenderer.endWidth = 0.015f;
 
+                results.Add(path.status == NavMeshPathStatus.PathComplete);
                 if (path.status == NavMeshPathStatus.PathComplete) { 
                     // lineRenderer.size = path.corners.Length;
                     lineRenderer.positionCount = path.corners.Length;
@@ -8734,6 +8735,35 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 // textMesh.characterSize = 
                 // go.AddComponent(textMesh)
             }
+            actionFinished(true, results.ToArray());
+        }
+
+         public void VisualizePath(ServerAction action) {
+            var path = action.positions;
+            if (path == null || path.Count == 0) {
+                this.errorMessage = "Invalid path with 0 points.";
+                actionFinished(false);
+                return;
+            }
+
+            var id = action.objectId;
+
+            var reachablePos = getReachablePositions(1.0f, 10000, action.grid);
+           
+            var go1 = Instantiate(DebugTargetPointPrefab, path[path.Count-1], Quaternion.identity);
+            var results = new List<bool>();
+            var go = Instantiate(DebugPointPrefab, path[0], Quaternion.identity);
+            var textMesh = go.GetComponentInChildren<TextMesh>();
+            textMesh.text = id;
+
+            var lineRenderer = go.GetComponentInChildren<LineRenderer>();
+            lineRenderer.startWidth = 0.015f;
+            lineRenderer.endWidth = 0.015f;
+
+            lineRenderer.positionCount = path.Count;
+            lineRenderer.SetPositions(path.ToArray());
+                // textMesh.characterSize = 
+                // go.AddComponent(textMesh)
             actionFinished(true);
         }
 

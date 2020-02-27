@@ -18,9 +18,8 @@ def updateNavMeshParamsForScene(scene_file_name):
             buildSettings['agentHeight'] = '0.9'
             buildSettings['agentClimb'] = '0.5'
             buildSettings['manualCellSize'] = '1'
-            buildSettings['manualCellSize'] = '0'
 
-            buildSettings['cellSize'] = '0.025'
+            buildSettings['cellSize'] = '0.03'
 
     doc.dump_yaml()
 
@@ -40,3 +39,9 @@ def main():
 
 if __name__== "__main__":
     main()
+
+
+    # Exceptions:
+    # Scene FloorPlan_Train7_1
+    # Train_11_3 unmade bed
+    # Val2_3 unamde bed

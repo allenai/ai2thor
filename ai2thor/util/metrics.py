@@ -116,6 +116,35 @@ def get_shortest_path_to_object_type(
         )
 
 
+def get_shortest_path_to_point(
+        controller,
+        initial_position,
+        target_position
+    ):
+    """
+    Computes the shortest path to a point from an initial position using an agent controller
+    :param controller: agent controller
+    :param initial_position: dict(x=float, y=float, z=float) with the desired initial rotation
+    :param target_position: dict(x=float, y=float, z=float) representing target position
+    :return:
+    """
+    event = controller.step(
+            action='GetShortestPathToPoint',
+            position=initial_position,
+            x=target_position['x'],
+            y=target_position['y'],
+            z=target_position['z']
+        )
+    if event.metadata['lastActionSuccess']:
+        return event.metadata['actionReturn']['corners']
+    else:
+        raise ValueError(
+            "Unable to find shortest path to point '{}'".format(
+                target_position
+            )
+        )
+
+
 
 def get_episodes_with_shortest_paths(controller, episodes, initialize_func=None):
     """

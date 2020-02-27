@@ -36,6 +36,13 @@ public class NavMeshSetup : MonoBehaviour
             selection.AddRange(testSceneNames);
             //selection.AddRange(valSceneNames);
             selection.AddRange(trainSceneNames);
+            var exclude = new List<string>() {
+                "Assets/Scenes/FloorPlan_Train7_1.unity",
+                "Assets/Scenes/FloorPlan_Train11_3.unity",
+                "Assets/Scenes/FloorPlan_Val2_3.unity",
+                };
+            exclude.ForEach((x) => selection.Remove(x));
+            // selection.RemoveAll(excludeSet);
             // selection = new List<string>()
             // {
             //     "Assets/Scenes/FloorPlan_Train1_2.unity",  
@@ -52,7 +59,7 @@ public class NavMeshSetup : MonoBehaviour
                 
             // };
 
-            print("selection is: " + selection.ToArray());
+            Debug.Log("selection is: " + selection.ToArray());
             selection.ToList().ForEach(sceneName => BuildNavmeshForScene(sceneName));
         }
 

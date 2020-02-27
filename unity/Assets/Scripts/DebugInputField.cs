@@ -1994,10 +1994,96 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }
+                     case "shortest_path_type":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "GetShortestPath";
+
+                        //pass in a min range, max range, delay
+                        if (splitcommand.Length > 1)
+                        {
+                            //ID of spawner
+                            action.objectType = splitcommand[1];
+
+                            if (splitcommand.Length == 5) {
+                                action.position = new Vector3(
+                                    float.Parse(splitcommand[2]),
+                                    float.Parse(splitcommand[3]), 
+                                    float.Parse(splitcommand[4])
+                                );
+                            }
+                            else {
+                                action.useAgentTransform = true;
+                            }
+                        }
+
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+                    case "shortest_path_point":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "GetShortestPathToPoint";
+
+
+                        //pass in a min range, max range, delay
+                        if (splitcommand.Length > 1)
+                        {
+                            //ID of spawner
+                            action.objectId = splitcommand[1];
+
+                            if (splitcommand.Length == 5) {
+                                action.position = new Vector3(
+                                    float.Parse(splitcommand[2]),
+                                    float.Parse(splitcommand[3]), 
+                                    float.Parse(splitcommand[4])
+                                );
+                            }
+                            else {
+                                action.positions = new List<Vector3>() {
+                                    new Vector3( 4.258f, 1.0f, -1.69f),
+                                    new Vector3(6.3f, 1.0f, -3.452f)
+                                };
+                            }
+                        }
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+                    case "visualize_path":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "VisualizePath";
+                        action.objectId = "0";
+
+                        //pass in a min range, max range, delay
+                        if (splitcommand.Length > 1)
+                        {
+                            //ID of spawner
+                            action.objectId = splitcommand[1];
+
+                            if (splitcommand.Length == 5) {
+                                action.position = new Vector3(
+                                    float.Parse(splitcommand[2]),
+                                    float.Parse(splitcommand[3]), 
+                                    float.Parse(splitcommand[4])
+                                );
+                            }
+                            else {
+                                action.positions = new List<Vector3>() {
+                                    new Vector3( 4.258f, 1.0f, -1.69f),
+                                    new Vector3(6.3f, 1.0f, -3.452f)
+                                };
+                            }
+                        }
+
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
                     case "visualize_paths":
                     {
                         ServerAction action = new ServerAction();
-                        action.action = "VisualizePaths";
+                        action.action = "VisualizeShortestPaths";
 
                         //pass in a min range, max range, delay
                         if (splitcommand.Length > 1)

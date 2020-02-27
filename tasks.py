@@ -2692,7 +2692,7 @@ def test_dataset(ctx, filename, scenes=None, objects=None, editor_mode=False, lo
 
 
 @task
-def visualize_points(ctx, dataset_path, width=600, height=300, editor_mode=False, local_build=False, scenes=None, object_types=None, gridSize=0.25, output_dir='.'):
+def visualize_shortest_paths(ctx, dataset_path, width=600, height=300, editor_mode=False, local_build=False, scenes=None, object_types=None, gridSize=0.25, output_dir='.'):
     angle = 45
     import ai2thor.controller
     import json
@@ -2765,6 +2765,7 @@ def visualize_points(ctx, dataset_path, width=600, height=300, editor_mode=False
         current_scene = datapoint['scene']
         current_object = datapoint['object_type']
         # controller.reset(current_scene)
+        failed ={}
         while index < len(dataset_filtered):
             previous_index = index
             controller.reset(current_scene)
@@ -2776,6 +2777,10 @@ def visualize_points(ctx, dataset_path, width=600, height=300, editor_mode=False
 
             current_scene = datapoint['scene']
             current_object = datapoint['object_type']
+
+            key = "{}_{}".format(current_scene, current_object)
+
+            failed[key] = []
 
             print("Points for '{}' in scene '{}'...".format(current_object, current_scene))
             evt = controller.step(
@@ -2793,7 +2798,7 @@ def visualize_points(ctx, dataset_path, width=600, height=300, editor_mode=False
             positions = [d['initial_position'] for d in dataset_filtered[previous_index:index]]
             # print("{} : {} : {}".format(sc, obj_type, positions))
             evt = controller.step(
-                action="VisualizePaths",
+                action="VisualizeShortestPaths",
                 objectType=obj_type,
                 positions=positions
             )
@@ -2801,6 +2806,13 @@ def visualize_points(ctx, dataset_path, width=600, height=300, editor_mode=False
             im = Image.fromarray(evt.third_party_camera_frames[0])
             # im.save("your_file.jpeg")
             im.save(os.path.join(output_dir, "{}-{}.jpg".format(sc, obj_type)))
+
+            print(evt.metadata['actionReturn'])
+
+            failed[key] = [positions[i] for i, success in enumerate(evt.metadata['actionReturn']) if not success]
+
+        from pprint import pprint
+        pprint(failed)
 
 
         # for i, d in enumerate(dataset_filtered):
