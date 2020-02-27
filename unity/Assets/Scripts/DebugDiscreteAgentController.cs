@@ -258,7 +258,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                             PhysicsController.ProcessControlCommand(action);
                         }
 
-                        if(Input.GetKeyDown(KeyCode.L))
+                        if(Input.GetKeyDown(KeyCode.X))
                         {
                             action.action = "DropHandObject";
                             action.objectId = this.objectId;
@@ -267,17 +267,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
                         if(Input.GetKeyDown(KeyCode.R))
                         {
-                            // Limiting where to look based on realistic expectation (for instance, a person can't turn
-                            // their head 180 degrees)
-                            if (horizon == -90)
-                            {
-                                horizonIncrement = 30;
-                            }
-                            else if (horizon == 90)
-                            {
-                                horizonIncrement = -30;
-                            }
-
                             action.rotation.y = rotationIncrement;
                             action.horizon = horizonIncrement;
 
