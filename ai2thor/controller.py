@@ -427,6 +427,17 @@ class Controller(object):
             )
 
             self.initialization_parameters = unity_initialization_parameters
+
+            if 'continuous' in self.initialization_parameters:
+                print("Warning: 'continuous' is deprecated and will be ignored,"
+                      " use 'snapToGrid={}' instead."
+                      .format(not self.initialization_parameters['continuous']))
+
+            if 'continuousMode' in self.initialization_parameters:
+                print("Warning: 'continuousMode' is deprecated and will be ignored,"
+                      " use 'snapToGrid={}' instead."
+                      .format(not self.initialization_parameters['continuousMode']))
+
             event = self.reset(scene)
             if event.metadata['lastActionSuccess']:
                 init_return = event.metadata['actionReturn']

@@ -87,6 +87,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         [SerializeField] private GameObject DebugTargetPointPrefab;
         [SerializeField] private GameObject GridRenderer;
 
+        private float gridVisualizeY = 0.005f;
+
         public Bounds sceneBounds = new Bounds(
             new Vector3(float.PositiveInfinity, float.PositiveInfinity, float.PositiveInfinity),
             new Vector3(-float.PositiveInfinity, -float.PositiveInfinity, -float.PositiveInfinity)
@@ -1891,7 +1893,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             v.y = Physics.gravity.y * this.m_GravityMultiplier;
             m_CharacterController.Move(v);
 
-            snapToGrid();
+            snapAgentToGrid();
             actionFinished(true);
         }
 
@@ -1935,9 +1937,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 DefaultAgentHand();
                 Vector3 oldPosition = transform.position;
                 transform.position = targetPosition;
-                if (!continuousMode) {
-                    this.snapToGrid();
-                }
+                this.snapAgentToGrid();
 
                 if (uniqueId != "" && maxDistanceToObject > 0.0f) {
                     if (!physicsSceneManager.UniqueIdToSimObjPhysics.ContainsKey(uniqueId)) {
@@ -2611,6 +2611,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 moveMagnitude,
                 1 << 8 | 1 << 10
             );
+
+            // Debug.Log("length " + String.Join(", ", sweepResults.Select(x => x.rigidbody).ToArray()))
 
             //check if we hit an environmental structure or a sim object that we aren't actively holding. If so we can't move
             if (sweepResults.Length > 0) {
@@ -6649,13 +6651,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                                 // gridLineRenderer.startWidth = 0.01f;
                                 // gridLineRenderer.endWidth = 0.01f;
                                 gridLineRenderer.SetPositions(new Vector3[] { 
-                                    new Vector3(p.x, 0.005f, p.z),
-                                    new Vector3(newPosition.x, 0.005f, newPosition.z)
+                                    new Vector3(p.x, gridVisualizeY, p.z),
+                                    new Vector3(newPosition.x, gridVisualizeY, newPosition.z)
                                 });
                             }
 #if UNITY_EDITOR
                             
-                            Debug.DrawLine(p, newPosition, Color.cyan, 100000f);
+                            // Debug.DrawLine(p, newPosition, Color.cyan, 100000f);
 #endif
                         }
                     }
@@ -6751,7 +6753,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         if (shouldEnqueue) {
                             pointsQueue.Enqueue(newPosition);
                             #if UNITY_EDITOR
-                                Debug.DrawLine(p, newPosition, Color.cyan, 100000f);
+                                // Debug.DrawLine(p, newPosition, Color.cyan, 100000f);
                             #endif
                         }
                     }
@@ -7394,7 +7396,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             psm.SetupScene();
             physicsSceneManager.ResetUniqueIdToSimObjPhysics();
 
-            snapToGrid(); // This snapping seems necessary for some reason, really doesn't make any sense.
+            snapAgentToGrid(); // This snapping seems necessary for some reason, really doesn't make any sense.
             actionFinished(true);
         }
 
@@ -8707,10 +8709,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 return;
             }
 
-            var reachablePos = getReachablePositions(1.0f, 10000, true);
+            var reachablePos = getReachablePositions(1.0f, 10000, action.grid);
 
             var go1 = Instantiate(DebugTargetPointPrefab, sop.transform.position, Quaternion.identity);
             var results = new List<bool>();
+             Debug.Log("Pos count " + action.positions.Count);
             for (var i = 0; i < action.positions.Count; i++) {
                 var pos = action.positions[i];
                 var go = Instantiate(DebugPointPrefab, pos, Quaternion.identity);
@@ -8724,10 +8727,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 lineRenderer.endWidth = 0.015f;
 
                 results.Add(path.status == NavMeshPathStatus.PathComplete);
+                Debug.Log("status " + path.corners.Length);
                 if (path.status == NavMeshPathStatus.PathComplete) { 
                     // lineRenderer.size = path.corners.Length;
                     lineRenderer.positionCount = path.corners.Length;
-                    lineRenderer.SetPositions(path.corners);
+                    Debug.Log("COunt " + path.corners.Length);
+                    lineRenderer.SetPositions(path.corners.Select(c => new Vector3(c.x, gridVisualizeY + 0.005f, c.z)).ToArray());
                     //  for (int j = 0; j < path.corners.Length; j++) {
                     //      lineRenderer.SetPosition (j, path.corners[j]);
                     //  }
@@ -8765,6 +8770,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 // textMesh.characterSize = 
                 // go.AddComponent(textMesh)
             actionFinished(true);
+        }
+
+        public void VisualizeGrid(ServerAction action) {
+            var reachablePositions = getReachablePositions(1.0f, 10000, true);
+            actionFinished(true, reachablePositions);
         }
 
         public void GetShortestPath(ServerAction action) {
@@ -8923,7 +8933,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             var pathDistance = 0.0f;
             for (int i = 0; i < path.corners.Length - 1; i++) {
                 #if UNITY_EDITOR
-                    Debug.DrawLine(path.corners[i], path.corners[i + 1], Color.red, 10.0f);
+                    // Debug.DrawLine(path.corners[i], path.corners[i + 1], Color.red, 10.0f);
                 #endif
                 pathDistance += Vector3.Distance(path.corners[i], path.corners[i + 1]);
             }

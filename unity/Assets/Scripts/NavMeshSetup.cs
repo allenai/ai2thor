@@ -36,28 +36,13 @@ public class NavMeshSetup : MonoBehaviour
             selection.AddRange(testSceneNames);
             //selection.AddRange(valSceneNames);
             selection.AddRange(trainSceneNames);
+            // These scenes were mannually adjusted so the nav mesh variables should not be set automatically and should be build manually 
             var exclude = new List<string>() {
-                "Assets/Scenes/FloorPlan_Train7_1.unity",
-                "Assets/Scenes/FloorPlan_Train11_3.unity",
-                "Assets/Scenes/FloorPlan_Val2_3.unity",
+                "Assets/Scenes/FloorPlan_Train7_1.unity", // Radius of agent made smaller to fit between table small path where reachable positions exist
+                "Assets/Scenes/FloorPlan_Train11_3.unity", // Unmade bed obstructs conectivity of navmesh
+                "Assets/Scenes/FloorPlan_Val2_3.unity", // Unmade bed obstructs conectivity of navmesh
                 };
             exclude.ForEach((x) => selection.Remove(x));
-            // selection.RemoveAll(excludeSet);
-            // selection = new List<string>()
-            // {
-            //     "Assets/Scenes/FloorPlan_Train1_2.unity",  
-            //     "Assets/Scenes/FloorPlan_Train1_4.unity", 
-            //     "Assets/Scenes/FloorPlan_Train2_5.unity", 
-            //     "Assets/Scenes/FloorPlan_Train8_2.unity", 
-            //     "Assets/Scenes/FloorPlan_Train9_4.unity", 
-            //     "Assets/Scenes/FloorPlan_Train9_5.unity", 
-            //     "Assets/Scenes/FloorPlan_Val1_2.unity", 
-            //     "Assets/Scenes/FloorPlan_Val1_4.unity", 
-            //     "Assets/Scenes/FloorPlan_Val1_5.unity", 
-            //     "Assets/Scenes/FloorPlan_Val2_1.unity", 
-            //     "Assets/Scenes/FloorPlan_Val2_3.unity", 
-                
-            // };
 
             Debug.Log("selection is: " + selection.ToArray());
             selection.ToList().ForEach(sceneName => BuildNavmeshForScene(sceneName));

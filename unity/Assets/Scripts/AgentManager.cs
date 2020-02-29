@@ -102,9 +102,8 @@ public class AgentManager : MonoBehaviour
         if (action.agentType != null && action.agentType.ToLower() == "stochastic") {
             this.agents.Clear();
 
-            // stochastic must have these set to work properly
-            action.continuous = true;
-            action.grid = false;
+            // stochastic must not snap to grid to work properly
+            action.snapToGrid = false;
 
             GameObject fpsController = GameObject.FindObjectOfType<BaseFPSAgentController>().gameObject;
             primaryAgent.enabled = false;
@@ -984,7 +983,6 @@ public class ServerAction
 	public bool alwaysReturnVisibleRange = false;
 	public int sequenceId;
 	public bool snapToGrid = true;
-	public bool continuous;
 	public string sceneName;
 	public bool rotateOnTeleport;
 	public bool forceVisible;
@@ -993,7 +991,6 @@ public class ServerAction
 	public float moveMagnitude;
 	public bool autoSimulation = true;
 	public float visibilityDistance;
-	public bool continuousMode; //i don't think this is used right now? also how is this different from the continuous bool above?
 	public bool uniquePickupableObjectTypes; // only allow one of each object type to be visible
 	public float removeProb;
 	public int numPlacementAttempts;
