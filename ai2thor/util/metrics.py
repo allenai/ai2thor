@@ -25,7 +25,7 @@ def compute_spl(episodes_with_golden):
                                  'path'
                                     the path to evaluate and 'shortest_path' the shortest path
                                     as returned by 'get_shortest_path_to_object'.
-                                    Both as a sequences with values the form
+                                    Both as sequences with values of the form
                                     dict(x=float, y=float, z=float)
                                  'success' boolean, a 0 for a failed path 1 for a successful one
     :return: returns a float representing the spl
