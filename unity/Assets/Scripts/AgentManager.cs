@@ -101,8 +101,7 @@ public class AgentManager : MonoBehaviour
         if (action.agentType != null && action.agentType.ToLower() == "stochastic") {
             this.agents.Clear();
 
-            // stochastic must have these set to work properly
-            action.continuous = true;
+            // stochastic must not snap to grid to work properly
             action.snapToGrid = false;
 
             GameObject fpsController = GameObject.FindObjectOfType<BaseFPSAgentController>().gameObject;
@@ -175,11 +174,14 @@ public class AgentManager : MonoBehaviour
             //default to 90 fov on third party camera if nothing passed in, or if value is too large
             fov = 90f;
         }
-        
         else
         {
             fov = action.fieldOfView;
         }
+        if (action.orthographic) {
+            camera.orthographicSize = action.fieldOfView;
+        }
+        camera.orthographic = action.orthographic;
 
         camera.fieldOfView = fov;
 
@@ -980,7 +982,6 @@ public class ServerAction
 	public bool alwaysReturnVisibleRange = false;
 	public int sequenceId;
 	public bool snapToGrid = true;
-	public bool continuous;
 	public string sceneName;
 	public bool rotateOnTeleport;
 	public bool forceVisible;
@@ -989,7 +990,6 @@ public class ServerAction
 	public float moveMagnitude;
 	public bool autoSimulation = true;
 	public float visibilityDistance;
-	public bool continuousMode; //i don't think this is used right now? also how is this different from the continuous bool above?
 	public bool uniquePickupableObjectTypes; // only allow one of each object type to be visible
 	public float removeProb;
 	public int numPlacementAttempts;
@@ -1021,6 +1021,16 @@ public class ServerAction
     public float rotateStepDegrees = 90.0f;
 
     public bool useAgentTransform = false;
+
+    public bool topView = false;
+
+    public bool orthographic = false;
+
+    public bool grid = false;
+
+    public Color? gridColor;
+
+    public Gradient pathGradient;
 
     public SimObjType ReceptableSimObjType()
 	{

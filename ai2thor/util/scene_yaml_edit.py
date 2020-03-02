@@ -15,10 +15,11 @@ def updateNavMeshParamsForScene(scene_file_name):
             buildSettings = getattr(entry, 'm_BuildSettings', None)
             # pprint(buildSettings)
             buildSettings['agentRadius'] = '0.175'
-            buildSettings['agentHeight'] = '1.1'
+            buildSettings['agentHeight'] = '0.9'
             buildSettings['agentClimb'] = '0.5'
-            buildSettings['manualCellSize'] = '0'
-            buildSettings['cellSize'] = '0.058333334'
+            buildSettings['manualCellSize'] = '1'
+
+            buildSettings['cellSize'] = '0.03'
 
     doc.dump_yaml()
 
@@ -29,12 +30,18 @@ def GetSceneNames(last_index, last_subIndex, nameTemplate):
 
 def main():
     testSceneNames = GetSceneNames(3, 5, "Val")
-    valSceneNames = GetSceneNames(2, 2, "test-dev")
-    trainSceneNames = GetSceneNames(14, 5, "Train")
-    allScenes = testSceneNames + valSceneNames + trainSceneNames
+    # valSceneNames = GetSceneNames(2, 2, "test-dev")
+    trainSceneNames = GetSceneNames(12, 5, "Train")
+    allScenes = testSceneNames  + trainSceneNames
     for scene_file_name in allScenes:
         updateNavMeshParamsForScene(scene_file_name)
 
 
 if __name__== "__main__":
     main()
+
+
+    # Exceptions:
+    # Scene FloorPlan_Train7_1
+    # Train_11_3 unmade bed
+    # Val2_3 unamde bed
