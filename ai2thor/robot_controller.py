@@ -165,13 +165,16 @@ class Controller(object):
                  class_segmentation_frame=False,
                  instance_segmentation_frame=False,
                  depth_frame=False,
-                 color_frame=False
+                 color_frame=False,
+                 metadata=False
                  ):
         self.interactive_controller.interact(
             self,
-            class_segmentation_frame,
-            instance_segmentation_frame,
-            depth_frame
+            class_segmentation_frame=class_segmentation_frame,
+            instance_segmentation_frame=instance_segmentation_frame,
+            depth_frame=depth_frame,
+            color_frame=color_frame,
+            metadata=metadata
         )
 
     def _post_event(self, route='', data=None):

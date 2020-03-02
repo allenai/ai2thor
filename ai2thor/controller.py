@@ -47,6 +47,8 @@ from ai2thor.server import queue_get, DepthFormat
 from ai2thor.build import BUILDS
 from ai2thor._quality_settings import QUALITY_SETTINGS, DEFAULT_QUALITY
 
+import warnings
+
 logger = logging.getLogger(__name__)
 
 RECEPTACLE_OBJECTS = {
@@ -429,14 +431,20 @@ class Controller(object):
             self.initialization_parameters = unity_initialization_parameters
 
             if 'continuous' in self.initialization_parameters:
-                print("Warning: 'continuous' is deprecated and will be ignored,"
-                      " use 'snapToGrid={}' instead."
-                      .format(not self.initialization_parameters['continuous']))
+                warnings.warn(
+                    "Warning: 'continuous' is deprecated and will be ignored,"
+                    " use 'snapToGrid={}' instead."
+                    .format(not self.initialization_parameters['continuous']),
+                    DeprecationWarning
+                )
 
             if 'continuousMode' in self.initialization_parameters:
-                print("Warning: 'continuousMode' is deprecated and will be ignored,"
-                      " use 'snapToGrid={}' instead."
-                      .format(not self.initialization_parameters['continuousMode']))
+                warnings.warn(
+                    "Warning: 'continuousMode' is deprecated and will be ignored,"
+                    " use 'snapToGrid={}' instead."
+                        .format(not self.initialization_parameters['continuousMode']),
+                    DeprecationWarning
+                )
 
             event = self.reset(scene)
             if event.metadata['lastActionSuccess']:
