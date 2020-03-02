@@ -735,7 +735,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		protected void snapAgentToGrid()
 		{
             if (this.snapToGrid) {
-                Debug.Log("This fires");
                 float mult = 1 / gridSize;
                 float gridX = Convert.ToSingle(Math.Round(this.transform.position.x * mult) / mult);
                 float gridZ = Convert.ToSingle(Math.Round(this.transform.position.z * mult) / mult);
