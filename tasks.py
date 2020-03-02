@@ -2364,7 +2364,8 @@ def visualize_shortest_paths(
             evt = controller.step(
                 action="VisualizeShortestPaths",
                 objectType=obj_type,
-                positions=positions
+                positions=positions,
+                grid=True
             )
             im = Image.fromarray(evt.third_party_camera_frames[0])
             im.save(os.path.join(output_dir, "{}-{}.jpg".format(sc, obj_type)))

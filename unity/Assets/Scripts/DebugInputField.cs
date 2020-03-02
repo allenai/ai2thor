@@ -2194,6 +2194,18 @@ namespace UnityStandardAssets.Characters.FirstPerson
                                 var pos = PhysicsController.getReachablePositions().Shuffle();
                                 action.positions = pos.Take(20).ToList();
                                 action.grid = true;
+                                // action.pathGradient = new Gradient() {
+                                //     colorKeys = new GradientColorKey[]{
+                                //          new GradientColorKey(Color.white, 0.0f),
+                                //          new GradientColorKey(Color.blue, 1.0f)
+                                //         },
+                                //     alphaKeys =  new GradientAlphaKey[]{
+                                //         new GradientAlphaKey(1.0f, 0.0f),
+                                //         new GradientAlphaKey(1.0f, 1.0f)
+                                //     },
+                                //     mode = GradientMode.Blend
+                                // };
+                                // action.gridColor = new Color(1.0f, 0.0f, 0.0f, 1.0f);
                                 // action.positions = new List<Vector3>() {
                                 //     new Vector3( 4.258f, 1.0f, -2.69f),
                                 //     new Vector3(4.3f, 1.0f, -3.452f)

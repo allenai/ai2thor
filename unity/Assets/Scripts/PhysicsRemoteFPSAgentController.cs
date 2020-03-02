@@ -6579,7 +6579,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             );
         }
 
-        override public Vector3[] getReachablePositions(float gridMultiplier = 1.0f, int maxStepCount = 10000, bool visualize = false) { //max step count represents a 100m * 100m room. Adjust this value later if we end up making bigger rooms?
+        override public Vector3[] getReachablePositions(float gridMultiplier = 1.0f, int maxStepCount = 10000, bool visualize = false, Color? gridColor = null) { //max step count represents a 100m * 100m room. Adjust this value later if we end up making bigger rooms?
             CapsuleCollider cc = GetComponent<CapsuleCollider>();
 
             float sw = m_CharacterController.skinWidth;
@@ -6644,6 +6644,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                             if (visualize) {
                                 var gridRenderer = Instantiate(GridRenderer, Vector3.zero, Quaternion.identity);
                                 var gridLineRenderer = gridRenderer.GetComponentInChildren<LineRenderer>();
+                                if (gridColor.HasValue) {
+                                    gridLineRenderer.startColor = gridColor.Value;
+                                    gridLineRenderer.endColor =  gridColor.Value;
+                                }
+                                // gridLineRenderer.startColor = ;
+                                // gridLineRenderer.endColor = ;
                                 gridLineRenderer.positionCount = 2;
                                 // gridLineRenderer.startWidth = 0.01f;
                                 // gridLineRenderer.endWidth = 0.01f;
@@ -8706,11 +8712,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 return;
             }
 
-            var reachablePos = getReachablePositions(1.0f, 10000, action.grid);
+            var reachablePos = getReachablePositions(1.0f, 10000, action.grid, action.gridColor);
 
             var go1 = Instantiate(DebugTargetPointPrefab, sop.transform.position, Quaternion.identity);
             var results = new List<bool>();
-             Debug.Log("Pos count " + action.positions.Count);
             for (var i = 0; i < action.positions.Count; i++) {
                 var pos = action.positions[i];
                 var go = Instantiate(DebugPointPrefab, pos, Quaternion.identity);
@@ -8720,22 +8725,19 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 var path = GetSimObjectNavMeshTarget(sop, pos, Quaternion.identity);
 
                 var lineRenderer = go.GetComponentInChildren<LineRenderer>();
+
+                if (action.pathGradient != null && action.pathGradient.colorKeys.Length > 0){
+                    lineRenderer.colorGradient = action.pathGradient;
+                }
                 lineRenderer.startWidth = 0.015f;
                 lineRenderer.endWidth = 0.015f;
 
                 results.Add(path.status == NavMeshPathStatus.PathComplete);
-                Debug.Log("status " + path.corners.Length);
+               
                 if (path.status == NavMeshPathStatus.PathComplete) { 
-                    // lineRenderer.size = path.corners.Length;
                     lineRenderer.positionCount = path.corners.Length;
-                    Debug.Log("COunt " + path.corners.Length);
                     lineRenderer.SetPositions(path.corners.Select(c => new Vector3(c.x, gridVisualizeY + 0.005f, c.z)).ToArray());
-                    //  for (int j = 0; j < path.corners.Length; j++) {
-                    //      lineRenderer.SetPosition (j, path.corners[j]);
-                    //  }
                 }
-                // textMesh.characterSize = 
-                // go.AddComponent(textMesh)
             }
             actionFinished(true, results.ToArray());
         }

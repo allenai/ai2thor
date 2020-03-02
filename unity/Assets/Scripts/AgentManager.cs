@@ -1029,6 +1029,10 @@ public class ServerAction
 
     public bool grid = false;
 
+    public Color? gridColor;
+
+    public Gradient pathGradient;
+
     public SimObjType ReceptableSimObjType()
 	{
 		if (string.IsNullOrEmpty(receptacleObjectType))
