@@ -1,8 +1,9 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using System;
+using System.Linq;
 
 namespace UnityStandardAssets.Characters.FirstPerson
 {
@@ -14,6 +15,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
         public AgentManager AManager = null;
 
         private ControlMode controlMode;
+        public StochasticRemoteFPSAgentController StochasticController = null;
 
         private Dictionary<KeyCode, ControlMode> debugKeyToController = new Dictionary<KeyCode, ControlMode>{
             {KeyCode.Alpha1, ControlMode.DEBUG_TEXT_INPUT},
@@ -79,6 +81,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
             StochasticController = fpsController.GetComponent<StochasticRemoteFPSAgentController>();
             Agent = PhysicsController.gameObject;
             AManager = GameObject.Find("PhysicsSceneManager").GetComponentInChildren<AgentManager>();
+
+            // StochasticController = fpsController.GetComponent<StochasticRemoteFPSAgentController>();
             
            SelectPlayerControl();
 
@@ -130,10 +134,105 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			{            
 
 					//turn off all pivot things, enable all physics things
-                case "init":
+                // case "init":
+                //     {
+				// 		ServerAction action = new ServerAction();
+
+                //         //if you want to use smaller grid size step increments, initialize with a smaller/larger gridsize here
+                //         //by default the gridsize is 0.25, so only moving in increments of .25 will work
+                //         //so the MoveAhead action will only take, by default, 0.25, .5, .75 etc magnitude with the default
+                //         //grid size!
+				// 		if (splitcommand.Length == 2 )
+                //         {
+				// 			action.gridSize = float.Parse(splitcommand[1]);
+                //         } else if (splitcommand.Length == 3)
+                //         {
+				// 			action.gridSize = float.Parse(splitcommand[1]);
+                //             action.agentCount = int.Parse(splitcommand[2]);
+                //         } else if (splitcommand.Length == 4) {
+                //             action.gridSize = float.Parse(splitcommand[1]);
+                //             action.agentCount = int.Parse(splitcommand[2]);
+                //             action.makeAgentsVisible = int.Parse(splitcommand[3]) == 1;
+                //         }
+
+                //         // action.renderNormalsImage = true;
+                //         // action.renderDepthImage = true;
+                //         // action.renderClassImage = true;
+                //         // action.renderObjectImage = true;
+                //         // action.renderFlowImage = true;
+
+                //         //action.continuous = true;//turn on continuous to test multiple emit frames after a single action
+
+				// 		PhysicsController.actionComplete = false;
+                //         //action.ssao = "default";
+                //         //action.snapToGrid = true;
+                //         //action.makeAgentsVisible = false;
+                //         //action.agentMode = "bot";
+                //         //action.fieldOfView = 120f;
+                //         //action.cameraY = 2.0f;
+
+                //         action.action = "Initialize";
+                //         AManager.Initialize(action);
+                //         // AgentManager am = PhysicsController.gameObject.FindObjectsOfType<AgentManager>()[0];
+                //         // Debug.Log("Physics scene manager = ...");
+                //         // Debug.Log(physicsSceneManager);
+                //         // AgentManager am = physicsSceneManager.GetComponent<AgentManager>();
+                //         // Debug.Log(am);
+      			//         // am.Initialize(action);
+                //         break;
+                //     }
+
+                // case "initb":
+                //     {
+				// 		ServerAction action = new ServerAction();
+
+                //         //if you want to use smaller grid size step increments, initialize with a smaller/larger gridsize here
+                //         //by default the gridsize is 0.25, so only moving in increments of .25 will work
+                //         //so the MoveAhead action will only take, by default, 0.25, .5, .75 etc magnitude with the default
+                //         //grid size!
+				// 		if (splitcommand.Length == 2 )
+                //         {
+				// 			action.gridSize = float.Parse(splitcommand[1]);
+                //         } else if (splitcommand.Length == 3)
+                //         {
+				// 			action.gridSize = float.Parse(splitcommand[1]);
+                //             action.agentCount = int.Parse(splitcommand[2]);
+                //         } else if (splitcommand.Length == 4) {
+                //             action.gridSize = float.Parse(splitcommand[1]);
+                //             action.agentCount = int.Parse(splitcommand[2]);
+                //             action.makeAgentsVisible = int.Parse(splitcommand[3]) == 1;
+                //         }
+
+                //         // action.renderNormalsImage = true;
+                //         // action.renderDepthImage = true;
+                //         // action.renderClassImage = true;
+                //         // action.renderObjectImage = true;
+                //         // action.renderFlowImage = true;
+
+                //         //action.continuous = true;//turn on continuous to test multiple emit frames after a single action
+                //         action.gridSize = 0.25f;
+                //         action.visibilityDistance = 1.0f;
+				// 		PhysicsController.actionComplete = false;
+                //         action.fieldOfView = 60;
+                //         action.rotateStepDegrees = 45;
+                //         //action.ssao = "default";
+                //         //action.snapToGrid = true;
+                //         //action.makeAgentsVisible = false;
+                //         action.agentMode = "bot";
+
+                //         action.action = "Initialize";
+                //         AManager.Initialize(action);
+                //         // AgentManager am = PhysicsController.gameObject.FindObjectsOfType<AgentManager>()[0];
+                //         // Debug.Log("Physics scene manager = ...");
+                //         // Debug.Log(physicsSceneManager);
+                //         // AgentManager am = physicsSceneManager.GetComponent<AgentManager>();
+                //         // Debug.Log(am);
+      			//         // am.Initialize(action);
+                //         break;
+                //     }
+                    case "init":
                     {
 						ServerAction action = new ServerAction();
-
                         //if you want to use smaller grid size step increments, initialize with a smaller/larger gridsize here
                         //by default the gridsize is 0.25, so only moving in increments of .25 will work
                         //so the MoveAhead action will only take, by default, 0.25, .5, .75 etc magnitude with the default
@@ -150,23 +249,21 @@ namespace UnityStandardAssets.Characters.FirstPerson
                             action.agentCount = int.Parse(splitcommand[2]);
                             action.makeAgentsVisible = int.Parse(splitcommand[3]) == 1;
                         }
-
                         // action.renderNormalsImage = true;
                         // action.renderDepthImage = true;
                         // action.renderClassImage = true;
                         // action.renderObjectImage = true;
                         // action.renderFlowImage = true;
-
                         //action.continuous = true;//turn on continuous to test multiple emit frames after a single action
-
 						PhysicsController.actionComplete = false;
                         //action.ssao = "default";
                         //action.snapToGrid = true;
                         //action.makeAgentsVisible = false;
                         //action.agentMode = "bot";
-                        //action.fieldOfView = 120f;
+                        action.fieldOfView = 90f;
                         //action.cameraY = 2.0f;
-
+                        action.snapToGrid = false;
+                        // action.rotateStepDegrees = 45;
                         action.action = "Initialize";
                         AManager.Initialize(action);
                         // AgentManager am = PhysicsController.gameObject.FindObjectsOfType<AgentManager>()[0];
@@ -177,11 +274,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
       			        // am.Initialize(action);
                         break;
                     }
-
                 case "initb":
                     {
 						ServerAction action = new ServerAction();
-
                         //if you want to use smaller grid size step increments, initialize with a smaller/larger gridsize here
                         //by default the gridsize is 0.25, so only moving in increments of .25 will work
                         //so the MoveAhead action will only take, by default, 0.25, .5, .75 etc magnitude with the default
@@ -198,38 +293,34 @@ namespace UnityStandardAssets.Characters.FirstPerson
                             action.agentCount = int.Parse(splitcommand[2]);
                             action.makeAgentsVisible = int.Parse(splitcommand[3]) == 1;
                         }
-
-                        // action.renderNormalsImage = true;
-                        // action.renderDepthImage = true;
-                        // action.renderClassImage = true;
-                        // action.renderObjectImage = true;
-                        // action.renderFlowImage = true;
-
-                        //action.continuous = true;//turn on continuous to test multiple emit frames after a single action
                         action.gridSize = 0.25f;
                         action.visibilityDistance = 1.0f;
 						PhysicsController.actionComplete = false;
                         action.fieldOfView = 60;
                         action.rotateStepDegrees = 45;
-                        //action.ssao = "default";
-                        //action.snapToGrid = true;
-                        //action.makeAgentsVisible = false;
                         action.agentMode = "bot";
                         action.agentType = "stochastic";
 
+                        action.applyActionNoise = false;
+                       
+                        action.snapToGrid = false;
                         action.action = "Initialize";
                         action.fieldOfView = 90;
                         action.gridSize = 0.25f;
                         AManager.Initialize(action);
-                        // AgentManager am = PhysicsController.gameObject.FindObjectsOfType<AgentManager>()[0];
-                        // Debug.Log("Physics scene manager = ...");
-                        // Debug.Log(physicsSceneManager);
-                        // AgentManager am = physicsSceneManager.GetComponent<AgentManager>();
-                        // Debug.Log(am);
-      			        // am.Initialize(action);
                         break;
                     }
+                 case "mas":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "MoveAhead";
 
+                        action.moveMagnitude = 0.25f;
+						
+                        StochasticController.ProcessControlCommand(action);
+
+                        break;
+                    }
                 case "rad":
                     {
                         ServerAction action = new ServerAction();
@@ -2274,26 +2365,136 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }
-                     case "shortest_path_point":
+                     case "shortest_path_type":
                     {
                         ServerAction action = new ServerAction();
-                        action.action = "GetShortestPathToPoint";
+                        action.action = "GetShortestPath";
 
                         //pass in a min range, max range, delay
                         if (splitcommand.Length > 1)
                         {
-  
-                                action.x = float.Parse(splitcommand[1]);
-                                action.y = float.Parse(splitcommand[2]);
-                                action.z = float.Parse(splitcommand[3]);
-           
+                            //ID of spawner
+                            action.objectType = splitcommand[1];
+
+                            if (splitcommand.Length == 5) {
+                                action.position = new Vector3(
+                                    float.Parse(splitcommand[2]),
+                                    float.Parse(splitcommand[3]), 
+                                    float.Parse(splitcommand[4])
+                                );
+                            }
+                            else {
                                 action.useAgentTransform = true;
+                            }
                         }
 
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }
-                    
+                    case "shortest_path_point":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "GetShortestPathToPoint";
+
+
+                        //pass in a min range, max range, delay
+                        if (splitcommand.Length > 1)
+                        {
+                            //ID of spawner
+                            action.objectId = splitcommand[1];
+
+                            if (splitcommand.Length == 5) {
+                                action.position = new Vector3(
+                                    float.Parse(splitcommand[2]),
+                                    float.Parse(splitcommand[3]), 
+                                    float.Parse(splitcommand[4])
+                                );
+                            }
+                            else {
+                                action.positions = new List<Vector3>() {
+                                    new Vector3( 4.258f, 1.0f, -1.69f),
+                                    new Vector3(6.3f, 1.0f, -3.452f)
+                                };
+                            }
+                        }
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+                    case "visualize_path":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "VisualizePath";
+                        action.objectId = "0";
+
+                        //pass in a min range, max range, delay
+                        if (splitcommand.Length > 1)
+                        {
+                            //ID of spawner
+                            action.objectId = splitcommand[1];
+
+                            if (splitcommand.Length == 5) {
+                                action.position = new Vector3(
+                                    float.Parse(splitcommand[2]),
+                                    float.Parse(splitcommand[3]), 
+                                    float.Parse(splitcommand[4])
+                                );
+                            }
+                            else {
+                                action.positions = new List<Vector3>() {
+                                    new Vector3( 4.258f, 1.0f, -1.69f),
+                                    new Vector3(6.3f, 1.0f, -3.452f)
+                                };
+                            }
+                        }
+
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
+                    case "vp":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "VisualizeShortestPaths";
+
+                        //pass in a min range, max range, delay
+                        if (splitcommand.Length > 1)
+                        {
+                            //ID of spawner
+                            action.objectId = splitcommand[1];
+
+                            if (splitcommand.Length == 5) {
+                                action.position = new Vector3(
+                                    float.Parse(splitcommand[2]),
+                                    float.Parse(splitcommand[3]), 
+                                    float.Parse(splitcommand[4])
+                                );
+                            }
+                            else {
+                                var pos = PhysicsController.getReachablePositions().Shuffle();
+                                action.positions = pos.Take(20).ToList();
+                                action.grid = true;
+                                // action.pathGradient = new Gradient() {
+                                //     colorKeys = new GradientColorKey[]{
+                                //          new GradientColorKey(Color.white, 0.0f),
+                                //          new GradientColorKey(Color.blue, 1.0f)
+                                //         },
+                                //     alphaKeys =  new GradientAlphaKey[]{
+                                //         new GradientAlphaKey(1.0f, 0.0f),
+                                //         new GradientAlphaKey(1.0f, 1.0f)
+                                //     },
+                                //     mode = GradientMode.Blend
+                                // };
+                                // action.gridColor = new Color(1.0f, 0.0f, 0.0f, 1.0f);
+                                // action.positions = new List<Vector3>() {
+                                //     new Vector3( 4.258f, 1.0f, -2.69f),
+                                //     new Vector3(4.3f, 1.0f, -3.452f)
+                                // };
+                            }
+                        }
+
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
 
                     case "get_object_type_ids":
                     {

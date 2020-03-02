@@ -69,11 +69,13 @@ namespace UnityStandardAssets.Characters.FirstPerson
             {
                 //random.NextGaussian(RotateGaussianMu, RotateGaussianSigma);
                 var random = new System.Random();
-                var rotateNoise = (float)random.NextGaussian(rotateGaussianMu, rotateGaussianSigma / 2.0f);
+                
 
                 // rotate a small amount with every movement since robot doesn't always move perfectly straight
-                transform.rotation = transform.rotation * Quaternion.Euler(new Vector3(0.0f, rotateNoise, 0.0f));
-
+                if (this.applyActionNoise) {
+                    var rotateNoise = (float)random.NextGaussian(rotateGaussianMu, rotateGaussianSigma / 2.0f);
+                    transform.rotation = transform.rotation * Quaternion.Euler(new Vector3(0.0f, rotateNoise, 0.0f));
+                }
                 var moveLocalNorm = moveLocal / moveMagnitude;
                 if (action.moveMagnitude > 0.0)
                 {
@@ -89,7 +91,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 actionFinished(moveInDirection(
                     this.transform.rotation * (moveLocalNorm * magnitudeWithNoise),
                     action.objectId,
-                    action.maxAgentsDistance, action.forceAction
+                    action.maxAgentsDistance,
+                    action.forceAction
                 ));
             }
             else

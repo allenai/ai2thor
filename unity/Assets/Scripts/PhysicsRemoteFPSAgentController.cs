@@ -84,6 +84,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public Material[] ScreenFaces; //0 - neutral, 1 - Happy, 2 - Mad, 3 - Angriest
         public MeshRenderer MyFaceMesh;
 
+        [SerializeField] private GameObject DebugPointPrefab;
+
+        [SerializeField] private GameObject DebugTargetPointPrefab;
+        [SerializeField] private GameObject GridRenderer;
+
+        private float gridVisualizeY = 0.005f;
+
         public Bounds sceneBounds = new Bounds(
             new Vector3(float.PositiveInfinity, float.PositiveInfinity, float.PositiveInfinity),
             new Vector3(-float.PositiveInfinity, -float.PositiveInfinity, -float.PositiveInfinity)
@@ -2258,7 +2265,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             v.y = Physics.gravity.y * this.m_GravityMultiplier;
             m_CharacterController.Move(v);
 
-            snapToGrid();
+            snapAgentToGrid();
             actionFinished(true);
         }
 
@@ -2302,8 +2309,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 DefaultAgentHand();
                 Vector3 oldPosition = transform.position;
                 transform.position = targetPosition;
-
-                this.snapToGrid();
+                this.snapAgentToGrid();
 
                 if (objectId != "" && maxDistanceToObject > 0.0f) {
                     if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
@@ -3009,7 +3015,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 moveMagnitude,
                 1 << 8 | 1 << 10
             );
-
             //check if we hit an environmental structure or a sim object that we aren't actively holding. If so we can't move
             if (sweepResults.Length > 0) {
                 foreach (RaycastHit res in sweepResults) {
@@ -5037,6 +5042,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     }
                 }
             }
+        }
+
+        public void SetTopLevelView(ServerAction action) {
+            inTopLevelView = action.topView;
+            actionFinished(true);
         }
 
         public void ToggleMapView(ServerAction action) {
@@ -7335,7 +7345,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
 
-        override public Vector3[] getReachablePositions(float gridMultiplier = 1.0f, int maxStepCount = 10000) {
+        override public Vector3[] getReachablePositions(float gridMultiplier = 1.0f, int maxStepCount = 10000, bool visualize = false, Color? gridColor = null) { //max step count represents a 100m * 100m room. Adjust this value later if we end up making bigger rooms?
             CapsuleCollider cc = GetComponent<CapsuleCollider>();
 
             float sw = m_CharacterController.skinWidth;
@@ -7396,7 +7406,26 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         );
                         if (shouldEnqueue) {
                             pointsQueue.Enqueue(newPosition);
+
+                            if (visualize) {
+                                var gridRenderer = Instantiate(GridRenderer, Vector3.zero, Quaternion.identity);
+                                var gridLineRenderer = gridRenderer.GetComponentInChildren<LineRenderer>();
+                                if (gridColor.HasValue) {
+                                    gridLineRenderer.startColor = gridColor.Value;
+                                    gridLineRenderer.endColor =  gridColor.Value;
+                                }
+                                // gridLineRenderer.startColor = ;
+                                // gridLineRenderer.endColor = ;
+                                gridLineRenderer.positionCount = 2;
+                                // gridLineRenderer.startWidth = 0.01f;
+                                // gridLineRenderer.endWidth = 0.01f;
+                                gridLineRenderer.SetPositions(new Vector3[] { 
+                                    new Vector3(p.x, gridVisualizeY, p.z),
+                                    new Vector3(newPosition.x, gridVisualizeY, newPosition.z)
+                                });
+                            }
 #if UNITY_EDITOR
+                            
                             Debug.DrawLine(p, newPosition, Color.cyan, 100000f);
 #endif
                         }
@@ -8136,7 +8165,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             physicsSceneManager.SetupScene();
             physicsSceneManager.ResetObjectIdToSimObjPhysics();
 
-            snapToGrid(); // This snapping seems necessary for some reason, really doesn't make any sense.
+            snapAgentToGrid(); // This snapping seems necessary for some reason, really doesn't make any sense.
             actionFinished(true);
         }
 
@@ -9411,19 +9440,17 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
 
-        public void GetShortestPath(ServerAction action) {
+        private SimObjPhysics getSimObjectFromTypeOrId(ServerAction action) {
             var objectId = action.objectId;
             if (!String.IsNullOrEmpty(action.objectType) && String.IsNullOrEmpty(action.objectId)) {
                 var ids = objectTypeToObjectIds(action.objectType);
                 if (ids.Length == 0) {
                     errorMessage = "Object type '" + action.objectType + "' was not found in the scene.";
-                    actionFinished(false);
-                    return;
+                    return null;
                 }
                 else if (ids.Length > 1) {
                     errorMessage = "Multiple objects of type '" + action.objectType + "' were found in the scene, cannot disambiguate.";
-                    actionFinished(false);
-                    return;
+                    return null;
                 }
                 
                 objectId = ids[0];
@@ -9431,13 +9458,93 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
                 errorMessage = "Cannot find sim object with id '" + objectId + "'";
-                actionFinished(false);
-                return;
+                return null;
             }
            
             SimObjPhysics sop = physicsSceneManager.ObjectIdToSimObjPhysics[objectId];
             if (sop == null) {
                 errorMessage = "Object with id '" + objectId+ "' is null";
+                return null;
+            }
+
+            return sop;
+        }
+
+        public void VisualizeShortestPaths(ServerAction action) {
+            
+            SimObjPhysics sop = getSimObjectFromTypeOrId(action);
+            if (sop == null) {
+                actionFinished(false);
+                return;
+            }
+
+            var reachablePos = getReachablePositions(1.0f, 10000, action.grid, action.gridColor);
+
+            var go1 = Instantiate(DebugTargetPointPrefab, sop.transform.position, Quaternion.identity);
+            var results = new List<bool>();
+            for (var i = 0; i < action.positions.Count; i++) {
+                var pos = action.positions[i];
+                var go = Instantiate(DebugPointPrefab, pos, Quaternion.identity);
+                var textMesh = go.GetComponentInChildren<TextMesh>();
+                textMesh.text = i.ToString();
+
+                var path = GetSimObjectNavMeshTarget(sop, pos, Quaternion.identity);
+
+                var lineRenderer = go.GetComponentInChildren<LineRenderer>();
+
+                if (action.pathGradient != null && action.pathGradient.colorKeys.Length > 0){
+                    lineRenderer.colorGradient = action.pathGradient;
+                }
+                lineRenderer.startWidth = 0.015f;
+                lineRenderer.endWidth = 0.015f;
+
+                results.Add(path.status == NavMeshPathStatus.PathComplete);
+               
+                if (path.status == NavMeshPathStatus.PathComplete) { 
+                    lineRenderer.positionCount = path.corners.Length;
+                    lineRenderer.SetPositions(path.corners.Select(c => new Vector3(c.x, gridVisualizeY + 0.005f, c.z)).ToArray());
+                }
+            }
+            actionFinished(true, results.ToArray());
+        }
+
+         public void VisualizePath(ServerAction action) {
+            var path = action.positions;
+            if (path == null || path.Count == 0) {
+                this.errorMessage = "Invalid path with 0 points.";
+                actionFinished(false);
+                return;
+            }
+
+            var id = action.objectId;
+
+            var reachablePos = getReachablePositions(1.0f, 10000, action.grid);
+           
+            var go1 = Instantiate(DebugTargetPointPrefab, path[path.Count-1], Quaternion.identity);
+            var results = new List<bool>();
+            var go = Instantiate(DebugPointPrefab, path[0], Quaternion.identity);
+            var textMesh = go.GetComponentInChildren<TextMesh>();
+            textMesh.text = id;
+
+            var lineRenderer = go.GetComponentInChildren<LineRenderer>();
+            lineRenderer.startWidth = 0.015f;
+            lineRenderer.endWidth = 0.015f;
+
+            lineRenderer.positionCount = path.Count;
+            lineRenderer.SetPositions(path.ToArray());
+                // textMesh.characterSize = 
+                // go.AddComponent(textMesh)
+            actionFinished(true);
+        }
+
+        public void VisualizeGrid(ServerAction action) {
+            var reachablePositions = getReachablePositions(1.0f, 10000, true);
+            actionFinished(true, reachablePositions);
+        }
+
+        public void GetShortestPath(ServerAction action) {
+            SimObjPhysics sop = getSimObjectFromTypeOrId(action);
+            if (sop == null) {
                 actionFinished(false);
                 return;
             }
@@ -9562,7 +9669,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return pathSuccess;
         }
 
-        private NavMeshPath GetSimObjectNavMeshTarget(SimObjPhysics targetSOP, Vector3 initialPosition, Quaternion initialRotation) {
+        private NavMeshPath GetSimObjectNavMeshTarget(SimObjPhysics targetSOP, Vector3 initialPosition, Quaternion initialRotation, bool visualize = false) {
             var targetTransform = targetSOP.transform;
             var targetSimObject = targetTransform.GetComponentInChildren<SimObjPhysics>();
             var PhysicsController = this;
@@ -9586,11 +9693,16 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             this.GetComponent<NavMeshAgent>().enabled = true;
             bool pathSuccess = NavMesh.CalculatePath(initialPosition, fixedPosition,  NavMesh.AllAreas, path);
         
+            
+            
             var pathDistance = 0.0f;
             for (int i = 0; i < path.corners.Length - 1; i++) {
-                Debug.DrawLine(path.corners[i], path.corners[i + 1], Color.red, 10.0f);
+                #if UNITY_EDITOR
+                    // Debug.DrawLine(path.corners[i], path.corners[i + 1], Color.red, 10.0f);
+                #endif
                 pathDistance += Vector3.Distance(path.corners[i], path.corners[i + 1]);
             }
+            
 
             //disable navmesh agent
             this.GetComponent<NavMeshAgent>().enabled = false;

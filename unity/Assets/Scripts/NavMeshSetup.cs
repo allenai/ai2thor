@@ -27,32 +27,24 @@ public class NavMeshSetup : MonoBehaviour
         public static void Build()
         {
             var testSceneNames = GetSceneNames(3, 5, "Val");
-            var valSceneNames = GetSceneNames(2, 2, "test-dev");
+            // var valSceneNames = GetSceneNames(2, 2, "test-dev");
             var trainSceneNames = GetSceneNames(12, 5, "Train");
 
             Debug.Log("Scenes: " + string.Join(",", trainSceneNames.ToArray()));
 
             var selection = new List<string>();
-            //selection.AddRange(testSceneNames);
+            selection.AddRange(testSceneNames);
             //selection.AddRange(valSceneNames);
-            //selection.AddRange(trainSceneNames);
-            selection = new List<string>()
-            {
-                "Assets/Scenes/FloorPlan_Train1_2.unity",  
-                "Assets/Scenes/FloorPlan_Train1_4.unity", 
-                "Assets/Scenes/FloorPlan_Train2_5.unity", 
-                "Assets/Scenes/FloorPlan_Train8_2.unity", 
-                "Assets/Scenes/FloorPlan_Train9_4.unity", 
-                "Assets/Scenes/FloorPlan_Train9_5.unity", 
-                "Assets/Scenes/FloorPlan_Val1_2.unity", 
-                "Assets/Scenes/FloorPlan_Val1_4.unity", 
-                "Assets/Scenes/FloorPlan_Val1_5.unity", 
-                "Assets/Scenes/FloorPlan_Val2_1.unity", 
-                "Assets/Scenes/FloorPlan_Val2_3.unity", 
-                
-            };
+            selection.AddRange(trainSceneNames);
+            // These scenes were mannually adjusted so the nav mesh variables should not be set automatically and should be build manually 
+            var exclude = new List<string>() {
+                "Assets/Scenes/FloorPlan_Train7_1.unity", // Radius of agent made smaller to fit between table small path where reachable positions exist
+                "Assets/Scenes/FloorPlan_Train11_3.unity", // Unmade bed obstructs conectivity of navmesh
+                "Assets/Scenes/FloorPlan_Val2_3.unity", // Unmade bed obstructs conectivity of navmesh
+                };
+            exclude.ForEach((x) => selection.Remove(x));
 
-            print("selection is: " + selection.ToArray());
+            Debug.Log("selection is: " + selection.ToArray());
             selection.ToList().ForEach(sceneName => BuildNavmeshForScene(sceneName));
         }
 

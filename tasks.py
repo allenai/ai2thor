@@ -1739,7 +1739,7 @@ def start_mock_real_server(context):
 
 
 @task
-def create_dataset(
+def create_robothor_dataset(
         context,
         local_build=False,
         editor_mode=False,
@@ -1747,20 +1747,34 @@ def create_dataset(
         height=300,
         output='robothor-dataset.json',
         intermediate_directory='.',
-        visibility_distance=1,
-        objects=None,
-        scenes=None
+        visibility_distance=1.0,
+        objects_filter=None,
+        scene_filter=None,
+        filter_file=None
     ):
+    """
+    Creates a dataset for the robothor challenge in `intermediate_directory`
+    named `robothor-dataset.json`
+    """
     import ai2thor.controller
     import ai2thor.util.metrics as metrics
     import json
-    import re
+    from pprint import pprint
 
     scene = 'FloorPlan_Train1_1'
     angle = 45
     gridSize = 0.25
     # Restrict points visibility_multiplier_filter * visibility_distance away from the target object
     visibility_multiplier_filter = 2
+
+    scene_object_filter = {}
+    if filter_file is not None:
+        with open(filter_file, 'r') as f:
+            scene_object_filter = json.load(f)
+            print("Filter:")
+            pprint(scene_object_filter)
+
+    print("Visibility distance: {}".format(visibility_distance))
     controller = ai2thor.controller.Controller(
         width=width,
         height=height,
@@ -1780,7 +1794,7 @@ def create_dataset(
     targets = [
         "Apple",
         "Baseball Bat",
-        "Basketball",
+        "BasketBall",
         "Bowl",
         "Garbage Can",
         "House Plant",
@@ -1791,12 +1805,13 @@ def create_dataset(
         "Vase",
         "Alarm Clock",
         "Television",
-        "Pillow",
-        "Bottle"
-    ]
+        "Pillow"
 
-    if objects is not None:
-        obj_filter = set([o for o in objects.split[","]])
+    ]
+    failed_points = []
+
+    if objects_filter is not None:
+        obj_filter = set([o for o in objects_filter.split(",")])
         targets = [o for o in targets if o.replace(" ", "") in obj_filter]
 
     desired_points = 30
@@ -1821,7 +1836,7 @@ def create_dataset(
 
     def get_points(contoller, object_type, scene):
         print("Getting points in scene: '{}'...: ".format(scene))
-
+        controller.reset(scene)
         event = controller.step(
             dict(
                 action='ObjectTypeToObjectIds',
@@ -1829,6 +1844,9 @@ def create_dataset(
             )
         )
         object_ids = event.metadata['actionReturn']
+
+
+
 
         if object_ids is None or len(object_ids) > 1 or len(object_ids) == 0:
             print("Object type '{}' not available in scene.".format(object_type))
@@ -1839,7 +1857,8 @@ def create_dataset(
 
         event_reachable = controller.step(
             dict(
-                action='GetReachablePositions'
+                action='GetReachablePositions',
+                gridSize=0.25
             )
         )
 
@@ -1875,12 +1894,10 @@ def create_dataset(
 
         print("Id {}".format(event.metadata['actionReturn']))
 
-
-
-
         point_objects = []
 
         eps = 0.0001
+        counter = 0
         for (x, y, z) in final_point_set:
             possible_orientations = [0, 90, 180, 270]
             pos_unity = dict(x=x, y=y, z=z)
@@ -1912,7 +1929,16 @@ def create_dataset(
                         print("--------- Rotation not allowed! for pos {} rot {} ".format(pos_unity, roatation_y))
 
                 if minimum_path_length > eps and rotation_allowed:
+                    m = re.search('FloorPlan_([a-zA-Z\-]*)([0-9]+)_([0-9]+)', scene)
+                    point_id = "{}_{}_{}_{}_{}".format(
+                        m.group(1),
+                        m.group(2),
+                        m.group(3),
+                        object_type,
+                        counter
+                    )
                     point_objects.append({
+                        'id': point_id,
                         'scene': scene,
                         'object_type': object_type,
                         'object_id': object_id,
@@ -1922,9 +1948,17 @@ def create_dataset(
                         'shortest_path': path,
                         'shortest_path_length': minimum_path_length
                     })
+                    counter += 1
 
             except ValueError:
                 print("-----Invalid path discarding point...")
+                failed_points.append({
+                    'scene': scene,
+                    'object_type': object_type,
+                    'object_id': object_id,
+                    'target_position': target_position,
+                    'initial_position': pos_unity
+                })
 
 
         sorted_objs = sorted(point_objects,
@@ -1962,28 +1996,28 @@ def create_dataset(
                     key=key_sort_func
                     )
 
-    print("Sorted scenes: {}".format(scenes))
+    if scene_filter is not None:
+        scene_filter_set = set([o for o in scene_filter.split(",")])
+        scenes = [s for s in scenes if s in scene_filter_set]
 
-    scenes = scenes[:1]
-    targets = ["Bowl"]
+    print("Sorted scenes: {}".format(scenes))
     for scene in scenes:
         dataset[scene] = {}
         dataset['object_types'] = targets
         objects = []
-
-        # [t for t in targets if 'Basketball' in t]:
         for objectType in targets:
 
-            dataset[scene][objectType] = []
-            obj = get_points(controller, objectType, scene)
-            if obj is not None:
+            if filter_file is None or (objectType in scene_object_filter and scene in scene_object_filter[objectType]):
+                dataset[scene][objectType] = []
+                obj = get_points(controller, objectType, scene)
+                if obj is not None:
 
-                objects = objects + obj
+                    objects = objects + obj
 
         dataset_flat = dataset_flat + objects
         if intermediate_directory != '.':
             with open(os.path.join(intermediate_directory, '{}.json'.format(scene)), 'w') as f:
-                json.dump(obj, f, indent=4)
+                json.dump(objects, f, indent=4)
 
 
     with open(os.path.join(intermediate_directory, output), 'w') as f:
@@ -1993,9 +2027,25 @@ def create_dataset(
     print("Total scenes: {}".format(len(scenes)))
     print("Total datapoints: {}".format(len(dataset_flat)))
 
+    print(failed_points)
+    with open(os.path.join(intermediate_directory, 'failed.json'), 'w') as f:
+        json.dump(failed_points, f, indent=4)
+
 
 @task
-def path_to_object(context, scene, object, x, z, y=0.9103442, rotation=0, editor_mode=False, local_build=False, visibility_distance=1.0, grid_size=0.25):
+def shortest_path_to_object(
+        context,
+        scene,
+        object,
+        x,
+        z,
+        y=0.9103442,
+        rotation=0,
+        editor_mode=False,
+        local_build=False,
+        visibility_distance=1.0,
+        grid_size=0.25
+):
     p = dict(x=x, y=y, z=z)
 
     import ai2thor.controller
@@ -2030,14 +2080,323 @@ def path_to_object(context, scene, object, x, z, y=0.9103442, rotation=0, editor
     print("Path: {}".format(path))
     print("Path lenght: {}".format(minimum_path_length))
 
-
 @task
-def filter_dataset(ctx, filename, filter, output_filename):
+def filter_dataset(ctx, filename, output_filename, ids=False):
+    """
+    Filters objects in dataset that are not reachable in at least one of the scenes (have
+    zero occurrences in the dataset)
+    """
     import json
     from pprint import pprint
-    filter_set = filter.split(",")
     with open(filename, 'r') as f:
         obj = json.load(f)
+
+    targets = [
+        "Apple",
+        "Baseball Bat",
+        "BasketBall",
+        "Bowl",
+        "Garbage Can",
+        "House Plant",
+        "Laptop",
+        "Mug",
+        "Spray Bottle",
+        "Vase",
+        "Alarm Clock",
+        "Television",
+        "Pillow"
+    ]
+
+    counter = {}
+    for f in obj:
+        obj_type = f['object_type']
+
+        if f['scene'] not in counter:
+            counter[f['scene']] = {target: 0 for target in targets}
+        scene_counter = counter[f['scene']]
+        if obj_type not in scene_counter:
+            scene_counter[obj_type] = 1
+        else:
+            scene_counter[obj_type] += 1
+
+    objects_with_zero = set()
+    objects_with_zero_by_obj = {}
+    for k, item in counter.items():
+        # print("Key {} ".format(k))
+        for obj_type, count in item.items():
+            # print("obj {} count {}".format(obj_type, count))
+            if count == 0:
+                if obj_type not in objects_with_zero_by_obj:
+                    objects_with_zero_by_obj[obj_type] = set()
+
+                # print("With zero for obj: {} in scene {}".format(obj_type, k))
+                objects_with_zero_by_obj[obj_type].add(k)
+                objects_with_zero.add(obj_type)
+
+    print("Objects with zero: {}".format(objects_with_zero))
+    with open('with_zero.json', 'w') as fw:
+        dict_list = {k: list(v) for k, v in objects_with_zero_by_obj.items()}
+        json.dump(dict_list, fw, sort_keys=True, indent=4)
+    pprint(objects_with_zero_by_obj)
+    filtered = [o for o in obj if o['object_type'] not in objects_with_zero]
+    counter = 0
+    current_scene = ""
+    current_object_type = ""
+    import re
+    for i, o in enumerate(filtered):
+        if current_scene != o['scene'] or current_object_type != o['object_type']:
+            counter = 0
+            current_scene = o['scene']
+            current_object_type = o['object_type']
+
+        m = re.search('FloorPlan_([a-zA-Z\-]*)([0-9]+)_([0-9]+)', o['scene'])
+        point_id = "{}_{}_{}_{}_{}".format(
+            m.group(1),
+            m.group(2),
+            m.group(3),
+            o['object_type'],
+            counter
+        )
+        counter += 1
+
+        o['id'] = point_id
+    with open(output_filename, 'w') as f:
+        json.dump(filtered, f, indent=4)
+
+
+@task
+def fix_dataset_object_types(ctx, input_file, output_file, editor_mode=False, local_build=False):
+    import json
+    import ai2thor.controller
+
+    with open(input_file, 'r') as f:
+        obj = json.load(f)
+        scene = 'FloorPlan_Train1_1'
+        angle = 45
+        gridSize = 0.25
+        controller = ai2thor.controller.Controller(
+            width=300,
+            height=300,
+            local_executable_path=_local_build_path() if local_build else None,
+            start_unity=False if editor_mode else True,
+            scene=scene,
+            port=8200,
+            host='127.0.0.1',
+            # Unity params
+            gridSize=gridSize,
+            fieldOfView=60,
+            rotateStepDegrees=angle,
+            agentMode='bot',
+            visibilityDistance=1,
+        )
+        current_scene = None
+        object_map = {}
+        for i, point in enumerate(obj):
+            if current_scene != point['scene']:
+                print("Fixing for scene '{}'...".format(point['scene']))
+                controller.reset(point['scene'])
+                current_scene = point['scene']
+                object_map = {o['objectType'].lower(): {'id': o['objectId'], 'type': o['objectType']} for o in controller.last_event.metadata['objects']}
+            key = point['object_type'].replace(" ", "").lower()
+            point['object_id'] = object_map[key]['id']
+            point['object_type'] = object_map[key]['type']
+
+        with open(output_file, 'w') as fw:
+            json.dump(obj, fw, indent=True)
+
+
+@task
+def test_dataset(ctx, filename, scenes=None, objects=None, editor_mode=False, local_build=False):
+    import json
+    import ai2thor.controller
+    import ai2thor.util.metrics as metrics
+    scene = "FloorPlan_Train1_1" if scenes is None else scenes.split(",")[0]
+    controller = ai2thor.controller.Controller(
+        width=300,
+        height=300,
+        local_executable_path=_local_build_path() if local_build else None,
+        start_unity=False if editor_mode else True,
+        scene=scene,
+        port=8200,
+        host='127.0.0.1',
+        # Unity params
+        gridSize=0.25,
+        fieldOfView=60,
+        rotateStepDegrees=45,
+        agentMode='bot',
+        visibilityDistance=1,
+    )
+    with open(filename, 'r') as f:
+        dataset = json.load(f)
+        filtered_dataset = dataset
+        if scenes is not None:
+            scene_set = set(scenes.split(","))
+            print("Filtering {}".format(scene_set))
+            filtered_dataset = [d for d in dataset if d['scene'] in scene_set]
+        if objects is not None:
+            object_set = set(objects.split(","))
+            print("Filtering {}".format(object_set))
+            filtered_dataset = [d for d in filtered_dataset if d['object_type'] in object_set]
+        current_scene = None
+        current_object = None
+        point_counter = 0
+        print(len(filtered_dataset))
+        for point in filtered_dataset:
+            if current_scene != point['scene']:
+                current_scene = point['scene']
+                print("Testing for scene '{}'...".format(current_scene))
+            if current_object != point['object_type']:
+                current_object = point['object_type']
+                point_counter = 0
+                print("    Object '{}'...".format(current_object))
+            try:
+                path = metrics.get_shortest_path_to_object_type(
+                    controller,
+                    point['object_type'],
+                    point['initial_position'],
+                    {'x': 0, 'y': point['initial_orientation'], 'z': 0}
+                )
+                path_dist = metrics.path_distance(path)
+                point_counter += 1
+
+                print("        Total points: {}".format(point_counter))
+
+                print(path_dist)
+            except ValueError:
+                print("Cannot find path from point")
+
+
+@task
+def visualize_shortest_paths(
+        ctx,
+        dataset_path,
+        width=600,
+        height=300,
+        editor_mode=False,
+        local_build=False,
+        scenes=None,
+        object_types=None,
+        gridSize=0.25,
+        output_dir='.'
+):
+    angle = 45
+    import ai2thor.controller
+    import json
+    from PIL import Image
+    controller = ai2thor.controller.Controller(
+        width=width,
+        height=height,
+        local_executable_path=_local_build_path() if local_build else None,
+        start_unity=False if editor_mode else True,
+        port=8200,
+        host='127.0.0.1',
+        # Unity params
+        gridSize=gridSize,
+        fieldOfView=60,
+        rotateStepDegrees=angle,
+        agentMode='bot',
+        visibilityDistance=1,
+    )
+    if output_dir != '.' and os.path.exists(output_dir):
+        shutil.rmtree(output_dir)
+    if output_dir != '.':
+        os.mkdir(output_dir)
+    evt = controller.step(
+        action='AddThirdPartyCamera',
+        rotation=dict(x=90, y=0, z=0),
+        position=dict(x=5.40, y=3.25, z=-3.0),
+        fieldOfView=2.25,
+        orthographic=True
+    )
+
+    evt = controller.step(action='SetTopLevelView', topView=True)
+    evt = controller.step(action='ToggleMapView')
+
+    im = Image.fromarray(evt.third_party_camera_frames[0])
+    im.save(os.path.join(output_dir, "top_view.jpg"))
+
+    with open(dataset_path, 'r') as f:
+        dataset = json.load(f)
+        print("Running for {} points...".format(len(dataset)))
+        dataset_filtered = dataset
+        if scenes is not None:
+            scene_f_set = set(scenes.split(","))
+            dataset_filtered = [d for d in dataset if d['scene'] in scene_f_set]
+        if object_types is not None:
+            object_f_set = set(object_types.split(","))
+            dataset_filtered = [d for d in dataset_filtered if d['object_type'] in object_f_set]
+
+
+        index = 0
+        datapoint = dataset_filtered[index]
+        current_scene = datapoint['scene']
+        current_object = datapoint['object_type']
+        failed ={}
+        while index < len(dataset_filtered):
+            previous_index = index
+            controller.reset(current_scene)
+            while current_scene == datapoint['scene'] and current_object == datapoint['object_type']:
+                index += 1
+                if index > len(dataset_filtered) - 1:
+                    break
+                datapoint = dataset_filtered[index]
+
+            current_scene = datapoint['scene']
+            current_object = datapoint['object_type']
+
+            key = "{}_{}".format(current_scene, current_object)
+
+            failed[key] = []
+
+            print("Points for '{}' in scene '{}'...".format(current_object, current_scene))
+            evt = controller.step(
+                action='AddThirdPartyCamera',
+                rotation=dict(x=90, y=0, z=0),
+                position=dict(x=5.40, y=3.25, z=-3.0),
+                fieldOfView=2.25,
+                orthographic=True
+            )
+
+            sc = dataset_filtered[previous_index]['scene']
+            obj_type = dataset_filtered[previous_index]['object_type']
+            positions = [d['initial_position'] for d in dataset_filtered[previous_index:index]]
+            # print("{} : {} : {}".format(sc, obj_type, positions))
+            evt = controller.step(
+                action="VisualizeShortestPaths",
+                objectType=obj_type,
+                positions=positions,
+                grid=True
+            )
+            im = Image.fromarray(evt.third_party_camera_frames[0])
+            im.save(os.path.join(output_dir, "{}-{}.jpg".format(sc, obj_type)))
+
+            failed[key] = [positions[i] for i, success in enumerate(evt.metadata['actionReturn']) if not success]
+
+        from pprint import pprint
+        pprint(failed)
+
+@task
+def fill_in_dataset(
+        ctx,
+        dataset_dir,
+        dataset_filename,
+        filter_filename,
+        intermediate_dir,
+        output_filename='filled.json',
+        local_build=False,
+        editor_mode=False,
+        visibility_distance=1.0
+):
+    import json
+    import re
+    import glob
+    import ai2thor.controller
+    dataset_path = os.path.join(dataset_dir, dataset_filename)
+    output_dataset_path = os.path.join(dataset_dir, output_filename)
+    filled_dataset_path = os.path.join(intermediate_dir, output_filename)
+    def key_sort_func(scene_name):
+        m = re.search('FloorPlan_([a-zA-Z\-]*)([0-9]+)_([0-9]+)', scene_name)
+        return m.group(1), int(m.group(2)), int(m.group(3))
 
     targets = [
         "Apple",
@@ -2053,51 +2412,197 @@ def filter_dataset(ctx, filename, filter, output_filename):
         "Vase",
         "Alarm Clock",
         "Television",
-        "Pillow",
-        "Bottle"
+        "Pillow"
     ]
 
-    counter = {}
-    for f in obj:
-        obj_type = f['object_type']
+    controller = ai2thor.controller.Controller(
+        width=300,
+        height=300,
+        local_executable_path=_local_build_path() if local_build else None,
+        start_unity=False if editor_mode else True,
+        port=8200,
+        host='127.0.0.1',
+        # Unity params
+        gridSize=0.25,
+        fieldOfView=60,
+        rotateStepDegrees=45,
+        agentMode='bot',
+        visibilityDistance=1,
+    )
 
-        if f['scene'] not in counter:
-            counter[f['scene']] = {target: 0 for target in targets}
-        scene_counter = counter[f['scene']]
-        if obj_type not in scene_counter:
-            scene_counter[obj_type] = 1
-        else:
-            scene_counter[obj_type] += 1
+    scenes = sorted(
+        [scene for scene in controller._scenes_in_build if 'physics' not in scene],
+        key=key_sort_func
+    )
 
-    # for f in obj:
-    #     obj_type = f['object_type']
-    #
-    #     if f['scene'] not in counter:
-    #         counter[f['scene']] = {}
-    #     scene_counter = counter[f['scene']]
-    #     if obj_type not in scene_counter:
-    #         scene_counter[obj_type] = 1
-    #     else:
-    #         scene_counter[obj_type] += 1
+    missing_datapoints_by_scene = {}
+    partial_dataset_by_scene = {}
+    for scene in scenes:
+        missing_datapoints_by_scene[scene] = []
+        partial_dataset_by_scene[scene] = []
 
-    objects_with_zero = set()
-    objects_with_zero_by_obj = {}
-    for k, item in counter.items():
-        for obj_type, count in item.items():
-            if count == 0:
-                if obj_type not in objects_with_zero_by_obj:
-                    objects_with_zero_by_obj[obj_type] = set()
-                else:
-                    objects_with_zero_by_obj[obj_type].add(k)
-                objects_with_zero.add(obj_type)
+    with open(dataset_path, 'r') as f:
+        dataset = json.load(f)
+        fill_in_dataset = create_dataset(
+            ctx,
+            local_build=local_build,
+            editor_mode=editor_mode,
+            output=output_filename,
+            intermediate_directory=intermediate_dir,
+            visibility_distance=visibility_distance
+        )
+
+        for datapoint in filter_dataset:
+            missing_datapoints_by_scene[datapoint['scene']].append(datapoint)
+
+        partial_dataset_filenames = sorted(glob.glob("{}/FloorPlan_*.png".format(dataset_dir)))
+        print("Datas")
+
+        difficulty_order_map = {
+            'easy': 0,
+            'medium': 1,
+            'hard': 2
+        }
+
+        for d_filename in partial_dataset_filenames:
+            with open(d_filename, 'r') as fp:
+                partial_dataset = json.load(fp)
+                partial_dataset[0]['scene'] = partial_dataset
+
+        final_dataset = []
+        for scene in scenes:
+            for object_type in targets:
+                arr = [p for p in partial_dataset[scene] if p['object_type'] == object_type] + \
+                      [p for p in missing_datapoints_by_scene[scene] if p['object_type'] == object_type]
+                final_dataset = final_dataset + sorted(
+                    arr,
+                    key=lambda p: (p['object_type'], difficulty_order_map[p['difficulty']])
+                )
+
+@task
+def test_teleport(ctx, editor_mode=False, local_build=False):
+    import ai2thor.controller
+    import  time
+    controller = ai2thor.controller.Controller(
+        rotateStepDegrees=30,
+        visibilityDistance=1.0,
+        gridSize=0.25,
+        port=8200,
+        host='127.0.0.1',
+        local_executable_path=_local_build_path() if local_build else None,
+        start_unity=False if editor_mode else True,
+        agentType="stochastic",
+        continuousMode=True,
+        continuous=False,
+        snapToGrid=False,
+        agentMode="bot",
+        scene="FloorPlan_Train1_2",
+        width=640,
+        height=480,
+        continus=True
+    )
+
+    controller.step(
+        action="GetReachablePositions",
+        gridSize=0.25
+    )
+    params = {'x': 8.0, 'y': 0.924999952, 'z': -1.75, 'rotation': {'x': 0.0, 'y': 240.0, 'z': 0.0}, 'horizon': 330.0}
+    evt = controller.step(
+        action="TeleportFull",
+        **params
+    )
+
+    print("New pos: {}".format(evt.metadata["agent"]["position"]))
 
 
-    print("Objects wuth zero: {}".format(objects_with_zero))
-    pprint(objects_with_zero_by_obj)
-    filtered = [o for o in obj if o['object_type'] not in objects_with_zero]
+@task
+def resort_dataset(ctx, dataset_path, output_path, editor_mode=False, local_build = True):
+    import json
+    import re
+    with open(dataset_path, 'r') as f:
+        dataset = json.load(f)
 
-    for i, o in enumerate(filtered):
-        o['id'] = i
-    with open(output_filename, 'w') as f:
-        json.dump(filtered, f, indent=4)
-    # pprint("counts\n {}".format(counter))
+    index = 0
+    previous_index = 0
+    datapoint = dataset[index]
+    current_scene = datapoint['scene']
+    current_object = datapoint['object_type']
+    # controller.reset(current_scene)
+    sum_t = 0
+    new_dataset = []
+    while index < len(dataset):
+        previous_index = index
+        while current_scene == datapoint['scene'] and current_object == datapoint['object_type']:
+            index += 1
+            if index > len(dataset) - 1:
+                break
+            datapoint = dataset[index]
+
+        current_scene = datapoint['scene']
+        current_object = datapoint['object_type']
+
+        print("Scene '{}'...".format(current_scene))
+        sorted_datapoints = sorted(
+            dataset[previous_index:index],
+            key=lambda dp: dp['shortest_path_length']
+        )
+        third = int(len(sorted_datapoints) / 3.0)
+        for i, obj in enumerate(sorted_datapoints):
+            if i < third:
+                level = 'easy'
+            elif i < 2 * third:
+                level = 'medium'
+            else:
+                level = 'hard'
+            sorted_datapoints[i]['difficulty'] = level
+            m = re.search('FloorPlan_([a-zA-Z\-]*)([0-9]+)_([0-9]+)', obj['scene'])
+            point_id = "{}_{}_{}_{}_{}".format(
+                m.group(1),
+                m.group(2),
+                m.group(3),
+                obj['object_type'],
+                i
+            )
+            sorted_datapoints[i]['id'] = point_id
+            sorted_datapoints[i]['difficulty'] = level
+        new_dataset = new_dataset + sorted_datapoints
+        sum_t += len(sorted_datapoints)
+
+    print("original len: {}, new len: {}".format(len(dataset), sum_t))
+
+    with open(output_path, 'w') as fw:
+        json.dump(new_dataset, fw, indent=4)
+
+
+@task
+def remove_dataset_spaces(ctx, dataset_dir):
+    import json
+    train = os.path.join(dataset_dir, 'train.json')
+    test = os.path.join(dataset_dir, 'val.json')
+
+    with open(train, 'r') as f:
+        train_data = json.load(f)
+
+    with open(test, 'r') as f:
+        test_data = json.load(f)
+
+    id_set = set()
+    for o in train_data:
+        o['id'] = o['id'].replace(" ", '')
+        id_set.add(o['id'])
+
+    print(sorted(id_set))
+
+    id_set = set()
+
+    for o in test_data:
+        o['id'] = o['id'].replace(" ", '')
+        id_set.add(o['id'])
+
+    print(sorted(id_set))
+
+    with open('train.json', 'w') as fw:
+        json.dump(train_data, fw, indent=4, sort_keys=True)
+
+    with open('val.json', 'w') as fw:
+        json.dump(test_data, fw, indent=4, sort_keys=True)

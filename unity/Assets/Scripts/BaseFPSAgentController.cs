@@ -32,6 +32,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		protected float moveMagnitude;
 
         protected float rotateStepDegrees = 90.0f;
+
+        protected bool snapToGrid;
 		protected bool continuousMode;
 		public ImageSynthesis imageSynthesis;
         public GameObject VisibilityCapsule = null;
@@ -186,6 +188,11 @@ namespace UnityStandardAssets.Characters.FirstPerson
             //     this.enableImageSynthesis();
             // #endif
 			//allowNodes = false;
+
+            #if UNITY_EDITOR || UNITY_WEBGL
+            //if using editor mode or webgl demo, default to tall mode
+            SetAgentMode("tall");
+            #endif
 		}
 
         //defaults all agent renderers, both Tall and Bot, to hidden for initialization default
@@ -229,7 +236,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			targetTeleport = Vector3.zero;
 		}
 
-		abstract public Vector3[] getReachablePositions(float gridMultiplier=1.0f, int maxStepCount = 10000);
+		abstract public Vector3[] getReachablePositions(float gridMultiplier=1.0f, int maxStepCount = 10000, bool visualize = false, Color? gridColor = null);
 
 		public void Initialize(ServerAction action)
         {
@@ -301,7 +308,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 return;
             }
 
-			this.continuousMode = action.continuous;
+            this.snapToGrid = action.snapToGrid;
 
             if (action.renderDepthImage || action.renderClassImage || action.renderObjectImage || action.renderNormalsImage) 
             {
@@ -510,7 +517,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 firstMove.y = Physics.gravity.y * this.m_GravityMultiplier;
 
                 m_CharacterController.Move(firstMove);
-                snapToGrid();
+                snapAgentToGrid();
                 actionFinished(true, new InitializeReturn{
                     cameraNearPlane = m_Camera.nearClipPlane,
                     cameraFarPlane = m_Camera.farClipPlane
@@ -734,9 +741,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			//body.AddForceAtPosition (m_CharacterController.velocity * 15f, hit.point, ForceMode.Acceleration);//might have to adjust the force vector scalar later
 		}
 
-		protected void snapToGrid()
+		protected void snapAgentToGrid()
 		{
-            if (!this.continuousMode) {
+            if (this.snapToGrid) {
                 float mult = 1 / gridSize;
                 float gridX = Convert.ToSingle(Math.Round(this.transform.position.x * mult) / mult);
                 float gridZ = Convert.ToSingle(Math.Round(this.transform.position.z * mult) / mult);
@@ -788,91 +795,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			// StartCoroutine(checkMoveAction(action));
 		}
 
-        //this is not currently used by the Physics agent. Physics agent now checks the final movement position first before moving, so collision checks after trying to move are no longer needed
-		virtual protected IEnumerator checkMoveAction(ServerAction action)
-		{
-
-			yield return null;
-
-    
-			if (continuousMode)
-			{
-				actionFinished(true);
-				yield break;
-			}
-
-			bool result = false;
-
-			errorMessage = "Agent did not settle during move.";
-			for (int i = 0; i < actionDuration; i++)
-			{
-				Vector3 currentPosition = this.transform.position;
-				Vector3 zeroY = new Vector3(1.0f, 0.0f, 1.0f);
-				float distance = Vector3.Distance(Vector3.Scale(lastPosition, zeroY), Vector3.Scale(currentPosition, zeroY));
-				if (Math.Abs(moveMagnitude - distance) < 0.005)
-				{
-					currentPosition = this.transform.position;
-
-					if (action.snapToGrid)
-					{
-						//print("jere");
-						this.snapToGrid();
-					}
-
-
-					yield return null;
-					if (this.IsCollided())
-					{
-						for (int j = 0; j < actionDuration; j++)
-						{
-							yield return null;
-						}
-
-					}
-
-					if ((currentPosition - this.transform.position).magnitude <= 0.001f)
-					{
-						result = true;
-						//lastPosition = transform.position;//debugging
-					}
-
-					break;
-				}
-
-				else
-				{
-				//	print("here?");
-
-					yield return null;
-				}
-			}
-
-			// Debug.Log(this.transform.position.z.ToString("F3", CultureInfo.InvariantCulture));
-
-			// if for some reason we moved in the Y space too much, then we assume that something is wrong
-			// In FloorPlan 223 @ x=-1, z=2.0 its possible to move through the wall using move=0.5
-
-			if (Math.Abs((this.transform.position - lastPosition).y) > 0.2)
-			{
-				errorMessage = "Move resulted in too large a change in y coordinate.";
-				result = false;
-			}
-
-
-			if (!result)
-			{
-				Debug.Log(errorMessage);
-				transform.position = lastPosition;
-			} else {
-				errorMessage = "";
-			}
-
-			actionFinished(result);
-		}
-
-
-
-
 		public virtual void MoveLeft(ServerAction action)
 		{
 			moveCharacter(action, 270);
@@ -900,26 +822,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			m_CharacterController.Move(moveWorldSpace);
 			actionFinished(true);
         }
-
-		//free move
-		public virtual void Move(ServerAction action)
-		{
-			//resetHand(); again, reset hand was commented out so was doing nothing
-			if (Math.Abs(action.x) > 0)
-			{
-				moveMagnitude = Math.Abs(action.x);
-			}
-
-			else
-			{
-				moveMagnitude = Math.Abs(action.z);
-			}
-
-			action.y = Physics.gravity.y * this.m_GravityMultiplier;
-			m_CharacterController.Move(new Vector3(action.x, action.y, action.z));
-			StartCoroutine(checkMoveAction(action));
-		}
-
 
 		private int nearestAngleIndex(float angle, float[] array)
 		{

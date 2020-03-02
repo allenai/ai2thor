@@ -47,6 +47,8 @@ from ai2thor.server import queue_get, DepthFormat
 from ai2thor.build import BUILDS
 from ai2thor._quality_settings import QUALITY_SETTINGS, DEFAULT_QUALITY
 
+import warnings
+
 logger = logging.getLogger(__name__)
 
 RECEPTACLE_OBJECTS = {
@@ -414,7 +416,6 @@ class Controller(object):
             image_per_frame=save_image_per_frame
         )
 
-
         if download_only:
             self.download_binary()
         else:
@@ -428,6 +429,23 @@ class Controller(object):
             )
 
             self.initialization_parameters = unity_initialization_parameters
+
+            if 'continuous' in self.initialization_parameters:
+                warnings.warn(
+                    "Warning: 'continuous' is deprecated and will be ignored,"
+                    " use 'snapToGrid={}' instead."
+                    .format(not self.initialization_parameters['continuous']),
+                    DeprecationWarning
+                )
+
+            if 'continuousMode' in self.initialization_parameters:
+                warnings.warn(
+                    "Warning: 'continuousMode' is deprecated and will be ignored,"
+                    " use 'snapToGrid={}' instead."
+                        .format(not self.initialization_parameters['continuousMode']),
+                    DeprecationWarning
+                )
+
             event = self.reset(scene)
             if event.metadata['lastActionSuccess']:
                 init_return = event.metadata['actionReturn']
@@ -466,8 +484,9 @@ class Controller(object):
                 last_val = m.group(3) if m.group(3) is not None else -1
                 return m.group(1), int(m.group(2)), int(last_val)
             raise ValueError(
-                "\nScene not contained in build (scene names are case sensitive)."
+                "\nScene '{}' not contained in build (scene names are case sensitive)."
                 "\nPlease choose one of the following scene names:\n\n{}".format(
+                    scene,
                     ", ".join(sorted(list(self.scenes_in_build), key=key_sort_func))
                 )
             )

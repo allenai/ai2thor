@@ -25,7 +25,7 @@ def compute_spl(episodes_with_golden):
                                  'path'
                                     the path to evaluate and 'shortest_path' the shortest path
                                     as returned by 'get_shortest_path_to_object'.
-                                    Both as a sequences with values the form
+                                    Both as sequences with values of the form
                                     dict(x=float, y=float, z=float)
                                  'success' boolean, a 0 for a failed path 1 for a successful one
     :return: returns a float representing the spl
@@ -112,6 +112,35 @@ def get_shortest_path_to_object_type(
         raise ValueError(
             "Unable to find shortest path for object type '{}'".format(
                 object_type
+            )
+        )
+
+
+def get_shortest_path_to_point(
+        controller,
+        initial_position,
+        target_position
+    ):
+    """
+    Computes the shortest path to a point from an initial position using an agent controller
+    :param controller: agent controller
+    :param initial_position: dict(x=float, y=float, z=float) with the desired initial rotation
+    :param target_position: dict(x=float, y=float, z=float) representing target position
+    :return:
+    """
+    event = controller.step(
+            action='GetShortestPathToPoint',
+            position=initial_position,
+            x=target_position['x'],
+            y=target_position['y'],
+            z=target_position['z']
+        )
+    if event.metadata['lastActionSuccess']:
+        return event.metadata['actionReturn']['corners']
+    else:
+        raise ValueError(
+            "Unable to find shortest path to point '{}'".format(
+                target_position
             )
         )
 
