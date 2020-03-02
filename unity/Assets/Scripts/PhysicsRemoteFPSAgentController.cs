@@ -2611,9 +2611,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 moveMagnitude,
                 1 << 8 | 1 << 10
             );
-
-            // Debug.Log("length " + String.Join(", ", sweepResults.Select(x => x.rigidbody).ToArray()))
-
             //check if we hit an environmental structure or a sim object that we aren't actively holding. If so we can't move
             if (sweepResults.Length > 0) {
                 foreach (RaycastHit res in sweepResults) {
@@ -6657,7 +6654,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                             }
 #if UNITY_EDITOR
                             
-                            // Debug.DrawLine(p, newPosition, Color.cyan, 100000f);
+                            Debug.DrawLine(p, newPosition, Color.cyan, 100000f);
 #endif
                         }
                     }
@@ -6753,7 +6750,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         if (shouldEnqueue) {
                             pointsQueue.Enqueue(newPosition);
                             #if UNITY_EDITOR
-                                // Debug.DrawLine(p, newPosition, Color.cyan, 100000f);
+                                Debug.DrawLine(p, newPosition, Color.cyan, 100000f);
                             #endif
                         }
                     }
