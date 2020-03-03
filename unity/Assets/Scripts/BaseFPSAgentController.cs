@@ -34,7 +34,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
         protected float rotateStepDegrees = 90.0f;
 
         protected bool snapToGrid;
-		protected bool continuousMode;
+		protected bool continuousMode;//deprecated, use snapToGrid instead
 		public ImageSynthesis imageSynthesis;
         public GameObject VisibilityCapsule = null;
         public GameObject TallVisCap;
