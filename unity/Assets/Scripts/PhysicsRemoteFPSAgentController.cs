@@ -4082,6 +4082,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             target.transform.SetParent(AgentHand.transform);
             ItemInHand = target.gameObject;
 
+            /* TODO MCS
             if (!action.forceAction && isHandObjectColliding(true)) {
                 // Undo picking up the object if the object is colliding with something after picking it up
                 target.GetComponent<Rigidbody>().isKinematic = wasKinematic;
@@ -4096,6 +4097,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 actionFinished(false);
                 return;
             }
+            */
 
             SetUpRotationBoxChecks();
 
