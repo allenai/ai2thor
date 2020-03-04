@@ -65,4 +65,10 @@ public class MachineCommonSenseController : PhysicsRemoteFPSAgentController {
         action.horizon = updatedHorizonValue;
         base.RotateLook(action);
     }
+
+    public override MetadataWrapper generateMetadataWrapper() {
+        MetadataWrapper metadataWrapper = base.generateMetadataWrapper();
+        metadataWrapper.lastActionStatus = this.lastActionStatus;
+        return metadataWrapper;
+    }
 }

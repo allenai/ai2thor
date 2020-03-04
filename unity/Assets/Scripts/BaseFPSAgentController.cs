@@ -128,6 +128,15 @@ namespace UnityStandardAssets.Characters.FirstPerson
         private JavaScriptInterface jsInterface;
         private ServerAction currentServerAction;
 
+        protected string lastActionStatus;
+
+        public enum ActionStatus
+        {
+            SUCCESSFUL,
+            OBSTRUCTED,
+            FAILED // generic error code for unexpected failures
+        }
+
 		public Quaternion TargetRotation
 		{
 			get { return targetRotation; }
@@ -246,6 +255,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 errorMessage = "agentMode must be set to 'bot' or 'tall'";
                 Debug.Log(errorMessage);
                 actionFinished(false);
+                this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.FAILED);
                 return;
             }
 
@@ -265,6 +275,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 				errorMessage = "fov must be set to (0, 180) noninclusive.";
                 Debug.Log(errorMessage);
                 actionFinished(false);
+                this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.FAILED);
                 return;
 			}
 
@@ -299,6 +310,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 errorMessage = "Time scale must be >0";
                 Debug.Log(errorMessage);
                 actionFinished(false);
+                this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.FAILED);
                 return;
             }
 
@@ -318,6 +330,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 errorMessage = "grid size must be in the range (0,5]";
                 Debug.Log(errorMessage);
                 actionFinished(false);
+                this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.FAILED);
                 return;
             }
             else
@@ -325,6 +338,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 gridSize = action.gridSize;
                 //StartCoroutine(checkInitializeAgentLocationAction());
                 snapToGrid();
+                this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.SUCCESSFUL);
                 actionFinished(true);
             }
 
@@ -339,6 +353,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     errorMessage = "Invalid argument 'rotateStepDegrees': 360 should be divisible by 'rotateStepDegrees'.";
                     Debug.Log(errorMessage);
                     actionFinished(false);
+                    this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.FAILED);
                     return;
                 }
                 else {
@@ -642,12 +657,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		public virtual void ProcessControlCommand(ServerAction controlCommand)
 		{
             currentServerAction = controlCommand;
-			
-	        errorMessage = "";
+			errorMessage = "";
 			errorCode = ServerActionErrorCode.Undefined;
 			collisionsInAction = new List<string>();
 
 			lastAction = controlCommand.action;
+			lastActionStatus = null;
 			lastActionSuccess = false;
 			lastPosition = new Vector3(transform.position.x, transform.position.y, transform.position.z);
 			System.Reflection.MethodInfo method = this.GetType().GetMethod(controlCommand.action);
