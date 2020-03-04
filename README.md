@@ -32,7 +32,8 @@ Alternatively, if you want to build the Unity project via the command line, run 
 - [`unity/Assets/Scripts/MachineCommonSenseMain.cs`](./unity/Assets/Scripts/MachineCommonSenseMain.cs)  The main MCS Unity script that is imported into and runs within the Scene.
 - [`unity/Assets/Scripts/MachineCommonSensePerformerManager.cs`](./unity/Assets/Scripts/MachineCommonSensePerformerManager.cs)  A custom subclass extending AI2-THOR's [AgentManager](./unity/Assets/Scripts/AgentManager.cs) that handles all the communication between the Python API and the Unity Scene.
 - [`unity/Assets/Resources/MCS/`](./unity/Assets/Resources/MCS)  Folder containing all MCS runtime resources.
-- [`unity/Assets/Resources/MCS/object_registry.json`](./unity/Assets/Resources/MCS/object_registry.json)  Config file containing the MCS Scene's Game Objects that may be loaded at runtime. 
+- [`unity/Assets/Resources/MCS/mcs_object_registry.json`](./unity/Assets/Resources/MCS/mcs_object_registry.json)  Config file containing the MCS Scene's specific custom Game Objects that may be loaded at runtime. 
+- [`unity/Assets/Resources/MCS/primitive_object_registry.json`](./unity/Assets/Resources/MCS/primitive_object_registry.json)  Config file containing the MCS Scene's Unity Primitive Game Objects that may be loaded at runtime. 
 - [`unity/Assets/Resources/MCS/Materials/`](./unity/Assets/Resources/MCS/Materials)  Copy of AI2-THOR's [`unity/Assets/QuickMaterials/`](./unity/Assets/QuickMaterials).  Must be in the `Resources` folder to access at runtime.
 - [`unity/Assets/Resources/MCS/Scenes/`](./unity/Assets/Resources/MCS/Scenes)  Folder containing sample scene config files (see [Run](#run)).
 
@@ -46,12 +47,12 @@ Alternatively, if you want to build the Unity project via the command line, run 
 
 ## Code Workflow
 
-### Shared Workflow:
+### Shared Workflow
 
 1. (Unity) `BaseFPSAgentController.ProcessControlCommand` will use `Invoke` to call the specific action function in `BaseFPSAgentController` or `PhysicsRemoteFPSAgentController` (like `MoveAhead` or `LookUp`)
 2. (Unity) The specific action function will call `BaseFPSAgentController.actionFinished()` to set `actionComplete` to `true`
 
-### Python API Workflow:
+### Python API Workflow
 
 1. (Python) **You** create a new Python AI2-THOR `Controller` object
 2. (Python) The `Controller` class constructor will automatically send a `Reset` action over the AI2-THOR socket to `AgentManager.ProcessControlCommand(string action)`
@@ -61,14 +62,16 @@ Alternatively, if you want to build the Unity project via the command line, run 
 6. (Unity) `AgentManager.ProcessControlCommand` will create a `ServerAction` from the action string and call `AgentManager.Initialize(ServerAction action)`
 7. (Unity) `AgentManager.Initialize` will call `AgentManager.addAgents(ServerAction action)`, then call `AgentManager.addAgent(ServerAction action)`, then call `BaseFPSAgentController.ProcessControlCommand(ServerAction action)` with the `Initialize` action
 8. (Unity) See the [**Shared Workflow**](#shared-workflow)
-9. (Python) **You** call `controller.step(dict action)` with a specific action
-10. (Unity) The action is sent over the AI2-THOR socket to `AgentManager.ProcessControlCommand(string action)`
-11. (Unity) `AgentManager.ProcessControlCommand` will create a `ServerAction` from the action string and call `BaseFPSAgentController.ProcessControlCommand(ServerAction action)` (except on `Reset` or `Initialize` actions)
-12. (Unity) See the [**Shared Workflow**](#shared-workflow)
-13. (Unity) `AgentManager.LateUpdate`, which is run every frame, will see `actionComplete` is `true` and call `AgentManager.EmitFrame()`
-14. (Unity) `AgentManager.EmitFrame` will return output to the Python API (`controller.step`) and await the next step
+9. (Unity) `AgentManager.LateUpdate`, which is run every frame, will see `actionComplete` is `true` and call `AgentManager.EmitFrame()`
+10. (Unity) `AgentManager.EmitFrame` will return output from the `Initialize` action to the Python API (`controller.step`) and await the next action
+11. (Python) **You** call `controller.step(dict action)` with a specific action
+12. (Unity) The action is sent over the AI2-THOR socket to `AgentManager.ProcessControlCommand(string action)`
+13. (Unity) `AgentManager.ProcessControlCommand` will create a `ServerAction` from the action string and call `BaseFPSAgentController.ProcessControlCommand(ServerAction action)` (except on `Reset` or `Initialize` actions)
+14. (Unity) See the [**Shared Workflow**](#shared-workflow)
+15. (Unity) `AgentManager.LateUpdate`, which is run every frame, will see `actionComplete` is `true` and call `AgentManager.EmitFrame()`
+16. (Unity) `AgentManager.EmitFrame` will return output from the specific action to the Python API (`controller.step`) and await the next action
 
-### Unity Editor Workflow:
+### Unity Editor Workflow
 
 1. (Unity) Loads the Unity scene
 2. (Editor) Waits until **you** press a key
@@ -80,6 +83,7 @@ Alternatively, if you want to build the Unity project via the command line, run 
 
 - Adding AI2-THOR's custom Tags and Layers to your Game Objects is needed for their scripts to work properly.  For example, if you don't tag the walls as `Structure`, then the player can walk fully into them.
 - Fast moving objects that use Unity physics, as well as all structural objects, should have their `Collision Detection` (in their `Rigidbody`) set to `Continuous`.  With these changes, a fast moving object that tries to move from one side of a wall to the other side in a single frame will be stopped as expected.
+- The FPSController object's robot model is half scale, and ends up being about 0.5 high while the game is running.  I had to change the properties of the `Capsule Collider` and the `Character Controller` so the FPSController would not collide with the floor while moving (`PhysicsRemoteFPSAgentController.capsuleCastAllForAgent`).  Previously:  `center.y=-0.45`, `radius=0.175`, `height=0.9`.  Now:  `center.y=-0.05`, `radius=0.2`, `height=0.5` (though these numbers seem smaller than they should really be).
 
 ## Changelog of AI2-THOR Classes
 
@@ -96,6 +100,7 @@ Alternatively, if you want to build the Unity project via the command line, run 
   - Added a way to "Pass" (with the "Escape" button) or "Initialize" (with the "Backspace" button) on a step while playing the game in the Unity Editor
 - `Scripts/PhysicsRemoteFPSAgentController`:
   - Changed the `physicsSceneManager` variable from `private` to `protected` so we can access it from our subclasses
+  - Commented out a block in the `PickupObject` function that checked for collisions between the held object and other objects in the scene because it caused odd behavior if you were looking at the floor.  The `Look` functions don't make this check either, and we may decide not to move the held object during `Look` actions anyway.
 - `Scripts/SimObjPhysics`:
   - Changed the `Start` function to `public` so we can call it from our scripts
 - `Scripts/SimObjType`:

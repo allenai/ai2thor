@@ -10,8 +10,15 @@ namespace UnityStandardAssets.Characters.FirstPerson
         public GameObject InputFieldObj = null;
         public PhysicsRemoteFPSAgentController PhysicsController = null;
         private InputField inputField;
+        public bool continuous = true;
+        public bool forceAction = false;
+        public float gridSize = 0.1f;
+        public string objectId = "";
+        public float visibilityDistance = 0.4f;
         public float rotationIncrement = 45.0f;
         public int horizonIncrement = 30;
+        public float FlyMagnitude = 1.0f;
+        public float WalkMagnitude = 0.2f;
 
         [SerializeField] private GameObject InputMode_Text = null;
         // Start is called before the first frame update
@@ -33,6 +40,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             }
 
             ServerAction action = new ServerAction();
+            action.gridSize = gridSize;
             action.action = "Initialize";
             PhysicsController.ProcessControlCommand(action);
         }
@@ -92,11 +100,14 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 
                     if(!inputField.isFocused)
                     {
-                        float FlyMagnitude = 1.0f;
-                        float WalkMagnitude = 0.25f;
+                        ServerAction action = new ServerAction();
+                        action.continuous = continuous;
+                        action.forceAction = forceAction;
+                        action.gridSize = gridSize;
+                        action.visibilityDistance = visibilityDistance;
+
                         if(Input.GetKeyDown(KeyCode.W))
                         {
-                            ServerAction action = new ServerAction();
                             if(PhysicsController.FlightMode)
                             {
                                 action.action = "FlyAhead";
@@ -114,7 +125,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
                         if(Input.GetKeyDown(KeyCode.S))
                         {
-                            ServerAction action = new ServerAction();
                             if(PhysicsController.FlightMode)
                             {
                                 action.action = "FlyBack";
@@ -132,7 +142,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
                         if(Input.GetKeyDown(KeyCode.A))
                         {
-                            ServerAction action = new ServerAction();
                             if(PhysicsController.FlightMode)
                             {
                                 action.action = "FlyLeft";
@@ -150,7 +159,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
                         if(Input.GetKeyDown(KeyCode.D))
                         {
-                            ServerAction action = new ServerAction();
                             if(PhysicsController.FlightMode)
                             {
                                 action.action = "FlyRight";
@@ -170,7 +178,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         {
                             if(PhysicsController.FlightMode)
                             {
-                                ServerAction action = new ServerAction();
                                 action.action = "FlyUp";
                                 action.moveMagnitude = FlyMagnitude;
                                 PhysicsController.ProcessControlCommand(action);
@@ -181,7 +188,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         {
                             if(PhysicsController.FlightMode)
                             {
-                                ServerAction action = new ServerAction();
                                 action.action = "FlyDown";
                                 action.moveMagnitude = FlyMagnitude;
                                 PhysicsController.ProcessControlCommand(action);
@@ -190,28 +196,24 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
                         if(Input.GetKeyDown(KeyCode.UpArrow))
                         {
-                            ServerAction action = new ServerAction();
                             action.action = "LookUp";
                             PhysicsController.ProcessControlCommand(action); 
                         }
 
                         if(Input.GetKeyDown(KeyCode.DownArrow))
                         {
-                            ServerAction action = new ServerAction();
                             action.action = "LookDown";
                             PhysicsController.ProcessControlCommand(action); 
                         }
 
                         if(Input.GetKeyDown(KeyCode.LeftArrow) )//|| Input.GetKeyDown(KeyCode.J))
                         {
-                            ServerAction action = new ServerAction();
                             action.action = "RotateLeft";
                             PhysicsController.ProcessControlCommand(action); 
                         }
 
                         if(Input.GetKeyDown(KeyCode.RightArrow) )//|| Input.GetKeyDown(KeyCode.L))
                         {
-                            ServerAction action = new ServerAction();
                             action.action = "RotateRight";
                             PhysicsController.ProcessControlCommand(action); 
                         }
@@ -220,7 +222,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         {
                             if(PhysicsController.FlightMode)
                             {
-                                ServerAction action = new ServerAction();
                                 action.action = "LaunchDroneObject";
                                 action.moveMagnitude = 200f;
                                 //action. = new Vector3(0, 1, -1);
@@ -232,13 +233,11 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         }
 
                         if (Input.GetKeyDown(KeyCode.Escape)) {
-                            ServerAction action = new ServerAction();
                             action.action = "Pass";
                             PhysicsController.ProcessControlCommand(action);
                         }
 
                         if (Input.GetKeyDown(KeyCode.Backspace)) {
-                            ServerAction action = new ServerAction();
                             action.action = "Initialize";
                             PhysicsController.ProcessControlCommand(action);
                         }
@@ -247,16 +246,27 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         {
                             if(PhysicsController.FlightMode)
                             {
-                                ServerAction action = new ServerAction();
                                 action.action = "CheckDroneCaught";
                                 PhysicsController.ProcessControlCommand(action);
                             }
                         }
 
+                        if(Input.GetKeyDown(KeyCode.P))
+                        {
+                            action.action = "PickupObject";
+                            action.objectId = this.objectId;
+                            PhysicsController.ProcessControlCommand(action);
+                        }
+
+                        if(Input.GetKeyDown(KeyCode.X))
+                        {
+                            action.action = "DropHandObject";
+                            action.objectId = this.objectId;
+                            PhysicsController.ProcessControlCommand(action);
+                        }
+
                         if(Input.GetKeyDown(KeyCode.R))
                         {
-                            ServerAction action = new ServerAction();
-
                             action.rotation.y = rotationIncrement;
                             action.horizon = horizonIncrement;
 
