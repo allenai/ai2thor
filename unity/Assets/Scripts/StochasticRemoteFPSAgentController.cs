@@ -23,11 +23,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
         protected float movementGaussianSigma = 0.005f;
         protected float rotateGaussianMu = 0.0f;
         protected float rotateGaussianSigma = 0.5f;
-
         protected bool allowHorizontalMovement = false;
+        //determines rotation increment of stochastic rotate functions
+        protected float rotateStepDegrees = 90.0f;
+
         public void Initialize(ServerAction action)
         {
-
             this.applyActionNoise = action.applyActionNoise;
 
             if (action.movementGaussianMu > 0.0f)
@@ -50,6 +51,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 this.rotateGaussianSigma = action.rotateGaussianSigma;
             }
 
+            if (action.rotateStepDegrees > 0.0) {
+                this.rotateStepDegrees = action.rotateStepDegrees;
+            }
             Debug.Log("MoveNoise: " + movementGaussianMu + " mu, " + movementGaussianSigma + " sigma");
             Debug.Log("RotateNoise: " + rotateGaussianMu + " mu, " + rotateGaussianSigma + " sigma");
             Debug.Log("applynoise:" + applyActionNoise);
@@ -112,6 +116,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
         DefaultAgentHand(action);
         var rotateAmountDegrees = GetRotateMagnitudeWithNoise(action);
 
+        //multiply quaternions to apply rotation based on rotateAmountDegrees
         transform.rotation = transform.rotation * Quaternion.Euler(new Vector3(0.0f, rotateAmountDegrees, 0.0f));
         actionFinished(true);
     }

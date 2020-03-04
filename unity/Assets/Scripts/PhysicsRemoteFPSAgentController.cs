@@ -1193,8 +1193,49 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return result;
         }
 
+        //checks if a float is an increment of 0.1f
+        private bool CheckIfFloatIsIncrementOfTenths(float f)
+        {
+            var epsilon = 1e-5;
+            var remainder = f % 0.1f;
+            if(isThisFloatCloseToThisOtherFloatBecauseFloatsAreWeird(remainder, 0.0f, epsilon) ||
+                isThisFloatCloseToThisOtherFloatBecauseFloatsAreWeird(remainder, 1.0f, epsilon))
+                {
+                    //it's an increment of 0.1 we're good!
+                    return true;
+                }
+            
+            //not an increment of 0.1f
+            else
+            return false;
+        }
+
+        //check if a float is close to another float within an epsilon tolerance
+        private bool isThisFloatCloseToThisOtherFloatBecauseFloatsAreWeird(float x, float y, double tolerance)
+        {
+            if(x + tolerance > y && x - tolerance < y)
+            return true;
+
+            else
+            return false;
+        }
+
         public override void LookDown(ServerAction action) 
         {
+            if(action.degrees < 0)
+            {
+                errorMessage = "LookDown action requires positive degree value. Invalid value used: " + action.degrees;
+                actionFinished(false);
+                return;
+            }
+
+            if(!CheckIfFloatIsIncrementOfTenths(action.degrees))
+            {
+                errorMessage = "LookDown action requires degree value to be in increments of 0.1f";
+                actionFinished(false);
+                return;
+            }
+
             //default degree increment to 30
             if(action.degrees == 0)
             {
@@ -1230,6 +1271,21 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         public override void LookUp(ServerAction action) 
         {
+
+            if(action.degrees < 0)
+            {
+                errorMessage = "LookUp action requires positive degree value. Invalid value used: " + action.degrees;
+                actionFinished(false);
+                return;
+            }
+
+            if(!CheckIfFloatIsIncrementOfTenths(action.degrees))
+            {
+                errorMessage = "LookUp action requires degree value to be in increments of 0.1f";
+                actionFinished(false);
+                return;
+            }
+
             //default degree increment to 30
             if(action.degrees == 0)
             {

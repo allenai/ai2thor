@@ -30,9 +30,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 		protected static float gridSize = 0.25f;
 		protected float moveMagnitude;
-
-        protected float rotateStepDegrees = 90.0f;
-
         protected bool snapToGrid;
 		protected bool continuousMode;//deprecated, use snapToGrid instead
 		public ImageSynthesis imageSynthesis;
@@ -260,10 +257,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 action.gridSize = 0.25f;
             }
 
-            if (action.rotateStepDegrees > 0.0) {
-                this.rotateStepDegrees = action.rotateStepDegrees;
-            }
-
 			if (action.fieldOfView > 0 && action.fieldOfView < 180) {
 				m_Camera.fieldOfView = action.fieldOfView;
 			} 
@@ -332,26 +325,33 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 StartCoroutine(checkInitializeAgentLocationAction());
             }
 
-            // Rotation
-            var epsilon = 1e-4;
-            var epsilonBig = 1e-3;
-            if (Mathf.Abs(action.rotateStepDegrees - 90.0f) > epsilonBig) {
-                var ratio = 360.0f / action.rotateStepDegrees;
-                var angleStepNumber = Mathf.RoundToInt(ratio);
+            //// The below previously set up headingAngles based on the increment defined by rotateStepDegrees.
+            //// The new base rotate functions no longer make use of this, so rotateStepDegrees is now only on the StochasticRemoteFPSAgentController component
+            // var epsilon = 1e-4;
+            // var epsilonBig = 1e-3;
+            // if (Mathf.Abs(action.rotateStepDegrees - 90.0f) > epsilonBig) {
+            //     print("abs value of rotateStepDegrees-90.0f is bigger than epsilon big");
+            //     //get how many increments to divide the whole 360 rotation to
+            //     //ie: rotateStepDegrees 45 is 360/45
+            //     var ratio = 360.0f / action.rotateStepDegrees;
+            //     var angleStepNumber = Mathf.RoundToInt(ratio);
                 
-                if (Mathf.Abs(ratio - angleStepNumber) > epsilon) {
-                    errorMessage = "Invalid argument 'rotateStepDegrees': 360 should be divisible by 'rotateStepDegrees'.";
-                    Debug.Log(errorMessage);
-                    actionFinished(false);
-                    return;
-                }
-                else {
-                    this.headingAngles = new float[angleStepNumber];
-                    for (int i = 0; i < angleStepNumber; i++) {
-                        headingAngles[i] = i * action.rotateStepDegrees;
-                    }
-                }
-            }
+            //     //double check that the rotateStepDegrees is actually divisible by 360, if not then return false
+            //     if (Mathf.Abs(ratio - angleStepNumber) > epsilon) {
+            //         errorMessage = "Invalid argument 'rotateStepDegrees': 360 should be divisible by 'rotateStepDegrees'.";
+            //         Debug.Log(errorMessage);
+            //         actionFinished(false);
+            //         return;
+            //     }
+
+            //     //ok so it is divisible, regenerate the headingAngles array based on the new rotateStepDegrees and their increments
+            //     else {
+            //         this.headingAngles = new float[angleStepNumber];
+            //         for (int i = 0; i < angleStepNumber; i++) {
+            //             headingAngles[i] = i * action.rotateStepDegrees;
+            //         }
+            //     }
+            // }
 
 			//override default ssao settings when using init
 			// string ssao = action.ssao.ToLower().Trim();
@@ -536,16 +536,19 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			return Array.IndexOf(this.excludeObjectIds, objectId) >= 0;
 		}
 
+        //currently unused
 		public bool excludeObject(SimpleSimObj so)
 		{
 			return excludeObject(so.ObjectID);
 		}
 
+        //currently unused
 		protected bool closeSimObj(SimpleSimObj so)
 		{
 			return so.Close();
 		}
 
+        //currently unused
 		protected bool openSimObj(SimpleSimObj so)
 		{
 			return so.Open();
@@ -693,6 +696,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		}
 
 		// Handle collisions - CharacterControllers don't apply physics innately, see "PushMode" check below
+        // XXX: this will be used for truly continuous movement over time, for now this is unused
 		protected void OnControllerColliderHit(ControllerColliderHit hit)
 		{
 			if (!enabled)
@@ -795,6 +799,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			// StartCoroutine(checkMoveAction(action));
 		}
 
+        //do not use this base version, use the override from PhysicsRemote or Stochastic
 		public virtual void MoveLeft(ServerAction action)
 		{
 			moveCharacter(action, 270);
@@ -815,6 +820,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			moveCharacter(action, 180);
 		}
 
+        //overriden by stochastic
         public virtual void MoveRelative(ServerAction action) {
             var moveLocal = new Vector3(action.x, 0, action.z);
             Vector3 moveWorldSpace = transform.rotation * moveLocal;
@@ -823,18 +829,19 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			actionFinished(true);
         }
 
-		private int nearestAngleIndex(float angle, float[] array)
-		{
+        //only used by currentHorizonAngleIndex, which is now deprecated
+		// private int nearestAngleIndex(float angle, float[] array)
+		// {
 
-			for (int i = 0; i < array.Length; i++)
-			{
-				if (Math.Abs(angle - array[i]) < 2.0f)
-				{
-					return i;
-				}
-			}
-			return 0;
-		}
+		// 	for (int i = 0; i < array.Length; i++)
+		// 	{
+		// 		if (Math.Abs(angle - array[i]) < 2.0f)
+		// 		{
+		// 			return i;
+		// 		}
+		// 	}
+		// 	return 0;
+		// }
 
 		// protected int currentHorizonAngleIndex()
 		// {
@@ -846,14 +853,15 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		// 	return nearestAngleIndex(Quaternion.LookRotation(transform.forward).eulerAngles.y, headingAngles);
 		// }
 
-		//free look, change up/down angle of camera view
-		public void Look(ServerAction response)
-		{
-			m_Camera.transform.localEulerAngles = new Vector3(response.horizon, 0.0f, 0.0f);
-			actionFinished(true);
-		}
+		//free look, change up/down angle of camera view, also deprecated
+		// public void Look(ServerAction response)
+		// {
+		// 	m_Camera.transform.localEulerAngles = new Vector3(response.horizon, 0.0f, 0.0f);
+		// 	actionFinished(true);
+		// }
 
 		//free rotate, change forward facing of Agent
+        //this is currently overrided by Rotate in Stochastic Controller
 		public virtual void Rotate(ServerAction response)
 		{
 			transform.rotation = Quaternion.Euler(new Vector3(0.0f, response.rotation.y, 0.0f));
@@ -861,12 +869,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		}
 
 		//looks like thisfree rotates AND free changes camera look angle? don't use this, very deprecated
-		public void RotateLook(ServerAction response)
-		{
-			transform.rotation = Quaternion.Euler(new Vector3(0.0f, response.rotation.y, 0.0f));
-			m_Camera.transform.localEulerAngles = new Vector3(response.horizon, 0.0f, 0.0f);
-			actionFinished(true);
-		}
+		// public void RotateLook(ServerAction response)
+		// {
+		// 	transform.rotation = Quaternion.Euler(new Vector3(0.0f, response.rotation.y, 0.0f));
+		// 	m_Camera.transform.localEulerAngles = new Vector3(response.horizon, 0.0f, 0.0f);
+		// 	actionFinished(true);
+		// }
 
 		//rotates controlCommand.degrees degrees left w/ respect to current forward
 		public virtual void RotateLeft(ServerAction controlCommand)
