@@ -1894,6 +1894,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         protected bool checkIfSceneBoundsContainTargetPosition(Vector3 position) {
             if (!sceneBounds.Contains(position)) {
                 errorMessage = "Scene bounds do not contain target position.";
+                this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.FAILED);
                 return false;
             } else {
                 return true;
@@ -1929,16 +1930,20 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 if (uniqueId != "" && maxDistanceToObject > 0.0f) {
                     if (!physicsSceneManager.UniqueIdToSimObjPhysics.ContainsKey(uniqueId)) {
                         errorMessage = "No object with ID " + uniqueId;
-                        transform.position = oldPosition; 
+                        transform.position = oldPosition;
+                        this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.FAILED);
                         return false;
                     }
                     SimObjPhysics sop = physicsSceneManager.UniqueIdToSimObjPhysics[uniqueId];
                     if (distanceToObject(sop) > maxDistanceToObject) {
                         errorMessage = "Agent movement would bring it beyond the max distance of " + uniqueId;
                         transform.position = oldPosition;
+                        this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.FAILED);
                         return false;
                     }
                 }
+
+                this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.SUCCESSFUL);
                 return true;
             } else {
                 return false;
@@ -2499,6 +2504,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                             errorMessage = res.transform.name + " is blocking the Agent from moving " + orientation + " with " + ItemInHand.name;
                             result = false;
                             Debug.Log(errorMessage);
+                            this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.OBSTRUCTED);
                             return result;
                         }
 
@@ -2613,6 +2619,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         int thisAgentNum = agentManager.agents.IndexOf(this);
                         int otherAgentNum = agentManager.agents.IndexOf(maybeOtherAgent);
                         errorMessage = "Agent " + otherAgentNum.ToString() + " is blocking Agent " + thisAgentNum.ToString() + " from moving " + orientation;
+                        this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.OBSTRUCTED);
                         return false;
                     }
 
@@ -2621,6 +2628,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         int thisAgentNum = agentManager.agents.IndexOf(this);
                         errorMessage = res.transform.name + " is blocking Agent " + thisAgentNum.ToString() + " from moving " + orientation;
                         //the moment we find a result that is blocking, return false here
+                        this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.OBSTRUCTED);
                         return false;
                     }
                 }
