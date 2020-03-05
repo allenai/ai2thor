@@ -13,10 +13,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
         public bool continuous = true;
         public bool forceAction = false;
         public float gridSize = 0.1f;
-        public string objectId = "";
         public float visibilityDistance = 0.4f;
+        public string objectId = "";
+        public string secondObjectId = "";
         public float rotationIncrement = 45.0f;
         public int horizonIncrement = 30;
+        public float pushPullForce = 150.0f;
         public float FlyMagnitude = 1.0f;
         public float WalkMagnitude = 0.2f;
 
@@ -244,11 +246,25 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
                         if(Input.GetKeyDown(KeyCode.O))
                         {
+                            action.action = "OpenObject";
+                            action.moveMagnitude = 1.0f;
+                            action.objectId = this.objectId;
+                            PhysicsController.ProcessControlCommand(action);
+                            /*
                             if(PhysicsController.FlightMode)
                             {
                                 action.action = "CheckDroneCaught";
                                 PhysicsController.ProcessControlCommand(action);
                             }
+                            */
+                        }
+
+                        if(Input.GetKeyDown(KeyCode.C))
+                        {
+                            action.action = "CloseObject";
+                            action.moveMagnitude = 1.0f;
+                            action.objectId = this.objectId;
+                            PhysicsController.ProcessControlCommand(action);
                         }
 
                         if(Input.GetKeyDown(KeyCode.P))
@@ -258,9 +274,25 @@ namespace UnityStandardAssets.Characters.FirstPerson
                             PhysicsController.ProcessControlCommand(action);
                         }
 
+                        if(Input.GetKeyDown(KeyCode.Z))
+                        {
+                            action.action = "PutObject";
+                            action.objectId = this.objectId;
+                            action.receptacleObjectId = this.secondObjectId;
+                            PhysicsController.ProcessControlCommand(action);
+                        }
+
                         if(Input.GetKeyDown(KeyCode.X))
                         {
                             action.action = "DropHandObject";
+                            action.objectId = this.objectId;
+                            PhysicsController.ProcessControlCommand(action);
+                        }
+
+                        if(Input.GetKeyDown(KeyCode.U))
+                        {
+                            action.action = this.pushPullForce > 0 ? "PushObject" : "PullObject";
+                            action.moveMagnitude = System.Math.Abs(this.pushPullForce);
                             action.objectId = this.objectId;
                             PhysicsController.ProcessControlCommand(action);
                         }

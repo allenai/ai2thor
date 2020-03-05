@@ -10,6 +10,7 @@ public class MachineCommonSenseMain : MonoBehaviour {
     public static float CONTROLLER_Y = 0.4f;
     public string defaultSceneFile = "";
     public bool enableVerboseLog = false;
+    public string ai2thorObjectRegistryFile = "ai2thor_object_registry";
     public string mcsObjectRegistryFile = "mcs_object_registry";
     public string primitiveObjectRegistryFile = "primitive_object_registry";
 
@@ -34,12 +35,14 @@ public class MachineCommonSenseMain : MonoBehaviour {
         this.physicsSceneManager.physicsSimulationPaused = true;
 
         // Load the configurable game objects from our custom registry files.
+        List<MachineCommonSenseConfigObjectDefinition> ai2thorObjects = LoadObjectRegistryFromFile(
+            this.ai2thorObjectRegistryFile);
         List<MachineCommonSenseConfigObjectDefinition> mcsObjects = LoadObjectRegistryFromFile(
             this.mcsObjectRegistryFile);
         List<MachineCommonSenseConfigObjectDefinition> primitiveObjects = LoadObjectRegistryFromFile(
             this.primitiveObjectRegistryFile);
-        mcsObjects.Concat(primitiveObjects).ToList().ForEach((objectDefinition) => {
-            this.objectDictionary.Add(objectDefinition.id, objectDefinition);
+        ai2thorObjects.Concat(mcsObjects).Concat(primitiveObjects).ToList().ForEach((objectDefinition) => {
+            this.objectDictionary.Add(objectDefinition.id.ToUpper(), objectDefinition);
         });
 
         // Load the default MCS scene set in the Unity Editor.
@@ -65,7 +68,7 @@ public class MachineCommonSenseMain : MonoBehaviour {
                         // If new objects were added to the scene...
                         if (objectsWereShown) {
                             // Notify the PhysicsSceneManager so the objects will be compatible with AI2-THOR scripts.
-                            this.physicsSceneManager.ResetUniqueIdToSimObjPhysics();
+                            this.physicsSceneManager.SetupScene();
                             // Notify ImageSynthesis so the objects will appear in the masks.
                             ImageSynthesis imageSynthesis = GameObject.Find("FPSController")
                                 .GetComponentInChildren<ImageSynthesis>();
@@ -122,12 +125,16 @@ public class MachineCommonSenseMain : MonoBehaviour {
 
     private Collider AssignBoundingBox(
         GameObject gameObject,
-        MachineCommonSenseConfigColliderDefinition colliderDefinition
+        MachineCommonSenseConfigCollider colliderDefinition
     ) {
         // The AI2-THOR bounding box property is always a box collider.
         colliderDefinition.type = "box";
-        GameObject boundingBoxObject = new GameObject();
-        boundingBoxObject.name = gameObject.name + "_bounding_box";
+        // The AI2-THOR scripts assume the bounding box collider object is always called BoundingBox.
+        GameObject boundingBoxObject = new GameObject {
+            isStatic = true,
+            layer = 9, // AI2-THOR Layer SimObjInvisible
+            name = "BoundingBox"
+        };
         boundingBoxObject.transform.parent = gameObject.transform;
         Collider boundingBox = AssignCollider(boundingBoxObject, colliderDefinition);
         // The AI2-THOR documentation says to deactive the bounding box collider.
@@ -137,24 +144,29 @@ public class MachineCommonSenseMain : MonoBehaviour {
 
     private Collider AssignCollider(
         GameObject gameObject,
-        MachineCommonSenseConfigColliderDefinition colliderDefinition
+        MachineCommonSenseConfigCollider colliderDefinition
     ) {
-        Vector3 center = colliderDefinition.center == null ? new Vector3(0, 0, 0) : new Vector3(
-            colliderDefinition.center.x, colliderDefinition.center.y, colliderDefinition.center.z);
-        Vector3 size = colliderDefinition.size == null ? new Vector3(1, 1, 1) : new Vector3(
-            colliderDefinition.size.GetX(), colliderDefinition.size.GetY(), colliderDefinition.size.GetZ());
+        gameObject.transform.localPosition = colliderDefinition.position == null ? Vector3.zero :
+            new Vector3(colliderDefinition.position.x, colliderDefinition.position.y,
+            colliderDefinition.position.z);
+        gameObject.transform.localRotation = colliderDefinition.rotation == null ? Quaternion.identity :
+            Quaternion.Euler(colliderDefinition.rotation.x, colliderDefinition.rotation.y,
+            colliderDefinition.rotation.z);
+        gameObject.transform.localScale = colliderDefinition.scale == null ? Vector3.one :
+            new Vector3(colliderDefinition.scale.GetX(), colliderDefinition.scale.GetY(),
+            colliderDefinition.scale.GetZ());
 
         if (colliderDefinition.type.Equals("box")) {
             BoxCollider boxCollider = gameObject.AddComponent<BoxCollider>();
-            boxCollider.center = center;
-            boxCollider.size = size;
+            boxCollider.center = Vector3.zero;
+            boxCollider.size = Vector3.one;
             LogVerbose("ASSIGN BOX COLLIDER TO GAME OBJECT " + gameObject.name);
             return boxCollider;
         }
 
         if (colliderDefinition.type.Equals("capsule")) {
             CapsuleCollider capsuleCollider = gameObject.AddComponent<CapsuleCollider>();
-            capsuleCollider.center = center;
+            capsuleCollider.center = Vector3.zero;
             capsuleCollider.height = colliderDefinition.height;
             capsuleCollider.radius = colliderDefinition.radius;
             LogVerbose("ASSIGN CAPSULE COLLIDER TO GAME OBJECT " + gameObject.name);
@@ -163,7 +175,7 @@ public class MachineCommonSenseMain : MonoBehaviour {
 
         if (colliderDefinition.type.Equals("sphere")) {
             SphereCollider sphereCollider = gameObject.AddComponent<SphereCollider>();
-            sphereCollider.center = center;
+            sphereCollider.center = Vector3.zero;
             sphereCollider.radius = colliderDefinition.radius;
             return sphereCollider;
         }
@@ -174,9 +186,10 @@ public class MachineCommonSenseMain : MonoBehaviour {
     private Material AssignMaterial(GameObject gameObject, String materialFile) {
         Renderer renderer = gameObject.GetComponent<Renderer>();
         if (materialFile != null && !materialFile.Equals("")) {
-            Material material = Resources.Load<Material>("MCS/Materials/" + materialFile);
-            LogVerbose("LOAD OF MATERIAL FILE Assets/Resources/MCS/Materials/" + materialFile + (material == null ?
-                " IS NULL" : " IS DONE"));
+            // TODO Load materials from a folder other than MCS/Materials/AI2-THOR
+            Material material = Resources.Load<Material>("MCS/Materials/AI2-THOR/" + materialFile);
+            LogVerbose("LOAD OF MATERIAL FILE Assets/Resources/MCS/Materials/AI2-THOR/" + materialFile +
+                (material == null ?  " IS NULL" : " IS DONE"));
             if (material != null) {
                 renderer.material = material;
                 LogVerbose("ASSIGN MATERIAL " + materialFile + " TO GAME OBJECT " + gameObject.name);
@@ -199,6 +212,12 @@ public class MachineCommonSenseMain : MonoBehaviour {
 
         LogVerbose("CREATE " + objectDefinition.id.ToUpper() + " GAME OBJECT " + gameObject.name);
 
+        // If scale is defined, set the object's scale to the defined scale; otherwise, use the object's default scale.
+        if (objectDefinition.scale != null) {
+            gameObject.transform.localScale = new Vector3(objectDefinition.scale.GetX(), objectDefinition.scale.GetY(),
+                objectDefinition.scale.GetZ());
+        }
+
         if (objectConfig.structure) {
             // Ensure this object is not moveable.
             gameObject.isStatic = true;
@@ -208,40 +227,153 @@ public class MachineCommonSenseMain : MonoBehaviour {
             ai2thorStructureScript.WhatIsMyStructureObjectTag = StructureObjectTag.Wall; // TODO Make configurable
         }
 
-        if (objectConfig.physics) {
-            // Add Unity RigidBody and Collider components to enable physics on this object.
-            Rigidbody rigidbody = gameObject.AddComponent<Rigidbody>();
-            rigidbody.mass = objectConfig.mass == 0 ? 1 : objectConfig.mass;
-            rigidbody.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
-            LogVerbose("ASSIGN RIGID BODY TO GAME OBJECT " + gameObject.name);
-            Collider collider = this.AssignCollider(gameObject, objectDefinition.collider);
-            List<Transform> visibilityPoints = this.AssignVisibilityPoints(gameObject,
-                objectDefinition.visibilityPoints);
+        bool moveable = objectConfig.moveable || objectDefinition.moveable;
+        bool openable = objectConfig.openable || objectDefinition.openable;
+        bool pickupable = objectConfig.pickupable || objectDefinition.pickupable;
+        bool receptacle = objectConfig.receptacle || objectDefinition.receptacle;
 
-            // Add AI2-THOR specific properties.
+        bool shouldAddPhysicsScript = moveable || openable || pickupable || receptacle;
+        Collider[] colliders = new Collider[] { };
+
+        // Add Unity Rigidbody and Collider components to enable physics on this object.
+        if (objectConfig.physics || shouldAddPhysicsScript) {
+            // Note that some prefabs may already have a Rigidbody component.
+            Rigidbody rigidbody = gameObject.GetComponent<Rigidbody>();
+            if (rigidbody == null) {
+                rigidbody = gameObject.AddComponent<Rigidbody>();
+                LogVerbose("ASSIGN RIGID BODY TO GAME OBJECT " + gameObject.name);
+            }
+            rigidbody.isKinematic = false;
+            rigidbody.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
+            if (objectConfig.mass > 0) {
+                rigidbody.mass = objectConfig.mass;
+            }
+
+            // We don't care about existing trigger colliders here so just ignore them.
+            colliders = gameObject.GetComponentsInChildren<Collider>().Where((collider) =>
+                !collider.isTrigger).ToArray();
+            // Deactivate any MeshCollider.  We expect non-MeshCollider(s) to be defined on the object too.
+            // A MeshCollider will cause an error with our object's ContinuousDynamic Rigidbody component.
+            colliders.ToList().ForEach((collider) => {
+                if (collider is MeshCollider) {
+                    collider.enabled = false;
+                }
+            });
+            if (objectDefinition.colliders != null && objectDefinition.colliders.Count > 0) {
+                // If new colliders are defined for the object, deactivate the existing colliders.
+                colliders.ToList().ForEach((collider) => {
+                    collider.enabled = false;
+                });
+                // The AI2-THOR scripts assume the colliders have a parent object with the name Colliders.
+                GameObject colliderParentObject = new GameObject {
+                    isStatic = true,
+                    name = "Colliders"
+                };
+                colliderParentObject.transform.parent = gameObject.transform;
+                colliderParentObject.transform.localPosition = Vector3.zero;
+                int index = 0;
+                colliders = objectDefinition.colliders.Select((colliderDefinition) => {
+                    ++index;
+                    GameObject colliderObject = new GameObject {
+                        isStatic = true,
+                        layer = 8, // AI2-THOR Layer SimObjVisible
+                        name = gameObject.name + "_collider_" + index,
+                        tag = "SimObjPhysics" // AI2-THOR Tag
+                    };
+                    colliderObject.transform.parent = colliderParentObject.transform;
+                    Collider collider = this.AssignCollider(colliderObject, colliderDefinition);
+                    return collider;
+                }).ToArray();
+            }
+        }
+
+        // Add AI2-THOR specific properties.
+        if (shouldAddPhysicsScript) {
             gameObject.tag = "SimObjPhysics"; // AI2-THOR Tag
-            SimObjPhysics ai2thorPhysicsScript = gameObject.AddComponent<SimObjPhysics>();
+
+            // Remove the unneeded SimObj script from AI2-THOR prefabs that we want to make moveable/pickupable.
+            if (gameObject.GetComponent<SimObj>() != null) {
+                Destroy(gameObject.GetComponent<SimObj>());
+            }
+
+            SimObjPhysics ai2thorPhysicsScript = gameObject.GetComponent<SimObjPhysics>();
+            if (ai2thorPhysicsScript == null) {
+                ai2thorPhysicsScript = gameObject.AddComponent<SimObjPhysics>();
+                ai2thorPhysicsScript.PrimaryProperty = (pickupable ? SimObjPrimaryProperty.CanPickup : (moveable ?
+                    SimObjPrimaryProperty.Moveable : SimObjPrimaryProperty.Static));
+                ai2thorPhysicsScript.isInteractable = true;
+                ai2thorPhysicsScript.SecondaryProperties = (receptacle ? new SimObjSecondaryProperty[] {
+                    SimObjSecondaryProperty.Receptacle
+                } : new SimObjSecondaryProperty[] { }).Concat(openable ? new SimObjSecondaryProperty[] {
+                    SimObjSecondaryProperty.CanOpen
+                } : new SimObjSecondaryProperty[] { }).ToArray();
+                ai2thorPhysicsScript.ReceptacleTriggerBoxes = new List<GameObject>().ToArray();
+                ai2thorPhysicsScript.MyColliders = colliders ?? (new Collider[] { });
+                /* TODO We should probably set these properties
+                ai2thorPhysicsScript.HFdynamicfriction
+                ai2thorPhysicsScript.HFstaticfriction
+                ai2thorPhysicsScript.HFbounciness
+                ai2thorPhysicsScript.HFrbdrag
+                ai2thorPhysicsScript.HFrbangulardrag
+                */
+            }
+
+            if (pickupable) {
+                // TODO Should we make the AI2-THOR object type configurable? Does it even matter?
+                ai2thorPhysicsScript.Type = SimObjType.IgnoreType;
+            }
+
+            if (objectConfig.salientMaterials != null && objectConfig.salientMaterials.Count > 0) {
+                ai2thorPhysicsScript.salientMaterials = this.RetrieveSalientMaterials(objectConfig.salientMaterials);
+            }
+            if (ai2thorPhysicsScript.salientMaterials == null || ai2thorPhysicsScript.salientMaterials.Length == 0) {
+                // TODO What should we set as the default material? Does it even matter?
+                ai2thorPhysicsScript.salientMaterials = new ObjectMetadata.ObjectSalientMaterial[] {
+                    ObjectMetadata.ObjectSalientMaterial.Wood
+                };
+            }
+
+            if (receptacle && objectDefinition.receptacleTriggerBox != null &&
+                ai2thorPhysicsScript.ReceptacleTriggerBoxes.Length == 0) {
+
+                GameObject receptacleTriggerBoxObject = new GameObject {
+                    isStatic = true,
+                    layer = 9, // AI2-THOR Layer SimObjInvisible
+                    name = "ReceptacleTriggerBox",
+                    tag = "Receptacle" // AI2-THOR Tag
+                };
+                receptacleTriggerBoxObject.transform.parent = gameObject.transform;
+
+                MachineCommonSenseConfigCollider colliderDefinition = new MachineCommonSenseConfigCollider {
+                    position = objectDefinition.receptacleTriggerBox.position,
+                    rotation = objectDefinition.receptacleTriggerBox.rotation,
+                    scale = objectDefinition.receptacleTriggerBox.scale,
+                    type = "box"
+                };
+
+                Collider receptacleCollider = this.AssignCollider(receptacleTriggerBoxObject, colliderDefinition);
+                receptacleCollider.isTrigger = true;
+
+                Contains containsScript = receptacleTriggerBoxObject.AddComponent<Contains>();
+                containsScript.myParent = gameObject;
+
+                ai2thorPhysicsScript.ReceptacleTriggerBoxes = new GameObject[] { receptacleTriggerBoxObject };
+            }
+
+            if (objectDefinition.visibilityPoints != null && objectDefinition.visibilityPoints.Count > 0) {
+                List<Transform> visibilityPoints = this.AssignVisibilityPoints(gameObject,
+                    objectDefinition.visibilityPoints);
+                ai2thorPhysicsScript.VisibilityPoints = visibilityPoints.ToArray();
+            }
+
+            // I'm not sure why, but boundingBox is always set, so verify its position is not null too.
+            if (objectDefinition.boundingBox != null && objectDefinition.boundingBox.position != null) {
+                ai2thorPhysicsScript.BoundingBox = this.AssignBoundingBox(gameObject, objectDefinition.boundingBox)
+                    .gameObject;
+            }
+
+            // Always set the uniqueID to a new name (we don't want to use AI2-THOR's default names).
             ai2thorPhysicsScript.uniqueID = gameObject.name;
-            ai2thorPhysicsScript.Type = SimObjType.MachineCommonSenseObject; // TODO Make configurable
-            ai2thorPhysicsScript.PrimaryProperty = SimObjPrimaryProperty.CanPickup; // TODO Make configurable
-            ai2thorPhysicsScript.isInteractable = true; // TODO Make configurable
-            // TODO We should probably use these properties
-            ai2thorPhysicsScript.SecondaryProperties = new List<SimObjSecondaryProperty>().ToArray();
-            ai2thorPhysicsScript.VisibilityPoints = visibilityPoints.ToArray();
-            ai2thorPhysicsScript.ReceptacleTriggerBoxes = new List<GameObject>().ToArray();
-            ai2thorPhysicsScript.MyColliders = collider != null ? new Collider[] { collider } : new Collider[] {};
-            ai2thorPhysicsScript.salientMaterials = new ObjectMetadata.ObjectSalientMaterial[] {
-                ObjectMetadata.ObjectSalientMaterial.Plastic
-            };
-            ai2thorPhysicsScript.BoundingBox = this.AssignBoundingBox(gameObject, objectDefinition.boundingBox)
-                .gameObject;
-            /* TODO We should probably set these properties
-            ai2thorPhysicsScript.HFdynamicfriction
-            ai2thorPhysicsScript.HFstaticfriction
-            ai2thorPhysicsScript.HFbounciness
-            ai2thorPhysicsScript.HFrbdrag
-            ai2thorPhysicsScript.HFrbangulardrag
-            */
             // Call Start to initialize the script since it did not exist on game start.
             ai2thorPhysicsScript.Start();
         }
@@ -255,12 +387,22 @@ public class MachineCommonSenseMain : MonoBehaviour {
         GameObject gameObject,
         List<MachineCommonSenseConfigVector> points
     ) {
+        // The AI2-THOR scripts assume the visibility points have a parent object with the name VisibilityPoints.
+        GameObject visibilityPointsParentObject = new GameObject {
+            isStatic = true,
+            name = "VisibilityPoints"
+        };
+        visibilityPointsParentObject.transform.parent = gameObject.transform;
+        visibilityPointsParentObject.transform.localPosition = Vector3.zero;
         int index = 0;
         return points.Select((point) => {
             ++index;
-            GameObject visibilityPointsObject = new GameObject();
-            visibilityPointsObject.name = gameObject.name + "_visibility_point_" + index;
-            visibilityPointsObject.transform.parent = gameObject.transform;
+            GameObject visibilityPointsObject = new GameObject {
+                isStatic = true,
+                layer = 8, // AI2-THOR Layer SimObjVisible
+                name = gameObject.name + "_visibility_point_" + index
+            };
+            visibilityPointsObject.transform.parent = visibilityPointsParentObject.transform;
             visibilityPointsObject.transform.localPosition = new Vector3(point.x, point.y, point.z);
             return visibilityPointsObject.transform;
         }).ToList();
@@ -273,45 +415,47 @@ public class MachineCommonSenseMain : MonoBehaviour {
         GameObject gameObject = Instantiate(Resources.Load("MCS/Objects/" + objectDefinition.resourceFile,
             typeof(GameObject))) as GameObject;
 
-        LogVerbose("LOAD CUSTOM GAME OBJECT Assets/Resources/MCS/Objects/" + objectDefinition.id + " FROM FILE " +
+        LogVerbose("LOAD CUSTOM GAME OBJECT " + objectDefinition.id + " FROM FILE Assets/Resources/MCS/Objects/" +
             objectDefinition.resourceFile + (gameObject == null ? " IS NULL" : " IS DONE"));
 
         gameObject = AssignProperties(gameObject, objectConfig, objectDefinition);
 
         // Set animations.
-        if (objectDefinition.actions.Any((action) => action.animationFile != null &&
-            !action.animationFile.Equals(""))) {
+        if (objectDefinition.animations.Any((animationDefinition) => animationDefinition.animationFile != null &&
+            !animationDefinition.animationFile.Equals(""))) {
 
             Animation animation = gameObject.GetComponent<Animation>();
             if (animation == null) {
                 animation = gameObject.AddComponent<Animation>();
                 LogVerbose("ASSIGN NEW ANIMATION TO GAME OBJECT " + gameObject.name);
             }
-            objectDefinition.actions.ForEach((action) => {
-                if (action.animationFile != null && !action.animationFile.Equals("")) {
-                    AnimationClip clip = Resources.Load<AnimationClip>("MCS/Animations/" + action.animationFile);
-                    LogVerbose("LOAD OF ANIMATION CLIP FILE Assets/Resources/MCS/Animations/" + action.animationFile +
-                        (clip == null ? " IS NULL" : " IS DONE"));
-                    animation.AddClip(clip, action.id);
-                    LogVerbose("ASSIGN ANIMATION CLIP " + action.animationFile + " TO ACTION " + action.id);
+            objectDefinition.animations.ForEach((animationDefinition) => {
+                if (animationDefinition.animationFile != null && !animationDefinition.animationFile.Equals("")) {
+                    AnimationClip clip = Resources.Load<AnimationClip>("MCS/Animations/" +
+                        animationDefinition.animationFile);
+                    LogVerbose("LOAD OF ANIMATION CLIP FILE Assets/Resources/MCS/Animations/" +
+                        animationDefinition.animationFile + (clip == null ? " IS NULL" : " IS DONE"));
+                    animation.AddClip(clip, animationDefinition.id);
+                    LogVerbose("ASSIGN ANIMATION CLIP " + animationDefinition.animationFile + " TO ACTION " +
+                        animationDefinition.id);
                 }
             });
         }
 
         // Set animation controller.
         if (objectConfig.controller != null && !objectConfig.controller.Equals("")) {
-            MachineCommonSenseConfigControllerDefinition controllerDefinition = objectDefinition.controllers
+            MachineCommonSenseConfigAnimator animatorDefinition = objectDefinition.animators
                 .Where(cont => cont.id.Equals(objectConfig.controller)).ToList().First();
-            if (controllerDefinition.controllerFile != null && !controllerDefinition.controllerFile.Equals("")) {
+            if (animatorDefinition.animatorFile != null && !animatorDefinition.animatorFile.Equals("")) {
                 Animator animator = gameObject.GetComponent<Animator>();
                 if (animator == null) {
                     animator = gameObject.AddComponent<Animator>();
                     LogVerbose("ASSIGN NEW ANIMATOR CONTROLLER TO GAME OBJECT " + gameObject.name);
                 }
                 RuntimeAnimatorController animatorController = Resources.Load<RuntimeAnimatorController>(
-                    "MCS/Animators/" + controllerDefinition.controllerFile);
+                    "MCS/Animators/" + animatorDefinition.animatorFile);
                 LogVerbose("LOAD OF ANIMATOR CONTROLLER FILE Assets/Resources/MCS/Animators/" +
-                    controllerDefinition.controllerFile + (animatorController == null ? " IS NULL" : " IS DONE"));
+                    animatorDefinition.animatorFile + (animatorController == null ? " IS NULL" : " IS DONE"));
                 animator.runtimeAnimatorController = animatorController;
             }
         }
@@ -320,7 +464,7 @@ public class MachineCommonSenseMain : MonoBehaviour {
     }
 
     private GameObject CreateGameObject(MachineCommonSenseConfigGameObject objectConfig) {
-        MachineCommonSenseConfigObjectDefinition objectDefinition = this.objectDictionary[objectConfig.type];
+        MachineCommonSenseConfigObjectDefinition objectDefinition = this.objectDictionary[objectConfig.type.ToUpper()];
         if (objectDefinition != null) {
             if (objectDefinition.primitive) {
                 switch (objectConfig.type) {
@@ -405,6 +549,42 @@ public class MachineCommonSenseMain : MonoBehaviour {
         }
     }
 
+    private ObjectMetadata.ObjectSalientMaterial[] RetrieveSalientMaterials(List<string> salientMaterials) {
+        return salientMaterials.Select((salientMaterial) => {
+            switch (salientMaterial.ToLower()) {
+                case "ceramic":
+                    return ObjectMetadata.ObjectSalientMaterial.Ceramic;
+                case "fabric":
+                    return ObjectMetadata.ObjectSalientMaterial.Fabric;
+                case "food":
+                    return ObjectMetadata.ObjectSalientMaterial.Food;
+                case "glass":
+                    return ObjectMetadata.ObjectSalientMaterial.Glass;
+                case "metal":
+                    return ObjectMetadata.ObjectSalientMaterial.Metal;
+                case "organic":
+                    return ObjectMetadata.ObjectSalientMaterial.Organic;
+                case "paper":
+                    return ObjectMetadata.ObjectSalientMaterial.Paper;
+                case "plastic":
+                    return ObjectMetadata.ObjectSalientMaterial.Plastic;
+                case "rubber":
+                    return ObjectMetadata.ObjectSalientMaterial.Rubber;
+                case "soap":
+                    return ObjectMetadata.ObjectSalientMaterial.Soap;
+                case "sponge":
+                    return ObjectMetadata.ObjectSalientMaterial.Sponge;
+                case "stone":
+                    return ObjectMetadata.ObjectSalientMaterial.Stone;
+                case "wax":
+                    return ObjectMetadata.ObjectSalientMaterial.Wax;
+                case "wood":
+                default:
+                    return ObjectMetadata.ObjectSalientMaterial.Wood;
+            }
+        }).ToArray();
+    }
+
     private bool UpdateGameObjectOnStep(MachineCommonSenseConfigGameObject objectConfig, int step) {
         bool objectsWereShown = false;
 
@@ -416,18 +596,21 @@ public class MachineCommonSenseMain : MonoBehaviour {
         });
 
         objectConfig.shows.Where(show => show.stepBegin == step).ToList().ForEach((show) => {
+            // Set the position, rotation, and scale on the game object, not on the parent object.
+            GameObject gameObject = objectConfig.GetGameObject();
             if (show.position != null) {
-                objectConfig.GetGameObject().transform.localPosition = new Vector3(show.position.x, show.position.y,
+                gameObject.transform.localPosition = new Vector3(show.position.x, show.position.y,
                     show.position.z);
             }
             if (show.rotation != null) {
-                objectConfig.GetGameObject().transform.localRotation = Quaternion.Euler(show.rotation.x,
+                gameObject.transform.localRotation = Quaternion.Euler(show.rotation.x,
                     show.rotation.y, show.rotation.z);
             }
             if (show.scale != null) {
-                // Set the scale on the game object, not on the parent object.
-                objectConfig.GetGameObject().transform.localScale = new Vector3(show.scale.GetX(), show.scale.GetY(),
-                    show.scale.GetZ());
+                // Use the scale as a multiplier because the scale of prefab objects may be very specific.
+                gameObject.transform.localScale = new Vector3(gameObject.transform.localScale.x * show.scale.GetX(),
+                    gameObject.transform.localScale.y * show.scale.GetY(),
+                    gameObject.transform.localScale.z * show.scale.GetZ());
             }
             gameOrParentObject.SetActive(true);
             objectsWereShown = true;
@@ -436,8 +619,11 @@ public class MachineCommonSenseMain : MonoBehaviour {
         objectConfig.resizes.Where(resize => resize.stepBegin <= step && resize.stepEnd >= step && resize.size != null)
             .ToList().ForEach((resize) => {
                 // Set the scale on the game object, not on the parent object.
-                objectConfig.GetGameObject().transform.localScale = new Vector3(resize.size.GetX(), resize.size.GetY(),
-                    resize.size.GetZ());
+                GameObject gameObject = objectConfig.GetGameObject();
+                // Use the scale as a multiplier because the scale of prefab objects may be very specific.
+                gameObject.transform.localScale = new Vector3(gameObject.transform.localScale.x * resize.size.GetX(),
+                    gameObject.transform.localScale.y * resize.size.GetY(),
+                    gameObject.transform.localScale.z * resize.size.GetZ());
             });
 
         objectConfig.rotates.Where(rotate => rotate.stepBegin <= step && rotate.stepEnd >= step &&
@@ -489,24 +675,22 @@ public class MachineCommonSenseConfigAction : MachineCommonSenseConfigStepBegin 
 }
 
 [Serializable]
-public class MachineCommonSenseConfigActionDefinition {
+public class MachineCommonSenseConfigAnimation {
     public string id;
     public string animationFile;
 }
 
 [Serializable]
-public class MachineCommonSenseConfigColliderDefinition {
-    public string type;
-    public MachineCommonSenseConfigVector center;
-    public float height;
-    public float radius;
-    public MachineCommonSenseConfigSize size;
+public class MachineCommonSenseConfigAnimator {
+    public string id;
+    public string animatorFile;
 }
 
 [Serializable]
-public class MachineCommonSenseConfigControllerDefinition {
-    public string id;
-    public string controllerFile;
+public class MachineCommonSenseConfigCollider : MachineCommonSenseConfigTransform {
+    public string type;
+    public float height;
+    public float radius;
 }
 
 [Serializable]
@@ -515,16 +699,21 @@ public class MachineCommonSenseConfigGameObject {
     public string controller;
     public float mass;
     public string materialFile;
-    public bool physics;
+    public bool moveable;
+    public MachineCommonSenseConfigTransform nullParent = null;
+    public bool openable;
+    public bool physics; // deprecated
+    public bool pickupable;
+    public bool receptacle;
     public bool structure;
     public string type;
     public List<MachineCommonSenseConfigAction> actions;
     public List<MachineCommonSenseConfigMove> forces;
     public List<MachineCommonSenseConfigStepBegin> hides;
     public List<MachineCommonSenseConfigMove> moves;
-    public MachineCommonSenseConfigParentObject nullParent = null;
     public List<MachineCommonSenseConfigResize> resizes;
     public List<MachineCommonSenseConfigMove> rotates;
+    public List<string> salientMaterials;
     public List<MachineCommonSenseConfigShow> shows;
     public List<MachineCommonSenseConfigMove> torques;
 
@@ -557,18 +746,18 @@ public class MachineCommonSenseConfigMove : MachineCommonSenseConfigStepBeginEnd
 public class MachineCommonSenseConfigObjectDefinition {
     public string id;
     public string resourceFile;
+    public bool moveable;
+    public bool openable;
+    public bool pickupable;
     public bool primitive;
-    public MachineCommonSenseConfigColliderDefinition boundingBox;
-    public MachineCommonSenseConfigColliderDefinition collider;
-    public List<MachineCommonSenseConfigActionDefinition> actions;
-    public List<MachineCommonSenseConfigControllerDefinition> controllers;
+    public bool receptacle;
+    public MachineCommonSenseConfigCollider boundingBox = null;
+    public MachineCommonSenseConfigSize scale = null;
+    public MachineCommonSenseConfigTransform receptacleTriggerBox = null;
+    public List<MachineCommonSenseConfigAnimation> animations;
+    public List<MachineCommonSenseConfigAnimator> animators;
+    public List<MachineCommonSenseConfigCollider> colliders;
     public List<MachineCommonSenseConfigVector> visibilityPoints;
-}
-
-[Serializable]
-public class MachineCommonSenseConfigParentObject {
-    public MachineCommonSenseConfigVector position;
-    public MachineCommonSenseConfigVector rotation;
 }
 
 [Serializable]
@@ -616,6 +805,13 @@ public class MachineCommonSenseConfigStepBeginEnd : MachineCommonSenseConfigStep
 }
 
 [Serializable]
+public class MachineCommonSenseConfigTransform {
+    public MachineCommonSenseConfigVector position = null;
+    public MachineCommonSenseConfigVector rotation = null;
+    public MachineCommonSenseConfigSize scale = null;
+}
+
+[Serializable]
 public class MachineCommonSenseConfigVector {
     public float x;
     public float y;
@@ -628,7 +824,7 @@ public class MachineCommonSenseConfigScene {
     public String ceilingMaterial;
     public String floorMaterial;
     public String wallMaterial;
-    public MachineCommonSenseConfigVector performerStart;
+    public MachineCommonSenseConfigVector performerStart = null;
     public List<MachineCommonSenseConfigGameObject> objects;
 }
 

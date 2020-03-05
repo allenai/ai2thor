@@ -2848,7 +2848,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
 
-        public void ResetAgentHandPosition(ServerAction action = null) {
+        public virtual void ResetAgentHandPosition(ServerAction action = null) {
             AgentHand.transform.position = DefaultHandPosition.transform.position;
             // SimObjPhysics sop = AgentHand.GetComponentInChildren<SimObjPhysics>();
             // if (sop != null) {
@@ -3946,7 +3946,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             SimObjPhysics handSOP = ItemInHand.GetComponent<SimObjPhysics>();
 
-            if (!action.forceAction) {
+            if (!action.forceAction && handSOP.ObjType != SimObjType.IgnoreType) {
                 bool HandObjectFoundInList = false;
                 //check if the item we are holding can even be placed in the action.UniqueID target at all
                 foreach (KeyValuePair<SimObjType, List<SimObjType>> res in ReceptacleRestrictions.PlacementRestrictions) {
@@ -4003,12 +4003,15 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 randomizedSpawnPoints.Shuffle_(action.randomSeed);
                 spawnPoints = randomizedSpawnPoints;
             }
+            Transform previousParent = handSOP.transform.parent;
+            handSOP.transform.parent = null;
             if (script.PlaceObjectReceptacle(spawnPoints, ItemInHand.GetComponent<SimObjPhysics>(), action.placeStationary, -1, 90, placeUpright, null)) {
                 ItemInHand = null;
                 DefaultAgentHand();
                 actionFinished(true);
             } else {
                 errorMessage = "No valid positions to place object found";
+                handSOP.transform.parent = previousParent;
                 actionFinished(false);
             }
 
@@ -4019,7 +4022,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 #endif
         }
 
-        public void PickupObject(ServerAction action) //use serveraction objectid
+        public virtual void PickupObject(ServerAction action) //use serveraction objectid
         {
             if (!physicsSceneManager.UniqueIdToSimObjPhysics.ContainsKey(action.objectId)) {
                 errorMessage = "Object ID appears to be invalid.";

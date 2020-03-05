@@ -255,7 +255,7 @@ public enum SimObjType : int
     TVStand = 147,
     CoffeeTable = 148,
 
-    MachineCommonSenseObject = 999999999
+    IgnoreType = 999999999
 }
 
 public static class ReceptacleRestrictions
@@ -298,6 +298,7 @@ public static class ReceptacleRestrictions
 	//this elminiates the need for visibly seeing the bottommost point on the object, which would restrict the valid placement positions greatly due to these objects being viewed at extreme angles
 	public static List<SimObjType> ReturnAllPoints = new List<SimObjType>()
 	{
+        SimObjType.IgnoreType,
 		SimObjType.Pot, SimObjType.Pan, SimObjType.Bowl, SimObjType.GarbageCan, SimObjType.Plate, SimObjType.Box, SimObjType.Drawer, SimObjType.Mug, SimObjType.Cup,
 	};
 
@@ -311,6 +312,7 @@ public static class ReceptacleRestrictions
 	//it with the opening facing up!
 	public static List<SimObjType> AlwaysPlaceUpright = new List<SimObjType>()
 	{
+        SimObjType.IgnoreType,
 		SimObjType.Pot, SimObjType.Pan, SimObjType.Bowl, SimObjType.Plate, SimObjType.Bread, SimObjType.Cup, SimObjType.Mug, SimObjType.Laptop,
 		SimObjType.SaltShaker, SimObjType.PepperShaker, SimObjType.AlarmClock, SimObjType.Box, SimObjType.SoapBottle, SimObjType.SoapBottleFilled, SimObjType.Kettle,
 		SimObjType.Glassbottle, SimObjType.CreditCard, SimObjType.RemoteControl, SimObjType.Candle, SimObjType.SprayBottle, SimObjType.Statue, SimObjType.Vase, 

@@ -3,6 +3,8 @@ using UnityEngine;
 using UnityStandardAssets.Characters.FirstPerson;
 
 public class MachineCommonSenseController : PhysicsRemoteFPSAgentController {
+    public static float DISTANCE_HELD_OBJECT_Y = 0.15f;
+    public static float DISTANCE_HELD_OBJECT_Z = 0.15f;
     public static int PHYSICS_SIMULATION_STEPS = 20;
     public int step = 0;
 
@@ -21,6 +23,31 @@ public class MachineCommonSenseController : PhysicsRemoteFPSAgentController {
         main.ChangeCurrentScene(action.sceneConfig);
     }
 
+    public override void PickupObject(ServerAction action) {
+        SimObjPhysics target = physicsSceneManager.UniqueIdToSimObjPhysics[action.objectId];
+
+        MeshFilter meshFilter = target.gameObject.GetComponentInChildren<MeshFilter>();
+        if (meshFilter != null) {
+            // Move the player's hand on the Y axis corresponding to the size of the target object so that the object,
+            // once held, is shown at the bottom of the player's camera view.
+            float handY = (meshFilter.mesh.bounds.size.y * meshFilter.transform.localScale.y);
+            // Move the player's hand on the Z axis corresponding to the size of the target object so that the object,
+            // once held, never collides with the player's body.
+            float handZ = (meshFilter.mesh.bounds.size.z / 2.0f * meshFilter.transform.localScale.z);
+            if (!GameObject.ReferenceEquals(meshFilter.gameObject, target.gameObject)) {
+                handY = (handY + (meshFilter.transform.localPosition.y * meshFilter.transform.localScale.y));
+                handZ = ((handZ - meshFilter.transform.localPosition.z) * target.gameObject.transform.localScale.z);
+            }
+            this.AgentHand.transform.localPosition = new Vector3(this.AgentHand.transform.localPosition.x,
+                (handY + MachineCommonSenseController.DISTANCE_HELD_OBJECT_Y) * -1,
+                (handZ + MachineCommonSenseController.DISTANCE_HELD_OBJECT_Z) * (1.0f / this.transform.localScale.z));
+        } else {
+            Debug.LogError("PickupObject target " + target.gameObject.name + " does not have a MeshFilter!");
+        }
+
+        base.PickupObject(action);
+    }
+
     public override void ProcessControlCommand(ServerAction controlCommand) {
         base.ProcessControlCommand(controlCommand);
 
@@ -32,6 +59,16 @@ public class MachineCommonSenseController : PhysicsRemoteFPSAgentController {
         }
 
         this.step++;
+    }
+
+    public override void ResetAgentHandPosition(ServerAction action) {
+        // Don't reset the player's hand position if the player is just moving or rotating.
+        // Use this.lastAction here because this function's ServerAction argument is sometimes null.
+        if (this.lastAction.StartsWith("Move") || this.lastAction.StartsWith("Rotate") ||
+            this.lastAction.StartsWith("Look") || this.lastAction.StartsWith("Teleport")) {
+            return;
+        }
+        base.ResetAgentHandPosition(action);
     }
 
     public override void RotateLook(ServerAction response)

@@ -195,7 +195,7 @@ public class PhysicsSceneManager : MonoBehaviour
 		ReceptaclesInScene.Sort((r0, r1) => (r0.gameObject.GetInstanceID().CompareTo(r1.gameObject.GetInstanceID())));
 	}
     
-	private void Generate_UniqueID(SimObjPhysics o)
+	protected virtual void Generate_UniqueID(SimObjPhysics o)
     {
 		//check if this object require's it's parent simObj's UniqueID as a prefix
 		if(ReceptacleRestrictions.UseParentUniqueIDasPrefix.Contains(o.Type))

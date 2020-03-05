@@ -134,6 +134,28 @@ MonoBehaviour:
   agents: []
   actionDuration: 3
   AdvancePhysicsStepCount: 0
+--- !u!114 &14088545
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 14088543}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e682801a288fd2321b876bb3e2f21f5b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  RequiredObjects: []
+  SpawnedObjects: []
+  ReceptaclesInScene: []
+  HideAndSeek: {fileID: 0}
+  ManipulatorTables: []
+  ManipulatorReceptacles: []
+  ManipulatorBooks: []
+  AllowDecayTemperature: 1
+  physicsSimulationPaused: 0
+  isSceneAtRest: 0
 --- !u!1 &79736621 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 1762336587455144, guid: 5e9e851c0e142814dac026a256ba2ac0,
@@ -300,12 +322,12 @@ PrefabInstance:
     - target: {fileID: 114080650210219948, guid: 3a963756b61df410c91df72a73d4efde,
         type: 3}
       propertyPath: SpawnedObjects.Array.size
-      value: 30
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 114080650210219948, guid: 3a963756b61df410c91df72a73d4efde,
         type: 3}
       propertyPath: RequiredObjects.Array.size
-      value: 30
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 114080650210219948, guid: 3a963756b61df410c91df72a73d4efde,
         type: 3}
@@ -1902,7 +1924,12 @@ PrefabInstance:
     - target: {fileID: 114699917896503758, guid: 3a963756b61df410c91df72a73d4efde,
         type: 3}
       propertyPath: prefabs.Array.size
-      value: 18
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 114699917896503758, guid: 3a963756b61df410c91df72a73d4efde,
+        type: 3}
+      propertyPath: prefabs.Array.data[0]
+      value: 
       objectReference: {fileID: 0}
     - target: {fileID: 114125549759153004, guid: 3a963756b61df410c91df72a73d4efde,
         type: 3}
@@ -1911,6 +1938,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents:
     - {fileID: 114125549759153004, guid: 3a963756b61df410c91df72a73d4efde, type: 3}
+    - {fileID: 114080650210219948, guid: 3a963756b61df410c91df72a73d4efde, type: 3}
   m_SourcePrefab: {fileID: 100100000, guid: 3a963756b61df410c91df72a73d4efde, type: 3}
 --- !u!1 &458248787 stripped
 GameObject:
@@ -2826,12 +2854,12 @@ PrefabInstance:
     - target: {fileID: 3388362411129917294, guid: 5e9e851c0e142814dac026a256ba2ac0,
         type: 3}
       propertyPath: horizonIncrement
-      value: 20
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 3388362411129917294, guid: 5e9e851c0e142814dac026a256ba2ac0,
         type: 3}
       propertyPath: objectId
-      value: testBall
+      value: test_ball_1
       objectReference: {fileID: 0}
     - target: {fileID: 3388362411129917294, guid: 5e9e851c0e142814dac026a256ba2ac0,
         type: 3}
@@ -2843,6 +2871,16 @@ PrefabInstance:
       propertyPath: WalkMagnitude
       value: 0.2
       objectReference: {fileID: 0}
+    - target: {fileID: 3388362411129917294, guid: 5e9e851c0e142814dac026a256ba2ac0,
+        type: 3}
+      propertyPath: secondObjectId
+      value: test_table_desk
+      objectReference: {fileID: 0}
+    - target: {fileID: 3388362411129917294, guid: 5e9e851c0e142814dac026a256ba2ac0,
+        type: 3}
+      propertyPath: rotationIncrement
+      value: 180
+      objectReference: {fileID: 0}
     - target: {fileID: 136752831871764314, guid: 5e9e851c0e142814dac026a256ba2ac0,
         type: 3}
       propertyPath: m_Center.y
@@ -2851,12 +2889,12 @@ PrefabInstance:
     - target: {fileID: 136752831871764314, guid: 5e9e851c0e142814dac026a256ba2ac0,
         type: 3}
       propertyPath: m_Radius
-      value: 0.2
+      value: 0.05
       objectReference: {fileID: 0}
     - target: {fileID: 136752831871764314, guid: 5e9e851c0e142814dac026a256ba2ac0,
         type: 3}
       propertyPath: m_Height
-      value: 0.5
+      value: 0.05
       objectReference: {fileID: 0}
     - target: {fileID: 14300000, guid: 5e9e851c0e142814dac026a256ba2ac0, type: 3}
       propertyPath: m_Center.y
@@ -2864,16 +2902,27 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 14300000, guid: 5e9e851c0e142814dac026a256ba2ac0, type: 3}
       propertyPath: m_Radius
-      value: 0.2
+      value: 0.05
       objectReference: {fileID: 0}
     - target: {fileID: 14300000, guid: 5e9e851c0e142814dac026a256ba2ac0, type: 3}
       propertyPath: m_Height
-      value: 0.5
+      value: 0.05
       objectReference: {fileID: 0}
-    - target: {fileID: 256261901358105704, guid: 5e9e851c0e142814dac026a256ba2ac0,
-        type: 3}
-      propertyPath: m_IsActive
-      value: 1
+    - target: {fileID: 4044070813507312, guid: 5e9e851c0e142814dac026a256ba2ac0, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: -0.25
+      objectReference: {fileID: 0}
+    - target: {fileID: 4044070813507312, guid: 5e9e851c0e142814dac026a256ba2ac0, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4781144330620476, guid: 5e9e851c0e142814dac026a256ba2ac0, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: -0.25
+      objectReference: {fileID: 0}
+    - target: {fileID: 4781144330620476, guid: 5e9e851c0e142814dac026a256ba2ac0, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents:
     - {fileID: 114749714472260818, guid: 5e9e851c0e142814dac026a256ba2ac0, type: 3}
@@ -3019,8 +3068,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 940f8586c495e37cc80926a37e932c65, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  defaultSceneFile: ball_obstructed
+  defaultSceneFile: playroom
   enableVerboseLog: 0
+  ai2thorObjectRegistryFile: ai2thor_object_registry
   mcsObjectRegistryFile: mcs_object_registry
   primitiveObjectRegistryFile: primitive_object_registry
 --- !u!4 &1891392285
