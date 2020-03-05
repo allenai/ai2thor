@@ -76,16 +76,17 @@ public class NavMeshSetup : MonoBehaviour
             var navmeshAgent = agentController.GetComponent<NavMeshAgent>();
             navmeshAgent.enabled = true;
             // The Editor bake interface does not take with parameters and could not be modified as of 2018.3
-            // var buildSettings = new NavMeshBuildSettings() {
-            //     agentTypeID = navmeshAgent.agentTypeID,
-            //     agentRadius = navmeshAgent.radius,
-            //     agentHeight = navmeshAgent.height,
-            //     agentSlope = 10,
-            //     agentClimb = 0.5f,
-            //     minRegionArea = 0.05f,
-            //     overrideVoxelSize = false,
-            //     overrideTileSize = false
-            // };
+            //var buildSettings = 
+            new NavMeshBuildSettings() {
+                agentTypeID = navmeshAgent.agentTypeID,
+                agentRadius = navmeshAgent.radius,
+                agentHeight = navmeshAgent.height,
+                agentSlope = 10,
+                agentClimb = 0.5f,
+                minRegionArea = 0.05f,
+                overrideVoxelSize = false,
+                overrideTileSize = false
+            };
     
             UnityEditor.AI.NavMeshBuilder.BuildNavMesh();
             EditorSceneManager.SaveScene(EditorSceneManager.GetActiveScene());
