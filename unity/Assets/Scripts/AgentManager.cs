@@ -41,7 +41,7 @@ public class AgentManager : MonoBehaviour
 
 	private BaseFPSAgentController primaryAgent;
 
-    private JavaScriptInterface jsInterface;
+    //private JavaScriptInterface jsInterface;
 
     private PhysicsSceneManager physicsSceneManager;
     public int AdvancePhysicsStepCount = 0;
@@ -95,7 +95,6 @@ public class AgentManager : MonoBehaviour
 	}
 
 	private void initializePrimaryAgent() {
-
 		GameObject fpsController = GameObject.FindObjectOfType<BaseFPSAgentController>().gameObject;
 		primaryAgent = fpsController.GetComponent<PhysicsRemoteFPSAgentController>();
 		primaryAgent.enabled = true;
@@ -107,17 +106,12 @@ public class AgentManager : MonoBehaviour
 	{
         if (action.agentType != null && action.agentType.ToLower() == "stochastic") {
             this.agents.Clear();
-
-            // stochastic must not snap to grid to work properly
             action.snapToGrid = false;
-
             GameObject fpsController = GameObject.FindObjectOfType<BaseFPSAgentController>().gameObject;
             primaryAgent.enabled = false;
-
             primaryAgent = fpsController.GetComponent<StochasticRemoteFPSAgentController>();
             primaryAgent.agentManager = this;
             primaryAgent.enabled = true;
-            // must manually call start here since it this only gets called before Update() is called
             primaryAgent.Start();
             this.agents.Add(primaryAgent);
         }
@@ -570,7 +564,9 @@ public class AgentManager : MonoBehaviour
 
 		ThirdPartyCameraMetadata[] cameraMetadata = new ThirdPartyCameraMetadata[this.thirdPartyCameras.Count];
 		RenderTexture currentTexture = null;
+        #if UNITY_WEBGL
         JavaScriptInterface jsInterface = null;
+        #endif
         if (shouldRender) {
             currentTexture = RenderTexture.active;
             for (int i = 0; i < this.thirdPartyCameras.Count; i++) {
@@ -592,7 +588,9 @@ public class AgentManager : MonoBehaviour
 
         for (int i = 0; i < this.agents.Count; i++) {
             BaseFPSAgentController agent = this.agents.ToArray () [i];
+            #if UNITY_WEBGL
             jsInterface = agent.GetComponent<JavaScriptInterface>();
+            #endif
             MetadataWrapper metadata = agent.generateMetadataWrapper ();
             metadata.agentId = i;
             // we don't need to render the agent's camera for the first agent
@@ -615,9 +613,6 @@ public class AgentManager : MonoBehaviour
 
         var serializedMetadata = Newtonsoft.Json.JsonConvert.SerializeObject(multiMeta);
 		#if UNITY_WEBGL
-
-				// JavaScriptInterface jsI =  FindObjectOfType<JavaScriptInterface>();
-				// jsInterface.SendAction(new ServerAction(){action = "Test"});
                 if (jsInterface != null) {
 					jsInterface.SendActionMetadata(serializedMetadata);
 				}
@@ -656,8 +651,8 @@ public class AgentManager : MonoBehaviour
                 }
                 request += "\r\n";
 
-                int sent = this.sock.Send(Encoding.ASCII.GetBytes(request));
-                sent = this.sock.Send(rawData);
+                this.sock.Send(Encoding.ASCII.GetBytes(request));
+                this.sock.Send(rawData);
 
                 // waiting for a frame here keeps the Unity window in sync visually
                 // its not strictly necessary, but allows the interact() command to work properly

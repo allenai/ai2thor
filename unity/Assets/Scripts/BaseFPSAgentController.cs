@@ -118,8 +118,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 		// internal state variables
 		private float lastEmitTime;
-		protected List<string> collisionsInAction; // tracking collided objects
-		protected string[] collidedObjects;      // container for collided objects
+		protected List<string> collisionsInAction;// tracking collided objects
+		protected string[] collidedObjects;// container for collided objects
 
 
 		private Quaternion targetRotation;
@@ -140,36 +140,31 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 this.jsInterface = this.GetComponent<JavaScriptInterface>();
                 this.jsInterface.enabled = true;
             #endif
-            // whether it's in training or test phase         
+
             // character controller parameters
             m_CharacterController = GetComponent<CharacterController>();
-			//float radius = m_CharacterController.radius;
-			//m_CharacterController.radius = 0.2f;
-			// using default for now to remain consistent with generated points
-			//m_CharacterController.height = LoadFloatVariable (height, "AGENT_HEIGHT");
 			this.m_WalkSpeed = 2;
 			this.m_RunSpeed = 10;
 			this.m_GravityMultiplier = 2;
-			//this.m_UseFovKick = true;
-			//this.m_StepInterval = 5;
-		}
 
+            //default to tall mode for in-editor debugging or webgl web demo
+            //both of these cases don't run an 'Initialize' action, so yeah default the mode on awake here
+            #if UNITY_WEBGL || UNITY_EDITOR
+            SetAgentMode("tall");            
+            #endif
+		}
 
 		// Use this for initialization
 		public virtual void Start()
 		{
 			m_Camera = this.gameObject.GetComponentInChildren<Camera>();
-			//m_OriginalCameraPosition = m_Camera.transform.localPosition;
-			//m_FovKick.Setup(m_Camera);
-			//m_HeadBob.Setup(m_Camera, m_StepInterval);
-			//m_Jumping = false;
 
 			// set agent initial states
 			targetRotation = transform.rotation;
 			collidedObjects = new string[0];
 			collisionsInAction = new List<string>();
 
-            //set agent default mode to tall, setting default renderer settings
+            //setting default renderer settings
             //this hides renderers not used in tall mode, and also sets renderer
             //culling in FirstPersonCharacterCull.cs to ignore tall mode renderers
             HideAllAgentRenderers();
@@ -179,17 +174,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			init_rotation = transform.rotation;
 
 			agentManager = GameObject.Find("PhysicsSceneManager").GetComponentInChildren<AgentManager>();
-
-			//disabling in editor by default so performance in editor isn't garbage all the time. Enable this from the DebugInputField -InitSynth
-            // #if UNITY_EDITOR
-            //     this.enableImageSynthesis();
-            // #endif
-			//allowNodes = false;
-
-            #if UNITY_EDITOR || UNITY_WEBGL
-            //if using editor mode or webgl demo, default to tall mode
-            SetAgentMode("tall");
-            #endif
 		}
 
         //defaults all agent renderers, both Tall and Bot, to hidden for initialization default
@@ -237,7 +221,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 		public void Initialize(ServerAction action)
         {
-
             if(action.agentMode.ToLower() == "tall" || action.agentMode.ToLower() == "bot")
             {
                 //set agent mode to Tall or Bot accordingly
@@ -279,7 +262,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
 					//set camera stand/crouch local positions for Tall mode
                 	standingLocalCameraPosition = m_Camera.transform.localPosition;
                 	crouchingLocalCameraPosition = m_Camera.transform.localPosition + new Vector3(0, -0.675f, 0);// bigger y offset if tall
-
 				}
 			}
 
@@ -385,11 +367,17 @@ namespace UnityStandardAssets.Characters.FirstPerson
             string whichMode;
             whichMode = mode.ToLower();
 
+            //null check for camera, used to ensure no missing references on initialization
+            if(m_Camera == null)
+            {
+                m_Camera = this.gameObject.GetComponentInChildren<Camera>();
+            }
+
             FirstPersonCharacterCull fpcc = m_Camera.GetComponent<FirstPersonCharacterCull>();
 
             //determine if we are in Tall or Bot mode (or other modes as we go on)
             if(whichMode == "tall")
-            {
+            {   
                 //toggle FirstPersonCharacterCull
                 fpcc.SwitchRenderersToHide(whichMode);
 
@@ -713,11 +701,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 			if (!collisionsInAction.Contains(hit.gameObject.name))
 			{
-
-                //XXX - Yeh so we will need to search up the gameobject's parentint Heirarchy for a SimObj or SimObjPhysics component, 
-				//otherwise
-                //compound colliders will report back nonsense names
-				Debug.Log("Agent Collided with " + hit.gameObject.name);
 				collisionsInAction.Add(hit.gameObject.name);
 			}
 

@@ -38,7 +38,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             this.enableHighlightShader = false;
         }
 
-        public void HideHUD()
+        public new void HideHUD()
         {
             InputMode_Text = GameObject.Find("DebugCanvasPhysics/InputModeText");
             if (InputMode_Text != null) {
@@ -61,7 +61,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             TargetText.GetComponent<Text>().enabled = false;
         }
 
-          public void ShowHUD()
+        public void ShowHUD()
         {
             if (InputMode_Text != null) {
                 InputMode_Text.SetActive(true);
@@ -82,7 +82,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             TargetText.GetComponent<Text>().enabled = true;
         }
 
-        public void OnEnable()
+        public new void OnEnable()
         {
                 FPSEnabled = true;
                 Cursor.visible = false;
@@ -102,20 +102,20 @@ namespace UnityStandardAssets.Characters.FirstPerson
               
         }
 
-        public void OnDisable()
+        public new void OnDisable()
         {
             DisableMouseControl();
             ShowHUD();
         }
 
-        public void EnableMouseControl()
+        public new void EnableMouseControl()
         {
             FPSEnabled = true;
             Cursor.visible = false;
             Cursor.lockState = CursorLockMode.Locked;
         }
 
-        public void DisableMouseControl()
+        public new void DisableMouseControl()
         {
             Debug.Log("Disabled mouse");
             FPSEnabled = false;

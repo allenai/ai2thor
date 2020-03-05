@@ -3810,7 +3810,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(false);
         }
 
-        private List<Vector3> validpointlist = new List<Vector3>();
+        //uncomment this to debug draw valid points
+        //private List<Vector3> validpointlist = new List<Vector3>();
 
         //return a bunch of vector3 points above a target receptacle
         //if forceVisible = true, return points regardless of where receptacle is
@@ -3868,9 +3869,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 targetPoints = filteredTargetPoints;
             }
 
-            #if UNITY_EDITOR
-            validpointlist = targetPoints;
-            #endif
+            //uncomment to debug draw valid points
+            // #if UNITY_EDITOR
+            // validpointlist = targetPoints;
+            // #endif
 
             actionFinished(true, targetPoints);
         }
@@ -4112,7 +4114,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     listOfExcludedReceptacles.Add(objType);
                 }
 
-                catch (Exception e)
+                catch (Exception)
                 {
                     errorMessage = "invalid Object Type used in excludedReceptacles array: " + receptacleType;
                     actionFinished(false);
@@ -9534,9 +9536,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 return;
             }
 
-            var reachablePos = getReachablePositions(1.0f, 10000, action.grid, action.gridColor);
+            //var reachablePos = getReachablePositions(1.0f, 10000, action.grid, action.gridColor);
 
-            var go1 = Instantiate(DebugTargetPointPrefab, sop.transform.position, Quaternion.identity);
+            Instantiate(DebugTargetPointPrefab, sop.transform.position, Quaternion.identity);
             var results = new List<bool>();
             for (var i = 0; i < action.positions.Count; i++) {
                 var pos = action.positions[i];
@@ -9574,10 +9576,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             var id = action.objectId;
 
-            var reachablePos = getReachablePositions(1.0f, 10000, action.grid);
+            getReachablePositions(1.0f, 10000, action.grid);
            
-            var go1 = Instantiate(DebugTargetPointPrefab, path[path.Count-1], Quaternion.identity);
-            var results = new List<bool>();
+            Instantiate(DebugTargetPointPrefab, path[path.Count-1], Quaternion.identity);
+            //var results = new List<bool>();
             var go = Instantiate(DebugPointPrefab, path[0], Quaternion.identity);
             var textMesh = go.GetComponentInChildren<TextMesh>();
             textMesh.text = id;
@@ -9636,9 +9638,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             var path = new NavMeshPath();
             this.GetComponent<NavMeshAgent>().enabled = true;
-            bool pathSuccess = NavMesh.CalculatePath(startPosition, targetPosition,  NavMesh.AllAreas, path);
+            NavMesh.CalculatePath(startPosition, targetPosition,  NavMesh.AllAreas, path);
             if (path.status == NavMeshPathStatus.PathComplete) {
-                // VisualizePath(startPosition, path);
                 actionFinished(true, path);
                 return;
             }
@@ -9659,7 +9660,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     }
                 }
             }   
-            catch (ArgumentException exception) {}
+            catch (ArgumentException) {}
             return objectIds.ToArray();
         }
 
@@ -9738,16 +9739,18 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             agentTransform.position = initialPosition;
             agentTransform.rotation = initialRotation;
-            var successReach = getReachablePositionToObjectVisible(targetSimObject, out fixedPosition);
+            //var successReach = 
+            getReachablePositionToObjectVisible(targetSimObject, out fixedPosition);
             agentTransform.position = originalAgentPosition;
             agentTransform.rotation = orignalAgentRotation;
             var path = new NavMeshPath();
-            var sopPos = targetSOP.transform.position;
-            var target = new Vector3(sopPos.x, initialPosition.y, sopPos.z);
+            //var sopPos = targetSOP.transform.position;
+            //var target = new Vector3(sopPos.x, initialPosition.y, sopPos.z);
 
             //make sure navmesh agent is active
             this.GetComponent<NavMeshAgent>().enabled = true;
-            bool pathSuccess = NavMesh.CalculatePath(initialPosition, fixedPosition,  NavMesh.AllAreas, path);
+            //bool pathSuccess = 
+            NavMesh.CalculatePath(initialPosition, fixedPosition,  NavMesh.AllAreas, path);
         
             
             

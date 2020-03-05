@@ -27,7 +27,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
         //determines rotation increment of stochastic rotate functions
         protected float rotateStepDegrees = 90.0f;
 
-        public void Initialize(ServerAction action)
+        public new void Initialize(ServerAction action)
         {
             this.applyActionNoise = action.applyActionNoise;
 
@@ -54,9 +54,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
             if (action.rotateStepDegrees > 0.0) {
                 this.rotateStepDegrees = action.rotateStepDegrees;
             }
+
+            #if UNITY_EDITOR
             Debug.Log("MoveNoise: " + movementGaussianMu + " mu, " + movementGaussianSigma + " sigma");
             Debug.Log("RotateNoise: " + rotateGaussianMu + " mu, " + rotateGaussianSigma + " sigma");
             Debug.Log("applynoise:" + applyActionNoise);
+            #endif
 
             base.Initialize(action);
         }
