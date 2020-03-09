@@ -450,7 +450,30 @@
         "resourceFile": "AI2-THOR/Physics/SimObjsPhysics/Kitchen Objects/Cup/Prefabs/Cup_30"
     }, {
         "id": "drawer_1",
-        "resourceFile": "AI2-THOR/Physics/SimObjsPhysics/Entryway Objects/Furniture/EndTableDoubleDrawer"
+        "resourceFile": "AI2-THOR/Physics/SimObjsPhysics/Entryway Objects/Furniture/EndTableDoubleDrawer",
+        "interactables": [{
+            "id": "right_drawer",
+            "name": "Drawer"
+        }, {
+            "id": "left_drawer",
+            "name": "Drawer (1)"
+        }, {
+            "id": "shelf",
+            "name": "Shelf"
+        }],
+        "overrides": [{
+            "name": "Colliders/Col (1)",
+            "position": {
+                "x": 0,
+                "y": 0.593,
+                "z": 0.0055
+            },
+            "scale": {
+                "x": 0.975,
+                "y": 0.9,
+                "z": 0.925
+            }
+        }]
     }, {
         "id": "garbage_can_1",
         "resourceFile": "AI2-THOR/Prefabs/SimObjs/UNFINISHED/Trash/GarbageCan"
@@ -744,17 +767,19 @@
         "resourceFile": "AI2-THOR/Physics/SimObjsPhysics/Bathroom Objects/Footstool/Prefabs/Footstool4"
     }, {
         "id": "table_1",
-        "resourceFile": "AI2-THOR/Physics/SimObjsPhysics/Custom Project Objects/Hide And Seek Objects/Tables/Long Table 2"
+        "resourceFile": "AI2-THOR/Physics/SimObjsPhysics/Custom Project Objects/Hide And Seek Objects/Tables/Long Table 2",
+        "receptacle": true
     }, {
         "id": "table_2",
-        "resourceFile": "AI2-THOR/Physics/SimObjsPhysics/Custom Project Objects/Hide And Seek Objects/Tables/SmallRecTable"
+        "resourceFile": "AI2-THOR/Physics/SimObjsPhysics/Custom Project Objects/Hide And Seek Objects/Tables/SmallRecTable",
+        "receptacle": true
     }, {
         "id": "table_3",
         "resourceFile": "AI2-THOR/Prefabs/StaticObjects/Furniture/Tables/CoffeeTable1",
         "receptacle": true,
         "boundingBox": {
             "position": {
-                "x": -0.175,
+                "x": -0.18,
                 "y": 0.22,
                 "z": 0
             },
@@ -767,76 +792,76 @@
         "colliders": [{
             "type": "box",
             "position": {
-                "x": -0.175,
-                "y": 0.3925,
+                "x": -0.18,
+                "y": 0.39,
                 "z": 0
             },
             "scale": {
-                "x": 1,
+                "x": 1.01,
                 "y": 0.1,
-                "z": 0.625
+                "z": 0.65
             }
         }, {
             "type": "box",
             "position": {
-                "x": 0.3,
-                "y": 0.175,
-                "z": 0.3
+                "x": 0.305,
+                "y": 0.17,
+                "z": 0.305
             },
             "scale": {
-                "x": 0.03,
+                "x": 0.04,
                 "y": 0.35,
-                "z": 0.03
+                "z": 0.04
             }
         }, {
             "type": "box",
             "position": {
-                "x": 0.3,
-                "y": 0.175,
-                "z": -0.3
+                "x": 0.305,
+                "y": 0.17,
+                "z": -0.305
             },
             "scale": {
-                "x": 0.03,
+                "x": 0.04,
                 "y": 0.35,
-                "z": 0.03
+                "z": 0.04
             }
         }, {
             "type": "box",
             "position": {
-                "x": -0.66,
-                "y": 0.175,
-                "z": 0.3
+                "x": -0.665,
+                "y": 0.17,
+                "z": 0.305
             },
             "scale": {
-                "x": 0.03,
+                "x": 0.04,
                 "y": 0.35,
-                "z": 0.03
+                "z": 0.04
             }
         }, {
             "type": "box",
             "position": {
-                "x": -0.66,
-                "y": 0.175,
-                "z": -0.3
+                "x": -0.665,
+                "y": 0.17,
+                "z": -0.305
             },
             "scale": {
-                "x": 0.03,
+                "x": 0.04,
                 "y": 0.35,
-                "z": 0.03
+                "z": 0.04
             }
         }],
-        "receptacleTriggerBox": {
+        "receptacleTriggerBoxes": [{
             "position": {
-                "x": -0.175,
-                "y": 0.94,
+                "x": -0.18,
+                "y": 0.945,
                 "z": 0
             },
             "scale": {
-                "x": 1,
+                "x": 1.01,
                 "y": 1,
-                "z": 0.625
+                "z": 0.65
             }
-        },
+        }],
         "visibilityPoints": [{
             "x": 0.3,
             "y": 0,
@@ -846,11 +871,11 @@
             "y": 0,
             "z": -0.35
         }, {
-            "x": -0.65,
+            "x": -0.66,
             "y": 0,
             "z": 0.35
         }, {
-            "x": -0.65,
+            "x": -0.66,
             "y": 0,
             "z": -0.35
         }, {
@@ -862,32 +887,326 @@
             "y": 0.45,
             "z": -0.35
         }, {
-            "x": -0.65,
+            "x": -0.66,
             "y": 0.45,
             "z": 0.35
         }, {
-            "x": -0.65,
+            "x": -0.66,
             "y": 0.45,
             "z": -0.35
         }, {
-            "x": -0.175,
+            "x": -0.18,
             "y": 0.45,
-            "z": -0.025
+            "z": 0
         }]
     }, {
         "id": "table_4",
-        "resourceFile": "AI2-THOR/Prefabs/StaticObjects/Furniture/Tables/SideTable1"
+        "resourceFile": "AI2-THOR/Prefabs/StaticObjects/Furniture/Tables/SideTable1",
+        "receptacle": true,
+        "boundingBox": {
+            "position": {
+                "x": 0,
+                "y": 0.345,
+                "z": 0.16
+            },
+            "scale": {
+                "x": 0.65,
+                "y": 0.715,
+                "z": 1.01
+            }
+        },
+        "colliders": [{
+            "type": "box",
+            "position": {
+                "x": 0,
+                "y": 0.655,
+                "z": 0.16
+            },
+            "scale": {
+                "x": 0.65,
+                "y": 0.1,
+                "z": 1.01
+            }
+        }, {
+            "type": "box",
+            "position": {
+                "x": 0,
+                "y": 0.195,
+                "z": 0.16
+            },
+            "scale": {
+                "x": 0.65,
+                "y": 0.05,
+                "z": 1.01
+            }
+        }, {
+            "type": "box",
+            "position": {
+                "x": -0.305,
+                "y": 0.34,
+                "z": -0.325
+            },
+            "scale": {
+                "x": 0.04,
+                "y": 0.71,
+                "z": 0.04
+            }
+        }, {
+            "type": "box",
+            "position": {
+                "x": 0.305,
+                "y": 0.34,
+                "z": -0.325
+            },
+            "scale": {
+                "x": 0.04,
+                "y": 0.71,
+                "z": 0.04
+            }
+        }, {
+            "type": "box",
+            "position": {
+                "x": 0.305,
+                "y": 0.34,
+                "z": 0.645
+            },
+            "scale": {
+                "x": 0.04,
+                "y": 0.71,
+                "z": 0.04
+            }
+        }, {
+            "type": "box",
+            "position": {
+                "x": -0.305,
+                "y": 0.34,
+                "z": 0.645
+            },
+            "scale": {
+                "x": 0.04,
+                "y": 0.71,
+                "z": 0.04
+            }
+        }],
+        "receptacleTriggerBoxes": [{
+            "position": {
+                "x": 0,
+                "y": 1.20,
+                "z": 0.16
+            },
+            "scale": {
+                "x": 0.65,
+                "y": 1,
+                "z": 1.01
+            }
+        }, {
+            "position": {
+                "x": 0,
+                "y": 0.4,
+                "z": 0.16
+            },
+            "scale": {
+                "x": 0.65,
+                "y": 0.35,
+                "z": 1.01
+            }
+        }],
+        "visibilityPoints": [{
+            "x": -0.33,
+            "y": 0,
+            "z": -0.35
+        }, {
+            "x": 0.33,
+            "y": 0,
+            "z": -0.35
+        }, {
+            "x": 0.33,
+            "y": 0,
+            "z": 0.67
+        }, {
+            "x": -0.33,
+            "y": 0,
+            "z": 0.67
+        }, {
+            "x": -0.33,
+            "y": 0.71,
+            "z": -0.35
+        }, {
+            "x": 0.33,
+            "y": 0.71,
+            "z": -0.35
+        }, {
+            "x": 0.33,
+            "y": 0.71,
+            "z": 0.67
+        }, {
+            "x": -0.33,
+            "y": 0.71,
+            "z": 0.67
+        }, {
+            "x": -0.33,
+            "y": 0.2,
+            "z": 0.16
+        }, {
+            "x": 0.33,
+            "y": 0.2,
+            "z": 0.16
+        }, {
+            "x": 0,
+            "y": 0.2,
+            "z": -0.35
+        }, {
+            "x": 0,
+            "y": 0.2,
+            "z": 0.67
+        }, {
+            "x": 0,
+            "y": 0.71,
+            "z": 0.16
+        }]
     }, {
         "id": "table_5",
-        "resourceFile": "AI2-THOR/Prefabs/StaticObjects/Furniture/Tables/TVTable"
+        "resourceFile": "AI2-THOR/Prefabs/StaticObjects/Furniture/Tables/TVTable",
+        "receptacle": true,
+        "boundingBox": {
+            "position": {
+                "x": -0.18,
+                "y": 0.35,
+                "z": 0
+            },
+            "scale": {
+                "x": 1.2,
+                "y": 0.7,
+                "z": 0.9
+            }
+        },
+        "colliders": [{
+            "type": "box",
+            "position": {
+                "x": -0.18,
+                "y": 0.35,
+                "z": 0
+            },
+            "scale": {
+                "x": 1.2,
+                "y": 0.7,
+                "z": 0.9
+            }
+        }],
+        "receptacleTriggerBoxes": [{
+            "position": {
+                "x": -0.18,
+                "y": 1.20,
+                "z": 0
+            },
+            "scale": {
+                "x": 1.2,
+                "y": 1,
+                "z": 0.9
+            }
+        }],
+        "visibilityPoints": [{
+            "x": -0.78,
+            "y": 0,
+            "z": -0.43
+        }, {
+            "x": -0.78,
+            "y": 0,
+            "z": 0.43
+        }, {
+            "x": 0.42,
+            "y": 0,
+            "z": 0.43
+        }, {
+            "x": 0.42,
+            "y": 0,
+            "z": -0.43
+        }, {
+            "x": -0.78,
+            "y": 0.7,
+            "z": -0.43
+        }, {
+            "x": -0.78,
+            "y": 0.7,
+            "z": 0.43
+        }, {
+            "x": 0.42,
+            "y": 0.7,
+            "z": 0.43
+        }, {
+            "x": 0.42,
+            "y": 0.7,
+            "z": -0.43
+        }, {
+            "x": -0.18,
+            "y": 0.35,
+            "z": -0.45
+        }, {
+            "x": -0.18,
+            "y": 0.35,
+            "z": 0.45
+        }, {
+            "x": -0.78,
+            "y": 0.35,
+            "z": 0
+        }, {
+            "x": 0.42,
+            "y": 0.35,
+            "z": 0
+        }, {
+            "x": -0.18,
+            "y": 0.7,
+            "z": 0
+        }]
+    }, {
+        "id": "table_6",
+        "resourceFile": "AI2-THOR/Physics/SimObjsPhysics/Entryway Objects/Furniture/FlatTable",
+        "receptacle": true,
+        "receptacleTriggerBoxes": [{
+            "position": {
+                "x": 0.018,
+                "y": 0.769,
+                "z": 0
+            },
+            "scale": {
+                "x": 1,
+                "y": 0.103,
+                "z": 1
+            }
+        }, {
+            "position": {
+                "x": 0.04,
+                "y": 0.52,
+                "z": 0
+            },
+            "scale": {
+                "x": 0.66,
+                "y": 0.22,
+                "z": 0.9
+            }
+        }, {
+            "position": {
+                "x": 0.04,
+                "y": 0.22,
+                "z": 0
+            },
+            "scale": {
+                "x": 0.66,
+                "y": 0.22,
+                "z": 0.9
+            }
+        }]
     }, {
         "id": "table_round_1",
-        "resourceFile": "AI2-THOR/Physics/SimObjsPhysics/Entryway Objects/Furniture/RoundTable"
+        "resourceFile": "AI2-THOR/Physics/SimObjsPhysics/Entryway Objects/Furniture/RoundTable",
+        "receptacle": true
     }, {
         "id": "table_round_2",
-        "resourceFile": "AI2-THOR/Physics/SimObjsPhysics/Entryway Objects/Furniture/DecorativeTable"
+        "resourceFile": "AI2-THOR/Physics/SimObjsPhysics/Entryway Objects/Furniture/DecorativeTable",
+        "receptacle": true
     }, {
         "id": "table_semicircle_1",
-        "resourceFile": "AI2-THOR/Physics/SimObjsPhysics/Entryway Objects/Furniture/SemiCircleEndTable"
+        "resourceFile": "AI2-THOR/Physics/SimObjsPhysics/Entryway Objects/Furniture/SemiCircleEndTable",
+        "receptacle": true
     }]
 }
