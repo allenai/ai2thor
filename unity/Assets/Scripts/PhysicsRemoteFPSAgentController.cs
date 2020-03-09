@@ -4033,14 +4033,65 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         public void PickupObject(ServerAction action) //use serveraction objectid
         {
-            if (!physicsSceneManager.UniqueIdToSimObjPhysics.ContainsKey(action.objectId)) {
-                errorMessage = "Object ID appears to be invalid.";
+            //specify target to pickup via objectId or coordinates
+            SimObjPhysics target = null;
+
+            //no target object specified, so instead try and use x/y screen coordinates
+            if(action.objectId == null)
+            {
+                float x = action.x;
+                float y = 1.0f - action.y; //reverse the y so that the origin (0, 0) can be passed in as the top left of the screen
+
+                //cast ray from screen coordinate into world space. If it hits an object
+                Ray ray = m_Camera.ViewportPointToRay(new Vector3(x, y, 0.0f));
+                RaycastHit hit;
+
+                //if something was touched, actionFinished(true) always
+                if(Physics.Raycast(ray, out hit, Mathf.Infinity, 1 << 0 |1 << 8| 1<<10, QueryTriggerInteraction.Ignore))
+                {
+                    if(hit.transform.GetComponent<SimObjPhysics>())
+                    {
+                        //wait! First check if the point hit is withing visibility bounds (camera viewport, max distance etc)
+                        //this should basically only happen if the handDistance value is too big
+                        if(!CheckIfTargetPositionIsInViewportRange(hit.point))
+                        {
+                            errorMessage = "target sim object is not within the viewport";
+                            actionFinished(false);
+                            return;
+                        }
+                        
+                        //it is within viewport, so we are good, assign as target
+                        target = hit.transform.GetComponent<SimObjPhysics>();
+                    }
+                }
+            }
+
+            //an objectId was given, so find that target in the scene if it exists
+            else
+            {
+                if (!physicsSceneManager.UniqueIdToSimObjPhysics.ContainsKey(action.objectId)) {
+                    errorMessage = "Object ID appears to be invalid.";
+                    actionFinished(false);
+                    return;
+                }
+                
+                target = physicsSceneManager.UniqueIdToSimObjPhysics[action.objectId];
+            }
+
+            //neither objectId nor coordinates found an object
+            if(target == null)
+            {
+                errorMessage = "No target found";
                 actionFinished(false);
                 return;
             }
             
-            SimObjPhysics target = physicsSceneManager.UniqueIdToSimObjPhysics[action.objectId];
-
+            if (target.PrimaryProperty != SimObjPrimaryProperty.CanPickup) {
+                errorMessage = action.objectId + " must have the property CanPickup to be picked up.";
+                actionFinished(false);
+                return;
+            }
+            
             if (ItemInHand != null) {
                 Debug.Log("Agent hand has something in it already! Can't pick up anything else");
                 actionFinished(false);
@@ -4054,13 +4105,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
 
             if (!action.forceAction && !objectIsCurrentlyVisible(target, maxVisibleDistance)) {
-                errorMessage = action.objectId + " is not visible.";
-                actionFinished(false);
-                return;
-            }
-
-            if (target.PrimaryProperty != SimObjPrimaryProperty.CanPickup) {
-                errorMessage = action.objectId + " must have the property CanPickup to be picked up.";
+                errorMessage = action.objectId + " is not visible and can't be picked up.";
                 actionFinished(false);
                 return;
             }
@@ -4073,7 +4118,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             //move the object to the hand's default position. Make it Kinematic
             //then set parant and ItemInHand
-
             Vector3 savedPos = target.transform.position;
             Quaternion savedRot = target.transform.rotation;
             Transform savedParent = target.transform.parent;
