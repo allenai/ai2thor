@@ -95,16 +95,25 @@ Alternatively, if you want to build the Unity project via the command line, run 
   - Added `virtual` to the `Initialize` and `ProcessControlCommand` functions
   - Removed the hard-coded camera properties in the `SetAgentMode` function
   - Replaced the call to `checkInitializeAgentLocationAction` in `Initialize` with calls to `snapToGrid` and `actionFinished` so re-initialization doesn't cause the player to move for a few steps
+- `Scripts/CanOpen_Object`:
+  - Rewrote part of the `Interact` function so it doesn't use iTween if `animationTime` is `0`.  Also the `Interact` function now uses the `openPercentage` on both "open" and "close".
 - `Scripts/DebugDiscreteAgentController`:
   - Calls `ProcessControlCommand` on the controller object with an "Initialize" action in its `Start` function (so the Unity Editor Workflow mimics the Python API Workflow)
   - Added a way to "Pass" (with the "Escape" button) or "Initialize" (with the "Backspace" button) on a step while playing the game in the Unity Editor
+  - Added support for executing other actions and properties while playing the game in the Unity Editor
+- `Scripts/InstantiatePrefabTest`:
+  - Fixed a bug in the `CheckSpawnArea` function in which the object's bounding box was not adjusted by the object's scale.
 - `Scripts/PhysicsRemoteFPSAgentController`:
   - Changed the `physicsSceneManager` variable from `private` to `protected` so we can access it from our subclasses
+  - Added `virtual` to the `PickupObject` and `ResetAgentHandPosition` functions
   - Commented out a block in the `PickupObject` function that checked for collisions between the held object and other objects in the scene because it caused odd behavior if you were looking at the floor.  The `Look` functions don't make this check either, and we may decide not to move the held object during `Look` actions anyway.
+  - In the `PlaceHeldObject` function: ignores `PlacementRestrictions` if `ObjType` is `IgnoreType`; sets the held object's parent to null so the parent's properties (like scale) don't affect the placement validation; sets the held object's `isKinematic` property to `false` if placement is successful.
+- `Scripts/PhysicsSceneManager`:
+  - Added `virtual` to the `Generate_UniqueID` function
 - `Scripts/SimObjPhysics`:
   - Changed the `Start` function to `public` so we can call it from our scripts
 - `Scripts/SimObjType`:
-  - Added a `MachineCommonSenseObject` type
+  - Added `IgnoreType` to the `SimObjType` enum, `ReturnAllPoints`, and `AlwaysPlaceUpright`
 - `Shaders/DepthBW`:
   - Changed the divisor to increase the effective depth of field for the depth masks.
 - `Scripts/MachineCommonSenseController`:
