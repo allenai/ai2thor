@@ -49,6 +49,9 @@ public class MachineCommonSenseController : PhysicsRemoteFPSAgentController {
     }
 
     public override void ProcessControlCommand(ServerAction controlCommand) {
+        // Never let the placeable objects ignore the physics simulation (they should always be affected by it).
+        controlCommand.placeStationary = false;
+
         base.ProcessControlCommand(controlCommand);
 
         // Call Physics.Simulate multiple times with a small step value because a large step

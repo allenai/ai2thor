@@ -4011,11 +4011,16 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 randomizedSpawnPoints.Shuffle_(action.randomSeed);
                 spawnPoints = randomizedSpawnPoints;
             }
+            // Remove the parent from the held object so that the parent's properties (like scale) don't affect our calculations.
             Transform previousParent = handSOP.transform.parent;
             handSOP.transform.parent = null;
             if (script.PlaceObjectReceptacle(spawnPoints, ItemInHand.GetComponent<SimObjPhysics>(), action.placeStationary, -1, 90, placeUpright, null)) {
                 ItemInHand = null;
                 DefaultAgentHand();
+                if (!action.placeStationary) {
+                    // Reset isKinematic because it was set to true when the object was picked up.
+                    handSOP.GetComponentInChildren<Rigidbody>().isKinematic = false;
+                }
                 actionFinished(true);
             } else {
                 errorMessage = "No valid positions to place object found";
