@@ -52,7 +52,12 @@ class VideoController(Controller):
 
     def transform(self, *action_generators):
         """Apply multiple actions at the same time (e.g., move multiple agents,
-           and pan the camera around the scene."""
+           and pan the camera around the scene.
+           
+           Examples
+           vc.transform(vc.moveAhead())
+           vc.transform(vc.Pass(60))
+           vc.transform(vc.moveAhead(), vc.orbitCameraAnimation(0, 0, 0))"""
         # action_generators should be a list of generators (e.g., moveAhead(<Params>))
         # this does many transformations at the same time
         
