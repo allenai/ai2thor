@@ -4035,6 +4035,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             if (!physicsSceneManager.UniqueIdToSimObjPhysics.ContainsKey(action.objectId)) {
                 errorMessage = "Object ID appears to be invalid.";
                 actionFinished(false);
+                this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.NOT_OBJECT);
                 return;
             }
             
@@ -4043,30 +4044,36 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             if (ItemInHand != null) {
                 Debug.Log("Agent hand has something in it already! Can't pick up anything else");
                 actionFinished(false);
+                this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.HAND_IS_FULL);
                 return;
             } 
 
             if (IsHandDefault == false) {
                 errorMessage = "Reset Hand to default position before attempting to Pick Up objects";
                 actionFinished(false);
+                this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.FAILED);
                 return;
             }
 
+            // TODO: MCS-83: Need to split into OUT_OF_REACH and OBSTRUCTED
             if (!action.forceAction && !objectIsCurrentlyVisible(target, maxVisibleDistance)) {
                 errorMessage = action.objectId + " is not visible.";
                 actionFinished(false);
+                this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.OUT_OF_REACH);
                 return;
             }
 
             if (target.PrimaryProperty != SimObjPrimaryProperty.CanPickup) {
                 errorMessage = action.objectId + " must have the property CanPickup to be picked up.";
                 actionFinished(false);
+                this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.NOT_PICKUPABLE);
                 return;
             }
 
             if (!action.forceAction && target.isInteractable == false) {
                 errorMessage = action.objectId + " is not interactable and (perhaps it is occluded by something).";
                 actionFinished(false);
+                this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.FAILED);
                 return;
             }
 
@@ -4115,6 +4122,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             //we have succesfully picked up something! 
             target.GetComponent<SimObjPhysics>().isInAgentHand = true;
             actionFinished(true, target.UniqueID);
+            this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.SUCCESSFUL);
             return;
         }
 
@@ -4252,12 +4260,28 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public bool DropHandObject(ServerAction action) {
             //make sure something is actually in our hands
             if (ItemInHand != null) {
+
+                if (!physicsSceneManager.UniqueIdToSimObjPhysics.ContainsKey(action.objectId)) {
+                    errorMessage = "Object ID appears to be invalid.";
+                    actionFinished(false);
+                    this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.NOT_OBJECT);
+                    return false;
+                }
+
+                if(ItemInHand.transform.name != action.objectId) {
+                    errorMessage = "Object ID " + action.objectId + " is not the object currently being held.";
+                    actionFinished(false);
+                    this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.NOT_HELD);
+                    return false;
+                }
+
                 //we do need this to check if the item is currently colliding with the agent, otherwise
                 //dropping an object while it is inside the agent will cause it to shoot out weirdly
                 if (!action.forceAction && isHandObjectColliding(false)) {
                     errorMessage = ItemInHand.transform.name + " can't be dropped. It must be clear of all other collision first, including the Agent";
                     Debug.Log(errorMessage);
                     actionFinished(false);
+                    this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.FAILED);
                     return false;
                 } else {
                     Rigidbody rb = ItemInHand.GetComponent<Rigidbody>();
@@ -4303,12 +4327,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                     ItemInHand.GetComponent<SimObjPhysics>().isInAgentHand = false;
                     ItemInHand = null;
+                    this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.SUCCESSFUL);
                     return true;
                 }
             } else {
                 errorMessage = "nothing in hand to drop!";
                 Debug.Log(errorMessage);
                 actionFinished(false);
+                this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.NOT_HELD);
                 return false;
             }
         }
