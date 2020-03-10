@@ -78,6 +78,10 @@ public class MachineCommonSenseMain : MonoBehaviour {
                         }
                     });
             }
+            if (agentController.step == 0) {
+                // After initialization, simulate the physics so that objects can settle down onto the floor.
+                agentController.SimulatePhysics();
+            }
         }
     }
 
@@ -112,11 +116,20 @@ public class MachineCommonSenseMain : MonoBehaviour {
         AssignMaterial(GameObject.Find("Wall Left"), this.currentScene.wallMaterial);
         AssignMaterial(GameObject.Find("Wall Right"), this.currentScene.wallMaterial);
 
-        if (this.currentScene.performerStart != null) {
-            GameObject controller = GameObject.Find("FPSController");
-            // Always keep the same Y position.
-            controller.transform.position = new Vector3(this.currentScene.performerStart.x,
-                MachineCommonSenseMain.CONTROLLER_Y, this.currentScene.performerStart.z);
+        GameObject controller = GameObject.Find("FPSController");
+        if (this.currentScene.performerStart != null && this.currentScene.performerStart.position != null) {
+            // Always keep the Y position on the floor.
+            controller.transform.position = new Vector3(this.currentScene.performerStart.position.x,
+                MachineCommonSenseMain.CONTROLLER_Y, this.currentScene.performerStart.position.z);
+        }
+        else {
+            controller.transform.position = new Vector3(0, MachineCommonSenseMain.CONTROLLER_Y, 0);
+        }
+
+        if (this.currentScene.performerStart != null && this.currentScene.performerStart.rotation != null) {
+            // Only permit rotating left or right (along the Y axis).
+            controller.transform.rotation = Quaternion.Euler(0,
+                this.currentScene.performerStart.rotation.y, 0);
         }
 
         this.lastStep = -1;
@@ -462,6 +475,18 @@ public class MachineCommonSenseMain : MonoBehaviour {
         }
 
         this.EnsureCanOpenObjectScriptAnimationTimeIsZero(gameObject);
+
+        // Only do this AFTER calling EnsureCanOpenObjectScriptAnimationTimeIsZero
+        if (openable) {
+            CanOpen_Object ai2thorCanOpenObjectScript = gameObject.GetComponent<CanOpen_Object>();
+            if (ai2thorCanOpenObjectScript != null) {
+                if ((ai2thorCanOpenObjectScript.isOpen && !objectConfig.opened) ||
+                    (!ai2thorCanOpenObjectScript.isOpen && objectConfig.opened)) {
+
+                    ai2thorCanOpenObjectScript.Interact();
+                }
+            }
+        }
 
         // Call Start to initialize the script since it did not exist on game start.
         ai2thorPhysicsScript.Start();
@@ -856,6 +881,7 @@ public class MachineCommonSenseConfigGameObject {
     public bool moveable;
     public MachineCommonSenseConfigTransform nullParent = null;
     public bool openable;
+    public bool opened;
     public bool physics; // deprecated
     public bool pickupable;
     public bool receptacle;
@@ -995,7 +1021,7 @@ public class MachineCommonSenseConfigScene {
     public String ceilingMaterial;
     public String floorMaterial;
     public String wallMaterial;
-    public MachineCommonSenseConfigVector performerStart = null;
+    public MachineCommonSenseConfigTransform performerStart = null;
     public List<MachineCommonSenseConfigGameObject> objects;
 }
 

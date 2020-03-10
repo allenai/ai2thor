@@ -16,10 +16,11 @@ public class MachineCommonSenseController : PhysicsRemoteFPSAgentController {
     public override void Initialize(ServerAction action) {
         base.Initialize(action);
 
-        // Reset the MCS scene configuration data and player.
-        this.step = 0;
+        // Set the step to -1 here because it will increase to 0 in ProcessControlCommand.
+        this.step = -1;
         MachineCommonSenseMain main = GameObject.Find("MCS").GetComponent<MachineCommonSenseMain>();
         main.enableVerboseLog = action.logs;
+        // Reset the MCS scene configuration data and player.
         main.ChangeCurrentScene(action.sceneConfig);
     }
 
@@ -54,12 +55,7 @@ public class MachineCommonSenseController : PhysicsRemoteFPSAgentController {
 
         base.ProcessControlCommand(controlCommand);
 
-        // Call Physics.Simulate multiple times with a small step value because a large step
-        // value causes collision errors.  From the Unity Physics.Simulate documentation:
-        // "Using step values greater than 0.03 is likely to produce inaccurate results."
-        for (int i = 0; i < MachineCommonSenseController.PHYSICS_SIMULATION_STEPS; ++i) {
-            Physics.Simulate(0.01f);
-        }
+        this.SimulatePhysics();
 
         this.step++;
     }
@@ -110,5 +106,14 @@ public class MachineCommonSenseController : PhysicsRemoteFPSAgentController {
         MetadataWrapper metadataWrapper = base.generateMetadataWrapper();
         metadataWrapper.lastActionStatus = this.lastActionStatus;
         return metadataWrapper;
+    }
+
+    public void SimulatePhysics() {
+        // Call Physics.Simulate multiple times with a small step value because a large step
+        // value causes collision errors.  From the Unity Physics.Simulate documentation:
+        // "Using step values greater than 0.03 is likely to produce inaccurate results."
+        for (int i = 0; i < MachineCommonSenseController.PHYSICS_SIMULATION_STEPS; ++i) {
+            Physics.Simulate(0.01f);
+        }
     }
 }
