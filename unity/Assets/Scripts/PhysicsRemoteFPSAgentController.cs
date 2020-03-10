@@ -4268,7 +4268,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     return false;
                 }
 
-                if(ItemInHand.transform.name != action.objectId) {
+                if(!ItemInHand.transform.name.Equals(action.objectId)) {
                     errorMessage = "Object ID " + action.objectId + " is not the object currently being held.";
                     actionFinished(false);
                     this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.NOT_HELD);
