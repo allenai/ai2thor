@@ -3854,7 +3854,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
 
-        public void PutObject(ServerAction action) {
+        public virtual void PutObject(ServerAction action) {
             action.objectId = action.receptacleObjectId;
             action.receptacleObjectId = null;
             PlaceHeldObject(action);
@@ -3954,6 +3954,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             SimObjPhysics handSOP = ItemInHand.GetComponent<SimObjPhysics>();
 
+            // MCS CHANGE NEXT LINE
             if (!action.forceAction && handSOP.ObjType != SimObjType.IgnoreType) {
                 bool HandObjectFoundInList = false;
                 //check if the item we are holding can even be placed in the action.UniqueID target at all
@@ -4011,20 +4012,30 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 randomizedSpawnPoints.Shuffle_(action.randomSeed);
                 spawnPoints = randomizedSpawnPoints;
             }
+
+            // MCS CHANGE START
             // Remove the parent from the held object so that the parent's properties (like scale) don't affect our calculations.
             Transform previousParent = handSOP.transform.parent;
             handSOP.transform.parent = null;
+            // MCS CHANGE END
+
             if (script.PlaceObjectReceptacle(spawnPoints, ItemInHand.GetComponent<SimObjPhysics>(), action.placeStationary, -1, 90, placeUpright, null)) {
                 ItemInHand = null;
                 DefaultAgentHand();
+
+                // MCS CHANGE START
                 if (!action.placeStationary) {
                     // Reset isKinematic because it was set to true when the object was picked up.
                     handSOP.GetComponentInChildren<Rigidbody>().isKinematic = false;
                 }
+                // MCS CHANGE END
+
                 actionFinished(true);
             } else {
-                errorMessage = "No valid positions to place object found";
+                // MCS CHANGE NEXT LINE
                 handSOP.transform.parent = previousParent;
+
+                errorMessage = "No valid positions to place object found";
                 actionFinished(false);
             }
 
@@ -4254,7 +4265,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true);
         }
 
-        public bool DropHandObject(ServerAction action) {
+        public virtual bool DropHandObject(ServerAction action) {
             //make sure something is actually in our hands
             if (ItemInHand != null) {
                 //we do need this to check if the item is currently colliding with the agent, otherwise
@@ -4320,7 +4331,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         //by default will throw in the forward direction relative to the Agent's Camera
         //moveMagnitude, strength of throw, good values for an average throw are around 150-250
-        public void ThrowObject(ServerAction action) {
+        public virtual void ThrowObject(ServerAction action) {
             if (ItemInHand == null) {
                 errorMessage = "Nothing in Hand to Throw!";
                 Debug.Log(errorMessage);

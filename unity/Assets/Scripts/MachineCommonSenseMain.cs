@@ -381,6 +381,7 @@ public class MachineCommonSenseMain : MonoBehaviour {
         }
         // Set isKinematic to false by default so the objects are always affected by the physics simulation.
         rigidbody.isKinematic = objectConfig.kinematic;
+        // Set the mode to continuous dynamic or else fast moving objects may pass through other objects.
         rigidbody.collisionDetectionMode = objectConfig.kinematic ? CollisionDetectionMode.Discrete :
             CollisionDetectionMode.ContinuousDynamic;
         if (objectConfig.mass > 0) {
@@ -440,6 +441,7 @@ public class MachineCommonSenseMain : MonoBehaviour {
             Destroy(gameObject.GetComponent<Break>());
         }
 
+        // Override the object's AI2-THOR simulation type or else the object may have odd behavior.
         if (pickupable) {
             // TODO Should we make the AI2-THOR object type configurable? Does it even matter?
             ai2thorPhysicsScript.Type = SimObjType.IgnoreType;
@@ -457,17 +459,20 @@ public class MachineCommonSenseMain : MonoBehaviour {
             };
         }
 
+        // The object's receptacle trigger boxes define the area in which objects may be placed for AI2-THOR.
         if (receptacle && ai2thorPhysicsScript.ReceptacleTriggerBoxes.Length == 0) {
             ai2thorPhysicsScript.ReceptacleTriggerBoxes = this.AssignReceptacleTriggerBoxes(gameObject,
                 objectDefinition);
         }
 
+        // The object's visibility points define a subset of points along the outside of the object for AI2-THOR.
         if (objectDefinition.visibilityPoints.Count > 0) {
             List<Transform> visibilityPoints = this.AssignVisibilityPoints(gameObject,
                 objectDefinition.visibilityPoints);
             ai2thorPhysicsScript.VisibilityPoints = visibilityPoints.ToArray();
         }
 
+        // The object's bounding box defines the complete bounding box around the object for AI2-THOR.
         // JsonUtility always sets objectDefinition.boundingBox, so verify that the position is not null.
         if (objectDefinition.boundingBox != null && objectDefinition.boundingBox.position != null) {
             ai2thorPhysicsScript.BoundingBox = this.AssignBoundingBox(gameObject, objectDefinition.boundingBox)
@@ -476,7 +481,8 @@ public class MachineCommonSenseMain : MonoBehaviour {
 
         this.EnsureCanOpenObjectScriptAnimationTimeIsZero(gameObject);
 
-        // Only do this AFTER calling EnsureCanOpenObjectScriptAnimationTimeIsZero
+        // Open or close an openable receptacle as demaned by the object's config.
+        // Note: Do this AFTER calling EnsureCanOpenObjectScriptAnimationTimeIsZero
         if (openable) {
             CanOpen_Object ai2thorCanOpenObjectScript = gameObject.GetComponent<CanOpen_Object>();
             if (ai2thorCanOpenObjectScript != null) {
