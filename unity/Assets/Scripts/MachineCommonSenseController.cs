@@ -14,58 +14,83 @@ public class MachineCommonSenseController : PhysicsRemoteFPSAgentController {
     protected float minRotation = -360f;
     protected float maxRotation = 360f;
 
+    public override bool DropHandObject(ServerAction action) {
+        SimObjPhysics target = physicsSceneManager.UniqueIdToSimObjPhysics[action.objectId];
+
+        // Reactivate the object BEFORE trying to drop it so that we can see if it's obstructed.
+        // TODO MCS-77 This object will always be active, so we won't need to reactivate this object.
+        if (target && target.transform.parent == this.AgentHand.transform) {
+            target.gameObject.SetActive(true);
+        }
+
+        bool status = base.DropHandObject(action);
+
+        // Deactivate the object again if the drop failed.
+        // TODO MCS-77 We should never need to deactivate this object again (see PickupObject).
+        if (target && target.transform.parent == this.AgentHand.transform) {
+            target.gameObject.SetActive(false);
+        }
+
+        return status;
+    }
+
     public override void Initialize(ServerAction action) {
         base.Initialize(action);
 
-        // Reset the MCS scene configuration data and player.
-        this.step = 0;
+        // Set the step to -1 here because it will increase to 0 in ProcessControlCommand.
+        this.step = -1;
         MachineCommonSenseMain main = GameObject.Find("MCS").GetComponent<MachineCommonSenseMain>();
         main.enableVerboseLog = action.logs;
+        // Reset the MCS scene configuration data and player.
         main.ChangeCurrentScene(action.sceneConfig);
     }
 
     public override void PickupObject(ServerAction action) {
-        if(physicsSceneManager.UniqueIdToSimObjPhysics.ContainsKey(action.objectId)) {
-            SimObjPhysics target = physicsSceneManager.UniqueIdToSimObjPhysics[action.objectId];
+        SimObjPhysics target = null;
 
-            MeshFilter meshFilter = target.gameObject.GetComponentInChildren<MeshFilter>();
-            if (meshFilter != null)
-            {
-                // Move the player's hand on the Y axis corresponding to the size of the target object so that the object,
-                // once held, is shown at the bottom of the player's camera view.
-                float handY = (meshFilter.mesh.bounds.size.y * meshFilter.transform.localScale.y);
-                // Move the player's hand on the Z axis corresponding to the size of the target object so that the object,
-                // once held, never collides with the player's body.
-                float handZ = (meshFilter.mesh.bounds.size.z / 2.0f * meshFilter.transform.localScale.z);
-                if (!GameObject.ReferenceEquals(meshFilter.gameObject, target.gameObject))
-                {
-                    handY = (handY + (meshFilter.transform.localPosition.y * meshFilter.transform.localScale.y));
-                    handZ = ((handZ - meshFilter.transform.localPosition.z) * target.gameObject.transform.localScale.z);
-                }
-                this.AgentHand.transform.localPosition = new Vector3(this.AgentHand.transform.localPosition.x,
-                    (handY + MachineCommonSenseController.DISTANCE_HELD_OBJECT_Y) * -1,
-                    (handZ + MachineCommonSenseController.DISTANCE_HELD_OBJECT_Z) * (1.0f / this.transform.localScale.z));
-            }
-            else
-            {
-                Debug.LogError("PickupObject target " + target.gameObject.name + " does not have a MeshFilter!");
-            }
+        if (physicsSceneManager.UniqueIdToSimObjPhysics.ContainsKey(action.objectId)) {
+            target = physicsSceneManager.UniqueIdToSimObjPhysics[action.objectId];
+
+            this.UpdateHandPositionToHoldObject(target);
         }
 
+        // Update our hand's position so that the object we want to hold doesn't clip our body.
+        // TODO MCS-77 We may want to change how this function is used.
         base.PickupObject(action);
+
+        // TODO MCS-77 Find a way to handle held object collisions so we don't have to deactivate this object.
+        if (target != null && target.transform.parent == this.AgentHand.transform) {
+            target.gameObject.SetActive(false);
+        }
     }
 
     public override void ProcessControlCommand(ServerAction controlCommand) {
+        // Never let the placeable objects ignore the physics simulation (they should always be affected by it).
+        controlCommand.placeStationary = false;
+
         base.ProcessControlCommand(controlCommand);
 
-        // Call Physics.Simulate multiple times with a small step value because a large step
-        // value causes collision errors.  From the Unity Physics.Simulate documentation:
-        // "Using step values greater than 0.03 is likely to produce inaccurate results."
-        for (int i = 0; i < MachineCommonSenseController.PHYSICS_SIMULATION_STEPS; ++i) {
-            Physics.Simulate(0.01f);
-        }
+        this.SimulatePhysics();
 
         this.step++;
+    }
+
+    public override void PutObject(ServerAction action) {
+        SimObjPhysics target = physicsSceneManager.UniqueIdToSimObjPhysics[action.objectId];
+
+        // Reactivate the object BEFORE trying to place it so that we can see if it's obstructed.
+        // TODO MCS-77 This object will always be active, so we won't need to reactivate this object.
+        if (target && target.transform.parent == this.AgentHand.transform) {
+            target.gameObject.SetActive(true);
+        }
+
+        base.PutObject(action);
+
+        // Deactivate the object again if the placement failed.
+        // TODO MCS-77 We should never need to deactivate this object (see PickupObject).
+        if (target.transform.parent == this.AgentHand.transform) {
+            target.gameObject.SetActive(false);
+        }
     }
 
     public override void ResetAgentHandPosition(ServerAction action) {
@@ -114,5 +139,53 @@ public class MachineCommonSenseController : PhysicsRemoteFPSAgentController {
         MetadataWrapper metadataWrapper = base.generateMetadataWrapper();
         metadataWrapper.lastActionStatus = this.lastActionStatus;
         return metadataWrapper;
+    }
+
+    public void SimulatePhysics() {
+        // Call Physics.Simulate multiple times with a small step value because a large step
+        // value causes collision errors.  From the Unity Physics.Simulate documentation:
+        // "Using step values greater than 0.03 is likely to produce inaccurate results."
+        for (int i = 0; i < MachineCommonSenseController.PHYSICS_SIMULATION_STEPS; ++i) {
+            Physics.Simulate(0.01f);
+        }
+    }
+
+    public override void ThrowObject(ServerAction action) {
+        SimObjPhysics target = physicsSceneManager.UniqueIdToSimObjPhysics[action.objectId];
+
+        // Reactivate the object BEFORE trying to throw it so that we can see if it's obstructed.
+        // TODO MCS-77 This object will always be active, so we won't need to reactivate this object.
+        if (target && target.transform.parent == this.AgentHand.transform) {
+            target.gameObject.SetActive(true);
+        }
+
+        base.ThrowObject(action);
+
+        // Deactivate the object again if the throw failed.
+        // TODO MCS-77 We should never need to deactivate this object (see PickupObject).
+        if (target.transform.parent == this.AgentHand.transform) {
+            target.gameObject.SetActive(false);
+        }
+    }
+
+    private void UpdateHandPositionToHoldObject(SimObjPhysics target) {
+        MeshFilter meshFilter = target.gameObject.GetComponentInChildren<MeshFilter>();
+        if (meshFilter != null) {
+            // Move the player's hand on the Y axis corresponding to the size of the target object so that the object,
+            // once held, is shown at the bottom of the player's camera view.
+            float handY = (meshFilter.mesh.bounds.size.y * meshFilter.transform.localScale.y);
+            // Move the player's hand on the Z axis corresponding to the size of the target object so that the object,
+            // once held, never collides with the player's body.
+            float handZ = (meshFilter.mesh.bounds.size.z / 2.0f * meshFilter.transform.localScale.z);
+            if (!GameObject.ReferenceEquals(meshFilter.gameObject, target.gameObject)) {
+                handY = (handY + (meshFilter.transform.localPosition.y * meshFilter.transform.localScale.y));
+                handZ = ((handZ - meshFilter.transform.localPosition.z) * target.gameObject.transform.localScale.z);
+            }
+            this.AgentHand.transform.localPosition = new Vector3(this.AgentHand.transform.localPosition.x,
+                (handY + MachineCommonSenseController.DISTANCE_HELD_OBJECT_Y) * -1,
+                (handZ + MachineCommonSenseController.DISTANCE_HELD_OBJECT_Z) * (1.0f / this.transform.localScale.z));
+        } else {
+            Debug.LogError("PickupObject target " + target.gameObject.name + " does not have a MeshFilter!");
+        }
     }
 }

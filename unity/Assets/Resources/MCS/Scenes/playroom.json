@@ -3,20 +3,27 @@
     "floorMaterial": "Fabrics/CarpetWhite 3",
     "wallMaterial": "Walls/DrywallBeige",
     "objects": [{
-        "id": "test_drawer",
+        "id": "playroom_drawers",
         "type": "drawer_1",
-        "receptacle": true,
+        "kinematic": true,
+        "mass": 50,
         "shows": [{
             "stepBegin": 0,
             "position": {
                 "x": 2,
-                "y": 0,
-                "z": 4.75
+                "y": -0.55,
+                "z": 4.5
+            },
+            "scale": {
+                "x": 1,
+                "y": 1,
+                "z": 1
             }
         }]
     }, {
-        "id": "test_sofa",
+        "id": "playroom_sofa",
         "type": "sofa_1",
+        "mass": 50,
         "shows": [{
             "stepBegin": 0,
             "position": {
@@ -26,8 +33,9 @@
             }
         }]
     }, {
-        "id": "test_sofa_chair",
+        "id": "playroom_sofa_chair",
         "type": "sofa_chair_1",
+        "mass": 25,
         "shows": [{
             "stepBegin": 0,
             "position": {
@@ -42,9 +50,9 @@
             }
         }]
     }, {
-        "id": "test_table",
+        "id": "playroom_dinner_table",
         "type": "table_1",
-        "receptacle": true,
+        "mass": 10,
         "shows": [{
             "stepBegin": 0,
             "position": {
@@ -59,21 +67,26 @@
             }
         }]
     }, {
-        "id": "test_coffee_table",
-        "type": "table_3",
-        "receptacle": true,
+        "id": "playroom_coffee_table",
+        "type": "table_5",
+        "mass": 10,
         "shows": [{
             "stepBegin": 0,
             "position": {
                 "x": -1.75,
                 "y": 0,
                 "z": -2.5
+            },
+            "scale": {
+                "x": 1,
+                "y": 0.5,
+                "z": 1
             }
         }]
     }, {
-        "id": "test_desk",
+        "id": "playroom_desk",
         "type": "table_2",
-        "receptacle": true,
+        "mass": 10,
         "shows": [{
             "stepBegin": 0,
             "position": {
@@ -83,8 +96,9 @@
             }
         }]
     }, {
-        "id": "test_chair_1",
+        "id": "playroom_chair_a",
         "type": "chair_1",
+        "mass": 5,
         "moveable": true,
         "shows": [{
             "stepBegin": 0,
@@ -95,8 +109,9 @@
             }
         }]
     }, {
-        "id": "test_chair_2",
+        "id": "playroom_chair_b",
         "type": "chair_2",
+        "mass": 5,
         "moveable": true,
         "shows": [{
             "stepBegin": 0,
@@ -107,48 +122,162 @@
             }
         }]
     }, {
-        "id": "test_box_a",
-        "type": "box_2",
-        "pickupable": true,
-        "shows": [{
-            "stepBegin": 0,
-            "position": {
-                "x": -0.5,
-                "y": 0.1,
-                "z": 0.5
-            },
-            "scale": {
-                "x": 0.5,
-                "y": 0.5,
-                "z": 0.5
-            }
-        }]
-    }, {
-        "id": "test_box_b",
-        "type": "box_3",
-        "pickupable": true,
-        "shows": [{
-            "stepBegin": 0,
-            "position": {
-                "x": 0.5,
-                "y": 0.15,
-                "z": -0.5
-            },
-            "scale": {
-                "x": 0.5,
-                "y": 0.5,
-                "z": 0.5
-            }
-        }]
-    }, {
-        "id": "test_apple_1",
-        "type": "apple_1",
+        "id": "playroom_ball_a",
+        "type": "sphere",
+        "mass": 0.1,
+        "salientMaterials": ["plastic"],
+        "materialFile": "Plastics/BlueRubber",
         "pickupable": true,
         "shows": [{
             "stepBegin": 0,
             "position": {
                 "x": 0,
+                "y": 0.05,
+                "z": 1
+            },
+            "scale": {
+                "x": 0.025,
+                "y": 0.025,
+                "z": 0.025
+            }
+        }]
+    }, {
+        "id": "playroom_ball_b",
+        "type": "sphere",
+        "mass": 0.5,
+        "salientMaterials": ["plastic"],
+        "materialFile": "Plastics/OrangePlastic",
+        "pickupable": true,
+        "shows": [{
+            "stepBegin": 0,
+            "position": {
+                "x": 0,
+                "y": 0.05,
+                "z": 1.25
+            },
+            "scale": {
+                "x": 0.05,
+                "y": 0.05,
+                "z": 0.05
+            }
+        }]
+    }, {
+        "id": "playroom_ball_c",
+        "type": "sphere",
+        "mass": 1,
+        "salientMaterials": ["wood"],
+        "materialFile": "Wood/WoodGrain_Brown",
+        "pickupable": true,
+        "shows": [{
+            "stepBegin": 0,
+            "position": {
+                "x": 0,
+                "y": 0.05,
+                "z": 1.5
+            },
+            "scale": {
+                "x": 0.075,
+                "y": 0.075,
+                "z": 0.075
+            }
+        }]
+    }, {
+        "id": "playroom_ball_d",
+        "type": "sphere",
+        "mass": 5,
+        "salientMaterials": ["metal"],
+        "materialFile": "Metals/StainlessSteel",
+        "pickupable": true,
+        "shows": [{
+            "stepBegin": 0,
+            "position": {
+                "x": 0,
+                "y": 0.05,
+                "z": 1.75
+            },
+            "scale": {
+                "x": 0.1,
                 "y": 0.1,
+                "z": 0.1
+            }
+        }]
+    }, {
+        "id": "playroom_box_a",
+        "type": "box_2",
+        "mass": 1,
+        "opened": true,
+        "shows": [{
+            "stepBegin": 0,
+            "position": {
+                "x": -0.5,
+                "y": 0.1,
+                "z": 0
+            },
+            "scale": {
+                "x": 1,
+                "y": 0.5,
+                "z": 1
+            }
+        }]
+    }, {
+        "id": "playroom_box_b",
+        "type": "box_3",
+        "mass": 1,
+        "shows": [{
+            "stepBegin": 0,
+            "position": {
+                "x": 0.5,
+                "y": 0.15,
+                "z": 0
+            },
+            "scale": {
+                "x": 0.5,
+                "y": 0.5,
+                "z": 0.5
+            }
+        }]
+    }, {
+        "id": "playroom_apple_a",
+        "type": "apple_1",
+        "mass": 0.5,
+        "shows": [{
+            "stepBegin": 0,
+            "position": {
+                "x": -0.25,
+                "y": 0.03,
+                "z": 1.0
+            },
+            "scale": {
+                "x": 0.5,
+                "y": 0.5,
+                "z": 0.5
+            }
+        }]
+    }, {
+        "id": "playroom_apple_b",
+        "type": "apple_2",
+        "mass": 0.5,
+        "shows": [{
+            "stepBegin": 0,
+            "position": {
+                "x": -0.5,
+                "y": 0.03,
+                "z": 1.0
+            },
+            "scale": {
+                "x": 0.5,
+                "y": 0.5,
+                "z": 0.5
+            }
+        }]
+    }, {
+        "id": "playroom_bowl_a",
+        "type": "bowl_3",
+        "shows": [{
+            "stepBegin": 0,
+            "position": {
+                "x": -0.5,
+                "y": 0.01,
                 "z": 1.5
             },
             "scale": {
@@ -158,21 +287,85 @@
             }
         }]
     }, {
-        "id": "test_ball_1",
-        "type": "sphere",
-        "materialFile": "Plastics/BlueRubber",
-        "pickupable": true,
+        "id": "playroom_bowl_b",
+        "type": "bowl_4",
         "shows": [{
             "stepBegin": 0,
             "position": {
-                "x": 0,
-                "y": 0.05,
-                "z": 0.5
+                "x": -1.0,
+                "y": 0.01,
+                "z": 1.5
             },
             "scale": {
-                "x": 0.05,
-                "y": 0.05,
-                "z": 0.05
+                "x": 1,
+                "y": 1,
+                "z": 1
+            }
+        }]
+    }, {
+        "id": "playroom_cup_a",
+        "type": "cup_2",
+        "shows": [{
+            "stepBegin": 0,
+            "position": {
+                "x": -1.0,
+                "y": 0.01,
+                "z": 1.0
+            },
+            "scale": {
+                "x": 1,
+                "y": 1,
+                "z": 1
+            }
+        }]
+    }, {
+        "id": "playroom_cup_b",
+        "type": "cup_6",
+        "shows": [{
+            "stepBegin": 0,
+            "position": {
+                "x": -1.5,
+                "y": 0.01,
+                "z": 1.0
+            },
+            "scale": {
+                "x": 1,
+                "y": 1,
+                "z": 1
+            }
+        }]
+    }, {
+        "id": "playroom_plate_a",
+        "type": "plate_1",
+        "salientMaterials": ["plastic"],
+        "shows": [{
+            "stepBegin": 0,
+            "position": {
+                "x": -0.5,
+                "y": 0.01,
+                "z": 2
+            },
+            "scale": {
+                "x": 1,
+                "y": 1,
+                "z": 1
+            }
+        }]
+    }, {
+        "id": "playroom_plate_b",
+        "type": "plate_3",
+        "salientMaterials": ["plastic"],
+        "shows": [{
+            "stepBegin": 0,
+            "position": {
+                "x": -1.0,
+                "y": 0.01,
+                "z": 2
+            },
+            "scale": {
+                "x": 1,
+                "y": 1,
+                "z": 1
             }
         }]
     }]
