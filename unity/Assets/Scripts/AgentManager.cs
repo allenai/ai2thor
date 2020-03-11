@@ -300,9 +300,18 @@ public class AgentManager : MonoBehaviour
 
     private void LateUpdate() {
 		int completeCount = 0;
+		int hasUpdateCount = 0;
+		bool FlightMode = false;
 		foreach (BaseFPSAgentController agent in this.agents) {
 			if (agent.actionComplete) {
 				completeCount++;
+			}
+			//Hao:
+			if (agent.hasUpdate){
+				hasUpdateCount++;
+			}
+			if (agent.FlightMode){
+				FlightMode = true;
 			}
 		}
 
@@ -346,13 +355,21 @@ public class AgentManager : MonoBehaviour
         }
 
 		if (completeCount == agents.Count && completeCount > 0 && readyToEmit) {
-			readyToEmit = false;
-			StartCoroutine (EmitFrame ());
+			if (!FlightMode){
+				readyToEmit = false;
+				StartCoroutine (EmitFrame ());
+			}else{
+				if (hasUpdateCount == agents.Count && hasUpdateCount > 0){
+					readyToEmit = false;
+					StartCoroutine (EmitFrame ());
+				}
+			}
 		}
 
         //ok now if the scene is at rest, turn back on physics autosimulation automatically
         //note: you can do this earlier by manually using the UnpausePhysicsAutoSim() action found in PhysicsRemoteFPSAgentController
-        if(physicsSceneManager.isSceneAtRest && 
+		//Hao:
+        if(physicsSceneManager.isSceneAtRest && !FlightMode &&
         physicsSceneManager.physicsSimulationPaused && AdvancePhysicsStepCount > 0)
         {
             //print("soshite toki wa ugoki desu");
@@ -671,6 +688,17 @@ public class AgentManager : MonoBehaviour
 				ProcessControlCommand(www.downloadHandler.text);
 			}
 		}
+
+		if (Time.timeScale == 0 && !Physics.autoSimulation && physicsSceneManager.physicsSimulationPaused)
+        {
+            BaseFPSAgentController agent_tmp = this.agents.ToArray()[0];
+            Time.timeScale = agent_tmp.currentTimeScale;
+            Physics.autoSimulation = true;
+            physicsSceneManager.physicsSimulationPaused = false;
+            agent_tmp.fixTimer = Time.fixedTime;
+            agent_tmp.hasUpdate = false;
+            //Debug.Log(agent_tmp.fixupdateCnt);
+        }
         #endif
     }
 	private int parseContentLength(string header) {
@@ -831,6 +859,15 @@ public class ObjectMetadata
 
     public WorldSpaceBounds objectBounds;
 	public ObjectMetadata() { }
+
+	//Hao:
+    public bool FlightMode;
+    public int numHits;
+    public int numGeneralHits;
+    public int numNongroundHits;
+    public float lastVelocity;
+    public Vector3 LauncherPosition;
+	public bool iscaught;
 }
 
 [Serializable]
@@ -946,6 +983,8 @@ public class ServerAction
 	public string quality;
 	public bool makeAgentsVisible = true;
 	public float timeScale = 1.0f;
+	public float fixedDeltaTime = 0.02f;
+    public float randomNoiseSigma = 0.00f;
 	public string objectType;
 	public int objectVariation;
 	public string receptacleObjectType;
@@ -988,12 +1027,20 @@ public class ServerAction
 	public bool randomizeOpen;
 	public int randomSeed;
 	public float moveMagnitude;
+	public float moveMagnitudeX;
+    public float moveMagnitudeY;
+    public float moveMagnitudeZ;
+	public Vector3 dronePosition;
+    public Vector3 launcherPosition;
 	public bool autoSimulation = true;
 	public float visibilityDistance;
 	public bool uniquePickupableObjectTypes; // only allow one of each object type to be visible
 	public float removeProb;
 	public int numPlacementAttempts;
 	public bool randomizeObjectAppearance;
+	public bool random_start;
+    public bool objectRandom;
+    public string objectName;
 	public bool renderImage = true;
 	public bool renderDepthImage;
 	public bool renderClassImage;

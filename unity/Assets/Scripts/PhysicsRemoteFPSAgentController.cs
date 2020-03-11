@@ -14,6 +14,7 @@ using UnityStandardAssets.CrossPlatformInput;
 using UnityStandardAssets.ImageEffects;
 using UnityStandardAssets.Utility;
 using UnityEngine.AI;
+using RandomExtensions;
 
 namespace UnityStandardAssets.Characters.FirstPerson {
     [RequireComponent(typeof(CharacterController))]
@@ -70,6 +71,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         protected float actionFloatReturn;
         protected bool actionBoolReturn;
         protected float[] actionFloatsReturn;
+        protected float currentTimer;
 
         protected Vector3[] actionVector3sReturn;
         protected string[] actionStringsReturn;
@@ -203,12 +205,37 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         // Update is called once per frame
         void Update() {
-            if (FlightMode) {
-                if (thrust.magnitude > 0.1) {
-                    m_CharacterController.Move(thrust * Time.deltaTime);
+
+        }
+
+        void FixedUpdate(){
+            if (FlightMode)
+            {   
+                if (hasUpdate)
+                {   
+                    Time.timeScale = 0;
+                    Physics.autoSimulation = false;
+                    physicsSceneManager.physicsSimulationPaused = true;
+                }   
+                else
+                {
+                    fixupdateCnt++;
+                    hasUpdate = true;
                 }
 
-                thrust = Vector3.Lerp(thrust, Vector3.zero, 5 * Time.deltaTime);
+                if (thrust.magnitude > 0.0001 && Time.timeScale != 0)
+                {
+                    if (randomNoiseSigma > 0){
+                        var random = new System.Random();
+                        var noiseX = (float)random.NextGaussian(0.0f, randomNoiseSigma/3.0f);
+                        var noiseY = (float)random.NextGaussian(0.0f, randomNoiseSigma/3.0f);
+                        var noiseZ = (float)random.NextGaussian(0.0f, randomNoiseSigma/3.0f);
+                        Vector3 noise = new Vector3(noiseX, noiseY, noiseZ);
+                        m_CharacterController.Move((thrust * Time.fixedDeltaTime) + noise);
+                    }else{
+                        m_CharacterController.Move(thrust * Time.fixedDeltaTime);
+                    }
+                }
             }
         }
 
@@ -303,6 +330,15 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 objMeta.isCooked = simObj.IsCooked;
             }
 
+            if (FlightMode)
+            {   
+                objMeta.iscaught = this.GetComponent<FlyingDrone>().isObjectCaught(simObj);
+                objMeta.numHits = simObj.numHit;
+                objMeta.numGeneralHits = simObj.numGeneralHit;
+                objMeta.numNongroundHits = simObj.numNongoundHit;
+                objMeta.lastVelocity = simObj.lastVelocity;
+            }
+
             //if the sim object is moveable or pickupable
             if(simObj.IsPickupable || simObj.IsMoveable)
             {
@@ -318,7 +354,17 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 objMeta.salientMaterials = salientMaterialsToString;
 
                 //this object should also report back mass since it is moveable/pickupable
-                objMeta.mass = simObj.Mass;
+                if (FlightMode)
+                {   
+                    if (!objMeta.iscaught)
+                    {
+                        objMeta.mass = simObj.Mass;
+                    }
+                }
+                else
+                {
+                    objMeta.mass = simObj.Mass;
+                }
             }
 
             //can this object change others to hot?
@@ -449,6 +495,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             if (agentMeta.cameraHorizon > 180) {
                 agentMeta.cameraHorizon -= 360;
             }
+            if (FlightMode)
+            {   
+                agentMeta.FlightMode = FlightMode;
+                agentMeta.LauncherPosition = this.GetComponent<FlyingDrone>().GetLauncherPosition();
+            }
 
             // OTHER METADATA
             MetadataWrapper metaMessage = new MetadataWrapper();
@@ -534,7 +585,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         public float TimeSinceStart() {
-            return Time.time;
+            return fixupdateCnt * Time.fixedDeltaTime;
         }
 
         //change the radius of the agent's capsule on the char controller component, and the capsule collider component
@@ -2022,6 +2073,86 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         //Flying Drone Agent Controls
+        public Vector3[] SeekTwoPos(Vector3[] shuffledCurrentlyReachable){
+            Vector3[] output = new Vector3[2];
+            System.Random rnd = new System.Random();
+            List<float> y_candidates = new List<float>(new float[] {1.0f, 1.25f, 1.5f});
+            foreach (Vector3 p in shuffledCurrentlyReachable){
+                foreach (Vector3 p2 in shuffledCurrentlyReachable){
+                    if(!p.Equals(p2)){
+                        if(p2.z>=(p.z+1.5f) && Mathf.Abs(p.z-p2.z)<=2.5f){
+                            //if(Mathf.Abs(p.x-p2.x) < 0.5*Mathf.Abs(p.z-p2.z)){
+                            //if(Mathf.Abs(p.x-p2.x) == 0){
+                            if(Mathf.Abs(p.x-p2.x) <= 0.5){
+                                float y = y_candidates.OrderBy(x => rnd.Next()).ToArray()[0];
+                                output[0] = new Vector3(p.x, 1.0f, p.z);
+                                output[1] = new Vector3(p2.x, y, p2.z);
+                                return output;
+                            }
+                        }
+                    }
+                }
+            }
+            return output;
+        }
+
+        public void FlyRandomStart(ServerAction action)
+        {   
+            if(FlightMode)
+            {
+                Vector3 thrust_dt = new Vector3(transform.position.x, 1.0f, transform.position.z);
+                transform.position = thrust_dt;
+                Vector3 thrust_dt_drone = new Vector3(transform.position.x, 1.0f, transform.position.z);
+                Vector3 thrust_dt_launcher = new Vector3(transform.position.x, action.launcherPosition.y, transform.position.z+2.0f);
+                if(action.random_start){
+                    System.Random rnd = new System.Random();
+                    Vector3[] shuffledCurrentlyReachable = getReachablePositions().OrderBy(x => rnd.Next()).ToArray();
+                    Vector3[] Random_output = SeekTwoPos(shuffledCurrentlyReachable);
+
+                    thrust_dt_drone = Random_output[0];
+                    thrust_dt_launcher = Random_output[1];
+                    thrust_dt_launcher = new Vector3(thrust_dt_launcher.x, action.launcherPosition.y, thrust_dt_launcher.z);
+                }
+                transform.position = thrust_dt_drone;
+
+                this.GetComponent<FlyingDrone>().MoveLauncher(thrust_dt_launcher);
+                actionFinished(true);
+            }
+        }   
+
+        public void FlyAssignStart(ServerAction action)
+        {   
+            if(FlightMode)
+            {
+                Vector3 thrust_dt = action.dronePosition;
+                transform.position = thrust_dt;
+
+                Vector3 thrust_dt_launcher = action.launcherPosition;
+                this.GetComponent<FlyingDrone>().MoveLauncher(thrust_dt_launcher);
+
+                actionFinished(true);
+            }
+        }
+
+        //Flying Drone Agent Controls
+        public void FlyTo(ServerAction action)
+        {   
+            if (FlightMode)
+            {
+                transform.rotation = Quaternion.Euler(new Vector3(0.0f, action.rotation.y, 0.0f));
+                m_Camera.transform.localEulerAngles = new Vector3(action.horizon, 0.0f, 0.0f);
+                thrust += new Vector3(action.moveMagnitudeX, action.moveMagnitudeY, action.moveMagnitudeZ);
+                actionFinished(true);
+            }
+        }
+
+        //Flying Drone Agent Controls
+        public void FlyIdle(ServerAction action)
+        {
+            actionFinished(true);
+        }
+
+        //Flying Drone Agent Controls
         public void FlyAhead(ServerAction action) {
             if (FlightMode) {
                 thrust += GetFlyingOrientation(action, 0);
@@ -2084,6 +2215,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             if (FlightMode) {
                 this.GetComponent<FlyingDrone>().Launch(action);
                 actionFinished(true);
+                this.currentTimer = Time.fixedTime;
+                //currentTimer = Time.time;
+                fixupdateCnt = 0f;
             }
         }
 
@@ -4033,65 +4167,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         public void PickupObject(ServerAction action) //use serveraction objectid
         {
-            //specify target to pickup via objectId or coordinates
-            SimObjPhysics target = null;
-
-            //no target object specified, so instead try and use x/y screen coordinates
-            if(action.objectId == null)
-            {
-                float x = action.x;
-                float y = 1.0f - action.y; //reverse the y so that the origin (0, 0) can be passed in as the top left of the screen
-
-                //cast ray from screen coordinate into world space. If it hits an object
-                Ray ray = m_Camera.ViewportPointToRay(new Vector3(x, y, 0.0f));
-                RaycastHit hit;
-
-                //if something was touched, actionFinished(true) always
-                if(Physics.Raycast(ray, out hit, Mathf.Infinity, 1 << 0 |1 << 8| 1<<10, QueryTriggerInteraction.Ignore))
-                {
-                    if(hit.transform.GetComponent<SimObjPhysics>())
-                    {
-                        //wait! First check if the point hit is withing visibility bounds (camera viewport, max distance etc)
-                        //this should basically only happen if the handDistance value is too big
-                        if(!CheckIfTargetPositionIsInViewportRange(hit.point))
-                        {
-                            errorMessage = "target sim object is not within the viewport";
-                            actionFinished(false);
-                            return;
-                        }
-                        
-                        //it is within viewport, so we are good, assign as target
-                        target = hit.transform.GetComponent<SimObjPhysics>();
-                    }
-                }
-            }
-
-            //an objectId was given, so find that target in the scene if it exists
-            else
-            {
-                if (!physicsSceneManager.UniqueIdToSimObjPhysics.ContainsKey(action.objectId)) {
-                    errorMessage = "Object ID appears to be invalid.";
-                    actionFinished(false);
-                    return;
-                }
-                
-                target = physicsSceneManager.UniqueIdToSimObjPhysics[action.objectId];
-            }
-
-            //neither objectId nor coordinates found an object
-            if(target == null)
-            {
-                errorMessage = "No target found";
+            if (!physicsSceneManager.UniqueIdToSimObjPhysics.ContainsKey(action.objectId)) {
+                errorMessage = "Object ID appears to be invalid.";
                 actionFinished(false);
                 return;
             }
             
-            if (target.PrimaryProperty != SimObjPrimaryProperty.CanPickup) {
-                errorMessage = action.objectId + " must have the property CanPickup to be picked up.";
-                actionFinished(false);
-                return;
-            }
-            
+            SimObjPhysics target = physicsSceneManager.UniqueIdToSimObjPhysics[action.objectId];
+
             if (ItemInHand != null) {
                 Debug.Log("Agent hand has something in it already! Can't pick up anything else");
                 actionFinished(false);
@@ -4105,7 +4188,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
 
             if (!action.forceAction && !objectIsCurrentlyVisible(target, maxVisibleDistance)) {
-                errorMessage = action.objectId + " is not visible and can't be picked up.";
+                errorMessage = action.objectId + " is not visible.";
+                actionFinished(false);
+                return;
+            }
+
+            if (target.PrimaryProperty != SimObjPrimaryProperty.CanPickup) {
+                errorMessage = action.objectId + " must have the property CanPickup to be picked up.";
                 actionFinished(false);
                 return;
             }
@@ -4118,6 +4207,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             //move the object to the hand's default position. Make it Kinematic
             //then set parant and ItemInHand
+
             Vector3 savedPos = target.transform.position;
             Quaternion savedRot = target.transform.rotation;
             Transform savedParent = target.transform.parent;
@@ -4382,7 +4472,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                 go.GetComponent<SimObjPhysics>().ApplyForce(dir, action.moveMagnitude);
                 //sopApplyForce(apply, go.GetComponent<SimObjPhysics>());
-
+                this.currentTimer = Time.fixedTime;
+                fixupdateCnt = 0f;
             }
 
         }
@@ -5901,6 +5992,22 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 errorMessage = "Time scale must be >0";
                 actionFinished(false);
             }
+        }
+
+        public void ChangeFixedDeltaTime(ServerAction action) {
+            if (action.fixedDeltaTime > 0) {
+                currentFixedDeltaTime = action.fixedDeltaTime;
+                Time.fixedDeltaTime = currentFixedDeltaTime;
+                actionFinished(true);
+            } else {
+                errorMessage = "FixedDeltaTime must be >0";
+                actionFinished(false);
+            }
+        }
+
+        public void ChangeRandomNoiseSigma(ServerAction action) {
+            randomNoiseSigma = action.randomNoiseSigma;
+            actionFinished(true);
         }
 
         ///////////////////////////////////

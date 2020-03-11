@@ -8,6 +8,7 @@ public class DroneObjectLauncher : MonoBehaviour
 
 	// public Vector3 direction;
 	// public float magnitude;
+	public List<SimObjPhysics> launch_object = new List<SimObjPhysics>();
 
 	// Use this for initialization
 	void Start () 
@@ -21,15 +22,44 @@ public class DroneObjectLauncher : MonoBehaviour
 		
 	}
 
-	public void Launch(float magnitude, Vector3 direction)
-	{
+	public bool HasLaunch(SimObjPhysics obj)
+    {   
+        if (launch_object.Count > 0)
+        {   
+            foreach(SimObjPhysics go in launch_object)
+            {   
+                if (go == obj)
+                {   
+                    return true;
+                }
+            }
+            return false;
+        }
+        else
+        {   
+            return false;
+        }
+    }
 
-		GameObject fireaway = Instantiate(prefabToLaunch, this.transform.position, this.transform.rotation);
-		Rigidbody rb = fireaway.GetComponent<Rigidbody>();
+	public void Launch(float magnitude, Vector3 direction, string objectName, bool randomize)
+        {
 
-		rb.collisionDetectionMode = CollisionDetectionMode.ContinuousSpeculative;
-		rb.isKinematic = false;
-		rb.AddForce(direction * magnitude);
+        InstantiatePrefabTest script = GameObject.Find("PhysicsSceneManager").GetComponent<InstantiatePrefabTest>();
+        prefabToLaunch = script.GetGameObject(objectName, randomize, 0);
+                GameObject fireaway = Instantiate(prefabToLaunch, this.transform.position, this.transform.rotation);
+        GameObject topObject = GameObject.Find("Objects");
+        fireaway.transform.SetParent(topObject.transform);
+        fireaway.transform.position = this.transform.position;
+        fireaway.transform.rotation = this.transform.rotation;
+        Rigidbody rb = fireaway.GetComponent<Rigidbody>();
 
-	}
+        //rb.collisionDetectionMode = CollisionDetectionMode.ContinuousSpeculative;
+        //rb.collisionDetectionMode = CollisionDetectionMode.Continuous;
+        rb.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
+        rb.isKinematic = false;
+                rb.AddForce(direction * magnitude);
+
+        launch_object.Add(fireaway.GetComponent<SimObjPhysics>());
+
+    }
 }

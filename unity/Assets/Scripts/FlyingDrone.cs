@@ -11,6 +11,7 @@ public class FlyingDrone : MonoBehaviour
 	[SerializeField] DroneObjectLauncher DroneObjectLauncher;
 	
 	public bool caught = false;
+	public List<SimObjPhysics> caught_object = new List<SimObjPhysics>();
 
 
 	// Use this for initialization
@@ -25,16 +26,49 @@ public class FlyingDrone : MonoBehaviour
 		
 	}
 
+	public bool HasLaunch(SimObjPhysics obj)
+    {   
+        return DroneObjectLauncher.HasLaunch(obj);
+    }
+
 	public bool isCaught()
 	{
 		return caught;
 	}
 
+	public bool isObjectCaught(SimObjPhysics check_obj)
+    {
+        bool caught_object_bool = false;
+        foreach (SimObjPhysics obj in caught_object)
+        {
+            if(obj.Type == check_obj.Type)
+            {
+                if(obj.name == check_obj.name)
+                {
+                    caught_object_bool = true;
+                    //Debug.Log("catch!!!");
+                    break;
+                }
+            }
+        }
+        return caught_object_bool;
+    }
+
 	public void Launch(ServerAction action)
 	{
 		Vector3 LaunchAngle = new Vector3(action.x, action.y, action.z);
-		DroneObjectLauncher.Launch(action.moveMagnitude, LaunchAngle);
+		DroneObjectLauncher.Launch(action.moveMagnitude, LaunchAngle, action.objectName, action.objectRandom);
 	}
+
+	public void MoveLauncher(Vector3 position)
+    {
+        DroneObjectLauncher.transform.position = position;
+    }
+
+	public Vector3 GetLauncherPosition()
+    {
+        return DroneObjectLauncher.transform.position;
+    }
 
 	public bool DidICatchTheThing(ServerAction action)
 	{

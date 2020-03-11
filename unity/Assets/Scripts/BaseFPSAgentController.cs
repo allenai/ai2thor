@@ -31,6 +31,15 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		protected static float gridSize = 0.25f;
 		protected float moveMagnitude;
 
+		public float currentFixedDeltaTime = 0.02f;
+        public float currentTimeScale = 0.5f;
+        public float fixTimer = 0f;
+        public float fixupdateCnt = 0f;
+        public float randomNoiseSigma = 0f;
+        public float prevFixupdateCnt = 0f;
+        public bool hasUpdate = true;
+		public bool FlightMode = false;
+
         protected float rotateStepDegrees = 90.0f;
 
         protected bool snapToGrid;
