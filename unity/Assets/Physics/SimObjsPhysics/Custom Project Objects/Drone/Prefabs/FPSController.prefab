@@ -2991,12 +2991,23 @@ MonoBehaviour:
   m_WalkSpeed: 0
   m_RunSpeed: 0
   m_GravityMultiplier: 2
+  currentFixedDeltaTime: 0.02
+  currentTimeScale: 0.5
+  fixTimer: 0
+  fixupdateCnt: 0
+  randomNoiseSigma: 0
+  prevFixupdateCnt: 0
   imageSynthesis: {fileID: 0}
+  VisibilityCapsule: {fileID: 0}
+  TallVisCap: {fileID: 0}
+  BotVisCap: {fileID: 0}
   agentManager: {fileID: 0}
   excludeObjectIds: []
   m_Camera: {fileID: 0}
   m_CharacterController: {fileID: 0}
   actionComplete: 0
+  standingLocalCameraPosition: {x: 0, y: 0, z: 0}
+  crouchingLocalCameraPosition: {x: 0, y: 0, z: 0}
   maxVisibleDistance: 1.5
   actionDuration: 3
   ToSetActive:
@@ -3049,9 +3060,9 @@ MonoBehaviour:
   - {fileID: 1546866129445916}
   - {fileID: 1613111777925540}
   - {fileID: 1183734135134282}
-  VisibleSimObjPhysics: []
   IsHandDefault: 1
   FlightMode: 1
+  hasUpdate: 1
   FlightCameras:
   - {fileID: 20385402088215808}
   - {fileID: 20398037145635868}
@@ -3062,11 +3073,13 @@ MonoBehaviour:
   lastLocalCameraPosition: {x: 0, y: 0, z: 0}
   lastLocalCameraRotation: {x: 0, y: 0, z: 0, w: 0}
   cameraOrthSize: 0
-  standingLocalCameraPosition: {x: 0, y: 0, z: 0}
-  crouchingLocalCameraPosition: {x: 0, y: 0, z: 0}
   reachablePositions: []
+  alwaysReturnVisibleRange: 0
   ScreenFaces: []
   MyFaceMesh: {fileID: 0}
+  DebugPointPrefab: {fileID: 0}
+  DebugTargetPointPrefab: {fileID: 0}
+  GridRenderer: {fileID: 0}
   sceneBounds:
     m_Center: {x: Infinity, y: Infinity, z: Infinity}
     m_Extent: {x: -Infinity, y: -Infinity, z: -Infinity}
@@ -3100,6 +3113,7 @@ MonoBehaviour:
   basketTrigger: {fileID: 1108304367776940}
   DroneObjectLauncher: {fileID: 0}
   caught: 0
+  caught_object: []
 --- !u!114 &6336607332118460162
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4521,6 +4535,7 @@ GameObject:
   - component: {fileID: 124233708301012808}
   - component: {fileID: 114538638565559640}
   - component: {fileID: 114164259782192150}
+  - component: {fileID: 2767762083739321265}
   m_Layer: 10
   m_Name: FirstPersonCharacter
   m_TagString: MainCamera
@@ -4623,11 +4638,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6b7e9fcb795b84664bfc1ac40799a68f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  uberReplacementShader: {fileID: 4800000, guid: 171e6e515a12e4a298dce708924e98ba,
-    type: 3}
-  opticalFlowShader: {fileID: 4800000, guid: 2a970eca3c9e84f13b5b616e530a7919, type: 3}
-  depthShader: {fileID: 4800000, guid: cdf4223aff4114212bb5196565b0abce, type: 3}
-  positionShader: {fileID: 0}
   opticalFlowSensitivity: 0
   sentColorCorrespondence: 0
   tex: {fileID: 0}
@@ -4651,6 +4661,23 @@ MonoBehaviour:
   heightDensity: 2
   startDistance: 0
   fogShader: {fileID: 4800000, guid: 70d8568987ac0499f952b54c7c13e265, type: 3}
+--- !u!114 &2767762083739321265
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1837671242731456}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 181cb022eb181f047b9a3b6c23af0e80, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  StopCullingThingsForASecond: 0
+  RenderersToHide: []
+  FPSController: {fileID: 0}
+  TallRenderers: []
+  BotRenderers: []
 --- !u!1 &1841981170033996
 GameObject:
   m_ObjectHideFlags: 0

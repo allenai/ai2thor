@@ -300,20 +300,28 @@ public class AgentManager : MonoBehaviour
 
     private void LateUpdate() {
 		int completeCount = 0;
-		int hasUpdateCount = 0;
-		bool FlightMode = false;
 		foreach (BaseFPSAgentController agent in this.agents) {
 			if (agent.actionComplete) {
 				completeCount++;
 			}
-			//Hao:
-			if (agent.hasUpdate){
-				hasUpdateCount++;
-			}
-			if (agent.FlightMode){
-				FlightMode = true;
-			}
 		}
+
+		int hasUpdateCount = 0;
+		bool FlightMode = false;
+        //check if any active agents are in FlightMode
+        foreach (PhysicsRemoteFPSAgentController physAgent in this.agents)
+        {
+			if (physAgent.FlightMode)
+            {
+				FlightMode = true;
+
+                //get total count of all flight mode agents that have finished updating
+                if (physAgent.hasUpdate)
+                {
+                    hasUpdateCount++;
+                }
+			}
+        }
 
         //check what objects in the scene are currently in motion
         Rigidbody[] rbs = FindObjectsOfType(typeof(Rigidbody)) as Rigidbody[];
@@ -355,11 +363,18 @@ public class AgentManager : MonoBehaviour
         }
 
 		if (completeCount == agents.Count && completeCount > 0 && readyToEmit) {
-			if (!FlightMode){
+			if (!FlightMode)
+            {
 				readyToEmit = false;
 				StartCoroutine (EmitFrame ());
-			}else{
-				if (hasUpdateCount == agents.Count && hasUpdateCount > 0){
+			}
+            
+            //some number of agents is in FlightMode
+            else
+            {
+                //make sure each agent in flightMode has updated at least once
+				if (hasUpdateCount == agents.Count && hasUpdateCount > 0)
+                {
 					readyToEmit = false;
 					StartCoroutine (EmitFrame ());
 				}
@@ -368,7 +383,6 @@ public class AgentManager : MonoBehaviour
 
         //ok now if the scene is at rest, turn back on physics autosimulation automatically
         //note: you can do this earlier by manually using the UnpausePhysicsAutoSim() action found in PhysicsRemoteFPSAgentController
-		//Hao:
         if(physicsSceneManager.isSceneAtRest && !FlightMode &&
         physicsSceneManager.physicsSimulationPaused && AdvancePhysicsStepCount > 0)
         {
@@ -691,14 +705,13 @@ public class AgentManager : MonoBehaviour
 
 		if (Time.timeScale == 0 && !Physics.autoSimulation && physicsSceneManager.physicsSimulationPaused)
         {
-            BaseFPSAgentController agent_tmp = this.agents.ToArray()[0];
-            Time.timeScale = agent_tmp.currentTimeScale;
+            PhysicsRemoteFPSAgentController agent_tmp = this.agents.ToArray()[0].GetComponent<PhysicsRemoteFPSAgentController>();
+            Time.timeScale = agent_tmp.autoResetTimeScale;
             Physics.autoSimulation = true;
             physicsSceneManager.physicsSimulationPaused = false;
-            agent_tmp.fixTimer = Time.fixedTime;
             agent_tmp.hasUpdate = false;
-            //Debug.Log(agent_tmp.fixupdateCnt);
         }
+
         #endif
     }
 	private int parseContentLength(string header) {
@@ -860,14 +873,16 @@ public class ObjectMetadata
     public WorldSpaceBounds objectBounds;
 	public ObjectMetadata() { }
 
-	//Hao:
+    // Drone Related Metadata
     public bool FlightMode;
-    public int numHits;
-    public int numGeneralHits;
-    public int numNongroundHits;
+    public int numSimObjHits;
+    public int numFloorHits;
+    public int numStructureHits;
     public float lastVelocity;
     public Vector3 LauncherPosition;
-	public bool iscaught;
+	public bool isCaught;
+    // end drone metadata
+    
 }
 
 [Serializable]
@@ -969,8 +984,9 @@ public struct MetadataWrapper
 	public Vector3[] actionVector3sReturn;
 	public List<Vector3> visibleRange;
 	public System.Object actionReturn;
-
 	public float currentTime;
+    //time based on increments of fixedUpdate in drone mode
+    public float droneCurrentTime;
 }
 
 
@@ -984,7 +1000,7 @@ public class ServerAction
 	public bool makeAgentsVisible = true;
 	public float timeScale = 1.0f;
 	public float fixedDeltaTime = 0.02f;
-    public float randomNoiseSigma = 0.00f;
+    public float dronePositionRandomNoiseSigma = 0.00f;
 	public string objectType;
 	public int objectVariation;
 	public string receptacleObjectType;
