@@ -1043,18 +1043,12 @@ public class ServerAction
 	public bool randomizeOpen;
 	public int randomSeed;
 	public float moveMagnitude;
-	public float moveMagnitudeX;
-    public float moveMagnitudeY;
-    public float moveMagnitudeZ;
-	public Vector3 dronePosition;
-    public Vector3 launcherPosition;
 	public bool autoSimulation = true;
 	public float visibilityDistance;
 	public bool uniquePickupableObjectTypes; // only allow one of each object type to be visible
 	public float removeProb;
 	public int numPlacementAttempts;
 	public bool randomizeObjectAppearance;
-	public bool random_start;
     public bool objectRandom;
     public string objectName;
 	public bool renderImage = true;

@@ -2114,19 +2114,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         {   
             if(FlightMode)
             {
-                Vector3 thrust_dt = new Vector3(transform.position.x, 1.0f, transform.position.z);
-                transform.position = thrust_dt;
-                Vector3 thrust_dt_drone = new Vector3(transform.position.x, 1.0f, transform.position.z);
-                Vector3 thrust_dt_launcher = new Vector3(transform.position.x, action.launcherPosition.y, transform.position.z+2.0f);
-                if(action.random_start){
-                    System.Random rnd = new System.Random();
-                    Vector3[] shuffledCurrentlyReachable = getReachablePositions().OrderBy(x => rnd.Next()).ToArray();
-                    Vector3[] Random_output = SeekTwoPos(shuffledCurrentlyReachable);
+                System.Random rnd = new System.Random();
+                Vector3[] shuffledCurrentlyReachable = getReachablePositions().OrderBy(x => rnd.Next()).ToArray();
+                Vector3[] Random_output = SeekTwoPos(shuffledCurrentlyReachable);
 
-                    thrust_dt_drone = Random_output[0];
-                    thrust_dt_launcher = Random_output[1];
-                    thrust_dt_launcher = new Vector3(thrust_dt_launcher.x, action.launcherPosition.y, thrust_dt_launcher.z);
-                }
+                var thrust_dt_drone = Random_output[0];
+                var thrust_dt_launcher = Random_output[1];
+                thrust_dt_launcher = new Vector3(thrust_dt_launcher.x, action.y, thrust_dt_launcher.z);
                 transform.position = thrust_dt_drone;
 
                 this.GetComponent<FlyingDrone>().MoveLauncher(thrust_dt_launcher);
@@ -2134,14 +2128,18 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }   
 
+        //move drone and launcher to some start position
         public void FlyAssignStart(ServerAction action)
         {   
             if(FlightMode)
             {
-                Vector3 thrust_dt = action.dronePosition;
+                //drone uses action.position
+                Vector3 thrust_dt = action.position;
                 transform.position = thrust_dt;
 
-                Vector3 thrust_dt_launcher = action.launcherPosition;
+                //use action.x,y,z for launcher
+                Vector3 launcherPosition = new Vector3(action.x, action.y, action.z);
+                Vector3 thrust_dt_launcher = launcherPosition;
                 this.GetComponent<FlyingDrone>().MoveLauncher(thrust_dt_launcher);
 
                 actionFinished(true);
@@ -2155,7 +2153,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             {
                 transform.rotation = Quaternion.Euler(new Vector3(0.0f, action.rotation.y, 0.0f));
                 m_Camera.transform.localEulerAngles = new Vector3(action.horizon, 0.0f, 0.0f);
-                thrust += new Vector3(action.moveMagnitudeX, action.moveMagnitudeY, action.moveMagnitudeZ);
+                thrust += new Vector3(action.x, action.y, action.z);
                 actionFinished(true);
             }
         }

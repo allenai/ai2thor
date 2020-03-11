@@ -30,7 +30,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 		protected static float gridSize = 0.25f;
 		protected float moveMagnitude;
-		public float currentFixedDeltaTime = 0.02f;
         protected float rotateStepDegrees = 90.0f;
         protected bool snapToGrid;
 		protected bool continuousMode;
