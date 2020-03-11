@@ -1032,6 +1032,8 @@ public class ServerAction
 
     // MCS Additions
     public bool logs = false;
+    public Vector3 objectDirection;
+    public Vector3 receptacleObjectDirection;
     public MachineCommonSenseConfigScene sceneConfig;
 
     public SimObjType ReceptableSimObjType()

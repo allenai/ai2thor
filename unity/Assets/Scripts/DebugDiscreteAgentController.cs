@@ -14,7 +14,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
         public bool forceAction = false;
         public float gridSize = 0.1f;
         public float visibilityDistance = 0.4f;
+        public Vector3 moveOrPickupObjectDirection;
         public string moveOrPickupObjectId = "";
+        public Vector3 receptacleObjectDirection;
         public string receptacleObjectId = "";
         public float rotationIncrement = 45.0f;
         public int horizonIncrement = 30;
@@ -248,6 +250,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         {
                             action.action = "OpenObject";
                             action.moveMagnitude = 1.0f;
+                            action.objectDirection = this.receptacleObjectDirection;
                             action.objectId = this.receptacleObjectId;
                             PhysicsController.ProcessControlCommand(action);
                             /*
@@ -263,6 +266,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         {
                             action.action = "CloseObject";
                             action.moveMagnitude = 1.0f;
+                            action.objectDirection = this.receptacleObjectDirection;
                             action.objectId = this.receptacleObjectId;
                             PhysicsController.ProcessControlCommand(action);
                         }
@@ -270,6 +274,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         if(Input.GetKeyDown(KeyCode.P))
                         {
                             action.action = "PickupObject";
+                            action.objectDirection = this.moveOrPickupObjectDirection;
                             action.objectId = this.moveOrPickupObjectId;
                             PhysicsController.ProcessControlCommand(action);
                         }
@@ -277,7 +282,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         if(Input.GetKeyDown(KeyCode.Z))
                         {
                             action.action = "PutObject";
+                            action.objectDirection = this.moveOrPickupObjectDirection;
                             action.objectId = this.moveOrPickupObjectId;
+                            action.receptacleObjectDirection = this.receptacleObjectDirection;
                             action.receptacleObjectId = this.receptacleObjectId;
                             PhysicsController.ProcessControlCommand(action);
                         }
@@ -285,6 +292,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         if(Input.GetKeyDown(KeyCode.X))
                         {
                             action.action = "DropHandObject";
+                            action.objectDirection = this.moveOrPickupObjectDirection;
                             action.objectId = this.moveOrPickupObjectId;
                             PhysicsController.ProcessControlCommand(action);
                         }
@@ -293,6 +301,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         {
                             action.action = this.pushPullForce > 0 ? "PushObject" : "PullObject";
                             action.moveMagnitude = System.Math.Abs(this.pushPullForce);
+                            action.objectDirection = this.moveOrPickupObjectDirection;
                             action.objectId = this.moveOrPickupObjectId;
                             PhysicsController.ProcessControlCommand(action);
                         }

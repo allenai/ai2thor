@@ -21,7 +21,57 @@ public class MachineCommonSenseController : PhysicsRemoteFPSAgentController {
     protected float minRotation = -360f;
     protected float maxRotation = 360f;
 
+    public override void CloseObject(ServerAction action) {
+        bool continueAction = TryConvertingEachObjectDirectionToId(action);
+
+        if (!continueAction) {
+            return;
+        }
+
+        base.CloseObject(action);
+    }
+
+    private string ConvertObjectDirectionToId(Vector3 direction, string previousObjectId) {
+        // If the objectId was set or the direction vector was not set, return the previous objectId.
+        if ((previousObjectId != null && !previousObjectId.Equals("")) ||
+            (direction.x == 0 && direction.y == 0 && direction.z == 0)) {
+            return previousObjectId;
+        }
+
+        int layerMask = (1 << 8); // Only look at objects on the SimObjVisible layer.
+        List<RaycastHit> hits = Physics.RaycastAll(this.transform.position, direction,
+            MachineCommonSenseController.MAX_DISTANCE_ACCROSS_ROOM, layerMask).ToList();
+        if (hits.Count == 0) {
+            this.errorMessage = "Cannot find any object on the directional vector.";
+            // TODO lastActionStatus
+            this.actionFinished(false);
+            return previousObjectId;
+        }
+        else {
+            hits.Sort(delegate (RaycastHit one, RaycastHit two) {
+                return one.distance.CompareTo(two.distance);
+            });
+            SimObjPhysics simObjPhysics = hits.First().transform.gameObject
+                .GetComponentInParent<SimObjPhysics>();
+            if (simObjPhysics == null) {
+                this.errorMessage = "The closest object on the directional vector is not interactable.";
+                // TODO lastActionStatus
+                this.actionFinished(false);
+                return previousObjectId;
+            }
+            else {
+                return simObjPhysics.UniqueID;
+            }
+        }
+    }
+
     public override bool DropHandObject(ServerAction action) {
+        bool continueAction = TryConvertingEachObjectDirectionToId(action);
+
+        if (!continueAction) {
+            return false;
+        }
+
         SimObjPhysics target = physicsSceneManager.UniqueIdToSimObjPhysics[action.objectId];
 
         // Reactivate the object BEFORE trying to drop it so that we can see if it's obstructed.
@@ -84,7 +134,23 @@ public class MachineCommonSenseController : PhysicsRemoteFPSAgentController {
         return objectMetadata;
     }
 
+    public override void OpenObject(ServerAction action) {
+        bool continueAction = TryConvertingEachObjectDirectionToId(action);
+
+        if (!continueAction) {
+            return;
+        }
+
+        base.OpenObject(action);
+    }
+
     public override void PickupObject(ServerAction action) {
+        bool continueAction = TryConvertingEachObjectDirectionToId(action);
+
+        if (!continueAction) {
+            return;
+        }
+
         SimObjPhysics target = physicsSceneManager.UniqueIdToSimObjPhysics[action.objectId];
 
         // Update our hand's position so that the object we want to hold doesn't clip our body.
@@ -110,7 +176,33 @@ public class MachineCommonSenseController : PhysicsRemoteFPSAgentController {
         this.step++;
     }
 
+    public override void PullObject(ServerAction action) {
+        bool continueAction = TryConvertingEachObjectDirectionToId(action);
+
+        if (!continueAction) {
+            return;
+        }
+
+        base.PullObject(action);
+    }
+
+    public override void PushObject(ServerAction action) {
+        bool continueAction = TryConvertingEachObjectDirectionToId(action);
+
+        if (!continueAction) {
+            return;
+        }
+
+        base.PushObject(action);
+    }
+
     public override void PutObject(ServerAction action) {
+        bool continueAction = TryConvertingEachObjectDirectionToId(action);
+
+        if (!continueAction) {
+            return;
+        }
+
         SimObjPhysics target = physicsSceneManager.UniqueIdToSimObjPhysics[action.objectId];
 
         // Reactivate the object BEFORE trying to place it so that we can see if it's obstructed.
@@ -180,6 +272,12 @@ public class MachineCommonSenseController : PhysicsRemoteFPSAgentController {
     }
 
     public override void ThrowObject(ServerAction action) {
+        bool continueAction = TryConvertingEachObjectDirectionToId(action);
+
+        if (!continueAction) {
+            return;
+        }
+
         SimObjPhysics target = physicsSceneManager.UniqueIdToSimObjPhysics[action.objectId];
 
         // Reactivate the object BEFORE trying to throw it so that we can see if it's obstructed.
@@ -195,6 +293,27 @@ public class MachineCommonSenseController : PhysicsRemoteFPSAgentController {
         if (target.transform.parent == this.AgentHand.transform) {
             target.gameObject.SetActive(false);
         }
+    }
+
+    public override void ToggleObject(ServerAction action, bool toggleOn, bool forceAction) {
+        bool continueAction = TryConvertingEachObjectDirectionToId(action);
+
+        if (!continueAction) {
+            return;
+        }
+
+        base.ToggleObject(action, toggleOn, forceAction);
+    }
+
+    private bool TryConvertingEachObjectDirectionToId(ServerAction action) {
+        action.objectId = this.ConvertObjectDirectionToId(action.objectDirection,
+            action.objectId);
+        if (!this.actionComplete) {
+            action.receptacleObjectId = this.ConvertObjectDirectionToId(action.receptacleObjectDirection,
+                action.receptacleObjectId);
+        }
+        // If we haven't yet called actionFinished then actionComplete will be false; continue the action.
+        return !this.actionComplete;
     }
 
     private void UpdateHandPositionToHoldObject(SimObjPhysics target) {

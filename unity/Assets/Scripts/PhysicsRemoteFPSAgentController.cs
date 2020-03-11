@@ -2085,7 +2085,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
 
-        public void PushObject(ServerAction action) {
+        public virtual void PushObject(ServerAction action) {
             if (ItemInHand != null && action.objectId == ItemInHand.GetComponent<SimObjPhysics>().uniqueID) {
                 errorMessage = "Please use Throw for an item in the Agent's Hand";
                 Debug.Log(errorMessage);
@@ -2102,7 +2102,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             ApplyForceObject(action);
         }
 
-        public void PullObject(ServerAction action) {
+        public virtual void PullObject(ServerAction action) {
             if (ItemInHand != null && action.objectId == ItemInHand.GetComponent<SimObjPhysics>().uniqueID) {
                 errorMessage = "Please use Throw for an item in the Agent's Hand";
                 Debug.Log(errorMessage);
@@ -4525,7 +4525,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             StartCoroutine(InteractAndWait(coos));
         }
 
-        public void CloseObject(ServerAction action) {
+        public virtual void CloseObject(ServerAction action) {
             //pass name of object in from action.objectID
             //check if that object is in the viewport
             //also check to make sure that target object is interactable
@@ -4945,7 +4945,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
 
-        public void ToggleObject(ServerAction action, bool toggleOn, bool forceAction)
+        public virtual void ToggleObject(ServerAction action, bool toggleOn, bool forceAction)
         {
             if (action.objectId == null)
             {
@@ -5063,7 +5063,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(success);
         }
 
-        public void OpenObject(ServerAction action) {
+        public virtual void OpenObject(ServerAction action) {
             //pass name of object in from action.objectID
             //check if that object is in the viewport
             //also check to make sure that target object is interactable
