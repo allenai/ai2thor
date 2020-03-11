@@ -696,7 +696,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 				errorMessage += e.ToString();
 				actionFinished(false);
-				this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.FAILED);
 			}
 
 #if UNITY_EDITOR
