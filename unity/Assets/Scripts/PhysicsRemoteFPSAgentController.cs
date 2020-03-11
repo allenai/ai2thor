@@ -246,7 +246,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         //generates object metatada based on sim object's properties
-        private ObjectMetadata ObjectMetadataFromSimObjPhysics(SimObjPhysics simObj, bool isVisible) {
+        protected virtual ObjectMetadata ObjectMetadataFromSimObjPhysics(SimObjPhysics simObj, bool isVisible) {
             ObjectMetadata objMeta = new ObjectMetadata();
             GameObject o = simObj.gameObject;
             objMeta.name = o.name;

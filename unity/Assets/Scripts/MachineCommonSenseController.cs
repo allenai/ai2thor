@@ -1,11 +1,19 @@
 ﻿using System.Collections;
 using UnityEngine;
 using UnityStandardAssets.Characters.FirstPerson;
+using System.Linq;
+using System.Collections.Generic;
 
 public class MachineCommonSenseController : PhysicsRemoteFPSAgentController {
     public static float DISTANCE_HELD_OBJECT_Y = 0.15f;
     public static float DISTANCE_HELD_OBJECT_Z = 0.15f;
+
+    // The room is 5x5 so the distance from corner to corner is around 7.08.
+    public static float MAX_DISTANCE_ACCROSS_ROOM = 7.08f;
+
+    // The number of times to run Physics.Simulate after each action from the player.
     public static int PHYSICS_SIMULATION_STEPS = 20;
+
     public int step = 0;
 
     protected int minHorizon = -90;
@@ -33,6 +41,24 @@ public class MachineCommonSenseController : PhysicsRemoteFPSAgentController {
         return status;
     }
 
+    public override ObjectMetadata[] generateObjectMetadata() {
+        ObjectMetadata[] objectMetadata = base.generateObjectMetadata();
+        List<string> visibleObjectIds = this.GetAllVisibleSimObjPhysics(this.m_Camera,
+            MachineCommonSenseController.MAX_DISTANCE_ACCROSS_ROOM).Select((obj) => obj.UniqueID).ToList();
+        return objectMetadata.ToList().Select((metadata) => {
+            // The "visible" property in the ObjectMetadata really describes if the object is within reach.
+            // We also want to know if we can currently see the object in our camera view.
+            metadata.visibleInCamera = visibleObjectIds.Contains(metadata.objectId);
+            return metadata;
+        }).ToArray();
+    }
+
+    public override MetadataWrapper generateMetadataWrapper() {
+        MetadataWrapper metadataWrapper = base.generateMetadataWrapper();
+        metadataWrapper.lastActionStatus = this.lastActionStatus;
+        return metadataWrapper;
+    }
+
     public override void Initialize(ServerAction action) {
         base.Initialize(action);
 
@@ -42,6 +68,20 @@ public class MachineCommonSenseController : PhysicsRemoteFPSAgentController {
         main.enableVerboseLog = action.logs;
         // Reset the MCS scene configuration data and player.
         main.ChangeCurrentScene(action.sceneConfig);
+    }
+
+    protected override ObjectMetadata ObjectMetadataFromSimObjPhysics(SimObjPhysics simObj, bool isVisible) {
+        ObjectMetadata objectMetadata = base.ObjectMetadataFromSimObjPhysics(simObj, isVisible);
+
+        // Each SimObjPhysics object should have a MeshFilter component.
+        MeshFilter meshFilter = simObj.gameObject.GetComponentInChildren<MeshFilter>();
+        objectMetadata.points = meshFilter.mesh.vertices;
+
+        // From https://docs.unity3d.com/Manual/DirectionDistanceFromOneObjectToAnother.html
+        objectMetadata.heading = objectMetadata.position - this.transform.position;
+        objectMetadata.direction = (objectMetadata.heading / objectMetadata.heading.magnitude);
+
+        return objectMetadata;
     }
 
     public override void PickupObject(ServerAction action) {
@@ -128,12 +168,6 @@ public class MachineCommonSenseController : PhysicsRemoteFPSAgentController {
         action.rotation.y = updatedRotationValue;
         action.horizon = updatedHorizonValue;
         base.RotateLook(action);
-    }
-
-    public override MetadataWrapper generateMetadataWrapper() {
-        MetadataWrapper metadataWrapper = base.generateMetadataWrapper();
-        metadataWrapper.lastActionStatus = this.lastActionStatus;
-        return metadataWrapper;
     }
 
     public void SimulatePhysics() {

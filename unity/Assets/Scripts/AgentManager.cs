@@ -828,6 +828,13 @@ public class ObjectMetadata
     public bool isMoving;//true if this game object currently has a non-zero velocity
 
     public WorldSpaceBounds objectBounds;
+
+    // MCS Additions
+    public Vector3 direction;
+    public Vector3 heading;
+    public Vector3[] points;
+    public bool visibleInCamera;
+
 	public ObjectMetadata() { }
 }
 
@@ -1023,7 +1030,7 @@ public class ServerAction
 
     public bool useAgentTransform = false;
 
-    // Machine Common Sense Additions
+    // MCS Additions
     public bool logs = false;
     public MachineCommonSenseConfigScene sceneConfig;
 

@@ -88,9 +88,10 @@ Alternatively, if you want to build the Unity project via the command line, run 
 ## Changelog of AI2-THOR Classes
 
 - `Scripts/AgentManager`:
-  - Added the `logs` and `sceneConfig` properties to the `ServerAction` class
+  - Added properties to `ObjectMetadata`: `points`, `visibleInCamera`
+  - Added properties to `ServerAction`: `logs`, `sceneConfig`
   - Added `virtual` to functions: `Update`
-  - Changed the `physicsSceneManager` variable from `private` to `protected` so we can access it from our subclasses
+  - Changed variables or functions from `private` to `protected`: `physicsSceneManager`
 - `Scripts/BaseFPSAgentController`:
   - Added `virtual` to functions: `Initialize`, `ProcessControlCommand`
   - Removed the hard-coded camera properties in the `SetAgentMode` function
@@ -104,7 +105,7 @@ Alternatively, if you want to build the Unity project via the command line, run 
 - `Scripts/InstantiatePrefabTest`:
   - Fixed a bug in the `CheckSpawnArea` function in which the object's bounding box was not adjusted by the object's scale.
 - `Scripts/PhysicsRemoteFPSAgentController`:
-  - Changed the `physicsSceneManager` variable from `private` to `protected` so we can access it from our subclasses
+  - Changed variables or functions from `private` to `protected`: `physicsSceneManager`, `ObjectMetadataFromSimObjPhysics`
   - Added `virtual` to functions: `DropHandObject`, `PickupObject`, `PutObject`, `ResetAgentHandPosition`, `ThrowObject`
   - Commented out a block in the `PickupObject` function that checked for collisions between the held object and other objects in the scene because it caused odd behavior if you were looking at the floor.  The `Look` functions don't make this check either, and we may decide not to move the held object during `Look` actions anyway.
   - In the `PlaceHeldObject` function: ignores `PlacementRestrictions` if `ObjType` is `IgnoreType`; sets the held object's parent to null so the parent's properties (like scale) don't affect the placement validation; sets the held object's `isKinematic` property to `false` if placement is successful.
