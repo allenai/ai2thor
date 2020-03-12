@@ -316,7 +316,7 @@ public class AgentManager : MonoBehaviour
 				FlightMode = true;
 
                 //get total count of all flight mode agents that have finished updating
-                if (physAgent.hasUpdate)
+                if (physAgent.hasFixedUpdateHappened)
                 {
                     hasUpdateCount++;
                 }
@@ -709,7 +709,7 @@ public class AgentManager : MonoBehaviour
             Time.timeScale = agent_tmp.autoResetTimeScale;
             Physics.autoSimulation = true;
             physicsSceneManager.physicsSimulationPaused = false;
-            agent_tmp.hasUpdate = false;
+            agent_tmp.hasFixedUpdateHappened = false;
         }
 
         #endif

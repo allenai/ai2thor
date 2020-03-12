@@ -14,6 +14,8 @@ public class FirstPersonCharacterCull : MonoBehaviour
     public MeshRenderer [] TallRenderers;
     //references to renderers for when the Agent is in Bot mode
     public MeshRenderer [] BotRenderers;
+    //references to renderers for when agent is in Drone mode
+    public MeshRenderer [] DroneRenderers;
 
     public void SwitchRenderersToHide(string mode)
     {
@@ -22,6 +24,9 @@ public class FirstPersonCharacterCull : MonoBehaviour
 
         else if(mode == "bot")
         RenderersToHide = BotRenderers;
+
+        else if(mode == "drone")
+        RenderersToHide = DroneRenderers;
     }
 
     void OnPreRender() //Just before this camera starts to render...

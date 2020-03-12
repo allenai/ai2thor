@@ -42,16 +42,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         //DRONE parameters
         [SerializeField] public bool FlightMode = false;
-        public bool hasUpdate = true;
+        public bool hasFixedUpdateHappened = true;//track if the fixed physics update has happened
         protected Vector3 thrust;
         public float dronePositionRandomNoiseSigma = 0f;
         //count of fixed updates for use in droneCurrentTime
         public float fixupdateCnt = 0f;
         public float autoResetTimeScale = 1.0f;
-
-
-
-        [SerializeField] Camera[] FlightCameras;
 
         // Extra stuff
         private PhysicsSceneManager _physicsSceneManager = null;
@@ -223,7 +219,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             //support for fully continuous drone movement and emitFrame metadata generation at the same time.
             if (FlightMode)
             {   
-                if (hasUpdate)
+                if (hasFixedUpdateHappened)
                 {   
                     Time.timeScale = 0;
                     Physics.autoSimulation = false;
@@ -232,7 +228,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 else
                 {
                     fixupdateCnt++;
-                    hasUpdate = true;
+                    hasFixedUpdateHappened = true;
                 }
 
                 if (thrust.magnitude > 0.0001 && Time.timeScale != 0)
@@ -2132,6 +2128,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 this.GetComponent<FlyingDrone>().MoveLauncher(thrust_dt_launcher);
                 actionFinished(true);
             }
+
+            else
+            {
+                errorMessage = "Agent not in drone mode";
+                actionFinished(false);
+            }
         }   
 
         //move drone and launcher to some start position
@@ -2150,6 +2152,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                 actionFinished(true);
             }
+
+            else
+            {
+                errorMessage = "Agent not in drone mode";
+                actionFinished(false);
+            }
         }
 
         //Flying Drone Agent Controls
@@ -2162,6 +2170,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 thrust += new Vector3(action.x, action.y, action.z);
                 actionFinished(true);
             }
+
+            else
+            {
+                errorMessage = "Agent not in drone mode";
+                actionFinished(false);
+            }
         }
 
         //Flying Drone Agent Controls
@@ -2169,6 +2183,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             if (FlightMode) {
                 thrust += GetFlyingOrientation(action, 0);
                 actionFinished(true);
+            }
+
+            else
+            {
+                errorMessage = "Agent not in drone mode";
+                actionFinished(false);
             }
         }
 
@@ -2179,6 +2199,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 actionFinished(true);
 
             }
+
+            else
+            {
+                errorMessage = "Agent not in drone mode";
+                actionFinished(false);
+            }
         }
 
         //Flying Drone Agent Controls
@@ -2187,6 +2213,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 thrust += GetFlyingOrientation(action, 270);
                 actionFinished(true);
 
+            }
+
+            else
+            {
+                errorMessage = "Agent not in drone mode";
+                actionFinished(false);
             }
         }
 
@@ -2197,6 +2229,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 actionFinished(true);
 
             }
+
+            else
+            {
+                errorMessage = "Agent not in drone mode";
+                actionFinished(false);
+            }
         }
 
         //Flying Drone Agent Controls
@@ -2206,6 +2244,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 //transform.position = targetPosition;
                 thrust += new Vector3(0, action.moveMagnitude, 0);
                 actionFinished(true);
+            }
+
+            else
+            {
+                errorMessage = "Agent not in drone mode";
+                actionFinished(false);
             }
 
         }
@@ -2219,6 +2263,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 actionFinished(true);
             }
 
+            else
+            {
+                errorMessage = "Agent not in drone mode";
+                actionFinished(false);
+            }
         }
 
         //for use with the Drone to be able to launch an object into the air
@@ -2229,13 +2278,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 actionFinished(true);
                 fixupdateCnt = 0f;
             }
-        }
 
-        // public void CheckDroneCaught(ServerAction action) {
-        //     if (FlightMode) {
-        //         actionFinished(true, this.GetComponent<FlyingDrone>().DidICatchTheThing(action));
-        //     }
-        // }
+            else
+            {
+                errorMessage = "Agent not in drone mode";
+                actionFinished(false);
+            }
+        }
 
         //spawn a launcher object at action.position coordinates
         public void SpawnDroneLauncher(ServerAction action)
@@ -2244,6 +2293,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             {
                 this.GetComponent<FlyingDrone>().SpawnLauncher(action.position);
                 actionFinished(true);
+            }
+
+            else
+            {
+                errorMessage = "Agent not in drone mode";
+                actionFinished(false);
             }
         }
 
@@ -5415,21 +5470,14 @@ public void PickupObject(ServerAction action) //use serveraction objectid
             }
         }
         public SimObjPhysics[] VisibleSimObjs(bool forceVisible) {
-            if (forceVisible) {
+            if (forceVisible) 
+            {
                 return GameObject.FindObjectsOfType(typeof(SimObjPhysics)) as SimObjPhysics[];
-            } else {
-                if (!FlightMode)
-                    return GetAllVisibleSimObjPhysics(m_Camera, maxVisibleDistance);
+            } 
 
-                else {
-                    List<SimObjPhysics> ObjVisToAllCameras = new List<SimObjPhysics>();
-                    //ObjVisToAllCameras.AddRange(GetAllVisibleSimObjPhysics(m_Camera, maxVisibleDistance));
-                    foreach (Camera c in FlightCameras) {
-                        ObjVisToAllCameras.AddRange(GetAllVisibleSimObjPhysics(c, maxVisibleDistance));
-                    }
-
-                    return ObjVisToAllCameras.ToArray();
-                }
+            else 
+            {
+                return GetAllVisibleSimObjPhysics(m_Camera, maxVisibleDistance);
             }
         }
 
