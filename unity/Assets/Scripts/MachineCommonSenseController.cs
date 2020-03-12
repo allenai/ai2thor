@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using UnityEngine;
 using UnityStandardAssets.Characters.FirstPerson;
 using System.Linq;
@@ -72,11 +73,15 @@ public class MachineCommonSenseController : PhysicsRemoteFPSAgentController {
             return false;
         }
 
-        SimObjPhysics target = physicsSceneManager.UniqueIdToSimObjPhysics[action.objectId];
+        SimObjPhysics target = null;
+
+        if (physicsSceneManager.UniqueIdToSimObjPhysics.ContainsKey(action.objectId)) {
+            target = physicsSceneManager.UniqueIdToSimObjPhysics[action.objectId];
+        }
 
         // Reactivate the object BEFORE trying to drop it so that we can see if it's obstructed.
         // TODO MCS-77 This object will always be active, so we won't need to reactivate this object.
-        if (target && target.transform.parent == this.AgentHand.transform) {
+        if (target != null && target.transform.parent == this.AgentHand.transform) {
             target.gameObject.SetActive(true);
         }
 
@@ -84,7 +89,7 @@ public class MachineCommonSenseController : PhysicsRemoteFPSAgentController {
 
         // Deactivate the object again if the drop failed.
         // TODO MCS-77 We should never need to deactivate this object again (see PickupObject).
-        if (target && target.transform.parent == this.AgentHand.transform) {
+        if (target != null && target.transform.parent == this.AgentHand.transform) {
             target.gameObject.SetActive(false);
         }
 
@@ -151,16 +156,20 @@ public class MachineCommonSenseController : PhysicsRemoteFPSAgentController {
             return;
         }
 
-        SimObjPhysics target = physicsSceneManager.UniqueIdToSimObjPhysics[action.objectId];
+        SimObjPhysics target = null;
 
-        // Update our hand's position so that the object we want to hold doesn't clip our body.
-        // TODO MCS-77 We may want to change how this function is used.
-        this.UpdateHandPositionToHoldObject(target);
+        if (physicsSceneManager.UniqueIdToSimObjPhysics.ContainsKey(action.objectId)) {
+            target = physicsSceneManager.UniqueIdToSimObjPhysics[action.objectId];
+
+            // Update our hand's position so that the object we want to hold doesn't clip our body.
+            // TODO MCS-77 We may want to change how this function is used.
+            this.UpdateHandPositionToHoldObject(target);
+        }
 
         base.PickupObject(action);
 
         // TODO MCS-77 Find a way to handle held object collisions so we don't have to deactivate this object.
-        if (target.transform.parent == this.AgentHand.transform) {
+        if (target != null && target.transform.parent == this.AgentHand.transform) {
             target.gameObject.SetActive(false);
         }
     }

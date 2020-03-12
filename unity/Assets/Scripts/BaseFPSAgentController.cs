@@ -132,9 +132,19 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
         public enum ActionStatus
         {
-            SUCCESSFUL,
-            OBSTRUCTED,
-            FAILED // generic error code for unexpected failures
+			IS_CLOSED_COMPLETELY,
+			IS_OPENED_COMPLETELY,
+			NOT_HELD,
+			HAND_IS_FULL,
+			NOT_OBJECT,
+			NOT_RECEPTACLE,
+			NOT_PICKUPABLE,
+			OBSTRUCTED,
+			OUT_OF_REACH,
+			SUCCESSFUL,
+			SUCCESSFUL_WITH_INVALID_PARAMETERS,
+            WRONG_POSE,
+			FAILED // generic error code for unexpected failures
         }
 
 		public Quaternion TargetRotation
@@ -231,7 +241,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 this.jsInterface.SendAction(currentServerAction);
             }
 
-            lastActionSuccess = success;
+			lastActionSuccess = success;
 			this.actionComplete = true;
 			this.actionReturn = actionReturn;
 			actionCounter = 0;
