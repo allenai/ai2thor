@@ -215,6 +215,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         void FixedUpdate(){
+
+            //when in drone mode, automatically pause time and physics simulation here
+            //time and physics will continue once emitFrame is called
+            //Note: this is to keep drone and object movement in sync, as pausing just object physics would
+            //still allow the drone's character controller Move() to function in "real time" and we dont have
+            //support for fully continuous drone movement and emitFrame metadata generation at the same time.
             if (FlightMode)
             {   
                 if (hasUpdate)
