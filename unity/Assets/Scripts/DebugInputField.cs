@@ -484,6 +484,15 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         AManager.Initialize(action);
                         break;
                     }
+
+                case "tpcam":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "AddThirdPartyCamera";
+                        AManager.AddThirdPartyCamera(action);
+                        break;
+                    }
+
                 case "to":
                     {
                         ServerAction action = new ServerAction();
