@@ -11,6 +11,7 @@ public class MachineCommonSenseMain : MonoBehaviour {
     public string defaultSceneFile = "";
     public bool enableVerboseLog = false;
     public string ai2thorObjectRegistryFile = "ai2thor_object_registry";
+    public string materialRegistryFile = "material_registry";
     public string mcsObjectRegistryFile = "mcs_object_registry";
     public string primitiveObjectRegistryFile = "primitive_object_registry";
 
@@ -18,6 +19,7 @@ public class MachineCommonSenseMain : MonoBehaviour {
     private int lastStep = -1;
     private Dictionary<String, MachineCommonSenseConfigObjectDefinition> objectDictionary =
         new Dictionary<string, MachineCommonSenseConfigObjectDefinition>();
+    private List<String> materials;
 
     // AI2-THOR Objects and Scripts
     private MachineCommonSenseController agentController;
@@ -44,6 +46,9 @@ public class MachineCommonSenseMain : MonoBehaviour {
         ai2thorObjects.Concat(mcsObjects).Concat(primitiveObjects).ToList().ForEach((objectDefinition) => {
             this.objectDictionary.Add(objectDefinition.id.ToUpper(), objectDefinition);
         });
+
+        // Save the materials (strings) that are accepted in the scene configuration files.
+        this.materials = LoadMaterialRegistryFromFile(this.materialRegistryFile).materials;
 
         // Load the default MCS scene set in the Unity Editor.
         if (!this.defaultSceneFile.Equals("")) {
@@ -237,15 +242,22 @@ public class MachineCommonSenseMain : MonoBehaviour {
     private Material AssignMaterial(GameObject gameObject, String materialFile) {
         Renderer renderer = gameObject.GetComponent<Renderer>();
         if (materialFile != null && !materialFile.Equals("")) {
-            // TODO Load materials from a folder other than MCS/Materials/AI2-THOR
-            Material material = Resources.Load<Material>("MCS/Materials/AI2-THOR/" + materialFile);
-            LogVerbose("LOAD OF MATERIAL FILE Assets/Resources/MCS/Materials/AI2-THOR/" + materialFile +
-                (material == null ?  " IS NULL" : " IS DONE"));
-            if (material != null) {
-                renderer.material = material;
-                LogVerbose("ASSIGN MATERIAL " + materialFile + " TO GAME OBJECT " + gameObject.name);
+            // Backwards compatibility
+            String fileToLoad = (materialFile.StartsWith("AI2-THOR/Materials/") ? "" : "AI2-THOR/Materials/") +
+                materialFile; 
+            if (this.materials.Contains(fileToLoad)) {
+                Material material = Resources.Load<Material>("MCS/" + fileToLoad);
+                LogVerbose("LOAD OF MATERIAL FILE Assets/Resources/MCS/" + fileToLoad +
+                    (material == null ?  " IS NULL" : " IS DONE"));
+                if (material != null) {
+                    renderer.material = material;
+                    LogVerbose("ASSIGN MATERIAL " + fileToLoad + " TO GAME OBJECT " + gameObject.name);
+                }
+                return material;
             }
-            return material;
+            else {
+                LogVerbose("MATERIAL " + fileToLoad + " NOT IN MATERIAL REGISTRY");
+            }
         }
         return null;
     }
@@ -551,10 +563,10 @@ public class MachineCommonSenseMain : MonoBehaviour {
         MachineCommonSenseConfigGameObject objectConfig,
         MachineCommonSenseConfigObjectDefinition objectDefinition
     ) {
-        GameObject gameObject = Instantiate(Resources.Load("MCS/Objects/" + objectDefinition.resourceFile,
+        GameObject gameObject = Instantiate(Resources.Load("MCS/" + objectDefinition.resourceFile,
             typeof(GameObject))) as GameObject;
 
-        LogVerbose("LOAD CUSTOM GAME OBJECT " + objectDefinition.id + " FROM FILE Assets/Resources/MCS/Objects/" +
+        LogVerbose("LOAD CUSTOM GAME OBJECT " + objectDefinition.id + " FROM FILE Assets/Resources/MCS/" +
             objectDefinition.resourceFile + (gameObject == null ? " IS NULL" : " IS DONE"));
 
         gameObject = AssignProperties(gameObject, objectConfig, objectDefinition);
@@ -570,9 +582,9 @@ public class MachineCommonSenseMain : MonoBehaviour {
             }
             objectDefinition.animations.ForEach((animationDefinition) => {
                 if (animationDefinition.animationFile != null && !animationDefinition.animationFile.Equals("")) {
-                    AnimationClip clip = Resources.Load<AnimationClip>("MCS/Animations/" +
+                    AnimationClip clip = Resources.Load<AnimationClip>("MCS/" +
                         animationDefinition.animationFile);
-                    LogVerbose("LOAD OF ANIMATION CLIP FILE Assets/Resources/MCS/Animations/" +
+                    LogVerbose("LOAD OF ANIMATION CLIP FILE Assets/Resources/MCS/" +
                         animationDefinition.animationFile + (clip == null ? " IS NULL" : " IS DONE"));
                     animation.AddClip(clip, animationDefinition.id);
                     LogVerbose("ASSIGN ANIMATION CLIP " + animationDefinition.animationFile + " TO ACTION " +
@@ -592,8 +604,8 @@ public class MachineCommonSenseMain : MonoBehaviour {
                     LogVerbose("ASSIGN NEW ANIMATOR CONTROLLER TO GAME OBJECT " + gameObject.name);
                 }
                 RuntimeAnimatorController animatorController = Resources.Load<RuntimeAnimatorController>(
-                    "MCS/Animators/" + animatorDefinition.animatorFile);
-                LogVerbose("LOAD OF ANIMATOR CONTROLLER FILE Assets/Resources/MCS/Animators/" +
+                    "MCS/" + animatorDefinition.animatorFile);
+                LogVerbose("LOAD OF ANIMATOR CONTROLLER FILE Assets/Resources/MCS/" +
                     animatorDefinition.animatorFile + (animatorController == null ? " IS NULL" : " IS DONE"));
                 animator.runtimeAnimatorController = animatorController;
             }
@@ -679,6 +691,13 @@ public class MachineCommonSenseMain : MonoBehaviour {
         Debug.Log("MCS:  Config file Assets/Resources/MCS/Scenes/" + filePath + ".json" + (currentSceneFile == null ?
             " is null!" : (":\n" + currentSceneFile.text)));
         return JsonUtility.FromJson<MachineCommonSenseConfigScene>(currentSceneFile.text);
+    }
+
+    private MachineCommonSenseConfigMaterialRegistry LoadMaterialRegistryFromFile(String filePath) {
+        TextAsset materialRegistryFile = Resources.Load<TextAsset>("MCS/" + filePath);
+        Debug.Log("MCS:  Config file Assets/Resources/MCS/" + filePath + ".json" + (materialRegistryFile == null ?
+            " is null!" : (":\n" + materialRegistryFile.text)));
+        return JsonUtility.FromJson<MachineCommonSenseConfigMaterialRegistry>(materialRegistryFile.text);
     }
 
     private List<MachineCommonSenseConfigObjectDefinition> LoadObjectRegistryFromFile(String filePath) {
@@ -1029,6 +1048,11 @@ public class MachineCommonSenseConfigScene {
     public String wallMaterial;
     public MachineCommonSenseConfigTransform performerStart = null;
     public List<MachineCommonSenseConfigGameObject> objects;
+}
+
+[Serializable]
+public class MachineCommonSenseConfigMaterialRegistry {
+    public List<String> materials;
 }
 
 [Serializable]
