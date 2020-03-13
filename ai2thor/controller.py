@@ -903,7 +903,6 @@ class Controller(object):
             height=height
         )
 
-        _, port = self.server.wsgi_server.socket.getsockname()
 
         self.server_thread = threading.Thread(target=self._start_server_thread)
 
@@ -929,6 +928,7 @@ class Controller(object):
                 self.lock_release()
                 self.prune_releases()
 
+            _, port = self.server.wsgi_server.socket.getsockname()
             unity_thread = threading.Thread(
                 target=self._start_unity_thread,
                 args=(env, width, height, host, port, image_name))
