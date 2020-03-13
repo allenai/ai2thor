@@ -237,13 +237,15 @@ public class MachineCommonSenseMain : MonoBehaviour {
     private Material AssignMaterial(GameObject gameObject, String materialFile) {
         Renderer renderer = gameObject.GetComponent<Renderer>();
         if (materialFile != null && !materialFile.Equals("")) {
-            // TODO Load materials from a folder other than MCS/Materials/AI2-THOR
-            Material material = Resources.Load<Material>("MCS/Materials/AI2-THOR/" + materialFile);
-            LogVerbose("LOAD OF MATERIAL FILE Assets/Resources/MCS/Materials/AI2-THOR/" + materialFile +
+            // Backwards compatibility
+            String fileToLoad = (materialFile.StartsWith("AI2-THOR/Materials/") ? "" : "AI2-THOR/Materials/") +
+                materialFile; 
+            Material material = Resources.Load<Material>("MCS/" + fileToLoad);
+            LogVerbose("LOAD OF MATERIAL FILE Assets/Resources/MCS/" + fileToLoad +
                 (material == null ?  " IS NULL" : " IS DONE"));
             if (material != null) {
                 renderer.material = material;
-                LogVerbose("ASSIGN MATERIAL " + materialFile + " TO GAME OBJECT " + gameObject.name);
+                LogVerbose("ASSIGN MATERIAL " + fileToLoad + " TO GAME OBJECT " + gameObject.name);
             }
             return material;
         }
@@ -551,10 +553,10 @@ public class MachineCommonSenseMain : MonoBehaviour {
         MachineCommonSenseConfigGameObject objectConfig,
         MachineCommonSenseConfigObjectDefinition objectDefinition
     ) {
-        GameObject gameObject = Instantiate(Resources.Load("MCS/Objects/" + objectDefinition.resourceFile,
+        GameObject gameObject = Instantiate(Resources.Load("MCS/" + objectDefinition.resourceFile,
             typeof(GameObject))) as GameObject;
 
-        LogVerbose("LOAD CUSTOM GAME OBJECT " + objectDefinition.id + " FROM FILE Assets/Resources/MCS/Objects/" +
+        LogVerbose("LOAD CUSTOM GAME OBJECT " + objectDefinition.id + " FROM FILE Assets/Resources/MCS/" +
             objectDefinition.resourceFile + (gameObject == null ? " IS NULL" : " IS DONE"));
 
         gameObject = AssignProperties(gameObject, objectConfig, objectDefinition);
@@ -570,9 +572,9 @@ public class MachineCommonSenseMain : MonoBehaviour {
             }
             objectDefinition.animations.ForEach((animationDefinition) => {
                 if (animationDefinition.animationFile != null && !animationDefinition.animationFile.Equals("")) {
-                    AnimationClip clip = Resources.Load<AnimationClip>("MCS/Animations/" +
+                    AnimationClip clip = Resources.Load<AnimationClip>("MCS/" +
                         animationDefinition.animationFile);
-                    LogVerbose("LOAD OF ANIMATION CLIP FILE Assets/Resources/MCS/Animations/" +
+                    LogVerbose("LOAD OF ANIMATION CLIP FILE Assets/Resources/MCS/" +
                         animationDefinition.animationFile + (clip == null ? " IS NULL" : " IS DONE"));
                     animation.AddClip(clip, animationDefinition.id);
                     LogVerbose("ASSIGN ANIMATION CLIP " + animationDefinition.animationFile + " TO ACTION " +
@@ -592,8 +594,8 @@ public class MachineCommonSenseMain : MonoBehaviour {
                     LogVerbose("ASSIGN NEW ANIMATOR CONTROLLER TO GAME OBJECT " + gameObject.name);
                 }
                 RuntimeAnimatorController animatorController = Resources.Load<RuntimeAnimatorController>(
-                    "MCS/Animators/" + animatorDefinition.animatorFile);
-                LogVerbose("LOAD OF ANIMATOR CONTROLLER FILE Assets/Resources/MCS/Animators/" +
+                    "MCS/" + animatorDefinition.animatorFile);
+                LogVerbose("LOAD OF ANIMATOR CONTROLLER FILE Assets/Resources/MCS/" +
                     animatorDefinition.animatorFile + (animatorController == null ? " IS NULL" : " IS DONE"));
                 animator.runtimeAnimatorController = animatorController;
             }
