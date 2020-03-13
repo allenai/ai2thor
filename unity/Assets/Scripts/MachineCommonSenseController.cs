@@ -9,7 +9,8 @@ public class MachineCommonSenseController : PhysicsRemoteFPSAgentController {
     public static float DISTANCE_HELD_OBJECT_Y = 0.15f;
     public static float DISTANCE_HELD_OBJECT_Z = 0.15f;
 
-    // The room is 5x5 so the distance from corner to corner is around 7.08.
+    // TODO MCS-95 Make the room size configurable in the scene configuration file.
+    // The room dimensions are always 5x5 so the distance from corner to corner is around 7.08.
     public static float MAX_DISTANCE_ACCROSS_ROOM = 7.08f;
 
     // The number of times to run Physics.Simulate after each action from the player.
