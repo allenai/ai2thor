@@ -11,6 +11,7 @@ public class MachineCommonSenseMain : MonoBehaviour {
     public string defaultSceneFile = "";
     public bool enableVerboseLog = false;
     public string ai2thorObjectRegistryFile = "ai2thor_object_registry";
+    public string materialRegistryFile = "material_registry";
     public string mcsObjectRegistryFile = "mcs_object_registry";
     public string primitiveObjectRegistryFile = "primitive_object_registry";
 
@@ -18,6 +19,7 @@ public class MachineCommonSenseMain : MonoBehaviour {
     private int lastStep = -1;
     private Dictionary<String, MachineCommonSenseConfigObjectDefinition> objectDictionary =
         new Dictionary<string, MachineCommonSenseConfigObjectDefinition>();
+    private List<String> materials;
 
     // AI2-THOR Objects and Scripts
     private MachineCommonSenseController agentController;
@@ -44,6 +46,9 @@ public class MachineCommonSenseMain : MonoBehaviour {
         ai2thorObjects.Concat(mcsObjects).Concat(primitiveObjects).ToList().ForEach((objectDefinition) => {
             this.objectDictionary.Add(objectDefinition.id.ToUpper(), objectDefinition);
         });
+
+        // Save the materials (strings) that are accepted in the scene configuration files.
+        this.materials = LoadMaterialRegistryFromFile(this.materialRegistryFile).materials;
 
         // Load the default MCS scene set in the Unity Editor.
         if (!this.defaultSceneFile.Equals("")) {
@@ -240,14 +245,19 @@ public class MachineCommonSenseMain : MonoBehaviour {
             // Backwards compatibility
             String fileToLoad = (materialFile.StartsWith("AI2-THOR/Materials/") ? "" : "AI2-THOR/Materials/") +
                 materialFile; 
-            Material material = Resources.Load<Material>("MCS/" + fileToLoad);
-            LogVerbose("LOAD OF MATERIAL FILE Assets/Resources/MCS/" + fileToLoad +
-                (material == null ?  " IS NULL" : " IS DONE"));
-            if (material != null) {
-                renderer.material = material;
-                LogVerbose("ASSIGN MATERIAL " + fileToLoad + " TO GAME OBJECT " + gameObject.name);
+            if (this.materials.Contains(fileToLoad)) {
+                Material material = Resources.Load<Material>("MCS/" + fileToLoad);
+                LogVerbose("LOAD OF MATERIAL FILE Assets/Resources/MCS/" + fileToLoad +
+                    (material == null ?  " IS NULL" : " IS DONE"));
+                if (material != null) {
+                    renderer.material = material;
+                    LogVerbose("ASSIGN MATERIAL " + fileToLoad + " TO GAME OBJECT " + gameObject.name);
+                }
+                return material;
             }
-            return material;
+            else {
+                LogVerbose("MATERIAL " + fileToLoad + " NOT IN MATERIAL REGISTRY");
+            }
         }
         return null;
     }
@@ -683,6 +693,13 @@ public class MachineCommonSenseMain : MonoBehaviour {
         return JsonUtility.FromJson<MachineCommonSenseConfigScene>(currentSceneFile.text);
     }
 
+    private MachineCommonSenseConfigMaterialRegistry LoadMaterialRegistryFromFile(String filePath) {
+        TextAsset materialRegistryFile = Resources.Load<TextAsset>("MCS/" + filePath);
+        Debug.Log("MCS:  Config file Assets/Resources/MCS/" + filePath + ".json" + (materialRegistryFile == null ?
+            " is null!" : (":\n" + materialRegistryFile.text)));
+        return JsonUtility.FromJson<MachineCommonSenseConfigMaterialRegistry>(materialRegistryFile.text);
+    }
+
     private List<MachineCommonSenseConfigObjectDefinition> LoadObjectRegistryFromFile(String filePath) {
         TextAsset objectRegistryFile = Resources.Load<TextAsset>("MCS/" + filePath);
         Debug.Log("MCS:  Config file Assets/Resources/MCS/" + filePath + ".json" + (objectRegistryFile == null ?
@@ -1031,6 +1048,11 @@ public class MachineCommonSenseConfigScene {
     public String wallMaterial;
     public MachineCommonSenseConfigTransform performerStart = null;
     public List<MachineCommonSenseConfigGameObject> objects;
+}
+
+[Serializable]
+public class MachineCommonSenseConfigMaterialRegistry {
+    public List<String> materials;
 }
 
 [Serializable]
