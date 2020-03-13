@@ -213,6 +213,20 @@ public class MachineCommonSenseController : PhysicsRemoteFPSAgentController {
             return;
         }
 
+        if (!physicsSceneManager.UniqueIdToSimObjPhysics.ContainsKey(action.objectId)) {
+            errorMessage = "Object ID appears to be invalid.";
+            actionFinished(false);
+            this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.NOT_OBJECT);
+            return;
+        }
+
+        if (!physicsSceneManager.UniqueIdToSimObjPhysics.ContainsKey(action.receptacleObjectId)) {
+            errorMessage = "Receptacle Object ID appears to be invalid.";
+            actionFinished(false);
+            this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.NOT_OBJECT);
+            return;
+        }
+
         SimObjPhysics target = physicsSceneManager.UniqueIdToSimObjPhysics[action.objectId];
 
         // Reactivate the object BEFORE trying to place it so that we can see if it's obstructed.

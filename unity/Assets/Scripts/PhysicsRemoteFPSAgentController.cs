@@ -3855,8 +3855,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         public virtual void PutObject(ServerAction action) {
-            action.objectId = action.receptacleObjectId;
-            action.receptacleObjectId = null;
             PlaceHeldObject(action);
         }
 
@@ -3872,17 +3870,25 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             if (ItemInHand == null) {
                 errorMessage = "Can't place an object if Agent isn't holding anything";
                 actionFinished(false);
+                this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.NOT_HELD);
                 return;
+            } else {
+                // Make sure object ID given is actually the item in hand
+                if (!ItemInHand.transform.name.Equals(action.objectId)) {
+                    errorMessage = "Object ID " + action.objectId + " is not the object currently being held.";
+                    actionFinished(false);
+                    this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.NOT_HELD);
+                    return;
+                }
             }
 
-            //get the target receptacle based on the action object ID
+            //get the target receptacle based on the action receptacle object ID
             SimObjPhysics targetReceptacle = null;
 
-            SimObjPhysics[] simObjPhysicsArray = VisibleSimObjs(action);
-
-            foreach (SimObjPhysics sop in simObjPhysicsArray) {
-                if (action.objectId == sop.UniqueID) {
+            foreach (SimObjPhysics sop in VisibleSimObjs(action.forceVisible)) {
+                if ((!string.IsNullOrEmpty(action.receptacleObjectId)) && action.receptacleObjectId == sop.UniqueID) {
                     targetReceptacle = sop;
+                    break;
                 }
             }
 
@@ -3890,6 +3896,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 errorMessage = "No valid Receptacle found";
                 Debug.Log(errorMessage);
                 actionFinished(false);
+                this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.OUT_OF_REACH);
                 return;
             }
 
@@ -3897,18 +3904,19 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 errorMessage = "This target object is NOT a receptacle!";
                 Debug.Log(errorMessage);
                 actionFinished(false);
+                this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.NOT_RECEPTACLE);
                 return;
             }
 
             //if receptacle can open, check that it's open before placing. Can't place objects in something that is closed!
+
             if (targetReceptacle.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanOpen)) {
-                if (ReceptacleRestrictions.MustBeOpenToPlaceObjectsIn.Contains(targetReceptacle.ObjType)) {
-                    if (!targetReceptacle.GetComponent<CanOpen_Object>().isOpen) {
-                        errorMessage = "Target openable Receptacle is CLOSED, can't place if target is not open!";
-                        Debug.Log(errorMessage);
-                        actionFinished(false);
-                        return;
-                    }
+                if (!targetReceptacle.GetComponent<CanOpen_Object>().isOpen) {
+                    errorMessage = "Target openable Receptacle is CLOSED, can't place if target is not open!";
+                    Debug.Log(errorMessage);
+                    actionFinished(false);
+                    this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.OBSTRUCTED);
+                    return;
                 }
             }
 
@@ -3925,6 +3933,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                                 osr.attachPoint.transform.rotation, false) == false) {
                             errorMessage = "another object's collision is blocking held object from being placed";
                             actionFinished(false);
+                            this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.OBSTRUCTED);
                             return;
                         }
 
@@ -3938,6 +3947,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     ItemInHand = null;
                     DefaultAgentHand();
                     actionFinished(true);
+                    this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.SUCCESSFUL);
                     return;
                 } else {
 
@@ -3947,6 +3957,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         errorMessage = ItemInHand.name + " is not a valid Object Type to be placed in " + targetReceptacle.name;
                     }
 
+                    this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.FAILED);
                     actionFinished(false);
                     return;
                 }
@@ -3965,6 +3976,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                             errorMessage = ItemInHand.name + " cannot be placed in " + targetReceptacle.transform.name;
                             Debug.Log(errorMessage);
                             actionFinished(false);
+                            this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.FAILED);
                             return;
                         }
 
@@ -4029,14 +4041,16 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     handSOP.GetComponentInChildren<Rigidbody>().isKinematic = false;
                 }
                 // MCS CHANGE END
-
+                this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.SUCCESSFUL);
                 actionFinished(true);
             } else {
                 // MCS CHANGE NEXT LINE
                 handSOP.transform.parent = previousParent;
 
                 errorMessage = "No valid positions to place object found";
+                this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.FAILED);
                 actionFinished(false);
+                return;
             }
 
 #if UNITY_EDITOR
