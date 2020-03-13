@@ -135,6 +135,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			IS_CLOSED_COMPLETELY,
 			IS_OPENED_COMPLETELY,
 			NOT_HELD,
+            NOT_INTERACTABLE,
 			HAND_IS_FULL,
 			NOT_OBJECT,
 			NOT_RECEPTACLE,

@@ -44,7 +44,7 @@ public class MachineCommonSenseController : PhysicsRemoteFPSAgentController {
             MachineCommonSenseController.MAX_DISTANCE_ACCROSS_ROOM, layerMask).ToList();
         if (hits.Count == 0) {
             this.errorMessage = "Cannot find any object on the directional vector.";
-            // TODO lastActionStatus
+            this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.NOT_OBJECT);
             this.actionFinished(false);
             return previousObjectId;
         }
@@ -56,7 +56,7 @@ public class MachineCommonSenseController : PhysicsRemoteFPSAgentController {
                 .GetComponentInParent<SimObjPhysics>();
             if (simObjPhysics == null) {
                 this.errorMessage = "The closest object on the directional vector is not interactable.";
-                // TODO lastActionStatus
+                this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.NOT_INTERACTABLE);
                 this.actionFinished(false);
                 return previousObjectId;
             }
