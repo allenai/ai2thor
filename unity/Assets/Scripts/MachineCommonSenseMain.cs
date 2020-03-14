@@ -7,7 +7,6 @@ using UnityStandardAssets.Characters.FirstPerson;
 using System.Text;
 
 public class MachineCommonSenseMain : MonoBehaviour {
-    public static float CONTROLLER_Y = 0.4f;
     public string defaultSceneFile = "";
     public bool enableVerboseLog = false;
     public string ai2thorObjectRegistryFile = "ai2thor_object_registry";
@@ -125,10 +124,10 @@ public class MachineCommonSenseMain : MonoBehaviour {
         if (this.currentScene.performerStart != null && this.currentScene.performerStart.position != null) {
             // Always keep the Y position on the floor.
             controller.transform.position = new Vector3(this.currentScene.performerStart.position.x,
-                MachineCommonSenseMain.CONTROLLER_Y, this.currentScene.performerStart.position.z);
+                MachineCommonSenseController.POSITION_Y, this.currentScene.performerStart.position.z);
         }
         else {
-            controller.transform.position = new Vector3(0, MachineCommonSenseMain.CONTROLLER_Y, 0);
+            controller.transform.position = new Vector3(0, MachineCommonSenseController.POSITION_Y, 0);
         }
 
         if (this.currentScene.performerStart != null && this.currentScene.performerStart.rotation != null) {

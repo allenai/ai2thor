@@ -44,8 +44,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
             }
 
             ServerAction action = new ServerAction();
-            action.gridSize = gridSize;
             action.action = "Initialize";
+            action.gridSize = gridSize;
+            action.visibilityDistance = visibilityDistance;
             PhysicsController.ProcessControlCommand(action);
         }
 

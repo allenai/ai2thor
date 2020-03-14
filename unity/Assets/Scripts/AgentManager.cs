@@ -937,9 +937,12 @@ public struct MetadataWrapper
 	public Vector3[] actionVector3sReturn;
 	public List<Vector3> visibleRange;
 	public System.Object actionReturn;
-	public string lastActionStatus;
 
 	public float currentTime;
+
+    // MCS Additions
+    public string lastActionStatus;
+    public float reachDistance;
 }
 
 

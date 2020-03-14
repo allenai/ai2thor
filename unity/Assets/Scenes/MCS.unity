@@ -2774,7 +2774,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 400000, guid: 5e9e851c0e142814dac026a256ba2ac0, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0.4
+      value: 0.4625
       objectReference: {fileID: 0}
     - target: {fileID: 400000, guid: 5e9e851c0e142814dac026a256ba2ac0, type: 3}
       propertyPath: m_LocalPosition.z
@@ -2806,15 +2806,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 400000, guid: 5e9e851c0e142814dac026a256ba2ac0, type: 3}
       propertyPath: m_LocalScale.x
-      value: 0.4
+      value: 0.5
       objectReference: {fileID: 0}
     - target: {fileID: 400000, guid: 5e9e851c0e142814dac026a256ba2ac0, type: 3}
       propertyPath: m_LocalScale.y
-      value: 0.4
+      value: 0.5
       objectReference: {fileID: 0}
     - target: {fileID: 400000, guid: 5e9e851c0e142814dac026a256ba2ac0, type: 3}
       propertyPath: m_LocalScale.z
-      value: 0.4
+      value: 0.5
       objectReference: {fileID: 0}
     - target: {fileID: 2000000, guid: 5e9e851c0e142814dac026a256ba2ac0, type: 3}
       propertyPath: far clip plane
@@ -2864,7 +2864,7 @@ PrefabInstance:
     - target: {fileID: 3388362411129917294, guid: 5e9e851c0e142814dac026a256ba2ac0,
         type: 3}
       propertyPath: WalkMagnitude
-      value: 0.2
+      value: 0.5
       objectReference: {fileID: 0}
     - target: {fileID: 3388362411129917294, guid: 5e9e851c0e142814dac026a256ba2ac0,
         type: 3}
@@ -2881,10 +2881,15 @@ PrefabInstance:
       propertyPath: receptacleObjectId
       value: playroom_plate_a
       objectReference: {fileID: 0}
+    - target: {fileID: 3388362411129917294, guid: 5e9e851c0e142814dac026a256ba2ac0,
+        type: 3}
+      propertyPath: visibilityDistance
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 136752831871764314, guid: 5e9e851c0e142814dac026a256ba2ac0,
         type: 3}
       propertyPath: m_Center.y
-      value: -0.05
+      value: -0.25
       objectReference: {fileID: 0}
     - target: {fileID: 136752831871764314, guid: 5e9e851c0e142814dac026a256ba2ac0,
         type: 3}
@@ -2898,7 +2903,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 14300000, guid: 5e9e851c0e142814dac026a256ba2ac0, type: 3}
       propertyPath: m_Center.y
-      value: -0.05
+      value: -0.25
       objectReference: {fileID: 0}
     - target: {fileID: 14300000, guid: 5e9e851c0e142814dac026a256ba2ac0, type: 3}
       propertyPath: m_Radius
@@ -2923,6 +2928,22 @@ PrefabInstance:
     - target: {fileID: 4781144330620476, guid: 5e9e851c0e142814dac026a256ba2ac0, type: 3}
       propertyPath: m_LocalPosition.z
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 400002, guid: 5e9e851c0e142814dac026a256ba2ac0, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 400002, guid: 5e9e851c0e142814dac026a256ba2ac0, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 400002, guid: 5e9e851c0e142814dac026a256ba2ac0, type: 3}
+      propertyPath: m_LocalScale.y
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 400002, guid: 5e9e851c0e142814dac026a256ba2ac0, type: 3}
+      propertyPath: m_LocalScale.z
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents:
     - {fileID: 114749714472260818, guid: 5e9e851c0e142814dac026a256ba2ac0, type: 3}
@@ -3068,9 +3089,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 940f8586c495e37cc80926a37e932c65, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  defaultSceneFile: playroom
+  defaultSceneFile: 
   enableVerboseLog: 0
   ai2thorObjectRegistryFile: ai2thor_object_registry
+  materialRegistryFile: material_registry
   mcsObjectRegistryFile: mcs_object_registry
   primitiveObjectRegistryFile: primitive_object_registry
 --- !u!4 &1891392285

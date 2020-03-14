@@ -4049,7 +4049,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public virtual void PickupObject(ServerAction action) //use serveraction objectid
         {
             if (!physicsSceneManager.UniqueIdToSimObjPhysics.ContainsKey(action.objectId)) {
-                errorMessage = "Object ID appears to be invalid.";
+                errorMessage = "Object ID " + action.objectId + " appears to be invalid.";
                 actionFinished(false);
                 this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.NOT_OBJECT);
                 return;

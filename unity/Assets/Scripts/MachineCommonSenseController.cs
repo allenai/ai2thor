@@ -6,6 +6,8 @@ using System.Linq;
 using System.Collections.Generic;
 
 public class MachineCommonSenseController : PhysicsRemoteFPSAgentController {
+    public static float POSITION_Y = 0.4625f;
+
     public static float DISTANCE_HELD_OBJECT_Y = 0.15f;
     public static float DISTANCE_HELD_OBJECT_Z = 0.15f;
 
@@ -105,6 +107,10 @@ public class MachineCommonSenseController : PhysicsRemoteFPSAgentController {
             // The "visible" property in the ObjectMetadata really describes if the object is within reach.
             // We also want to know if we can currently see the object in our camera view.
             metadata.visibleInCamera = visibleObjectIds.Contains(metadata.objectId);
+            SimObjPhysics simObjPhysics = physicsSceneManager.UniqueIdToSimObjPhysics[metadata.objectId];
+            // Set the object's distance and calculate it using the player's Y position as 0.
+            metadata.distance = Vector3.Distance(new Vector3(this.transform.position.x, 0, this.transform.position.y),
+                simObjPhysics.transform.position);
             return metadata;
         }).ToArray();
     }
@@ -112,6 +118,7 @@ public class MachineCommonSenseController : PhysicsRemoteFPSAgentController {
     public override MetadataWrapper generateMetadataWrapper() {
         MetadataWrapper metadataWrapper = base.generateMetadataWrapper();
         metadataWrapper.lastActionStatus = this.lastActionStatus;
+        metadataWrapper.reachDistance = this.maxVisibleDistance;
         return metadataWrapper;
     }
 
