@@ -114,10 +114,6 @@ public class MachineCommonSenseController : PhysicsRemoteFPSAgentController {
             // The "visible" property in the ObjectMetadata really describes if the object is within reach.
             // We also want to know if we can currently see the object in our camera view.
             metadata.visibleInCamera = visibleObjectIds.Contains(metadata.objectId);
-            SimObjPhysics simObjPhysics = physicsSceneManager.UniqueIdToSimObjPhysics[metadata.objectId];
-            // Set the object's distance and calculate it using the player's Y position as 0.
-            metadata.distance = Vector3.Distance(new Vector3(this.transform.position.x, 0, this.transform.position.y),
-                simObjPhysics.transform.position);
             return metadata;
         }).ToArray();
 
@@ -157,6 +153,10 @@ public class MachineCommonSenseController : PhysicsRemoteFPSAgentController {
         // From https://docs.unity3d.com/Manual/DirectionDistanceFromOneObjectToAnother.html
         objectMetadata.heading = objectMetadata.position - this.transform.position;
         objectMetadata.direction = (objectMetadata.heading / objectMetadata.heading.magnitude);
+
+        // Calculate a distance with only the X and Z coordinates for our Python API.
+        objectMetadata.distanceXZ = Vector3.Distance(new Vector3(this.transform.position.x, 0, this.transform.position.z),
+            new Vector3(simObj.transform.position.x, 0, simObj.transform.position.z));
 
         return objectMetadata;
     }

@@ -831,6 +831,7 @@ public class ObjectMetadata
 
     // MCS Additions
     public Vector3 direction;
+    public float distanceXZ;
     public Vector3 heading;
     public Vector3[] points;
     public bool visibleInCamera;
