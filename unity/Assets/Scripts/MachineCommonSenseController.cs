@@ -100,10 +100,17 @@ public class MachineCommonSenseController : PhysicsRemoteFPSAgentController {
     }
 
     public override ObjectMetadata[] generateObjectMetadata() {
-        ObjectMetadata[] objectMetadata = base.generateObjectMetadata();
+        // TODO MCS-77 The held objects will always be active, so we won't need to reactivate this object again.
+        bool deactivate = false;
+        if (this.ItemInHand != null && !this.ItemInHand.activeSelf) {
+            deactivate = true;
+            this.ItemInHand.SetActive(true);
+        }
+
         List<string> visibleObjectIds = this.GetAllVisibleSimObjPhysics(this.m_Camera,
             MachineCommonSenseController.MAX_DISTANCE_ACCROSS_ROOM).Select((obj) => obj.UniqueID).ToList();
-        return objectMetadata.ToList().Select((metadata) => {
+
+        ObjectMetadata[] objectMetadata = base.generateObjectMetadata().ToList().Select((metadata) => {
             // The "visible" property in the ObjectMetadata really describes if the object is within reach.
             // We also want to know if we can currently see the object in our camera view.
             metadata.visibleInCamera = visibleObjectIds.Contains(metadata.objectId);
@@ -113,6 +120,13 @@ public class MachineCommonSenseController : PhysicsRemoteFPSAgentController {
                 simObjPhysics.transform.position);
             return metadata;
         }).ToArray();
+
+        // TODO MCS-77 The held objects will always be active, so we shouldn't deactivate this object again.
+        if (deactivate) {
+            this.ItemInHand.SetActive(false);
+        }
+
+        return objectMetadata;
     }
 
     public override MetadataWrapper generateMetadataWrapper() {
