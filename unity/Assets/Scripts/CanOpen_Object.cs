@@ -6,6 +6,7 @@ using UnityStandardAssets.Characters.FirstPerson;
 //controls opening doors on a fridge. Because the fridge base body and door should be considered a single
 //sim object, this has mimicked functionality from CanOpen.cs but specialized for a Fridge.
 using System.Linq;
+using System;
 public class CanOpen_Object : MonoBehaviour 
 {
 	[Header("Moving Parts for this Object")]
@@ -23,7 +24,7 @@ public class CanOpen_Object : MonoBehaviour
     public float animationTime = 0.2f;
 
     [SerializeField]
-    protected float openPercentage = 1.0f; //0.0 to 1.0 - percent of openPosition the object opens. 
+    protected float openPercentage = 0;
 
 	[Header("Objects To Ignore Collision With - For Cabinets/Drawers with hinges too close together")]
     //these are objects to ignore collision with. This is in case the fridge doors touch each other or something that might
@@ -63,8 +64,7 @@ public class CanOpen_Object : MonoBehaviour
     [SerializeField]
     protected GameObject ClosedBoundingBox;
 
-
-
+    public float isOpenByPercentage = 0;
 
     #if UNITY_EDITOR
     void OnEnable ()
@@ -174,33 +174,35 @@ public class CanOpen_Object : MonoBehaviour
 
 		for (int i = 0; i < MovingParts.Length; i++)
 		{
-            Vector3 previousPosition = isOpen ? openPositions[i] : closedPositions[i];
-            Vector3 nextPosition = isOpen ? closedPositions[i] : openPositions[i];
+            bool isOpening = (this.openPercentage > this.isOpenByPercentage);
+            float percentage = isOpening ? this.openPercentage : (1 - this.openPercentage);
+            Vector3 previousPosition = isOpening ? closedPositions[i] : openPositions[i];
+            Vector3 nextPosition = isOpening ? openPositions[i] : closedPositions[i];
 
             if (animationTime == 0) {
                 if (movementType == MovementType.Rotate) {
                     MovingParts[i].transform.localRotation = Quaternion.Euler(
-                        nextPosition.x * openPercentage,
-                        nextPosition.y * openPercentage,
-                        nextPosition.z * openPercentage
+                        nextPosition.x * percentage,
+                        nextPosition.y * percentage,
+                        nextPosition.z * percentage
                     );
                 }
                 else if (movementType == MovementType.Slide) {
-                    MovingParts[i].transform.localPosition = nextPosition * openPercentage;
+                    MovingParts[i].transform.localPosition = nextPosition * percentage;
                 }
                 else if (movementType == MovementType.ScaleX || movementType == MovementType.ScaleY ||
                     movementType == MovementType.ScaleZ) {
                     MovingParts[i].transform.localScale = new Vector3(
                         movementType != MovementType.ScaleX ? nextPosition.x :
-                            (previousPosition.x + (nextPosition.x - previousPosition.x) * openPercentage),
+                            (previousPosition.x + (nextPosition.x - previousPosition.x) * percentage),
                         movementType != MovementType.ScaleY ? nextPosition.y :
-                            (previousPosition.y + (nextPosition.y - previousPosition.y) * openPercentage),
+                            (previousPosition.y + (nextPosition.y - previousPosition.y) * percentage),
                         movementType != MovementType.ScaleZ ? nextPosition.z :
-                            (previousPosition.z + (nextPosition.z - previousPosition.z) * openPercentage)
+                            (previousPosition.z + (nextPosition.z - previousPosition.z) * percentage)
                     );
                 }
                 if (i == MovingParts.Length - 1) {
-                    setisOpen();
+                    UpdateOpenOrCloseBoundingBox();
                 }
                 continue;
             }
@@ -217,7 +219,7 @@ public class CanOpen_Object : MonoBehaviour
             if (i == MovingParts.Length - 1) {
                 args = args.Concat(new System.Object[] {
                     "onComplete",
-                    "setisOpen",
+                    "UpdateOpenOrCloseBoundingBox",
                     "onCompleteTarget",
                     gameObject
                 }).ToArray();
@@ -226,7 +228,7 @@ public class CanOpen_Object : MonoBehaviour
 			if(movementType == MovementType.Rotate)
 			{
                 iTween.RotateTo(MovingParts[i], iTween.Hash(new System.Object[] {
-                    nextPosition * openPercentage,
+                    nextPosition * percentage,
                     "rotation"
                 }.Concat(args).ToArray()));
 			}
@@ -234,7 +236,7 @@ public class CanOpen_Object : MonoBehaviour
 			else if(movementType == MovementType.Slide)
 			{
                 iTween.MoveTo(MovingParts[i], iTween.Hash(new System.Object[] {
-                    nextPosition * openPercentage,
+                    nextPosition * percentage,
                     "position"
                 }.Concat(args).ToArray()));
 			}
@@ -242,7 +244,7 @@ public class CanOpen_Object : MonoBehaviour
             else if(movementType == MovementType.ScaleX)
             {
                 iTween.ScaleTo(MovingParts[i], iTween.Hash(new System.Object[] {
-                    new Vector3(previousPosition.x + (nextPosition.x - previousPosition.x) * openPercentage, nextPosition.y, nextPosition.z),
+                    new Vector3(previousPosition.x + (nextPosition.x - previousPosition.x) * percentage, nextPosition.y, nextPosition.z),
                     "scale"
                 }.Concat(args).ToArray()));
             }
@@ -250,7 +252,7 @@ public class CanOpen_Object : MonoBehaviour
             else if(movementType == MovementType.ScaleY)
             {
                 iTween.ScaleTo(MovingParts[i], iTween.Hash(new System.Object[] {
-                    new Vector3(nextPosition.x, nextPosition.y + (nextPosition.y - previousPosition.y) * openPercentage, nextPosition.z),
+                    new Vector3(nextPosition.x, nextPosition.y + (nextPosition.y - previousPosition.y) * percentage, nextPosition.z),
                     "scale"
                 }.Concat(args).ToArray()));
             }
@@ -258,23 +260,18 @@ public class CanOpen_Object : MonoBehaviour
             else if(movementType == MovementType.ScaleZ)
             {
                 iTween.ScaleTo(MovingParts[i], iTween.Hash(new System.Object[] {
-                    new Vector3(nextPosition.x, nextPosition.y, nextPosition.z + (nextPosition.z - previousPosition.z) * openPercentage),
+                    new Vector3(nextPosition.x, nextPosition.y, nextPosition.z + (nextPosition.z - previousPosition.z) * percentage),
                     "scale"
                 }.Concat(args).ToArray()));
 			}
         }
 
+        this.isOpenByPercentage = this.openPercentage;
+        this.isOpen = (this.isOpenByPercentage > 0);
+
         //default open percentage for next call
         openPercentage = 1.0f;
     }
-
-    private void setisOpen()
-	{
-        //print("isOpen was " + isOpen);
-		isOpen = !isOpen;
-        //print("isOpen is now " + isOpen);
-        UpdateOpenOrCloseBoundingBox();
-	}
 
     private void UpdateOpenOrCloseBoundingBox()
     {

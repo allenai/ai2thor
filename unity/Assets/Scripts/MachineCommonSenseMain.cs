@@ -502,6 +502,7 @@ public class MachineCommonSenseMain : MonoBehaviour {
 
                     ai2thorCanOpenObjectScript.Interact();
                 }
+                ai2thorCanOpenObjectScript.isOpenByPercentage = ai2thorCanOpenObjectScript.isOpen ? 1 : 0;
             }
         }
 

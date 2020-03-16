@@ -4571,9 +4571,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             //also check to make sure that target object is interactable
             if (action.objectId == null) {
                 Debug.Log("Hey, actually give me an object ID to pick up, yeah?");
+                this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.NOT_OBJECT);
                 errorMessage = "objectId required for OpenObject";
                 actionFinished(false);
-                Debug.Log("Hey, actually give me an object ID to pick up, yeah?");
                 return;
             }
 
@@ -4583,14 +4583,24 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 action.forceVisible = true;
             }
 
-            foreach (SimObjPhysics sop in VisibleSimObjs(action)) {
+            SimObjPhysics[] visibleObjects = VisibleSimObjs(action);
+
+            if (visibleObjects.Length == 0) {
+                this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.OUT_OF_REACH);
+                errorMessage = "Object " + action.objectId + " is not within reach or is not really an object.";
+                actionFinished(false);
+                return;
+            }
+
+            foreach (SimObjPhysics sop in visibleObjects) {
                 if (sop.GetComponent<CanOpen_Object>()) {
                     target = sop;
                 }
             }
 
-            if (target) {
+            if (target != null) {
                 if (!action.forceAction && target.isInteractable == false) {
+                    this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.OBSTRUCTED);
                     errorMessage = "object is visible but occluded by something: " + action.objectId;
                     actionFinished(false);
                 }
@@ -4598,21 +4608,32 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 if (target.GetComponent<CanOpen_Object>()) {
                     CanOpen_Object codd = target.GetComponent<CanOpen_Object>();
 
+                    //pass in percentage close if desired
+                    if (action.moveMagnitude > 0.0f) {
+                        //if this fails, invalid percentage given
+                        if (!codd.SetOpenPercent(1 - action.moveMagnitude)) {
+                            this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.FAILED);
+                            errorMessage = "Please give an close percentage between 0.0f and 1.0f";
+                            actionFinished(false);
+                            return;
+                        }
+                    }
+
                     //if object is open, close it
                     if (codd.isOpen) {
                         // codd.Interact();
                         // actionFinished(true);
                         StartCoroutine(InteractAndWait(codd));
                     } else {
+                        this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.IS_CLOSED_COMPLETELY);
                         errorMessage = "object already closed: " + action.objectId;
                         actionFinished(false);
                     }
                 }
-
             } else {
-                Debug.Log("Target object not in sight");
+                this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.NOT_OPENABLE);
+                errorMessage = "Object " + action.objectId + " is not openable.";
                 actionFinished(false);
-                errorMessage = "object not found: " + action.objectId;
             }
         }
 
@@ -4789,6 +4810,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 openedObject = coo.GetComponentInParent<SimObjPhysics>().gameObject;
 
                 if (isAgentCapsuleCollidingWith(openedObject) || isHandObjectCollidingWith(openedObject)) {
+                    this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.OBSTRUCTED);
                     success = false;
                     if (coo != null) {
                         coo.Interact();
@@ -4809,6 +4831,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             if (!success) {
                 errorMessage = "Object failed to open/close successfully.";
             }
+            this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.SUCCESSFUL);
             //print("actionFinished now");
             actionFinished(success);
         }
@@ -5108,6 +5131,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             //check if that object is in the viewport
             //also check to make sure that target object is interactable
             if (action.objectId == null) {
+                this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.NOT_OBJECT);
                 errorMessage = "objectId required for OpenObject";
                 actionFinished(false);
                 return;
@@ -5119,15 +5143,25 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 action.forceVisible = true;
             }
 
-            foreach (SimObjPhysics sop in VisibleSimObjs(action)) {
+            SimObjPhysics[] visibleObjects = VisibleSimObjs(action);
+
+            if (visibleObjects.Length == 0) {
+                this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.OUT_OF_REACH);
+                errorMessage = "Object " + action.objectId + " is not within reach or is not really an object.";
+                actionFinished(false);
+                return;
+            }
+
+            foreach (SimObjPhysics sop in visibleObjects) {
                 //check for CanOpen drawers, cabinets or CanOpen_Fridge fridge objects
                 if (sop.GetComponent<CanOpen_Object>()) {
                     target = sop;
                 }
             }
 
-            if (target) {
+            if (target != null) {
                 if (!action.forceAction && target.isInteractable == false) {
+                    this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.OBSTRUCTED);
                     actionFinished(false);
                     errorMessage = "object is visible but occluded by something: " + action.objectId;
                     return;
@@ -5137,7 +5171,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     CanOpen_Object codd = target.GetComponent<CanOpen_Object>();
 
                     //check to make sure object is closed
-                    if (codd.isOpen) {
+                    if (codd.isOpen && codd.isOpenByPercentage == 1) {
+                        this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.IS_OPENED_COMPLETELY);
                         errorMessage = "Object already open";
                         actionFinished(false);
                         return;
@@ -5145,6 +5180,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                     if (codd.WhatReceptaclesMustBeOffToOpen().Contains(target.Type)) {
                         if (target.GetComponent<CanToggleOnOff>().isOn) {
+                            // TODO MCS toggleable objects
+                            this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.FAILED);
                             errorMessage = "Target must be OFF to open!";
                             actionFinished(false);
                             return;
@@ -5155,6 +5192,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     if (action.moveMagnitude > 0.0f) {
                         //if this fails, invalid percentage given
                         if (!codd.SetOpenPercent(action.moveMagnitude)) {
+                            this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.FAILED);
                             errorMessage = "Please give an open percentage between 0.0f and 1.0f";
                             actionFinished(false);
                             return;
@@ -5168,12 +5206,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     StartCoroutine(InteractAndWait(codd));
 
                 }
-
             }
-
-            //target not found in currently visible objects, report not found
             else {
-                errorMessage = "object not found: " + action.objectId;
+                this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.NOT_OPENABLE);
+                errorMessage = "Object " + action.objectId + " is not openable.";
                 actionFinished(false);
             }
         }

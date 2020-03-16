@@ -143,6 +143,18 @@ public class MachineCommonSenseController : PhysicsRemoteFPSAgentController {
         main.ChangeCurrentScene(action.sceneConfig);
     }
 
+    public void MCSCloseObject(ServerAction action) {
+        // The AI2-THOR Python library has buggy error checking specifically for the CloseObject function,
+        // so create our own function and call it from the Python API.
+        this.CloseObject(action);
+    }
+
+    public void MCSOpenObject(ServerAction action) {
+        // The AI2-THOR Python library has buggy error checking specifically for the OpenObject function,
+        // so create our own function and call it from the Python API.
+        this.OpenObject(action);
+    }
+
     protected override ObjectMetadata ObjectMetadataFromSimObjPhysics(SimObjPhysics simObj, bool isVisible) {
         ObjectMetadata objectMetadata = base.ObjectMetadataFromSimObjPhysics(simObj, isVisible);
 
