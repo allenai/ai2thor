@@ -5981,6 +5981,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         ///////////////////////////////////
 
         public void Pass(ServerAction action) {
+            this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.SUCCESSFUL);
             actionFinished(true);
         }
 
