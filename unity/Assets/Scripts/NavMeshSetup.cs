@@ -27,14 +27,11 @@ public class NavMeshSetup : MonoBehaviour
         public static void Build()
         {
             // var testSceneNames = GetSceneNames(3, 5, "Val");
-            var valSceneNames = GetSceneNames(2, 2, "test-dev");
-            // var trainSceneNames = GetSceneNames(12, 5, "Train");
-
-            
+            var trainSceneNames = GetSceneNames(12, 5, "Train");
 
             var selection = new List<string>();
             // selection.AddRange(testSceneNames);
-            selection.AddRange(valSceneNames);
+            selection.AddRange(trainSceneNames);
             
             // selection.AddRange(trainSceneNames);
 
@@ -50,11 +47,11 @@ public class NavMeshSetup : MonoBehaviour
             selection.ToList().ForEach(sceneName => BuildNavmeshForScene(sceneName));
         }
 
-        private static  List<string> GetSceneNames(int lastIndex, int lastSubIndex, string nameTemplate) {
+        private static  List<string> GetSceneNames(int lastIndex, int lastSubIndex, string nameTemplate, string pathPrefix="Assets/Scenes") {
             var scenes = new List<string>();
             for (var i = 1; i <= lastIndex; i++) {
                 for (var j = 1; j <= lastSubIndex; j++) {
-                    var scene = "Assets/Scenes/FloorPlan_" + nameTemplate + i + "_" + j + ".unity";
+                    var scene = pathPrefix + "/FloorPlan_" + nameTemplate + i + "_" + j + ".unity";
                     scenes.Add(scene);
                 }
             }
