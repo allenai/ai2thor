@@ -2086,10 +2086,18 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         public virtual void PushObject(ServerAction action) {
+            if (!physicsSceneManager.UniqueIdToSimObjPhysics.ContainsKey(action.objectId)) {
+                errorMessage = "Object ID appears to be invalid.";
+                actionFinished(false);
+                this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.NOT_OBJECT);
+                return;
+            }
+
             if (ItemInHand != null && action.objectId == ItemInHand.GetComponent<SimObjPhysics>().uniqueID) {
                 errorMessage = "Please use Throw for an item in the Agent's Hand";
                 Debug.Log(errorMessage);
                 actionFinished(false);
+                this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.FAILED);
                 return;
             }
 
@@ -2103,10 +2111,18 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         public virtual void PullObject(ServerAction action) {
+            if (!physicsSceneManager.UniqueIdToSimObjPhysics.ContainsKey(action.objectId)) {
+                errorMessage = "Object ID appears to be invalid.";
+                actionFinished(false);
+                this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.NOT_OBJECT);
+                return;
+            }
+
             if (ItemInHand != null && action.objectId == ItemInHand.GetComponent<SimObjPhysics>().uniqueID) {
                 errorMessage = "Please use Throw for an item in the Agent's Hand";
                 Debug.Log(errorMessage);
                 actionFinished(false);
+                this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.FAILED);
                 return;
             }
 
@@ -2223,10 +2239,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 }
             }
 
+            // TODO: MCS-83: Need to split into OUT_OF_REACH and OBSTRUCTED
             if (target == null) {
-                errorMessage = "No valid target!";
+                errorMessage = "Target " + action.objectId + " is not visible.";
                 Debug.Log(errorMessage);
                 actionFinished(false);
+                this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.OUT_OF_REACH);
                 return;
             }
 
@@ -2236,6 +2254,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 errorMessage = "Target must be SimObjPhysics!";
                 Debug.Log(errorMessage);
                 actionFinished(false);
+                this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.FAILED);
                 return;
             }
 
@@ -2248,12 +2267,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             if (!canbepushed) {
                 errorMessage = "Target Sim Object cannot be moved. It's primary property must be Pickupable or Moveable";
                 actionFinished(false);
+                this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.NOT_PICKUPABLE);
                 return;
             }
 
             if (!action.forceAction && target.isInteractable == false) {
                 errorMessage = "Target is not interactable and is probably occluded by something!";
                 actionFinished(false);
+                this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.FAILED);
                 return;
             }
 
@@ -2278,6 +2299,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             apply.z = dir.z;
 
             sopApplyForce(apply, target);
+            this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.SUCCESSFUL);
             //target.GetComponent<SimObjPhysics>().ApplyForce(apply);
             //actionFinished(true);
         }
