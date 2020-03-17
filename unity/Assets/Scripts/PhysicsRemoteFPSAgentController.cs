@@ -2256,7 +2256,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 errorMessage = "Target must be SimObjPhysics!";
                 Debug.Log(errorMessage);
                 actionFinished(false);
-                this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.FAILED);
+                this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.NOT_PICKUPABLE);
                 return;
             }
 
@@ -2276,7 +2276,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             if (!action.forceAction && target.isInteractable == false) {
                 errorMessage = "Target is not interactable and is probably occluded by something!";
                 actionFinished(false);
-                this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.FAILED);
+                this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.NOT_PICKUPABLE);
                 return;
             }
 
