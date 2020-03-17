@@ -388,6 +388,7 @@ class Controller(object):
             depth_format=DepthFormat.Meters,
             add_depth_noise=False,
             download_only=False,
+            include_private_scenes=False,
             **unity_initialization_parameters
     ):
         self.request_queue = Queue(maxsize=1)
@@ -408,6 +409,8 @@ class Controller(object):
         self.headless = headless
         self.depth_format = depth_format
         self.add_depth_noise = add_depth_noise
+        self.include_private_scenes = include_private_scenes
+
 
         self.interactive_controller = InteractiveControllerPrompt(
             list(DefaultActions),
@@ -580,7 +583,7 @@ class Controller(object):
                     with open(os.path.join(release, ".lock"), "w") as f:
                         fcntl.flock(f, fcntl.LOCK_EX | fcntl.LOCK_NB)
                         shutil.rmtree(release)
-                except Exception as e:
+                except Exception:
                     pass
 
     def next_interact_command(self):
@@ -767,15 +770,16 @@ class Controller(object):
             git_dir = os.path.normpath(os.path.dirname(os.path.realpath(__file__)) + "/../.git")
             for commit_id in subprocess.check_output('git --git-dir=' + git_dir + ' log -n 10 --format=%H', shell=True).decode('ascii').strip().split("\n"):
                 arch = arch_platform_map[platform.system()]
+                commit_build = ai2thor.build.Build(arch, commit_id, self.include_private_scenes)
 
                 try:
-                    u = ai2thor.downloader.commit_build_url(arch, commit_id)
+                    u = commit_build.url()
                     if os.path.isfile(self.executable_path(url=u)):
                         # don't need sha256 since we aren't going to download
                         url = u
                         break
-                    elif ai2thor.downloader.commit_build_exists(arch, commit_id):
-                        sha256_build = ai2thor.downloader.commit_build_sha256(arch, commit_id)
+                    elif commit_build.exists():
+                        sha256_build = commit_build.sha256()
                         url = u
                         break
                 except Exception:
@@ -829,7 +833,9 @@ class Controller(object):
                 zip_data = ai2thor.downloader.download(
                     url,
                     self.build_name(),
-                    sha256_build)
+                    sha256_build,
+                    self.include_private_scenes
+                    )
 
                 z = zipfile.ZipFile(io.BytesIO(zip_data))
                 # use tmpdir instead or a random number

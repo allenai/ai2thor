@@ -10,9 +10,11 @@ import pprint
 from invoke import task
 import boto3
 import platform
+import ai2thor.build
 
 
 S3_BUCKET = "ai2-thor"
+PRIVATE_S3_BUCKET = "ai2-thor-private"
 UNITY_VERSION = "2018.4.16f1"
 
 
@@ -25,24 +27,30 @@ def add_files(zipf, start_dir):
             zipf.write(fn, arcname)
 
 
-def push_build(build_archive_name, archive_sha256):
+def push_build(build_archive_name, archive_sha256, include_private_scenes):
     import boto3
 
     # subprocess.run("ls %s" % build_archive_name, shell=True)
     # subprocess.run("gsha256sum %s" % build_archive_name)
     s3 = boto3.resource("s3")
+    acl = 'public-read'
+    bucket = S3_BUCKET
+    if include_private_scenes:
+        bucket = PRIVATE_S3_BUCKET 
+        acl = 'private'
+
     archive_base = os.path.basename(build_archive_name)
     key = "builds/%s" % (archive_base,)
 
     sha256_key = "builds/%s.sha256" % (os.path.splitext(archive_base)[0],)
 
     with open(build_archive_name, "rb") as af:
-        s3.Object(S3_BUCKET, key).put(Body=af, ACL="public-read")
+        s3.Object(bucket, key).put(Body=af, ACL=acl)
 
-    s3.Object(S3_BUCKET, sha256_key).put(
-        Body=archive_sha256, ACL="public-read", ContentType="text/plain"
+    s3.Object(bucket, sha256_key).put(
+        Body=archive_sha256, ACL=acl, ContentType="text/plain"
     )
-    print("pushed build %s to %s" % (S3_BUCKET, build_archive_name))
+    print("pushed build %s to %s" % (bucket, build_archive_name))
 
 
 def _local_build_path(prefix="local"):
@@ -328,9 +336,12 @@ def local_build_name(prefix, arch):
 
 
 @task
-def local_build(context, prefix="local", arch="OSXIntel64"):
+def local_build(context, prefix="local", arch="OSXIntel64", include_private_scenes=False):
     build_name = local_build_name(prefix, arch)
-    if _build("unity", arch, "builds", build_name):
+    env = dict()
+    if include_private_scenes:
+        env['INCLUDE_PRIVATE_SCENES'] = 'true'
+    if _build("unity", arch, "builds", build_name, env=env):
         print("Build Successful")
     else:
         print("Build Failure")
@@ -581,7 +592,7 @@ def build_log_push(build_info):
     )
 
 
-def archive_push(unity_path, build_path, build_dir, build_info):
+def archive_push(unity_path, build_path, build_dir, build_info, include_private_scenes=False):
     threading.current_thread().success = False
     archive_name = os.path.join(unity_path, build_path)
     zipf = zipfile.ZipFile(archive_name, 'w', zipfile.ZIP_DEFLATED)
@@ -589,7 +600,7 @@ def archive_push(unity_path, build_path, build_dir, build_info):
     zipf.close()
 
     build_info["sha256"] = build_sha256(archive_name)
-    push_build(archive_name, build_info["sha256"])
+    push_build(archive_name, build_info["sha256"], include_private_scenes)
     build_log_push(build_info)
     print("Build successful")
     threading.current_thread().success = True
@@ -698,13 +709,15 @@ def ci_build_arch(arch, branch):
         .strip()
     )
 
-    if ai2thor.downloader.commit_build_exists(arch, commit_id):
+    commit_build = ai2thor.build.Build(arch, commit_id, False)
+    if commit_build.exists():
         print("found build for commit %s %s" % (commit_id, arch))
         return
 
+    # XXX FIX bucket name
     build_url_base = "http://s3-us-west-2.amazonaws.com/%s/" % S3_BUCKET
     unity_path = "unity"
-    build_name = "thor-%s-%s" % (arch, commit_id)
+    build_name = ai2thor.build.build_name(arch, commit_id, include_private_scenes)
     build_dir = os.path.join("builds", build_name)
     build_path = build_dir + ".zip"
     build_info = {}
@@ -747,7 +760,8 @@ def poll_ci_build(context):
         for arch in platform_map.keys():
             if (i % 5) == 0:
                 print("checking %s for commit id %s" % (arch, commit_id))
-            if ai2thor.downloader.commit_build_log_exists(arch, commit_id):
+            commit_build = ai2thor.build.Build(arch, commit_id, False)
+            if commit_build.log_exists(arch, commit_id):
                 print("log exists %s" % commit_id)
             else:
                 missing = True
@@ -756,18 +770,23 @@ def poll_ci_build(context):
         time.sleep(10)
 
     for arch in platform_map.keys():
-        if not ai2thor.downloader.commit_build_exists(arch, commit_id):
+        commit_build = ai2thor.build.Build(arch, commit_id, False)
+        if not commit_build.exists():
             print(
                 "Build log url: %s"
-                % ai2thor.downloader.commit_build_log_url(arch, commit_id)
+                % commit_build.log_url()
             )
             raise Exception("Failed to build %s for commit: %s " % (arch, commit_id))
 
 
 @task
-def build(context, local=False):
+def build(context, local=False, include_private_scenes=False):
     from multiprocessing import Process
     from ai2thor.build import platform_map
+
+    env = {}
+    if include_private_scenes:
+        env['INCLUDE_PRIVATE_SCENES'] = 'true'
 
     version = datetime.datetime.now().strftime("%Y%m%d%H%M")
     build_url_base = "http://s3-us-west-2.amazonaws.com/%s/" % S3_BUCKET
@@ -779,7 +798,7 @@ def build(context, local=False):
 
     for arch in platform_map.keys():
         unity_path = "unity"
-        build_name = "thor-%s-%s" % (version, arch)
+        build_name = ai2thor.build.build_name(arch, version, include_private_scenes)
         build_dir = os.path.join("builds", build_name)
         build_path = build_dir + ".zip"
         build_info = builds[platform_map[arch]] = {}
@@ -788,9 +807,9 @@ def build(context, local=False):
         build_info["build_exception"] = ""
         build_info["log"] = "%s.log" % (build_name,)
 
-        _build(unity_path, arch, build_dir, build_name)
+        _build(unity_path, arch, build_dir, build_name, env=env)
         t = threading.Thread(
-            target=archive_push, args=(unity_path, build_path, build_dir, build_info)
+            target=archive_push, args=(unity_path, build_path, build_dir, build_info, include_private_scenes)
         )
         t.start()
         threads.append(t)
@@ -833,6 +852,7 @@ def interact(
     image_directory='.',
     width=300,
     height=300,
+    include_private_scenes=False,
     noise=False
 ):
     import ai2thor.controller
@@ -853,6 +873,7 @@ def interact(
             image_dir=image_directory,
             start_unity=False if editor_mode else True,
             save_image_per_frame=True,
+            include_private_scenes=include_private_scenes,
             add_depth_noise=noise
         )
     else:
@@ -2604,3 +2625,4 @@ def remove_dataset_spaces(ctx, dataset_dir):
 
     with open('val.json', 'w') as fw:
         json.dump(test_data, fw, indent=4, sort_keys=True)
+

@@ -9,7 +9,6 @@ import shutil
 import copy
 
 import ai2thor.docker
-import ai2thor.downloader
 import ai2thor.server
 from ai2thor.server import queue_get
 from ai2thor.build import BUILDS
