@@ -2306,8 +2306,8 @@ def visualize_shortest_paths(
     evt = controller.step(action='SetTopLevelView', topView=True)
     evt = controller.step(action='ToggleMapView')
 
-    im = Image.fromarray(evt.third_party_camera_frames[0])
-    im.save(os.path.join(output_dir, "top_view.jpg"))
+    # im = Image.fromarray(evt.third_party_camera_frames[0])
+    # im.save(os.path.join(output_dir, "top_view.jpg"))
 
     with open(dataset_path, 'r') as f:
         dataset = json.load(f)
