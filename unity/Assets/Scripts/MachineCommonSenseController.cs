@@ -248,6 +248,7 @@ public class MachineCommonSenseController : PhysicsRemoteFPSAgentController {
 
         if (!physicsSceneManager.UniqueIdToSimObjPhysics.ContainsKey(action.objectId)) {
             errorMessage = "Object ID appears to be invalid.";
+            Debug.Log(errorMessage);
             actionFinished(false);
             this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.NOT_OBJECT);
             return;
@@ -255,6 +256,7 @@ public class MachineCommonSenseController : PhysicsRemoteFPSAgentController {
 
         if (!physicsSceneManager.UniqueIdToSimObjPhysics.ContainsKey(action.receptacleObjectId)) {
             errorMessage = "Receptacle Object ID appears to be invalid.";
+            Debug.Log(errorMessage);
             actionFinished(false);
             this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.NOT_OBJECT);
             return;
