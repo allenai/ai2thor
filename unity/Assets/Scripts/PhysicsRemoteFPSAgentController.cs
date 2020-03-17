@@ -2088,6 +2088,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public virtual void PushObject(ServerAction action) {
             if (!physicsSceneManager.UniqueIdToSimObjPhysics.ContainsKey(action.objectId)) {
                 errorMessage = "Object ID appears to be invalid.";
+                Debug.Log(errorMessage);
                 actionFinished(false);
                 this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.NOT_OBJECT);
                 return;
@@ -2113,6 +2114,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public virtual void PullObject(ServerAction action) {
             if (!physicsSceneManager.UniqueIdToSimObjPhysics.ContainsKey(action.objectId)) {
                 errorMessage = "Object ID appears to be invalid.";
+                Debug.Log(errorMessage);
                 actionFinished(false);
                 this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.NOT_OBJECT);
                 return;
@@ -3891,6 +3893,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             //check if we are even holding anything
             if (ItemInHand == null) {
                 errorMessage = "Can't place an object if Agent isn't holding anything";
+                Debug.Log(errorMessage);
                 actionFinished(false);
                 this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.NOT_HELD);
                 return;
@@ -3898,6 +3901,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 // Make sure object ID given is actually the item in hand
                 if (!ItemInHand.transform.name.Equals(action.objectId)) {
                     errorMessage = "Object ID " + action.objectId + " is not the object currently being held.";
+                    Debug.Log(errorMessage);
                     actionFinished(false);
                     this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.NOT_HELD);
                     return;
@@ -4086,6 +4090,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         {
             if (!physicsSceneManager.UniqueIdToSimObjPhysics.ContainsKey(action.objectId)) {
                 errorMessage = "Object ID " + action.objectId + " appears to be invalid.";
+                Debug.Log(errorMessage);
                 actionFinished(false);
                 this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.NOT_OBJECT);
                 return;
@@ -4315,6 +4320,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                 if (!physicsSceneManager.UniqueIdToSimObjPhysics.ContainsKey(action.objectId)) {
                     errorMessage = "Object ID appears to be invalid.";
+                    Debug.Log(errorMessage);
                     actionFinished(false);
                     this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.NOT_OBJECT);
                     return false;
@@ -4322,6 +4328,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                 if(!ItemInHand.transform.name.Equals(action.objectId)) {
                     errorMessage = "Object ID " + action.objectId + " is not the object currently being held.";
+                    Debug.Log(errorMessage);
                     actionFinished(false);
                     this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.NOT_HELD);
                     return false;
