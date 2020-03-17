@@ -336,11 +336,12 @@ def local_build_name(prefix, arch):
 
 
 @task
-def local_build(context, prefix="local", arch="OSXIntel64", include_private_scenes=False):
+def local_build(context, prefix="local", arch="OSXIntel64"):
     build_name = local_build_name(prefix, arch)
     env = dict()
-    if include_private_scenes:
+    if os.path.isdir('unity/Assets/Private/Scenes'):
         env['INCLUDE_PRIVATE_SCENES'] = 'true'
+
     if _build("unity", arch, "builds", build_name, env=env):
         print("Build Successful")
     else:
