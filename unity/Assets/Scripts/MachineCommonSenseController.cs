@@ -16,7 +16,7 @@ public class MachineCommonSenseController : PhysicsRemoteFPSAgentController {
     public static float MAX_DISTANCE_ACCROSS_ROOM = 7.08f;
 
     // The number of times to run Physics.Simulate after each action from the player.
-    public static int PHYSICS_SIMULATION_STEPS = 20;
+    public static int PHYSICS_SIMULATION_STEPS = 15;
 
     public int step = 0;
 
