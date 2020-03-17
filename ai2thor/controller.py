@@ -44,7 +44,7 @@ import ai2thor.downloader
 import ai2thor.server
 from ai2thor.interact import InteractiveControllerPrompt, DefaultActions
 from ai2thor.server import queue_get, DepthFormat
-from ai2thor.build import BUILDS
+from ai2thor.build import VERSION
 from ai2thor._quality_settings import QUALITY_SETTINGS, DEFAULT_QUALITY
 
 import warnings
@@ -762,14 +762,15 @@ class Controller(object):
     def build_url(self):
         from ai2thor.build import arch_platform_map
         import ai2thor.build
-        if platform.system() in BUILDS:
-            return (BUILDS[platform.system()]['url'], BUILDS[platform.system()]['sha256'])
+        arch = arch_platform_map[platform.system()]
+        if VERSION:
+            ver_build = ai2thor.build.Build(arch, VERSION, self.include_private_scenes)
+            return (ver_build.url(), ver_build.sha256())
         else:
             url = None
             sha256_build = None
             git_dir = os.path.normpath(os.path.dirname(os.path.realpath(__file__)) + "/../.git")
             for commit_id in subprocess.check_output('git --git-dir=' + git_dir + ' log -n 10 --format=%H', shell=True).decode('ascii').strip().split("\n"):
-                arch = arch_platform_map[platform.system()]
                 commit_build = ai2thor.build.Build(arch, commit_id, self.include_private_scenes)
 
                 try:

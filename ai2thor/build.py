@@ -2,10 +2,11 @@ from aws_requests_auth.boto_utils import BotoAWSRequestsAuth
 import os
 import requests
 
+VERSION = None
 try:
-    from ai2thor._builds import BUILDS
+    from ai2thor._builds import VERSION
 except ImportError:
-    BUILDS = {}
+    pass
 
 platform_map = dict(Linux64="Linux", OSXIntel64="Darwin")
 
