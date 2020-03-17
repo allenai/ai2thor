@@ -1956,7 +1956,7 @@ def create_robothor_dataset(
 
 
         sorted_objs = sorted(point_objects,
-                             key=lambda m: sqr_dist_dict(m['initial_position'], m['target_position']))
+                             key=lambda m: m['shortest_path_length'])
         third = int(len(sorted_objs) / 3.0)
 
         for i, obj in enumerate(sorted_objs):
