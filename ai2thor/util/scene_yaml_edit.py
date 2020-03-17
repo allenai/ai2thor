@@ -30,9 +30,11 @@ def GetSceneNames(last_index, last_subIndex, nameTemplate):
 
 def main():
     testSceneNames = GetSceneNames(3, 5, "Val")
-    # valSceneNames = GetSceneNames(2, 2, "test-dev")
+    valSceneNames = GetSceneNames(2, 2, "test-dev")
     trainSceneNames = GetSceneNames(12, 5, "Train")
-    allScenes = testSceneNames  + trainSceneNames
+
+    #allScenes = testSceneNames  + trainSceneNames
+    allScenes = valSceneNames
     for scene_file_name in allScenes:
         updateNavMeshParamsForScene(scene_file_name)
 

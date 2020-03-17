@@ -1845,9 +1845,6 @@ def create_robothor_dataset(
         )
         object_ids = event.metadata['actionReturn']
 
-
-
-
         if object_ids is None or len(object_ids) > 1 or len(object_ids) == 0:
             print("Object type '{}' not available in scene.".format(object_type))
             return None
@@ -1862,7 +1859,6 @@ def create_robothor_dataset(
             )
         )
 
-
         target_position = controller.step(action='GetObjectPosition', objectId=object_id).metadata['actionReturn']
 
         reachable_positions = event_reachable.metadata['actionReturn']
@@ -1871,8 +1867,6 @@ def create_robothor_dataset(
             (pos['x'], pos['y'], pos['z']) for pos in reachable_positions
             # if sqr_dist_dict(pos, target_position) >= visibility_distance * visibility_multiplier_filter
         ])
-
-
 
         def filter_points(selected_points, point_set, minimum_distance):
             result = set()
@@ -1962,7 +1956,7 @@ def create_robothor_dataset(
 
 
         sorted_objs = sorted(point_objects,
-                             key=lambda m: sqr_dist_dict(m['initial_position'], m['target_position']))
+                             key=lambda m: m['shortest_path_length'])
         third = int(len(sorted_objs) / 3.0)
 
         for i, obj in enumerate(sorted_objs):
@@ -1997,7 +1991,7 @@ def create_robothor_dataset(
                     )
 
     if scene_filter is not None:
-        scene_filter_set = set([o for o in scene_filter.split(",")])
+        scene_filter_set = set(scene_filter.split(","))
         scenes = [s for s in scenes if s in scene_filter_set]
 
     print("Sorted scenes: {}".format(scenes))
@@ -2275,9 +2269,9 @@ def visualize_shortest_paths(
         editor_mode=False,
         local_build=False,
         scenes=None,
-        object_types=None,
         gridSize=0.25,
-        output_dir='.'
+        output_dir='.',
+        object_types=None
 ):
     angle = 45
     import ai2thor.controller
@@ -2312,12 +2306,12 @@ def visualize_shortest_paths(
     evt = controller.step(action='SetTopLevelView', topView=True)
     evt = controller.step(action='ToggleMapView')
 
-    im = Image.fromarray(evt.third_party_camera_frames[0])
-    im.save(os.path.join(output_dir, "top_view.jpg"))
+    # im = Image.fromarray(evt.third_party_camera_frames[0])
+    # im.save(os.path.join(output_dir, "top_view.jpg"))
 
     with open(dataset_path, 'r') as f:
         dataset = json.load(f)
-        print("Running for {} points...".format(len(dataset)))
+
         dataset_filtered = dataset
         if scenes is not None:
             scene_f_set = set(scenes.split(","))
@@ -2325,9 +2319,11 @@ def visualize_shortest_paths(
         if object_types is not None:
             object_f_set = set(object_types.split(","))
             dataset_filtered = [d for d in dataset_filtered if d['object_type'] in object_f_set]
-
+        print("Running for {} points...".format(len(dataset_filtered)))
 
         index = 0
+        print(index)
+        print(len(dataset_filtered))
         datapoint = dataset_filtered[index]
         current_scene = datapoint['scene']
         current_object = datapoint['object_type']
@@ -2370,6 +2366,8 @@ def visualize_shortest_paths(
             im = Image.fromarray(evt.third_party_camera_frames[0])
             im.save(os.path.join(output_dir, "{}-{}.jpg".format(sc, obj_type)))
 
+            # print("Retur {}, {} ".format(evt.metadata['actionReturn'], evt.metadata['lastActionSuccess']))
+            # print(evt.metadata['errorMessage'])
             failed[key] = [positions[i] for i, success in enumerate(evt.metadata['actionReturn']) if not success]
 
         from pprint import pprint
