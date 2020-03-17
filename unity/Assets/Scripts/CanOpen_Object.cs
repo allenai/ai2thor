@@ -160,6 +160,11 @@ public class CanOpen_Object : MonoBehaviour
             return false;
         }
     }
+
+    private float CalculateValueByPercentage(float previous, float next, float percentage) {
+        return (previous < next ? (previous + ((next - previous) * percentage)) :
+            (previous - ((previous - next) * percentage)));
+    }
     
     public void Interact()
     {
@@ -172,38 +177,52 @@ public class CanOpen_Object : MonoBehaviour
             gameObject.GetComponent<Rigidbody>().isKinematic = false;
         }
 
+        bool isOpening = (this.openPercentage > this.isOpenByPercentage);
+        float percentage = isOpening ? this.openPercentage : (1 - this.openPercentage);
+
+        // Update the global variables BEFORE running the loop.
+        this.isOpenByPercentage = this.openPercentage;
+        this.isOpen = (this.isOpenByPercentage > 0);
+
 		for (int i = 0; i < MovingParts.Length; i++)
 		{
-            bool isOpening = (this.openPercentage > this.isOpenByPercentage);
-            float percentage = isOpening ? this.openPercentage : (1 - this.openPercentage);
-            Vector3 previousPosition = isOpening ? closedPositions[i] : openPositions[i];
-            Vector3 nextPosition = isOpening ? openPositions[i] : closedPositions[i];
+            Vector3 previous = isOpening ? closedPositions[i] : openPositions[i];
+            Vector3 next = isOpening ? openPositions[i] : closedPositions[i];
 
             if (animationTime == 0) {
                 if (movementType == MovementType.Rotate) {
                     MovingParts[i].transform.localRotation = Quaternion.Euler(
-                        nextPosition.x * percentage,
-                        nextPosition.y * percentage,
-                        nextPosition.z * percentage
+                        this.CalculateValueByPercentage(previous.x, next.x, percentage),
+                        this.CalculateValueByPercentage(previous.y, next.y, percentage),
+                        this.CalculateValueByPercentage(previous.z, next.z, percentage)
                     );
                 }
+
                 else if (movementType == MovementType.Slide) {
-                    MovingParts[i].transform.localPosition = nextPosition * percentage;
+                    MovingParts[i].transform.localPosition = new Vector3(
+                        this.CalculateValueByPercentage(previous.x, next.x, percentage),
+                        this.CalculateValueByPercentage(previous.y, next.y, percentage),
+                        this.CalculateValueByPercentage(previous.z, next.z, percentage)
+                    );
                 }
+
                 else if (movementType == MovementType.ScaleX || movementType == MovementType.ScaleY ||
                     movementType == MovementType.ScaleZ) {
+
                     MovingParts[i].transform.localScale = new Vector3(
-                        movementType != MovementType.ScaleX ? nextPosition.x :
-                            (previousPosition.x + (nextPosition.x - previousPosition.x) * percentage),
-                        movementType != MovementType.ScaleY ? nextPosition.y :
-                            (previousPosition.y + (nextPosition.y - previousPosition.y) * percentage),
-                        movementType != MovementType.ScaleZ ? nextPosition.z :
-                            (previousPosition.z + (nextPosition.z - previousPosition.z) * percentage)
+                        movementType != MovementType.ScaleX ? next.x :
+                            this.CalculateValueByPercentage(previous.x, next.x, percentage),
+                        movementType != MovementType.ScaleY ? next.y :
+                            this.CalculateValueByPercentage(previous.y, next.y, percentage),
+                        movementType != MovementType.ScaleZ ? next.z :
+                            this.CalculateValueByPercentage(previous.z, next.z, percentage)
                     );
                 }
+
                 if (i == MovingParts.Length - 1) {
                     UpdateOpenOrCloseBoundingBox();
                 }
+
                 continue;
             }
 
@@ -228,7 +247,11 @@ public class CanOpen_Object : MonoBehaviour
 			if(movementType == MovementType.Rotate)
 			{
                 iTween.RotateTo(MovingParts[i], iTween.Hash(new System.Object[] {
-                    nextPosition * percentage,
+                    Quaternion.Euler(
+                        this.CalculateValueByPercentage(previous.x, next.x, percentage),
+                        this.CalculateValueByPercentage(previous.y, next.y, percentage),
+                        this.CalculateValueByPercentage(previous.z, next.z, percentage)
+                    ),
                     "rotation"
                 }.Concat(args).ToArray()));
 			}
@@ -236,38 +259,31 @@ public class CanOpen_Object : MonoBehaviour
 			else if(movementType == MovementType.Slide)
 			{
                 iTween.MoveTo(MovingParts[i], iTween.Hash(new System.Object[] {
-                    nextPosition * percentage,
+                    new Vector3(
+                        this.CalculateValueByPercentage(previous.x, next.x, percentage),
+                        this.CalculateValueByPercentage(previous.y, next.y, percentage),
+                        this.CalculateValueByPercentage(previous.z, next.z, percentage)
+                    ),
                     "position"
                 }.Concat(args).ToArray()));
 			}
 
-            else if(movementType == MovementType.ScaleX)
-            {
+            else if (movementType == MovementType.ScaleX || movementType == MovementType.ScaleY ||
+                movementType == MovementType.ScaleZ) {
+
                 iTween.ScaleTo(MovingParts[i], iTween.Hash(new System.Object[] {
-                    new Vector3(previousPosition.x + (nextPosition.x - previousPosition.x) * percentage, nextPosition.y, nextPosition.z),
+                    new Vector3(
+                        movementType != MovementType.ScaleX ? next.x :
+                            this.CalculateValueByPercentage(previous.x, next.x, percentage),
+                        movementType != MovementType.ScaleY ? next.y :
+                            this.CalculateValueByPercentage(previous.y, next.y, percentage),
+                        movementType != MovementType.ScaleZ ? next.z :
+                            this.CalculateValueByPercentage(previous.z, next.z, percentage)
+                    ),
                     "scale"
                 }.Concat(args).ToArray()));
             }
-
-            else if(movementType == MovementType.ScaleY)
-            {
-                iTween.ScaleTo(MovingParts[i], iTween.Hash(new System.Object[] {
-                    new Vector3(nextPosition.x, nextPosition.y + (nextPosition.y - previousPosition.y) * percentage, nextPosition.z),
-                    "scale"
-                }.Concat(args).ToArray()));
-            }
-
-            else if(movementType == MovementType.ScaleZ)
-            {
-                iTween.ScaleTo(MovingParts[i], iTween.Hash(new System.Object[] {
-                    new Vector3(nextPosition.x, nextPosition.y, nextPosition.z + (nextPosition.z - previousPosition.z) * percentage),
-                    "scale"
-                }.Concat(args).ToArray()));
-			}
         }
-
-        this.isOpenByPercentage = this.openPercentage;
-        this.isOpen = (this.isOpenByPercentage > 0);
 
         //default open percentage for next call
         openPercentage = 1.0f;
