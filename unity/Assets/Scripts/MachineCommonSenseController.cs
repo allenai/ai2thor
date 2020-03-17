@@ -293,7 +293,11 @@ public class MachineCommonSenseController : PhysicsRemoteFPSAgentController {
     {
         // Need to calculate current rotation/horizon and increment by inputs given
         float updatedRotationValue = transform.localEulerAngles.y + response.rotation.y;
-        int updatedHorizonValue = (int)m_Camera.transform.localEulerAngles.x + response.horizon;
+        float currentHorizonValue = m_Camera.transform.localEulerAngles.x;
+        // The horizon should always be either between 0 and 90 (looking down) or 270 and 360 (looking up).
+        // If looking up, we must change the horizon from [360, 270] to [0, -90].
+        currentHorizonValue = (currentHorizonValue >= 270 ? (currentHorizonValue - 360) : currentHorizonValue);
+        float updatedHorizonValue = currentHorizonValue + response.horizon;
 
         // Check to ensure rotation value stays between -360 and 360
         while (updatedRotationValue >= maxRotation)
@@ -317,7 +321,7 @@ public class MachineCommonSenseController : PhysicsRemoteFPSAgentController {
 
         ServerAction action = new ServerAction();
         action.rotation.y = updatedRotationValue;
-        action.horizon = updatedHorizonValue;
+        action.horizon = (int)updatedHorizonValue;
         base.RotateLook(action);
     }
 
