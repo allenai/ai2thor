@@ -1843,7 +1843,6 @@ def create_robothor_dataset(
         )
     )
     scenes_in_build = event.metadata['actionReturn']
-
     objects_types_in_scene = set()
 
     def sqr_dist(a, b):
