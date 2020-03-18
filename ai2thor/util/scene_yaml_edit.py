@@ -24,15 +24,17 @@ def updateNavMeshParamsForScene(scene_file_name):
     doc.dump_yaml()
 
 
-def GetSceneNames(last_index, last_subIndex, nameTemplate):
-    return ["unity/Assets/Scenes/FloorPlan_{}{}_{}.unity".format(nameTemplate,i, j)  for i in range(1, last_index+1) for j in range(1, last_subIndex+1)]
+def GetSceneNames(last_index, last_subIndex, nameTemplate, prefix_path='unity/Assets/Scenes'):
+    return ["{}/FloorPlan_{}{}_{}.unity".format(prefix_path, nameTemplate, i, j)  for i in range(1, last_index+1) for j in range(1, last_subIndex+1)]
 
 
 def main():
     testSceneNames = GetSceneNames(3, 5, "Val")
-    # valSceneNames = GetSceneNames(2, 2, "test-dev")
+    valSceneNames = GetSceneNames(2, 2, "test-dev", 'unity/Assets/Private/Scenes')
     trainSceneNames = GetSceneNames(12, 5, "Train")
-    allScenes = testSceneNames  + trainSceneNames
+
+    #allScenes = testSceneNames  + trainSceneNames
+    allScenes = valSceneNames
     for scene_file_name in allScenes:
         updateNavMeshParamsForScene(scene_file_name)
 

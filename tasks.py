@@ -10,9 +10,11 @@ import pprint
 from invoke import task
 import boto3
 import platform
+import ai2thor.build
 
 
 S3_BUCKET = "ai2-thor"
+PRIVATE_S3_BUCKET = "ai2-thor-private"
 UNITY_VERSION = "2018.4.16f1"
 
 
@@ -25,24 +27,30 @@ def add_files(zipf, start_dir):
             zipf.write(fn, arcname)
 
 
-def push_build(build_archive_name, archive_sha256):
+def push_build(build_archive_name, archive_sha256, include_private_scenes):
     import boto3
 
     # subprocess.run("ls %s" % build_archive_name, shell=True)
     # subprocess.run("gsha256sum %s" % build_archive_name)
     s3 = boto3.resource("s3")
+    acl = 'public-read'
+    bucket = S3_BUCKET
+    if include_private_scenes:
+        bucket = PRIVATE_S3_BUCKET 
+        acl = 'private'
+
     archive_base = os.path.basename(build_archive_name)
     key = "builds/%s" % (archive_base,)
 
     sha256_key = "builds/%s.sha256" % (os.path.splitext(archive_base)[0],)
 
     with open(build_archive_name, "rb") as af:
-        s3.Object(S3_BUCKET, key).put(Body=af, ACL="public-read")
+        s3.Object(bucket, key).put(Body=af, ACL=acl)
 
-    s3.Object(S3_BUCKET, sha256_key).put(
-        Body=archive_sha256, ACL="public-read", ContentType="text/plain"
+    s3.Object(bucket, sha256_key).put(
+        Body=archive_sha256, ACL=acl, ContentType="text/plain"
     )
-    print("pushed build %s to %s" % (S3_BUCKET, build_archive_name))
+    print("pushed build %s to %s" % (bucket, build_archive_name))
 
 
 def _local_build_path(prefix="local"):
@@ -330,7 +338,11 @@ def local_build_name(prefix, arch):
 @task
 def local_build(context, prefix="local", arch="OSXIntel64"):
     build_name = local_build_name(prefix, arch)
-    if _build("unity", arch, "builds", build_name):
+    env = dict()
+    if os.path.isdir('unity/Assets/Private/Scenes'):
+        env['INCLUDE_PRIVATE_SCENES'] = 'true'
+
+    if _build("unity", arch, "builds", build_name, env=env):
         print("Build Successful")
     else:
         print("Build Failure")
@@ -581,7 +593,7 @@ def build_log_push(build_info):
     )
 
 
-def archive_push(unity_path, build_path, build_dir, build_info):
+def archive_push(unity_path, build_path, build_dir, build_info, include_private_scenes=False):
     threading.current_thread().success = False
     archive_name = os.path.join(unity_path, build_path)
     zipf = zipfile.ZipFile(archive_name, 'w', zipfile.ZIP_DEFLATED)
@@ -589,7 +601,7 @@ def archive_push(unity_path, build_path, build_dir, build_info):
     zipf.close()
 
     build_info["sha256"] = build_sha256(archive_name)
-    push_build(archive_name, build_info["sha256"])
+    push_build(archive_name, build_info["sha256"], include_private_scenes)
     build_log_push(build_info)
     print("Build successful")
     threading.current_thread().success = True
@@ -698,13 +710,16 @@ def ci_build_arch(arch, branch):
         .strip()
     )
 
-    if ai2thor.downloader.commit_build_exists(arch, commit_id):
+    commit_build = ai2thor.build.Build(arch, commit_id, False)
+    if commit_build.exists():
         print("found build for commit %s %s" % (commit_id, arch))
         return
 
+    include_private_scenes = False
+    # XXX FIX bucket name
     build_url_base = "http://s3-us-west-2.amazonaws.com/%s/" % S3_BUCKET
     unity_path = "unity"
-    build_name = "thor-%s-%s" % (arch, commit_id)
+    build_name = ai2thor.build.build_name(arch, commit_id, include_private_scenes)
     build_dir = os.path.join("builds", build_name)
     build_path = build_dir + ".zip"
     build_info = {}
@@ -747,7 +762,8 @@ def poll_ci_build(context):
         for arch in platform_map.keys():
             if (i % 5) == 0:
                 print("checking %s for commit id %s" % (arch, commit_id))
-            if ai2thor.downloader.commit_build_log_exists(arch, commit_id):
+            commit_build = ai2thor.build.Build(arch, commit_id, False)
+            if commit_build.log_exists():
                 print("log exists %s" % commit_id)
             else:
                 missing = True
@@ -756,10 +772,11 @@ def poll_ci_build(context):
         time.sleep(10)
 
     for arch in platform_map.keys():
-        if not ai2thor.downloader.commit_build_exists(arch, commit_id):
+        commit_build = ai2thor.build.Build(arch, commit_id, False)
+        if not commit_build.exists():
             print(
                 "Build log url: %s"
-                % ai2thor.downloader.commit_build_log_url(arch, commit_id)
+                % commit_build.log_url()
             )
             raise Exception("Failed to build %s for commit: %s " % (arch, commit_id))
 
@@ -769,6 +786,7 @@ def build(context, local=False):
     from multiprocessing import Process
     from ai2thor.build import platform_map
 
+
     version = datetime.datetime.now().strftime("%Y%m%d%H%M")
     build_url_base = "http://s3-us-west-2.amazonaws.com/%s/" % S3_BUCKET
 
@@ -777,23 +795,27 @@ def build(context, local=False):
     # dp = Process(target=build_docker, args=(version,))
     # dp.start()
 
-    for arch in platform_map.keys():
-        unity_path = "unity"
-        build_name = "thor-%s-%s" % (version, arch)
-        build_dir = os.path.join("builds", build_name)
-        build_path = build_dir + ".zip"
-        build_info = builds[platform_map[arch]] = {}
+    for include_private_scenes in (True, False):
+        for arch in platform_map.keys():
+            env = {}
+            if include_private_scenes:
+                env['INCLUDE_PRIVATE_SCENES'] = 'true'
+            unity_path = "unity"
+            build_name = ai2thor.build.build_name(arch, version, include_private_scenes)
+            build_dir = os.path.join("builds", build_name)
+            build_path = build_dir + ".zip"
+            build_info = builds[platform_map[arch]] = {}
 
-        build_info["url"] = build_url_base + build_path
-        build_info["build_exception"] = ""
-        build_info["log"] = "%s.log" % (build_name,)
+            build_info["url"] = build_url_base + build_path
+            build_info["build_exception"] = ""
+            build_info["log"] = "%s.log" % (build_name,)
 
-        _build(unity_path, arch, build_dir, build_name)
-        t = threading.Thread(
-            target=archive_push, args=(unity_path, build_path, build_dir, build_info)
-        )
-        t.start()
-        threads.append(t)
+            _build(unity_path, arch, build_dir, build_name, env=env)
+            t = threading.Thread(
+                target=archive_push, args=(unity_path, build_path, build_dir, build_info, include_private_scenes)
+            )
+            t.start()
+            threads.append(t)
 
     # dp.join()
 
@@ -833,6 +855,7 @@ def interact(
     image_directory='.',
     width=300,
     height=300,
+    include_private_scenes=False,
     noise=False
 ):
     import ai2thor.controller
@@ -853,6 +876,7 @@ def interact(
             image_dir=image_directory,
             start_unity=False if editor_mode else True,
             save_image_per_frame=True,
+            include_private_scenes=include_private_scenes,
             add_depth_noise=noise
         )
     else:
@@ -1821,7 +1845,6 @@ def create_robothor_dataset(
         )
     )
     scenes_in_build = event.metadata['actionReturn']
-
     objects_types_in_scene = set()
 
     def sqr_dist(a, b):
@@ -1845,9 +1868,6 @@ def create_robothor_dataset(
         )
         object_ids = event.metadata['actionReturn']
 
-
-
-
         if object_ids is None or len(object_ids) > 1 or len(object_ids) == 0:
             print("Object type '{}' not available in scene.".format(object_type))
             return None
@@ -1862,7 +1882,6 @@ def create_robothor_dataset(
             )
         )
 
-
         target_position = controller.step(action='GetObjectPosition', objectId=object_id).metadata['actionReturn']
 
         reachable_positions = event_reachable.metadata['actionReturn']
@@ -1871,8 +1890,6 @@ def create_robothor_dataset(
             (pos['x'], pos['y'], pos['z']) for pos in reachable_positions
             # if sqr_dist_dict(pos, target_position) >= visibility_distance * visibility_multiplier_filter
         ])
-
-
 
         def filter_points(selected_points, point_set, minimum_distance):
             result = set()
@@ -1962,7 +1979,7 @@ def create_robothor_dataset(
 
 
         sorted_objs = sorted(point_objects,
-                             key=lambda m: sqr_dist_dict(m['initial_position'], m['target_position']))
+                             key=lambda m: m['shortest_path_length'])
         third = int(len(sorted_objs) / 3.0)
 
         for i, obj in enumerate(sorted_objs):
@@ -1997,7 +2014,7 @@ def create_robothor_dataset(
                     )
 
     if scene_filter is not None:
-        scene_filter_set = set([o for o in scene_filter.split(",")])
+        scene_filter_set = set(scene_filter.split(","))
         scenes = [s for s in scenes if s in scene_filter_set]
 
     print("Sorted scenes: {}".format(scenes))
@@ -2275,9 +2292,9 @@ def visualize_shortest_paths(
         editor_mode=False,
         local_build=False,
         scenes=None,
-        object_types=None,
         gridSize=0.25,
-        output_dir='.'
+        output_dir='.',
+        object_types=None
 ):
     angle = 45
     import ai2thor.controller
@@ -2312,12 +2329,12 @@ def visualize_shortest_paths(
     evt = controller.step(action='SetTopLevelView', topView=True)
     evt = controller.step(action='ToggleMapView')
 
-    im = Image.fromarray(evt.third_party_camera_frames[0])
-    im.save(os.path.join(output_dir, "top_view.jpg"))
+    # im = Image.fromarray(evt.third_party_camera_frames[0])
+    # im.save(os.path.join(output_dir, "top_view.jpg"))
 
     with open(dataset_path, 'r') as f:
         dataset = json.load(f)
-        print("Running for {} points...".format(len(dataset)))
+
         dataset_filtered = dataset
         if scenes is not None:
             scene_f_set = set(scenes.split(","))
@@ -2325,9 +2342,11 @@ def visualize_shortest_paths(
         if object_types is not None:
             object_f_set = set(object_types.split(","))
             dataset_filtered = [d for d in dataset_filtered if d['object_type'] in object_f_set]
-
+        print("Running for {} points...".format(len(dataset_filtered)))
 
         index = 0
+        print(index)
+        print(len(dataset_filtered))
         datapoint = dataset_filtered[index]
         current_scene = datapoint['scene']
         current_object = datapoint['object_type']
@@ -2370,6 +2389,8 @@ def visualize_shortest_paths(
             im = Image.fromarray(evt.third_party_camera_frames[0])
             im.save(os.path.join(output_dir, "{}-{}.jpg".format(sc, obj_type)))
 
+            # print("Retur {}, {} ".format(evt.metadata['actionReturn'], evt.metadata['lastActionSuccess']))
+            # print(evt.metadata['errorMessage'])
             failed[key] = [positions[i] for i, success in enumerate(evt.metadata['actionReturn']) if not success]
 
         from pprint import pprint
@@ -2606,3 +2627,4 @@ def remove_dataset_spaces(ctx, dataset_dir):
 
     with open('val.json', 'w') as fw:
         json.dump(test_data, fw, indent=4, sort_keys=True)
+

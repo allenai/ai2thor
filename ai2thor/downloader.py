@@ -4,40 +4,19 @@ from progressbar import ProgressBar, Bar, Percentage, FileTransferSpeed
 import hashlib
 import logging
 import os
+import ai2thor.build
+from aws_requests_auth.boto_utils import BotoAWSRequestsAuth
 
 logger = logging.getLogger(__name__)
-base_url = "http://s3-us-west-2.amazonaws.com/ai2-thor/"
 
+def download(url, build_name, sha256_digest, include_private_scenes=False):
 
-def commit_build_url(arch, commit_id):
-    return base_url + os.path.join('builds', "thor-%s-%s.zip" % (arch, commit_id))
+    auth = None
+    if include_private_scenes:
+        auth = ai2thor.build.boto_auth()
 
-
-def commit_build_log_url(arch, commit_id):
-    return os.path.splitext(commit_build_url(arch, commit_id))[0] + '.log'
-
-
-def commit_build_sha256_url(arch, commit_id):
-    return os.path.splitext(commit_build_url(arch, commit_id))[0] + '.sha256'
-
-
-def commit_build_exists(arch, commit_id):
-    return requests.head(commit_build_url(arch, commit_id)).status_code == 200
-
-
-def commit_build_log_exists(arch, commit_id):
-    return requests.head(commit_build_log_url(arch, commit_id)).status_code == 200
-
-
-def commit_build_sha256(arch, commit_id):
-    res = requests.get(commit_build_sha256_url(arch, commit_id))
-    res.raise_for_status()
-    return res.content.decode('ascii')
-
-
-def download(url, build_name, sha256_digest):
     logger.debug("Downloading file from %s" % url)
-    r = requests.get(url, stream=True)
+    r = requests.get(url, stream=True, auth=auth)
     r.raise_for_status()
     size = int(r.headers['Content-Length'].strip())
     total_bytes = 0

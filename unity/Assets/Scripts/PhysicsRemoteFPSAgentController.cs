@@ -8964,7 +8964,7 @@ public void PickupObject(ServerAction action) //use serveraction objectid
                 actionFinished(false);
                 return;
             }
-
+            
             var reachablePos = getReachablePositions(1.0f, 10000, action.grid, action.gridColor);
 
             var go1 = Instantiate(DebugTargetPointPrefab, sop.transform.position, Quaternion.identity);

@@ -2204,7 +2204,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         if (splitcommand.Length > 1)
                         {
                             //ID of spawner
-                            action.objectId = splitcommand[1];
+                            action.objectType = splitcommand[1];
 
                             if (splitcommand.Length == 5) {
                                 action.position = new Vector3(

@@ -35,6 +35,8 @@ setup(name='ai2thor',
           'pyyaml',
           'requests',
           'progressbar2',
+          'botocore',
+          'aws-requests-auth',
           'msgpack',
           'Pillow'
       ],
