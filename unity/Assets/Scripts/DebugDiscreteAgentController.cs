@@ -13,10 +13,14 @@ namespace UnityStandardAssets.Characters.FirstPerson
         public bool continuous = true;
         public bool forceAction = false;
         public float gridSize = 0.1f;
-        public string objectId = "";
         public float visibilityDistance = 0.4f;
+        public Vector3 moveOrPickupObjectDirection;
+        public string moveOrPickupObjectId = "";
+        public Vector3 receptacleObjectDirection;
+        public string receptacleObjectId = "";
         public float rotationIncrement = 45.0f;
         public int horizonIncrement = 30;
+        public float pushPullForce = 150.0f;
         public float FlyMagnitude = 1.0f;
         public float WalkMagnitude = 0.2f;
 
@@ -40,8 +44,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
             }
 
             ServerAction action = new ServerAction();
-            action.gridSize = gridSize;
             action.action = "Initialize";
+            action.gridSize = gridSize;
+            action.visibilityDistance = visibilityDistance;
             PhysicsController.ProcessControlCommand(action);
         }
 
@@ -244,24 +249,61 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
                         if(Input.GetKeyDown(KeyCode.O))
                         {
+                            action.action = "OpenObject";
+                            action.moveMagnitude = 1.0f;
+                            action.objectDirection = this.receptacleObjectDirection;
+                            action.objectId = this.receptacleObjectId;
+                            PhysicsController.ProcessControlCommand(action);
+                            /*
                             if(PhysicsController.FlightMode)
                             {
                                 action.action = "CheckDroneCaught";
                                 PhysicsController.ProcessControlCommand(action);
                             }
+                            */
+                        }
+
+                        if(Input.GetKeyDown(KeyCode.C))
+                        {
+                            action.action = "CloseObject";
+                            action.moveMagnitude = 1.0f;
+                            action.objectDirection = this.receptacleObjectDirection;
+                            action.objectId = this.receptacleObjectId;
+                            PhysicsController.ProcessControlCommand(action);
                         }
 
                         if(Input.GetKeyDown(KeyCode.P))
                         {
                             action.action = "PickupObject";
-                            action.objectId = this.objectId;
+                            action.objectDirection = this.moveOrPickupObjectDirection;
+                            action.objectId = this.moveOrPickupObjectId;
+                            PhysicsController.ProcessControlCommand(action);
+                        }
+
+                        if(Input.GetKeyDown(KeyCode.Z))
+                        {
+                            action.action = "PutObject";
+                            action.objectDirection = this.moveOrPickupObjectDirection;
+                            action.objectId = this.moveOrPickupObjectId;
+                            action.receptacleObjectDirection = this.receptacleObjectDirection;
+                            action.receptacleObjectId = this.receptacleObjectId;
                             PhysicsController.ProcessControlCommand(action);
                         }
 
                         if(Input.GetKeyDown(KeyCode.X))
                         {
                             action.action = "DropHandObject";
-                            action.objectId = this.objectId;
+                            action.objectDirection = this.moveOrPickupObjectDirection;
+                            action.objectId = this.moveOrPickupObjectId;
+                            PhysicsController.ProcessControlCommand(action);
+                        }
+
+                        if(Input.GetKeyDown(KeyCode.U))
+                        {
+                            action.action = this.pushPullForce > 0 ? "PushObject" : "PullObject";
+                            action.moveMagnitude = System.Math.Abs(this.pushPullForce);
+                            action.objectDirection = this.moveOrPickupObjectDirection;
+                            action.objectId = this.moveOrPickupObjectId;
                             PhysicsController.ProcessControlCommand(action);
                         }
 

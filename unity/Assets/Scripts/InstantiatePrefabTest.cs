@@ -363,7 +363,6 @@ public class InstantiatePrefabTest : MonoBehaviour
             }
         }
 
-
         foreach(RotationAndDistanceValues quat in ToCheck)
         {
             //if spawn area is clear, spawn it and return true that we spawned it
@@ -547,26 +546,28 @@ public class InstantiatePrefabTest : MonoBehaviour
         GameObject bb = simObj.BoundingBox.transform.gameObject;
         BoxCollider bbcol = bb.GetComponent<BoxCollider>();
         Vector3 bbCenter = bbcol.center;
+        Vector3 bbSize = new Vector3(bbcol.size.x * simObj.transform.localScale.x,
+            bbcol.size.y * simObj.transform.localScale.y, bbcol.size.z * simObj.transform.localScale.z);
         Vector3 bbCenterTransformPoint = bb.transform.TransformPoint(bbCenter);
         //keep track of all 8 corners of the OverlapBox
         List<Vector3> corners = new List<Vector3>();
         //bottom forward right
-        corners.Add(bb.transform.TransformPoint(bbCenter + new Vector3(bbcol.size.x, -bbcol.size.y, bbcol.size.z) * 0.5f));
+        corners.Add(bb.transform.TransformPoint(bbCenter + new Vector3(bbSize.x, -bbSize.y, bbSize.z) * 0.5f));
         //bottom forward left
-        corners.Add(bb.transform.TransformPoint(bbCenter + new Vector3(-bbcol.size.x, -bbcol.size.y, bbcol.size.z) * 0.5f));
+        corners.Add(bb.transform.TransformPoint(bbCenter + new Vector3(-bbSize.x, -bbSize.y, bbSize.z) * 0.5f));
         //bottom back left
-        corners.Add(bb.transform.TransformPoint(bbCenter + new Vector3(-bbcol.size.x, -bbcol.size.y, -bbcol.size.z) * 0.5f));
+        corners.Add(bb.transform.TransformPoint(bbCenter + new Vector3(-bbSize.x, -bbSize.y, -bbSize.z) * 0.5f));
         //bottom back right
-        corners.Add(bb.transform.TransformPoint(bbCenter + new Vector3(bbcol.size.x, -bbcol.size.y, -bbcol.size.z) * 0.5f));
+        corners.Add(bb.transform.TransformPoint(bbCenter + new Vector3(bbSize.x, -bbSize.y, -bbSize.z) * 0.5f));
 
         //top forward right
-        corners.Add(bb.transform.TransformPoint(bbCenter + new Vector3(bbcol.size.x, bbcol.size.y, bbcol.size.z) * 0.5f));
+        corners.Add(bb.transform.TransformPoint(bbCenter + new Vector3(bbSize.x, bbSize.y, bbSize.z) * 0.5f));
         //top forward left
-        corners.Add(bb.transform.TransformPoint(bbCenter + new Vector3(-bbcol.size.x, bbcol.size.y, bbcol.size.z) * 0.5f));
+        corners.Add(bb.transform.TransformPoint(bbCenter + new Vector3(-bbSize.x, bbSize.y, bbSize.z) * 0.5f));
         //top back left
-        corners.Add(bb.transform.TransformPoint(bbCenter + new Vector3(-bbcol.size.x, bbcol.size.y, -bbcol.size.z) * 0.5f));
+        corners.Add(bb.transform.TransformPoint(bbCenter + new Vector3(-bbSize.x, bbSize.y, -bbSize.z) * 0.5f));
         //top back right
-        corners.Add(bb.transform.TransformPoint(bbCenter+ new Vector3(bbcol.size.x, bbcol.size.y, -bbcol.size.z) * 0.5f));
+        corners.Add(bb.transform.TransformPoint(bbCenter+ new Vector3(bbSize.x, bbSize.y, -bbSize.z) * 0.5f));
 
         SpawnCorners = corners;
 
@@ -585,7 +586,7 @@ public class InstantiatePrefabTest : MonoBehaviour
 
         //we need the center of the box collider in world space, we need the box collider size/2, we need the rotation to set the box at, layermask, querytrigger
         Collider[] hitColliders = Physics.OverlapBox(bbCenterTransformPoint,
-                                                     bbcol.size / 2.0f, simObj.transform.rotation, 
+                                                     bbSize / 2.0f, simObj.transform.rotation,
                                                      layermask, QueryTriggerInteraction.Ignore);
         // print("trying to place " + simObj.transform.name + ", hitCollider length is: " + hitColliders.Length);                                             
         // foreach(Collider c in hitColliders)

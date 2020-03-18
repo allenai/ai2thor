@@ -828,6 +828,14 @@ public class ObjectMetadata
     public bool isMoving;//true if this game object currently has a non-zero velocity
 
     public WorldSpaceBounds objectBounds;
+
+    // MCS Additions
+    public Vector3 direction;
+    public float distanceXZ;
+    public Vector3 heading;
+    public Vector3[] points;
+    public bool visibleInCamera;
+
 	public ObjectMetadata() { }
 }
 
@@ -930,9 +938,12 @@ public struct MetadataWrapper
 	public Vector3[] actionVector3sReturn;
 	public List<Vector3> visibleRange;
 	public System.Object actionReturn;
-	public string lastActionStatus;
 
 	public float currentTime;
+
+    // MCS Additions
+    public string lastActionStatus;
+    public float reachDistance;
 }
 
 
@@ -1023,8 +1034,10 @@ public class ServerAction
 
     public bool useAgentTransform = false;
 
-    // Machine Common Sense Additions
+    // MCS Additions
     public bool logs = false;
+    public Vector3 objectDirection;
+    public Vector3 receptacleObjectDirection;
     public MachineCommonSenseConfigScene sceneConfig;
 
     public SimObjType ReceptableSimObjType()

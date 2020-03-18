@@ -132,9 +132,21 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
         public enum ActionStatus
         {
-            SUCCESSFUL,
-            OBSTRUCTED,
-            FAILED // generic error code for unexpected failures
+			HAND_IS_FULL,
+			IS_CLOSED_COMPLETELY,
+			IS_OPENED_COMPLETELY,
+			NOT_HELD,
+            NOT_INTERACTABLE,
+			NOT_OBJECT,
+            NOT_OPENABLE,
+			NOT_PICKUPABLE,
+			NOT_RECEPTACLE,
+			OBSTRUCTED,
+			OUT_OF_REACH,
+			SUCCESSFUL,
+			SUCCESSFUL_WITH_INVALID_PARAMETERS,
+            WRONG_POSE,
+			FAILED // generic error code for unexpected failures
         }
 
 		public Quaternion TargetRotation
@@ -231,7 +243,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 this.jsInterface.SendAction(currentServerAction);
             }
 
-            lastActionSuccess = success;
+			lastActionSuccess = success;
 			this.actionComplete = true;
 			this.actionReturn = actionReturn;
 			actionCounter = 0;
@@ -958,6 +970,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		public void Look(ServerAction response)
 		{
 			m_Camera.transform.localEulerAngles = new Vector3(response.horizon, 0.0f, 0.0f);
+            this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.SUCCESSFUL);
 			actionFinished(true);
 		}
 
@@ -965,6 +978,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		public virtual void Rotate(ServerAction response)
 		{
 			transform.rotation = Quaternion.Euler(new Vector3(0.0f, response.rotation.y, 0.0f));
+            this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.SUCCESSFUL);
 			actionFinished(true);
 		}
 
@@ -973,6 +987,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		{
 			transform.rotation = Quaternion.Euler(new Vector3(0.0f, response.rotation.y, 0.0f));
 			m_Camera.transform.localEulerAngles = new Vector3(response.horizon, 0.0f, 0.0f);
+            this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.SUCCESSFUL);
 			actionFinished(true);
 
 		}
@@ -981,6 +996,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		public virtual void RotateLeft(ServerAction controlCommand)
 		{
 			transform.rotation = GetRotateQuaternion(-1);
+            this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.SUCCESSFUL);
 			actionFinished(true);
 		}
 
@@ -995,6 +1011,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		public virtual void RotateRight(ServerAction controlCommand)
 		{
 			transform.rotation = transform.rotation = GetRotateQuaternion(1);
+            this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.SUCCESSFUL);
 			actionFinished(true);
 		}
 
@@ -1005,6 +1022,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			{
 				float targetHorizon = horizonAngles[currentHorizonAngleIndex() - 1];
 				m_Camera.transform.localEulerAngles = new Vector3(targetHorizon, 0.0f, 0.0f);
+                this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.SUCCESSFUL);
 				actionFinished(true);
 
 			}
@@ -1013,6 +1031,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 				errorMessage = "can't LookDown below the min horizon angle";
 				Debug.Log(errorMessage);
 				errorCode = ServerActionErrorCode.LookDownCantExceedMin;
+                this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.FAILED);
 				actionFinished(false);
 			}
 		}
@@ -1025,6 +1044,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			{
 				float targetHorizon = horizonAngles[currentHorizonAngleIndex() + 1];
 				m_Camera.transform.localEulerAngles = new Vector3(targetHorizon, 0.0f, 0.0f);
+                this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.SUCCESSFUL);
 				actionFinished(true);
 			}
 
@@ -1033,6 +1053,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 				errorMessage = "can't LookUp beyond the max horizon angle";
 				Debug.Log(errorMessage);
 				errorCode = ServerActionErrorCode.LookUpCantExceedMax;
+                this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.FAILED);
 				actionFinished(false);
 			}
 		}

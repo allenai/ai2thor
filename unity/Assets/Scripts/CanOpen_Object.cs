@@ -5,6 +5,8 @@ using UnityStandardAssets.Characters.FirstPerson;
 
 //controls opening doors on a fridge. Because the fridge base body and door should be considered a single
 //sim object, this has mimicked functionality from CanOpen.cs but specialized for a Fridge.
+using System.Linq;
+using System;
 public class CanOpen_Object : MonoBehaviour 
 {
 	[Header("Moving Parts for this Object")]
@@ -22,7 +24,7 @@ public class CanOpen_Object : MonoBehaviour
     public float animationTime = 0.2f;
 
     [SerializeField]
-    protected float openPercentage = 1.0f; //0.0 to 1.0 - percent of openPosition the object opens. 
+    protected float openPercentage = 0;
 
 	[Header("Objects To Ignore Collision With - For Cabinets/Drawers with hinges too close together")]
     //these are objects to ignore collision with. This is in case the fridge doors touch each other or something that might
@@ -62,8 +64,7 @@ public class CanOpen_Object : MonoBehaviour
     [SerializeField]
     protected GameObject ClosedBoundingBox;
 
-
-
+    public float isOpenByPercentage = 0;
 
     #if UNITY_EDITOR
     void OnEnable ()
@@ -159,6 +160,11 @@ public class CanOpen_Object : MonoBehaviour
             return false;
         }
     }
+
+    private float CalculateValueByPercentage(float previous, float next, float percentage) {
+        return (previous < next ? (previous + ((next - previous) * percentage)) :
+            (previous - ((previous - next) * percentage)));
+    }
     
     public void Interact()
     {
@@ -171,195 +177,117 @@ public class CanOpen_Object : MonoBehaviour
             gameObject.GetComponent<Rigidbody>().isKinematic = false;
         }
 
-        //it's open? close it
-        if (isOpen)
-        {
-			for (int i = 0; i < MovingParts.Length; i++)
+        bool isOpening = (this.openPercentage > this.isOpenByPercentage);
+        float percentage = isOpening ? this.openPercentage : (1 - this.openPercentage);
+
+        // Update the global variables BEFORE running the loop.
+        this.isOpenByPercentage = this.openPercentage;
+        this.isOpen = (this.isOpenByPercentage > 0);
+
+		for (int i = 0; i < MovingParts.Length; i++)
+		{
+            Vector3 previous = isOpening ? closedPositions[i] : openPositions[i];
+            Vector3 next = isOpening ? openPositions[i] : closedPositions[i];
+
+            if (animationTime == 0) {
+                if (movementType == MovementType.Rotate) {
+                    MovingParts[i].transform.localRotation = Quaternion.Euler(
+                        this.CalculateValueByPercentage(previous.x, next.x, percentage),
+                        this.CalculateValueByPercentage(previous.y, next.y, percentage),
+                        this.CalculateValueByPercentage(previous.z, next.z, percentage)
+                    );
+                }
+
+                else if (movementType == MovementType.Slide) {
+                    MovingParts[i].transform.localPosition = new Vector3(
+                        this.CalculateValueByPercentage(previous.x, next.x, percentage),
+                        this.CalculateValueByPercentage(previous.y, next.y, percentage),
+                        this.CalculateValueByPercentage(previous.z, next.z, percentage)
+                    );
+                }
+
+                else if (movementType == MovementType.ScaleX || movementType == MovementType.ScaleY ||
+                    movementType == MovementType.ScaleZ) {
+
+                    MovingParts[i].transform.localScale = new Vector3(
+                        movementType != MovementType.ScaleX ? next.x :
+                            this.CalculateValueByPercentage(previous.x, next.x, percentage),
+                        movementType != MovementType.ScaleY ? next.y :
+                            this.CalculateValueByPercentage(previous.y, next.y, percentage),
+                        movementType != MovementType.ScaleZ ? next.z :
+                            this.CalculateValueByPercentage(previous.z, next.z, percentage)
+                    );
+                }
+
+                if (i == MovingParts.Length - 1) {
+                    UpdateOpenOrCloseBoundingBox();
+                }
+
+                continue;
+            }
+
+            System.Object[] args = new System.Object[] {
+                "islocal",
+                true,
+                "time",
+                animationTime,
+                "easetype",
+                "linear"
+            };
+
+            if (i == MovingParts.Length - 1) {
+                args = args.Concat(new System.Object[] {
+                    "onComplete",
+                    "UpdateOpenOrCloseBoundingBox",
+                    "onCompleteTarget",
+                    gameObject
+                }).ToArray();
+            }
+
+			if(movementType == MovementType.Rotate)
 			{
-				if(movementType == MovementType.Rotate)
-				{
-					//we are on the last loop here
-					if(i == MovingParts.Length - 1)
-					{
-						iTween.RotateTo(MovingParts[i], iTween.Hash(
-                        "rotation", closedPositions[i],
-                        "islocal", true,
-                        "time", animationTime,
-						"easetype", "linear", "onComplete", "setisOpen", "onCompleteTarget", gameObject));
-					}
-
-					else
-					iTween.RotateTo(MovingParts[i], iTween.Hash(
-                    "rotation", closedPositions[i],
-                    "islocal", true,
-                    "time", animationTime,
-                    "easetype", "linear"));
-				}
-                
-
-				else if(movementType == MovementType.Slide)
-				{
-					//we are on the last loop here
-                    if (i == MovingParts.Length - 1)
-                    {
-                        iTween.MoveTo(MovingParts[i], iTween.Hash(
-                        "position", closedPositions[i],
-                        "islocal", true,
-                        "time", animationTime,
-                        "easetype", "linear", "onComplete", "setisOpen", "onCompleteTarget", gameObject));
-                    }
-
-                    else
-					iTween.MoveTo(MovingParts[i], iTween.Hash(
-                    "position", closedPositions[i],
-                    "islocal", true,
-                    "time", animationTime,
-                    "easetype", "linear"));
-				}
-
-                else if(movementType == MovementType.ScaleX || movementType == MovementType.ScaleY 
-                        || movementType == MovementType.ScaleZ)
-                {
-                    //we are on the last loop here
-                    if(i == MovingParts.Length -1)
-                    {
-                        iTween.ScaleTo(MovingParts[i], iTween.Hash(
-                        "scale", closedPositions[i],
-                        "islocal", true,
-                        "time", animationTime,
-                        "easetype", "linear", "onComplete", "setisOpen", "onCompleteTarget", gameObject));
-                    }
-
-                    else
-                    iTween.ScaleTo(MovingParts[i], iTween.Hash(
-                    "scale", closedPositions[i],
-                    "islocal", true,
-                    "time", animationTime,
-                    "easetype", "linear"));
-                }
+                iTween.RotateTo(MovingParts[i], iTween.Hash(new System.Object[] {
+                    Quaternion.Euler(
+                        this.CalculateValueByPercentage(previous.x, next.x, percentage),
+                        this.CalculateValueByPercentage(previous.y, next.y, percentage),
+                        this.CalculateValueByPercentage(previous.z, next.z, percentage)
+                    ),
+                    "rotation"
+                }.Concat(args).ToArray()));
 			}
-        }
 
-        //oh it's closed? let's open it
-        else
-        {
-			for (int i = 0; i < MovingParts.Length; i++)
-            {
-				if (movementType == MovementType.Rotate)
-				{
-					if(i == MovingParts.Length -1)
-					{
-						iTween.RotateTo(MovingParts[i], iTween.Hash(
-                        "rotation", openPositions[i] * openPercentage,
-                        "islocal", true,
-                        "time", animationTime,
-						"easetype", "linear", "onComplete", "setisOpen", "onCompleteTarget", gameObject));
-					}
-
-					else
-					iTween.RotateTo(MovingParts[i], iTween.Hash(
-                    "rotation", openPositions[i] * openPercentage,
-                    "islocal", true,
-                    "time", animationTime,
-                    "easetype", "linear")); 
-				}
-
-                
-				else if (movementType == MovementType.Slide)
-				{
-					if (i == MovingParts.Length - 1)
-                    {
-                        iTween.MoveTo(MovingParts[i], iTween.Hash(
-                        "position", openPositions[i] * openPercentage,
-                        "islocal", true,
-                        "time", animationTime,
-                        "easetype", "linear", "onComplete", "setisOpen", "onCompleteTarget", gameObject));
-                    }
-
-                    else
-					iTween.MoveTo(MovingParts[i], iTween.Hash(
-					"position", openPositions[i] * openPercentage,
-                    "islocal", true,
-                    "time", animationTime,
-                    "easetype", "linear"));
-				}
-
-                //scale with Y axis
-                else if(movementType == MovementType.ScaleY)
-                {
-                    //we are on the last loop here
-                    if(i == MovingParts.Length -1)
-                    {
-                        iTween.ScaleTo(MovingParts[i], iTween.Hash(
-                        "scale", new Vector3(openPositions[i].x, closedPositions[i].y + (openPositions[i].y - closedPositions[i].y) * openPercentage, openPositions[i].z),
-                        "islocal", true,
-                        "time", animationTime,
-                        "easetype", "linear", "onComplete", "setisOpen", "onCompleteTarget", gameObject));
-                    }
-
-                    else
-                    iTween.ScaleTo(MovingParts[i], iTween.Hash(
-                    "scale", new Vector3(openPositions[i].x, closedPositions[i].y + (openPositions[i].y - closedPositions[i].y) * openPercentage, openPositions[i].z),
-                    "islocal", true,
-                    "time", animationTime,
-                    "easetype", "linear"));
-                }
-
-                //scale with X axis
-                else if(movementType == MovementType.ScaleX)
-                {
-                    //we are on the last loop here
-                    if(i == MovingParts.Length -1)
-                    {
-                        iTween.ScaleTo(MovingParts[i], iTween.Hash(
-                        "scale", new Vector3(closedPositions[i].x + (openPositions[i].x - closedPositions[i].x) * openPercentage, openPositions[i].y, openPositions[i].z),
-                        "islocal", true,
-                        "time", animationTime,
-                        "easetype", "linear", "onComplete", "setisOpen", "onCompleteTarget", gameObject));
-                    }
-
-                    else
-                    iTween.ScaleTo(MovingParts[i], iTween.Hash(
-                    "scale", new Vector3(closedPositions[i].x + (openPositions[i].x - closedPositions[i].x) * openPercentage, openPositions[i].y, openPositions[i].z),
-                    "islocal", true,
-                    "time", animationTime,
-                    "easetype", "linear"));
-                }
-
-                //scale with Z axis
-                else if(movementType == MovementType.ScaleZ)
-                {
-                    //we are on the last loop here
-                    if(i == MovingParts.Length -1)
-                    {
-                        iTween.ScaleTo(MovingParts[i], iTween.Hash(
-                        "scale", new Vector3(openPositions[i].x, openPositions[i].y, closedPositions[i].z + (openPositions[i].z - closedPositions[i].z) * openPercentage),
-                        "islocal", true,
-                        "time", animationTime,
-                        "easetype", "linear", "onComplete", "setisOpen", "onCompleteTarget", gameObject));
-                    }
-
-                    else
-                    iTween.ScaleTo(MovingParts[i], iTween.Hash(
-                    "scale", new Vector3(openPositions[i].x, openPositions[i].y, closedPositions[i].z + (openPositions[i].z - closedPositions[i].z) * openPercentage),
-                    "islocal", true,
-                    "time", animationTime,
-                    "easetype", "linear"));
-                }
+			else if(movementType == MovementType.Slide)
+			{
+                iTween.MoveTo(MovingParts[i], iTween.Hash(new System.Object[] {
+                    new Vector3(
+                        this.CalculateValueByPercentage(previous.x, next.x, percentage),
+                        this.CalculateValueByPercentage(previous.y, next.y, percentage),
+                        this.CalculateValueByPercentage(previous.z, next.z, percentage)
+                    ),
+                    "position"
+                }.Concat(args).ToArray()));
 			}
+
+            else if (movementType == MovementType.ScaleX || movementType == MovementType.ScaleY ||
+                movementType == MovementType.ScaleZ) {
+
+                iTween.ScaleTo(MovingParts[i], iTween.Hash(new System.Object[] {
+                    new Vector3(
+                        movementType != MovementType.ScaleX ? next.x :
+                            this.CalculateValueByPercentage(previous.x, next.x, percentage),
+                        movementType != MovementType.ScaleY ? next.y :
+                            this.CalculateValueByPercentage(previous.y, next.y, percentage),
+                        movementType != MovementType.ScaleZ ? next.z :
+                            this.CalculateValueByPercentage(previous.z, next.z, percentage)
+                    ),
+                    "scale"
+                }.Concat(args).ToArray()));
+            }
         }
 
         //default open percentage for next call
         openPercentage = 1.0f;
     }
-
-    private void setisOpen()
-	{
-        //print("isOpen was " + isOpen);
-		isOpen = !isOpen;
-        //print("isOpen is now " + isOpen);
-        UpdateOpenOrCloseBoundingBox();
-	}
 
     private void UpdateOpenOrCloseBoundingBox()
     {
