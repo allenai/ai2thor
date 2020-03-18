@@ -715,6 +715,7 @@ def ci_build_arch(arch, branch):
         print("found build for commit %s %s" % (commit_id, arch))
         return
 
+    include_private_scenes = False
     # XXX FIX bucket name
     build_url_base = "http://s3-us-west-2.amazonaws.com/%s/" % S3_BUCKET
     unity_path = "unity"
