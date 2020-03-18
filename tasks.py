@@ -782,13 +782,10 @@ def poll_ci_build(context):
 
 
 @task
-def build(context, local=False, include_private_scenes=False):
+def build(context, local=False):
     from multiprocessing import Process
     from ai2thor.build import platform_map
 
-    env = {}
-    if include_private_scenes:
-        env['INCLUDE_PRIVATE_SCENES'] = 'true'
 
     version = datetime.datetime.now().strftime("%Y%m%d%H%M")
     build_url_base = "http://s3-us-west-2.amazonaws.com/%s/" % S3_BUCKET
@@ -798,23 +795,27 @@ def build(context, local=False, include_private_scenes=False):
     # dp = Process(target=build_docker, args=(version,))
     # dp.start()
 
-    for arch in platform_map.keys():
-        unity_path = "unity"
-        build_name = ai2thor.build.build_name(arch, version, include_private_scenes)
-        build_dir = os.path.join("builds", build_name)
-        build_path = build_dir + ".zip"
-        build_info = builds[platform_map[arch]] = {}
+    for include_private_scenes in (True, False):
+        for arch in platform_map.keys():
+            env = {}
+            if include_private_scenes:
+                env['INCLUDE_PRIVATE_SCENES'] = 'true'
+            unity_path = "unity"
+            build_name = ai2thor.build.build_name(arch, version, include_private_scenes)
+            build_dir = os.path.join("builds", build_name)
+            build_path = build_dir + ".zip"
+            build_info = builds[platform_map[arch]] = {}
 
-        build_info["url"] = build_url_base + build_path
-        build_info["build_exception"] = ""
-        build_info["log"] = "%s.log" % (build_name,)
+            build_info["url"] = build_url_base + build_path
+            build_info["build_exception"] = ""
+            build_info["log"] = "%s.log" % (build_name,)
 
-        _build(unity_path, arch, build_dir, build_name, env=env)
-        t = threading.Thread(
-            target=archive_push, args=(unity_path, build_path, build_dir, build_info, include_private_scenes)
-        )
-        t.start()
-        threads.append(t)
+            _build(unity_path, arch, build_dir, build_name, env=env)
+            t = threading.Thread(
+                target=archive_push, args=(unity_path, build_path, build_dir, build_info, include_private_scenes)
+            )
+            t.start()
+            threads.append(t)
 
     # dp.join()
 
