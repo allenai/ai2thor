@@ -762,7 +762,7 @@ def poll_ci_build(context):
             if (i % 5) == 0:
                 print("checking %s for commit id %s" % (arch, commit_id))
             commit_build = ai2thor.build.Build(arch, commit_id, False)
-            if commit_build.log_exists(arch, commit_id):
+            if commit_build.log_exists():
                 print("log exists %s" % commit_id)
             else:
                 missing = True
