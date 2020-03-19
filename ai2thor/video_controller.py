@@ -78,22 +78,20 @@ class VideoController(Controller):
         self.ceiling_off = not self.ceiling_off
         return self.step(action='ToggleMapView')
 
-    def _cdf(self, x, std=0.5, mean=0.0):
+    def _cdf(self, x, std_dev=0.5, mean=0.0):
         '''Cumulative distribution function'''
         return (1.0 + erf((x - mean) / sqrt(2.0 * std_dev**2))) / 2.0
 
-    def _linear_to_smooth(self, curr_frame, total_frames, std=0.5, min_val=3):
+    def _linear_to_smooth(self, curr_frame, total_frames, std_dev=0.5, min_val=3):
         # start at -3 STD on a normal gaussian, go to 3 STD on gaussian
         # curr frame should be 1 indexed, and end with total_frames
         assert min_val > 0, "Min val should be > 0"
-
-        distribution = st.norm(0, std)
 
         if curr_frame == total_frames:
             # removes drifting
             return 1
 
-        return self._cdf(- min_val + 2 * min_val * (curr_frame / total_frames))
+        return self._cdf(- min_val + 2 * min_val * (curr_frame / total_frames), std_dev=std_dev)
 
     def _move(self, actionName, moveMagnitude, frames, smoothAnimation, agentId=None):
         """Yields a generator full of move commands to move the agent incrementally.
@@ -102,7 +100,7 @@ class VideoController(Controller):
         for i in range(frames):
             # smoothAnimation = False => linear animation
             if smoothAnimation:
-                next_moveMag = self._linear_to_smooth(i + 1, frames, std=1) * moveMagnitude
+                next_moveMag = self._linear_to_smooth(i + 1, frames, std_dev=1) * moveMagnitude
                 if agentId == None:
                     yield self.step(action=actionName, moveMagnitude=next_moveMag - last_moveMag)
                 else:
@@ -132,12 +130,12 @@ class VideoController(Controller):
             if smoothAnimation:
                 if agentId == None:
                     yield self.step(action='TeleportFull',
-                        rotation=y0 + rotateDegrees * self._linear_to_smooth(i + 1, frames, std=1),
+                        rotation=y0 + rotateDegrees * self._linear_to_smooth(i + 1, frames, std_dev=1),
                         agentId=agentId,
                         **p)
                 else:
                     yield self.step(action='TeleportFull',
-                        rotation=y0 + rotateDegrees * self._linear_to_smooth(i + 1, frames, std=1),
+                        rotation=y0 + rotateDegrees * self._linear_to_smooth(i + 1, frames, std_dev=1),
                         **p)
             else:
                 if agentId == None:
