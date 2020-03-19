@@ -3,7 +3,9 @@ A video controller for ai2thor
 Basic example:
 from ai2thor.controller import VideoController
 with VideoController() as vc:
-    vc.transform(vc.moveAhead())
+    vc.play(vc.MoveAhead())
+    vc.wait(5)
+    vc.play(vc.MoveAhead())
     vc.exportVideo('thor.mp4')
 Known issues:
 - Multi agent rotations don't work (since TeleportFull breaks when passing in an AgentID)
@@ -13,7 +15,6 @@ from ai2thor.controller import Controller
 import cv2
 import os
 from PIL import Image
-from queue import Queue
 import math
 from math import erf, sqrt
 
@@ -46,14 +47,14 @@ class VideoController(Controller):
             position=self.initial_camera_position,
             fieldOfView=self.initial_camera_fov)
 
-    def transform(self, *action_generators):
+    def play(self, *action_generators):
         """Apply multiple actions at the same time (e.g., move multiple agents,
            and pan the camera around the scene.
 
            Examples
-           vc.transform(vc.moveAhead())
-           vc.transform(vc.wait(60))
-           vc.transform(vc.moveAhead(), vc.orbitCameraAnimation(0, 0, 0))"""
+           vc.play(vc.moveAhead())
+           vc.wait(60)
+           vc.play(vc.moveAhead(), vc.orbitCameraAnimation(0, 0, 0))"""
         # action_generators should be a list of generators (e.g., moveAhead(<Params>))
         # this does many transformations at the same time
         while True:
@@ -70,7 +71,22 @@ class VideoController(Controller):
                 # exit after all generators have finished
                 break
 
-    def toggleCeiling(self):
+    def _wait(self, frames=60):
+        """Returns a generator used in self.wait()"""
+        for _ in range(frames):
+            yield self.step(action='Pass')
+
+    def wait(self, frames=60):
+        """Do absolutely nothing to the agent. Keep the current frame still, as is.
+
+        Params
+        - frames (int)=60: The duration of the do nothing action.
+          Note: videos are typically 30fps.
+
+        Example: vc.wait(60)"""
+        self.play(self._wait(frames))
+
+    def ToggleCeiling(self):
         """Hides the ceiling. This method is greatly preferred over calling
            step(action='ToggleMapView') directly, since it allows for automatic
            ceiling toggles in the future. (e.g., if the camera is above the
@@ -101,13 +117,13 @@ class VideoController(Controller):
             # smoothAnimation = False => linear animation
             if smoothAnimation:
                 next_moveMag = self._linear_to_smooth(i + 1, frames, std_dev=1) * moveMagnitude
-                if agentId == None:
+                if agentId is None:
                     yield self.step(action=actionName, moveMagnitude=next_moveMag - last_moveMag)
                 else:
                     yield self.step(action=actionName, moveMagnitude=next_moveMag - last_moveMag, agentId=agentId)
                 last_moveMag = next_moveMag
             else:
-                if agentId == None:
+                if agentId is None:
                     yield self.step(action=actionName, moveMagnitude=moveMagnitude / frames)
                 else:
                     yield self.step(action=actionName, moveMagnitude=moveMagnitude / frames, agentId=agentId)
@@ -147,35 +163,27 @@ class VideoController(Controller):
                         rotation=y0 + rotateDegrees * ((i + 1) / frames),
                         **p)
 
-    def moveAhead(self, moveMagnitude=1, frames=60, smoothAnimation=True, agentId=None):
+    def MoveAhead(self, moveMagnitude=1, frames=60, smoothAnimation=True, agentId=None):
         return self._move('MoveAhead', moveMagnitude, frames, smoothAnimation, agentId=agentId)
 
-    def moveBack(self, moveMagnitude=1, frames=60, smoothAnimation=True, agentId=None):
+    def MoveBack(self, moveMagnitude=1, frames=60, smoothAnimation=True, agentId=None):
         return self._move('MoveBack', moveMagnitude, frames, smoothAnimation, agentId=agentId)
 
-    def moveLeft(self, moveMagnitude=1, frames=60, smoothAnimation=True, agentId=None):
+    def MoveLeft(self, moveMagnitude=1, frames=60, smoothAnimation=True, agentId=None):
         return self._move('MoveLeft', moveMagnitude, frames, smoothAnimation, agentId=agentId)
 
-    def moveRight(self, moveMagnitude=1, frames=60, smoothAnimation=True, agentId=None):
+    def MoveRight(self, moveMagnitude=1, frames=60, smoothAnimation=True, agentId=None):
         return self._move('MoveRight', moveMagnitude, frames, smoothAnimation, agentId=agentId)
 
-    def rotateRight(self, rotateDegrees=90, frames=60, smoothAnimation=True, agentId=None):
+    def RotateRight(self, rotateDegrees=90, frames=60, smoothAnimation=True, agentId=None):
         # do incremental teleporting
         return self._rotate('right', rotateDegrees, frames, smoothAnimation, agentId=agentId)
 
-    def rotateLeft(self, rotateDegrees=90, frames=60, smoothAnimation=True, agentId=None):
+    def RotateLeft(self, rotateDegrees=90, frames=60, smoothAnimation=True, agentId=None):
         # do incremental teleporting
         return self._rotate('left', rotateDegrees, frames, smoothAnimation, agentId=agentId)
 
-    def wait(self, frames=60):
-        """Do absolutely nothing to the agent. Keep the current frame still, as is.
-        Params
-        - frames (int)=60: The duration of the do nothing action.
-          Note: videos are typically 30fps."""
-        for _ in range(frames):
-            yield self.step(action='Pass')
-
-    def orbitCameraAnimation(self, centerX, centerZ, posY,
+    def OrbitCameraAnimation(self, centerX, centerZ, posY,
                              dx=6, dz=6, xAngle=55, frames=60,
                              orbit_degrees_per_frame=0.5):
         """Orbits the camera around the scene.
@@ -194,7 +202,7 @@ class VideoController(Controller):
                                       'y': posY,
                                       'z': centerZ - dz * math.cos(math.radians(yAngle))})
 
-    def relativeCameraAnimation(self, px=0, py=0, pz=0, rx=0, ry=0, rz=0, frames=60):
+    def RelativeCameraAnimation(self, px=0, py=0, pz=0, rx=0, ry=0, rz=0, frames=60):
         """Linear interpolation between the current camera position and rotation
            and the final camera position, given by deltas to the current values.
            
@@ -219,7 +227,7 @@ class VideoController(Controller):
                                       'y': pos['y'] + py / frames,
                                       'z': pos['z'] + pz / frames})
 
-    def absoluteCameraAnimation(self,
+    def AbsoluteCameraAnimation(self,
                                 px, py, pz,
                                 rx, ry, rz,
                                 frames=60,
@@ -241,9 +249,8 @@ class VideoController(Controller):
 
         for i in range(1, frames + 1):
             if self.ceiling_off and maxY > p0['y'] + (py - p0['y']) / frames * i:
-                print('toggleCeiling!')
                 # turn ceiling on
-                self.toggleCeiling()
+                self.ToggleCeiling()
 
             # enables linear animation changes to the camera FOV
             if FOVstart != None and FOVend != None:
@@ -284,58 +291,54 @@ class VideoController(Controller):
                     kwargs['skyboxColor'] = 'black'
                 yield self.step(**kwargs)
 
-    def lookUp(self):
+    def LookUp(self):
         raise NotImplementedError()
 
-    def lookDown(self):
+    def LookDown(self):
         raise NotImplementedError()
 
-    def stand(self):
+    def Stand(self):
         """Note: have not found an easy way to move the agent in-between
            stand and crouch."""
         raise NotImplementedError()
 
-    def crouch(self):
+    def Crouch(self):
         """Note: have not found an easy way to move the agent in-between
            stand and crouch."""
         raise NotImplementedError()
 
-    def exportVideo(self, path):
+    def export_video(self, path):
         """Merges all the saved frames into a .mp4 video and saves it to `path`"""
         if self.saved_frames:
             path = path if path[:-4] == '.mp4' else path + '.mp4'
             if os.path.exists(path):
                 os.remove(path)
-            print((self.saved_frames[0].shape[1], self.saved_frames[0].shape[0]))
             video = cv2.VideoWriter(
                 path,
                 cv2.VideoWriter_fourcc(*'DIVX'),
                 30,
                 (self.saved_frames[0].shape[1], self.saved_frames[0].shape[0])
             )
-            for i, frame in enumerate(self.saved_frames):
-                print('|', end='')
+            for frame in self.saved_frames:
                 # assumes that the frames are RGB images. CV2 uses BGR.
                 video.write(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
             cv2.destroyAllWindows()
             video.release()
-            print('done')
 
-    def exportFrames(self, path):
+    def export_frames(self, path, file_type='.png'):
         """Exports all of the presently frames to the `path` directory.
         
         The frames are numbered in sequential order (starting with 0)."""
         for i in range(len(self.saved_frames)):
-            p = os.path.join(path, f'{i}.jpg')
+            p = os.path.join(path, f'{i}.{file_type}')
             if os.path.exists(p):
                 os.remove(p)
             Image.fromarray(self.saved_frames[i]).save(p)
-        print('done')
 
-    def mergeVideo(self, otherVideoPath):
-        """Concatenates the frames of `otherVideoPath` to the presently
+    def merge_video(self, other_video_path):
+        """Concatenates the frames of `other_video_path` to the presently
            generated video within this class."""
-        vidcap = cv2.VideoCapture(otherVideoPath)
+        vidcap = cv2.VideoCapture(other_video_path)
         success, image = vidcap.read()
         i = 0
         while success:
