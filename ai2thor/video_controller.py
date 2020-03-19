@@ -13,7 +13,7 @@ Known issues:
 
 """
 
-import ai2thor.controller import Controller
+from ai2thor.controller import Controller
 import cv2
 import os
 from PIL import Image
