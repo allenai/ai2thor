@@ -38,7 +38,8 @@ setup(name='ai2thor',
           'botocore',
           'aws-requests-auth',
           'msgpack',
-          'Pillow'
+          'Pillow',
+          'opencv-python'
       ],
       setup_requires=['pytest-runner'],
       tests_require=['pytest', 'pytest-cov'],
