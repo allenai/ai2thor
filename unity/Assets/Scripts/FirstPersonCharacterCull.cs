@@ -5,10 +5,22 @@ using UnityStandardAssets.Characters.FirstPerson;
 [ExecuteInEditMode]
 public class FirstPersonCharacterCull : MonoBehaviour
 {
-    public bool StopCullingThingsForASecond = false;
+    private bool _stopCullingThingsForASecond = false;
+
+    public bool StopCullingThingsForASecond
+    {
+        get
+        {
+            return this._stopCullingThingsForASecond;
+        }
+        set
+        {
+            this._stopCullingThingsForASecond = value;
+        }
+    }
+
     public MeshRenderer [] RenderersToHide; //Mesh renderer that you want this script's camera to cull
     public PhysicsRemoteFPSAgentController FPSController;
-
 
     //references to renderers for when Agent is in Tall mode
     public MeshRenderer [] TallRenderers;
@@ -33,7 +45,8 @@ public class FirstPersonCharacterCull : MonoBehaviour
     {
         if(!StopCullingThingsForASecond)
         {
-            if(FPSController != null && RenderersToHide != null && FPSController.IsVisible)//only do this if visibility capsule has been toggled on
+            if(FPSController != null && (RenderersToHide != null || RenderersToHide.Length != 0) 
+                && FPSController.IsVisible)//only do this if visibility capsule has been toggled on
             {
                 foreach (MeshRenderer mr in RenderersToHide)
                 {
@@ -48,7 +61,8 @@ public class FirstPersonCharacterCull : MonoBehaviour
     {
         if(!StopCullingThingsForASecond)
         {
-            if(FPSController != null && RenderersToHide != null && FPSController.IsVisible)//only do this if visibility capsule is toggled on
+            if(FPSController != null && (RenderersToHide != null || RenderersToHide.Length != 0)
+                && FPSController.IsVisible)//only do this if visibility capsule is toggled on
             {
                 foreach (MeshRenderer mr in RenderersToHide)
                 {
