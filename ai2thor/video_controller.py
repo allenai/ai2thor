@@ -72,7 +72,7 @@ class VideoController(Controller):
                 break
 
     def _wait(self, frames=60):
-        """Returns a generator used in self.wait()"""
+        """Yields a generator used in self.wait()"""
         for _ in range(frames):
             yield self.step(action='Pass')
 
