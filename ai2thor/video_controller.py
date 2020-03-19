@@ -21,9 +21,9 @@ from math import erf, sqrt
 
 class VideoController(Controller):
     def __init__(self,
-                 initial_camera_rotation=dict(x=85, y=225, z=0),
-                 initial_camera_position=dict(x=-1.25, y=7.0, z=-1.0),
-                 initial_camera_fov=60,
+                 cam_rot=dict(x=85, y=225, z=0),
+                 cam_pos=dict(x=-1.25, y=7.0, z=-1.0),
+                 cam_fov=60,
                  **controller_kwargs):
         super().__init__(continuous=True, **controller_kwargs)
         self.step(
@@ -34,18 +34,18 @@ class VideoController(Controller):
 
         self.saved_frames = []
         self.ceiling_off = False
-        self.initial_camera_position = initial_camera_position
-        self.initial_camera_rotation = initial_camera_rotation
-        self.initial_camera_fov = initial_camera_fov
+        self.initial_cam_rot = cam_rot.copy()
+        self.initial_cam_pos = cam_pos.copy()
+        self.initial_cam_fov = cam_fov
 
     def reset(self, scene):
         """Changes the scene and adds a new third party camera to the initial position."""
         super().reset(scene)
         self.step(
             action='AddThirdPartyCamera', 
-            rotation=self.initial_camera_rotation,
-            position=self.initial_camera_position,
-            fieldOfView=self.initial_camera_fov)
+            rotation=self.initial_cam_rot,
+            position=self.initial_cam_pos,
+            fieldOfView=self.initial_cam_fov)
 
     def play(self, *action_generators):
         """Apply multiple actions at the same time (e.g., move multiple agents,
