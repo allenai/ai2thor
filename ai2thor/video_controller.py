@@ -144,7 +144,7 @@ class VideoController(Controller):
             # keep the position the same
             p = self.last_event.metadata['agent']['position']
             if smoothAnimation:
-                if agentId == None:
+                if agentId is None:
                     yield self.step(action='TeleportFull',
                         rotation=y0 + rotateDegrees * self._linear_to_smooth(i + 1, frames, std_dev=1),
                         agentId=agentId,
@@ -154,7 +154,7 @@ class VideoController(Controller):
                         rotation=y0 + rotateDegrees * self._linear_to_smooth(i + 1, frames, std_dev=1),
                         **p)
             else:
-                if agentId == None:
+                if agentId is None:
                     yield self.step(action='TeleportFull',
                         rotation=y0 + rotateDegrees * ((i + 1) / frames),
                         agentId=agentId, **p)
