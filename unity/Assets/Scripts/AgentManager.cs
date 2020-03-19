@@ -193,7 +193,20 @@ public class AgentManager : MonoBehaviour
 			Camera thirdPartyCamera = thirdPartyCameras.ToArray()[action.thirdPartyCameraId];
 			thirdPartyCamera.gameObject.transform.eulerAngles = action.rotation;
 			thirdPartyCamera.gameObject.transform.position = action.position;
-		} 
+
+			// set the skybox to default, white, or black (other colors can be added as needed)
+			if (action.skyboxColor == null) {
+				// default blue-ish skybox that shows the ground
+				thirdPartyCamera.clearFlags = CameraClearFlags.Skybox;
+			} else {
+				thirdPartyCamera.clearFlags = CameraClearFlags.SolidColor;
+				if (action.skyboxColor == "white") {
+					thirdPartyCamera.backgroundColor = Color.white;
+				} else {
+					thirdPartyCamera.backgroundColor = Color.black;
+				}
+			}
+		}
 		readyToEmit = true;
 	}
 
@@ -973,7 +986,7 @@ public class ServerAction
     public float movementGaussianSigma;
     public float rotateGaussianMu;
     public float rotateGaussianSigma;
-
+    public string skyboxColor = null;
 
 	public bool forceKinematic;
 
