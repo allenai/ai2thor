@@ -68,9 +68,4 @@ public class FlyingDrone : MonoBehaviour
         Instantiate(DroneObjectLauncher, position, Quaternion.identity);
     }
 
-	// public bool DidICatchTheThing(ServerAction action)
-	// {
-	// 	Debug.Log("Did The Drone catch something?- " + caught);
-	// 	return isCaught();
-	// }
 }
