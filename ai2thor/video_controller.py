@@ -13,9 +13,9 @@ from ai2thor.controller import Controller
 import cv2
 import os
 from PIL import Image
-import scipy.stats as st  # for smooth non-linear animations
 from queue import Queue
 import math
+from math import erf, sqrt
 
 
 class VideoController(Controller):
@@ -52,7 +52,7 @@ class VideoController(Controller):
 
            Examples
            vc.transform(vc.moveAhead())
-           vc.transform(vc.Pass(60))
+           vc.transform(vc.wait(60))
            vc.transform(vc.moveAhead(), vc.orbitCameraAnimation(0, 0, 0))"""
         # action_generators should be a list of generators (e.g., moveAhead(<Params>))
         # this does many transformations at the same time
@@ -78,8 +78,12 @@ class VideoController(Controller):
         self.ceiling_off = not self.ceiling_off
         return self.step(action='ToggleMapView')
 
+    def _cdf(self, x, std=0.5, mean=0.0):
+        '''Cumulative distribution function'''
+        return (1.0 + erf((x - mean) / sqrt(2.0 * std_dev**2))) / 2.0
+
     def _linear_to_smooth(self, curr_frame, total_frames, std=0.5, min_val=3):
-        # start at -3 STD on a normal gaussian, to to 3 STD on gaussian
+        # start at -3 STD on a normal gaussian, go to 3 STD on gaussian
         # curr frame should be 1 indexed, and end with total_frames
         assert min_val > 0, "Min val should be > 0"
 
@@ -89,7 +93,7 @@ class VideoController(Controller):
             # removes drifting
             return 1
 
-        return distribution.cdf(- min_val + 2 * min_val * (curr_frame / total_frames))
+        return self._cdf(- min_val + 2 * min_val * (curr_frame / total_frames))
 
     def _move(self, actionName, moveMagnitude, frames, smoothAnimation, agentId=None):
         """Yields a generator full of move commands to move the agent incrementally.
@@ -127,14 +131,23 @@ class VideoController(Controller):
             p = self.last_event.metadata['agent']['position']
             if smoothAnimation:
                 if agentId == None:
-                    yield self.step(action='TeleportFull', rotation=y0 + rotateDegrees * self._linear_to_smooth(i + 1, frames, std=1), agentId=agentId, **p)
+                    yield self.step(action='TeleportFull',
+                        rotation=y0 + rotateDegrees * self._linear_to_smooth(i + 1, frames, std=1),
+                        agentId=agentId,
+                        **p)
                 else:
-                    yield self.step(action='TeleportFull', rotation=y0 + rotateDegrees * self._linear_to_smooth(i + 1, frames, std=1), **p)
+                    yield self.step(action='TeleportFull',
+                        rotation=y0 + rotateDegrees * self._linear_to_smooth(i + 1, frames, std=1),
+                        **p)
             else:
                 if agentId == None:
-                    yield self.step(action='TeleportFull', rotation=y0 + rotateDegrees * ((i + 1) / frames), agentId=agentId, **p)
+                    yield self.step(action='TeleportFull',
+                        rotation=y0 + rotateDegrees * ((i + 1) / frames),
+                        agentId=agentId, **p)
                 else:
-                    yield self.step(action='TeleportFull', rotation=y0 + rotateDegrees * ((i + 1) / frames), **p)
+                    yield self.step(action='TeleportFull',
+                        rotation=y0 + rotateDegrees * ((i + 1) / frames),
+                        **p)
 
     def moveAhead(self, moveMagnitude=1, frames=60, smoothAnimation=True, agentId=None):
         return self._move('MoveAhead', moveMagnitude, frames, smoothAnimation, agentId=agentId)
@@ -156,7 +169,7 @@ class VideoController(Controller):
         # do incremental teleporting
         return self._rotate('left', rotateDegrees, frames, smoothAnimation, agentId=agentId)
 
-    def Pass(self, frames=60):
+    def wait(self, frames=60):
         """Do absolutely nothing to the agent. Keep the current frame still, as is.
         Params
         - frames (int)=60: The duration of the do nothing action.
@@ -324,7 +337,6 @@ class VideoController(Controller):
     def mergeVideo(self, otherVideoPath):
         """Concatenates the frames of `otherVideoPath` to the presently
            generated video within this class."""
-        import cv2
         vidcap = cv2.VideoCapture(otherVideoPath)
         success, image = vidcap.read()
         i = 0
