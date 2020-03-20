@@ -66,15 +66,37 @@
             }
         }]
     }, {
-        "id": "shelf",
+        "id": "shelf_1",
+        "type": "shelf_1",
+        "mass": 10,
+        "shows": [{
+            "stepBegin": 0,
+            "position": {
+                "x": 4.5,
+                "y": 0,
+                "z": 0
+            },
+            "rotation": {
+                "x": 0,
+                "y": -90,
+                "z": 0
+            },
+            "scale": {
+                "x": 1.5,
+                "y": 1.5,
+                "z": 1.5
+            }
+        }]
+    }, {
+        "id": "shelf_2",
         "type": "table_6",
         "mass": 10,
         "shows": [{
             "stepBegin": 0,
             "position": {
-                "x": 2.5,
+                "x": 1,
                 "y": 0,
-                "z": -4.5
+                "z": -4.25
             },
             "rotation": {
                 "x": 0,
@@ -84,7 +106,7 @@
             "scale": {
                 "x": 1,
                 "y": 2,
-                "z": 1
+                "z": 1.5
             }
         }]
     }, {
@@ -119,16 +141,34 @@
             }
         }]
     }, {
-        "id": "chair_c",
+        "id": "stool_a",
         "type": "chair_2",
         "mass": 5,
         "moveable": true,
         "shows": [{
             "stepBegin": 0,
             "position": {
-                "x": -3,
+                "x": 4.25,
                 "y": 0,
-                "z": 0
+                "z": -2
+            },
+            "scale": {
+                "x": 1,
+                "y": 0.5,
+                "z": 1
+            }
+        }]
+    }, {
+        "id": "stool_b",
+        "type": "chair_2",
+        "mass": 5,
+        "moveable": true,
+        "shows": [{
+            "stepBegin": 0,
+            "position": {
+                "x": 4.5,
+                "y": 0,
+                "z": 4.5
             }
         }]
     }, {
@@ -212,86 +252,6 @@
             }
         }]
     }, {
-        "id": "cube_a",
-        "type": "cube",
-        "mass": 0.05,
-        "salientMaterials": ["plastic"],
-        "materialFile": "AI2-THOR/Materials/Plastics/BlueRubber",
-        "pickupable": true,
-        "shows": [{
-            "stepBegin": 0,
-            "position": {
-                "x": 0.5,
-                "y": 0.025,
-                "z": 1
-            },
-            "scale": {
-                "x": 0.025,
-                "y": 0.025,
-                "z": 0.025
-            }
-        }]
-    }, {
-        "id": "cube_b",
-        "type": "cube",
-        "mass": 0.5,
-        "salientMaterials": ["metal"],
-        "materialFile": "AI2-THOR/Materials/Metals/GenericStainlessSteel",
-        "pickupable": true,
-        "shows": [{
-            "stepBegin": 0,
-            "position": {
-                "x": 0.5,
-                "y": 0.05,
-                "z": 1.25
-            },
-            "scale": {
-                "x": 0.05,
-                "y": 0.05,
-                "z": 0.05
-            }
-        }]
-    }, {
-        "id": "cube_c",
-        "type": "cube",
-        "mass": 0.5,
-        "salientMaterials": ["wood"],
-        "materialFile": "AI2-THOR/Materials/Wood/WoodGrain_Brown",
-        "pickupable": true,
-        "shows": [{
-            "stepBegin": 0,
-            "position": {
-                "x": 0.5,
-                "y": 0.1,
-                "z": 1.5
-            },
-            "scale": {
-                "x": 0.1,
-                "y": 0.1,
-                "z": 0.1
-            }
-        }]
-    }, {
-        "id": "cube_d",
-        "type": "cube",
-        "mass": 0.25,
-        "salientMaterials": ["plastic"],
-        "materialFile": "AI2-THOR/Materials/Plastics/OrangePlastic",
-        "pickupable": true,
-        "shows": [{
-            "stepBegin": 0,
-            "position": {
-                "x": 0.5,
-                "y": 0.25,
-                "z": 1.75
-            },
-            "scale": {
-                "x": 0.25,
-                "y": 0.25,
-                "z": 0.2
-            }
-        }]
-    }, {
         "id": "box_a",
         "type": "box_2",
         "mass": 1,
@@ -350,7 +310,7 @@
         "shows": [{
             "stepBegin": 0,
             "position": {
-                "x": -1.0,
+                "x": -1,
                 "y": 0.03,
                 "z": 0.5
             },
@@ -368,7 +328,7 @@
             "position": {
                 "x": -0.5,
                 "y": 0.01,
-                "z": 1.0
+                "z": 1
             },
             "scale": {
                 "x": 1,
@@ -382,9 +342,9 @@
         "shows": [{
             "stepBegin": 0,
             "position": {
-                "x": -1.0,
+                "x": -1,
                 "y": 0.01,
-                "z": 1.0
+                "z": 1
             },
             "scale": {
                 "x": 1,
@@ -414,7 +374,7 @@
         "shows": [{
             "stepBegin": 0,
             "position": {
-                "x": -1.0,
+                "x": -1,
                 "y": 0.01,
                 "z": 1.5
             },
@@ -448,7 +408,7 @@
         "shows": [{
             "stepBegin": 0,
             "position": {
-                "x": -1.0,
+                "x": -1,
                 "y": 0.01,
                 "z": 2
             },
@@ -456,6 +416,777 @@
                 "x": 1,
                 "y": 1,
                 "z": 1
+            }
+        }]
+    }, {
+        "id": "painting_a",
+        "type": "painting_2",
+        "shows": [{
+            "stepBegin": 0,
+            "position": {
+                "x": 5.28,
+                "y": 2,
+                "z": 0
+            },
+            "rotation": {
+                "x": 0,
+                "y": 90,
+                "z": 0
+            },
+            "scale": {
+                "x": 1,
+                "y": 1,
+                "z": 1
+            }
+        }]
+    }, {
+        "id": "painting_b",
+        "type": "painting_4",
+        "shows": [{
+            "stepBegin": 0,
+            "position": {
+                "x": 1.25,
+                "y": 2,
+                "z": 4.99
+            },
+            "rotation": {
+                "x": 0,
+                "y": 180,
+                "z": 0
+            },
+            "scale": {
+                "x": 1,
+                "y": 1,
+                "z": 1
+            }
+        }]
+    }, {
+        "id": "painting_c",
+        "type": "painting_5",
+        "shows": [{
+            "stepBegin": 0,
+            "position": {
+                "x": -2,
+                "y": 2,
+                "z": -4.98
+            },
+            "rotation": {
+                "x": 0,
+                "y": 360,
+                "z": 0
+            },
+            "scale": {
+                "x": 1,
+                "y": 1,
+                "z": 1
+            }
+        }]
+    }, {
+        "id": "painting_d",
+        "type": "painting_9",
+        "shows": [{
+            "stepBegin": 0,
+            "position": {
+                "x": -2.55,
+                "y": 2,
+                "z": 5.02
+            },
+            "rotation": {
+                "x": 0,
+                "y": 360,
+                "z": 0
+            },
+            "scale": {
+                "x": 1,
+                "y": 1,
+                "z": 1
+            }
+        }]
+    }, {
+        "id": "painting_e",
+        "type": "painting_10",
+        "shows": [{
+            "stepBegin": 0,
+            "position": {
+                "x": -4.99,
+                "y": 2,
+                "z": 3.45
+            },
+            "rotation": {
+                "x": 0,
+                "y": 180,
+                "z": 0
+            },
+            "scale": {
+                "x": 1,
+                "y": 1,
+                "z": 1
+            }
+        }]
+    }, {
+        "id": "painting_f",
+        "type": "painting_16",
+        "shows": [{
+            "stepBegin": 0,
+            "position": {
+                "x": -4.98,
+                "y": 1.5,
+                "z": 0
+            },
+            "rotation": {
+                "x": 0,
+                "y": -90,
+                "z": 0
+            },
+            "scale": {
+                "x": 1.5,
+                "y": 1.5,
+                "z": 1.5
+            }
+        }]
+    }, {
+        "id": "plant_a",
+        "type": "plant_16",
+        "shows": [{
+            "stepBegin": 0,
+            "position": {
+                "x": -4,
+                "y": 0,
+                "z": -4
+            },
+            "scale": {
+                "x": 2,
+                "y": 2,
+                "z": 2
+            }
+        }]
+    }, {
+        "id": "plant_b",
+        "type": "plant_14",
+        "shows": [{
+            "stepBegin": 0,
+            "position": {
+                "x": 4.25,
+                "y": 0,
+                "z": -4.25
+            },
+            "scale": {
+                "x": 2,
+                "y": 2,
+                "z": 2
+            }
+        }]
+    }, {
+        "id": "plant_c",
+        "type": "plant_5",
+        "shows": [{
+            "stepBegin": 0,
+            "position": {
+                "x": 4.25,
+                "y": 0,
+                "z": -3
+            },
+            "scale": {
+                "x": 1,
+                "y": 1,
+                "z": 1
+            }
+        }]
+    }, {
+        "id": "plant_d",
+        "type": "plant_9",
+        "shows": [{
+            "stepBegin": 0,
+            "position": {
+                "x": 3,
+                "y": 0,
+                "z": -4.25
+            },
+            "scale": {
+                "x": 1,
+                "y": 1,
+                "z": 1
+            }
+        }]
+    }, {
+        "id": "plant_e",
+        "type": "plant_7",
+        "shows": [{
+            "stepBegin": 0,
+            "position": {
+                "x": -4.25,
+                "y": 0,
+                "z": 4.25
+            },
+            "scale": {
+                "x": 1.5,
+                "y": 1.5,
+                "z": 1.5
+            }
+        }]
+    }, {
+        "id": "plant_f",
+        "type": "plant_1",
+        "shows": [{
+            "stepBegin": 0,
+            "position": {
+                "x": -0.5,
+                "y": 0,
+                "z": 4.25
+            },
+            "scale": {
+                "x": 1.5,
+                "y": 1.5,
+                "z": 1.5
+            }
+        }]
+    }, {
+        "id": "duck_on_wheels",
+        "type": "duck_on_wheels",
+        "shows": [{
+            "stepBegin": 0,
+            "position": {
+                "x": 3,
+                "y": 0.01,
+                "z": 0.3
+            },
+            "rotation": {
+                "x": 0,
+                "y": 45,
+                "z": 0
+            }
+        }]
+    }, {
+        "id": "racecar",
+        "type": "racecar_red",
+        "shows": [{
+            "stepBegin": 0,
+            "position": {
+                "x": 3,
+                "y": 0.01,
+                "z": -0.3
+            },
+            "rotation": {
+                "x": 0,
+                "y": 45,
+                "z": 0
+            }
+        }]
+    }, {
+        "id": "crayon_blue",
+        "type": "crayon_blue",
+        "shows": [{
+            "stepBegin": 0,
+            "position": {
+                "x": -1.4,
+                "y": 0.35,
+                "z": -2.1
+            }
+        }]
+    }, {
+        "id": "pacifier",
+        "type": "pacifier",
+        "shows": [{
+            "stepBegin": 0,
+            "position": {
+                "x": 4.3,
+                "y": 0.6,
+                "z": 0.1
+            },
+            "rotation": {
+                "x": 0,
+                "y": -90,
+                "z": 0
+            }
+        }]
+    }, {
+        "id": "block_m",
+        "type": "block_blue_letter_m",
+        "shows": [{
+            "stepBegin": 0,
+            "position": {
+                "x": 3.55,
+                "y": 0.01,
+                "z": -3.35
+            },
+            "rotation": {
+                "x": 0,
+                "y": 0,
+                "z": 0
+            }
+        }]
+    }, {
+        "id": "block_c",
+        "type": "block_blue_letter_c",
+        "shows": [{
+            "stepBegin": 0,
+            "position": {
+                "x": 3.5,
+                "y": 0.01,
+                "z": -3.5
+            },
+            "rotation": {
+                "x": 0,
+                "y": 45,
+                "z": 0
+            }
+        }]
+    }, {
+        "id": "block_s",
+        "type": "block_blue_letter_s",
+        "shows": [{
+            "stepBegin": 0,
+            "position": {
+                "x": 3.35,
+                "y": 0.01,
+                "z": -3.55
+            },
+            "rotation": {
+                "x": 0,
+                "y": 0,
+                "z": 0
+            }
+        }]
+    }, {
+        "id": "block_3",
+        "type": "block_yellow_number_3",
+        "shows": [{
+            "stepBegin": 0,
+            "position": {
+                "x": 3.425,
+                "y": 0.12,
+                "z": -3.55
+            },
+            "rotation": {
+                "x": 0,
+                "y": -22.5,
+                "z": 0
+            }
+        }]
+    }, {
+        "id": "block_2",
+        "type": "block_yellow_number_2",
+        "shows": [{
+            "stepBegin": 0,
+            "position": {
+                "x": 3.55,
+                "y": 0.12,
+                "z": -3.425
+            },
+            "rotation": {
+                "x": 0,
+                "y": 22.5,
+                "z": 0
+            }
+        }]
+    }, {
+        "id": "block_1",
+        "type": "block_yellow_number_1",
+        "shows": [{
+            "stepBegin": 0,
+            "position": {
+                "x": 3.5,
+                "y": 0.23,
+                "z": -3.5
+            },
+            "rotation": {
+                "x": 0,
+                "y": 45,
+                "z": 0
+            }
+        }]
+    }, {
+        "id": "block_blank_a",
+        "type": "block_blank_yellow_cube",
+        "shows": [{
+            "stepBegin": 0,
+            "position": {
+                "x": -2,
+                "y": 0,
+                "z": -0.11
+            },
+            "rotation": {
+                "x": 0,
+                "y": 0,
+                "z": 0
+            },
+            "scale": {
+                "x": 2,
+                "y": 1,
+                "z": 2
+            }
+        }]
+    }, {
+        "id": "block_blank_b",
+        "type": "block_blank_red_cylinder",
+        "shows": [{
+            "stepBegin": 0,
+            "position": {
+                "x": -2,
+                "y": 0,
+                "z": 0.11
+            },
+            "rotation": {
+                "x": 0,
+                "y": 0,
+                "z": 0
+            },
+            "scale": {
+                "x": 2,
+                "y": 1,
+                "z": 2
+            }
+        }]
+    }, {
+        "id": "block_blank_c",
+        "type": "block_blank_blue_cube",
+        "shows": [{
+            "stepBegin": 0,
+            "position": {
+                "x": -2,
+                "y": 0.1,
+                "z": -0.11
+            },
+            "rotation": {
+                "x": 0,
+                "y": 0,
+                "z": 0
+            },
+            "scale": {
+                "x": 1,
+                "y": 1,
+                "z": 1
+            }
+        }]
+    }, {
+        "id": "block_blank_d",
+        "type": "block_blank_yellow_cube",
+        "shows": [{
+            "stepBegin": 0,
+            "position": {
+                "x": -2,
+                "y": 0.2,
+                "z": -0.1
+            },
+            "rotation": {
+                "x": 0,
+                "y": 0,
+                "z": 0
+            },
+            "scale": {
+                "x": 1,
+                "y": 1,
+                "z": 1
+            }
+        }]
+    }, {
+        "id": "block_blank_e",
+        "type": "block_blank_wood_cylinder",
+        "shows": [{
+            "stepBegin": 0,
+            "position": {
+                "x": -2,
+                "y": 0.1,
+                "z": 0.1
+            },
+            "rotation": {
+                "x": 0,
+                "y": 0,
+                "z": 0
+            },
+            "scale": {
+                "x": 1,
+                "y": 2,
+                "z": 1
+            }
+        }]
+    }, {
+        "id": "block_blank_f",
+        "type": "block_blank_red_cube",
+        "shows": [{
+            "stepBegin": 0,
+            "position": {
+                "x": -2,
+                "y": 0.35,
+                "z": -0.1
+            },
+            "rotation": {
+                "x": 90,
+                "y": 0,
+                "z": 0
+            },
+            "scale": {
+                "x": 1,
+                "y": 2,
+                "z": 1
+            }
+        }]
+    }, {
+        "id": "block_blank_g",
+        "type": "block_blank_yellow_cylinder",
+        "shows": [{
+            "stepBegin": 0,
+            "position": {
+                "x": -1.71,
+                "y": 0,
+                "z": -0.3
+            },
+            "rotation": {
+                "x": 0,
+                "y": 0,
+                "z": 0
+            },
+            "scale": {
+                "x": 1,
+                "y": 1,
+                "z": 1
+            }
+        }]
+    }, {
+        "id": "block_blank_h",
+        "type": "block_blank_wood_cylinder",
+        "shows": [{
+            "stepBegin": 0,
+            "position": {
+                "x": -1.69,
+                "y": 0.1,
+                "z": -0.3
+            },
+            "rotation": {
+                "x": 0,
+                "y": 0,
+                "z": 0
+            },
+            "scale": {
+                "x": 1,
+                "y": 1,
+                "z": 1
+            }
+        }]
+    }, {
+        "id": "block_blank_i",
+        "type": "block_blank_red_cube",
+        "shows": [{
+            "stepBegin": 0,
+            "position": {
+                "x": -2.3,
+                "y": 0,
+                "z": -0.4
+            },
+            "rotation": {
+                "x": 0,
+                "y": 45,
+                "z": 0
+            },
+            "scale": {
+                "x": 1,
+                "y": 1,
+                "z": 1
+            }
+        }]
+    }, {
+        "id": "block_blank_j",
+        "type": "block_blank_yellow_cylinder",
+        "shows": [{
+            "stepBegin": 0,
+            "position": {
+                "x": -2.3,
+                "y": 0.1,
+                "z": -0.4
+            },
+            "rotation": {
+                "x": 0,
+                "y": 0,
+                "z": 0
+            },
+            "scale": {
+                "x": 2,
+                "y": 1,
+                "z": 2
+            }
+        }]
+    }, {
+        "id": "block_blank_k",
+        "type": "block_blank_blue_cylinder",
+        "shows": [{
+            "stepBegin": 0,
+            "position": {
+                "x": -2.3,
+                "y": 0.2,
+                "z": -0.4
+            },
+            "rotation": {
+                "x": 0,
+                "y": 0,
+                "z": 0
+            },
+            "scale": {
+                "x": 1,
+                "y": 1,
+                "z": 1
+            }
+        }]
+    }, {
+        "id": "block_blank_l",
+        "type": "block_blank_red_cylinder",
+        "shows": [{
+            "stepBegin": 0,
+            "position": {
+                "x": -2.5,
+                "y": 0,
+                "z": 0
+            },
+            "rotation": {
+                "x": 0,
+                "y": 0,
+                "z": 0
+            },
+            "scale": {
+                "x": 1,
+                "y": 1,
+                "z": 1
+            }
+        }]
+    }, {
+        "id": "block_blank_m",
+        "type": "block_blank_blue_cube",
+        "shows": [{
+            "stepBegin": 0,
+            "position": {
+                "x": -2.5,
+                "y": 0.1,
+                "z": 0
+            },
+            "rotation": {
+                "x": 0,
+                "y": 45,
+                "z": 0
+            },
+            "scale": {
+                "x": 1,
+                "y": 2,
+                "z": 1
+            }
+        }]
+    }, {
+        "id": "block_blank_n",
+        "type": "block_blank_wood_cube",
+        "shows": [{
+            "stepBegin": 0,
+            "position": {
+                "x": -2.3,
+                "y": 0.1,
+                "z": 0.3
+            },
+            "rotation": {
+                "x": 0,
+                "y": 45,
+                "z": 90
+            },
+            "scale": {
+                "x": 2,
+                "y": 1,
+                "z": 2
+            }
+        }]
+    }, {
+        "id": "block_blank_o",
+        "type": "block_blank_blue_cylinder",
+        "shows": [{
+            "stepBegin": 0,
+            "position": {
+                "x": -1.7,
+                "y": 0.05,
+                "z": 0.4
+            },
+            "rotation": {
+                "x": 0,
+                "y": 0,
+                "z": 90
+            },
+            "scale": {
+                "x": 1,
+                "y": 2,
+                "z": 1
+            }
+        }]
+    }, {
+        "id": "block_blank_p",
+        "type": "block_blank_wood_cube",
+        "shows": [{
+            "stepBegin": 0,
+            "position": {
+                "x": -1.5,
+                "y": 0,
+                "z": 0
+            },
+            "rotation": {
+                "x": 0,
+                "y": 0,
+                "z": 0
+            },
+            "scale": {
+                "x": 1,
+                "y": 1,
+                "z": 1
+            }
+        }]
+    }, {
+        "id": "changing_table",
+        "type": "changing_table",
+        "shows": [{
+            "stepBegin": 0,
+            "position": {
+                "x": 1.25,
+                "y": 0,
+                "z": 4.5
+            },
+            "rotation": {
+                "x": 0,
+                "y": 180,
+                "z": 0
+            },
+            "scale": {
+                "x": 1,
+                "y": 1,
+                "z": 1
+            }
+        }]
+    }, {
+        "id": "crib",
+        "type": "crib",
+        "shows": [{
+            "stepBegin": 0,
+            "position": {
+                "x": 3,
+                "y": 0,
+                "z": 4.5
+            },
+            "rotation": {
+                "x": 0,
+                "y": 90,
+                "z": 0
+            },
+            "scale": {
+                "x": 1,
+                "y": 1,
+                "z": 1
+            }
+        }]
+    }, {
+        "id": "foam_floor_tiles",
+        "type": "foam_floor_tiles",
+        "shows": [{
+            "stepBegin": 0,
+            "position": {
+                "x": 2.75,
+                "y": 0.01,
+                "z": 0
+            },
+            "scale": {
+                "x": 2,
+                "y": 2,
+                "z": 2
             }
         }]
     }]

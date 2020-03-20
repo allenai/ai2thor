@@ -114,6 +114,7 @@ Alternatively, if you want to build the Unity project via the command line, run 
   - Added check to make sure object exists for `DropHandObject`
   - Make sure objectId specified is actually the object being held for `DropHandObject` and `PutObject`
   - Undid objectId being reset to receptableObjectId and not allowing objects to be placed in closed receptacles regardless of type of receptacle for `PutObject`
+  - In `PickupContainedObjects` and `DropContainedObjects`, added a null check for the Colliders object and added a loop over the colliders array in the SimObjPhysics script.
 - `Scripts/PhysicsSceneManager`:
   - Added `virtual` to functions: `Generate_UniqueID`
 - `Scripts/SimObjPhysics`:

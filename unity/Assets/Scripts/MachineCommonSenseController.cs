@@ -160,7 +160,8 @@ public class MachineCommonSenseController : PhysicsRemoteFPSAgentController {
 
         // Each SimObjPhysics object should have a MeshFilter component.
         MeshFilter meshFilter = simObj.gameObject.GetComponentInChildren<MeshFilter>();
-        objectMetadata.points = meshFilter.mesh.vertices;
+        objectMetadata.points = (meshFilter != null && meshFilter.mesh != null) ? meshFilter.mesh.vertices :
+            new Vector3[] { };
 
         // From https://docs.unity3d.com/Manual/DirectionDistanceFromOneObjectToAnother.html
         objectMetadata.heading = objectMetadata.position - this.transform.position;
