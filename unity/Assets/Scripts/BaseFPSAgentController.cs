@@ -30,15 +30,15 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 		protected static float gridSize = 0.25f;
 		protected float moveMagnitude;
-
         protected float rotateStepDegrees = 90.0f;
-
         protected bool snapToGrid;
 		protected bool continuousMode;
 		public ImageSynthesis imageSynthesis;
-        public GameObject VisibilityCapsule = null;
-        public GameObject TallVisCap;
-        public GameObject BotVisCap;
+        public GameObject VisibilityCapsule = null;//used to keep track of currently active VisCap: see different vis caps for modes below
+        public GameObject TallVisCap;//meshes used for Tall mode
+        public GameObject BotVisCap;//meshes used for Bot mode
+        public GameObject DroneVisCap;//meshes used for Drone mode
+        public GameObject DroneBasket;//reference to the drone's basket object
         private bool isVisible = true;
         public bool IsVisible
         {
@@ -188,13 +188,13 @@ namespace UnityStandardAssets.Characters.FirstPerson
             // #endif
 			//allowNodes = false;
 
-            #if UNITY_EDITOR || UNITY_WEBGL
+            #if UNITY_WEBGL
             //if using editor mode or webgl demo, default to tall mode
             SetAgentMode("tall");
             #endif
 		}
 
-        //defaults all agent renderers, both Tall and Bot, to hidden for initialization default
+        //defaults all agent renderers, from all modes (tall, bot, drone), to hidden for initialization default
         private void HideAllAgentRenderers()
         {
             foreach(Renderer r in TallVisCap.GetComponentsInChildren<Renderer>())
@@ -206,6 +206,14 @@ namespace UnityStandardAssets.Characters.FirstPerson
             }
 
             foreach(Renderer r in BotVisCap.GetComponentsInChildren<Renderer>())
+            {
+                if(r.enabled)
+                {
+                    r.enabled = false;
+                }
+            }
+
+            foreach(Renderer r in DroneVisCap.GetComponentsInChildren<Renderer>())
             {
                 if(r.enabled)
                 {
@@ -240,9 +248,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		public void Initialize(ServerAction action)
         {
 
-            if(action.agentMode.ToLower() == "tall" || action.agentMode.ToLower() == "bot")
+            if(action.agentMode.ToLower() == "tall" || action.agentMode.ToLower() == "bot"
+                || action.agentMode.ToLower() == "drone")
             {
-                //set agent mode to Tall or Bot accordingly
+                //set agent mode to Tall, Bot or Drone accordingly
                 SetAgentMode(action.agentMode);
             }
             
@@ -447,6 +456,41 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
                 // limit camera from looking too far down
                 this.horizonAngles = new float[] { 30.0f, 0.0f, 330.0f };
+            }
+
+            else if(whichMode == "drone")
+            {
+                //toggle first person character cull
+                fpcc.SwitchRenderersToHide(whichMode);
+
+                VisibilityCapsule = DroneVisCap;
+                m_CharacterController.center = new Vector3(0,0,0);
+                m_CharacterController.radius = 0.2f;
+                m_CharacterController.height = 0.0f;
+
+                CapsuleCollider cc = this.GetComponent<CapsuleCollider>();
+                cc.center = m_CharacterController.center;
+                cc.radius = m_CharacterController.radius;
+                cc.height = m_CharacterController.height;
+
+                m_Camera.GetComponent<PostProcessVolume>().enabled = false;
+                m_Camera.GetComponent<PostProcessLayer>().enabled = false;
+
+                //camera position set forward a bit for drone
+                m_Camera.transform.localPosition = new Vector3(0, 0, 0.2f);
+
+                //camera FOV for drone
+                m_Camera.fieldOfView = 150f;
+
+                //default camera stand/crouch for drone mode since drone doesn't stand or crouch
+                standingLocalCameraPosition = m_Camera.transform.localPosition;
+                crouchingLocalCameraPosition = m_Camera.transform.localPosition;
+
+                //drone also needs to toggle on the drone basket
+                DroneBasket.SetActive(true);
+
+                //set physics controller to flight mode
+                this.GetComponent<PhysicsRemoteFPSAgentController>().FlightMode = true;
             }
         }
 

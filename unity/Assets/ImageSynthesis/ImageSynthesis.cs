@@ -131,11 +131,15 @@ public class ImageSynthesis : MonoBehaviour {
 	private Camera CreateHiddenCamera(string name)
 	{
 		var go = new GameObject (name, typeof (Camera));
-#if !UNITY_EDITOR // Useful to be able to see these cameras in the editor
+    #if !UNITY_EDITOR // Useful to be able to see these cameras in the editor
 		go.hideFlags = HideFlags.HideAndDontSave; 
-#endif
+    #endif
 		go.transform.parent = transform;
 
+        //this is a check for if the image synth is being added to a ThirdPartyCamera, which doesn't have a FirstPersonCharacterCull component
+        //Note: Check that all image synthesis works with third party cameras, as the image synth assumes that it is taking default settings
+        //from the Agent's camera, and a ThirdPartyCamera does not have the same defaults, which may cause some errors
+        if(go.transform.parent.GetComponent<FirstPersonCharacterCull>())
 		//add the FirstPersonCharacterCull so this camera's agent is not rendered- other agents when multi agent is enabled should still be rendered
 		go.AddComponent<FirstPersonCharacterCull>(go.transform.parent.GetComponent<FirstPersonCharacterCull>());
 
