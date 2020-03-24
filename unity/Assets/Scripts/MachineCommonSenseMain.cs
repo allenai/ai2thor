@@ -200,11 +200,15 @@ public class MachineCommonSenseMain : MonoBehaviour {
         Collider[] colliders = gameObject.GetComponentsInChildren<Collider>().Where((collider) =>
             !collider.isTrigger).ToArray();
 
-        // Deactivate any MeshCollider.  We expect non-MeshCollider(s) to be defined on the object too.
-        // A MeshCollider will cause an error with our object's ContinuousDynamic Rigidbody component.
+        // Deactivate any concave MeshCollider.  We expect other collider(s) to be defined on the object.
+        // Concave MeshCollider cause Unity errors with our object's ContinuousDynamic Rigidbody component.
         colliders.ToList().ForEach((collider) => {
             if (collider is MeshCollider) {
-                collider.enabled = false;
+                if (!((MeshCollider)collider).convex) {
+                    // TODO Do we need to do more?
+                    Debug.LogWarning("Deactivating concave MeshCollider in GameObject " + gameObject.name);
+                    collider.enabled = false;
+                }
             }
         });
 
@@ -309,6 +313,11 @@ public class MachineCommonSenseMain : MonoBehaviour {
             this.AssignSimObjPhysicsScript(gameObject, objectConfig, objectDefinition, colliders, moveable,
                 openable, pickupable, receptacle);
         }
+        // If the object has a SimObjPhysics script for some reason, ensure its tag and ID are set correctly.
+        else if (gameObject.GetComponent<SimObjPhysics>() != null) {
+            gameObject.tag = "SimObjPhysics"; // AI2-THOR Tag
+            gameObject.GetComponent<SimObjPhysics>().uniqueID = gameObject.name;
+        }
 
         this.AssignMaterial(gameObject, objectConfig.materialFile);
 
@@ -352,10 +361,8 @@ public class MachineCommonSenseMain : MonoBehaviour {
         MachineCommonSenseConfigObjectDefinition objectDefinition
     ) {
         // If we've configured new trigger box definitions but trigger boxes already exist, delete them.
-        if (objectDefinition.receptacleTriggerBoxes.Count > 0) {
-            if (gameObject.transform.Find("ReceptacleTriggerBox") != null) {
-                Destroy(gameObject.transform.Find("ReceptacleTriggerBox").gameObject);
-            }
+        if (gameObject.transform.Find("ReceptacleTriggerBox") != null) {
+            Destroy(gameObject.transform.Find("ReceptacleTriggerBox").gameObject);
         }
 
         // If this object will have multiple trigger boxes, create a common parent.
@@ -458,6 +465,10 @@ public class MachineCommonSenseMain : MonoBehaviour {
             ai2thorPhysicsScript.Type = SimObjType.IgnoreType;
         }
 
+        if (objectDefinition.salientMaterials.Count > 0) {
+            ai2thorPhysicsScript.salientMaterials = this.RetrieveSalientMaterials(objectConfig.salientMaterials);
+        }
+
         if (objectConfig.salientMaterials.Count > 0) {
             ai2thorPhysicsScript.salientMaterials = this.RetrieveSalientMaterials(objectConfig.salientMaterials);
         }
@@ -471,7 +482,7 @@ public class MachineCommonSenseMain : MonoBehaviour {
         }
 
         // The object's receptacle trigger boxes define the area in which objects may be placed for AI2-THOR.
-        if (receptacle && ai2thorPhysicsScript.ReceptacleTriggerBoxes.Length == 0) {
+        if (receptacle && objectDefinition.receptacleTriggerBoxes.Count > 0) {
             ai2thorPhysicsScript.ReceptacleTriggerBoxes = this.AssignReceptacleTriggerBoxes(gameObject,
                 objectDefinition);
         }
@@ -970,6 +981,7 @@ public class MachineCommonSenseConfigObjectDefinition {
     public List<MachineCommonSenseConfigInteractables> interactables;
     public List<MachineCommonSenseConfigOverride> overrides;
     public List<MachineCommonSenseConfigTransform> receptacleTriggerBoxes;
+    public List<string> salientMaterials;
     public List<MachineCommonSenseConfigVector> visibilityPoints;
 }
 

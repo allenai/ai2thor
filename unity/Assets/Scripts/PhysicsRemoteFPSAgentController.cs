@@ -4205,7 +4205,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                             }
                         }
 
-                        sop.transform.Find("Colliders").gameObject.SetActive(false);
+                        if (sop.transform.Find("Colliders") != null) {
+                            sop.transform.Find("Colliders").gameObject.SetActive(false);
+                        }
+                        sop.MyColliders.ToList().ForEach((collider) => {
+                            collider.enabled = false;
+                        });
                         Rigidbody soprb = sop.GetComponent<Rigidbody>();
                         soprb.collisionDetectionMode = CollisionDetectionMode.Discrete;
                         soprb.isKinematic = true;
@@ -4228,7 +4233,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     //print(sop.name);
                     //for every object that is contained by this object...
                     //turn off the colliders, leaving Trigger Colliders active (this is important to maintain visibility!)
-                    sop.transform.Find("Colliders").gameObject.SetActive(true);
+                    if (sop.transform.Find("Colliders") != null) {
+                        sop.transform.Find("Colliders").gameObject.SetActive(true);
+                    }
+                    sop.MyColliders.ToList().ForEach((collider) => {
+                        collider.enabled = true;
+                    });
                     Rigidbody rb = sop.GetComponent<Rigidbody>();
                     
                     rb.isKinematic = false;
@@ -4249,7 +4259,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     //print(sop.name);
                     //for every object that is contained by this object...
                     //turn off the colliders, leaving Trigger Colliders active (this is important to maintain visibility!)
-                    sop.transform.Find("Colliders").gameObject.SetActive(true);
+                    if (sop.transform.Find("Colliders") != null) {
+                        sop.transform.Find("Colliders").gameObject.SetActive(true);
+                    }
+                    sop.MyColliders.ToList().ForEach((collider) => {
+                        collider.enabled = true;
+                    });
                     sop.isInAgentHand = false;//agent hand flag
                 }
                 target.ClearContainedObjectReferences();
