@@ -1259,31 +1259,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return result;
         }
 
-        //checks if a float is an increment of 0.1f
-        private bool CheckIfFloatIsIncrementOfTenths(float f)
+        //checks if a float is a multiple of 0.1f
+        private bool CheckIfFloatIsMultipleOfOneTenth(float f)
         {
-            var epsilon = 1e-5;
-            var remainder = f % 0.1f;
-            if(isThisFloatCloseToThisOtherFloatBecauseFloatsAreWeird(remainder, 0.0f, epsilon) ||
-                isThisFloatCloseToThisOtherFloatBecauseFloatsAreWeird(remainder, 1.0f, epsilon))
-                {
-                    //it's an increment of 0.1 we're good!
-                    return true;
-                }
-            
-            //not an increment of 0.1f
-            else
+            if(((decimal)f % 0.1M == 0) == false)
             return false;
-        }
 
-        //check if a float is close to another float within an epsilon tolerance
-        private bool isThisFloatCloseToThisOtherFloatBecauseFloatsAreWeird(float x, float y, double tolerance)
-        {
-            if(x + tolerance > y && x - tolerance < y)
+            else 
             return true;
-
-            else
-            return false;
         }
 
         public override void LookDown(ServerAction action) 
@@ -1295,9 +1278,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 return;
             }
 
-            if(!CheckIfFloatIsIncrementOfTenths(action.degrees))
+            if(!CheckIfFloatIsMultipleOfOneTenth(action.degrees))
             {
-                errorMessage = "LookDown action requires degree value to be in increments of 0.1f";
+                errorMessage = "LookDown action requires degree value to be a multiple of 0.1f";
                 actionFinished(false);
                 return;
             }
@@ -1314,7 +1297,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             if(!checkForUpDownAngleLimit("down", action.degrees))
             {
-                errorMessage = "can't look down below the minimum angle:" + maxDownwardLookAngle;
+                errorMessage = "can't look down beyond " + maxDownwardLookAngle + " degrees below the forward horizon";
 			 	errorCode = ServerActionErrorCode.LookDownCantExceedMin;
 			 	actionFinished(false);
                 return;
@@ -1345,9 +1328,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 return;
             }
 
-            if(!CheckIfFloatIsIncrementOfTenths(action.degrees))
+            if(!CheckIfFloatIsMultipleOfOneTenth(action.degrees))
             {
-                errorMessage = "LookUp action requires degree value to be in increments of 0.1f";
+                errorMessage = "LookUp action requires degree value to be a multiple of 0.1f";
                 actionFinished(false);
                 return;
             }
@@ -1364,7 +1347,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             if(!checkForUpDownAngleLimit("up", action.degrees))
             {
-                errorMessage = "can't look up above the maximum angle:" + maxUpwardLookAngle;
+                errorMessage = "can't look up beyond " + maxUpwardLookAngle + " degrees above the forward horizon";
 			 	errorCode = ServerActionErrorCode.LookDownCantExceedMin;
 			 	actionFinished(false);
                 return;
@@ -1610,9 +1593,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             if(direction == "down")
             {
                 rotPoint.Rotate(new Vector3(degrees, 0, 0));
-                //print("rotating down rounded: " + Mathf.Round(Vector3.SignedAngle(rotPoint.transform.forward, m_CharacterController.transform.forward, m_CharacterController.transform.right)));
-                //print("rotating down exact: " + Vector3.SignedAngle(rotPoint.transform.forward, m_CharacterController.transform.forward, m_CharacterController.transform.right));
-                if(Mathf.Round(Vector3.SignedAngle(rotPoint.transform.forward, m_CharacterController.transform.forward, m_CharacterController.transform.right)* 10.0f) / 10.0f < maxDownwardLookAngle)
+                //note: maxDownwardLookAngle is negative because SignedAngle() returns a... signed angle... so even though the input is LookDown(degrees) with
+                //degrees being positive, it still needs to check against this negatively signed direction.
+                if(Mathf.Round(Vector3.SignedAngle(rotPoint.transform.forward, m_CharacterController.transform.forward, m_CharacterController.transform.right)* 10.0f) / 10.0f < -maxDownwardLookAngle)
                 {
                     result = false;
                 }
@@ -1621,8 +1604,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             if(direction == "up")
             {
                 rotPoint.Rotate(new Vector3(-degrees, 0, 0));
-                //print("rotating up rounded: " + Mathf.Round(Vector3.SignedAngle(rotPoint.transform.forward, m_CharacterController.transform.forward, m_CharacterController.transform.right)));
-                //print("rotating up exact: " + Vector3.SignedAngle(rotPoint.transform.forward, m_CharacterController.transform.forward, m_CharacterController.transform.right));
                 if(Mathf.Round(Vector3.SignedAngle(rotPoint.transform.forward, m_CharacterController.transform.forward, m_CharacterController.transform.right) * 10.0f) / 10.0f > maxUpwardLookAngle)
                 {
                     result = false;
@@ -4991,13 +4972,13 @@ public void PickupObject(ServerAction action) //use serveraction objectid
             //an objectId was given, so find that target in the scene if it exists
             else
             {
-                if (!physicsSceneManager.UniqueIdToSimObjPhysics.ContainsKey(action.objectId)) {
+                if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(action.objectId)) {
                     errorMessage = "Object ID appears to be invalid.";
                     actionFinished(false);
                     return;
                 }
                 
-                target = physicsSceneManager.UniqueIdToSimObjPhysics[action.objectId];
+                target = physicsSceneManager.ObjectIdToSimObjPhysics[action.objectId];
             }
             //neither objectId nor coordinates found an object
             if(target == null)

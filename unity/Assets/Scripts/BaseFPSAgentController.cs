@@ -76,7 +76,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 		protected float[] headingAngles = new float[] { 0.0f, 90.0f, 180.0f, 270.0f };
 		//protected float[] horizonAngles = new float[] { 60.0f, 30.0f, 0.0f, 330.0f };
-		protected float maxDownwardLookAngle = -60f;
+		protected float maxDownwardLookAngle = 60f;
 		protected float maxUpwardLookAngle = 30f;
 		//allow agent to push sim objects that can move, for physics
 		protected bool PushMode = false;
@@ -453,7 +453,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 crouchingLocalCameraPosition = m_Camera.transform.localPosition + new Vector3(0, -0.2206f, 0);//smaller y offset if Bot
 
                 // limit camera from looking too far down
-				this.maxDownwardLookAngle = -30f;
+				this.maxDownwardLookAngle = 30f;
 				this.maxUpwardLookAngle = 30f;
                 //this.horizonAngles = new float[] { 30.0f, 0.0f, 330.0f };
             }

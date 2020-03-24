@@ -527,26 +527,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		//GameObject agent = GameObject.Find("FPSController");
 		if(col.transform.GetComponentInParent<SimObjPhysics>())
 		{
-			// //add a check for if this is the handheld object, in which case dont't do this!
-
-            // var fpsController = GameObject.FindObjectOfType<PhysicsRemoteFPSAgentController>();
-            // //Debug.Log("FPS " + (fpsController == null));
-			
-			// if(fpsController != null && !fpsController.WhatAmIHolding() == this.transform)
-			// {
-			// 	//if this object is pickupable or moveable
-			// 	if(PrimaryProperty == SimObjPrimaryProperty.CanPickup || PrimaryProperty == SimObjPrimaryProperty.Moveable)
-			// 	{
-			// 		//only do this if other object that hit this object is moving
-			// 		if(col.impulse.magnitude > 0)
-			// 		{
-			// 			//print(col.transform.GetComponentInParent<SimObjPhysics>().transform.name);
-			// 			Rigidbody rb = gameObject.transform.GetComponent<Rigidbody>();
-			// 			rb.isKinematic = false;
-			// 			rb.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
-			// 		}
-			// 	}
-			// }
+            var fpsController = GameObject.FindObjectOfType<PhysicsRemoteFPSAgentController>();
 
 			//add a check for if the Agent is a flying drone
             if (fpsController.FlightMode)
