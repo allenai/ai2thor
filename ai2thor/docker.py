@@ -2,7 +2,7 @@ import subprocess
 import os.path
 import re
 import tempfile
-from ai2thor.build import BUILDS
+from ai2thor.build import VERSION
 import shlex
 import shutil
 
@@ -104,8 +104,7 @@ def kill_container(container_id):
 def build_image():
 
     version = nvidia_version()
-    tag = BUILDS['Docker']['tag']
-    image_name = 'ai2thor/ai2thor-nvidia-%s:%s' % (version, tag)
+    image_name = 'ai2thor/ai2thor-nvidia-%s:%s' % (version, VERSION)
 
     if image_exists(image_name):
         return image_name

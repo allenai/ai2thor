@@ -209,6 +209,20 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         AManager.Initialize(action);
                         break;
                     }
+
+                //initialize drone mode
+                 case "initd":
+                    {
+						ServerAction action = new ServerAction();
+
+						PhysicsController.actionComplete = false;
+                        action.action = "Initialize";
+                        action.agentMode = "drone";
+                        AManager.Initialize(action);
+
+                        break;
+                    }
+
                  case "mas":
                     {
                         ServerAction action = new ServerAction();
@@ -442,6 +456,15 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         AManager.Initialize(action);
                         break;
                     }
+
+                case "atpc":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "AddThirdPartyCamera";
+                        AManager.AddThirdPartyCamera(action);
+                        break;
+                    }
+
                 case "to":
                     {
                         ServerAction action = new ServerAction();
@@ -2359,7 +2382,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         if (splitcommand.Length > 1)
                         {
                             //ID of spawner
-                            action.objectId = splitcommand[1];
+                            action.objectType = splitcommand[1];
 
                             if (splitcommand.Length == 5) {
                                 action.position = new Vector3(

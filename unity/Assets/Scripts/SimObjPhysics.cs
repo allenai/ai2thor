@@ -84,7 +84,12 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 
 	private PhysicsSceneManager sceneManager;//reference to scene manager object
 
-    public bool inMotion = false;
+	public bool inMotion = false;
+
+    //count of number of other sim objects this object has hit, if agent is drone
+    public int numSimObjHit = 0;
+    public int numFloorHit = 0;
+    public int numStructureHit = 0;
 
     //the velocity of this object from the last frame
     public float lastVelocity = 0;//start at zero assuming at rest
@@ -519,27 +524,91 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		// //this is to enable kinematics if this object hits another object that isKinematic but needs to activate
 		// //physics uppon being touched/collided
 
-		// if(col.transform.GetComponentInParent<SimObjPhysics>())
-		// {
-		// 	//add a check for if this is the handheld object, in which case dont't do this!
-		// 	GameObject agent = GameObject.Find("FPSController");
-		// 	if(!agent.transform.GetComponent<PhysicsRemoteFPSAgentController>().WhatAmIHolding() == this.transform)
-		// 	{
-		// 		//if this object is pickupable or moveable
-		// 		if(PrimaryProperty == SimObjPrimaryProperty.CanPickup || PrimaryProperty == SimObjPrimaryProperty.Moveable)
-		// 		{
-		// 			//only do this if other object that hit this object is moving
-		// 			if(col.impulse.magnitude > 0)
-		// 			{
-		// 				//print(col.transform.GetComponentInParent<SimObjPhysics>().transform.name);
-		// 				Rigidbody rb = gameObject.transform.GetComponent<Rigidbody>();
-		// 				rb.isKinematic = false;
-		// 				rb.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
-		// 			}
-		// 		}
-		// 	}
+		//GameObject agent = GameObject.Find("FPSController");
+		if(col.transform.GetComponentInParent<SimObjPhysics>())
+		{
+			// //add a check for if this is the handheld object, in which case dont't do this!
 
-		// }
+            // var fpsController = GameObject.FindObjectOfType<PhysicsRemoteFPSAgentController>();
+            // //Debug.Log("FPS " + (fpsController == null));
+			
+			// if(fpsController != null && !fpsController.WhatAmIHolding() == this.transform)
+			// {
+			// 	//if this object is pickupable or moveable
+			// 	if(PrimaryProperty == SimObjPrimaryProperty.CanPickup || PrimaryProperty == SimObjPrimaryProperty.Moveable)
+			// 	{
+			// 		//only do this if other object that hit this object is moving
+			// 		if(col.impulse.magnitude > 0)
+			// 		{
+			// 			//print(col.transform.GetComponentInParent<SimObjPhysics>().transform.name);
+			// 			Rigidbody rb = gameObject.transform.GetComponent<Rigidbody>();
+			// 			rb.isKinematic = false;
+			// 			rb.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
+			// 		}
+			// 	}
+			// }
+
+			//add a check for if the Agent is a flying drone
+            if (fpsController.FlightMode)
+            {   
+                FlyingDrone fdComp = fpsController.GetComponent<FlyingDrone>();
+                //add a check for if it's for initialization
+                if (fdComp.HasLaunch(this))
+                {   
+                    //add a check for if this is the object caought by the drone
+                    if (!fdComp.isObjectCaught(this))
+                    {   
+                        //emperically find the relative velocity > 1 means a "real" hit.
+                        if (col.relativeVelocity.magnitude > 1)
+                        {
+                            //make sure we only count hit once per time, not for all collision contact points of an object.
+                            if (!contactPointsDictionary.ContainsKey(col.collider))
+                            {
+                                numSimObjHit++;
+                            }
+                        }
+                    }
+                }
+            }
+
+		}
+
+
+		//add a check for if the hitting one is a structure object
+        else if (col.transform.GetComponentInParent<StructureObject>())
+        {   
+            var fpsController = GameObject.FindObjectOfType<PhysicsRemoteFPSAgentController>();
+
+            //add a check for if the Agent is a flying drone
+            if (fpsController.FlightMode)
+            {   
+                FlyingDrone fdComp = fpsController.GetComponent<FlyingDrone>();
+                //add a check for if it's for initialization
+                if (fdComp.HasLaunch(this))
+                {   
+                    //add a check for if this is the object caought by the drone
+                    if (!fdComp.isObjectCaught(this))
+                    {   
+                        //emperically find the relative velocity > 1 means a "real" hit.
+                        if (col.relativeVelocity.magnitude > 1)
+                        {   
+                            //make sure we only count hit once per time, not for all collision contact points of an object.
+                            if (!contactPointsDictionary.ContainsKey(col.collider))
+                            {
+                                numStructureHit++;
+                                //check if structure hit is a floor
+                                if (col.transform.GetComponentInParent<StructureObject>().WhatIsMyStructureObjectTag == StructureObjectTag.Floor)
+                                {
+                                    numFloorHit++;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        
+		contactPointsDictionary[col.collider] = col.contacts;
 	}
 	void OnCollisionExit (Collision col)	
     {

@@ -26,16 +26,16 @@ public class NavMeshSetup : MonoBehaviour
         [UnityEditor.MenuItem("NavMesh/Build NavMeshes for All Scenes")]
         public static void Build()
         {
-            var testSceneNames = GetSceneNames(3, 5, "Val");
-            // var valSceneNames = GetSceneNames(2, 2, "test-dev");
+            // var testSceneNames = GetSceneNames(3, 5, "Val");
             var trainSceneNames = GetSceneNames(12, 5, "Train");
 
-            Debug.Log("Scenes: " + string.Join(",", trainSceneNames.ToArray()));
-
             var selection = new List<string>();
-            selection.AddRange(testSceneNames);
-            //selection.AddRange(valSceneNames);
+            // selection.AddRange(testSceneNames);
             selection.AddRange(trainSceneNames);
+            
+            // selection.AddRange(trainSceneNames);
+
+            
             // These scenes were mannually adjusted so the nav mesh variables should not be set automatically and should be build manually 
             var exclude = new List<string>() {
                 "Assets/Scenes/FloorPlan_Train7_1.unity", // Radius of agent made smaller to fit between table small path where reachable positions exist
@@ -43,16 +43,15 @@ public class NavMeshSetup : MonoBehaviour
                 "Assets/Scenes/FloorPlan_Val2_3.unity", // Unmade bed obstructs conectivity of navmesh
                 };
             exclude.ForEach((x) => selection.Remove(x));
-
-            Debug.Log("selection is: " + selection.ToArray());
+            Debug.Log("Scenes: " + string.Join(",", selection.ToArray()));
             selection.ToList().ForEach(sceneName => BuildNavmeshForScene(sceneName));
         }
 
-        private static  List<string> GetSceneNames(int lastIndex, int lastSubIndex, string nameTemplate) {
+        private static  List<string> GetSceneNames(int lastIndex, int lastSubIndex, string nameTemplate, string pathPrefix="Assets/Scenes") {
             var scenes = new List<string>();
             for (var i = 1; i <= lastIndex; i++) {
                 for (var j = 1; j <= lastSubIndex; j++) {
-                    var scene = "Assets/Scenes/FloorPlan_" + nameTemplate + i + "_" + j + ".unity";
+                    var scene = pathPrefix + "/FloorPlan_" + nameTemplate + i + "_" + j + ".unity";
                     scenes.Add(scene);
                 }
             }

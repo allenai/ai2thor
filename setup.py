@@ -35,8 +35,11 @@ setup(name='ai2thor',
           'pyyaml',
           'requests',
           'progressbar2',
+          'botocore',
+          'aws-requests-auth',
           'msgpack',
-          'Pillow'
+          'Pillow',
+          'opencv-python'
       ],
       setup_requires=['pytest-runner'],
       tests_require=['pytest', 'pytest-cov'],

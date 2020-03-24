@@ -52,6 +52,7 @@ controller = ai2thor.controller.Controller(
 For building for browser, please refer to [this page](WEBGL.md).
 
 ## Citation
+If you use iTHOR, please cite the original AI2-THOR paper:
 
     @article{ai2thor,
         Author = {Eric Kolve and Roozbeh Mottaghi 
@@ -63,7 +64,20 @@ For building for browser, please refer to [this page](WEBGL.md).
         Journal = {arXiv},
         Year = {2017}
     }
-    
+  
+If you use RoboTHOR, please cite the following paper:
+
+    @inproceedings{robothor,
+        Author = {Matt Deitke and Winson Han and Alvaro Herrasti and
+                  Aniruddha Kembhavi and Eric Kolve and Roozbeh Mottaghi and
+                  Jordi Salvador and Dustin Schwenk and Eli VanderBilt and
+                  Matthew Wallingford and Luca Weihs and Mark Yatskar and
+                  Ali Farhadi},
+        Title = {{RoboTHOR: An Open Simulation-to-Real Embodied AI Platform}},
+        Booktitle = {CVPR},
+        Year = {2020}
+    }
+
 
 ## Support
 

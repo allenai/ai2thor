@@ -14,6 +14,7 @@ using UnityStandardAssets.CrossPlatformInput;
 using UnityStandardAssets.ImageEffects;
 using UnityStandardAssets.Utility;
 using UnityEngine.AI;
+using RandomExtensions;
 
 namespace UnityStandardAssets.Characters.FirstPerson {
     [RequireComponent(typeof(CharacterController))]
@@ -41,10 +42,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         [SerializeField] protected bool IsHandDefault = true;
 
+        //DRONE parameters
         [SerializeField] public bool FlightMode = false;
+        public bool hasFixedUpdateHappened = true;//track if the fixed physics update has happened
         protected Vector3 thrust;
-
-        [SerializeField] Camera[] FlightCameras;
+        public float dronePositionRandomNoiseSigma = 0f;
+        //count of fixed updates for use in droneCurrentTime
+        public float fixupdateCnt = 0f;
+        public float autoResetTimeScale = 1.0f;
 
         // Extra stuff
         private PhysicsSceneManager _physicsSceneManager = null;
@@ -72,7 +77,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         protected float actionFloatReturn;
         protected bool actionBoolReturn;
         protected float[] actionFloatsReturn;
-
         protected Vector3[] actionVector3sReturn;
         protected string[] actionStringsReturn;
         protected HashSet<int> initiallyDisabledRenderers = new HashSet<int>();
@@ -248,12 +252,43 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         // Update is called once per frame
         void Update() {
-            if (FlightMode) {
-                if (thrust.magnitude > 0.1) {
-                    m_CharacterController.Move(thrust * Time.deltaTime);
+
+        }
+
+        void FixedUpdate(){
+
+            //when in drone mode, automatically pause time and physics simulation here
+            //time and physics will continue once emitFrame is called
+            //Note: this is to keep drone and object movement in sync, as pausing just object physics would
+            //still allow the drone's character controller Move() to function in "real time" and we dont have
+            //support for fully continuous drone movement and emitFrame metadata generation at the same time.
+            if (FlightMode)
+            {   
+                if (hasFixedUpdateHappened)
+                {   
+                    Time.timeScale = 0;
+                    Physics.autoSimulation = false;
+                    physicsSceneManager.physicsSimulationPaused = true;
+                }   
+                else
+                {
+                    fixupdateCnt++;
+                    hasFixedUpdateHappened = true;
                 }
 
-                thrust = Vector3.Lerp(thrust, Vector3.zero, 5 * Time.deltaTime);
+                if (thrust.magnitude > 0.0001 && Time.timeScale != 0)
+                {
+                    if (dronePositionRandomNoiseSigma > 0){
+                        var random = new System.Random();
+                        var noiseX = (float)random.NextGaussian(0.0f, dronePositionRandomNoiseSigma/3.0f);
+                        var noiseY = (float)random.NextGaussian(0.0f, dronePositionRandomNoiseSigma/3.0f);
+                        var noiseZ = (float)random.NextGaussian(0.0f, dronePositionRandomNoiseSigma/3.0f);
+                        Vector3 noise = new Vector3(noiseX, noiseY, noiseZ);
+                        m_CharacterController.Move((thrust * Time.fixedDeltaTime) + noise);
+                    }else{
+                        m_CharacterController.Move(thrust * Time.fixedDeltaTime);
+                    }
+                }
             }
         }
 
@@ -348,6 +383,15 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 objMeta.isCooked = simObj.IsCooked;
             }
 
+            if (FlightMode)
+            {   
+                objMeta.isCaught = this.GetComponent<FlyingDrone>().isObjectCaught(simObj);
+                objMeta.numSimObjHits = simObj.numSimObjHit;
+                objMeta.numFloorHits = simObj.numFloorHit;
+                objMeta.numStructureHits = simObj.numStructureHit;
+                objMeta.lastVelocity = simObj.lastVelocity;
+            }
+
             //if the sim object is moveable or pickupable
             if(simObj.IsPickupable || simObj.IsMoveable)
             {
@@ -363,7 +407,17 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 objMeta.salientMaterials = salientMaterialsToString;
 
                 //this object should also report back mass since it is moveable/pickupable
-                objMeta.mass = simObj.Mass;
+                if (FlightMode)
+                {   
+                    if (!objMeta.isCaught)
+                    {
+                        objMeta.mass = simObj.Mass;
+                    }
+                }
+                else
+                {
+                    objMeta.mass = simObj.Mass;
+                }
             }
 
             //can this object change others to hot?
@@ -610,6 +664,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             if (agentMeta.cameraHorizon > 180) {
                 agentMeta.cameraHorizon -= 360;
             }
+            if (FlightMode)
+            {   
+                agentMeta.FlightMode = FlightMode;
+                agentMeta.LauncherPosition = this.GetComponent<FlyingDrone>().GetLauncherPosition();
+            }
 
             // OTHER METADATA
             MetadataWrapper metaMessage = new MetadataWrapper();
@@ -677,6 +736,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             //test time
             metaMessage.currentTime = TimeSinceStart();
 
+            //if we are a drone, update DroneTime
+            if(FlightMode)
+            metaMessage.droneCurrentTime = DroneTimeSinceStart();
+
             // Resetting things
             reachablePositions = new Vector3[0];
             flatSurfacesOnGrid = new float[0, 0, 0];
@@ -696,6 +759,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         public float TimeSinceStart() {
             return Time.time;
+        }
+        public float DroneTimeSinceStart() {
+            return fixupdateCnt * Time.fixedDeltaTime;
         }
 
         //change the radius of the agent's capsule on the char controller component, and the capsule collider component
@@ -2450,10 +2516,107 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         //Flying Drone Agent Controls
+        //use get reachable positions, get two positions, one in front of the other
+        public Vector3[] SeekTwoPos(Vector3[] shuffledCurrentlyReachable){
+            Vector3[] output = new Vector3[2];
+            System.Random rnd = new System.Random();
+            List<float> y_candidates = new List<float>(new float[] {1.0f, 1.25f, 1.5f});
+            foreach (Vector3 p in shuffledCurrentlyReachable){
+                foreach (Vector3 p2 in shuffledCurrentlyReachable){
+                    if(!p.Equals(p2)){
+                        if(p2.z>=(p.z+1.5f) && Mathf.Abs(p.z-p2.z)<=2.5f){
+                            //if(Mathf.Abs(p.x-p2.x) < 0.5*Mathf.Abs(p.z-p2.z)){
+                            //if(Mathf.Abs(p.x-p2.x) == 0){
+                            if(Mathf.Abs(p.x-p2.x) <= 0.5){
+                                float y = y_candidates.OrderBy(x => rnd.Next()).ToArray()[0];
+                                output[0] = new Vector3(p.x, 1.0f, p.z);
+                                output[1] = new Vector3(p2.x, y, p2.z);
+                                return output;
+                            }
+                        }
+                    }
+                }
+            }
+            return output;
+        }
+
+        public void FlyRandomStart(ServerAction action)
+        {   
+            if(FlightMode)
+            {
+                System.Random rnd = new System.Random();
+                Vector3[] shuffledCurrentlyReachable = getReachablePositions().OrderBy(x => rnd.Next()).ToArray();
+                Vector3[] Random_output = SeekTwoPos(shuffledCurrentlyReachable);
+
+                var thrust_dt_drone = Random_output[0];
+                var thrust_dt_launcher = Random_output[1];
+                thrust_dt_launcher = new Vector3(thrust_dt_launcher.x, action.y, thrust_dt_launcher.z);
+                transform.position = thrust_dt_drone;
+
+                this.GetComponent<FlyingDrone>().MoveLauncher(thrust_dt_launcher);
+                actionFinished(true);
+            }
+
+            else
+            {
+                errorMessage = "Agent not in drone mode";
+                actionFinished(false);
+            }
+        }   
+
+        //move drone and launcher to some start position
+        public void FlyAssignStart(ServerAction action)
+        {   
+            if(FlightMode)
+            {
+                //drone uses action.position
+                Vector3 thrust_dt = action.position;
+                transform.position = thrust_dt;
+
+                //use action.x,y,z for launcher
+                Vector3 launcherPosition = new Vector3(action.x, action.y, action.z);
+                Vector3 thrust_dt_launcher = launcherPosition;
+                this.GetComponent<FlyingDrone>().MoveLauncher(thrust_dt_launcher);
+
+                actionFinished(true);
+            }
+
+            else
+            {
+                errorMessage = "Agent not in drone mode";
+                actionFinished(false);
+            }
+        }
+
+        //Flying Drone Agent Controls
+        public void FlyTo(ServerAction action)
+        {   
+            if (FlightMode)
+            {
+                transform.rotation = Quaternion.Euler(new Vector3(0.0f, action.rotation.y, 0.0f));
+                m_Camera.transform.localEulerAngles = new Vector3(action.horizon, 0.0f, 0.0f);
+                thrust += new Vector3(action.x, action.y, action.z);
+                actionFinished(true);
+            }
+
+            else
+            {
+                errorMessage = "Agent not in drone mode";
+                actionFinished(false);
+            }
+        }
+
+        //Flying Drone Agent Controls
         public void FlyAhead(ServerAction action) {
             if (FlightMode) {
                 thrust += GetFlyingOrientation(action, 0);
                 actionFinished(true);
+            }
+
+            else
+            {
+                errorMessage = "Agent not in drone mode";
+                actionFinished(false);
             }
         }
 
@@ -2464,6 +2627,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 actionFinished(true);
 
             }
+
+            else
+            {
+                errorMessage = "Agent not in drone mode";
+                actionFinished(false);
+            }
         }
 
         //Flying Drone Agent Controls
@@ -2472,6 +2641,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 thrust += GetFlyingOrientation(action, 270);
                 actionFinished(true);
 
+            }
+
+            else
+            {
+                errorMessage = "Agent not in drone mode";
+                actionFinished(false);
             }
         }
 
@@ -2482,6 +2657,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 actionFinished(true);
 
             }
+
+            else
+            {
+                errorMessage = "Agent not in drone mode";
+                actionFinished(false);
+            }
         }
 
         //Flying Drone Agent Controls
@@ -2491,6 +2672,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 //transform.position = targetPosition;
                 thrust += new Vector3(0, action.moveMagnitude, 0);
                 actionFinished(true);
+            }
+
+            else
+            {
+                errorMessage = "Agent not in drone mode";
+                actionFinished(false);
             }
 
         }
@@ -2504,6 +2691,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 actionFinished(true);
             }
 
+            else
+            {
+                errorMessage = "Agent not in drone mode";
+                actionFinished(false);
+            }
         }
 
         //for use with the Drone to be able to launch an object into the air
@@ -2512,12 +2704,29 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             if (FlightMode) {
                 this.GetComponent<FlyingDrone>().Launch(action);
                 actionFinished(true);
+                fixupdateCnt = 0f;
+            }
+
+            else
+            {
+                errorMessage = "Agent not in drone mode";
+                actionFinished(false);
             }
         }
 
-        public void CheckDroneCaught(ServerAction action) {
-            if (FlightMode) {
-                actionFinished(true, this.GetComponent<FlyingDrone>().DidICatchTheThing(action));
+        //spawn a launcher object at action.position coordinates
+        public void SpawnDroneLauncher(ServerAction action)
+        {
+            if(FlightMode)
+            {
+                this.GetComponent<FlyingDrone>().SpawnLauncher(action.position);
+                actionFinished(true);
+            }
+
+            else
+            {
+                errorMessage = "Agent not in drone mode";
+                actionFinished(false);
             }
         }
 
@@ -4748,69 +4957,100 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 #endif
         }
 
-        public void PickupObject(ServerAction action) //use serveraction objectid
+public void PickupObject(ServerAction action) //use serveraction objectid
         {
-            if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(action.objectId)) {
-                errorMessage = "Object ID appears to be invalid.";
+            //specify target to pickup via objectId or coordinates
+            SimObjPhysics target = null;
+            //no target object specified, so instead try and use x/y screen coordinates
+            if(action.objectId == null)
+            {
+                float x = action.x;
+                float y = 1.0f - action.y; //reverse the y so that the origin (0, 0) can be passed in as the top left of the screen
+                //cast ray from screen coordinate into world space. If it hits an object
+                Ray ray = m_Camera.ViewportPointToRay(new Vector3(x, y, 0.0f));
+                RaycastHit hit;
+                //if something was touched, actionFinished(true) always
+                if(Physics.Raycast(ray, out hit, Mathf.Infinity, 1 << 0 |1 << 8| 1<<10, QueryTriggerInteraction.Ignore))
+                {
+                    if(hit.transform.GetComponent<SimObjPhysics>())
+                    {
+                        //wait! First check if the point hit is withing visibility bounds (camera viewport, max distance etc)
+                        //this should basically only happen if the handDistance value is too big
+                        if(!CheckIfTargetPositionIsInViewportRange(hit.point))
+                        {
+                            errorMessage = "target sim object is not within the viewport";
+                            actionFinished(false);
+                            return;
+                        }
+                        
+                        //it is within viewport, so we are good, assign as target
+                        target = hit.transform.GetComponent<SimObjPhysics>();
+                    }
+                }
+            }
+            //an objectId was given, so find that target in the scene if it exists
+            else
+            {
+                if (!physicsSceneManager.UniqueIdToSimObjPhysics.ContainsKey(action.objectId)) {
+                    errorMessage = "Object ID appears to be invalid.";
+                    actionFinished(false);
+                    return;
+                }
+                
+                target = physicsSceneManager.UniqueIdToSimObjPhysics[action.objectId];
+            }
+            //neither objectId nor coordinates found an object
+            if(target == null)
+            {
+                errorMessage = "No target found";
                 actionFinished(false);
                 return;
             }
             
-            SimObjPhysics target = physicsSceneManager.ObjectIdToSimObjPhysics[action.objectId];
-
-            if (ItemInHand != null) {
-                Debug.Log("Agent hand has something in it already! Can't pick up anything else");
-                actionFinished(false);
-                return;
-            } 
-
-            if (IsHandDefault == false) {
-                errorMessage = "Reset Hand to default position before attempting to Pick Up objects";
-                actionFinished(false);
-                return;
-            }
-
-            if (!action.forceAction && !objectIsCurrentlyVisible(target, maxVisibleDistance)) {
-                errorMessage = action.objectId + " is not visible.";
-                actionFinished(false);
-                return;
-            }
-
             if (target.PrimaryProperty != SimObjPrimaryProperty.CanPickup) {
                 errorMessage = action.objectId + " must have the property CanPickup to be picked up.";
                 actionFinished(false);
                 return;
             }
-
+            
+            if (ItemInHand != null) {
+                Debug.Log("Agent hand has something in it already! Can't pick up anything else");
+                actionFinished(false);
+                return;
+            } 
+            if (IsHandDefault == false) {
+                errorMessage = "Reset Hand to default position before attempting to Pick Up objects";
+                actionFinished(false);
+                return;
+            }
+            if (!action.forceAction && !objectIsCurrentlyVisible(target, maxVisibleDistance)) {
+                errorMessage = action.objectId + " is not visible and can't be picked up.";
+                actionFinished(false);
+                return;
+            }
             if (!action.forceAction && target.isInteractable == false) {
                 errorMessage = action.objectId + " is not interactable and (perhaps it is occluded by something).";
                 actionFinished(false);
                 return;
             }
-
             //move the object to the hand's default position. Make it Kinematic
             //then set parant and ItemInHand
-
             Vector3 savedPos = target.transform.position;
             Quaternion savedRot = target.transform.rotation;
             Transform savedParent = target.transform.parent;
             bool wasKinematic = target.GetComponent<Rigidbody>().isKinematic;
-
             //object is being held, set kinematic true
             Rigidbody rb = target.GetComponent<Rigidbody>();
             rb.collisionDetectionMode = CollisionDetectionMode.Discrete;
             rb.isKinematic = true;
-
             //if the target is rotated too much, don't try to pick up any contained objects since they would fall out
             if (Vector3.Angle(target.transform.up, Vector3.up) < 60)
                 PickupContainedObjects(target);
-
             target.transform.position = AgentHand.transform.position;
             // target.transform.rotation = AgentHand.transform.rotation; - keep this line if we ever want to change the pickup position to be constant relative to the Agent Hand and Agent Camera rather than aligned by world axis
             target.transform.rotation = transform.rotation;
             target.transform.SetParent(AgentHand.transform);
             ItemInHand = target.gameObject;
-
             if (!action.forceAction && isHandObjectColliding(true)) {
                 // Undo picking up the object if the object is colliding with something after picking it up
                 target.GetComponent<Rigidbody>().isKinematic = wasKinematic;
@@ -4818,16 +5058,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 target.transform.rotation = savedRot;
                 target.transform.SetParent(savedParent);
                 ItemInHand = null;
-
                 DropContainedObjects(target);
-
                 errorMessage = "Picking up object would cause it to collide.";
                 actionFinished(false);
                 return;
             }
-
-            //SetUpRotationBoxChecks();
-
+            
             //we have succesfully picked up something! 
             target.GetComponent<SimObjPhysics>().isInAgentHand = true;
             actionFinished(true, target.ObjectID);
@@ -5985,21 +6221,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         //     }
         // }
         public SimObjPhysics[] VisibleSimObjs(bool forceVisible) {
-            if (forceVisible) {
+            if (forceVisible) 
+            {
                 return GameObject.FindObjectsOfType(typeof(SimObjPhysics)) as SimObjPhysics[];
-            } else {
-                if (!FlightMode)
-                    return GetAllVisibleSimObjPhysics(m_Camera, maxVisibleDistance);
+            } 
 
-                else {
-                    List<SimObjPhysics> ObjVisToAllCameras = new List<SimObjPhysics>();
-                    //ObjVisToAllCameras.AddRange(GetAllVisibleSimObjPhysics(m_Camera, maxVisibleDistance));
-                    foreach (Camera c in FlightCameras) {
-                        ObjVisToAllCameras.AddRange(GetAllVisibleSimObjPhysics(c, maxVisibleDistance));
-                    }
-
-                    return ObjVisToAllCameras.ToArray();
-                }
+            else 
+            {
+                return GetAllVisibleSimObjPhysics(m_Camera, maxVisibleDistance);
             }
         }
 
@@ -6595,6 +6824,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         //     script.enabled = false;
         // }
 
+        //in case you want to change the timescale
         public void ChangeTimeScale(ServerAction action) {
             if (action.timeScale > 0) {
                 Time.timeScale = action.timeScale;
@@ -6603,6 +6833,29 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 errorMessage = "Time scale must be >0";
                 actionFinished(false);
             }
+        }
+
+        //change what timeScale is automatically reset to on emitFrame when in FlightMode
+        public void ChangeAutoResetTimeScale(ServerAction action)
+        {
+            autoResetTimeScale = action.timeScale;
+            actionFinished(true);
+        }
+
+        //in case you want to change the fixed delta time
+        public void ChangeFixedDeltaTime(ServerAction action) {
+            if (action.fixedDeltaTime > 0) {
+                Time.fixedDeltaTime = action.fixedDeltaTime;
+                actionFinished(true);
+            } else {
+                errorMessage = "FixedDeltaTime must be >0";
+                actionFinished(false);
+            }
+        }
+
+        public void ChangeDronePositionRandomNoiseSigma(ServerAction action) {
+            dronePositionRandomNoiseSigma = action.dronePositionRandomNoiseSigma;
+            actionFinished(true);
         }
 
         ///////////////////////////////////
@@ -9536,6 +9789,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 return;
             }
 
+            //Alvaro I commented this out cause it didn't appear to do anything? uhhhhh
             //var reachablePos = getReachablePositions(1.0f, 10000, action.grid, action.gridColor);
 
             Instantiate(DebugTargetPointPrefab, sop.transform.position, Quaternion.identity);

@@ -205,7 +205,20 @@ public class AgentManager : MonoBehaviour
 			Camera thirdPartyCamera = thirdPartyCameras.ToArray()[action.thirdPartyCameraId];
 			thirdPartyCamera.gameObject.transform.eulerAngles = action.rotation;
 			thirdPartyCamera.gameObject.transform.position = action.position;
-		} 
+
+			// set the skybox to default, white, or black (other colors can be added as needed)
+			if (action.skyboxColor == null) {
+				// default blue-ish skybox that shows the ground
+				thirdPartyCamera.clearFlags = CameraClearFlags.Skybox;
+			} else {
+				thirdPartyCamera.clearFlags = CameraClearFlags.SolidColor;
+				if (action.skyboxColor == "white") {
+					thirdPartyCamera.backgroundColor = Color.white;
+				} else {
+					thirdPartyCamera.backgroundColor = Color.black;
+				}
+			}
+		}
 		readyToEmit = true;
 	}
 
@@ -318,6 +331,23 @@ public class AgentManager : MonoBehaviour
 			}
 		}
 
+		int hasUpdateCount = 0;
+		bool FlightMode = false;
+        //check if any active agents are in FlightMode
+        foreach (PhysicsRemoteFPSAgentController physAgent in this.agents)
+        {
+			if (physAgent.FlightMode)
+            {
+				FlightMode = true;
+
+                //get total count of all flight mode agents that have finished updating
+                if (physAgent.hasFixedUpdateHappened)
+                {
+                    hasUpdateCount++;
+                }
+			}
+        }
+
         //check what objects in the scene are currently in motion
         //Rigidbody[] rbs = FindObjectsOfType(typeof(Rigidbody)) as Rigidbody[];
         foreach(Rigidbody rb in rbsInScene)
@@ -389,13 +419,27 @@ public class AgentManager : MonoBehaviour
         }
 
 		if (completeCount == agents.Count && completeCount > 0 && readyToEmit) {
-			readyToEmit = false;
-			StartCoroutine (EmitFrame ());
+			if (!FlightMode)
+            {
+				readyToEmit = false;
+				StartCoroutine (EmitFrame ());
+			}
+            
+            //some number of agents is in FlightMode
+            else
+            {
+                //make sure each agent in flightMode has updated at least once
+				if (hasUpdateCount == agents.Count && hasUpdateCount > 0)
+                {
+					readyToEmit = false;
+					StartCoroutine (EmitFrame ());
+				}
+			}
 		}
 
         //ok now if the scene is at rest, turn back on physics autosimulation automatically
         //note: you can do this earlier by manually using the UnpausePhysicsAutoSim() action found in PhysicsRemoteFPSAgentController
-        if(physicsSceneManager.isSceneAtRest && 
+        if(physicsSceneManager.isSceneAtRest && !FlightMode &&
         physicsSceneManager.physicsSimulationPaused && AdvancePhysicsStepCount > 0)
         {
             //print("soshite toki wa ugoki desu");
@@ -715,6 +759,16 @@ public class AgentManager : MonoBehaviour
 				ProcessControlCommand(www.downloadHandler.text);
 			}
 		}
+
+		if (Time.timeScale == 0 && !Physics.autoSimulation && physicsSceneManager.physicsSimulationPaused)
+        {
+            PhysicsRemoteFPSAgentController agent_tmp = this.agents.ToArray()[0].GetComponent<PhysicsRemoteFPSAgentController>();
+            Time.timeScale = agent_tmp.autoResetTimeScale;
+            Physics.autoSimulation = true;
+            physicsSceneManager.physicsSimulationPaused = false;
+            agent_tmp.hasFixedUpdateHappened = false;
+        }
+
         #endif
     }
 	private int parseContentLength(string header) {
@@ -889,6 +943,17 @@ public class ObjectMetadata
     public ObjectOrientedBoundingBox objectOrientedBoundingBox;
     
 	public ObjectMetadata() { }
+
+    // Drone Related Metadata
+    public bool FlightMode;
+    public int numSimObjHits;
+    public int numFloorHits;
+    public int numStructureHits;
+    public float lastVelocity;
+    public Vector3 LauncherPosition;
+	public bool isCaught;
+    // end drone metadata
+    
 }
 
 //for returning a world axis aligned bounding box
@@ -1022,8 +1087,9 @@ public struct MetadataWrapper
 	public Vector3[] actionVector3sReturn;
 	public List<Vector3> visibleRange;
 	public System.Object actionReturn;
-
 	public float currentTime;
+    //time based on increments of fixedUpdate in drone mode
+    public float droneCurrentTime;
 }
 
 
@@ -1036,6 +1102,8 @@ public class ServerAction
 	public string quality;
 	public bool makeAgentsVisible = true;
 	public float timeScale = 1.0f;
+	public float fixedDeltaTime = 0.02f;
+    public float dronePositionRandomNoiseSigma = 0.00f;
 	public string objectType;
 	public int objectVariation;
 	public string receptacleObjectType;
@@ -1063,6 +1131,8 @@ public class ServerAction
     public float movementGaussianSigma;
     public float rotateGaussianMu;
     public float rotateGaussianSigma;
+    public string skyboxColor = null;
+
 	public bool forceKinematic;
 	public float maxAgentsDistance = -1.0f;
 	public bool alwaysReturnVisibleRange = false;
@@ -1081,6 +1151,8 @@ public class ServerAction
 	public float removeProb;
 	public int numPlacementAttempts;
 	public bool randomizeObjectAppearance;
+    public bool objectRandom;
+    public string objectName;
 	public bool renderImage = true;
 	public bool renderDepthImage;
 	public bool renderClassImage;

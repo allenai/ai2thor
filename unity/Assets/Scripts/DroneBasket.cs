@@ -55,7 +55,7 @@ public class DroneBasket : MonoBehaviour
 
 				sop.enabled = false;
 
-				myParent.GetComponent<FlyingDrone>().caught = true;
+				myParent.GetComponent<FlyingDrone>().caught_object.Add(sop);
 			}
 		}
 	}

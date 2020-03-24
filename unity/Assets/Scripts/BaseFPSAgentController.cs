@@ -33,9 +33,11 @@ namespace UnityStandardAssets.Characters.FirstPerson
         protected bool snapToGrid;
 		protected bool continuousMode;//deprecated, use snapToGrid instead
 		public ImageSynthesis imageSynthesis;
-        public GameObject VisibilityCapsule = null;
-        public GameObject TallVisCap;
-        public GameObject BotVisCap;
+        public GameObject VisibilityCapsule = null;//used to keep track of currently active VisCap: see different vis caps for modes below
+        public GameObject TallVisCap;//meshes used for Tall mode
+        public GameObject BotVisCap;//meshes used for Bot mode
+        public GameObject DroneVisCap;//meshes used for Drone mode
+        public GameObject DroneBasket;//reference to the drone's basket object
         private bool isVisible = true;
         public bool IsVisible
         {
@@ -147,11 +149,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			this.m_RunSpeed = 10;
 			this.m_GravityMultiplier = 2;
 
-            //default to tall mode for in-editor debugging or webgl web demo
-            //both of these cases don't run an 'Initialize' action, so yeah default the mode on awake here
-            #if UNITY_WEBGL || UNITY_EDITOR
-            SetAgentMode("tall");            
-            #endif
 		}
 
 		// Use this for initialization
@@ -174,9 +171,20 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			init_rotation = transform.rotation;
 
 			agentManager = GameObject.Find("PhysicsSceneManager").GetComponentInChildren<AgentManager>();
+
+			//disabling in editor by default so performance in editor isn't garbage all the time. Enable this from the DebugInputField -InitSynth
+            // #if UNITY_EDITOR
+            //     this.enableImageSynthesis();
+            // #endif
+			//allowNodes = false;
+
+            #if UNITY_WEBGL
+            //if using editor mode or webgl demo, default to tall mode
+            SetAgentMode("tall");
+            #endif
 		}
 
-        //defaults all agent renderers, both Tall and Bot, to hidden for initialization default
+        //defaults all agent renderers, from all modes (tall, bot, drone), to hidden for initialization default
         private void HideAllAgentRenderers()
         {
             foreach(Renderer r in TallVisCap.GetComponentsInChildren<Renderer>())
@@ -188,6 +196,14 @@ namespace UnityStandardAssets.Characters.FirstPerson
             }
 
             foreach(Renderer r in BotVisCap.GetComponentsInChildren<Renderer>())
+            {
+                if(r.enabled)
+                {
+                    r.enabled = false;
+                }
+            }
+
+            foreach(Renderer r in DroneVisCap.GetComponentsInChildren<Renderer>())
             {
                 if(r.enabled)
                 {
@@ -221,9 +237,11 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 		public void Initialize(ServerAction action)
         {
-            if(action.agentMode.ToLower() == "tall" || action.agentMode.ToLower() == "bot")
+
+            if(action.agentMode.ToLower() == "tall" || action.agentMode.ToLower() == "bot"
+                || action.agentMode.ToLower() == "drone")
             {
-                //set agent mode to Tall or Bot accordingly
+                //set agent mode to Tall, Bot or Drone accordingly
                 SetAgentMode(action.agentMode);
             }
             
@@ -438,6 +456,41 @@ namespace UnityStandardAssets.Characters.FirstPerson
 				this.maxDownwardLookAngle = -30f;
 				this.maxUpwardLookAngle = 30f;
                 //this.horizonAngles = new float[] { 30.0f, 0.0f, 330.0f };
+            }
+
+            else if(whichMode == "drone")
+            {
+                //toggle first person character cull
+                fpcc.SwitchRenderersToHide(whichMode);
+
+                VisibilityCapsule = DroneVisCap;
+                m_CharacterController.center = new Vector3(0,0,0);
+                m_CharacterController.radius = 0.2f;
+                m_CharacterController.height = 0.0f;
+
+                CapsuleCollider cc = this.GetComponent<CapsuleCollider>();
+                cc.center = m_CharacterController.center;
+                cc.radius = m_CharacterController.radius;
+                cc.height = m_CharacterController.height;
+
+                m_Camera.GetComponent<PostProcessVolume>().enabled = false;
+                m_Camera.GetComponent<PostProcessLayer>().enabled = false;
+
+                //camera position set forward a bit for drone
+                m_Camera.transform.localPosition = new Vector3(0, 0, 0.2f);
+
+                //camera FOV for drone
+                m_Camera.fieldOfView = 150f;
+
+                //default camera stand/crouch for drone mode since drone doesn't stand or crouch
+                standingLocalCameraPosition = m_Camera.transform.localPosition;
+                crouchingLocalCameraPosition = m_Camera.transform.localPosition;
+
+                //drone also needs to toggle on the drone basket
+                DroneBasket.SetActive(true);
+
+                //set physics controller to flight mode
+                this.GetComponent<PhysicsRemoteFPSAgentController>().FlightMode = true;
             }
         }
 
