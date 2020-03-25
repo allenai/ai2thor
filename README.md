@@ -126,4 +126,4 @@ Alternatively, if you want to build the Unity project via the command line, run 
 - `Scripts/MachineCommonSenseController`:
   - Added custom `RotateLook` to use relative inputs instead of absolute values.
   - Added checks to see whether objects exist and set lastActionStatus appropriately for `PutObject`
-  - Added custom `ThrowObject` in order to perform error checking prior to rotating the camera using `RotateLook` before throwing an object.
+  - Added custom `ThrowObject` in order to perform error checking prior to rotating the camera using `RotateLook` and throwing an object.
