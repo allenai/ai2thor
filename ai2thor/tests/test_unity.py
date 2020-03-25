@@ -3,15 +3,12 @@
 import os
 import ai2thor.controller
 
-def releases_dir(self):
-    return os.path.normpath(os.path.join(os.path.abspath(__file__), "..", "..", "..", "unity", "builds"))
+class TestController(ai2thor.controller.Controller):
+    def releases_dir(self):
+        return os.path.normpath(os.path.join(os.path.abspath(__file__), "..", "..", "..", "unity", "builds"))
 
 
-controller = ai2thor.controller.Controller()
-controller.releases_dir = releases_dir.__get__(controller, ai2thor.controller.Controller)
-print("trying to start unity")
-controller.start()
-print("started")
+controller = TestController()
 controller.reset('FloorPlan28')
 controller.step(dict(action='Initialize', gridSize=0.25))
 
@@ -25,11 +22,7 @@ def assert_near(point1, point2):
         assert round(point1[k], 3) == round(point2[k], 3)
 
 def test_rectangle_aspect():
-    controller = ai2thor.controller.Controller()
-    controller.releases_dir = releases_dir.__get__(controller, ai2thor.controller.Controller)
-    print("trying to start unity")
-    controller.start(width=600, height=300)
-    print("started")
+    controller = TestController(width=600, height=300)
     controller.reset('FloorPlan28')
     event = controller.step(dict(action='Initialize', gridSize=0.25))
     assert event.frame.shape == (300, 600, 3)
@@ -144,7 +137,7 @@ def test_moveback():
     controller.step(dict(action='Teleport', x=-1.5, z=-1.5, y=1.0), raise_for_failure=True)
     controller.step(dict(action='MoveBack'), raise_for_failure=True)
     position = controller.last_event.metadata['agent']['position']
-    assert position == dict(x=-1.75, z=-1.5, y=0.900998652)
+    assert_near(position, dict(x=-1.75, z=-1.5, y=0.900998652))
 
 def test_moveleft():
     controller.step(dict(action='Teleport', x=-1.5, z=-1.5, y=1.0), raise_for_failure=True)
