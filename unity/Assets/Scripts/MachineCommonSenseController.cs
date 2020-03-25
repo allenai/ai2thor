@@ -341,6 +341,14 @@ public class MachineCommonSenseController : PhysicsRemoteFPSAgentController {
             return;
         }
 
+        if (!physicsSceneManager.UniqueIdToSimObjPhysics.ContainsKey(action.objectId)) {
+            errorMessage = "Object ID appears to be invalid.";
+            Debug.Log(errorMessage);
+            actionFinished(false);
+            this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.NOT_OBJECT);
+            return;
+        }
+
         SimObjPhysics target = physicsSceneManager.UniqueIdToSimObjPhysics[action.objectId];
 
         // Reactivate the object BEFORE trying to throw it so that we can see if it's obstructed.
@@ -349,7 +357,15 @@ public class MachineCommonSenseController : PhysicsRemoteFPSAgentController {
             target.gameObject.SetActive(true);
         }
 
-        base.ThrowObject(action);
+        if(base.CheckIfObjectCanBeDropped(action)) {
+            GameObject go = ItemInHand;
+            // Need to rotate in direction specified by user input before throwing object
+            RotateLook(action);
+            base.DropObjectIfNoErrors(action);
+            Vector3 dir = m_Camera.transform.forward;
+            go.GetComponent<SimObjPhysics>().ApplyForce(dir, action.moveMagnitude);
+        }
+
 
         // Deactivate the object again if the throw failed.
         // TODO MCS-77 We should never need to deactivate this object (see PickupObject).
