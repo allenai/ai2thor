@@ -321,7 +321,7 @@ public class MachineCommonSenseController : PhysicsRemoteFPSAgentController {
 
         ServerAction action = new ServerAction();
         action.rotation.y = updatedRotationValue;
-        action.horizon = (int)updatedHorizonValue;
+        action.horizon = updatedHorizonValue;
         base.RotateLook(action);
     }
 

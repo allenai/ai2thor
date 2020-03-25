@@ -19,12 +19,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
         public Vector3 receptacleObjectDirection;
         public string receptacleObjectId = "";
         public float rotationIncrement = 45.0f;
-        public int horizonIncrement = 30;
+        public float horizonIncrement = 30.0f;
         public float pushPullForce = 150.0f;
         public float FlyMagnitude = 1.0f;
         public float WalkMagnitude = 0.2f;
         public float rotationForForceAction = 15.0f;
-        public int horizonForForceAction = 5;
+        public float horizonForForceAction = 5.0f;
 
         [SerializeField] private GameObject InputMode_Text = null;
         // Start is called before the first frame update

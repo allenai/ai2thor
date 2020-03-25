@@ -92,6 +92,7 @@ Alternatively, if you want to build the Unity project via the command line, run 
   - Added properties to `ServerAction`: `logs`, `objectDirection`, `receptacleObjectDirection`, `sceneConfig`
   - Added `virtual` to functions: `Update`
   - Changed variables or functions from `private` to `protected`: `physicsSceneManager`
+  - Changed properties in `ServerAction`: `horizon` (from int to float)
 - `Scripts/BaseFPSAgentController`:
   - Added `virtual` to functions: `Initialize`, `ProcessControlCommand`
   - Removed the hard-coded camera properties in the `SetAgentMode` function
