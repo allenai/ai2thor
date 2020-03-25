@@ -13,6 +13,9 @@ public class MachineCommonSenseMain : MonoBehaviour {
     public string materialRegistryFile = "material_registry";
     public string mcsObjectRegistryFile = "mcs_object_registry";
     public string primitiveObjectRegistryFile = "primitive_object_registry";
+    public string defaultCeilingMaterial = "AI2-THOR/Materials/Walls/Drywall";
+    public string defaultFloorMaterial = "AI2-THOR/Materials/Fabrics/CarpetWhite 3";
+    public string defaultWallsMaterial = "AI2-THOR/Materials/Walls/DrywallBeige";
 
     private MachineCommonSenseConfigScene currentScene;
     private int lastStep = -1;
@@ -52,8 +55,8 @@ public class MachineCommonSenseMain : MonoBehaviour {
         // Load the default MCS scene set in the Unity Editor.
         if (!this.defaultSceneFile.Equals("")) {
             this.currentScene = LoadCurrentSceneFromFile(this.defaultSceneFile);
-            this.currentScene.id = ((this.currentScene.id == null || this.currentScene.id.Equals("")) ?
-                this.defaultSceneFile : this.currentScene.id);
+            this.currentScene.name = ((this.currentScene.name == null || this.currentScene.name.Equals("")) ?
+                this.defaultSceneFile : this.currentScene.name);
             ChangeCurrentScene(this.currentScene);
         }
     }
@@ -106,19 +109,28 @@ public class MachineCommonSenseMain : MonoBehaviour {
 
         if (scene != null) {
             this.currentScene = scene;
-            Debug.Log("MCS:  Switching the current MCS scene to " + scene.id);
+            Debug.Log("MCS:  Switching the current MCS scene to " + scene.name);
         } else {
             Debug.Log("MCS:  Resetting the current MCS scene...");
         }
 
-        this.currentScene.objects.ForEach(InitializeGameObject);
+        if (this.currentScene != null && this.currentScene.objects != null) {
+            this.currentScene.objects.ForEach(InitializeGameObject);
+        }
 
-        AssignMaterial(GameObject.Find("Ceiling"), this.currentScene.ceilingMaterial);
-        AssignMaterial(GameObject.Find("Floor"), this.currentScene.floorMaterial);
-        AssignMaterial(GameObject.Find("Wall Back"), this.currentScene.wallMaterial);
-        AssignMaterial(GameObject.Find("Wall Front"), this.currentScene.wallMaterial);
-        AssignMaterial(GameObject.Find("Wall Left"), this.currentScene.wallMaterial);
-        AssignMaterial(GameObject.Find("Wall Right"), this.currentScene.wallMaterial);
+        String ceiling = (this.currentScene.ceilingMaterial != null && !this.currentScene.ceilingMaterial.Equals("")) ?
+            this.currentScene.ceilingMaterial : this.defaultCeilingMaterial;
+        String floor = (this.currentScene.floorMaterial != null && !this.currentScene.floorMaterial.Equals("")) ?
+            this.currentScene.floorMaterial : this.defaultFloorMaterial;
+        String walls = (this.currentScene.wallMaterial != null && !this.currentScene.wallMaterial.Equals("")) ?
+            this.currentScene.wallMaterial : this.defaultWallsMaterial;
+
+        AssignMaterial(GameObject.Find("Ceiling"), ceiling);
+        AssignMaterial(GameObject.Find("Floor"), floor);
+        AssignMaterial(GameObject.Find("Wall Back"), walls);
+        AssignMaterial(GameObject.Find("Wall Front"), walls);
+        AssignMaterial(GameObject.Find("Wall Left"), walls);
+        AssignMaterial(GameObject.Find("Wall Right"), walls);
 
         GameObject controller = GameObject.Find("FPSController");
         if (this.currentScene.performerStart != null && this.currentScene.performerStart.position != null) {
@@ -1054,7 +1066,7 @@ public class MachineCommonSenseConfigVector {
 
 [Serializable]
 public class MachineCommonSenseConfigScene {
-    public String id;
+    public String name;
     public String ceilingMaterial;
     public String floorMaterial;
     public String wallMaterial;
