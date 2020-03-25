@@ -458,7 +458,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             objMeta.isMoving = simObj.inMotion;//keep track of if this object is actively moving
 
-            if(simObj.PrimaryProperty == SimObjPrimaryProperty.CanPickup) //|| simObj.PrimaryProperty == SimObjPrimaryProperty.Moveable) 
+            if(simObj.PrimaryProperty == SimObjPrimaryProperty.CanPickup || simObj.PrimaryProperty == SimObjPrimaryProperty.Moveable) 
             {
                 objMeta.objectOrientedBoundingBox = GenerateObjectOrientedBoundingBox(simObj);
             }
