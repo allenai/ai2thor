@@ -114,6 +114,7 @@ Alternatively, if you want to build the Unity project via the command line, run 
   - Added check to make sure object exists for `DropHandObject`
   - Make sure objectId specified is actually the object being held for `DropHandObject` and `PutObject`
   - Undid objectId being reset to receptableObjectId and not allowing objects to be placed in closed receptacles regardless of type of receptacle for `PutObject`
+  - Split up validation logic and action for `DropHandObject` into seperate methods.
 - `Scripts/PhysicsSceneManager`:
   - Added `virtual` to functions: `Generate_UniqueID`
 - `Scripts/SimObjPhysics`:
@@ -125,3 +126,4 @@ Alternatively, if you want to build the Unity project via the command line, run 
 - `Scripts/MachineCommonSenseController`:
   - Added custom `RotateLook` to use relative inputs instead of absolute values.
   - Added checks to see whether objects exist and set lastActionStatus appropriately for `PutObject`
+  - Added custom `ThrowObject` in order to perform error checking prior to rotating the camera using `RotateLook` before throwing an object.
