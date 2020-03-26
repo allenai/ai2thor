@@ -22,15 +22,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         [SerializeField] protected GameObject[] ToSetActive = null;
 
         [SerializeField] protected float PhysicsAgentSkinWidth = -1f; //change agent's skin width so that it collides directly with ground - otherwise sweeptests will fail for flat objects on floor
-
-        //used to grab visibl objects for use in Editor Mode only Debugging
-        #if UNITY_EDITOR
         [SerializeField] public SimObjPhysics[] VisibleSimObjPhysics 
         {
             get;
             protected set;
         }
-        #endif
         [SerializeField] protected bool IsHandDefault = true;
         [SerializeField] protected bool inTopLevelView = false;
         [SerializeField] protected Vector3 lastLocalCameraPosition;
@@ -248,7 +244,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             //this is also mostly for in editor, the array of visible sim objects is found via server actions
             //using VisibleSimObjs(action), so be aware of that
 
-#if UNITY_EDITOR || UNITY_WEBGL
+            #if UNITY_EDITOR || UNITY_WEBGL
             if (this.actionComplete && !FlightMode) {
                 ServerAction action = new ServerAction();
                 VisibleSimObjPhysics = VisibleSimObjs(action); //GetAllVisibleSimObjPhysics(m_Camera, maxVisibleDistance);
@@ -259,7 +255,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 ServerAction action = new ServerAction();
                 VisibleSimObjPhysics = VisibleSimObjs(action);
             }
-#endif
+            #endif
         }
 
         public override ObjectMetadata[] generateObjectMetadata() 
@@ -362,9 +358,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
         #endif
         /////////////////////////////////////////////////////////
-
         //return a reference to a SimObj that is Visible (in the VisibleSimObjPhysics array) and
-        //matches the passe din objectID
+        //matches the passed in objectID
         public GameObject FindObjectInVisibleSimObjPhysics(string objectID) {
             GameObject target = null;
 

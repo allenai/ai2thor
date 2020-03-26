@@ -119,6 +119,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             background.SetActive(false);
         }
 
+        #if UNITY_EDITOR
         public void Execute(string command)
         {
             // if (!PhysicsController.actionComplete) {
@@ -2454,16 +2455,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			//StartCoroutine(CheckIfactionCompleteWasSetToTrueAfterWaitingALittleBit(splitcommand[0]));
 
         }
+        #endif
 
-		IEnumerator CheckIfactionCompleteWasSetToTrueAfterWaitingALittleBit(string s)
-		{
-			yield return new WaitForSeconds(0.5f);
-			if (!PhysicsController.actionComplete)
-            {
-                Debug.LogError("Physics controller does not have actionComplete set to true after :" + s);
-				yield return null;
-            }
-		}
 #if UNITY_EDITOR
 
         // Taken from https://answers.unity.com/questions/1144378/copy-to-clipboard-with-a-button-unity-53-solution.html
