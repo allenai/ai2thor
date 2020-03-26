@@ -588,7 +588,6 @@ public class AgentManager : MonoBehaviour
 
 	public IEnumerator EmitFrame() {
 
-
 		frameCounter += 1;
 
 		bool shouldRender = this.renderImage && serverSideScreenshot;
@@ -669,7 +668,6 @@ public class AgentManager : MonoBehaviour
         #if !UNITY_WEBGL 
 		if (synchronousHttp) {
 
-
 			if (this.sock == null) {
 				// Debug.Log("connecting to host: " + robosimsHost);
 				IPAddress host = IPAddress.Parse(robosimsHost);
@@ -682,7 +680,6 @@ public class AgentManager : MonoBehaviour
                     Debug.Log("Socket exception: " + e.ToString());
                 }
 			}
-            
 
             if (this.sock != null && this.sock.Connected) {
                 byte[] rawData = form.data;
@@ -768,9 +765,9 @@ public class AgentManager : MonoBehaviour
             physicsSceneManager.physicsSimulationPaused = false;
             agent_tmp.hasFixedUpdateHappened = false;
         }
-
         #endif
     }
+
 	private int parseContentLength(string header) {
 		// Debug.Log("got header: " + header);
 		string[] fields = header.Split(new char[]{'\r','\n'});
@@ -1208,7 +1205,6 @@ public class ServerAction
 
 	public SimObjType GetSimObjType()
 	{
-
 		if (string.IsNullOrEmpty(objectType))
 		{
 			return SimObjType.Undefined;

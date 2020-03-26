@@ -79,7 +79,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 
 
                 // rotate a small amount with every movement since robot doesn't always move perfectly straight
-                if (this.applyActionNoise) {
+                if (this.applyActionNoise) 
+                {
                     var rotateNoise = (float)random.NextGaussian(rotateGaussianMu, rotateGaussianSigma / 2.0f);
                     transform.rotation = transform.rotation * Quaternion.Euler(new Vector3(0.0f, rotateNoise, 0.0f));
                 }
@@ -109,83 +110,84 @@ namespace UnityStandardAssets.Characters.FirstPerson
         }
 
 
-    // NOOP action to allow evaluation to know that the episode has finished
-    public void Stop(ServerAction action) {
-        actionFinished(true);
-    }
-
-    public override void Rotate(ServerAction action)
-    {
-        DefaultAgentHand(action);
-        var rotateAmountDegrees = GetRotateMagnitudeWithNoise(action);
-
-        //multiply quaternions to apply rotation based on rotateAmountDegrees
-        transform.rotation = transform.rotation * Quaternion.Euler(new Vector3(0.0f, rotateAmountDegrees, 0.0f));
-        actionFinished(true);
-    }
-
-    public override void RotateRight(ServerAction action)
-    {
-        Rotate(new ServerAction() { rotation = new Vector3(0, this.rotateStepDegrees, 0) });
-    }
-
-    public override void RotateLeft(ServerAction action)
-    {
-        Rotate(new ServerAction() { rotation = new Vector3(0, -1.0f * this.rotateStepDegrees, 0) });
-    }
-
-    public override void MoveAhead(ServerAction action)
-    {
-        action.x = 0.0f;
-        action.y = 0;
-        action.z = 1.0f;
-        MoveRelative(action);
-    }
-
-    public override void MoveBack(ServerAction action)
-    {
-        action.x = 0.0f;
-        action.y = 0;
-        action.z = -1.0f;
-        MoveRelative(action);
-    }
-
-    public override void MoveRight(ServerAction action)
-    {
-        if (!allowHorizontalMovement)
+        // NOOP action to allow evaluation to know that the episode has finished
+        public void Stop(ServerAction action) 
         {
-            throw new InvalidOperationException("Controller does not support horizontal movement by default. Set AllowHorizontalMovement to true on the Controller.");
+            actionFinished(true);
         }
-        action.x = 1.0f;
-        action.y = 0;
-        action.z = 0.0f;
-        MoveRelative(action);
-    }
 
-    public override void MoveLeft(ServerAction action)
-    {
-        if (!allowHorizontalMovement)
+        public override void Rotate(ServerAction action)
         {
-            throw new InvalidOperationException("Controller does not support horizontal movement. Set AllowHorizontalMovement to true on the Controller.");
+            DefaultAgentHand(action);
+            var rotateAmountDegrees = GetRotateMagnitudeWithNoise(action);
+
+            //multiply quaternions to apply rotation based on rotateAmountDegrees
+            transform.rotation = transform.rotation * Quaternion.Euler(new Vector3(0.0f, rotateAmountDegrees, 0.0f));
+            actionFinished(true);
         }
-        action.x = -1.0f;
-        action.y = 0;
-        action.z = 1.0f;
-        MoveRelative(action);
-    }
 
-    private float GetMoveMagnitudeWithNoise(ServerAction action)
-    {
-        var random = new System.Random();
-        var noise = applyActionNoise ? random.NextGaussian(movementGaussianMu, movementGaussianSigma) : 0;
-        return action.moveMagnitude + action.noise + (float)noise;
-    }
+        public override void RotateRight(ServerAction action)
+        {
+            Rotate(new ServerAction() { rotation = new Vector3(0, this.rotateStepDegrees, 0) });
+        }
 
-    private float GetRotateMagnitudeWithNoise(ServerAction action)
-    {
-        var random = new System.Random();
-        var noise = applyActionNoise ? random.NextGaussian(rotateGaussianMu, rotateGaussianSigma) : 0;
-        return action.rotation.y + action.noise + (float)noise;
+        public override void RotateLeft(ServerAction action)
+        {
+            Rotate(new ServerAction() { rotation = new Vector3(0, -1.0f * this.rotateStepDegrees, 0) });
+        }
+
+        public override void MoveAhead(ServerAction action)
+        {
+            action.x = 0.0f;
+            action.y = 0;
+            action.z = 1.0f;
+            MoveRelative(action);
+        }
+
+        public override void MoveBack(ServerAction action)
+        {
+            action.x = 0.0f;
+            action.y = 0;
+            action.z = -1.0f;
+            MoveRelative(action);
+        }
+
+        public override void MoveRight(ServerAction action)
+        {
+            if (!allowHorizontalMovement)
+            {
+                throw new InvalidOperationException("Controller does not support horizontal movement by default. Set AllowHorizontalMovement to true on the Controller.");
+            }
+            action.x = 1.0f;
+            action.y = 0;
+            action.z = 0.0f;
+            MoveRelative(action);
+        }
+
+        public override void MoveLeft(ServerAction action)
+        {
+            if (!allowHorizontalMovement)
+            {
+                throw new InvalidOperationException("Controller does not support horizontal movement. Set AllowHorizontalMovement to true on the Controller.");
+            }
+            action.x = -1.0f;
+            action.y = 0;
+            action.z = 1.0f;
+            MoveRelative(action);
+        }
+
+        private float GetMoveMagnitudeWithNoise(ServerAction action)
+        {
+            var random = new System.Random();
+            var noise = applyActionNoise ? random.NextGaussian(movementGaussianMu, movementGaussianSigma) : 0;
+            return action.moveMagnitude + action.noise + (float)noise;
+        }
+
+        private float GetRotateMagnitudeWithNoise(ServerAction action)
+        {
+            var random = new System.Random();
+            var noise = applyActionNoise ? random.NextGaussian(rotateGaussianMu, rotateGaussianSigma) : 0;
+            return action.rotation.y + action.noise + (float)noise;
+        }
     }
-}
 }
