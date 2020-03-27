@@ -73,14 +73,12 @@ public class AgentManager : MonoBehaviour
 		// agent speed and action length
 		string prefix = trainPhase ? "TRAIN_" : "TEST_";
 
-
-		
-
 		actionDuration = LoadIntVariable(actionDuration, prefix + "ACTION_LENGTH");
 
 	}
 
-	void Start() {
+	void Start() 
+	{
 		initializePrimaryAgent();
         primaryAgent.actionDuration = this.actionDuration;
 		readyToEmit = true;
@@ -104,7 +102,7 @@ public class AgentManager : MonoBehaviour
 	
 	public void Initialize(ServerAction action)
 	{
-        if (action.agentType != null && action.agentType.ToLower() == "stochastic") {
+        if (action.agentControllerType != null && action.agentControllerType.ToLower() == "stochastic") {
             this.agents.Clear();
             action.snapToGrid = false;
             GameObject fpsController = GameObject.FindObjectOfType<BaseFPSAgentController>().gameObject;
@@ -1176,7 +1174,7 @@ public class ServerAction
     public float maxDistance;//used in target circle spawning function
     public float noise;
     public ControllerInitialization controllerInitialization = null;
-    public string agentType;
+    public string agentControllerType;
     public float agentRadius = 2.0f;
     public int maxStepCount;
     public float rotateStepDegrees = 90.0f;

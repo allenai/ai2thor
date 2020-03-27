@@ -61,7 +61,7 @@ CharacterController:
   m_Radius: 0.175
   m_SlopeLimit: 0
   m_StepOffset: 0
-  m_SkinWidth: 0.08
+  m_SkinWidth: 0.001
   m_MinMoveDistance: 0
   m_Center: {x: 0, y: -0.45, z: 0}
 --- !u!54 &5400000
@@ -154,6 +154,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2d22dfd375bd14529b5d465c7b493eb0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  ItemInHand: {fileID: 0}
+  AgentHand: {fileID: 1340499340313870}
+  DefaultHandPosition: {fileID: 1863262018947090}
+  rotPoint: {fileID: 8450533553661686078}
+  reachablePositions: []
   m_IsWalking: 0
   m_WalkSpeed: 0
   m_RunSpeed: 0
@@ -167,33 +172,28 @@ MonoBehaviour:
   agentManager: {fileID: 0}
   excludeObjectIds: []
   m_Camera: {fileID: 0}
+  cameraOrthSize: 0
   m_CharacterController: {fileID: 0}
   actionComplete: 0
   standingLocalCameraPosition: {x: 0, y: 0, z: 0}
   crouchingLocalCameraPosition: {x: 0, y: 0, z: 0}
   maxVisibleDistance: 1.5
+  objectIdsInBox: []
+  alwaysReturnVisibleRange: 0
   actionDuration: 3
-  ToSetActive:
-  - {fileID: 1340499340313870}
-  - {fileID: 1863262018947090}
-  PhysicsAgentSkinWidth: 0.001
-  AgentHand: {fileID: 1340499340313870}
-  DefaultHandPosition: {fileID: 1863262018947090}
-  ItemInHand: {fileID: 0}
-  rotPoint: {fileID: 8450533553661686078}
-  IsHandDefault: 1
   FlightMode: 0
   hasFixedUpdateHappened: 1
   dronePositionRandomNoiseSigma: 0
   fixupdateCnt: 0
   autoResetTimeScale: 1
-  objectIdsInBox: []
+  ToSetActive:
+  - {fileID: 1340499340313870}
+  - {fileID: 1863262018947090}
+  PhysicsAgentSkinWidth: 0.001
+  IsHandDefault: 1
   inTopLevelView: 0
   lastLocalCameraPosition: {x: 0, y: 0, z: 0}
   lastLocalCameraRotation: {x: 0, y: 0, z: 0, w: 0}
-  cameraOrthSize: 0
-  reachablePositions: []
-  alwaysReturnVisibleRange: 0
   ScreenFaces:
   - {fileID: 2100000, guid: 3244a00d10815aa4b8ca6f11febd11f9, type: 2}
   - {fileID: 2100000, guid: 7b776d33d2e7db4499b93e29978400ea, type: 2}
@@ -251,6 +251,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6839fe93e39084f7ba1b70ae71c8d153, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  ItemInHand: {fileID: 0}
+  AgentHand: {fileID: 1340499340313870}
+  DefaultHandPosition: {fileID: 1863262018947090}
+  rotPoint: {fileID: 0}
+  reachablePositions: []
   m_IsWalking: 0
   m_WalkSpeed: 0
   m_RunSpeed: 0
@@ -264,31 +269,26 @@ MonoBehaviour:
   agentManager: {fileID: 0}
   excludeObjectIds: []
   m_Camera: {fileID: 0}
+  cameraOrthSize: 0
   m_CharacterController: {fileID: 0}
   actionComplete: 0
   standingLocalCameraPosition: {x: 0, y: 0, z: 0}
   crouchingLocalCameraPosition: {x: 0, y: 0, z: 0}
   maxVisibleDistance: 1.5
+  objectIdsInBox: []
+  alwaysReturnVisibleRange: 0
   actionDuration: 3
-  ToSetActive: []
-  PhysicsAgentSkinWidth: 0.001
-  AgentHand: {fileID: 1340499340313870}
-  DefaultHandPosition: {fileID: 1863262018947090}
-  ItemInHand: {fileID: 0}
-  rotPoint: {fileID: 0}
-  IsHandDefault: 1
   FlightMode: 0
   hasFixedUpdateHappened: 1
   dronePositionRandomNoiseSigma: 0
   fixupdateCnt: 0
   autoResetTimeScale: 1
-  objectIdsInBox: []
+  ToSetActive: []
+  PhysicsAgentSkinWidth: 0.001
+  IsHandDefault: 1
   inTopLevelView: 0
   lastLocalCameraPosition: {x: 0, y: 0, z: 0}
   lastLocalCameraRotation: {x: 0, y: 0, z: 0, w: 0}
-  cameraOrthSize: 0
-  reachablePositions: []
-  alwaysReturnVisibleRange: 0
   ScreenFaces:
   - {fileID: 2100000, guid: 3244a00d10815aa4b8ca6f11febd11f9, type: 2}
   - {fileID: 2100000, guid: 7b776d33d2e7db4499b93e29978400ea, type: 2}

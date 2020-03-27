@@ -11,6 +11,7 @@ using Random = UnityEngine.Random;
 using UnityStandardAssets.ImageEffects;
 using System.Linq;
 using UnityEngine.Rendering.PostProcessing;
+using UnityEngine.AI;
 
 namespace UnityStandardAssets.Characters.FirstPerson
 {
@@ -22,12 +23,21 @@ namespace UnityStandardAssets.Characters.FirstPerson
         #if UNITY_EDITOR
         protected List<Bounds> gizmobounds = new List<Bounds>();
         #endif
-
+        [SerializeField] protected bool IsHandDefault = true;
         [SerializeField] protected GameObject ItemInHand = null; //current object in inventory
         [SerializeField] protected GameObject AgentHand = null;
         [SerializeField] protected GameObject DefaultHandPosition = null;
         [SerializeField] protected Transform rotPoint;
+
+       [SerializeField] protected GameObject DebugPointPrefab;
+
+        [SerializeField] protected GameObject DebugTargetPointPrefab;
         public Vector3[] reachablePositions = new Vector3[0];
+        protected float gridVisualizeY = 0.005f; //used to visualize reachable position grid, offset from floor
+        public Bounds sceneBounds = new Bounds(
+            new Vector3(float.PositiveInfinity, float.PositiveInfinity, float.PositiveInfinity),
+            new Vector3(-float.PositiveInfinity, -float.PositiveInfinity, -float.PositiveInfinity)
+        );
 		// first person controller parameters
 		[SerializeField]
 		protected bool m_IsWalking;
@@ -93,7 +103,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		public bool actionComplete;
 		public System.Object actionReturn;
         [SerializeField] protected Vector3 standingLocalCameraPosition;
-        [SerializeField] protected Vector3 crouchingLocalCameraPosition;//get rid of this probably
+        [SerializeField] protected Vector3 crouchingLocalCameraPosition;
         public float maxVisibleDistance = 1.5f; //changed from 1.0f to account for objects randomly spawned far away on tables/countertops, which would be not visible at 1.0f
         protected float[, , ] flatSurfacesOnGrid = new float[0, 0, 0];
         protected float[, ] distances = new float[0, 0];
@@ -188,6 +198,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
             // #endif
 			//allowNodes = false;
 
+            //default nav mesh agent to false cause WHY DOES THIS BREAK THINGS I GUESS IT DOESN TLIKE TELEPORTING
+            this.GetComponent<NavMeshAgent>().enabled = false;
+
             #if UNITY_WEBGL
             //if using editor mode or webgl demo, default to tall mode
             SetAgentMode("tall");
@@ -257,7 +270,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             
             else
             {
-                errorMessage = "agentMode must be set to 'bot' or 'tall'";
+                errorMessage = "agentMode must be set to 'bot' or 'tall' or 'drone'";
                 Debug.Log(errorMessage);
                 actionFinished(false);
                 return;
@@ -1324,6 +1337,16 @@ namespace UnityStandardAssets.Characters.FirstPerson
             }
         }
 
+        protected bool ancestorHasName(GameObject go, string name) {
+            if (go.name == name) {
+                return true;
+            } else if (go.transform.parent != null) {
+                return ancestorHasName(go.transform.parent.gameObject, name);
+            } else {
+                return false;
+            }
+        }
+
         protected static SimObjPhysics ancestorSimObjPhysics(GameObject go) {
             if (go == null) {
                 return null;
@@ -1670,6 +1693,629 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
             return result;
         }
+
+        public void DefaultAgentHand(ServerAction action = null) {
+            ResetAgentHandPosition(action);
+            ResetAgentHandRotation(action);
+            //SetUpRotationBoxChecks();
+            IsHandDefault = true;
+        }
+
+        public void ResetAgentHandPosition(ServerAction action = null) {
+            AgentHand.transform.position = DefaultHandPosition.transform.position;
+        }
+
+        public void ResetAgentHandRotation(ServerAction action = null) {
+            AgentHand.transform.localRotation = Quaternion.Euler(Vector3.zero);
+        }
+
+        //randomly repositions sim objects in the current scene
+        public void InitialRandomSpawn(ServerAction action) 
+        {
+            //something is in our hand AND we are trying to spawn it. Quick drop the object
+            if (ItemInHand != null) 
+            {
+                Rigidbody rb = ItemInHand.GetComponent<Rigidbody>();
+                rb.isKinematic = false;
+                rb.constraints = RigidbodyConstraints.None;
+                rb.useGravity = true;
+                rb.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
+
+                GameObject topObject = GameObject.Find("Objects");
+                if (topObject != null) 
+                {
+                    ItemInHand.transform.parent = topObject.transform;
+                } 
+
+                else 
+                {
+                    ItemInHand.transform.parent = null;
+                }
+
+                rb.angularVelocity = UnityEngine.Random.insideUnitSphere;
+
+                ItemInHand.GetComponent<SimObjPhysics>().isInAgentHand = false;//agent hand flag
+                DefaultAgentHand();//also default agent hand
+                ItemInHand = null;
+            }
+
+            //default number of attempts if no value is passed in.
+            if (action.numPlacementAttempts == 0)
+            {
+                action.numPlacementAttempts = 5;
+            }
+
+            //default excludedReceptacles if null
+            if (action.excludedReceptacles == null)
+            {
+                action.excludedReceptacles = new String[0];
+            }
+
+            List<SimObjType> listOfExcludedReceptacles = new List<SimObjType>();
+
+            //check if strings used for excludedReceptacles are valid object types
+            foreach (string receptacleType in action.excludedReceptacles)
+            {
+                try
+                {
+                    SimObjType objType = (SimObjType)System.Enum.Parse(typeof(SimObjType), receptacleType);
+                    listOfExcludedReceptacles.Add(objType);
+                }
+
+                catch (Exception)
+                {
+                    errorMessage = "invalid Object Type used in excludedReceptacles array: " + receptacleType;
+                    actionFinished(false);
+                    return;
+                }
+            }
+
+            bool success = physicsSceneManager.RandomSpawnRequiredSceneObjects(
+                action.randomSeed,
+                action.forceVisible,
+                action.numPlacementAttempts,
+                action.placeStationary,
+                action.numDuplicatesOfType,
+                listOfExcludedReceptacles
+                );
+            physicsSceneManager.ResetObjectIdToSimObjPhysics();
+            actionFinished(success);
+        }
+
+        // On demand public function for getting what sim objects are visible at that moment 
+        public List<SimObjPhysics> GetAllVisibleSimObjPhysics(float maxDistance) {
+            List<SimObjPhysics> currentlyVisibleItems = new List<SimObjPhysics>();
+            CapsuleCollider agentCapsuleCollider = this.GetComponent<CapsuleCollider>();
+            var camera = this.GetComponentInChildren<Camera>();
+            Vector3 point0, point1;
+            float radius;
+            
+            agentCapsuleCollider.ToWorldSpaceCapsule(out point0, out point1, out radius);
+            if (point0.y <= point1.y) {
+                point1.y += maxDistance;
+            } else {
+                point0.y += maxDistance;
+            }
+
+            this.updateAllAgentCollidersForVisibilityCheck(false);
+            Collider[] colliders_in_view = Physics.OverlapCapsule(point0, point1, maxDistance, 1 << 8, QueryTriggerInteraction.Collide);
+
+            if (colliders_in_view != null) {
+                HashSet<SimObjPhysics> testedSops = new HashSet<SimObjPhysics>();
+                foreach (Collider item in colliders_in_view) {
+                    SimObjPhysics sop = ancestorSimObjPhysics(item.gameObject);
+
+                    //now we have a reference to our sim object 
+                    if (sop != null && !testedSops.Contains(sop)) {
+                        testedSops.Add(sop);
+                        //check against all visibility points, accumulate count. If at least one point is visible, set object to visible
+                        if (sop.VisibilityPoints == null || sop.VisibilityPoints.Length > 0) {
+                            Transform[] visPoints = sop.VisibilityPoints;
+                            int visPointCount = 0;
+
+                            foreach (Transform point in visPoints) {
+
+                               
+
+                                //if this particular point is in view...
+                                if (CheckIfVisibilityPointInViewport(sop, point, camera, false)) {
+                                    visPointCount++;
+                                   
+                                    #if !UNITY_EDITOR
+                                    // If we're in the unity editor then don't break on finding a visible
+                                    // point as we want to draw lines to each visible point.
+                                    break;
+                                    #endif
+                                }
+                            }
+
+                            //if we see at least one vis point, the object is "visible"
+                            if (visPointCount > 0) {
+                                //  Debug.Log("------ Visible " + sop.Type);
+                                #if UNITY_EDITOR
+                                sop.isVisible = true;
+                                #endif
+                                if (!currentlyVisibleItems.Contains(sop)) {
+                                    currentlyVisibleItems.Add(sop);
+                                }
+                            }
+                        } else {
+                            Debug.Log("Error! Set at least 1 visibility point on SimObjPhysics " + sop + ".");
+                        }
+
+                    }
+                }
+            }
+
+            this.updateAllAgentCollidersForVisibilityCheck(true);
+
+            return currentlyVisibleItems;
+        }
+
+        private void VisualizePath(Vector3 startPosition, NavMeshPath path) {
+            var pathDistance = 0.0;
+
+            for (int i = 0; i < path.corners.Length - 1; i++) {
+                Debug.DrawLine(path.corners[i], path.corners[i + 1], Color.red, 10.0f);
+                Debug.Log("P i:" + i + " : " + path.corners[i] + " i+1:" + i + 1 + " : " + path.corners[i]);
+                pathDistance += Vector3.Distance(path.corners[i], path.corners[i + 1]);
+            }
+
+            if (pathDistance > 0.0001 ) {
+                // Better way to draw spheres
+                var go = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+                go.transform.localScale = new Vector3(0.1f, 0.1f, 0.1f);
+                go.GetComponent<Collider>().enabled = false;
+                go.transform.position = startPosition;
+            }
+        }
+
+        private string[] objectTypeToObjectIds(string objectTypeString) {
+            List<string> objectIds = new List<string>();
+            try {
+                SimObjType objectType = (SimObjType) Enum.Parse(typeof(SimObjType), objectTypeString.Replace(" ", String.Empty), true);
+                foreach (var s in physicsSceneManager.ObjectIdToSimObjPhysics) {
+                    if (s.Value.ObjType == objectType) {
+                        objectIds.Add(s.Value.objectID);
+                    }
+                }
+            }   
+            catch (ArgumentException) {}
+            return objectIds.ToArray();
+        }
+
+        public void ObjectTypeToObjectIds(ServerAction action) {
+            try {
+                var objectIds = objectTypeToObjectIds(action.objectType);
+                actionFinished(true, objectIds.ToArray());
+            }   
+            catch (ArgumentException exception) {
+                errorMessage = "Invalid object type '" + action.objectType + "'. " + exception.Message;
+                actionFinished(false);
+            }
+        }
+
+        private SimObjPhysics getSimObjectFromTypeOrId(ServerAction action) {
+            var objectId = action.objectId;
+            if (!String.IsNullOrEmpty(action.objectType) && String.IsNullOrEmpty(action.objectId)) {
+                var ids = objectTypeToObjectIds(action.objectType);
+                if (ids.Length == 0) {
+                    errorMessage = "Object type '" + action.objectType + "' was not found in the scene.";
+                    return null;
+                }
+                else if (ids.Length > 1) {
+                    errorMessage = "Multiple objects of type '" + action.objectType + "' were found in the scene, cannot disambiguate.";
+                    return null;
+                }
+                
+                objectId = ids[0];
+            }
+
+            if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
+                errorMessage = "Cannot find sim object with id '" + objectId + "'";
+                return null;
+            }
+           
+            SimObjPhysics sop = physicsSceneManager.ObjectIdToSimObjPhysics[objectId];
+            if (sop == null) {
+                errorMessage = "Object with id '" + objectId+ "' is null";
+                return null;
+            }
+
+            return sop;
+        }
+
+         public void VisualizePath(ServerAction action) {
+            var path = action.positions;
+            if (path == null || path.Count == 0) {
+                this.errorMessage = "Invalid path with 0 points.";
+                actionFinished(false);
+                return;
+            }
+
+            var id = action.objectId;
+
+            getReachablePositions(1.0f, 10000, action.grid);
+           
+            Instantiate(DebugTargetPointPrefab, path[path.Count-1], Quaternion.identity);
+            //var results = new List<bool>();
+            var go = Instantiate(DebugPointPrefab, path[0], Quaternion.identity);
+            var textMesh = go.GetComponentInChildren<TextMesh>();
+            textMesh.text = id;
+
+            var lineRenderer = go.GetComponentInChildren<LineRenderer>();
+            lineRenderer.startWidth = 0.015f;
+            lineRenderer.endWidth = 0.015f;
+
+            lineRenderer.positionCount = path.Count;
+            lineRenderer.SetPositions(path.ToArray());
+                // textMesh.characterSize = 
+                // go.AddComponent(textMesh)
+            actionFinished(true);
+        }
+
+        public void VisualizeGrid(ServerAction action) {
+            var reachablePositions = getReachablePositions(1.0f, 10000, true);
+            actionFinished(true, reachablePositions);
+        }
+
+        public void GetShortestPath(ServerAction action) {
+            SimObjPhysics sop = getSimObjectFromTypeOrId(action);
+            if (sop == null) {
+                actionFinished(false);
+                return;
+            }
+            var startPosition = this.transform.position;
+            var startRotation = this.transform.rotation;
+            if (!action.useAgentTransform) {
+                startPosition = action.position;
+                startRotation = Quaternion.Euler(action.rotation);
+            }
+            var path = GetSimObjectNavMeshTarget(sop, startPosition, startRotation);
+            if (path.status == NavMeshPathStatus.PathComplete) {
+                //VisualizePath(startPosition, path);
+                actionFinished(true, path);
+                return;
+            }
+            else {
+                errorMessage = "Path to target could not be found";
+                actionFinished(false);
+                return;
+            }
+        }
+
+        private bool GetPathFromReachablePositions(
+            IEnumerable<Vector3> sortedPositions,
+            Vector3 targetPosition,
+            Transform agentTransform,
+            string targetSimObjectId,
+            NavMeshPath path) {
+                
+            Vector3 fixedPosition = new Vector3(float.MinValue, float.MinValue, float.MinValue);
+            //bool success = false;
+            var PhysicsController = this;
+            foreach (var pos in sortedPositions) {
+                agentTransform.position = pos;
+                agentTransform.LookAt(targetPosition);
+
+                var visibleSimObjects = PhysicsController.GetAllVisibleSimObjPhysics(PhysicsController.maxVisibleDistance);
+                if (visibleSimObjects.Any(sop => sop.objectID == targetSimObjectId)) {
+                    fixedPosition = pos;
+                    //success = true;
+                    break;
+                }
+            }
+
+            var pathSuccess =  NavMesh.CalculatePath(agentTransform.position, fixedPosition,  NavMesh.AllAreas, path);
+            return pathSuccess;
+        }
+
+        protected Collider[] overlapCollider(BoxCollider box, Vector3 newCenter, float rotateBy, int layerMask) {
+            Vector3 center, halfExtents;
+            Quaternion orientation;
+            box.ToWorldSpaceBox(out center, out halfExtents, out orientation);
+            orientation = Quaternion.Euler(0f, rotateBy, 0f) * orientation;
+
+            return Physics.OverlapBox(newCenter, halfExtents, orientation, layerMask, QueryTriggerInteraction.Ignore);
+        }
+
+        protected Collider[] overlapCollider(SphereCollider sphere, Vector3 newCenter, int layerMask) {
+            Vector3 center;
+            float radius;
+            sphere.ToWorldSpaceSphere(out center, out radius);
+            return Physics.OverlapSphere(newCenter, radius, layerMask, QueryTriggerInteraction.Ignore);
+        }
+
+        protected Collider[] overlapCollider(CapsuleCollider capsule, Vector3 newCenter, float rotateBy, int layerMask) {
+            Vector3 point0, point1;
+            float radius;
+            capsule.ToWorldSpaceCapsule(out point0, out point1, out radius);
+
+            // Normalizing
+            Vector3 oldCenter = (point0 + point1) / 2.0f;
+            point0 = point0 - oldCenter;
+            point1 = point1 - oldCenter;
+
+            // Rotating and recentering
+            var rotator = Quaternion.Euler(0f, rotateBy, 0f);
+            point0 = rotator * point0 + newCenter;
+            point1 = rotator * point1 + newCenter;
+
+            return Physics.OverlapCapsule(point0, point1, radius, layerMask, QueryTriggerInteraction.Ignore);
+        }
+
+        protected bool handObjectCanFitInPosition(Vector3 newAgentPosition, float rotation) {
+            if (ItemInHand == null) {
+                return true;
+            }
+
+            SimObjPhysics soInHand = ItemInHand.GetComponent<SimObjPhysics>();
+
+            Vector3 handObjPosRelAgent =
+                Quaternion.Euler(0, rotation - transform.rotation.y, 0) *
+                (transform.position - ItemInHand.transform.position);
+
+            Vector3 newHandPosition = handObjPosRelAgent + newAgentPosition;
+
+            int layerMask = 1 << 8;
+            foreach (CapsuleCollider cc in soInHand.GetComponentsInChildren<CapsuleCollider>()) {
+                foreach (Collider c in overlapCollider(cc, newHandPosition, rotation, layerMask)) {
+                    if (!hasAncestor(c.transform.gameObject, gameObject)) {
+                        return false;
+                    }
+                }
+            }
+
+            foreach (BoxCollider bc in soInHand.GetComponentsInChildren<BoxCollider>()) {
+                foreach (Collider c in overlapCollider(bc, newHandPosition, rotation, layerMask)) {
+                    if (!hasAncestor(c.transform.gameObject, gameObject)) {
+                        return false;
+                    }
+                }
+            }
+
+            foreach (SphereCollider sc in soInHand.GetComponentsInChildren<SphereCollider>()) {
+                foreach (Collider c in overlapCollider(sc, newHandPosition, layerMask)) {
+                    if (!hasAncestor(c.transform.gameObject, gameObject)) {
+                        return false;
+                    }
+                }
+            }
+
+            return true;
+        }
+
+        //cast a capsule the same size as the agent
+        //used to check for collisions
+        public RaycastHit[] capsuleCastAllForAgent(
+            CapsuleCollider cc,
+            float skinWidth,
+            Vector3 startPosition,
+            Vector3 dir,
+            float moveMagnitude,
+            int layerMask
+            ) {
+            Vector3 center = cc.transform.position + cc.center;//make sure to offset this by cc.center since we shrank the capsule size
+            float radius = cc.radius + skinWidth;
+            float innerHeight = cc.height / 2.0f - radius;
+            Vector3 point1 = new Vector3(startPosition.x, center.y + innerHeight, startPosition.z);
+            Vector3 point2 = new Vector3(startPosition.x, center.y - innerHeight + skinWidth, startPosition.z);
+            return Physics.CapsuleCastAll(
+                point1,
+                point2,
+                radius,
+                dir,
+                moveMagnitude,
+                layerMask,
+                QueryTriggerInteraction.Ignore
+            );
+        }
+
+        protected Collider[] objectsCollidingWithAgent() {
+            int layerMask = 1 << 8;
+            return PhysicsExtensions.OverlapCapsule(GetComponent<CapsuleCollider>(), layerMask, QueryTriggerInteraction.Ignore);
+        }
+
+        public bool  getReachablePositionToObjectVisible(SimObjPhysics targetSOP, out Vector3 pos, float gridMultiplier = 1.0f, int maxStepCount = 10000) {
+            CapsuleCollider cc = GetComponent<CapsuleCollider>();
+            float sw = m_CharacterController.skinWidth;
+            Queue<Vector3> pointsQueue = new Queue<Vector3>();
+            pointsQueue.Enqueue(transform.position);
+            Vector3[] directions = {
+                new Vector3(1.0f, 0.0f, 0.0f),
+                new Vector3(0.0f, 0.0f, 1.0f),
+                new Vector3(-1.0f, 0.0f, 0.0f),
+                new Vector3(0.0f, 0.0f, -1.0f)
+            };
+            Quaternion originalRot = transform.rotation;
+
+            HashSet<Vector3> goodPoints = new HashSet<Vector3>();
+            int layerMask = 1 << 8;
+            int stepsTaken = 0;
+            pos = Vector3.negativeInfinity;
+            while (pointsQueue.Count != 0) {
+                stepsTaken += 1;
+                Vector3 p = pointsQueue.Dequeue();
+                if (!goodPoints.Contains(p)) {
+                    goodPoints.Add(p);
+                    transform.position = p;
+                    var rot = transform.rotation;
+                    //make sure to rotate just the Camera, not the whole agent
+                    m_Camera.transform.LookAt(targetSOP.transform, transform.up);
+
+                    var visibleSimObjects = this.GetAllVisibleSimObjPhysics(this.maxVisibleDistance);
+                    transform.rotation = rot;
+                    
+                    if (visibleSimObjects.Any(sop => sop.objectID == targetSOP.objectID)) {
+                        
+                        pos = p;
+                        return true;
+                    }
+                    
+                    HashSet<Collider> objectsAlreadyColliding = new HashSet<Collider>(objectsCollidingWithAgent());
+                    foreach (Vector3 d in directions) {
+                        RaycastHit[] hits = capsuleCastAllForAgent(
+                            cc,
+                            sw,
+                            p,
+                            d,
+                            (gridSize * gridMultiplier),
+                            layerMask
+                        );
+
+                        bool shouldEnqueue = true;
+                        foreach (RaycastHit hit in hits) {
+                            if (hit.transform.gameObject.name != "Floor" &&
+                                !ancestorHasName(hit.transform.gameObject, "FPSController") &&
+                                !objectsAlreadyColliding.Contains(hit.collider)
+                            ) {
+                                shouldEnqueue = false;
+                                break;
+                            }
+                        }
+                        Vector3 newPosition = p + d * gridSize * gridMultiplier;
+                        bool inBounds = sceneBounds.Contains(newPosition);
+                        if (errorMessage == "" && !inBounds) {
+                            errorMessage = "In " +
+                                UnityEngine.SceneManagement.SceneManager.GetActiveScene().name +
+                                ", position " + newPosition.ToString() +
+                                " can be reached via capsule cast but is beyond the scene bounds.";
+                        }
+
+                        shouldEnqueue = shouldEnqueue && inBounds && (
+                            handObjectCanFitInPosition(newPosition, 0.0f) ||
+                            handObjectCanFitInPosition(newPosition, 90.0f) ||
+                            handObjectCanFitInPosition(newPosition, 180.0f) ||
+                            handObjectCanFitInPosition(newPosition, 270.0f)
+                        );
+                        if (shouldEnqueue) {
+                            pointsQueue.Enqueue(newPosition);
+                            #if UNITY_EDITOR
+                                Debug.DrawLine(p, newPosition, Color.cyan, 100000f);
+                            #endif
+                        }
+                    }
+                }
+                if (stepsTaken > maxStepCount) {
+                    errorMessage = "Too many steps taken in GetReachablePositions.";
+                    break;
+                }
+            }
+
+            Vector3[] reachablePos = new Vector3[goodPoints.Count];
+            goodPoints.CopyTo(reachablePos);
+            #if UNITY_EDITOR
+                Debug.Log(reachablePos.Length);
+            #endif
+            return false;
+        }
+
+        private NavMeshPath GetSimObjectNavMeshTarget(SimObjPhysics targetSOP, Vector3 initialPosition, Quaternion initialRotation, bool visualize = false) {
+            var targetTransform = targetSOP.transform;
+            var targetSimObject = targetTransform.GetComponentInChildren<SimObjPhysics>();
+            var PhysicsController = this;
+            var agentTransform = PhysicsController.transform;
+
+            var originalAgentPosition = agentTransform.position;
+            var orignalAgentRotation = agentTransform.rotation;
+
+            var fixedPosition = Vector3.negativeInfinity;
+
+            agentTransform.position = initialPosition;
+            agentTransform.rotation = initialRotation;
+            //var successReach = 
+            getReachablePositionToObjectVisible(targetSimObject, out fixedPosition);
+            agentTransform.position = originalAgentPosition;
+            agentTransform.rotation = orignalAgentRotation;
+            var path = new NavMeshPath();
+            //var sopPos = targetSOP.transform.position;
+            //var target = new Vector3(sopPos.x, initialPosition.y, sopPos.z);
+
+            //make sure navmesh agent is active
+            this.GetComponent<NavMeshAgent>().enabled = true;
+            //bool pathSuccess = 
+            NavMesh.CalculatePath(initialPosition, fixedPosition,  NavMesh.AllAreas, path);
+        
+            
+            
+            var pathDistance = 0.0f;
+            for (int i = 0; i < path.corners.Length - 1; i++) {
+                #if UNITY_EDITOR
+                    // Debug.DrawLine(path.corners[i], path.corners[i + 1], Color.red, 10.0f);
+                #endif
+                pathDistance += Vector3.Distance(path.corners[i], path.corners[i + 1]);
+            }
+            
+
+            //disable navmesh agent
+            this.GetComponent<NavMeshAgent>().enabled = false;
+
+            return path;
+        }
+
+        public void GetShortestPathToPoint(ServerAction action) {
+            var startPosition = this.transform.position;
+            if (!action.useAgentTransform) {
+                startPosition = action.position;
+            }
+
+            var targetPosition = new Vector3(action.x, action.y, action.z);
+            Debug.Log("Target " + targetPosition);
+            Debug.Log("Source "+ startPosition);
+
+
+            var path = new NavMeshPath();
+            this.GetComponent<NavMeshAgent>().enabled = true;
+            NavMesh.CalculatePath(startPosition, targetPosition,  NavMesh.AllAreas, path);
+            if (path.status == NavMeshPathStatus.PathComplete) {
+                actionFinished(true, path);
+                return;
+            }
+            else {
+                errorMessage = "Path to target could not be found";
+                actionFinished(false);
+                return;
+            }
+        }
+        public void VisualizeShortestPaths(ServerAction action) {
+            
+            SimObjPhysics sop = getSimObjectFromTypeOrId(action);
+            if (sop == null) {
+                actionFinished(false);
+                return;
+            }
+
+            //Alvaro I commented this out cause it didn't appear to do anything? uhhhhh
+            //var reachablePos = getReachablePositions(1.0f, 10000, action.grid, action.gridColor);
+
+            Instantiate(DebugTargetPointPrefab, sop.transform.position, Quaternion.identity);
+            var results = new List<bool>();
+            for (var i = 0; i < action.positions.Count; i++) {
+                var pos = action.positions[i];
+                var go = Instantiate(DebugPointPrefab, pos, Quaternion.identity);
+                var textMesh = go.GetComponentInChildren<TextMesh>();
+                textMesh.text = i.ToString();
+
+                var path = GetSimObjectNavMeshTarget(sop, pos, Quaternion.identity);
+
+                var lineRenderer = go.GetComponentInChildren<LineRenderer>();
+
+                if (action.pathGradient != null && action.pathGradient.colorKeys.Length > 0){
+                    lineRenderer.colorGradient = action.pathGradient;
+                }
+                lineRenderer.startWidth = 0.015f;
+                lineRenderer.endWidth = 0.015f;
+
+                results.Add(path.status == NavMeshPathStatus.PathComplete);
+               
+                if (path.status == NavMeshPathStatus.PathComplete) { 
+                    lineRenderer.positionCount = path.corners.Length;
+                    lineRenderer.SetPositions(path.corners.Select(c => new Vector3(c.x, gridVisualizeY + 0.005f, c.z)).ToArray());
+                }
+            }
+            actionFinished(true, results.ToArray());
+        }
+
 
         #if UNITY_EDITOR
         void OnDrawGizmos()
