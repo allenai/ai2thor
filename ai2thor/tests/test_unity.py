@@ -3,12 +3,23 @@
 import os
 import ai2thor.controller
 
-class TestController(ai2thor.controller.Controller):
-    def releases_dir(self):
-        return os.path.normpath(os.path.join(os.path.abspath(__file__), "..", "..", "..", "unity", "builds"))
+class UnityTestController(ai2thor.controller.Controller):
+
+    def __init__(self,**kwargs):
+        base_path = os.path.normpath(os.path.join(os.path.abspath(__file__), "..", "..", "..", "unity", "builds"))
+        build_path = 'thor-local-OSXIntel64.app/Contents/MacOS/thor-local-OSXIntel64'
+        
+
+        kwargs['local_executable_path'] = os.path.join(base_path, build_path)
+        kwargs['scene'] = 'FloorPlan28'
+        super().__init__(**kwargs)
+
+    def prune_releases(self):
+        pass
 
 
-controller = TestController()
+controller = UnityTestController()
+print(controller.local_executable_path)
 controller.reset('FloorPlan28')
 controller.step(dict(action='Initialize', gridSize=0.25))
 
@@ -22,7 +33,7 @@ def assert_near(point1, point2):
         assert round(point1[k], 3) == round(point2[k], 3)
 
 def test_rectangle_aspect():
-    controller = TestController(width=600, height=300)
+    controller = UnityTestController(width=600, height=300)
     controller.reset('FloorPlan28')
     event = controller.step(dict(action='Initialize', gridSize=0.25))
     assert event.frame.shape == (300, 600, 3)
