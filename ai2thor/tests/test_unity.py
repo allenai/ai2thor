@@ -4,11 +4,22 @@ import os
 import ai2thor.controller
 
 class TestController(ai2thor.controller.Controller):
-    def releases_dir(self):
-        return os.path.normpath(os.path.join(os.path.abspath(__file__), "..", "..", "..", "unity", "builds"))
+
+    def __init__(self,**kwargs):
+        base_path = os.path.normpath(os.path.join(os.path.abspath(__file__), "..", "..", "..", "unity", "builds"))
+        build_path = 'thor-local-OSXIntel64.app/Contents/MacOS/thor-local-OSXIntel64'
+        
+
+        kwargs['local_executable_path'] = os.path.join(base_path, build_path)
+        kwargs['scene'] = 'FloorPlan28'
+        super().__init__(**kwargs)
+
+    def prune_releases(self):
+        pass
 
 
 controller = TestController()
+print(controller.local_executable_path)
 controller.reset('FloorPlan28')
 controller.step(dict(action='Initialize', gridSize=0.25))
 
