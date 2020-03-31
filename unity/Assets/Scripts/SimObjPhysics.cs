@@ -507,19 +507,26 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 	}
 
 	void OnCollisionEnter (Collision col)	
-    {
-		contactPointsDictionary[col.collider] = col.contacts;
-		
+    {		
 		//this is to enable kinematics if this object hits another object that isKinematic but needs to activate
 		//physics uppon being touched/collided
+        PhysicsRemoteFPSAgentController fpsController;
+
+        if(GameObject.Find("FPSController"))
+        {
+            fpsController = GameObject.Find("FPSController").GetComponent<PhysicsRemoteFPSAgentController>();
+        }
+
+        else
+        {
+            Debug.LogError("No FPSController in scene!");
+            return;
+        }
 
 		//GameObject agent = GameObject.Find("FPSController");
 		if(col.transform.GetComponentInParent<SimObjPhysics>())
 		{
 			//add a check for if this is the handheld object, in which case dont't do this!
-
-            var fpsController = GameObject.FindObjectOfType<PhysicsRemoteFPSAgentController>();
-            //Debug.Log("FPS " + (fpsController == null));
 			
 			if(fpsController != null && !fpsController.WhatAmIHolding() == this.transform)
 			{
@@ -566,14 +573,12 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		//add a check for if the hitting one is a structure object
         else if (col.transform.GetComponentInParent<StructureObject>())
         {   
-            var fpsController = GameObject.FindObjectOfType<PhysicsRemoteFPSAgentController>();
-
             //add a check for if the Agent is a flying drone
             if (fpsController.FlightMode)
             {   
                 FlyingDrone fdComp = fpsController.GetComponent<FlyingDrone>();
                 //add a check for if it's for initialization
-                if (fdComp.HasLaunch(this))
+                if (!fdComp.HasLaunch(this))
                 {   
                     //add a check for if this is the object caought by the drone
                     if (!fdComp.isObjectCaught(this))
@@ -598,6 +603,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
         }
 		contactPointsDictionary[col.collider] = col.contacts;
 	}
+
 	void OnCollisionExit (Collision col)	
     {
 		contactPointsDictionary.Remove(col.collider);
