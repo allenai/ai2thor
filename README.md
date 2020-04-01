@@ -113,8 +113,12 @@ Take a GameObject (we'll call it the "Target" object) containing a MeshFilter, M
 - `Scripts/AgentManager`:
   - Added properties to `ObjectMetadata`: `points`, `visibleInCamera`
   - Added properties to `ServerAction`: `logs`, `objectDirection`, `receptacleObjectDirection`, `sceneConfig`
-  - Added `virtual` to functions: `Update`
-  - Changed variables or functions from `private` to `protected`: `physicsSceneManager`
+  - Added `virtual` to functions: `setReadyToEmit`, `Update`
+  - Changed variables or functions from `private` to `protected`: `physicsSceneManager`, most `render*Image` variables
+  - Changed variables or functions from `private` to `public`: `captureScreen`, 'renderImage'
+  - Split the existing metadata-update-behavior of the `addObjectImageForm` function into a separate, new function called `UpdateMetadataColors`
+  - Created the `InitializeForm` and `FinalizeMultiAgentMetadata` virtual functions and called them both inside `EmitFrame`
+  - In `ProcessControlCommand`, changed `readyToEmit = true` to `this.setReadyToEmit(true);`
 - `Scripts/BaseFPSAgentController`:
   - Added `virtual` to functions: `Initialize`, `ProcessControlCommand`
   - Removed the hard-coded camera properties in the `SetAgentMode` function
