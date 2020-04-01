@@ -9041,6 +9041,7 @@ public void PickupObject(ServerAction action) //use serveraction objectid
                 startPosition = action.position;
                 startRotation = Quaternion.Euler(action.rotation);
             }
+
             var path = GetSimObjectNavMeshTarget(sop, startPosition, startRotation);
             if (path.status == NavMeshPathStatus.PathComplete) {
                 //VisualizePath(startPosition, path);
@@ -9061,20 +9062,19 @@ public void PickupObject(ServerAction action) //use serveraction objectid
             }
 
             var targetPosition = new Vector3(action.x, action.y, action.z);
-            Debug.Log("Target " + targetPosition);
-            Debug.Log("Source "+ startPosition);
-
 
             var path = new NavMeshPath();
             this.GetComponent<NavMeshAgent>().enabled = true;
             bool pathSuccess = NavMesh.CalculatePath(startPosition, targetPosition,  NavMesh.AllAreas, path);
             if (path.status == NavMeshPathStatus.PathComplete) {
-                // VisualizePath(startPosition, path);
+                //VisualizePath(startPosition, path);
+                this.GetComponent<NavMeshAgent>().enabled = false;
                 actionFinished(true, path);
                 return;
             }
             else {
                 errorMessage = "Path to target could not be found";
+                this.GetComponent<NavMeshAgent>().enabled = false;
                 actionFinished(false);
                 return;
             }
@@ -9178,6 +9178,8 @@ public void PickupObject(ServerAction action) //use serveraction objectid
 
             //make sure navmesh agent is active
             this.GetComponent<NavMeshAgent>().enabled = true;
+             Debug.Log("Source "+ initialPosition);
+             Debug.Log("Target " + fixedPosition);
             bool pathSuccess = NavMesh.CalculatePath(initialPosition, fixedPosition,  NavMesh.AllAreas, path);
         
             

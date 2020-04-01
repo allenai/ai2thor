@@ -118,7 +118,13 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
         public void Execute(string command)
         {
-            if (!PhysicsController.actionComplete) {
+            if ((PhysicsController.enabled && !PhysicsController.actionComplete) ||
+                (StochasticController != null && StochasticController.enabled && !StochasticController.actionComplete)
+            ) {
+                Debug.Log("Cannot execute command while last action has not completed.");
+            }
+
+            if (StochasticController.enabled && !StochasticController.actionComplete) {
                 Debug.Log("Cannot execute command while last action has not completed.");
             }
 
@@ -2140,26 +2146,35 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         ServerAction action = new ServerAction();
                         action.action = "GetShortestPathToPoint";
 
-
                         //pass in a min range, max range, delay
                         if (splitcommand.Length > 1)
                         {
+                             action.useAgentTransform = false;
                             //ID of spawner
-                            action.objectId = splitcommand[1];
+                            //action.objectId = splitcommand[1];
 
-                            if (splitcommand.Length == 5) {
+                            if (splitcommand.Length == 4) {
+                                action.useAgentTransform = true;
+                                action.x = float.Parse(splitcommand[1]);
+                                action.y = float.Parse(splitcommand[2]);
+                                action.z = float.Parse(splitcommand[3]);
+                            }
+                            if (splitcommand.Length == 7) {
                                 action.position = new Vector3(
-                                    float.Parse(splitcommand[2]),
-                                    float.Parse(splitcommand[3]), 
-                                    float.Parse(splitcommand[4])
+                                    float.Parse(splitcommand[1]),
+                                    float.Parse(splitcommand[2]), 
+                                    float.Parse(splitcommand[3])
                                 );
+                                action.x = float.Parse(splitcommand[4]);
+                                action.y = float.Parse(splitcommand[5]);
+                                action.z = float.Parse(splitcommand[6]);
                             }
-                            else {
-                                action.positions = new List<Vector3>() {
-                                    new Vector3( 4.258f, 1.0f, -1.69f),
-                                    new Vector3(6.3f, 1.0f, -3.452f)
-                                };
+                             if (splitcommand.Length < 4) {
+                                throw new ArgumentException("need to provide 6 floats, first 3 source position second 3 target position");
                             }
+                        }
+                        else {
+                             throw new ArgumentException("need to provide at least 3 floats for target position");
                         }
                         PhysicsController.ProcessControlCommand(action);
                         break;

@@ -2628,3 +2628,36 @@ def remove_dataset_spaces(ctx, dataset_dir):
     with open('val.json', 'w') as fw:
         json.dump(test_data, fw, indent=4, sort_keys=True)
 
+
+@task
+def shortest_path_to_point(ctx, scene, x0, y0, z0, x1, y1, z1, editor_mode=False):
+    import ai2thor.util.metrics as metrics
+    import ai2thor.controller
+    controller = ai2thor.controller.Controller(
+        rotateStepDegrees=30,
+        visibilityDistance=1.0,
+        gridSize=0.25,
+        port=8200,
+        host='127.0.0.1',
+        local_executable_path=_local_build_path() if local_build else None,
+        start_unity=False if editor_mode else True,
+        agentType="stochastic",
+        continuousMode=True,
+        continuous=False,
+        snapToGrid=False,
+        agentMode="bot",
+        scene=scene,
+        width=300,
+        height=300,
+        continus=True
+    )
+
+    evt = metrics.get_shortest_path_to_point(
+        controller,
+        dict(x=x0, y=y0, z=z0),
+        dict(x=x1, y=y1, z=z1)
+    )
+
+    print(evt.metadata["lastActionSuccess"])
+    print(evt.metadata["errorMessage"])
+
