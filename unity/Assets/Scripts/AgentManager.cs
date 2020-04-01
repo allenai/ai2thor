@@ -102,6 +102,7 @@ public class AgentManager : MonoBehaviour
 	
 	public void Initialize(ServerAction action)
 	{
+        print("agentManager Initialize here");
         if (action.agentControllerType != null && action.agentControllerType.ToLower() == "stochastic") {
             this.agents.Clear();
             action.snapToGrid = false;
@@ -114,6 +115,7 @@ public class AgentManager : MonoBehaviour
             this.agents.Add(primaryAgent);
         }
         
+        print("about to go into " + primaryAgent + "'s initialize");
 		primaryAgent.ProcessControlCommand (action);
 		primaryAgent.IsVisible = action.makeAgentsVisible;
 		this.renderClassImage = action.renderClassImage;
@@ -329,22 +331,22 @@ public class AgentManager : MonoBehaviour
 			}
 		}
 
-		int hasUpdateCount = 0;
+		int hasDroneAgentUpdatedCount = 0;
 		bool FlightMode = false;
-        //check if any active agents are in FlightMode
-        foreach (PhysicsRemoteFPSAgentController physAgent in this.agents)
-        {
-			if (physAgent.FlightMode)
-            {
-				FlightMode = true;
+        // //check if any active agents are in FlightMode
+        // foreach (PhysicsRemoteFPSAgentController physAgent in this.agents)
+        // {
+		// 	if (physAgent.FlightMode)
+        //     {
+		// 		FlightMode = true;
 
-                //get total count of all flight mode agents that have finished updating
-                if (physAgent.hasFixedUpdateHappened)
-                {
-                    hasUpdateCount++;
-                }
-			}
-        }
+        //         //get total count of all flight mode agents that have finished updating
+        //         if (physAgent.hasFixedUpdateHappened)
+        //         {
+        //             hasDroneAgentUpdatedCount++;
+        //         }
+		// 	}
+        // }
 
         //check what objects in the scene are currently in motion
         //Rigidbody[] rbs = FindObjectsOfType(typeof(Rigidbody)) as Rigidbody[];
@@ -416,18 +418,20 @@ public class AgentManager : MonoBehaviour
             }
         }
 
-		if (completeCount == agents.Count && completeCount > 0 && readyToEmit) {
-			if (!FlightMode)
+		if (completeCount == agents.Count && completeCount > 0 && readyToEmit) 
+        {
+            //start emit frame for physics and stochastic controllers
+			if(!FlightMode)
             {
 				readyToEmit = false;
 				StartCoroutine (EmitFrame ());
 			}
             
-            //some number of agents is in FlightMode
-            else
+            //start emit frame for flying drone controller
+            if(FlightMode)
             {
                 //make sure each agent in flightMode has updated at least once
-				if (hasUpdateCount == agents.Count && hasUpdateCount > 0)
+				if (hasDroneAgentUpdatedCount == agents.Count && hasDroneAgentUpdatedCount > 0)
                 {
 					readyToEmit = false;
 					StartCoroutine (EmitFrame ());

@@ -29,8 +29,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
         [SerializeField] protected GameObject DefaultHandPosition = null;
         [SerializeField] protected Transform rotPoint;
 
-       [SerializeField] protected GameObject DebugPointPrefab;
-
+        [SerializeField] protected GameObject DebugPointPrefab;
+        [SerializeField] private GameObject GridRenderer;
         [SerializeField] protected GameObject DebugTargetPointPrefab;
         public Vector3[] reachablePositions = new Vector3[0];
         protected float gridVisualizeY = 0.005f; //used to visualize reachable position grid, offset from floor
@@ -265,11 +265,125 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			targetTeleport = Vector3.zero;
 		}
 
-		abstract public Vector3[] getReachablePositions(float gridMultiplier=1.0f, int maxStepCount = 10000, bool visualize = false, Color? gridColor = null);
+        public Vector3[] getReachablePositions(float gridMultiplier = 1.0f, int maxStepCount = 10000, bool visualize = false, Color? gridColor = null) { //max step count represents a 100m * 100m room. Adjust this value later if we end up making bigger rooms?
+            CapsuleCollider cc = GetComponent<CapsuleCollider>();
+
+            float sw = m_CharacterController.skinWidth;
+            Queue<Vector3> pointsQueue = new Queue<Vector3>();
+            pointsQueue.Enqueue(transform.position);
+
+            //float dirSkinWidthMultiplier = 1.0f + sw;
+            Vector3[] directions = {
+                new Vector3(1.0f, 0.0f, 0.0f),
+                new Vector3(0.0f, 0.0f, 1.0f),
+                new Vector3(-1.0f, 0.0f, 0.0f),
+                new Vector3(0.0f, 0.0f, -1.0f)
+            };
+
+            HashSet<Vector3> goodPoints = new HashSet<Vector3>();
+            int layerMask = 1 << 8;
+            int stepsTaken = 0;
+            while (pointsQueue.Count != 0) {
+                stepsTaken += 1;
+                Vector3 p = pointsQueue.Dequeue();
+                if (!goodPoints.Contains(p)) {
+                    goodPoints.Add(p);
+                    HashSet<Collider> objectsAlreadyColliding = new HashSet<Collider>(objectsCollidingWithAgent());
+                    foreach (Vector3 d in directions) {
+                        RaycastHit[] hits = capsuleCastAllForAgent(
+                            cc,
+                            sw,
+                            p,
+                            d,
+                            (gridSize * gridMultiplier),
+                            layerMask
+                        );
+
+                        bool shouldEnqueue = true;
+                        foreach (RaycastHit hit in hits) {
+                            if (hit.transform.gameObject.name != "Floor" &&
+                                !ancestorHasName(hit.transform.gameObject, "FPSController") &&
+                                !objectsAlreadyColliding.Contains(hit.collider)
+                            ) {
+                                shouldEnqueue = false;
+                                break;
+                            }
+                        }
+                        Vector3 newPosition = p + d * gridSize * gridMultiplier;
+                        bool inBounds = sceneBounds.Contains(newPosition);
+                        if (errorMessage == "" && !inBounds) {
+                            errorMessage = "In " +
+                                UnityEngine.SceneManagement.SceneManager.GetActiveScene().name +
+                                ", position " + newPosition.ToString() +
+                                " can be reached via capsule cast but is beyond the scene bounds.";
+                        }
+
+                        shouldEnqueue = shouldEnqueue && inBounds && (
+                            handObjectCanFitInPosition(newPosition, 0.0f) ||
+                            handObjectCanFitInPosition(newPosition, 90.0f) ||
+                            handObjectCanFitInPosition(newPosition, 180.0f) ||
+                            handObjectCanFitInPosition(newPosition, 270.0f)
+                        );
+                        if (shouldEnqueue) {
+                            pointsQueue.Enqueue(newPosition);
+
+                            if (visualize) {
+                                var gridRenderer = Instantiate(GridRenderer, Vector3.zero, Quaternion.identity);
+                                var gridLineRenderer = gridRenderer.GetComponentInChildren<LineRenderer>();
+                                if (gridColor.HasValue) {
+                                    gridLineRenderer.startColor = gridColor.Value;
+                                    gridLineRenderer.endColor =  gridColor.Value;
+                                }
+                                // gridLineRenderer.startColor = ;
+                                // gridLineRenderer.endColor = ;
+                                gridLineRenderer.positionCount = 2;
+                                // gridLineRenderer.startWidth = 0.01f;
+                                // gridLineRenderer.endWidth = 0.01f;
+                                gridLineRenderer.SetPositions(new Vector3[] { 
+                                    new Vector3(p.x, gridVisualizeY, p.z),
+                                    new Vector3(newPosition.x, gridVisualizeY, newPosition.z)
+                                });
+                            }
+                            #if UNITY_EDITOR
+                            Debug.DrawLine(p, newPosition, Color.cyan, 100000f);
+                            #endif
+                        }
+                    }
+                }
+                //default maxStepCount to scale based on gridSize
+                if (stepsTaken > Math.Floor(maxStepCount/gridSize * gridSize)) {
+                    errorMessage = "Too many steps taken in GetReachablePositions.";
+                    break;
+                }
+            }
+
+            Vector3[] reachablePos = new Vector3[goodPoints.Count];
+            goodPoints.CopyTo(reachablePos);
+
+            #if UNITY_EDITOR
+            Debug.Log("count of reachable positions:        " + reachablePos.Length);
+            #endif
+
+            return reachablePos;
+        }
+
+        public void GetReachablePositions(ServerAction action) {
+            if(action.maxStepCount != 0) {
+                reachablePositions = getReachablePositions(1.0f, action.maxStepCount);
+            } else {
+                reachablePositions = getReachablePositions();
+            }
+
+            if (errorMessage != "") {
+                actionFinished(false);
+            } else {
+                actionFinished(true, reachablePositions);
+            }
+        }
 
 		public void Initialize(ServerAction action)
         {
-
+            print("base initialize called here");
             if(action.agentMode.ToLower() == "tall" || action.agentMode.ToLower() == "bot"
                 || action.agentMode.ToLower() == "drone")
             {
@@ -299,28 +413,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 actionFinished(false);
                 return;
 			}
-
-			//if defaulted to "tall" agentMode, we assume cameraY default is 0.675f
-			if(action.agentMode.ToLower() == "tall")
-			{
-				//if camera height is not the default value
-				if(action.cameraY != 0.675f)
-				{
-			 		Vector3 pos = m_Camera.transform.localPosition;
-			 		m_Camera.transform.localPosition = new Vector3 (pos.x, pos.y + action.cameraY, pos.z);
-
-					//set camera stand/crouch local positions for Tall mode
-                	standingLocalCameraPosition = m_Camera.transform.localPosition;
-                	crouchingLocalCameraPosition = m_Camera.transform.localPosition + new Vector3(0, -0.675f, 0);// bigger y offset if tall
-				}
-			}
-
-            // //amount in the positive or negative Y axis to offset the current camera position
-			// if (action.cameraY != 0.0) 
-            // {
-			// 	Vector3 pos = m_Camera.transform.localPosition;
-			// 	m_Camera.transform.localPosition = new Vector3 (pos.x, pos.y + action.cameraY, pos.z);
-			// }
 
 			if (action.timeScale > 0) {
 				if (Time.timeScale != action.timeScale) {
@@ -366,11 +458,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     FieldInfo field = t.GetField(entry.Key, BindingFlags.Public | BindingFlags.Instance);
                     field.SetValue(this, entry.Value);
                 }
-                InitializeController(action);
+
             }
         }
 
-        //
         public void SetAgentMode(string mode)
         {
             string whichMode;
@@ -412,7 +503,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 //set camera stand/crouch local positions for Tall mode
                 standingLocalCameraPosition = m_Camera.transform.localPosition;
                 crouchingLocalCameraPosition = m_Camera.transform.localPosition + new Vector3(0, -0.675f, 0);// bigger y offset if tall
-
             }
 
             else if(whichMode == "bot")
@@ -483,10 +573,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 //set physics controller to flight mode
                 this.GetComponent<PhysicsRemoteFPSAgentController>().FlightMode = true;
             }
-        }
-
-        public virtual void InitializeController(ServerAction action) {
-            
         }
 
         public IEnumerator checkInitializeAgentLocationAction()
@@ -586,6 +672,212 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		// 	return so.Open();
 		// }
 
+        //for all translational movement, check if the item the player is holding will hit anything, or if the agent will hit anything
+        //NOTE: (XXX) All four movements below no longer use base character controller Move() due to doing initial collision blocking
+        //checks before actually moving. Previously we would moveCharacter() first and if we hit anything reset, but now to match
+        //Luca's movement grid and valid position generation, simple transform setting is used for movement instead.
+
+        //XXX revisit what movement means when we more clearly define what "continuous" movement is
+        protected bool moveInDirection(Vector3 direction, string objectId="", float maxDistanceToObject=-1.0f, bool forceAction = false) {
+            Vector3 targetPosition = transform.position + direction;
+            float angle = Vector3.Angle(transform.forward, Vector3.Normalize(direction));
+
+            float right = Vector3.Dot(transform.right, direction);
+            if (right < 0) {
+                angle = 360f - angle;
+            }
+            int angleInt = Mathf.RoundToInt(angle) % 360;
+
+            if (checkIfSceneBoundsContainTargetPosition(targetPosition) &&
+                CheckIfItemBlocksAgentMovement(direction.magnitude, angleInt, forceAction) && // forceAction = true allows ignoring movement restrictions caused by held objects
+                CheckIfAgentCanMove(direction.magnitude, angleInt)) {
+                DefaultAgentHand();
+                Vector3 oldPosition = transform.position;
+                transform.position = targetPosition;
+                this.snapAgentToGrid();
+
+                if (objectId != "" && maxDistanceToObject > 0.0f) {
+                    if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
+                        errorMessage = "No object with ID " + objectId;
+                        transform.position = oldPosition; 
+                        return false;
+                    }
+                    SimObjPhysics sop = physicsSceneManager.ObjectIdToSimObjPhysics[objectId];
+                    if (distanceToObject(sop) > maxDistanceToObject) {
+                        errorMessage = "Agent movement would bring it beyond the max distance of " + objectId;
+                        transform.position = oldPosition;
+                        return false;
+                    }
+                }
+                return true;
+            } else {
+                return false;
+            }
+        }
+
+        protected float distanceToObject(SimObjPhysics sop) {
+            float dist = 10000.0f;
+            foreach (Collider c in sop.GetComponentsInChildren<Collider>()) {
+                Vector3 closestPoint = c.ClosestPointOnBounds(transform.position);
+                Vector3 p0 = new Vector3(transform.position.x, 0f, transform.position.z);
+                Vector3 p1 = new Vector3(closestPoint.x, 0f, closestPoint.z);
+                dist = Math.Min(Vector3.Distance(p0, p1), dist);
+            }
+            return dist;
+        }
+
+        public void DistanceToObject(ServerAction action) {
+            float dist = distanceToObject(physicsSceneManager.ObjectIdToSimObjPhysics[action.objectId]);
+            #if UNITY_EDITOR
+            Debug.Log(dist);
+            #endif
+            actionFinished(true, dist);
+        }
+
+        public bool CheckIfAgentCanMove(float moveMagnitude, int orientation) {
+            Vector3 dir = new Vector3();
+
+            switch (orientation) {
+                case 0: //forward
+                    dir = gameObject.transform.forward;
+                    break;
+
+                case 180: //backward
+                    dir = -gameObject.transform.forward;
+                    break;
+
+                case 270: //left
+                    dir = -gameObject.transform.right;
+                    break;
+
+                case 90: //right
+                    dir = gameObject.transform.right;
+                    break;
+
+                default:
+                    Debug.Log("Incorrect orientation input! Allowed orientations (0 - forward, 90 - right, 180 - backward, 270 - left) ");
+                    break;
+            }
+
+            RaycastHit[] sweepResults = capsuleCastAllForAgent(
+                GetComponent<CapsuleCollider>(),
+                m_CharacterController.skinWidth,
+                transform.position,
+                dir,
+                moveMagnitude,
+                1 << 8 | 1 << 10
+            );
+            //check if we hit an environmental structure or a sim object that we aren't actively holding. If so we can't move
+            if (sweepResults.Length > 0) {
+                foreach (RaycastHit res in sweepResults) {
+                    // Don't worry if we hit something thats in our hand.
+                    if (ItemInHand != null && ItemInHand.transform == res.transform) {
+                        continue;
+                    }
+
+                    if (res.transform.gameObject != this.gameObject && res.transform.GetComponent<PhysicsRemoteFPSAgentController>()) {
+
+                        PhysicsRemoteFPSAgentController maybeOtherAgent = res.transform.GetComponent<PhysicsRemoteFPSAgentController>();
+                        int thisAgentNum = agentManager.agents.IndexOf(this);
+                        int otherAgentNum = agentManager.agents.IndexOf(maybeOtherAgent);
+                        errorMessage = "Agent " + otherAgentNum.ToString() + " is blocking Agent " + thisAgentNum.ToString() + " from moving " + orientation;
+                        return false;
+                    }
+
+                    //including "Untagged" tag here so that the agent can't move through objects that are transparent
+                    if (res.transform.GetComponent<SimObjPhysics>() || res.transform.tag == "Structure" || res.transform.tag == "Untagged") {
+                        int thisAgentNum = agentManager.agents.IndexOf(this);
+                        errorMessage = res.transform.name + " is blocking Agent " + thisAgentNum.ToString() + " from moving " + orientation;
+                        //the moment we find a result that is blocking, return false here
+                        return false;
+                    }
+                }
+            }
+            return true;
+        }
+
+        //Sweeptest to see if the object Agent is holding will prohibit movement
+        public bool CheckIfItemBlocksAgentMovement(float moveMagnitude, int orientation, bool forceAction = false) {
+            bool result = false;
+
+            //if forceAction true, ignore collision restrictions caused by held objects
+            if(forceAction)
+            {
+                return true;
+            }
+            //if there is nothing in our hand, we are good, return!
+            if (ItemInHand == null) {
+                result = true;
+                //  Debug.Log("Agent has nothing in hand blocking movement");
+                return result;
+            }
+
+            //otherwise we are holding an object and need to do a sweep using that object's rb
+            else {
+                Vector3 dir = new Vector3();
+
+                //use the agent's forward as reference
+                switch (orientation) {
+                    case 0: //forward
+                        dir = gameObject.transform.forward;
+                        break;
+
+                    case 180: //backward
+                        dir = -gameObject.transform.forward;
+                        break;
+
+                    case 270: //left
+                        dir = -gameObject.transform.right;
+                        break;
+
+                    case 90: //right
+                        dir = gameObject.transform.right;
+                        break;
+
+                    default:
+                        Debug.Log("Incorrect orientation input! Allowed orientations (0 - forward, 90 - right, 180 - backward, 270 - left) ");
+                        break;
+                }
+                //otherwise we haev an item in our hand, so sweep using it's rigid body.
+                //RaycastHit hit;
+
+                Rigidbody rb = ItemInHand.GetComponent<Rigidbody>();
+
+                RaycastHit[] sweepResults = rb.SweepTestAll(dir, moveMagnitude, QueryTriggerInteraction.Ignore);
+                if (sweepResults.Length > 0) {
+                    foreach (RaycastHit res in sweepResults) {
+                        //did the item in the hand touch the agent? if so, ignore it's fine
+                        if (res.transform.tag == "Player") {
+                            result = true;
+                            break;
+                        } else {
+                            errorMessage = res.transform.name + " is blocking the Agent from moving " + orientation + " with " + ItemInHand.name;
+                            result = false;
+                            Debug.Log(errorMessage);
+                            return result;
+                        }
+
+                    }
+                }
+
+                //if the array is empty, nothing was hit by the sweeptest so we are clear to move
+                else {
+                    //Debug.Log("Agent Body can move " + orientation);
+                    result = true;
+                }
+
+                return result;
+            }
+        }
+
+        protected bool checkIfSceneBoundsContainTargetPosition(Vector3 position) {
+            if (!sceneBounds.Contains(position)) {
+                errorMessage = "Scene bounds do not contain target position.";
+                return false;
+            } else {
+                return true;
+            }
+        }
 
 		// rotate view with respect to mouse or server controls - I'm not sure when this is actually used
 		protected virtual void RotateView()
@@ -1322,13 +1614,17 @@ namespace UnityStandardAssets.Characters.FirstPerson
         // enableColliders == false and after with it equaling true). It, in particular, will
         // turn off/on all the colliders on agents which should not block visibility for the current agent
         // (invisible agents for example). 
-        protected void updateAllAgentCollidersForVisibilityCheck(bool enableColliders) {
-            foreach (BaseFPSAgentController agent in this.agentManager.agents) {
-                PhysicsRemoteFPSAgentController phyAgent = (PhysicsRemoteFPSAgentController) agent;
-                bool overlapping = (transform.position - phyAgent.transform.position).magnitude < 0.001f;
-                if (overlapping || phyAgent == this || !phyAgent.IsVisible) {
-                    foreach (Collider c in phyAgent.GetComponentsInChildren<Collider>()) {
-                        if (ItemInHand == null || !hasAncestor(c.transform.gameObject, ItemInHand)) {
+        protected void updateAllAgentCollidersForVisibilityCheck(bool enableColliders) 
+        {
+            foreach (BaseFPSAgentController agent in this.agentManager.agents) 
+            {
+                bool overlapping = (transform.position - agent.transform.position).magnitude < 0.001f;
+                if (overlapping || agent == this || !agent.IsVisible) 
+                {
+                    foreach (Collider c in agent.GetComponentsInChildren<Collider>()) 
+                    {
+                        if (ItemInHand == null || !hasAncestor(c.transform.gameObject, ItemInHand)) 
+                        {
                             c.enabled = enableColliders;
                         }
                     }

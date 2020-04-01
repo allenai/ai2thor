@@ -16,7 +16,7 @@ using RandomExtensions;
 namespace UnityStandardAssets.Characters.FirstPerson
 {
     [RequireComponent(typeof(CharacterController))]
-    public class StochasticRemoteFPSAgentController : PhysicsRemoteFPSAgentController
+    public class StochasticRemoteFPSAgentController : BaseFPSAgentController
     {
         protected bool applyActionNoise = true;
         protected float movementGaussianMu = 0.001f;

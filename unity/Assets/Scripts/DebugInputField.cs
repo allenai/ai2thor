@@ -193,6 +193,13 @@ namespace UnityStandardAssets.Characters.FirstPerson
                             action.agentCount = int.Parse(splitcommand[2]);
                             action.makeAgentsVisible = int.Parse(splitcommand[3]) == 1;
                         }
+
+                        // action.renderNormalsImage = true;
+                        // action.renderDepthImage = true;
+                        // action.renderClassImage = true;
+                        // action.renderObjectImage = true;
+                        // action.renderFlowImage = true;
+
                         action.gridSize = 0.25f;
                         action.visibilityDistance = 1.0f;
 						PhysicsController.actionComplete = false;
@@ -215,6 +222,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
                  case "initd":
                     {
 						ServerAction action = new ServerAction();
+
+                        // action.renderNormalsImage = true;
+                        // action.renderDepthImage = true;
+                        // action.renderClassImage = true;
+                        // action.renderObjectImage = true;
+                        // action.renderFlowImage = true;
 
 						PhysicsController.actionComplete = false;
                         action.action = "Initialize";
