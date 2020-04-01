@@ -8338,21 +8338,6 @@ public void PickupObject(ServerAction action) //use serveraction objectid
             }
         }
 
-        public void GetObjectPosition(ServerAction action) {
-
-                if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(action.objectId)) 
-                {
-                    errorMessage = "Cannot find sim object with id '" + action.objectId + "'";
-                    actionFinished(false);
-                }
-                SimObjPhysics sop = physicsSceneManager.ObjectIdToSimObjPhysics[action.objectId];
-                if (sop == null) {
-                    errorMessage = "Object with id '" + action.objectId + "' is null";
-                    actionFinished(false);
-                }
-                actionFinished(true, sop.transform.position);
-        }
-
         public void GetScenesInBuild(ServerAction action) {
             int sceneCount = UnityEngine.SceneManagement.SceneManager.sceneCountInBuildSettings;
             string[] scenes = new string[sceneCount];
