@@ -190,3 +190,13 @@ def test_get_scenes_in_build():
     diff = return_scenes - scenes
     assert len(diff) == 0, "scenes in build diff: %s" % diff
 
+
+def test_change_resolution():
+    event = controller.step(dict(action='Pass'), raise_for_failure=True)
+    assert event.frame.shape == (300,300,3)
+    event = controller.step(dict(action='ChangeResolution', x=400, y=400), raise_for_failure=True)
+    assert event.frame.shape == (400,400,3)
+    assert event.screen_width == 400
+    assert event.screen_height == 400
+    event = controller.step(dict(action='ChangeResolution', x=300, y=300), raise_for_failure=True)
+
