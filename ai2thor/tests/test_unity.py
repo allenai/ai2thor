@@ -2,6 +2,7 @@
 #import pytest
 import os
 import ai2thor.controller
+import glob
 
 class UnityTestController(ai2thor.controller.Controller):
 
@@ -169,8 +170,23 @@ def test_moveahead_mag():
     position = controller.last_event.metadata['agent']['position']
     assert position == dict(x=-1.0, z=-1.5, y=0.900998354)
 
+
 def test_moveahead_fail():
     controller.step(dict(action='Teleport', x=-1.5, z=-1.5, y=1.0), raise_for_failure=True)
     controller.step(dict(action='MoveAhead', moveMagnitude=5.0))
     assert not controller.last_event.metadata['lastActionSuccess']
+
+
+def test_get_scenes_in_build():
+    scenes = set()
+    for g in glob.glob('unity/Assets/Scenes/*.unity'):
+        scenes.add(os.path.splitext(os.path.basename(g))[0])
+
+
+
+    event = controller.step(dict(action='GetScenesInBuild'), raise_for_failure=True)
+    return_scenes = set(event.metadata['actionReturn'])
+    # not testing for private scenes
+    diff = return_scenes - scenes
+    assert len(diff) == 0, "scenes in build diff: %s" % diff
 
