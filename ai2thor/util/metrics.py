@@ -109,6 +109,7 @@ def get_shortest_path_to_object_type(
     if event.metadata['lastActionSuccess']:
         return event.metadata['actionReturn']['corners']
     else:
+        print(event.metadata['errorMessage'])
         raise ValueError(
             "Unable to find shortest path for object type '{}'".format(
                 object_type
