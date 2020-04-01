@@ -9178,11 +9178,7 @@ public void PickupObject(ServerAction action) //use serveraction objectid
 
             //make sure navmesh agent is active
             this.GetComponent<NavMeshAgent>().enabled = true;
-             Debug.Log("Source "+ initialPosition);
-             Debug.Log("Target " + fixedPosition);
             bool pathSuccess = NavMesh.CalculatePath(initialPosition, fixedPosition,  NavMesh.AllAreas, path);
-        
-            
             
             var pathDistance = 0.0f;
             for (int i = 0; i < path.corners.Length - 1; i++) {
