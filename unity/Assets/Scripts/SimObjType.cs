@@ -254,6 +254,7 @@ public enum SimObjType : int
 	ShowerHead = 146,
     TVStand = 147,
     CoffeeTable = 148,
+    Door = 149
 }
 
 public static class ReceptacleRestrictions
