@@ -2661,3 +2661,57 @@ def shortest_path_to_point(ctx, scene, x0, y0, z0, x1, y1, z1, editor_mode=False
     print(evt.metadata["lastActionSuccess"])
     print(evt.metadata["errorMessage"])
 
+
+@task
+def reachable_pos(ctx, scene, editor_mode=False, local_build=False):
+    import ai2thor.util.metrics as metrics
+    import ai2thor.controller
+    gridSize = 0.25
+    controller = ai2thor.controller.Controller(
+        rotateStepDegrees=30,
+        visibilityDistance=1.0,
+        gridSize=gridSize,
+        port=8200,
+        host='127.0.0.1',
+        local_executable_path=_local_build_path() if local_build else None,
+        start_unity=False if editor_mode else True,
+        agentType="stochastic",
+        continuousMode=True,
+        continuous=False,
+        snapToGrid=False,
+        agentMode="bot",
+        scene=scene,
+        width=300,
+        height=300,
+        continus=True
+    )
+
+    print("constoller.last_action Agent Pos: {}".format(controller.last_event.metadata["agent"]["position"]))
+
+    evt = controller.step(action="GetReachablePositions", gridSize=gridSize)
+
+    print("After GetReachable AgentPos: {}".format(evt.metadata['agent']['position']))
+
+    print(evt.metadata["lastActionSuccess"])
+    print(evt.metadata["errorMessage"])
+
+    reachable_pos = evt.metadata["actionReturn"]
+
+    print(evt.metadata["actionReturn"])
+
+
+
+    evt = controller.step(
+        dict(
+            action="TeleportFull",
+            x=3.0,
+            y=reachable_pos[0]['y'],
+            z=-1.5,
+            rotation=dict(x=0, y=45.0, z=0),
+            horizon=0.0,
+        )
+    )
+
+    print("After teleport: {}".format(evt.metadata['agent']['position']))
+
+
