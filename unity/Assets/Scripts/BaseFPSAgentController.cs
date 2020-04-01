@@ -205,6 +205,15 @@ namespace UnityStandardAssets.Characters.FirstPerson
             //if using editor mode or webgl demo, default to tall mode
             SetAgentMode("tall");
             #endif
+
+            //for normal, non-drone flight operation mode
+            if (!FlightMode) 
+            {
+                //On start, activate gravity
+                Vector3 movement = Vector3.zero;
+                movement.y = Physics.gravity.y * m_GravityMultiplier;
+                m_CharacterController.Move(movement);
+            }
 		}
 
         //defaults all agent renderers, from all modes (tall, bot, drone), to hidden for initialization default

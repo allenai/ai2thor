@@ -46,16 +46,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public override void Start() {
             base.Start();
 
-            //for normal, non-drone flight operation mode
-            if (!FlightMode) 
-            {
-                //On start, activate gravity
-                Vector3 movement = Vector3.zero;
-                movement.y = Physics.gravity.y * m_GravityMultiplier;
-                m_CharacterController.Move(movement);
-            }
-
             // Recordining initially disabled renderers and scene bounds 
+            //this is setup to be used in hide and seek/ moving object helper functions
             foreach (Renderer r in GameObject.FindObjectsOfType<Renderer>()) {
                 if (!r.enabled) {
                     initiallyDisabledRenderers.Add(r.GetInstanceID());
