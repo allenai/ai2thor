@@ -64,7 +64,7 @@ public class MachineCommonSenseMain : MonoBehaviour {
     // Unity's Update method is called once per frame
     void Update() {
         // If the player made a step, update the scene based on the current configuration.
-        if (this.lastStep < agentController.step) {
+        if (this.lastStep < this.agentController.step) {
             this.lastStep++;
             LogVerbose("Run Step " + this.lastStep + " at Frame " + Time.frameCount);
             if (this.currentScene != null && this.currentScene.objects != null) {
@@ -85,10 +85,7 @@ public class MachineCommonSenseMain : MonoBehaviour {
                         }
                     });
             }
-            if (agentController.step == 0) {
-                // After initialization, simulate the physics so that objects can settle down onto the floor.
-                agentController.SimulatePhysics();
-            }
+            this.agentController.SimulatePhysics();
         }
     }
 
