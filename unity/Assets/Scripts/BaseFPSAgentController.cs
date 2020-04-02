@@ -2157,6 +2157,34 @@ namespace UnityStandardAssets.Characters.FirstPerson
             return currentlyVisibleItems;
         }
 
+         public void VisualizePath(ServerAction action) {
+            var path = action.positions;
+            if (path == null || path.Count == 0) {
+                this.errorMessage = "Invalid path with 0 points.";
+                actionFinished(false);
+                return;
+            }
+
+            var id = action.objectId;
+
+            getReachablePositions(1.0f, 10000, action.grid);
+           
+            Instantiate(DebugTargetPointPrefab, path[path.Count-1], Quaternion.identity);
+            new List<bool>();
+            var go = Instantiate(DebugPointPrefab, path[0], Quaternion.identity);
+            var textMesh = go.GetComponentInChildren<TextMesh>();
+            textMesh.text = id;
+
+            var lineRenderer = go.GetComponentInChildren<LineRenderer>();
+            lineRenderer.startWidth = 0.015f;
+            lineRenderer.endWidth = 0.015f;
+
+            lineRenderer.positionCount = path.Count;
+            lineRenderer.SetPositions(path.ToArray());
+            actionFinished(true);
+        }
+
+        //this one is used for in-editor debug draw, currently calls to this are commented out
         private void VisualizePath(Vector3 startPosition, NavMeshPath path) {
             var pathDistance = 0.0;
 
@@ -2174,7 +2202,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 go.transform.position = startPosition;
             }
         }
-
+        
         private string[] objectTypeToObjectIds(string objectTypeString) {
             List<string> objectIds = new List<string>();
             try {
@@ -2185,7 +2213,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     }
                 }
             }   
-            catch (ArgumentException) {}
+            catch (ArgumentException exception) {
+                Debug.Log(exception);
+            }
             return objectIds.ToArray();
         }
 
@@ -2230,35 +2260,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
             return sop;
         }
 
-         public void VisualizePath(ServerAction action) {
-            var path = action.positions;
-            if (path == null || path.Count == 0) {
-                this.errorMessage = "Invalid path with 0 points.";
-                actionFinished(false);
-                return;
-            }
-
-            var id = action.objectId;
-
-            getReachablePositions(1.0f, 10000, action.grid);
-           
-            Instantiate(DebugTargetPointPrefab, path[path.Count-1], Quaternion.identity);
-            //var results = new List<bool>();
-            var go = Instantiate(DebugPointPrefab, path[0], Quaternion.identity);
-            var textMesh = go.GetComponentInChildren<TextMesh>();
-            textMesh.text = id;
-
-            var lineRenderer = go.GetComponentInChildren<LineRenderer>();
-            lineRenderer.startWidth = 0.015f;
-            lineRenderer.endWidth = 0.015f;
-
-            lineRenderer.positionCount = path.Count;
-            lineRenderer.SetPositions(path.ToArray());
-                // textMesh.characterSize = 
-                // go.AddComponent(textMesh)
-            actionFinished(true);
-        }
-
         public void VisualizeGrid(ServerAction action) {
             var reachablePositions = getReachablePositions(1.0f, 10000, true);
             actionFinished(true, reachablePositions);
@@ -2276,8 +2277,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 startPosition = action.position;
                 startRotation = Quaternion.Euler(action.rotation);
             }
+
             var path = GetSimObjectNavMeshTarget(sop, startPosition, startRotation);
-            if (path.status == NavMeshPathStatus.PathComplete) {
+            if (path.status == UnityEngine.AI.NavMeshPathStatus.PathComplete) {
                 //VisualizePath(startPosition, path);
                 actionFinished(true, path);
                 return;
@@ -2294,7 +2296,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             Vector3 targetPosition,
             Transform agentTransform,
             string targetSimObjectId,
-            NavMeshPath path) {
+            UnityEngine.AI.NavMeshPath path) {
                 
             Vector3 fixedPosition = new Vector3(float.MinValue, float.MinValue, float.MinValue);
             //bool success = false;
@@ -2311,7 +2313,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 }
             }
 
-            var pathSuccess =  NavMesh.CalculatePath(agentTransform.position, fixedPosition,  NavMesh.AllAreas, path);
+            var pathSuccess =  UnityEngine.AI.NavMesh.CalculatePath(agentTransform.position, fixedPosition,  UnityEngine.AI.NavMesh.AllAreas, path);
             return pathSuccess;
         }
 
@@ -2515,7 +2517,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             return false;
         }
 
-        private NavMeshPath GetSimObjectNavMeshTarget(SimObjPhysics targetSOP, Vector3 initialPosition, Quaternion initialRotation, bool visualize = false) {
+        private UnityEngine.AI.NavMeshPath GetSimObjectNavMeshTarget(SimObjPhysics targetSOP, Vector3 initialPosition, Quaternion initialRotation, bool visualize = false) {
             var targetTransform = targetSOP.transform;
             var targetSimObject = targetTransform.GetComponentInChildren<SimObjPhysics>();
             var PhysicsController = this;
@@ -2528,20 +2530,16 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
             agentTransform.position = initialPosition;
             agentTransform.rotation = initialRotation;
-            //var successReach = 
             getReachablePositionToObjectVisible(targetSimObject, out fixedPosition);
             agentTransform.position = originalAgentPosition;
             agentTransform.rotation = orignalAgentRotation;
-            var path = new NavMeshPath();
-            //var sopPos = targetSOP.transform.position;
+            var path = new UnityEngine.AI.NavMeshPath();
+            var sopPos = targetSOP.transform.position;
             //var target = new Vector3(sopPos.x, initialPosition.y, sopPos.z);
 
             //make sure navmesh agent is active
-            this.GetComponent<NavMeshAgent>().enabled = true;
-            //bool pathSuccess = 
-            NavMesh.CalculatePath(initialPosition, fixedPosition,  NavMesh.AllAreas, path);
-        
-            
+            this.GetComponent<UnityEngine.AI.NavMeshAgent>().enabled = true;
+            //bool pathSuccess = UnityEngine.AI.NavMesh.CalculatePath(initialPosition, fixedPosition,  UnityEngine.AI.NavMesh.AllAreas, path);
             
             var pathDistance = 0.0f;
             for (int i = 0; i < path.corners.Length - 1; i++) {
@@ -2553,7 +2551,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             
 
             //disable navmesh agent
-            this.GetComponent<NavMeshAgent>().enabled = false;
+            this.GetComponent<UnityEngine.AI.NavMeshAgent>().enabled = false;
 
             return path;
         }
@@ -2564,20 +2562,20 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 startPosition = action.position;
             }
 
-            var targetPosition = new Vector3(action.x, action.y, action.z);
-            Debug.Log("Target " + targetPosition);
-            Debug.Log("Source "+ startPosition);
+            //var targetPosition = new Vector3(action.x, action.y, action.z);
 
-
-            var path = new NavMeshPath();
-            this.GetComponent<NavMeshAgent>().enabled = true;
-            NavMesh.CalculatePath(startPosition, targetPosition,  NavMesh.AllAreas, path);
-            if (path.status == NavMeshPathStatus.PathComplete) {
+            var path = new UnityEngine.AI.NavMeshPath();
+            this.GetComponent<UnityEngine.AI.NavMeshAgent>().enabled = true;
+            //bool pathSuccess = UnityEngine.AI.NavMesh.CalculatePath(startPosition, targetPosition,  UnityEngine.AI.NavMesh.AllAreas, path);
+            if (path.status == UnityEngine.AI.NavMeshPathStatus.PathComplete) {
+                //VisualizePath(startPosition, path);
+                this.GetComponent<UnityEngine.AI.NavMeshAgent>().enabled = false;
                 actionFinished(true, path);
                 return;
             }
             else {
                 errorMessage = "Path to target could not be found";
+                this.GetComponent<UnityEngine.AI.NavMeshAgent>().enabled = false;
                 actionFinished(false);
                 return;
             }
@@ -2589,9 +2587,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 actionFinished(false);
                 return;
             }
-
-            //Alvaro I commented this out cause it didn't appear to do anything? uhhhhh
-            //var reachablePos = getReachablePositions(1.0f, 10000, action.grid, action.gridColor);
+            
+            getReachablePositions(1.0f, 10000, action.grid, action.gridColor);
 
             Instantiate(DebugTargetPointPrefab, sop.transform.position, Quaternion.identity);
             var results = new List<bool>();
@@ -2611,9 +2608,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 lineRenderer.startWidth = 0.015f;
                 lineRenderer.endWidth = 0.015f;
 
-                results.Add(path.status == NavMeshPathStatus.PathComplete);
+                results.Add(path.status == UnityEngine.AI.NavMeshPathStatus.PathComplete);
                
-                if (path.status == NavMeshPathStatus.PathComplete) { 
+                if (path.status == UnityEngine.AI.NavMeshPathStatus.PathComplete) { 
                     lineRenderer.positionCount = path.corners.Length;
                     lineRenderer.SetPositions(path.corners.Select(c => new Vector3(c.x, gridVisualizeY + 0.005f, c.z)).ToArray());
                 }
