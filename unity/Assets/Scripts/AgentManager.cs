@@ -30,6 +30,7 @@ public class AgentManager : MonoBehaviour
 	private bool renderNormalsImage;
     private bool renderFlowImage;
 	private bool synchronousHttp = true;
+	public bool skipClient = false; // setting this to true will skip the Python side and force the agent to RotateRight
 	private Socket sock = null;
 	private List<Camera> thirdPartyCameras = new List<Camera>();
 	private bool readyToEmit;
@@ -623,7 +624,10 @@ public class AgentManager : MonoBehaviour
         form.AddField("token", robosimsClientToken);
 
         #if !UNITY_WEBGL 
-		if (synchronousHttp) {
+        if (skipClient) {
+            string msg = "{\"action\": \"RotateRight\"}";
+            ProcessControlCommand(msg);
+        } else if (synchronousHttp) {
 
 
 			if (this.sock == null) {
