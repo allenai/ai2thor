@@ -12,7 +12,6 @@ using UnityEngine.Networking;
 public class AgentManager : MonoBehaviour
 {
 	public List<BaseFPSAgentController> agents = new List<BaseFPSAgentController>();
-
 	protected int frameCounter;
 	protected bool serverSideScreenshot;
 	protected string robosimsClientToken = "";
@@ -103,16 +102,33 @@ public class AgentManager : MonoBehaviour
 	public void Initialize(ServerAction action)
 	{
         print("agentManager Initialize here");
-        if (action.agentControllerType != null && action.agentControllerType.ToLower() == "stochastic") {
-            this.agents.Clear();
-            action.snapToGrid = false;
-            GameObject fpsController = GameObject.FindObjectOfType<BaseFPSAgentController>().gameObject;
-            primaryAgent.enabled = false;
-            primaryAgent = fpsController.GetComponent<StochasticRemoteFPSAgentController>();
-            primaryAgent.agentManager = this;
-            primaryAgent.enabled = true;
-            primaryAgent.Start();
-            this.agents.Add(primaryAgent);
+        if(action.agentControllerType != null)
+        {
+            if (action.agentControllerType.ToLower() == "stochastic") 
+            {
+                this.agents.Clear();
+                action.snapToGrid = false;
+                GameObject fpsController = GameObject.FindObjectOfType<BaseFPSAgentController>().gameObject;
+                primaryAgent.enabled = false;
+                primaryAgent = fpsController.GetComponent<StochasticRemoteFPSAgentController>();
+                primaryAgent.agentManager = this;
+                primaryAgent.enabled = true;
+                primaryAgent.Start();
+                this.agents.Add(primaryAgent);
+            }
+
+            else if(action.agentControllerType.ToLower() =="drone")
+            {
+                this.agents.Clear();
+                action.snapToGrid = false;
+                GameObject fpsController = GameObject.FindObjectOfType<BaseFPSAgentController>().gameObject;
+                primaryAgent.enabled = false;
+                primaryAgent = fpsController.GetComponent<DroneFPSAgentController>();
+                primaryAgent.agentManager = this;
+                primaryAgent.enabled = true;
+                primaryAgent.Start();
+                this.agents.Add(primaryAgent);
+            }
         }
         
         print("about to go into " + primaryAgent + "'s initialize");
@@ -333,19 +349,13 @@ public class AgentManager : MonoBehaviour
 
 		int hasDroneAgentUpdatedCount = 0;
 		bool FlightMode = false;
-        // //check if any active agents are in FlightMode
-        // foreach (PhysicsRemoteFPSAgentController physAgent in this.agents)
+        // foreach (DroneFPSAgentController droneAgent in this.agents)
         // {
-		// 	if (physAgent.FlightMode)
+        //     //get total count of all flight mode agents that have finished updating
+        //     if (droneAgent.hasFixedUpdateHappened)
         //     {
-		// 		FlightMode = true;
-
-        //         //get total count of all flight mode agents that have finished updating
-        //         if (physAgent.hasFixedUpdateHappened)
-        //         {
-        //             hasDroneAgentUpdatedCount++;
-        //         }
-		// 	}
+        //         hasDroneAgentUpdatedCount++;
+        //     }
         // }
 
         //check what objects in the scene are currently in motion
@@ -765,7 +775,7 @@ public class AgentManager : MonoBehaviour
             Time.timeScale = agent_tmp.autoResetTimeScale;
             Physics.autoSimulation = true;
             physicsSceneManager.physicsSimulationPaused = false;
-            agent_tmp.hasFixedUpdateHappened = false;
+            // agent_tmp.hasFixedUpdateHappened = false;
         }
         #endif
     }
@@ -872,13 +882,46 @@ public class ThirdPartyCameraMetadata
 	public Vector3 rotation;
 }
 
+//adding AgentMetdata class so there is less confusing
+//overlap between ObjectMetadata and AgentMetadata
+[Serializable]
+public class AgentMetadata
+{
+    public string name;
+    public Vector3 position;
+    public Vector3 rotation;
+    public float cameraHorizon;
+    public AgentMetadata() {}
+}
+
+[Serializable]
+public class DroneAgentMetadata : AgentMetadata
+{
+    public float droneCurrentTime;
+    public Vector3 LauncherPosition;
+}
+//additional metadata for drone objects (only use with Drone controller)
+[Serializable]
+public class DroneObjectMetadata : ObjectMetadata
+{
+    // Drone Related Metadata
+    public bool FlightMode;
+    public int numSimObjHits;
+    public int numFloorHits;
+    public int numStructureHits;
+    public float lastVelocity;
+    public Vector3 LauncherPosition;
+	public bool isCaught;
+    public DroneObjectMetadata() {}
+}
+
 [Serializable]
 public class ObjectMetadata
 {
 	public string name;
 	public Vector3 position;
 	public Vector3 rotation;
-	public float cameraHorizon;
+	//public float cameraHorizon; moved to AgentMetadata, objects don't have a camerahorizon
 	public bool visible;
 	public bool receptacle;
 	///
@@ -931,7 +974,7 @@ public class ObjectMetadata
 	public string [] salientMaterials; //salient materials that this object is made of as strings (see enum above). This is only for objects that are Pickupable or Moveable
 	///
 	public string[] receptacleObjectIds;
-	public float distance;
+	public float distance;//dintance fromm object's transform to agent transform
 	public String objectType;
 	public string objectId;
 	//public string parentReceptacle;
@@ -942,17 +985,6 @@ public class ObjectMetadata
     public ObjectOrientedBoundingBox objectOrientedBoundingBox;
     
 	public ObjectMetadata() { }
-
-    // Drone Related Metadata
-    public bool FlightMode;
-    public int numSimObjHits;
-    public int numFloorHits;
-    public int numStructureHits;
-    public float lastVelocity;
-    public Vector3 LauncherPosition;
-	public bool isCaught;
-    // end drone metadata
-    
 }
 
 //for returning a world axis aligned bounding box
@@ -1048,7 +1080,7 @@ public struct MetadataWrapper
 {
 	public ObjectMetadata[] objects;
     public bool isSceneAtRest;//set true if all objects in the scene are at rest (or very very close to 0 velocity)
-	public ObjectMetadata agent;
+	public AgentMetadata agent;
 	public HandMetadata hand;
 	public float fov;
 	public bool isStanding;
@@ -1087,10 +1119,7 @@ public struct MetadataWrapper
 	public List<Vector3> visibleRange;
 	public System.Object actionReturn;
 	public float currentTime;
-    //time based on increments of fixedUpdate in drone mode
-    public float droneCurrentTime;
 }
-
 
 [Serializable]
 public class ServerAction
@@ -1131,7 +1160,6 @@ public class ServerAction
     public float rotateGaussianMu;
     public float rotateGaussianSigma;
     public string skyboxColor = null;
-
 	public bool forceKinematic;
 	public float maxAgentsDistance = -1.0f;
 	public bool alwaysReturnVisibleRange = false;

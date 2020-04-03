@@ -23,15 +23,21 @@ namespace UnityStandardAssets.Characters.FirstPerson
         #if UNITY_EDITOR
         protected List<Bounds> gizmobounds = new List<Bounds>();
         #endif
+        [SerializeField] public SimObjPhysics[] VisibleSimObjPhysics 
+        {
+            get;
+            protected set;
+        }
         [SerializeField] protected bool IsHandDefault = true;
         [SerializeField] protected GameObject ItemInHand = null; //current object in inventory
         [SerializeField] protected GameObject AgentHand = null;
         [SerializeField] protected GameObject DefaultHandPosition = null;
         [SerializeField] protected Transform rotPoint;
-
         [SerializeField] protected GameObject DebugPointPrefab;
         [SerializeField] private GameObject GridRenderer;
         [SerializeField] protected GameObject DebugTargetPointPrefab;
+        public float autoResetTimeScale = 1.0f;
+
         public Vector3[] reachablePositions = new Vector3[0];
         protected float gridVisualizeY = 0.005f; //used to visualize reachable position grid, offset from floor
         public Bounds sceneBounds = new Bounds(
@@ -126,7 +132,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		private float lastEmitTime;
 		protected List<string> collisionsInAction;// tracking collided objects
 		protected string[] collidedObjects;// container for collided objects
-		private Quaternion targetRotation;
+		protected Quaternion targetRotation;
         // Javascript communication
         private JavaScriptInterface jsInterface;
         private ServerAction currentServerAction;
@@ -134,14 +140,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		{
 			get { return targetRotation; }
 		}
-        //DRONE parameters
-        [SerializeField] public bool FlightMode = false;
-        public bool hasFixedUpdateHappened = true;//track if the fixed physics update has happened
-        protected Vector3 thrust;
-        public float dronePositionRandomNoiseSigma = 0f;
-        //count of fixed updates for use in droneCurrentTime
-        public float fixupdateCnt = 0f;
-        public float autoResetTimeScale = 1.0f;
 
         private PhysicsSceneManager _physicsSceneManager = null;
         //use as reference to the PhysicsSceneManager object
@@ -206,18 +204,14 @@ namespace UnityStandardAssets.Characters.FirstPerson
             SetAgentMode("tall");
             #endif
 
-            //for normal, non-drone flight operation mode
-            if (!FlightMode) 
-            {
-                //On start, activate gravity
-                Vector3 movement = Vector3.zero;
-                movement.y = Physics.gravity.y * m_GravityMultiplier;
-                m_CharacterController.Move(movement);
-            }
+            //On start, activate gravity
+            Vector3 movement = Vector3.zero;
+            movement.y = Physics.gravity.y * m_GravityMultiplier;
+            m_CharacterController.Move(movement);
 		}
 
         //defaults all agent renderers, from all modes (tall, bot, drone), to hidden for initialization default
-        private void HideAllAgentRenderers()
+        protected void HideAllAgentRenderers()
         {
             foreach(Renderer r in TallVisCap.GetComponentsInChildren<Renderer>())
             {
@@ -571,7 +565,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 DroneBasket.SetActive(true);
 
                 //set physics controller to flight mode
-                this.GetComponent<PhysicsRemoteFPSAgentController>().FlightMode = true;
+                //this.GetComponent<PhysicsRemoteFPSAgentController>().FlightMode = true;
             }
         }
 
@@ -975,7 +969,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		}
 
         //generates object metatada based on sim object's properties
-        private ObjectMetadata ObjectMetadataFromSimObjPhysics(SimObjPhysics simObj, bool isVisible) {
+        public virtual ObjectMetadata ObjectMetadataFromSimObjPhysics(SimObjPhysics simObj, bool isVisible) {            
             ObjectMetadata objMeta = new ObjectMetadata();
             GameObject o = simObj.gameObject;
             objMeta.name = o.name;
@@ -1014,15 +1008,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 objMeta.isCooked = simObj.IsCooked;
             }
 
-            if (FlightMode)
-            {   
-                objMeta.isCaught = this.GetComponent<FlyingDrone>().isObjectCaught(simObj);
-                objMeta.numSimObjHits = simObj.numSimObjHit;
-                objMeta.numFloorHits = simObj.numFloorHit;
-                objMeta.numStructureHits = simObj.numStructureHit;
-                objMeta.lastVelocity = simObj.lastVelocity;
-            }
-
             //if the sim object is moveable or pickupable
             if(simObj.IsPickupable || simObj.IsMoveable)
             {
@@ -1038,17 +1023,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 objMeta.salientMaterials = salientMaterialsToString;
 
                 //this object should also report back mass since it is moveable/pickupable
-                if (FlightMode)
-                {   
-                    if (!objMeta.isCaught)
-                    {
-                        objMeta.mass = simObj.Mass;
-                    }
-                }
-                else
-                {
-                    objMeta.mass = simObj.Mass;
-                }
+                objMeta.mass = simObj.Mass;
+                
             }
 
             //can this object change others to hot?
@@ -1242,18 +1218,14 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		public virtual MetadataWrapper generateMetadataWrapper()
 		{
             // AGENT METADATA
-            ObjectMetadata agentMeta = new ObjectMetadata();
+            AgentMetadata agentMeta = new AgentMetadata();
             agentMeta.name = "agent";
             agentMeta.position = transform.position;
             agentMeta.rotation = transform.eulerAngles;
             agentMeta.cameraHorizon = m_Camera.transform.rotation.eulerAngles.x;
-            if (agentMeta.cameraHorizon > 180) {
+            if (agentMeta.cameraHorizon > 180) 
+            {
                 agentMeta.cameraHorizon -= 360;
-            }
-            if (FlightMode)
-            {   
-                agentMeta.FlightMode = FlightMode;
-                agentMeta.LauncherPosition = this.GetComponent<FlyingDrone>().GetLauncherPosition();
             }
 
             // OTHER METADATA
@@ -1322,10 +1294,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
             //test time
             metaMessage.currentTime = TimeSinceStart();
 
-            //if we are a drone, update DroneTime
-            if(FlightMode)
-            metaMessage.droneCurrentTime = DroneTimeSinceStart();
-
             // Resetting things
             reachablePositions = new Vector3[0];
             flatSurfacesOnGrid = new float[0, 0, 0];
@@ -1389,11 +1357,11 @@ namespace UnityStandardAssets.Characters.FirstPerson
 				actionFinished(false);
 			}
 
-#if UNITY_EDITOR
+            #if UNITY_EDITOR
 			if (errorMessage != "") {
 				Debug.Log(errorMessage);
 			}
-#endif
+            #endif
 
 			agentManager.setReadyToEmit(true);
 		}
@@ -1563,7 +1531,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			actionFinished(true);
 		}
 
-        private T[] flatten2DimArray<T>(T[, ] array) {
+        protected T[] flatten2DimArray<T>(T[, ] array) {
             int nrow = array.GetLength(0);
             int ncol = array.GetLength(1);
             T[] flat = new T[nrow * ncol];
@@ -1575,7 +1543,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             return flat;
         }
 
-        private T[] flatten3DimArray<T>(T[, , ] array) {
+        protected T[] flatten3DimArray<T>(T[, , ] array) {
             int n0 = array.GetLength(0);
             int n1 = array.GetLength(1);
             int n2 = array.GetLength(2);
@@ -1672,10 +1640,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
         public float TimeSinceStart() {
             return Time.time;
-        }
-
-        public float DroneTimeSinceStart() {
-            return fixupdateCnt * Time.fixedDeltaTime;
         }
 
         public SimObjPhysics[] VisibleSimObjs(ServerAction action) 

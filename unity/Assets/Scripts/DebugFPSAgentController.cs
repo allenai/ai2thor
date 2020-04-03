@@ -30,7 +30,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
         [SerializeField] protected float MaxViewDistance = 5.0f;
         [SerializeField] private float MaxChargeThrowSeconds = 1.4f;
         [SerializeField] private float MaxThrowForce = 1000.0f;
-        public bool FlightMode = false;
+        // public bool FlightMode = false;
 
         public bool FPSEnabled = true;
 		public GameObject InputFieldObj = null;
@@ -69,7 +69,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 Cursor.lockState = CursorLockMode.Locked;
             }
           
-            FlightMode = PhysicsController.FlightMode;
+            // FlightMode = PhysicsController.FlightMode;
 
             #if UNITY_WEBGL
                 FPSEnabled = false;
@@ -313,7 +313,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             m_MoveDir.x = desiredMove.x * speed;
             m_MoveDir.z = desiredMove.z * speed;    
 
-			if(!FlightMode)
+			// if(!FlightMode)
             m_MoveDir += Physics.gravity * m_GravityMultiplier * Time.fixedDeltaTime;   
 
             //added this check so that move is not called if/when the Character Controller's capsule is disabled. Right now the capsule is being disabled when open/close animations are in progress so yeah there's that

@@ -521,11 +521,11 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
     {		
 		//this is to enable kinematics if this object hits another object that isKinematic but needs to activate
 		//physics uppon being touched/collided
-        PhysicsRemoteFPSAgentController fpsController;
+        DroneFPSAgentController droneController;
 
         if(GameObject.Find("FPSController"))
         {
-            fpsController = GameObject.Find("FPSController").GetComponent<PhysicsRemoteFPSAgentController>();
+            droneController = GameObject.Find("FPSController").GetComponent<DroneFPSAgentController>();
         }
 
         else
@@ -534,62 +534,54 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
             return;
         }
 
+        if(!droneController.enabled)
+        {
+            return;
+        }
+
 		//GameObject agent = GameObject.Find("FPSController");
 		if(col.transform.GetComponentInParent<SimObjPhysics>())
-		{
-            fpsController = GameObject.FindObjectOfType<PhysicsRemoteFPSAgentController>();
-
-			//add a check for if the Agent is a flying drone
-            if (fpsController.FlightMode)
+		{ 
+            //add a check for if it's for initialization
+            if (droneController.HasLaunch(this))
             {   
-                FlyingDrone fdComp = fpsController.GetComponent<FlyingDrone>();
-                //add a check for if it's for initialization
-                if (fdComp.HasLaunch(this))
+                //add a check for if this is the object caought by the drone
+                if (!droneController.isObjectCaught(this))
                 {   
-                    //add a check for if this is the object caought by the drone
-                    if (!fdComp.isObjectCaught(this))
-                    {   
-                        //emperically find the relative velocity > 1 means a "real" hit.
-                        if (col.relativeVelocity.magnitude > 1)
+                    //emperically find the relative velocity > 1 means a "real" hit.
+                    if (col.relativeVelocity.magnitude > 1)
+                    {
+                        //make sure we only count hit once per time, not for all collision contact points of an object.
+                        if (!contactPointsDictionary.ContainsKey(col.collider))
                         {
-                            //make sure we only count hit once per time, not for all collision contact points of an object.
-                            if (!contactPointsDictionary.ContainsKey(col.collider))
-                            {
-                                numSimObjHit++;
-                            }
+                            numSimObjHit++;
                         }
                     }
                 }
             }
-
 		}
 
 
 		//add a check for if the hitting one is a structure object
         else if (col.transform.GetComponentInParent<StructureObject>())
         {   
-            //add a check for if the Agent is a flying drone
-            if (fpsController.FlightMode)
+            //add a check for if it's for initialization
+            if (droneController.HasLaunch(this))
             {   
-                FlyingDrone fdComp = fpsController.GetComponent<FlyingDrone>();
-                //add a check for if it's for initialization
-                if (!fdComp.HasLaunch(this))
+                //add a check for if this is the object caought by the drone
+                if (!droneController.isObjectCaught(this))
                 {   
-                    //add a check for if this is the object caought by the drone
-                    if (!fdComp.isObjectCaught(this))
+                    //emperically find the relative velocity > 1 means a "real" hit.
+                    if (col.relativeVelocity.magnitude > 1)
                     {   
-                        //emperically find the relative velocity > 1 means a "real" hit.
-                        if (col.relativeVelocity.magnitude > 1)
-                        {   
-                            //make sure we only count hit once per time, not for all collision contact points of an object.
-                            if (!contactPointsDictionary.ContainsKey(col.collider))
+                        //make sure we only count hit once per time, not for all collision contact points of an object.
+                        if (!contactPointsDictionary.ContainsKey(col.collider))
+                        {
+                            numStructureHit++;
+                            //check if structure hit is a floor
+                            if (col.transform.GetComponentInParent<StructureObject>().WhatIsMyStructureObjectTag == StructureObjectTag.Floor)
                             {
-                                numStructureHit++;
-                                //check if structure hit is a floor
-                                if (col.transform.GetComponentInParent<StructureObject>().WhatIsMyStructureObjectTag == StructureObjectTag.Floor)
-                                {
-                                    numFloorHit++;
-                                }
+                                numFloorHit++;
                             }
                         }
                     }
