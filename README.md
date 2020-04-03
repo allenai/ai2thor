@@ -118,7 +118,7 @@ Take a GameObject (we'll call it the "Target" object) containing a MeshFilter, M
   - Changed variables or functions from `private` to `public`: `captureScreen`, 'renderImage'
   - Split the existing metadata-update-behavior of the `addObjectImageForm` function into a separate, new function called `UpdateMetadataColors`
   - Created the `InitializeForm` and `FinalizeMultiAgentMetadata` virtual functions and called them both inside `EmitFrame`
-  - In `ProcessControlCommand`, changed `readyToEmit = true` to `this.setReadyToEmit(true);`
+  - Changed `readyToEmit = true;` to `this.setReadyToEmit(true);` in `addAgents`, `ProcessControlCommand`, `Start`
 - `Scripts/BaseFPSAgentController`:
   - Added `virtual` to functions: `Initialize`, `ProcessControlCommand`
   - Removed the hard-coded camera properties in the `SetAgentMode` function
@@ -154,4 +154,6 @@ Take a GameObject (we'll call it the "Target" object) containing a MeshFilter, M
   - Added custom `RotateLook` to use relative inputs instead of absolute values.
   - Added checks to see whether objects exist and set lastActionStatus appropriately for `PutObject`
   - Changed 'CheckIfAgentCanMove' to take a reference to a directionMagnitude instead of a copy parameter, so if distance to object is greater than zero, we can move a partial distance in 'moveInDirection' by adjusting the Vector3
+- `ImageSynthesis/ImageSynthesis`:
+  - Added a null check in `OnSceneChange`
 
