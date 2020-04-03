@@ -578,7 +578,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
             {   
                 FlyingDrone fdComp = fpsController.GetComponent<FlyingDrone>();
                 //add a check for if it's for initialization
-                if (!fdComp.HasLaunch(this))
+                if (fdComp.HasLaunch(this))
                 {   
                     //add a check for if this is the object caought by the drone
                     if (!fdComp.isObjectCaught(this))
