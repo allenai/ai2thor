@@ -334,25 +334,17 @@ public class MachineCommonSenseController : PhysicsRemoteFPSAgentController {
         if (this.step == 0) {
             // After initialization, simulate the physics so that the objects can settle onto the floor.
             this.SimulatePhysicsCompletely();
+        }
 
-            if (this.agentManager.renderImage) {
-                // We only need to save ONE image of the scene after initialization.
-                ((MachineCommonSensePerformerManager)this.agentManager).SaveImages(this.imageSynthesis);
-            }
+        if (this.agentManager.renderImage) {
+            // We only need to save ONE image of the scene after initialization.
+            StartCoroutine(this.SimulatePhysicsSaveImagesIncreaseStep(this.step == 0 ? 1 :
+                MachineCommonSenseController.PHYSICS_SIMULATION_LOOPS));
+        }
 
+        else {
             // Notify the AgentManager to send the action output metadata and images to the Python API.
             ((MachineCommonSensePerformerManager)this.agentManager).FinalizeEmit();
-        }
-        else {
-            if (this.agentManager.renderImage) {
-                StartCoroutine(this.SimulatePhysicsSaveImagesIncreaseStep(
-                    MachineCommonSenseController.PHYSICS_SIMULATION_LOOPS));
-            }
-            else {
-                this.SimulatePhysicsCompletely();
-                // Notify the AgentManager to send the action output metadata and images to the Python API.
-                ((MachineCommonSensePerformerManager)this.agentManager).FinalizeEmit();
-            }
         }
     }
 

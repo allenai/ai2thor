@@ -326,7 +326,9 @@ public class ImageSynthesis : MonoBehaviour {
 			classColor = ColorEncoding.EncodeTagAsColor (classTag);
 			objColor = ColorEncoding.EncodeTagAsColor(objTag);
 
-			capturePasses [0].camera.WorldToScreenPoint (r.bounds.center);
+            if (capturePasses[0].camera != null) {
+			    capturePasses [0].camera.WorldToScreenPoint (r.bounds.center);
+            }
 
 			if (so != null || sop != null) 
 			{

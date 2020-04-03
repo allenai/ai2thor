@@ -80,7 +80,7 @@ public class AgentManager : MonoBehaviour
 	void Start() {
 		initializePrimaryAgent();
         primaryAgent.actionDuration = this.actionDuration;
-		readyToEmit = true;
+        this.setReadyToEmit(true);
 		Debug.Log("Graphics Tier: " + Graphics.activeTier);
 		this.agents.Add (primaryAgent);
 
@@ -151,7 +151,7 @@ public class AgentManager : MonoBehaviour
 		}
 		this.agents[0].m_Camera.depth = 9999;
 
-		readyToEmit = true;
+		this.setReadyToEmit(true);
 	}
 
 	public void AddThirdPartyCamera(ServerAction action) {

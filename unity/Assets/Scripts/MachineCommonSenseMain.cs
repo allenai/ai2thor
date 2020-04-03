@@ -144,6 +144,9 @@ public class MachineCommonSenseMain : MonoBehaviour {
             controller.transform.rotation = Quaternion.Euler(0,
                 this.currentScene.performerStart.rotation.y, 0);
         }
+        else {
+            controller.transform.rotation = Quaternion.Euler(0, 0, 0);
+        }
 
         this.lastStep = -1;
         this.physicsSceneManager.SetupScene();
@@ -751,7 +754,10 @@ public class MachineCommonSenseMain : MonoBehaviour {
                 this.EnsureCanOpenObjectScriptAnimationTimeIsZero(interactableObject);
                 Rigidbody rigidbody = interactableObject.GetComponent<Rigidbody>();
                 if (rigidbody != null) {
-                    rigidbody.isKinematic = false;
+                    Renderer renderer = interactableObject.GetComponent<Renderer>();
+                    // Interactable children that don't have renderers (like shelves) should normally be kinematic
+                    // (or at least shelves). Other interactable children should definitely never be kinematic.
+                    rigidbody.isKinematic = (renderer == null);
                 }
             }
         });
