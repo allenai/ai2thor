@@ -10,7 +10,11 @@ public class InstantiatePrefabTest : MonoBehaviour
 {
 	public GameObject[] prefabs = null;
 	private int spawnCount = 0;
+    
+    #if UNITY_EDITOR
 	private bool m_Started = false;
+    #endif
+
 	Vector3 gizmopos;
 	Vector3 gizmoscale;
 	Quaternion gizmoquaternion;

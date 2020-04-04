@@ -30,8 +30,10 @@ public class PhysicsSceneManager : MonoBehaviour
 	public bool AllowDecayTemperature = true;//if true, temperature of sim objects decays to Room Temp over time
 
     //public List<SimObjPhysics> LookAtThisList = new List<SimObjPhysics>();
-
+    #if UNITY_EDITOR
 	private bool m_Started = false;
+    #endif
+    
 	private Vector3 gizmopos;
 	private Vector3 gizmoscale;
 	private Quaternion gizmoquaternion;

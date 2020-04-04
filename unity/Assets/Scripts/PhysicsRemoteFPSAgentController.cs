@@ -24,8 +24,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         [SerializeField] protected Quaternion lastLocalCameraRotation;
         protected Dictionary<string, Dictionary<int, Material[]>> maskedObjects = new Dictionary<string, Dictionary<int, Material[]>>();
         protected bool actionBoolReturn;
-        protected HashSet<int> initiallyDisabledRenderers = new HashSet<int>();
-
         //face swap stuff here
         public Material[] ScreenFaces; //0 - neutral, 1 - Happy, 2 - Mad, 3 - Angriest
         public MeshRenderer MyFaceMesh;
@@ -38,16 +36,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         // Use this for initialization
         public override void Start() {
             base.Start();
-
-            // Recordining initially disabled renderers and scene bounds 
-            //this is setup to be used in hide and seek/ moving object helper functions
-            foreach (Renderer r in GameObject.FindObjectsOfType<Renderer>()) {
-                if (!r.enabled) {
-                    initiallyDisabledRenderers.Add(r.GetInstanceID());
-                } else {
-                    sceneBounds.Encapsulate(r.bounds);
-                }
-            }
         }
 
         //forceVisible is true to activate, false to deactivate
@@ -5335,7 +5323,9 @@ public void PickupObject(ServerAction action) //use serveraction objectid
                 pq.Enqueue(p, xzManhattanDistance(p, agentPos, gridSize));
             }
 
+            #if UNITY_EDITOR
             Vector3 visiblePosition = new Vector3(0.0f, 0.0f, 0.0f);
+            #endif
             bool objectSeen = false;
             int positionsTried = 0;
             while (pq.Count != 0 && !objectSeen) {
@@ -5368,7 +5358,9 @@ public void PickupObject(ServerAction action) //use serveraction objectid
                         transform.rotation = Quaternion.Euler(new Vector3(0.0f, 90.0f * i, 0.0f));
                         if (objectIsCurrentlyVisible(theObject, 1000f)) {
                             objectSeen = true;
+                            #if UNITY_EDITOR
                             visiblePosition = p;
+                            #endif
                             break;
                         }
                     }

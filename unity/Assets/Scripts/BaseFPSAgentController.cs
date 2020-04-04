@@ -44,6 +44,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             new Vector3(float.PositiveInfinity, float.PositiveInfinity, float.PositiveInfinity),
             new Vector3(-float.PositiveInfinity, -float.PositiveInfinity, -float.PositiveInfinity)
         );
+        protected HashSet<int> initiallyDisabledRenderers = new HashSet<int>();
 		// first person controller parameters
 		[SerializeField]
 		protected bool m_IsWalking;
@@ -190,19 +191,23 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 			agentManager = GameObject.Find("PhysicsSceneManager").GetComponentInChildren<AgentManager>();
 
-			//disabling in editor by default so performance in editor isn't garbage all the time. Enable this from the DebugInputField -InitSynth
-            // #if UNITY_EDITOR
-            //     this.enableImageSynthesis();
-            // #endif
-			//allowNodes = false;
-
             //default nav mesh agent to false cause WHY DOES THIS BREAK THINGS I GUESS IT DOESN TLIKE TELEPORTING
             this.GetComponent<NavMeshAgent>().enabled = false;
 
-            #if UNITY_WEBGL
-            //if using editor mode or webgl demo, default to tall mode
-            SetAgentMode("tall");
-            #endif
+            // #if UNITY_WEBGL
+            // //if using editor mode or webgl demo, default to tall mode
+            // SetAgentMode("tall");
+            // #endif
+
+            // Recordining initially disabled renderers and scene bounds 
+            //this is setup to be used in hide and seek/ moving object helper functions
+            foreach (Renderer r in GameObject.FindObjectsOfType<Renderer>()) {
+                if (!r.enabled) {
+                    initiallyDisabledRenderers.Add(r.GetInstanceID());
+                } else {
+                    sceneBounds.Encapsulate(r.bounds);
+                }
+            }
 
             //On start, activate gravity
             Vector3 movement = Vector3.zero;
@@ -355,7 +360,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             goodPoints.CopyTo(reachablePos);
 
             #if UNITY_EDITOR
-            Debug.Log("count of reachable positions:        " + reachablePos.Length);
+            Debug.Log("count of reachable positions: " + reachablePos.Length);
             #endif
 
             return reachablePos;
@@ -377,9 +382,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 		public void Initialize(ServerAction action)
         {
-            print("base initialize called here");
-            if(action.agentMode.ToLower() == "tall" || action.agentMode.ToLower() == "bot"
-                || action.agentMode.ToLower() == "drone")
+            if(action.agentMode.ToLower() == "tall" || 
+               action.agentMode.ToLower() == "bot" || 
+               action.agentMode.ToLower() == "drone")
             {
                 //set agent mode to Tall, Bot or Drone accordingly
                 SetAgentMode(action.agentMode);
@@ -563,9 +568,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
                 //drone also needs to toggle on the drone basket
                 DroneBasket.SetActive(true);
-
-                //set physics controller to flight mode
-                //this.GetComponent<PhysicsRemoteFPSAgentController>().FlightMode = true;
             }
         }
 
@@ -866,7 +868,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
         protected bool checkIfSceneBoundsContainTargetPosition(Vector3 position) {
             if (!sceneBounds.Contains(position)) {
-                errorMessage = "Scene bounds do not contain target position.";
+                errorMessage = "Scene bounds do not contain target position: " + position;
                 return false;
             } else {
                 return true;

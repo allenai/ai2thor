@@ -139,7 +139,6 @@ MonoBehaviour:
   MaxViewDistance: 5
   MaxChargeThrowSeconds: 1.4
   MaxThrowForce: 1000
-  FlightMode: 0
   FPSEnabled: 1
   InputFieldObj: {fileID: 0}
 --- !u!114 &114749714472260818
@@ -154,11 +153,22 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2d22dfd375bd14529b5d465c7b493eb0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  IsHandDefault: 1
   ItemInHand: {fileID: 0}
   AgentHand: {fileID: 1340499340313870}
   DefaultHandPosition: {fileID: 1863262018947090}
   rotPoint: {fileID: 8450533553661686078}
+  DebugPointPrefab: {fileID: 8845411471443356390, guid: 66870cddb950b4005b7814586e193f48,
+    type: 3}
+  GridRenderer: {fileID: 7597241071844323457, guid: c449b4b3a65e447c4bef4ddef5b6bb59,
+    type: 3}
+  DebugTargetPointPrefab: {fileID: 8489347496220810827, guid: e6c0a9a9ece944e328cad96dbba1d847,
+    type: 3}
+  autoResetTimeScale: 1
   reachablePositions: []
+  sceneBounds:
+    m_Center: {x: Infinity, y: Infinity, z: Infinity}
+    m_Extent: {x: -Infinity, y: -Infinity, z: -Infinity}
   m_IsWalking: 0
   m_WalkSpeed: 0
   m_RunSpeed: 0
@@ -181,16 +191,9 @@ MonoBehaviour:
   objectIdsInBox: []
   alwaysReturnVisibleRange: 0
   actionDuration: 3
-  FlightMode: 0
-  hasFixedUpdateHappened: 1
-  dronePositionRandomNoiseSigma: 0
-  fixupdateCnt: 0
-  autoResetTimeScale: 1
   ToSetActive:
   - {fileID: 1340499340313870}
   - {fileID: 1863262018947090}
-  PhysicsAgentSkinWidth: 0.001
-  IsHandDefault: 1
   inTopLevelView: 0
   lastLocalCameraPosition: {x: 0, y: 0, z: 0}
   lastLocalCameraRotation: {x: 0, y: 0, z: 0, w: 0}
@@ -200,15 +203,6 @@ MonoBehaviour:
   - {fileID: 2100000, guid: 3e9ce1cb292fb6442984e83b779c6e72, type: 2}
   - {fileID: 2100000, guid: 7a57fbb1753fd1d40893e3d4e4c3a02b, type: 2}
   MyFaceMesh: {fileID: 256261900328249901}
-  DebugPointPrefab: {fileID: 8845411471443356390, guid: 66870cddb950b4005b7814586e193f48,
-    type: 3}
-  DebugTargetPointPrefab: {fileID: 8489347496220810827, guid: e6c0a9a9ece944e328cad96dbba1d847,
-    type: 3}
-  GridRenderer: {fileID: 7597241071844323457, guid: c449b4b3a65e447c4bef4ddef5b6bb59,
-    type: 3}
-  sceneBounds:
-    m_Center: {x: Infinity, y: Infinity, z: Infinity}
-    m_Extent: {x: -Infinity, y: -Infinity, z: -Infinity}
   TargetCircles:
   - {fileID: 5816710041462207104, guid: 9215b98f2bb6741b8bafa00989578d49, type: 3}
   - {fileID: 6545476784750854561, guid: aca5ccb301c25451183fa2ae1deceeb9, type: 3}
@@ -251,11 +245,22 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6839fe93e39084f7ba1b70ae71c8d153, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  IsHandDefault: 1
   ItemInHand: {fileID: 0}
   AgentHand: {fileID: 1340499340313870}
   DefaultHandPosition: {fileID: 1863262018947090}
-  rotPoint: {fileID: 0}
+  rotPoint: {fileID: 8450533553661686078}
+  DebugPointPrefab: {fileID: 8845411471443356390, guid: 66870cddb950b4005b7814586e193f48,
+    type: 3}
+  GridRenderer: {fileID: 7597241071844323457, guid: c449b4b3a65e447c4bef4ddef5b6bb59,
+    type: 3}
+  DebugTargetPointPrefab: {fileID: 8489347496220810827, guid: e6c0a9a9ece944e328cad96dbba1d847,
+    type: 3}
+  autoResetTimeScale: 1
   reachablePositions: []
+  sceneBounds:
+    m_Center: {x: Infinity, y: Infinity, z: Infinity}
+    m_Extent: {x: -Infinity, y: -Infinity, z: -Infinity}
   m_IsWalking: 0
   m_WalkSpeed: 0
   m_RunSpeed: 0
@@ -278,30 +283,6 @@ MonoBehaviour:
   objectIdsInBox: []
   alwaysReturnVisibleRange: 0
   actionDuration: 3
-  FlightMode: 0
-  hasFixedUpdateHappened: 1
-  dronePositionRandomNoiseSigma: 0
-  fixupdateCnt: 0
-  autoResetTimeScale: 1
-  ToSetActive: []
-  PhysicsAgentSkinWidth: 0.001
-  IsHandDefault: 1
-  inTopLevelView: 0
-  lastLocalCameraPosition: {x: 0, y: 0, z: 0}
-  lastLocalCameraRotation: {x: 0, y: 0, z: 0, w: 0}
-  ScreenFaces:
-  - {fileID: 2100000, guid: 3244a00d10815aa4b8ca6f11febd11f9, type: 2}
-  - {fileID: 2100000, guid: 7b776d33d2e7db4499b93e29978400ea, type: 2}
-  - {fileID: 2100000, guid: 3e9ce1cb292fb6442984e83b779c6e72, type: 2}
-  - {fileID: 2100000, guid: 7a57fbb1753fd1d40893e3d4e4c3a02b, type: 2}
-  MyFaceMesh: {fileID: 256261900328249901}
-  DebugPointPrefab: {fileID: 0}
-  DebugTargetPointPrefab: {fileID: 0}
-  GridRenderer: {fileID: 0}
-  sceneBounds:
-    m_Center: {x: Infinity, y: Infinity, z: Infinity}
-    m_Extent: {x: -Infinity, y: -Infinity, z: -Infinity}
-  TargetCircles: []
 --- !u!195 &4492823058425331622
 NavMeshAgent:
   m_ObjectHideFlags: 0
@@ -331,16 +312,58 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 100000}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 67054803aa2494b648e38adc641a6788, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  IsHandDefault: 1
+  ItemInHand: {fileID: 0}
+  AgentHand: {fileID: 1340499340313870}
+  DefaultHandPosition: {fileID: 1863262018947090}
+  rotPoint: {fileID: 8450533553661686078}
+  DebugPointPrefab: {fileID: 8845411471443356390, guid: 66870cddb950b4005b7814586e193f48,
+    type: 3}
+  GridRenderer: {fileID: 7597241071844323457, guid: c449b4b3a65e447c4bef4ddef5b6bb59,
+    type: 3}
+  DebugTargetPointPrefab: {fileID: 8489347496220810827, guid: e6c0a9a9ece944e328cad96dbba1d847,
+    type: 3}
+  autoResetTimeScale: 1
+  reachablePositions: []
+  sceneBounds:
+    m_Center: {x: Infinity, y: Infinity, z: Infinity}
+    m_Extent: {x: -Infinity, y: -Infinity, z: -Infinity}
+  m_IsWalking: 0
+  m_WalkSpeed: 0
+  m_RunSpeed: 0
+  m_GravityMultiplier: 0
+  imageSynthesis: {fileID: 0}
+  VisibilityCapsule: {fileID: 0}
+  TallVisCap: {fileID: 1762015268591634}
+  BotVisCap: {fileID: 1762015268591634}
+  DroneVisCap: {fileID: 7970507070051039418}
+  DroneBasket: {fileID: 4893713080621194879}
+  agentManager: {fileID: 0}
+  excludeObjectIds: []
+  m_Camera: {fileID: 0}
+  cameraOrthSize: 0
+  m_CharacterController: {fileID: 0}
+  actionComplete: 0
+  standingLocalCameraPosition: {x: 0, y: 0, z: 0}
+  crouchingLocalCameraPosition: {x: 0, y: 0, z: 0}
+  maxVisibleDistance: 1.5
+  objectIdsInBox: []
+  alwaysReturnVisibleRange: 0
+  actionDuration: 3
   basket: {fileID: 4893713080621194879}
   basketTrigger: {fileID: 4895214489969182531}
   DroneObjectLauncher: {fileID: 114390950229851692, guid: cdca5ee44bd7e45e9b82820e69a242f2,
     type: 3}
   caught_object: []
+  FlightMode: 0
+  hasFixedUpdateHappened: 1
+  dronePositionRandomNoiseSigma: 0
+  fixupdateCnt: 0
 --- !u!1 &100002
 GameObject:
   m_ObjectHideFlags: 0

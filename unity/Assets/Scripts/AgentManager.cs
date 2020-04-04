@@ -33,19 +33,15 @@ public class AgentManager : MonoBehaviour
 	private Socket sock = null;
 	private List<Camera> thirdPartyCameras = new List<Camera>();
 	private bool readyToEmit;
-
 	private Color[] agentColors = new Color[]{Color.blue, Color.yellow, Color.green, Color.red, Color.magenta, Color.grey};
-
 	public int actionDuration = 3;
-
 	private BaseFPSAgentController primaryAgent;
-
     //private JavaScriptInterface jsInterface;
-
     private PhysicsSceneManager physicsSceneManager;
     public int AdvancePhysicsStepCount = 0;
-
     public List<Rigidbody> rbsInScene = null;
+    private bool droneMode = false;
+
 
 	void Awake() {
 
@@ -78,12 +74,17 @@ public class AgentManager : MonoBehaviour
 
 	void Start() 
 	{
+        //default primary agent's agentController type to "PhysicsRemoteFPSAgentController"
 		initializePrimaryAgent();
+
+        //auto set agentMode to tall for the web demo
+        #if UNITY_WEBGL
+        primaryAgent.SetAgentMode("tall");
+        #endif
+
         primaryAgent.actionDuration = this.actionDuration;
 		readyToEmit = true;
-		//Debug.Log("Graphics Tier: " + Graphics.activeTier);
-		this.agents.Add (primaryAgent);
-
+		// this.agents.Add (primaryAgent);
         physicsSceneManager = GameObject.Find("PhysicsSceneManager").GetComponent<PhysicsSceneManager>();
 
         //cache all rigidbodies that are in the scene by default
@@ -91,47 +92,63 @@ public class AgentManager : MonoBehaviour
         rbsInScene = new List<Rigidbody>(FindObjectsOfType<Rigidbody>());
 	}
 
-	private void initializePrimaryAgent() {
-		GameObject fpsController = GameObject.FindObjectOfType<BaseFPSAgentController>().gameObject;
-		primaryAgent = fpsController.GetComponent<PhysicsRemoteFPSAgentController>();
-		primaryAgent.enabled = true;
-		primaryAgent.agentManager = this;
-		primaryAgent.actionComplete = true;
+	private void initializePrimaryAgent() 
+    {
+        SetUpPhysicsController();
 	}
 	
 	public void Initialize(ServerAction action)
 	{
-        print("agentManager Initialize here");
-        if(action.agentControllerType != null)
+        //first parse agentMode and agentControllerType
+        //"tall" agentMode can use either default or "stochastic" agentControllerType
+        //"bot" agentMode can use either default or "stochastic" agentControllerType
+        //"drone" agentMode can ONLY use "drone" agentControllerType, and NOTHING ELSE (for now?)
+        if(action.agentMode.ToLower() == "tall")
         {
-            if (action.agentControllerType.ToLower() == "stochastic") 
+            //if not stochastic, default to physics controller
+            if(action.agentControllerType.ToLower() == "physics")
             {
-                this.agents.Clear();
-                action.snapToGrid = false;
-                GameObject fpsController = GameObject.FindObjectOfType<BaseFPSAgentController>().gameObject;
-                primaryAgent.enabled = false;
-                primaryAgent = fpsController.GetComponent<StochasticRemoteFPSAgentController>();
-                primaryAgent.agentManager = this;
-                primaryAgent.enabled = true;
-                primaryAgent.Start();
-                this.agents.Add(primaryAgent);
+                print("set up physics controller");
+                //set up physics controller
+                SetUpPhysicsController();
             }
 
-            else if(action.agentControllerType.ToLower() =="drone")
+            //if stochastic, set up stochastic controller
+            else if(action.agentControllerType.ToLower() == "stochastic")
             {
-                this.agents.Clear();
-                action.snapToGrid = false;
-                GameObject fpsController = GameObject.FindObjectOfType<BaseFPSAgentController>().gameObject;
-                primaryAgent.enabled = false;
-                primaryAgent = fpsController.GetComponent<DroneFPSAgentController>();
-                primaryAgent.agentManager = this;
-                primaryAgent.enabled = true;
-                primaryAgent.Start();
-                this.agents.Add(primaryAgent);
+                //set up stochastic controller
+                SetUpStochasticController(action);
+            }
+        }
+
+        else if(action.agentMode.ToLower() == "bot")
+        {
+            //if not stochastic, default to physics controller
+            if(action.agentControllerType.ToLower() == "physics")
+            {
+                //set up physics controller
+                SetUpPhysicsController();
+            }
+            //if stochastic, set up stochastic controller
+            if(action.agentControllerType.ToLower() == "stochastic")
+            {
+                //set up stochastic controller
+                SetUpStochasticController(action);
+            }
+        }
+
+        else if(action.agentMode.ToLower() == "drone")
+        {
+            if(action.agentControllerType.ToLower() != "drone")
+            {
+                Debug.Log("'drone' agentMode is only compatible with 'drone' agentControllerType, forcing agentControllerType to 'drone'");
+                action.agentControllerType = "drone";
+
+                //ok now set up drone controller
+                SetUpDroneController(action);
             }
         }
         
-        print("about to go into " + primaryAgent + "'s initialize");
 		primaryAgent.ProcessControlCommand (action);
 		primaryAgent.IsVisible = action.makeAgentsVisible;
 		this.renderClassImage = action.renderClassImage;
@@ -142,10 +159,47 @@ public class AgentManager : MonoBehaviour
 		if (action.alwaysReturnVisibleRange) {
 			((PhysicsRemoteFPSAgentController) primaryAgent).alwaysReturnVisibleRange = action.alwaysReturnVisibleRange;
 		}
+        print("start addAgents");
 		StartCoroutine (addAgents (action));
 
 	}
 
+    private void SetUpStochasticController(ServerAction action)
+    {
+        this.agents.Clear();
+        action.snapToGrid = false;
+        GameObject fpsController = GameObject.FindObjectOfType<BaseFPSAgentController>().gameObject;
+        primaryAgent.enabled = false;
+        primaryAgent = fpsController.GetComponent<StochasticRemoteFPSAgentController>();
+        primaryAgent.agentManager = this;
+        primaryAgent.enabled = true;
+        // primaryAgent.Start();
+        this.agents.Add(primaryAgent);
+    }
+
+    private void SetUpDroneController (ServerAction action)
+    {
+        this.agents.Clear();
+        action.snapToGrid = false;
+        GameObject fpsController = GameObject.FindObjectOfType<BaseFPSAgentController>().gameObject;
+        primaryAgent.enabled = false;
+        primaryAgent = fpsController.GetComponent<DroneFPSAgentController>();
+        primaryAgent.agentManager = this;
+        primaryAgent.enabled = true;
+        this.agents.Add(primaryAgent);
+        droneMode = true;//set flag for drone mode so the emitFrame syncs up with Drone's lateUpdate
+    }
+
+    private void SetUpPhysicsController ()
+    {
+        this.agents.Clear();
+		GameObject fpsController = GameObject.FindObjectOfType<BaseFPSAgentController>().gameObject;
+		primaryAgent = fpsController.GetComponent<PhysicsRemoteFPSAgentController>();
+		primaryAgent.enabled = true;
+		primaryAgent.agentManager = this;
+		primaryAgent.actionComplete = true;
+        this.agents.Add(primaryAgent);
+    }
     //used to add a reference to a rigidbody created after the scene was started
     public void AddToRBSInScene(Rigidbody rb)
     {
@@ -348,15 +402,18 @@ public class AgentManager : MonoBehaviour
 		}
 
 		int hasDroneAgentUpdatedCount = 0;
-		bool FlightMode = false;
-        // foreach (DroneFPSAgentController droneAgent in this.agents)
-        // {
-        //     //get total count of all flight mode agents that have finished updating
-        //     if (droneAgent.hasFixedUpdateHappened)
-        //     {
-        //         hasDroneAgentUpdatedCount++;
-        //     }
-        // }
+
+        if(droneMode)
+        {
+            foreach (DroneFPSAgentController droneAgent in this.agents)
+            {
+                //get total count of all flight mode agents that have finished updating
+                if (droneAgent.hasFixedUpdateHappened)
+                {
+                    hasDroneAgentUpdatedCount++;
+                }
+            }
+        }
 
         //check what objects in the scene are currently in motion
         //Rigidbody[] rbs = FindObjectsOfType(typeof(Rigidbody)) as Rigidbody[];
@@ -431,14 +488,14 @@ public class AgentManager : MonoBehaviour
 		if (completeCount == agents.Count && completeCount > 0 && readyToEmit) 
         {
             //start emit frame for physics and stochastic controllers
-			if(!FlightMode)
+			if(!droneMode)
             {
 				readyToEmit = false;
 				StartCoroutine (EmitFrame ());
 			}
             
             //start emit frame for flying drone controller
-            if(FlightMode)
+            if(droneMode)
             {
                 //make sure each agent in flightMode has updated at least once
 				if (hasDroneAgentUpdatedCount == agents.Count && hasDroneAgentUpdatedCount > 0)
@@ -451,7 +508,7 @@ public class AgentManager : MonoBehaviour
 
         //ok now if the scene is at rest, turn back on physics autosimulation automatically
         //note: you can do this earlier by manually using the UnpausePhysicsAutoSim() action found in PhysicsRemoteFPSAgentController
-        if(physicsSceneManager.isSceneAtRest && !FlightMode &&
+        if(physicsSceneManager.isSceneAtRest && !droneMode &&
         physicsSceneManager.physicsSimulationPaused && AdvancePhysicsStepCount > 0)
         {
             //print("soshite toki wa ugoki desu");
@@ -769,14 +826,18 @@ public class AgentManager : MonoBehaviour
 			}
 		}
 
-		if (Time.timeScale == 0 && !Physics.autoSimulation && physicsSceneManager.physicsSimulationPaused)
+        if(droneMode)
         {
-            PhysicsRemoteFPSAgentController agent_tmp = this.agents.ToArray()[0].GetComponent<PhysicsRemoteFPSAgentController>();
-            Time.timeScale = agent_tmp.autoResetTimeScale;
-            Physics.autoSimulation = true;
-            physicsSceneManager.physicsSimulationPaused = false;
-            // agent_tmp.hasFixedUpdateHappened = false;
+            if (Time.timeScale == 0 && !Physics.autoSimulation && physicsSceneManager.physicsSimulationPaused)
+            {
+                DroneFPSAgentController agent_tmp = this.agents.ToArray()[0].GetComponent<DroneFPSAgentController>();
+                Time.timeScale = agent_tmp.autoResetTimeScale;
+                Physics.autoSimulation = true;
+                physicsSceneManager.physicsSimulationPaused = false;
+                agent_tmp.hasFixedUpdateHappened = false;
+            }
         }
+
         #endif
     }
 
@@ -905,7 +966,6 @@ public class DroneAgentMetadata : AgentMetadata
 public class DroneObjectMetadata : ObjectMetadata
 {
     // Drone Related Metadata
-    public bool FlightMode;
     public int numSimObjHits;
     public int numFloorHits;
     public int numStructureHits;
@@ -1125,7 +1185,7 @@ public struct MetadataWrapper
 public class ServerAction
 {
 	public string action;
-    public string agentMode = "tall"; //default to Tall version of Agent
+    public string agentMode = "tall"; //default to Tall version of Agent, valid values are "tall" "bot" "drone"
 	public int agentCount = 1;
 	public string quality;
 	public bool makeAgentsVisible = true;
@@ -1206,7 +1266,7 @@ public class ServerAction
     public float maxDistance;//used in target circle spawning function
     public float noise;
     public ControllerInitialization controllerInitialization = null;
-    public string agentControllerType;
+    public string agentControllerType = "physics";//default to physics controller
     public float agentRadius = 2.0f;
     public int maxStepCount;
     public float rotateStepDegrees = 90.0f;

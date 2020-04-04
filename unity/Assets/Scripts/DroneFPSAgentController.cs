@@ -15,7 +15,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
         public GameObject basketTrigger;
         public DroneObjectLauncher DroneObjectLauncher;
         public List<SimObjPhysics> caught_object = new List<SimObjPhysics>();
-        public bool FlightMode = false;
         public bool hasFixedUpdateHappened = true;//track if the fixed physics update has happened
         protected Vector3 thrust;
         public float dronePositionRandomNoiseSigma = 0f;
@@ -47,12 +46,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 			agentManager = GameObject.Find("PhysicsSceneManager").GetComponentInChildren<AgentManager>();
 
-			//disabling in editor by default so performance in editor isn't garbage all the time. Enable this from the DebugInputField -InitSynth
-            // #if UNITY_EDITOR
-            //     this.enableImageSynthesis();
-            // #endif
-			//allowNodes = false;
-
             //default nav mesh agent to false cause WHY DOES THIS BREAK THINGS I GUESS IT DOESN TLIKE TELEPORTING
             this.GetComponent<NavMeshAgent>().enabled = false;
         }
@@ -65,39 +58,36 @@ namespace UnityStandardAssets.Characters.FirstPerson
             #endif
         }
 
-        void FixedUpdate(){
-
+        void FixedUpdate()
+        {
             //when in drone mode, automatically pause time and physics simulation here
             //time and physics will continue once emitFrame is called
             //Note: this is to keep drone and object movement in sync, as pausing just object physics would
             //still allow the drone's character controller Move() to function in "real time" and we dont have
             //support for fully continuous drone movement and emitFrame metadata generation at the same time.
-            if (FlightMode)
+            if (hasFixedUpdateHappened)
             {   
-                if (hasFixedUpdateHappened)
-                {   
-                    Time.timeScale = 0;
-                    Physics.autoSimulation = false;
-                    physicsSceneManager.physicsSimulationPaused = true;
-                }   
-                else
-                {
-                    fixupdateCnt++;
-                    hasFixedUpdateHappened = true;
-                }
+                Time.timeScale = 0;
+                Physics.autoSimulation = false;
+                physicsSceneManager.physicsSimulationPaused = true;
+            }   
+            else
+            {
+                fixupdateCnt++;
+                hasFixedUpdateHappened = true;
+            }
 
-                if (thrust.magnitude > 0.0001 && Time.timeScale != 0)
-                {
-                    if (dronePositionRandomNoiseSigma > 0){
-                        var random = new System.Random();
-                        var noiseX = (float)random.NextGaussian(0.0f, dronePositionRandomNoiseSigma/3.0f);
-                        var noiseY = (float)random.NextGaussian(0.0f, dronePositionRandomNoiseSigma/3.0f);
-                        var noiseZ = (float)random.NextGaussian(0.0f, dronePositionRandomNoiseSigma/3.0f);
-                        Vector3 noise = new Vector3(noiseX, noiseY, noiseZ);
-                        m_CharacterController.Move((thrust * Time.fixedDeltaTime) + noise);
-                    }else{
-                        m_CharacterController.Move(thrust * Time.fixedDeltaTime);
-                    }
+            if (thrust.magnitude > 0.0001 && Time.timeScale != 0)
+            {
+                if (dronePositionRandomNoiseSigma > 0){
+                    var random = new System.Random();
+                    var noiseX = (float)random.NextGaussian(0.0f, dronePositionRandomNoiseSigma/3.0f);
+                    var noiseY = (float)random.NextGaussian(0.0f, dronePositionRandomNoiseSigma/3.0f);
+                    var noiseZ = (float)random.NextGaussian(0.0f, dronePositionRandomNoiseSigma/3.0f);
+                    Vector3 noise = new Vector3(noiseX, noiseY, noiseZ);
+                    m_CharacterController.Move((thrust * Time.fixedDeltaTime) + noise);
+                }else{
+                    m_CharacterController.Move(thrust * Time.fixedDeltaTime);
                 }
             }
         }
@@ -383,206 +373,125 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
         public void FlyRandomStart(ServerAction action)
         {   
-            if(FlightMode)
-            {
-                System.Random rnd = new System.Random();
-                Vector3[] shuffledCurrentlyReachable = getReachablePositions().OrderBy(x => rnd.Next()).ToArray();
-                Vector3[] Random_output = SeekTwoPos(shuffledCurrentlyReachable);
+            System.Random rnd = new System.Random();
+            Vector3[] shuffledCurrentlyReachable = getReachablePositions().OrderBy(x => rnd.Next()).ToArray();
+            Vector3[] Random_output = SeekTwoPos(shuffledCurrentlyReachable);
 
-                var thrust_dt_drone = Random_output[0];
-                var thrust_dt_launcher = Random_output[1];
-                thrust_dt_launcher = new Vector3(thrust_dt_launcher.x, action.y, thrust_dt_launcher.z);
-                transform.position = thrust_dt_drone;
+            var thrust_dt_drone = Random_output[0];
+            var thrust_dt_launcher = Random_output[1];
+            thrust_dt_launcher = new Vector3(thrust_dt_launcher.x, action.y, thrust_dt_launcher.z);
+            transform.position = thrust_dt_drone;
 
-                this.GetComponent<DroneFPSAgentController>().MoveLauncher(thrust_dt_launcher);
-                actionFinished(true);
-            }
-
-            else
-            {
-                errorMessage = "Agent not in drone mode";
-                actionFinished(false);
-            }
+            this.GetComponent<DroneFPSAgentController>().MoveLauncher(thrust_dt_launcher);
+            actionFinished(true);
         }   
 
         //move drone and launcher to some start position
         public void FlyAssignStart(ServerAction action)
         {   
-            if(FlightMode)
-            {
-                //drone uses action.position
-                Vector3 thrust_dt = action.position;
-                transform.position = thrust_dt;
+            //drone uses action.position
+            Vector3 thrust_dt = action.position;
+            transform.position = thrust_dt;
 
-                //use action.x,y,z for launcher
-                Vector3 launcherPosition = new Vector3(action.x, action.y, action.z);
-                Vector3 thrust_dt_launcher = launcherPosition;
-                this.GetComponent<DroneFPSAgentController>().MoveLauncher(thrust_dt_launcher);
+            //use action.x,y,z for launcher
+            Vector3 launcherPosition = new Vector3(action.x, action.y, action.z);
+            Vector3 thrust_dt_launcher = launcherPosition;
+            this.GetComponent<DroneFPSAgentController>().MoveLauncher(thrust_dt_launcher);
 
-                actionFinished(true);
-            }
-
-            else
-            {
-                errorMessage = "Agent not in drone mode";
-                actionFinished(false);
-            }
+            actionFinished(true);
         }
 
         //Flying Drone Agent Controls
         public void FlyTo(ServerAction action)
         {   
-            if (FlightMode)
-            {
-                transform.rotation = Quaternion.Euler(new Vector3(0.0f, action.rotation.y, 0.0f));
-                m_Camera.transform.localEulerAngles = new Vector3(action.horizon, 0.0f, 0.0f);
-                thrust += new Vector3(action.x, action.y, action.z);
-                actionFinished(true);
-            }
-
-            else
-            {
-                errorMessage = "Agent not in drone mode";
-                actionFinished(false);
-            }
+            transform.rotation = Quaternion.Euler(new Vector3(0.0f, action.rotation.y, 0.0f));
+            m_Camera.transform.localEulerAngles = new Vector3(action.horizon, 0.0f, 0.0f);
+            thrust += new Vector3(action.x, action.y, action.z);
+            actionFinished(true);
         }
 
         //Flying Drone Agent Controls
-        public void FlyAhead(ServerAction action) {
-            if (FlightMode) {
-                thrust += GetFlyingOrientation(action, 0);
-                actionFinished(true);
-            }
-
-            else
-            {
-                errorMessage = "Agent not in drone mode";
-                actionFinished(false);
-            }
+        public void FlyAhead(ServerAction action) 
+        {
+            print("fly ahead happening");
+            thrust += GetFlyingOrientation(action, 0);
+            actionFinished(true);
         }
 
         //Flying Drone Agent Controls
-        public void FlyBack(ServerAction action) {
-            if (FlightMode) {
-                thrust += GetFlyingOrientation(action, 180);
-                actionFinished(true);
-
-            }
-
-            else
-            {
-                errorMessage = "Agent not in drone mode";
-                actionFinished(false);
-            }
+        public void FlyBack(ServerAction action) 
+        {
+            thrust += GetFlyingOrientation(action, 180);
+            actionFinished(true);
         }
 
         //Flying Drone Agent Controls
-        public void FlyLeft(ServerAction action) {
-            if (FlightMode) {
-                thrust += GetFlyingOrientation(action, 270);
-                actionFinished(true);
-
-            }
-
-            else
-            {
-                errorMessage = "Agent not in drone mode";
-                actionFinished(false);
-            }
+        public void FlyLeft(ServerAction action) 
+        {
+            thrust += GetFlyingOrientation(action, 270);
+            actionFinished(true);
         }
 
         //Flying Drone Agent Controls
-        public void FlyRight(ServerAction action) {
-            if (FlightMode) {
-                thrust += GetFlyingOrientation(action, 90);
-                actionFinished(true);
-
-            }
-
-            else
-            {
-                errorMessage = "Agent not in drone mode";
-                actionFinished(false);
-            }
+        public void FlyRight(ServerAction action) 
+        {
+            thrust += GetFlyingOrientation(action, 90);
+            actionFinished(true);
         }
 
         //Flying Drone Agent Controls
-        public void FlyUp(ServerAction action) {
-            if (FlightMode) {
-                //Vector3 targetPosition = transform.position + transform.up * action.moveMagnitude;
-                //transform.position = targetPosition;
-                thrust += new Vector3(0, action.moveMagnitude, 0);
-                actionFinished(true);
-            }
-
-            else
-            {
-                errorMessage = "Agent not in drone mode";
-                actionFinished(false);
-            }
-
+        public void FlyUp(ServerAction action) 
+        {
+            //Vector3 targetPosition = transform.position + transform.up * action.moveMagnitude;
+            //transform.position = targetPosition;
+            thrust += new Vector3(0, action.moveMagnitude, 0);
+            actionFinished(true);
         }
 
         //Flying Drone Agent Controls
-        public void FlyDown(ServerAction action) {
-            if (FlightMode) {
-                //Vector3 targetPosition = transform.position + -transform.up * action.moveMagnitude;
-                //transform.position = targetPosition;
-                thrust += new Vector3(0, -action.moveMagnitude, 0);
-                actionFinished(true);
-            }
-
-            else
-            {
-                errorMessage = "Agent not in drone mode";
-                actionFinished(false);
-            }
+        public void FlyDown(ServerAction action) 
+        {
+            //Vector3 targetPosition = transform.position + -transform.up * action.moveMagnitude;
+            //transform.position = targetPosition;
+            thrust += new Vector3(0, -action.moveMagnitude, 0);
+            actionFinished(true);
         }
 
         //for use with the Drone to be able to launch an object into the air
         //Launch an object at a given Force (action.moveMagnitude), and angle (action.rotation)
-        public void LaunchDroneObject(ServerAction action) {
-            if (FlightMode) {
-                this.GetComponent<DroneFPSAgentController>().Launch(action);
-                actionFinished(true);
-                fixupdateCnt = 0f;
-            }
-
-            else
-            {
-                errorMessage = "Agent not in drone mode";
-                actionFinished(false);
-            }
+        public void LaunchDroneObject(ServerAction action) 
+        {
+            this.GetComponent<DroneFPSAgentController>().Launch(action);
+            actionFinished(true);
+            fixupdateCnt = 0f;
         }
 
         //spawn a launcher object at action.position coordinates
         public void SpawnDroneLauncher(ServerAction action)
         {
-            if(FlightMode)
-            {
-                this.GetComponent<DroneFPSAgentController>().SpawnLauncher(action.position);
-                actionFinished(true);
-            }
 
-            else
-            {
-                errorMessage = "Agent not in drone mode";
-                actionFinished(false);
-            }
+            this.GetComponent<DroneFPSAgentController>().SpawnLauncher(action.position);
+            actionFinished(true);
         }
 
         //in case you want to change the fixed delta time
-        public void ChangeFixedDeltaTime(ServerAction action) {
-            if (action.fixedDeltaTime > 0) {
+        public void ChangeFixedDeltaTime(ServerAction action) 
+        {
+            if (action.fixedDeltaTime > 0) 
+            {
                 Time.fixedDeltaTime = action.fixedDeltaTime;
                 actionFinished(true);
-            } else {
+            } 
+            
+            else 
+            {
                 errorMessage = "FixedDeltaTime must be >0";
                 actionFinished(false);
             }
         }
 
-        public void ChangeDronePositionRandomNoiseSigma(ServerAction action) {
+        public void ChangeDronePositionRandomNoiseSigma(ServerAction action) 
+        {
             dronePositionRandomNoiseSigma = action.dronePositionRandomNoiseSigma;
             actionFinished(true);
         }
@@ -630,7 +539,5 @@ namespace UnityStandardAssets.Characters.FirstPerson
         {
             Instantiate(DroneObjectLauncher, position, Quaternion.identity);
         }
-
     }
-
 }

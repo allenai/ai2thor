@@ -12,10 +12,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		public GameObject Agent = null;
 		public PhysicsRemoteFPSAgentController PhysicsController = null;
         public StochasticRemoteFPSAgentController StochasticController = null;
+        public DroneFPSAgentController DroneController = null;
         public AgentManager AManager = null;
 
         private ControlMode controlMode;
 
+        #if UNITY_EDITOR
         private Dictionary<KeyCode, ControlMode> debugKeyToController = new Dictionary<KeyCode, ControlMode>{
             {KeyCode.Alpha1, ControlMode.DEBUG_TEXT_INPUT},
             {KeyCode.BackQuote, ControlMode.FPS},
@@ -23,6 +25,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             {KeyCode.Alpha3, ControlMode.DISCRETE_HIDE_N_SEEK},
             {KeyCode.Alpha4, ControlMode.MINIMAL_FPS}
         };
+        #endif
 
         private bool setEnabledControlComponent(ControlMode mode, bool enabled) {
             Type componentType;
@@ -77,6 +80,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             GameObject fpsController = GameObject.FindObjectOfType<BaseFPSAgentController>().gameObject;
             PhysicsController = fpsController.GetComponent<PhysicsRemoteFPSAgentController>();
             StochasticController = fpsController.GetComponent<StochasticRemoteFPSAgentController>();
+            DroneController = fpsController.GetComponent<DroneFPSAgentController>();
             Agent = PhysicsController.gameObject;
             AManager = GameObject.Find("PhysicsSceneManager").GetComponentInChildren<AgentManager>();
 
@@ -243,6 +247,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         break;
                     }
 
+                //move ahead stochastic
                  case "mas":
                     {
                         ServerAction action = new ServerAction();
@@ -1147,7 +1152,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         action.action = "FlyUp";
 
                         action.moveMagnitude = 2f;
-                        PhysicsController.ProcessControlCommand(action);
+                        DroneController.ProcessControlCommand(action);
                         break;
                     }
 
@@ -1157,7 +1162,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         action.action = "FlyDown";
 
                         action.moveMagnitude = 2f;
-                        PhysicsController.ProcessControlCommand(action);
+                        DroneController.ProcessControlCommand(action);
                         break;
                     }
 
@@ -1167,7 +1172,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         action.action = "FlyAhead";
 
                         action.moveMagnitude = 2f;
-                        PhysicsController.ProcessControlCommand(action);
+                        DroneController.ProcessControlCommand(action);
                         break;
                     }
                 case "fl":
@@ -1176,7 +1181,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         action.action = "FlyLeft";
 
                         action.moveMagnitude = 2f;
-                        PhysicsController.ProcessControlCommand(action);
+                        DroneController.ProcessControlCommand(action);
                         break;
                     }
 
@@ -1186,7 +1191,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         action.action = "FlyRight";
 
                         action.moveMagnitude = 2f;
-                        PhysicsController.ProcessControlCommand(action);
+                        DroneController.ProcessControlCommand(action);
                         break;
                     }
 
@@ -1196,7 +1201,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         action.action = "FlyBack";
 
                         action.moveMagnitude = 2f;
-                        PhysicsController.ProcessControlCommand(action);
+                        DroneController.ProcessControlCommand(action);
                         break;
                     }
 
