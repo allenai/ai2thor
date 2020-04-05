@@ -4314,43 +4314,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true);
         }
 
-        protected bool CheckIfObjectCanBeDropped(ServerAction action) {
-           if (ItemInHand != null) {
-                if (!physicsSceneManager.UniqueIdToSimObjPhysics.ContainsKey(action.objectId)) {
-                    errorMessage = "Object ID appears to be invalid.";
-                    Debug.Log(errorMessage);
-                    actionFinished(false);
-                    this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.NOT_OBJECT);
-                    return false;
-                }
-
-                if(!ItemInHand.transform.name.Equals(action.objectId)) {
-                    errorMessage = "Object ID " + action.objectId + " is not the object currently being held.";
-                    Debug.Log(errorMessage);
-                    actionFinished(false);
-                    this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.NOT_HELD);
-                    return false;
-                }
-
-                //we do need this to check if the item is currently colliding with the agent, otherwise
-                //dropping an object while it is inside the agent will cause it to shoot out weirdly
-                if (!action.forceAction && isHandObjectColliding(false)) {
-                    errorMessage = ItemInHand.transform.name + " can't be dropped. It must be clear of all other collision first, including the Agent";
-                    Debug.Log(errorMessage);
-                    actionFinished(false);
-                    this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.FAILED);
-                    return false;
-                }
-           } else {
-                errorMessage = "nothing in hand to drop!";
-                Debug.Log(errorMessage);
-                actionFinished(false);
-                this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.NOT_HELD);
-                return false;
-            }
-            return true;
-        }
-
         public virtual bool DropHandObject(ServerAction action) {
             //make sure something is actually in our hands
             if (ItemInHand != null) {
