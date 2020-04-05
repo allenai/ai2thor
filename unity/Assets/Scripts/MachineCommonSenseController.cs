@@ -358,14 +358,16 @@ public class MachineCommonSenseController : PhysicsRemoteFPSAgentController {
         }
 
         if(base.CheckIfObjectCanBeDropped(action)) {
-            GameObject go = ItemInHand;
-            // Need to rotate in direction specified by user input before throwing object
-            RotateLook(action);
+            GameObject gameObj = ItemInHand;
             base.DropObjectIfNoErrors(action);
-            Vector3 dir = m_Camera.transform.forward;
-            go.GetComponent<SimObjPhysics>().ApplyForce(dir, action.moveMagnitude);
-        }
 
+            if (action.objectDirection.x != 0 || action.objectDirection.y != 0 || action.objectDirection.z != 0) {
+                gameObj.GetComponent<SimObjPhysics>().ApplyRelativeForce(action.objectDirection, action.moveMagnitude);
+            } else {
+                // throw object forward if no direction input is given
+                gameObj.GetComponent<SimObjPhysics>().ApplyRelativeForce(Vector3.forward, action.moveMagnitude);
+            }
+        }
 
         // Deactivate the object again if the throw failed.
         // TODO MCS-77 We should never need to deactivate this object (see PickupObject).

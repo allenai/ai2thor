@@ -23,8 +23,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
         public float pushPullForce = 150.0f;
         public float FlyMagnitude = 1.0f;
         public float WalkMagnitude = 0.2f;
-        public float rotationForForceAction = 15.0f;
-        public float horizonForForceAction = 5.0f;
 
         [SerializeField] private GameObject InputMode_Text = null;
         // Start is called before the first frame update
@@ -81,8 +79,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     action.objectId = moveOrPickupObjectId;
 
                     action.action = "ThrowObject";
-                    action.rotation.y = rotationForForceAction;
-                    action.horizon = horizonForForceAction;
+                    action.objectDirection = moveOrPickupObjectDirection;
                     action.moveMagnitude = pushPullForce;
                     PhysicsController.ProcessControlCommand(action);
                 }

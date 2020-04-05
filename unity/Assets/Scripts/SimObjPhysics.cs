@@ -819,6 +819,13 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
         myrb.AddForce(dir * magnitude);
     }
 
+	public void ApplyRelativeForce(Vector3 dir, float magnitude) {
+		Rigidbody myrb = gameObject.GetComponent<Rigidbody>();
+		myrb.isKinematic = false;
+		myrb.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
+		myrb.AddRelativeForce(dir * magnitude);
+	}
+
 	//returns a game object list of all sim objects contained by this object if it is a receptacle
 	public List<GameObject> Contains_GameObject()
 	{
