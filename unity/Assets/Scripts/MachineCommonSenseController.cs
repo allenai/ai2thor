@@ -357,10 +357,9 @@ public class MachineCommonSenseController : PhysicsRemoteFPSAgentController {
             target.gameObject.SetActive(true);
         }
 
-        if(base.CheckIfObjectCanBeDropped(action)) {
-            GameObject gameObj = ItemInHand;
-            base.DropObjectIfNoErrors(action);
+        GameObject gameObj = ItemInHand;
 
+        if(base.DropHandObject(action)) {
             if (action.objectDirection.x != 0 || action.objectDirection.y != 0 || action.objectDirection.z != 0) {
                 gameObj.GetComponent<SimObjPhysics>().ApplyRelativeForce(action.objectDirection, action.moveMagnitude);
             } else {

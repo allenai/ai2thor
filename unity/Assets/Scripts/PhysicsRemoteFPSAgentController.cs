@@ -4352,61 +4352,87 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         public virtual bool DropHandObject(ServerAction action) {
-            bool canObjectBeDropped = CheckIfObjectCanBeDropped(action);
+            //make sure something is actually in our hands
+            if (ItemInHand != null) {
 
-            if(canObjectBeDropped) {
-                return DropObjectIfNoErrors(action);
-            } else {
-                return canObjectBeDropped;
-            }
-        }
-
-        protected bool DropObjectIfNoErrors(ServerAction action) {
-            Rigidbody rb = ItemInHand.GetComponent<Rigidbody>();
-            rb.isKinematic = false;
-            rb.constraints = RigidbodyConstraints.None;
-            rb.useGravity = true;
-
-            //change collision detection mode while falling so that obejcts don't phase through colliders.
-            //this is reset to discrete on SimObjPhysics.cs's update 
-            rb.collisionDetectionMode = CollisionDetectionMode.ContinuousSpeculative;
-
-            GameObject topObject = GameObject.Find("Objects");
-            if (topObject != null) {
-                ItemInHand.transform.parent = topObject.transform;
-            } else {
-                ItemInHand.transform.parent = null;
-            }
-
-            // Add some random rotational momentum to the dropped object to make things
-            // less deterministic.
-            // TODO: Need a parameter to control how much randomness we introduce.
-            rb.angularVelocity = UnityEngine.Random.insideUnitSphere;
-
-            DropContainedObjects(ItemInHand.GetComponent<SimObjPhysics>());
-
-            //if physics simulation has been paused by the PausePhysicsAutoSim() action, don't do any coroutine checks
-            if(!physicsSceneManager.physicsSimulationPaused)
-            {
-                //this is true by default
-                if (action.autoSimulation) 
-                {
-                    StartCoroutine(checkIfObjectHasStoppedMoving(ItemInHand.GetComponent<SimObjPhysics>(), 0));
-                } 
-
-                else 
-                {
-                    StartCoroutine(checkDropHandObjectActionFast(ItemInHand.GetComponent<SimObjPhysics>()));
+                if (!physicsSceneManager.UniqueIdToSimObjPhysics.ContainsKey(action.objectId)) {
+                    errorMessage = "Object ID appears to be invalid.";
+                    Debug.Log(errorMessage);
+                    actionFinished(false);
+                    this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.NOT_OBJECT);
+                    return false;
                 }
+
+                if(!ItemInHand.transform.name.Equals(action.objectId)) {
+                    errorMessage = "Object ID " + action.objectId + " is not the object currently being held.";
+                    Debug.Log(errorMessage);
+                    actionFinished(false);
+                    this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.NOT_HELD);
+                    return false;
+                }
+
+                //we do need this to check if the item is currently colliding with the agent, otherwise
+                //dropping an object while it is inside the agent will cause it to shoot out weirdly
+                if (!action.forceAction && isHandObjectColliding(false)) {
+                    errorMessage = ItemInHand.transform.name + " can't be dropped. It must be clear of all other collision first, including the Agent";
+                    Debug.Log(errorMessage);
+                    actionFinished(false);
+                    this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.FAILED);
+                    return false;
+                } else {
+                    Rigidbody rb = ItemInHand.GetComponent<Rigidbody>();
+                    rb.isKinematic = false;
+                    rb.constraints = RigidbodyConstraints.None;
+                    rb.useGravity = true;
+
+                    //change collision detection mode while falling so that obejcts don't phase through colliders.
+                    //this is reset to discrete on SimObjPhysics.cs's update 
+                    rb.collisionDetectionMode = CollisionDetectionMode.ContinuousSpeculative;
+
+                    GameObject topObject = GameObject.Find("Objects");
+                    if (topObject != null) {
+                        ItemInHand.transform.parent = topObject.transform;
+                    } else {
+                        ItemInHand.transform.parent = null;
+                    }
+
+                    // Add some random rotational momentum to the dropped object to make things
+                    // less deterministic.
+                    // TODO: Need a parameter to control how much randomness we introduce.
+                    rb.angularVelocity = UnityEngine.Random.insideUnitSphere;
+
+                    DropContainedObjects(ItemInHand.GetComponent<SimObjPhysics>());
+
+                    //if physics simulation has been paused by the PausePhysicsAutoSim() action, don't do any coroutine checks
+                    if(!physicsSceneManager.physicsSimulationPaused)
+                    {
+                        //this is true by default
+                        if (action.autoSimulation) 
+                        {
+                            StartCoroutine(checkIfObjectHasStoppedMoving(ItemInHand.GetComponent<SimObjPhysics>(), 0));
+                        } 
+
+                        else 
+                        {
+                            StartCoroutine(checkDropHandObjectActionFast(ItemInHand.GetComponent<SimObjPhysics>()));
+                        }
+                    }
+
+                    else
+                    actionFinished(true);
+
+                    ItemInHand.GetComponent<SimObjPhysics>().isInAgentHand = false;
+                    ItemInHand = null;
+                    this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.SUCCESSFUL);
+                    return true;
+                }
+            } else {
+                errorMessage = "nothing in hand to drop!";
+                Debug.Log(errorMessage);
+                actionFinished(false);
+                this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.NOT_HELD);
+                return false;
             }
-
-            else
-            actionFinished(true);
-
-            ItemInHand.GetComponent<SimObjPhysics>().isInAgentHand = false;
-            ItemInHand = null;
-            this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.SUCCESSFUL);
-            return true;
         }
 
         //by default will throw in the forward direction relative to the Agent's Camera

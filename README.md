@@ -115,11 +115,11 @@ Alternatively, if you want to build the Unity project via the command line, run 
   - Added check to make sure object exists for `DropHandObject`
   - Make sure objectId specified is actually the object being held for `DropHandObject` and `PutObject`
   - Undid objectId being reset to receptableObjectId and not allowing objects to be placed in closed receptacles regardless of type of receptacle for `PutObject`
-  - Split up validation logic and action for `DropHandObject` into seperate methods.
 - `Scripts/PhysicsSceneManager`:
   - Added `virtual` to functions: `Generate_UniqueID`
 - `Scripts/SimObjPhysics`:
   - Changed the `Start` function to `public` so we can call it from our scripts
+  - Added `ApplyRelativeForce` to apply force in a direction relative to the agent's current position.
 - `Scripts/SimObjType`:
   - Added `IgnoreType` to the `SimObjType` enum, `ReturnAllPoints`, and `AlwaysPlaceUpright`
 - `Shaders/DepthBW`:
@@ -127,4 +127,4 @@ Alternatively, if you want to build the Unity project via the command line, run 
 - `Scripts/MachineCommonSenseController`:
   - Added custom `RotateLook` to use relative inputs instead of absolute values.
   - Added checks to see whether objects exist and set lastActionStatus appropriately for `PutObject`
-  - Added custom `ThrowObject` in order to perform error checking prior to rotating the camera using `RotateLook` and throwing an object.
+  - Added custom `ThrowObject` in order to use a relative directional vector to throw object towards.
