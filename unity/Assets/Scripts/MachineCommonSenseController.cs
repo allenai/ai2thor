@@ -160,8 +160,6 @@ public class MachineCommonSenseController : PhysicsRemoteFPSAgentController {
 
         // Each SimObjPhysics object should have a MeshFilter component.
         MeshFilter meshFilter = simObj.gameObject.GetComponentInChildren<MeshFilter>();
-        objectMetadata.points = (meshFilter != null && meshFilter.mesh != null) ? meshFilter.mesh.vertices :
-            new Vector3[] { };
 
         // Use the object's renderer (each object should have a renderer, except maybe shelf children in complex
         // receptacle objects) for its position because its transform's position may not be its actual position
