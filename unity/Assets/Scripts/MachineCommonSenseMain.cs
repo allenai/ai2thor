@@ -255,17 +255,14 @@ public class MachineCommonSenseMain : MonoBehaviour {
     }
 
     private Material LoadMaterial(string filename) {
-        // Backwards compatibility
-        string filenameToLoad = (filename.StartsWith("AI2-THOR/Materials/") ? "" : "AI2-THOR/Materials/") + filename;
-
-        if (this.materialRegistry.Contains(filenameToLoad)) {
-            Material material = Resources.Load<Material>("MCS/" + filenameToLoad);
-            LogVerbose("LOAD OF MATERIAL FILE Assets/Resources/MCS/" + filenameToLoad +
+        if (this.materialRegistry.Contains(filename)) {
+            Material material = Resources.Load<Material>("MCS/" + filename);
+            LogVerbose("LOAD OF MATERIAL FILE Assets/Resources/MCS/" + filename +
                 (material == null ? " IS NULL" : " IS DONE"));
             return material;
         }
 
-        LogVerbose("MATERIAL " + filenameToLoad + " NOT IN MATERIAL REGISTRY");
+        LogVerbose("MATERIAL " + filename + " NOT IN MATERIAL REGISTRY");
         return null;
     }
 
