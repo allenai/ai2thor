@@ -115,6 +115,7 @@ Take a GameObject (we'll call it the "Target" object) containing a MeshFilter, M
   - Added properties to `ServerAction`: `logs`, `objectDirection`, `receptacleObjectDirection`, `sceneConfig`
   - Added `virtual` to functions: `setReadyToEmit`, `Update`
   - Changed variables or functions from `private` to `protected`: `physicsSceneManager`, most `render*Image` variables
+  - Changed properties in `ServerAction`: `horizon` (from int to float)
   - Changed variables or functions from `private` to `public`: `captureScreen`, 'renderImage'
   - Split the existing metadata-update-behavior of the `addObjectImageForm` function into a separate, new function called `UpdateMetadataColors`
   - Created the `InitializeForm` and `FinalizeMultiAgentMetadata` virtual functions and called them both inside `EmitFrame`
@@ -146,6 +147,7 @@ Take a GameObject (we'll call it the "Target" object) containing a MeshFilter, M
   - Added `virtual` to functions: `Generate_UniqueID`
 - `Scripts/SimObjPhysics`:
   - Changed the `Start` function to `public` so we can call it from our scripts
+  - Added `ApplyRelativeForce` to apply force in a direction relative to the agent's current position.
 - `Scripts/SimObjType`:
   - Added `IgnoreType` to the `SimObjType` enum, `ReturnAllPoints`, and `AlwaysPlaceUpright`
 - `Shaders/DepthBW`:
@@ -153,7 +155,7 @@ Take a GameObject (we'll call it the "Target" object) containing a MeshFilter, M
 - `Scripts/MachineCommonSenseController`:
   - Added custom `RotateLook` to use relative inputs instead of absolute values.
   - Added checks to see whether objects exist and set lastActionStatus appropriately for `PutObject`
+  - Added custom `ThrowObject` in order to use a relative directional vector to throw object towards.
   - Changed 'CheckIfAgentCanMove' to take a reference to a directionMagnitude instead of a copy parameter, so if distance to object is greater than zero, we can move a partial distance in 'moveInDirection' by adjusting the Vector3
 - `ImageSynthesis/ImageSynthesis`:
   - Added a null check in `OnSceneChange`
-

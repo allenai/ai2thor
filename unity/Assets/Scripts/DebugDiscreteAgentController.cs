@@ -19,7 +19,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
         public Vector3 receptacleObjectDirection;
         public string receptacleObjectId = "";
         public float rotationIncrement = 45.0f;
-        public int horizonIncrement = 30;
+        public float horizonIncrement = 30.0f;
         public float pushPullForce = 150.0f;
         public float FlyMagnitude = 1.0f;
         public float WalkMagnitude = 0.2f;
@@ -74,13 +74,15 @@ namespace UnityStandardAssets.Characters.FirstPerson
                             
                 // }
 
-                // if(Input.GetKeyDown(KeyCode.T))
-                // {
-                //     ServerAction action = new ServerAction();
-                //     action.action = "ThrowObject";
-                //     action.moveMagnitude = 600f;
-                //     PhysicsController.ProcessControlCommand(action);   
-                // }
+                if(Input.GetKeyDown(KeyCode.T)) {
+                    ServerAction action = new ServerAction();
+                    action.objectId = moveOrPickupObjectId;
+
+                    action.action = "ThrowObject";
+                    action.objectDirection = moveOrPickupObjectDirection;
+                    action.moveMagnitude = pushPullForce;
+                    PhysicsController.ProcessControlCommand(action);
+                }
 
                 // if(Input.GetKeyDown(KeyCode.U))
                 // {

@@ -333,7 +333,7 @@ public class MachineCommonSenseController : PhysicsRemoteFPSAgentController {
 
         ServerAction action = new ServerAction();
         action.rotation.y = updatedRotationValue;
-        action.horizon = (int)updatedHorizonValue;
+        action.horizon = updatedHorizonValue;
         base.RotateLook(action);
     }
 
@@ -398,6 +398,14 @@ public class MachineCommonSenseController : PhysicsRemoteFPSAgentController {
             return;
         }
 
+        if (!physicsSceneManager.UniqueIdToSimObjPhysics.ContainsKey(action.objectId)) {
+            errorMessage = "Object ID appears to be invalid.";
+            Debug.Log(errorMessage);
+            actionFinished(false);
+            this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.NOT_OBJECT);
+            return;
+        }
+
         SimObjPhysics target = physicsSceneManager.UniqueIdToSimObjPhysics[action.objectId];
 
         // Reactivate the object BEFORE trying to throw it so that we can see if it's obstructed.
@@ -406,7 +414,16 @@ public class MachineCommonSenseController : PhysicsRemoteFPSAgentController {
             target.gameObject.SetActive(true);
         }
 
-        base.ThrowObject(action);
+        GameObject gameObj = ItemInHand;
+
+        if(base.DropHandObject(action)) {
+            if (action.objectDirection.x != 0 || action.objectDirection.y != 0 || action.objectDirection.z != 0) {
+                gameObj.GetComponent<SimObjPhysics>().ApplyRelativeForce(action.objectDirection, action.moveMagnitude);
+            } else {
+                // throw object forward if no direction input is given
+                gameObj.GetComponent<SimObjPhysics>().ApplyRelativeForce(Vector3.forward, action.moveMagnitude);
+            }
+        }
 
         // Deactivate the object again if the throw failed.
         // TODO MCS-77 We should never need to deactivate this object (see PickupObject).

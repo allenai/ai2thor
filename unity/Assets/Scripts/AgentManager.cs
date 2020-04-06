@@ -986,7 +986,7 @@ public class ServerAction
 	public float x;
 	public float z;
     public float pushAngle;
-	public int horizon;
+	public float horizon;
 	public Vector3 rotation;
 	public Vector3 position;
     public Vector3 direction;
