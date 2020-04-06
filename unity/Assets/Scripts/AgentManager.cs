@@ -23,12 +23,12 @@ public class AgentManager : MonoBehaviour
 	private Rect readPixelsRect;
 	private int currentSequenceId;
 	private int activeAgentId;
-	private bool renderImage = true;
-	private bool renderDepthImage;
-	private bool renderClassImage;
-	private bool renderObjectImage;
-	private bool renderNormalsImage;
-    private bool renderFlowImage;
+	public bool renderImage = true;
+	protected bool renderDepthImage;
+	protected bool renderClassImage;
+	protected bool renderObjectImage;
+	protected bool renderNormalsImage;
+    protected bool renderFlowImage;
 	private bool synchronousHttp = true;
 	private Socket sock = null;
 	private List<Camera> thirdPartyCameras = new List<Camera>();
@@ -80,7 +80,7 @@ public class AgentManager : MonoBehaviour
 	void Start() {
 		initializePrimaryAgent();
         primaryAgent.actionDuration = this.actionDuration;
-		readyToEmit = true;
+        this.setReadyToEmit(true);
 		Debug.Log("Graphics Tier: " + Graphics.activeTier);
 		this.agents.Add (primaryAgent);
 
@@ -151,7 +151,7 @@ public class AgentManager : MonoBehaviour
 		}
 		this.agents[0].m_Camera.depth = 9999;
 
-		readyToEmit = true;
+		this.setReadyToEmit(true);
 	}
 
 	public void AddThirdPartyCamera(ServerAction action) {
@@ -284,7 +284,7 @@ public class AgentManager : MonoBehaviour
         return false;
     }
 
-	public void setReadyToEmit(bool readyToEmit) {
+	public virtual void setReadyToEmit(bool readyToEmit) {
 		this.readyToEmit = readyToEmit;
 	}
 
@@ -361,7 +361,7 @@ public class AgentManager : MonoBehaviour
 
 	}
 
-	private byte[] captureScreen() {
+	public byte[] captureScreen() {
 		if (tex.height != UnityEngine.Screen.height || 
 			tex.width != UnityEngine.Screen.width) {
 			tex = new Texture2D(UnityEngine.Screen.width, UnityEngine.Screen.height, TextureFormat.RGB24, false);
@@ -408,7 +408,12 @@ public class AgentManager : MonoBehaviour
 			}
 			byte[] bytes = agent.imageSynthesis.Encode ("_id");
 			form.AddBinaryData ("image_ids", bytes);
+            metadata = this.UpdateMetadataColors(agent, metadata);
+		}
+    }
 
+    public MetadataWrapper UpdateMetadataColors(BaseFPSAgentController agent, MetadataWrapper metadata) {
+		if (this.renderObjectImage) {
 			Color[] id_image = agent.imageSynthesis.tex.GetPixels();
 			Dictionary<Color, int[]> colorBounds = new Dictionary<Color, int[]> ();
 			for (int yy = 0; yy < tex.height; yy++) {
@@ -459,8 +464,8 @@ public class AgentManager : MonoBehaviour
 				colors.Add (cid);
 			}
 			metadata.colors = colors.ToArray ();
-
-		}
+        }
+        return metadata;
 	}
 
 	private void addImageSynthesisImageForm(WWWForm form, ImageSynthesis synth, bool flag, string captureName, string fieldName)
@@ -496,8 +501,15 @@ public class AgentManager : MonoBehaviour
 		ProcessControlCommand(msg);
 	}
 
+    protected virtual WWWForm InitializeForm(WWWForm form) {
+        return form;
+    }
 
-	public IEnumerator EmitFrame() {
+    protected virtual MultiAgentMetadata FinalizeMultiAgentMetadata(MultiAgentMetadata metadata) {
+        return metadata;
+    }
+
+	public virtual IEnumerator EmitFrame() {
 
 
 		frameCounter += 1;
@@ -510,6 +522,8 @@ public class AgentManager : MonoBehaviour
 		}
 
 		WWWForm form = new WWWForm();
+
+        form = this.InitializeForm(form);
 
         MultiAgentMetadata multiMeta = new MultiAgentMetadata ();
         multiMeta.agents = new MetadataWrapper[this.agents.Count];
@@ -561,6 +575,8 @@ public class AgentManager : MonoBehaviour
         if (shouldRender) {
             RenderTexture.active = currentTexture;
         }
+
+        multiMeta = this.FinalizeMultiAgentMetadata(multiMeta);
 
         var serializedMetadata = Newtonsoft.Json.JsonConvert.SerializeObject(multiMeta);
 		#if UNITY_WEBGL
@@ -708,7 +724,7 @@ public class AgentManager : MonoBehaviour
 			this.UpdateThirdPartyCamera(controlCommand);
 		} else {
 			this.activeAgent().ProcessControlCommand (controlCommand);
-			readyToEmit = true;
+            this.setReadyToEmit(true);
 		}
 	}
 

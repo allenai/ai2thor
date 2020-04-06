@@ -13,6 +13,9 @@ public class MachineCommonSenseMain : MonoBehaviour {
     public string materialRegistryFile = "material_registry";
     public string mcsObjectRegistryFile = "mcs_object_registry";
     public string primitiveObjectRegistryFile = "primitive_object_registry";
+    public string defaultCeilingMaterial = "AI2-THOR/Materials/Walls/Drywall";
+    public string defaultFloorMaterial = "AI2-THOR/Materials/Fabrics/CarpetWhite 3";
+    public string defaultWallsMaterial = "AI2-THOR/Materials/Walls/DrywallBeige";
 
     private MachineCommonSenseConfigScene currentScene;
     private int lastStep = -1;
@@ -52,8 +55,8 @@ public class MachineCommonSenseMain : MonoBehaviour {
         // Load the default MCS scene set in the Unity Editor.
         if (!this.defaultSceneFile.Equals("")) {
             this.currentScene = LoadCurrentSceneFromFile(this.defaultSceneFile);
-            this.currentScene.id = ((this.currentScene.id == null || this.currentScene.id.Equals("")) ?
-                this.defaultSceneFile : this.currentScene.id);
+            this.currentScene.name = ((this.currentScene.name == null || this.currentScene.name.Equals("")) ?
+                this.defaultSceneFile : this.currentScene.name);
             ChangeCurrentScene(this.currentScene);
         }
     }
@@ -61,7 +64,7 @@ public class MachineCommonSenseMain : MonoBehaviour {
     // Unity's Update method is called once per frame
     void Update() {
         // If the player made a step, update the scene based on the current configuration.
-        if (this.lastStep < agentController.step) {
+        if (this.lastStep < this.agentController.step) {
             this.lastStep++;
             LogVerbose("Run Step " + this.lastStep + " at Frame " + Time.frameCount);
             if (this.currentScene != null && this.currentScene.objects != null) {
@@ -82,10 +85,7 @@ public class MachineCommonSenseMain : MonoBehaviour {
                         }
                     });
             }
-            if (agentController.step == 0) {
-                // After initialization, simulate the physics so that objects can settle down onto the floor.
-                agentController.SimulatePhysics();
-            }
+            this.agentController.SimulatePhysics();
         }
     }
 
@@ -106,19 +106,28 @@ public class MachineCommonSenseMain : MonoBehaviour {
 
         if (scene != null) {
             this.currentScene = scene;
-            Debug.Log("MCS:  Switching the current MCS scene to " + scene.id);
+            Debug.Log("MCS:  Switching the current MCS scene to " + scene.name);
         } else {
             Debug.Log("MCS:  Resetting the current MCS scene...");
         }
 
-        this.currentScene.objects.ForEach(InitializeGameObject);
+        if (this.currentScene != null && this.currentScene.objects != null) {
+            this.currentScene.objects.ForEach(InitializeGameObject);
+        }
 
-        AssignMaterial(GameObject.Find("Ceiling"), this.currentScene.ceilingMaterial);
-        AssignMaterial(GameObject.Find("Floor"), this.currentScene.floorMaterial);
-        AssignMaterial(GameObject.Find("Wall Back"), this.currentScene.wallMaterial);
-        AssignMaterial(GameObject.Find("Wall Front"), this.currentScene.wallMaterial);
-        AssignMaterial(GameObject.Find("Wall Left"), this.currentScene.wallMaterial);
-        AssignMaterial(GameObject.Find("Wall Right"), this.currentScene.wallMaterial);
+        String ceiling = (this.currentScene.ceilingMaterial != null && !this.currentScene.ceilingMaterial.Equals("")) ?
+            this.currentScene.ceilingMaterial : this.defaultCeilingMaterial;
+        String floor = (this.currentScene.floorMaterial != null && !this.currentScene.floorMaterial.Equals("")) ?
+            this.currentScene.floorMaterial : this.defaultFloorMaterial;
+        String walls = (this.currentScene.wallMaterial != null && !this.currentScene.wallMaterial.Equals("")) ?
+            this.currentScene.wallMaterial : this.defaultWallsMaterial;
+
+        AssignMaterial(GameObject.Find("Ceiling"), ceiling);
+        AssignMaterial(GameObject.Find("Floor"), floor);
+        AssignMaterial(GameObject.Find("Wall Back"), walls);
+        AssignMaterial(GameObject.Find("Wall Front"), walls);
+        AssignMaterial(GameObject.Find("Wall Left"), walls);
+        AssignMaterial(GameObject.Find("Wall Right"), walls);
 
         GameObject controller = GameObject.Find("FPSController");
         if (this.currentScene.performerStart != null && this.currentScene.performerStart.position != null) {
@@ -134,6 +143,9 @@ public class MachineCommonSenseMain : MonoBehaviour {
             // Only permit rotating left or right (along the Y axis).
             controller.transform.rotation = Quaternion.Euler(0,
                 this.currentScene.performerStart.rotation.y, 0);
+        }
+        else {
+            controller.transform.rotation = Quaternion.Euler(0, 0, 0);
         }
 
         this.lastStep = -1;
@@ -200,11 +212,15 @@ public class MachineCommonSenseMain : MonoBehaviour {
         Collider[] colliders = gameObject.GetComponentsInChildren<Collider>().Where((collider) =>
             !collider.isTrigger).ToArray();
 
-        // Deactivate any MeshCollider.  We expect non-MeshCollider(s) to be defined on the object too.
-        // A MeshCollider will cause an error with our object's ContinuousDynamic Rigidbody component.
+        // Deactivate any concave MeshCollider.  We expect other collider(s) to be defined on the object.
+        // Concave MeshCollider cause Unity errors with our object's ContinuousDynamic Rigidbody component.
         colliders.ToList().ForEach((collider) => {
             if (collider is MeshCollider) {
-                collider.enabled = false;
+                if (!((MeshCollider)collider).convex) {
+                    // TODO Do we need to do more?
+                    Debug.LogWarning("Deactivating concave MeshCollider in GameObject " + gameObject.name);
+                    collider.enabled = false;
+                }
             }
         });
 
@@ -309,6 +325,11 @@ public class MachineCommonSenseMain : MonoBehaviour {
             this.AssignSimObjPhysicsScript(gameObject, objectConfig, objectDefinition, colliders, moveable,
                 openable, pickupable, receptacle);
         }
+        // If the object has a SimObjPhysics script for some reason, ensure its tag and ID are set correctly.
+        else if (gameObject.GetComponent<SimObjPhysics>() != null) {
+            gameObject.tag = "SimObjPhysics"; // AI2-THOR Tag
+            gameObject.GetComponent<SimObjPhysics>().uniqueID = gameObject.name;
+        }
 
         this.AssignMaterial(gameObject, objectConfig.materialFile);
 
@@ -352,10 +373,8 @@ public class MachineCommonSenseMain : MonoBehaviour {
         MachineCommonSenseConfigObjectDefinition objectDefinition
     ) {
         // If we've configured new trigger box definitions but trigger boxes already exist, delete them.
-        if (objectDefinition.receptacleTriggerBoxes.Count > 0) {
-            if (gameObject.transform.Find("ReceptacleTriggerBox") != null) {
-                Destroy(gameObject.transform.Find("ReceptacleTriggerBox").gameObject);
-            }
+        if (gameObject.transform.Find("ReceptacleTriggerBox") != null) {
+            Destroy(gameObject.transform.Find("ReceptacleTriggerBox").gameObject);
         }
 
         // If this object will have multiple trigger boxes, create a common parent.
@@ -458,6 +477,10 @@ public class MachineCommonSenseMain : MonoBehaviour {
             ai2thorPhysicsScript.Type = SimObjType.IgnoreType;
         }
 
+        if (objectDefinition.salientMaterials.Count > 0) {
+            ai2thorPhysicsScript.salientMaterials = this.RetrieveSalientMaterials(objectConfig.salientMaterials);
+        }
+
         if (objectConfig.salientMaterials.Count > 0) {
             ai2thorPhysicsScript.salientMaterials = this.RetrieveSalientMaterials(objectConfig.salientMaterials);
         }
@@ -471,7 +494,7 @@ public class MachineCommonSenseMain : MonoBehaviour {
         }
 
         // The object's receptacle trigger boxes define the area in which objects may be placed for AI2-THOR.
-        if (receptacle && ai2thorPhysicsScript.ReceptacleTriggerBoxes.Length == 0) {
+        if (receptacle && objectDefinition.receptacleTriggerBoxes.Count > 0) {
             ai2thorPhysicsScript.ReceptacleTriggerBoxes = this.AssignReceptacleTriggerBoxes(gameObject,
                 objectDefinition);
         }
@@ -731,7 +754,10 @@ public class MachineCommonSenseMain : MonoBehaviour {
                 this.EnsureCanOpenObjectScriptAnimationTimeIsZero(interactableObject);
                 Rigidbody rigidbody = interactableObject.GetComponent<Rigidbody>();
                 if (rigidbody != null) {
-                    rigidbody.isKinematic = false;
+                    Renderer renderer = interactableObject.GetComponent<Renderer>();
+                    // Interactable children that don't have renderers (like shelves) should normally be kinematic
+                    // (or at least shelves). Other interactable children should definitely never be kinematic.
+                    rigidbody.isKinematic = (renderer == null);
                 }
             }
         });
@@ -970,6 +996,7 @@ public class MachineCommonSenseConfigObjectDefinition {
     public List<MachineCommonSenseConfigInteractables> interactables;
     public List<MachineCommonSenseConfigOverride> overrides;
     public List<MachineCommonSenseConfigTransform> receptacleTriggerBoxes;
+    public List<string> salientMaterials;
     public List<MachineCommonSenseConfigVector> visibilityPoints;
 }
 
@@ -1042,7 +1069,7 @@ public class MachineCommonSenseConfigVector {
 
 [Serializable]
 public class MachineCommonSenseConfigScene {
-    public String id;
+    public String name;
     public String ceilingMaterial;
     public String floorMaterial;
     public String wallMaterial;

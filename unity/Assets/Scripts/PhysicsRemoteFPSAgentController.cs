@@ -1917,9 +1917,15 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
             int angleInt = Mathf.RoundToInt(angle) % 360;
 
+            float directionMagnitude = direction.magnitude;
             if (checkIfSceneBoundsContainTargetPosition(targetPosition) &&
                 CheckIfItemBlocksAgentMovement(direction.magnitude, angleInt, forceAction) && // forceAction = true allows ignoring movement restrictions caused by held objects
-                CheckIfAgentCanMove(direction.magnitude, angleInt)) {
+                CheckIfAgentCanMove(ref directionMagnitude, angleInt)) {
+
+                Vector3 newDirection = new Vector3();
+                newDirection *= directionMagnitude;
+                targetPosition = targetPosition + newDirection;
+
                 DefaultAgentHand();
                 Vector3 oldPosition = transform.position;
                 transform.position = targetPosition;
@@ -2595,7 +2601,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
 
-        public bool CheckIfAgentCanMove(float moveMagnitude, int orientation) {
+        public bool CheckIfAgentCanMove(ref float moveMagnitude, int orientation) {
             Vector3 dir = new Vector3();
 
             switch (orientation) {
@@ -2638,6 +2644,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     }
 
                     if (res.transform.gameObject != this.gameObject && res.transform.GetComponent<PhysicsRemoteFPSAgentController>()) {
+                        // Check if distance to object is greater than zero, if so than we can move partial amount
+                        if(res.distance > 0) {
+                            moveMagnitude = res.distance / moveMagnitude;
+                            return true;
+                        }
 
                         PhysicsRemoteFPSAgentController maybeOtherAgent = res.transform.GetComponent<PhysicsRemoteFPSAgentController>();
                         int thisAgentNum = agentManager.agents.IndexOf(this);
@@ -2649,6 +2660,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                     //including "Untagged" tag here so that the agent can't move through objects that are transparent
                     if (res.transform.GetComponent<SimObjPhysics>() || res.transform.tag == "Structure" || res.transform.tag == "Untagged") {
+                        // Check if distance to object is greater than zero, if so than we can move partial amount
+                        if(res.distance > 0) {
+                            moveMagnitude = res.distance / moveMagnitude;
+                            return true;
+                        }
+
                         int thisAgentNum = agentManager.agents.IndexOf(this);
                         errorMessage = res.transform.name + " is blocking Agent " + thisAgentNum.ToString() + " from moving " + orientation;
                         //the moment we find a result that is blocking, return false here
@@ -4205,7 +4222,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                             }
                         }
 
-                        sop.transform.Find("Colliders").gameObject.SetActive(false);
+                        if (sop.transform.Find("Colliders") != null) {
+                            sop.transform.Find("Colliders").gameObject.SetActive(false);
+                        }
+                        sop.MyColliders.ToList().ForEach((collider) => {
+                            collider.enabled = false;
+                        });
                         Rigidbody soprb = sop.GetComponent<Rigidbody>();
                         soprb.collisionDetectionMode = CollisionDetectionMode.Discrete;
                         soprb.isKinematic = true;
@@ -4228,7 +4250,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     //print(sop.name);
                     //for every object that is contained by this object...
                     //turn off the colliders, leaving Trigger Colliders active (this is important to maintain visibility!)
-                    sop.transform.Find("Colliders").gameObject.SetActive(true);
+                    if (sop.transform.Find("Colliders") != null) {
+                        sop.transform.Find("Colliders").gameObject.SetActive(true);
+                    }
+                    sop.MyColliders.ToList().ForEach((collider) => {
+                        collider.enabled = true;
+                    });
                     Rigidbody rb = sop.GetComponent<Rigidbody>();
                     
                     rb.isKinematic = false;
@@ -4249,7 +4276,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     //print(sop.name);
                     //for every object that is contained by this object...
                     //turn off the colliders, leaving Trigger Colliders active (this is important to maintain visibility!)
-                    sop.transform.Find("Colliders").gameObject.SetActive(true);
+                    if (sop.transform.Find("Colliders") != null) {
+                        sop.transform.Find("Colliders").gameObject.SetActive(true);
+                    }
+                    sop.MyColliders.ToList().ForEach((collider) => {
+                        collider.enabled = true;
+                    });
                     sop.isInAgentHand = false;//agent hand flag
                 }
                 target.ClearContainedObjectReferences();

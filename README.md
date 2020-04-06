@@ -4,7 +4,13 @@ Original documentation:  https://github.com/allenai/ai2thor
 
 ## Setup
 
+### Editor
+
 The AI2-THOR documetation wants us to use Unity Editor version `2018.3.6` but that version was not available for the Linux Unity Editor.  However, version [`2018.3.0f2`](https://forum.unity.com/threads/unity-on-linux-release-notes-and-known-issues.350256/page-2#post-4009651) does work fine.  Do NOT use any version that starts with `2019` because its build files are not compatible with AI2-THOR.
+
+### Assets
+
+Checkout the [MCS private GitHub repository](https://github.com/NextCenturyCorporation/mcs-private) and copy the files from its `UnityAssetStore` folder into `unity/Assets/Resources/MCS/UnityAssetStore/`.
 
 ## Run
 
@@ -85,14 +91,35 @@ Alternatively, if you want to build the Unity project via the command line, run 
 - Fast moving objects that use Unity physics, as well as all structural objects, should have their `Collision Detection` (in their `Rigidbody`) set to `Continuous`.  With these changes, a fast moving object that tries to move from one side of a wall to the other side in a single frame will be stopped as expected.
 - The FPSController object's robot model is half scale, and ends up being about 0.5 high while the game is running.  I had to change the properties of the `Capsule Collider` and the `Character Controller` so the FPSController would not collide with the floor while moving (`PhysicsRemoteFPSAgentController.capsuleCastAllForAgent`).  Previously:  `center.y=-0.45`, `radius=0.175`, `height=0.9`.  Now:  `center.y=-0.05`, `radius=0.2`, `height=0.5` (though these numbers seem smaller than they should really be).
 
+## Making a New Prefab
+
+![sample_prefab](./sample_prefab.png)
+
+Take a GameObject (we'll call it the "Target" object) containing a MeshFilter, MeshRenderer, and material(s). Sometimes the components are on the Target itself, and sometimes they are on a child of the Target.
+
+1. Set the Tag of the Target to "SimObjPhysics" and set the Layer to "SimObjVisible".
+2. Add a Rigidbody to the Target. Ensure its "Use Gravity" property is true.
+3. If the Target (or its child) does not have any Colliders, you'll have to make them. Create an Empty Child under the Target called "Colliders" and mark it static. Then create an Empty Child under "Colliders" for each Collider you need to make (give them useful names). On each child, add the correct Collider component (often a box, but sometimes others -- note that all MeshColliders should be CONVEX). Adjust the Transform of each child to position the Collider as needed. Set the Tag of each child to "SimObjPhysics" and set the Layer to "SimObjVisible".
+4. Create an Empty Child under the Target called "VisibilityPoints" (no space!) and mark it static. Then create an Empty Child under "VisibilityPoints" for each visibility point you need to make. Adjust the Transform of each child to position the visibility point as needed. Set the Layer of each child to "SimObjVisible". A visibility point should be positioned on each corner of the Target, plus one or more points should be positioned on each large surface (think: if all the corners are occluded, can I still draw line-of-sight to the center of the Target?).
+5. Create an Empty Child under the Target called "BoundingBox" (no space!) and add a BoxCollider component to it. Ensure this BoxCollider is NOT ACTIVE (but NOT the other Colliders). Adjust the Transform of the "BoundingBox" to completely enclose the Target. Set the Layer of the Target to "SimObjInvisible".
+6. On the Target itself, add a SimObjPhysics component (it's an AI2-THOR script). Set the "Primary Property" to "Static" (for non-moveable objects), "Moveable", or "Can Pickup" (a subset of Moveable). Set the "Secondary Properties" as needed (like "Receptacle" and/or "Can Open"). Set the "Bounding Box" property to the "BoundingBox" child you created. Set the "Visibility Points" property to the visibility point children you created. Set the "My Colliders" property to the Collider children you created. Optionally, set the "Salient Materials" property as needed.
+7. If the Target is openable, add a Can Open_Object component (AI2-THOR script) to the Target. Set the "Moving Parts" property to the Target. Set the "Open Positions" and the "Close Positions" to the correct positions. Change the "Movement Type" property to "Slide", "Rotate", or "Scale" as needed.
+8. If the Target is a Receptacle, create an Empty Child under the Target called "ReceptacleTriggerBox" (no spaces!) and mark it static. Set the Tag of the "ReceptacleTriggerBox" to "Receptacle" and set the Layer to "SimObjInvisible". Add a "BoxCollider" component to the "ReceptacleTriggerBox" and set its "Is Trigger" property to true. Adjust the Transform of the "ReceptacleTriggerBox" to the receptacle area that can contain objects (I'm not sure if the height actually matters). Add a Contains component (AI2-THOR script) to the "ReceptacleTriggerBox".
+9. For each other receptacle within the Target (like a cabinet door, drawer, shelf, etc.), create an Empty Child under the Target (we'll call this the Sub-Target), give it a useful name, and move the mesh corresponding to the Sub-Target to be under the child. Repeat steps 1-8 (EXCEPT the Bounding Box) on each Sub-Target.
+10. Click-and-drag the finished Target into the Project tab of the Unity Editor to save it as a new Prefab file. Add a new entry for it in the mcs_object_registry file.
+
 ## Changelog of AI2-THOR Classes
 
 - `Scripts/AgentManager`:
   - Added properties to `ObjectMetadata`: `points`, `visibleInCamera`
   - Added properties to `ServerAction`: `logs`, `objectDirection`, `receptacleObjectDirection`, `sceneConfig`
-  - Added `virtual` to functions: `Update`
-  - Changed variables or functions from `private` to `protected`: `physicsSceneManager`
+  - Added `virtual` to functions: `setReadyToEmit`, `Update`
+  - Changed variables or functions from `private` to `protected`: `physicsSceneManager`, most `render*Image` variables
   - Changed properties in `ServerAction`: `horizon` (from int to float)
+  - Changed variables or functions from `private` to `public`: `captureScreen`, 'renderImage'
+  - Split the existing metadata-update-behavior of the `addObjectImageForm` function into a separate, new function called `UpdateMetadataColors`
+  - Created the `InitializeForm` and `FinalizeMultiAgentMetadata` virtual functions and called them both inside `EmitFrame`
+  - Changed `readyToEmit = true;` to `this.setReadyToEmit(true);` in `addAgents`, `ProcessControlCommand`, `Start`
 - `Scripts/BaseFPSAgentController`:
   - Added `virtual` to functions: `Initialize`, `ProcessControlCommand`
   - Removed the hard-coded camera properties in the `SetAgentMode` function
@@ -115,6 +142,7 @@ Alternatively, if you want to build the Unity project via the command line, run 
   - Added check to make sure object exists for `DropHandObject`
   - Make sure objectId specified is actually the object being held for `DropHandObject` and `PutObject`
   - Undid objectId being reset to receptableObjectId and not allowing objects to be placed in closed receptacles regardless of type of receptacle for `PutObject`
+  - In `PickupContainedObjects` and `DropContainedObjects`, added a null check for the Colliders object and added a loop over the colliders array in the SimObjPhysics script.
 - `Scripts/PhysicsSceneManager`:
   - Added `virtual` to functions: `Generate_UniqueID`
 - `Scripts/SimObjPhysics`:
@@ -128,3 +156,6 @@ Alternatively, if you want to build the Unity project via the command line, run 
   - Added custom `RotateLook` to use relative inputs instead of absolute values.
   - Added checks to see whether objects exist and set lastActionStatus appropriately for `PutObject`
   - Added custom `ThrowObject` in order to use a relative directional vector to throw object towards.
+  - Changed 'CheckIfAgentCanMove' to take a reference to a directionMagnitude instead of a copy parameter, so if distance to object is greater than zero, we can move a partial distance in 'moveInDirection' by adjusting the Vector3
+- `ImageSynthesis/ImageSynthesis`:
+  - Added a null check in `OnSceneChange`

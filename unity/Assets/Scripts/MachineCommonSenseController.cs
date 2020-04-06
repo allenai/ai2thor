@@ -15,8 +15,9 @@ public class MachineCommonSenseController : PhysicsRemoteFPSAgentController {
     // The room dimensions are always 5x5 so the distance from corner to corner is around 7.08.
     public static float MAX_DISTANCE_ACCROSS_ROOM = 7.08f;
 
-    // The number of times to run Physics.Simulate after each action from the player.
-    public static int PHYSICS_SIMULATION_STEPS = 15;
+    // The number of times to run Physics.Simulate after each action from the player is LOOPS * STEPS.
+    public static int PHYSICS_SIMULATION_LOOPS = 5;
+    public static int PHYSICS_SIMULATION_STEPS = 3;
 
     public int step = 0;
 
@@ -126,17 +127,16 @@ public class MachineCommonSenseController : PhysicsRemoteFPSAgentController {
     }
 
     public override MetadataWrapper generateMetadataWrapper() {
-        MetadataWrapper metadataWrapper = base.generateMetadataWrapper();
-        metadataWrapper.lastActionStatus = this.lastActionStatus;
-        metadataWrapper.reachDistance = this.maxVisibleDistance;
-        return metadataWrapper;
+        MetadataWrapper metadata = base.generateMetadataWrapper();
+        metadata.lastActionStatus = this.lastActionStatus;
+        metadata.reachDistance = this.maxVisibleDistance;
+        return this.agentManager.UpdateMetadataColors(this, metadata);
     }
 
     public override void Initialize(ServerAction action) {
         base.Initialize(action);
 
-        // Set the step to -1 here because it will increase to 0 in ProcessControlCommand.
-        this.step = -1;
+        this.step = 0;
         MachineCommonSenseMain main = GameObject.Find("MCS").GetComponent<MachineCommonSenseMain>();
         main.enableVerboseLog = action.logs;
         // Reset the MCS scene configuration data and player.
@@ -160,7 +160,16 @@ public class MachineCommonSenseController : PhysicsRemoteFPSAgentController {
 
         // Each SimObjPhysics object should have a MeshFilter component.
         MeshFilter meshFilter = simObj.gameObject.GetComponentInChildren<MeshFilter>();
-        objectMetadata.points = meshFilter.mesh.vertices;
+
+        // Use the object's renderer (each object should have a renderer, except maybe shelf children in complex
+        // receptacle objects) for its position because its transform's position may not be its actual position
+        // in the camera since the renderer may be defined in a child object with an offset position.
+        Renderer renderer = simObj.gameObject.GetComponentInChildren<Renderer>();
+        if (renderer != null) {
+            objectMetadata.position = renderer.bounds.center;
+            // Use the object's new position for the distance previously set in generateObjectMetadata.
+            objectMetadata.distance = Vector3.Distance(this.transform.position, objectMetadata.position);
+        }
 
         // From https://docs.unity3d.com/Manual/DirectionDistanceFromOneObjectToAnother.html
         objectMetadata.heading = objectMetadata.position - this.transform.position;
@@ -214,9 +223,12 @@ public class MachineCommonSenseController : PhysicsRemoteFPSAgentController {
 
         base.ProcessControlCommand(controlCommand);
 
-        this.SimulatePhysics();
+        // Clear the saved images from the previous step.
+        ((MachineCommonSensePerformerManager)this.agentManager).ClearSavedImages();
 
-        this.step++;
+        if (!controlCommand.action.Equals("Initialize")) {
+            this.step++;
+        }
     }
 
     public override void PullObject(ServerAction action) {
@@ -326,11 +338,56 @@ public class MachineCommonSenseController : PhysicsRemoteFPSAgentController {
     }
 
     public void SimulatePhysics() {
+        // Step 0 is initialization.
+        if (this.step == 0) {
+            // After initialization, simulate the physics so that the objects can settle onto the floor.
+            this.SimulatePhysicsCompletely();
+        }
+
+        if (this.agentManager.renderImage) {
+            // We only need to save ONE image of the scene after initialization.
+            StartCoroutine(this.SimulatePhysicsSaveImagesIncreaseStep(this.step == 0 ? 1 :
+                MachineCommonSenseController.PHYSICS_SIMULATION_LOOPS));
+        }
+
+        else {
+            // Notify the AgentManager to send the action output metadata and images to the Python API.
+            ((MachineCommonSensePerformerManager)this.agentManager).FinalizeEmit();
+        }
+    }
+
+    private void SimulatePhysicsCompletely() {
+        for (int i = 0; i < MachineCommonSenseController.PHYSICS_SIMULATION_LOOPS; ++i) {
+            this.SimulatePhysicsOnce();
+        }
+    }
+
+    private void SimulatePhysicsOnce() {
         // Call Physics.Simulate multiple times with a small step value because a large step
         // value causes collision errors.  From the Unity Physics.Simulate documentation:
         // "Using step values greater than 0.03 is likely to produce inaccurate results."
         for (int i = 0; i < MachineCommonSenseController.PHYSICS_SIMULATION_STEPS; ++i) {
             Physics.Simulate(0.01f);
+        }
+    }
+
+    private IEnumerator SimulatePhysicsSaveImagesIncreaseStep(int thisLoop) {
+        yield return new WaitForEndOfFrame(); // Required for coroutine functions
+
+        // Run the physics simulation for a little bit, then pause and save the images for the current scene.
+        this.SimulatePhysicsOnce();
+
+        ((MachineCommonSensePerformerManager)this.agentManager).SaveImages(this.imageSynthesis);
+
+        int nextLoop = thisLoop - 1;
+
+        if (nextLoop > 0) {
+            // Continue the next loop: run the physics simulation, then save more images.
+            StartCoroutine(this.SimulatePhysicsSaveImagesIncreaseStep(nextLoop));
+        }
+        else {
+            // Once finished, notify the AgentManager to send the action output metadata and images to the Python API.
+            ((MachineCommonSensePerformerManager)this.agentManager).FinalizeEmit();
         }
     }
 
