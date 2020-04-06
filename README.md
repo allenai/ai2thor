@@ -31,6 +31,15 @@ Alternatively, if you want to build the Unity project via the command line, run 
 ./Unity-2018.3.0f2/Editor/Unity -quit -batchmode -logfile MCS-Unity-Build.log -projectpath <cloned_repository>/unity/ -executeMethod Build.Linux64
 ```
 
+## TAR
+
+To TAR the application's Data directory:
+
+```
+cd <cloned_repository>/unity/
+tar -czvf MCS-AI2-THOR-Unity-App-<version>_Data.tar.gz MCS-AI2-THOR-Unity-App-<version>_Data/
+```
+
 ## Important Files and Folders
 
 - [`unity/`](./unity)  The MCS Unity project.  Add this folder as a project in your Unity Hub.
