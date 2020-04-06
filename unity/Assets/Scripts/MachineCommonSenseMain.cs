@@ -21,7 +21,7 @@ public class MachineCommonSenseMain : MonoBehaviour {
     private int lastStep = -1;
     private Dictionary<String, MachineCommonSenseConfigObjectDefinition> objectDictionary =
         new Dictionary<string, MachineCommonSenseConfigObjectDefinition>();
-    private List<String> materials;
+    private List<String> materialRegistry;
 
     // AI2-THOR Objects and Scripts
     private MachineCommonSenseController agentController;
@@ -50,7 +50,7 @@ public class MachineCommonSenseMain : MonoBehaviour {
         });
 
         // Save the materials (strings) that are accepted in the scene configuration files.
-        this.materials = LoadMaterialRegistryFromFile(this.materialRegistryFile).materials;
+        this.materialRegistry = LoadMaterialRegistryFromFile(this.materialRegistryFile).materials;
 
         // Load the default MCS scene set in the Unity Editor.
         if (!this.defaultSceneFile.Equals("")) {
@@ -254,27 +254,57 @@ public class MachineCommonSenseMain : MonoBehaviour {
         return colliders;
     }
 
-    private Material AssignMaterial(GameObject gameObject, String materialFile) {
-        Renderer renderer = gameObject.GetComponent<Renderer>();
-        if (materialFile != null && !materialFile.Equals("")) {
-            // Backwards compatibility
-            String fileToLoad = (materialFile.StartsWith("AI2-THOR/Materials/") ? "" : "AI2-THOR/Materials/") +
-                materialFile; 
-            if (this.materials.Contains(fileToLoad)) {
-                Material material = Resources.Load<Material>("MCS/" + fileToLoad);
-                LogVerbose("LOAD OF MATERIAL FILE Assets/Resources/MCS/" + fileToLoad +
-                    (material == null ?  " IS NULL" : " IS DONE"));
+    private Material LoadMaterial(string filename) {
+        if (this.materialRegistry.Contains(filename)) {
+            Material material = Resources.Load<Material>("MCS/" + filename);
+            LogVerbose("LOAD OF MATERIAL FILE Assets/Resources/MCS/" + filename +
+                (material == null ? " IS NULL" : " IS DONE"));
+            return material;
+        }
+
+        LogVerbose("MATERIAL " + filename + " NOT IN MATERIAL REGISTRY");
+        return null;
+    }
+
+    private void AssignMaterial(GameObject gameObject, string configMaterialFile) {
+        this.AssignMaterials(gameObject, new string[] { configMaterialFile }, new string[] { });
+    }
+
+    private void AssignMaterials(GameObject gameObject, string[] configMaterialFiles, string[] objectMaterialNames) {
+        if (configMaterialFiles.Length == 0) {
+            return;
+        }
+
+        // If given objectMaterialNames, assign each objectMaterialName to its corresponding configMaterialFile.
+        Dictionary<string, Material> assignments = new Dictionary<string, Material>();
+        for (int i = 0; i < objectMaterialNames.Length; ++i) {
+            if (configMaterialFiles.Length > i && !configMaterialFiles[i].Equals("")) {
+                Material material = this.LoadMaterial(configMaterialFiles[i]);
                 if (material != null) {
-                    renderer.material = material;
-                    LogVerbose("ASSIGN MATERIAL " + fileToLoad + " TO GAME OBJECT " + gameObject.name);
+                    assignments.Add(objectMaterialNames[i], material);
                 }
-                return material;
-            }
-            else {
-                LogVerbose("MATERIAL " + fileToLoad + " NOT IN MATERIAL REGISTRY");
             }
         }
-        return null;
+
+        // If not given objectMaterialNames, just change all object materials to the first configMaterialFile.
+        Material singleConfigMaterial = assignments.Count > 0 ? null : this.LoadMaterial(configMaterialFiles[0]);
+
+        if (singleConfigMaterial == null) {
+            return;
+        }
+
+        // Sometimes objects have multiple renderers with their own materials (like flaps of boxes), so modify each.
+        Renderer[] renderers = gameObject.GetComponentsInChildren<Renderer>();
+        renderers.ToList().ForEach((renderer) => {
+            renderer.materials = renderer.materials.ToList().Select((material) => {
+                if (assignments.Count > 0) {
+                    // Object material names appear to end with " (Instance)" (I'm not sure why).
+                    return assignments.ContainsKey(material.name + " (Instance)") ? assignments[material.name] :
+                        material;
+                }
+                return singleConfigMaterial;
+            }).ToArray();
+        });
     }
 
     private GameObject AssignProperties(
@@ -338,7 +368,13 @@ public class MachineCommonSenseMain : MonoBehaviour {
             gameObject.GetComponent<SimObjPhysics>().uniqueID = gameObject.name;
         }
 
-        this.AssignMaterial(gameObject, objectConfig.materialFile);
+        string[] materialFiles = objectConfig.materials != null ? objectConfig.materials.ToArray() : new string[] { };
+        // Backwards compatibility
+        if (materialFiles.Length == 0 && objectConfig.materialFile != null && !objectConfig.materialFile.Equals("")) {
+            materialFiles = new string[] { objectConfig.materialFile };
+        }
+        this.AssignMaterials(gameObject, materialFiles, objectDefinition.materials != null ?
+            objectDefinition.materials.ToArray() : new string[] { });
 
         this.ModifyChildrenInteractables(gameObject, objectDefinition.interactables);
 
@@ -934,7 +970,7 @@ public class MachineCommonSenseConfigGameObject {
     public string controller;
     public bool kinematic;
     public float mass;
-    public string materialFile;
+    public string materialFile; // deprecated; please use materials
     public bool moveable;
     public MachineCommonSenseConfigTransform nullParent = null;
     public bool openable;
@@ -947,6 +983,7 @@ public class MachineCommonSenseConfigGameObject {
     public List<MachineCommonSenseConfigAction> actions;
     public List<MachineCommonSenseConfigMove> forces;
     public List<MachineCommonSenseConfigStepBegin> hides;
+    public List<string> materials;
     public List<MachineCommonSenseConfigMove> moves;
     public List<MachineCommonSenseConfigResize> resizes;
     public List<MachineCommonSenseConfigMove> rotates;
@@ -1002,6 +1039,7 @@ public class MachineCommonSenseConfigObjectDefinition {
     public List<MachineCommonSenseConfigAnimator> animators;
     public List<MachineCommonSenseConfigCollider> colliders;
     public List<MachineCommonSenseConfigInteractables> interactables;
+    public List<string> materials;
     public List<MachineCommonSenseConfigOverride> overrides;
     public List<MachineCommonSenseConfigTransform> receptacleTriggerBoxes;
     public List<string> salientMaterials;
