@@ -212,19 +212,19 @@ public class MachineCommonSenseMain : MonoBehaviour {
         Collider[] colliders = gameObject.GetComponentsInChildren<Collider>().Where((collider) =>
             !collider.isTrigger).ToArray();
 
-        // Deactivate any concave MeshCollider.  We expect other collider(s) to be defined on the object.
-        // Concave MeshCollider cause Unity errors with our object's ContinuousDynamic Rigidbody component.
-        colliders.ToList().ForEach((collider) => {
-            if (collider is MeshCollider) {
-                if (!((MeshCollider)collider).convex) {
-                    // TODO Do we need to do more?
-                    Debug.LogWarning("Deactivating concave MeshCollider in GameObject " + gameObject.name);
-                    collider.enabled = false;
-                }
-            }
-        });
-
         if (objectDefinition.colliders.Count > 0) {
+            // Deactivate any concave MeshCollider.  We expect other collider(s) to be defined on the object.
+            // Concave MeshCollider cause Unity errors with our object's ContinuousDynamic Rigidbody component.
+            colliders.ToList().ForEach((collider) => {
+                if (collider is MeshCollider) {
+                    if (!((MeshCollider)collider).convex) {
+                        // TODO Do we need to do more?
+                        Debug.LogWarning("Deactivating concave MeshCollider in GameObject " + gameObject.name);
+                        collider.enabled = false;
+                    }
+                }
+            });
+
             // If new colliders are defined for the object, deactivate the existing colliders.
             colliders.ToList().ForEach((collider) => {
                 collider.enabled = false;
@@ -310,20 +310,27 @@ public class MachineCommonSenseMain : MonoBehaviour {
         bool pickupable = objectConfig.pickupable || objectDefinition.pickupable;
         bool receptacle = objectConfig.receptacle || objectDefinition.receptacle;
 
-        bool shouldAddSimObjPhysicsScript = moveable || openable || pickupable || receptacle;
+        bool shouldAddSimObjPhysicsScript = moveable || openable || pickupable || receptacle || objectConfig.physics ||
+            objectDefinition.physics;
 
         Collider[] colliders = new Collider[] { };
+        Transform[] visibilityPoints = new Transform[] { };
 
-        if (objectConfig.physics || shouldAddSimObjPhysicsScript) {
+        if (shouldAddSimObjPhysicsScript) {
             // Add Unity Rigidbody and Collider components to enable physics on this object.
-            this.AssignRigidbody(gameObject, objectConfig);
+            this.AssignRigidbody(gameObject, objectConfig, objectConfig.kinematic || objectDefinition.kinematic);
             colliders = this.AssignColliders(gameObject, objectDefinition);
+        }
+
+        // The object's visibility points define a subset of points along the outside of the object for AI2-THOR.
+        if (objectDefinition.visibilityPoints.Count > 0) {
+            visibilityPoints = this.AssignVisibilityPoints(gameObject, objectDefinition.visibilityPoints);
         }
 
         if (shouldAddSimObjPhysicsScript) {
             // Add the AI2-THOR SimObjPhysics script with specific properties.
-            this.AssignSimObjPhysicsScript(gameObject, objectConfig, objectDefinition, colliders, moveable,
-                openable, pickupable, receptacle);
+            this.AssignSimObjPhysicsScript(gameObject, objectConfig, objectDefinition, colliders, visibilityPoints,
+                moveable, openable, pickupable, receptacle);
         }
         // If the object has a SimObjPhysics script for some reason, ensure its tag and ID are set correctly.
         else if (gameObject.GetComponent<SimObjPhysics>() != null) {
@@ -402,7 +409,11 @@ public class MachineCommonSenseMain : MonoBehaviour {
         }).ToArray();
     }
 
-    private void AssignRigidbody(GameObject gameObject, MachineCommonSenseConfigGameObject objectConfig) {
+    private void AssignRigidbody(
+        GameObject gameObject,
+        MachineCommonSenseConfigGameObject objectConfig,
+        bool kinematic
+    ) {
         // Note that some prefabs may already have a Rigidbody component.
         Rigidbody rigidbody = gameObject.GetComponent<Rigidbody>();
         if (rigidbody == null) {
@@ -410,9 +421,9 @@ public class MachineCommonSenseMain : MonoBehaviour {
             LogVerbose("ASSIGN RIGID BODY TO GAME OBJECT " + gameObject.name);
         }
         // Set isKinematic to false by default so the objects are always affected by the physics simulation.
-        rigidbody.isKinematic = objectConfig.kinematic;
+        rigidbody.isKinematic = kinematic;
         // Set the mode to continuous dynamic or else fast moving objects may pass through other objects.
-        rigidbody.collisionDetectionMode = objectConfig.kinematic ? CollisionDetectionMode.Discrete :
+        rigidbody.collisionDetectionMode = kinematic ? CollisionDetectionMode.Discrete :
             CollisionDetectionMode.ContinuousDynamic;
         if (objectConfig.mass > 0) {
             rigidbody.mass = objectConfig.mass;
@@ -424,6 +435,7 @@ public class MachineCommonSenseMain : MonoBehaviour {
         MachineCommonSenseConfigGameObject objectConfig,
         MachineCommonSenseConfigObjectDefinition objectDefinition,
         Collider[] colliders,
+        Transform[] visibilityPoints,
         bool moveable,
         bool openable,
         bool pickupable,
@@ -499,13 +511,6 @@ public class MachineCommonSenseMain : MonoBehaviour {
                 objectDefinition);
         }
 
-        // The object's visibility points define a subset of points along the outside of the object for AI2-THOR.
-        if (objectDefinition.visibilityPoints.Count > 0) {
-            List<Transform> visibilityPoints = this.AssignVisibilityPoints(gameObject,
-                objectDefinition.visibilityPoints);
-            ai2thorPhysicsScript.VisibilityPoints = visibilityPoints.ToArray();
-        }
-
         // The object's bounding box defines the complete bounding box around the object for AI2-THOR.
         // JsonUtility always sets objectDefinition.boundingBox, so verify that the position is not null.
         if (objectDefinition.boundingBox != null && objectDefinition.boundingBox.position != null) {
@@ -527,6 +532,10 @@ public class MachineCommonSenseMain : MonoBehaviour {
                 }
                 ai2thorCanOpenObjectScript.isOpenByPercentage = ai2thorCanOpenObjectScript.isOpen ? 1 : 0;
             }
+        }
+
+        if (visibilityPoints.Length > 0) {
+            ai2thorPhysicsScript.VisibilityPoints = visibilityPoints;
         }
 
         // Call Start to initialize the script since it did not exist on game start.
@@ -557,10 +566,7 @@ public class MachineCommonSenseMain : MonoBehaviour {
             transformDefinition.scale.GetZ());
     }
 
-    private List<Transform> AssignVisibilityPoints(
-        GameObject gameObject,
-        List<MachineCommonSenseConfigVector> points
-    ) {
+    private Transform[] AssignVisibilityPoints(GameObject gameObject, List<MachineCommonSenseConfigVector> points) {
         // The AI2-THOR scripts assume the visibility points have a parent object with the name VisibilityPoints.
         GameObject visibilityPointsParentObject = new GameObject {
             isStatic = true,
@@ -579,7 +585,7 @@ public class MachineCommonSenseMain : MonoBehaviour {
             visibilityPointsObject.transform.parent = visibilityPointsParentObject.transform;
             visibilityPointsObject.transform.localPosition = new Vector3(point.x, point.y, point.z);
             return visibilityPointsObject.transform;
-        }).ToList();
+        }).ToArray();
     }
 
     private GameObject CreateCustomGameObject(
@@ -933,7 +939,7 @@ public class MachineCommonSenseConfigGameObject {
     public MachineCommonSenseConfigTransform nullParent = null;
     public bool openable;
     public bool opened;
-    public bool physics; // deprecated
+    public bool physics;
     public bool pickupable;
     public bool receptacle;
     public bool structure;
@@ -983,8 +989,10 @@ public class MachineCommonSenseConfigMove : MachineCommonSenseConfigStepBeginEnd
 public class MachineCommonSenseConfigObjectDefinition {
     public string id;
     public string resourceFile;
+    public bool kinematic;
     public bool moveable;
     public bool openable;
+    public bool physics;
     public bool pickupable;
     public bool primitive;
     public bool receptacle;
