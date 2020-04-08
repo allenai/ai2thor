@@ -138,7 +138,7 @@ public class MachineCommonSenseController : PhysicsRemoteFPSAgentController {
 
         this.step = 0;
         MachineCommonSenseMain main = GameObject.Find("MCS").GetComponent<MachineCommonSenseMain>();
-        main.enableVerboseLog = action.logs;
+        main.enableVerboseLog = main.enableVerboseLog || action.logs;
         // Reset the MCS scene configuration data and player.
         main.ChangeCurrentScene(action.sceneConfig);
     }
@@ -178,6 +178,10 @@ public class MachineCommonSenseController : PhysicsRemoteFPSAgentController {
         // Calculate a distance with only the X and Z coordinates for our Python API.
         objectMetadata.distanceXZ = Vector3.Distance(new Vector3(this.transform.position.x, 0, this.transform.position.z),
             new Vector3(simObj.transform.position.x, 0, simObj.transform.position.z));
+
+        if (objectMetadata.objectBounds == null && simObj.BoundingBox != null) {
+            objectMetadata.objectBounds = this.WorldCoordinatesOfBoundingBox(simObj);
+        }
 
         return objectMetadata;
     }
@@ -338,12 +342,6 @@ public class MachineCommonSenseController : PhysicsRemoteFPSAgentController {
     }
 
     public void SimulatePhysics() {
-        // Step 0 is initialization.
-        if (this.step == 0) {
-            // After initialization, simulate the physics so that the objects can settle onto the floor.
-            this.SimulatePhysicsCompletely();
-        }
-
         if (this.agentManager.renderImage) {
             // We only need to save ONE image of the scene after initialization.
             StartCoroutine(this.SimulatePhysicsSaveImagesIncreaseStep(this.step == 0 ? 1 :
@@ -351,6 +349,8 @@ public class MachineCommonSenseController : PhysicsRemoteFPSAgentController {
         }
 
         else {
+            // (Also simulate the physics after initialization so that the objects can settle down onto the floor.)
+            this.SimulatePhysicsCompletely();
             // Notify the AgentManager to send the action output metadata and images to the Python API.
             ((MachineCommonSensePerformerManager)this.agentManager).FinalizeEmit();
         }
