@@ -1922,9 +1922,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 CheckIfItemBlocksAgentMovement(direction.magnitude, angleInt, forceAction) && // forceAction = true allows ignoring movement restrictions caused by held objects
                 CheckIfAgentCanMove(ref directionMagnitude, angleInt)) {
 
-                Vector3 newDirection = new Vector3();
-                newDirection *= directionMagnitude;
-                targetPosition = targetPosition + newDirection;
+                if(directionMagnitude != direction.magnitude) {
+                    Vector3 newDirection = direction * directionMagnitude;
+                    targetPosition = transform.position + newDirection;
+                }
 
                 DefaultAgentHand();
                 Vector3 oldPosition = transform.position;
@@ -2644,9 +2645,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     }
 
                     if (res.transform.gameObject != this.gameObject && res.transform.GetComponent<PhysicsRemoteFPSAgentController>()) {
-                        // Check if distance to object is greater than zero, if so than we can move partial amount
-                        if(res.distance > 0) {
-                            moveMagnitude = res.distance / moveMagnitude;
+                        // Check if distance to object is greater than 0.1, if so than we can move partial amount
+                        // Use 0.1 instead of 0, because if we move right next to an object we can become attached to it.
+                        if(moveMagnitude > res.distance && res.distance > 0.1) {
+                            moveMagnitude = res.distance - 0.1f / moveMagnitude;
                             return true;
                         }
 
@@ -2660,9 +2662,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                     //including "Untagged" tag here so that the agent can't move through objects that are transparent
                     if (res.transform.GetComponent<SimObjPhysics>() || res.transform.tag == "Structure" || res.transform.tag == "Untagged") {
-                        // Check if distance to object is greater than zero, if so than we can move partial amount
-                        if(res.distance > 0) {
-                            moveMagnitude = res.distance / moveMagnitude;
+                        // Check if distance to object is greater than 0.1, if so than we can move partial amount
+                        // Use 0.1 instead of 0, because if we move right next to an object we can become attached to it.
+                        if(moveMagnitude > res.distance && res.distance > 0.1) {
+                            moveMagnitude = res.distance - 0.1f / moveMagnitude;
                             return true;
                         }
 
