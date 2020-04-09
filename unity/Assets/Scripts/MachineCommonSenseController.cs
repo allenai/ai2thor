@@ -351,6 +351,7 @@ public class MachineCommonSenseController : PhysicsRemoteFPSAgentController {
         else {
             // (Also simulate the physics after initialization so that the objects can settle down onto the floor.)
             this.SimulatePhysicsCompletely();
+            GameObject.Find("MCS").GetComponent<MachineCommonSenseMain>().UpdateOnPhysicsSubstep(1);
             // Notify the AgentManager to send the action output metadata and images to the Python API.
             ((MachineCommonSensePerformerManager)this.agentManager).FinalizeEmit();
         }
@@ -376,6 +377,9 @@ public class MachineCommonSenseController : PhysicsRemoteFPSAgentController {
 
         // Run the physics simulation for a little bit, then pause and save the images for the current scene.
         this.SimulatePhysicsOnce();
+
+        GameObject.Find("MCS").GetComponent<MachineCommonSenseMain>().UpdateOnPhysicsSubstep(
+            MachineCommonSenseController.PHYSICS_SIMULATION_LOOPS);
 
         ((MachineCommonSensePerformerManager)this.agentManager).SaveImages(this.imageSynthesis);
 

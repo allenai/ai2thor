@@ -902,7 +902,7 @@ public class MachineCommonSenseMain : MonoBehaviour {
                 gameOrParentObject.transform.Rotate(new Vector3(rotate.vector.x, rotate.vector.y, rotate.vector.z));
             });
 
-        objectConfig.moves.Where(move => move.stepBegin <= step && move.stepEnd >= step && move.vector != null)
+        objectConfig.teleports.Where(move => move.stepBegin <= step && move.stepEnd >= step && move.vector != null)
             .ToList().ForEach((move) => {
                 gameOrParentObject.transform.Translate(new Vector3(move.vector.x, move.vector.y, move.vector.z));
             });
@@ -938,6 +938,24 @@ public class MachineCommonSenseMain : MonoBehaviour {
 
         return objectsWereShown;
     }
+
+    public void UpdateOnPhysicsSubstep(int numberOfSubsteps) {
+        if (this.currentScene != null && this.currentScene.objects != null) {
+            // Loop over each configuration object in the scene and update if needed.
+            this.currentScene.objects.Where(objectConfig => objectConfig.GetGameObject() != null).ToList()
+                .ForEach(objectConfig => {
+                    GameObject gameOrParentObject = objectConfig.GetParentObject() ?? objectConfig.GetGameObject();
+                    // If the object should move during this step, move it a little during each individual substep, so
+                    // it looks like the object is moving slowly if we take a snapshot of the scene after each substep.
+                    objectConfig.moves.Where(move => move.stepBegin <= this.lastStep &&
+                        move.stepEnd >= this.lastStep && move.vector != null).ToList().ForEach((move) => {
+                            gameOrParentObject.transform.Translate(new Vector3(move.vector.x, move.vector.y,
+                                move.vector.z) / (float)numberOfSubsteps);
+                        });
+                });
+        }
+    }
+
 }
 
 // Definitions of serializable objects from JSON config files.
@@ -991,6 +1009,7 @@ public class MachineCommonSenseConfigGameObject {
     public List<MachineCommonSenseConfigMove> rotates;
     public List<string> salientMaterials;
     public List<MachineCommonSenseConfigShow> shows;
+    public List<MachineCommonSenseConfigMove> teleports;
     public List<MachineCommonSenseConfigMove> torques;
 
     private GameObject gameObject;
