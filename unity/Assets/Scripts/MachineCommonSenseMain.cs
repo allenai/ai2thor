@@ -902,9 +902,10 @@ public class MachineCommonSenseMain : MonoBehaviour {
                 gameOrParentObject.transform.Rotate(new Vector3(rotate.vector.x, rotate.vector.y, rotate.vector.z));
             });
 
-        objectConfig.teleports.Where(move => move.stepBegin <= step && move.stepEnd >= step && move.vector != null)
-            .ToList().ForEach((move) => {
-                gameOrParentObject.transform.Translate(new Vector3(move.vector.x, move.vector.y, move.vector.z));
+        objectConfig.teleports.Where(teleport => teleport.stepBegin <= step && teleport.stepEnd >= step &&
+            teleport.vector != null).ToList().ForEach((teleport) => {
+                gameOrParentObject.transform.Translate(new Vector3(teleport.vector.x, teleport.vector.y,
+                    teleport.vector.z));
             });
 
         objectConfig.forces.Where(force => force.stepBegin <= step && force.stepEnd >= step && force.vector != null)
