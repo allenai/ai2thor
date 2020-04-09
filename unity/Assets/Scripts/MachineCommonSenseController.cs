@@ -242,7 +242,14 @@ public class MachineCommonSenseController : PhysicsRemoteFPSAgentController {
             return;
         }
 
-        base.PullObject(action);
+        if (physicsSceneManager.UniqueIdToSimObjPhysics.ContainsKey(action.objectId) &&
+            ItemInHand != null && action.objectId == ItemInHand.GetComponent<SimObjPhysics>().uniqueID) {
+            Debug.Log("Cannot pull. Object " + action.objectId + " is in agent's hand. Calling ThrowObject instead.");
+            ThrowObject(action);
+        } else {
+            base.PullObject(action);
+        }
+
     }
 
     public override void PushObject(ServerAction action) {
@@ -252,7 +259,13 @@ public class MachineCommonSenseController : PhysicsRemoteFPSAgentController {
             return;
         }
 
-        base.PushObject(action);
+        if (physicsSceneManager.UniqueIdToSimObjPhysics.ContainsKey(action.objectId) &&
+            ItemInHand != null && action.objectId == ItemInHand.GetComponent<SimObjPhysics>().uniqueID) {
+            Debug.Log("Cannot push. Object " + action.objectId + " is in agent's hand. Calling ThrowObject instead.");
+            ThrowObject(action);
+        } else {
+            base.PushObject(action);
+        }
     }
 
     public override void PutObject(ServerAction action) {
