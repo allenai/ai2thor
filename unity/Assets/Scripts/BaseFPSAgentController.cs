@@ -875,6 +875,45 @@ namespace UnityStandardAssets.Characters.FirstPerson
             }
         }
 
+        //if you want to do something like throw objects to knock over other objects, use this action to set all objects to Kinematic false
+        //otherwise objects will need to be hit multiple times in order to ensure kinematic false toggle
+        //use this by initializing the scene, then calling randomize if desired, and then call this action to prepare the scene so all objects will react to others upon collision.
+        //note that SOMETIMES rigidbodies will continue to jitter or wiggle, especially if they are stacked against other rigidbodies.
+        //this means that the isSceneAtRest bool will always be false
+        public void MakeAllObjectsMoveable(ServerAction action)
+        {
+            foreach (SimObjPhysics sop in GameObject.FindObjectsOfType<SimObjPhysics>()) 
+            {
+                //check if the sopType is something that can be hung
+                if(sop.Type == SimObjType.Towel || sop.Type == SimObjType.HandTowel || sop.Type == SimObjType.ToiletPaper)
+                {
+                    //if this object is actively hung on its corresponding object specific receptacle... skip it so it doesn't fall on the floor
+                    if(sop.GetComponentInParent<ObjectSpecificReceptacle>())
+                    {
+                        continue;
+                    }
+                }
+
+                if (sop.PrimaryProperty == SimObjPrimaryProperty.CanPickup || sop.PrimaryProperty == SimObjPrimaryProperty.Moveable) 
+                {
+                    Rigidbody rb = sop.GetComponent<Rigidbody>();
+                    rb.isKinematic = false;
+                    rb.collisionDetectionMode = CollisionDetectionMode.ContinuousSpeculative;
+                }
+            }
+            actionFinished(true);
+        }
+
+        //this does not appear to be used except for by the python unit test?
+        //May deprecate this at some point?
+		public void RotateLook(ServerAction response)
+		{
+			transform.rotation = Quaternion.Euler(new Vector3(0.0f, response.rotation.y, 0.0f));
+			m_Camera.transform.localEulerAngles = new Vector3(response.horizon, 0.0f, 0.0f);
+			actionFinished(true);
+
+		}
+
 		// rotate view with respect to mouse or server controls - I'm not sure when this is actually used
 		protected virtual void RotateView()
 		{

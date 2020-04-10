@@ -2565,6 +2565,15 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 actionFinished(false);
                 return;
             }
+
+            //make sure point we are moving the object to is valid
+            if(!sceneBounds.Contains(action.position))
+            {
+                errorMessage = "position coordinate is not within scene bounds";
+                actionFinished(false);
+                return;
+            }
+
             //ok let's get the distance from the simObj to the bottom most part of its colliders
             Vector3 targetNegY = target.transform.position + new Vector3(0, -1, 0);
             BoxCollider b = target.BoundingBox.GetComponent<BoxCollider>();
@@ -4725,35 +4734,6 @@ public void PickupObject(ServerAction action) //use serveraction objectid
             foreach (SimObjPhysics sop in GameObject.FindObjectsOfType<SimObjPhysics>()) {
                 if (sop.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanSeeThrough)) {
                     UpdateDisplayGameObject(sop.gameObject, false);
-                }
-            }
-            actionFinished(true);
-        }
-
-        //if you want to do something like throw objects to knock over other objects, use this action to set all objects to Kinematic false
-        //otherwise objects will need to be hit multiple times in order to ensure kinematic false toggle
-        //use this by initializing the scene, then calling randomize if desired, and then call this action to prepare the scene so all objects will react to others upon collision.
-        //note that SOMETIMES rigidbodies will continue to jitter or wiggle, especially if they are stacked against other rigidbodies.
-        //this means that the isSceneAtRest bool will always be false
-        public void MakeAllObjectsMoveable(ServerAction action)
-        {
-            foreach (SimObjPhysics sop in GameObject.FindObjectsOfType<SimObjPhysics>()) 
-            {
-                //check if the sopType is something that can be hung
-                if(sop.Type == SimObjType.Towel || sop.Type == SimObjType.HandTowel || sop.Type == SimObjType.ToiletPaper)
-                {
-                    //if this object is actively hung on its corresponding object specific receptacle... skip it so it doesn't fall on the floor
-                    if(sop.GetComponentInParent<ObjectSpecificReceptacle>())
-                    {
-                        continue;
-                    }
-                }
-
-                if (sop.PrimaryProperty == SimObjPrimaryProperty.CanPickup || sop.PrimaryProperty == SimObjPrimaryProperty.Moveable) 
-                {
-                    Rigidbody rb = sop.GetComponent<Rigidbody>();
-                    rb.isKinematic = false;
-                    rb.collisionDetectionMode = CollisionDetectionMode.ContinuousSpeculative;
                 }
             }
             actionFinished(true);
