@@ -28,11 +28,25 @@ public class MachineCommonSenseMain : MonoBehaviour {
     private GameObject objectParent;
     private PhysicsSceneManager physicsSceneManager;
 
+    // Room objects
+    private GameObject ceiling;
+    private GameObject floor;
+    private GameObject wallLeft;
+    private GameObject wallRight;
+    private GameObject wallFront;
+    private GameObject wallBack;
+
     // Unity's Start method is called before the first frame update
     void Start() {
         this.agentController = GameObject.Find("FPSController").GetComponent<MachineCommonSenseController>();
         this.objectParent = GameObject.Find("Objects");
         this.physicsSceneManager = GameObject.Find("PhysicsSceneManager").GetComponent<PhysicsSceneManager>();
+        this.ceiling = GameObject.Find("Ceiling");
+        this.floor = GameObject.Find("Floor");
+        this.wallLeft = GameObject.Find("Wall Left");
+        this.wallRight = GameObject.Find("Wall Right");
+        this.wallFront = GameObject.Find("Wall Front");
+        this.wallBack = GameObject.Find("Wall Back");
 
         // Disable all physics simulation (we re-enable it on each step in MachineCommonSenseController).
         Physics.autoSimulation = false;
@@ -115,19 +129,37 @@ public class MachineCommonSenseMain : MonoBehaviour {
             this.currentScene.objects.ForEach(InitializeGameObject);
         }
 
-        String ceiling = (this.currentScene.ceilingMaterial != null && !this.currentScene.ceilingMaterial.Equals("")) ?
-            this.currentScene.ceilingMaterial : this.defaultCeilingMaterial;
-        String floor = (this.currentScene.floorMaterial != null && !this.currentScene.floorMaterial.Equals("")) ?
-            this.currentScene.floorMaterial : this.defaultFloorMaterial;
-        String walls = (this.currentScene.wallMaterial != null && !this.currentScene.wallMaterial.Equals("")) ?
-            this.currentScene.wallMaterial : this.defaultWallsMaterial;
+        String ceilingMaterial = (this.currentScene.ceilingMaterial != null &&
+            !this.currentScene.ceilingMaterial.Equals("")) ? this.currentScene.ceilingMaterial :
+            this.defaultCeilingMaterial;
+        String floorMaterial = (this.currentScene.floorMaterial != null &&
+            !this.currentScene.floorMaterial.Equals("")) ? this.currentScene.floorMaterial :
+            this.defaultFloorMaterial;
+        String wallsMaterial = (this.currentScene.wallMaterial != null &&
+            !this.currentScene.wallMaterial.Equals("")) ? this.currentScene.wallMaterial :
+            this.defaultWallsMaterial;
 
-        AssignMaterial(GameObject.Find("Ceiling"), ceiling);
-        AssignMaterial(GameObject.Find("Floor"), floor);
-        AssignMaterial(GameObject.Find("Wall Back"), walls);
-        AssignMaterial(GameObject.Find("Wall Front"), walls);
-        AssignMaterial(GameObject.Find("Wall Left"), walls);
-        AssignMaterial(GameObject.Find("Wall Right"), walls);
+        if (this.currentScene.observation) {
+            this.ceiling.SetActive(false);
+            this.wallLeft.transform.position = new Vector3(-7, 1.5f, 0);
+            this.wallRight.transform.position = new Vector3(7, 1.5f, 0);
+            this.currentScene.performerStart = new MachineCommonSenseConfigTransform();
+            this.currentScene.performerStart.position = new MachineCommonSenseConfigVector();
+            this.currentScene.performerStart.position.z = -4.5f;
+            this.currentScene.performerStart.rotation = new MachineCommonSenseConfigVector();
+        }
+        else {
+            this.ceiling.SetActive(true);
+            AssignMaterial(this.ceiling, ceilingMaterial);
+            this.wallLeft.transform.position = new Vector3(-5.5f, 1.5f, 0);
+            this.wallRight.transform.position = new Vector3(5.5f, 1.5f, 0);
+        }
+
+        AssignMaterial(this.floor, floorMaterial);
+        AssignMaterial(this.wallLeft, wallsMaterial);
+        AssignMaterial(this.wallRight, wallsMaterial);
+        AssignMaterial(this.wallFront, wallsMaterial);
+        AssignMaterial(this.wallBack, wallsMaterial);
 
         GameObject controller = GameObject.Find("FPSController");
         if (this.currentScene.performerStart != null && this.currentScene.performerStart.position != null) {
@@ -348,7 +380,8 @@ public class MachineCommonSenseMain : MonoBehaviour {
 
         if (shouldAddSimObjPhysicsScript) {
             // Add Unity Rigidbody and Collider components to enable physics on this object.
-            this.AssignRigidbody(gameObject, objectConfig, objectConfig.kinematic || objectDefinition.kinematic);
+            this.AssignRigidbody(gameObject, objectConfig.mass > 0 ? objectConfig.mass : objectDefinition.mass,
+                objectConfig.kinematic || objectDefinition.kinematic);
             colliders = this.AssignColliders(gameObject, objectDefinition);
         }
 
@@ -445,11 +478,7 @@ public class MachineCommonSenseMain : MonoBehaviour {
         }).ToArray();
     }
 
-    private void AssignRigidbody(
-        GameObject gameObject,
-        MachineCommonSenseConfigGameObject objectConfig,
-        bool kinematic
-    ) {
+    private void AssignRigidbody(GameObject gameObject, float mass, bool kinematic) {
         // Note that some prefabs may already have a Rigidbody component.
         Rigidbody rigidbody = gameObject.GetComponent<Rigidbody>();
         if (rigidbody == null) {
@@ -461,8 +490,8 @@ public class MachineCommonSenseMain : MonoBehaviour {
         // Set the mode to continuous dynamic or else fast moving objects may pass through other objects.
         rigidbody.collisionDetectionMode = kinematic ? CollisionDetectionMode.Discrete :
             CollisionDetectionMode.ContinuousDynamic;
-        if (objectConfig.mass > 0) {
-            rigidbody.mass = objectConfig.mass;
+        if (mass > 0) {
+            rigidbody.mass = mass;
         }
     }
 
@@ -526,7 +555,7 @@ public class MachineCommonSenseMain : MonoBehaviour {
         }
 
         if (objectDefinition.salientMaterials.Count > 0) {
-            ai2thorPhysicsScript.salientMaterials = this.RetrieveSalientMaterials(objectConfig.salientMaterials);
+            ai2thorPhysicsScript.salientMaterials = this.RetrieveSalientMaterials(objectDefinition.salientMaterials);
         }
 
         if (objectConfig.salientMaterials.Count > 0) {
@@ -830,6 +859,8 @@ public class MachineCommonSenseMain : MonoBehaviour {
                     return ObjectMetadata.ObjectSalientMaterial.Food;
                 case "glass":
                     return ObjectMetadata.ObjectSalientMaterial.Glass;
+                case "hollow":
+                    return ObjectMetadata.ObjectSalientMaterial.Hollow;
                 case "metal":
                     return ObjectMetadata.ObjectSalientMaterial.Metal;
                 case "organic":
@@ -897,11 +928,6 @@ public class MachineCommonSenseMain : MonoBehaviour {
                     gameObject.transform.localScale.z * resize.size.GetZ());
             });
 
-        objectConfig.rotates.Where(rotate => rotate.stepBegin <= step && rotate.stepEnd >= step &&
-            rotate.vector != null).ToList().ForEach((rotate) => {
-                gameOrParentObject.transform.Rotate(new Vector3(rotate.vector.x, rotate.vector.y, rotate.vector.z));
-            });
-
         objectConfig.teleports.Where(teleport => teleport.stepBegin <= step && teleport.stepEnd >= step &&
             teleport.vector != null).ToList().ForEach((teleport) => {
                 gameOrParentObject.transform.Translate(new Vector3(teleport.vector.x, teleport.vector.y,
@@ -953,6 +979,11 @@ public class MachineCommonSenseMain : MonoBehaviour {
                             gameOrParentObject.transform.Translate(new Vector3(move.vector.x, move.vector.y,
                                 move.vector.z) / (float)numberOfSubsteps);
                         });
+                    objectConfig.rotates.Where(rotate => rotate.stepBegin <= this.lastStep &&
+                        rotate.stepEnd >= this.lastStep && rotate.vector != null).ToList().ForEach((rotate) => {
+                            gameOrParentObject.transform.Rotate(new Vector3(rotate.vector.x, rotate.vector.y,
+                                rotate.vector.z) / (float)numberOfSubsteps);
+                        });
                 });
         }
     }
@@ -986,29 +1017,18 @@ public class MachineCommonSenseConfigCollider : MachineCommonSenseConfigTransfor
 }
 
 [Serializable]
-public class MachineCommonSenseConfigGameObject {
-    public string id;
+public class MachineCommonSenseConfigGameObject : MachineCommonSenseConfigAbstractObject {
     public string controller;
-    public bool kinematic;
-    public float mass;
     public string materialFile; // deprecated; please use materials
-    public bool moveable;
     public MachineCommonSenseConfigTransform nullParent = null;
-    public bool openable;
-    public bool opened;
-    public bool physics;
-    public bool pickupable;
-    public bool receptacle;
     public bool structure;
     public string type;
     public List<MachineCommonSenseConfigAction> actions;
     public List<MachineCommonSenseConfigMove> forces;
     public List<MachineCommonSenseConfigStepBegin> hides;
-    public List<string> materials;
     public List<MachineCommonSenseConfigMove> moves;
     public List<MachineCommonSenseConfigResize> resizes;
     public List<MachineCommonSenseConfigMove> rotates;
-    public List<string> salientMaterials;
     public List<MachineCommonSenseConfigShow> shows;
     public List<MachineCommonSenseConfigMove> teleports;
     public List<MachineCommonSenseConfigMove> torques;
@@ -1045,26 +1065,32 @@ public class MachineCommonSenseConfigMove : MachineCommonSenseConfigStepBeginEnd
 }
 
 [Serializable]
-public class MachineCommonSenseConfigObjectDefinition {
+public class MachineCommonSenseConfigAbstractObject {
     public string id;
-    public string resourceFile;
     public bool kinematic;
+    public float mass;
     public bool moveable;
     public bool openable;
+    public bool opened;
     public bool physics;
     public bool pickupable;
-    public bool primitive;
     public bool receptacle;
+    public List<string> materials;
+    public List<string> salientMaterials;
+}
+
+[Serializable]
+public class MachineCommonSenseConfigObjectDefinition : MachineCommonSenseConfigAbstractObject {
+    public string resourceFile;
+    public bool primitive;
     public MachineCommonSenseConfigCollider boundingBox = null;
     public MachineCommonSenseConfigSize scale = null;
     public List<MachineCommonSenseConfigAnimation> animations;
     public List<MachineCommonSenseConfigAnimator> animators;
     public List<MachineCommonSenseConfigCollider> colliders;
     public List<MachineCommonSenseConfigInteractables> interactables;
-    public List<string> materials;
     public List<MachineCommonSenseConfigOverride> overrides;
     public List<MachineCommonSenseConfigTransform> receptacleTriggerBoxes;
-    public List<string> salientMaterials;
     public List<MachineCommonSenseConfigVector> visibilityPoints;
 }
 
@@ -1141,6 +1167,7 @@ public class MachineCommonSenseConfigScene {
     public String ceilingMaterial;
     public String floorMaterial;
     public String wallMaterial;
+    public bool observation;
     public MachineCommonSenseConfigTransform performerStart = null;
     public List<MachineCommonSenseConfigGameObject> objects;
 }
