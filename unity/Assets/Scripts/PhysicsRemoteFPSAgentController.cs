@@ -1010,7 +1010,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         public bool CheckIfAgentCanLook(float targetAngle, int updown) {
             //print(targetAngle);
-            if (ItemInHand == null) {
+            
+            // If the Item the agent is holding isn't active, it's geometry won't interfere with looking
+            if (ItemInHand == null || !ItemInHand.active) {
                 //Debug.Log("Look check passed: nothing in Agent Hand to prevent Angle change");
                 return true;
             }
@@ -1087,8 +1089,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public bool CheckIfAgentCanTurn(int direction) {
             bool result = true;
 
-            if (ItemInHand == null) {
-                //Debug.Log("Rotation check passed: nothing in Agent Hand");
+            // If the Item the agent is holding isn't active, it's geometry won't interfere with looking
+            if (ItemInHand == null || !ItemInHand.active) {
+                //Debug.Log("Look check passed: nothing in Agent Hand to prevent Angle change");
                 return true;
             }
 
@@ -1906,7 +1909,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         //checks before actually moving. Previously we would moveCharacter() first and if we hit anything reset, but now to match
         //Luca's movement grid and valid position generation, simple transform setting is used for movement instead.
 
-        //XXX revisit what movement means when we more clearly define what "continuous" movement is
+        //XXX revisit what movement means when we more clearly definewhat "continuous" movement is
         protected bool moveInDirection(Vector3 direction, string uniqueId="", float maxDistanceToObject=-1.0f, bool forceAction = false) {
             Vector3 targetPosition = transform.position + direction;
             float angle = Vector3.Angle(transform.forward, Vector3.Normalize(direction));
