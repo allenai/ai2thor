@@ -7,6 +7,11 @@ using UnityStandardAssets.Characters.FirstPerson;
 using System.Text;
 
 public class MachineCommonSenseMain : MonoBehaviour {
+    private static float WALL_X_POSITION_OBSERVATION = 7.0f;
+    private static float WALL_X_POSITION_INTERACTION = 5.5f;
+    private static float WALL_Y_POSITION = 1.5f;
+    private static float WALL_Z_POSITION = 0;
+
     public string defaultSceneFile = "";
     public bool enableVerboseLog = false;
     public string ai2thorObjectRegistryFile = "ai2thor_object_registry";
@@ -141,8 +146,10 @@ public class MachineCommonSenseMain : MonoBehaviour {
 
         if (this.currentScene.observation) {
             this.ceiling.SetActive(false);
-            this.wallLeft.transform.position = new Vector3(-7, 1.5f, 0);
-            this.wallRight.transform.position = new Vector3(7, 1.5f, 0);
+            this.wallLeft.transform.position = new Vector3(-1 * MachineCommonSenseMain.WALL_X_POSITION_OBSERVATION,
+                MachineCommonSenseMain.WALL_Y_POSITION, MachineCommonSenseMain.WALL_Z_POSITION);
+            this.wallRight.transform.position = new Vector3(MachineCommonSenseMain.WALL_X_POSITION_OBSERVATION,
+                MachineCommonSenseMain.WALL_Y_POSITION, MachineCommonSenseMain.WALL_Z_POSITION);
             this.currentScene.performerStart = new MachineCommonSenseConfigTransform();
             this.currentScene.performerStart.position = new MachineCommonSenseConfigVector();
             this.currentScene.performerStart.position.z = -4.5f;
@@ -151,8 +158,10 @@ public class MachineCommonSenseMain : MonoBehaviour {
         else {
             this.ceiling.SetActive(true);
             AssignMaterial(this.ceiling, ceilingMaterial);
-            this.wallLeft.transform.position = new Vector3(-5.5f, 1.5f, 0);
-            this.wallRight.transform.position = new Vector3(5.5f, 1.5f, 0);
+            this.wallLeft.transform.position = new Vector3(-1 * MachineCommonSenseMain.WALL_X_POSITION_INTERACTION,
+                MachineCommonSenseMain.WALL_Y_POSITION, MachineCommonSenseMain.WALL_Z_POSITION);
+            this.wallRight.transform.position = new Vector3(MachineCommonSenseMain.WALL_X_POSITION_INTERACTION,
+                MachineCommonSenseMain.WALL_Y_POSITION, MachineCommonSenseMain.WALL_Z_POSITION);
         }
 
         AssignMaterial(this.floor, floorMaterial);
