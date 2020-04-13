@@ -186,7 +186,7 @@ def test_get_scenes_in_build():
     event = controller.step(dict(action='GetScenesInBuild'), raise_for_failure=True)
     return_scenes = set(event.metadata['actionReturn'])
     # not testing for private scenes
-    diff = return_scenes - scenes
+    diff = scenes - return_scenes
     assert len(diff) == 0, "scenes in build diff: %s" % diff
 
 
