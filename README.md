@@ -168,5 +168,6 @@ Take a GameObject (we'll call it the "Target" object) containing a MeshFilter, M
   - Added checks to see whether objects exist and set lastActionStatus appropriately for `PutObject`
   - Added custom `ThrowObject` in order to use a relative directional vector to throw object towards.
   - Changed 'CheckIfAgentCanMove' to take a reference to a directionMagnitude instead of a copy parameter, so if distance to object is greater than zero, we can move a partial distance in 'moveInDirection' by adjusting the Vector3
+  - If `PushObject` or `PullObject` is called on a held object, `ThrowObject` will be called instead of throwing an error.
 - `ImageSynthesis/ImageSynthesis`:
   - Added a null check in `OnSceneChange`
