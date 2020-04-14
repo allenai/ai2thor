@@ -77,9 +77,9 @@ public class AgentManager : MonoBehaviour
         //default primary agent's agentController type to "PhysicsRemoteFPSAgentController"
 		initializePrimaryAgent();
 
-        //auto set agentMode to tall for the web demo
+        //auto set agentMode to default for the web demo
         #if UNITY_WEBGL
-        primaryAgent.SetAgentMode("tall");
+        primaryAgent.SetAgentMode("default");
         #endif
 
         primaryAgent.actionDuration = this.actionDuration;
@@ -100,10 +100,10 @@ public class AgentManager : MonoBehaviour
 	public void Initialize(ServerAction action)
 	{
         //first parse agentMode and agentControllerType
-        //"tall" agentMode can use either default or "stochastic" agentControllerType
+        //"default" agentMode can use either default or "stochastic" agentControllerType
         //"bot" agentMode can use either default or "stochastic" agentControllerType
         //"drone" agentMode can ONLY use "drone" agentControllerType, and NOTHING ELSE (for now?)
-        if(action.agentMode.ToLower() == "tall")
+        if(action.agentMode.ToLower() == "default")
         {
             //if not stochastic, default to physics controller
             if(action.agentControllerType.ToLower() == "physics")
@@ -1185,7 +1185,7 @@ public struct MetadataWrapper
 public class ServerAction
 {
 	public string action;
-    public string agentMode = "tall"; //default to Tall version of Agent, valid values are "tall" "bot" "drone"
+    public string agentMode = "default"; //mode of Agent, valid values are "default" "bot" "drone", note certain modes are only compatible with certain controller types
 	public int agentCount = 1;
 	public string quality;
 	public bool makeAgentsVisible = true;

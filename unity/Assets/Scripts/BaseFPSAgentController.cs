@@ -194,11 +194,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
             //default nav mesh agent to false cause WHY DOES THIS BREAK THINGS I GUESS IT DOESN TLIKE TELEPORTING
             this.GetComponent<NavMeshAgent>().enabled = false;
 
-            // #if UNITY_WEBGL
-            // //if using editor mode or webgl demo, default to tall mode
-            // SetAgentMode("tall");
-            // #endif
-
             // Recordining initially disabled renderers and scene bounds 
             //this is setup to be used in hide and seek/ moving object helper functions
             foreach (Renderer r in GameObject.FindObjectsOfType<Renderer>()) {
@@ -382,17 +377,17 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 		public void Initialize(ServerAction action)
         {
-            if(action.agentMode.ToLower() == "tall" || 
+            if(action.agentMode.ToLower() == "default" || 
                action.agentMode.ToLower() == "bot" || 
                action.agentMode.ToLower() == "drone")
             {
-                //set agent mode to Tall, Bot or Drone accordingly
+                //set agent mode to Default, Bot or Drone accordingly
                 SetAgentMode(action.agentMode);
             }
             
             else
             {
-                errorMessage = "agentMode must be set to 'bot' or 'tall' or 'drone'";
+                errorMessage = "agentMode must be set to 'default' or 'bot' or 'drone'";
                 Debug.Log(errorMessage);
                 actionFinished(false);
                 return;
@@ -475,7 +470,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             FirstPersonCharacterCull fpcc = m_Camera.GetComponent<FirstPersonCharacterCull>();
 
             //determine if we are in Tall or Bot mode (or other modes as we go on)
-            if(whichMode == "tall")
+            if(whichMode == "default")
             {   
                 //toggle FirstPersonCharacterCull
                 fpcc.SwitchRenderersToHide(whichMode);
