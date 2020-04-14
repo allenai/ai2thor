@@ -24,8 +24,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
         protected float rotateGaussianMu = 0.0f;
         protected float rotateGaussianSigma = 0.5f;
         protected bool allowHorizontalMovement = false;
-        //determines rotation increment of stochastic rotate functions
-        protected float rotateStepDegrees = 90.0f;
 
         public new void Initialize(ServerAction action)
         {
@@ -49,10 +47,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
             if (action.rotateGaussianSigma > 0.0f)
             {
                 this.rotateGaussianSigma = action.rotateGaussianSigma;
-            }
-
-            if (action.rotateStepDegrees > 0.0) {
-                this.rotateStepDegrees = action.rotateStepDegrees;
             }
 
             #if UNITY_EDITOR
@@ -128,12 +122,26 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
         public override void RotateRight(ServerAction action)
         {
-            Rotate(new ServerAction() { rotation = new Vector3(0, this.rotateStepDegrees, 0) });
+            float rotationAmount = this.rotateStepDegrees;
+
+            if(action.degrees != 0.0f)
+            {
+                rotationAmount = action.degrees;
+            }
+
+            Rotate(new ServerAction() { rotation = new Vector3(0, rotationAmount, 0) });
         }
 
         public override void RotateLeft(ServerAction action)
         {
-            Rotate(new ServerAction() { rotation = new Vector3(0, -1.0f * this.rotateStepDegrees, 0) });
+            float rotationAmount = this.rotateStepDegrees;
+
+            if(action.degrees != 0.0f)
+            {
+                rotationAmount = action.degrees;
+            }
+
+            Rotate(new ServerAction() { rotation = new Vector3(0, -1.0f * rotationAmount, 0) });
         }
 
         public override void MoveAhead(ServerAction action)

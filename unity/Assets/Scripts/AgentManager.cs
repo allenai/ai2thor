@@ -1269,10 +1269,10 @@ public class ServerAction
     public string agentControllerType = "physics";//default to physics controller
     public float agentRadius = 2.0f;
     public int maxStepCount;
-    public float rotateStepDegrees = 90.0f;
+    public float rotateStepDegrees = 90.0f; //default rotation amount for RotateRight/RotateLeft actions
 
     public bool useAgentTransform = false;
-    public float degrees;//for rotate let/right/up/down
+    public float degrees;//for overriding the default degree amount in look up/lookdown/rotaterRight/rotateLeft
 
     public bool topView = false;
 

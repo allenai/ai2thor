@@ -433,9 +433,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         public override void RotateRight(ServerAction action) 
         {
-            //if controlCommand.degrees is default (0), rotate 90 by default
+            //if controlCommand.degrees is default (0), rotate by the default rotation amount set on initialize
             if(action.degrees == 0f)
-            action.degrees = 90f;
+            action.degrees = rotateStepDegrees;
 
             if (CheckIfAgentCanRotate("right", action.degrees)||action.forceAction) 
             {
@@ -452,9 +452,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         public override void RotateLeft(ServerAction action) 
         {
-            //if controlCommand.degrees is default (0), rotate 90 by default
+            //if controlCommand.degrees is default (0), rotate by the default rotation amount set on initialize
             if(action.degrees == 0f)
-            action.degrees = 90f;
+            action.degrees = rotateStepDegrees;
 
             if (CheckIfAgentCanRotate("left", action.degrees)||action.forceAction) 
             {

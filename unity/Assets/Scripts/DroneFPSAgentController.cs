@@ -58,6 +58,24 @@ namespace UnityStandardAssets.Characters.FirstPerson
             #endif
         }
 
+        public override void RotateRight(ServerAction action) 
+        {
+            //if controlCommand.degrees is default (0), rotate by the default rotation amount set on initialize
+            if(action.degrees == 0f)
+            action.degrees = rotateStepDegrees;
+
+            base.RotateRight(action);
+        }
+
+        public override void RotateLeft(ServerAction action) 
+        {
+            //if controlCommand.degrees is default (0), rotate by the default rotation amount set on initialize
+            if(action.degrees == 0f)
+            action.degrees = rotateStepDegrees;
+
+            base.RotateLeft(action);
+        }
+
         void FixedUpdate()
         {
             //when in drone mode, automatically pause time and physics simulation here

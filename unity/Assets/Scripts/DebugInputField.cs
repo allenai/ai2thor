@@ -166,6 +166,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         // action.renderObjectImage = true;
                         // action.renderFlowImage = true;
 						PhysicsController.actionComplete = false;
+                        // action.rotateStepDegrees = 30;
                         //action.ssao = "default";
                         //action.snapToGrid = true;
                         //action.makeAgentsVisible = false;
@@ -218,7 +219,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         action.agentMode = "bot";
                         action.agentControllerType = "stochastic";
 
-                        action.applyActionNoise = false;
+                        action.applyActionNoise = true;
                        
                         action.snapToGrid = false;
                         action.action = "Initialize";

@@ -55,7 +55,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		[SerializeField]
 		protected float m_GravityMultiplier;
 		protected static float gridSize = 0.25f;
+        //determins default move distance for move actions
 		protected float moveMagnitude;
+        //determines rotation increment of rotate functions
+        protected float rotateStepDegrees = 90.0f;
         protected bool snapToGrid;
 		protected bool continuousMode;//deprecated, use snapToGrid instead
 		public ImageSynthesis imageSynthesis;
@@ -417,6 +420,19 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 Debug.Log(errorMessage);
                 actionFinished(false);
                 return;
+            }
+
+            if (action.rotateStepDegrees <= 0.0)
+            {
+                errorMessage = "rotateStepDegrees must be a non-zero, non-negative float";
+                Debug.Log(errorMessage);
+                actionFinished(false);
+                return;
+            }
+
+            //default is 90 defined in the ServerAction class, specify whatever you want the default to be
+            if (action.rotateStepDegrees > 0.0) {
+                this.rotateStepDegrees = action.rotateStepDegrees;
             }
 
             this.snapToGrid = action.snapToGrid;
