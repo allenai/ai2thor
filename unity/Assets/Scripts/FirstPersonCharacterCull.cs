@@ -31,7 +31,7 @@ public class FirstPersonCharacterCull : MonoBehaviour
 
     public void SwitchRenderersToHide(string mode)
     {
-        if(mode == "tall")
+        if(mode == "default")
         RenderersToHide = TallRenderers;
 
         else if(mode == "bot")

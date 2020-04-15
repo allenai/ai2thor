@@ -52,7 +52,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         private PhysicsRemoteFPSAgentController PhysicsController;
         private bool throwEnabled;
 
-        private float throwSliderValue = 0.0f;
+        //this was assigned but never used so uhhhhhh comment out for now Alvaro heeeelp
+        //private float throwSliderValue = 0.0f;
         // Optimization
         private bool softHighlight = true;
 
@@ -117,7 +118,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     if (closestObj != null)
                     {
                         var actionName = "";
-                        if (closestObj.PrimaryProperty == SimObjPrimaryProperty.CanPickup && (onlyPickableObjectId == null || onlyPickableObjectId == closestObj.uniqueID))
+                        if (closestObj.PrimaryProperty == SimObjPrimaryProperty.CanPickup && (onlyPickableObjectId == null || onlyPickableObjectId == closestObj.objectID))
                         {
                             pickupState = true;
                             actionName = "PickupObject";
@@ -136,7 +137,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                             ServerAction action = new ServerAction
                             {
                                 action = actionName,
-                                objectId = closestObj.uniqueID
+                                objectId = closestObj.objectID
                             };
                             this.PhysicsController.ProcessControlCommand(action);
                         }
@@ -163,7 +164,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                             ServerAction action = new ServerAction
                             {
                                 action = actionName,
-                                objectId = closestObj.uniqueID
+                                objectId = closestObj.objectID
                             };
                             this.PhysicsController.ProcessControlCommand(action);
                         }
@@ -173,6 +174,42 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     // }
                 }
             }
+
+            //simulate TouchThenApply for in-editor debugging stuff
+            #if UNITY_EDITOR
+            if (Input.GetKeyDown(KeyCode.Mouse1)&& !Input.GetKey(KeyCode.LeftShift))
+            {
+                ServerAction dothis = new ServerAction();
+
+                dothis.action = "TouchThenApplyForce";
+                dothis.x = 0.5f;
+                dothis.y = 0.5f;
+                dothis.handDistance = 5.0f;
+                dothis.direction = new Vector3(0, 0.1f, 1);
+                dothis.moveMagnitude = 2000f;
+
+                // dothis.action = "SliceObject";
+                // dothis.objectId = PhysicsController.GetComponent<PhysicsRemoteFPSAgentController>().ObjectIdOfClosestVisibleObject();
+
+                PhysicsController.ProcessControlCommand(dothis);
+            }
+
+            if (Input.GetKeyDown(KeyCode.Mouse1) && Input.GetKey(KeyCode.LeftShift))
+            {
+                ServerAction dothis = new ServerAction();
+                dothis.action = "TouchThenApplyForce";
+                dothis.x = 0.5f;
+                dothis.y = 0.5f;
+                dothis.handDistance = 5.0f;
+                dothis.direction = new Vector3(0, 0.1f, 1);
+                dothis.moveMagnitude = 15000f;
+                
+                // dothis.action = "PutObject";
+                // dothis.receptacleObjectId = PhysicsController.ObjectIdOfClosestReceptacleObject();
+
+                PhysicsController.ProcessControlCommand(dothis);
+            }
+            #endif
 
             // Sets throw bar value
             if (throwEnabled && ThrowForceBarSlider != null) {
@@ -250,18 +287,18 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 softHighlight = true;
                 var simObj = hit.transform.GetComponent<SimObjPhysics>();
                 Func<bool> validObjectLazy = () => { 
-                    return (simObj.PrimaryProperty == SimObjPrimaryProperty.CanPickup && (this.onlyPickableObjectId == null || this.onlyPickableObjectId == simObj.uniqueID)) ||
+                    return (simObj.PrimaryProperty == SimObjPrimaryProperty.CanPickup && (this.onlyPickableObjectId == null || this.onlyPickableObjectId == simObj.objectID)) ||
                                   simObj.GetComponent<CanOpen_Object>() ||
                                   simObj.GetComponent<CanToggleOnOff>();
                 };
                 if (simObj != null && validObjectLazy())
                 {
-                    var withinReach = PhysicsController.FindObjectInVisibleSimObjPhysics(simObj.uniqueID) != null;
+                    var withinReach = PhysicsController.FindObjectInVisibleSimObjPhysics(simObj.objectID) != null;
                     setTargetText(simObj.name, withinReach);
                     newHighlightedObject = simObj;
                     var mRenderer = newHighlightedObject.GetComponentInChildren<MeshRenderer>();
 
-                    var useHighlightShader = !(disableHighlightShaderForObject && simObj.uniqueID == this.onlyPickableObjectId) && this.withHighlightShader;
+                    var useHighlightShader = !(disableHighlightShaderForObject && simObj.objectID == this.onlyPickableObjectId) && this.withHighlightShader;
                     
                     if (mRenderer != null && useHighlightShader)
                     {
@@ -296,7 +333,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     var mRenderer = this.highlightedObject.GetComponentInChildren<MeshRenderer>();
 
                     setTargetText("");
-                    var useHighlightShader = !(disableHighlightShaderForObject && highlightedObject.uniqueID == this.onlyPickableObjectId) && this.withHighlightShader;
+                    var useHighlightShader = !(disableHighlightShaderForObject && highlightedObject.objectID == this.onlyPickableObjectId) && this.withHighlightShader;
 
                     if (mRenderer != null && useHighlightShader)
                     {

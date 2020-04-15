@@ -7,7 +7,7 @@ using UnityStandardAssets.Characters.FirstPerson;
 public class JavaScriptInterface : MonoBehaviour {
 
     private PhysicsRemoteFPSAgentController PhysicsController;
-    private DebugInputField inputField;
+    //private DebugInputField inputField; //inputField.setControlMode no longer used in SetController
 
     [DllImport("__Internal")]
     private static extern void Init();
@@ -34,7 +34,7 @@ public class JavaScriptInterface : MonoBehaviour {
     void Start()
     {
         PhysicsController = gameObject.GetComponent<PhysicsRemoteFPSAgentController>();
-        inputField = GameObject.Find("DebugCanvasPhysics").GetComponentInChildren<DebugInputField>();//FindObjectOfType<DebugInputField>();
+        //inputField = GameObject.Find("DebugCanvasPhysics").GetComponentInChildren<DebugInputField>();//FindObjectOfType<DebugInputField>();
         //GameObject.Find("DebugCanvas").GetComponentInChildren<AgentManager>();
         Init();
 

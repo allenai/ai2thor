@@ -743,7 +743,7 @@ MonoBehaviour:
   ReceptacleTriggerBoxes: []
   isVisible: 0
   isInteractable: 0
-  isColliding: 0
+  isInAgentHand: 0
   MyColliders:
   - {fileID: 36365451318893063}
   - {fileID: 36365451475733959}
@@ -756,6 +756,12 @@ MonoBehaviour:
   HFbounciness: 0
   HFrbdrag: 0
   HFrbangulardrag: 0
+  salientMaterials: 
+  MySpawnPoints: []
+  CurrentTemperature: 0
+  HowManySecondsUntilRoomTemp: 10
+  inMotion: 0
+  lastVelocity: 0
   ContainedObjectReferences: []
 --- !u!114 &36365451007618174
 MonoBehaviour:
@@ -779,7 +785,8 @@ MonoBehaviour:
   animationTime: 0.05
   isOn: 0
   movementType: 0
-  MustBeClosedToTurnOn: 10000000
+  SelfControlled: 1
+  ControlledSimObjects: []
 --- !u!54 &36365451007618175
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -992,7 +999,6 @@ GameObject:
   - component: {fileID: 1898811810365056745}
   - component: {fileID: 1898811810365056751}
   - component: {fileID: 1898811810365056744}
-  - component: {fileID: 1898811810365056750}
   m_Layer: 8
   m_Name: FaucetMesh
   m_TagString: Structure
@@ -1062,20 +1068,6 @@ MeshRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
---- !u!64 &1898811810365056750
-MeshCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1898811810365056746}
-  m_Material: {fileID: 0}
-  m_IsTrigger: 0
-  m_Enabled: 1
-  serializedVersion: 3
-  m_Convex: 0
-  m_CookingOptions: 14
-  m_Mesh: {fileID: 4300084, guid: e8390eaa1f4750343abe84b3dd878f22, type: 3}
 --- !u!1 &6309244379612939666
 GameObject:
   m_ObjectHideFlags: 0

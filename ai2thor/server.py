@@ -65,7 +65,6 @@ class BufferedIO(object):
     def flush(self):
         self.wfile.write(b"".join(self.data))
         self.wfile.flush()
-
     def close(self):
         return self.wfile.close()
 

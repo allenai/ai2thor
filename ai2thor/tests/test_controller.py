@@ -24,7 +24,7 @@ class FakeQueue(object):
         return True
 
 def controller():
-    return ai2thor.controller.Controller(download_only=True)
+    return ai2thor.controller.Controller(download_only=True, local_executable_path='unity-local-path')
 
 def test_contstruct():
     c = controller()
@@ -134,7 +134,7 @@ def test_unity_command():
         '-screen-height', 
         '550'] 
 
-    c = ai2thor.controller.Controller(quality='Low', fullscreen=True, download_only=True)
+    c = ai2thor.controller.Controller(quality='Low', fullscreen=True, download_only=True, local_executable_path='unity-local-path')
     assert c.unity_command(650, 550, False) == [
         c.executable_path(),
         '-screen-fullscreen', 

@@ -116,7 +116,7 @@ public class Break : MonoBehaviour
                 {
                     resultObject.transform.rotation = Quaternion.Euler(Vector3.zero);
                     PhysicsSceneManager psm = GameObject.Find("PhysicsSceneManager").GetComponent<PhysicsSceneManager>();
-                    psm.Generate_InheritedUniqueID(gameObject.GetComponent<SimObjPhysics>(), resultObject.GetComponent<SimObjPhysics>(), 0);
+                    psm.Generate_InheritedObjectID(gameObject.GetComponent<SimObjPhysics>(), resultObject.GetComponent<SimObjPhysics>(), 0);
 
                     Rigidbody resultrb = resultObject.GetComponent<Rigidbody>();
                     resultrb.collisionDetectionMode = CollisionDetectionMode.ContinuousSpeculative;

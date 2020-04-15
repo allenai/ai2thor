@@ -104,11 +104,11 @@ public int objectVariation;
 
         public void DisableObjectCollisionWithAgent(string objectId) {
             var physicsSceneManager = FindObjectOfType<PhysicsSceneManager>();
-            if (!physicsSceneManager.UniqueIdToSimObjPhysics.ContainsKey(objectId)) {
+            if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
                 return;
             }
             
-            SimObjPhysics target = physicsSceneManager.UniqueIdToSimObjPhysics[objectId];
+            SimObjPhysics target = physicsSceneManager.ObjectIdToSimObjPhysics[objectId];
             disableCollistionWithPickupObject = true;
             foreach (Collider c0 in this.GetComponentsInChildren<Collider>()) {
                 foreach (Collider c1 in target.GetComponentsInChildren<Collider>()) {
@@ -153,116 +153,43 @@ public int objectVariation;
 
                 if (PhysicsController.actionComplete) {
                         handMode = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
-                        float FlyMagnitude = 1.0f;
                         float WalkMagnitude = 0.25f;
                         if (!handMode && !hidingPhase) {
                             if(Input.GetKeyDown(KeyCode.W))
                             {
                                 ServerAction action = new ServerAction();
-                                if(PhysicsController.FlightMode)
-                                {
-                                    action.action = "FlyAhead";
-                                    action.moveMagnitude = FlyMagnitude;
-                                    PhysicsController.ProcessControlCommand(action);
-                                }
-
-                                else
-                                {
-                                    action.action = "MoveAhead";
-                                    action.moveMagnitude = WalkMagnitude;		
-                                    PhysicsController.ProcessControlCommand(action);
-                                }
+                                action.action = "MoveAhead";
+                                action.moveMagnitude = WalkMagnitude;		
+                                PhysicsController.ProcessControlCommand(action);
+                            
                             }
 
                             if(Input.GetKeyDown(KeyCode.S))
                             {
                                 ServerAction action = new ServerAction();
-                                if(PhysicsController.FlightMode)
-                                {
-                                    action.action = "FlyBack";
-                                    action.moveMagnitude = FlyMagnitude;
-                                    PhysicsController.ProcessControlCommand(action);
-                                }
-
-                                else
-                                {
-                                    action.action = "MoveBack";
-                                    action.moveMagnitude = WalkMagnitude;		
-                                    PhysicsController.ProcessControlCommand(action);
-                                }
+                                action.action = "MoveBack";
+                                action.moveMagnitude = WalkMagnitude;		
+                                PhysicsController.ProcessControlCommand(action);
+                            
                             }
 
                             if(Input.GetKeyDown(KeyCode.A))
                             {
                                 ServerAction action = new ServerAction();
-                                if(PhysicsController.FlightMode)
-                                {
-                                    action.action = "FlyLeft";
-                                    action.moveMagnitude = FlyMagnitude;
-                                    PhysicsController.ProcessControlCommand(action);
-                                }
-
-                                else
-                                {
-                                    action.action = "MoveLeft";
-                                    action.moveMagnitude = WalkMagnitude;		
-                                    PhysicsController.ProcessControlCommand(action);
-                                }
+                                action.action = "MoveLeft";
+                                action.moveMagnitude = WalkMagnitude;		
+                                PhysicsController.ProcessControlCommand(action);
+                            
                             }
 
                             if(Input.GetKeyDown(KeyCode.D))
                             {
                                 ServerAction action = new ServerAction();
-                                if(PhysicsController.FlightMode)
-                                {
-                                    action.action = "FlyRight";
-                                    action.moveMagnitude = FlyMagnitude;
-                                    PhysicsController.ProcessControlCommand(action);
-                                }
-
-                                else
-                                {
-                                    action.action = "MoveRight";
-                                    action.moveMagnitude = WalkMagnitude;		
-                                    PhysicsController.ProcessControlCommand(action);
-                                }
+                                action.action = "MoveRight";
+                                action.moveMagnitude = WalkMagnitude;		
+                                PhysicsController.ProcessControlCommand(action);
+                            
                             }
-
-                            if(Input.GetKeyDown(KeyCode.I))
-                            {
-                                if(PhysicsController.FlightMode)
-                                {
-                                    ServerAction action = new ServerAction();
-                                    action.action = "FlyUp";
-                                    action.moveMagnitude = FlyMagnitude;
-                                    PhysicsController.ProcessControlCommand(action);
-                                }
-                            }
-
-                            if(Input.GetKeyDown(KeyCode.K))
-                            {
-                                if(PhysicsController.FlightMode)
-                                {
-                                    ServerAction action = new ServerAction();
-                                    action.action = "FlyDown";
-                                    action.moveMagnitude = FlyMagnitude;
-                                    PhysicsController.ProcessControlCommand(action);
-                                }
-                            }
-
-                            // if(Input.GetKeyDown(KeyCode.UpArrow))
-                            // {
-                            //     ServerAction action = new ServerAction();
-                            //     action.action = "LookUp";
-                            //     PhysicsController.ProcessControlCommand(action); 
-                            // }
-
-                            // if(Input.GetKeyDown(KeyCode.DownArrow))
-                            // {
-                            //     ServerAction action = new ServerAction();
-                            //     action.action = "LookDown";
-                            //     PhysicsController.ProcessControlCommand(action); 
-                            // }
 
                             if(Input.GetKeyDown(KeyCode.LeftArrow) )//|| Input.GetKeyDown(KeyCode.J))
                             {

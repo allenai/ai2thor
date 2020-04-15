@@ -819,6 +819,10 @@ class Controller(object):
             raise Exception('unable to handle target arch %s' % target_arch)
 
     def download_binary(self):
+
+        if self.local_executable_path:
+            return
+
         if platform.architecture()[0] != '64bit':
             raise Exception("Only 64bit currently supported")
 

@@ -216,6 +216,7 @@ Transform:
   - {fileID: 4138494269112618}
   - {fileID: 4604351128781834}
   - {fileID: 4194924594370948}
+  - {fileID: 5985605866622966888}
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: -134.747, y: -90, z: 0}
@@ -231,17 +232,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b439f6e4ef5714ee2a3643acf37b7a9d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  uniqueID: StoveKnob|+01.60|+00.92|+00.74
+  objectID: 
   Type: 32
   PrimaryProperty: 1
   SecondaryProperties: 1d000000
-  BoundingBox: {fileID: 0}
+  BoundingBox: {fileID: 8852144849163779966}
   VisibilityPoints:
   - {fileID: 4137403299328758}
   ReceptacleTriggerBoxes: []
   isVisible: 0
   isInteractable: 0
-  isColliding: 0
   isInAgentHand: 0
   MyColliders: []
   HFdynamicfriction: 0
@@ -249,6 +249,12 @@ MonoBehaviour:
   HFbounciness: 0
   HFrbdrag: 0
   HFrbangulardrag: 0
+  salientMaterials: 
+  MySpawnPoints: []
+  CurrentTemperature: 0
+  HowManySecondsUntilRoomTemp: 10
+  inMotion: 0
+  lastVelocity: 0
   ContainedObjectReferences: []
 --- !u!54 &54642751483355120
 Rigidbody:
@@ -324,3 +330,47 @@ Transform:
   m_Father: {fileID: 4322996899280170}
   m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &8852144849163779966
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 5985605866622966888}
+  - component: {fileID: 2806327084914398770}
+  m_Layer: 9
+  m_Name: BoundingBox
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &5985605866622966888
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8852144849163779966}
+  m_LocalRotation: {x: 0.6526825, y: 0.2720398, z: 0.6526825, w: 0.2720398}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1.5071938, y: 1.5071943, z: 1.5071933}
+  m_Children: []
+  m_Father: {fileID: 4322996899280170}
+  m_RootOrder: 3
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!65 &2806327084914398770
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8852144849163779966}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_Enabled: 0
+  serializedVersion: 2
+  m_Size: {x: 0.067826286, y: 0.067876875, z: 0.07718808}
+  m_Center: {x: 0, y: 0, z: 0}

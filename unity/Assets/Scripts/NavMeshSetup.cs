@@ -71,11 +71,12 @@ public class NavMeshSetup : MonoBehaviour
             SetNavMeshNotWalkable(GameObject.Find("Objects"));
             SetNavMeshNotWalkable(GameObject.Find("Structure"));
             var agentController = FindObjectOfType<PhysicsRemoteFPSAgentController>();
-            var capsuleCollider = agentController.GetComponent<CapsuleCollider>();
+            //var capsuleCollider = agentController.GetComponent<CapsuleCollider>();
             var navmeshAgent = agentController.GetComponent<NavMeshAgent>();
             navmeshAgent.enabled = true;
             // The Editor bake interface does not take with parameters and could not be modified as of 2018.3
-            var buildSettings = new NavMeshBuildSettings() {
+            //var buildSettings = 
+            new NavMeshBuildSettings() {
                 agentTypeID = navmeshAgent.agentTypeID,
                 agentRadius = navmeshAgent.radius,
                 agentHeight = navmeshAgent.height,
@@ -85,8 +86,6 @@ public class NavMeshSetup : MonoBehaviour
                 overrideVoxelSize = false,
                 overrideTileSize = false
             };
-
-            int bs = NavMesh.GetSettingsCount();
     
             UnityEditor.AI.NavMeshBuilder.BuildNavMesh();
             EditorSceneManager.SaveScene(EditorSceneManager.GetActiveScene());

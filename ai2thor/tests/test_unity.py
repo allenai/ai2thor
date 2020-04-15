@@ -20,7 +20,6 @@ class UnityTestController(ai2thor.controller.Controller):
 
 
 controller = UnityTestController()
-print(controller.local_executable_path)
 controller.reset('FloorPlan28')
 controller.step(dict(action='Initialize', gridSize=0.25))
 
@@ -168,7 +167,7 @@ def test_moveahead_mag():
     controller.step(dict(action='Teleport', x=-1.5, z=-1.5, y=1.1), raise_for_failure=True)
     controller.step(dict(action='MoveAhead', moveMagnitude=0.5), raise_for_failure=True)
     position = controller.last_event.metadata['agent']['position']
-    assert position == dict(x=-1.0, z=-1.5, y=0.900998354)
+    assert_near(position, dict(x=-1.0, z=-1.5, y=0.9009983))
 
 
 def test_moveahead_fail():
@@ -187,7 +186,7 @@ def test_get_scenes_in_build():
     event = controller.step(dict(action='GetScenesInBuild'), raise_for_failure=True)
     return_scenes = set(event.metadata['actionReturn'])
     # not testing for private scenes
-    diff = return_scenes - scenes
+    diff = scenes - return_scenes
     assert len(diff) == 0, "scenes in build diff: %s" % diff
 
 

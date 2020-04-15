@@ -10,6 +10,5 @@ public class CameraDepthSetup : MonoBehaviour
         Camera.main.depthTextureMode = DepthTextureMode.Depth;
         // GetComponent<Camera>().depthTextureMode = DepthTextureMode.Depth;
         Camera.main.transparencySortMode = TransparencySortMode.Perspective;
-        Debug.Log("RENDERING PATH: " + GetComponentInChildren<Camera>().actualRenderingPath);
     }
 }

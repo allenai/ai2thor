@@ -12,7 +12,6 @@ using UnityEngine.Networking;
 public class AgentManager : MonoBehaviour
 {
 	public List<BaseFPSAgentController> agents = new List<BaseFPSAgentController>();
-
 	protected int frameCounter;
 	protected bool serverSideScreenshot;
 	protected string robosimsClientToken = "";
@@ -27,23 +26,22 @@ public class AgentManager : MonoBehaviour
 	private bool renderDepthImage;
 	private bool renderClassImage;
 	private bool renderObjectImage;
+    private bool defaultRenderObjectImage;
 	private bool renderNormalsImage;
     private bool renderFlowImage;
 	private bool synchronousHttp = true;
 	private Socket sock = null;
 	private List<Camera> thirdPartyCameras = new List<Camera>();
 	private bool readyToEmit;
-
 	private Color[] agentColors = new Color[]{Color.blue, Color.yellow, Color.green, Color.red, Color.magenta, Color.grey};
-
 	public int actionDuration = 3;
-
 	private BaseFPSAgentController primaryAgent;
-
-    private JavaScriptInterface jsInterface;
-
+    //private JavaScriptInterface jsInterface;
     private PhysicsSceneManager physicsSceneManager;
     public int AdvancePhysicsStepCount = 0;
+    public List<Rigidbody> rbsInScene = null;
+    private bool droneMode = false;
+
 
 	void Awake() {
 
@@ -70,49 +68,85 @@ public class AgentManager : MonoBehaviour
 		// agent speed and action length
 		string prefix = trainPhase ? "TRAIN_" : "TEST_";
 
-
-		
-
 		actionDuration = LoadIntVariable(actionDuration, prefix + "ACTION_LENGTH");
 
 	}
 
-	void Start() {
+	void Start() 
+	{
+        //default primary agent's agentController type to "PhysicsRemoteFPSAgentController"
 		initializePrimaryAgent();
+
+        //auto set agentMode to default for the web demo
+        #if UNITY_WEBGL
+        primaryAgent.SetAgentMode("default");
+        #endif
+
         primaryAgent.actionDuration = this.actionDuration;
 		readyToEmit = true;
-		Debug.Log("Graphics Tier: " + Graphics.activeTier);
-		this.agents.Add (primaryAgent);
-
+		// this.agents.Add (primaryAgent);
         physicsSceneManager = GameObject.Find("PhysicsSceneManager").GetComponent<PhysicsSceneManager>();
+
+        //cache all rigidbodies that are in the scene by default
+        //NOTE: any rigidbodies created from actions such as Slice/Break or spawned in should be added to this!
+        rbsInScene = new List<Rigidbody>(FindObjectsOfType<Rigidbody>());
 	}
 
-	private void initializePrimaryAgent() {
-
-		GameObject fpsController = GameObject.FindObjectOfType<BaseFPSAgentController>().gameObject;
-		primaryAgent = fpsController.GetComponent<PhysicsRemoteFPSAgentController>();
-		primaryAgent.enabled = true;
-		primaryAgent.agentManager = this;
-		primaryAgent.actionComplete = true;
+	private void initializePrimaryAgent() 
+    {
+        SetUpPhysicsController();
 	}
 	
 	public void Initialize(ServerAction action)
 	{
-        if (action.agentType != null && action.agentType.ToLower() == "stochastic") {
-            this.agents.Clear();
+        //first parse agentMode and agentControllerType
+        //"default" agentMode can use either default or "stochastic" agentControllerType
+        //"bot" agentMode can use either default or "stochastic" agentControllerType
+        //"drone" agentMode can ONLY use "drone" agentControllerType, and NOTHING ELSE (for now?)
+        if(action.agentMode.ToLower() == "default")
+        {
+            //if not stochastic, default to physics controller
+            if(action.agentControllerType.ToLower() == "physics")
+            {
+                print("set up physics controller");
+                //set up physics controller
+                SetUpPhysicsController();
+            }
 
-            // stochastic must not snap to grid to work properly
-            action.snapToGrid = false;
+            //if stochastic, set up stochastic controller
+            else if(action.agentControllerType.ToLower() == "stochastic")
+            {
+                //set up stochastic controller
+                SetUpStochasticController(action);
+            }
+        }
 
-            GameObject fpsController = GameObject.FindObjectOfType<BaseFPSAgentController>().gameObject;
-            primaryAgent.enabled = false;
+        else if(action.agentMode.ToLower() == "bot")
+        {
+            //if not stochastic, default to physics controller
+            if(action.agentControllerType.ToLower() == "physics")
+            {
+                //set up physics controller
+                SetUpPhysicsController();
+            }
+            //if stochastic, set up stochastic controller
+            if(action.agentControllerType.ToLower() == "stochastic")
+            {
+                //set up stochastic controller
+                SetUpStochasticController(action);
+            }
+        }
 
-            primaryAgent = fpsController.GetComponent<StochasticRemoteFPSAgentController>();
-            primaryAgent.agentManager = this;
-            primaryAgent.enabled = true;
-            // must manually call start here since it this only gets called before Update() is called
-            primaryAgent.Start();
-            this.agents.Add(primaryAgent);
+        else if(action.agentMode.ToLower() == "drone")
+        {
+            if(action.agentControllerType.ToLower() != "drone")
+            {
+                Debug.Log("'drone' agentMode is only compatible with 'drone' agentControllerType, forcing agentControllerType to 'drone'");
+                action.agentControllerType = "drone";
+
+                //ok now set up drone controller
+                SetUpDroneController(action);
+            }
         }
         
 		primaryAgent.ProcessControlCommand (action);
@@ -120,14 +154,62 @@ public class AgentManager : MonoBehaviour
 		this.renderClassImage = action.renderClassImage;
 		this.renderDepthImage = action.renderDepthImage;
 		this.renderNormalsImage = action.renderNormalsImage;
-		this.renderObjectImage = action.renderObjectImage;
+		this.renderObjectImage = this.defaultRenderObjectImage = action.renderObjectImage;
         this.renderFlowImage = action.renderFlowImage;
 		if (action.alwaysReturnVisibleRange) {
 			((PhysicsRemoteFPSAgentController) primaryAgent).alwaysReturnVisibleRange = action.alwaysReturnVisibleRange;
 		}
+        print("start addAgents");
 		StartCoroutine (addAgents (action));
 
 	}
+
+    private void SetUpStochasticController(ServerAction action)
+    {
+        this.agents.Clear();
+        action.snapToGrid = false;
+        GameObject fpsController = GameObject.FindObjectOfType<BaseFPSAgentController>().gameObject;
+        primaryAgent.enabled = false;
+        primaryAgent = fpsController.GetComponent<StochasticRemoteFPSAgentController>();
+        primaryAgent.agentManager = this;
+        primaryAgent.enabled = true;
+        // primaryAgent.Start();
+        this.agents.Add(primaryAgent);
+    }
+
+    private void SetUpDroneController (ServerAction action)
+    {
+        this.agents.Clear();
+        action.snapToGrid = false;
+        GameObject fpsController = GameObject.FindObjectOfType<BaseFPSAgentController>().gameObject;
+        primaryAgent.enabled = false;
+        primaryAgent = fpsController.GetComponent<DroneFPSAgentController>();
+        primaryAgent.agentManager = this;
+        primaryAgent.enabled = true;
+        this.agents.Add(primaryAgent);
+        droneMode = true;//set flag for drone mode so the emitFrame syncs up with Drone's lateUpdate
+    }
+
+    private void SetUpPhysicsController ()
+    {
+        this.agents.Clear();
+		GameObject fpsController = GameObject.FindObjectOfType<BaseFPSAgentController>().gameObject;
+		primaryAgent = fpsController.GetComponent<PhysicsRemoteFPSAgentController>();
+		primaryAgent.enabled = true;
+		primaryAgent.agentManager = this;
+		primaryAgent.actionComplete = true;
+        this.agents.Add(primaryAgent);
+    }
+    //used to add a reference to a rigidbody created after the scene was started
+    public void AddToRBSInScene(Rigidbody rb)
+    {
+        rbsInScene.Add(rb);
+    }
+
+    public void RemoveFromRBSInScene(Rigidbody rb)
+    {
+        rbsInScene.Remove(rb);
+    }
 
     //return reference to primary agent in case we need a reference to the primary
     public BaseFPSAgentController ReturnPrimaryAgent()
@@ -319,39 +401,37 @@ public class AgentManager : MonoBehaviour
 			}
 		}
 
-		int hasUpdateCount = 0;
-		bool FlightMode = false;
-        //check if any active agents are in FlightMode
-        foreach (PhysicsRemoteFPSAgentController physAgent in this.agents)
-        {
-			if (physAgent.FlightMode)
-            {
-				FlightMode = true;
+		int hasDroneAgentUpdatedCount = 0;
 
+        if(droneMode)
+        {
+            foreach (DroneFPSAgentController droneAgent in this.agents)
+            {
                 //get total count of all flight mode agents that have finished updating
-                if (physAgent.hasFixedUpdateHappened)
+                if (droneAgent.hasFixedUpdateHappened)
                 {
-                    hasUpdateCount++;
+                    hasDroneAgentUpdatedCount++;
                 }
-			}
+            }
         }
 
         //check what objects in the scene are currently in motion
-        Rigidbody[] rbs = FindObjectsOfType(typeof(Rigidbody)) as Rigidbody[];
-        foreach(Rigidbody rb in rbs)
+        //Rigidbody[] rbs = FindObjectsOfType(typeof(Rigidbody)) as Rigidbody[];
+        foreach(Rigidbody rb in rbsInScene)
         {
             //if this rigidbody is part of a SimObject, calculate rest using lastVelocity/currentVelocity comparisons
-            if(rb.GetComponentInParent<SimObjPhysics>())
+            if(rb.GetComponentInParent<SimObjPhysics>() && rb.transform.gameObject.activeSelf) // make sure the object is actually active, otherwise skip the check
             {
-                
                 SimObjPhysics sop = rb.GetComponentInParent<SimObjPhysics>();
                 
                 float currentVelocity = Math.Abs(rb.angularVelocity.sqrMagnitude + rb.velocity.sqrMagnitude);
                 float accel = (currentVelocity - sop.lastVelocity) / Time.fixedDeltaTime;
 
-                if(accel == 0)
+                if(Mathf.Abs(accel) <= 0.0001f)
                 {
                     sop.inMotion = false;
+                    //print(sop.transform.name + " should be sleeping");
+                    //rb.Sleep(); maybe do something to ensure object has stopped moving, and reduce jitter
                 }
 
                 else
@@ -359,34 +439,66 @@ public class AgentManager : MonoBehaviour
                     //the rb's velocities are not 0, so it is in motion and the scene is not at rest
                     rb.GetComponentInParent<SimObjPhysics>().inMotion = true;
                     physicsSceneManager.isSceneAtRest = false;
+                    // #if UNITY_EDITOR
+                    // print(rb.GetComponentInParent<SimObjPhysics>().name + " is still in motion!");
+                    // #endif
                 }
-
             }
 
             //this rigidbody is not a SimOBject, and might be a piece of a shattered sim object spawned in, or something
             else
             {
-                //is the rigidbody at non zero velocity? then the scene is not at rest
-                if(!(Math.Abs(rb.angularVelocity.sqrMagnitude + 
-                rb.velocity.sqrMagnitude) < 0.001))
+                if(rb.transform.gameObject.activeSelf)
                 {
-                    physicsSceneManager.isSceneAtRest = false;
+                    //is the rigidbody at non zero velocity? then the scene is not at rest
+                    if(!(Math.Abs(rb.angularVelocity.sqrMagnitude + 
+                    rb.velocity.sqrMagnitude) < 0.01))
+                    {
+                        physicsSceneManager.isSceneAtRest = false;
+                        //make sure the rb's drag values are not at 0 exactly
+                        //if(rb.drag < 0.1f)
+                        rb.drag += 0.01f;
+
+                        //if(rb.angularDrag < 0.1f)
+                        //rb.angularDrag = 1.5f;
+                        rb.angularDrag += 0.01f;
+
+                        #if UNITY_EDITOR
+                        print(rb.transform.name + " is still in motion!");
+                        #endif
+                    }
+
+                    //the velocities are small enough, assume object has come to rest and force this one to sleep
+                    else
+                    {
+                        rb.drag = 1.0f;
+                        rb.angularDrag = 1.0f;
+                    }
+
+                    //if the shard/broken piece gets out of bounds somehow and begins falling forever, get rid of it with this check
+                    if(rb.transform.position.y < -50f)
+                    {
+                        rb.transform.gameObject.SetActive(false);
+                        //note: we might want to remove these from the list of rbs at some point but for now it'll be fine
+                    }
                 }
             }
         }
 
-		if (completeCount == agents.Count && completeCount > 0 && readyToEmit) {
-			if (!FlightMode)
+		if (completeCount == agents.Count && completeCount > 0 && readyToEmit) 
+        {
+            //start emit frame for physics and stochastic controllers
+			if(!droneMode)
             {
 				readyToEmit = false;
 				StartCoroutine (EmitFrame ());
 			}
             
-            //some number of agents is in FlightMode
-            else
+            //start emit frame for flying drone controller
+            if(droneMode)
             {
                 //make sure each agent in flightMode has updated at least once
-				if (hasUpdateCount == agents.Count && hasUpdateCount > 0)
+				if (hasDroneAgentUpdatedCount == agents.Count && hasDroneAgentUpdatedCount > 0)
                 {
 					readyToEmit = false;
 					StartCoroutine (EmitFrame ());
@@ -396,7 +508,7 @@ public class AgentManager : MonoBehaviour
 
         //ok now if the scene is at rest, turn back on physics autosimulation automatically
         //note: you can do this earlier by manually using the UnpausePhysicsAutoSim() action found in PhysicsRemoteFPSAgentController
-        if(physicsSceneManager.isSceneAtRest && !FlightMode &&
+        if(physicsSceneManager.isSceneAtRest && !droneMode &&
         physicsSceneManager.physicsSimulationPaused && AdvancePhysicsStepCount > 0)
         {
             //print("soshite toki wa ugoki desu");
@@ -545,7 +657,6 @@ public class AgentManager : MonoBehaviour
 
 	public IEnumerator EmitFrame() {
 
-
 		frameCounter += 1;
 
 		bool shouldRender = this.renderImage && serverSideScreenshot;
@@ -565,7 +676,9 @@ public class AgentManager : MonoBehaviour
 
 		ThirdPartyCameraMetadata[] cameraMetadata = new ThirdPartyCameraMetadata[this.thirdPartyCameras.Count];
 		RenderTexture currentTexture = null;
+        #if UNITY_WEBGL
         JavaScriptInterface jsInterface = null;
+        #endif
         if (shouldRender) {
             currentTexture = RenderTexture.active;
             for (int i = 0; i < this.thirdPartyCameras.Count; i++) {
@@ -587,7 +700,9 @@ public class AgentManager : MonoBehaviour
 
         for (int i = 0; i < this.agents.Count; i++) {
             BaseFPSAgentController agent = this.agents.ToArray () [i];
+            #if UNITY_WEBGL
             jsInterface = agent.GetComponent<JavaScriptInterface>();
+            #endif
             MetadataWrapper metadata = agent.generateMetadataWrapper ();
             metadata.agentId = i;
             // we don't need to render the agent's camera for the first agent
@@ -610,9 +725,6 @@ public class AgentManager : MonoBehaviour
 
         var serializedMetadata = Newtonsoft.Json.JsonConvert.SerializeObject(multiMeta);
 		#if UNITY_WEBGL
-
-				// JavaScriptInterface jsI =  FindObjectOfType<JavaScriptInterface>();
-				// jsInterface.SendAction(new ServerAction(){action = "Test"});
                 if (jsInterface != null) {
 					jsInterface.SendActionMetadata(serializedMetadata);
 				}
@@ -624,7 +736,6 @@ public class AgentManager : MonoBehaviour
 
         #if !UNITY_WEBGL 
 		if (synchronousHttp) {
-
 
 			if (this.sock == null) {
 				// Debug.Log("connecting to host: " + robosimsHost);
@@ -638,7 +749,6 @@ public class AgentManager : MonoBehaviour
                     Debug.Log("Socket exception: " + e.ToString());
                 }
 			}
-            
 
             if (this.sock != null && this.sock.Connected) {
                 byte[] rawData = form.data;
@@ -651,8 +761,8 @@ public class AgentManager : MonoBehaviour
                 }
                 request += "\r\n";
 
-                int sent = this.sock.Send(Encoding.ASCII.GetBytes(request));
-                sent = this.sock.Send(rawData);
+                this.sock.Send(Encoding.ASCII.GetBytes(request));
+                this.sock.Send(rawData);
 
                 // waiting for a frame here keeps the Unity window in sync visually
                 // its not strictly necessary, but allows the interact() command to work properly
@@ -716,17 +826,21 @@ public class AgentManager : MonoBehaviour
 			}
 		}
 
-		if (Time.timeScale == 0 && !Physics.autoSimulation && physicsSceneManager.physicsSimulationPaused)
+        if(droneMode)
         {
-            PhysicsRemoteFPSAgentController agent_tmp = this.agents.ToArray()[0].GetComponent<PhysicsRemoteFPSAgentController>();
-            Time.timeScale = agent_tmp.autoResetTimeScale;
-            Physics.autoSimulation = true;
-            physicsSceneManager.physicsSimulationPaused = false;
-            agent_tmp.hasFixedUpdateHappened = false;
+            if (Time.timeScale == 0 && !Physics.autoSimulation && physicsSceneManager.physicsSimulationPaused)
+            {
+                DroneFPSAgentController agent_tmp = this.agents.ToArray()[0].GetComponent<DroneFPSAgentController>();
+                Time.timeScale = agent_tmp.autoResetTimeScale;
+                Physics.autoSimulation = true;
+                physicsSceneManager.physicsSimulationPaused = false;
+                agent_tmp.hasFixedUpdateHappened = false;
+            }
         }
 
         #endif
     }
+
 	private int parseContentLength(string header) {
 		// Debug.Log("got header: " + header);
 		string[] fields = header.Split(new char[]{'\r','\n'});
@@ -747,12 +861,15 @@ public class AgentManager : MonoBehaviour
 	private void ProcessControlCommand(string msg)
 	{
 
+        this.renderObjectImage = this.defaultRenderObjectImage;
+
 		ServerAction controlCommand = new ServerAction();
 
 		JsonUtility.FromJsonOverwrite(msg, controlCommand);
 
 		this.currentSequenceId = controlCommand.sequenceId;
 		this.renderImage = controlCommand.renderImage;
+
 		activeAgentId = controlCommand.agentId;
 		if (controlCommand.action == "Reset") {
 			this.Reset (controlCommand);
@@ -763,6 +880,15 @@ public class AgentManager : MonoBehaviour
 		} else if (controlCommand.action == "UpdateThirdPartyCamera") {
 			this.UpdateThirdPartyCamera(controlCommand);
 		} else {
+            // we only allow renderObjectImage to be flipped on 
+            // on a per step() basis, since by default the param is false
+            // so we don't know if a request is meant to turn the param off
+            // or if it is just the value by default
+            if (controlCommand.renderObjectImage) {
+                this.renderObjectImage = true;
+            }
+
+            this.activeAgent().updateImageSynthesis(this.renderDepthImage || this.renderClassImage || this.renderObjectImage || this.renderNormalsImage);
 			this.activeAgent().ProcessControlCommand (controlCommand);
 			readyToEmit = true;
 		}
@@ -817,13 +943,47 @@ public class ThirdPartyCameraMetadata
 	public Vector3 rotation;
 }
 
+//adding AgentMetdata class so there is less confusing
+//overlap between ObjectMetadata and AgentMetadata
+[Serializable]
+public class AgentMetadata
+{
+    public string name;
+    public Vector3 position;
+    public Vector3 rotation;
+    public float cameraHorizon;
+	public bool isStanding;
+    public AgentMetadata() {}
+}
+
+[Serializable]
+public class DroneAgentMetadata : AgentMetadata
+{
+    public float droneCurrentTime;
+    public Vector3 LauncherPosition;
+}
+
+//additional metadata for drone objects (only use with Drone controller)
+[Serializable]
+public class DroneObjectMetadata : ObjectMetadata
+{
+    // Drone Related Metadata
+    public int numSimObjHits;
+    public int numFloorHits;
+    public int numStructureHits;
+    public float lastVelocity;
+    public Vector3 LauncherPosition;
+	public bool isCaught;
+    public DroneObjectMetadata() {}
+}
+
 [Serializable]
 public class ObjectMetadata
 {
 	public string name;
 	public Vector3 position;
 	public Vector3 rotation;
-	public float cameraHorizon;
+	//public float cameraHorizon; moved to AgentMetadata, objects don't have a camerahorizon
 	public bool visible;
 	public bool receptacle;
 	///
@@ -866,43 +1026,69 @@ public class ObjectMetadata
 	///
 	public bool pickupable;
 	public bool isPickedUp;//if the pickupable object is actively being held by the agent
+    public bool moveable;//if the object is moveable, able to be pushed/affected by physics but is too big to pick up
 
 	public float mass;//mass is only for moveable and pickupable objects
 
 	//salient materials are only for pickupable and moveable objects, for now static only objects do not report material back since we have to assign them manually
-	public enum ObjectSalientMaterial {Metal, Wood, Plastic, Glass, Ceramic, Stone, Fabric, Rubber, Food, Paper, Wax, Soap, Sponge, Organic} //salient materials that make up an object (ie: cell phone - metal, glass)
+	public enum ObjectSalientMaterial {Metal, Wood, Plastic, Glass, Ceramic, Stone, Fabric, Rubber, Food, Paper, Wax, Soap, Sponge, Organic, Leather} //salient materials that make up an object (ie: cell phone - metal, glass)
 
 	public string [] salientMaterials; //salient materials that this object is made of as strings (see enum above). This is only for objects that are Pickupable or Moveable
 	///
 	public string[] receptacleObjectIds;
-	public float distance;
+	public float distance;//dintance fromm object's transform to agent transform
 	public String objectType;
 	public string objectId;
-	public string parentReceptacle;
+	//public string parentReceptacle;
 	public string[] parentReceptacles;
-	public float currentTime;
+	//public float currentTime;
     public bool isMoving;//true if this game object currently has a non-zero velocity
-
-    public WorldSpaceBounds objectBounds;
-	public ObjectMetadata() { }
-
-    // Drone Related Metadata
-    public bool FlightMode;
-    public int numSimObjHits;
-    public int numFloorHits;
-    public int numStructureHits;
-    public float lastVelocity;
-    public Vector3 LauncherPosition;
-	public bool isCaught;
-    // end drone metadata
+    public AxisAlignedBoundingBox axisAlignedBoundingBox;
+    public ObjectOrientedBoundingBox objectOrientedBoundingBox;
     
+	public ObjectMetadata() { }
 }
 
 [Serializable]
-public class WorldSpaceBounds
+public class SceneBounds
 {
-    //8 corners of the box that bounds a sim object
-    public Vector3[] objectBoundsCorners;
+    //8 corners of the world axis aligned box that bounds a sim object
+    //8 rows - 8 corners, one per row
+    //3 columns - x, y, z of each corner respectively
+    public float[,] cornerPoints = new float[8,3];
+
+    //center of the bounding box of the scene in worldspace coordinates
+    public Vector3 center;
+
+    //the size of the bounding box of the scene in worldspace coordinates (world x, y, z)
+    public Vector3 size;
+}
+
+//for returning a world axis aligned bounding box
+//if an object is rotated, the dimensions of this box are subject to change
+[Serializable]
+public class AxisAlignedBoundingBox
+{
+    //8 corners of the world axis aligned box that bounds a sim object
+    //8 rows - 8 corners, one per row
+    //3 columns - x, y, z of each corner respectively
+    public float[,] cornerPoints = new float[8,3];
+
+    //center of the bounding box of this object in worldspace coordinates
+    public Vector3 center;
+
+    //the size of the bounding box in worldspace coordinates (world x, y, z)
+    public Vector3 size;
+}
+
+//for returning an object oriented bounds not locked to world axes
+//if an object is rotated, this object oriented box will not change dimensions
+[Serializable]
+public class ObjectOrientedBoundingBox
+{
+    //probably return these from the BoundingBox component of the object for now?
+    //this means that it will only work for Pickupable objects at the moment
+    public float[,] cornerPoints = new float[8,3];
 }
 
 [Serializable]
@@ -935,8 +1121,8 @@ public class HandMetadata {
 [Serializable]
 public class ObjectTypeCount
 {
-    public string objectType;
-    public int count;
+    public string objectType; //specify object by type in scene
+    public int count; //the total count of objects of type objectType that we will try to make exist in the scene
 }
 
 [Serializable]
@@ -947,11 +1133,23 @@ public class ObjectPose
     public Vector3 rotation;
 }
 
+//set object states either by Type or by compatible State
+//"slice all objects of type Apple"
+//"slice all objects that have the sliceable property"
+//also used to randomly do this ie: randomly slice all objects of type apple, randomly slice all objects that have sliceable property
 [Serializable]
-public class ObjectToggle
+public class SetObjectStates
 {
-    public string objectType;
-    public bool isOn;
+    public string objectType = null; //valid strings are any Object Type listed in documentation (ie: AlarmClock, Apple, etc)
+    public string stateChange = null; //valid strings are: openable, toggleable, breakable, canFillWithLiquid, dirtyable, cookable, sliceable, canBeUsedUp
+    public bool isOpen;
+    public bool isToggled;
+    public bool isBroken;
+    public bool isFilledWithLiquid;
+    public bool isDirty;
+    public bool isCooked;
+    public bool isSliced;
+    public bool isUsedUp;
 }
 
 [Serializable]
@@ -959,10 +1157,9 @@ public struct MetadataWrapper
 {
 	public ObjectMetadata[] objects;
     public bool isSceneAtRest;//set true if all objects in the scene are at rest (or very very close to 0 velocity)
-	public ObjectMetadata agent;
+	public AgentMetadata agent;
 	public HandMetadata hand;
 	public float fov;
-	public bool isStanding;
 	public Vector3 cameraPosition;
 	public float cameraOrthSize;
 	public ThirdPartyCameraMetadata[] thirdPartyCameras;
@@ -998,16 +1195,14 @@ public struct MetadataWrapper
 	public List<Vector3> visibleRange;
 	public System.Object actionReturn;
 	public float currentTime;
-    //time based on increments of fixedUpdate in drone mode
-    public float droneCurrentTime;
+    public SceneBounds sceneBounds;//return coordinates of the scene's bounds (center, size, extents)
 }
-
 
 [Serializable]
 public class ServerAction
 {
 	public string action;
-    public string agentMode = "tall"; //default to Tall version of Agent
+    public string agentMode = "default"; //mode of Agent, valid values are "default" "bot" "drone", note certain modes are only compatible with certain controller types
 	public int agentCount = 1;
 	public string quality;
 	public bool makeAgentsVisible = true;
@@ -1042,17 +1237,15 @@ public class ServerAction
     public float rotateGaussianMu;
     public float rotateGaussianSigma;
     public string skyboxColor = null;
-
 	public bool forceKinematic;
-
 	public float maxAgentsDistance = -1.0f;
-
 	public bool alwaysReturnVisibleRange = false;
 	public int sequenceId;
 	public bool snapToGrid = true;
 	public string sceneName;
 	public bool rotateOnTeleport;
 	public bool forceVisible;
+    public bool anywhere;//used for SpawnTargetCircle, GetSpawnCoordinatesAboveObject for if anywhere or only in agent view 
 	public bool randomizeOpen;
 	public int randomSeed;
 	public float moveMagnitude;
@@ -1078,19 +1271,25 @@ public class ServerAction
 	public bool allowDecayTemperature = true; //set to true if temperature should decay over time, set to false if temp changes should not decay, defaulted true
 	public string StateChange;//a string that specifies which state change to randomly toggle
     public float timeStep = 0.01f;
-    public ObjectTypeCount[] numRepeats;
-    public ObjectTypeCount[] minFreePerReceptacleType;
+    public float mass;
+    public float drag;
+    public float angularDrag;
+    public ObjectTypeCount[] numDuplicatesOfType; //specify, by object Type, how many duplicates of that given object type to try and spawn
+    //use only the objectType class member to specify which receptacle objects should be excluded from the valid receptacles to spawn objects in
+    public String[] excludedReceptacles; 
     public ObjectPose[] objectPoses;
-    public ObjectToggle[] objectToggles;
+    public SetObjectStates SetObjectStates;
+    public float minDistance;//used in target circle spawning function
+    public float maxDistance;//used in target circle spawning function
     public float noise;
     public ControllerInitialization controllerInitialization = null;
-    public string agentType;
+    public string agentControllerType = "physics";//default to physics controller
     public float agentRadius = 2.0f;
     public int maxStepCount;
-
-    public float rotateStepDegrees = 90.0f;
+    public float rotateStepDegrees = 90.0f; //default rotation amount for RotateRight/RotateLeft actions
 
     public bool useAgentTransform = false;
+    public float degrees;//for overriding the default degree amount in look up/lookdown/rotaterRight/rotateLeft
 
     public bool topView = false;
 
@@ -1113,7 +1312,6 @@ public class ServerAction
 
 	public SimObjType GetSimObjType()
 	{
-
 		if (string.IsNullOrEmpty(objectType))
 		{
 			return SimObjType.Undefined;
