@@ -5139,11 +5139,6 @@ public void PickupObject(ServerAction action) //use serveraction objectid
         ///// DATA GENERATION HELPERS /////
         ///////////////////////////////////
 
-        //no op action
-        public void Pass(ServerAction action) {
-            actionFinished(true);
-        }
-
         //this is a combination of objectIsWithinViewport and objectIsCurrentlyVisible, specifically to check
         //if a single sim object is on screen regardless of agent visibility maxDistance
         //DO NOT USE THIS FOR ALL OBJECTS cause it's going to be soooo expensive

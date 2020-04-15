@@ -107,7 +107,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
         // NOOP action to allow evaluation to know that the episode has finished
         public void Stop(ServerAction action) 
         {
-            actionFinished(true);
+            //i don't know why, but we have two no-op actions so here we go
+            base.Pass(action);
         }
 
         public override void Rotate(ServerAction action)
