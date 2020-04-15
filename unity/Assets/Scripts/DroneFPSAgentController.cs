@@ -260,8 +260,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
             metaMessage.cameraOrthSize = cameraOrthSize;
             cameraOrthSize = -1f;
             metaMessage.fov = m_Camera.fieldOfView;
-            metaMessage.isStanding = (m_Camera.transform.localPosition - standingLocalCameraPosition).magnitude < 0.1f;
-
             metaMessage.lastAction = lastAction;
             metaMessage.lastActionSuccess = lastActionSuccess;
             metaMessage.errorMessage = errorMessage;

@@ -198,7 +198,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             this.GetComponent<NavMeshAgent>().enabled = false;
 
             // Recordining initially disabled renderers and scene bounds 
-            //this is setup to be used in hide and seek/ moving object helper functions
+            //then setting up sceneBounds based on encapsulating all renderers
             foreach (Renderer r in GameObject.FindObjectsOfType<Renderer>()) {
                 if (!r.enabled) {
                     initiallyDisabledRenderers.Add(r.GetInstanceID());
@@ -1186,6 +1186,48 @@ namespace UnityStandardAssets.Characters.FirstPerson
             return b;
         }
 
+        public SceneBounds GenerateSceneBounds(Bounds bounding)
+        {
+            SceneBounds b = new SceneBounds();
+
+            b.cornerPoints[0,0] = bounding.center.x + bounding.size.x/2f;
+            b.cornerPoints[0,1] = bounding.center.y + bounding.size.y/2f;
+            b.cornerPoints[0,2] = bounding.center.z + bounding.size.z/2f;
+
+            b.cornerPoints[1,0] = bounding.center.x + bounding.size.x/2f;
+            b.cornerPoints[1,1] = bounding.center.y + bounding.size.y/2f;
+            b.cornerPoints[1,2] = bounding.center.z - bounding.size.z/2f;
+            
+            b.cornerPoints[2,0] = bounding.center.x + bounding.size.x/2f;
+            b.cornerPoints[2,1] = bounding.center.y - bounding.size.y/2f;
+            b.cornerPoints[2,2] = bounding.center.z + bounding.size.z/2f;
+
+            b.cornerPoints[3,0] = bounding.center.x + bounding.size.x/2f;
+            b.cornerPoints[3,1] = bounding.center.y - bounding.size.y/2f;
+            b.cornerPoints[3,2] = bounding.center.z - bounding.size.z/2f;
+
+            b.cornerPoints[4,0] = bounding.center.x - bounding.size.x/2f;
+            b.cornerPoints[4,1] = bounding.center.y + bounding.size.y/2f;
+            b.cornerPoints[4,2] = bounding.center.z + bounding.size.z/2f;
+    
+            b.cornerPoints[5,0] = bounding.center.x - bounding.size.x/2f;
+            b.cornerPoints[5,1] = bounding.center.y + bounding.size.y/2f;
+            b.cornerPoints[5,2] = bounding.center.z - bounding.size.z/2f;
+
+            b.cornerPoints[6,0] = bounding.center.x - bounding.size.x/2f;
+            b.cornerPoints[6,1] = bounding.center.y - bounding.size.y/2f;
+            b.cornerPoints[6,2] = bounding.center.z + bounding.size.z/2f;
+
+            b.cornerPoints[7,0] = bounding.center.x - bounding.size.x/2f;
+            b.cornerPoints[7,1] = bounding.center.y - bounding.size.y/2f;
+            b.cornerPoints[7,2] = bounding.center.z - bounding.size.z/2f;
+
+            b.center = bounding.center;
+            b.size = bounding.size;
+            
+            return b;
+        }
+
         //generates a world space bounding box that enncapsulates all active Colliders (trigger and non trigger) for a sim obj
         public AxisAlignedBoundingBox GenerateAxisAlignedBoundingBox(SimObjPhysics sop)
         {
@@ -1279,14 +1321,15 @@ namespace UnityStandardAssets.Characters.FirstPerson
             {
                 agentMeta.cameraHorizon -= 360;
             }
+	        agentMeta.isStanding = (m_Camera.transform.localPosition - standingLocalCameraPosition).magnitude < 0.1f;
 
             // OTHER METADATA
             MetadataWrapper metaMessage = new MetadataWrapper();
             metaMessage.agent = agentMeta;
             metaMessage.sceneName = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
             metaMessage.objects = this.generateObjectMetadata();
-            //check scene manager to see if the scene's objects are at rest
             metaMessage.isSceneAtRest = physicsSceneManager.isSceneAtRest;
+            metaMessage.sceneBounds = GenerateSceneBounds(sceneBounds);
             metaMessage.collided = collidedObjects.Length > 0;
             metaMessage.collidedObjects = collidedObjects;
             metaMessage.screenWidth = Screen.width;
@@ -1295,8 +1338,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
             metaMessage.cameraOrthSize = cameraOrthSize;
             cameraOrthSize = -1f;
             metaMessage.fov = m_Camera.fieldOfView;
-            metaMessage.isStanding = (m_Camera.transform.localPosition - standingLocalCameraPosition).magnitude < 0.1f;
-
             metaMessage.lastAction = lastAction;
             metaMessage.lastActionSuccess = lastActionSuccess;
             metaMessage.errorMessage = errorMessage;

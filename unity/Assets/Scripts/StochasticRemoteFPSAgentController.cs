@@ -58,6 +58,15 @@ namespace UnityStandardAssets.Characters.FirstPerson
             base.Initialize(action);
         }
 
+        //reset visible objects while in editor, for debug purposes only
+        private void LateUpdate()
+        {
+            #if UNITY_EDITOR || UNITY_WEBGL
+            ServerAction action = new ServerAction();
+            VisibleSimObjPhysics = VisibleSimObjs(action);
+            #endif
+        }
+
         public override void MoveRelative(ServerAction action)
         {
             if (!allowHorizontalMovement && Math.Abs(action.x) > 0)

@@ -952,6 +952,7 @@ public class AgentMetadata
     public Vector3 position;
     public Vector3 rotation;
     public float cameraHorizon;
+	public bool isStanding;
     public AgentMetadata() {}
 }
 
@@ -961,6 +962,7 @@ public class DroneAgentMetadata : AgentMetadata
     public float droneCurrentTime;
     public Vector3 LauncherPosition;
 }
+
 //additional metadata for drone objects (only use with Drone controller)
 [Serializable]
 public class DroneObjectMetadata : ObjectMetadata
@@ -1045,6 +1047,21 @@ public class ObjectMetadata
     public ObjectOrientedBoundingBox objectOrientedBoundingBox;
     
 	public ObjectMetadata() { }
+}
+
+[Serializable]
+public class SceneBounds
+{
+    //8 corners of the world axis aligned box that bounds a sim object
+    //8 rows - 8 corners, one per row
+    //3 columns - x, y, z of each corner respectively
+    public float[,] cornerPoints = new float[8,3];
+
+    //center of the bounding box of the scene in worldspace coordinates
+    public Vector3 center;
+
+    //the size of the bounding box of the scene in worldspace coordinates (world x, y, z)
+    public Vector3 size;
 }
 
 //for returning a world axis aligned bounding box
@@ -1143,7 +1160,6 @@ public struct MetadataWrapper
 	public AgentMetadata agent;
 	public HandMetadata hand;
 	public float fov;
-	public bool isStanding;
 	public Vector3 cameraPosition;
 	public float cameraOrthSize;
 	public ThirdPartyCameraMetadata[] thirdPartyCameras;
@@ -1179,6 +1195,7 @@ public struct MetadataWrapper
 	public List<Vector3> visibleRange;
 	public System.Object actionReturn;
 	public float currentTime;
+    public SceneBounds sceneBounds;//return coordinates of the scene's bounds (center, size, extents)
 }
 
 [Serializable]
