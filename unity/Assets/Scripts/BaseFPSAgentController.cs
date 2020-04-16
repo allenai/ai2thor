@@ -803,6 +803,47 @@ namespace UnityStandardAssets.Characters.FirstPerson
             return true;
         }
 
+        public void DisableObject(ServerAction action) {
+            string objectId = action.objectId;
+            if (physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
+                physicsSceneManager.ObjectIdToSimObjPhysics[objectId].gameObject.SetActive(false);
+                actionFinished(true);
+            } else {
+                actionFinished(false);
+            }
+        }
+
+        public void EnableObject(ServerAction action) {
+            string objectId = action.objectId;
+            if (physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
+                physicsSceneManager.ObjectIdToSimObjPhysics[objectId].gameObject.SetActive(true);
+                actionFinished(true);
+            } else {
+                actionFinished(false);
+            }
+        }
+        
+        //remove a given sim object from the scene. Pass in the object's objectID string to remove it.
+        public void RemoveFromScene(ServerAction action) {
+            //pass name of object in from action.objectId
+            if (action.objectId == null) {
+                errorMessage = "objectId required for OpenObject";
+                actionFinished(false);
+                return;
+            }
+
+            //see if the object exists in this scene
+            if (physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(action.objectId)) {
+                physicsSceneManager.ObjectIdToSimObjPhysics[action.objectId].transform.gameObject.SetActive(false);
+                physicsSceneManager.SetupScene();
+                actionFinished(true);
+                return;
+            }
+
+            errorMessage = action.objectId + " could not be found in this scene, so it can't be removed";
+            actionFinished(false);
+        }
+
         //Sweeptest to see if the object Agent is holding will prohibit movement
         public bool CheckIfItemBlocksAgentMovement(float moveMagnitude, int orientation, bool forceAction = false) {
             bool result = false;
@@ -1231,7 +1272,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
         //generates a world space bounding box that enncapsulates all active Colliders (trigger and non trigger) for a sim obj
         public AxisAlignedBoundingBox GenerateAxisAlignedBoundingBox(SimObjPhysics sop)
         {
-
             AxisAlignedBoundingBox b = new AxisAlignedBoundingBox();
  
             //get all colliders on the sop, excluding colliders if they are not enabled

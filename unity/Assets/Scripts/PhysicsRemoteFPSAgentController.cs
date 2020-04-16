@@ -6302,26 +6302,6 @@ public void PickupObject(ServerAction action) //use serveraction objectid
             actionFinished(true);
         }
 
-        public void DisableObject(ServerAction action) {
-            string objectId = action.objectId;
-            if (physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
-                physicsSceneManager.ObjectIdToSimObjPhysics[objectId].gameObject.SetActive(false);
-                actionFinished(true);
-            } else {
-                actionFinished(false);
-            }
-        }
-
-        public void EnableObject(ServerAction action) {
-            string objectId = action.objectId;
-            if (physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objectId)) {
-                physicsSceneManager.ObjectIdToSimObjPhysics[objectId].gameObject.SetActive(true);
-                actionFinished(true);
-            } else {
-                actionFinished(false);
-            }
-        }
-
         public void StackBooks(ServerAction action) {
             GameObject topLevelObject = GameObject.Find("HideAndSeek");
             SimObjPhysics[] hideSeekObjects = topLevelObject.GetComponentsInChildren<SimObjPhysics>();
@@ -7204,27 +7184,6 @@ public void PickupObject(ServerAction action) //use serveraction objectid
             }
 
             StartCoroutine(SpamObjectsInRoomHelper(100, newObjects));
-        }
-
-        //remove a given sim object from the scene. Pass in the object's objectID string to remove it.
-        public void RemoveFromScene(ServerAction action) {
-            //pass name of object in from action.objectId
-            if (action.objectId == null) {
-                errorMessage = "objectId required for OpenObject";
-                actionFinished(false);
-                return;
-            }
-
-            //see if the object exists in this scene
-            if (physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(action.objectId)) {
-                physicsSceneManager.ObjectIdToSimObjPhysics[action.objectId].transform.gameObject.SetActive(false);
-                physicsSceneManager.SetupScene();
-                actionFinished(true);
-                return;
-            }
-
-            errorMessage = action.objectId + " could not be found in this scene, so it can't be removed";
-            actionFinished(false);
         }
 
         public void ChangeLightSet(ServerAction action)

@@ -83,6 +83,11 @@ namespace UnityStandardAssets.Characters.FirstPerson
             //Note: this is to keep drone and object movement in sync, as pausing just object physics would
             //still allow the drone's character controller Move() to function in "real time" and we dont have
             //support for fully continuous drone movement and emitFrame metadata generation at the same time.
+
+            //NOTE/XXX: because of the fixedupdate/lateupdate/delayed coroutine emitframe nonsense going on
+            //here, the in-editor axisAlignedBoundingBox metadata for drone objects seems to be offset by some number of updates.
+            //it's unclear whether this is only an in-editor debug draw issue, or the actual metadata for the axis
+            //aligned box is messed up, but yeah.
             if (hasFixedUpdateHappened)
             {   
                 Time.timeScale = 0;
@@ -119,11 +124,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
             objMeta.numFloorHits = simObj.numFloorHit;
             objMeta.numStructureHits = simObj.numStructureHit;
             objMeta.lastVelocity = simObj.lastVelocity;
-
-            if (!objMeta.isCaught)
-            {
-                objMeta.mass = simObj.Mass;
-            }
             
             GameObject o = simObj.gameObject;
             objMeta.name = o.name;
@@ -176,9 +176,15 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
                 objMeta.salientMaterials = salientMaterialsToString;
 
-                //this object should also report back mass since it is moveable/pickupable
-                objMeta.mass = simObj.Mass;
+                //record the mass unless the object was caught by the drone, which means the
+                //rigidbody was disabled
+                if (!objMeta.isCaught)
+                {
+                    objMeta.mass = simObj.Mass;
+                }
             }
+
+
 
             //can this object change others to hot?
             objMeta.canChangeTempToHot = simObj.canChangeTempToHot;
@@ -429,7 +435,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
         //Flying Drone Agent Controls
         public void FlyAhead(ServerAction action) 
         {
-            print("fly ahead happening");
             thrust += GetFlyingOrientation(action, 0);
             actionFinished(true);
         }

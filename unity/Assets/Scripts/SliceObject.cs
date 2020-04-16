@@ -128,7 +128,7 @@ public class SliceObject : MonoBehaviour
                     trb.isKinematic = false;
 
                     //also add each child object's rb to the cache of all rigidbodies in scene
-                    psm.GetComponent<AgentManager>().AddToRBSInScene(trb);
+                    psm.AddToRBSInScene(trb);
                 }
             }
 
@@ -149,7 +149,7 @@ public class SliceObject : MonoBehaviour
                 resultrb.isKinematic = false;
 
                 //also add the spawned object's RB to the cache of all rigidbodies in scene
-                psm.GetComponent<AgentManager>().AddToRBSInScene(resultrb);
+                psm.AddToRBSInScene(resultrb);
             }
 
         }
