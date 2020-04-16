@@ -1019,6 +1019,21 @@ public class MachineCommonSenseMain : MonoBehaviour {
 // Definitions of serializable objects from JSON config files.
 
 [Serializable]
+public class MachineCommonSenseConfigAbstractObject {
+    public string id;
+    public bool kinematic;
+    public float mass;
+    public bool moveable;
+    public bool openable;
+    public bool opened;
+    public bool physics;
+    public bool pickupable;
+    public bool receptacle;
+    public List<string> materials;
+    public List<string> salientMaterials;
+}
+
+[Serializable]
 public class MachineCommonSenseConfigAction : MachineCommonSenseConfigStepBegin {
     public string id;
 }
@@ -1088,21 +1103,6 @@ public class MachineCommonSenseConfigInteractables {
 [Serializable]
 public class MachineCommonSenseConfigMove : MachineCommonSenseConfigStepBeginEnd {
     public MachineCommonSenseConfigVector vector;
-}
-
-[Serializable]
-public class MachineCommonSenseConfigAbstractObject {
-    public string id;
-    public bool kinematic;
-    public float mass;
-    public bool moveable;
-    public bool openable;
-    public bool opened;
-    public bool physics;
-    public bool pickupable;
-    public bool receptacle;
-    public List<string> materials;
-    public List<string> salientMaterials;
 }
 
 [Serializable]
