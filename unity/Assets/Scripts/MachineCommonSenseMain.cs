@@ -164,11 +164,21 @@ public class MachineCommonSenseMain : MonoBehaviour {
                 MachineCommonSenseMain.WALL_Y_POSITION, MachineCommonSenseMain.WALL_Z_POSITION);
         }
 
-        AssignMaterial(this.floor, floorMaterial);
-        AssignMaterial(this.wallLeft, wallsMaterial);
-        AssignMaterial(this.wallRight, wallsMaterial);
-        AssignMaterial(this.wallFront, wallsMaterial);
-        AssignMaterial(this.wallBack, wallsMaterial);
+
+        if (this.currentScene.screenshot) {
+            this.floor.GetComponent<Renderer>().material = new Material(Shader.Find("Unlit/Color"));
+            this.wallLeft.GetComponent<Renderer>().material = new Material(Shader.Find("Unlit/Color"));
+            this.wallRight.GetComponent<Renderer>().material = new Material(Shader.Find("Unlit/Color"));
+            this.wallFront.GetComponent<Renderer>().material = new Material(Shader.Find("Unlit/Color"));
+            this.wallBack.GetComponent<Renderer>().material = new Material(Shader.Find("Unlit/Color"));
+        }
+        else {
+            AssignMaterial(this.floor, floorMaterial);
+            AssignMaterial(this.wallLeft, wallsMaterial);
+            AssignMaterial(this.wallRight, wallsMaterial);
+            AssignMaterial(this.wallFront, wallsMaterial);
+            AssignMaterial(this.wallBack, wallsMaterial);
+        }
 
         GameObject controller = GameObject.Find("FPSController");
         if (this.currentScene.performerStart != null && this.currentScene.performerStart.position != null) {
@@ -323,6 +333,8 @@ public class MachineCommonSenseMain : MonoBehaviour {
                 Material material = this.LoadMaterial(configMaterialFiles[i]);
                 if (material != null) {
                     assignments.Add(objectMaterialNames[i], material);
+                    LogVerbose("OBJECT " + gameObject.name.ToUpper() + " SWAP MATERIAL " + objectMaterialNames[i] +
+                        " WITH " + material.name);
                 }
             }
         }
@@ -330,7 +342,7 @@ public class MachineCommonSenseMain : MonoBehaviour {
         // If not given objectMaterialNames, just change all object materials to the first configMaterialFile.
         Material singleConfigMaterial = assignments.Count > 0 ? null : this.LoadMaterial(configMaterialFiles[0]);
 
-        if (singleConfigMaterial == null) {
+        if (assignments.Count == 0 && singleConfigMaterial == null) {
             return;
         }
 
@@ -339,9 +351,14 @@ public class MachineCommonSenseMain : MonoBehaviour {
         renderers.ToList().ForEach((renderer) => {
             renderer.materials = renderer.materials.ToList().Select((material) => {
                 if (assignments.Count > 0) {
-                    // Object material names appear to end with " (Instance)" (I'm not sure why).
-                    return assignments.ContainsKey(material.name + " (Instance)") ? assignments[material.name] :
-                        material;
+                    if (assignments.ContainsKey(material.name)) {
+                        return assignments[material.name];
+                    }
+                    // Object material names sometimes end with " (Instance)" though I'm not sure why.
+                    if (assignments.ContainsKey(material.name.Replace(" (Instance)", ""))) {
+                        return assignments[material.name.Replace(" (Instance)", "")];
+                    }
+                    return material;
                 }
                 return singleConfigMaterial;
             }).ToArray();
@@ -1177,6 +1194,7 @@ public class MachineCommonSenseConfigScene {
     public String floorMaterial;
     public String wallMaterial;
     public bool observation;
+    public bool screenshot;
     public MachineCommonSenseConfigTransform performerStart = null;
     public List<MachineCommonSenseConfigGameObject> objects;
 }
