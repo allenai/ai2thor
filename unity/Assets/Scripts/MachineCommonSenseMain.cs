@@ -934,10 +934,13 @@ public class MachineCommonSenseMain : MonoBehaviour {
                         // First, copy the origin object's position and rotation to the target object.
                         targetObject.transform.localPosition = new Vector3(originObject.transform.localPosition.x,
                             originObject.transform.localPosition.y, originObject.transform.localPosition.z);
-                        targetObject.transform.localRotation = Quaternion.Euler(originObject.transform.localRotation.eulerAngles.x,
-                            originObject.transform.localRotation.eulerAngles.y, originObject.transform.localRotation.eulerAngles.z);
+                        targetObject.transform.localRotation = Quaternion.Euler(
+                            originObject.transform.localRotation.eulerAngles.x,
+                            originObject.transform.localRotation.eulerAngles.y,
+                            originObject.transform.localRotation.eulerAngles.z);
                         // Then, reposition the target object as configured in relation to its rotation.
-                        targetObject.transform.Translate(new Vector3(show.position.x, show.position.y, show.position.z));
+                        targetObject.transform.Translate(new Vector3(show.position.x, show.position.y,
+                            show.position.z));
                         // Finally, rotate the target object as configured in relation to its rotation.
                         targetObject.transform.Rotate(new Vector3(show.rotation.x, show.rotation.y, show.rotation.z));
                     }
