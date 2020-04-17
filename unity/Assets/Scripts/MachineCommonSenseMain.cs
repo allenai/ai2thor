@@ -625,6 +625,7 @@ public class MachineCommonSenseMain : MonoBehaviour {
                 if ((ai2thorCanOpenObjectScript.isOpen && !objectConfig.opened) ||
                     (!ai2thorCanOpenObjectScript.isOpen && objectConfig.opened)) {
 
+                    ai2thorCanOpenObjectScript.SetOpenPercent(objectConfig.opened ? 1 : 0);
                     ai2thorCanOpenObjectScript.Interact();
                 }
                 ai2thorCanOpenObjectScript.isOpenByPercentage = ai2thorCanOpenObjectScript.isOpen ? 1 : 0;
