@@ -1909,7 +1909,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         //checks before actually moving. Previously we would moveCharacter() first and if we hit anything reset, but now to match
         //Luca's movement grid and valid position generation, simple transform setting is used for movement instead.
 
-        //XXX revisit what movement means when we more clearly definewhat "continuous" movement is
+        //XXX revisit what movement means when we more clearly define what "continuous" movement is
         protected bool moveInDirection(Vector3 direction, string uniqueId="", float maxDistanceToObject=-1.0f, bool forceAction = false) {
             Vector3 targetPosition = transform.position + direction;
             float angle = Vector3.Angle(transform.forward, Vector3.Normalize(direction));
