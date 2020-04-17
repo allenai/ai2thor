@@ -87,22 +87,28 @@ public class MachineCommonSenseMain : MonoBehaviour {
             this.lastStep++;
             LogVerbose("Run Step " + this.lastStep + " at Frame " + Time.frameCount);
             if (this.currentScene != null && this.currentScene.objects != null) {
+                bool objectsWereShown = false;
+                List<MachineCommonSenseConfigGameObject> objects = this.currentScene.objects.Where(objectConfig =>
+                    objectConfig.GetGameObject() != null).ToList();
+
                 // Loop over each configuration object in the scene and update if needed.
-                this.currentScene.objects.Where(objectConfig => objectConfig.GetGameObject() != null).ToList()
-                    .ForEach(objectConfig => {
-                        bool objectsWereShown = UpdateGameObjectOnStep(objectConfig, this.lastStep);
-                        // If new objects were added to the scene...
-                        if (objectsWereShown) {
-                            // Notify the PhysicsSceneManager so the objects will be compatible with AI2-THOR scripts.
-                            this.physicsSceneManager.SetupScene();
-                            // Notify ImageSynthesis so the objects will appear in the masks.
-                            ImageSynthesis imageSynthesis = GameObject.Find("FPSController")
-                                .GetComponentInChildren<ImageSynthesis>();
-                            if (imageSynthesis != null && imageSynthesis.enabled) {
-                                imageSynthesis.OnSceneChange();
-                            }
-                        }
-                    });
+                objects.ForEach(objectConfig => {
+                    objectsWereShown = this.UpdateGameObjectOnStep(objectConfig, this.lastStep) || objectsWereShown;
+                });
+
+                this.PostUpdateGameObjectOnStep(objects, this.lastStep);
+
+                // If new objects were added to the scene...
+                if (objectsWereShown) {
+                    // Notify the PhysicsSceneManager so the objects will be compatible with AI2-THOR scripts.
+                    this.physicsSceneManager.SetupScene();
+                    // Notify ImageSynthesis so the objects will appear in the masks.
+                    ImageSynthesis imageSynthesis = GameObject.Find("FPSController")
+                        .GetComponentInChildren<ImageSynthesis>();
+                    if (imageSynthesis != null && imageSynthesis.enabled) {
+                        imageSynthesis.OnSceneChange();
+                    }
+                }
             }
             this.agentController.SimulatePhysics();
         }
@@ -619,6 +625,7 @@ public class MachineCommonSenseMain : MonoBehaviour {
                 if ((ai2thorCanOpenObjectScript.isOpen && !objectConfig.opened) ||
                     (!ai2thorCanOpenObjectScript.isOpen && objectConfig.opened)) {
 
+                    ai2thorCanOpenObjectScript.SetOpenPercent(objectConfig.opened ? 1 : 0);
                     ai2thorCanOpenObjectScript.Interact();
                 }
                 ai2thorCanOpenObjectScript.isOpenByPercentage = ai2thorCanOpenObjectScript.isOpen ? 1 : 0;
@@ -913,6 +920,36 @@ public class MachineCommonSenseMain : MonoBehaviour {
         }).ToArray();
     }
 
+    private void PostUpdateGameObjectOnStep(List<MachineCommonSenseConfigGameObject> objectConfigs, int step) {
+        objectConfigs.ForEach(objectConfig => {
+            // If an object's location is set in relation to another object, modify its location in the PostUpdate to
+            // ensure that any update to the other object's location is finished.
+            if (objectConfig.locationParent != null && !objectConfig.locationParent.Equals("")) {
+                objectConfig.shows.Where(show => show.stepBegin == step).ToList().ForEach((show) => {
+                    MachineCommonSenseConfigGameObject[] originObjectConfigs = objectConfigs.Where(possibleConfig =>
+                        possibleConfig.id.Equals(objectConfig.locationParent)).ToArray();
+
+                    if (originObjectConfigs.Length > 0) {
+                        GameObject originObject = originObjectConfigs[0].GetGameObject();
+                        GameObject targetObject = objectConfig.GetGameObject();
+                        // First, copy the origin object's position and rotation to the target object.
+                        targetObject.transform.localPosition = new Vector3(originObject.transform.localPosition.x,
+                            originObject.transform.localPosition.y, originObject.transform.localPosition.z);
+                        targetObject.transform.localRotation = Quaternion.Euler(
+                            originObject.transform.localRotation.eulerAngles.x,
+                            originObject.transform.localRotation.eulerAngles.y,
+                            originObject.transform.localRotation.eulerAngles.z);
+                        // Then, reposition the target object as configured in relation to its rotation.
+                        targetObject.transform.Translate(new Vector3(show.position.x, show.position.y,
+                            show.position.z));
+                        // Finally, rotate the target object as configured in relation to its rotation.
+                        targetObject.transform.Rotate(new Vector3(show.rotation.x, show.rotation.y, show.rotation.z));
+                    }
+                });
+            }
+        });
+    }
+
     private bool UpdateGameObjectOnStep(MachineCommonSenseConfigGameObject objectConfig, int step) {
         bool objectsWereShown = false;
 
@@ -1060,6 +1097,7 @@ public class MachineCommonSenseConfigCollider : MachineCommonSenseConfigTransfor
 [Serializable]
 public class MachineCommonSenseConfigGameObject : MachineCommonSenseConfigAbstractObject {
     public string controller;
+    public string locationParent;
     public string materialFile; // deprecated; please use materials
     public MachineCommonSenseConfigTransform nullParent = null;
     public bool structure;
