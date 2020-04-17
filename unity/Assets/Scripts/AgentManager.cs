@@ -100,10 +100,15 @@ public class AgentManager : MonoBehaviour
         //"drone" agentMode can ONLY use "drone" agentControllerType, and NOTHING ELSE (for now?)
         if(action.agentMode.ToLower() == "default")
         {
+            if(action.agentControllerType.ToLower() != "physics" || action.agentControllerType.ToLower() != "stochastic")
+            {
+                Debug.Log("default mode must use either physics or stochastic controller. Defaulting to physics");
+                SetUpPhysicsController();
+            }
+
             //if not stochastic, default to physics controller
             if(action.agentControllerType.ToLower() == "physics")
             {
-                print("set up physics controller");
                 //set up physics controller
                 SetUpPhysicsController();
             }
@@ -118,18 +123,17 @@ public class AgentManager : MonoBehaviour
 
         else if(action.agentMode.ToLower() == "bot")
         {
-            //if not stochastic, default to physics controller
-            if(action.agentControllerType.ToLower() == "physics")
+            //if not stochastic, default to stochastic
+            if(action.agentControllerType.ToLower() != "stochastic")
             {
-                //set up physics controller
-                SetUpPhysicsController();
-            }
-            //if stochastic, set up stochastic controller
-            if(action.agentControllerType.ToLower() == "stochastic")
-            {
+                Debug.Log("'bot' mode only fully supports the 'stochastic' controller type at the moment. Forcing agentControllerType to 'stochastic'");
+                action.agentControllerType = "stochastic";
                 //set up stochastic controller
                 SetUpStochasticController(action);
             }
+
+            else
+            SetUpStochasticController(action);
         }
 
         else if(action.agentMode.ToLower() == "drone")
@@ -142,6 +146,10 @@ public class AgentManager : MonoBehaviour
                 //ok now set up drone controller
                 SetUpDroneController(action);
             }
+
+            else
+            SetUpDroneController(action);
+
         }
         
 		primaryAgent.ProcessControlCommand (action);
@@ -162,6 +170,7 @@ public class AgentManager : MonoBehaviour
     private void SetUpStochasticController(ServerAction action)
     {
         this.agents.Clear();
+        //force snapToGrid to be false since we are stochastic
         action.snapToGrid = false;
         GameObject fpsController = GameObject.FindObjectOfType<BaseFPSAgentController>().gameObject;
         primaryAgent.enabled = false;
@@ -175,6 +184,7 @@ public class AgentManager : MonoBehaviour
     private void SetUpDroneController (ServerAction action)
     {
         this.agents.Clear();
+        //force snapToGrid to be false
         action.snapToGrid = false;
         GameObject fpsController = GameObject.FindObjectOfType<BaseFPSAgentController>().gameObject;
         primaryAgent.enabled = false;
@@ -185,6 +195,8 @@ public class AgentManager : MonoBehaviour
         droneMode = true;//set flag for drone mode so the emitFrame syncs up with Drone's lateUpdate
     }
 
+    //note: this doesn't take a ServerAction because we don't have to force the snpToGrid bool
+    //to be false like in other controller types.
     private void SetUpPhysicsController ()
     {
         this.agents.Clear();
@@ -1117,7 +1129,6 @@ public struct MetadataWrapper
 public class ServerAction
 {
 	public string action;
-    public string agentMode = "default"; //mode of Agent, valid values are "default" "bot" "drone", note certain modes are only compatible with certain controller types
 	public int agentCount = 1;
 	public string quality;
 	public bool makeAgentsVisible = true;
@@ -1199,6 +1210,8 @@ public class ServerAction
     public float noise;
     public ControllerInitialization controllerInitialization = null;
     public string agentControllerType = "physics";//default to physics controller
+    public string agentMode = "default"; //mode of Agent, valid values are "default" "bot" "drone", note certain modes are only compatible with certain controller types
+
     public float agentRadius = 2.0f;
     public int maxStepCount;
     public float rotateStepDegrees = 90.0f; //default rotation amount for RotateRight/RotateLeft actions

@@ -243,6 +243,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 						PhysicsController.actionComplete = false;
                         action.action = "Initialize";
                         action.agentMode = "drone";
+                        action.agentControllerType = "drone";
                         AManager.Initialize(action);
 
                         break;
