@@ -154,6 +154,7 @@ Take a GameObject (we'll call it the "Target" object) containing a MeshFilter, M
   - Undid objectId being reset to receptableObjectId and not allowing objects to be placed in closed receptacles regardless of type of receptacle for `PutObject`
   - In `PickupContainedObjects` and `DropContainedObjects`, added a null check for the Colliders object and added a loop over the colliders array in the SimObjPhysics script.
   - Added code to allow movement that will auto calculate the space to close the distance to an object within 0.1f
+  - In 'CheckIfAgentCanTurn' and 'CheckIfAgentCanLook' add a check to see if object in hand is active
 - `Scripts/PhysicsSceneManager`:
   - Added `virtual` to functions: `Generate_UniqueID`
 - `Scripts/SimObjPhysics`:

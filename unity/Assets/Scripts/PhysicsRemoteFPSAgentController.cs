@@ -1010,7 +1010,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         public bool CheckIfAgentCanLook(float targetAngle, int updown) {
             //print(targetAngle);
-            if (ItemInHand == null) {
+            
+            // If the Item the agent is holding isn't active, it's geometry won't interfere with looking
+            if (ItemInHand == null || !ItemInHand.active) {
                 //Debug.Log("Look check passed: nothing in Agent Hand to prevent Angle change");
                 return true;
             }
@@ -1087,8 +1089,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public bool CheckIfAgentCanTurn(int direction) {
             bool result = true;
 
-            if (ItemInHand == null) {
-                //Debug.Log("Rotation check passed: nothing in Agent Hand");
+            // If the Item the agent is holding isn't active, it's geometry won't interfere with looking
+            if (ItemInHand == null || !ItemInHand.active) {
+                //Debug.Log("Look check passed: nothing in Agent Hand to prevent Angle change");
                 return true;
             }
 
