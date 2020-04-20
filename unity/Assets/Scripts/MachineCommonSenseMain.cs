@@ -26,7 +26,7 @@ public class MachineCommonSenseMain : MonoBehaviour {
     private int lastStep = -1;
     private Dictionary<String, MachineCommonSenseConfigObjectDefinition> objectDictionary =
         new Dictionary<string, MachineCommonSenseConfigObjectDefinition>();
-    private List<String> materialRegistry;
+    private Dictionary<string, List<string>> materialRegistry;
 
     // AI2-THOR Objects and Scripts
     private MachineCommonSenseController agentController;
@@ -69,7 +69,7 @@ public class MachineCommonSenseMain : MonoBehaviour {
         });
 
         // Save the materials (strings) that are accepted in the scene configuration files.
-        this.materialRegistry = LoadMaterialRegistryFromFile(this.materialRegistryFile).materials;
+        this.materialRegistry = LoadMaterialRegistryFromFile(this.materialRegistryFile);
 
         // Load the default MCS scene set in the Unity Editor.
         if (!this.defaultSceneFile.Equals("")) {
@@ -311,12 +311,24 @@ public class MachineCommonSenseMain : MonoBehaviour {
         return colliders;
     }
 
-    private Material LoadMaterial(string filename) {
-        if (this.materialRegistry.Contains(filename)) {
-            Material material = Resources.Load<Material>("MCS/" + filename);
-            LogVerbose("LOAD OF MATERIAL FILE Assets/Resources/MCS/" + filename +
-                (material == null ? " IS NULL" : " IS DONE"));
-            return material;
+    private Material LoadMaterial(string filename, string[] restrictions) {
+        if (restrictions.Length == 1 && restrictions[0].Equals("no_material")) {
+            LogVerbose("ALL CUSTOM MATERIALS ARE RESTRICTED ON THIS OBJECT");
+            return null;
+        }
+
+        foreach (KeyValuePair<string, List<string>> materialType in this.materialRegistry) {
+            if (materialType.Value.Contains(filename)) {
+                if (restrictions.Length == 0 || Array.IndexOf(restrictions, materialType.Key) >= 0) {
+                    Material material = Resources.Load<Material>("MCS/" + filename);
+                    LogVerbose("LOAD OF MATERIAL FILE Assets/Resources/MCS/" + filename +
+                        (material == null ? " IS NULL" : " IS DONE"));
+                    return material;
+                }
+
+                LogVerbose("MATERIAL " + filename + " TYPE " + materialType.Key + " IS RESTRICTED");
+                return null;
+            }
         }
 
         LogVerbose("MATERIAL " + filename + " NOT IN MATERIAL REGISTRY");
@@ -324,10 +336,15 @@ public class MachineCommonSenseMain : MonoBehaviour {
     }
 
     private void AssignMaterial(GameObject gameObject, string configMaterialFile) {
-        this.AssignMaterials(gameObject, new string[] { configMaterialFile }, new string[] { });
+        this.AssignMaterials(gameObject, new string[] { configMaterialFile }, new string[] { }, new string[] { });
     }
 
-    private void AssignMaterials(GameObject gameObject, string[] configMaterialFiles, string[] objectMaterialNames) {
+    private void AssignMaterials(
+        GameObject gameObject,
+        string[] configMaterialFiles,
+        string[] objectMaterialNames,
+        string[] objectMaterialRestrictions
+    ) {
         if (configMaterialFiles.Length == 0) {
             return;
         }
@@ -336,7 +353,7 @@ public class MachineCommonSenseMain : MonoBehaviour {
         Dictionary<string, Material> assignments = new Dictionary<string, Material>();
         for (int i = 0; i < objectMaterialNames.Length; ++i) {
             if (configMaterialFiles.Length > i && !configMaterialFiles[i].Equals("")) {
-                Material material = this.LoadMaterial(configMaterialFiles[i]);
+                Material material = this.LoadMaterial(configMaterialFiles[i], objectMaterialRestrictions);
                 if (material != null) {
                     assignments.Add(objectMaterialNames[i], material);
                     LogVerbose("OBJECT " + gameObject.name.ToUpper() + " SWAP MATERIAL " + objectMaterialNames[i] +
@@ -346,7 +363,8 @@ public class MachineCommonSenseMain : MonoBehaviour {
         }
 
         // If not given objectMaterialNames, just change all object materials to the first configMaterialFile.
-        Material singleConfigMaterial = assignments.Count > 0 ? null : this.LoadMaterial(configMaterialFiles[0]);
+        Material singleConfigMaterial = assignments.Count > 0 ? null : this.LoadMaterial(configMaterialFiles[0],
+            objectMaterialRestrictions);
 
         if (assignments.Count == 0 && singleConfigMaterial == null) {
             return;
@@ -439,7 +457,7 @@ public class MachineCommonSenseMain : MonoBehaviour {
             materialFiles = new string[] { objectConfig.materialFile };
         }
         this.AssignMaterials(gameObject, materialFiles, objectDefinition.materials != null ?
-            objectDefinition.materials.ToArray() : new string[] { });
+            objectDefinition.materials.ToArray() : new string[] { }, objectDefinition.materialRestrictions.ToArray());
 
         this.ModifyChildrenInteractables(gameObject, objectDefinition.interactables);
 
@@ -820,11 +838,24 @@ public class MachineCommonSenseMain : MonoBehaviour {
         return JsonUtility.FromJson<MachineCommonSenseConfigScene>(currentSceneFile.text);
     }
 
-    private MachineCommonSenseConfigMaterialRegistry LoadMaterialRegistryFromFile(String filePath) {
+    private Dictionary<string, List<string>> LoadMaterialRegistryFromFile(String filePath) {
         TextAsset materialRegistryFile = Resources.Load<TextAsset>("MCS/" + filePath);
         Debug.Log("MCS:  Config file Assets/Resources/MCS/" + filePath + ".json" + (materialRegistryFile == null ?
             " is null!" : (":\n" + materialRegistryFile.text)));
-        return JsonUtility.FromJson<MachineCommonSenseConfigMaterialRegistry>(materialRegistryFile.text);
+        MachineCommonSenseConfigMaterialRegistry materialJson =
+            JsonUtility.FromJson<MachineCommonSenseConfigMaterialRegistry>(materialRegistryFile.text);
+        Dictionary<string, List<string>> materialDictionary = new Dictionary<string, List<string>>() {
+            { "block_blank", materialJson.block_blank },
+            { "block_design", materialJson.block_design },
+            { "ceramic", materialJson.ceramic },
+            { "fabric", materialJson.fabric },
+            { "metal", materialJson.metal },
+            { "plastic", materialJson.plastic },
+            { "rubber", materialJson.rubber },
+            { "wall", materialJson.wall },
+            { "wood", materialJson.wood }
+        };
+        return materialDictionary;
     }
 
     private List<MachineCommonSenseConfigObjectDefinition> LoadObjectRegistryFromFile(String filePath) {
@@ -1153,6 +1184,7 @@ public class MachineCommonSenseConfigObjectDefinition : MachineCommonSenseConfig
     public List<MachineCommonSenseConfigAnimator> animators;
     public List<MachineCommonSenseConfigCollider> colliders;
     public List<MachineCommonSenseConfigInteractables> interactables;
+    public List<string> materialRestrictions;
     public List<MachineCommonSenseConfigOverride> overrides;
     public List<MachineCommonSenseConfigTransform> receptacleTriggerBoxes;
     public List<MachineCommonSenseConfigVector> visibilityPoints;
@@ -1239,7 +1271,15 @@ public class MachineCommonSenseConfigScene {
 
 [Serializable]
 public class MachineCommonSenseConfigMaterialRegistry {
-    public List<String> materials;
+    public List<String> block_blank;
+    public List<String> block_design;
+    public List<String> ceramic;
+    public List<String> fabric;
+    public List<String> metal;
+    public List<String> plastic;
+    public List<String> rubber;
+    public List<String> wall;
+    public List<String> wood;
 }
 
 [Serializable]
