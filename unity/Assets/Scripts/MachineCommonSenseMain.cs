@@ -7,6 +7,12 @@ using UnityStandardAssets.Characters.FirstPerson;
 using System.Text;
 
 public class MachineCommonSenseMain : MonoBehaviour {
+    private static float LIGHT_RANGE = 20f;
+    private static float LIGHT_RANGE_SCREENSHOT = 10f;
+    private static float LIGHT_Y_POSITION = 2.95f;
+    private static float LIGHT_Y_POSITION_SCREENSHOT = 0.5f;
+    private static float LIGHT_Z_POSITION = 0;
+    private static float LIGHT_Z_POSITION_SCREENSHOT = -2.0f;
     private static float WALL_X_POSITION_OBSERVATION = 7.0f;
     private static float WALL_X_POSITION_INTERACTION = 5.5f;
     private static float WALL_Y_POSITION = 1.5f;
@@ -36,6 +42,7 @@ public class MachineCommonSenseMain : MonoBehaviour {
     // Room objects
     private GameObject ceiling;
     private GameObject floor;
+    private GameObject light;
     private GameObject wallLeft;
     private GameObject wallRight;
     private GameObject wallFront;
@@ -48,6 +55,7 @@ public class MachineCommonSenseMain : MonoBehaviour {
         this.physicsSceneManager = GameObject.Find("PhysicsSceneManager").GetComponent<PhysicsSceneManager>();
         this.ceiling = GameObject.Find("Ceiling");
         this.floor = GameObject.Find("Floor");
+        this.light = GameObject.Find("Point light");
         this.wallLeft = GameObject.Find("Wall Left");
         this.wallRight = GameObject.Find("Wall Right");
         this.wallFront = GameObject.Find("Wall Front");
@@ -177,6 +185,9 @@ public class MachineCommonSenseMain : MonoBehaviour {
             this.wallRight.GetComponent<Renderer>().material = new Material(Shader.Find("Unlit/Color"));
             this.wallFront.GetComponent<Renderer>().material = new Material(Shader.Find("Unlit/Color"));
             this.wallBack.GetComponent<Renderer>().material = new Material(Shader.Find("Unlit/Color"));
+            this.light.GetComponent<Light>().range = MachineCommonSenseMain.LIGHT_RANGE_SCREENSHOT;
+            this.light.transform.position = new Vector3(0, MachineCommonSenseMain.LIGHT_Y_POSITION_SCREENSHOT,
+                MachineCommonSenseMain.LIGHT_Z_POSITION_SCREENSHOT);
         }
         else {
             AssignMaterial(this.floor, floorMaterial);
@@ -184,6 +195,9 @@ public class MachineCommonSenseMain : MonoBehaviour {
             AssignMaterial(this.wallRight, wallsMaterial);
             AssignMaterial(this.wallFront, wallsMaterial);
             AssignMaterial(this.wallBack, wallsMaterial);
+            this.light.GetComponent<Light>().range = MachineCommonSenseMain.LIGHT_RANGE;
+            this.light.transform.position = new Vector3(0, MachineCommonSenseMain.LIGHT_Y_POSITION,
+                MachineCommonSenseMain.LIGHT_Z_POSITION);
         }
 
         GameObject controller = GameObject.Find("FPSController");
