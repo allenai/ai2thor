@@ -680,6 +680,7 @@ namespace HoudiniEngineUnity
 				int pointStartOffset = rampParameter._parmInfo.instanceStartOffset;
 
 				List<int> interpolationValues = new List<int>();
+				int indexAdded = 0;
 
 				// First create the animation curve and set point positions and values
 				rampParameter._animCurve = new AnimationCurve();
@@ -693,10 +694,15 @@ namespace HoudiniEngineUnity
 					{
 						float position = posParamData._floatValues[0];
 						float value = valueParamData._floatValues[0];
-						rampParameter._animCurve.AddKey(position, value);
 
-						HEU_ParameterData interpParamData = GetParameter(rampParameter._childParameterIDs[pt * 3 + 2]);
-						interpolationValues.Add(interpParamData._intValues[0]);
+						// AddKey returns index that was added, or -1 if already have the value
+						// Note that Unity's Animation Curve doesn't allow for duplicate position-value pairs
+						indexAdded = rampParameter._animCurve.AddKey(position, value);
+						if (indexAdded >= 0)
+						{
+							HEU_ParameterData interpParamData = GetParameter(rampParameter._childParameterIDs[pt * 3 + 2]);
+							interpolationValues.Add(interpParamData._intValues[0]);
+						}
 					}
 				}
 

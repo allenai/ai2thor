@@ -223,6 +223,8 @@ namespace HoudiniEngineUnity
 
 		public long SessionID { get { return _sessionID; } }
 
+		public bool WarnedPrefabNotSupported { get; set; }
+
 		// UI TOGGLES -------------------------------------------------------------------------------------------------
 
 		// Disable the warning for unused variables. We're accessing these as SerializedProperty.
@@ -442,6 +444,18 @@ namespace HoudiniEngineUnity
 		}
 
 		/// <summary>
+		/// Clean up generated data and disable this asset.
+		/// </summary>
+		public void CleanUpAndDisable()
+		{
+			InvalidateAsset();
+			DeleteAllGeneratedData();
+
+			// Setup again to avoid null references
+			SetupAsset(_assetType, _assetPath, _rootGameObject, GetAssetSession(true));
+		}
+
+		/// <summary>
 		/// Returns true if this asset has been saved in a scene.
 		/// </summary>
 		/// <returns>True if asset has been saved in a scene.</returns>
@@ -488,13 +502,20 @@ namespace HoudiniEngineUnity
 #if HOUDINIENGINEUNITY_ENABLED
 			// Adding in OnEnable as its called after a code recompile (Awake is not).
 			HEU_AssetUpdater.AddAssetForUpdate(this);
-#endif
+
+			// Not supporting prefab so disable and clean up if inside prefab stage
+			if (HEU_EditorUtility.IsEditingInPrefabMode(gameObject))
+			{
+				CleanUpAndDisable();
+			}
 
 			// This is required when coming back from play mode, after code compilation,
 			// or scene load to re-add the upstream notifications for input assets.
 			// Note that this done in OnEnable instead of Awake since OnEnable seems to
 			// cover all cases including code compilation refresh.
 			ReconnectInputsUpstreamNotifications();
+
+#endif
 		}
 
 		private void OnDestroy()
@@ -603,6 +624,28 @@ namespace HoudiniEngineUnity
 				SetCookStatus(AssetCookStatus.NONE, AssetCookResult.NONE);
 			}
 
+#endif
+		}
+
+		/// <summary>
+		/// Reset the parameters and reload and rebuild the asset.
+		/// </summary>
+		/// <param name="bAsync">Reload asynchronously if true, or block until completed.</param>
+		/// </summary>
+		public void RequestResetParameters(bool bAsync)
+		{
+#if HOUDINIENGINEUNITY_ENABLED
+			if (bAsync)
+			{
+				_requestBuildAction = AssetBuildAction.RESET_PARAMS;
+			}
+			else
+			{
+				ClearBuildRequest();
+				SetCookStatus(AssetCookStatus.PRELOAD, AssetCookResult.NONE);
+				ResetParametersToDefault();
+				ProcessRebuild(true, -1);
+			}
 #endif
 		}
 
@@ -891,12 +934,12 @@ namespace HoudiniEngineUnity
 			_assetOpName = HEU_SessionManager.GetString(_assetInfo.fullOpNameSH, session);
 			_assetHelp = HEU_SessionManager.GetString(_assetInfo.helpTextSH, session);
 
-			Debug.Log(HEU_Defines.HEU_NAME + ": Asset Loaded - ID: " + _assetInfo.nodeId + "\n" +
-								"    Full Name: " + _assetOpName + "\n" +
-								"    Version: " + HEU_SessionManager.GetString(_assetInfo.versionSH, session) + "\n" +
-								"    Unique Node Id: " + _nodeInfo.uniqueHoudiniNodeId + "\n" +
-								"    Internal Node Path: " + HEU_SessionManager.GetString(_nodeInfo.internalNodePathSH, session) + "\n" +
-								"    Asset Library File: " + HEU_SessionManager.GetString(_assetInfo.filePathSH, session) + "\n");
+			//Debug.Log(HEU_Defines.HEU_NAME + ": Asset Loaded - ID: " + _assetInfo.nodeId + "\n" +
+			//					"    Full Name: " + _assetOpName + "\n" +
+			//					"    Version: " + HEU_SessionManager.GetString(_assetInfo.versionSH, session) + "\n" +
+			//					"    Unique Node Id: " + _nodeInfo.uniqueHoudiniNodeId + "\n" +
+			//					"    Internal Node Path: " + HEU_SessionManager.GetString(_nodeInfo.internalNodePathSH, session) + "\n" +
+			//					"    Asset Library File: " + HEU_SessionManager.GetString(_assetInfo.filePathSH, session) + "\n");
 
 			if (RootGameObject.name.Equals(HEU_Defines.HEU_DEFAULT_ASSET_NAME))
 			{
@@ -927,6 +970,8 @@ namespace HoudiniEngineUnity
 			GenerateObjectsGeometry(session, bRebuild: true);
 
 			GenerateInstances(session);
+
+			GenerateAttributesStore(session);
 
 			GenerateHandles(session);
 
@@ -1043,6 +1088,49 @@ namespace HoudiniEngineUnity
 			if (_refreshUIDelegate != null)
 			{
 				_refreshUIDelegate();
+			}
+		}
+
+		/// <summary>
+		/// Returns true if this asset is in a valid state for interactive
+		/// parameter changes, cooking, and generating results.
+		/// </summary>
+		/// <param name="errorMessage">Fills with error message if not valid</param>
+		/// <returns>True if valid</returns>
+		public bool IsValidForInteraction(ref string errorMessage)
+		{
+			bool valid = true;
+			if (HEU_EditorUtility.IsPrefabAsset(gameObject))
+			{
+				// Disable UI when HDA is prefab
+				errorMessage = "Houdini Engine Asset Error\n" +
+					"HDA as prefab not supported!";
+				valid = false;
+			}
+			else
+			{
+#if UNITY_EDITOR && UNITY_2018_3_OR_NEWER
+				var stage = UnityEditor.Experimental.SceneManagement.PrefabStageUtility.GetCurrentPrefabStage();
+				if (stage != null)
+				{
+					// Disable UI when HDA is in prefab stage
+					errorMessage = "Houdini Engine Asset Error\n" +
+						"HDA as prefab not supported!";
+					valid = false;
+				}
+#endif
+			}
+			return valid;
+		}
+
+		private void OnValidate()
+		{
+			// This gets called when copying component or applying prefab
+
+			// Not supporting HDA as prefab, so disable the asset
+			if (HEU_EditorUtility.IsPrefabAsset(gameObject))
+			{
+				CleanUpAndDisable();
 			}
 		}
 
@@ -1314,27 +1402,15 @@ namespace HoudiniEngineUnity
 			// This should be done before update the objects as below.
 			UpdateHoudiniMaterials(session);
 
-			// Note that on HDA reload, we need to check all the objects to make sure
-			// they have updated ObjectInfos.
-			// _assetInfo.haveObjectsChanged is false on HDA reload so we check _bForceUpdate as well
-			if (_assetInfo.haveObjectsChanged || _isCookingAssetReloaded || _bForceUpdate)
-			{
-				// Number of objects might have changed.
-				// This gets latest object infos, adds and removes objects, then refreshes them
-				UpdateAllObjectNodes(session);
-			}
-			else
-			{
-				// Go through each object and refresh its state in order to handle changes
-				foreach (HEU_ObjectNode objNode in _objectNodes)
-				{
-					objNode.UpdateObject(session, _bForceUpdate);
-				}
-			}
+			// Number of objects might have changed.
+			// This gets latest object infos, adds and removes objects, then refreshes them
+			UpdateAllObjectNodes(session);
 
 			GenerateObjectsGeometry(session, bRebuild: false);
 
 			GenerateInstances(session);
+
+			GenerateAttributesStore(session);
 
 			GenerateHandles(session);
 
@@ -1945,7 +2021,7 @@ namespace HoudiniEngineUnity
 			// upstream inputs before doing so.
 
 			bool bForceUpload = false;
-			if (_toolsInfo._alwaysCookUpstream)
+			if (_toolsInfo != null && _toolsInfo._alwaysCookUpstream)
 			{
 				foreach (HEU_AttributesStore attributeStore in _attributeStores)
 				{
@@ -1961,7 +2037,7 @@ namespace HoudiniEngineUnity
 			{
 				if(bForceUpload || attributeStore.HasDirtyAttributes())
 				{
-					if(_toolsInfo._alwaysCookUpstream)
+					if (_toolsInfo != null && _toolsInfo._alwaysCookUpstream)
 					{
 						attributeStore.RefreshUpstreamInputs(session);
 					}
@@ -2166,6 +2242,14 @@ namespace HoudiniEngineUnity
 			foreach (HEU_ObjectNode objNode in _objectNodes)
 			{
 				objNode.GenerateGeometry(session, bRebuild);
+			}
+		}
+
+		private void GenerateAttributesStore(HEU_SessionBase session)
+		{
+			foreach (HEU_ObjectNode objNode in _objectNodes)
+			{
+				objNode.GenerateAttributesStore(session);
 			}
 		}
 
@@ -2594,7 +2678,6 @@ namespace HoudiniEngineUnity
 			// Map of materials copied for corresponding source materials (for reuse)
 			Dictionary<Material, Material> sourceToCopiedMaterials = new Dictionary<Material, Material>();
 
-			List<GameObject> unprocessedTargetChildren = HEU_GeneralUtility.GetNonInstanceChildObjects(bakeTargetGO);
 			string targetAssetPath = null;
 
 			List<GameObject> outputObjects = new List<GameObject>();
@@ -2613,6 +2696,8 @@ namespace HoudiniEngineUnity
 			{
 				// Multi objects
 				// Leave root as is. Update each child object by matching via "name + HEU_Defines.HEU_BAKED_CLONE"
+
+				List<GameObject>  unprocessedTargetChildren = HEU_GeneralUtility.GetNonInstanceChildObjects(bakeTargetGO);
 
 				Transform targetParentTransform = bakeTargetGO.transform;
 
@@ -2640,15 +2725,15 @@ namespace HoudiniEngineUnity
 					outputObjects.Add(targetObject);
 					bBakedSuccessful = true;
 				}
-			}
-
-			// Clean up any children that we haven't processed
-			if(unprocessedTargetChildren.Count > 0)
-			{
-				Debug.LogWarningFormat("Bake target has more children than bake output. GameObjects with names ending in {0} will be destroyed!", HEU_Defines.HEU_BAKED_CLONE);
 
 				// Clean up any children that we haven't processed
-				HEU_GeneralUtility.DestroyBakedGameObjectsWithEndName(unprocessedTargetChildren, HEU_Defines.HEU_BAKED_CLONE);
+				if (unprocessedTargetChildren.Count > 0)
+				{
+					Debug.LogWarningFormat("Bake target has more children than bake output. GameObjects with names ending in {0} will be destroyed!", HEU_Defines.HEU_BAKED_CLONE);
+
+					// Clean up any children that we haven't processed
+					HEU_GeneralUtility.DestroyBakedGameObjectsWithEndName(unprocessedTargetChildren, HEU_Defines.HEU_BAKED_CLONE);
+				}
 			}
 
 			InvokeBakedEvent(bBakedSuccessful, outputObjects);
@@ -2860,7 +2945,7 @@ namespace HoudiniEngineUnity
 			foreach(HEU_MaterialData materialData in _materialCache)
 			{
 				// Non-Houdini material so no need to update it.
-				if(materialData._materialSource != HEU_MaterialData.Source.HOUDINI || materialData._materialKey == HEU_Defines.HEU_INVALID_MATERIAL
+				if(materialData == null || materialData._materialSource != HEU_MaterialData.Source.HOUDINI || materialData._materialKey == HEU_Defines.HEU_INVALID_MATERIAL
 					|| materialData._materialKey == HEU_Defines.EDITABLE_MATERIAL_KEY)
 				{
 					continue;
@@ -3351,7 +3436,10 @@ namespace HoudiniEngineUnity
 		{
 			foreach (HEU_ObjectNode objNode in _objectNodes)
 			{
-				objNode.PopulateObjectInstanceInfos(objInstanceInfos);
+				if (objNode != null)
+				{
+					objNode.PopulateObjectInstanceInfos(objInstanceInfos);
+				}
 			}
 		}
 

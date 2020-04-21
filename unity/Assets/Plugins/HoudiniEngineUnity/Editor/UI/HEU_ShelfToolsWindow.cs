@@ -69,7 +69,7 @@ namespace HoudiniEngineUnity
 		{
 			bool bUtility = false;
 			bool bFocus = true;
-			string title = "Houdini Engine Tools";
+			string title = "Houdini Tools";
 
 			HEU_ShelfToolsWindow window = EditorWindow.GetWindow<HEU_ShelfToolsWindow>(bUtility, title, bFocus);
 			window.autoRepaintOnSceneChange = true;
@@ -315,8 +315,7 @@ namespace HoudiniEngineUnity
 			using (new GUILayout.VerticalScope())
 			{
 				_shelfName = EditorGUILayout.TextField("New Shelf Name", _shelfName);
-
-				using (new EditorGUI.DisabledScope(string.IsNullOrEmpty(_shelfName)))
+				using (new EditorGUI.DisabledScope(string.IsNullOrEmpty(_shelfName) || _shelfName.Trim().Length == 0))
 				{
 					if (GUILayout.Button("Create"))
 					{

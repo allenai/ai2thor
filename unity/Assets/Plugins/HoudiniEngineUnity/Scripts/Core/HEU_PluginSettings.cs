@@ -697,7 +697,11 @@ namespace HoudiniEngineUnity
 		{
 			get
 			{
+#if UNITY_EDITOR_OSX || UNITY_STANDALONE_OSX
+				string path = HEU_Platform.GetHoudiniEnginePath();
+#else
 				string path = HEU_Platform.GetHoudiniEnginePath() + HEU_HoudiniVersion.HAPI_BIN_PATH + HEU_Platform.DirectorySeparator + "houdini";
+#endif
 				HEU_PluginStorage.Instance.Get("HEU_HoudiniDebugLaunchPath", out path, path);
 				return path;
 			}

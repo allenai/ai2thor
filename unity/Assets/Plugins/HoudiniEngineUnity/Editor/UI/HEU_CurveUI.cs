@@ -458,7 +458,7 @@ namespace HoudiniEngineUnity
 				{
 					bool bMouseInDrawArea = HEU_GeneralUtility.IsMouseWithinSceneView(_currentCamera, mousePosition) 
 						&& !HEU_GeneralUtility.IsMouseOverRect(_currentCamera, mousePosition, ref _curveEditorUIRect)
-						&& !HEU_GeneralUtility.IsMouseOverRect(_currentCamera, mousePosition, ref _infoRect);
+						&& (!_showInfoRepaint || !HEU_GeneralUtility.IsMouseOverRect(_currentCamera, mousePosition, ref _infoRect));
 
 					// Plane for default collider
 					Plane collisionPlane = new Plane(Vector3.up, Vector3.zero);
@@ -1219,7 +1219,7 @@ namespace HoudiniEngineUnity
 					{
 						DrawHelpLineGridBox("Left Mouse", "Add point to end of curve.");
 						DrawHelpLineGridBox("A", "Toggle where to add new point (Start, Inside, End).");
-						DrawHelpLineGridBox("Hold Ctrl", "Grid snapping.");
+						DrawHelpLineGridBox("Hold " + HEU_Defines.HEU_KEY_CTRL, "Grid snapping.");
 						DrawHelpLineGridBox("Backspace", "Delete last new point.");
 						DrawHelpLineGridBox("Space", "Edit mode.");
 						DrawHelpLineGridBox("Esc / Enter", "View mode.");
@@ -1237,8 +1237,8 @@ namespace HoudiniEngineUnity
 					else if (_interactionMode == HEU_Curve.Interaction.EDIT)
 					{
 						DrawHelpLineGridBox("Left Mouse", "Select point.");
-						DrawHelpLineGridBox("Ctrl + Left Mouse", "Multi-select point.");
-						DrawHelpLineGridBox("Hold Ctrl + Left Mouse", "Grid snapping when moving points.");
+						DrawHelpLineGridBox(HEU_Defines.HEU_KEY_CTRL + " + Left Mouse", "Multi-select point.");
+						DrawHelpLineGridBox(string.Format("Hold {0} + Left Mouse", HEU_Defines.HEU_KEY_CTRL), "Grid snapping when moving points.");
 						DrawHelpLineGridBox("Backspace", "Delete selected points.");
 						DrawHelpLineGridBox("Space", "Add mode.");
 						DrawHelpLineGridBox("Esc / Enter", "View mode.");
@@ -1259,7 +1259,7 @@ namespace HoudiniEngineUnity
 				_helpGridBoxStyle.normal.background  = HEU_GeneralUtility.MakeTexture(1, 1, new Color(c, c, c, 0.2f));
 				_helpGridBoxStyle.normal.textColor = Color.white;
 				_helpGridBoxStyle.fontStyle = FontStyle.Normal;
-				_helpGridBoxStyle.fontSize = 12;
+				_helpGridBoxStyle.fontSize = 11;
 				_helpGridBoxStyle.alignment = TextAnchor.MiddleLeft;
 			}
 		}
@@ -1270,8 +1270,8 @@ namespace HoudiniEngineUnity
 			{
 				GUILayout.FlexibleSpace();
 
-				GUILayout.Box(keyText, _helpGridBoxStyle, GUILayout.Width(150), GUILayout.Height(20));
-				GUILayout.Box(descText, _helpGridBoxStyle, GUILayout.Width(320), GUILayout.Height(20));
+				GUILayout.Box(keyText, _helpGridBoxStyle, GUILayout.Width(180), GUILayout.Height(20));
+				GUILayout.Box(descText, _helpGridBoxStyle, GUILayout.Width(300), GUILayout.Height(20));
 
 				GUILayout.FlexibleSpace();
 			}

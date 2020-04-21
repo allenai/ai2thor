@@ -55,6 +55,11 @@ namespace HoudiniEngineUnity
 		{
 #if UNITY_EDITOR && HOUDINIENGINEUNITY_ENABLED
 			EditorApplication.update += Update;
+
+#if UNITY_2017_1_OR_NEWER
+			PrefabUtility.prefabInstanceUpdated += OnPrefabInstanceUpdate;
+#endif
+
 #endif
 		}
 
@@ -105,6 +110,41 @@ namespace HoudiniEngineUnity
 			if (index >= 0)
 			{
 				_allHoudiniAssets[index] = null;
+			}
+#endif
+		}
+
+		/// <summary>
+		/// Callback when new prefab instances gets created or updated in Unity scene.
+		/// The plugin does not support creating prefab of HDAs directly
+		/// so this notifies user and provides a way to clean up the created prefab.
+		/// </summary>
+		/// <param name="instance">New prefab instance that was created</param>
+		static void OnPrefabInstanceUpdate(GameObject instance)
+		{
+#if UNITY_EDITOR && HOUDINIENGINEUNITY_ENABLED && UNITY_2017_1_OR_NEWER
+
+			var heu_root = instance.GetComponent<HEU_HoudiniAssetRoot>();
+			if (heu_root != null && heu_root._houdiniAsset != null && 
+				(HEU_EditorUtility.IsPrefabInstance(instance) || HEU_EditorUtility.IsPrefabAsset(instance)) &&
+				!heu_root._houdiniAsset.WarnedPrefabNotSupported)
+			{
+				string prefabPath = HEU_EditorUtility.GetPrefabAssetPath(instance);
+
+				string title = HEU_Defines.HEU_PRODUCT_NAME + " Prefabs Not Supported";
+				string message =
+						"Creating prefab of an HDA is not supported by HoudniEngine.\n\n" +
+						"It is recommended to select 'Remove Prefab' to destroy new prefab " +
+						"and revert to original asset.\n\n" +
+						"Prefab: " + prefabPath;
+
+				heu_root._houdiniAsset.WarnedPrefabNotSupported = true;
+				if (HEU_EditorUtility.DisplayDialog(title, message, "Remove Prefab & Revert", "Keep Prefab"))
+				{
+					HEU_EditorUtility.DisconnectPrefabInstance(instance);
+
+					HEU_AssetDatabase.DeleteAssetAtPath(prefabPath);
+				}
 			}
 #endif
 		}

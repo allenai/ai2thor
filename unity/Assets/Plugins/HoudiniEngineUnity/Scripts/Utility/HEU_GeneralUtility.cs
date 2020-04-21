@@ -514,6 +514,110 @@ namespace HoudiniEngineUnity
 		}
 
 		/// <summary>
+		/// Add or Update HEU_OutputAttributesStore component on the given gameobject for the specified part. 
+		/// </summary>
+		/// <param name="session">Houdini Engine session</param>
+		/// <param name="geoID">Geometry object ID</param>
+		/// <param name="partID">Part ID</param>
+		/// <param name="go">GameObject that will contain the HEU_OutputAttributesStore component</param>
+		public static void UpdateGeneratedAttributeStore(HEU_SessionBase session, HAPI_NodeId geoID, HAPI_PartId partID, GameObject go)
+		{
+			HAPI_AttributeInfo storeAttrInfo = new HAPI_AttributeInfo();
+			GetAttributeInfo(session, geoID, partID, HEU_Defines.HENGINE_STORE_ATTR, ref storeAttrInfo);
+			if (!storeAttrInfo.exists)
+			{
+				DestroyComponent<HEU_OutputAttributesStore>(go);
+				return;
+			}
+
+			string[] storeAttrs = GetAttributeStringData(session, geoID, partID, HEU_Defines.HENGINE_STORE_ATTR, ref storeAttrInfo);
+			if (storeAttrs == null)
+			{
+				DestroyComponent<HEU_OutputAttributesStore>(go);
+				return;
+			}
+
+			HEU_OutputAttributesStore attrsStore = GetOrCreateComponent<HEU_OutputAttributesStore>(go);
+			attrsStore.Clear();
+
+			string[] attrNames = storeAttrs[0].Split(',');
+			for(int a = 0; a < attrNames.Length; ++a)
+			{
+				HAPI_AttributeInfo attrInfo = new HAPI_AttributeInfo();
+				if (GetAttributeInfo(session, geoID, partID, attrNames[a], ref attrInfo) && attrInfo.exists)
+				{
+					HEU_OutputAttribute outAttr = CreateOutputAttribute(session, geoID, partID, attrNames[a], ref attrInfo);
+					if (outAttr != null)
+					{
+						attrsStore.SetAttribute(outAttr);
+					}
+				}
+			}
+		}
+
+		/// <summary>
+		/// Helper to create HEU_OutputAttribute given the name and attribute info.
+		/// </summary>
+		/// <param name="attrName">Name of attribute</param>
+		/// <param name="attrInfo">Attribute info</param>
+		/// <returns>Created HEU_OutputAttribute</returns>
+		public static HEU_OutputAttribute CreateOutputAttributeHelper(string attrName, ref HAPI_AttributeInfo attrInfo)
+		{
+			HEU_OutputAttribute outputAttr = new HEU_OutputAttribute();
+			outputAttr._name = attrName;
+			outputAttr._class = attrInfo.owner;
+			outputAttr._type = attrInfo.storage;
+			return outputAttr;
+		}
+
+		/// <summary>
+		/// Create the HEU_OutputAttribute for the specified attribute on the given part.
+		/// </summary>
+		/// <param name="session">Houdini Engine session</param>
+		/// <param name="geoID">Geometry object ID</param>
+		/// <param name="partID">Part ID</param>
+		/// <param name="attrName">Name of the attribute</param>
+		/// <param name="attrInfo">Attribute info</param>
+		/// <returns>The generated HEU_OutputAttribute if successful else null</returns>
+		public static HEU_OutputAttribute CreateOutputAttribute(HEU_SessionBase session, HAPI_NodeId geoID, HAPI_PartId partID, string attrName, ref HAPI_AttributeInfo attrInfo)
+		{
+			HEU_OutputAttribute outputAttr = null;
+			if (attrInfo.storage == HAPI_StorageType.HAPI_STORAGETYPE_FLOAT)
+			{
+				float[] attrValues = new float[0];
+				if (GetAttribute(session, geoID, partID, attrName, ref attrInfo, ref attrValues, session.GetAttributeFloatData))
+				{
+					outputAttr = CreateOutputAttributeHelper(attrName, ref attrInfo);
+					outputAttr._floatValues = attrValues;
+				}
+			}
+			else if (attrInfo.storage == HAPI_StorageType.HAPI_STORAGETYPE_INT)
+			{
+				int[] attrValues = new int[0];
+				if (GetAttribute(session, geoID, partID, attrName, ref attrInfo, ref attrValues, session.GetAttributeIntData))
+				{
+					outputAttr = CreateOutputAttributeHelper(attrName, ref attrInfo);
+					outputAttr._intValues = attrValues;
+				}
+			}
+			else if (attrInfo.storage == HAPI_StorageType.HAPI_STORAGETYPE_STRING)
+			{
+				string[] attrValues = GetAttributeStringData(session, geoID, partID, attrName, ref attrInfo);
+				if (attrValues != null)
+				{
+					outputAttr = CreateOutputAttributeHelper(attrName, ref attrInfo);
+					outputAttr._stringValues = attrValues;
+				}
+			}
+			else
+			{
+				Debug.LogWarningFormat("Unsupported storage type {0} for storing attribute!", attrInfo.storage);
+			}
+
+			return outputAttr;
+		}
+
+		/// <summary>
 		/// Copy the world transform values from src to dest.
 		/// </summary>
 		/// <param name="src"></param>
@@ -748,6 +852,7 @@ namespace HoudiniEngineUnity
 			DestroyComponent<MeshFilter>(gameObject);
 			DestroyComponent<MeshRenderer>(gameObject);
 			DestroyComponent<Collider>(gameObject);
+			DestroyComponent<HEU_OutputAttributesStore>(gameObject);
 
 #if !HEU_TERRAIN_COLLIDER_DISABLED
 			DestroyComponent<TerrainCollider>(gameObject);
@@ -1477,7 +1582,7 @@ namespace HoudiniEngineUnity
 		{
 			List<HEU_Handle> newHandles = new List<HEU_Handle>();
 
-			if (assetInfo.handleCount == 0)
+			if (assetInfo.handleCount <= 0)
 			{
 				return newHandles;
 			}

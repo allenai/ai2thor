@@ -732,7 +732,7 @@ namespace HoudiniEngineUnity
 							value = EditorGUILayout.DelayedIntField(new GUIContent(parameterData._labelName), value, GUILayout.ExpandWidth(!bHasUIMinMax));
 							if (bHasUIMinMax)
 							{
-								value = Mathf.RoundToInt(GUILayout.HorizontalSlider(value, parameterData.IntUIMin, parameterData.IntUIMax, _sliderStyle, _sliderThumbStyle));
+								value = Mathf.RoundToInt(GUILayout.HorizontalSlider(value, (int)Mathf.Min(value, parameterData.IntUIMin), (int)Mathf.Max(value, parameterData.IntUIMax), _sliderStyle, _sliderThumbStyle));
 							}
 						}
 						EditorGUILayout.EndHorizontal();
@@ -772,7 +772,7 @@ namespace HoudiniEngineUnity
 						value = EditorGUILayout.DelayedFloatField(new GUIContent(parameterData._labelName), value, GUILayout.ExpandWidth(!bHasUIMinMax));
 						if (bHasUIMinMax)
 						{
-							value = GUILayout.HorizontalSlider(value, parameterData.FloatUIMin, parameterData.FloatUIMax, _sliderStyle, _sliderThumbStyle);
+							value = GUILayout.HorizontalSlider(value, Mathf.Min(value, parameterData.FloatUIMin), Mathf.Max(value, parameterData.FloatUIMax), _sliderStyle, _sliderThumbStyle);
 						}
 					}
 					EditorGUILayout.EndHorizontal();
@@ -916,8 +916,10 @@ namespace HoudiniEngineUnity
 			}
 			else if (parmType == HAPI_ParmType.HAPI_PARMTYPE_LABEL)
 			{
-				SerializedProperty stringsProperty = paramUICache._primaryValue;
-				HEU_EditorUI.DrawHeadingLabel(stringsProperty.GetArrayElementAtIndex(0).stringValue);
+				//SerializedProperty stringsProperty = paramUICache._primaryValue;
+				//HEU_EditorUI.DrawHeadingLabel(stringsProperty.GetArrayElementAtIndex(0).stringValue);
+				// Replaced above with this as it seems to be the correct label value
+				HEU_EditorUI.DrawHeadingLabel(parameterData._labelName);
 			}
 			else if (parmType == HAPI_ParmType.HAPI_PARMTYPE_NODE)
 			{

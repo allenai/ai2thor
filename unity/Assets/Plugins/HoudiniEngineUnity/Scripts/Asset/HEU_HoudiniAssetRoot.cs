@@ -44,6 +44,7 @@ namespace HoudiniEngineUnity
 		public List<GameObject> _bakeTargets = new List<GameObject>();
 
 
+
 		/// <summary>
 		/// Callback when asset is deleted. Removes assset from Houdini session if in Editor.
 		/// </summary>
@@ -54,7 +55,7 @@ namespace HoudiniEngineUnity
 			// or asset has been user deleted. 
 			// Skips if its just transitioning into or out of play mode.
 			// TODO RUNTIME: if/when we support runtime, should only do the Application.isEditor check if in Editor			
-			if( _houdiniAsset != null && HEU_EditorUtility.IsEditorNotInPlayModeAndNotGoingToPlayMode())
+			if ( _houdiniAsset != null && HEU_EditorUtility.IsEditorNotInPlayModeAndNotGoingToPlayMode())
 			{
 				// Delete mesh data if this asset hasn't been saved and it is a user invoked delete event.
 				// Otherwise just remove from session.
@@ -104,6 +105,23 @@ namespace HoudiniEngineUnity
 		public static void DestroyRootComponent(HEU_HoudiniAssetRoot assetRoot)
 		{
 			HEU_GeneralUtility.DestroyImmediate(assetRoot, bRegisterUndo:true);
+		}
+
+		void Reset()
+		{
+			// Unity calls this to reset this component.
+			// _houdiniAsset will be null since that is the default value.
+			// So just reconnect _houdiniAsset, then reset all HDA parms and rebuild it.
+
+			if (_houdiniAsset == null)
+			{
+				_houdiniAsset = transform.GetComponentInChildren<HEU_HoudiniAsset>();
+			}
+
+			if (_houdiniAsset != null)
+			{
+				_houdiniAsset.RequestResetParameters(false);
+			}
 		}
 	}
 

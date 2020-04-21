@@ -257,12 +257,14 @@ namespace HoudiniEngineUnity
 			HAPI_StringHandle string_handle,
 			out int buffer_length);
 
+		// Instead of StringBuilder, using bytes to get the char buffer, and then encoding manually
+		// into utf8 to support international characters properly
 		[DllImport(HEU_HoudiniVersion.HAPI_LIBRARY, CallingConvention = CallingConvention.Cdecl)]
 		public static extern HAPI_Result
 		HAPI_GetString(
-			ref HAPI_Session session,
-			HAPI_StringHandle string_handle,
-			StringBuilder string_value,
+			ref HAPI_Session session, 
+			HAPI_StringHandle string_handle, 
+			byte[] string_value, 
 			int length);
 
 		// TIME -----------------------------------------------------------------------------------------------------

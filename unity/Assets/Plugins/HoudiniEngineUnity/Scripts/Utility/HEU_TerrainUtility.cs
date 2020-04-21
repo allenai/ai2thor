@@ -91,15 +91,6 @@ namespace HoudiniEngineUnity
 				//Debug.LogFormat("HeightField Terrain Size x:{0}, y:{1}", terrainSizeX.ToString("{0.00}"), terrainSizeY.ToString("{0.00}"));
 				//Debug.LogFormat("HeightField minX={0}, minY={1}, minZ={2}", volumeInfo.minX.ToString("{0.00}"), volumeInfo.minY.ToString("{0.00}"), volumeInfo.minZ.ToString("{0.00}"));
 
-				const int UNITY_MINIMUM_HEIGHTMAP_RESOLUTION = 33;
-				if (terrainSizeX < UNITY_MINIMUM_HEIGHTMAP_RESOLUTION || terrainSizeY < UNITY_MINIMUM_HEIGHTMAP_RESOLUTION)
-				{
-					Debug.LogWarningFormat("Unity Terrain has a minimum heightmap resolution of {0}. This HDA heightmap size is {1}x{2}."
-						+ "\nPlease resize the terrain to a value higher than this.",
-						UNITY_MINIMUM_HEIGHTMAP_RESOLUTION, terrainSizeX, terrainSizeY);
-					return false;
-				}
-
 				bool bNewTerrain = false;
 				bool bNewTerrainData = false;
 				terrain = gameObject.GetComponent<Terrain>();
@@ -127,6 +118,10 @@ namespace HoudiniEngineUnity
 				{
 					terrain.terrainData = terrainData;
 				}
+				else if (terrain.terrainData != null)
+				{
+					terrainData = terrain.terrainData;
+				}
 				else
 				{
 					return false;
@@ -153,6 +148,16 @@ namespace HoudiniEngineUnity
 				// Heightmap resolution must be square power-of-two plus 1. 
 				// Unity will automatically resize terrainData.heightmapResolution so need to handle the changed size (if Unity changed it).
 				int heightMapResolution = volumeInfo.xLength;
+
+				const int UNITY_MINIMUM_HEIGHTMAP_RESOLUTION = 33;
+				if (heightMapResolution < UNITY_MINIMUM_HEIGHTMAP_RESOLUTION || heightMapResolution < UNITY_MINIMUM_HEIGHTMAP_RESOLUTION)
+				{
+					Debug.LogWarningFormat("Unity Terrain has a minimum heightmap resolution of {0}. This HDA heightmap size is {1}x{2}."
+						+ "\nPlease resample the heightmap resolution to a value higher than this.",
+						UNITY_MINIMUM_HEIGHTMAP_RESOLUTION, heightMapResolution, heightMapResolution);
+					return false;
+				}
+
 				terrainData.heightmapResolution = heightMapResolution;
 				int terrainResizedDelta = terrainData.heightmapResolution - heightMapResolution;
 				if (terrainResizedDelta < 0)

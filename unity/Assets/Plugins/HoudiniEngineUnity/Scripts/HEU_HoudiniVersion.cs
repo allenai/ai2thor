@@ -1,5 +1,5 @@
 /*
-* Copyright (c) <2018> Side Effects Software Inc.
+* Copyright (c) <2020> Side Effects Software Inc.
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files (the "Software"), to deal
@@ -41,15 +41,15 @@ namespace HoudiniEngineUnity
 	{
 		public const int HOUDINI_MAJOR			= 18;
 		public const int HOUDINI_MINOR			= 0;
-		public const int HOUDINI_BUILD			= 287;
+		public const int HOUDINI_BUILD			= 416;
 		public const int HOUDINI_PATCH			= 0;
 
-		public const string HOUDINI_VERSION_STRING = "18.0.287";
+		public const string HOUDINI_VERSION_STRING = "18.0.416";
 
 		public const int HOUDINI_ENGINE_MAJOR	= 3;
 		public const int HOUDINI_ENGINE_MINOR	= 3;
 
-		public const int HOUDINI_ENGINE_API		= 2;
+		public const int HOUDINI_ENGINE_API		= 3;
 
 		public const int UNITY_PLUGIN_VERSION	= 2;
 
@@ -63,12 +63,15 @@ namespace HoudiniEngineUnity
 			public const string HAPI_LIBRARY	= "libHARC32";
 		#endif // UNITY_EDITOR_64
 
+        public const string SIDEFX_SOFTWARE_REGISTRY = "SOFTWARE\\Side Effects Software\\";
+
 #elif UNITY_EDITOR_OSX || UNITY_STANDALONE_OSX
 
-		public const string HOUDINI_INSTALL_PATH = "/Applications/Houdini/Houdini" + HOUDINI_VERSION_STRING + "/Frameworks/Houdini.framework/Versions/Current";
+		public const string HOUDINI_INSTALL_PATH = "/Applications/Houdini/Houdini" + HOUDINI_VERSION_STRING;
+		public const string HOUDINI_FRAMEWORKS_PATH = "/Frameworks/Houdini.framework/Versions/Current";
 
-		public const string HAPI_BIN_PATH		= "/Resources/bin";
-		public const string HAPI_LIBRARY_PATH	= "/Libraries";
+		public const string HAPI_BIN_PATH		= HOUDINI_FRAMEWORKS_PATH + "/Resources/bin";
+		public const string HAPI_LIBRARY_PATH		= HOUDINI_FRAMEWORKS_PATH + "/Libraries";
 
 		#if UNITY_EDITOR_64 || UNITY_64
 			public const string HAPI_LIBRARY	= HOUDINI_INSTALL_PATH + HAPI_LIBRARY_PATH + "/libHAPIL.dylib";

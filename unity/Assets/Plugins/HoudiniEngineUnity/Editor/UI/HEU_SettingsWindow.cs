@@ -57,9 +57,9 @@ namespace HoudiniEngineUnity
 
 		public static void ShowWindow()
 		{
-			bool bUtility = false;
+			bool bUtility = true;
 			bool bFocus = true;
-			string title = HEU_Defines.HEU_PRODUCT_NAME + " Plugin Settings";
+			string title = HEU_Defines.HEU_PRODUCT_NAME + " Settings";
 
 			Rect rect = new Rect(Screen.width * 0.5f, Screen.height * 0.5f, 610, 650);
 			EditorWindow window = EditorWindow.GetWindowWithRect<HEU_SettingsWindow>(rect, bUtility, title, bFocus);
@@ -192,6 +192,9 @@ namespace HoudiniEngineUnity
 				}
 			}
 			HEU_EditorUI.DrawSeparator();
+#if UNITY_EDITOR_WIN
+			// Only enabling this for Windows since Mac/Linux have issues dynamically loading
+			// HAPI libraries.
 			{
 				string oldPath = HEU_PluginSettings.HoudiniInstallPath;
 				string fileExt = "";
@@ -206,9 +209,7 @@ namespace HoudiniEngineUnity
 					if (GUILayout.Button("...", buttonStyle, GUILayout.Width(30), GUILayout.Height(18)))
 					{
 						string panelMsg = "Select Houdini Install Path";
-#if UNITY_EDITOR_OSX
 						panelMsg += " (.app)";
-#endif
 
 						string openFilePath = UnityEditor.EditorUtility.OpenFolderPanel(panelMsg, newPath, fileExt);
 						if (!string.IsNullOrEmpty(openFilePath))
@@ -241,6 +242,7 @@ namespace HoudiniEngineUnity
 #endif
 			}
 			HEU_EditorUI.DrawSeparator();
+#endif
 			{
 				string oldPath = HEU_PluginSettings.HoudiniDebugLaunchPath;
 				string fileExt = "";
@@ -274,7 +276,7 @@ namespace HoudiniEngineUnity
 #if UNITY_EDITOR_OSX
 				GUIStyle labelStyle = new GUIStyle(GUI.skin.label);
 				labelStyle.wordWrap = true;
-				EditorGUILayout.LabelField("  On macOS, you'll need to select the path to the .app folder.\n  E.g. /Applications/Houdini/Houdini16.5.616/Houdini Core 16.5.616.app", labelStyle);
+				EditorGUILayout.LabelField("  On macOS, you'll need to select the path to the .app folder.\n  E.g. /Applications/Houdini/Houdini18.0.100/Houdini Core 18.0.100.app", labelStyle);
 #endif
 			}
 			HEU_EditorUI.DrawSeparator();

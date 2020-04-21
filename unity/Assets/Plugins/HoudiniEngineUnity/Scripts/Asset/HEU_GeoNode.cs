@@ -260,13 +260,11 @@ namespace HoudiniEngineUnity
 						{
 							//Debug.Log("Found matched part: " + oldMatchedPart.name);
 
-							List<HEU_ObjectInstanceInfo> sourceObjectInstanceInfos = null;
-							if (bObjectInstancer)
-							{
-								// ProcessPart will clear out the object instances, so hence why
-								// we keep a copy here, then restore after processing the parts.
-								sourceObjectInstanceInfos = oldMatchedPart.GetObjectInstanceInfos();
-							}
+							// ProcessPart will clear out the object instances, so hence why
+							// we keep a copy here, then restore after processing the parts.
+							// Note that at this point we don't know if the the new part is an
+							// instancer or not (e.g. object, attribute instancer).
+							List<HEU_ObjectInstanceInfo> sourceObjectInstanceInfos = oldMatchedPart.GetObjectInstanceInfos();
 
 							// Clear out old generated data
 							oldMatchedPart.ClearGeneratedData();
@@ -276,7 +274,7 @@ namespace HoudiniEngineUnity
 
 							ProcessPart(session, i, ref partInfo, ref part);
 
-							if (part != null && bObjectInstancer && sourceObjectInstanceInfos != null)
+							if (sourceObjectInstanceInfos != null && part != null && (bObjectInstancer || part.IsAttribInstancer()))
 							{
 								// Set object instances from old part into new. This keeps the user set object inputs around.
 								part.SetObjectInstanceInfos(sourceObjectInstanceInfos);
@@ -575,6 +573,15 @@ namespace HoudiniEngineUnity
 				{
 					_parts[i].GeneratePartInstances(session);
 				}
+			}
+		}
+
+		public void GenerateAttributesStore(HEU_SessionBase session)
+		{
+			int numParts = _parts.Count;
+			for (int i = 0; i < numParts; ++i)
+			{
+				_parts[i].GenerateAttributesStore(session);
 			}
 		}
 

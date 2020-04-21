@@ -29,6 +29,12 @@ using System.Collections.Generic;
 
 #if UNITY_EDITOR
 using UnityEditor;
+
+#if UNITY_2018_3_OR_NEWER
+using UnityEditor.SceneManagement;
+using UnityEditor.Experimental.SceneManagement;
+#endif
+
 #endif
 
 namespace HoudiniEngineUnity
@@ -239,6 +245,37 @@ namespace HoudiniEngineUnity
 		}
 
 		/// <summary>
+		/// Returns true if the given object is being edited in prefab mode.
+		/// </summary>
+		/// <param name="obj">Object to check</param>
+		/// <returns>True if object is in prefab mode</returns>
+		public static bool IsEditingInPrefabMode(GameObject obj)
+		{
+#if UNITY_EDITOR
+			if (EditorUtility.IsPersistent(obj))
+			{
+				// Stored on disk (some sort of prefab)
+				return true;
+			}
+			else
+			{
+#if UNITY_2018_3_OR_NEWER
+				// If not persistent, check if in prefab stage
+				if (StageUtility.GetMainStageHandle() != StageUtility.GetStageHandle(obj))
+				{
+					var stage = PrefabStageUtility.GetPrefabStage(obj);
+					if (stage != null)
+					{
+						return true;
+					}
+				}
+#endif
+			}
+#endif
+			return false;
+		}
+
+		/// <summary>
 		/// Returns true if given GameObject is a disconnected instance of a prefab.
 		/// </summary>
 		/// <param name="go">GameObject to check</param>
@@ -270,6 +307,44 @@ namespace HoudiniEngineUnity
 #else
 			Debug.LogWarning(HEU_Defines.HEU_USERMSG_NONEDITOR_NOT_SUPPORTED);
 			return null;
+#endif
+		}
+
+		/// <summary>
+		/// Returns the prefab asset path of the given object.
+		/// </summary>
+		/// <param name="obj">Object to get the path for</param>
+		/// <returns>Relative asset path of given object</returns>
+		public static string GetPrefabAssetPath(Object obj)
+		{
+#if UNITY_EDITOR
+#if UNITY_2018_3_OR_NEWER
+			return PrefabUtility.GetPrefabAssetPathOfNearestInstanceRoot(obj);
+#else
+			return AssetDatabase.GetAssetPath(obj);
+#endif
+#else
+			Debug.LogWarning(HEU_Defines.HEU_USERMSG_NONEDITOR_NOT_SUPPORTED);
+			return null;
+#endif
+		}
+
+		/// <summary>
+		/// Disconnect the given prefab instance (unpack) so its no
+		/// longer a prefab instance.
+		/// </summary>
+		/// <param name="instance">The instance to disconnect</param>
+		public static void DisconnectPrefabInstance(GameObject instance)
+		{
+#if UNITY_EDITOR
+#if UNITY_2018_3_OR_NEWER
+			PrefabUtility.UnpackPrefabInstance(instance,
+						PrefabUnpackMode.Completely, InteractionMode.AutomatedAction);
+#else
+			PrefabUtility.DisconnectPrefabInstance(instance);
+#endif
+#else
+			Debug.LogWarning(HEU_Defines.HEU_USERMSG_NONEDITOR_NOT_SUPPORTED);
 #endif
 		}
 

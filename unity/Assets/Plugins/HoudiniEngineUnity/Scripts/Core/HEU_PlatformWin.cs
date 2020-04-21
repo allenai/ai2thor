@@ -174,11 +174,11 @@ namespace HoudiniEngineUnity
 				correctVersionKey += "." + HEU_HoudiniVersion.HOUDINI_PATCH;
 #pragma warning restore 162
 
-			string appPath = HEU_PlatformWin.GetRegistryKeyvalue_x64(HEU_PlatformWin.HKEY_LOCAL_MACHINE, HEU_Defines.SIDEFX_SOFTWARE_REGISTRY + appName, correctVersionKey);
+			string appPath = HEU_PlatformWin.GetRegistryKeyvalue_x64(HEU_PlatformWin.HKEY_LOCAL_MACHINE, HEU_HoudiniVersion.SIDEFX_SOFTWARE_REGISTRY + appName, correctVersionKey);
 			if (appPath == null || appPath.Length == 0)
 			{
 				// Try 32-bit entry (for Steam builds)
-				appPath = HEU_PlatformWin.GetRegistryKeyvalue_x86(HEU_PlatformWin.HKEY_LOCAL_MACHINE, HEU_Defines.SIDEFX_SOFTWARE_REGISTRY + appName, correctVersionKey);
+				appPath = HEU_PlatformWin.GetRegistryKeyvalue_x86(HEU_PlatformWin.HKEY_LOCAL_MACHINE, HEU_HoudiniVersion.SIDEFX_SOFTWARE_REGISTRY + appName, correctVersionKey);
 				if (appPath == null || appPath.Length == 0)
 				{
 					throw new HEU_HoudiniEngineError(string.Format("Expected version {0} of {1} not found in the system registry!", correctVersion, appName));

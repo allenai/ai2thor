@@ -50,7 +50,7 @@ namespace HoudiniEngineUnity
 			string rootPath = HEU_Platform.BuildPath("Assets", HEU_PluginSettings.AssetCachePath);
 			if (!AssetDatabase.IsValidFolder(rootPath))
 			{
-				AssetDatabase.CreateFolder("Assets", HEU_PluginSettings.AssetCachePath);
+				CreatePathWithFolders(rootPath);
 			}
 
 			return rootPath;
