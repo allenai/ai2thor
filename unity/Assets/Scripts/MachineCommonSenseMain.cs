@@ -200,6 +200,10 @@ public class MachineCommonSenseMain : MonoBehaviour {
                 MachineCommonSenseMain.LIGHT_Z_POSITION);
         }
 
+        if (this.currentScene.goal != null && this.currentScene.goal.description != null) {
+            Debug.Log("GOAL: " + this.currentScene.goal.description);
+        }
+
         GameObject controller = GameObject.Find("FPSController");
         if (this.currentScene.performerStart != null && this.currentScene.performerStart.position != null) {
             // Always keep the Y position on the floor.
@@ -1279,8 +1283,14 @@ public class MachineCommonSenseConfigScene {
     public String wallMaterial;
     public bool observation;
     public bool screenshot;
+    public MachineCommonSenseConfigGoal goal;
     public MachineCommonSenseConfigTransform performerStart = null;
     public List<MachineCommonSenseConfigGameObject> objects;
+}
+
+[Serializable]
+public class MachineCommonSenseConfigGoal {
+    public string description;
 }
 
 [Serializable]
