@@ -142,7 +142,7 @@ public class MachineCommonSenseController : PhysicsRemoteFPSAgentController {
      * or the agent has two hands to use.
      */
     private string GetHeldObjectId(string previousObjectId) {
-        if ((previousObjectId != null && !previousObjectId.Equals(""))) {
+        if ((previousObjectId != null) && (!previousObjectId.Equals(""))) {
             return previousObjectId;
         } else {
             if (ItemInHand != null) {
