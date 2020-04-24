@@ -71,7 +71,8 @@ public class MachineCommonSenseController : PhysicsRemoteFPSAgentController {
     }
 
     public override bool DropHandObject(ServerAction action) {
-        bool continueAction = TryConvertingEachObjectDirectionToId(action);
+        // Use held object instead of direction for objectId (if needed)
+        bool continueAction = TryObjectIdFromHeldObject(action);
 
         if (!continueAction) {
             return false;
@@ -131,6 +132,29 @@ public class MachineCommonSenseController : PhysicsRemoteFPSAgentController {
         metadata.lastActionStatus = this.lastActionStatus;
         metadata.reachDistance = this.maxVisibleDistance;
         return this.agentManager.UpdateMetadataColors(this, metadata);
+    }
+
+    /**
+     * For actions where there is an object in the agent's hand, check the held object
+     * for an object ID if one isn't given.
+     *
+     * Note: This may need to change later when the held object is visible
+     * or the agent has two hands to use.
+     */
+    private string GetHeldObjectId(string previousObjectId) {
+        if ((previousObjectId != null) && (!previousObjectId.Equals(""))) {
+            return previousObjectId;
+        } else {
+            if (ItemInHand != null) {
+                return ItemInHand.GetComponent<SimObjPhysics>().uniqueID;
+            } else {
+                errorMessage = "No object found in hand.";
+                Debug.Log(errorMessage);
+                actionFinished(false);
+                this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.NOT_HELD);
+                return previousObjectId;
+            }
+        }
     }
 
     public override void Initialize(ServerAction action) {
@@ -269,7 +293,8 @@ public class MachineCommonSenseController : PhysicsRemoteFPSAgentController {
     }
 
     public override void PutObject(ServerAction action) {
-        bool continueAction = TryConvertingEachObjectDirectionToId(action);
+        // Use held object instead of direction for objectId (if needed)
+        bool continueAction = TryObjectIdFromHeldObject(action);
 
         if (!continueAction) {
             return;
@@ -409,7 +434,8 @@ public class MachineCommonSenseController : PhysicsRemoteFPSAgentController {
     }
 
     public override void ThrowObject(ServerAction action) {
-        bool continueAction = TryConvertingEachObjectDirectionToId(action);
+        // Use held object instead of direction for objectId (if needed)
+        bool continueAction = TryObjectIdFromHeldObject(action);
 
         if (!continueAction) {
             return;
@@ -462,6 +488,19 @@ public class MachineCommonSenseController : PhysicsRemoteFPSAgentController {
     private bool TryConvertingEachObjectDirectionToId(ServerAction action) {
         action.objectId = this.ConvertObjectDirectionToId(action.objectDirection,
             action.objectId);
+
+        return TryReceptacleObjectIdFromDirection(action);
+    }
+
+    private bool TryObjectIdFromHeldObject(ServerAction action) {
+        // Can't currently use direction for objects in player's hand, since held objects are currently invisible
+        action.objectId = this.GetHeldObjectId(action.objectId);
+
+        // For receptacleObjectId (if needed), still using direction
+        return TryReceptacleObjectIdFromDirection(action);
+    }
+
+    private bool TryReceptacleObjectIdFromDirection(ServerAction action) {
         if (!this.actionComplete) {
             action.receptacleObjectId = this.ConvertObjectDirectionToId(action.receptacleObjectDirection,
                 action.receptacleObjectId);
