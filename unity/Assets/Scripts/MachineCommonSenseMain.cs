@@ -93,7 +93,7 @@ public class MachineCommonSenseMain : MonoBehaviour {
         // If the player made a step, update the scene based on the current configuration.
         if (this.lastStep < this.agentController.step) {
             this.lastStep++;
-            LogVerbose("Run Step " + this.lastStep + " at Frame " + Time.frameCount);
+            Debug.Log("MCS: Run Step " + this.lastStep + " at Frame " + Time.frameCount);
             if (this.currentScene != null && this.currentScene.objects != null) {
                 bool objectsWereShown = false;
                 List<MachineCommonSenseConfigGameObject> objects = this.currentScene.objects.Where(objectConfig =>
@@ -126,7 +126,7 @@ public class MachineCommonSenseMain : MonoBehaviour {
 
     public void ChangeCurrentScene(MachineCommonSenseConfigScene scene) {
         if (scene == null && this.currentScene == null) {
-            Debug.LogError("MCS:  Cannot switch the MCS scene to null... Keeping the current MCS scene.");
+            Debug.LogError("MCS: Cannot switch the MCS scene to null... Keeping the current MCS scene.");
             return;
         }
 
@@ -139,9 +139,9 @@ public class MachineCommonSenseMain : MonoBehaviour {
 
         if (scene != null) {
             this.currentScene = scene;
-            Debug.Log("MCS:  Switching the current MCS scene to " + scene.name);
+            Debug.Log("MCS: Switching the current MCS scene to " + scene.name);
         } else {
-            Debug.Log("MCS:  Resetting the current MCS scene...");
+            Debug.Log("MCS: Resetting the current MCS scene...");
         }
 
         if (this.currentScene != null && this.currentScene.objects != null) {
@@ -201,7 +201,7 @@ public class MachineCommonSenseMain : MonoBehaviour {
         }
 
         if (this.currentScene.goal != null && this.currentScene.goal.description != null) {
-            Debug.Log("GOAL: " + this.currentScene.goal.description);
+            Debug.Log("MCS: Goal = " + this.currentScene.goal.description);
         }
 
         GameObject controller = GameObject.Find("FPSController");
@@ -294,7 +294,7 @@ public class MachineCommonSenseMain : MonoBehaviour {
                 if (collider is MeshCollider) {
                     if (!((MeshCollider)collider).convex) {
                         // TODO Do we need to do more?
-                        Debug.LogWarning("Deactivating concave MeshCollider in GameObject " + gameObject.name);
+                        Debug.LogWarning("MCS: Deactivating concave MeshCollider in GameObject " + gameObject.name);
                         collider.enabled = false;
                     }
                 }
@@ -586,13 +586,8 @@ public class MachineCommonSenseMain : MonoBehaviour {
         if (ai2thorPhysicsScript == null) {
             ai2thorPhysicsScript = gameObject.AddComponent<SimObjPhysics>();
             ai2thorPhysicsScript.isInteractable = true;
-            ai2thorPhysicsScript.PrimaryProperty = (pickupable ? SimObjPrimaryProperty.CanPickup : (moveable ?
-                SimObjPrimaryProperty.Moveable : SimObjPrimaryProperty.Static));
-            ai2thorPhysicsScript.SecondaryProperties = (receptacle ? new SimObjSecondaryProperty[] {
-                SimObjSecondaryProperty.Receptacle
-            } : new SimObjSecondaryProperty[] { }).Concat(openable ? new SimObjSecondaryProperty[] {
-                SimObjSecondaryProperty.CanOpen
-            } : new SimObjSecondaryProperty[] { }).ToArray();
+            ai2thorPhysicsScript.PrimaryProperty = SimObjPrimaryProperty.Static;
+            ai2thorPhysicsScript.SecondaryProperties = new SimObjSecondaryProperty[] { };
             ai2thorPhysicsScript.MyColliders = colliders ?? (new Collider[] { });
             ai2thorPhysicsScript.ReceptacleTriggerBoxes = new List<GameObject>().ToArray();
             /* TODO MCS-75 We should let people set these properties in the JSON config file.
@@ -602,6 +597,19 @@ public class MachineCommonSenseMain : MonoBehaviour {
             ai2thorPhysicsScript.HFrbdrag
             ai2thorPhysicsScript.HFrbangulardrag
             */
+        }
+
+        ai2thorPhysicsScript.PrimaryProperty = (pickupable ? SimObjPrimaryProperty.CanPickup : (moveable ?
+            SimObjPrimaryProperty.Moveable : ai2thorPhysicsScript.PrimaryProperty));
+
+        if (receptacle && !ai2thorPhysicsScript.SecondaryProperties.ToList().Contains(SimObjSecondaryProperty.Receptacle)) {
+            ai2thorPhysicsScript.SecondaryProperties = ai2thorPhysicsScript.SecondaryProperties.ToList().Concat(
+                new SimObjSecondaryProperty[] { SimObjSecondaryProperty.Receptacle }).ToArray();
+        }
+
+        if (openable && !ai2thorPhysicsScript.SecondaryProperties.ToList().Contains(SimObjSecondaryProperty.CanOpen)) {
+            ai2thorPhysicsScript.SecondaryProperties = ai2thorPhysicsScript.SecondaryProperties.ToList().Concat(
+                new SimObjSecondaryProperty[] { SimObjSecondaryProperty.CanOpen }).ToArray();
         }
 
         // Always set the uniqueID to a new name (we don't want to use AI2-THOR's default names).
@@ -845,20 +853,20 @@ public class MachineCommonSenseMain : MonoBehaviour {
                 (parentObject ?? gameObject).SetActive(false);
             }
         } catch (Exception e) {
-            Debug.LogError("MCS:  " + e);
+            Debug.LogError("MCS: " + e);
         }
     }
 
     private MachineCommonSenseConfigScene LoadCurrentSceneFromFile(String filePath) {
         TextAsset currentSceneFile = Resources.Load<TextAsset>("MCS/Scenes/" + filePath);
-        Debug.Log("MCS:  Config file Assets/Resources/MCS/Scenes/" + filePath + ".json" + (currentSceneFile == null ?
+        Debug.Log("MCS: Config file Assets/Resources/MCS/Scenes/" + filePath + ".json" + (currentSceneFile == null ?
             " is null!" : (":\n" + currentSceneFile.text)));
         return JsonUtility.FromJson<MachineCommonSenseConfigScene>(currentSceneFile.text);
     }
 
     private Dictionary<string, List<string>> LoadMaterialRegistryFromFile(String filePath) {
         TextAsset materialRegistryFile = Resources.Load<TextAsset>("MCS/" + filePath);
-        Debug.Log("MCS:  Config file Assets/Resources/MCS/" + filePath + ".json" + (materialRegistryFile == null ?
+        Debug.Log("MCS: Config file Assets/Resources/MCS/" + filePath + ".json" + (materialRegistryFile == null ?
             " is null!" : (":\n" + materialRegistryFile.text)));
         MachineCommonSenseConfigMaterialRegistry materialJson =
             JsonUtility.FromJson<MachineCommonSenseConfigMaterialRegistry>(materialRegistryFile.text);
@@ -878,7 +886,7 @@ public class MachineCommonSenseMain : MonoBehaviour {
 
     private List<MachineCommonSenseConfigObjectDefinition> LoadObjectRegistryFromFile(String filePath) {
         TextAsset objectRegistryFile = Resources.Load<TextAsset>("MCS/" + filePath);
-        Debug.Log("MCS:  Config file Assets/Resources/MCS/" + filePath + ".json" + (objectRegistryFile == null ?
+        Debug.Log("MCS: Config file Assets/Resources/MCS/" + filePath + ".json" + (objectRegistryFile == null ?
             " is null!" : (":\n" + objectRegistryFile.text)));
         MachineCommonSenseConfigObjectRegistry objectRegistry = JsonUtility
             .FromJson<MachineCommonSenseConfigObjectRegistry>(objectRegistryFile.text);
@@ -887,7 +895,7 @@ public class MachineCommonSenseMain : MonoBehaviour {
 
     private void LogVerbose(String text) {
         if (this.enableVerboseLog) {
-            Debug.Log("MCS:  " + text);
+            Debug.Log("MCS: " + text);
         }
     }
 
@@ -1040,10 +1048,11 @@ public class MachineCommonSenseMain : MonoBehaviour {
                     gameObject.transform.localScale.z * resize.size.GetZ());
             });
 
-        objectConfig.teleports.Where(teleport => teleport.stepBegin <= step && teleport.stepEnd >= step &&
-            teleport.vector != null).ToList().ForEach((teleport) => {
-                gameOrParentObject.transform.Translate(new Vector3(teleport.vector.x, teleport.vector.y,
-                    teleport.vector.z));
+        objectConfig.teleports.Where(teleport => teleport.stepBegin == step && teleport.position != null).ToList()
+            .ForEach((teleport) => {
+                gameOrParentObject.transform.localPosition = new Vector3(teleport.position.x, teleport.position.y,
+                    teleport.position.z);
+                Debug.Log("TELEPORT " + gameOrParentObject.transform.position.ToString("F4"));
             });
 
         objectConfig.forces.Where(force => force.stepBegin <= step && force.stepEnd >= step && force.vector != null)
@@ -1158,7 +1167,7 @@ public class MachineCommonSenseConfigGameObject : MachineCommonSenseConfigAbstra
     public List<MachineCommonSenseConfigResize> resizes;
     public List<MachineCommonSenseConfigMove> rotates;
     public List<MachineCommonSenseConfigShow> shows;
-    public List<MachineCommonSenseConfigMove> teleports;
+    public List<MachineCommonSenseConfigTeleport> teleports;
     public List<MachineCommonSenseConfigMove> torques;
 
     private GameObject gameObject;
@@ -1286,6 +1295,11 @@ public class MachineCommonSenseConfigScene {
     public MachineCommonSenseConfigGoal goal;
     public MachineCommonSenseConfigTransform performerStart = null;
     public List<MachineCommonSenseConfigGameObject> objects;
+}
+
+[Serializable]
+public class MachineCommonSenseConfigTeleport : MachineCommonSenseConfigStepBegin {
+    public MachineCommonSenseConfigVector position;
 }
 
 [Serializable]
