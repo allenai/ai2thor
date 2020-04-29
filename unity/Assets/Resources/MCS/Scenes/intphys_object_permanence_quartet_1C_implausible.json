@@ -1,0 +1,192 @@
+﻿{
+    "name": "intphys_object_permanence_quartet_1C",
+    "observation": true,
+    "ceilingMaterial": "AI2-THOR/Materials/Walls/Drywall",
+    "floorMaterial": "AI2-THOR/Materials/Fabrics/HotelCarpet3",
+    "wallMaterial": "AI2-THOR/Materials/Walls/Drywall4Tiled",
+    "goal": {
+      "type_list": [],
+      "task_list": [],
+      "info_list": [],
+      "last_step": 60,
+      "action_list": [
+          ["Pass"], ["Pass"], ["Pass"], ["Pass"], ["Pass"],
+          ["Pass"], ["Pass"], ["Pass"], ["Pass"], ["Pass"],
+          ["Pass"], ["Pass"], ["Pass"], ["Pass"], ["Pass"],
+          ["Pass"], ["Pass"], ["Pass"], ["Pass"], ["Pass"],
+          ["Pass"], ["Pass"], ["Pass"], ["Pass"], ["Pass"],
+          ["Pass"], ["Pass"], ["Pass"], ["Pass"], ["Pass"],
+          ["Pass"], ["Pass"], ["Pass"], ["Pass"], ["Pass"],
+          ["Pass"], ["Pass"], ["Pass"], ["Pass"], ["Pass"],
+          ["Pass"], ["Pass"], ["Pass"], ["Pass"], ["Pass"],
+          ["Pass"], ["Pass"], ["Pass"], ["Pass"], ["Pass"],
+          ["Pass"], ["Pass"], ["Pass"], ["Pass"], ["Pass"],
+          ["Pass"], ["Pass"], ["Pass"], ["Pass"], ["Pass"]
+      ],
+      "metadata": {
+        "choose": ["plausible", "implausible"]
+      }
+    },
+    "objects": [{
+        "id": "ball",
+        "type": "sphere",
+        "mass": 0.75,
+        "pickupable": true,
+        "materials": ["AI2-THOR/Materials/Plastics/OrangePlastic"],
+        "salientMaterials": ["plastic"],
+        "shows": [{
+            "stepBegin": 0,
+            "position": {
+                "x": -4.2,
+                "y": 0.4,
+                "z": 1.6
+            },
+            "scale": {
+                "x": 0.75,
+                "y": 0.75,
+                "z": 0.75
+            }
+        }],
+        "forces": [{
+            "stepBegin": 14,
+            "stepEnd": 55,
+            "vector": {
+                "x": 225,
+                "y": 0,
+                "z": 0
+            }
+        }],
+        "hides": [{
+            "stepBegin": 24
+        }]
+    }, {
+        "id": "occluder_wall",
+        "type": "cube",
+        "physics": true,
+        "kinematic": true,
+        "structure": true,
+        "mass": 100,
+        "materials": ["AI2-THOR/Materials/Wood/WoodFloorsCross"],
+        "salientMaterials": ["wood"],
+        "shows": [{
+            "stepBegin": 0,
+            "position": {
+                "x": 0,
+                "y": 0.75,
+                "z": 1
+            },
+            "rotation": {
+                "x": 0,
+                "y": 0,
+                "z": 0
+            },
+            "scale": {
+                "x": 1,
+                "y": 1.5,
+                "z": 0.1
+            }
+        }],
+        "moves": [{
+            "stepBegin": 1,
+            "stepEnd": 6,
+            "vector": {
+                "x": 0,
+                "y": 0.25,
+                "z": 0
+            }
+        }, {
+            "stepBegin": 7,
+            "stepEnd": 12,
+            "vector": {
+                "x": 0,
+                "y": -0.25,
+                "z": 0
+            }
+        }, {
+            "stepBegin": 55,
+            "stepEnd": 60,
+            "vector": {
+                "x": 0,
+                "y": 0.25,
+                "z": 0
+            }
+        }],
+        "rotates": [{
+            "stepBegin": 1,
+            "stepEnd": 2,
+            "vector": {
+                "x": 0,
+                "y": 45,
+                "z": 0
+            }
+        }, {
+            "stepBegin": 11,
+            "stepEnd": 12,
+            "vector": {
+                "x": 0,
+                "y": -45,
+                "z": 0
+            }
+        }, {
+            "stepBegin": 55,
+            "stepEnd": 56,
+            "vector": {
+                "x": 0,
+                "y": 45,
+                "z": 0
+            }
+        }]
+    }, {
+        "id": "occluder_pole",
+        "type": "cylinder",
+        "physics": true,
+        "kinematic": true,
+        "structure": true,
+        "mass": 1,
+        "materials": ["AI2-THOR/Materials/Metals/Metal"],
+        "salientMaterials": ["metal"],
+        "shows": [{
+            "stepBegin": 0,
+            "position": {
+                "x": 0,
+                "y": 2.5,
+                "z": 1
+            },
+            "rotation": {
+                "x": 0,
+                "y": 0,
+                "z": 0
+            },
+            "scale": {
+                "x": 0.1,
+                "y": 1,
+                "z": 0.1
+            }
+        }],
+        "moves": [{
+            "stepBegin": 1,
+            "stepEnd": 6,
+            "vector": {
+                "x": 0,
+                "y": 0.25,
+                "z": 0
+            }
+        }, {
+            "stepBegin": 7,
+            "stepEnd": 12,
+            "vector": {
+                "x": 0,
+                "y": -0.25,
+                "z": 0
+            }
+        }, {
+            "stepBegin": 55,
+            "stepEnd": 60,
+            "vector": {
+                "x": 0,
+                "y": 0.25,
+                "z": 0
+            }
+        }]
+    }]
+}

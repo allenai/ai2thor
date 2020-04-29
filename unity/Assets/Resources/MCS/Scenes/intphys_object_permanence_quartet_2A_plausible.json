@@ -1,0 +1,160 @@
+﻿{
+    "name": "intphys_object_permanence_quartet_2A",
+    "observation": true,
+    "ceilingMaterial": "AI2-THOR/Materials/Walls/Drywall",
+    "floorMaterial": "AI2-THOR/Materials/Fabrics/HotelCarpet3",
+    "wallMaterial": "AI2-THOR/Materials/Walls/Drywall4Tiled",
+    "goal": {
+      "type_list": [],
+      "task_list": [],
+      "info_list": [],
+      "last_step": 40,
+      "action_list": [
+          ["Pass"], ["Pass"], ["Pass"], ["Pass"], ["Pass"],
+          ["Pass"], ["Pass"], ["Pass"], ["Pass"], ["Pass"],
+          ["Pass"], ["Pass"], ["Pass"], ["Pass"], ["Pass"],
+          ["Pass"], ["Pass"], ["Pass"], ["Pass"], ["Pass"],
+          ["Pass"], ["Pass"], ["Pass"], ["Pass"], ["Pass"],
+          ["Pass"], ["Pass"], ["Pass"], ["Pass"], ["Pass"],
+          ["Pass"], ["Pass"], ["Pass"], ["Pass"], ["Pass"],
+          ["Pass"], ["Pass"], ["Pass"], ["Pass"], ["Pass"],
+          ["Pass"], ["Pass"], ["Pass"], ["Pass"], ["Pass"],
+          ["Pass"], ["Pass"], ["Pass"], ["Pass"], ["Pass"],
+          ["Pass"], ["Pass"], ["Pass"], ["Pass"], ["Pass"],
+          ["Pass"], ["Pass"], ["Pass"], ["Pass"], ["Pass"]
+      ],
+      "metadata": {
+        "choose": ["plausible", "implausible"]
+      }
+    },
+    "objects": [{
+        "id": "occluder_wall",
+        "type": "cube",
+        "physics": true,
+        "kinematic": true,
+        "structure": true,
+        "mass": 100,
+        "materials": ["AI2-THOR/Materials/Wood/WoodFloorsCross"],
+        "salientMaterials": ["wood"],
+        "shows": [{
+            "stepBegin": 0,
+            "position": {
+                "x": 0,
+                "y": 0.75,
+                "z": 1
+            },
+            "rotation": {
+                "x": 0,
+                "y": 0,
+                "z": 0
+            },
+            "scale": {
+                "x": 1,
+                "y": 1.5,
+                "z": 0.1
+            }
+        }],
+        "moves": [{
+            "stepBegin": 1,
+            "stepEnd": 4,
+            "vector": {
+                "x": 0,
+                "y": 0.25,
+                "z": 0
+            }
+        }, {
+            "stepBegin": 9,
+            "stepEnd": 12,
+            "vector": {
+                "x": 0,
+                "y": -0.25,
+                "z": 0
+            }
+        }, {
+            "stepBegin": 35,
+            "stepEnd": 38,
+            "vector": {
+                "x": 0,
+                "y": 0.25,
+                "z": 0
+            }
+        }],
+        "rotates": [{
+            "stepBegin": 5,
+            "stepEnd": 6,
+            "vector": {
+                "x": 45,
+                "y": 0,
+                "z": 0
+            }
+        }, {
+            "stepBegin": 7,
+            "stepEnd": 8,
+            "vector": {
+                "x": -45,
+                "y": 0,
+                "z": 0
+            }
+        }, {
+            "stepBegin": 39,
+            "stepEnd": 40,
+            "vector": {
+                "x": 45,
+                "y": 0,
+                "z": 0
+            }
+        }]
+    }, {
+        "id": "occluder_pole",
+        "type": "cylinder",
+        "physics": true,
+        "kinematic": true,
+        "structure": true,
+        "mass": 1,
+        "materials": ["AI2-THOR/Materials/Metals/Metal"],
+        "salientMaterials": ["metal"],
+        "shows": [{
+            "stepBegin": 0,
+            "position": {
+                "x": -3,
+                "y": 0.75,
+                "z": 1
+            },
+            "rotation": {
+                "x": 0,
+                "y": 0,
+                "z": 90
+            },
+            "scale": {
+                "x": 0.1,
+                "y": 2.5,
+                "z": 0.1
+            }
+        }],
+        "moves": [{
+            "stepBegin": 1,
+            "stepEnd": 4,
+            "vector": {
+                "x": 0.25,
+                "y": 0,
+                "z": 0
+            }
+        }, {
+            "stepBegin": 9,
+            "stepEnd": 12,
+            "vector": {
+                "x": -0.25,
+                "y": 0,
+                "z": 0
+            }
+        }, {
+            "stepBegin": 35,
+            "stepEnd": 38,
+            "vector": {
+                "x": 0.25,
+                "y": 0,
+                "z": 0
+            }
+        }]
+    }]
+}

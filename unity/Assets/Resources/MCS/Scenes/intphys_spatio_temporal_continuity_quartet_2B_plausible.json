@@ -1,0 +1,309 @@
+﻿{
+    "name": "intphys_spatio_temporal_continuity_quartet_2B",
+    "observation": true,
+    "ceilingMaterial": "AI2-THOR/Materials/Walls/Drywall",
+    "floorMaterial": "AI2-THOR/Materials/Fabrics/RugPattern224",
+    "wallMaterial": "AI2-THOR/Materials/Walls/YellowDrywall",
+    "goal": {
+      "type_list": [],
+      "task_list": [],
+      "info_list": [],
+      "last_step": 40,
+      "action_list": [
+          ["Pass"], ["Pass"], ["Pass"], ["Pass"], ["Pass"],
+          ["Pass"], ["Pass"], ["Pass"], ["Pass"], ["Pass"],
+          ["Pass"], ["Pass"], ["Pass"], ["Pass"], ["Pass"],
+          ["Pass"], ["Pass"], ["Pass"], ["Pass"], ["Pass"],
+          ["Pass"], ["Pass"], ["Pass"], ["Pass"], ["Pass"],
+          ["Pass"], ["Pass"], ["Pass"], ["Pass"], ["Pass"],
+          ["Pass"], ["Pass"], ["Pass"], ["Pass"], ["Pass"],
+          ["Pass"], ["Pass"], ["Pass"], ["Pass"], ["Pass"],
+          ["Pass"], ["Pass"], ["Pass"], ["Pass"], ["Pass"],
+          ["Pass"], ["Pass"], ["Pass"], ["Pass"], ["Pass"],
+          ["Pass"], ["Pass"], ["Pass"], ["Pass"], ["Pass"],
+          ["Pass"], ["Pass"], ["Pass"], ["Pass"], ["Pass"]
+      ],
+      "metadata": {
+        "choose": ["plausible", "implausible"]
+      }
+    },
+    "objects": [{
+        "id": "ball_1",
+        "type": "sphere",
+        "mass": 0.5,
+        "pickupable": true,
+        "materials": ["AI2-THOR/Materials/Metals/GenericStainlessSteel"],
+        "salientMaterials": ["metal"],
+        "shows": [{
+            "stepBegin": 20,
+            "position": {
+                "x": 2,
+                "y": 3.8,
+                "z": 2.7
+            },
+            "scale": {
+                "x": 0.5,
+                "y": 0.5,
+                "z": 0.5
+            }
+        }]
+    }, {
+        "id": "occluder_wall_1",
+        "type": "cube",
+        "physics": true,
+        "kinematic": true,
+        "structure": true,
+        "mass": 100,
+        "materials": ["AI2-THOR/Materials/Ceramics/GREYGRANITE"],
+        "salientMaterials": ["metal"],
+        "shows": [{
+            "stepBegin": 0,
+            "position": {
+                "x": -0.8,
+                "y": 0.75,
+                "z": 1
+            },
+            "rotation": {
+                "x": 0,
+                "y": 0,
+                "z": 0
+            },
+            "scale": {
+                "x": 1,
+                "y": 1.5,
+                "z": 0.1
+            }
+        }],
+        "moves": [{
+            "stepBegin": 1,
+            "stepEnd": 4,
+            "vector": {
+                "x": 0,
+                "y": 0.25,
+                "z": 0
+            }
+        }, {
+            "stepBegin": 9,
+            "stepEnd": 12,
+            "vector": {
+                "x": 0,
+                "y": -0.25,
+                "z": 0
+            }
+        }, {
+            "stepBegin": 35,
+            "stepEnd": 38,
+            "vector": {
+                "x": 0,
+                "y": 0.25,
+                "z": 0
+            }
+        }],
+        "rotates": [{
+            "stepBegin": 5,
+            "stepEnd": 6,
+            "vector": {
+                "x": 45,
+                "y": 0,
+                "z": 0
+            }
+        }, {
+            "stepBegin": 7,
+            "stepEnd": 8,
+            "vector": {
+                "x": -45,
+                "y": 0,
+                "z": 0
+            }
+        }, {
+            "stepBegin": 39,
+            "stepEnd": 40,
+            "vector": {
+                "x": 45,
+                "y": 0,
+                "z": 0
+            }
+        }]
+    }, {
+        "id": "occluder_pole_1",
+        "type": "cylinder",
+        "physics": true,
+        "kinematic": true,
+        "structure": true,
+        "mass": 1,
+        "materials": ["AI2-THOR/Materials/Metals/Metal"],
+        "salientMaterials": ["metal"],
+        "shows": [{
+            "stepBegin": 0,
+            "position": {
+                "x": -3.8,
+                "y": 0.75,
+                "z": 1
+            },
+            "rotation": {
+                "x": 0,
+                "y": 0,
+                "z": 90
+            },
+            "scale": {
+                "x": 0.1,
+                "y": 2.5,
+                "z": 0.1
+            }
+        }],
+        "moves": [{
+            "stepBegin": 1,
+            "stepEnd": 4,
+            "vector": {
+                "x": 0.25,
+                "y": 0,
+                "z": 0
+            }
+        }, {
+            "stepBegin": 9,
+            "stepEnd": 12,
+            "vector": {
+                "x": -0.25,
+                "y": 0,
+                "z": 0
+            }
+        }, {
+            "stepBegin": 35,
+            "stepEnd": 38,
+            "vector": {
+                "x": 0.25,
+                "y": 0,
+                "z": 0
+            }
+        }]
+    }, {
+        "id": "occluder_wall_2",
+        "type": "cube",
+        "physics": true,
+        "kinematic": true,
+        "structure": true,
+        "mass": 100,
+        "materials": ["AI2-THOR/Materials/Ceramics/GREYGRANITE"],
+        "salientMaterials": ["metal"],
+        "shows": [{
+            "stepBegin": 0,
+            "position": {
+                "x": 1.6,
+                "y": 0.75,
+                "z": 1
+            },
+            "rotation": {
+                "x": 0,
+                "y": 0,
+                "z": 0
+            },
+            "scale": {
+                "x": 0.75,
+                "y": 1.5,
+                "z": 0.1
+            }
+        }],
+        "moves": [{
+            "stepBegin": 1,
+            "stepEnd": 4,
+            "vector": {
+                "x": 0,
+                "y": 0.25,
+                "z": 0
+            }
+        }, {
+            "stepBegin": 9,
+            "stepEnd": 12,
+            "vector": {
+                "x": 0,
+                "y": -0.25,
+                "z": 0
+            }
+        }, {
+            "stepBegin": 35,
+            "stepEnd": 38,
+            "vector": {
+                "x": 0,
+                "y": 0.25,
+                "z": 0
+            }
+        }],
+        "rotates": [{
+            "stepBegin": 5,
+            "stepEnd": 6,
+            "vector": {
+                "x": 45,
+                "y": 0,
+                "z": 0
+            }
+        }, {
+            "stepBegin": 7,
+            "stepEnd": 8,
+            "vector": {
+                "x": -45,
+                "y": 0,
+                "z": 0
+            }
+        }, {
+            "stepBegin": 39,
+            "stepEnd": 40,
+            "vector": {
+                "x": 45,
+                "y": 0,
+                "z": 0
+            }
+        }]
+    }, {
+        "id": "occluder_pole_2",
+        "type": "cylinder",
+        "physics": true,
+        "kinematic": true,
+        "structure": true,
+        "mass": 1,
+        "materials": ["AI2-THOR/Materials/Metals/Metal"],
+        "salientMaterials": ["metal"],
+        "shows": [{
+            "stepBegin": 0,
+            "position": {
+                "x": 4.1,
+                "y": 0.75,
+                "z": 1
+            },
+            "rotation": {
+                "x": 0,
+                "y": 0,
+                "z": 90
+            },
+            "scale": {
+                "x": 0.1,
+                "y": 2.5,
+                "z": 0.1
+            }
+        }],
+        "moves": [{
+            "stepBegin": 1,
+            "stepEnd": 4,
+            "vector": {
+                "x": 0.25,
+                "y": 0,
+                "z": 0
+            }
+        }, {
+            "stepBegin": 9,
+            "stepEnd": 12,
+            "vector": {
+                "x": -0.25,
+                "y": 0,
+                "z": 0
+            }
+        }, {
+            "stepBegin": 35,
+            "stepEnd": 38,
+            "vector": {
+                "x": 0.25,
+                "y": 0,
+                "z": 0
+            }
+        }]
+    }]
+}
