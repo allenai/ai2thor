@@ -25,7 +25,7 @@ Types Added:
 ## Moveable Objects
 Previously, only objects with the `Pickupable` property were able to be moved around the environment with physics based actions. `Pickupable` objects are small enough to be picked up by the agent's hand, but larger objects that would have made sense to be moved around via `PushObject` or `PullObject` actions could not move, becuase they were not classified as `Pickupable.` 
 
-<p align = "center"><img width = "70%" src = "Fill.png" /></p>
+<p align = "center"><img width = "70%" src = "Moveable.png" /></p>
 
 Now, a new property called `Moveable` has been added. All large objects that are not explicitly attached to the structure of a scene can now be moved with physics. Some examples of these new `Moveable` objects are the `Chair`, `Table`, `Sofa`, `Microwave`, or `Toaster` categories. These `Moveable` objects cannot be picked up by the agent, as they are too large, but actions that can shove `Pickupable` objects like `PushObject` and `PullObject` will now also affect `Moveable` objects.
 
