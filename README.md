@@ -16,7 +16,7 @@ Checkout the [MCS private GitHub repository](https://github.com/NextCenturyCorpo
 
 If you want to run an MCS Scene in the Unity Editor:
 
-- Copy a config file from the [AI2-THOR scenes folder in our MCS GitHub repository](https://github.com/NextCenturyCorporation/MCS/tree/master/ai2thor_wrapper/scenes) into the `unity/Assets/Resources/MCS/Scenes/` folder.
+- Copy a config file from the [scenes folder in our MCS GitHub repository](https://github.com/NextCenturyCorporation/MCS/tree/master/python_api/scenes) into the `unity/Assets/Resources/MCS/Scenes/` folder.
 - In the "MCS" Game Object, enter the name of your scene file in the "Default Scene File" property.
 - If you want to see the class/depth/object masks, enable "Image Synthesis" in the "FirstPersonCharacter" (camera) within the "FPSController" Game Object.
 - While running, use WASD to move, arrow buttons to look, and escape to pass.
@@ -45,8 +45,12 @@ tar -czvf MCS-AI2-THOR-Unity-App-<version>_Data.tar.gz MCS-AI2-THOR-Unity-App-<v
 - [`unity/`](./unity)  The MCS Unity project.  Add this folder as a project in your Unity Hub.
 - `unity/Assets/Scenes/MCS.unity`  The MCS Unity Scene.  You can load and edit this in the Unity Editor.
 - [`unity/Assets/Scripts/MachineCommonSenseMain.cs`](./unity/Assets/Scripts/MachineCommonSenseMain.cs)  The main MCS Unity script that is imported into and runs within the Scene.
-- [`unity/Assets/Scripts/MachineCommonSensePerformerManager.cs`](./unity/Assets/Scripts/MachineCommonSensePerformerManager.cs)  A custom subclass extending AI2-THOR's [AgentManager](./unity/Assets/Scripts/AgentManager.cs) that handles all the communication between the Python API and the Unity Scene.
+- [`unity/Assets/Scripts/MachineCommonSenseController.cs`](./unity/Assets/Scripts/MachineCommonSenseController.cs)  A custom subclass extending AI2-THOR's [PhysicsRemoteFPSAgentController](./unity/Assets/Scripts/PhysicsRemoteFPSAgentController.cs) that handles player actions and state.
+- [`unity/Assets/Scripts/MachineCommonSensePerformerManager.cs`](./unity/Assets/Scripts/MachineCommonSensePerformerManager.cs)  A custom subclass extending AI2-THOR's [AgentManager](./unity/Assets/Scripts/AgentManager.cs) that handles the communication between the Python API and the Unity Scene.
+- [`unity/Assets/Scripts/MachineCommonSenseSceneManager.cs`](./unity/Assets/Scripts/MachineCommonSenseSceneManager.cs)  A custom subclass extending AI2-THOR's [PhysicsSceneManager](./unity/Assets/Scripts/PhysicsSceneManager.cs) that handles scene state.
 - [`unity/Assets/Resources/MCS/`](./unity/Assets/Resources/MCS)  Folder containing all MCS runtime resources.
+- [`unity/Assets/Resources/MCS/ai2thor_object_registry.json`](./unity/Assets/Resources/MCS/ai2thor_object_registry.json)  Config file containing the MCS Scene's specific Game Objects borrowed from the AI2-THOR framework that may be loaded at runtime. 
+- [`unity/Assets/Resources/MCS/material_registry.json`](./unity/Assets/Resources/MCS/material_registry.json)  Config file containing the MCS Scene's specific Materials that may be loaded at runtime. 
 - [`unity/Assets/Resources/MCS/mcs_object_registry.json`](./unity/Assets/Resources/MCS/mcs_object_registry.json)  Config file containing the MCS Scene's specific custom Game Objects that may be loaded at runtime. 
 - [`unity/Assets/Resources/MCS/primitive_object_registry.json`](./unity/Assets/Resources/MCS/primitive_object_registry.json)  Config file containing the MCS Scene's Unity Primitive Game Objects that may be loaded at runtime. 
 - [`unity/Assets/Resources/MCS/Materials/`](./unity/Assets/Resources/MCS/Materials)  Copy of AI2-THOR's [`unity/Assets/QuickMaterials/`](./unity/Assets/QuickMaterials).  Must be in the `Resources` folder to access at runtime.
@@ -94,13 +98,20 @@ tar -czvf MCS-AI2-THOR-Unity-App-<version>_Data.tar.gz MCS-AI2-THOR-Unity-App-<v
 4. (Unity) See the [**Shared Workflow**](#shared-workflow)
 5. (Unity) `DebugDiscreteAgentController.Update` will see `actionComplete` is `true` and then waits until **you** press another key
 
-## Lessons Learned
+## Lessons Learned (WIP)
 
 - Adding AI2-THOR's custom Tags and Layers to your Game Objects is needed for their scripts to work properly.  For example, if you don't tag the walls as `Structure`, then the player can walk fully into them.
 - Fast moving objects that use Unity physics, as well as all structural objects, should have their `Collision Detection` (in their `Rigidbody`) set to `Continuous`.  With these changes, a fast moving object that tries to move from one side of a wall to the other side in a single frame will be stopped as expected.
 - The FPSController object's robot model is half scale, and ends up being about 0.5 high while the game is running.  I had to change the properties of the `Capsule Collider` and the `Character Controller` so the FPSController would not collide with the floor while moving (`PhysicsRemoteFPSAgentController.capsuleCastAllForAgent`).  Previously:  `center.y=-0.45`, `radius=0.175`, `height=0.9`.  Now:  `center.y=-0.05`, `radius=0.2`, `height=0.5` (though these numbers seem smaller than they should really be).
 
-## Making a New Prefab
+## Adding an Object to the MCS Scene
+
+1. Create a Unity Prefab and save it in the `unity/Assets/Resources/MCS/` folder.
+2. Add the relevant scripts and subcomponents to it (see the section below).
+3. Add it to the `unity/Assets/Resources/MCS/mcs_object_registry.json` file with a unique ID and a path to the prefab.
+4. Rebuild the Unity application.
+
+## Modifying a Prefab to Work in the MCS Scene
 
 ![sample_prefab](./sample_prefab.png)
 
