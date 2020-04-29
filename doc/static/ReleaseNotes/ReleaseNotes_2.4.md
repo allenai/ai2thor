@@ -3,6 +3,13 @@
 ## IMPORTANT NOTICE
 Note that AI2-THOR 2.4.0 is not fully backwards compatible with previous versions due to updates and reworked architecture in the framework. All scenes and the majority of objects have been updated. Some actions have been deprecated and replaced with new actions with more features.
 
+## Moveable Objects
+Previously, only objects with the `Pickupable` property were able to be moved around the environment with physics based actions. `Pickupable` objects are small enough to be picked up by the agent's hand, but larger objects that would have made sense to be moved around via `PushObject` or `PullObject` actions could not move, becuase they were not classified as `Pickupable.` 
+
+<p align = "center"><img width = "70%" src = "Moveable.png" /></p>
+
+Now, a new property called `Moveable` has been added. All large objects that are not explicitly attached to the structure of a scene can now be moved with physics. Some examples of these new `Moveable` objects are the `Chair`, `Table`, `Sofa`, `Microwave`, or `Toaster` categories. These `Moveable` objects cannot be picked up by the agent, as they are too large, but actions that can shove `Pickupable` objects like `PushObject` and `PullObject` will now also affect `Moveable` objects.
+
 ## More Sim Object Types
 Additional Sim Object Types have been added to the framework
 - Old Total Types: **115**
@@ -21,13 +28,6 @@ Types Added:
 - **Desktop**
 - **TargetCircle**
 - **Floor**
-
-## Moveable Objects
-Previously, only objects with the `Pickupable` property were able to be moved around the environment with physics based actions. `Pickupable` objects are small enough to be picked up by the agent's hand, but larger objects that would have made sense to be moved around via `PushObject` or `PullObject` actions could not move, becuase they were not classified as `Pickupable.` 
-
-<p align = "center"><img width = "70%" src = "Moveable.png" /></p>
-
-Now, a new property called `Moveable` has been added. All large objects that are not explicitly attached to the structure of a scene can now be moved with physics. Some examples of these new `Moveable` objects are the `Chair`, `Table`, `Sofa`, `Microwave`, or `Toaster` categories. These `Moveable` objects cannot be picked up by the agent, as they are too large, but actions that can shove `Pickupable` objects like `PushObject` and `PullObject` will now also affect `Moveable` objects.
 
 ## Upgraded Actions
 Various older actions have been upgraded to allow for more functionality.
