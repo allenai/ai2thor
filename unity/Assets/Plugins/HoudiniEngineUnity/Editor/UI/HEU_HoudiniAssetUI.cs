@@ -148,13 +148,7 @@ namespace HoudiniEngineUnity
 			// Needed after a cook.
 			_instanceInputUI = null;
 
-			HEU_UIRepaint();
-		}
-
-		public void HEU_UIRepaint()
-		{
-			//Repaint();
-			SceneView.RepaintAll();
+			Repaint();
 		}
 
 		public override void OnInspectorGUI()
@@ -163,11 +157,9 @@ namespace HoudiniEngineUnity
 			// Eg. After a delete, Undo requires us to re-acquire references.
 			TryAcquiringAsset();
 
-			string msg = "Houdini Engine Asset Error\n" +
-				"No HEU_HoudiniAsset found!";
-			if (_houdiniAsset == null || !_houdiniAsset.IsValidForInteraction(ref msg))
+			if (_houdiniAsset == null)
 			{
-				DrawHDAUIMessage(msg);
+				DrawNoHDAInfo();
 				return;
 			}
 
@@ -270,7 +262,7 @@ namespace HoudiniEngineUnity
 
 				// Force a repaint here to update the UI when Undo is invoked. Handles case where the Inspector window is
 				// no longer the focus. Without this the Inspector window still shows old value until user selects it.
-				HEU_UIRepaint();
+				Repaint();
 			}
 
 			// Draw custom scene elements. Should be called for any event, not just repaint.
@@ -296,16 +288,14 @@ namespace HoudiniEngineUnity
 			}
 		}
 
-		private void DrawHDAUIMessage(string msg)
+		private void DrawNoHDAInfo()
 		{
 			HEU_EditorUI.DrawSeparator();
 
 			GUIStyle labelStyle = new GUIStyle(GUI.skin.label);
 			labelStyle.fontStyle = FontStyle.Bold;
 			labelStyle.normal.textColor = HEU_EditorUI.IsEditorDarkSkin() ? Color.yellow : Color.red;
-			labelStyle.alignment = TextAnchor.MiddleCenter;
-			labelStyle.wordWrap = true;
-			EditorGUILayout.LabelField(msg, labelStyle);
+			EditorGUILayout.LabelField("Houdini Engine Asset - no HEU_HoudiniAsset found!", labelStyle);
 
 			HEU_EditorUI.DrawSeparator();
 		}

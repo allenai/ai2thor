@@ -426,14 +426,6 @@ namespace HoudiniEngineUnity
 			}
 		}
 
-		public void GenerateAttributesStore(HEU_SessionBase session)
-		{
-			foreach (HEU_GeoNode geoNode in _geoNodes)
-			{
-				geoNode.GenerateAttributesStore(session);
-			}
-		}
-
 		/// <summary>
 		/// Apply this object's transform to all its geo nodes.
 		/// </summary>
@@ -683,7 +675,7 @@ namespace HoudiniEngineUnity
 						int numParts = parts.Count;
 						for (int j = 0; j < numParts; ++j)
 						{
-							parts[j].PopulateObjectInstanceInfos(objInstanceInfos);
+							parts[i].PopulateObjectInstanceInfos(objInstanceInfos);
 						}
 					}
 				}

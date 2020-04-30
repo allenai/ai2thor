@@ -193,7 +193,7 @@ namespace HoudiniEngineUnity
 			{
 				if (ex is System.DllNotFoundException || ex is System.EntryPointNotFoundException)
 				{
-					SetSessionErrorMsg(string.Format("Unable to create session due to Houdini Engine libraries not found! " + ex), true);
+					SetSessionErrorMsg(string.Format("Unable to create session due to Houdini Engine libraries not found!"), true);
 				}
 				else
 				{
@@ -291,7 +291,7 @@ namespace HoudiniEngineUnity
 			{
 				if (ex is System.DllNotFoundException || ex is System.EntryPointNotFoundException)
 				{
-					SetSessionErrorMsg(string.Format("Unable to create session due to Houdini Engine libraries not found! " + ex), bLogError);
+					SetSessionErrorMsg(string.Format("Unable to create session due to Houdini Engine libraries not found!"), bLogError);
 				}
 				else
 				{
@@ -708,13 +708,18 @@ namespace HoudiniEngineUnity
 				result = HEU_HAPIImports.HAPI_GetStringBufLength(ref _sessionData._HAPISession, stringHandle, out bufferLength);
 				if (result == HAPI_Result.HAPI_RESULT_SUCCESS)
 				{
-					if (bufferLength > 0)
+					if (bufferLength <= 0)
 					{
-						GetString(stringHandle, ref value, bufferLength);
+						value = "";
 					}
 					else
 					{
-						value = "";
+						StringBuilder strBuilder = new StringBuilder(bufferLength);
+						result = HEU_HAPIImports.HAPI_GetString(ref _sessionData._HAPISession, stringHandle, strBuilder, bufferLength);
+						if (result == HAPI_Result.HAPI_RESULT_SUCCESS)
+						{
+							value = strBuilder.ToString();
+						}
 					}
 				}
 			}
@@ -810,21 +815,13 @@ namespace HoudiniEngineUnity
 		/// Get the string value for the associated string handle.
 		/// </summary>
 		/// <param name="stringHandle">Handle to look up.</param>
-		/// <param name="resultString">Container for return value.</param>
+		/// <param name="stringBuilder">Container for return value.</param>
 		/// <param name="bufferLength">Length of return value</param>
 		/// <returns>True if it has successfully populated the string value.</returns>
-		public override bool GetString(HAPI_StringHandle stringHandle, ref string resultString, int bufferLength)
+		public override bool GetString(HAPI_StringHandle stringHandle, StringBuilder stringBuilder, int bufferLength)
 		{
-			// StringBuilder returns empty string when value has invalid utf8 characters, so doing
-			// the conversion manuallly to atleast get part of the string that is valid.
-			byte[] buffer = new byte[bufferLength];
-			HAPI_Result result = HEU_HAPIImports.HAPI_GetString(ref _sessionData._HAPISession, stringHandle, buffer, buffer.Length);
-			if (result == HAPI_Result.HAPI_RESULT_SUCCESS)
-			{
-				// Note the bufferLength - 1 to skip the null-terminator as the encoding adds its own
-				resultString = System.Text.Encoding.UTF8.GetString(buffer, 0, bufferLength - 1);
-			}
-
+			Debug.AssertFormat(stringBuilder.Capacity >= bufferLength, "StringBuilder must be atleast of size {0}.", bufferLength);
+			HAPI_Result result = HEU_HAPIImports.HAPI_GetString(ref _sessionData._HAPISession, stringHandle, stringBuilder, bufferLength);
 			HandleStatusResult(result, "Getting String Value", false, true);
 			return (result == HAPI_Result.HAPI_RESULT_SUCCESS);
 		}
@@ -1387,13 +1384,6 @@ namespace HoudiniEngineUnity
 			return (result == HAPI_Result.HAPI_RESULT_SUCCESS);
 		}
 
-		public override bool GetAttributeFloat64Data(HAPI_NodeId nodeID, HAPI_PartId partID, string name, ref HAPI_AttributeInfo attributeInfo, [Out] double[] data, int start, int length)
-		{
-			HAPI_Result result = HEU_HAPIImports.HAPI_GetAttributeFloat64Data(ref _sessionData._HAPISession, nodeID, partID, name, ref attributeInfo, -1, data, start, length);
-			HandleStatusResult(result, "Getting Attribute Float64 Data", false, true);
-			return (result == HAPI_Result.HAPI_RESULT_SUCCESS);
-		}
-
 		/// <summary>
 		/// Get the attribute int data.
 		/// </summary>
@@ -1409,13 +1399,6 @@ namespace HoudiniEngineUnity
 		{
 			HAPI_Result result = HEU_HAPIImports.HAPI_GetAttributeIntData(ref _sessionData._HAPISession, nodeID, partID, name, ref attributeInfo, -1, data, start, length);
 			HandleStatusResult(result, "Getting Attribute Int Data", false, true);
-			return (result == HAPI_Result.HAPI_RESULT_SUCCESS);
-		}
-
-		public override bool GetAttributeInt64Data(HAPI_NodeId nodeID, HAPI_PartId partID, string name, ref HAPI_AttributeInfo attributeInfo, [Out] HAPI_Int64[] data, int start, int length)
-		{
-			HAPI_Result result = HEU_HAPIImports.HAPI_GetAttributeInt64Data(ref _sessionData._HAPISession, nodeID, partID, name, ref attributeInfo, -1, data, start, length);
-			HandleStatusResult(result, "Getting Attribute Int64 Data", false, true);
 			return (result == HAPI_Result.HAPI_RESULT_SUCCESS);
 		}
 

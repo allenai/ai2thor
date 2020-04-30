@@ -620,7 +620,7 @@ namespace HoudiniEngineUnity
 				Transform partTransform = OutputGameObject.transform;
 
 				HAPI_Transform[] instanceTransforms = new HAPI_Transform[numInstances];
-				if (HEU_GeneralUtility.GetArray3Arg(_geoID, _partID, HAPI_RSTOrder.HAPI_SRT, session.GetInstanceTransformsOnPart, instanceTransforms, 0, numInstances))
+				if (!HEU_GeneralUtility.GetArray3Arg(_geoID, _partID, HAPI_RSTOrder.HAPI_SRT, session.GetInstanceTransformsOnPart, instanceTransforms, 0, numInstances))
 				{
 					int numTransforms = instanceTransforms.Length;
 					for (int j = 0; j < numTransforms; ++j)
@@ -670,7 +670,7 @@ namespace HoudiniEngineUnity
 			Transform partTransform = OutputGameObject.transform;
 
 			HAPI_Transform[] instanceTransforms = new HAPI_Transform[numInstances];
-			if (HEU_GeneralUtility.GetArray3Arg(_geoID, _partID, HAPI_RSTOrder.HAPI_SRT, session.GetInstanceTransformsOnPart, instanceTransforms, 0, numInstances))
+			if (!HEU_GeneralUtility.GetArray3Arg(_geoID, _partID, HAPI_RSTOrder.HAPI_SRT, session.GetInstanceTransformsOnPart, instanceTransforms, 0, numInstances))
 			{
 				int numInstancesCreated = 0;
 				int numTransforms = instanceTransforms.Length;
@@ -820,7 +820,7 @@ namespace HoudiniEngineUnity
 				}
 			}
 
-			SetObjectInstancer(true);
+				SetObjectInstancer(true);
 			ObjectInstancesBeenGenerated = true;
 
 			Transform partTransform = OutputGameObject.transform;
@@ -1060,14 +1060,6 @@ namespace HoudiniEngineUnity
 			instanceInfo._instances.Add(newInstanceGO);
 		}
 
-		public void GenerateAttributesStore(HEU_SessionBase session)
-		{
-			if (OutputGameObject != null)
-			{
-				HEU_GeneralUtility.UpdateGeneratedAttributeStore(session, _geoID, PartID, OutputGameObject);
-			}
-		}
-
 		public HEU_Curve GetCurve(bool bEditableOnly)
 		{
 			if(_curve != null && (!bEditableOnly || _curve.IsEditable()))
@@ -1186,7 +1178,7 @@ namespace HoudiniEngineUnity
 				CopyChildGameObjects(sourceGO, targetGO, assetName, sourceToTargetMeshMap, sourceToCopiedMaterials, bWriteMeshesToAssetDatabase, ref bakedAssetPath,
 						ref assetDBObject, assetObjectFileName, bDeleteExistingComponents, bDontDeletePersistantResources);
 
-				LOD[] sourceLODs = sourceLODGroup.GetLODs();
+				LOD[] sourceLODs = targetLODGroup.GetLODs();
 				if(sourceLODs != null)
 				{
 					List<GameObject> targetChilden = HEU_GeneralUtility.GetChildGameObjects(targetGO);
@@ -1375,18 +1367,15 @@ namespace HoudiniEngineUnity
 							}
 
 							// Normal map
-							if (materials[m].HasProperty(HEU_Defines.UNITY_SHADER_BUMP_MAP))
+							Texture srcNormalMap = materials[m].GetTexture(HEU_Defines.UNITY_SHADER_BUMP_MAP);
+							if (srcNormalMap != null)
 							{
-								Texture srcNormalMap = materials[m].GetTexture(HEU_Defines.UNITY_SHADER_BUMP_MAP);
-								if (srcNormalMap != null)
+								Texture newNormalMap = HEU_AssetDatabase.CopyAndLoadAssetWithRelativePath(srcNormalMap, bakedAssetPath, "", typeof(Texture), false) as Texture;
+								if (newNormalMap == null)
 								{
-									Texture newNormalMap = HEU_AssetDatabase.CopyAndLoadAssetWithRelativePath(srcNormalMap, bakedAssetPath, "", typeof(Texture), false) as Texture;
-									if (newNormalMap == null)
-									{
-										throw new HEU_HoudiniEngineError(string.Format("Unable to copy texture. Stopping bake!"));
-									}
-									newMaterial.SetTexture(HEU_Defines.UNITY_SHADER_BUMP_MAP, newNormalMap);
+									throw new HEU_HoudiniEngineError(string.Format("Unable to copy texture. Stopping bake!"));
 								}
+								newMaterial.SetTexture(HEU_Defines.UNITY_SHADER_BUMP_MAP, newNormalMap);
 							}
 
 							materials[m] = newMaterial;

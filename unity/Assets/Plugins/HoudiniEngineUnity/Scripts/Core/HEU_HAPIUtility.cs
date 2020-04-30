@@ -350,7 +350,7 @@ namespace HoudiniEngineUnity
 			// Apply Unity transform and possibly upload to Houdini Engine
 			rootGO.transform.position = initialPosition;
 
-			//Debug.LogFormat("{0}: Created new HDA asset from {1} of type {2}.", HEU_Defines.HEU_NAME, filePath, asset.AssetType);
+			Debug.LogFormat("{0}: Created new HDA asset from {1} of type {2}.", HEU_Defines.HEU_NAME, filePath, asset.AssetType);
 
 			return rootGO;
 		}
@@ -1081,28 +1081,18 @@ namespace HoudiniEngineUnity
 		public static void SetAnimationCurveTangentModes(AnimationCurve animCurve, List<int> tangentValues)
 		{
 #if UNITY_EDITOR
-			try
+			AnimationUtility.TangentMode leftTangent = AnimationUtility.TangentMode.Free;
+			AnimationUtility.TangentMode rightTangent = AnimationUtility.TangentMode.Free;
+			for(int i = 0; i < tangentValues.Count; ++i)
 			{
-				AnimationUtility.TangentMode leftTangent = AnimationUtility.TangentMode.Free;
-				AnimationUtility.TangentMode rightTangent = AnimationUtility.TangentMode.Free;
-				for (int i = 0; i < tangentValues.Count; ++i)
+				if (i > 0)
 				{
-					if (i > 0)
-					{
-						leftTangent = rightTangent;
-					}
-
-					rightTangent = HEU_HAPIUtility.HoudiniRampInterpolationToTangentMode(tangentValues[i]);
-
-					AnimationUtility.SetKeyLeftTangentMode(animCurve, i, leftTangent);
-					AnimationUtility.SetKeyRightTangentMode(animCurve, i, rightTangent);
+					leftTangent = rightTangent;
 				}
-			}
-			catch(System.Exception ex)
-			{
-				// Setting above key tangent modes can throw error which aborts the entire UI
-				// drawing. Instead just print the error and let UI drawing continue.
-				Debug.LogError(ex);
+				rightTangent = HEU_HAPIUtility.HoudiniRampInterpolationToTangentMode(tangentValues[i]);
+
+				AnimationUtility.SetKeyLeftTangentMode(animCurve, i, leftTangent);
+				AnimationUtility.SetKeyRightTangentMode(animCurve, i, rightTangent);
 			}
 #endif
 		}

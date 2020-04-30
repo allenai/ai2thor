@@ -50,16 +50,11 @@ namespace HoudiniEngineUnity
 			EditorGUILayout.Separator();
 		}
 
-		public static void DrawHorizontalLine(int thickness = 2, int padding = 10)
+		public static void DrawHorizontalLine()
 		{
-			Color color = Color.gray;
-
-			Rect r = EditorGUILayout.GetControlRect(GUILayout.Height(padding + thickness));
-			r.height = thickness;
-			r.y += padding / 2;
-			r.x -= 2;
-			r.width += 6;
-			EditorGUI.DrawRect(r, color);
+			EditorGUILayout.Separator();
+			EditorGUILayout.TextArea("", GUI.skin.horizontalSlider);
+			EditorGUILayout.Separator();
 		}
 
 		public static bool IsEditorDarkSkin()
@@ -121,19 +116,14 @@ namespace HoudiniEngineUnity
 
 		public static Vector3 GetSnapPosition(Vector3 inPos)
 		{
-#if UNITY_2019_3_OR_NEWER
-			Vector3 move = EditorSnapSettings.move;
-#else
-			Vector3 move = new Vector3(
-				EditorPrefs.GetFloat("MoveSnapX"),
-				EditorPrefs.GetFloat("MoveSnapY"),
-				EditorPrefs.GetFloat("MoveSnapZ"));
-#endif
+			// For earlier versions than Unity 2019.3, need to get the
+			// snap values from EditorProfes, then use Handles.SnapValue.
+			// In future, there will be new APIs to handle this.
 
-			inPos.x = Handles.SnapValue(inPos.x, move.x);
-			inPos.y = Handles.SnapValue(inPos.y, move.y);
-			inPos.z = Handles.SnapValue(inPos.z, move.z);
-
+			float sx = EditorPrefs.GetFloat("MoveSnapX");
+			float sz = EditorPrefs.GetFloat("MoveSnapZ");
+			inPos.x = Handles.SnapValue(inPos.x, sx);
+			inPos.z = Handles.SnapValue(inPos.z, sz);
 			return inPos;
 		}
 

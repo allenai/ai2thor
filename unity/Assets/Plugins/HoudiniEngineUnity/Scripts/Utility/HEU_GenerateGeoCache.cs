@@ -34,7 +34,6 @@ using System.Collections.Generic;
 
 namespace HoudiniEngineUnity
 {
-	using HAPI_Int64 = System.Int64;
 	using HAPI_NodeId = System.Int32;
 	using HAPI_PartId = System.Int32;
 	using HAPI_StringHandle = System.Int32;
@@ -369,46 +368,7 @@ namespace HoudiniEngineUnity
 				_uvsAttrInfo[i] = new HAPI_AttributeInfo();
 				_uvsAttr[i] = new float[0];
 				string uvName = i == 0 ? HEU_Defines.HAPI_ATTRIB_UV : HEU_Defines.HAPI_ATTRIB_UV + (i + 1);
-
-				if (!HEU_GeneralUtility.GetAttributeInfo(session, GeoID, PartID, uvName, ref _uvsAttrInfo[i]) || !_uvsAttrInfo[i].exists)
-				{
-					continue;
-				}
-
-				_uvsAttr[i] = new float[_uvsAttrInfo[i].count * _uvsAttrInfo[i].tupleSize];
-
-				if (_uvsAttrInfo[i].storage == HAPI_StorageType.HAPI_STORAGETYPE_INT)
-				{
-					int[] intUVs = new int[_uvsAttrInfo[i].count * _uvsAttrInfo[i].tupleSize];
-					if (HEU_GeneralUtility.GetAttributeArray<int>(GeoID, PartID, uvName, ref _uvsAttrInfo[i], intUVs, session.GetAttributeIntData, _uvsAttrInfo[i].count))
-					{
-						_uvsAttr[i] = System.Array.ConvertAll<int, float>(intUVs, System.Convert.ToSingle);
-					}
-				}
-				else if (_uvsAttrInfo[i].storage == HAPI_StorageType.HAPI_STORAGETYPE_INT64)
-				{
-					HAPI_Int64[] intUVs = new HAPI_Int64[_uvsAttrInfo[i].count * _uvsAttrInfo[i].tupleSize];
-					if (HEU_GeneralUtility.GetAttributeArray<HAPI_Int64>(GeoID, PartID, uvName, ref _uvsAttrInfo[i], intUVs, session.GetAttributeInt64Data, _uvsAttrInfo[i].count))
-					{
-						_uvsAttr[i] = System.Array.ConvertAll<HAPI_Int64, float>(intUVs, System.Convert.ToSingle);
-					}
-				}
-				else if (_uvsAttrInfo[i].storage == HAPI_StorageType.HAPI_STORAGETYPE_FLOAT)
-				{
-					HEU_GeneralUtility.GetAttribute(session, GeoID, PartID, uvName, ref _uvsAttrInfo[i], ref _uvsAttr[i], session.GetAttributeFloatData);
-				}
-				else if (_uvsAttrInfo[i].storage == HAPI_StorageType.HAPI_STORAGETYPE_FLOAT64)
-				{
-					double[] doubleUVs = new double[_uvsAttrInfo[i].count * _uvsAttrInfo[i].tupleSize];
-					if (HEU_GeneralUtility.GetAttribute(session, GeoID, PartID, uvName, ref _uvsAttrInfo[i], ref doubleUVs, session.GetAttributeFloat64Data))
-					{
-						_uvsAttr[i] = System.Array.ConvertAll<double, float>(doubleUVs, System.Convert.ToSingle);
-					}
-				}
-				else
-				{
-					Debug.LogWarningFormat("UV attribute '{0}' has unsupported type: {1}", uvName, _uvsAttrInfo[i].storage);
-				}
+				HEU_GeneralUtility.GetAttribute(session, GeoID, PartID, uvName, ref _uvsAttrInfo[i], ref _uvsAttr[i], session.GetAttributeFloatData);
 
 				if (_uvsAttrInfo[i].exists && (_uvsAttrInfo[i].tupleSize < 2 || _uvsAttrInfo[i].tupleSize > 4))
 				{
@@ -1882,8 +1842,7 @@ namespace HoudiniEngineUnity
 						}
 						else
 						{
-							// Don't add colour if not found
-							//subMeshData._colors.Add(Color.white);
+							subMeshData._colors.Add(Color.white);
 						}
 
 						// Normal
@@ -2343,8 +2302,7 @@ namespace HoudiniEngineUnity
 							}
 							else
 							{
-								// Don't add colour if not found
-								//subMeshData._colors.Add(Color.white);
+								subMeshData._colors.Add(Color.white);
 							}
 
 							// Normal

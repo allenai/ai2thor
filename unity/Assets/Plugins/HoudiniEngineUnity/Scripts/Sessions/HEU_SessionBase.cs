@@ -379,10 +379,10 @@ namespace HoudiniEngineUnity
 		/// Get the string value for the associated string handle.
 		/// </summary>
 		/// <param name="stringHandle">Handle to look up.</param>
-		/// <param name="resultString">Container for return value.</param>
+		/// <param name="stringBuilder">Container for return value.</param>
 		/// <param name="bufferLength">Length of return value</param>
 		/// <returns>True if it has successfully populated the string value.</returns>
-		public virtual bool GetString(HAPI_StringHandle stringHandle, ref string resultString, int bufferLength)
+		public virtual bool GetString(HAPI_StringHandle stringHandle, StringBuilder stringBuilder, int bufferLength)
 		{
 			return false;
 		}
@@ -820,11 +820,6 @@ namespace HoudiniEngineUnity
 			return false;
 		}
 
-		public virtual bool GetAttributeFloat64Data(HAPI_NodeId nodeID, HAPI_PartId partID, string name, ref HAPI_AttributeInfo attributeInfo, [Out] double[] data, int start, int length)
-		{
-			return false;
-		}
-
 		/// <summary>
 		/// Get the attribute int data.
 		/// </summary>
@@ -837,11 +832,6 @@ namespace HoudiniEngineUnity
 		/// <param name="length">Must be at least 0 and at most HAPI_AttributeInfo::count - start.</param>
 		/// <returns>True if successfully queried the atttribute int data</returns>
 		public virtual bool GetAttributeIntData(HAPI_NodeId nodeID, HAPI_PartId partID, string name, ref HAPI_AttributeInfo attributeInfo, [Out] int[] data, int start, int length)
-		{
-			return false;
-		}
-
-		public virtual bool GetAttributeInt64Data(HAPI_NodeId nodeID, HAPI_PartId partID, string name, ref HAPI_AttributeInfo attributeInfo, [Out] HAPI_Int64[] data, int start, int length)
 		{
 			return false;
 		}

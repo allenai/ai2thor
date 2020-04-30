@@ -79,17 +79,12 @@ namespace HoudiniEngineUnity
 		/// <returns>Path to the Houdini Engine plugin installation.</returns>
 		public static string GetHoudiniEnginePath()
 		{
-#if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN
-			// Limiting only to Windows since unable to dynamically load HAPI libs
-			// with relative custom paths for now.
-
 			// Use plugin setting path unless its not set
 			string HAPIPath = GetSavedHoudiniPath();
 			if (!string.IsNullOrEmpty(HAPIPath))
 			{
 				return HAPIPath;
 			}
-#endif
 
 			return GetHoudiniEngineDefaultPath();
 		}
@@ -279,7 +274,7 @@ namespace HoudiniEngineUnity
 				}
 			}
 			System.Environment.SetEnvironmentVariable("PATH", systemPath, System.EnvironmentVariableTarget.Process);
-			
+
 			_pathSet = true;
 #endif
 
