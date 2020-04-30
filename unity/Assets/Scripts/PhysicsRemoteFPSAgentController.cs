@@ -3396,7 +3396,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             SimObjPhysics handSOP = ItemInHand.GetComponent<SimObjPhysics>();
 
             if (!action.forceAction) {
-                bool HandObjectFoundInList = false;
                 //check if the item we are holding can even be placed in the action.ObjectID target at all
                 foreach (KeyValuePair<SimObjType, List<SimObjType>> res in ReceptacleRestrictions.PlacementRestrictions) {
                     //find the Object Type in the PlacementRestrictions dictionary
@@ -3407,15 +3406,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                             actionFinished(false);
                             return;
                         }
-
-                        HandObjectFoundInList = true;
                     }
-                }
-
-                if (!HandObjectFoundInList) {
-#if UNITY_EDITOR
-                    Debug.Log("Object Type:" + handSOP.ObjType + " not found in PlacementRestrictions dictionary");
-#endif
                 }
             }
 
@@ -4352,6 +4343,11 @@ public void PickupObject(ServerAction action) //use serveraction objectid
                 errorMessage = "objectId required for ToggleObject";
                 actionFinished(false);
                 //return false;
+            }
+            
+            if (action.forceAction) 
+            {
+                action.forceVisible = true;
             }
 
             SimObjPhysics target = null;

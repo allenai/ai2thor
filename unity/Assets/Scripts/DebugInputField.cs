@@ -1876,6 +1876,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
                             action.objectId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().ObjectIdOfClosestToggleObject();
                         }
 
+                        action.objectId = "DeskLamp|-01.32|+01.24|-00.99";
+                        action.forceVisible = true;
+                        action.forceAction = true;
                         PhysicsController.ProcessControlCommand(action);
 
                         break;
@@ -1901,10 +1904,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         action.action = "SetObjectStates";
                         action.SetObjectStates = new SetObjectStates()
                         {
-                            //objectType = "LightSwitch",
-                            stateChange = "openable",
-                            objectType = "Cabinet",
-                            isOpen = true
+                            stateChange = "toggleable",
+                            objectType = "DeskLamp",
+                            isToggled = false
                         };
 
                         PhysicsController.ProcessControlCommand(action);
