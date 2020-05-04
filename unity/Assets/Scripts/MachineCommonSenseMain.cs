@@ -455,7 +455,8 @@ public class MachineCommonSenseMain : MonoBehaviour {
 
         // The object's visibility points define a subset of points along the outside of the object for AI2-THOR.
         if (objectDefinition.visibilityPoints.Count > 0) {
-            visibilityPoints = this.AssignVisibilityPoints(gameObject, objectDefinition.visibilityPoints);
+            visibilityPoints = this.AssignVisibilityPoints(gameObject, objectDefinition.visibilityPoints,
+                objectDefinition.visibilityPointsScaleOne);
         }
 
         if (shouldAddSimObjPhysicsScript) {
@@ -708,7 +709,11 @@ public class MachineCommonSenseMain : MonoBehaviour {
             transformDefinition.scale.GetZ());
     }
 
-    private Transform[] AssignVisibilityPoints(GameObject gameObject, List<MachineCommonSenseConfigVector> points) {
+    private Transform[] AssignVisibilityPoints(
+        GameObject gameObject,
+        List<MachineCommonSenseConfigVector> points,
+        bool scaleOne
+    ) {
         // The AI2-THOR scripts assume the visibility points have a parent object with the name VisibilityPoints.
         GameObject visibilityPointsParentObject = new GameObject {
             isStatic = true,
@@ -716,6 +721,10 @@ public class MachineCommonSenseMain : MonoBehaviour {
         };
         visibilityPointsParentObject.transform.parent = gameObject.transform;
         visibilityPointsParentObject.transform.localPosition = Vector3.zero;
+        visibilityPointsParentObject.transform.localRotation = Quaternion.identity;
+        if (scaleOne) {
+            visibilityPointsParentObject.transform.localScale = Vector3.one;
+        }
         int index = 0;
         return points.Select((point) => {
             ++index;
@@ -1205,6 +1214,7 @@ public class MachineCommonSenseConfigMove : MachineCommonSenseConfigStepBeginEnd
 public class MachineCommonSenseConfigObjectDefinition : MachineCommonSenseConfigAbstractObject {
     public string resourceFile;
     public bool primitive;
+    public bool visibilityPointsScaleOne;
     public MachineCommonSenseConfigCollider boundingBox = null;
     public MachineCommonSenseConfigSize scale = null;
     public List<MachineCommonSenseConfigAnimation> animations;
