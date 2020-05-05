@@ -325,6 +325,13 @@ public class MachineCommonSenseMain : MonoBehaviour {
                 return collider;
             }).ToArray();
         }
+        else {
+            // Else, add the AI2-THOR layer and tag to the existing colliders so they work with the AI2-THOR scripts.
+            colliders.ToList().ForEach((collider) => {
+                collider.gameObject.layer = 8; // AI2-THOR Layer SimObjVisible
+                collider.gameObject.tag = "SimObjPhysics"; // AI2-THOR Tag
+            });
+        }
 
         return colliders;
     }
