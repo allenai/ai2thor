@@ -1990,12 +1990,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
                 float distFromPointToCamera = Vector3.Distance(point.position, m_Camera.transform.position);
 
+                //adding slight buffer to this distance to ensure the ray goes all the way to the collider of the object being cast to
                 float raycastDistance = distFromPointToCamera + 0.5f;
-
-                if(raycastDistance > maxVisibleDistance)
-                {
-                    raycastDistance = maxVisibleDistance + 0.5f;
-                }
 
                 LayerMask mask = (1 << 8) | (1 << 9) | (1 << 10);
 
