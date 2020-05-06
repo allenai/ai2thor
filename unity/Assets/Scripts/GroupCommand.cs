@@ -1,6 +1,7 @@
 ﻿using UnityEditor;
 using UnityEngine;
 
+#if UNITY_EDITOR
 public static class GroupCommand
 {
     [MenuItem("GameObject/Group Selected %g")]
@@ -14,3 +15,4 @@ public static class GroupCommand
         Selection.activeGameObject = go;
     }
 }
+#endif
