@@ -265,6 +265,7 @@ public enum SimObjType : int
     Desktop = 157,
     TargetCircle = 158,
     Floor = 159,
+    Door = 160
 }
 
 public static class ReceptacleRestrictions
