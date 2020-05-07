@@ -5,6 +5,7 @@ using UnityEngine.AI;
 using UnityStandardAssets.Characters.FirstPerson;
  #if UNITY_EDITOR
     using UnityEditor.SceneManagement;
+    using UnityEditor;
 #endif
 using System.Linq;
 
@@ -22,6 +23,83 @@ public class NavMeshSetup : MonoBehaviour
     }
 
     #if UNITY_EDITOR
+
+        [UnityEditor.MenuItem("NavMesh/Save Full Scene Prefabs (all houdini scenes)")]
+        public static void SaveHoudiniScenePrefabs()
+        {
+            var trainSceneNames = houdiniScenes();
+
+            // These scenes were mannually adjusted so the nav mesh variables should not be set automatically and should be build manually 
+            trainSceneNames.ForEach((x) => saveSceneAsPrefab(x));
+        }
+
+        private static void saveSceneAsPrefab(string sceneName)
+        {
+            EditorSceneManager.OpenScene(sceneName);
+            GameObject sceneParent = new GameObject();
+            sceneParent.name = "Scene";
+            foreach (GameObject obj in Object.FindObjectsOfType(typeof(GameObject)))
+            {
+                if (obj.transform.parent == null && (obj.name == "Objects" || obj.name == "Structure" || obj.name == "Lighting"))
+                {
+                    
+                    // create new object then destroy it
+                    GameObject copyObj = Instantiate(obj) as GameObject;
+                    copyObj.transform.parent = sceneParent.transform;
+                    //stroyImmediate(copyObj);
+                    copyObj.name = copyObj.name.Replace("(Clone)", "");
+                }
+            }
+            
+            sceneName = sceneName.Substring(sceneName.IndexOf("/") + 1);
+            sceneName = sceneName.Substring(sceneName.IndexOf("/") + 1);
+            PrefabUtility.SaveAsPrefabAsset(sceneParent, "Assets/Scenes/prefab_exports/" + sceneName.Substring(0, sceneName.Length - ".unity".Length) + ".prefab");
+            DestroyImmediate(sceneParent);
+        }
+
+        private static List<string> houdiniScenes(string pathPrefix = "Assets/Scenes")
+        {
+            // list hand chosen from Winson
+            // gets iTHOR scene names
+            var scenes = new List<string>();
+
+            // house 1
+            scenes.Add(pathPrefix + "/FloorPlan508_physics.unity");
+            scenes.Add(pathPrefix + "/FloorPlan1_physics.unity");
+            scenes.Add(pathPrefix + "/FloorPlan210_physics.unity");
+            scenes.Add(pathPrefix + "/FloorPlan301_physics.unity");
+            scenes.Add(pathPrefix + "/FloorPlan416_physics.unity");
+
+            // house 2
+            scenes.Add(pathPrefix + "/FloorPlan507_physics.unity");
+            scenes.Add(pathPrefix + "/FloorPlan10_physics.unity");
+            scenes.Add(pathPrefix + "/FloorPlan202_physics.unity");
+            scenes.Add(pathPrefix + "/FloorPlan304_physics.unity");
+            scenes.Add(pathPrefix + "/FloorPlan404_physics.unity");
+
+            // house 3
+            scenes.Add(pathPrefix + "/FloorPlan514_physics.unity");
+            scenes.Add(pathPrefix + "/FloorPlan14_physics.unity");
+            scenes.Add(pathPrefix + "/FloorPlan202_physics.unity");
+            scenes.Add(pathPrefix + "/FloorPlan304_physics.unity");
+            scenes.Add(pathPrefix + "/FloorPlan404_physics.unity");
+
+            // house 4
+            scenes.Add(pathPrefix + "/FloorPlan522_physics.unity");
+            scenes.Add(pathPrefix + "/FloorPlan23_physics.unity");
+            scenes.Add(pathPrefix + "/FloorPlan225_physics.unity");
+            scenes.Add(pathPrefix + "/FloorPlan321_physics.unity");
+            scenes.Add(pathPrefix + "/FloorPlan424_physics.unity");
+
+            // house 5
+            scenes.Add(pathPrefix + "/FloorPlan529_physics.unity");
+            scenes.Add(pathPrefix + "/FloorPlan29_physics.unity");
+            scenes.Add(pathPrefix + "/FloorPlan228_physics.unity");
+            scenes.Add(pathPrefix + "/FloorPlan329_physics.unity");
+            scenes.Add(pathPrefix + "/FloorPlan428_physics.unity");
+
+            return scenes;
+        }
 
         [UnityEditor.MenuItem("NavMesh/Build NavMeshes for All Scenes")]
         public static void Build()
