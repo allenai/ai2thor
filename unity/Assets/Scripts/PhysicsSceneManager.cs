@@ -72,6 +72,18 @@ public class PhysicsSceneManager : MonoBehaviour
 	void Start () 
 	{
         GatherAllRBsInScene();
+
+		//set the list to 0 members and run once in order to populate the lists for initial random spawn to work
+		if(RequiredObjects.Count == 0)
+		{
+			foreach (SimObjPhysics sop in GameObject.FindObjectsOfType<SimObjPhysics>())
+			{
+				if(sop.IsPickupable)
+				RequiredObjects.Add(sop.transform.gameObject);
+			}
+
+			SpawnedObjects = RequiredObjects;
+		}
 	}
 
     private void GatherAllRBsInScene()
