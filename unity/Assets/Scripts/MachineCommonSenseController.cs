@@ -417,7 +417,8 @@ public class MachineCommonSenseController : PhysicsRemoteFPSAgentController {
         // value causes collision errors.  From the Unity Physics.Simulate documentation:
         // "Using step values greater than 0.03 is likely to produce inaccurate results."
         for (int i = 0; i < MachineCommonSenseController.PHYSICS_SIMULATION_STEPS; ++i) {
-            Physics.Simulate(0.01f);
+            // Simulate the physics a little more on initialization so that the objects can settle down onto the floor.
+            Physics.Simulate(this.step == 0 ? 0.02f : 0.01f);
         }
     }
 
