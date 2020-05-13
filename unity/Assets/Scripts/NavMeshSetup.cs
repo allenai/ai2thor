@@ -34,23 +34,22 @@ public class NavMeshSetup : MonoBehaviour
         {
             if (obj.transform.parent == null && (obj.name == "Objects" || obj.name == "Structure" || obj.name == "Lighting"))
             {
-                // create new object then destroy it
-                GameObject copyObj = Instantiate(obj) as GameObject;
-                copyObj.transform.parent = sceneParent.transform;
-                //stroyImmediate(copyObj);
-                copyObj.name = copyObj.name.Replace("(Clone)", "");
+                obj.transform.parent = sceneParent.transform;
             }
         }
         sceneName = sceneName.Substring(sceneName.IndexOf("/") + 1);
         sceneName = sceneName.Substring(sceneName.IndexOf("/") + 1);
         PrefabUtility.SaveAsPrefabAsset(sceneParent, "Assets/Scenes/prefab_exports/" + sceneName.Substring(0, sceneName.Length - ".unity".Length) + ".prefab");
-        DestroyImmediate(sceneParent);
     }
+
     private static List<string> houdiniScenes(string pathPrefix = "Assets/Scenes")
     {
         // list hand chosen from Winson
         // gets iTHOR scene names
         var scenes = new List<string>();
+        scenes.Add(pathPrefix + "/FloorPlan205_physics.unity");
+        scenes.Add(pathPrefix + "/FloorPlan305_physics.unity");
+        scenes.Add(pathPrefix + "/FloorPlan408_physics.unity");
         // house 1
         scenes.Add(pathPrefix + "/FloorPlan508_physics.unity");
         scenes.Add(pathPrefix + "/FloorPlan1_physics.unity");
