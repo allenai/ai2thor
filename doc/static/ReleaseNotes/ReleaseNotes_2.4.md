@@ -13,7 +13,7 @@ Now, a new property called `Moveable` has been added. All large objects that are
 ## More Sim Object Types
 Additional Sim Object Types have been added to the framework
 - Old Total Types: **115**
-- New Total Types: **126**
+- New Total Types: **125**
 
 Types Added:
 
