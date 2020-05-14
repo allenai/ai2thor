@@ -735,7 +735,7 @@ GameObject:
   m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
-  m_StaticEditorFlags: 64
+  m_StaticEditorFlags: 0
   m_IsActive: 1
 --- !u!4 &1047797480
 Transform:
@@ -770,9 +770,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b439f6e4ef5714ee2a3643acf37b7a9d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  uniqueID: Bed|+31.00|+31.00|+31.00
+  objectID: Bed|+00.00|+00.00|+00.00
   Type: 76
-  PrimaryProperty: 1
+  PrimaryProperty: 2
   SecondaryProperties: 0700000004000000
   BoundingBox: {fileID: 1826000443}
   VisibilityPoints:
@@ -814,15 +814,19 @@ MonoBehaviour:
   - {fileID: 1419384094}
   - {fileID: 757561201}
   - {fileID: 1388857936}
-  HFdynamicfriction: 0
-  HFstaticfriction: 0
+  HFdynamicfriction: 0.8
+  HFstaticfriction: 0.8
   HFbounciness: 0
-  HFrbdrag: 0
-  HFrbangulardrag: 0
-  salientMaterials: 
+  HFrbdrag: 0.8
+  HFrbangulardrag: 0.08
+  salientMaterials: 0100000006000000
+  MySpawnPoints: []
   CurrentTemperature: 0
   HowManySecondsUntilRoomTemp: 10
   inMotion: 0
+  numSimObjHit: 0
+  numFloorHit: 0
+  numStructureHit: 0
   lastVelocity: 0
   ContainedObjectReferences: []
 --- !u!54 &1047797483
@@ -833,11 +837,11 @@ Rigidbody:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1047797481}
   serializedVersion: 2
-  m_Mass: 1
-  m_Drag: 0
+  m_Mass: 30
+  m_Drag: 0.5
   m_AngularDrag: 0.05
   m_UseGravity: 1
-  m_IsKinematic: 1
+  m_IsKinematic: 0
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
@@ -1850,16 +1854,6 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 9167887664331830263}
     m_Modifications:
-    - target: {fileID: 984119560449234737, guid: b3a9ca13678a3564a83946838f0f3d1e,
-        type: 3}
-      propertyPath: m_Name
-      value: Bedsheet_Unmade_29A
-      objectReference: {fileID: 0}
-    - target: {fileID: 984119560449234737, guid: b3a9ca13678a3564a83946838f0f3d1e,
-        type: 3}
-      propertyPath: m_StaticEditorFlags
-      value: 64
-      objectReference: {fileID: 0}
     - target: {fileID: 984119560448805585, guid: b3a9ca13678a3564a83946838f0f3d1e,
         type: 3}
       propertyPath: m_LocalPosition.x
@@ -1929,6 +1923,16 @@ PrefabInstance:
         type: 3}
       propertyPath: m_LocalScale.z
       value: 0.6205674
+      objectReference: {fileID: 0}
+    - target: {fileID: 984119560449234737, guid: b3a9ca13678a3564a83946838f0f3d1e,
+        type: 3}
+      propertyPath: m_Name
+      value: Bedsheet_Unmade_29A
+      objectReference: {fileID: 0}
+    - target: {fileID: 984119560449234737, guid: b3a9ca13678a3564a83946838f0f3d1e,
+        type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 64
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: b3a9ca13678a3564a83946838f0f3d1e, type: 3}
@@ -2052,21 +2056,6 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 9167887664331830263}
     m_Modifications:
-    - target: {fileID: 8433609901620567676, guid: 2cb513c73d554904ea94a003bc332849,
-        type: 3}
-      propertyPath: m_Name
-      value: Bedsheet_Made_29B
-      objectReference: {fileID: 0}
-    - target: {fileID: 8433609901620567676, guid: 2cb513c73d554904ea94a003bc332849,
-        type: 3}
-      propertyPath: m_StaticEditorFlags
-      value: 64
-      objectReference: {fileID: 0}
-    - target: {fileID: 8433609901620567676, guid: 2cb513c73d554904ea94a003bc332849,
-        type: 3}
-      propertyPath: m_IsActive
-      value: 0
-      objectReference: {fileID: 0}
     - target: {fileID: 8433609901620069276, guid: 2cb513c73d554904ea94a003bc332849,
         type: 3}
       propertyPath: m_LocalPosition.x
@@ -2137,6 +2126,21 @@ PrefabInstance:
       propertyPath: m_LocalScale.z
       value: 0.7008515
       objectReference: {fileID: 0}
+    - target: {fileID: 8433609901620567676, guid: 2cb513c73d554904ea94a003bc332849,
+        type: 3}
+      propertyPath: m_Name
+      value: Bedsheet_Made_29B
+      objectReference: {fileID: 0}
+    - target: {fileID: 8433609901620567676, guid: 2cb513c73d554904ea94a003bc332849,
+        type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 64
+      objectReference: {fileID: 0}
+    - target: {fileID: 8433609901620567676, guid: 2cb513c73d554904ea94a003bc332849,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 2cb513c73d554904ea94a003bc332849, type: 3}
 --- !u!1 &7610085989251765559 stripped
@@ -2158,21 +2162,6 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 9167887664331830263}
     m_Modifications:
-    - target: {fileID: 8563068229914016220, guid: 7185615200b61744ca84fbfc26e1fc7e,
-        type: 3}
-      propertyPath: m_Name
-      value: Bedsheet_Made_29A
-      objectReference: {fileID: 0}
-    - target: {fileID: 8563068229914016220, guid: 7185615200b61744ca84fbfc26e1fc7e,
-        type: 3}
-      propertyPath: m_StaticEditorFlags
-      value: 64
-      objectReference: {fileID: 0}
-    - target: {fileID: 8563068229914016220, guid: 7185615200b61744ca84fbfc26e1fc7e,
-        type: 3}
-      propertyPath: m_IsActive
-      value: 0
-      objectReference: {fileID: 0}
     - target: {fileID: 8563068229913847292, guid: 7185615200b61744ca84fbfc26e1fc7e,
         type: 3}
       propertyPath: m_LocalPosition.x
@@ -2237,6 +2226,21 @@ PrefabInstance:
         type: 3}
       propertyPath: m_LocalScale.z
       value: 0.75106
+      objectReference: {fileID: 0}
+    - target: {fileID: 8563068229914016220, guid: 7185615200b61744ca84fbfc26e1fc7e,
+        type: 3}
+      propertyPath: m_Name
+      value: Bedsheet_Made_29A
+      objectReference: {fileID: 0}
+    - target: {fileID: 8563068229914016220, guid: 7185615200b61744ca84fbfc26e1fc7e,
+        type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 64
+      objectReference: {fileID: 0}
+    - target: {fileID: 8563068229914016220, guid: 7185615200b61744ca84fbfc26e1fc7e,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 7185615200b61744ca84fbfc26e1fc7e, type: 3}
