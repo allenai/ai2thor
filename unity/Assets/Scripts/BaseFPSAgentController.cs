@@ -162,6 +162,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
             }
         }
 
+        //reference to prefab for activiting the cracked camera effect via CameraCrack()
+        [SerializeField] GameObject CrackedCameraCanvas;
+
 		// Initialize parameters from environment variables
 		protected virtual void Awake()
 		{
@@ -2802,6 +2805,15 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 }
             }
             actionFinished(true, results.ToArray());
+        }
+
+        public void CameraCrack(ServerAction action)
+        {
+            GameObject canvas = Instantiate(CrackedCameraCanvas);
+            CrackedCameraManager camMan = canvas.GetComponent<CrackedCameraManager>();
+
+            camMan.SpawnCrack(action.randomSeed);
+            actionFinished(true);
         }
 
         public void OnTriggerStay(Collider other)

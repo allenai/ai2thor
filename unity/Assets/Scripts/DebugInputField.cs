@@ -249,6 +249,30 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         break;
                     }
 
+                //activate cracked camera effect with random seed
+                 case "cc":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "CameraCrack";
+
+                        //give me a seed
+                        if(splitcommand.Length == 2)
+                        {
+                            action.randomSeed = int.Parse(splitcommand[1]);
+                            action.forceVisible = false;
+                            action.numPlacementAttempts = 5;
+                        }
+    
+                        else
+                        {
+                            action.randomSeed = 0;
+                        }
+
+                        PhysicsController.ProcessControlCommand(action);
+
+                        break;
+                    }
+
                 //move ahead stochastic
                  case "mas":
                     {
