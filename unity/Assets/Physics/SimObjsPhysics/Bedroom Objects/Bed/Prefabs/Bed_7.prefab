@@ -359,7 +359,7 @@ GameObject:
   m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
-  m_StaticEditorFlags: 64
+  m_StaticEditorFlags: 0
   m_IsActive: 1
 --- !u!4 &781991432
 Transform:
@@ -394,9 +394,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b439f6e4ef5714ee2a3643acf37b7a9d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  uniqueID: Bed|+07.00|+07.00|+07.00
+  objectID: Bed|+00.00|+00.00|+00.00
   Type: 76
-  PrimaryProperty: 1
+  PrimaryProperty: 2
   SecondaryProperties: 0700000004000000
   BoundingBox: {fileID: 1728529249}
   VisibilityPoints:
@@ -434,15 +434,19 @@ MonoBehaviour:
   - {fileID: 1386171716}
   - {fileID: 1878042529}
   - {fileID: 1848970409}
-  HFdynamicfriction: 0
-  HFstaticfriction: 0
+  HFdynamicfriction: 0.8
+  HFstaticfriction: 0.8
   HFbounciness: 0
-  HFrbdrag: 0
-  HFrbangulardrag: 0
-  salientMaterials: 
+  HFrbdrag: 0.8
+  HFrbangulardrag: 0.08
+  salientMaterials: 0100000006000000
+  MySpawnPoints: []
   CurrentTemperature: 0
   HowManySecondsUntilRoomTemp: 10
   inMotion: 0
+  numSimObjHit: 0
+  numFloorHit: 0
+  numStructureHit: 0
   lastVelocity: 0
   ContainedObjectReferences: []
 --- !u!54 &781991433
@@ -453,11 +457,11 @@ Rigidbody:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 781991435}
   serializedVersion: 2
-  m_Mass: 1
-  m_Drag: 0
+  m_Mass: 30
+  m_Drag: 0.5
   m_AngularDrag: 0.05
   m_UseGravity: 1
-  m_IsKinematic: 1
+  m_IsKinematic: 0
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
@@ -1907,16 +1911,6 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 5965990321506460939}
     m_Modifications:
-    - target: {fileID: 8563068229914016220, guid: 26d2125bf29e71a4c9d5ff331c395300,
-        type: 3}
-      propertyPath: m_Name
-      value: Bedsheet_Made_7
-      objectReference: {fileID: 0}
-    - target: {fileID: 8563068229914016220, guid: 26d2125bf29e71a4c9d5ff331c395300,
-        type: 3}
-      propertyPath: m_StaticEditorFlags
-      value: 64
-      objectReference: {fileID: 0}
     - target: {fileID: 8563068229913847292, guid: 26d2125bf29e71a4c9d5ff331c395300,
         type: 3}
       propertyPath: m_LocalPosition.x
@@ -1981,6 +1975,16 @@ PrefabInstance:
         type: 3}
       propertyPath: m_LocalScale.z
       value: 1.04
+      objectReference: {fileID: 0}
+    - target: {fileID: 8563068229914016220, guid: 26d2125bf29e71a4c9d5ff331c395300,
+        type: 3}
+      propertyPath: m_Name
+      value: Bedsheet_Made_7
+      objectReference: {fileID: 0}
+    - target: {fileID: 8563068229914016220, guid: 26d2125bf29e71a4c9d5ff331c395300,
+        type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 64
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 26d2125bf29e71a4c9d5ff331c395300, type: 3}

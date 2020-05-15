@@ -1308,7 +1308,7 @@ GameObject:
   m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
-  m_StaticEditorFlags: 64
+  m_StaticEditorFlags: 0
   m_IsActive: 1
 --- !u!4 &1620384785
 Transform:
@@ -1343,9 +1343,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b439f6e4ef5714ee2a3643acf37b7a9d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  uniqueID: Bed|+27.00|+27.00|+27.00
+  objectID: Bed|+00.00|+00.00|+00.00
   Type: 76
-  PrimaryProperty: 1
+  PrimaryProperty: 2
   SecondaryProperties: 0700000004000000
   BoundingBox: {fileID: 1287856291}
   VisibilityPoints:
@@ -1389,15 +1389,19 @@ MonoBehaviour:
   - {fileID: 1215975369}
   - {fileID: 867516431}
   - {fileID: 1029870249}
-  HFdynamicfriction: 0
-  HFstaticfriction: 0
+  HFdynamicfriction: 0.8
+  HFstaticfriction: 0.8
   HFbounciness: 0
-  HFrbdrag: 0
-  HFrbangulardrag: 0
-  salientMaterials: 
+  HFrbdrag: 0.8
+  HFrbangulardrag: 0.08
+  salientMaterials: 0100000006000000
+  MySpawnPoints: []
   CurrentTemperature: 0
   HowManySecondsUntilRoomTemp: 10
   inMotion: 0
+  numSimObjHit: 0
+  numFloorHit: 0
+  numStructureHit: 0
   lastVelocity: 0
   ContainedObjectReferences: []
 --- !u!54 &1620384786
@@ -1408,11 +1412,11 @@ Rigidbody:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1620384784}
   serializedVersion: 2
-  m_Mass: 1
-  m_Drag: 0
+  m_Mass: 30
+  m_Drag: 0.5
   m_AngularDrag: 0.05
   m_UseGravity: 1
-  m_IsKinematic: 1
+  m_IsKinematic: 0
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
@@ -2027,21 +2031,6 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 1565325082020817041}
     m_Modifications:
-    - target: {fileID: 4239849535828173946, guid: e78244da961d230479b717bf94c49c70,
-        type: 3}
-      propertyPath: m_Name
-      value: Bedsheet_Made_26_1
-      objectReference: {fileID: 0}
-    - target: {fileID: 4239849535828173946, guid: e78244da961d230479b717bf94c49c70,
-        type: 3}
-      propertyPath: m_StaticEditorFlags
-      value: 64
-      objectReference: {fileID: 0}
-    - target: {fileID: 4239849535828173946, guid: e78244da961d230479b717bf94c49c70,
-        type: 3}
-      propertyPath: m_IsActive
-      value: 0
-      objectReference: {fileID: 0}
     - target: {fileID: 4239849535828081050, guid: e78244da961d230479b717bf94c49c70,
         type: 3}
       propertyPath: m_LocalPosition.x
@@ -2112,6 +2101,21 @@ PrefabInstance:
       propertyPath: m_LocalScale.z
       value: 0.8537762
       objectReference: {fileID: 0}
+    - target: {fileID: 4239849535828173946, guid: e78244da961d230479b717bf94c49c70,
+        type: 3}
+      propertyPath: m_Name
+      value: Bedsheet_Made_26_1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4239849535828173946, guid: e78244da961d230479b717bf94c49c70,
+        type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 64
+      objectReference: {fileID: 0}
+    - target: {fileID: 4239849535828173946, guid: e78244da961d230479b717bf94c49c70,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: e78244da961d230479b717bf94c49c70, type: 3}
 --- !u!1 &3625785988367913351 stripped
@@ -2133,16 +2137,6 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 1565325082020817041}
     m_Modifications:
-    - target: {fileID: 984119560449234737, guid: 3f1ef69e66461fe40a43aef69c0c4ca9,
-        type: 3}
-      propertyPath: m_Name
-      value: Bedsheet_Unmade_26_1
-      objectReference: {fileID: 0}
-    - target: {fileID: 984119560449234737, guid: 3f1ef69e66461fe40a43aef69c0c4ca9,
-        type: 3}
-      propertyPath: m_StaticEditorFlags
-      value: 64
-      objectReference: {fileID: 0}
     - target: {fileID: 984119560448805585, guid: 3f1ef69e66461fe40a43aef69c0c4ca9,
         type: 3}
       propertyPath: m_LocalPosition.x
@@ -2212,6 +2206,16 @@ PrefabInstance:
         type: 3}
       propertyPath: m_LocalScale.z
       value: 0.78029
+      objectReference: {fileID: 0}
+    - target: {fileID: 984119560449234737, guid: 3f1ef69e66461fe40a43aef69c0c4ca9,
+        type: 3}
+      propertyPath: m_Name
+      value: Bedsheet_Unmade_26_1
+      objectReference: {fileID: 0}
+    - target: {fileID: 984119560449234737, guid: 3f1ef69e66461fe40a43aef69c0c4ca9,
+        type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 64
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 3f1ef69e66461fe40a43aef69c0c4ca9, type: 3}
