@@ -71,6 +71,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
         public GameObject DroneVisCap;//meshes used for Drone mode
         public GameObject DroneBasket;//reference to the drone's basket object
         private bool isVisible = true;
+        public bool inHighFrictionArea = false;
+
         public bool IsVisible
         {
 			get 
@@ -159,6 +161,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 return _physicsSceneManager;
             }
         }
+
+        //reference to prefab for activiting the cracked camera effect via CameraCrack()
+        [SerializeField] GameObject CrackedCameraCanvas;
 
 		// Initialize parameters from environment variables
 		protected virtual void Awake()
@@ -1105,7 +1110,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             }
 
             //if the sim object is moveable or pickupable
-            if(simObj.IsPickupable || simObj.IsMoveable)
+            if(simObj.IsPickupable || simObj.IsMoveable || simObj.salientMaterials.Length > 0)
             {
                 //this object should report back mass and salient materials
 
@@ -1365,6 +1370,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 agentMeta.cameraHorizon -= 360;
             }
 	        agentMeta.isStanding = (m_Camera.transform.localPosition - standingLocalCameraPosition).magnitude < 0.1f;
+            agentMeta.inHighFrictionArea = inHighFrictionArea;
 
             // OTHER METADATA
             MetadataWrapper metaMessage = new MetadataWrapper();
@@ -2801,6 +2807,27 @@ namespace UnityStandardAssets.Characters.FirstPerson
             actionFinished(true, results.ToArray());
         }
 
+        public void CameraCrack(ServerAction action)
+        {
+            GameObject canvas = Instantiate(CrackedCameraCanvas);
+            CrackedCameraManager camMan = canvas.GetComponent<CrackedCameraManager>();
+
+            camMan.SpawnCrack(action.randomSeed);
+            actionFinished(true);
+        }
+
+        public void OnTriggerStay(Collider other)
+        {
+            if(other.CompareTag("HighFriction"))
+            {
+                inHighFrictionArea = true;
+            }
+            
+            else
+            {
+                inHighFrictionArea = false;
+            }
+        }
 
         #if UNITY_EDITOR
         void OnDrawGizmos()

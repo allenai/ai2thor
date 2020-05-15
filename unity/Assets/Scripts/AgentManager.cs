@@ -880,6 +880,7 @@ public class AgentMetadata
     public Vector3 rotation;
     public float cameraHorizon;
 	public bool isStanding;
+	public bool inHighFrictionArea;
     public AgentMetadata() {}
 }
 
