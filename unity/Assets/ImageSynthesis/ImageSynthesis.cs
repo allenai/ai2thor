@@ -89,15 +89,8 @@ public class ImageSynthesis : MonoBehaviour {
 		if (!opticalFlowShader)
 			opticalFlowShader = Shader.Find("Hidden/OpticalFlow");
 
-        #if UNITY_EDITOR
-
-            if (!depthShader)
-                depthShader = Shader.Find("Hidden/DepthBW");
-        #else
-            if (!depthShader)
-                depthShader = Shader.Find("Hidden/Depth");
-
-        #endif
+        if (!depthShader)
+            depthShader = Shader.Find("Hidden/Depth");
 
         //if (!positionShader)
         //	positionShader = Shader.Find("Hidden/World");

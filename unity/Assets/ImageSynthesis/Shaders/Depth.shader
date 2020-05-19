@@ -50,6 +50,7 @@ Shader "Hidden/Depth" {
              
              fixed4 frag(output o) : COLOR
              {
+                 /*
                  //depth01 = pow(LinearEyeDepth(depth01), _DepthLevel);
                  float depth01 = LinearEyeDepth(UNITY_SAMPLE_DEPTH(tex2D(_CameraDepthTexture, o.uv))) / 10;
 
@@ -66,6 +67,11 @@ Shader "Hidden/Depth" {
 
 				 return fixed4(lowBits, medBits, highBits, 0.0);
                  //return depth01;
+                 */
+
+                 float cameraClippingPlaneFar = 25.0;
+                 float depthPixel = LinearEyeDepth(UNITY_SAMPLE_DEPTH(tex2D(_CameraDepthTexture, o.uv))) / cameraClippingPlaneFar;
+                 return fixed4(depthPixel, depthPixel, depthPixel, 0.0);
              }
              
              ENDCG
