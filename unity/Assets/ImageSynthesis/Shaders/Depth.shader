@@ -69,9 +69,8 @@ Shader "Hidden/Depth" {
                  //return depth01;
                  */
 
-                 float cameraClippingPlaneFar = 25.0;
-                 float depthPixel = LinearEyeDepth(UNITY_SAMPLE_DEPTH(tex2D(_CameraDepthTexture, o.uv))) / cameraClippingPlaneFar;
-                 return fixed4(depthPixel, depthPixel, depthPixel, 0.0);
+                 float depth = Linear01Depth(UNITY_SAMPLE_DEPTH(tex2D(_CameraDepthTexture, o.uv)));
+                 return fixed4(depth, depth, depth, 0.0);
              }
              
              ENDCG
