@@ -39,7 +39,8 @@ setup(name='ai2thor',
           'aws-requests-auth',
           'msgpack',
           'Pillow',
-          'opencv-python'
+          'opencv-python',
+          'werkzeug>=0.15.0' # needed for unix socket support
       ],
       setup_requires=['pytest-runner'],
       tests_require=['pytest', 'pytest-cov'],
