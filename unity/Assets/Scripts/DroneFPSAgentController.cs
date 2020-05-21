@@ -269,7 +269,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
             metaMessage.lastAction = lastAction;
             metaMessage.lastActionSuccess = lastActionSuccess;
             metaMessage.errorMessage = errorMessage;
-            metaMessage.actionReturn = this.actionReturn;
 
             if (errorCode != ServerActionErrorCode.Undefined) {
                 metaMessage.errorCode = Enum.GetName(typeof(ServerActionErrorCode), errorCode);

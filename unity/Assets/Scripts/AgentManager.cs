@@ -596,6 +596,7 @@ public class AgentManager : MonoBehaviour
 		WWWForm form = new WWWForm();
 
         MultiAgentMetadata multiMeta = new MultiAgentMetadata ();
+        System.Object[] actionReturns = new System.Object[this.agents.Count];
         multiMeta.agents = new MetadataWrapper[this.agents.Count];
         multiMeta.activeAgentId = this.activeAgentId;
         multiMeta.sequenceId = this.currentSequenceId;
@@ -632,6 +633,8 @@ public class AgentManager : MonoBehaviour
             #endif
             MetadataWrapper metadata = agent.generateMetadataWrapper ();
             metadata.agentId = i;
+            actionReturns[i] = agent.actionReturn;
+
             // we don't need to render the agent's camera for the first agent
             if (shouldRender) {
                 addImageForm (form, agent);
@@ -650,15 +653,22 @@ public class AgentManager : MonoBehaviour
             RenderTexture.active = currentTexture;
         }
 
-        var serializedMetadata = Newtonsoft.Json.JsonConvert.SerializeObject(multiMeta);
+       var serializedActionReturns = Newtonsoft.Json.JsonConvert.SerializeObject(actionReturns, Newtonsoft.Json.Formatting.None,
+                new Newtonsoft.Json.JsonSerializerSettings()
+                       {
+                           ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore
+                       }
+
+               );
+
 		#if UNITY_WEBGL
                 if (jsInterface != null) {
 					jsInterface.SendActionMetadata(serializedMetadata);
 				}
         #endif
 
-        //form.AddField("metadata", JsonUtility.ToJson(multiMeta));
-        form.AddField("metadata", serializedMetadata);
+        form.AddField("metadata", JsonUtility.ToJson(multiMeta));
+        form.AddField("actionReturns", serializedActionReturns);
         form.AddField("token", robosimsClientToken);
 
         #if !UNITY_WEBGL 
@@ -1121,7 +1131,6 @@ public struct MetadataWrapper
 	public float[] actionFloatsReturn;
 	public Vector3[] actionVector3sReturn;
 	public List<Vector3> visibleRange;
-	public System.Object actionReturn;
 	public float currentTime;
     public SceneBounds sceneBounds;//return coordinates of the scene's bounds (center, size, extents)
 }
