@@ -173,8 +173,6 @@ Take a GameObject (we'll call it the "Target" object) containing a MeshFilter, M
   - Added `ApplyRelativeForce` to apply force in a direction relative to the agent's current position.
 - `Scripts/SimObjType`:
   - Added `IgnoreType` to the `SimObjType` enum, `ReturnAllPoints`, and `AlwaysPlaceUpright`
-- `Shaders/DepthBW`:
-  - Changed the divisor to increase the effective depth of field for the depth masks.
 - `Scripts/MachineCommonSenseController`:
   - Added custom `RotateLook` to use relative inputs instead of absolute values.
   - Added checks to see whether objects exist and set lastActionStatus appropriately for `PutObject`
@@ -183,3 +181,6 @@ Take a GameObject (we'll call it the "Target" object) containing a MeshFilter, M
   - If `PushObject` or `PullObject` is called on a held object, `ThrowObject` will be called instead of throwing an error.
 - `ImageSynthesis/ImageSynthesis`:
   - Added a null check in `OnSceneChange`
+  - Changed to always use the `Hidden/Depth` Shader
+- `ImageSynthesis/Shaders/Depth`:
+  - Changed the `frag` function to return pixels based on the camera's far clipping pane
