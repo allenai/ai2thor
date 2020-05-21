@@ -131,6 +131,7 @@ Take a GameObject (we'll call it the "Target" object) containing a MeshFilter, M
 ## Changelog of AI2-THOR Classes
 
 - `Scripts/AgentManager`:
+  - Added properties to `MetadataWrapper`: `structuralObjects`
   - Added properties to `ObjectMetadata`: `points`, `visibleInCamera`
   - Added properties to `ServerAction`: `logs`, `objectDirection`, `receptacleObjectDirection`, `sceneConfig`
   - Added `virtual` to functions: `setReadyToEmit`, `Update`
