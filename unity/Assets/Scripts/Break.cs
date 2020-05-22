@@ -7,9 +7,9 @@ public class Break : MonoBehaviour
 {
 
     [SerializeField]
-    private GameObject PrefabToSwapTo;
+    private GameObject PrefabToSwapTo = null;
     [SerializeField]
-    private GameObject DirtyPrefabToSwapTo;
+    private GameObject DirtyPrefabToSwapTo = null;
 
     [SerializeField]
     protected float ImpulseThreshold = 3.6f; //set this to lower if this object should be easier to break. Higher if the object requires more force to break

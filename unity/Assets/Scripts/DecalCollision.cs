@@ -16,7 +16,7 @@ public class DecalCollision : Break
     [SerializeField]
     private int stencilWriteValue = 1;
     [SerializeField]
-    private GameObject[] decals;
+    private GameObject[] decals = null;
     [SerializeField]
     private float nextDecalWaitTimeSeconds = 1;
     [SerializeField]

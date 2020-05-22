@@ -34,7 +34,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
         [SerializeField] protected GameObject DefaultHandPosition = null;
         [SerializeField] protected Transform rotPoint;
         [SerializeField] protected GameObject DebugPointPrefab;
-        [SerializeField] private GameObject GridRenderer;
+        [SerializeField] private GameObject GridRenderer = null;
         [SerializeField] protected GameObject DebugTargetPointPrefab;
         [SerializeField] protected bool inTopLevelView = false;
         [SerializeField] protected Vector3 lastLocalCameraPosition;
@@ -143,7 +143,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		protected string[] collidedObjects;// container for collided objects
 		protected Quaternion targetRotation;
         // Javascript communication
-        private JavaScriptInterface jsInterface;
+        private JavaScriptInterface jsInterface = null;
         private ServerAction currentServerAction;
 		public Quaternion TargetRotation
 		{
@@ -163,7 +163,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
         }
 
         //reference to prefab for activiting the cracked camera effect via CameraCrack()
-        [SerializeField] GameObject CrackedCameraCanvas;
+        [SerializeField] GameObject CrackedCameraCanvas = null;
 
 		// Initialize parameters from environment variables
 		protected virtual void Awake()

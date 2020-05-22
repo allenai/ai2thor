@@ -5,7 +5,7 @@ using System;
 
 public class DroneObjectLauncher : MonoBehaviour 
 {
-	[SerializeField] GameObject[] prefabsToLaunch;
+	[SerializeField] public GameObject[] prefabsToLaunch;
 
     //keep track of what objects were launched already
 	public List<SimObjPhysics> launch_object = new List<SimObjPhysics>();
