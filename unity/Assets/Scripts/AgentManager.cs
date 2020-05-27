@@ -237,6 +237,8 @@ public class AgentManager : MonoBehaviour
 		gameObject.AddComponent(typeof(Camera));
 		Camera camera = gameObject.GetComponentInChildren<Camera>();
 
+		camera.cullingMask = ~(1 << 11);
+
 		if (this.renderDepthImage || this.renderClassImage || this.renderObjectImage || this.renderNormalsImage || this.renderFlowImage) 
 		{
 			gameObject.AddComponent(typeof(ImageSynthesis));
