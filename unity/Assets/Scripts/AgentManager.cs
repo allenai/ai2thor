@@ -663,13 +663,15 @@ public class AgentManager : MonoBehaviour
 
                );
 
+        var serializedMetadata = JsonUtility.ToJson(multiMeta);
+
 		#if UNITY_WEBGL
                 if (jsInterface != null) {
 					jsInterface.SendActionMetadata(serializedMetadata);
 				}
         #endif
 
-        form.AddField("metadata", JsonUtility.ToJson(multiMeta));
+        form.AddField("metadata", serializedMetadata);
         form.AddField("actionReturns", serializedActionReturns);
         form.AddField("token", robosimsClientToken);
 
