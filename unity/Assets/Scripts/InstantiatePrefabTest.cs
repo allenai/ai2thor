@@ -288,6 +288,7 @@ public class InstantiatePrefabTest : MonoBehaviour
         {
             oabb.enabled = true;
 
+            // Set the new rotation rather than using Transform.Rotate because we want to ignore the receptacle object's local rotation.
             sop.transform.rotation = Quaternion.Euler(sop.transform.localRotation.x, i * degreeIncrement, sop.transform.localRotation.z);
 
             Vector3 Offset = oabb.ClosestPoint(oabb.transform.TransformPoint(oabb.center) + Vector3.down * 10);

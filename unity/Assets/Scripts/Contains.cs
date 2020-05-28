@@ -223,6 +223,7 @@ public class Contains : MonoBehaviour
             verticalDistance = zDiff;
         }
 
+        // TODO MCS-226 Adjust number of spawn points by receptacle trigger box size
 		//so lets make a grid, we can parametize the gridsize value later, for now we'll adjust it here
 		int gridsize = 4; //number of grid boxes we want, reduce this to SPEED THINGS UP but also GET WAY MORE INACCURATE
 		int linepoints = gridsize + 1; //number of points on the line we need to make the number of grid boxes
