@@ -131,10 +131,16 @@ public class MachineCommonSenseController : PhysicsRemoteFPSAgentController {
         MetadataWrapper metadata = base.generateMetadataWrapper();
         metadata.lastActionStatus = this.lastActionStatus;
         metadata.reachDistance = this.maxVisibleDistance;
-        metadata.structuralObjects = metadata.objects.ToList().Where(objectMetadata =>
-            GameObject.Find(objectMetadata.name).GetComponent<StructureObject>() != null).ToArray();
-        metadata.objects = metadata.objects.ToList().Where(objectMetadata =>
-            GameObject.Find(objectMetadata.name).GetComponent<StructureObject>() == null).ToArray();
+        metadata.structuralObjects = metadata.objects.ToList().Where(objectMetadata => {
+            GameObject gameObject = GameObject.Find(objectMetadata.name);
+            // The object may be null if it is being held.
+            return gameObject != null && gameObject.GetComponent<StructureObject>() != null;
+        }).ToArray();
+        metadata.objects = metadata.objects.ToList().Where(objectMetadata => {
+            GameObject gameObject = GameObject.Find(objectMetadata.name);
+            // The object may be null if it is being held.
+            return gameObject == null || gameObject.GetComponent<StructureObject>() == null;
+        }).ToArray();
         return this.agentManager.UpdateMetadataColors(this, metadata);
     }
 

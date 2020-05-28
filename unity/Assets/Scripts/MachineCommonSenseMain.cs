@@ -719,6 +719,7 @@ public class MachineCommonSenseMain : MonoBehaviour {
 
         // The object's receptacle trigger boxes define the area in which objects may be placed for AI2-THOR.
         if (receptacle && objectDefinition.receptacleTriggerBoxes.Count > 0) {
+            ai2thorPhysicsScript.ContainedObjectReferences = new List<SimObjPhysics>();
             ai2thorPhysicsScript.ReceptacleTriggerBoxes = this.AssignReceptacleTriggerBoxes(gameObject,
                 objectDefinition);
         }
