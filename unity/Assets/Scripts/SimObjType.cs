@@ -96,6 +96,8 @@ public enum SimObjSecondaryProperty : int //EACH SimObjPhysics can have any numb
     CanLightOnFire = 50,
     CanSeeThrough = 51,
 	ObjectSpecificReceptacle = 52,
+
+    Stacking = 999999999
 }
 
 [Serializable]

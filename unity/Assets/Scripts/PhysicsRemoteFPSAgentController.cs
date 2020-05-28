@@ -4209,7 +4209,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         //make sure not to pick up any sliced objects because those should remain uninteractable i they have been sliced
         public void PickupContainedObjects(SimObjPhysics target) 
         {
-            if (target.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.Receptacle)) 
+            if (target.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.Receptacle) && !target.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.Stacking))
             {
                 foreach (SimObjPhysics sop in target.ReceptacleObjects) 
                 {

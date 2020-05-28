@@ -355,9 +355,13 @@ public class MachineCommonSenseMain : MonoBehaviour {
             });
 
             // If new colliders are defined for the object, deactivate the existing colliders.
-            colliders.ToList().ForEach((collider) => {
-                collider.enabled = false;
-            });
+            if (!objectDefinition.keepColliders) {
+                colliders.ToList().ForEach((collider) => {
+                    collider.enabled = false;
+                });
+                colliders = new Collider[] { };
+            }
+
             // The AI2-THOR scripts assume the colliders have a parent object with the name Colliders.
             GameObject colliderParentObject = new GameObject {
                 isStatic = true,
@@ -366,7 +370,7 @@ public class MachineCommonSenseMain : MonoBehaviour {
             colliderParentObject.transform.parent = gameObject.transform;
             colliderParentObject.transform.localPosition = Vector3.zero;
             int index = 0;
-            colliders = objectDefinition.colliders.Select((colliderDefinition) => {
+            colliders = colliders.ToList().Concat(objectDefinition.colliders.Select((colliderDefinition) => {
                 ++index;
                 GameObject colliderObject = new GameObject {
                     isStatic = true,
@@ -377,7 +381,7 @@ public class MachineCommonSenseMain : MonoBehaviour {
                 colliderObject.transform.parent = colliderParentObject.transform;
                 Collider collider = this.AssignCollider(colliderObject, colliderDefinition);
                 return collider;
-            }).ToArray();
+            })).ToArray();
         }
         else {
             // Else, add the AI2-THOR layer and tag to the existing colliders so they work with the AI2-THOR scripts.
@@ -681,6 +685,11 @@ public class MachineCommonSenseMain : MonoBehaviour {
         if (openable && !ai2thorPhysicsScript.SecondaryProperties.ToList().Contains(SimObjSecondaryProperty.CanOpen)) {
             ai2thorPhysicsScript.SecondaryProperties = ai2thorPhysicsScript.SecondaryProperties.ToList().Concat(
                 new SimObjSecondaryProperty[] { SimObjSecondaryProperty.CanOpen }).ToArray();
+        }
+
+        if (objectDefinition.stacking || objectConfig.stacking) {
+            ai2thorPhysicsScript.SecondaryProperties = ai2thorPhysicsScript.SecondaryProperties.ToList().Concat(
+                new SimObjSecondaryProperty[] { SimObjSecondaryProperty.Stacking }).ToArray();
         }
 
         // Always set the uniqueID to a new name (we don't want to use AI2-THOR's default names).
@@ -1262,6 +1271,7 @@ public class MachineCommonSenseConfigAbstractObject {
     public bool physics;
     public bool pickupable;
     public bool receptacle;
+    public bool stacking;
     public List<string> materials;
     public List<string> salientMaterials;
 }
@@ -1342,6 +1352,7 @@ public class MachineCommonSenseConfigMove : MachineCommonSenseConfigStepBeginEnd
 [Serializable]
 public class MachineCommonSenseConfigObjectDefinition : MachineCommonSenseConfigAbstractObject {
     public string resourceFile;
+    public bool keepColliders;
     public bool primitive;
     public bool visibilityPointsScaleOne;
     public MachineCommonSenseConfigCollider boundingBox = null;

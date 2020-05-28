@@ -193,63 +193,77 @@ public class Contains : MonoBehaviour
 	{
 		List<ReceptacleSpawnPoint> PossibleSpawnPoints = new List<ReceptacleSpawnPoint>();
 
-		Vector3 p1, p2, /*p3,*/ p4, p5 /*p6, p7, p8*/; //in case we need all the corners later for something...
+        // Find the true center and size (in global environment coordinates) of the receptacle trigger box collider.
+        BoxCollider triggerBoxCollider = GetComponent<BoxCollider>();
+        Vector3 center = gameObject.transform.TransformPoint(triggerBoxCollider.center);
+        Vector3 size = this.FindReceptacleTriggerBoxSize();
 
-		BoxCollider b = GetComponent<BoxCollider>();
+        // Define the true sides (in global environment coordinates) of the box collider.
+        Vector3 objectSideLeft = center + (new Vector3(size.x, 0, 0) * 0.5f);
+        Vector3 objectSideRight = center - (new Vector3(size.x, 0, 0) * 0.5f);
+        Vector3 objectSideTop = center + (new Vector3(0, size.y, 0) * 0.5f);
+        Vector3 objectSideBottom = center - (new Vector3(0, size.y, 0) * 0.5f);
+        Vector3 objectSideForward = center + (new Vector3(0, 0, size.z) * 0.5f);
+        Vector3 objectSideBack = center - (new Vector3(0, 0, size.z) * 0.5f);
 
-		//get all the corners of the box and convert to world coordinates
-		//top forward right
-		p1 = transform.TransformPoint(b.center + new Vector3(b.size.x, b.size.y, b.size.z) * 0.5f);
-		//top forward left
-		p2 = transform.TransformPoint(b.center + new Vector3(-b.size.x, b.size.y, b.size.z) * 0.5f);
-		//top back left
-		//p3 = transform.TransformPoint(b.center + new Vector3(-b.size.x, b.size.y, -b.size.z) * 0.5f);
-		//top back right
-		p4 = transform.TransformPoint(b.center + new Vector3(b.size.x, b.size.y, -b.size.z) * 0.5f);
+        // Identify the direction corresponding to the global UP based on this receptacle object's current local rotation.
+        // Since gravity is always global DOWN, we want this receptacle object between the spawn object and the ground.
+        Vector3 objectUpVector = objectSideTop.y > objectSideBottom.y ? Vector3.up : Vector3.down;
+        float xDiff = Mathf.Abs(objectSideTop.x - objectSideBottom.x);
+        float yDiff = Mathf.Abs(objectSideTop.y - objectSideBottom.y);
+        float zDiff = Mathf.Abs(objectSideTop.z - objectSideBottom.z);
 
-		//bottom forward right
-		p5 = transform.TransformPoint(b.center + new Vector3(b.size.x, -b.size.y, b.size.z) * 0.5f);
-		//bottom forward left
-		//p6 = transform.TransformPoint(b.center + new Vector3(-b.size.x, -b.size.y, b.size.z) * 0.5f);
-		//bottom back left
-		//p7 = transform.TransformPoint(b.center + new Vector3(-b.size.x, -b.size.y, -b.size.z) * 0.5f);
-		//bottom back right
-		//p8 = transform.TransformPoint(b.center + new Vector3(b.size.x, -b.size.y, -b.size.z) * 0.5f);
-
-		// List<Vector3> crn = new List<Vector3>() {p1, p2, p3, p4, p5, p6, p7, p8};
-		// Corners = crn;
-
+        float verticalDistance = yDiff;
+        if (xDiff > yDiff && xDiff > zDiff) {
+            objectUpVector = objectSideTop.x > objectSideBottom.x ? Vector3.left : Vector3.right;
+            verticalDistance = xDiff;
+        }
+        if (zDiff > yDiff && zDiff > xDiff) {
+            objectUpVector = objectSideTop.z > objectSideBottom.z ? Vector3.forward : Vector3.back;
+            verticalDistance = zDiff;
+        }
 
 		//so lets make a grid, we can parametize the gridsize value later, for now we'll adjust it here
-		int gridsize = 8; //number of grid boxes we want, reduce this to SPEED THINGS UP but also GET WAY MORE INACCURATE
+		int gridsize = 4; //number of grid boxes we want, reduce this to SPEED THINGS UP but also GET WAY MORE INACCURATE
 		int linepoints = gridsize + 1; //number of points on the line we need to make the number of grid boxes
 		float lineincrement =  1.0f / gridsize; //increment on the line to distribute the gridpoints
-
-		Vector3[] PointsOnLineXdir = new Vector3[linepoints];
 
 		//these are all the points on the grid on the top of the receptacle box in local space
 		List<Vector3> gridpoints = new List<Vector3>();
 
-		Vector3 zdir = (p4 - p1).normalized; //direction in the -z direction to finish drawing grid
-		Vector3 xdir = (p2 - p1).normalized; //direction in the +x direction to finish drawing grid
-		Vector3 ydir = (p1 - p5).normalized;
-		float zdist = Vector3.Distance(p4, p1);
-		float ydist = Vector3.Distance(p1, p5);
+        if (objectUpVector.Equals(Vector3.up) || objectUpVector.Equals(Vector3.down)) {
+            for(int i = 0; i < linepoints; i++) {
+                float x = objectSideLeft.x + ((objectSideRight.x - objectSideLeft.x) * (lineincrement * i));
+                float y = objectUpVector.Equals(Vector3.up) ? objectSideTop.y : objectSideBottom.y;
+                for(int j = 0; j < linepoints; j++) {
+                    float z = objectSideBack.z + ((objectSideForward.z - objectSideBack.z) * (lineincrement * j));
+                    gridpoints.Add(new Vector3(x, y, z));
+                }
+            }
+        }
 
-		for(int i = 0; i < linepoints; i++)
-		{
-			float x = p1.x + (p2.x - p1.x) * (lineincrement * i);
-			float y = p1.y + (p2.y - p1.y) * (lineincrement * i);
-			float z = p1.z + (p2.z - p1.z) * (lineincrement * i);
+        else if (objectUpVector.Equals(Vector3.left) || objectUpVector.Equals(Vector3.right)) {
+            for(int i = 0; i < linepoints; i++) {
+                float x = objectUpVector.Equals(Vector3.left) ? objectSideLeft.x : objectSideRight.x;
+                float y = objectSideBottom.y + ((objectSideTop.y - objectSideBottom.y) * (lineincrement * i));
+                for(int j = 0; j < linepoints; j++) {
+                    float z = objectSideBack.z + ((objectSideForward.z - objectSideBack.z) * (lineincrement * j));
+                    gridpoints.Add(new Vector3(x, y, z));
+                }
+            }
+        }
 
-			PointsOnLineXdir[i] = new Vector3 (x, y, z);
+        else if (objectUpVector.Equals(Vector3.forward) || objectUpVector.Equals(Vector3.back)) {
+            for(int i = 0; i < linepoints; i++) {
+                float x = objectSideLeft.x + ((objectSideRight.x - objectSideLeft.x) * (lineincrement * i));
+                float z = objectUpVector.Equals(Vector3.forward) ? objectSideForward.z : objectSideBack.z;
+                for(int j = 0; j < linepoints; j++) {
+                    float y = objectSideBottom.y + ((objectSideTop.y - objectSideBottom.y) * (lineincrement * i));
+                    gridpoints.Add(new Vector3(x, y, z));
+                }
+            }
+        }
 
-			for(int j = 0; j < linepoints; j++)
-			{
-				gridpoints.Add(PointsOnLineXdir[i] + zdir * (zdist * (j*lineincrement)));
-			}
-		}
-		
 		//****** */debug draw the grid points as gizmos
 		// #if UNITY_EDITOR
 		// gridVisual = gridpoints.ToArray();
@@ -258,14 +272,14 @@ public class Contains : MonoBehaviour
 		foreach(Vector3 point in gridpoints)
 		{
 			//debug draw the gridpoints if you wanna see em
-			// #if UNITY_EDITOR
-			// Debug.DrawLine(point, point + -(ydir * ydist), Color.red, 100f);
-			// #endif
+			#if UNITY_EDITOR
+			Debug.DrawLine(point, point + (Vector3.down * verticalDistance), Color.red, 100f);
+			#endif
 
 			// //quick test to see if this point on the grid is blocked by anything by raycasting down
 			// //toward it
 			RaycastHit hit;
-			if(Physics.Raycast(point, -ydir, out hit, ydist, 1 << 8, QueryTriggerInteraction.Ignore))
+			if(Physics.Raycast(point, Vector3.down, out hit, verticalDistance, 1 << 8, QueryTriggerInteraction.Ignore))
 			{
 				//if this hits anything except the parent object, this spot is blocked by something
 
@@ -275,28 +289,28 @@ public class Contains : MonoBehaviour
 				{
 					if(!ReturnPointsCloseToAgent)
 					{
-						PossibleSpawnPoints.Add(new ReceptacleSpawnPoint(hit.point, b, this, myParent.GetComponent<SimObjPhysics>()));
+						PossibleSpawnPoints.Add(new ReceptacleSpawnPoint(hit.point, triggerBoxCollider, this, myParent.GetComponent<SimObjPhysics>()));
 					}
 
 					else if(NarrowDownValidSpawnPoints(hit.point))
 					{
-						PossibleSpawnPoints.Add(new ReceptacleSpawnPoint(hit.point, b, this, myParent.GetComponent<SimObjPhysics>()));
+						PossibleSpawnPoints.Add(new ReceptacleSpawnPoint(hit.point, triggerBoxCollider, this, myParent.GetComponent<SimObjPhysics>()));
 					}
 				}
 			}
 
-			Vector3 BottomPoint = point + -(ydir * ydist);
+			Vector3 BottomPoint = point + (Vector3.down * verticalDistance);
 			//didn't hit anything that could obstruct, so this point is good to go
 			//do additional checks here tos ee if the point is valid
 			// else
 			// 
 			if(!ReturnPointsCloseToAgent)
 			{
-				PossibleSpawnPoints.Add(new ReceptacleSpawnPoint(BottomPoint, b, this, myParent.GetComponent<SimObjPhysics>()));
+				PossibleSpawnPoints.Add(new ReceptacleSpawnPoint(BottomPoint, triggerBoxCollider, this, myParent.GetComponent<SimObjPhysics>()));
 			}
 
 			else if(NarrowDownValidSpawnPoints(BottomPoint))
-				PossibleSpawnPoints.Add(new ReceptacleSpawnPoint(BottomPoint, b, this, myParent.GetComponent<SimObjPhysics>()));
+				PossibleSpawnPoints.Add(new ReceptacleSpawnPoint(BottomPoint, triggerBoxCollider, this, myParent.GetComponent<SimObjPhysics>()));
 			//}
 		}
 
@@ -363,60 +377,62 @@ public class Contains : MonoBehaviour
 		
 	}
 
+    public Vector3 FindReceptacleTriggerBoxSize() {
+        GameObject simObj = gameObject.GetComponentInParent<SimObjPhysics>().gameObject;
+        // Sometimes the receptacle trigger box has a component between itself and the SimObjPhysics object.
+        GameObject parentObject = (gameObject.transform.parent.gameObject.GetInstanceID() == simObj.GetInstanceID()) ?
+            null : gameObject.transform.parent.gameObject;
+        BoxCollider triggerBoxCollider = GetComponent<BoxCollider>();
+
+        Vector3 simObjScale = simObj.transform.localScale;
+        Vector3 parentObjectScale = parentObject != null ? parentObject.transform.localScale : Vector3.one;
+        Vector3 triggerBoxObjectScale = gameObject.transform.localScale;
+
+        return new Vector3(
+            simObjScale.x * parentObjectScale.x * triggerBoxObjectScale.x * triggerBoxCollider.size.x,
+            simObjScale.y * parentObjectScale.y * triggerBoxObjectScale.y * triggerBoxCollider.size.y,
+            simObjScale.z * parentObjectScale.z * triggerBoxObjectScale.z * triggerBoxCollider.size.z
+        );
+    }
+
 	//used to check if a given Vector3 is inside this receptacle box in world space
 	//use this to check if a SimObjectPhysics's corners are contained within this receptacle, if not then it doesn't fit
 	public bool CheckIfPointIsInsideReceptacleTriggerBox(Vector3 point)
 	{
-		BoxCollider myBox = gameObject.GetComponent<BoxCollider>();
+        BoxCollider triggerBoxCollider = GetComponent<BoxCollider>();
+        Vector3 center = gameObject.transform.TransformPoint(triggerBoxCollider.center);
+        Vector3 size = this.FindReceptacleTriggerBoxSize();
 
-		point = myBox.transform.InverseTransformPoint(point) - myBox.center;
+        SimObjPhysics simObj = gameObject.GetComponentInParent<SimObjPhysics>();
+        if (simObj.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.Stacking)) {
+            return point.y >= (center.y - (size.y * 0.5f));
+        }
 
-		float halfX = (myBox.size.x * 0.5f);
-        float halfY = (myBox.size.y * 0.5f);
-        float halfZ = (myBox.size.z * 0.5f);
-        if( point.x < halfX && point.x > -halfX && 
-            point.y < halfY && point.y > -halfY && 
-            point.z < halfZ && point.z > -halfZ )
-            return true;
-        else
-            return false;	
-	}
-
-	public bool CheckIfPointIsAboveReceptacleTriggerBox(Vector3 point)
-	{
-		BoxCollider myBox = gameObject.GetComponent<BoxCollider>();
-
-		point = myBox.transform.InverseTransformPoint(point) - myBox.center;
-
-		float halfX = (myBox.size.x * 0.5f);
-        float BIGY = (myBox.size.y * 10.0f);
-        float halfZ = (myBox.size.z * 0.5f);
-        if( point.x < halfX && point.x > -halfX && 
-            point.y < BIGY && point.y > -BIGY && 
-            point.z < halfZ && point.z > -halfZ )
-            return true;
-        else
-            return false;	
+        return point.x <= (center.x + (size.x * 0.5f)) && point.x >= (center.x - (size.x * 0.5f)) &&
+            point.y <= (center.y + (size.y * 0.5f)) && point.y >= (center.y - (size.y * 0.5f)) &&
+            point.z <= (center.z + (size.z * 0.5f)) && point.z >= (center.z - (size.z * 0.5f));
 	}
 
     #if UNITY_EDITOR
 	void OnDrawGizmos()
 	{
-		BoxCollider b = GetComponent<BoxCollider>();
-        
+        BoxCollider triggerBoxCollider = GetComponent<BoxCollider>();
+        Vector3 center = gameObject.transform.TransformPoint(triggerBoxCollider.center);
+        Vector3 size = this.FindReceptacleTriggerBoxSize();
+
 		//these are the 8 points making up the corner of the box. If ANY parents of this object have non uniform scales,
         //these values will be off. Make sure that all parents in the heirarchy are at 1,1,1 scale and we can use these values
         //as a "valid area" for spawning objects inside of receptacles.
 		Gizmos.color = Color.green;
-        Gizmos.DrawCube(transform.TransformPoint(b.center + new Vector3(b.size.x, -b.size.y, b.size.z) * 0.5f), new Vector3(0.01f, 0.01f, 0.01f));
-		Gizmos.DrawCube(transform.TransformPoint(b.center + new Vector3(-b.size.x, -b.size.y, b.size.z) * 0.5f), new Vector3(0.01f, 0.01f, 0.01f));
-		Gizmos.DrawCube(transform.TransformPoint(b.center + new Vector3(-b.size.x, -b.size.y, -b.size.z) * 0.5f), new Vector3(0.01f, 0.01f, 0.01f));
-		Gizmos.DrawCube(transform.TransformPoint(b.center + new Vector3(b.size.x, -b.size.y, -b.size.z) * 0.5f), new Vector3(0.01f, 0.01f, 0.01f));
+        Gizmos.DrawCube(center + (new Vector3(size.x, -size.y, size.z) * 0.5f), new Vector3(0.01f, 0.01f, 0.01f));
+		Gizmos.DrawCube(center + (new Vector3(-size.x, -size.y, size.z) * 0.5f), new Vector3(0.01f, 0.01f, 0.01f));
+		Gizmos.DrawCube(center + (new Vector3(-size.x, -size.y, -size.z) * 0.5f), new Vector3(0.01f, 0.01f, 0.01f));
+		Gizmos.DrawCube(center + (new Vector3(size.x, -size.y, -size.z) * 0.5f), new Vector3(0.01f, 0.01f, 0.01f));
 
-		Gizmos.DrawCube(transform.TransformPoint(b.center + new Vector3(b.size.x, b.size.y, b.size.z) * 0.5f), new Vector3(0.01f, 0.01f, 0.01f));
-		Gizmos.DrawCube(transform.TransformPoint(b.center + new Vector3(-b.size.x, b.size.y, b.size.z) * 0.5f), new Vector3(0.01f, 0.01f, 0.01f));
-		Gizmos.DrawCube(transform.TransformPoint(b.center + new Vector3(-b.size.x, b.size.y, -b.size.z) * 0.5f), new Vector3(0.01f, 0.01f, 0.01f));
-		Gizmos.DrawCube(transform.TransformPoint(b.center + new Vector3(b.size.x, b.size.y, -b.size.z) * 0.5f), new Vector3(0.01f, 0.01f, 0.01f));
+		Gizmos.DrawCube(center + (new Vector3(size.x, size.y, size.z) * 0.5f), new Vector3(0.01f, 0.01f, 0.01f));
+		Gizmos.DrawCube(center + (new Vector3(-size.x, size.y, size.z) * 0.5f), new Vector3(0.01f, 0.01f, 0.01f));
+		Gizmos.DrawCube(center + (new Vector3(-size.x, size.y, -size.z) * 0.5f), new Vector3(0.01f, 0.01f, 0.01f));
+		Gizmos.DrawCube(center + (new Vector3(size.x, size.y, -size.z) * 0.5f), new Vector3(0.01f, 0.01f, 0.01f));
 
 		// foreach(Vector3 v in Corners)
 		// {
@@ -424,7 +440,7 @@ public class Contains : MonoBehaviour
 		// }
 
 		// Gizmos.color = Color.blue;
-		// //Gizmos.DrawCube(b.ClosestPoint(GameObject.Find("FPSController").transform.position), new Vector3 (0.1f, 0.1f, 0.1f));
+		// //Gizmos.DrawCube(boxCollider.ClosestPoint(GameObject.Find("FPSController").transform.position), new Vector3 (0.1f, 0.1f, 0.1f));
 		
 		// Gizmos.color = Color.magenta;
 		// if(validpointlist.Count > 0)
