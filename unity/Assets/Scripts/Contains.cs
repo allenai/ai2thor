@@ -218,7 +218,7 @@ public class Contains : MonoBehaviour
             objectUpVector = objectSideTop.x > objectSideBottom.x ? Vector3.left : Vector3.right;
             verticalDistance = xDiff;
         }
-        if (zDiff > yDiff && zDiff > xDiff) {
+        else if (zDiff > yDiff && zDiff > xDiff) {
             objectUpVector = objectSideTop.z > objectSideBottom.z ? Vector3.forward : Vector3.back;
             verticalDistance = zDiff;
         }
@@ -259,7 +259,7 @@ public class Contains : MonoBehaviour
                 float x = objectSideLeft.x + ((objectSideRight.x - objectSideLeft.x) * (lineincrement * i));
                 float z = objectUpVector.Equals(Vector3.forward) ? objectSideForward.z : objectSideBack.z;
                 for(int j = 0; j < linepoints; j++) {
-                    float y = objectSideBottom.y + ((objectSideTop.y - objectSideBottom.y) * (lineincrement * i));
+                    float y = objectSideBottom.y + ((objectSideTop.y - objectSideBottom.y) * (lineincrement * j));
                     gridpoints.Add(new Vector3(x, y, z));
                 }
             }
