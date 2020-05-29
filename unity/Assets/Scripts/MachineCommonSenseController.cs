@@ -272,7 +272,7 @@ public class MachineCommonSenseController : PhysicsRemoteFPSAgentController {
         base.PickupObject(action);
 
         // TODO MCS-77 Find a way to handle held object collisions so we don't have to deactivate this object
-        // and manually edit CurrentlyContains list.
+        // and update CurrentlyContains list.
         if (target != null && target.transform.parent == this.AgentHand.transform) {
             target.gameObject.SetActive(false);
 
