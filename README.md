@@ -149,12 +149,20 @@ Take a GameObject (we'll call it the "Target" object) containing a MeshFilter, M
   - Added `lastActionStatus` to `Initialize` to help indicate success or failure
 - `Scripts/CanOpen_Object`:
   - Rewrote part of the `Interact` function so it doesn't use iTween if `animationTime` is `0`.  Also the `Interact` function now uses the `openPercentage` on both "open" and "close".
+- `Scripts/Contains`:
+  - In `GetValidSpawnPoints`, rewrote the method so that it generates the spawn points based on the global UP (which may actually be down, left, right, forward, or back) rather than the receptacle object's local UP, so the grid may be X/Y, X/Z, or Y/Z.
+  - In `CheckIfPointIsInsideReceptacleTriggerBox`, if the receptacle trigger box's parent object has the `Stacking` secondary property, just ensure that the point is above the receptacle trigger box's bottom Y point.
+  - In `CheckIfPointIsInsideReceptacleTriggerBox`, fixed how the receptacle trigger box center and size are calculated so that its transform, its parent's transform(s), and its collider are all used.
+  - Added the `FindReceptacleTriggerBoxSize` method to implemented the behavior in the previous bullet.
+  - Removed the `CheckIfPointIsAboveReceptacleTriggerBox` method because it is no longer used (due to corresponding changes in `InstantiatePrefabTest`) and is also redundant with `CheckIfPointIsInsideReceptacleTriggerBox`.
 - `Scripts/DebugDiscreteAgentController`:
   - Calls `ProcessControlCommand` on the controller object with an "Initialize" action in its `Start` function (so the Unity Editor Workflow mimics the Python API Workflow)
   - Added a way to "Pass" (with the "Escape" button) or "Initialize" (with the "Backspace" button) on a step while playing the game in the Unity Editor
   - Added support for executing other actions and properties while playing the game in the Unity Editor
 - `Scripts/InstantiatePrefabTest`:
-  - Fixed a bug in the `CheckSpawnArea` function in which the object's bounding box was not adjusted by the object's scale.
+  - In `PlaceObject`, fixed object rotation so that it always rotates around the global DOWN rather than using the receptacle object's local rotation.
+  - In `PlaceObject`, removed the `HowManyCornersToCheck` behavior because it was buggy (there's no way to guarantee that the 4 correct corners are always the 4 bottom corners).
+  - In `CheckSpawnArea`, fixed how the object bounding box center and size are calculated so that its transform, its parent's transform, and its collider are all used.
 - `Scripts/PhysicsRemoteFPSAgentController`:
   - Changed variables or functions from `private` to `protected`: `physicsSceneManager`, `ObjectMetadataFromSimObjPhysics`
   - Added `virtual` to functions: `CloseObject`, `DropHandObject`, `OpenObject`, `PickupObject`, `PullObject`, `PushObject`, `PutObject`, `ResetAgentHandPosition`, `ThrowObject`, `ToggleObject`
@@ -165,6 +173,7 @@ Take a GameObject (we'll call it the "Target" object) containing a MeshFilter, M
   - Make sure objectId specified is actually the object being held for `DropHandObject` and `PutObject`
   - Undid objectId being reset to receptableObjectId and not allowing objects to be placed in closed receptacles regardless of type of receptacle for `PutObject`
   - In `PickupContainedObjects` and `DropContainedObjects`, added a null check for the Colliders object and added a loop over the colliders array in the SimObjPhysics script.
+  - In `PickupContainedObjects`, don't pickup contained objects if the receptacle has the `Stacking` secondary property.
   - Added code to allow movement that will auto calculate the space to close the distance to an object within 0.1f
   - In 'CheckIfAgentCanTurn' and 'CheckIfAgentCanLook' add a check to see if object in hand is active
 - `Scripts/PhysicsSceneManager`:
@@ -174,6 +183,7 @@ Take a GameObject (we'll call it the "Target" object) containing a MeshFilter, M
   - Added `ApplyRelativeForce` to apply force in a direction relative to the agent's current position.
 - `Scripts/SimObjType`:
   - Added `IgnoreType` to the `SimObjType` enum, `ReturnAllPoints`, and `AlwaysPlaceUpright`
+  - Added `Stacking` to the `SimObjSecondaryProperty` enum.
 - `Scripts/MachineCommonSenseController`:
   - Added custom `RotateLook` to use relative inputs instead of absolute values.
   - Added checks to see whether objects exist and set lastActionStatus appropriately for `PutObject`
