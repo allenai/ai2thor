@@ -148,6 +148,8 @@ Take a GameObject (we'll call it the "Target" object) containing a MeshFilter, M
   - Added `lastActionStatus` to `Initialize` to help indicate success or failure
 - `Scripts/CanOpen_Object`:
   - Rewrote part of the `Interact` function so it doesn't use iTween if `animationTime` is `0`.  Also the `Interact` function now uses the `openPercentage` on both "open" and "close".
+- `Scripts/Contains`:
+  - Added function `RemoveFromCurrentlyContains` to temporarily get around ReceptacleObjects not updating when an object is picked up (and deactivated).
 - `Scripts/DebugDiscreteAgentController`:
   - Calls `ProcessControlCommand` on the controller object with an "Initialize" action in its `Start` function (so the Unity Editor Workflow mimics the Python API Workflow)
   - Added a way to "Pass" (with the "Escape" button) or "Initialize" (with the "Backspace" button) on a step while playing the game in the Unity Editor
@@ -166,6 +168,7 @@ Take a GameObject (we'll call it the "Target" object) containing a MeshFilter, M
   - In `PickupContainedObjects` and `DropContainedObjects`, added a null check for the Colliders object and added a loop over the colliders array in the SimObjPhysics script.
   - Added code to allow movement that will auto calculate the space to close the distance to an object within 0.1f
   - In 'CheckIfAgentCanTurn' and 'CheckIfAgentCanLook' add a check to see if object in hand is active
+  - In `InteractAndWait`, parent objects within receptacles to that receptacle so they all move together when a receptacle is opened or closed.
 - `Scripts/PhysicsSceneManager`:
   - Added `virtual` to functions: `Generate_UniqueID`
 - `Scripts/SimObjPhysics`:
@@ -179,6 +182,7 @@ Take a GameObject (we'll call it the "Target" object) containing a MeshFilter, M
   - Added custom `ThrowObject` in order to use a relative directional vector to throw object towards.
   - Changed 'CheckIfAgentCanMove' to take a reference to a directionMagnitude instead of a copy parameter, so if distance to object is greater than zero, we can move a partial distance in 'moveInDirection' by adjusting the Vector3
   - If `PushObject` or `PullObject` is called on a held object, `ThrowObject` will be called instead of throwing an error.
+  - Manually update ReceptacleObjects if needed in `PickupObject`.
 - `ImageSynthesis/ImageSynthesis`:
   - Added a null check in `OnSceneChange`
   - Changed to always use the `Hidden/Depth` Shader
