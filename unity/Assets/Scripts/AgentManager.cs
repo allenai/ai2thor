@@ -915,6 +915,7 @@ public class ObjectToggle
 public struct MetadataWrapper
 {
 	public ObjectMetadata[] objects;
+	public ObjectMetadata[] structuralObjects;
     public bool isSceneAtRest;//set true if all objects in the scene are at rest (or very very close to 0 velocity)
 	public ObjectMetadata agent;
 	public HandMetadata hand;

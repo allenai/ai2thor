@@ -7,16 +7,29 @@ using UnityStandardAssets.Characters.FirstPerson;
 using System.Text;
 
 public class MachineCommonSenseMain : MonoBehaviour {
+    private static float CUBE_INTERNAL_GRID = 0.25f;
     private static float LIGHT_RANGE = 20f;
     private static float LIGHT_RANGE_SCREENSHOT = 10f;
     private static float LIGHT_Y_POSITION = 2.95f;
     private static float LIGHT_Y_POSITION_SCREENSHOT = 0.5f;
     private static float LIGHT_Z_POSITION = 0;
     private static float LIGHT_Z_POSITION_SCREENSHOT = -2.0f;
-    private static float WALL_X_POSITION_OBSERVATION = 7.0f;
-    private static float WALL_X_POSITION_INTERACTION = 5.5f;
+    private static float FLOOR_X_SCALE_OBSERVATION = 13f;
+    private static float FLOOR_X_SCALE_INTERACTION = 10f;
+    private static float FLOOR_Y_SCALE = 1f;
+    private static float FLOOR_Z_SCALE = 10f;
+    private static float WALL_SIDE_X_POSITION_OBSERVATION = 7.0f;
+    private static float WALL_SIDE_X_POSITION_INTERACTION = 5.5f;
     private static float WALL_Y_POSITION = 1.5f;
-    private static float WALL_Z_POSITION = 0;
+    private static float WALL_SIDE_Z_POSITION = 0;
+    private static float WALL_FRONT_X_POSITION = 0;
+    private static float WALL_FRONT_Y_POSITION_OBSERVATION = 2.25f;
+    private static float WALL_FRONT_Z_POSITION = 5.5f;
+    private static float WALL_FRONT_X_SCALE_OBSERVATION = 13.0f;
+    private static float WALL_FRONT_X_SCALE_INTERACTION = 10.0f;
+    private static float WALL_FRONT_Y_SCALE_OBSERVATION = 4.5f;
+    private static float WALL_FRONT_Y_SCALE_INTERACTION = 3.0f;
+    private static float WALL_FRONT_Z_SCALE = 1f;
 
     public string defaultSceneFile = "";
     public bool enableVerboseLog = false;
@@ -160,10 +173,18 @@ public class MachineCommonSenseMain : MonoBehaviour {
 
         if (this.currentScene.observation) {
             this.ceiling.SetActive(false);
-            this.wallLeft.transform.position = new Vector3(-1 * MachineCommonSenseMain.WALL_X_POSITION_OBSERVATION,
-                MachineCommonSenseMain.WALL_Y_POSITION, MachineCommonSenseMain.WALL_Z_POSITION);
-            this.wallRight.transform.position = new Vector3(MachineCommonSenseMain.WALL_X_POSITION_OBSERVATION,
-                MachineCommonSenseMain.WALL_Y_POSITION, MachineCommonSenseMain.WALL_Z_POSITION);
+
+            this.wallLeft.transform.position = new Vector3(-1 * MachineCommonSenseMain.WALL_SIDE_X_POSITION_OBSERVATION,
+                MachineCommonSenseMain.WALL_Y_POSITION, MachineCommonSenseMain.WALL_SIDE_Z_POSITION);
+            this.wallRight.transform.position = new Vector3(MachineCommonSenseMain.WALL_SIDE_X_POSITION_OBSERVATION,
+                MachineCommonSenseMain.WALL_Y_POSITION, MachineCommonSenseMain.WALL_SIDE_Z_POSITION);
+            this.wallFront.transform.position = new Vector3(MachineCommonSenseMain.WALL_FRONT_X_POSITION,
+                MachineCommonSenseMain.WALL_FRONT_Y_POSITION_OBSERVATION, MachineCommonSenseMain.WALL_FRONT_Z_POSITION);
+            this.wallFront.transform.localScale = new Vector3(MachineCommonSenseMain.WALL_FRONT_X_SCALE_OBSERVATION,
+                MachineCommonSenseMain.WALL_FRONT_Y_SCALE_OBSERVATION, MachineCommonSenseMain.WALL_FRONT_Z_SCALE);
+            this.floor.transform.localScale = new Vector3(MachineCommonSenseMain.FLOOR_X_SCALE_OBSERVATION,
+                MachineCommonSenseMain.FLOOR_Y_SCALE, MachineCommonSenseMain.FLOOR_Z_SCALE);
+
             this.currentScene.performerStart = new MachineCommonSenseConfigTransform();
             this.currentScene.performerStart.position = new MachineCommonSenseConfigVector();
             this.currentScene.performerStart.position.z = -4.5f;
@@ -171,11 +192,17 @@ public class MachineCommonSenseMain : MonoBehaviour {
         }
         else {
             this.ceiling.SetActive(true);
-            AssignMaterial(this.ceiling, ceilingMaterial);
-            this.wallLeft.transform.position = new Vector3(-1 * MachineCommonSenseMain.WALL_X_POSITION_INTERACTION,
-                MachineCommonSenseMain.WALL_Y_POSITION, MachineCommonSenseMain.WALL_Z_POSITION);
-            this.wallRight.transform.position = new Vector3(MachineCommonSenseMain.WALL_X_POSITION_INTERACTION,
-                MachineCommonSenseMain.WALL_Y_POSITION, MachineCommonSenseMain.WALL_Z_POSITION);
+
+            this.wallLeft.transform.position = new Vector3(-1 * MachineCommonSenseMain.WALL_SIDE_X_POSITION_INTERACTION,
+                MachineCommonSenseMain.WALL_Y_POSITION, MachineCommonSenseMain.WALL_SIDE_Z_POSITION);
+            this.wallRight.transform.position = new Vector3(MachineCommonSenseMain.WALL_SIDE_X_POSITION_INTERACTION,
+                MachineCommonSenseMain.WALL_Y_POSITION, MachineCommonSenseMain.WALL_SIDE_Z_POSITION);
+            this.wallFront.transform.position = new Vector3(MachineCommonSenseMain.WALL_FRONT_X_POSITION,
+                MachineCommonSenseMain.WALL_Y_POSITION, MachineCommonSenseMain.WALL_FRONT_Z_POSITION);
+            this.wallFront.transform.localScale = new Vector3(MachineCommonSenseMain.WALL_FRONT_X_SCALE_INTERACTION,
+                MachineCommonSenseMain.WALL_FRONT_Y_SCALE_INTERACTION, MachineCommonSenseMain.WALL_FRONT_Z_SCALE);
+            this.floor.transform.localScale = new Vector3(MachineCommonSenseMain.FLOOR_X_SCALE_INTERACTION,
+                MachineCommonSenseMain.FLOOR_Y_SCALE, MachineCommonSenseMain.FLOOR_Z_SCALE);
         }
 
 
@@ -190,11 +217,38 @@ public class MachineCommonSenseMain : MonoBehaviour {
                 MachineCommonSenseMain.LIGHT_Z_POSITION_SCREENSHOT);
         }
         else {
+            if (!this.currentScene.observation) {
+                SimObjPhysics ceilingSimObjPhysics = this.ceiling.GetComponent<SimObjPhysics>();
+                ceilingSimObjPhysics.VisibilityPoints = AssignVisibilityPoints(this.ceiling,
+                    this.GenerateCubeInternalVisibilityPoints(this.ceiling, null), false);
+                AssignMaterial(this.ceiling, ceilingMaterial);
+            }
+
+            SimObjPhysics floorSimObjPhysics = this.floor.GetComponent<SimObjPhysics>();
+            floorSimObjPhysics.VisibilityPoints = AssignVisibilityPoints(this.floor,
+                this.GenerateCubeInternalVisibilityPoints(this.floor, null), false);
             AssignMaterial(this.floor, floorMaterial);
+
+            SimObjPhysics wallLeftSimObjPhysics = this.wallLeft.GetComponent<SimObjPhysics>();
+            wallLeftSimObjPhysics.VisibilityPoints = AssignVisibilityPoints(this.wallLeft,
+                this.GenerateCubeInternalVisibilityPoints(this.wallLeft, null), false);
             AssignMaterial(this.wallLeft, wallsMaterial);
+
+            SimObjPhysics wallRightSimObjPhysics = this.wallRight.GetComponent<SimObjPhysics>();
+            wallRightSimObjPhysics.VisibilityPoints = AssignVisibilityPoints(this.wallRight,
+                this.GenerateCubeInternalVisibilityPoints(this.wallRight, null), false);
             AssignMaterial(this.wallRight, wallsMaterial);
+
+            SimObjPhysics wallFrontSimObjPhysics = this.wallFront.GetComponent<SimObjPhysics>();
+            wallFrontSimObjPhysics.VisibilityPoints = AssignVisibilityPoints(this.wallFront,
+                this.GenerateCubeInternalVisibilityPoints(this.wallFront, null), false);
             AssignMaterial(this.wallFront, wallsMaterial);
+
+            SimObjPhysics wallBackSimObjPhysics = this.wallBack.GetComponent<SimObjPhysics>();
+            wallBackSimObjPhysics.VisibilityPoints = AssignVisibilityPoints(this.wallBack,
+                this.GenerateCubeInternalVisibilityPoints(this.wallBack, null), false);
             AssignMaterial(this.wallBack, wallsMaterial);
+
             this.light.GetComponent<Light>().range = MachineCommonSenseMain.LIGHT_RANGE;
             this.light.transform.position = new Vector3(0, MachineCommonSenseMain.LIGHT_Y_POSITION,
                 MachineCommonSenseMain.LIGHT_Z_POSITION);
@@ -435,11 +489,6 @@ public class MachineCommonSenseMain : MonoBehaviour {
                 objectDefinition.scale.GetZ());
         }
 
-        if (objectConfig.structure) {
-            // Add the AI2-THOR Structure script with specific properties.
-            this.AssignStructureScript(gameObject);
-        }
-
         // See if each SimObjPhysics property is active on this specific object or on all objects of this type.
         // Currently you can't deactivate the properties on specific objects, since we don't need to do that right now.
         bool moveable = objectConfig.moveable || objectDefinition.moveable;
@@ -449,6 +498,14 @@ public class MachineCommonSenseMain : MonoBehaviour {
 
         bool shouldAddSimObjPhysicsScript = moveable || openable || pickupable || receptacle || objectConfig.physics ||
             objectDefinition.physics;
+
+        if (objectConfig.structure) {
+            // Add the AI2-THOR Structure script with specific properties.
+            this.AssignStructureScript(gameObject);
+            // Add the AI2-THOR SimObjPhysics script to generate visibility points for the structure so it will be
+            // returned in the output object metadata.
+            shouldAddSimObjPhysicsScript = true;
+        }
 
         Collider[] colliders = new Collider[] { };
         Transform[] visibilityPoints = new Transform[] { };
@@ -462,7 +519,13 @@ public class MachineCommonSenseMain : MonoBehaviour {
 
         // The object's visibility points define a subset of points along the outside of the object for AI2-THOR.
         if (objectDefinition.visibilityPoints.Count > 0) {
-            visibilityPoints = this.AssignVisibilityPoints(gameObject, objectDefinition.visibilityPoints,
+            // Use the List constructor to copy the visibility points list from the object definition.
+            List<MachineCommonSenseConfigVector> points = new List<MachineCommonSenseConfigVector>(
+                objectDefinition.visibilityPoints);
+            if (objectDefinition.id.Equals("cube")) {
+                points.AddRange(this.GenerateCubeInternalVisibilityPoints(gameObject, objectConfig));
+            }
+            visibilityPoints = this.AssignVisibilityPoints(gameObject, points,
                 objectDefinition.visibilityPointsScaleOne);
         }
 
@@ -859,6 +922,65 @@ public class MachineCommonSenseMain : MonoBehaviour {
         }
     }
 
+    private MachineCommonSenseConfigVector GenerateCubeInternalVisibilityPoint(float x, float y, float z) {
+        MachineCommonSenseConfigVector point = new MachineCommonSenseConfigVector();
+        point.x = x;
+        point.y = y;
+        point.z = z;
+        return point;
+    }
+
+    private List<MachineCommonSenseConfigVector> GenerateCubeInternalVisibilityPoints(
+        GameObject gameObject,
+        MachineCommonSenseConfigGameObject objectConfig
+    ) {
+        MachineCommonSenseConfigShow showConfig = (objectConfig != null && objectConfig.shows.Count > 0) ?
+            objectConfig.shows[0] : null;
+
+        float xSize = showConfig != null ? showConfig.scale.GetX() : gameObject.transform.localScale.x;
+        float ySize = showConfig != null ? showConfig.scale.GetY() : gameObject.transform.localScale.y;
+        float zSize = showConfig != null ? showConfig.scale.GetZ() : gameObject.transform.localScale.z;
+
+        float xGrid = Mathf.Floor(xSize / MachineCommonSenseMain.CUBE_INTERNAL_GRID);
+        float yGrid = Mathf.Floor(ySize / MachineCommonSenseMain.CUBE_INTERNAL_GRID);
+        float zGrid = Mathf.Floor(zSize / MachineCommonSenseMain.CUBE_INTERNAL_GRID);
+
+        float xSpan = xSize / xGrid;
+        float ySpan = ySize / yGrid;
+        float zSpan = zSize / zGrid;
+
+        List<MachineCommonSenseConfigVector> points = new List<MachineCommonSenseConfigVector>();
+
+        for (float x = 1; x < xGrid; ++x) {
+            for (float y = 1; y < yGrid; ++y) {
+                float xPosition = (x * xSpan) - (xSize / 2f);
+                float yPosition = (y * ySpan) - (ySize / 2f);
+                points.Add(this.GenerateCubeInternalVisibilityPoint(xPosition, yPosition, 0.5f));
+                points.Add(this.GenerateCubeInternalVisibilityPoint(xPosition, yPosition, -0.5f));
+            }
+        }
+
+        for (float y = 1; y < yGrid; ++y) {
+            for (float z = 1; z < zGrid; ++z) {
+                float yPosition = (y * ySpan) - (ySize / 2f);
+                float zPosition = (z * zSpan) - (zSize / 2f);
+                points.Add(this.GenerateCubeInternalVisibilityPoint(0.5f, yPosition, zPosition));
+                points.Add(this.GenerateCubeInternalVisibilityPoint(-0.5f, yPosition, zPosition));
+            }
+        }
+
+        for (float x = 1; x < xGrid; ++x) {
+            for (float z = 1; z < zGrid; ++z) {
+                float xPosition = (x * xSpan) - (xSize / 2f);
+                float zPosition = (z * zSpan) - (zSize / 2f);
+                points.Add(this.GenerateCubeInternalVisibilityPoint(xPosition, 0.5f, zPosition));
+                points.Add(this.GenerateCubeInternalVisibilityPoint(xPosition, -0.5f, zPosition));
+            }
+        }
+
+        return points;
+    }
+
     private void InitializeGameObject(MachineCommonSenseConfigGameObject objectConfig) {
         try {
             GameObject gameObject = CreateGameObject(objectConfig);
@@ -1124,7 +1246,6 @@ public class MachineCommonSenseMain : MonoBehaviour {
                 });
         }
     }
-
 }
 
 // Definitions of serializable objects from JSON config files.
