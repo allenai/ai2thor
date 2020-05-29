@@ -270,11 +270,14 @@ public class MachineCommonSenseMain : MonoBehaviour {
 
         if (this.currentScene.performerStart != null && this.currentScene.performerStart.rotation != null) {
             // Only permit rotating left or right (along the Y axis).
-            controller.transform.rotation = Quaternion.Euler(0,
-                this.currentScene.performerStart.rotation.y, 0);
+            controller.transform.rotation = Quaternion.Euler(0, this.currentScene.performerStart.rotation.y, 0);
+            controller.GetComponent<MachineCommonSenseController>().m_Camera.transform.localEulerAngles = new Vector3(
+                this.currentScene.performerStart.rotation.x, 0, 0);
         }
         else {
             controller.transform.rotation = Quaternion.Euler(0, 0, 0);
+            controller.GetComponent<MachineCommonSenseController>().m_Camera.transform.localEulerAngles = new Vector3(
+                0, 0, 0);
         }
 
         this.lastStep = -1;
