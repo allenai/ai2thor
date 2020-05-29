@@ -920,6 +920,8 @@ public struct MetadataWrapper
 	public ObjectMetadata agent;
 	public HandMetadata hand;
 	public float fov;
+	public float clippingPlaneFar;
+	public float clippingPlaneNear;
 	public bool isStanding;
 	public Vector3 cameraPosition;
 	public float cameraOrthSize;

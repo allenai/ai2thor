@@ -131,6 +131,8 @@ public class MachineCommonSenseController : PhysicsRemoteFPSAgentController {
         MetadataWrapper metadata = base.generateMetadataWrapper();
         metadata.lastActionStatus = this.lastActionStatus;
         metadata.reachDistance = this.maxVisibleDistance;
+        metadata.clippingPlaneFar = this.m_Camera.farClipPlane;
+        metadata.clippingPlaneNear = this.m_Camera.nearClipPlane;
         metadata.structuralObjects = metadata.objects.ToList().Where(objectMetadata => {
             GameObject gameObject = GameObject.Find(objectMetadata.name);
             // The object may be null if it is being held.
