@@ -131,6 +131,18 @@ public class MachineCommonSenseController : PhysicsRemoteFPSAgentController {
         MetadataWrapper metadata = base.generateMetadataWrapper();
         metadata.lastActionStatus = this.lastActionStatus;
         metadata.reachDistance = this.maxVisibleDistance;
+        metadata.clippingPlaneFar = this.m_Camera.farClipPlane;
+        metadata.clippingPlaneNear = this.m_Camera.nearClipPlane;
+        metadata.structuralObjects = metadata.objects.ToList().Where(objectMetadata => {
+            GameObject gameObject = GameObject.Find(objectMetadata.name);
+            // The object may be null if it is being held.
+            return gameObject != null && gameObject.GetComponent<StructureObject>() != null;
+        }).ToArray();
+        metadata.objects = metadata.objects.ToList().Where(objectMetadata => {
+            GameObject gameObject = GameObject.Find(objectMetadata.name);
+            // The object may be null if it is being held.
+            return gameObject == null || gameObject.GetComponent<StructureObject>() == null;
+        }).ToArray();
         return this.agentManager.UpdateMetadataColors(this, metadata);
     }
 
@@ -185,23 +197,7 @@ public class MachineCommonSenseController : PhysicsRemoteFPSAgentController {
         // Each SimObjPhysics object should have a MeshFilter component.
         MeshFilter meshFilter = simObj.gameObject.GetComponentInChildren<MeshFilter>();
 
-        // Use the object's renderer (each object should have a renderer, except maybe shelf children in complex
-        // receptacle objects) for its position because its transform's position may not be its actual position
-        // in the camera since the renderer may be defined in a child object with an offset position.
-        Renderer renderer = simObj.gameObject.GetComponentInChildren<Renderer>();
-        if (renderer != null) {
-            objectMetadata.position = renderer.bounds.center;
-            // Use the object's new position for the distance previously set in generateObjectMetadata.
-            objectMetadata.distance = Vector3.Distance(this.transform.position, objectMetadata.position);
-        }
-
-        // From https://docs.unity3d.com/Manual/DirectionDistanceFromOneObjectToAnother.html
-        objectMetadata.heading = objectMetadata.position - this.transform.position;
-        objectMetadata.direction = (objectMetadata.heading / objectMetadata.heading.magnitude);
-
-        // Calculate a distance with only the X and Z coordinates for our Python API.
-        objectMetadata.distanceXZ = Vector3.Distance(new Vector3(this.transform.position.x, 0, this.transform.position.z),
-            new Vector3(simObj.transform.position.x, 0, simObj.transform.position.z));
+        objectMetadata = this.UpdatePositionDistanceAndDirectionInObjectMetadata(simObj.gameObject, objectMetadata);
 
         if (objectMetadata.objectBounds == null && simObj.BoundingBox != null) {
             objectMetadata.objectBounds = this.WorldCoordinatesOfBoundingBox(simObj);
@@ -550,6 +546,28 @@ public class MachineCommonSenseController : PhysicsRemoteFPSAgentController {
         }
         // If we haven't yet called actionFinished then actionComplete will be false; continue the action.
         return !this.actionComplete;
+    }
+
+    private ObjectMetadata UpdatePositionDistanceAndDirectionInObjectMetadata(GameObject gameObject, ObjectMetadata objectMetadata) {
+        // Use the object's renderer (each object should have a renderer, except maybe shelf children in complex
+        // receptacle objects) for its position because its transform's position may not be its actual position
+        // in the camera since the renderer may be defined in a child object with an offset position.
+        Renderer renderer = gameObject.GetComponentInChildren<Renderer>();
+        if (renderer != null) {
+            objectMetadata.position = renderer.bounds.center;
+            // Use the object's new position for the distance previously set in generateObjectMetadata.
+            objectMetadata.distance = Vector3.Distance(this.transform.position, objectMetadata.position);
+        }
+
+        // From https://docs.unity3d.com/Manual/DirectionDistanceFromOneObjectToAnother.html
+        objectMetadata.heading = objectMetadata.position - this.transform.position;
+        objectMetadata.direction = (objectMetadata.heading / objectMetadata.heading.magnitude);
+
+        // Calculate a distance with only the X and Z coordinates for our Python API.
+        objectMetadata.distanceXZ = Vector3.Distance(new Vector3(this.transform.position.x, 0, this.transform.position.z),
+            new Vector3(gameObject.transform.position.x, 0, gameObject.transform.position.z));
+
+        return objectMetadata;
     }
 
     private void UpdateHandPositionToHoldObject(SimObjPhysics target) {
