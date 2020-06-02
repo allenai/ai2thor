@@ -4859,6 +4859,15 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 }
             }
 
+            Dictionary<string, Transform> previousParents = new Dictionary<string, Transform>();
+
+            if (coo.GetComponent<SimObjPhysics>().IsReceptacle) {
+                foreach (SimObjPhysics item in coo.GetComponent<SimObjPhysics>().ReceptacleObjects) {
+                    previousParents.Add(item.uniqueID, item.transform.parent);
+                    item.transform.SetParent(coo.GetComponent<SimObjPhysics>().transform);
+                }
+            }
+
             bool success = false;
             if (coo != null) {
                 coo.Interact();
@@ -4898,6 +4907,15 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             if (!success) {
                 errorMessage = "Object failed to open/close successfully.";
             }
+
+            if (coo.GetComponent<SimObjPhysics>().IsReceptacle) {
+                foreach (SimObjPhysics item in coo.GetComponent<SimObjPhysics>().ReceptacleObjects) {
+                    if(previousParents.ContainsKey(item.uniqueID)) {
+                        item.transform.SetParent(previousParents[item.uniqueID]);
+                    }
+                }
+            }
+
             this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.SUCCESSFUL);
             //print("actionFinished now");
             actionFinished(success);

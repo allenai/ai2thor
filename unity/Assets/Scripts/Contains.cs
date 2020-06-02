@@ -167,6 +167,12 @@ public class Contains : MonoBehaviour
 		}
 	}
 
+    // TODO MCS-77 We can take this out when we no longer deactivate held objects
+    public void RemoveFromCurrentlyContains(SimObjPhysics sop) {
+		occupied = false;
+		CurrentlyContains.Remove(sop);
+    }
+
 	//report back what is currently inside this receptacle
 	public List<SimObjPhysics> CurrentlyContainedObjects()
 	{

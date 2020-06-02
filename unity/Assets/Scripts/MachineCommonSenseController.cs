@@ -233,6 +233,7 @@ public class MachineCommonSenseController : PhysicsRemoteFPSAgentController {
         }
 
         SimObjPhysics target = null;
+        SimObjPhysics containerObject = null;
 
         if (physicsSceneManager.UniqueIdToSimObjPhysics.ContainsKey(action.objectId)) {
             target = physicsSceneManager.UniqueIdToSimObjPhysics[action.objectId];
@@ -240,13 +241,43 @@ public class MachineCommonSenseController : PhysicsRemoteFPSAgentController {
             // Update our hand's position so that the object we want to hold doesn't clip our body.
             // TODO MCS-77 We may want to change how this function is used.
             this.UpdateHandPositionToHoldObject(target);
+
+            // Check if the object to be picked up is currently inside a receptacle.
+            // If so, we'll need to manually update that receptacle's list of contained objects since the
+            // previous onTriggerExit method that handled this will not get called once the
+            // picked up object is deactivated.
+            // TODO MCS-77 Remove when object is no longer deactivated when picked up
+            int layerMask = 1 << 8;
+
+            List<RaycastHit> hits = Physics.RaycastAll(target.transform.position, Vector3.down,
+                1f, layerMask).ToList();
+            if (hits.Count > 0) {
+                hits.Sort(delegate (RaycastHit one, RaycastHit two) {
+                    return one.distance.CompareTo(two.distance);
+                });
+                SimObjPhysics firstObject = hits.First().transform.gameObject
+                    .GetComponentInParent<SimObjPhysics>();
+
+                if(firstObject != null && firstObject.IsReceptacle && firstObject.ReceptacleObjects.Contains(target)) {
+                    containerObject = firstObject;
+                }
+            }
         }
+
 
         base.PickupObject(action);
 
-        // TODO MCS-77 Find a way to handle held object collisions so we don't have to deactivate this object.
+        // TODO MCS-77 Find a way to handle held object collisions so we don't have to deactivate this object
+        // and update CurrentlyContains list.
         if (target != null && target.transform.parent == this.AgentHand.transform) {
             target.gameObject.SetActive(false);
+
+            if(containerObject != null) {
+                foreach(GameObject rtb in containerObject.ReceptacleTriggerBoxes) {
+                    Contains containsScript = rtb.GetComponent<Contains>();
+                    containsScript.RemoveFromCurrentlyContains(target);
+                }
+            }
         }
     }
 

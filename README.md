@@ -150,6 +150,7 @@ Take a GameObject (we'll call it the "Target" object) containing a MeshFilter, M
 - `Scripts/CanOpen_Object`:
   - Rewrote part of the `Interact` function so it doesn't use iTween if `animationTime` is `0`.  Also the `Interact` function now uses the `openPercentage` on both "open" and "close".
 - `Scripts/Contains`:
+  - Added function `RemoveFromCurrentlyContains` to temporarily get around ReceptacleObjects not updating when an object is picked up (and deactivated).
   - In `GetValidSpawnPoints`, rewrote the method so that it generates the spawn points based on the global UP (which may actually be down, left, right, forward, or back) rather than the receptacle object's local UP, so the grid may be X/Y, X/Z, or Y/Z.
   - In `CheckIfPointIsInsideReceptacleTriggerBox`, if the receptacle trigger box's parent object has the `Stacking` secondary property, just ensure that the point is above the receptacle trigger box's bottom Y point.
   - In `CheckIfPointIsInsideReceptacleTriggerBox`, fixed how the receptacle trigger box center and size are calculated so that its transform, its parent's transform(s), and its collider are all used.
@@ -176,6 +177,7 @@ Take a GameObject (we'll call it the "Target" object) containing a MeshFilter, M
   - In `PickupContainedObjects`, don't pickup contained objects if the receptacle has the `Stacking` secondary property.
   - Added code to allow movement that will auto calculate the space to close the distance to an object within 0.1f
   - In 'CheckIfAgentCanTurn' and 'CheckIfAgentCanLook' add a check to see if object in hand is active
+  - In `InteractAndWait`, parent objects within receptacles to that receptacle so they all move together when a receptacle is opened or closed.
 - `Scripts/PhysicsSceneManager`:
   - Added `virtual` to functions: `Generate_UniqueID`
 - `Scripts/SimObjPhysics`:
@@ -190,6 +192,7 @@ Take a GameObject (we'll call it the "Target" object) containing a MeshFilter, M
   - Added custom `ThrowObject` in order to use a relative directional vector to throw object towards.
   - Changed 'CheckIfAgentCanMove' to take a reference to a directionMagnitude instead of a copy parameter, so if distance to object is greater than zero, we can move a partial distance in 'moveInDirection' by adjusting the Vector3
   - If `PushObject` or `PullObject` is called on a held object, `ThrowObject` will be called instead of throwing an error.
+  - Update ReceptacleObjects if needed in `PickupObject`.
 - `ImageSynthesis/ImageSynthesis`:
   - Added a null check in `OnSceneChange`
   - Changed to always use the `Hidden/Depth` Shader
