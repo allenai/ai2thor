@@ -1277,6 +1277,7 @@ public class MachineCommonSenseConfigAbstractObject {
     public bool stacking;
     public List<string> materials;
     public List<string> salientMaterials;
+    public MachineCommonSenseConfigPhysicsProperties physicsProperties;
 }
 
 [Serializable]
@@ -1476,4 +1477,16 @@ public class MachineCommonSenseConfigMaterialRegistry {
 [Serializable]
 public class MachineCommonSenseConfigObjectRegistry {
     public List<MachineCommonSenseConfigObjectDefinition> objects;
+}
+
+[Serializable]
+
+public class MachineCommonSenseConfigPhysicsProperties {
+
+    public float dynamicFriction;
+    public float staticFriction;
+    public float bounciness;
+    public float drag;
+    public float angularDrag;
+
 }
