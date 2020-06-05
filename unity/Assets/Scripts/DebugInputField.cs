@@ -211,7 +211,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         // action.renderObjectImage = true;
                         // action.renderFlowImage = true;
 
-                        action.gridSize = 0.25f;
+                        action.gridSize = 0.01f;
                         action.visibilityDistance = 1.0f;
 						PhysicsController.actionComplete = false;
                         action.fieldOfView = 60;
@@ -224,7 +224,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         action.snapToGrid = false;
                         action.action = "Initialize";
                         action.fieldOfView = 90;
-                        action.gridSize = 0.25f;
                         AManager.Initialize(action);
                         break;
                     }
@@ -904,6 +903,16 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         //action.maxStepCount = 10;
                         PhysicsController.ProcessControlCommand(action);
                         Debug.Log(PhysicsController.reachablePositions.Length);
+                        break;
+                    }
+
+                case "grpb":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "GetReachablePositions";
+                        //action.maxStepCount = 10;
+                        StochasticController.ProcessControlCommand(action);
+                        Debug.Log("stochastic grp " + StochasticController.reachablePositions.Length);
                         break;
                     }
 

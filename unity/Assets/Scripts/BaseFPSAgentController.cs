@@ -356,7 +356,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     }
                 }
                 //default maxStepCount to scale based on gridSize
-                if (stepsTaken > Math.Floor(maxStepCount/gridSize * gridSize)) {
+                if (stepsTaken > Math.Floor(maxStepCount/(gridSize * gridSize))) {
                     errorMessage = "Too many steps taken in GetReachablePositions.";
                     break;
                 }
@@ -2691,7 +2691,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         }
                     }
                 }
-                if (stepsTaken > maxStepCount) {
+                if (stepsTaken > Math.Floor(maxStepCount/(gridSize * gridSize))) {
                     errorMessage = "Too many steps taken in GetReachablePositions.";
                     break;
                 }
