@@ -21,6 +21,7 @@ def checkout_branch(directory):
     branch = current_branch()
     print("Moving private checkout %s -> %s" % (directory, branch))
     subprocess.check_call("git checkout -B %s" % branch, shell=True)
+    subprocess.check_call("git pull origin %s" % branch, shell=True)
 
 
 if __name__ == "__main__":
