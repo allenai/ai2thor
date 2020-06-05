@@ -668,13 +668,23 @@ public class MachineCommonSenseMain : MonoBehaviour {
             ai2thorPhysicsScript.SecondaryProperties = new SimObjSecondaryProperty[] { };
             ai2thorPhysicsScript.MyColliders = colliders ?? (new Collider[] { });
             ai2thorPhysicsScript.ReceptacleTriggerBoxes = new List<GameObject>().ToArray();
-            /* TODO MCS-75 We should let people set these properties in the JSON config file.
-            ai2thorPhysicsScript.HFdynamicfriction
-            ai2thorPhysicsScript.HFstaticfriction
-            ai2thorPhysicsScript.HFbounciness
-            ai2thorPhysicsScript.HFrbdrag
-            ai2thorPhysicsScript.HFrbangulardrag
-            */
+        
+        }
+
+        if (objectConfig.physicsProperties != null) {
+            ai2thorPhysicsScript.HFdynamicfriction = objectConfig.physicsProperties.dynamicFriction;
+            ai2thorPhysicsScript.HFstaticfriction = objectConfig.physicsProperties.staticFriction;
+            ai2thorPhysicsScript.HFbounciness = objectConfig.physicsProperties.bounciness;
+            ai2thorPhysicsScript.HFrbdrag = objectConfig.physicsProperties.drag;
+            ai2thorPhysicsScript.HFrbangulardrag = objectConfig.physicsProperties.angularDrag;
+        } 
+        
+        else if (objectDefinition.physicsProperties != null) {
+            ai2thorPhysicsScript.HFdynamicfriction = objectDefinition.physicsProperties.dynamicFriction;
+            ai2thorPhysicsScript.HFstaticfriction = objectDefinition.physicsProperties.staticFriction;
+            ai2thorPhysicsScript.HFbounciness = objectDefinition.physicsProperties.bounciness;
+            ai2thorPhysicsScript.HFrbdrag = objectDefinition.physicsProperties.drag;
+            ai2thorPhysicsScript.HFrbangulardrag = objectDefinition.physicsProperties.angularDrag;
         }
 
         ai2thorPhysicsScript.PrimaryProperty = (pickupable ? SimObjPrimaryProperty.CanPickup : (moveable ?
