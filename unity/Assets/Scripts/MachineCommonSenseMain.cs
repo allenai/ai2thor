@@ -671,11 +671,12 @@ public class MachineCommonSenseMain : MonoBehaviour {
         
         }
 
-        //*************JACOB's ATTEMPT AT SOLVING THE PROBLEM!!!!!!!
+        //*************JACOB's CODE
         Rigidbody rigidbody = gameObject.GetComponent<Rigidbody>();
         
-        objectConfig.physicsProperties.drag = 100;
-        objectConfig.physicsProperties.bounciness = 1;
+        //uncomment these to see effect when in editor:
+        //objectConfig.physicsProperties.drag = 100;
+        //objectConfig.physicsProperties.bounciness = 1;
 
         if (objectConfig.physicsProperties != null) {
             ai2thorPhysicsScript.HFdynamicfriction = objectConfig.physicsProperties.dynamicFriction;
@@ -684,23 +685,14 @@ public class MachineCommonSenseMain : MonoBehaviour {
             ai2thorPhysicsScript.HFrbdrag = objectConfig.physicsProperties.drag;
             ai2thorPhysicsScript.HFrbangulardrag = objectConfig.physicsProperties.angularDrag;
 
-            /*
-            if(rigidbody != null){
-            Debug.Log("I have a body");
-            Debug.Log(string.Format("Mass is {0}", rigidbody.mass));
-            //rigidbody.mass = ai2thorPhysicsScript.HFbounciness;
-            Debug.Log(string.Format("UPDATED Mass is {0}", rigidbody.mass + 1));
-            //ai2thorPhysicsScript.HFrbdrag = rigidbody.mass;
-            } */
-
             //Gets rigid body of object and changes drag/angular drag
             rigidbody.drag = ai2thorPhysicsScript.HFrbdrag;
             rigidbody.angularDrag = ai2thorPhysicsScript.HFrbangulardrag;
 
             //Loops through each collider on the object, creates a new material (other wise it would change)
-            //(every instance where this material is used) and then assigns each collider with an updated psychics material
+            //(every instance where this material is used) and then assigns each collider with an updated physics material
+            PhysicMaterial physicMaterial = new PhysicMaterial();
             foreach (Collider collider in ai2thorPhysicsScript.MyColliders) {
-                PhysicMaterial physicMaterial = new PhysicMaterial();
                 physicMaterial.dynamicFriction = ai2thorPhysicsScript.HFdynamicfriction;
                 physicMaterial.staticFriction = ai2thorPhysicsScript.HFstaticfriction;
                 physicMaterial.bounciness = ai2thorPhysicsScript.HFbounciness;
@@ -722,9 +714,9 @@ public class MachineCommonSenseMain : MonoBehaviour {
             rigidbody.angularDrag = ai2thorPhysicsScript.HFrbangulardrag;
 
             //Loops through each collider on the object, creates a new material (other wise it would change)
-            //(every instance where this material is used) and then assigns each collider with an updated psychics material
+            //(every instance where this material is used) and then assigns each collider with an updated physics material
+            PhysicMaterial physicMaterial = new PhysicMaterial();
             foreach (Collider collider in ai2thorPhysicsScript.MyColliders) {
-                PhysicMaterial physicMaterial = new PhysicMaterial();
                 physicMaterial.dynamicFriction = ai2thorPhysicsScript.HFdynamicfriction;
                 physicMaterial.staticFriction = ai2thorPhysicsScript.HFstaticfriction;
                 physicMaterial.bounciness = ai2thorPhysicsScript.HFbounciness;
@@ -734,8 +726,11 @@ public class MachineCommonSenseMain : MonoBehaviour {
             }
         }
 
-        //This is for manual input without objectConfig/Definition PhysicsProperties 
-        //if (objectDefinition.physicsProperties == null && objectConfig.physicsProperties == null) {  
+        //This is for manual input without objectConfig/Definition PhysicsProperties: DID NOT WORK!
+        //Could potentially work if move to update
+
+        /*
+        if (objectDefinition.physicsProperties == null && objectConfig.physicsProperties == null) {  
             //(PhysicsMaterial)
         if (ai2thorPhysicsScript.HFdynamicfriction > 0.0f || ai2thorPhysicsScript.HFstaticfriction > 0.0f 
         || ai2thorPhysicsScript.HFbounciness > 0.0f) {
@@ -785,10 +780,8 @@ public class MachineCommonSenseMain : MonoBehaviour {
         if (ai2thorPhysicsScript.HFrbangulardrag > 0.0f) {
             rigidbody.angularDrag = ai2thorPhysicsScript.HFrbangulardrag;
         }
-            
-
-        //}
-        //*************END!!!!!
+        */
+        //*************END
 
         ai2thorPhysicsScript.PrimaryProperty = (pickupable ? SimObjPrimaryProperty.CanPickup : (moveable ?
             SimObjPrimaryProperty.Moveable : ai2thorPhysicsScript.PrimaryProperty));
