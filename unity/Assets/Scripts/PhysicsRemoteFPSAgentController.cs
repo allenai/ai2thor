@@ -4675,6 +4675,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 if (target.GetComponent<CanOpen_Object>()) {
                     CanOpen_Object codd = target.GetComponent<CanOpen_Object>();
 
+                    float previousOpenPercent = codd.GetOpenPercent();
+
                     //pass in percentage close if desired
                     if (action.moveMagnitude > 0.0f) {
                         //if this fails, invalid percentage given
@@ -4688,9 +4690,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                     //if object is open, close it
                     if (codd.isOpen) {
-                        // codd.Interact();
-                        // actionFinished(true);
-                        StartCoroutine(InteractAndWait(codd));
+                        if(Physics.autoSimulation) {
+                            StartCoroutine(InteractAndWait(codd, previousOpenPercent));
+                        } else {
+                            OpenOrCloseObject(codd, previousOpenPercent);
+                        }
                     } else {
                         this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.IS_CLOSED_COMPLETELY);
                         errorMessage = "object already closed: " + action.objectId;
@@ -4846,7 +4850,56 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return;
         }
 
-        protected IEnumerator InteractAndWait(CanOpen_Object coo) {
+        protected void OpenOrCloseObject(CanOpen_Object coo, float previousOpenPercent) {
+            List<Collider> collidersDisabled = new List<Collider>();
+            foreach (Collider c in this.GetComponentsInChildren<Collider>()) {
+                if (c.enabled) {
+                    collidersDisabled.Add(c);
+                    c.enabled = false;
+                }
+            }
+
+            Dictionary<string, Transform> previousParents = new Dictionary<string, Transform>();
+
+            if (coo.GetComponent<SimObjPhysics>().IsReceptacle) {
+                foreach (SimObjPhysics item in coo.GetComponent<SimObjPhysics>().ReceptacleObjects) {
+                    previousParents.Add(item.uniqueID, item.transform.parent);
+                    item.transform.SetParent(coo.GetComponent<SimObjPhysics>().transform);
+                }
+            }
+
+            bool success;
+            coo.Interact();
+
+            GameObject openedObject = coo.GetComponentInParent<SimObjPhysics>().gameObject;
+
+            if (isAgentCapsuleCollidingWith(openedObject, 0.1f) || isHandObjectCollidingWith(openedObject)) {
+                this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.OBSTRUCTED);
+                Debug.Log("Object failed to open/close successfully.");
+                success = false;
+                coo.SetOpenPercent(previousOpenPercent);
+                coo.Interact();
+            } else {
+                this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.SUCCESSFUL);
+                success = true;
+            }
+
+            foreach (Collider c in collidersDisabled) {
+                c.enabled = true;
+            }
+
+            if (coo.GetComponent<SimObjPhysics>().IsReceptacle) {
+                foreach (SimObjPhysics item in coo.GetComponent<SimObjPhysics>().ReceptacleObjects) {
+                    if (previousParents.ContainsKey(item.uniqueID)) {
+                        item.transform.SetParent(previousParents[item.uniqueID]);
+                    }
+                }
+            }
+
+            actionFinished(success);
+        }
+
+        protected IEnumerator InteractAndWait(CanOpen_Object coo, float previousOpenPercent) {
             bool ignoreAgentInTransition = true;
 
             List<Collider> collidersDisabled = new List<Collider>();
@@ -4875,6 +4928,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             for (int i = 0; i < 1000; i++) {
                 if (coo != null && coo.GetiTweenCount() == 0) {
                     success = true;
+                    this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.SUCCESSFUL);
                     yield return null;
                     break;
                 }
@@ -4885,10 +4939,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 GameObject openedObject = null;
                 openedObject = coo.GetComponentInParent<SimObjPhysics>().gameObject;
 
-                if (isAgentCapsuleCollidingWith(openedObject) || isHandObjectCollidingWith(openedObject)) {
+                if (isAgentCapsuleCollidingWith(openedObject, 0.1f) || isHandObjectCollidingWith(openedObject)) {
+                    Debug.Log("Object failed to open/close successfully.");
                     this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.OBSTRUCTED);
                     success = false;
                     if (coo != null) {
+                        coo.SetOpenPercent(previousOpenPercent);
                         coo.Interact();
                     }
                     for (int i = 0; i < 1000; i++) {
@@ -4904,10 +4960,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 }
             }
 
-            if (!success) {
-                errorMessage = "Object failed to open/close successfully.";
-            }
-
             if (coo.GetComponent<SimObjPhysics>().IsReceptacle) {
                 foreach (SimObjPhysics item in coo.GetComponent<SimObjPhysics>().ReceptacleObjects) {
                     if(previousParents.ContainsKey(item.uniqueID)) {
@@ -4916,8 +4968,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 }
             }
 
-            this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.SUCCESSFUL);
-            //print("actionFinished now");
             actionFinished(success);
         }
 
@@ -5254,6 +5304,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                 if (target.GetComponent<CanOpen_Object>()) {
                     CanOpen_Object codd = target.GetComponent<CanOpen_Object>();
+                    float previousOpenPercent = codd.GetOpenPercent();
 
                     //check to make sure object is closed
                     if (codd.isOpen && codd.isOpenByPercentage == 1) {
@@ -5288,8 +5339,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     //coroutine will need some tweaking. Basically we need to send emit frames after some number of yield
                     //return null calls in the loop that's tracking iTween instances? We will figure that out later but
                     //for future notice I'm leaving this note.
-                    StartCoroutine(InteractAndWait(codd));
-
+                    if (Physics.autoSimulation) {
+                        StartCoroutine(InteractAndWait(codd, previousOpenPercent));
+                    } else {
+                        OpenOrCloseObject(codd, previousOpenPercent);
+                    }
                 }
             }
             else {
@@ -6519,9 +6573,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return UtilityFunctions.isObjectColliding(ItemInHand, ignoreGameObjects, expandBy);
         }
 
-        protected bool isAgentCapsuleCollidingWith(GameObject otherGameObject) {
+        protected bool isAgentCapsuleCollidingWith(GameObject otherGameObject, float expandBy = 0.0f) {
             int layerMask = 1 << 8;
-            foreach (Collider c in PhysicsExtensions.OverlapCapsule(GetComponent<CapsuleCollider>(), layerMask, QueryTriggerInteraction.Ignore)) {
+            foreach (Collider c in PhysicsExtensions.OverlapCapsule(GetComponent<CapsuleCollider>(), layerMask, QueryTriggerInteraction.Ignore, expandBy)) {
                 if (hasAncestor(c.transform.gameObject, otherGameObject)) {
                     return true;
                 }
