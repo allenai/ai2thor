@@ -669,119 +669,15 @@ public class MachineCommonSenseMain : MonoBehaviour {
             ai2thorPhysicsScript.MyColliders = colliders ?? (new Collider[] { });
             ai2thorPhysicsScript.ReceptacleTriggerBoxes = new List<GameObject>().ToArray();
         
-        }
-
-        //*************JACOB's CODE
-        Rigidbody rigidbody = gameObject.GetComponent<Rigidbody>();
-        
-        //uncomment these to see effect when in editor:
-        //objectConfig.physicsProperties.drag = 100;
-        //objectConfig.physicsProperties.bounciness = 1;
+        } 
 
         if (objectConfig.physicsProperties != null) {
-            ai2thorPhysicsScript.HFdynamicfriction = objectConfig.physicsProperties.dynamicFriction;
-            ai2thorPhysicsScript.HFstaticfriction = objectConfig.physicsProperties.staticFriction;
-            ai2thorPhysicsScript.HFbounciness = objectConfig.physicsProperties.bounciness;
-            ai2thorPhysicsScript.HFrbdrag = objectConfig.physicsProperties.drag;
-            ai2thorPhysicsScript.HFrbangulardrag = objectConfig.physicsProperties.angularDrag;
-
-            //Gets rigid body of object and changes drag/angular drag
-            rigidbody.drag = ai2thorPhysicsScript.HFrbdrag;
-            rigidbody.angularDrag = ai2thorPhysicsScript.HFrbangulardrag;
-
-            //Loops through each collider on the object, creates a new material (other wise it would change)
-            //(every instance where this material is used) and then assigns each collider with an updated physics material
-            PhysicMaterial physicMaterial = new PhysicMaterial();
-            foreach (Collider collider in ai2thorPhysicsScript.MyColliders) {
-                physicMaterial.dynamicFriction = ai2thorPhysicsScript.HFdynamicfriction;
-                physicMaterial.staticFriction = ai2thorPhysicsScript.HFstaticfriction;
-                physicMaterial.bounciness = ai2thorPhysicsScript.HFbounciness;
-                
-                collider.material = physicMaterial;
-
-            }
+            AssignPhysicsMaterialAndRigidBodyValues(objectConfig, gameObject, ai2thorPhysicsScript);
         } 
         
         else if (objectDefinition.physicsProperties != null) {
-            ai2thorPhysicsScript.HFdynamicfriction = objectDefinition.physicsProperties.dynamicFriction;
-            ai2thorPhysicsScript.HFstaticfriction = objectDefinition.physicsProperties.staticFriction;
-            ai2thorPhysicsScript.HFbounciness = objectDefinition.physicsProperties.bounciness;
-            ai2thorPhysicsScript.HFrbdrag = objectDefinition.physicsProperties.drag;
-            ai2thorPhysicsScript.HFrbangulardrag = objectDefinition.physicsProperties.angularDrag;
-
-            //Gets rigid body of object and changes drag/angular drag
-            rigidbody.drag = ai2thorPhysicsScript.HFrbdrag;
-            rigidbody.angularDrag = ai2thorPhysicsScript.HFrbangulardrag;
-
-            //Loops through each collider on the object, creates a new material (other wise it would change)
-            //(every instance where this material is used) and then assigns each collider with an updated physics material
-            PhysicMaterial physicMaterial = new PhysicMaterial();
-            foreach (Collider collider in ai2thorPhysicsScript.MyColliders) {
-                physicMaterial.dynamicFriction = ai2thorPhysicsScript.HFdynamicfriction;
-                physicMaterial.staticFriction = ai2thorPhysicsScript.HFstaticfriction;
-                physicMaterial.bounciness = ai2thorPhysicsScript.HFbounciness;
-                
-                collider.material = physicMaterial;
-
-            }
+            AssignPhysicsMaterialAndRigidBodyValues(objectDefinition, gameObject, ai2thorPhysicsScript);
         }
-
-        //This is for manual input without objectConfig/Definition PhysicsProperties: DID NOT WORK!
-        //Could potentially work if move to update
-
-        /*
-        if (objectDefinition.physicsProperties == null && objectConfig.physicsProperties == null) {  
-            //(PhysicsMaterial)
-        if (ai2thorPhysicsScript.HFdynamicfriction > 0.0f || ai2thorPhysicsScript.HFstaticfriction > 0.0f 
-        || ai2thorPhysicsScript.HFbounciness > 0.0f) {
-            foreach (Collider collider in ai2thorPhysicsScript.MyColliders) {
-                PhysicMaterial physicsMaterial = collider.material;
-                var dynamicFriction = physicsMaterial.dynamicFriction;
-                var staticFriction = physicsMaterial.staticFriction;
-                var bounciness = physicsMaterial.bounciness;
-
-                bool dynamicFrictionChangeValue = ai2thorPhysicsScript.HFdynamicfriction > 0.0f;
-                bool staticFrictionChangeValue = ai2thorPhysicsScript.HFstaticfriction > 0.0f;
-                bool bouncinessChangeValue = ai2thorPhysicsScript.HFbounciness > 0.0f;
-
-                PhysicMaterial changedPhysicMaterial = new PhysicMaterial();
-                if (dynamicFrictionChangeValue) {
-                    changedPhysicMaterial.dynamicFriction = ai2thorPhysicsScript.HFdynamicfriction;
-                }
-                else {
-                    changedPhysicMaterial.dynamicFriction = dynamicFriction;
-                }
-
-                if (staticFrictionChangeValue) {
-                    changedPhysicMaterial.staticFriction = ai2thorPhysicsScript.HFstaticfriction;
-                }
-                
-                else {
-                    changedPhysicMaterial.staticFriction = staticFriction;
-                }
-
-                if (bouncinessChangeValue) {
-                    changedPhysicMaterial.bounciness = ai2thorPhysicsScript.HFbounciness;
-                }
-                
-                else {
-                    changedPhysicMaterial.staticFriction = bounciness;
-                }
-
-            
-            }
-
-
-        }
-        //(RigidBody)
-        if(ai2thorPhysicsScript.HFrbdrag > 0.0f) {
-            rigidbody.drag = ai2thorPhysicsScript.HFrbdrag;
-        }
-        if (ai2thorPhysicsScript.HFrbangulardrag > 0.0f) {
-            rigidbody.angularDrag = ai2thorPhysicsScript.HFrbangulardrag;
-        }
-        */
-        //*************END
 
         ai2thorPhysicsScript.PrimaryProperty = (pickupable ? SimObjPrimaryProperty.CanPickup : (moveable ?
             SimObjPrimaryProperty.Moveable : ai2thorPhysicsScript.PrimaryProperty));
@@ -872,6 +768,33 @@ public class MachineCommonSenseMain : MonoBehaviour {
 
         // Call Start to initialize the script since it did not exist on game start.
         ai2thorPhysicsScript.Start();
+    }
+
+    private void AssignPhysicsMaterialAndRigidBodyValues
+        (MachineCommonSenseConfigAbstractObject physicsObject,
+        GameObject gameObject, SimObjPhysics ai2thorPhysicsScript
+        ) {
+            ai2thorPhysicsScript.HFdynamicfriction = physicsObject.physicsProperties.dynamicFriction;
+            ai2thorPhysicsScript.HFstaticfriction = physicsObject.physicsProperties.staticFriction;
+            ai2thorPhysicsScript.HFbounciness = physicsObject.physicsProperties.bounciness;
+            ai2thorPhysicsScript.HFrbdrag = physicsObject.physicsProperties.drag;
+            ai2thorPhysicsScript.HFrbangulardrag = physicsObject.physicsProperties.angularDrag;
+
+            Rigidbody rigidbody = gameObject.GetComponent<Rigidbody>();
+            //Gets rigid body of object and changes drag/angular drag
+            rigidbody.drag = ai2thorPhysicsScript.HFrbdrag;
+            rigidbody.angularDrag = ai2thorPhysicsScript.HFrbangulardrag;
+
+            //Loops through each collider on the object, creates a new material (other wise it would change)
+            //(every instance where this material is used) and then assigns each collider with an updated physics material
+            PhysicMaterial physicMaterial = new PhysicMaterial();
+            foreach (Collider collider in ai2thorPhysicsScript.MyColliders) {
+                physicMaterial.dynamicFriction = ai2thorPhysicsScript.HFdynamicfriction;
+                physicMaterial.staticFriction = ai2thorPhysicsScript.HFstaticfriction;
+                physicMaterial.bounciness = ai2thorPhysicsScript.HFbounciness;
+                
+                collider.material = physicMaterial;
+            }   
     }
 
     private void AssignStructureScript(GameObject gameObject) {
