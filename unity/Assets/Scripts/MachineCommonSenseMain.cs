@@ -640,7 +640,7 @@ public class MachineCommonSenseMain : MonoBehaviour {
             rigidbody.mass = mass;
         }
     }
-
+    
     private void AssignSimObjPhysicsScript(
         GameObject gameObject,
         MachineCommonSenseConfigGameObject objectConfig,
@@ -668,13 +668,15 @@ public class MachineCommonSenseMain : MonoBehaviour {
             ai2thorPhysicsScript.SecondaryProperties = new SimObjSecondaryProperty[] { };
             ai2thorPhysicsScript.MyColliders = colliders ?? (new Collider[] { });
             ai2thorPhysicsScript.ReceptacleTriggerBoxes = new List<GameObject>().ToArray();
-            /* TODO MCS-75 We should let people set these properties in the JSON config file.
-            ai2thorPhysicsScript.HFdynamicfriction
-            ai2thorPhysicsScript.HFstaticfriction
-            ai2thorPhysicsScript.HFbounciness
-            ai2thorPhysicsScript.HFrbdrag
-            ai2thorPhysicsScript.HFrbangulardrag
-            */
+        
+        } 
+
+        if (objectConfig.physicsProperties != null) {
+            AssignPhysicsMaterialAndRigidBodyValues(objectConfig, gameObject, ai2thorPhysicsScript);
+        } 
+        
+        else if (objectDefinition.physicsProperties != null) {
+            AssignPhysicsMaterialAndRigidBodyValues(objectDefinition, gameObject, ai2thorPhysicsScript);
         }
 
         ai2thorPhysicsScript.PrimaryProperty = (pickupable ? SimObjPrimaryProperty.CanPickup : (moveable ?
@@ -766,6 +768,33 @@ public class MachineCommonSenseMain : MonoBehaviour {
 
         // Call Start to initialize the script since it did not exist on game start.
         ai2thorPhysicsScript.Start();
+    }
+
+    private void AssignPhysicsMaterialAndRigidBodyValues
+        (MachineCommonSenseConfigAbstractObject physicsObject,
+        GameObject gameObject, SimObjPhysics ai2thorPhysicsScript
+        ) {
+            ai2thorPhysicsScript.HFdynamicfriction = physicsObject.physicsProperties.dynamicFriction;
+            ai2thorPhysicsScript.HFstaticfriction = physicsObject.physicsProperties.staticFriction;
+            ai2thorPhysicsScript.HFbounciness = physicsObject.physicsProperties.bounciness;
+            ai2thorPhysicsScript.HFrbdrag = physicsObject.physicsProperties.drag;
+            ai2thorPhysicsScript.HFrbangulardrag = physicsObject.physicsProperties.angularDrag;
+
+            Rigidbody rigidbody = gameObject.GetComponent<Rigidbody>();
+            //Gets rigid body of object and changes drag/angular drag
+            rigidbody.drag = ai2thorPhysicsScript.HFrbdrag;
+            rigidbody.angularDrag = ai2thorPhysicsScript.HFrbangulardrag;
+
+            //Loops through each collider on the object, creates a new material (other wise it would change)
+            //(every instance where this material is used) and then assigns each collider with an updated physics material
+            PhysicMaterial physicMaterial = new PhysicMaterial();
+            foreach (Collider collider in ai2thorPhysicsScript.MyColliders) {
+                physicMaterial.dynamicFriction = ai2thorPhysicsScript.HFdynamicfriction;
+                physicMaterial.staticFriction = ai2thorPhysicsScript.HFstaticfriction;
+                physicMaterial.bounciness = ai2thorPhysicsScript.HFbounciness;
+                
+                collider.material = physicMaterial;
+            }   
     }
 
     private void AssignStructureScript(GameObject gameObject) {
@@ -1277,6 +1306,7 @@ public class MachineCommonSenseConfigAbstractObject {
     public bool stacking;
     public List<string> materials;
     public List<string> salientMaterials;
+    public MachineCommonSenseConfigPhysicsProperties physicsProperties;
 }
 
 [Serializable]
@@ -1476,4 +1506,16 @@ public class MachineCommonSenseConfigMaterialRegistry {
 [Serializable]
 public class MachineCommonSenseConfigObjectRegistry {
     public List<MachineCommonSenseConfigObjectDefinition> objects;
+}
+
+[Serializable]
+
+public class MachineCommonSenseConfigPhysicsProperties {
+
+    public float dynamicFriction;
+    public float staticFriction;
+    public float bounciness;
+    public float drag;
+    public float angularDrag;
+
 }
