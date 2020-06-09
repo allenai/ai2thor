@@ -249,6 +249,16 @@ public class MachineCommonSenseMain : MonoBehaviour {
                 MachineCommonSenseMain.LIGHT_Z_POSITION);
         }
 
+        /*uncomment these to see in action*
+        scene.floorProperties.staticFriction = 1;
+        scene.floorProperties.bounciness = 0.72f;
+        scene.floorProperties.drag = 200;
+        
+        scene.wallProperties.dynamicFriction = 1;
+        scene.wallProperties.angularDrag = 300;
+        scene.wallProperties.bounciness = 0.22f;
+        */
+
         if (scene.wallProperties != null || scene.floorProperties != null) {
             List<SimObjPhysics> wallObjectPhysics = new List<SimObjPhysics>();
             List<GameObject> Walls = new List<GameObject>();
@@ -342,7 +352,7 @@ public class MachineCommonSenseMain : MonoBehaviour {
             }
 
             foreach (GameObject wall in gameObjects) {
-                if (wall == this.floor){
+                if (wall == this.floor) {
                     physicsValues = floorProperties;
                 }
                 else {
@@ -351,7 +361,7 @@ public class MachineCommonSenseMain : MonoBehaviour {
                 Collider wallCollider = wall.GetComponent<Collider>();
                 wallCollider.material.dynamicFriction = physicsValues.HFdynamicfriction;
                 wallCollider.material.staticFriction = physicsValues.HFstaticfriction;
-                wallCollider.material.bounciness = physicsValues.HFstaticfriction;
+                wallCollider.material.bounciness = physicsValues.HFbounciness;
 
                 Rigidbody wallRigidBody = wall.GetComponent<Rigidbody>();
                 wallRigidBody.drag = physicsValues.HFrbdrag;
