@@ -2240,37 +2240,34 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         public void ApplyForceObject(ServerAction action) {
-            SimObjPhysics target = null;
 
-            GameObject player = this.GetComponent<GameObject>();
+            GameObject player = this.gameObject;
 
             if (action.forceAction) {
                 action.forceVisible = true;
             }
 
-            SimObjPhysics[] simObjPhysicsArray = VisibleSimObjs(action);
-
-            foreach (SimObjPhysics sop in simObjPhysicsArray) {
-                if (action.objectId == sop.UniqueID) {
-                    target = sop;
-                }
-            }
+            SimObjPhysics target = physicsSceneManager.UniqueIdToSimObjPhysics[action.objectId];
             
-            /*
-            if (objectIsCurrentlyVisible(target, maxVisibleDistance)) {
-                errorMessage = "Target " + action.objectId + " is obstructed.";
-                Debug.Log(errorMessage);
-                Debug.Log(player.transform.position.x);
-                actionFinished(false);
-                this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.OBSTRUCTED);
-                return;
-            }*/
+            if (!objectIsCurrentlyVisible(target, maxVisibleDistance)) { 
+                Vector3 tmp = target.transform.position;
+                tmp.y = transform.position.y;
+                if (Vector3.Distance(tmp, transform.position) < maxVisibleDistance) {
+                    errorMessage = "Target " + action.objectId + " is obstructed.";
+                    Debug.Log(errorMessage);
+                    Debug.Log(string.Format("Agent - X position: {0} - Z position {1}.", player.transform.position.x, player.transform.position.z));
+                    actionFinished(false);
+                    this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.OBSTRUCTED);
+                    return;
+                }
+                
+            }
 
             // TODO: MCS-83: Need to split into OUT_OF_REACH and OBSTRUCTED
-            if (target == null) {
+            if (!objectIsCurrentlyVisible(target, maxVisibleDistance)) {
                 errorMessage = "Target " + action.objectId + " is not visible";
                 Debug.Log(errorMessage);
-                Debug.Log(player.transform.position.x);
+                Debug.Log(string.Format("Agent - X position: {0} - Z position {1}.", player.transform.position.x, player.transform.position.z));
                 actionFinished(false);
                 this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.OUT_OF_REACH);
                 return;
