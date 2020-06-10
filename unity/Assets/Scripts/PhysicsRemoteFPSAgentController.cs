@@ -2255,10 +2255,20 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     target = sop;
                 }
             }
+            
+            /*
+            if (objectIsCurrentlyVisible(target, maxVisibleDistance)) {
+                errorMessage = "Target " + action.objectId + " is obstructed.";
+                Debug.Log(errorMessage);
+                Debug.Log(player.transform.position.x);
+                actionFinished(false);
+                this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.OBSTRUCTED);
+                return;
+            }*/
 
             // TODO: MCS-83: Need to split into OUT_OF_REACH and OBSTRUCTED
             if (target == null) {
-                errorMessage = "Target " + action.objectId + " is not visible.";
+                errorMessage = "Target " + action.objectId + " is not visible";
                 Debug.Log(errorMessage);
                 Debug.Log(player.transform.position.x);
                 actionFinished(false);
@@ -4142,6 +4152,19 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
 
             // TODO: MCS-83: Need to split into OUT_OF_REACH and OBSTRUCTED
+            if (!objectIsCurrentlyVisible(target, maxVisibleDistance)) { 
+                Vector3 tmp = target.transform.position;
+                tmp.y = transform.position.y;
+                if (Vector3.Distance(tmp, transform.position) < maxVisibleDistance) {
+                    errorMessage = "Target " + action.objectId + " is obstructed.";
+                    Debug.Log(errorMessage);
+                    actionFinished(false);
+                    this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.OBSTRUCTED);
+                    return;
+                }
+                
+            }
+
             if (!action.forceAction && !objectIsCurrentlyVisible(target, maxVisibleDistance)) {
                 errorMessage = action.objectId + " is not visible.";
                 actionFinished(false);
