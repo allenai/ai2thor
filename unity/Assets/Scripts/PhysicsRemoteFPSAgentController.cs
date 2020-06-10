@@ -84,6 +84,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             new Vector3(-float.PositiveInfinity, -float.PositiveInfinity, -float.PositiveInfinity)
         );
 
+        // Used to expand agent capsule in collision checks for open/close actions
+        protected const float ExpandAgentCapsuleBy = 0.1f;
+
         //change visibility check to use this distance when looking down
         //protected float DownwardViewDistance = 2.0f;
 
@@ -4850,46 +4853,46 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return;
         }
 
-        protected void OpenOrCloseObject(CanOpen_Object coo, float previousOpenPercent) {
+        protected void OpenOrCloseObject(CanOpen_Object canOpen, float previousOpenPercent) {
             List<Collider> collidersDisabled = new List<Collider>();
-            foreach (Collider c in this.GetComponentsInChildren<Collider>()) {
-                if (c.enabled) {
-                    collidersDisabled.Add(c);
-                    c.enabled = false;
+            foreach (Collider collider in this.GetComponentsInChildren<Collider>()) {
+                if (collider.enabled) {
+                    collidersDisabled.Add(collider);
+                    collider.enabled = false;
                 }
             }
 
             Dictionary<string, Transform> previousParents = new Dictionary<string, Transform>();
 
-            if (coo.GetComponent<SimObjPhysics>().IsReceptacle) {
-                foreach (SimObjPhysics item in coo.GetComponent<SimObjPhysics>().ReceptacleObjects) {
+            if (canOpen.GetComponent<SimObjPhysics>().IsReceptacle) {
+                foreach (SimObjPhysics item in canOpen.GetComponent<SimObjPhysics>().ReceptacleObjects) {
                     previousParents.Add(item.uniqueID, item.transform.parent);
-                    item.transform.SetParent(coo.GetComponent<SimObjPhysics>().transform);
+                    item.transform.SetParent(canOpen.GetComponent<SimObjPhysics>().transform);
                 }
             }
 
             bool success;
-            coo.Interact();
+            canOpen.Interact();
 
-            GameObject openedObject = coo.GetComponentInParent<SimObjPhysics>().gameObject;
+            GameObject openedObject = canOpen.GetComponentInParent<SimObjPhysics>().gameObject;
 
-            if (isAgentCapsuleCollidingWith(openedObject, 0.1f) || isHandObjectCollidingWith(openedObject)) {
+            if (isAgentCapsuleCollidingWith(openedObject, ExpandAgentCapsuleBy) || isHandObjectCollidingWith(openedObject)) {
                 this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.OBSTRUCTED);
                 Debug.Log("Object failed to open/close successfully.");
                 success = false;
-                coo.SetOpenPercent(previousOpenPercent);
-                coo.Interact();
+                canOpen.SetOpenPercent(previousOpenPercent);
+                canOpen.Interact();
             } else {
                 this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.SUCCESSFUL);
                 success = true;
             }
 
-            foreach (Collider c in collidersDisabled) {
-                c.enabled = true;
+            foreach (Collider collider in collidersDisabled) {
+                collider.enabled = true;
             }
 
-            if (coo.GetComponent<SimObjPhysics>().IsReceptacle) {
-                foreach (SimObjPhysics item in coo.GetComponent<SimObjPhysics>().ReceptacleObjects) {
+            if (canOpen.GetComponent<SimObjPhysics>().IsReceptacle) {
+                foreach (SimObjPhysics item in canOpen.GetComponent<SimObjPhysics>().ReceptacleObjects) {
                     if (previousParents.ContainsKey(item.uniqueID)) {
                         item.transform.SetParent(previousParents[item.uniqueID]);
                     }
@@ -4939,7 +4942,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 GameObject openedObject = null;
                 openedObject = coo.GetComponentInParent<SimObjPhysics>().gameObject;
 
-                if (isAgentCapsuleCollidingWith(openedObject, 0.1f) || isHandObjectCollidingWith(openedObject)) {
+                if (isAgentCapsuleCollidingWith(openedObject, ExpandAgentCapsuleBy) || isHandObjectCollidingWith(openedObject)) {
                     Debug.Log("Object failed to open/close successfully.");
                     this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.OBSTRUCTED);
                     success = false;
