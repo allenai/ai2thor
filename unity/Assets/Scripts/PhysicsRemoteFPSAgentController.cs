@@ -2242,6 +2242,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public void ApplyForceObject(ServerAction action) {
             SimObjPhysics target = null;
 
+            GameObject player = this.GetComponent<GameObject>();
+
             if (action.forceAction) {
                 action.forceVisible = true;
             }
@@ -2258,6 +2260,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             if (target == null) {
                 errorMessage = "Target " + action.objectId + " is not visible.";
                 Debug.Log(errorMessage);
+                Debug.Log(player.transform.position.x);
                 actionFinished(false);
                 this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.OUT_OF_REACH);
                 return;
