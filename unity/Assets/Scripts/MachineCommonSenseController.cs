@@ -615,16 +615,13 @@ public class MachineCommonSenseController : PhysicsRemoteFPSAgentController {
             Debug.LogError("PickupObject target " + target.gameObject.name + " does not have a MeshFilter!");
         }
     }
-
-    public override void Stand(ServerAction action) {
-
-    }
-
+    /*
     public void Crawl(ServerAction action) {
+
         if (this.pose == PlayerPose.CRAWLING) {
-            this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.SUCCESSFUL);
-            actionFinished(true);
-        }
+                this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.SUCCESSFUL);
+                actionFinished(true);
+            }
 
         if (this.pose == PlayerPose.LYING) {
             //checking if agent is looking at ceiling
@@ -634,8 +631,23 @@ public class MachineCommonSenseController : PhysicsRemoteFPSAgentController {
             }
         }
 
-        float newHeight = this.transform.position.y / 2;
-        this.transform.position = new Vector3(this.transform.position.x, newHeight, this.transform.position.z);
+        if (object is obstructed from going down) {
+            //which i dont think would ever be the case since if you can stand there you can crouch
+            //only adjusting y position here
+
+            this.lastActionStatus == Enum.GetName(typeof(ActionStatus), ActionStatus.OBSTRUCTED);
+            actionFinished(false);
+
+        } else {
+
+            //change position
+            this.transform.position = new Vector3(this.transform.position.x, POSITION_Y/2, this.transform.position.z);
+
+            this.pose = PlayerPose.CRAWLING;
+            SetUpRotationBoxChecks();
+            this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.SUCCESSFUL);
+            actionFinished(true);
+        }
     }
 
     public void LieDown(ServerAction action) {
@@ -644,13 +656,46 @@ public class MachineCommonSenseController : PhysicsRemoteFPSAgentController {
             actionFinished(true);
         }
 
-        float newHeight = 0.1f;
-        this.transform.position = new Vector3(this.transform.position.x, newHeight, this.transform.position.z);
-        Vector3 currentRotation = this.transform.rotation.eulerAngles;
-        this.transform.rotation = Quaternion.Euler (45, currentRotation.y, currentRotation.z);
+        if (object is obstructed from going down) {
+            //which i dont think would ever be the case since if you can stand there you can lie down
+
+            this.lastActionStatus == Enum.GetName(typeof(ActionStatus), ActionStatus.SUCCESSFUL);
+            actionFinished(false);
+
+        } else {
+            //change position
+            this.transform.position = new Vector3(this.transform.position.x, 0.1f, this.transform.position.z);
+            //change rotation
+            Vector3 currentRotation = this.transform.rotation.eulerAngles;
+            this.transform.rotation = Quaternion.Euler (45, currentRotation.y, currentRotation.z);
+            this.pose == PlayerPose.LYING;
+            SetUpRotationBoxChecks();
+            this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.OBSTRUCTED);
+            actionFinished(true);
+        }
     }
 
-    public void SetCameraAndAgentHeight() {
+    public override void Stand(ServerAction action) {
+        if (this.pose == PlayerPose.STANDING) {
+            this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.SUCCESSFUL);
+            actionFinished(true);
+        }
+        
+        
+        if (object is obstructed from going up) {
+            //actually possible if under object
+
+            this.lastActionStatus == Enum.GetName(typeof(ActionStatus), ActionStatus.OBSTRUCTED);
+            actionFinished(false);
+        } else {
+            this.transform.position = new Vector3(this.transform.position.x, POSITION_Y, this.transform.position.z);
+            this.pose == PlayerPose.STANDING;
+            SetUpRotationBoxChecks();
+            this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.SUCCESSFUL);
+            actionFinished(true);
+        }
+        
 
     }
+    */
 }
