@@ -26,6 +26,15 @@ public class MachineCommonSenseController : PhysicsRemoteFPSAgentController {
     protected float minRotation = -360f;
     protected float maxRotation = 360f;
 
+    public enum PlayerPose {
+        STANDING,
+        CRAWLING,
+        LYING
+    }
+
+    PlayerPose pose = PlayerPose.STANDING;
+    public GameObject fpsAgent;
+
     public override void CloseObject(ServerAction action) {
         bool continueAction = TryConvertingEachObjectDirectionToId(action);
 
@@ -605,5 +614,43 @@ public class MachineCommonSenseController : PhysicsRemoteFPSAgentController {
         } else {
             Debug.LogError("PickupObject target " + target.gameObject.name + " does not have a MeshFilter!");
         }
+    }
+
+    public override void Stand(ServerAction action) {
+
+    }
+
+    public void Crawl(ServerAction action) {
+        if (this.pose == PlayerPose.CRAWLING) {
+            this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.SUCCESSFUL);
+            actionFinished(true);
+        }
+
+        if (this.pose == PlayerPose.LYING) {
+            //checking if agent is looking at ceiling
+            if (fpsAgent.transform.rotation.x < -45 && fpsAgent.transform.rotation.x > -135) {
+                this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.WRONG_POSE);
+                actionFinished(true);
+            }
+        }
+
+        float newHeight = this.transform.position.y / 2;
+        this.transform.position = new Vector3(this.transform.position.x, newHeight, this.transform.position.z);
+    }
+
+    public void LieDown(ServerAction action) {
+        if (this.pose == PlayerPose.LYING) {
+            this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.SUCCESSFUL);
+            actionFinished(true);
+        }
+
+        float newHeight = 0.1f;
+        this.transform.position = new Vector3(this.transform.position.x, newHeight, this.transform.position.z);
+        Vector3 currentRotation = this.transform.rotation.eulerAngles;
+        this.transform.rotation = Quaternion.Euler (45, currentRotation.y, currentRotation.z);
+    }
+
+    public void SetCameraAndAgentHeight() {
+
     }
 }
