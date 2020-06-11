@@ -247,44 +247,21 @@ public class MachineCommonSenseMain : MonoBehaviour {
             this.light.GetComponent<Light>().range = MachineCommonSenseMain.LIGHT_RANGE;
             this.light.transform.position = new Vector3(0, MachineCommonSenseMain.LIGHT_Y_POSITION,
                 MachineCommonSenseMain.LIGHT_Z_POSITION);
+        }       
+
+        if (scene.wallProperties != null) {
+            AssignRoomPhysicsMaterialAndRigidBodyValues(this.wallLeft, wallLeftSimObjPhysics, scene.wallProperties);
+            AssignRoomPhysicsMaterialAndRigidBodyValues(this.wallFront, wallFrontSimObjPhysics, scene.wallProperties);
+            AssignRoomPhysicsMaterialAndRigidBodyValues(this.wallRight, wallRightSimObjPhysics, scene.wallProperties);
+            AssignRoomPhysicsMaterialAndRigidBodyValues(this.wallBack, wallBackSimObjPhysics, scene.wallProperties);
+            AssignRoomPhysicsMaterialAndRigidBodyValues(this.ceiling, ceilingSimObjPhysics, scene.wallProperties);
         }
-
-        /*uncomment these to see in action*
-        scene.floorProperties.staticFriction = 1;
-        scene.floorProperties.bounciness = 0.72f;
-        scene.floorProperties.drag = 200;
-        
-        scene.wallProperties.dynamicFriction = 1;
-        scene.wallProperties.angularDrag = 300;
-        scene.wallProperties.bounciness = 0.22f;
-        */
-
-        if (scene.wallProperties != null || scene.floorProperties != null) {
-            List<SimObjPhysics> wallObjectPhysics = new List<SimObjPhysics>();
-            List<GameObject> Walls = new List<GameObject>();
-            if (scene.floorProperties != null) {
-                wallObjectPhysics.Add(floorSimObjPhysics);
-                Walls.Add(this.floor);
-            }
             
-            if (scene.wallProperties != null) {
-                wallObjectPhysics.Add(ceilingSimObjPhysics);
-                wallObjectPhysics.Add(wallLeftSimObjPhysics);
-                wallObjectPhysics.Add(wallRightSimObjPhysics);
-                wallObjectPhysics.Add(wallFrontSimObjPhysics);
-                wallObjectPhysics.Add(wallBackSimObjPhysics);
-
-                Walls.Add(this.ceiling);
-                Walls.Add(this.wallLeft);
-                Walls.Add(this.wallRight);
-                Walls.Add(this.wallFront);
-                Walls.Add(this.wallBack);
-            }
-
-            AssignRoomPhysicsMaterialAndRigidBodyValues(Walls, wallObjectPhysics, floorSimObjPhysics, 
-            scene.floorProperties, scene.wallProperties, this.floor);
+        if (scene.floorProperties != null) {
+            AssignRoomPhysicsMaterialAndRigidBodyValues(this.floor, floorSimObjPhysics, scene.floorProperties);
 
         }
+
 
         if (this.currentScene.goal != null && this.currentScene.goal.description != null) {
             Debug.Log("MCS: Goal = " + this.currentScene.goal.description);
@@ -317,57 +294,24 @@ public class MachineCommonSenseMain : MonoBehaviour {
     }
 
     private void AssignRoomPhysicsMaterialAndRigidBodyValues(
-        List<GameObject> gameObjects, 
-        List<SimObjPhysics> simObjectPhysicsElements,
-        SimObjPhysics floorPhysics,
-        MachineCommonSenseConfigPhysicsProperties floor,
-        MachineCommonSenseConfigPhysicsProperties walls,
-        GameObject floorObject
+        GameObject gameObject,
+        SimObjPhysics objPhysics,
+        MachineCommonSenseConfigPhysicsProperties properties
         ){ 
-            SimObjPhysics physicsValues = null;
-            MachineCommonSenseConfigPhysicsProperties inputValues = null;
-
-            SimObjPhysics floorProperties = null;
-            SimObjPhysics wallProperties = null;
-
-            foreach (SimObjPhysics physics in simObjectPhysicsElements) {
-                if (physics == floorPhysics) {
-                    inputValues = floor;
-                }
-                else {
-                    inputValues = walls;
-                }
-                physics.HFdynamicfriction = inputValues.dynamicFriction;
-                physics.HFstaticfriction = inputValues.staticFriction;
-                physics.HFbounciness = inputValues.bounciness;
-                physics.HFrbdrag = inputValues.drag;
-                physics.HFrbangulardrag = inputValues.angularDrag;
+            objPhysics.HFdynamicfriction = properties.dynamicFriction;
+            objPhysics.HFstaticfriction = properties.staticFriction;
+            objPhysics.HFbounciness = properties.bounciness;
+            objPhysics.HFrbdrag = properties.drag;
+            objPhysics.HFrbangulardrag = properties.angularDrag;
                 
-                if (physics == floorPhysics) {
-                    floorProperties = physics;
-                }
-                else if (wallProperties == null) {
-                    wallProperties = physics;
-                }
-            }
+            Collider wallCollider = gameObject.GetComponent<Collider>();
+            wallCollider.material.dynamicFriction = objPhysics.HFdynamicfriction;
+            wallCollider.material.staticFriction = objPhysics.HFstaticfriction;
+            wallCollider.material.bounciness = objPhysics.HFbounciness;
 
-            foreach (GameObject wall in gameObjects) {
-                if (wall == this.floor) {
-                    physicsValues = floorProperties;
-                }
-                else {
-                    physicsValues = wallProperties;
-                }
-                Collider wallCollider = wall.GetComponent<Collider>();
-                wallCollider.material.dynamicFriction = physicsValues.HFdynamicfriction;
-                wallCollider.material.staticFriction = physicsValues.HFstaticfriction;
-                wallCollider.material.bounciness = physicsValues.HFbounciness;
-
-                Rigidbody wallRigidBody = wall.GetComponent<Rigidbody>();
-                wallRigidBody.drag = physicsValues.HFrbdrag;
-                wallRigidBody.angularDrag = physicsValues.HFrbangulardrag;
-            }
-
+            Rigidbody wallRigidBody = gameObject.GetComponent<Rigidbody>();
+            wallRigidBody.drag = objPhysics.HFrbdrag;
+            wallRigidBody.angularDrag = objPhysics.HFrbangulardrag;
         }
 
     private Collider AssignBoundingBox(
