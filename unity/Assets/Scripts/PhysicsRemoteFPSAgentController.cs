@@ -2262,8 +2262,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 }
                 
             }
-
-            // TODO: MCS-83: Need to split into OUT_OF_REACH and OBSTRUCTED
+            
             if (!objectIsCurrentlyVisible(target, maxVisibleDistance)) {
                 errorMessage = "Target " + action.objectId + " is not visible";
                 Debug.Log(errorMessage);
@@ -4148,7 +4147,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 return;
             }
 
-            // TODO: MCS-83: Need to split into OUT_OF_REACH and OBSTRUCTED
             if (!objectIsCurrentlyVisible(target, maxVisibleDistance)) { 
                 Vector3 tmp = target.transform.position;
                 tmp.y = transform.position.y;
