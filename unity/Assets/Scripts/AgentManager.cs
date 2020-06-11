@@ -846,6 +846,7 @@ public class ObjectMetadata
     public WorldSpaceBounds objectBounds;
 
     // MCS Additions
+    public string[] colorsFromMaterials;
     public Vector3 direction;
     public float distanceXZ;
     public Vector3 heading;

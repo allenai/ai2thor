@@ -44,13 +44,13 @@ tar -czvf MCS-AI2-THOR-Unity-App-<version>_Data.tar.gz MCS-AI2-THOR-Unity-App-<v
 
 - [`unity/`](./unity)  The MCS Unity project.  Add this folder as a project in your Unity Hub.
 - `unity/Assets/Scenes/MCS.unity`  The MCS Unity Scene.  You can load and edit this in the Unity Editor.
+- [`unity/Assets/Scripts/MachineCommonSenseConfig.cs`](./unity/Assets/Scripts/MachineCommonSenseConfig.cs)  A class with MCS config data: the "material registry", which lists Materials that may be loaded at runtime in the MCS scene; the "material colors", which maps Material names to color words.
 - [`unity/Assets/Scripts/MachineCommonSenseMain.cs`](./unity/Assets/Scripts/MachineCommonSenseMain.cs)  The main MCS Unity script that is imported into and runs within the Scene.
 - [`unity/Assets/Scripts/MachineCommonSenseController.cs`](./unity/Assets/Scripts/MachineCommonSenseController.cs)  A custom subclass extending AI2-THOR's [PhysicsRemoteFPSAgentController](./unity/Assets/Scripts/PhysicsRemoteFPSAgentController.cs) that handles player actions and state.
 - [`unity/Assets/Scripts/MachineCommonSensePerformerManager.cs`](./unity/Assets/Scripts/MachineCommonSensePerformerManager.cs)  A custom subclass extending AI2-THOR's [AgentManager](./unity/Assets/Scripts/AgentManager.cs) that handles the communication between the Python API and the Unity Scene.
 - [`unity/Assets/Scripts/MachineCommonSenseSceneManager.cs`](./unity/Assets/Scripts/MachineCommonSenseSceneManager.cs)  A custom subclass extending AI2-THOR's [PhysicsSceneManager](./unity/Assets/Scripts/PhysicsSceneManager.cs) that handles scene state.
 - [`unity/Assets/Resources/MCS/`](./unity/Assets/Resources/MCS)  Folder containing all MCS runtime resources.
 - [`unity/Assets/Resources/MCS/ai2thor_object_registry.json`](./unity/Assets/Resources/MCS/ai2thor_object_registry.json)  Config file containing the MCS Scene's specific Game Objects borrowed from the AI2-THOR framework that may be loaded at runtime. 
-- [`unity/Assets/Resources/MCS/material_registry.json`](./unity/Assets/Resources/MCS/material_registry.json)  Config file containing the MCS Scene's specific Materials that may be loaded at runtime. 
 - [`unity/Assets/Resources/MCS/mcs_object_registry.json`](./unity/Assets/Resources/MCS/mcs_object_registry.json)  Config file containing the MCS Scene's specific custom Game Objects that may be loaded at runtime. 
 - [`unity/Assets/Resources/MCS/primitive_object_registry.json`](./unity/Assets/Resources/MCS/primitive_object_registry.json)  Config file containing the MCS Scene's Unity Primitive Game Objects that may be loaded at runtime. 
 - [`unity/Assets/Resources/MCS/Materials/`](./unity/Assets/Resources/MCS/Materials)  Copy of AI2-THOR's [`unity/Assets/QuickMaterials/`](./unity/Assets/QuickMaterials).  Must be in the `Resources` folder to access at runtime.
@@ -132,7 +132,7 @@ Take a GameObject (we'll call it the "Target" object) containing a MeshFilter, M
 
 - `Scripts/AgentManager`:
   - Added properties to `MetadataWrapper`: `clippingPlaneFar`, `clippingPlaneNear`, `structuralObjects`
-  - Added properties to `ObjectMetadata`: `points`, `visibleInCamera`
+  - Added properties to `ObjectMetadata`: `colorsFromMaterials`, `direction`, `distanceXZ`, `heading`, `points`, `visibleInCamera`
   - Added properties to `ServerAction`: `logs`, `objectDirection`, `receptacleObjectDirection`, `sceneConfig`
   - Added `virtual` to functions: `setReadyToEmit`, `Update`
   - Changed variables or functions from `private` to `protected`: `physicsSceneManager`, most `render*Image` variables

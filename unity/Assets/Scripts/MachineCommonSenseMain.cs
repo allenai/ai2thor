@@ -34,7 +34,6 @@ public class MachineCommonSenseMain : MonoBehaviour {
     public string defaultSceneFile = "";
     public bool enableVerboseLog = false;
     public string ai2thorObjectRegistryFile = "ai2thor_object_registry";
-    public string materialRegistryFile = "material_registry";
     public string mcsObjectRegistryFile = "mcs_object_registry";
     public string primitiveObjectRegistryFile = "primitive_object_registry";
     public string defaultCeilingMaterial = "AI2-THOR/Materials/Walls/Drywall";
@@ -45,7 +44,6 @@ public class MachineCommonSenseMain : MonoBehaviour {
     private int lastStep = -1;
     private Dictionary<String, MachineCommonSenseConfigObjectDefinition> objectDictionary =
         new Dictionary<string, MachineCommonSenseConfigObjectDefinition>();
-    private Dictionary<string, List<string>> materialRegistry;
 
     // AI2-THOR Objects and Scripts
     private MachineCommonSenseController agentController;
@@ -88,9 +86,6 @@ public class MachineCommonSenseMain : MonoBehaviour {
         ai2thorObjects.Concat(mcsObjects).Concat(primitiveObjects).ToList().ForEach((objectDefinition) => {
             this.objectDictionary.Add(objectDefinition.id.ToUpper(), objectDefinition);
         });
-
-        // Save the materials (strings) that are accepted in the scene configuration files.
-        this.materialRegistry = LoadMaterialRegistryFromFile(this.materialRegistryFile);
 
         // Load the default MCS scene set in the Unity Editor.
         if (!this.defaultSceneFile.Equals("")) {
@@ -403,8 +398,8 @@ public class MachineCommonSenseMain : MonoBehaviour {
             return null;
         }
 
-        foreach (KeyValuePair<string, List<string>> materialType in this.materialRegistry) {
-            if (materialType.Value.Contains(filename)) {
+        foreach (KeyValuePair<string, Dictionary<string, string[]>> materialType in MachineCommonSenseConfig.MATERIAL_REGISTRY) {
+            if (materialType.Value.ContainsKey(filename)) {
                 if (restrictions.Length == 0 || Array.IndexOf(restrictions, materialType.Key) >= 0) {
                     Material material = Resources.Load<Material>("MCS/" + filename);
                     LogVerbose("LOAD OF MATERIAL FILE Assets/Resources/MCS/" + filename +
@@ -1044,26 +1039,6 @@ public class MachineCommonSenseMain : MonoBehaviour {
         return JsonUtility.FromJson<MachineCommonSenseConfigScene>(currentSceneFile.text);
     }
 
-    private Dictionary<string, List<string>> LoadMaterialRegistryFromFile(String filePath) {
-        TextAsset materialRegistryFile = Resources.Load<TextAsset>("MCS/" + filePath);
-        Debug.Log("MCS: Config file Assets/Resources/MCS/" + filePath + ".json" + (materialRegistryFile == null ?
-            " is null!" : (":\n" + materialRegistryFile.text)));
-        MachineCommonSenseConfigMaterialRegistry materialJson =
-            JsonUtility.FromJson<MachineCommonSenseConfigMaterialRegistry>(materialRegistryFile.text);
-        Dictionary<string, List<string>> materialDictionary = new Dictionary<string, List<string>>() {
-            { "block_blank", materialJson.block_blank },
-            { "block_design", materialJson.block_design },
-            { "ceramic", materialJson.ceramic },
-            { "fabric", materialJson.fabric },
-            { "metal", materialJson.metal },
-            { "plastic", materialJson.plastic },
-            { "rubber", materialJson.rubber },
-            { "wall", materialJson.wall },
-            { "wood", materialJson.wood }
-        };
-        return materialDictionary;
-    }
-
     private List<MachineCommonSenseConfigObjectDefinition> LoadObjectRegistryFromFile(String filePath) {
         TextAsset objectRegistryFile = Resources.Load<TextAsset>("MCS/" + filePath);
         Debug.Log("MCS: Config file Assets/Resources/MCS/" + filePath + ".json" + (objectRegistryFile == null ?
@@ -1491,19 +1466,6 @@ public class MachineCommonSenseConfigGoal {
 }
 
 [Serializable]
-public class MachineCommonSenseConfigMaterialRegistry {
-    public List<String> block_blank;
-    public List<String> block_design;
-    public List<String> ceramic;
-    public List<String> fabric;
-    public List<String> metal;
-    public List<String> plastic;
-    public List<String> rubber;
-    public List<String> wall;
-    public List<String> wood;
-}
-
-[Serializable]
 public class MachineCommonSenseConfigObjectRegistry {
     public List<MachineCommonSenseConfigObjectDefinition> objects;
 }
@@ -1519,3 +1481,4 @@ public class MachineCommonSenseConfigPhysicsProperties {
     public float angularDrag;
 
 }
+
