@@ -540,6 +540,8 @@ public class MachineCommonSenseMain : MonoBehaviour {
         else if (gameObject.GetComponent<SimObjPhysics>() != null) {
             gameObject.tag = "SimObjPhysics"; // AI2-THOR Tag
             gameObject.GetComponent<SimObjPhysics>().uniqueID = gameObject.name;
+            gameObject.GetComponent<SimObjPhysics>().shape = objectConfig.structure ? "structural" :
+                objectDefinition.shape;
         }
 
         string[] materialFiles = objectConfig.materials != null ? objectConfig.materials.ToArray() : new string[] { };
@@ -663,8 +665,9 @@ public class MachineCommonSenseMain : MonoBehaviour {
             ai2thorPhysicsScript.SecondaryProperties = new SimObjSecondaryProperty[] { };
             ai2thorPhysicsScript.MyColliders = colliders ?? (new Collider[] { });
             ai2thorPhysicsScript.ReceptacleTriggerBoxes = new List<GameObject>().ToArray();
-        
         } 
+
+        ai2thorPhysicsScript.shape = objectConfig.structure ? "structural" : objectDefinition.shape;
 
         if (objectConfig.physicsProperties != null) {
             AssignPhysicsMaterialAndRigidBodyValues(objectConfig, gameObject, ai2thorPhysicsScript);
@@ -1066,6 +1069,9 @@ public class MachineCommonSenseMain : MonoBehaviour {
                 SimObjPhysics ai2thorPhysicsScript = interactableObject.GetComponent<SimObjPhysics>();
                 if (ai2thorPhysicsScript) {
                     ai2thorPhysicsScript.uniqueID = gameObject.name + "_" + interactableDefinition.id;
+                    // The type of a child interactable should be something like "drawer" or "shelf" so use that as
+                    // the object's shape.
+                    ai2thorPhysicsScript.shape = ai2thorPhysicsScript.Type.ToString().ToLower();
                 }
                 this.EnsureCanOpenObjectScriptAnimationTimeIsZero(interactableObject);
                 Rigidbody rigidbody = interactableObject.GetComponent<Rigidbody>();
@@ -1360,6 +1366,7 @@ public class MachineCommonSenseConfigMove : MachineCommonSenseConfigStepBeginEnd
 [Serializable]
 public class MachineCommonSenseConfigObjectDefinition : MachineCommonSenseConfigAbstractObject {
     public string resourceFile;
+    public string shape;
     public bool keepColliders;
     public bool primitive;
     public bool visibilityPointsScaleOne;

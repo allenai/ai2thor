@@ -851,6 +851,7 @@ public class ObjectMetadata
     public float distanceXZ;
     public Vector3 heading;
     public Vector3[] points;
+    public string shape;
     public bool visibleInCamera;
 
 	public ObjectMetadata() { }

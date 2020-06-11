@@ -132,7 +132,7 @@ Take a GameObject (we'll call it the "Target" object) containing a MeshFilter, M
 
 - `Scripts/AgentManager`:
   - Added properties to `MetadataWrapper`: `clippingPlaneFar`, `clippingPlaneNear`, `structuralObjects`
-  - Added properties to `ObjectMetadata`: `colorsFromMaterials`, `direction`, `distanceXZ`, `heading`, `points`, `visibleInCamera`
+  - Added properties to `ObjectMetadata`: `colorsFromMaterials`, `direction`, `distanceXZ`, `heading`, `points`, `shape`, `visibleInCamera`
   - Added properties to `ServerAction`: `logs`, `objectDirection`, `receptacleObjectDirection`, `sceneConfig`
   - Added `virtual` to functions: `setReadyToEmit`, `Update`
   - Changed variables or functions from `private` to `protected`: `physicsSceneManager`, most `render*Image` variables
@@ -181,6 +181,7 @@ Take a GameObject (we'll call it the "Target" object) containing a MeshFilter, M
 - `Scripts/PhysicsSceneManager`:
   - Added `virtual` to functions: `Generate_UniqueID`
 - `Scripts/SimObjPhysics`:
+  - Added properties: `shape`
   - Changed the `Start` function to `public` so we can call it from our scripts
   - Added `ApplyRelativeForce` to apply force in a direction relative to the agent's current position.
 - `Scripts/SimObjType`:

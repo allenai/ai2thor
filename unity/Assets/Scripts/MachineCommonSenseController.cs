@@ -226,6 +226,8 @@ public class MachineCommonSenseController : PhysicsRemoteFPSAgentController {
         });
         objectMetadata.colorsFromMaterials = colors.ToArray();
 
+        objectMetadata.shape = simObj.shape;
+
         return objectMetadata;
     }
 
