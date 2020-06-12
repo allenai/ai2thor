@@ -33,7 +33,6 @@ public class MCSController : PhysicsRemoteFPSAgentController {
     }
 
     PlayerPose pose = PlayerPose.STANDING;
-    public GameObject fpsAgent;
 
     public override void CloseObject(ServerAction action) {
         bool continueAction = TryConvertingEachObjectDirectionToId(action);
@@ -634,7 +633,7 @@ public class MCSController : PhysicsRemoteFPSAgentController {
                 direction = Vector3.down;
             }
 
-            CheckIfAgentCanCrawlLieOrStand(direction, startHeight, POSITION_Y/2, -0.15f, PlayerPose.CRAWLING);  
+            CheckIfAgentCanCrawlLieOrStand(direction, startHeight, POSITION_Y/2, -0.10f, PlayerPose.CRAWLING);  
         }
     }
     
@@ -653,7 +652,11 @@ public class MCSController : PhysicsRemoteFPSAgentController {
                 startHeight = POSITION_Y;
             }
 
-            CheckIfAgentCanCrawlLieOrStand(Vector3.down, startHeight, 0.1f, 0, PlayerPose.CRAWLING);          
+            CheckIfAgentCanCrawlLieOrStand(Vector3.down, startHeight, 0.1f, 0, PlayerPose.LYING);
+            
+            //agent looks down at the floor (increasing first parameter increases rotation downwards)  
+            Vector3 lookDirection = fpsAgent.transform.rotation.eulerAngles;
+            fpsAgent.transform.rotation = Quaternion.Euler (30, lookDirection.y, lookDirection.z);        
         }
 
         
@@ -674,17 +677,18 @@ public class MCSController : PhysicsRemoteFPSAgentController {
             startHeight = 0.1f;
         }   
 
-        CheckIfAgentCanCrawlLieOrStand(Vector3.up, startHeight, POSITION_Y, -0.25f, PlayerPose.CRAWLING);
-
+        CheckIfAgentCanCrawlLieOrStand(Vector3.up, startHeight, POSITION_Y, -0.25f, PlayerPose.STANDING); 
     }
 
     public void CheckIfAgentCanCrawlLieOrStand(Vector3 direction, float startHeight, float endHeight, float colliderY, PlayerPose pose) {
+        //Raycast up or down the distance of shifting on y-axis
         Vector3 origin = new Vector3(transform.position.x, startHeight, transform.position.z);
         Vector3 end = new Vector3(transform.position.x, endHeight, transform.position.z);
         RaycastHit hit;
         Ray ray = new Ray(origin, direction);
         LayerMask layerMask = ~(1 << 10);
 
+        //if raycast hits an object, the agent does not move on y-axis
         if (Physics.Raycast(ray, out hit, endHeight, layerMask) && hit.collider.tag == "SimObj") {
             this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.OBSTRUCTED);
             actionFinished(false);
@@ -697,6 +701,7 @@ public class MCSController : PhysicsRemoteFPSAgentController {
             this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.SUCCESSFUL);
             actionFinished(true);
 
+            //change collider height so agent can move
             GetComponent<CapsuleCollider>().center = new Vector3(0, colliderY, 0);
         }
     }
