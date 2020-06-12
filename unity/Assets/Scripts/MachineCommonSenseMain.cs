@@ -249,7 +249,7 @@ public class MachineCommonSenseMain : MonoBehaviour {
                 MachineCommonSenseMain.LIGHT_Z_POSITION);
         }       
 
-        if (scene.wallProperties != null) {
+        if (this.currentScene.wallProperties != null) {
             AssignRoomPhysicsMaterialAndRigidBodyValues(this.wallLeft, wallLeftSimObjPhysics, scene.wallProperties);
             AssignRoomPhysicsMaterialAndRigidBodyValues(this.wallFront, wallFrontSimObjPhysics, scene.wallProperties);
             AssignRoomPhysicsMaterialAndRigidBodyValues(this.wallRight, wallRightSimObjPhysics, scene.wallProperties);
@@ -257,7 +257,7 @@ public class MachineCommonSenseMain : MonoBehaviour {
             AssignRoomPhysicsMaterialAndRigidBodyValues(this.ceiling, ceilingSimObjPhysics, scene.wallProperties);
         }
             
-        if (scene.floorProperties != null) {
+        if (this.currentScene.floorProperties != null) {
             AssignRoomPhysicsMaterialAndRigidBodyValues(this.floor, floorSimObjPhysics, scene.floorProperties);
 
         }
