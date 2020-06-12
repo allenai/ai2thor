@@ -111,6 +111,12 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 
 	public List<SimObjPhysics> ContainedObjectReferences;
 
+    /* Begin MCS Additions */
+
+    public string shape = "";
+
+    /** End MCS Additions **/
+
 	public class PhysicsMaterialValues
 	{
 		public float DynamicFriction;

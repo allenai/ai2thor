@@ -846,10 +846,12 @@ public class ObjectMetadata
     public WorldSpaceBounds objectBounds;
 
     // MCS Additions
+    public string[] colorsFromMaterials;
     public Vector3 direction;
     public float distanceXZ;
     public Vector3 heading;
     public Vector3[] points;
+    public string shape;
     public bool visibleInCamera;
 
 	public ObjectMetadata() { }

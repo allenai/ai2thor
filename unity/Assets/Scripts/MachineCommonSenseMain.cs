@@ -34,7 +34,6 @@ public class MachineCommonSenseMain : MonoBehaviour {
     public string defaultSceneFile = "";
     public bool enableVerboseLog = false;
     public string ai2thorObjectRegistryFile = "ai2thor_object_registry";
-    public string materialRegistryFile = "material_registry";
     public string mcsObjectRegistryFile = "mcs_object_registry";
     public string primitiveObjectRegistryFile = "primitive_object_registry";
     public string defaultCeilingMaterial = "AI2-THOR/Materials/Walls/Drywall";
@@ -45,7 +44,6 @@ public class MachineCommonSenseMain : MonoBehaviour {
     private int lastStep = -1;
     private Dictionary<String, MachineCommonSenseConfigObjectDefinition> objectDictionary =
         new Dictionary<string, MachineCommonSenseConfigObjectDefinition>();
-    private Dictionary<string, List<string>> materialRegistry;
 
     // AI2-THOR Objects and Scripts
     private MachineCommonSenseController agentController;
@@ -88,9 +86,6 @@ public class MachineCommonSenseMain : MonoBehaviour {
         ai2thorObjects.Concat(mcsObjects).Concat(primitiveObjects).ToList().ForEach((objectDefinition) => {
             this.objectDictionary.Add(objectDefinition.id.ToUpper(), objectDefinition);
         });
-
-        // Save the materials (strings) that are accepted in the scene configuration files.
-        this.materialRegistry = LoadMaterialRegistryFromFile(this.materialRegistryFile);
 
         // Load the default MCS scene set in the Unity Editor.
         if (!this.defaultSceneFile.Equals("")) {
@@ -403,8 +398,8 @@ public class MachineCommonSenseMain : MonoBehaviour {
             return null;
         }
 
-        foreach (KeyValuePair<string, List<string>> materialType in this.materialRegistry) {
-            if (materialType.Value.Contains(filename)) {
+        foreach (KeyValuePair<string, Dictionary<string, string[]>> materialType in MachineCommonSenseConfig.MATERIAL_REGISTRY) {
+            if (materialType.Value.ContainsKey(filename)) {
                 if (restrictions.Length == 0 || Array.IndexOf(restrictions, materialType.Key) >= 0) {
                     Material material = Resources.Load<Material>("MCS/" + filename);
                     LogVerbose("LOAD OF MATERIAL FILE Assets/Resources/MCS/" + filename +
@@ -545,6 +540,8 @@ public class MachineCommonSenseMain : MonoBehaviour {
         else if (gameObject.GetComponent<SimObjPhysics>() != null) {
             gameObject.tag = "SimObjPhysics"; // AI2-THOR Tag
             gameObject.GetComponent<SimObjPhysics>().uniqueID = gameObject.name;
+            gameObject.GetComponent<SimObjPhysics>().shape = objectConfig.structure ? "structural" :
+                objectDefinition.shape;
         }
 
         string[] materialFiles = objectConfig.materials != null ? objectConfig.materials.ToArray() : new string[] { };
@@ -668,8 +665,9 @@ public class MachineCommonSenseMain : MonoBehaviour {
             ai2thorPhysicsScript.SecondaryProperties = new SimObjSecondaryProperty[] { };
             ai2thorPhysicsScript.MyColliders = colliders ?? (new Collider[] { });
             ai2thorPhysicsScript.ReceptacleTriggerBoxes = new List<GameObject>().ToArray();
-        
         } 
+
+        ai2thorPhysicsScript.shape = objectConfig.structure ? "structural" : objectDefinition.shape;
 
         if (objectConfig.physicsProperties != null) {
             AssignPhysicsMaterialAndRigidBodyValues(objectConfig, gameObject, ai2thorPhysicsScript);
@@ -1044,26 +1042,6 @@ public class MachineCommonSenseMain : MonoBehaviour {
         return JsonUtility.FromJson<MachineCommonSenseConfigScene>(currentSceneFile.text);
     }
 
-    private Dictionary<string, List<string>> LoadMaterialRegistryFromFile(String filePath) {
-        TextAsset materialRegistryFile = Resources.Load<TextAsset>("MCS/" + filePath);
-        Debug.Log("MCS: Config file Assets/Resources/MCS/" + filePath + ".json" + (materialRegistryFile == null ?
-            " is null!" : (":\n" + materialRegistryFile.text)));
-        MachineCommonSenseConfigMaterialRegistry materialJson =
-            JsonUtility.FromJson<MachineCommonSenseConfigMaterialRegistry>(materialRegistryFile.text);
-        Dictionary<string, List<string>> materialDictionary = new Dictionary<string, List<string>>() {
-            { "block_blank", materialJson.block_blank },
-            { "block_design", materialJson.block_design },
-            { "ceramic", materialJson.ceramic },
-            { "fabric", materialJson.fabric },
-            { "metal", materialJson.metal },
-            { "plastic", materialJson.plastic },
-            { "rubber", materialJson.rubber },
-            { "wall", materialJson.wall },
-            { "wood", materialJson.wood }
-        };
-        return materialDictionary;
-    }
-
     private List<MachineCommonSenseConfigObjectDefinition> LoadObjectRegistryFromFile(String filePath) {
         TextAsset objectRegistryFile = Resources.Load<TextAsset>("MCS/" + filePath);
         Debug.Log("MCS: Config file Assets/Resources/MCS/" + filePath + ".json" + (objectRegistryFile == null ?
@@ -1091,6 +1069,9 @@ public class MachineCommonSenseMain : MonoBehaviour {
                 SimObjPhysics ai2thorPhysicsScript = interactableObject.GetComponent<SimObjPhysics>();
                 if (ai2thorPhysicsScript) {
                     ai2thorPhysicsScript.uniqueID = gameObject.name + "_" + interactableDefinition.id;
+                    // The type of a child interactable should be something like "drawer" or "shelf" so use that as
+                    // the object's shape.
+                    ai2thorPhysicsScript.shape = ai2thorPhysicsScript.Type.ToString().ToLower();
                 }
                 this.EnsureCanOpenObjectScriptAnimationTimeIsZero(interactableObject);
                 Rigidbody rigidbody = interactableObject.GetComponent<Rigidbody>();
@@ -1385,6 +1366,7 @@ public class MachineCommonSenseConfigMove : MachineCommonSenseConfigStepBeginEnd
 [Serializable]
 public class MachineCommonSenseConfigObjectDefinition : MachineCommonSenseConfigAbstractObject {
     public string resourceFile;
+    public string shape;
     public bool keepColliders;
     public bool primitive;
     public bool visibilityPointsScaleOne;
@@ -1491,19 +1473,6 @@ public class MachineCommonSenseConfigGoal {
 }
 
 [Serializable]
-public class MachineCommonSenseConfigMaterialRegistry {
-    public List<String> block_blank;
-    public List<String> block_design;
-    public List<String> ceramic;
-    public List<String> fabric;
-    public List<String> metal;
-    public List<String> plastic;
-    public List<String> rubber;
-    public List<String> wall;
-    public List<String> wood;
-}
-
-[Serializable]
 public class MachineCommonSenseConfigObjectRegistry {
     public List<MachineCommonSenseConfigObjectDefinition> objects;
 }
@@ -1519,3 +1488,4 @@ public class MachineCommonSenseConfigPhysicsProperties {
     public float angularDrag;
 
 }
+
