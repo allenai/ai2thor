@@ -40,6 +40,8 @@ public class Contains : MonoBehaviour
 
 	public bool occupied = false;
 
+    private bool expanded = false;
+
 	//world coordinates of the Corners of this object's receptacles in case we need it for something
 	//public List<Vector3> Corners = new List<Vector3>();
 
@@ -54,6 +56,17 @@ public class Contains : MonoBehaviour
 			myParent = gameObject.GetComponentInParent<SimObjPhysics>().transform.gameObject;
 		}
 
+        // TODO MCS-267 Remove this code hack as well as the expanded variable
+        SimObjPhysics simObj = this.gameObject.GetComponentInParent<SimObjPhysics>();
+        BoxCollider triggerBoxCollider = this.GetComponent<BoxCollider>();
+        if (!this.expanded && simObj != null && (simObj.shape.Equals("bowl") || simObj.shape.Equals("box") || simObj.shape.Equals("plate"))) {
+            float multiplier = 10f / triggerBoxCollider.size.y;
+            triggerBoxCollider.size = new Vector3(triggerBoxCollider.size.x, triggerBoxCollider.size.y * multiplier,
+                triggerBoxCollider.size.z);
+            triggerBoxCollider.center = new Vector3(triggerBoxCollider.center.x, triggerBoxCollider.center.y +
+                (0.5f * triggerBoxCollider.size.y), triggerBoxCollider.center.z);
+            this.expanded = true;
+        }
 	}
 	void Start()
 	{
@@ -228,6 +241,10 @@ public class Contains : MonoBehaviour
             objectUpVector = objectSideTop.z > objectSideBottom.z ? Vector3.forward : Vector3.back;
             verticalDistance = zDiff;
         }
+
+        // Position each spawn point slightly above this object in order to avoid possible
+        // collisions (we assume that the spawned object will fall gently toward the ground).
+        verticalDistance -= 0.05f;
 
         // TODO MCS-226 Adjust number of spawn points by receptacle trigger box size
 		//so lets make a grid, we can parametize the gridsize value later, for now we'll adjust it here
