@@ -212,6 +212,22 @@ public class MachineCommonSenseController : PhysicsRemoteFPSAgentController {
             }
         }
 
+        HashSet<string> colors = new HashSet<string>();
+        simObj.gameObject.GetComponentsInChildren<Renderer>().ToList().ForEach((renderer) => {
+            renderer.materials.ToList().ForEach((material) => {
+                // Object material names sometimes end with " (Instance)" during runtime though I'm not sure why.
+                string materialName = material.name.Replace(" (Instance)", "");
+                if (MachineCommonSenseConfig.MATERIAL_COLORS.ContainsKey(materialName)) {
+                    MachineCommonSenseConfig.MATERIAL_COLORS[materialName].ToList().ForEach((color) => {
+                        colors.Add(color);
+                    });
+                }
+            });
+        });
+        objectMetadata.colorsFromMaterials = colors.ToArray();
+
+        objectMetadata.shape = simObj.shape;
+
         return objectMetadata;
     }
 
