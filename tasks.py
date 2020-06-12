@@ -619,8 +619,7 @@ def pre_test(context):
     )
 
 
-@task    
-def clean(context):
+def clean():
     import scripts.update_private
     subprocess.check_call("git reset --hard", shell=True)
     subprocess.check_call("git clean -f -d", shell=True)
