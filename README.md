@@ -178,6 +178,9 @@ Take a GameObject (we'll call it the "Target" object) containing a MeshFilter, M
   - Added code to allow movement that will auto calculate the space to close the distance to an object within 0.1f
   - In 'CheckIfAgentCanTurn' and 'CheckIfAgentCanLook' add a check to see if object in hand is active
   - In `InteractAndWait`, parent objects within receptacles to that receptacle so they all move together when a receptacle is opened or closed.
+  - Added logic to `InteractAndWait` to reset an object to its prior position if open/close action fails, and to increase the radius used to check if an agent is in the way of the object to be opened/closed.
+  - For `OpenObject` and `CloseObject`, only use coroutine if physics are enabled.
+  - In `isAgentCapsuleCollidingWith`, added expandBy parameter.
 - `Scripts/PhysicsSceneManager`:
   - Added `virtual` to functions: `Generate_UniqueID`
 - `Scripts/SimObjPhysics`:
