@@ -249,19 +249,18 @@ public class MachineCommonSenseMain : MonoBehaviour {
                 MachineCommonSenseMain.LIGHT_Z_POSITION);
         }       
 
-        if (this.currentScene.wallProperties != null) {
-            AssignRoomPhysicsMaterialAndRigidBodyValues(this.wallLeft, wallLeftSimObjPhysics, scene.wallProperties);
-            AssignRoomPhysicsMaterialAndRigidBodyValues(this.wallFront, wallFrontSimObjPhysics, scene.wallProperties);
-            AssignRoomPhysicsMaterialAndRigidBodyValues(this.wallRight, wallRightSimObjPhysics, scene.wallProperties);
-            AssignRoomPhysicsMaterialAndRigidBodyValues(this.wallBack, wallBackSimObjPhysics, scene.wallProperties);
-            AssignRoomPhysicsMaterialAndRigidBodyValues(this.ceiling, ceilingSimObjPhysics, scene.wallProperties);
+        if (this.currentScene.wallProperties != null && this.currentScene.wallProperties.enable) {
+            AssignRoomPhysicsMaterialAndRigidBodyValues(this.wallLeft, wallLeftSimObjPhysics, currentScene.wallProperties);
+            AssignRoomPhysicsMaterialAndRigidBodyValues(this.wallFront, wallFrontSimObjPhysics, currentScene.wallProperties);
+            AssignRoomPhysicsMaterialAndRigidBodyValues(this.wallRight, wallRightSimObjPhysics, currentScene.wallProperties);
+            AssignRoomPhysicsMaterialAndRigidBodyValues(this.wallBack, wallBackSimObjPhysics, currentScene.wallProperties);
+            AssignRoomPhysicsMaterialAndRigidBodyValues(this.ceiling, ceilingSimObjPhysics, currentScene.wallProperties);
         }
             
-        if (this.currentScene.floorProperties != null) {
+        if (this.currentScene.floorProperties != null && this.currentScene.floorProperties.enable) {
             AssignRoomPhysicsMaterialAndRigidBodyValues(this.floor, floorSimObjPhysics, scene.floorProperties);
 
         }
-
 
         if (this.currentScene.goal != null && this.currentScene.goal.description != null) {
             Debug.Log("MCS: Goal = " + this.currentScene.goal.description);
