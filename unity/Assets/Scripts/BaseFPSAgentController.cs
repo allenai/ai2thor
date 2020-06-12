@@ -130,6 +130,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
         protected string lastActionStatus;
 
+		public GameObject fpsAgent;
+
         public enum ActionStatus
         {
 			HAND_IS_FULL,
@@ -173,6 +175,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			this.m_GravityMultiplier = 2;
 			//this.m_UseFovKick = true;
 			//this.m_StepInterval = 5;
+			fpsAgent = GameObject.Find("FirstPersonCharacter");
 		}
 
 
