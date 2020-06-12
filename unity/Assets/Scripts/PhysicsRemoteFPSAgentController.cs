@@ -2250,9 +2250,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             SimObjPhysics target = physicsSceneManager.UniqueIdToSimObjPhysics[action.objectId];
             
             if (!objectIsCurrentlyVisible(target, maxVisibleDistance)) { 
-                Vector3 tmp = target.transform.position;
-                tmp.y = transform.position.y;
-                if (Vector3.Distance(tmp, transform.position) < maxVisibleDistance) {
+                Vector3 targetMoveYHeightToAgentHeight = target.transform.position;
+                targetMoveYHeightToAgentHeight.y = transform.position.y;
+                if (Vector3.Distance(targetMoveYHeightToAgentHeight, transform.position) < maxVisibleDistance) {
                     errorMessage = "Target " + action.objectId + " is obstructed.";
                     Debug.Log(errorMessage);
                     Debug.Log(string.Format("Agent - X position: {0} - Z position {1}.", player.transform.position.x, player.transform.position.z));
@@ -4148,9 +4148,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
 
             if (!objectIsCurrentlyVisible(target, maxVisibleDistance)) { 
-                Vector3 tmp = target.transform.position;
-                tmp.y = transform.position.y;
-                if (Vector3.Distance(tmp, transform.position) < maxVisibleDistance) {
+                Vector3 targetMoveYHeightToAgentHeight = target.transform.position;
+                targetMoveYHeightToAgentHeight.y = transform.position.y;
+                if (Vector3.Distance(targetMoveYHeightToAgentHeight, transform.position) < maxVisibleDistance) {
                     errorMessage = "Target " + action.objectId + " is obstructed.";
                     Debug.Log(errorMessage);
                     actionFinished(false);
