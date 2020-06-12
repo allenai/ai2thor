@@ -332,7 +332,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
                         if(Input.GetKeyDown(KeyCode.L))
                         {
-                            action.action = "Stand";
+                            action.action = "LieDown";
                             PhysicsController.ProcessControlCommand(action);
                         }
                     }

@@ -633,7 +633,7 @@ public class MachineCommonSenseController : PhysicsRemoteFPSAgentController {
                 direction = Vector3.down;
             }
 
-            CheckIfAgentCanCrawlLieOrStand(direction, startHeight, POSITION_Y/2, PlayerPose.CRAWLING);  
+            CheckIfAgentCanCrawlLieOrStand(direction, startHeight, POSITION_Y/2, -0.15f, PlayerPose.CRAWLING);  
         }
     }
     
@@ -652,7 +652,7 @@ public class MachineCommonSenseController : PhysicsRemoteFPSAgentController {
                 startHeight = POSITION_Y;
             }
 
-            CheckIfAgentCanCrawlLieOrStand(Vector3.down, startHeight, 0.1f, PlayerPose.CRAWLING);          
+            CheckIfAgentCanCrawlLieOrStand(Vector3.down, startHeight, 0.1f, 0, PlayerPose.CRAWLING);          
         }
 
         
@@ -673,11 +673,11 @@ public class MachineCommonSenseController : PhysicsRemoteFPSAgentController {
             startHeight = 0.1f;
         }   
 
-        CheckIfAgentCanCrawlLieOrStand(Vector3.up, startHeight, POSITION_Y, PlayerPose.CRAWLING);
+        CheckIfAgentCanCrawlLieOrStand(Vector3.up, startHeight, POSITION_Y, -0.25f, PlayerPose.CRAWLING);
 
     }
 
-    public void CheckIfAgentCanCrawlLieOrStand(Vector3 direction, float startHeight, float endHeight, PlayerPose pose) {
+    public void CheckIfAgentCanCrawlLieOrStand(Vector3 direction, float startHeight, float endHeight, float colliderY, PlayerPose pose) {
         Vector3 origin = new Vector3(transform.position.x, startHeight, transform.position.z);
         Vector3 end = new Vector3(transform.position.x, endHeight, transform.position.z);
         RaycastHit hit;
@@ -695,6 +695,8 @@ public class MachineCommonSenseController : PhysicsRemoteFPSAgentController {
             SetUpRotationBoxChecks();
             this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.SUCCESSFUL);
             actionFinished(true);
+
+            GetComponent<CapsuleCollider>().center = new Vector3(0, colliderY, 0);
         }
     }
 }
