@@ -11,10 +11,9 @@ from invoke import task
 import boto3
 import platform
 import ai2thor.build
+from ai2thor.build import PUBLIC_S3_BUCKET, PRIVATE_S3_BUCKET
 
 
-S3_BUCKET = "ai2-thor"
-PRIVATE_S3_BUCKET = "ai2-thor-private"
 UNITY_VERSION = "2018.4.16f1"
 
 
@@ -34,7 +33,7 @@ def push_build(build_archive_name, archive_sha256, include_private_scenes):
     # subprocess.run("gsha256sum %s" % build_archive_name)
     s3 = boto3.resource("s3")
     acl = 'public-read'
-    bucket = S3_BUCKET
+    bucket = PUBLIC_S3_BUCKET
     if include_private_scenes:
         bucket = PRIVATE_S3_BUCKET 
         acl = 'private'
@@ -588,7 +587,7 @@ def build_log_push(build_info):
 
     build_log_key = "builds/" + build_info["log"]
     s3 = boto3.resource("s3")
-    s3.Object(S3_BUCKET, build_log_key).put(
+    s3.Object(PUBLIC_S3_BUCKET, build_log_key).put(
         Body=build_log, ACL="public-read", ContentType="text/plain"
     )
 
@@ -717,14 +716,12 @@ def ci_build_arch(arch, branch):
 
     include_private_scenes = False
     # XXX FIX bucket name
-    build_url_base = "http://s3-us-west-2.amazonaws.com/%s/" % S3_BUCKET
     unity_path = "unity"
     build_name = ai2thor.build.build_name(arch, commit_id, include_private_scenes)
     build_dir = os.path.join("builds", build_name)
     build_path = build_dir + ".zip"
     build_info = {}
 
-    build_info["url"] = build_url_base + build_path
     build_info["build_exception"] = ""
 
     proc = None
@@ -788,7 +785,6 @@ def build(context, local=False):
 
 
     version = datetime.datetime.now().strftime("%Y%m%d%H%M")
-    build_url_base = "http://s3-us-west-2.amazonaws.com/%s/" % S3_BUCKET
 
     builds = {"Docker": {"tag": version}}
     threads = []
@@ -806,7 +802,6 @@ def build(context, local=False):
             build_path = build_dir + ".zip"
             build_info = builds[platform_map[arch]] = {}
 
-            build_info["url"] = build_url_base + build_path
             build_info["build_exception"] = ""
             build_info["log"] = "%s.log" % (build_name,)
 

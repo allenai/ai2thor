@@ -2,6 +2,9 @@ from aws_requests_auth.boto_utils import BotoAWSRequestsAuth
 import os
 import requests
 
+PUBLIC_S3_BUCKET = "ai2-thor-public"
+PRIVATE_S3_BUCKET = "ai2-thor-private"
+
 VERSION = None
 try:
     from ai2thor._builds import VERSION
@@ -24,8 +27,8 @@ def build_name(arch, commit_id, include_private_scenes=False):
     else:
         return "thor-%s-%s" % (arch, commit_id)
 
-base_url = "http://s3-us-west-2.amazonaws.com/ai2-thor/"
-private_base_url = "http://s3-us-west-2.amazonaws.com/ai2-thor-private/"
+base_url = "http://s3-us-west-2.amazonaws.com/%s/" % PUBLIC_S3_BUCKET
+private_base_url = "http://s3-us-west-2.amazonaws.com/%s/" % PRIVATE_S3_BUCKET
 
 class Build(object):
 
