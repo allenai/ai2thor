@@ -619,11 +619,15 @@ def pre_test(context):
     )
 
 
-def clean():
+@task    
+def clean(context):
+    import scripts.update_private
     subprocess.check_call("git reset --hard", shell=True)
     subprocess.check_call("git clean -f -d", shell=True)
     subprocess.check_call("git clean -f -x", shell=True)
     shutil.rmtree("unity/builds", ignore_errors=True)
+    shutil.rmtree(scripts.update_private.private_dir, ignore_errors=True)
+    scripts.update_private.checkout_branch()
 
 
 def link_build_cache(branch):
@@ -675,8 +679,9 @@ def ci_build(context):
 
             procs = []
             for arch in ["OSXIntel64", "Linux64"]:
-                p = ci_build_arch(arch, build["branch"])
-                procs.append(p)
+                for include_private_scenes in [True, False]:
+                    p = ci_build_arch(arch, build["branch"], include_private_scenes)
+                    procs.append(p)
 
             if build["branch"] == "master":
                 webgl_build_deploy_demo(
@@ -695,7 +700,7 @@ def ci_build(context):
     lock_f.close()
 
 
-def ci_build_arch(arch, branch):
+def ci_build_arch(arch, include_private_scenes):
     from multiprocessing import Process
     import subprocess
     import boto3
@@ -714,8 +719,6 @@ def ci_build_arch(arch, branch):
         print("found build for commit %s %s" % (commit_id, arch))
         return
 
-    include_private_scenes = False
-    # XXX FIX bucket name
     unity_path = "unity"
     build_name = ai2thor.build.build_name(arch, commit_id, include_private_scenes)
     build_dir = os.path.join("builds", build_name)

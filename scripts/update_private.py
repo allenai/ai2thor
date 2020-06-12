@@ -15,20 +15,22 @@ def current_branch():
     return subprocess.check_output("git --git-dir=%s rev-parse --abbrev-ref HEAD" % git_dir, shell=True).decode('ascii').strip()
 
 
-def checkout_branch(directory):
-    os.chdir(directory)
+def checkout_branch():
+    if not os.path.isdir(private_dir):
+        subprocess.check_call("git clone %s %s" % (private_repo_url, private_dir), shell=True)
+
+    cwd = os.getcwd()
+    os.chdir(private_dir)
     subprocess.check_call("git fetch", shell=True)
     branch = current_branch()
-    print("Moving private checkout %s -> %s" % (directory, branch))
+    print("Moving private checkout %s -> %s" % (private_dir, branch))
     subprocess.check_call("git checkout -B %s" % branch, shell=True)
     subprocess.check_call("git pull origin %s" % branch, shell=True)
+    os.chdir(cwd)
 
 
 if __name__ == "__main__":
-    if os.path.isdir(private_dir):
-        checkout_branch(private_dir)
-    elif os.path.exists(private_dir):
+    if not os.path.isdir(private_dir) and os.path.exists(private_dir):
         raise Exception("Private directory %s is not a directory - please remove" % private_dir)
     else:
-        subprocess.check_call("git clone %s %s" % (private_repo_url, private_dir), shell=True)
-        checkout_branch(private_dir)
+        checkout_branch()
