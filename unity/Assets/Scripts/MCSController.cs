@@ -616,87 +616,86 @@ public class MCSController : PhysicsRemoteFPSAgentController {
             Debug.LogError("PickupObject target " + target.gameObject.name + " does not have a MeshFilter!");
         }
     }
-    /*
+    
     public void Crawl(ServerAction action) {
-
         if (this.pose == PlayerPose.CRAWLING) {
                 this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.SUCCESSFUL);
                 actionFinished(true);
-            }
-
-        if (this.pose == PlayerPose.LYING) {
-            //checking if agent is looking at ceiling
-            if (fpsAgent.transform.rotation.x < -45 && fpsAgent.transform.rotation.x > -135) {
-                this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.WRONG_POSE);
-                actionFinished(true);
-            }
-        }
-
-        if (object is obstructed from going down) {
-            //which i dont think would ever be the case since if you can stand there you can crouch
-            //only adjusting y position here
-
-            this.lastActionStatus == Enum.GetName(typeof(ActionStatus), ActionStatus.OBSTRUCTED);
-            actionFinished(false);
-
+                Debug.Log("Agent is already Crawling");
         } else {
+            float startHeight;
+            Vector3 direction;
 
-            //change position
-            this.transform.position = new Vector3(this.transform.position.x, POSITION_Y/2, this.transform.position.z);
+            if (this.pose == PlayerPose.LYING) {
+                startHeight = 0.1f;
+                direction = Vector3.up;
+            }   else {
+                startHeight = POSITION_Y;
+                direction = Vector3.down;
+            }
 
-            this.pose = PlayerPose.CRAWLING;
-            SetUpRotationBoxChecks();
-            this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.SUCCESSFUL);
-            actionFinished(true);
+            CheckIfAgentCanCrawlLieOrStand(direction, startHeight, POSITION_Y/2, PlayerPose.CRAWLING);  
         }
     }
-
+    
     public void LieDown(ServerAction action) {
         if (this.pose == PlayerPose.LYING) {
             this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.SUCCESSFUL);
             actionFinished(true);
-        }
-
-        if (object is obstructed from going down) {
-            //which i dont think would ever be the case since if you can stand there you can lie down
-
-            this.lastActionStatus == Enum.GetName(typeof(ActionStatus), ActionStatus.SUCCESSFUL);
-            actionFinished(false);
-
+            Debug.Log("Agent is already Lying Down");
         } else {
-            //change position
-            this.transform.position = new Vector3(this.transform.position.x, 0.1f, this.transform.position.z);
-            //change rotation
-            Vector3 currentRotation = this.transform.rotation.eulerAngles;
-            this.transform.rotation = Quaternion.Euler (45, currentRotation.y, currentRotation.z);
-            this.pose == PlayerPose.LYING;
-            SetUpRotationBoxChecks();
-            this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.OBSTRUCTED);
-            actionFinished(true);
+
+            float startHeight;
+
+            if (this.pose == PlayerPose.CRAWLING) {
+                startHeight = POSITION_Y/2;
+            }   else {
+                startHeight = POSITION_Y;
+            }
+
+            CheckIfAgentCanCrawlLieOrStand(Vector3.down, startHeight, 0.1f, PlayerPose.CRAWLING);          
         }
+
+        
     }
 
     public override void Stand(ServerAction action) {
         if (this.pose == PlayerPose.STANDING) {
             this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.SUCCESSFUL);
             actionFinished(true);
-        }
-        
-        
-        if (object is obstructed from going up) {
-            //actually possible if under object
+            Debug.Log("Agent is already Standing");
+        }  
 
-            this.lastActionStatus == Enum.GetName(typeof(ActionStatus), ActionStatus.OBSTRUCTED);
+        float startHeight;
+
+        if (this.pose == PlayerPose.CRAWLING) {
+            startHeight = POSITION_Y/2;
+        }   else {
+            startHeight = 0.1f;
+        }   
+
+        CheckIfAgentCanCrawlLieOrStand(Vector3.up, startHeight, POSITION_Y, PlayerPose.CRAWLING);
+
+    }
+
+    public void CheckIfAgentCanCrawlLieOrStand(Vector3 direction, float startHeight, float endHeight, PlayerPose pose) {
+        Vector3 origin = new Vector3(transform.position.x, startHeight, transform.position.z);
+        Vector3 end = new Vector3(transform.position.x, endHeight, transform.position.z);
+        RaycastHit hit;
+        Ray ray = new Ray(origin, direction);
+        LayerMask layerMask = ~(1 << 10);
+
+        if (Physics.Raycast(ray, out hit, endHeight, layerMask) && hit.collider.tag == "SimObj") {
+            this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.OBSTRUCTED);
             actionFinished(false);
+            Debug.Log("Agent is Obstructed");
+            
         } else {
-            this.transform.position = new Vector3(this.transform.position.x, POSITION_Y, this.transform.position.z);
-            this.pose == PlayerPose.STANDING;
+            this.transform.position = new Vector3(this.transform.position.x, endHeight, this.transform.position.z);
+            this.pose = pose;
             SetUpRotationBoxChecks();
             this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.SUCCESSFUL);
             actionFinished(true);
         }
-        
-
     }
-    */
 }
