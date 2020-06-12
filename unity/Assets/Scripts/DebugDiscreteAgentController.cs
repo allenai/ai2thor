@@ -317,6 +317,24 @@ namespace UnityStandardAssets.Characters.FirstPerson
                             action.action = "RotateLook";
                             PhysicsController.ProcessControlCommand(action);
                         }
+
+                        if(Input.GetKeyDown(KeyCode.Q))
+                        {
+                            action.action = "Crawl";
+                            PhysicsController.ProcessControlCommand(action);
+                        }
+
+                        if(Input.GetKeyDown(KeyCode.E))
+                        {
+                            action.action = "Stand";
+                            PhysicsController.ProcessControlCommand(action);
+                        }
+
+                        if(Input.GetKeyDown(KeyCode.L))
+                        {
+                            action.action = "Stand";
+                            PhysicsController.ProcessControlCommand(action);
+                        }
                     }
             }
         }
