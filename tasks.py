@@ -641,7 +641,7 @@ def pending_travis_build():
     import requests
 
     res = requests.get(
-        "https://api.travis-ci.org/repo/16690831/builds?repository_id=16690831&include=build.commit%2Cbuild.branch%2Cbuild.request%2Cbuild.created_by%2Cbuild.repository&build.state=started%2Ccreated&sort_by=started_at:desc",
+        "https://api.travis-ci.org/repo/16690831/builds?repository_id=16690831&include=build.commit%2Cbuild.branch%2Cbuild.request%2Cbuild.created_by%2Cbuild.repository&build.state=started&sort_by=started_at:desc",
         headers={
             "Accept": "application/json",
             "Content-Type": "application/json",
