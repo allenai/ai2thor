@@ -669,11 +669,11 @@ public class MachineCommonSenseMain : MonoBehaviour {
 
         ai2thorPhysicsScript.shape = objectConfig.structure ? "structural" : objectDefinition.shape;
 
-        if (objectConfig.physicsProperties != null) {
+        if (objectConfig.physicsProperties != null && objectConfig.physicsProperties.enable) {
             AssignPhysicsMaterialAndRigidBodyValues(objectConfig, gameObject, ai2thorPhysicsScript);
         } 
         
-        else if (objectDefinition.physicsProperties != null) {
+        else if (objectDefinition.physicsProperties != null && objectDefinition.physicsProperties.enable) {
             AssignPhysicsMaterialAndRigidBodyValues(objectDefinition, gameObject, ai2thorPhysicsScript);
         }
 
@@ -1480,7 +1480,7 @@ public class MachineCommonSenseConfigObjectRegistry {
 [Serializable]
 
 public class MachineCommonSenseConfigPhysicsProperties {
-
+    public bool enable;
     public float dynamicFriction;
     public float staticFriction;
     public float bounciness;
