@@ -682,7 +682,7 @@ def ci_build(context):
             procs = []
             for arch in ["OSXIntel64", "Linux64"]:
                 for include_private_scenes in [True, False]:
-                    p = ci_build_arch(arch, build["branch"], include_private_scenes)
+                    p = ci_build_arch(arch, include_private_scenes)
                     procs.append(p)
 
             if build["branch"] == "master":
