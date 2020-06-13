@@ -621,6 +621,9 @@ def pre_test(context):
 
 def clean():
     import scripts.update_private
+    # a deploy key is used on the build server and an .ssh/config entry has been added
+    # to point to the deploy key caclled ai2thor-private-github
+    scripts.update_private.private_repo_url = 'git@ai2thor-private-github:allenai/ai2thor-private.git'
     subprocess.check_call("git reset --hard", shell=True)
     subprocess.check_call("git clean -f -d", shell=True)
     subprocess.check_call("git clean -f -x", shell=True)
