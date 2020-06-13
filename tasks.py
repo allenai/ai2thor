@@ -1481,7 +1481,7 @@ def s3_etag_data(data):
 
 cache_seconds = 31536000
 @task
-def webgl_deploy(ctx, bucket='ai2-thor-webgl', prefix='local', source_dir='builds', target_dir='', verbose=False, force=False, extensions_no_cache=''):
+def webgl_deploy(ctx, bucket='ai2-thor-webgl-public', prefix='local', source_dir='builds', target_dir='', verbose=False, force=False, extensions_no_cache=''):
     from pathlib import Path
     from os.path import isfile, join, isdir
 
