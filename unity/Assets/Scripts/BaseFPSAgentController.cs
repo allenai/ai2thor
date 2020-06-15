@@ -129,8 +129,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
         private ServerAction currentServerAction;
 
         protected string lastActionStatus;
-
-		public GameObject fpsAgent;
+		
+        public GameObject fpsAgent;
 
         public enum ActionStatus
         {
