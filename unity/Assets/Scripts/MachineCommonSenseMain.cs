@@ -1522,6 +1522,7 @@ public class MachineCommonSenseConfigPhysicsProperties {
     public float bounciness;
     public float drag;
     public float angularDrag;
+    public float enable;
 
 }
 
