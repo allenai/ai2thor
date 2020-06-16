@@ -558,7 +558,7 @@ def deploy_pip(context):
     subprocess.check_call("twine upload --repository testpypi -u __token__ dist/*", shell=True)
 
 @task
-def build_pip(context):
+def build_pip(context, version):
     from ai2thor.build import platform_map
     import re
     import xml.etree.ElementTree as ET 
@@ -568,17 +568,17 @@ def build_pip(context):
 
     res.raise_for_status()
 
-    try:
-        git_tag_version = (
-            subprocess.check_output("git describe --tags --exact-match", shell=True)
-            .decode("ascii")
-            .strip()
-        )
-    except Exception as e:
-        raise Exception("no tag found for current commit: %s" % e)
+    commit_tags = (
+        subprocess.check_output("git tag --points-at", shell=True)
+        .decode("ascii")
+        .strip().split("\n")
+    )
 
-    if not re.match(r'^[0-9]{1,3}\.+[0-9]{1,3}\.[0-9]{1,3}$', git_tag_version):
-        raise Exception("invalid version: %s" % tag_version)
+    if version not in commit_tags:
+        raise Exception("tag %s is not on current commit" % version)
+
+    if not re.match(r'^[0-9]{1,3}\.+[0-9]{1,3}\.[0-9]{1,3}$', version):
+        raise Exception("invalid version: %s" % version)
 
     commit_id = git_commit_id()
 
@@ -596,7 +596,7 @@ def build_pip(context):
         break
     
     current_maj, current_min, current_sub = list(map(int, latest_version.split('.')))
-    next_maj, next_min, next_sub = list(map(int, git_tag_version.split('.')))
+    next_maj, next_min, next_sub = list(map(int, version.split('.')))
 
     if (next_maj > current_maj) or \
         (next_maj >= current_maj and next_min > current_min) or \
@@ -616,13 +616,13 @@ def build_pip(context):
         with open("ai2thor/_version.py", "w") as fi:
             fi.write("# Copyright Allen Institute for Artificial Intelligence 2017\n")
             fi.write("# GENERATED FILE - DO NOT EDIT\n")
-            fi.write("__version__ = '%s'\n" % (git_tag_version))
+            fi.write("__version__ = '%s'\n" % (version))
 
 
         subprocess.check_call("python setup.py sdist bdist_wheel --universal", shell=True)
 
     else:
-        raise Exception("Invalid version: %s is not greater than latest version %s" % (git_tag_version, latest_version))
+        raise Exception("Invalid version: %s is not greater than latest version %s" % (version, latest_version))
             
 
 @task
