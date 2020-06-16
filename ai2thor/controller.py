@@ -44,7 +44,7 @@ import ai2thor.downloader
 import ai2thor.server
 from ai2thor.interact import InteractiveControllerPrompt, DefaultActions
 from ai2thor.server import queue_get, DepthFormat
-from ai2thor.build import VERSION
+from ai2thor.build import COMMIT_ID
 from ai2thor._quality_settings import QUALITY_SETTINGS, DEFAULT_QUALITY
 
 import warnings
@@ -763,8 +763,8 @@ class Controller(object):
         from ai2thor.build import arch_platform_map
         import ai2thor.build
         arch = arch_platform_map[platform.system()]
-        if VERSION:
-            ver_build = ai2thor.build.Build(arch, VERSION, self.include_private_scenes)
+        if COMMIT_ID:
+            ver_build = ai2thor.build.Build(arch, COMMIT_ID, self.include_private_scenes)
             return (ver_build.url(), ver_build.sha256())
         else:
             url = None

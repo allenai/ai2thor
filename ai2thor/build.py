@@ -5,9 +5,9 @@ import requests
 PUBLIC_S3_BUCKET = "ai2-thor-public"
 PRIVATE_S3_BUCKET = "ai2-thor-private"
 
-VERSION = None
+COMMIT_ID = None
 try:
-    from ai2thor._builds import VERSION
+    from ai2thor._builds import COMMIT_ID
 except ImportError:
     pass
 
