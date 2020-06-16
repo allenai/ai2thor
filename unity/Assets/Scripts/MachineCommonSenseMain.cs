@@ -250,15 +250,15 @@ public class MachineCommonSenseMain : MonoBehaviour {
         }       
 
         if (this.currentScene.wallProperties != null && this.currentScene.wallProperties.enable) {
-            AssignRoomPhysicsMaterialAndRigidBodyValues(this.wallLeft, wallLeftSimObjPhysics, currentScene.wallProperties);
-            AssignRoomPhysicsMaterialAndRigidBodyValues(this.wallFront, wallFrontSimObjPhysics, currentScene.wallProperties);
-            AssignRoomPhysicsMaterialAndRigidBodyValues(this.wallRight, wallRightSimObjPhysics, currentScene.wallProperties);
-            AssignRoomPhysicsMaterialAndRigidBodyValues(this.wallBack, wallBackSimObjPhysics, currentScene.wallProperties);
-            AssignRoomPhysicsMaterialAndRigidBodyValues(this.ceiling, ceilingSimObjPhysics, currentScene.wallProperties);
+            AssignPhysicsMaterialAndRigidBodyValues(currentScene.wallProperties, this.wallLeft, wallLeftSimObjPhysics);
+            AssignPhysicsMaterialAndRigidBodyValues(currentScene.wallProperties, this.wallFront, wallFrontSimObjPhysics);
+            AssignPhysicsMaterialAndRigidBodyValues(currentScene.wallProperties, this.wallRight, wallRightSimObjPhysics);
+            AssignPhysicsMaterialAndRigidBodyValues(currentScene.wallProperties, this.wallBack, wallBackSimObjPhysics);
+            AssignPhysicsMaterialAndRigidBodyValues(currentScene.wallProperties, this.ceiling, ceilingSimObjPhysics);
         }
             
         if (this.currentScene.floorProperties != null && this.currentScene.floorProperties.enable) {
-            AssignRoomPhysicsMaterialAndRigidBodyValues(this.floor, floorSimObjPhysics, scene.floorProperties);
+            AssignPhysicsMaterialAndRigidBodyValues(scene.floorProperties, this.floor, floorSimObjPhysics);
 
         }
 
@@ -291,27 +291,6 @@ public class MachineCommonSenseMain : MonoBehaviour {
         this.lastStep = -1;
         this.physicsSceneManager.SetupScene();
     }
-
-    private void AssignRoomPhysicsMaterialAndRigidBodyValues(
-        GameObject gameObject,
-        SimObjPhysics objPhysics,
-        MachineCommonSenseConfigPhysicsProperties properties
-        ){ 
-            objPhysics.HFdynamicfriction = properties.dynamicFriction;
-            objPhysics.HFstaticfriction = properties.staticFriction;
-            objPhysics.HFbounciness = properties.bounciness;
-            objPhysics.HFrbdrag = properties.drag;
-            objPhysics.HFrbangulardrag = properties.angularDrag;
-                
-            Collider wallCollider = gameObject.GetComponent<Collider>();
-            wallCollider.material.dynamicFriction = objPhysics.HFdynamicfriction;
-            wallCollider.material.staticFriction = objPhysics.HFstaticfriction;
-            wallCollider.material.bounciness = objPhysics.HFbounciness;
-
-            Rigidbody wallRigidBody = gameObject.GetComponent<Rigidbody>();
-            wallRigidBody.drag = objPhysics.HFrbdrag;
-            wallRigidBody.angularDrag = objPhysics.HFrbangulardrag;
-        }
 
     private Collider AssignBoundingBox(
         GameObject gameObject,
@@ -704,11 +683,11 @@ public class MachineCommonSenseMain : MonoBehaviour {
         ai2thorPhysicsScript.shape = objectConfig.structure ? "structural" : objectDefinition.shape;
 
         if (objectConfig.physicsProperties != null && objectConfig.physicsProperties.enable) {
-            AssignPhysicsMaterialAndRigidBodyValues(objectConfig, gameObject, ai2thorPhysicsScript);
+            AssignPhysicsMaterialAndRigidBodyValues(objectConfig.physicsProperties, gameObject, ai2thorPhysicsScript);
         } 
         
         else if (objectDefinition.physicsProperties != null && objectDefinition.physicsProperties.enable) {
-            AssignPhysicsMaterialAndRigidBodyValues(objectDefinition, gameObject, ai2thorPhysicsScript);
+            AssignPhysicsMaterialAndRigidBodyValues(objectDefinition.physicsProperties, gameObject, ai2thorPhysicsScript);
         }
 
         ai2thorPhysicsScript.PrimaryProperty = (pickupable ? SimObjPrimaryProperty.CanPickup : (moveable ?
@@ -803,14 +782,14 @@ public class MachineCommonSenseMain : MonoBehaviour {
     }
 
     private void AssignPhysicsMaterialAndRigidBodyValues
-        (MachineCommonSenseConfigAbstractObject physicsObject,
+        (MachineCommonSenseConfigPhysicsProperties physicsObject,
         GameObject gameObject, SimObjPhysics ai2thorPhysicsScript
         ) {
-            ai2thorPhysicsScript.HFdynamicfriction = physicsObject.physicsProperties.dynamicFriction;
-            ai2thorPhysicsScript.HFstaticfriction = physicsObject.physicsProperties.staticFriction;
-            ai2thorPhysicsScript.HFbounciness = physicsObject.physicsProperties.bounciness;
-            ai2thorPhysicsScript.HFrbdrag = physicsObject.physicsProperties.drag;
-            ai2thorPhysicsScript.HFrbangulardrag = physicsObject.physicsProperties.angularDrag;
+            ai2thorPhysicsScript.HFdynamicfriction = physicsObject.dynamicFriction;
+            ai2thorPhysicsScript.HFstaticfriction = physicsObject.staticFriction;
+            ai2thorPhysicsScript.HFbounciness = physicsObject.bounciness;
+            ai2thorPhysicsScript.HFrbdrag = physicsObject.drag;
+            ai2thorPhysicsScript.HFrbangulardrag = physicsObject.angularDrag;
 
             Rigidbody rigidbody = gameObject.GetComponent<Rigidbody>();
             //Gets rigid body of object and changes drag/angular drag
@@ -1522,7 +1501,5 @@ public class MachineCommonSenseConfigPhysicsProperties {
     public float bounciness;
     public float drag;
     public float angularDrag;
-    public float enable;
-
 }
 
