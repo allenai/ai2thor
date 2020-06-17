@@ -45,9 +45,11 @@ public class FirstPersonCharacterCull : MonoBehaviour
     {
         if(!StopCullingThingsForASecond)
         {
-            if(FPSController != null && (RenderersToHide != null || RenderersToHide.Length != 0) 
-                && FPSController.IsVisible)//only do this if visibility capsule has been toggled on
-            {
+            if (
+                FPSController != null 
+                && (RenderersToHide != null || RenderersToHide.Length != 0) 
+                && FPSController.IsVisible
+            ) { //only do this if visibility capsule has been toggled on
                 foreach (MeshRenderer mr in RenderersToHide)
                 {
                     mr.enabled = false; //Turn off renderer
@@ -61,9 +63,12 @@ public class FirstPersonCharacterCull : MonoBehaviour
     {
         if(!StopCullingThingsForASecond)
         {
-            if(FPSController != null && (RenderersToHide != null || RenderersToHide.Length != 0)
-                && FPSController.IsVisible)//only do this if visibility capsule is toggled on
-            {
+            if (
+                FPSController != null 
+                && (RenderersToHide != null || RenderersToHide.Length != 0)
+                && FPSController.IsVisible
+            ) { //only do this if visibility capsule is toggled on
+            
                 foreach (MeshRenderer mr in RenderersToHide)
                 {
                     mr.enabled = true; //Turn it back on

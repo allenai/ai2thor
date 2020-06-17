@@ -20,7 +20,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
     public class PhysicsRemoteFPSAgentController : BaseFPSAgentController {
         [SerializeField] protected GameObject[] ToSetActive = null;
         protected Dictionary<string, Dictionary<int, Material[]>> maskedObjects = new Dictionary<string, Dictionary<int, Material[]>>();
-        protected bool actionBoolReturn;
+        bool transparentStructureObjectsHidden = false;
         //face swap stuff here
         public Material[] ScreenFaces; //0 - neutral, 1 - Happy, 2 - Mad, 3 - Angriest
         public MeshRenderer MyFaceMesh;
@@ -141,7 +141,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         // Update is called once per frame
         void Update() {
-
         }
 
         private void LateUpdate() {
@@ -943,6 +942,69 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true, tableId);
         }
 
+        public float GetXZRadiusOfObject(SimObjPhysics sop) {
+            BoxCollider bc = sop.BoundingBox.GetComponent<BoxCollider>();
+            return (new Vector3(bc.size.x, 0f, bc.size.z) * 0.5f).magnitude;
+        }
+
+        public void GetUnreachableSilhouetteForObject(ServerAction action) {
+            if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(action.objectId)) {
+                errorMessage = "Cannot find object with id " + action.objectId;
+                actionFinished(false);
+                return;
+            }
+            if (action.z <= 0.0f) {
+                errorMessage = "Interactable distance (z) must be > 0";
+                actionFinished(false);
+                return;
+            }
+            SimObjPhysics targetObject = physicsSceneManager.ObjectIdToSimObjPhysics[action.objectId];
+
+            Vector3 savedObjectPosition = targetObject.transform.position;
+            Quaternion savedObjectRotation = targetObject.transform.rotation;
+            Vector3 savedAgentPosition = transform.position;
+            Quaternion savedAgentRotation = transform.rotation;
+
+            targetObject.transform.rotation = Quaternion.identity;
+            transform.rotation = Quaternion.identity;
+
+            float objectRad = GetXZRadiusOfObject(targetObject);
+
+            var sb = new System.Text.StringBuilder();
+            int halfWidth = 1 + ((int) Math.Round((objectRad + action.z + m_CharacterController.radius) / gridSize));
+            for (int i = 2 * halfWidth; i >= 0; i--) {
+                float zOffset = ((i - halfWidth) * gridSize);
+
+                for (int j = 0; j < 2 * halfWidth + 1; j++) {
+
+                    float xOffset = ((j - halfWidth) * gridSize);
+                    if (j != 0) {
+                        sb.Append(" ");
+                    }
+                    transform.position = targetObject.transform.position + new Vector3(xOffset, 0f, zOffset);
+                    if (isAgentCapsuleCollidingWith(targetObject.gameObject)) {
+                        sb.Append("1");
+                    } else if(distanceToObject(targetObject) <= action.z) {
+                        sb.Append("2");
+                    } else {
+                        sb.Append("0");
+                    }
+                }
+                sb.Append("\n");
+            }
+            string mat = sb.ToString();
+#if UNITY_EDITOR
+            Debug.Log(mat);
+#endif
+
+            targetObject.transform.position = savedObjectPosition;
+            targetObject.transform.rotation = savedObjectRotation;
+            transform.position = savedAgentPosition;
+            transform.rotation = savedAgentRotation;
+
+            actionFinished(true, mat);
+        }
+
         public void RandomlyCreateLiftedFurniture(ServerAction action) {
             if (action.z < 0.25f) {
                 errorMessage = "z must be at least 0.25";
@@ -963,9 +1025,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 agent.transform.position = new Vector3(50f, 50f, 50f);
                 oldAgentRotations.Add(agent.transform.rotation);
             }
-            SimObjPhysics objectCreated = randomlyCreateAndPlaceObjectOnFloor(
-                action.objectType, action.objectVariation, reachablePositions
-            );
+            SimObjPhysics objectCreated = null;
+            try {
+                objectCreated = randomlyCreateAndPlaceObjectOnFloor(
+                    action.objectType, action.objectVariation, reachablePositions
+                );
+            } catch (Exception e) {}
             if (objectCreated == null) {
                 for (int i = 0; i < this.agentManager.agents.Count; i++) {
                     var agent = this.agentManager.agents[i];
@@ -991,7 +1056,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     List<Vector3> candidatePositionsList = new List<Vector3>();
                     foreach (Vector3 p in reachablePositions) {
                         transform.position = p;
-                        if (isAgentCapsuleColliding()) {
+                        if (isAgentCapsuleColliding(collidersToIgnoreDuringMovement)) {
                             continue;
                         }
                         if (distanceToObject(objectCreated) <= action.z) {
@@ -1069,11 +1134,15 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 actionFinished(false);
                 return;
             }
-
             actionFinished(true, objectCreated.ObjectID);
         }
 
-        protected bool moveObject(SimObjPhysics sop, Vector3 targetPosition, bool snapToGrid=false) {
+        protected bool moveObject(
+            SimObjPhysics sop,
+            Vector3 targetPosition,
+            bool snapToGrid=false,
+            HashSet<Transform> ignoreCollisionWithTransforms=null
+        ) {
             Vector3 lastPosition = sop.transform.position;
             //Rigidbody ItemRB = sop.gameObject.GetComponent<Rigidbody>(); no longer needs rb reference
 
@@ -1091,11 +1160,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             );
 
             if (sweepResults.Length > 0) {
-                RaycastHit hit = sweepResults[0];
-                errorMessage = hit.transform.name + " is in the way of moving " + sop.ObjectID;
-                return false;
+                foreach (RaycastHit hit in sweepResults) {
+                    if (ignoreCollisionWithTransforms == null || !ignoreCollisionWithTransforms.Contains(hit.transform)) {
+                        errorMessage = hit.transform.name + " is in the way of moving " + sop.ObjectID;
+                        return false;
+                    }
+                }
             }
-
             sop.transform.position = targetPosition;
             return true;
         }
@@ -1121,6 +1192,55 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             } else {
                 return false;
             }
+        }
+
+        public void CollidersObjectCollidingWith(ServerAction action) {
+            if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(action.objectId)) {
+                errorMessage = "Cannot find object with id " + action.objectId;
+                actionFinished(false);
+                return;
+            }
+            List<string> collidingWithNames = new List<string>();
+            GameObject go = physicsSceneManager.ObjectIdToSimObjPhysics[action.objectId].gameObject;
+            foreach (Collider c in UtilityFunctions.collidersObjectCollidingWith(go)) {
+                collidingWithNames.Add(c.name);
+#if UNITY_EDITOR
+                Debug.Log(c.name);
+#endif
+            }
+            actionFinished(true, collidingWithNames);
+        }
+        protected bool moveObjectWithTeleport(SimObjPhysics sop, Vector3 targetPosition, bool snapToGrid = false) {
+            Vector3 lastPosition = sop.transform.position;
+
+            if (snapToGrid) {
+                float mult = 1.0f / gridSize;
+                float gridX = Convert.ToSingle(Math.Round(targetPosition.x * mult) / mult);
+                float gridZ = Convert.ToSingle(Math.Round(targetPosition.z * mult) / mult);
+                targetPosition = new Vector3(gridX, targetPosition.y, gridZ);
+            }
+
+            Vector3 oldPosition = sop.transform.position;
+            sop.transform.position = targetPosition;
+
+            if (UtilityFunctions.isObjectColliding(sop.gameObject)) {
+                sop.transform.position = oldPosition;
+                errorMessage = sop.ObjectID + " is colliding after teleport.";
+                return false;
+            }
+
+            foreach (BaseFPSAgentController agent in agentManager.agents) {
+                // This check is stupid but seems necessary to appease the unity gods
+                // as unity doesn't realize the object collides with the agents in
+                // the above checks in some cases.
+                if (((PhysicsRemoteFPSAgentController)agent).isAgentCapsuleCollidingWith(sop.gameObject)) {
+                    sop.transform.position = oldPosition;
+                    errorMessage = sop.ObjectID + " is colliding with an agent after movement.";
+                    return false;
+                }
+            }
+
+            return true;
         }
 
         public void MoveLiftedObjectAhead(ServerAction action) {
@@ -1187,17 +1307,29 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     if (action.maxAgentsDistance > 0.0f) {
                         for (int i = 0; i < agentManager.agents.Count; i++) {
                             if (((PhysicsRemoteFPSAgentController) agentManager.agents[i]).distanceToObject(sop) > action.maxAgentsDistance) {
+                                sop.transform.rotation = oldRotation;
                                 errorMessage = "Would move object beyond max distance from agent " + i.ToString();
                                 actionFinished(false);
                                 return;
                             }
                         }
                     }
-                    if (UtilityFunctions.isObjectColliding(sop.gameObject)) {
+                    if (UtilityFunctions.isObjectColliding(sop.gameObject, null, 0.0f)) {
                         sop.transform.rotation = oldRotation;
                         errorMessage = sop.ObjectID + " is colliding after teleport.";
                         actionFinished(false);
                         return;
+                    }
+                    foreach (BaseFPSAgentController agent in agentManager.agents) {
+                        // This check is silly but seems necessary to appease unity
+                        // as unity doesn't realize the object collides with the agents in
+                        // the above checks in some cases.
+                        if (((PhysicsRemoteFPSAgentController) agent).isAgentCapsuleCollidingWith(sop.gameObject)) {
+                            sop.transform.rotation = oldRotation;
+                            errorMessage = sop.ObjectID + " is colliding with an agent after rotation.";
+                            actionFinished(false);
+                            return;
+                        }
                     }
                 }
                 actionFinished(true);
@@ -1216,11 +1348,21 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             float objectPriority = d.x * startObjectPosition.x + d.z * startObjectPosition.z;
             bool objectMoved = false;
 
+            HashSet<Collider> agentsAndObjColliders = new HashSet<Collider>();
+            foreach (BaseFPSAgentController agent in agentManager.agents) {
+                foreach (Collider c in agent.GetComponentsInChildren<Collider>()) {
+                    agentsAndObjColliders.Add(c);
+                }
+            }
+            foreach (Collider c in objectToMove.GetComponentsInChildren<Collider>()) {
+                agentsAndObjColliders.Add(c);
+            }
+
             bool success = true;
             Physics.autoSimulation = false;
             while (agentMovePQ.Count > 0 || !objectMoved) {
                 if (agentMovePQ.Count == 0) {
-                    success = moveObject(objectToMove, objectToMove.transform.position + d, snapToGrid);
+                    success = moveObjectWithTeleport(objectToMove, objectToMove.transform.position + d, snapToGrid);
                     Physics.Simulate(0.04f);
                     break;
                 } else {
@@ -1228,12 +1370,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     float agentPriority = -agentMovePQ.GetPriority(nextAgent);
 
                     if (!objectMoved && agentPriority < objectPriority) {
-                        success = moveObject(objectToMove, objectToMove.transform.position + d, snapToGrid);
+                        // Debug.Log("Object");
+                        success = moveObjectWithTeleport(objectToMove, objectToMove.transform.position + d, snapToGrid);
                         Physics.Simulate(0.04f);
                         objectMoved = true;
                     } else {
+                        // Debug.Log(nextAgent);
                         agentMovePQ.Dequeue();
-                        success = nextAgent.moveInDirection(d);
+                        success = nextAgent.moveInDirection(d, "", -1, false, agentsAndObjColliders);
                         Physics.Simulate(0.04f);
                     }
                 }
@@ -1350,7 +1494,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 }
                 m_Camera.transform.localEulerAngles = new Vector3(action.horizon, 0.0f, 0.0f);
             } else {
-                if (!sceneBounds.Contains(targetTeleport)) {
+                if (!agentManager.SceneBounds.Contains(targetTeleport)) {
                     errorMessage = "Teleport target out of scene bounds.";
                     actionFinished(false);
                     return;
@@ -1383,7 +1527,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 }
                 m_Camera.transform.localEulerAngles = new Vector3(action.horizon, 0.0f, 0.0f);
 
-                bool agentCollides = isAgentCapsuleColliding();
+                bool agentCollides = isAgentCapsuleColliding(collidersToIgnoreDuringMovement);
                 bool handObjectCollides = isHandObjectColliding(true);
 
                 if (agentCollides) {
@@ -1425,12 +1569,25 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             TeleportFull(action);
         }
 
+        protected HashSet<Collider> allAgentColliders() {
+            HashSet<Collider> colliders = null;
+            colliders = new HashSet<Collider>();
+            foreach(BaseFPSAgentController agent in agentManager.agents) {
+                foreach (Collider c in agent.GetComponentsInChildren<Collider>()) {
+                    colliders.Add(c);
+                }
+            }
+            return colliders;
+        }
+
         public override void MoveLeft(ServerAction action) {
             action.moveMagnitude = action.moveMagnitude > 0 ? action.moveMagnitude : gridSize;
             actionFinished(moveInDirection(
                 -1 * transform.right * action.moveMagnitude,
                 action.objectId,
-                action.maxAgentsDistance, action.forceAction
+                action.maxAgentsDistance, 
+                action.forceAction,
+                action.allowAgentsToIntersect ? allAgentColliders() : null
             ));
         }
 
@@ -1439,7 +1596,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(moveInDirection(
                 transform.right * action.moveMagnitude,
                 action.objectId,
-                action.maxAgentsDistance, action.forceAction
+                action.maxAgentsDistance,
+                action.forceAction,
+                action.allowAgentsToIntersect ? allAgentColliders() : null
             ));
         }
 
@@ -1448,7 +1607,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(moveInDirection(
                 transform.forward * action.moveMagnitude,
                 action.objectId,
-                action.maxAgentsDistance, action.forceAction
+                action.maxAgentsDistance,
+                action.forceAction,
+                action.allowAgentsToIntersect ? allAgentColliders() : null
             ));
         }
 
@@ -1457,7 +1618,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(moveInDirection(
                 -1 * transform.forward * action.moveMagnitude,
                 action.objectId,
-                action.maxAgentsDistance, action.forceAction
+                action.maxAgentsDistance,
+                action.forceAction,
+                action.allowAgentsToIntersect ? allAgentColliders() : null
             ));
         }
 
@@ -2236,25 +2399,25 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         //checks if the target position in space is within the agent's current viewport
         public bool CheckIfTargetPositionIsInViewportRange(Vector3 targetPosition)
         {
-            bool result = true;
-
             //now check if the target position is within bounds of the Agent's forward (z) view
             Vector3 tmp = m_Camera.transform.position;
             tmp.y = targetPosition.y;
 
             if (Vector3.Distance(tmp, targetPosition) > maxVisibleDistance) // + 0.3)
             {
-                result = false;
+                errorMessage = "The target position is outside the agent's max visible distance.";
+                return false;
             }
 
             //now make sure that the targetPosition is within the Agent's x/y view, restricted by camera
             Vector3 vp = m_Camera.WorldToViewportPoint(targetPosition);
             if(vp.z < 0 || vp.x > 1.0f || vp.y < 0.0f || vp.y > 1.0f || vp.y < 0.0f)
             {
-                result = false;
+                errorMessage = "The target position is outside the viewport.";
+                return false;
             }
 
-            return result;
+            return true;
         }
 
         //checks if agent hand that is holding an object can move to a target location. Returns false if any obstructions
@@ -2465,7 +2628,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             //make sure there is a box collider
             if (ItemInHand.GetComponent<SimObjPhysics>().BoundingBox.GetComponent<BoxCollider>()) {
-                //print("yes yes yes");
                 Vector3 sizeOfBox = ItemInHand.GetComponent<SimObjPhysics>().BoundingBox.GetComponent<BoxCollider>().size;
                 float overlapRadius = Math.Max(Math.Max(sizeOfBox.x, sizeOfBox.y), sizeOfBox.z);
 
@@ -2480,8 +2642,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         if (col.GetComponentInParent<SimObjPhysics>()) {
                             //is it not the item we are holding? then it's blocking
                             if (col.GetComponentInParent<SimObjPhysics>().transform != ItemInHand.transform) {
-                                result = false;
-                                return result;
+                                errorMessage = "Rotating the object results in it colliding with " + col.gameObject.name;
+                                return false;
                             }
 
                             //oh it is the item we are holding, it's fine
@@ -2491,8 +2653,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                         //ok it's not a sim obj and it's not the player, so it must be a structure or something else that would block
                         else if (col.tag != "Player") {
-                            result = false;
-                            return result;
+                            errorMessage = "Rotating the object results in it colliding with an agent.";
+                            return false;
                         }
                     }
                 }
@@ -2512,7 +2674,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public void RotateHand(ServerAction action) {
 
             if (ItemInHand == null) {
-                Debug.Log("Can't rotate hand unless holding object");
+                errorMessage = "Can't rotate hand unless holding object";
                 return;
             }
 
@@ -2527,9 +2689,34 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                 actionFinished(true);
             } else {
-                Debug.Log("Something is blocking the object from rotating freely");
-
                 actionFinished(false);
+            }
+        }
+
+        //rotate the hand if there is an object in it
+        public void RotateHandRelative(ServerAction action) {
+
+            if (ItemInHand == null) {
+                errorMessage = "Can't rotate hand unless holding object";
+                return;
+            }
+
+            Quaternion agentRot = transform.rotation;
+            Quaternion agentHandStartRot = AgentHand.transform.rotation;
+
+            transform.rotation = Quaternion.identity;
+
+            AgentHand.transform.Rotate(
+                new Vector3(action.x, action.y, action.z), Space.World
+            );
+            transform.rotation = agentRot;
+
+            if (isHandObjectColliding(true)) {
+                errorMessage = "Hand object is coliding after rotation.";
+                AgentHand.transform.rotation = agentHandStartRot;
+                actionFinished(false);
+            } else {
+                actionFinished(true);
             }
         }
 
@@ -2564,7 +2751,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
 
             //make sure point we are moving the object to is valid
-            if(!sceneBounds.Contains(action.position))
+            if(!agentManager.sceneBounds.Contains(action.position))
             {
                 errorMessage = "position coordinate is not within scene bounds";
                 actionFinished(false);
@@ -3456,7 +3643,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 #endif
         }
 
-public void PickupObject(ServerAction action) //use serveraction objectid
+        public void PickupObject(ServerAction action) //use serveraction objectid
         {
             //specify target to pickup via objectId or coordinates
             SimObjPhysics target = null;
@@ -3469,13 +3656,13 @@ public void PickupObject(ServerAction action) //use serveraction objectid
                 Ray ray = m_Camera.ViewportPointToRay(new Vector3(x, y, 0.0f));
                 RaycastHit hit;
                 //if something was touched, actionFinished(true) always
-                if(Physics.Raycast(ray, out hit, Mathf.Infinity, 1 << 0 |1 << 8| 1<<10, QueryTriggerInteraction.Ignore))
+                if(Physics.Raycast(ray, out hit, Mathf.Infinity, 1 << 0 | 1 << 8 | 1 << 10, QueryTriggerInteraction.Ignore))
                 {
                     if(hit.transform.GetComponent<SimObjPhysics>())
                     {
                         //wait! First check if the point hit is withing visibility bounds (camera viewport, max distance etc)
                         //this should basically only happen if the handDistance value is too big
-                        if(!CheckIfTargetPositionIsInViewportRange(hit.point))
+                        if(!(action.forceAction || CheckIfTargetPositionIsInViewportRange(hit.point)))
                         {
                             errorMessage = "target sim object is not within the viewport";
                             actionFinished(false);
@@ -3522,7 +3709,7 @@ public void PickupObject(ServerAction action) //use serveraction objectid
                 actionFinished(false);
                 return;
             }
-            if (!action.forceAction && !objectIsCurrentlyVisible(target, maxVisibleDistance)) {
+            if (!(action.forceAction || objectIsCurrentlyVisible(target, maxVisibleDistance))) {
                 errorMessage = action.objectId + " is not visible and can't be picked up.";
                 actionFinished(false);
                 return;
@@ -3543,8 +3730,9 @@ public void PickupObject(ServerAction action) //use serveraction objectid
             rb.collisionDetectionMode = CollisionDetectionMode.Discrete;
             rb.isKinematic = true;
             //if the target is rotated too much, don't try to pick up any contained objects since they would fall out
-            if (Vector3.Angle(target.transform.up, Vector3.up) < 60)
+            if (Vector3.Angle(target.transform.up, Vector3.up) < 60) {
                 PickupContainedObjects(target);
+            }
             target.transform.position = AgentHand.transform.position;
             // target.transform.rotation = AgentHand.transform.rotation; - keep this line if we ever want to change the pickup position to be constant relative to the Agent Hand and Agent Camera rather than aligned by world axis
             target.transform.rotation = transform.rotation;
@@ -3817,6 +4005,89 @@ public void PickupObject(ServerAction action) //use serveraction objectid
             actionFinished(true);
         }
 
+        public void UpdateDisplayGameObject(GameObject go, bool display) {
+            if (go != null) {
+                foreach (MeshRenderer mr in go.GetComponentsInChildren<MeshRenderer>() as MeshRenderer[]) {
+                    if (!initiallyDisabledRenderers.Contains(mr.GetInstanceID())) {
+                        mr.enabled = display;
+                    }
+                }
+            }
+        }
+
+        //not sure what this does, maybe delete?
+        public void SetTopLevelView(ServerAction action) {
+            inTopLevelView = action.topView;
+            actionFinished(true);
+        }
+
+        public void ToggleMapView(ServerAction action) {
+
+            SyncTransform[] syncInChildren;
+
+            List<StructureObject> structureObjsList = new List<StructureObject>();
+            StructureObject[] structureObjs = FindObjectsOfType(typeof(StructureObject)) as StructureObject[];
+
+            foreach(StructureObject so in structureObjs)
+            {
+                if(so.WhatIsMyStructureObjectTag == StructureObjectTag.Ceiling)
+                {
+                    structureObjsList.Add(so);
+                }
+            }
+
+            if (inTopLevelView) {
+                inTopLevelView = false;
+                m_Camera.orthographic = false;
+                m_Camera.transform.localPosition = lastLocalCameraPosition;
+                m_Camera.transform.localRotation = lastLocalCameraRotation;
+
+                //restore agent body culling
+                m_Camera.transform.GetComponent<FirstPersonCharacterCull>().StopCullingThingsForASecond = false;
+                syncInChildren = gameObject.GetComponentsInChildren<SyncTransform>();
+                foreach (SyncTransform sync in syncInChildren)
+                {
+                    sync.StopSyncingForASecond = false;
+                }
+
+                foreach(StructureObject so in structureObjsList)
+                {
+                    UpdateDisplayGameObject(so.gameObject, true);
+                }
+            } 
+            
+            else {
+
+                //stop culling the agent's body so it's visible from the top?
+                m_Camera.transform.GetComponent<FirstPersonCharacterCull>().StopCullingThingsForASecond = true;
+                syncInChildren = gameObject.GetComponentsInChildren<SyncTransform>();
+                foreach (SyncTransform sync in syncInChildren)
+                {
+                    sync.StopSyncingForASecond = true;
+                }
+
+                inTopLevelView = true;
+                lastLocalCameraPosition = m_Camera.transform.localPosition;
+                lastLocalCameraRotation = m_Camera.transform.localRotation;
+
+
+                Bounds b = agentManager.SceneBounds;
+                float midX = (b.max.x + b.min.x) / 2.0f;
+                float midZ = (b.max.z + b.min.z) / 2.0f;
+                m_Camera.transform.rotation = Quaternion.Euler(90.0f, 0.0f, 0.0f);
+                m_Camera.transform.position = new Vector3(midX, b.max.y + 5, midZ);
+                m_Camera.orthographic = true;
+
+                m_Camera.orthographicSize = Math.Max((b.max.x - b.min.x) / 2f, (b.max.z - b.min.z) / 2f);
+
+                cameraOrthSize = m_Camera.orthographicSize;
+                foreach(StructureObject so in structureObjsList)
+                {
+                    UpdateDisplayGameObject(so.gameObject, false);
+                }            }
+            actionFinished(true);
+        }
+
         //try and close all visible objects
         public void CloseVisibleObjects(ServerAction action) {
             List<CanOpen_Object> coos = new List<CanOpen_Object>();
@@ -3830,7 +4101,7 @@ public void PickupObject(ServerAction action) //use serveraction objectid
                 }
             }
             if (coos.Count != 0) {
-                StartCoroutine(InteractAndWait(coos));
+                StartCoroutine(InteractAndWait(coos, action.simplifyPhysics));
             } else {
                 errorMessage = "No objects to close.";
                 actionFinished(false);
@@ -3849,7 +4120,7 @@ public void PickupObject(ServerAction action) //use serveraction objectid
                     }
                 }
             }
-            StartCoroutine(InteractAndWait(coos));
+            StartCoroutine(InteractAndWait(coos, action.simplifyPhysics));
         }
 
         public void CloseObject(ServerAction action) {
@@ -3889,7 +4160,7 @@ public void PickupObject(ServerAction action) //use serveraction objectid
                     if (codd.isOpen) {
                         // codd.Interact();
                         // actionFinished(true);
-                        StartCoroutine(InteractAndWait(codd));
+                        StartCoroutine(InteractAndWait(codd, action.simplifyPhysics));
                     } else {
                         errorMessage = "object already closed: " + action.objectId;
                         actionFinished(false);
@@ -4031,7 +4302,7 @@ public void PickupObject(ServerAction action) //use serveraction objectid
             return;
         }
 
-        protected IEnumerator InteractAndWait(CanOpen_Object coo) {
+        protected IEnumerator InteractAndWait(CanOpen_Object coo, bool freezeContained = false) {
             bool ignoreAgentInTransition = true;
 
             List<Collider> collidersDisabled = new List<Collider>();
@@ -4041,6 +4312,19 @@ public void PickupObject(ServerAction action) //use serveraction objectid
                         collidersDisabled.Add(c);
                         c.enabled = false;
                     }
+                }
+            }
+
+            Dictionary<string, Transform> objectIdToOldParent = null;
+            SimObjPhysics target = null;
+            if (freezeContained) {
+                target = ancestorSimObjPhysics(coo.gameObject);
+                objectIdToOldParent = new Dictionary<string, Transform>();
+                foreach (string objectId in target.Contains()) {
+                    SimObjPhysics toReParent = physicsSceneManager.ObjectIdToSimObjPhysics[objectId];
+                    objectIdToOldParent[toReParent.ObjectID] = toReParent.transform.parent;
+                    toReParent.transform.parent = coo.transform;
+                    toReParent.GetComponent<Rigidbody>().isKinematic = true;
                 }
             }
 
@@ -4072,10 +4356,21 @@ public void PickupObject(ServerAction action) //use serveraction objectid
                 }
             }
 
+            if (freezeContained) {
+                foreach (string objectId in objectIdToOldParent.Keys) {
+                    SimObjPhysics toReParent = physicsSceneManager.ObjectIdToSimObjPhysics[objectId];
+                    toReParent.transform.parent = objectIdToOldParent[toReParent.ObjectID];
+                    Rigidbody rb = toReParent.GetComponent<Rigidbody>();
+                    rb.velocity = new Vector3(0f, 0f, 0f);
+                    rb.angularVelocity = new Vector3(0f, 0f, 0f);
+                    rb.isKinematic = false;
+                }
+            }
+
             if (!success) {
                 errorMessage = "Object failed to open/close successfully.";
             }
-            //print("actionFinished now");
+
             actionFinished(success);
         }
 
@@ -4108,7 +4403,7 @@ public void PickupObject(ServerAction action) //use serveraction objectid
             actionFinished(true);
         }
 
-        protected IEnumerator InteractAndWait(List<CanOpen_Object> coos) {
+        protected IEnumerator InteractAndWait(List<CanOpen_Object> coos, bool freezeContained = false) {
             bool ignoreAgentInTransition = true;
 
             List<Collider> collidersDisabled = new List<Collider>();
@@ -4120,6 +4415,24 @@ public void PickupObject(ServerAction action) //use serveraction objectid
                     }
                 }
             }
+
+            Dictionary<string, Transform> objectIdToOldParent = null;
+            List<SimObjPhysics> targets = null;
+            if (freezeContained) {
+                targets = new List<SimObjPhysics>();
+                objectIdToOldParent = new Dictionary<string, Transform>();
+                foreach (CanOpen_Object coo in coos) {
+                    SimObjPhysics target = ancestorSimObjPhysics(coo.gameObject);
+                    targets.Add(target);
+                    foreach (string objectId in target.Contains()) {
+                        SimObjPhysics toReParent = physicsSceneManager.ObjectIdToSimObjPhysics[objectId];
+                        objectIdToOldParent[toReParent.ObjectID] = toReParent.transform.parent;
+                        toReParent.transform.parent = coo.transform;
+                        toReParent.GetComponent<Rigidbody>().isKinematic = true;
+                    }
+                }
+            }
+            
             foreach (CanOpen_Object coo in coos) {
                 coo.Interact();
             }
@@ -4142,6 +4455,17 @@ public void PickupObject(ServerAction action) //use serveraction objectid
 
                 foreach (Collider c in collidersDisabled) {
                     c.enabled = true;
+                }
+            }
+
+            if (freezeContained) {
+                foreach (string objectId in objectIdToOldParent.Keys) {
+                    SimObjPhysics toReParent = physicsSceneManager.ObjectIdToSimObjPhysics[objectId];
+                    toReParent.transform.parent = objectIdToOldParent[toReParent.ObjectID];
+                    Rigidbody rb = toReParent.GetComponent<Rigidbody>();
+                    rb.velocity = new Vector3(0f, 0f, 0f);
+                    rb.angularVelocity = new Vector3(0f, 0f, 0f);
+                    rb.isKinematic = false;
                 }
             }
 
@@ -4650,6 +4974,125 @@ public void PickupObject(ServerAction action) //use serveraction objectid
             actionFinished(true);
         }
 
+        public void HideTransparentStructureObjects() {
+            transparentStructureObjectsHidden = true;
+
+            GameObject structObj = GameObject.Find("Structure");
+            GameObject lightObj = GameObject.Find("Lighting");
+
+            List<Renderer> renderers = new List<Renderer>();
+            if (structObj != null) {
+                renderers.AddRange(structObj.GetComponentsInChildren<Renderer>());
+            }
+            if (lightObj != null) {
+                renderers.AddRange(lightObj.GetComponentsInChildren<Renderer>());
+            }
+            // renderers.AddRange(GameObject.FindObjectsOfType<Renderer>());
+
+            foreach (Renderer r in renderers) {
+                bool transparent = true;
+                foreach (Material m in r.materials) {
+                    if (
+                        !(m.IsKeywordEnabled("_ALPHATEST_ON") || 
+                          m.IsKeywordEnabled("_ALPHABLEND_ON") || 
+                          m.IsKeywordEnabled("_ALPHAPREMULTIPLY_ON")
+                        ) || m.color.a == 1.0f
+                        ) {
+                        transparent = false;
+                        break;
+                    }
+                }
+                if (transparent) {
+                    UpdateDisplayGameObject(r.gameObject, false);
+                }
+            }
+        }
+
+        public void UnhideStructureObjects() {
+            transparentStructureObjectsHidden = false;
+
+            GameObject structObj = GameObject.Find("Structure");
+            GameObject lightObj = GameObject.Find("Lighting");
+
+            List<Transform> transforms = new List<Transform>();
+            if (structObj != null) {
+                transforms.AddRange(structObj.GetComponentsInChildren<Transform>());
+            }
+            if (lightObj != null) {
+                transforms.AddRange(lightObj.GetComponentsInChildren<Transform>());
+            }
+
+            foreach (Transform transform in transforms) {
+                UpdateDisplayGameObject(transform.gameObject, true);
+            }
+        }
+
+        public void HideBlueObjects(ServerAction action) {
+            foreach (Renderer r in UnityEngine.Object.FindObjectsOfType<Renderer>()) {
+                foreach (Material m in r.materials) {
+                    if (m.name.Contains("BLUE")) {
+                        r.enabled = false;
+                        break;
+                    }
+                }
+            }
+
+            foreach (GameObject go in Resources.FindObjectsOfTypeAll<GameObject>()) {
+                if (go.name.Contains("BlueCube")) {
+                    UpdateDisplayGameObject(go, true);
+                }
+            }
+            actionFinished(true);
+        }
+
+        public void GetAwayFromObject(ServerAction action) {
+            if (physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(action.objectId)) {
+                SimObjPhysics sop = physicsSceneManager.ObjectIdToSimObjPhysics[action.objectId];
+                int k = 0;
+                while (isAgentCapsuleCollidingWith(sop.gameObject) && k < 20) {
+                    k++;
+                    Vector3[] dirs = {
+                        transform.forward, -transform.forward, transform.right, -transform.right
+                    };
+                    dirs.Shuffle_(action.randomSeed);
+
+                    sop.gameObject.SetActive(false);
+                    moveInDirection(dirs[0] * gridSize);
+                    sop.gameObject.SetActive(true);
+                }
+                if (isAgentCapsuleCollidingWith(sop.gameObject)) {
+                    errorMessage = "Could not get away from " + sop.ObjectID;
+                    actionFinished(false);
+                    return;
+                }
+                actionFinished(true);
+            }
+            else {
+                errorMessage = "No object with given id could be found to disable collisions with.";
+                actionFinished(false);
+            }
+        }
+
+
+        public void DisableObjectCollisionWithAgent(ServerAction action) {
+            if (physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(action.objectId)) {
+                SimObjPhysics sop = physicsSceneManager.ObjectIdToSimObjPhysics[action.objectId];
+                foreach (Collider c0 in this.GetComponentsInChildren<Collider>()) {
+                    foreach (Collider c1 in sop.GetComponentsInChildren<Collider>()) {
+                        Physics.IgnoreCollision(c0, c1);
+                    }
+                }
+                foreach (Collider c1 in sop.GetComponentsInChildren<Collider>()) {
+                    collidersToIgnoreDuringMovement.Add(c1);
+                }
+                actionFinished(true);
+            }
+            else {
+                errorMessage = "No object with given id could be found to disable collisions with.";
+                actionFinished(false);
+            }
+        }
+
         public void HideObject(ServerAction action) {
             if (physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(action.objectId)) {
                 SimObjPhysics sop = physicsSceneManager.ObjectIdToSimObjPhysics[action.objectId];
@@ -4690,11 +5133,15 @@ public void PickupObject(ServerAction action) //use serveraction objectid
         }
 
         public void UnhideAllObjects(ServerAction action) {
+            transparentStructureObjectsHidden = false;
             UnhideAll();
             actionFinished(true);
         }
 
         protected void MaskSimObj(SimObjPhysics so, Material mat) {
+            if (!transparentStructureObjectsHidden) {
+                HideTransparentStructureObjects();
+            }
             HashSet<MeshRenderer> renderersToSkip = new HashSet<MeshRenderer>();
             foreach (SimObjPhysics childSo in so.GetComponentsInChildren<SimObjPhysics>()) {
                 if (so.ObjectID != childSo.ObjectID) {
@@ -4720,12 +5167,19 @@ public void PickupObject(ServerAction action) //use serveraction objectid
         }
 
         protected void MaskSimObj(SimObjPhysics so, Color color) {
+            if (!transparentStructureObjectsHidden) {
+                HideTransparentStructureObjects();
+            }        
             Material material = new Material(Shader.Find("Unlit/Color"));
             material.color = color;
             MaskSimObj(so, material);
         }
 
         protected void UnmaskSimObj(SimObjPhysics so) {
+            if (transparentStructureObjectsHidden) {
+                UnhideStructureObjects();
+            }
+
             if (maskedObjects.ContainsKey(so.ObjectID)) {
                 foreach (MeshRenderer r in so.gameObject.GetComponentsInChildren<MeshRenderer>() as MeshRenderer[]) {
                     if (r != null) {
@@ -4991,6 +5445,11 @@ public void PickupObject(ServerAction action) //use serveraction objectid
         ///// MISC /////
         ////////////////
 
+        public void RotateUniverseAroundAgent(ServerAction action) {
+            agentManager.RotateAgentsByRotatingUniverse(action.rotation.y);
+            actionFinished(true);
+        }
+
         public void ChangeFOV(ServerAction action) 
         {
 
@@ -5032,6 +5491,18 @@ public void PickupObject(ServerAction action) //use serveraction objectid
                 }
             }
 
+            ScreenSpaceAmbientOcclusion script = GameObject.Find("FirstPersonCharacter").GetComponent<ScreenSpaceAmbientOcclusion>();
+            if (action.quality == "Low" || action.quality == "Very Low") {
+                script.enabled = false;
+            } else {
+                script.enabled = true;
+            }
+            actionFinished(true);
+        }
+
+        public void DisableScreenSpaceAmbientOcclusion(ServerAction action) {
+            ScreenSpaceAmbientOcclusion script = GameObject.Find("FirstPersonCharacter").GetComponent<ScreenSpaceAmbientOcclusion>();
+            script.enabled = false;
             actionFinished(true);
         }
 
@@ -5143,22 +5614,18 @@ public void PickupObject(ServerAction action) //use serveraction objectid
                     if (Vector3.Distance(tmp, transform.position) < maxDistance) 
                     {
                         //if this particular point is in view...
-                        if (CheckIfVisibilityPointInViewport(sop, point, m_Camera, false)) 
+                        if (CheckIfVisibilityPointInViewport(sop, point, m_Camera, false))
                         {
                             updateAllAgentCollidersForVisibilityCheck(true);
                             return true;
                         }
                     }
                 }
-            } 
-            
-            else 
-            {
+            } else {
                 #if UNITY_EDITOR
                 Debug.Log("Error! Set at least 1 visibility point on SimObjPhysics prefab!");
                 #endif
             }
-
             updateAllAgentCollidersForVisibilityCheck(true);
             return false;
         }
@@ -5274,7 +5741,6 @@ public void PickupObject(ServerAction action) //use serveraction objectid
             Debug.Log(positionsTried);
 #endif
 
-            actionBoolReturn = objectSeen;
             actionIntReturn = positionsTried;
 
             Dictionary<string, int> toReturn = new Dictionary<string, int>();
@@ -5447,30 +5913,16 @@ public void PickupObject(ServerAction action) //use serveraction objectid
 #endif
 
             actionFinished(true, goodLocationsDict);
-        }
+        } 
         
-        public void NumberOfPositionsFromWhichItemIsVisible(ServerAction action) {
-            Vector3[] positions = null;
-            if (action.positions != null && action.positions.Count != 0) {
-                positions = action.positions.ToArray();
-            } else {
-                positions = getReachablePositions();
-            }
-
+        public int NumberOfPositionsFromWhichItemIsVisibleHelper(SimObjPhysics theObject, Vector3[] positions) {
             bool wasStanding = isStanding();
             Vector3 oldPosition = transform.position;
             Quaternion oldRotation = transform.rotation;
 
-            if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(action.objectId)) {
-                errorMessage = "Object ID appears to be invalid.";
-                actionFinished(false);
-                return;
-            }
             if (ItemInHand != null) {
                 ItemInHand.gameObject.SetActive(false);
             }
-
-            SimObjPhysics theObject = physicsSceneManager.ObjectIdToSimObjPhysics[action.objectId];
 
             int numTimesVisible = 0;
             for (int j = 0; j < 2; j++) { // Standing / Crouching
@@ -5507,8 +5959,28 @@ public void PickupObject(ServerAction action) //use serveraction objectid
             Debug.Log(numTimesVisible);
 #endif
 
+            return numTimesVisible;
+        }
+        public void NumberOfPositionsFromWhichItemIsVisible(ServerAction action) {
+            Vector3[] positions = null;
+            if (action.positions != null && action.positions.Count != 0) {
+                positions = action.positions.ToArray();
+            } else {
+                positions = getReachablePositions();
+            }
+
+            if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(action.objectId)) {
+                errorMessage = "Object ID appears to be invalid.";
+                actionFinished(false);
+                return;
+            }
+
+            SimObjPhysics theObject = physicsSceneManager.ObjectIdToSimObjPhysics[action.objectId];
+
+            int numTimesVisible = NumberOfPositionsFromWhichItemIsVisibleHelper(theObject, positions);
+
             actionIntReturn = numTimesVisible;
-            actionFinished(true);
+            actionFinished(true, numTimesVisible);
         }
 
         public void TogglePhysics(ServerAction action) {
@@ -5525,27 +5997,13 @@ public void PickupObject(ServerAction action) //use serveraction objectid
 
         public void GetSceneBounds(ServerAction action) {
             reachablePositions = new Vector3[2];
-            reachablePositions[0] = sceneBounds.min;
-            reachablePositions[1] = sceneBounds.max;
+            reachablePositions[0] = agentManager.SceneBounds.min;
+            reachablePositions[1] = agentManager.SceneBounds.max;
 #if UNITY_EDITOR
             Debug.Log(reachablePositions[0]);
             Debug.Log(reachablePositions[1]);
 #endif
             actionFinished(true);
-        }
-
-        protected bool isAgentCapsuleColliding() {
-            int layerMask = 1 << 8;
-            foreach (Collider c in PhysicsExtensions.OverlapCapsule(GetComponent<CapsuleCollider>(), layerMask, QueryTriggerInteraction.Ignore)) {
-                if (!hasAncestor(c.transform.gameObject, gameObject)) {
-#if UNITY_EDITOR
-                    Debug.Log("Collided with: ");
-                    Debug.Log(c);
-#endif
-                    return true;
-                }
-            }
-            return false;
         }
 
         //to ignore the agent in this collision check, set ignoreAgent to true
@@ -5613,6 +6071,9 @@ public void PickupObject(ServerAction action) //use serveraction objectid
         }
 
         public void RandomlyMoveAgent(ServerAction action) {
+#if UNITY_EDITOR
+            action.randomSeed = UnityEngine.Random.Range(0, 1000000);
+#endif
             reachablePositions = getReachablePositions();
             var orientations = new float[]{
                 0,
@@ -5637,10 +6098,12 @@ public void PickupObject(ServerAction action) //use serveraction objectid
 
             if (errorMessage != "") {
                 actionFinished(false);
-            } else if (!success) {
+            }
+            else if (!success) {
                 errorMessage = "Could not find a position in which the agent and object fit.";
                 actionFinished(false);
-            } else {
+            }
+            else {
                 actionFinished(true, reachablePositions);
             }
         }
@@ -5656,18 +6119,26 @@ public void PickupObject(ServerAction action) //use serveraction objectid
             Vector3 startPos = sop.transform.position;
             Quaternion startRot = sop.transform.rotation;
 
+            Vector3[] positions = null;
+            if (action.positions != null && action.positions.Count != 0) {
+                positions = action.positions.ToArray();
+            }
+            else {
+                positions = getReachablePositions();
+            }
+
             Bounds b = new Bounds(
                 new Vector3(float.PositiveInfinity, float.PositiveInfinity, float.PositiveInfinity),
                 new Vector3(-float.PositiveInfinity, -float.PositiveInfinity, -float.PositiveInfinity)
             );
-            foreach (Vector3 p in getReachablePositions()) {
+            foreach (Vector3 p in positions) {
                 b.Encapsulate(p);
             }
 
-            float xMin = roundToGridSize(Math.Max(b.min.x - 0.25f, transform.position.x - 14), gridSize, true);
-            float xMax = roundToGridSize(Math.Min(b.max.x + 0.25f, transform.position.x + 14), gridSize, false);
-            float zMin = roundToGridSize(Math.Max(b.min.z - 0.25f, transform.position.z - 14), gridSize, true);
-            float zMax = roundToGridSize(Math.Min(b.max.z + 0.25f, transform.position.z + 14), gridSize, false);
+            float xMin = roundToGridSize(b.min.x - gridSize * 3, gridSize, true);
+            float xMax = roundToGridSize(b.max.x + gridSize * 3, gridSize, false);
+            float zMin = roundToGridSize(b.min.z - gridSize * 3, gridSize, true);
+            float zMax = roundToGridSize(b.max.z + gridSize * 3, gridSize, false);
             // Debug.Log(xMin);
             // Debug.Log(xMax);
             // Debug.Log(zMin);
@@ -5678,7 +6149,7 @@ public void PickupObject(ServerAction action) //use serveraction objectid
             foreach (BaseFPSAgentController agent in agentManager.agents) {
                 agentGameObjects.Add(agent.gameObject);
             }
-            List<Vector3> reachable = new List<Vector3>();
+            //List<Vector3> reachable = new List<Vector3>();
 
             List<Collider> enabledColliders = new List<Collider>();
             foreach (Collider c in sop.GetComponentsInChildren<Collider>()) {
@@ -5687,23 +6158,30 @@ public void PickupObject(ServerAction action) //use serveraction objectid
                     enabledColliders.Add(c);
                 }
             }
-
             sop.BoundingBox.GetComponent<BoxCollider>().enabled = true;
-            for (int i = 0; i <= (int) ((xMax - xMin) / gridSize); i++) {
-                for (int j = 0; j <= (int) ((zMax - zMin) / gridSize); j++) {
-                    Vector3 p = new Vector3(xMin + gridSize * i, startPos.y, zMin + j * gridSize);
-                    sop.transform.position = p;
-                    for (int k = 0; k < 4; k++) {
-                        sop.transform.rotation = Quaternion.Euler(new Vector3(0f, k * 90f, 0f));
-                        if (!UtilityFunctions.isObjectColliding(sop.BoundingBox.gameObject, agentGameObjects)) {
+
+            Dictionary<int, List<Vector3>> reachablePerRotation = new Dictionary<int, List<Vector3>>();
+            for (int k = 0; k < 4; k++) {
+                reachablePerRotation[90 * k] = new List<Vector3>();
+                sop.transform.rotation = Quaternion.Euler(new Vector3(0f, k * 90f, 0f));
+
+                for (int i = 0; i <= (int) ((xMax - xMin) / gridSize); i++) {
+                    for (int j = 0; j <= (int) ((zMax - zMin) / gridSize); j++) {
+                        Vector3 p = new Vector3(xMin + gridSize * i, startPos.y, zMin + j * gridSize);
+                        sop.transform.position = p;
+                        if (!UtilityFunctions.isObjectColliding(
+                                sop.BoundingBox.gameObject,
+                                agentGameObjects,
+                                0.0f,
+                                true
+                            )) {
                             // #if UNITY_EDITOR
                             // Debug.Log(p);
                             // #endif
-                            #if UNITY_EDITOR
-                            Debug.DrawLine(p, new Vector3(p.x, p.y + 0.3f, p.z), Color.red, 100000f);
-                            #endif
-                            reachable.Add(p);
-                            break;
+#if UNITY_EDITOR
+                            Debug.DrawLine(p, new Vector3(p.x, p.y + 0.3f, p.z) + sop.transform.forward * 0.3f, Color.red, 60f);
+#endif
+                            reachablePerRotation[90 * k].Add(p);
                         }
                     }
                 }
@@ -5716,10 +6194,13 @@ public void PickupObject(ServerAction action) //use serveraction objectid
             sop.transform.position = startPos;
             sop.transform.rotation = startRot;
 
-            #if UNITY_EDITOR
-            Debug.Log(reachable.Count);
-            #endif
-            actionFinished(true, reachable.ToArray());
+#if UNITY_EDITOR
+            Debug.Log(reachablePerRotation[0].Count);
+            Debug.Log(reachablePerRotation[90].Count);
+            Debug.Log(reachablePerRotation[180].Count);
+            Debug.Log(reachablePerRotation[270].Count);
+#endif
+            actionFinished(true, reachablePerRotation);
         }
 
         //from given position in worldspace, raycast straight down and return a point of any surface hit
@@ -5807,8 +6288,15 @@ public void PickupObject(ServerAction action) //use serveraction objectid
 
             //spawn the object at the agent's hand position
             InstantiatePrefabTest script = physicsSceneManager.GetComponent<InstantiatePrefabTest>();
-            SimObjPhysics so = script.SpawnObject(action.objectType, action.randomizeObjectAppearance, action.objectVariation,
-                AgentHand.transform.position, AgentHand.transform.rotation.eulerAngles, true);
+            SimObjPhysics so = script.SpawnObject(
+                action.objectType,
+                action.randomizeObjectAppearance,
+                action.objectVariation,
+                AgentHand.transform.position,
+                AgentHand.transform.rotation.eulerAngles,
+                true,
+                action.forceAction
+            );
 
             if (so == null) {
                 errorMessage = "Failed to create object, are you sure it can be spawned?";
@@ -5830,7 +6318,7 @@ public void PickupObject(ServerAction action) //use serveraction objectid
             Vector3 targetPosition = action.position;
             Vector3 targetRotation = action.rotation;
 
-            if (!action.forceAction && !sceneBounds.Contains(targetPosition)) {
+            if (!action.forceAction && !agentManager.SceneBounds.Contains(targetPosition)) {
                 errorMessage = "Target position is out of bounds!";
                 actionFinished(false);
                 return;
@@ -5856,11 +6344,11 @@ public void PickupObject(ServerAction action) //use serveraction objectid
                 physicsSceneManager.AddToObjectsInScene(so);
             }
 
-            actionFinished(true);
+            actionFinished(true, so.ObjectID);
         }
 
         protected SimObjPhysics createObjectAtLocation(string objectType, Vector3 targetPosition, Vector3 targetRotation, int objectVariation = 1) {
-            if (!sceneBounds.Contains(targetPosition)) {
+            if (!agentManager.SceneBounds.Contains(targetPosition)) {
                 errorMessage = "Target position is out of bounds!";
                 return null;
             }
@@ -6204,7 +6692,11 @@ public void PickupObject(ServerAction action) //use serveraction objectid
         }
 
         public void DisableAllObjectsOfType(ServerAction action) {
-            string type = action.objectId;
+            string type = action.objectType;
+            if (type == "") {
+                type = action.objectId;
+            }
+
             foreach (SimObjPhysics so in GameObject.FindObjectsOfType<SimObjPhysics>()) {
                 if (Enum.GetName(typeof(SimObjType), so.Type) == type) {
                     so.gameObject.SetActive(false);
@@ -6288,7 +6780,6 @@ public void PickupObject(ServerAction action) //use serveraction objectid
         public void RandomizeHideSeekObjects(ServerAction action) {
             System.Random rnd = new System.Random(action.randomSeed);
 
-            //PhysicsSceneManager psm = GameObject.Find("PhysicsSceneManager").GetComponent<PhysicsSceneManager>();
             if (!physicsSceneManager.ToggleHideAndSeek(true)) {
                 errorMessage = "Hide and Seek object reference not set, nothing to randomize.";
                 actionFinished(false);
@@ -6361,7 +6852,7 @@ public void PickupObject(ServerAction action) //use serveraction objectid
                     }
                 }
             }
-            StartCoroutine(InteractAndWait(toInteractWith));
+            StartCoroutine(InteractAndWait(toInteractWith, action.simplifyPhysics));
         }
 
         public void GetApproximateVolume(ServerAction action) {
@@ -6807,7 +7298,9 @@ public void PickupObject(ServerAction action) //use serveraction objectid
             int objectVariation = action.objectVariation;
             Vector3[] reachablePositions = getReachablePositions();
 
-            Bounds b = sceneBounds;
+            Bounds b = new Bounds();
+            b.min = agentManager.SceneBounds.min;
+            b.max = agentManager.SceneBounds.max;
             b.min = new Vector3(
                 Math.Max(b.min.x, transform.position.x - 7),
                 Math.Max(b.min.y, transform.position.y - 1.3f),
@@ -6925,6 +7418,60 @@ public void PickupObject(ServerAction action) //use serveraction objectid
             StartCoroutine(CoverSurfacesWithHelper(100, newObjects, reachablePositions));
         }
 
+        public void NumberOfPositionsObjectsOfTypeAreVisibleFrom(ServerAction action) {
+            Vector3[] positions = null;
+            if (action.positions != null && action.positions.Count != 0) {
+                positions = action.positions.ToArray();
+            }
+            else {
+#if UNITY_EDITOR
+                List<SimObjPhysics> toReEnable = new List<SimObjPhysics>();
+                foreach (SimObjPhysics sop in FindObjectsOfType<SimObjPhysics>()) {
+                    if (sop.Type.ToString().ToLower() == action.objectType.ToLower()) {
+                        toReEnable.Add(sop);
+                        sop.gameObject.SetActive(false);
+                    }
+                }
+#endif
+                positions = getReachablePositions();
+#if UNITY_EDITOR
+                foreach (SimObjPhysics sop in toReEnable) {
+                    sop.gameObject.SetActive(true);
+                }
+#endif
+            }
+
+            string objectType = action.objectType;
+
+            List<SimObjPhysics> objectsOfType = new List<SimObjPhysics>();
+            foreach (SimObjPhysics sop in FindObjectsOfType<SimObjPhysics>()) {
+                if (sop.Type.ToString().ToLower() == action.objectType.ToLower()) {
+                    objectsOfType.Add(sop);
+                    sop.gameObject.SetActive(false);
+                }
+            }
+
+            Dictionary<String, int> objectIdToPositionsVisibleFrom = new Dictionary<String, int>();
+            foreach (SimObjPhysics sop in objectsOfType) {
+                sop.gameObject.SetActive(true);
+                objectIdToPositionsVisibleFrom.Add(
+                    sop.ObjectID,
+                    NumberOfPositionsFromWhichItemIsVisibleHelper(sop, positions)
+                );
+#if UNITY_EDITOR
+                Debug.Log(sop.ObjectID);
+                Debug.Log(objectIdToPositionsVisibleFrom[sop.ObjectID]);
+#endif
+                sop.gameObject.SetActive(false);
+            }
+
+            foreach (SimObjPhysics sop in objectsOfType) {
+                sop.gameObject.SetActive(true);
+            }
+
+            actionFinished(true, objectIdToPositionsVisibleFrom);
+        }
+
         private IEnumerator SpamObjectsInRoomHelper(int n, List<SimObjPhysics> newObjects) {
             for (int i = 0; i < n; i++) {
                 yield return null;
@@ -6956,7 +7503,9 @@ public void PickupObject(ServerAction action) //use serveraction objectid
             };
             int numObjectVariations = 3;
 
-            Bounds b = sceneBounds;
+            Bounds b = new Bounds();
+            b.min = agentManager.SceneBounds.min;
+            b.max = agentManager.SceneBounds.max;
             b.min = new Vector3(
                 Math.Max(b.min.x, transform.position.x - 7),
                 Math.Max(b.min.y, transform.position.y - 1.3f),

@@ -43,10 +43,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
         public Vector3[] reachablePositions = new Vector3[0];
         protected float gridVisualizeY = 0.005f; //used to visualize reachable position grid, offset from floor
-        public Bounds sceneBounds = new Bounds(
-            new Vector3(float.PositiveInfinity, float.PositiveInfinity, float.PositiveInfinity),
-            new Vector3(-float.PositiveInfinity, -float.PositiveInfinity, -float.PositiveInfinity)
-        );
         protected HashSet<int> initiallyDisabledRenderers = new HashSet<int>();
 		// first person controller parameters
 		[SerializeField]
@@ -141,6 +137,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		private float lastEmitTime;
 		protected List<string> collisionsInAction;// tracking collided objects
 		protected string[] collidedObjects;// container for collided objects
+        protected HashSet<Collider> collidersToIgnoreDuringMovement = new HashSet<Collider>();
 		protected Quaternion targetRotation;
         // Javascript communication
         private JavaScriptInterface jsInterface = null;
@@ -211,7 +208,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 if (!r.enabled) {
                     initiallyDisabledRenderers.Add(r.GetInstanceID());
                 } else {
-                    sceneBounds.Encapsulate(r.bounds);
+                    agentManager.SceneBounds.Encapsulate(r.bounds);
                 }
             }
 
@@ -315,7 +312,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                             }
                         }
                         Vector3 newPosition = p + d * gridSize * gridMultiplier;
-                        bool inBounds = sceneBounds.Contains(newPosition);
+                        bool inBounds = agentManager.SceneBounds.Contains(newPosition);
                         if (errorMessage == "" && !inBounds) {
                             errorMessage = "In " +
                                 UnityEngine.SceneManagement.SceneManager.GetActiveScene().name +
@@ -445,8 +442,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
             this.snapToGrid = action.snapToGrid;
 
-            if (action.renderDepthImage || action.renderClassImage || action.renderObjectImage || action.renderNormalsImage) 
-            {
+            if (action.renderDepthImage || action.renderClassImage || action.renderObjectImage || action.renderNormalsImage) {
     			this.updateImageSynthesis(true);
     		}
 
@@ -693,7 +689,13 @@ namespace UnityStandardAssets.Characters.FirstPerson
         //Luca's movement grid and valid position generation, simple transform setting is used for movement instead.
 
         //XXX revisit what movement means when we more clearly define what "continuous" movement is
-        protected bool moveInDirection(Vector3 direction, string objectId="", float maxDistanceToObject=-1.0f, bool forceAction = false) {
+        protected bool moveInDirection(
+            Vector3 direction,
+            string objectId="",
+            float maxDistanceToObject=-1.0f,
+            bool forceAction = false,
+            HashSet<Collider> ignoreColliders=null
+        ) {
             Vector3 targetPosition = transform.position + direction;
             float angle = Vector3.Angle(transform.forward, Vector3.Normalize(direction));
 
@@ -705,7 +707,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
             if (checkIfSceneBoundsContainTargetPosition(targetPosition) &&
                 CheckIfItemBlocksAgentMovement(direction.magnitude, angleInt, forceAction) && // forceAction = true allows ignoring movement restrictions caused by held objects
-                CheckIfAgentCanMove(direction.magnitude, angleInt)) {
+                CheckIfAgentCanMove(direction.magnitude, angleInt, ignoreColliders)) {
                 DefaultAgentHand();
                 Vector3 oldPosition = transform.position;
                 transform.position = targetPosition;
@@ -749,7 +751,11 @@ namespace UnityStandardAssets.Characters.FirstPerson
             actionFinished(true, dist);
         }
 
-        public bool CheckIfAgentCanMove(float moveMagnitude, int orientation) {
+        public bool CheckIfAgentCanMove(
+            float moveMagnitude,
+            int orientation,
+            HashSet<Collider> ignoreColliders = null
+        ) {
             Vector3 dir = new Vector3();
 
             switch (orientation) {
@@ -785,6 +791,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
             //check if we hit an environmental structure or a sim object that we aren't actively holding. If so we can't move
             if (sweepResults.Length > 0) {
                 foreach (RaycastHit res in sweepResults) {
+                    if (ignoreColliders != null && ignoreColliders.Contains(res.collider)) {
+                        continue;
+                    }
+
                     // Don't worry if we hit something thats in our hand.
                     if (ItemInHand != null && ItemInHand.transform == res.transform) {
                         continue;
@@ -800,7 +810,11 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     }
 
                     //including "Untagged" tag here so that the agent can't move through objects that are transparent
-                    if (res.transform.GetComponent<SimObjPhysics>() || res.transform.tag == "Structure" || res.transform.tag == "Untagged") {
+                    if ((!collidersToIgnoreDuringMovement.Contains(res.collider)) && (
+                            res.transform.GetComponent<SimObjPhysics>() ||
+                            res.transform.tag == "Structure" ||
+                            res.transform.tag == "Untagged"
+                        )) {
                         int thisAgentNum = agentManager.agents.IndexOf(this);
                         errorMessage = res.transform.name + " is blocking Agent " + thisAgentNum.ToString() + " from moving " + orientation;
                         //the moment we find a result that is blocking, return false here
@@ -927,7 +941,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
         }
 
         protected bool checkIfSceneBoundsContainTargetPosition(Vector3 position) {
-            if (!sceneBounds.Contains(position)) {
+            if (!agentManager.SceneBounds.Contains(position)) {
                 errorMessage = "Scene bounds do not contain target position: " + position;
                 return false;
             } else {
@@ -1378,7 +1392,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             metaMessage.sceneName = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
             metaMessage.objects = this.generateObjectMetadata();
             metaMessage.isSceneAtRest = physicsSceneManager.isSceneAtRest;
-            metaMessage.sceneBounds = GenerateSceneBounds(sceneBounds);
+            metaMessage.sceneBounds = GenerateSceneBounds(agentManager.SceneBounds);
             metaMessage.collided = collidedObjects.Length > 0;
             metaMessage.collidedObjects = collidedObjects;
             metaMessage.screenWidth = Screen.width;
@@ -1978,8 +1992,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
         //check if the visibility point on a sim object, sop, is within the viewport
         //has a inclueInvisible bool to check against triggerboxes as well, to check for visibility with things like Cabinets/Drawers
-        protected bool CheckIfVisibilityPointInViewport(SimObjPhysics sop, Transform point, Camera agentCamera, bool includeInvisible) 
-        {
+        protected bool CheckIfVisibilityPointInViewport(
+            SimObjPhysics sop,
+            Transform point,
+            Camera agentCamera,
+            bool includeInvisible
+        ) {
             bool result = false;
 
             Vector3 viewPoint = agentCamera.WorldToViewportPoint(point.position);
@@ -2114,10 +2132,18 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
         public void ResetAgentHandPosition(ServerAction action = null) {
             AgentHand.transform.position = DefaultHandPosition.transform.position;
+            SimObjPhysics sop = AgentHand.GetComponentInChildren<SimObjPhysics>();
+            if (sop != null) {
+                sop.gameObject.transform.localPosition = Vector3.zero;
+            }
         }
 
         public void ResetAgentHandRotation(ServerAction action = null) {
             AgentHand.transform.localRotation = Quaternion.Euler(Vector3.zero);
+            SimObjPhysics sop = AgentHand.GetComponentInChildren<SimObjPhysics>();
+            if (sop != null) {
+                sop.gameObject.transform.rotation = transform.rotation;
+            }
         }
 
         //randomly repositions sim objects in the current scene
@@ -2302,8 +2328,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 {
                     UpdateDisplayGameObject(so.gameObject, true);
                 }
-            } 
-            
+            }
+
             else {
 
                 //stop culling the agent's body so it's visible from the top?
@@ -2318,7 +2344,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 lastLocalCameraPosition = m_Camera.transform.localPosition;
                 lastLocalCameraRotation = m_Camera.transform.localRotation;
 
-                Bounds b = sceneBounds;
+                Bounds b = new Bounds();
+                b.min = agentManager.SceneBounds.min;
+                b.max = agentManager.SceneBounds.max;
                 float midX = (b.max.x + b.min.x) / 2.0f;
                 float midZ = (b.max.z + b.min.z) / 2.0f;
                 m_Camera.transform.rotation = Quaternion.Euler(90.0f, 0.0f, 0.0f);
@@ -2606,6 +2634,23 @@ namespace UnityStandardAssets.Characters.FirstPerson
             );
         }
 
+        protected bool isAgentCapsuleColliding(HashSet<Collider> collidersToIgnore = null) {
+            int layerMask = 1 << 8;
+            foreach (Collider c in PhysicsExtensions.OverlapCapsule(GetComponent<CapsuleCollider>(), layerMask, QueryTriggerInteraction.Ignore)) {
+                if ((!hasAncestor(c.transform.gameObject, gameObject)) && (
+                    collidersToIgnore == null || !collidersToIgnoreDuringMovement.Contains(c))
+                ) {
+#if UNITY_EDITOR
+                    Debug.Log("Collided with: ");
+                    Debug.Log(c);
+                    Debug.Log(c.enabled);
+#endif
+                    return true;
+                }
+            }
+            return false;
+        }
+
         protected Collider[] objectsCollidingWithAgent() {
             int layerMask = 1 << 8;
             return PhysicsExtensions.OverlapCapsule(GetComponent<CapsuleCollider>(), layerMask, QueryTriggerInteraction.Ignore);
@@ -2669,7 +2714,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                             }
                         }
                         Vector3 newPosition = p + d * gridSize * gridMultiplier;
-                        bool inBounds = sceneBounds.Contains(newPosition);
+                        bool inBounds = agentManager.SceneBounds.Contains(newPosition);
                         if (errorMessage == "" && !inBounds) {
                             errorMessage = "In " +
                                 UnityEngine.SceneManagement.SceneManager.GetActiveScene().name +
@@ -2821,7 +2866,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             {
                 inHighFrictionArea = true;
             }
-            
+
             else
             {
                 inHighFrictionArea = false;
