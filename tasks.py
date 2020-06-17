@@ -832,7 +832,6 @@ def ci_build_arch(arch, include_private_scenes=False):
 @task
 def poll_ci_build(context):
     from ai2thor.build import platform_map
-    import botocore.exceptions
     import time
     import urllib3.exceptions
 
@@ -868,20 +867,22 @@ def poll_ci_build(context):
             )
             raise Exception("Failed to build %s for commit: %s " % (arch, commit_id))
 
-    s3_obj = pytest_s3_object(commit_id)
-
-    try:
-        res = json.loads(s3_obj.get()['Body'].read())
-        print(res['stdout']) # print so that it appears in travis log
-        print(res['stderr'])
-        if not res['success']:
-            raise Exception("pytest failure")
-
-    except botocore.exceptions.ClientError as e:
-        if e.__class__.__name__ == 'NoSuchKey':
-            raise Exception("No pytest results for commit_id: %s" % commit_id)
-        else:
-            raise(e)
+    pytest_missing = True
+    for i in range(30):
+        s3_obj = pytest_s3_object(commit_id)
+        s3_pytest_url = 'http://s3-us-west-2.amazonaws.com/%s/%s' % (s3_obj.bucket_name, s3_obj.key)
+        res = requests.get(s3_pytest_url)
+        if res.status_code == 200:
+            pytest_missing = False
+            pytest_result = res.json()
+            print(pytest_result['stdout']) # print so that it appears in travis log
+            print(pytest_result['stderr'])
+            if not pytest_result['success']:
+                raise Exception("pytest failure")
+        time.sleep(10)
+    
+    if pytest_missing:
+        raise Exception("Missing pytest output")
 
 
 @task
