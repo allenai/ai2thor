@@ -834,6 +834,7 @@ def poll_ci_build(context):
     from ai2thor.build import platform_map
     import botocore.exceptions
     import time
+    import urllib3.exceptions
 
     commit_id = git_commit_id()
 
@@ -843,10 +844,16 @@ def poll_ci_build(context):
             if (i % 5) == 0:
                 print("checking %s for commit id %s" % (arch, commit_id))
             commit_build = ai2thor.build.Build(arch, commit_id, False)
-            if commit_build.log_exists():
-                print("log exists %s" % commit_id)
-            else:
-                missing = True
+            try:
+                if commit_build.log_exists():
+                    print("log exists %s" % commit_id)
+                else:
+                    missing = True
+            # we observe errors when polling AWS periodically - we don't want these to stop
+            # the build
+            except urllib3.exceptions.ProtocolError as e:
+                print("Caught exception %s" % e)
+
         if not missing:
             break
         sys.stdout.flush()
