@@ -834,6 +834,7 @@ def poll_ci_build(context):
     from ai2thor.build import platform_map
     import time
     import urllib3.exceptions
+    import requests
 
     commit_id = git_commit_id()
 
