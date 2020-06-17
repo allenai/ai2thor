@@ -822,6 +822,7 @@ def poll_ci_build(context):
                 missing = True
         if not missing:
             break
+        sys.stdout.flush()
         time.sleep(10)
 
     for arch in platform_map.keys():
