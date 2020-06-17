@@ -605,7 +605,6 @@ def build_pip(context, version):
         if os.path.isdir("dist"):
             shutil.rmtree("dist")
 
-        subprocess.check_call("python setup.py clean --all", shell=True)
 
         generate_quality_settings(context)
 
@@ -618,7 +617,7 @@ def build_pip(context, version):
             fi.write("# GENERATED FILE - DO NOT EDIT\n")
             fi.write("__version__ = '%s'\n" % (version))
 
-
+        subprocess.check_call("python setup.py clean --all", shell=True)
         subprocess.check_call("python setup.py sdist bdist_wheel --universal", shell=True)
 
     else:
