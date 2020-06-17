@@ -6,7 +6,7 @@ using System.Linq;
 using UnityStandardAssets.Characters.FirstPerson;
 using System.Text;
 
-public class MachineCommonSenseMain : MonoBehaviour {
+public class MCSMain : MonoBehaviour {
     private static float CUBE_INTERNAL_GRID = 0.25f;
     private static float LIGHT_RANGE = 20f;
     private static float LIGHT_RANGE_SCREENSHOT = 10f;
@@ -46,7 +46,7 @@ public class MachineCommonSenseMain : MonoBehaviour {
         new Dictionary<string, MachineCommonSenseConfigObjectDefinition>();
 
     // AI2-THOR Objects and Scripts
-    private MachineCommonSenseController agentController;
+    private MCSController agentController;
     private GameObject objectParent;
     private PhysicsSceneManager physicsSceneManager;
 
@@ -61,7 +61,7 @@ public class MachineCommonSenseMain : MonoBehaviour {
 
     // Unity's Start method is called before the first frame update
     void Start() {
-        this.agentController = GameObject.Find("FPSController").GetComponent<MachineCommonSenseController>();
+        this.agentController = GameObject.Find("FPSController").GetComponent<MCSController>();
         this.objectParent = GameObject.Find("Objects");
         this.physicsSceneManager = GameObject.Find("PhysicsSceneManager").GetComponent<PhysicsSceneManager>();
         this.ceiling = GameObject.Find("Ceiling");
@@ -169,16 +169,16 @@ public class MachineCommonSenseMain : MonoBehaviour {
         if (this.currentScene.observation) {
             this.ceiling.SetActive(false);
 
-            this.wallLeft.transform.position = new Vector3(-1 * MachineCommonSenseMain.WALL_SIDE_X_POSITION_OBSERVATION,
-                MachineCommonSenseMain.WALL_Y_POSITION, MachineCommonSenseMain.WALL_SIDE_Z_POSITION);
-            this.wallRight.transform.position = new Vector3(MachineCommonSenseMain.WALL_SIDE_X_POSITION_OBSERVATION,
-                MachineCommonSenseMain.WALL_Y_POSITION, MachineCommonSenseMain.WALL_SIDE_Z_POSITION);
-            this.wallFront.transform.position = new Vector3(MachineCommonSenseMain.WALL_FRONT_X_POSITION,
-                MachineCommonSenseMain.WALL_FRONT_Y_POSITION_OBSERVATION, MachineCommonSenseMain.WALL_FRONT_Z_POSITION);
-            this.wallFront.transform.localScale = new Vector3(MachineCommonSenseMain.WALL_FRONT_X_SCALE_OBSERVATION,
-                MachineCommonSenseMain.WALL_FRONT_Y_SCALE_OBSERVATION, MachineCommonSenseMain.WALL_FRONT_Z_SCALE);
-            this.floor.transform.localScale = new Vector3(MachineCommonSenseMain.FLOOR_X_SCALE_OBSERVATION,
-                MachineCommonSenseMain.FLOOR_Y_SCALE, MachineCommonSenseMain.FLOOR_Z_SCALE);
+            this.wallLeft.transform.position = new Vector3(-1 * MCSMain.WALL_SIDE_X_POSITION_OBSERVATION,
+                MCSMain.WALL_Y_POSITION, MCSMain.WALL_SIDE_Z_POSITION);
+            this.wallRight.transform.position = new Vector3(MCSMain.WALL_SIDE_X_POSITION_OBSERVATION,
+                MCSMain.WALL_Y_POSITION, MCSMain.WALL_SIDE_Z_POSITION);
+            this.wallFront.transform.position = new Vector3(MCSMain.WALL_FRONT_X_POSITION,
+                MCSMain.WALL_FRONT_Y_POSITION_OBSERVATION, MCSMain.WALL_FRONT_Z_POSITION);
+            this.wallFront.transform.localScale = new Vector3(MCSMain.WALL_FRONT_X_SCALE_OBSERVATION,
+                MCSMain.WALL_FRONT_Y_SCALE_OBSERVATION, MCSMain.WALL_FRONT_Z_SCALE);
+            this.floor.transform.localScale = new Vector3(MCSMain.FLOOR_X_SCALE_OBSERVATION,
+                MCSMain.FLOOR_Y_SCALE, MCSMain.FLOOR_Z_SCALE);
 
             this.currentScene.performerStart = new MachineCommonSenseConfigTransform();
             this.currentScene.performerStart.position = new MachineCommonSenseConfigVector();
@@ -188,16 +188,16 @@ public class MachineCommonSenseMain : MonoBehaviour {
         else {
             this.ceiling.SetActive(true);
 
-            this.wallLeft.transform.position = new Vector3(-1 * MachineCommonSenseMain.WALL_SIDE_X_POSITION_INTERACTION,
-                MachineCommonSenseMain.WALL_Y_POSITION, MachineCommonSenseMain.WALL_SIDE_Z_POSITION);
-            this.wallRight.transform.position = new Vector3(MachineCommonSenseMain.WALL_SIDE_X_POSITION_INTERACTION,
-                MachineCommonSenseMain.WALL_Y_POSITION, MachineCommonSenseMain.WALL_SIDE_Z_POSITION);
-            this.wallFront.transform.position = new Vector3(MachineCommonSenseMain.WALL_FRONT_X_POSITION,
-                MachineCommonSenseMain.WALL_Y_POSITION, MachineCommonSenseMain.WALL_FRONT_Z_POSITION);
-            this.wallFront.transform.localScale = new Vector3(MachineCommonSenseMain.WALL_FRONT_X_SCALE_INTERACTION,
-                MachineCommonSenseMain.WALL_FRONT_Y_SCALE_INTERACTION, MachineCommonSenseMain.WALL_FRONT_Z_SCALE);
-            this.floor.transform.localScale = new Vector3(MachineCommonSenseMain.FLOOR_X_SCALE_INTERACTION,
-                MachineCommonSenseMain.FLOOR_Y_SCALE, MachineCommonSenseMain.FLOOR_Z_SCALE);
+            this.wallLeft.transform.position = new Vector3(-1 * MCSMain.WALL_SIDE_X_POSITION_INTERACTION,
+                MCSMain.WALL_Y_POSITION, MCSMain.WALL_SIDE_Z_POSITION);
+            this.wallRight.transform.position = new Vector3(MCSMain.WALL_SIDE_X_POSITION_INTERACTION,
+                MCSMain.WALL_Y_POSITION, MCSMain.WALL_SIDE_Z_POSITION);
+            this.wallFront.transform.position = new Vector3(MCSMain.WALL_FRONT_X_POSITION,
+                MCSMain.WALL_Y_POSITION, MCSMain.WALL_FRONT_Z_POSITION);
+            this.wallFront.transform.localScale = new Vector3(MCSMain.WALL_FRONT_X_SCALE_INTERACTION,
+                MCSMain.WALL_FRONT_Y_SCALE_INTERACTION, MCSMain.WALL_FRONT_Z_SCALE);
+            this.floor.transform.localScale = new Vector3(MCSMain.FLOOR_X_SCALE_INTERACTION,
+                MCSMain.FLOOR_Y_SCALE, MCSMain.FLOOR_Z_SCALE);
         }
 
         SimObjPhysics ceilingSimObjPhysics = this.ceiling.GetComponent<SimObjPhysics>();
@@ -213,9 +213,9 @@ public class MachineCommonSenseMain : MonoBehaviour {
             this.wallRight.GetComponent<Renderer>().material = new Material(Shader.Find("Unlit/Color"));
             this.wallFront.GetComponent<Renderer>().material = new Material(Shader.Find("Unlit/Color"));
             this.wallBack.GetComponent<Renderer>().material = new Material(Shader.Find("Unlit/Color"));
-            this.light.GetComponent<Light>().range = MachineCommonSenseMain.LIGHT_RANGE_SCREENSHOT;
-            this.light.transform.position = new Vector3(0, MachineCommonSenseMain.LIGHT_Y_POSITION_SCREENSHOT,
-                MachineCommonSenseMain.LIGHT_Z_POSITION_SCREENSHOT);
+            this.light.GetComponent<Light>().range = MCSMain.LIGHT_RANGE_SCREENSHOT;
+            this.light.transform.position = new Vector3(0, MCSMain.LIGHT_Y_POSITION_SCREENSHOT,
+                MCSMain.LIGHT_Z_POSITION_SCREENSHOT);
         }
 
         else {
@@ -244,9 +244,9 @@ public class MachineCommonSenseMain : MonoBehaviour {
                 this.GenerateCubeInternalVisibilityPoints(this.wallBack, null), false);
             AssignMaterial(this.wallBack, wallsMaterial);
 
-            this.light.GetComponent<Light>().range = MachineCommonSenseMain.LIGHT_RANGE;
-            this.light.transform.position = new Vector3(0, MachineCommonSenseMain.LIGHT_Y_POSITION,
-                MachineCommonSenseMain.LIGHT_Z_POSITION);
+            this.light.GetComponent<Light>().range = MCSMain.LIGHT_RANGE;
+            this.light.transform.position = new Vector3(0, MCSMain.LIGHT_Y_POSITION,
+                MCSMain.LIGHT_Z_POSITION);
         }       
 
         if (this.currentScene.wallProperties != null && this.currentScene.wallProperties.enable) {
@@ -259,7 +259,6 @@ public class MachineCommonSenseMain : MonoBehaviour {
             
         if (this.currentScene.floorProperties != null && this.currentScene.floorProperties.enable) {
             AssignPhysicsMaterialAndRigidBodyValues(scene.floorProperties, this.floor, floorSimObjPhysics);
-
         }
 
         if (this.currentScene.goal != null && this.currentScene.goal.description != null) {
@@ -270,21 +269,21 @@ public class MachineCommonSenseMain : MonoBehaviour {
         if (this.currentScene.performerStart != null && this.currentScene.performerStart.position != null) {
             // Always keep the Y position on the floor.
             controller.transform.position = new Vector3(this.currentScene.performerStart.position.x,
-                MachineCommonSenseController.POSITION_Y, this.currentScene.performerStart.position.z);
+                MCSController.POSITION_Y, this.currentScene.performerStart.position.z);
         }
         else {
-            controller.transform.position = new Vector3(0, MachineCommonSenseController.POSITION_Y, 0);
+            controller.transform.position = new Vector3(0, MCSController.POSITION_Y, 0);
         }
 
         if (this.currentScene.performerStart != null && this.currentScene.performerStart.rotation != null) {
             // Only permit rotating left or right (along the Y axis).
             controller.transform.rotation = Quaternion.Euler(0, this.currentScene.performerStart.rotation.y, 0);
-            controller.GetComponent<MachineCommonSenseController>().m_Camera.transform.localEulerAngles = new Vector3(
+            controller.GetComponent<MCSController>().m_Camera.transform.localEulerAngles = new Vector3(
                 this.currentScene.performerStart.rotation.x, 0, 0);
         }
         else {
             controller.transform.rotation = Quaternion.Euler(0, 0, 0);
-            controller.GetComponent<MachineCommonSenseController>().m_Camera.transform.localEulerAngles = new Vector3(
+            controller.GetComponent<MCSController>().m_Camera.transform.localEulerAngles = new Vector3(
                 0, 0, 0);
         }
 
@@ -411,7 +410,7 @@ public class MachineCommonSenseMain : MonoBehaviour {
             return null;
         }
 
-        foreach (KeyValuePair<string, Dictionary<string, string[]>> materialType in MachineCommonSenseConfig.MATERIAL_REGISTRY) {
+        foreach (KeyValuePair<string, Dictionary<string, string[]>> materialType in MCSConfig.MATERIAL_REGISTRY) {
             if (materialType.Value.ContainsKey(filename)) {
                 if (restrictions.Length == 0 || Array.IndexOf(restrictions, materialType.Key) >= 0) {
                     Material material = Resources.Load<Material>("MCS/" + filename);
@@ -994,9 +993,9 @@ public class MachineCommonSenseMain : MonoBehaviour {
         float ySize = showConfig != null ? showConfig.scale.GetY() : gameObject.transform.localScale.y;
         float zSize = showConfig != null ? showConfig.scale.GetZ() : gameObject.transform.localScale.z;
 
-        float xGrid = Mathf.Floor(xSize / MachineCommonSenseMain.CUBE_INTERNAL_GRID);
-        float yGrid = Mathf.Floor(ySize / MachineCommonSenseMain.CUBE_INTERNAL_GRID);
-        float zGrid = Mathf.Floor(zSize / MachineCommonSenseMain.CUBE_INTERNAL_GRID);
+        float xGrid = Mathf.Floor(xSize / MCSMain.CUBE_INTERNAL_GRID);
+        float yGrid = Mathf.Floor(ySize / MCSMain.CUBE_INTERNAL_GRID);
+        float zGrid = Mathf.Floor(zSize / MCSMain.CUBE_INTERNAL_GRID);
 
         float xSpan = xSize / xGrid;
         float ySpan = ySize / yGrid;
