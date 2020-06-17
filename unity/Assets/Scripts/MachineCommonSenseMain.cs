@@ -200,6 +200,12 @@ public class MachineCommonSenseMain : MonoBehaviour {
                 MachineCommonSenseMain.FLOOR_Y_SCALE, MachineCommonSenseMain.FLOOR_Z_SCALE);
         }
 
+        SimObjPhysics ceilingSimObjPhysics = this.ceiling.GetComponent<SimObjPhysics>();
+        SimObjPhysics floorSimObjPhysics = this.floor.GetComponent<SimObjPhysics>();
+        SimObjPhysics wallLeftSimObjPhysics = this.wallLeft.GetComponent<SimObjPhysics>();
+        SimObjPhysics wallRightSimObjPhysics = this.wallRight.GetComponent<SimObjPhysics>();
+        SimObjPhysics wallFrontSimObjPhysics = this.wallFront.GetComponent<SimObjPhysics>();
+        SimObjPhysics wallBackSimObjPhysics = this.wallBack.GetComponent<SimObjPhysics>();
 
         if (this.currentScene.screenshot) {
             this.floor.GetComponent<Renderer>().material = new Material(Shader.Find("Unlit/Color"));
@@ -211,35 +217,29 @@ public class MachineCommonSenseMain : MonoBehaviour {
             this.light.transform.position = new Vector3(0, MachineCommonSenseMain.LIGHT_Y_POSITION_SCREENSHOT,
                 MachineCommonSenseMain.LIGHT_Z_POSITION_SCREENSHOT);
         }
+
         else {
             if (!this.currentScene.observation) {
-                SimObjPhysics ceilingSimObjPhysics = this.ceiling.GetComponent<SimObjPhysics>();
                 ceilingSimObjPhysics.VisibilityPoints = AssignVisibilityPoints(this.ceiling,
                     this.GenerateCubeInternalVisibilityPoints(this.ceiling, null), false);
                 AssignMaterial(this.ceiling, ceilingMaterial);
             }
-
-            SimObjPhysics floorSimObjPhysics = this.floor.GetComponent<SimObjPhysics>();
             floorSimObjPhysics.VisibilityPoints = AssignVisibilityPoints(this.floor,
                 this.GenerateCubeInternalVisibilityPoints(this.floor, null), false);
             AssignMaterial(this.floor, floorMaterial);
 
-            SimObjPhysics wallLeftSimObjPhysics = this.wallLeft.GetComponent<SimObjPhysics>();
             wallLeftSimObjPhysics.VisibilityPoints = AssignVisibilityPoints(this.wallLeft,
                 this.GenerateCubeInternalVisibilityPoints(this.wallLeft, null), false);
             AssignMaterial(this.wallLeft, wallsMaterial);
 
-            SimObjPhysics wallRightSimObjPhysics = this.wallRight.GetComponent<SimObjPhysics>();
             wallRightSimObjPhysics.VisibilityPoints = AssignVisibilityPoints(this.wallRight,
                 this.GenerateCubeInternalVisibilityPoints(this.wallRight, null), false);
             AssignMaterial(this.wallRight, wallsMaterial);
 
-            SimObjPhysics wallFrontSimObjPhysics = this.wallFront.GetComponent<SimObjPhysics>();
             wallFrontSimObjPhysics.VisibilityPoints = AssignVisibilityPoints(this.wallFront,
                 this.GenerateCubeInternalVisibilityPoints(this.wallFront, null), false);
             AssignMaterial(this.wallFront, wallsMaterial);
 
-            SimObjPhysics wallBackSimObjPhysics = this.wallBack.GetComponent<SimObjPhysics>();
             wallBackSimObjPhysics.VisibilityPoints = AssignVisibilityPoints(this.wallBack,
                 this.GenerateCubeInternalVisibilityPoints(this.wallBack, null), false);
             AssignMaterial(this.wallBack, wallsMaterial);
@@ -247,6 +247,19 @@ public class MachineCommonSenseMain : MonoBehaviour {
             this.light.GetComponent<Light>().range = MachineCommonSenseMain.LIGHT_RANGE;
             this.light.transform.position = new Vector3(0, MachineCommonSenseMain.LIGHT_Y_POSITION,
                 MachineCommonSenseMain.LIGHT_Z_POSITION);
+        }       
+
+        if (this.currentScene.wallProperties != null && this.currentScene.wallProperties.enable) {
+            AssignPhysicsMaterialAndRigidBodyValues(currentScene.wallProperties, this.wallLeft, wallLeftSimObjPhysics);
+            AssignPhysicsMaterialAndRigidBodyValues(currentScene.wallProperties, this.wallFront, wallFrontSimObjPhysics);
+            AssignPhysicsMaterialAndRigidBodyValues(currentScene.wallProperties, this.wallRight, wallRightSimObjPhysics);
+            AssignPhysicsMaterialAndRigidBodyValues(currentScene.wallProperties, this.wallBack, wallBackSimObjPhysics);
+            AssignPhysicsMaterialAndRigidBodyValues(currentScene.wallProperties, this.ceiling, ceilingSimObjPhysics);
+        }
+            
+        if (this.currentScene.floorProperties != null && this.currentScene.floorProperties.enable) {
+            AssignPhysicsMaterialAndRigidBodyValues(scene.floorProperties, this.floor, floorSimObjPhysics);
+
         }
 
         if (this.currentScene.goal != null && this.currentScene.goal.description != null) {
@@ -670,11 +683,11 @@ public class MachineCommonSenseMain : MonoBehaviour {
         ai2thorPhysicsScript.shape = objectConfig.structure ? "structural" : objectDefinition.shape;
 
         if (objectConfig.physicsProperties != null && objectConfig.physicsProperties.enable) {
-            AssignPhysicsMaterialAndRigidBodyValues(objectConfig, gameObject, ai2thorPhysicsScript);
+            AssignPhysicsMaterialAndRigidBodyValues(objectConfig.physicsProperties, gameObject, ai2thorPhysicsScript);
         } 
         
         else if (objectDefinition.physicsProperties != null && objectDefinition.physicsProperties.enable) {
-            AssignPhysicsMaterialAndRigidBodyValues(objectDefinition, gameObject, ai2thorPhysicsScript);
+            AssignPhysicsMaterialAndRigidBodyValues(objectDefinition.physicsProperties, gameObject, ai2thorPhysicsScript);
         }
 
         ai2thorPhysicsScript.PrimaryProperty = (pickupable ? SimObjPrimaryProperty.CanPickup : (moveable ?
@@ -769,14 +782,14 @@ public class MachineCommonSenseMain : MonoBehaviour {
     }
 
     private void AssignPhysicsMaterialAndRigidBodyValues
-        (MachineCommonSenseConfigAbstractObject physicsObject,
+        (MachineCommonSenseConfigPhysicsProperties physicsObject,
         GameObject gameObject, SimObjPhysics ai2thorPhysicsScript
         ) {
-            ai2thorPhysicsScript.HFdynamicfriction = physicsObject.physicsProperties.dynamicFriction;
-            ai2thorPhysicsScript.HFstaticfriction = physicsObject.physicsProperties.staticFriction;
-            ai2thorPhysicsScript.HFbounciness = physicsObject.physicsProperties.bounciness;
-            ai2thorPhysicsScript.HFrbdrag = physicsObject.physicsProperties.drag;
-            ai2thorPhysicsScript.HFrbangulardrag = physicsObject.physicsProperties.angularDrag;
+            ai2thorPhysicsScript.HFdynamicfriction = physicsObject.dynamicFriction;
+            ai2thorPhysicsScript.HFstaticfriction = physicsObject.staticFriction;
+            ai2thorPhysicsScript.HFbounciness = physicsObject.bounciness;
+            ai2thorPhysicsScript.HFrbdrag = physicsObject.drag;
+            ai2thorPhysicsScript.HFrbangulardrag = physicsObject.angularDrag;
 
             Rigidbody rigidbody = gameObject.GetComponent<Rigidbody>();
             //Gets rigid body of object and changes drag/angular drag
@@ -1460,6 +1473,8 @@ public class MachineCommonSenseConfigScene {
     public MachineCommonSenseConfigGoal goal;
     public MachineCommonSenseConfigTransform performerStart = null;
     public List<MachineCommonSenseConfigGameObject> objects;
+    public MachineCommonSenseConfigPhysicsProperties floorProperties;
+    public MachineCommonSenseConfigPhysicsProperties wallProperties;
 }
 
 [Serializable]
@@ -1486,6 +1501,5 @@ public class MachineCommonSenseConfigPhysicsProperties {
     public float bounciness;
     public float drag;
     public float angularDrag;
-
 }
 
