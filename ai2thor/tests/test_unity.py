@@ -3,14 +3,29 @@
 import os
 import ai2thor.controller
 import glob
+import re
 
 class UnityTestController(ai2thor.controller.Controller):
 
     def __init__(self,**kwargs):
         base_path = os.path.normpath(os.path.join(os.path.abspath(__file__), "..", "..", "..", "unity", "builds"))
-        build_path = 'thor-local-OSXIntel64.app/Contents/MacOS/thor-local-OSXIntel64'
-        
+        build_path = None
+        local_build_path = 'thor-local-OSXIntel64.app/Contents/MacOS/thor-local-OSXIntel64'
+        newest_build_time = 0
+        if os.path.isfile(os.path.join(base_path, local_build_path)):
+            newest_build_time = os.stat(os.path.join(base_path, 'thor-local-OSXIntel64.app')).st_mtime
+            build_path = local_build_path
 
+        for g in glob.glob(base_path + "/*"):
+            if os.path.isdir(g):
+                base = os.path.basename(g)
+                if re.match(r'^thor-OSXIntel64-[0-9a-z]+$', base):
+                    mtime = os.stat(g).st_mtime
+                    if mtime > newest_build_time:
+                        newest_build_time = mtime
+                        build_path = os.path.join(base, base + '.app', 'Contents/MacOS/', base)
+
+        print("selected executable %s" % build_path)
         kwargs['local_executable_path'] = os.path.join(base_path, build_path)
         kwargs['scene'] = 'FloorPlan28'
         super().__init__(**kwargs)

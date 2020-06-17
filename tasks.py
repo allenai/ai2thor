@@ -1,6 +1,7 @@
 import os
 import sys
 import datetime
+import json
 import zipfile
 import threading
 import hashlib
@@ -115,7 +116,6 @@ def class_dataset_images_for_scene(scene_name):
     import numpy as np
     import cv2
     import hashlib
-    import json
 
     env = ai2thor.controller.Controller(quality="Low")
     player_size = 300
@@ -368,7 +368,6 @@ def webgl_build(
                                 have their content hashes as part of their names.
     :return:
     """
-    import json
     from functools import reduce
 
     def file_to_content_addressable(file_path, json_metadata_file_path, json_key):
@@ -573,6 +572,7 @@ def build_pip(context, version):
         .decode("ascii")
         .strip().split("\n")
     )
+    # XXX add check for tag on master branch
 
     if version not in commit_tags:
         raise Exception("tag %s is not on current commit" % version)
@@ -717,6 +717,31 @@ def pending_travis_build():
         return dict(branch=b["branch"]["name"], commit_id=b["commit"]["sha"])
 
 
+def pytest_s3_object(commit_id):
+    s3 = boto3.resource("s3")
+    pytest_key = 'builds/pytest-%s.json' % commit_id
+
+    return s3.Object(PUBLIC_S3_BUCKET, pytest_key)
+
+@task
+def ci_pytest(context):
+
+    proc = subprocess.run("pytest", shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+    commit_id = git_commit_id()
+
+    result = dict(
+        success=proc.returncode == 0,
+        stdout=proc.stdout.decode('ascii'),
+        stderr=proc.stderr.decode('ascii')
+    )
+
+    s3_obj = pytest_s3_object(commit_id)
+    s3_obj.put(
+        Body=json.dumps(result), ACL="public-read", ContentType='application/json'
+    )
+
+
 @task
 def ci_build(context):
     import fcntl
@@ -751,7 +776,10 @@ def ci_build(context):
             for p in procs:
                 if p:
                     p.join()
+            
 
+            ci_pytest(context)
+            
         fcntl.flock(lock_f, fcntl.LOCK_UN)
 
     except io.BlockingIOError as e:
@@ -760,11 +788,10 @@ def ci_build(context):
     lock_f.close()
 
 
-def ci_build_arch(arch, include_private_scenes):
+def ci_build_arch(arch, include_private_scenes=False):
     from multiprocessing import Process
     import subprocess
     import boto3
-    import ai2thor.downloader
 
     github_url = "https://github.com/allenai/ai2thor"
 
@@ -773,7 +800,7 @@ def ci_build_arch(arch, include_private_scenes):
     commit_build = ai2thor.build.Build(arch, commit_id, False)
     if commit_build.exists():
         print("found build for commit %s %s" % (commit_id, arch))
-        return
+        #return
 
     unity_path = "unity"
     build_name = ai2thor.build.build_name(arch, commit_id, include_private_scenes)
@@ -805,7 +832,7 @@ def ci_build_arch(arch, include_private_scenes):
 @task
 def poll_ci_build(context):
     from ai2thor.build import platform_map
-    import ai2thor.downloader
+    import botocore.exceptions
     import time
 
     commit_id = git_commit_id()
@@ -833,6 +860,21 @@ def poll_ci_build(context):
                 % commit_build.log_url()
             )
             raise Exception("Failed to build %s for commit: %s " % (arch, commit_id))
+
+    s3_obj = pytest_s3_object(commit_id)
+
+    try:
+        res = json.loads(s3_obj.get()['Body'].read())
+        print(res['stdout']) # print so that it appears in travis log
+        print(res['stderr'])
+        if not res['success']:
+            raise Exception("pytest failure")
+
+    except botocore.exceptions.ClientError as e:
+        if e.__class__.__name__ == 'NoSuchKey':
+            raise Exception("No pytest results for commit_id: %s" % commit_id)
+        else:
+            raise(e)
 
 
 @task
@@ -2757,4 +2799,5 @@ def reachable_pos(ctx, scene, editor_mode=False, local_build=False):
     )
 
     print("After teleport: {}".format(evt.metadata['agent']['position']))
+
 

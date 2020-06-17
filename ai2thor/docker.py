@@ -2,7 +2,7 @@ import subprocess
 import os.path
 import re
 import tempfile
-from ai2thor.build import VERSION
+from ai2thor.build import COMMIT_ID
 import shlex
 import shutil
 
@@ -104,7 +104,7 @@ def kill_container(container_id):
 def build_image():
 
     version = nvidia_version()
-    image_name = 'ai2thor/ai2thor-nvidia-%s:%s' % (version, VERSION)
+    image_name = 'ai2thor/ai2thor-nvidia-%s:%s' % (version, COMMIT_ID)
 
     if image_exists(image_name):
         return image_name
