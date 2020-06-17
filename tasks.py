@@ -872,6 +872,7 @@ def poll_ci_build(context):
     for i in range(30):
         s3_obj = pytest_s3_object(commit_id)
         s3_pytest_url = 'http://s3-us-west-2.amazonaws.com/%s/%s' % (s3_obj.bucket_name, s3_obj.key)
+        print("pytest url %s" % s3_pytest_url)
         res = requests.get(s3_pytest_url)
         if res.status_code == 200:
             pytest_missing = False
@@ -880,6 +881,7 @@ def poll_ci_build(context):
             print(pytest_result['stderr'])
             if not pytest_result['success']:
                 raise Exception("pytest failure")
+            break
         time.sleep(10)
     
     if pytest_missing:
