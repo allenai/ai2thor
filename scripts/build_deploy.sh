@@ -8,5 +8,5 @@ if [[ $(git rev-parse --is-shallow-repository) == 'true' ]]; then
     git fetch origin
 fi;
 
-invoke build-pip && invoke deploy-pip
+invoke build-pip $TRAVIS_TAG && invoke deploy-pip
 
