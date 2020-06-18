@@ -249,6 +249,30 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         break;
                     }
 
+                //activate cracked camera effect with random seed
+                 case "cc":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "CameraCrack";
+
+                        //give me a seed
+                        if(splitcommand.Length == 2)
+                        {
+                            action.randomSeed = int.Parse(splitcommand[1]);
+                            action.forceVisible = false;
+                            action.numPlacementAttempts = 5;
+                        }
+
+                        else
+                        {
+                            action.randomSeed = 0;
+                        }
+
+                        PhysicsController.ProcessControlCommand(action);
+
+                        break;
+                    }
+
                 //move ahead stochastic
                  case "mas":
                     {
@@ -915,6 +939,16 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         //action.maxStepCount = 10;
                         PhysicsController.ProcessControlCommand(action);
                         Debug.Log(PhysicsController.reachablePositions.Length);
+                        break;
+                    }
+
+                case "grpb":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "GetReachablePositions";
+                        //action.maxStepCount = 10;
+                        StochasticController.ProcessControlCommand(action);
+                        Debug.Log("stochastic grp " + StochasticController.reachablePositions.Length);
                         break;
                     }
 
