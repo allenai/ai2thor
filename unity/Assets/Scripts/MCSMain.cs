@@ -1341,7 +1341,7 @@ public class MCSConfigGameObject : MCSConfigAbstractObject {
     public List<MCSConfigResize> resizes;
     public List<MCSConfigMove> rotates;
     public List<MCSConfigShow> shows;
-    public List<MachineCommonSenseConfigTeleport> teleports;
+    public List<MCSConfigTeleport> teleports;
     public List<MCSConfigMove> torques;
 
     private GameObject gameObject;
@@ -1478,7 +1478,7 @@ public class MCSConfigScene {
 }
 
 [Serializable]
-public class MachineCommonSenseConfigTeleport : MCSConfigStepBegin {
+public class MCSConfigTeleport : MCSConfigStepBegin {
     public MCSConfigVector position;
 }
 
