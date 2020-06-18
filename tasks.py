@@ -768,6 +768,8 @@ def ci_build(context):
                     p = ci_build_arch(arch, include_private_scenes)
                     procs.append(p)
 
+            ci_pytest(context)
+
             if build["branch"] == "master":
                 webgl_build_deploy_demo(
                     context, verbose=True, content_addressable=True, force=True
@@ -778,7 +780,6 @@ def ci_build(context):
                     p.join()
             
 
-            ci_pytest(context)
             
         fcntl.flock(lock_f, fcntl.LOCK_UN)
 
