@@ -834,7 +834,7 @@ def ci_build_arch(arch, include_private_scenes=False):
 def poll_ci_build(context):
     from ai2thor.build import platform_map
     import time
-    import urllib3.exceptions
+    import requests.exceptions
     import requests
 
     commit_id = git_commit_id()
@@ -852,7 +852,7 @@ def poll_ci_build(context):
                     missing = True
             # we observe errors when polling AWS periodically - we don't want these to stop
             # the build
-            except urllib3.exceptions.ProtocolError as e:
+            except requests.exceptions.ConnectionError as e:
                 print("Caught exception %s" % e)
 
         if not missing:
