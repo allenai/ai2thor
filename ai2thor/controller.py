@@ -728,9 +728,6 @@ class Controller(object):
             proc = subprocess.Popen(command, env=env)
             self.unity_pid = proc.pid
             atexit.register(lambda: proc.poll() is None and proc.kill())
-            returncode = proc.wait()
-            if returncode != 0 and not self.killing_unity:
-                raise Exception("command: %s exited with %s" % (command, returncode))
 
     def check_docker(self):
         if self.docker_enabled:
@@ -940,11 +937,7 @@ class Controller(object):
                 self.prune_releases()
 
             _, port = self.server.wsgi_server.socket.getsockname()
-            unity_thread = threading.Thread(
-                target=self._start_unity_thread,
-                args=(env, width, height, host, port, image_name))
-            unity_thread.daemon = True
-            unity_thread.start()
+            self._start_unity_thread(env, width, height, host, port, image_name)
 
         # receive the first request
         self.last_event = queue_get(self.request_queue)
