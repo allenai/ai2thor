@@ -38,6 +38,9 @@ controller = UnityTestController()
 controller.reset('FloorPlan28')
 controller.step(dict(action='Initialize', gridSize=0.25))
 
+def teardown_module(module):
+    controller.stop()
+
 #@pytest.fixture
 #def controller():
 #    return c
