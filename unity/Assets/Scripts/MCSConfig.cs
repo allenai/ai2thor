@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class MachineCommonSenseConfig {
+public class MCSConfig {
     public static Dictionary<string, string[]> BLOCK_BLANK_MATERIAL_REGISTRY = new Dictionary<string, string[]>() {
         { "UnityAssetStore/Wooden_Toys_Bundle/ToyBlocks/meshes/Materials/blue_1x1", new string[] { "blue" } },
         { "UnityAssetStore/Wooden_Toys_Bundle/ToyBlocks/meshes/Materials/red_1x1", new string[] { "red" } },
@@ -108,7 +108,7 @@ public class MachineCommonSenseConfig {
         { "wood", WOOD_MATERIAL_REGISTRY }
     };
 
-    public static Dictionary<string, string[]> MATERIAL_COLORS = MachineCommonSenseConfig.GenerateMaterialColors();
+    public static Dictionary<string, string[]> MATERIAL_COLORS = MCSConfig.GenerateMaterialColors();
 
     private static Dictionary<string, string[]> GenerateMaterialColors() {
         // Hard-code additional materials present in the original playroom scene but not available in the registry.
@@ -147,7 +147,7 @@ public class MachineCommonSenseConfig {
             { "peder-balke-steigen-1849-trivium-art-history", new string[] { "painting" } },
             { "THORKEA_Shelving_Unit_Kallax_Small_Wood_2_Mat", new string[] { "white" } }
         };
-        foreach (KeyValuePair<string, Dictionary<string, string[]>> materialType in MachineCommonSenseConfig.MATERIAL_REGISTRY) {
+        foreach (KeyValuePair<string, Dictionary<string, string[]>> materialType in MCSConfig.MATERIAL_REGISTRY) {
             foreach (KeyValuePair<string, string[]> materialName in materialType.Value) {
                 materialColors.Add(materialName.Key.Substring(materialName.Key.LastIndexOf("/") + 1), materialName.Value);
             }

@@ -6,7 +6,7 @@ using System.Linq;
 using UnityStandardAssets.Characters.FirstPerson;
 using System.Text;
 
-public class MachineCommonSenseMain : MonoBehaviour {
+public class MCSMain : MonoBehaviour {
     private static float CUBE_INTERNAL_GRID = 0.25f;
     private static float LIGHT_RANGE = 20f;
     private static float LIGHT_RANGE_SCREENSHOT = 10f;
@@ -40,13 +40,13 @@ public class MachineCommonSenseMain : MonoBehaviour {
     public string defaultFloorMaterial = "AI2-THOR/Materials/Fabrics/CarpetWhite 3";
     public string defaultWallsMaterial = "AI2-THOR/Materials/Walls/DrywallBeige";
 
-    private MachineCommonSenseConfigScene currentScene;
+    private MCSConfigScene currentScene;
     private int lastStep = -1;
-    private Dictionary<String, MachineCommonSenseConfigObjectDefinition> objectDictionary =
-        new Dictionary<string, MachineCommonSenseConfigObjectDefinition>();
+    private Dictionary<String, MCSConfigObjectDefinition> objectDictionary =
+        new Dictionary<string, MCSConfigObjectDefinition>();
 
     // AI2-THOR Objects and Scripts
-    private MachineCommonSenseController agentController;
+    private MCSController agentController;
     private GameObject objectParent;
     private PhysicsSceneManager physicsSceneManager;
 
@@ -61,7 +61,7 @@ public class MachineCommonSenseMain : MonoBehaviour {
 
     // Unity's Start method is called before the first frame update
     void Start() {
-        this.agentController = GameObject.Find("FPSController").GetComponent<MachineCommonSenseController>();
+        this.agentController = GameObject.Find("FPSController").GetComponent<MCSController>();
         this.objectParent = GameObject.Find("Objects");
         this.physicsSceneManager = GameObject.Find("PhysicsSceneManager").GetComponent<PhysicsSceneManager>();
         this.ceiling = GameObject.Find("Ceiling");
@@ -77,11 +77,11 @@ public class MachineCommonSenseMain : MonoBehaviour {
         this.physicsSceneManager.physicsSimulationPaused = true;
 
         // Load the configurable game objects from our custom registry files.
-        List<MachineCommonSenseConfigObjectDefinition> ai2thorObjects = LoadObjectRegistryFromFile(
+        List<MCSConfigObjectDefinition> ai2thorObjects = LoadObjectRegistryFromFile(
             this.ai2thorObjectRegistryFile);
-        List<MachineCommonSenseConfigObjectDefinition> mcsObjects = LoadObjectRegistryFromFile(
+        List<MCSConfigObjectDefinition> mcsObjects = LoadObjectRegistryFromFile(
             this.mcsObjectRegistryFile);
-        List<MachineCommonSenseConfigObjectDefinition> primitiveObjects = LoadObjectRegistryFromFile(
+        List<MCSConfigObjectDefinition> primitiveObjects = LoadObjectRegistryFromFile(
             this.primitiveObjectRegistryFile);
         ai2thorObjects.Concat(mcsObjects).Concat(primitiveObjects).ToList().ForEach((objectDefinition) => {
             this.objectDictionary.Add(objectDefinition.id.ToUpper(), objectDefinition);
@@ -96,7 +96,7 @@ public class MachineCommonSenseMain : MonoBehaviour {
         }
     }
 
-    // Unity's Update method is called once per frame
+    // Unity's Update method is called once per frame.
     void Update() {
         // If the player made a step, update the scene based on the current configuration.
         if (this.lastStep < this.agentController.step) {
@@ -104,7 +104,7 @@ public class MachineCommonSenseMain : MonoBehaviour {
             Debug.Log("MCS: Run Step " + this.lastStep + " at Frame " + Time.frameCount);
             if (this.currentScene != null && this.currentScene.objects != null) {
                 bool objectsWereShown = false;
-                List<MachineCommonSenseConfigGameObject> objects = this.currentScene.objects.Where(objectConfig =>
+                List<MCSConfigGameObject> objects = this.currentScene.objects.Where(objectConfig =>
                     objectConfig.GetGameObject() != null).ToList();
 
                 // Loop over each configuration object in the scene and update if needed.
@@ -132,7 +132,7 @@ public class MachineCommonSenseMain : MonoBehaviour {
 
     // Custom Methods
 
-    public void ChangeCurrentScene(MachineCommonSenseConfigScene scene) {
+    public void ChangeCurrentScene(MCSConfigScene scene) {
         if (scene == null && this.currentScene == null) {
             Debug.LogError("MCS: Cannot switch the MCS scene to null... Keeping the current MCS scene.");
             return;
@@ -169,35 +169,35 @@ public class MachineCommonSenseMain : MonoBehaviour {
         if (this.currentScene.observation) {
             this.ceiling.SetActive(false);
 
-            this.wallLeft.transform.position = new Vector3(-1 * MachineCommonSenseMain.WALL_SIDE_X_POSITION_OBSERVATION,
-                MachineCommonSenseMain.WALL_Y_POSITION, MachineCommonSenseMain.WALL_SIDE_Z_POSITION);
-            this.wallRight.transform.position = new Vector3(MachineCommonSenseMain.WALL_SIDE_X_POSITION_OBSERVATION,
-                MachineCommonSenseMain.WALL_Y_POSITION, MachineCommonSenseMain.WALL_SIDE_Z_POSITION);
-            this.wallFront.transform.position = new Vector3(MachineCommonSenseMain.WALL_FRONT_X_POSITION,
-                MachineCommonSenseMain.WALL_FRONT_Y_POSITION_OBSERVATION, MachineCommonSenseMain.WALL_FRONT_Z_POSITION);
-            this.wallFront.transform.localScale = new Vector3(MachineCommonSenseMain.WALL_FRONT_X_SCALE_OBSERVATION,
-                MachineCommonSenseMain.WALL_FRONT_Y_SCALE_OBSERVATION, MachineCommonSenseMain.WALL_FRONT_Z_SCALE);
-            this.floor.transform.localScale = new Vector3(MachineCommonSenseMain.FLOOR_X_SCALE_OBSERVATION,
-                MachineCommonSenseMain.FLOOR_Y_SCALE, MachineCommonSenseMain.FLOOR_Z_SCALE);
+            this.wallLeft.transform.position = new Vector3(-1 * MCSMain.WALL_SIDE_X_POSITION_OBSERVATION,
+                MCSMain.WALL_Y_POSITION, MCSMain.WALL_SIDE_Z_POSITION);
+            this.wallRight.transform.position = new Vector3(MCSMain.WALL_SIDE_X_POSITION_OBSERVATION,
+                MCSMain.WALL_Y_POSITION, MCSMain.WALL_SIDE_Z_POSITION);
+            this.wallFront.transform.position = new Vector3(MCSMain.WALL_FRONT_X_POSITION,
+                MCSMain.WALL_FRONT_Y_POSITION_OBSERVATION, MCSMain.WALL_FRONT_Z_POSITION);
+            this.wallFront.transform.localScale = new Vector3(MCSMain.WALL_FRONT_X_SCALE_OBSERVATION,
+                MCSMain.WALL_FRONT_Y_SCALE_OBSERVATION, MCSMain.WALL_FRONT_Z_SCALE);
+            this.floor.transform.localScale = new Vector3(MCSMain.FLOOR_X_SCALE_OBSERVATION,
+                MCSMain.FLOOR_Y_SCALE, MCSMain.FLOOR_Z_SCALE);
 
-            this.currentScene.performerStart = new MachineCommonSenseConfigTransform();
-            this.currentScene.performerStart.position = new MachineCommonSenseConfigVector();
+            this.currentScene.performerStart = new MCSConfigTransform();
+            this.currentScene.performerStart.position = new MCSConfigVector();
             this.currentScene.performerStart.position.z = -4.5f;
-            this.currentScene.performerStart.rotation = new MachineCommonSenseConfigVector();
+            this.currentScene.performerStart.rotation = new MCSConfigVector();
         }
         else {
             this.ceiling.SetActive(true);
 
-            this.wallLeft.transform.position = new Vector3(-1 * MachineCommonSenseMain.WALL_SIDE_X_POSITION_INTERACTION,
-                MachineCommonSenseMain.WALL_Y_POSITION, MachineCommonSenseMain.WALL_SIDE_Z_POSITION);
-            this.wallRight.transform.position = new Vector3(MachineCommonSenseMain.WALL_SIDE_X_POSITION_INTERACTION,
-                MachineCommonSenseMain.WALL_Y_POSITION, MachineCommonSenseMain.WALL_SIDE_Z_POSITION);
-            this.wallFront.transform.position = new Vector3(MachineCommonSenseMain.WALL_FRONT_X_POSITION,
-                MachineCommonSenseMain.WALL_Y_POSITION, MachineCommonSenseMain.WALL_FRONT_Z_POSITION);
-            this.wallFront.transform.localScale = new Vector3(MachineCommonSenseMain.WALL_FRONT_X_SCALE_INTERACTION,
-                MachineCommonSenseMain.WALL_FRONT_Y_SCALE_INTERACTION, MachineCommonSenseMain.WALL_FRONT_Z_SCALE);
-            this.floor.transform.localScale = new Vector3(MachineCommonSenseMain.FLOOR_X_SCALE_INTERACTION,
-                MachineCommonSenseMain.FLOOR_Y_SCALE, MachineCommonSenseMain.FLOOR_Z_SCALE);
+            this.wallLeft.transform.position = new Vector3(-1 * MCSMain.WALL_SIDE_X_POSITION_INTERACTION,
+                MCSMain.WALL_Y_POSITION, MCSMain.WALL_SIDE_Z_POSITION);
+            this.wallRight.transform.position = new Vector3(MCSMain.WALL_SIDE_X_POSITION_INTERACTION,
+                MCSMain.WALL_Y_POSITION, MCSMain.WALL_SIDE_Z_POSITION);
+            this.wallFront.transform.position = new Vector3(MCSMain.WALL_FRONT_X_POSITION,
+                MCSMain.WALL_Y_POSITION, MCSMain.WALL_FRONT_Z_POSITION);
+            this.wallFront.transform.localScale = new Vector3(MCSMain.WALL_FRONT_X_SCALE_INTERACTION,
+                MCSMain.WALL_FRONT_Y_SCALE_INTERACTION, MCSMain.WALL_FRONT_Z_SCALE);
+            this.floor.transform.localScale = new Vector3(MCSMain.FLOOR_X_SCALE_INTERACTION,
+                MCSMain.FLOOR_Y_SCALE, MCSMain.FLOOR_Z_SCALE);
         }
 
         SimObjPhysics ceilingSimObjPhysics = this.ceiling.GetComponent<SimObjPhysics>();
@@ -213,9 +213,9 @@ public class MachineCommonSenseMain : MonoBehaviour {
             this.wallRight.GetComponent<Renderer>().material = new Material(Shader.Find("Unlit/Color"));
             this.wallFront.GetComponent<Renderer>().material = new Material(Shader.Find("Unlit/Color"));
             this.wallBack.GetComponent<Renderer>().material = new Material(Shader.Find("Unlit/Color"));
-            this.light.GetComponent<Light>().range = MachineCommonSenseMain.LIGHT_RANGE_SCREENSHOT;
-            this.light.transform.position = new Vector3(0, MachineCommonSenseMain.LIGHT_Y_POSITION_SCREENSHOT,
-                MachineCommonSenseMain.LIGHT_Z_POSITION_SCREENSHOT);
+            this.light.GetComponent<Light>().range = MCSMain.LIGHT_RANGE_SCREENSHOT;
+            this.light.transform.position = new Vector3(0, MCSMain.LIGHT_Y_POSITION_SCREENSHOT,
+                MCSMain.LIGHT_Z_POSITION_SCREENSHOT);
         }
 
         else {
@@ -244,9 +244,9 @@ public class MachineCommonSenseMain : MonoBehaviour {
                 this.GenerateCubeInternalVisibilityPoints(this.wallBack, null), false);
             AssignMaterial(this.wallBack, wallsMaterial);
 
-            this.light.GetComponent<Light>().range = MachineCommonSenseMain.LIGHT_RANGE;
-            this.light.transform.position = new Vector3(0, MachineCommonSenseMain.LIGHT_Y_POSITION,
-                MachineCommonSenseMain.LIGHT_Z_POSITION);
+            this.light.GetComponent<Light>().range = MCSMain.LIGHT_RANGE;
+            this.light.transform.position = new Vector3(0, MCSMain.LIGHT_Y_POSITION,
+                MCSMain.LIGHT_Z_POSITION);
         }       
 
         if (this.currentScene.wallProperties != null && this.currentScene.wallProperties.enable) {
@@ -259,7 +259,6 @@ public class MachineCommonSenseMain : MonoBehaviour {
             
         if (this.currentScene.floorProperties != null && this.currentScene.floorProperties.enable) {
             AssignPhysicsMaterialAndRigidBodyValues(scene.floorProperties, this.floor, floorSimObjPhysics);
-
         }
 
         if (this.currentScene.goal != null && this.currentScene.goal.description != null) {
@@ -270,21 +269,21 @@ public class MachineCommonSenseMain : MonoBehaviour {
         if (this.currentScene.performerStart != null && this.currentScene.performerStart.position != null) {
             // Always keep the Y position on the floor.
             controller.transform.position = new Vector3(this.currentScene.performerStart.position.x,
-                MachineCommonSenseController.POSITION_Y, this.currentScene.performerStart.position.z);
+                MCSController.POSITION_Y, this.currentScene.performerStart.position.z);
         }
         else {
-            controller.transform.position = new Vector3(0, MachineCommonSenseController.POSITION_Y, 0);
+            controller.transform.position = new Vector3(0, MCSController.POSITION_Y, 0);
         }
 
         if (this.currentScene.performerStart != null && this.currentScene.performerStart.rotation != null) {
             // Only permit rotating left or right (along the Y axis).
             controller.transform.rotation = Quaternion.Euler(0, this.currentScene.performerStart.rotation.y, 0);
-            controller.GetComponent<MachineCommonSenseController>().m_Camera.transform.localEulerAngles = new Vector3(
+            controller.GetComponent<MCSController>().m_Camera.transform.localEulerAngles = new Vector3(
                 this.currentScene.performerStart.rotation.x, 0, 0);
         }
         else {
             controller.transform.rotation = Quaternion.Euler(0, 0, 0);
-            controller.GetComponent<MachineCommonSenseController>().m_Camera.transform.localEulerAngles = new Vector3(
+            controller.GetComponent<MCSController>().m_Camera.transform.localEulerAngles = new Vector3(
                 0, 0, 0);
         }
 
@@ -294,7 +293,7 @@ public class MachineCommonSenseMain : MonoBehaviour {
 
     private Collider AssignBoundingBox(
         GameObject gameObject,
-        MachineCommonSenseConfigCollider colliderDefinition
+        MCSConfigCollider colliderDefinition
     ) {
         // The AI2-THOR bounding box property is always a box collider.
         colliderDefinition.type = "box";
@@ -313,7 +312,7 @@ public class MachineCommonSenseMain : MonoBehaviour {
 
     private Collider AssignCollider(
         GameObject gameObject,
-        MachineCommonSenseConfigCollider colliderDefinition
+        MCSConfigCollider colliderDefinition
     ) {
         this.AssignTransform(gameObject, colliderDefinition);
 
@@ -346,7 +345,7 @@ public class MachineCommonSenseMain : MonoBehaviour {
 
     private Collider[] AssignColliders(
         GameObject gameObject,
-        MachineCommonSenseConfigObjectDefinition objectDefinition
+        MCSConfigObjectDefinition objectDefinition
     ) {
         // We don't care about existing trigger colliders here so just ignore them.
         Collider[] colliders = gameObject.GetComponentsInChildren<Collider>().Where((collider) =>
@@ -411,7 +410,7 @@ public class MachineCommonSenseMain : MonoBehaviour {
             return null;
         }
 
-        foreach (KeyValuePair<string, Dictionary<string, string[]>> materialType in MachineCommonSenseConfig.MATERIAL_REGISTRY) {
+        foreach (KeyValuePair<string, Dictionary<string, string[]>> materialType in MCSConfig.MATERIAL_REGISTRY) {
             if (materialType.Value.ContainsKey(filename)) {
                 if (restrictions.Length == 0 || Array.IndexOf(restrictions, materialType.Key) >= 0) {
                     Material material = Resources.Load<Material>("MCS/" + filename);
@@ -485,8 +484,8 @@ public class MachineCommonSenseMain : MonoBehaviour {
 
     private GameObject AssignProperties(
         GameObject gameObject,
-        MachineCommonSenseConfigGameObject objectConfig,
-        MachineCommonSenseConfigObjectDefinition objectDefinition
+        MCSConfigGameObject objectConfig,
+        MCSConfigObjectDefinition objectDefinition
     ) {
         // NOTE: The objectConfig applies to THIS object and the objectDefinition applies to ALL objects of this type.
 
@@ -535,7 +534,7 @@ public class MachineCommonSenseMain : MonoBehaviour {
         // The object's visibility points define a subset of points along the outside of the object for AI2-THOR.
         if (objectDefinition.visibilityPoints.Count > 0) {
             // Use the List constructor to copy the visibility points list from the object definition.
-            List<MachineCommonSenseConfigVector> points = new List<MachineCommonSenseConfigVector>(
+            List<MCSConfigVector> points = new List<MCSConfigVector>(
                 objectDefinition.visibilityPoints);
             if (objectDefinition.id.Equals("cube")) {
                 points.AddRange(this.GenerateCubeInternalVisibilityPoints(gameObject, objectConfig));
@@ -574,7 +573,7 @@ public class MachineCommonSenseMain : MonoBehaviour {
 
     private GameObject AssignReceptacleTrigglerBox(
         GameObject gameObject,
-        MachineCommonSenseConfigTransform receptacleTriggerBoxDefinition
+        MCSConfigTransform receptacleTriggerBoxDefinition
     ) {
         GameObject receptacleTriggerBoxObject = new GameObject {
             isStatic = true,
@@ -584,7 +583,7 @@ public class MachineCommonSenseMain : MonoBehaviour {
         };
         receptacleTriggerBoxObject.transform.parent = gameObject.transform;
 
-        MachineCommonSenseConfigCollider colliderDefinition = new MachineCommonSenseConfigCollider {
+        MCSConfigCollider colliderDefinition = new MCSConfigCollider {
             position = receptacleTriggerBoxDefinition.position,
             rotation = receptacleTriggerBoxDefinition.rotation,
             scale = receptacleTriggerBoxDefinition.scale,
@@ -602,7 +601,7 @@ public class MachineCommonSenseMain : MonoBehaviour {
 
     private GameObject[] AssignReceptacleTriggerBoxes(
         GameObject gameObject,
-        MachineCommonSenseConfigObjectDefinition objectDefinition
+        MCSConfigObjectDefinition objectDefinition
     ) {
         // If we've configured new trigger box definitions but trigger boxes already exist, delete them.
         if (gameObject.transform.Find("ReceptacleTriggerBox") != null) {
@@ -653,8 +652,8 @@ public class MachineCommonSenseMain : MonoBehaviour {
     
     private void AssignSimObjPhysicsScript(
         GameObject gameObject,
-        MachineCommonSenseConfigGameObject objectConfig,
-        MachineCommonSenseConfigObjectDefinition objectDefinition,
+        MCSConfigGameObject objectConfig,
+        MCSConfigObjectDefinition objectDefinition,
         Collider[] colliders,
         Transform[] visibilityPoints,
         bool moveable,
@@ -782,7 +781,7 @@ public class MachineCommonSenseMain : MonoBehaviour {
     }
 
     private void AssignPhysicsMaterialAndRigidBodyValues
-        (MachineCommonSenseConfigPhysicsProperties physicsObject,
+        (MCSConfigPhysicsProperties physicsObject,
         GameObject gameObject, SimObjPhysics ai2thorPhysicsScript
         ) {
             ai2thorPhysicsScript.HFdynamicfriction = physicsObject.dynamicFriction;
@@ -819,7 +818,7 @@ public class MachineCommonSenseMain : MonoBehaviour {
 
     private void AssignTransform(
         GameObject gameObject,
-        MachineCommonSenseConfigTransform transformDefinition
+        MCSConfigTransform transformDefinition
     ) {
         gameObject.transform.localPosition = transformDefinition.position == null ? Vector3.zero :
             new Vector3(transformDefinition.position.x, transformDefinition.position.y,
@@ -834,7 +833,7 @@ public class MachineCommonSenseMain : MonoBehaviour {
 
     private Transform[] AssignVisibilityPoints(
         GameObject gameObject,
-        List<MachineCommonSenseConfigVector> points,
+        List<MCSConfigVector> points,
         bool scaleOne
     ) {
         // The AI2-THOR scripts assume the visibility points have a parent object with the name VisibilityPoints.
@@ -863,8 +862,8 @@ public class MachineCommonSenseMain : MonoBehaviour {
     }
 
     private GameObject CreateCustomGameObject(
-        MachineCommonSenseConfigGameObject objectConfig,
-        MachineCommonSenseConfigObjectDefinition objectDefinition
+        MCSConfigGameObject objectConfig,
+        MCSConfigObjectDefinition objectDefinition
     ) {
         GameObject gameObject = Instantiate(Resources.Load("MCS/" + objectDefinition.resourceFile,
             typeof(GameObject))) as GameObject;
@@ -898,7 +897,7 @@ public class MachineCommonSenseMain : MonoBehaviour {
 
         // Set animation controller.
         if (objectConfig.controller != null && !objectConfig.controller.Equals("")) {
-            MachineCommonSenseConfigAnimator animatorDefinition = objectDefinition.animators
+            MCSConfigAnimator animatorDefinition = objectDefinition.animators
                 .Where(cont => cont.id.Equals(objectConfig.controller)).ToList().First();
             if (animatorDefinition.animatorFile != null && !animatorDefinition.animatorFile.Equals("")) {
                 Animator animator = gameObject.GetComponent<Animator>();
@@ -917,8 +916,8 @@ public class MachineCommonSenseMain : MonoBehaviour {
         return gameObject;
     }
 
-    private GameObject CreateGameObject(MachineCommonSenseConfigGameObject objectConfig) {
-        MachineCommonSenseConfigObjectDefinition objectDefinition = this.objectDictionary[objectConfig.type.ToUpper()];
+    private GameObject CreateGameObject(MCSConfigGameObject objectConfig) {
+        MCSConfigObjectDefinition objectDefinition = this.objectDictionary[objectConfig.type.ToUpper()];
         if (objectDefinition != null) {
             if (objectDefinition.primitive) {
                 switch (objectConfig.type) {
@@ -947,7 +946,7 @@ public class MachineCommonSenseMain : MonoBehaviour {
         return null;
     }
 
-    private GameObject CreateNullParentObjectIfNeeded(MachineCommonSenseConfigGameObject objectConfig) {
+    private GameObject CreateNullParentObjectIfNeeded(MCSConfigGameObject objectConfig) {
         // Null parents are useful if we want to rotate an object but don't want to pivot around its center point.
         if (objectConfig.nullParent != null && (objectConfig.nullParent.position != null ||
             objectConfig.nullParent.rotation != null)) {
@@ -975,34 +974,34 @@ public class MachineCommonSenseMain : MonoBehaviour {
         }
     }
 
-    private MachineCommonSenseConfigVector GenerateCubeInternalVisibilityPoint(float x, float y, float z) {
-        MachineCommonSenseConfigVector point = new MachineCommonSenseConfigVector();
+    private MCSConfigVector GenerateCubeInternalVisibilityPoint(float x, float y, float z) {
+        MCSConfigVector point = new MCSConfigVector();
         point.x = x;
         point.y = y;
         point.z = z;
         return point;
     }
 
-    private List<MachineCommonSenseConfigVector> GenerateCubeInternalVisibilityPoints(
+    private List<MCSConfigVector> GenerateCubeInternalVisibilityPoints(
         GameObject gameObject,
-        MachineCommonSenseConfigGameObject objectConfig
+        MCSConfigGameObject objectConfig
     ) {
-        MachineCommonSenseConfigShow showConfig = (objectConfig != null && objectConfig.shows.Count > 0) ?
+        MCSConfigShow showConfig = (objectConfig != null && objectConfig.shows.Count > 0) ?
             objectConfig.shows[0] : null;
 
         float xSize = showConfig != null ? showConfig.scale.GetX() : gameObject.transform.localScale.x;
         float ySize = showConfig != null ? showConfig.scale.GetY() : gameObject.transform.localScale.y;
         float zSize = showConfig != null ? showConfig.scale.GetZ() : gameObject.transform.localScale.z;
 
-        float xGrid = Mathf.Floor(xSize / MachineCommonSenseMain.CUBE_INTERNAL_GRID);
-        float yGrid = Mathf.Floor(ySize / MachineCommonSenseMain.CUBE_INTERNAL_GRID);
-        float zGrid = Mathf.Floor(zSize / MachineCommonSenseMain.CUBE_INTERNAL_GRID);
+        float xGrid = Mathf.Floor(xSize / MCSMain.CUBE_INTERNAL_GRID);
+        float yGrid = Mathf.Floor(ySize / MCSMain.CUBE_INTERNAL_GRID);
+        float zGrid = Mathf.Floor(zSize / MCSMain.CUBE_INTERNAL_GRID);
 
         float xSpan = xSize / xGrid;
         float ySpan = ySize / yGrid;
         float zSpan = zSize / zGrid;
 
-        List<MachineCommonSenseConfigVector> points = new List<MachineCommonSenseConfigVector>();
+        List<MCSConfigVector> points = new List<MCSConfigVector>();
 
         for (float x = 1; x < xGrid; ++x) {
             for (float y = 1; y < yGrid; ++y) {
@@ -1034,7 +1033,7 @@ public class MachineCommonSenseMain : MonoBehaviour {
         return points;
     }
 
-    private void InitializeGameObject(MachineCommonSenseConfigGameObject objectConfig) {
+    private void InitializeGameObject(MCSConfigGameObject objectConfig) {
         try {
             GameObject gameObject = CreateGameObject(objectConfig);
             objectConfig.SetGameObject(gameObject);
@@ -1048,19 +1047,19 @@ public class MachineCommonSenseMain : MonoBehaviour {
         }
     }
 
-    private MachineCommonSenseConfigScene LoadCurrentSceneFromFile(String filePath) {
+    private MCSConfigScene LoadCurrentSceneFromFile(String filePath) {
         TextAsset currentSceneFile = Resources.Load<TextAsset>("MCS/Scenes/" + filePath);
         Debug.Log("MCS: Config file Assets/Resources/MCS/Scenes/" + filePath + ".json" + (currentSceneFile == null ?
             " is null!" : (":\n" + currentSceneFile.text)));
-        return JsonUtility.FromJson<MachineCommonSenseConfigScene>(currentSceneFile.text);
+        return JsonUtility.FromJson<MCSConfigScene>(currentSceneFile.text);
     }
 
-    private List<MachineCommonSenseConfigObjectDefinition> LoadObjectRegistryFromFile(String filePath) {
+    private List<MCSConfigObjectDefinition> LoadObjectRegistryFromFile(String filePath) {
         TextAsset objectRegistryFile = Resources.Load<TextAsset>("MCS/" + filePath);
         Debug.Log("MCS: Config file Assets/Resources/MCS/" + filePath + ".json" + (objectRegistryFile == null ?
             " is null!" : (":\n" + objectRegistryFile.text)));
-        MachineCommonSenseConfigObjectRegistry objectRegistry = JsonUtility
-            .FromJson<MachineCommonSenseConfigObjectRegistry>(objectRegistryFile.text);
+        MCSConfigObjectRegistry objectRegistry = JsonUtility
+            .FromJson<MCSConfigObjectRegistry>(objectRegistryFile.text);
         return objectRegistry.objects;
     }
 
@@ -1072,7 +1071,7 @@ public class MachineCommonSenseMain : MonoBehaviour {
 
     private void ModifyChildrenInteractables(
         GameObject gameObject,
-        List<MachineCommonSenseConfigInteractables> interactableDefinitions
+        List<MCSConfigInteractables> interactableDefinitions
     ) {
         interactableDefinitions.ForEach((interactableDefinition) => {
             // Override properties of SimObjPhysics children in existing AI2-THOR prefab objects if needed.
@@ -1100,7 +1099,7 @@ public class MachineCommonSenseMain : MonoBehaviour {
 
     private void ModifyChildrenWithCustomOverrides(
         GameObject gameObject,
-        List<MachineCommonSenseConfigOverride> overrideDefinitions
+        List<MCSConfigOverride> overrideDefinitions
     ) {
         overrideDefinitions.ForEach((overrideDefinition) => {
             // Override properties of colliders, meshes, or other children in existing prefab objects if needed.
@@ -1151,13 +1150,13 @@ public class MachineCommonSenseMain : MonoBehaviour {
         }).ToArray();
     }
 
-    private void PostUpdateGameObjectOnStep(List<MachineCommonSenseConfigGameObject> objectConfigs, int step) {
+    private void PostUpdateGameObjectOnStep(List<MCSConfigGameObject> objectConfigs, int step) {
         objectConfigs.ForEach(objectConfig => {
             // If an object's location is set in relation to another object, modify its location in the PostUpdate to
             // ensure that any update to the other object's location is finished.
             if (objectConfig.locationParent != null && !objectConfig.locationParent.Equals("")) {
                 objectConfig.shows.Where(show => show.stepBegin == step).ToList().ForEach((show) => {
-                    MachineCommonSenseConfigGameObject[] originObjectConfigs = objectConfigs.Where(possibleConfig =>
+                    MCSConfigGameObject[] originObjectConfigs = objectConfigs.Where(possibleConfig =>
                         possibleConfig.id.Equals(objectConfig.locationParent)).ToArray();
 
                     if (originObjectConfigs.Length > 0) {
@@ -1181,7 +1180,7 @@ public class MachineCommonSenseMain : MonoBehaviour {
         });
     }
 
-    private bool UpdateGameObjectOnStep(MachineCommonSenseConfigGameObject objectConfig, int step) {
+    private bool UpdateGameObjectOnStep(MCSConfigGameObject objectConfig, int step) {
         bool objectsWereShown = false;
 
         GameObject gameOrParentObject = objectConfig.GetParentObject() ?? objectConfig.GetGameObject();
@@ -1287,7 +1286,7 @@ public class MachineCommonSenseMain : MonoBehaviour {
 // Definitions of serializable objects from JSON config files.
 
 [Serializable]
-public class MachineCommonSenseConfigAbstractObject {
+public class MCSConfigAbstractObject {
     public string id;
     public bool kinematic;
     public float mass;
@@ -1300,50 +1299,50 @@ public class MachineCommonSenseConfigAbstractObject {
     public bool stacking;
     public List<string> materials;
     public List<string> salientMaterials;
-    public MachineCommonSenseConfigPhysicsProperties physicsProperties;
+    public MCSConfigPhysicsProperties physicsProperties;
 }
 
 [Serializable]
-public class MachineCommonSenseConfigAction : MachineCommonSenseConfigStepBegin {
+public class MCSConfigAction : MCSConfigStepBegin {
     public string id;
 }
 
 [Serializable]
-public class MachineCommonSenseConfigAnimation {
+public class MCSConfigAnimation {
     public string id;
     public string animationFile;
 }
 
 [Serializable]
-public class MachineCommonSenseConfigAnimator {
+public class MCSConfigAnimator {
     public string id;
     public string animatorFile;
 }
 
 [Serializable]
-public class MachineCommonSenseConfigCollider : MachineCommonSenseConfigTransform {
+public class MCSConfigCollider : MCSConfigTransform {
     public string type;
     public float height;
     public float radius;
 }
 
 [Serializable]
-public class MachineCommonSenseConfigGameObject : MachineCommonSenseConfigAbstractObject {
+public class MCSConfigGameObject : MCSConfigAbstractObject {
     public string controller;
     public string locationParent;
     public string materialFile; // deprecated; please use materials
-    public MachineCommonSenseConfigTransform nullParent = null;
+    public MCSConfigTransform nullParent = null;
     public bool structure;
     public string type;
-    public List<MachineCommonSenseConfigAction> actions;
-    public List<MachineCommonSenseConfigMove> forces;
-    public List<MachineCommonSenseConfigStepBegin> hides;
-    public List<MachineCommonSenseConfigMove> moves;
-    public List<MachineCommonSenseConfigResize> resizes;
-    public List<MachineCommonSenseConfigMove> rotates;
-    public List<MachineCommonSenseConfigShow> shows;
-    public List<MachineCommonSenseConfigTeleport> teleports;
-    public List<MachineCommonSenseConfigMove> torques;
+    public List<MCSConfigAction> actions;
+    public List<MCSConfigMove> forces;
+    public List<MCSConfigStepBegin> hides;
+    public List<MCSConfigMove> moves;
+    public List<MCSConfigResize> resizes;
+    public List<MCSConfigMove> rotates;
+    public List<MCSConfigShow> shows;
+    public List<MCSConfigTeleport> teleports;
+    public List<MCSConfigMove> torques;
 
     private GameObject gameObject;
     private GameObject parentObject;
@@ -1366,54 +1365,54 @@ public class MachineCommonSenseConfigGameObject : MachineCommonSenseConfigAbstra
 }
 
 [Serializable]
-public class MachineCommonSenseConfigInteractables {
+public class MCSConfigInteractables {
     public string id;
     public string name;
 }
 
 [Serializable]
-public class MachineCommonSenseConfigMove : MachineCommonSenseConfigStepBeginEnd {
-    public MachineCommonSenseConfigVector vector;
+public class MCSConfigMove : MCSConfigStepBeginEnd {
+    public MCSConfigVector vector;
 }
 
 [Serializable]
-public class MachineCommonSenseConfigObjectDefinition : MachineCommonSenseConfigAbstractObject {
+public class MCSConfigObjectDefinition : MCSConfigAbstractObject {
     public string resourceFile;
     public string shape;
     public bool keepColliders;
     public bool primitive;
     public bool visibilityPointsScaleOne;
-    public MachineCommonSenseConfigCollider boundingBox = null;
-    public MachineCommonSenseConfigSize scale = null;
-    public List<MachineCommonSenseConfigAnimation> animations;
-    public List<MachineCommonSenseConfigAnimator> animators;
-    public List<MachineCommonSenseConfigCollider> colliders;
-    public List<MachineCommonSenseConfigInteractables> interactables;
+    public MCSConfigCollider boundingBox = null;
+    public MCSConfigSize scale = null;
+    public List<MCSConfigAnimation> animations;
+    public List<MCSConfigAnimator> animators;
+    public List<MCSConfigCollider> colliders;
+    public List<MCSConfigInteractables> interactables;
     public List<string> materialRestrictions;
-    public List<MachineCommonSenseConfigOverride> overrides;
-    public List<MachineCommonSenseConfigTransform> receptacleTriggerBoxes;
-    public List<MachineCommonSenseConfigVector> visibilityPoints;
+    public List<MCSConfigOverride> overrides;
+    public List<MCSConfigTransform> receptacleTriggerBoxes;
+    public List<MCSConfigVector> visibilityPoints;
 }
 
 [Serializable]
-public class MachineCommonSenseConfigOverride : MachineCommonSenseConfigTransform {
+public class MCSConfigOverride : MCSConfigTransform {
     public string name;
 }
 
 [Serializable]
-public class MachineCommonSenseConfigResize : MachineCommonSenseConfigStepBeginEnd {
-    public MachineCommonSenseConfigSize size;
+public class MCSConfigResize : MCSConfigStepBeginEnd {
+    public MCSConfigSize size;
 }
 
 [Serializable]
-public class MachineCommonSenseConfigShow : MachineCommonSenseConfigStepBegin {
-    public MachineCommonSenseConfigVector position;
-    public MachineCommonSenseConfigVector rotation;
-    public MachineCommonSenseConfigSize scale;
+public class MCSConfigShow : MCSConfigStepBegin {
+    public MCSConfigVector position;
+    public MCSConfigVector rotation;
+    public MCSConfigSize scale;
 }
 
 [Serializable]
-public class MachineCommonSenseConfigSize {
+public class MCSConfigSize {
     [SerializeField]
     private float x;
     [SerializeField]
@@ -1439,62 +1438,63 @@ public class MachineCommonSenseConfigSize {
 }
 
 [Serializable]
-public class MachineCommonSenseConfigStepBegin {
+public class MCSConfigStepBegin {
     public int stepBegin;
 }
 
 [Serializable]
-public class MachineCommonSenseConfigStepBeginEnd : MachineCommonSenseConfigStepBegin {
+public class MCSConfigStepBeginEnd : MCSConfigStepBegin {
     public int stepEnd;
 }
 
 [Serializable]
-public class MachineCommonSenseConfigTransform {
-    public MachineCommonSenseConfigVector position = null;
-    public MachineCommonSenseConfigVector rotation = null;
-    public MachineCommonSenseConfigSize scale = null;
+public class MCSConfigTransform {
+    public MCSConfigVector position = null;
+    public MCSConfigVector rotation = null;
+    public MCSConfigSize scale = null;
 }
 
 [Serializable]
-public class MachineCommonSenseConfigVector {
+public class MCSConfigVector {
     public float x;
     public float y;
     public float z;
 }
 
 [Serializable]
-public class MachineCommonSenseConfigScene {
+public class MCSConfigScene {
     public String name;
     public String ceilingMaterial;
     public String floorMaterial;
     public String wallMaterial;
     public bool observation;
     public bool screenshot;
-    public MachineCommonSenseConfigGoal goal;
-    public MachineCommonSenseConfigTransform performerStart = null;
-    public List<MachineCommonSenseConfigGameObject> objects;
-    public MachineCommonSenseConfigPhysicsProperties floorProperties;
-    public MachineCommonSenseConfigPhysicsProperties wallProperties;
+    
+    public MCSConfigGoal goal;
+    public MCSConfigTransform performerStart = null;
+    public List<MCSConfigGameObject> objects;
+    public MCSConfigPhysicsProperties floorProperties;
+    public MCSConfigPhysicsProperties wallProperties;
 }
 
 [Serializable]
-public class MachineCommonSenseConfigTeleport : MachineCommonSenseConfigStepBegin {
-    public MachineCommonSenseConfigVector position;
+public class MCSConfigTeleport : MCSConfigStepBegin {
+    public MCSConfigVector position;
 }
 
 [Serializable]
-public class MachineCommonSenseConfigGoal {
+public class MCSConfigGoal {
     public string description;
 }
 
 [Serializable]
-public class MachineCommonSenseConfigObjectRegistry {
-    public List<MachineCommonSenseConfigObjectDefinition> objects;
+public class MCSConfigObjectRegistry {
+    public List<MCSConfigObjectDefinition> objects;
 }
 
 [Serializable]
 
-public class MachineCommonSenseConfigPhysicsProperties {
+public class MCSConfigPhysicsProperties {
     public bool enable;
     public float dynamicFriction;
     public float staticFriction;
