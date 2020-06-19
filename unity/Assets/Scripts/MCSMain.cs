@@ -1473,8 +1473,8 @@ public class MCSConfigScene {
     public MCSConfigGoal goal;
     public MCSConfigTransform performerStart = null;
     public List<MCSConfigGameObject> objects;
-    public MachineCommonSenseConfigPhysicsProperties floorProperties;
-    public MachineCommonSenseConfigPhysicsProperties wallProperties;
+    public MCSConfigPhysicsProperties floorProperties;
+    public MCSConfigPhysicsProperties wallProperties;
 }
 
 [Serializable]
