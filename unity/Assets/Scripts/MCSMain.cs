@@ -96,7 +96,7 @@ public class MCSMain : MonoBehaviour {
         }
     }
 
-    // Unity's Update method is called once per frame
+    // Unity's Update method is called once per frame.
     void Update() {
         // If the player made a step, update the scene based on the current configuration.
         if (this.lastStep < this.agentController.step) {
