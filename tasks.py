@@ -726,8 +726,6 @@ def pytest_s3_object(commit_id):
 @task
 def ci_pytest(context):
 
-    from pprint import pprint
-    pprint(dict(os.environ))
     proc = subprocess.run("pytest", shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
     commit_id = git_commit_id()
@@ -738,11 +736,10 @@ def ci_pytest(context):
         stderr=proc.stderr.decode('ascii')
     )
 
-    #s3_obj = pytest_s3_object(commit_id)
-    #s3_obj.put(
-    #    Body=json.dumps(result), ACL="public-read", ContentType='application/json'
-    #)
-    print(result)
+    s3_obj = pytest_s3_object(commit_id)
+    s3_obj.put(
+        Body=json.dumps(result), ACL="public-read", ContentType='application/json'
+    )
 
 
 @task
