@@ -726,6 +726,8 @@ def pytest_s3_object(commit_id):
 @task
 def ci_pytest(context):
 
+    from pprint import pprint
+    pprint(dict(os.environ))
     proc = subprocess.run("pytest", shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
     commit_id = git_commit_id()
@@ -736,10 +738,11 @@ def ci_pytest(context):
         stderr=proc.stderr.decode('ascii')
     )
 
-    s3_obj = pytest_s3_object(commit_id)
-    s3_obj.put(
-        Body=json.dumps(result), ACL="public-read", ContentType='application/json'
-    )
+    #s3_obj = pytest_s3_object(commit_id)
+    #s3_obj.put(
+    #    Body=json.dumps(result), ACL="public-read", ContentType='application/json'
+    #)
+    print(result)
 
 
 @task
@@ -752,7 +755,7 @@ def ci_build(context):
     try:
         fcntl.flock(lock_f, fcntl.LOCK_EX | fcntl.LOCK_NB)
         build = pending_travis_build()
-        blacklist_branches = ["vids"]
+        blacklist_branches = ["vids", "video"]
         if build and build["branch"] not in blacklist_branches:
             clean()
             link_build_cache(build["branch"])
@@ -768,9 +771,9 @@ def ci_build(context):
                     p = ci_build_arch(arch, include_private_scenes)
                     procs.append(p)
 
-            ci_pytest(context)
 
             if build["branch"] == "master":
+                ci_pytest(context)
                 webgl_build_deploy_demo(
                     context, verbose=True, content_addressable=True, force=True
                 )
