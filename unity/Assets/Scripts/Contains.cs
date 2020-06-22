@@ -249,6 +249,22 @@ public class Contains : MonoBehaviour
         // TODO MCS-226 Adjust number of spawn points by receptacle trigger box size
 		//so lets make a grid, we can parametize the gridsize value later, for now we'll adjust it here
 		int gridsize = 4; //number of grid boxes we want, reduce this to SPEED THINGS UP but also GET WAY MORE INACCURATE
+		float xBoundsMin = triggerBoxCollider.bounds.min.x;
+		float xBoundsMax = triggerBoxCollider.bounds.max.x;
+		float zBoundsMin = triggerBoxCollider.bounds.min.z;
+		float zBoundsMax = triggerBoxCollider.bounds.max.z;
+
+		float xBoundsRange = Mathf.Abs(xBoundsMax - xBoundsMin);
+		float zBoundsRange = Mathf.Abs(zBoundsMax - zBoundsMin);
+
+		if (xBoundsRange > 0.1f) {
+			float counterForGridSize = 0.1f;
+			while (counterForGridSize < xBoundsRange) {
+				gridsize += 1;
+				counterForGridSize += 0.1F;
+			}
+		}
+
 		int linepoints = gridsize + 1; //number of points on the line we need to make the number of grid boxes
 		float lineincrement =  1.0f / gridsize; //increment on the line to distribute the gridpoints
 
