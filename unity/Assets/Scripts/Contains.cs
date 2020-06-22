@@ -251,12 +251,11 @@ public class Contains : MonoBehaviour
 		int gridsize = 4; //number of grid boxes we want, reduce this to SPEED THINGS UP but also GET WAY MORE INACCURATE
 		float xBoundsMin = triggerBoxCollider.bounds.min.x;
 		float xBoundsMax = triggerBoxCollider.bounds.max.x;
-		float zBoundsMin = triggerBoxCollider.bounds.min.z;
-		float zBoundsMax = triggerBoxCollider.bounds.max.z;
 
 		float xBoundsRange = Mathf.Abs(xBoundsMax - xBoundsMin);
-		float zBoundsRange = Mathf.Abs(zBoundsMax - zBoundsMin);
 
+		//this amount can be changed but seems to be an apropriate size for increasing the number of points
+		//on a varitey of receptacle sizes. Affects both x and z axis of the receptacle
 		if (xBoundsRange > 0.1f) {
 			float counterForGridSize = 0.1f;
 			while (counterForGridSize < xBoundsRange) {
