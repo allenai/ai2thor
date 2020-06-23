@@ -466,13 +466,14 @@ public class MCSController : PhysicsRemoteFPSAgentController {
     }
 
     private IEnumerator SimulatePhysicsSaveImagesIncreaseStep(int thisLoop) {
-        yield return new WaitForEndOfFrame(); // Required for coroutine functions
-
         // Run the physics simulation for a little bit, then pause and save the images for the current scene.
         this.SimulatePhysicsOnce();
 
         GameObject.Find("MCS").GetComponent<MCSMain>().UpdateOnPhysicsSubstep(
             MCSController.PHYSICS_SIMULATION_LOOPS);
+
+        // Wait for the end of frame after we run the physics simulation but before we save the images.
+        yield return new WaitForEndOfFrame(); // Required for coroutine functions
 
         ((MCSPerformerManager)this.agentManager).SaveImages(this.imageSynthesis);
 
