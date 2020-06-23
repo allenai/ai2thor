@@ -563,16 +563,27 @@ def build_pip(context, version):
     import xml.etree.ElementTree as ET 
     import requests
 
-    res = requests.get('https://test.pypi.org/rss/project/ai2thor/releases.xml')
+    res = requests.get('https://pypi.org/rss/project/ai2thor/releases.xml')
 
     res.raise_for_status()
 
+    # make sure that the tag is on this commit
     commit_tags = (
         subprocess.check_output("git tag --points-at", shell=True)
         .decode("ascii")
         .strip().split("\n")
     )
-    # XXX add check for tag on master branch
+
+    # make sure that the tag is off of the master branch
+    branch_tags = (
+        subprocess.check_output("git branch --format='%(refname:short)' --contains tags/%s" % version, shell=True)
+        .decode("ascii")
+        .strip().split("\n")
+
+    )
+
+    if 'master' not in branch_tags:
+        raise Exception("tag %s is not off the master branch" % version)
 
     if version not in commit_tags:
         raise Exception("tag %s is not on current commit" % version)
