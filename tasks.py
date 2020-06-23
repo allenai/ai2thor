@@ -808,11 +808,10 @@ def ci_build_arch(arch, include_private_scenes=False):
     github_url = "https://github.com/allenai/ai2thor"
 
     commit_id = git_commit_id()
-
-    commit_build = ai2thor.build.Build(arch, commit_id, False)
+    commit_build = ai2thor.build.Build(arch, commit_id, include_private_scenes)
     if commit_build.exists():
         print("found build for commit %s %s" % (commit_id, arch))
-        #return
+        return
 
     unity_path = "unity"
     build_name = ai2thor.build.build_name(arch, commit_id, include_private_scenes)
