@@ -265,7 +265,7 @@ public class Contains : MonoBehaviour
 				counterForGridSize += 0.1F;
 			}
 		} else {
-			while (counterForGridSize < xBoundsRange) {
+			while (counterForGridSize < zBoundsRange) {
 				gridsize += 1;
 				counterForGridSize += 0.1F;
 			}
