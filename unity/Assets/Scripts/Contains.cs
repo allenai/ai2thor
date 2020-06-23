@@ -257,19 +257,9 @@ public class Contains : MonoBehaviour
 		float zBoundsRange = Mathf.Abs(zBoundsMax - zBoundsMin);
 		float counterForGridSize = 0.1f;
 
-		//this amount can be changed but seems to be an apropriate size for increasing the number of points
+		//this counteForGridSize amount can be changed but seems to be an apropriate size for increasing the number of points
 		//on a varitey of receptacle sizes. Affects both x and z axis of the receptacle
-		if (xBoundsRange > zBoundsRange) {
-			while (counterForGridSize < xBoundsRange) {
-				gridsize += 1;
-				counterForGridSize += 0.1F;
-			}
-		} else {
-			while (counterForGridSize < zBoundsRange) {
-				gridsize += 1;
-				counterForGridSize += 0.1F;
-			}
-		}
+		gridsize += (int) (Mathf.Ceil(((Mathf.Max(xBoundsRange,zBoundsRange) / counterForGridSize))));
 
 		int linepoints = gridsize + 1; //number of points on the line we need to make the number of grid boxes
 		float lineincrement =  1.0f / gridsize; //increment on the line to distribute the gridpoints
