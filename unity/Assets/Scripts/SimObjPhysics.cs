@@ -725,7 +725,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 			}
 		}
 
-		if(this.tag != "SimObjPhysics")
+		if(this.tag != "SimObjPhysics" && this.tag != "Structure")
 		{
 			Debug.LogError(this.name + " is missing SimObjPhysics tag!");
 		}
