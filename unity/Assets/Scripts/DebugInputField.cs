@@ -399,6 +399,19 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         break;
                     }
 
+                case "potwhcb":
+                    {
+                        ServerAction action = new ServerAction();
+
+                        action.action = "PointsOverTableWhereHandCanBe";
+                        action.objectId = splitcommand[1];
+                        action.x = float.Parse(splitcommand[2]);
+                        action.z = float.Parse(splitcommand[3]);
+
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
                 case "pfrat":
                     {
                         ServerAction action = new ServerAction();

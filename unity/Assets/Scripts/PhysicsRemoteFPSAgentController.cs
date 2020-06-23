@@ -735,6 +735,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             string tableId = action.objectId;
 
+            if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(action.objectId)) {
+                errorMessage = "Cannot find object with id " + action.objectId;
+                actionFinished(false);
+                return;
+            }
+
             int xSteps = Convert.ToInt32(Math.Abs(action.x / 0.1f));
             int zStart = Convert.ToInt32(Math.Abs(action.z / 0.1f));
 
@@ -783,7 +789,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
 
             DefaultAgentHand();
-
             actionFinished(true, goodPositions);
         }
 
