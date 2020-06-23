@@ -576,7 +576,7 @@ def build_pip(context, version):
 
     # make sure that the tag is off of the master branch
     branch_tags = (
-        subprocess.check_output("git branch --format='%(refname:short)' --contains tags/%s" % version, shell=True)
+        subprocess.check_output("git branch --format='%(refname:short)' --contains tags/" + version, shell=True)
         .decode("ascii")
         .strip().split("\n")
 
