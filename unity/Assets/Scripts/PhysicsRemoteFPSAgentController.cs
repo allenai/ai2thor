@@ -4396,9 +4396,18 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     return false;
                 }
 
+                // Ignoring the floor for upcoming collision check (some objects are large enough
+                // that they will collide with floor even while held)
+                List<GameObject> ignoreCollisions = new List<GameObject>();
+                GameObject floor = GameObject.Find("Floor");
+
+                if(floor != null) {
+                    ignoreCollisions.Add(floor);
+                }
+
                 //we do need this to check if the item is currently colliding with the agent, otherwise
                 //dropping an object while it is inside the agent will cause it to shoot out weirdly
-                if (!action.forceAction && isHandObjectColliding(false)) {
+                if (!action.forceAction && isHandObjectColliding(false, ignoreCollisions)) {
                     errorMessage = ItemInHand.transform.name + " can't be dropped. It must be clear of all other collision first, including the Agent";
                     Debug.Log(errorMessage);
                     actionFinished(false);
@@ -6585,13 +6594,17 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         //to ignore the agent in this collision check, set ignoreAgent to true
-        protected bool isHandObjectColliding(bool ignoreAgent = false, float expandBy = 0.0f) {
+        protected bool isHandObjectColliding(bool ignoreAgent = false, List<GameObject> ignoreGameObjects = null, float expandBy = 0.0f) {
             if (ItemInHand == null) {
                 return false;
             }
-            List<GameObject> ignoreGameObjects = new List<GameObject>();
+
+            if(ignoreGameObjects == null) {
+                ignoreGameObjects = new List<GameObject>();
+            }
+
             // Ignore the agent when determining if the hand object is colliding
-            if (ignoreAgent) {
+            if (ignoreAgent && !ignoreGameObjects.Contains(this.gameObject)) {
                 ignoreGameObjects.Add(this.gameObject);
             }
             return UtilityFunctions.isObjectColliding(ItemInHand, ignoreGameObjects, expandBy);
