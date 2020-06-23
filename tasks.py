@@ -567,6 +567,13 @@ def build_pip(context, version):
 
     res.raise_for_status()
 
+    root = ET.fromstring(res.content)
+    latest_version = None
+
+    for title in root.findall('./channel/item/title'): 
+        latest_version = title.text
+        break
+
     # make sure that the tag is on this commit
     commit_tags = (
         subprocess.check_output("git tag --points-at", shell=True)
@@ -593,13 +600,6 @@ def build_pip(context, version):
         if not commit_build.exists():
             raise Exception("Build does not exist for %s/%s" % (commit_id, arch))
 
-
-    root = ET.fromstring(res.content)
-    latest_version = None
-
-    for title in root.findall('./channel/item/title'): 
-        latest_version = title.text
-        break
     
     current_maj, current_min, current_sub = list(map(int, latest_version.split('.')))
     next_maj, next_min, next_sub = list(map(int, version.split('.')))
