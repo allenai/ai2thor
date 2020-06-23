@@ -4005,6 +4005,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     ItemInHand.transform.localRotation = Quaternion.identity;
                     ItemInHand.GetComponent<Rigidbody>().isKinematic = true;
                     ItemInHand.GetComponent<SimObjPhysics>().isInAgentHand = false;//remove in agent hand flag
+                    ItemInHand.layer = 8;
                     ItemInHand = null;
                     DefaultAgentHand();
                     actionFinished(true);
@@ -4093,6 +4094,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // MCS CHANGE END
 
             if (script.PlaceObjectReceptacle(spawnPoints, ItemInHand.GetComponent<SimObjPhysics>(), action.placeStationary, -1, 90, placeUpright, null)) {
+                ItemInHand.layer = 8;
                 ItemInHand = null;
                 DefaultAgentHand();
 
@@ -4203,6 +4205,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             target.transform.rotation = transform.rotation;
             target.transform.SetParent(AgentHand.transform);
             ItemInHand = target.gameObject;
+            ItemInHand.layer = 9;
 
             /* TODO MCS
             if (!action.forceAction && isHandObjectColliding(true)) {
@@ -4447,6 +4450,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     actionFinished(true);
 
                     ItemInHand.GetComponent<SimObjPhysics>().isInAgentHand = false;
+                    ItemInHand.layer = 8;
                     ItemInHand = null;
                     this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.SUCCESSFUL);
                     return true;
@@ -8543,6 +8547,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         }
 
                         targetsop.isInAgentHand = false;
+                        ItemInHand.layer = 8;
                         ItemInHand = null;
                         DefaultAgentHand();
                         //ok now we are ready to break go go go
