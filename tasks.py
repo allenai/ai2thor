@@ -574,24 +574,19 @@ def build_pip(context, version):
         .strip().split("\n")
     )
 
-    # make sure that the tag is off of the master branch
-    branch_tags = (
-        subprocess.check_output("git branch --format='%(refname:short)' --contains tags/" + version, shell=True)
-        .decode("ascii")
-        .strip().split("\n")
-
-    )
-
-    if 'master' not in branch_tags:
-        raise Exception("tag %s is not off the master branch" % version)
-
     if version not in commit_tags:
         raise Exception("tag %s is not on current commit" % version)
 
+    commit_id = git_commit_id()
+
+    res = requests.get('https://api.github.com/repos/allenai/ai2thor/commits?sha=master')
+    res.raise_for_status()
+
+    if commit_id not in map(lambda c: c['sha'], res.json()):
+        raise Exception("tag %s is not off the master branch" % version)
+
     if not re.match(r'^[0-9]{1,3}\.+[0-9]{1,3}\.[0-9]{1,3}$', version):
         raise Exception("invalid version: %s" % version)
-
-    commit_id = git_commit_id()
 
     for arch in platform_map.keys():
         commit_build = ai2thor.build.Build(arch, commit_id, False)
