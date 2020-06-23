@@ -9,7 +9,7 @@ public class MCSController : PhysicsRemoteFPSAgentController {
     public static float POSITION_Y = 0.4625f;
 
     public static float DISTANCE_HELD_OBJECT_Y = 0.15f;
-    public static float DISTANCE_HELD_OBJECT_Z = 0.15f;
+    public static float DISTANCE_HELD_OBJECT_Z = 0.30f;
 
     // TODO MCS-95 Make the room size configurable in the scene configuration file.
     // The room dimensions are always 10x10 so the distance from corner to corner is around 14.15
