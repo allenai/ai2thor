@@ -254,7 +254,7 @@ public class Contains : MonoBehaviour
 		float zBoundsMax = triggerBoxCollider.bounds.max.z;
 
 		float xBoundsRange = Mathf.Abs(xBoundsMax - xBoundsMin);
-		float zBoundsRange = Mathf.Abs(xBoundsMax - xBoundsMin);
+		float zBoundsRange = Mathf.Abs(zBoundsMax - zBoundsMin);
 		float counterForGridSize = 0.1f;
 
 		//this amount can be changed but seems to be an apropriate size for increasing the number of points
