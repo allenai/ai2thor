@@ -480,10 +480,8 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		// Sort the receptacle trigger boxes so that we test the spawn points for the highest boxes first.
 		// This is especially useful for stacking objects on top of blocks.
 		List<GameObject> sortedReceptacleTriggerBoxes = new List<GameObject>(this.ReceptacleTriggerBoxes);
-		sortedReceptacleTriggerBoxes.Sort(delegate(GameObject one, GameObject two) {
-			float diff = two.transform.position.y - one.transform.position.y;
-			return diff < 0 ? -1 : (diff > 0 ? 1 : 0);
-		});
+		sortedReceptacleTriggerBoxes.Sort((GameObject one, GameObject two) =>
+			two.transform.position.y.CompareTo(one.transform.position.y));
 
 		foreach(GameObject rtb in sortedReceptacleTriggerBoxes)
 		{
