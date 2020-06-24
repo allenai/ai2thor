@@ -267,38 +267,46 @@ public class Contains : MonoBehaviour
 		//these are all the points on the grid on the top of the receptacle box in local space
 		List<Vector3> gridpoints = new List<Vector3>();
 
-        if (objectUpVector.Equals(Vector3.up) || objectUpVector.Equals(Vector3.down)) {
-            for(int i = 0; i < linepoints; i++) {
-                float x = objectSideLeft.x + ((objectSideRight.x - objectSideLeft.x) * (lineincrement * i));
-                float y = objectUpVector.Equals(Vector3.up) ? objectSideTop.y : objectSideBottom.y;
-                for(int j = 0; j < linepoints; j++) {
-                    float z = objectSideBack.z + ((objectSideForward.z - objectSideBack.z) * (lineincrement * j));
-                    gridpoints.Add(new Vector3(x, y, z));
-                }
-            }
-        }
+        //This creates only one spawn point directly in the center of a receptacle 
+		//if the receptacle is smaller than the bounds below (for very small objects)
+		if (xBoundsRange < 0.125f & zBoundsRange < 0.125f) {
+			Vector3 centerOfReceptacleForSmallObjects = new Vector3(center.x, center.y + 0.1f, center.z);
+			gridpoints.Add(centerOfReceptacleForSmallObjects);
+		
+		} else {
+			if (objectUpVector.Equals(Vector3.up) || objectUpVector.Equals(Vector3.down)) {
+				for(int i = 0; i < linepoints; i++) {
+					float x = objectSideLeft.x + ((objectSideRight.x - objectSideLeft.x) * (lineincrement * i));
+					float y = objectUpVector.Equals(Vector3.up) ? objectSideTop.y : objectSideBottom.y;
+					for(int j = 0; j < linepoints; j++) {
+						float z = objectSideBack.z + ((objectSideForward.z - objectSideBack.z) * (lineincrement * j));
+						gridpoints.Add(new Vector3(x, y, z));
+					}
+				}
+			}
 
-        else if (objectUpVector.Equals(Vector3.left) || objectUpVector.Equals(Vector3.right)) {
-            for(int i = 0; i < linepoints; i++) {
-                float x = objectUpVector.Equals(Vector3.left) ? objectSideLeft.x : objectSideRight.x;
-                float y = objectSideBottom.y + ((objectSideTop.y - objectSideBottom.y) * (lineincrement * i));
-                for(int j = 0; j < linepoints; j++) {
-                    float z = objectSideBack.z + ((objectSideForward.z - objectSideBack.z) * (lineincrement * j));
-                    gridpoints.Add(new Vector3(x, y, z));
-                }
-            }
-        }
+			else if (objectUpVector.Equals(Vector3.left) || objectUpVector.Equals(Vector3.right)) {
+				for(int i = 0; i < linepoints; i++) {
+					float x = objectUpVector.Equals(Vector3.left) ? objectSideLeft.x : objectSideRight.x;
+					float y = objectSideBottom.y + ((objectSideTop.y - objectSideBottom.y) * (lineincrement * i));
+					for(int j = 0; j < linepoints; j++) {
+						float z = objectSideBack.z + ((objectSideForward.z - objectSideBack.z) * (lineincrement * j));
+						gridpoints.Add(new Vector3(x, y, z));
+					}
+				}
+			}
 
-        else if (objectUpVector.Equals(Vector3.forward) || objectUpVector.Equals(Vector3.back)) {
-            for(int i = 0; i < linepoints; i++) {
-                float x = objectSideLeft.x + ((objectSideRight.x - objectSideLeft.x) * (lineincrement * i));
-                float z = objectUpVector.Equals(Vector3.forward) ? objectSideForward.z : objectSideBack.z;
-                for(int j = 0; j < linepoints; j++) {
-                    float y = objectSideBottom.y + ((objectSideTop.y - objectSideBottom.y) * (lineincrement * j));
-                    gridpoints.Add(new Vector3(x, y, z));
-                }
-            }
-        }
+			else if (objectUpVector.Equals(Vector3.forward) || objectUpVector.Equals(Vector3.back)) {
+				for(int i = 0; i < linepoints; i++) {
+					float x = objectSideLeft.x + ((objectSideRight.x - objectSideLeft.x) * (lineincrement * i));
+					float z = objectUpVector.Equals(Vector3.forward) ? objectSideForward.z : objectSideBack.z;
+					for(int j = 0; j < linepoints; j++) {
+						float y = objectSideBottom.y + ((objectSideTop.y - objectSideBottom.y) * (lineincrement * j));
+						gridpoints.Add(new Vector3(x, y, z));
+					}
+				}
+			}
+		}
 
 		//****** */debug draw the grid points as gizmos
 		// #if UNITY_EDITOR
