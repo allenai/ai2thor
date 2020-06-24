@@ -270,7 +270,7 @@ public class Contains : MonoBehaviour
         //This creates only one spawn point directly in the center of a receptacle 
 		//if the receptacle is smaller than the bounds below (for very small objects)
 		if (xBoundsRange < 0.125f & zBoundsRange < 0.125f) {
-			Vector3 centerOfReceptacleForSmallObjects = new Vector3(center.x, center.y + 0.1f, center.z);
+			Vector3 centerOfReceptacleForSmallObjects = new Vector3(center.x, center.y + 0.075f, center.z);
 			gridpoints.Add(centerOfReceptacleForSmallObjects);
 		
 		} else {
