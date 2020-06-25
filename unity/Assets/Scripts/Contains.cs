@@ -388,7 +388,7 @@ public class Contains : MonoBehaviour
 		tmpForCamera.y = point.y;
 
 		//automatically rule out a point if it's beyond our max distance of visibility
-		if(Vector3.Distance(point, tmpForCamera) >= maxvisdist)
+		if(Vector3.Distance(point, tmpForCamera) >= maxvisdist) 
 		return false;
 
 		//ok cool, it's within distance to the agent, now let's check 
