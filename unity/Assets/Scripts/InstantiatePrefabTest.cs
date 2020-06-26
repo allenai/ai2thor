@@ -437,8 +437,7 @@ public class InstantiatePrefabTest : MonoBehaviour
 
                 #if UNITY_EDITOR
                 //Debug.Log(sop.name + " succesfully spawned in " +rsp.ParentSimObjPhys.name + " at coordinate " + rsp.Point);
-                #endif
-                               
+                #endif               
                 return true;
             }
         }

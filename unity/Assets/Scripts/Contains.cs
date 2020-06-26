@@ -267,10 +267,12 @@ public class Contains : MonoBehaviour
 		//these are all the points on the grid on the top of the receptacle box in local space
 		List<Vector3> gridpoints = new List<Vector3>();
 
-        //This creates only one spawn point directly in the center of a receptacle 
+        //The first if creates only one spawn point directly in the center of a receptacle 
 		//if the receptacle is smaller than the bounds below (for very small objects)
-		if (xBoundsRange < 0.125f & zBoundsRange < 0.125f) {
-			Vector3 centerOfReceptacleForSmallObjects = new Vector3(center.x, center.y + 0.075f, center.z);
+		float smallObjectBounds = 0.125f; //need this variable or else stacking will not work properly
+		float raisedCenterForSingleSpawnPoint = 0.075f;
+		if (xBoundsRange < smallObjectBounds & zBoundsRange < smallObjectBounds) {
+			Vector3 centerOfReceptacleForSmallObjects = new Vector3(center.x, center.y + raisedCenterForSingleSpawnPoint, center.z);
 			gridpoints.Add(centerOfReceptacleForSmallObjects);
 		
 		} else {
@@ -388,7 +390,7 @@ public class Contains : MonoBehaviour
 		tmpForCamera.y = point.y;
 
 		//automatically rule out a point if it's beyond our max distance of visibility
-		if(Vector3.Distance(point, tmpForCamera) >= maxvisdist) 
+		if(Vector3.Distance(point, tmpForCamera) >= maxvisdist)
 		return false;
 
 		//ok cool, it's within distance to the agent, now let's check 
