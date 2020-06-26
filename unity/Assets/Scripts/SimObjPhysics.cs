@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityStandardAssets.Characters.FirstPerson;
 using UnityEngine.SceneManagement;
+using System.Linq;
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -476,7 +477,13 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 	{
 		List<ReceptacleSpawnPoint> temp = new List<ReceptacleSpawnPoint>();
 
-		foreach(GameObject rtb in ReceptacleTriggerBoxes)
+		// Sort the receptacle trigger boxes so that we test the spawn points for the highest boxes first.
+		// This is especially useful for stacking objects on top of blocks.
+		List<GameObject> sortedReceptacleTriggerBoxes = new List<GameObject>(this.ReceptacleTriggerBoxes);
+		sortedReceptacleTriggerBoxes.Sort((GameObject one, GameObject two) =>
+			two.transform.position.y.CompareTo(one.transform.position.y));
+
+		foreach(GameObject rtb in sortedReceptacleTriggerBoxes)
 		{
 			Contains containsScript = rtb.GetComponent<Contains>();
 			temp.AddRange(containsScript.GetValidSpawnPoints(ReturnPointsCloseToAgent));
