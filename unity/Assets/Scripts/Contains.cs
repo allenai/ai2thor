@@ -229,18 +229,11 @@ public class Contains : MonoBehaviour
         Vector3 objectSideForward = center + (new Vector3(0, 0, size.z) * 0.5f);
         Vector3 objectSideBack = center - (new Vector3(0, 0, size.z) * 0.5f);
 
-		//This sets the object being placed box collider checks to be the rotation of this receptacle
 		Quaternion parentRotation = Quaternion.Euler(myParent.transform.eulerAngles);
 		physScene = GameObject.Find("PhysicsSceneManager").GetComponent<MCSSceneManager>();
+		//This is for setting the object being placed box collider checks to be the rotation of this receptacle
 		iPrefabTest = physScene.GetComponent<InstantiatePrefabTest>();
 		iPrefabTest.receptacleRotation = parentRotation;
-
-		objectSideLeft = RotateAroundPivot(objectSideLeft, center, parentRotation);
-		objectSideRight = RotateAroundPivot(objectSideRight, center, parentRotation);
-		objectSideTop = RotateAroundPivot(objectSideTop, center, parentRotation);
-		objectSideBottom = RotateAroundPivot(objectSideBottom, center, parentRotation);
-		objectSideForward = RotateAroundPivot(objectSideForward, center, parentRotation);
-		objectSideBack = RotateAroundPivot(objectSideBack, center, parentRotation);
 
         // Identify the direction corresponding to the global UP based on this receptacle object's current local rotation.
         // Since gravity is always global DOWN, we want this receptacle object between the spawn object and the ground.

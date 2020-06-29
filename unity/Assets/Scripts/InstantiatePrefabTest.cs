@@ -476,7 +476,7 @@ public class InstantiatePrefabTest : MonoBehaviour
         Vector3 originalPos = simObj.transform.position;
         Quaternion originalRot = simObj.transform.rotation;
 
-        //change collision box rotation to the receptacles rotation
+        //change collision box rotation to the receptacle's rotation
         physScene = GameObject.Find("PhysicsSceneManager").GetComponent<MCSSceneManager>();
         Quaternion placementRotation = receptacleRotation;
 

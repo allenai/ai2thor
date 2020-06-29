@@ -861,7 +861,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         Vector3.Distance(m_Camera.transform.position, point) - 0.01f, (1 << 8) | (1 << 10))) //reduce distance by slight offset
                 {
                     updateAllAgentCollidersForVisibilityCheck(true);
-                    //this should be set to for object placement flexibility
+                    //this should be set to true for object placement flexibility
                     return true;
                 } else {
                     updateAllAgentCollidersForVisibilityCheck(true); 
