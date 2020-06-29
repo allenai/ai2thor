@@ -42,6 +42,8 @@ public class PhysicsSceneManager : MonoBehaviour
     //physics simulation was paused
     public bool isSceneAtRest;//if any object in the scene has a non zero velocity, set to false
 
+	public Quaternion receptacleRotation;
+
 	private void OnEnable()
 	{
 		//clear this on start so that the CheckForDuplicates function doesn't check pre-existing lists

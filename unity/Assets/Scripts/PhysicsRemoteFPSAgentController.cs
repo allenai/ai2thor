@@ -843,8 +843,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public bool CheckIfPointIsInViewport(Vector3 point) {
             Vector3 viewPoint = m_Camera.WorldToViewportPoint(point);
 
+            //increasing these grants a very slight flexibiltiy in object placement if the agent is below or above a receptacle
             float ViewPointRangeHigh = 1.0f;
-            float ViewPointRangeLow = 0.0f;
+            float ViewPointRangeLow = -1.0f;
 
             if (viewPoint.z > 0 //&& viewPoint.z < maxDistance * DownwardViewDistance //is in front of camera and within range of visibility sphere
                 &&
@@ -860,13 +861,15 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         Vector3.Distance(m_Camera.transform.position, point) - 0.01f, (1 << 8) | (1 << 10))) //reduce distance by slight offset
                 {
                     updateAllAgentCollidersForVisibilityCheck(true);
-                    return false;
-                } else {
-                    updateAllAgentCollidersForVisibilityCheck(true);
+                    //this should be set to for object placement flexibility
                     return true;
+                } else {
+                    updateAllAgentCollidersForVisibilityCheck(true); 
+                    //if the previous is true, this should be false
+                    return false;
+
                 }
             }
-
             return false;
         }
 
@@ -3946,7 +3949,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             //get the target receptacle based on the action receptacle object ID
             SimObjPhysics targetReceptacle = null;
 
-            foreach (SimObjPhysics sop in VisibleSimObjs(action.forceVisible)) {
+            //this needs to be true to account for objects scaled larger
+            //setting this to be true at all times seems to affect only the flexibility of object placement 
+            foreach (SimObjPhysics sop in VisibleSimObjs(true)) {
                 if ((!string.IsNullOrEmpty(action.receptacleObjectId)) && action.receptacleObjectId == sop.UniqueID) {
                     targetReceptacle = sop;
                     break;

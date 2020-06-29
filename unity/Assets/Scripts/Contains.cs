@@ -42,6 +42,10 @@ public class Contains : MonoBehaviour
 
     private bool expanded = false;
 
+	private MCSSceneManager physScene;
+
+	private InstantiatePrefabTest iPrefabTest;
+
 	//world coordinates of the Corners of this object's receptacles in case we need it for something
 	//public List<Vector3> Corners = new List<Vector3>();
 
@@ -225,7 +229,11 @@ public class Contains : MonoBehaviour
         Vector3 objectSideForward = center + (new Vector3(0, 0, size.z) * 0.5f);
         Vector3 objectSideBack = center - (new Vector3(0, 0, size.z) * 0.5f);
 
+		//This sets the object being placed box collider checks to be the rotation of this receptacle
 		Quaternion parentRotation = Quaternion.Euler(myParent.transform.eulerAngles);
+		physScene = GameObject.Find("PhysicsSceneManager").GetComponent<MCSSceneManager>();
+		iPrefabTest = physScene.GetComponent<InstantiatePrefabTest>();
+		iPrefabTest.receptacleRotation = parentRotation;
 
 		objectSideLeft = RotateAroundPivot(objectSideLeft, center, parentRotation);
 		objectSideRight = RotateAroundPivot(objectSideRight, center, parentRotation);
@@ -291,7 +299,10 @@ public class Contains : MonoBehaviour
 					float y = objectUpVector.Equals(Vector3.up) ? objectSideTop.y : objectSideBottom.y;
 					for(int j = 0; j < linepoints; j++) {
 						float z = objectSideBack.z + ((objectSideForward.z - objectSideBack.z) * (lineincrement * j));
-						gridpoints.Add(new Vector3(x, y, z));
+						//Rotate the point around the y-axis of the parent GameObject
+						Vector3 returnVector = new Vector3(x,y,z);
+						returnVector = RotateAroundPivot(returnVector, center, parentRotation);
+						gridpoints.Add(returnVector);
 					}
 				}
 			}
@@ -302,7 +313,9 @@ public class Contains : MonoBehaviour
 					float y = objectSideBottom.y + ((objectSideTop.y - objectSideBottom.y) * (lineincrement * i));
 					for(int j = 0; j < linepoints; j++) {
 						float z = objectSideBack.z + ((objectSideForward.z - objectSideBack.z) * (lineincrement * j));
-						gridpoints.Add(new Vector3(x, y, z));
+						Vector3 returnVector = new Vector3(x,y,z);
+						returnVector = RotateAroundPivot(returnVector, center, parentRotation);
+						gridpoints.Add(returnVector);
 					}
 				}
 			}
@@ -313,7 +326,9 @@ public class Contains : MonoBehaviour
 					float z = objectUpVector.Equals(Vector3.forward) ? objectSideForward.z : objectSideBack.z;
 					for(int j = 0; j < linepoints; j++) {
 						float y = objectSideBottom.y + ((objectSideTop.y - objectSideBottom.y) * (lineincrement * j));
-						gridpoints.Add(new Vector3(x, y, z));
+						Vector3 returnVector = new Vector3(x,y,z);
+						returnVector = RotateAroundPivot(returnVector, center, parentRotation);
+						gridpoints.Add(returnVector);
 					}
 				}
 			}
