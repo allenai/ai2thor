@@ -181,6 +181,7 @@ Take a GameObject (we'll call it the "Target" object) containing a MeshFilter, M
   - Added logic to `InteractAndWait` to reset an object to its prior position if open/close action fails, and to increase the radius used to check if an agent is in the way of the object to be opened/closed.
   - For `OpenObject` and `CloseObject`, only use coroutine if physics are enabled.
   - In `isAgentCapsuleCollidingWith`, added expandBy parameter.
+  - Change the layer of the `ItemInHand` to `SimObjInvisible` when picked up and to `SimObjVisible` when put/dropped/thrown.
 - `Scripts/PhysicsSceneManager`:
   - Added `virtual` to functions: `Generate_UniqueID`
 - `Scripts/SimObjPhysics`:
