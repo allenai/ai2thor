@@ -63,6 +63,7 @@ tar -czvf MCS-AI2-THOR-Unity-App-<version>_Data.tar.gz MCS-AI2-THOR-Unity-App-<v
 - In the `PhysicsSceneManager` object, I replaced the `AgentManager` script with our `MachineCommonSensePerformerManager` script.
 - Added structural objects (walls, floor, ceiling).
 - Added the invisible `MCS` object containing our `MachineCommonSenseMain` script that runs in the background.
+- The `FPSController` prefab now has the AgentHand at the top level (instead of under `FirstPersonCharacter`), so that it is no longer affected by head tilt/camera.
 
 ## Code Workflow
 
@@ -198,6 +199,8 @@ Take a GameObject (we'll call it the "Target" object) containing a MeshFilter, M
   - Changed 'CheckIfAgentCanMove' to take a reference to a directionMagnitude instead of a copy parameter, so if distance to object is greater than zero, we can move a partial distance in 'moveInDirection' by adjusting the Vector3
   - If `PushObject` or `PullObject` is called on a held object, `ThrowObject` will be called instead of throwing an error.
   - Update ReceptacleObjects if needed in `PickupObject`.
+- `Scripts/UtilityFunctions`:
+  - Ignore checking collisions on ReceptacleTriggerBoxes in `isObjectColliding`
 - `ImageSynthesis/ImageSynthesis`:
   - Added a null check in `OnSceneChange`
   - Changed to always use the `Hidden/Depth` Shader
