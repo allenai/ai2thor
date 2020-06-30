@@ -2240,24 +2240,33 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         public void ApplyForceObject(ServerAction action) {
-            SimObjPhysics target = null;
+
+            GameObject player = this.gameObject;
 
             if (action.forceAction) {
                 action.forceVisible = true;
             }
 
-            SimObjPhysics[] simObjPhysicsArray = VisibleSimObjs(action);
-
-            foreach (SimObjPhysics sop in simObjPhysicsArray) {
-                if (action.objectId == sop.UniqueID) {
-                    target = sop;
+            SimObjPhysics target = physicsSceneManager.UniqueIdToSimObjPhysics[action.objectId];
+            
+            if (!objectIsCurrentlyVisible(target, maxVisibleDistance)) { 
+                Vector3 targetMoveYHeightToAgentHeight = target.transform.position;
+                targetMoveYHeightToAgentHeight.y = transform.position.y;
+                if (Vector3.Distance(targetMoveYHeightToAgentHeight, transform.position) < maxVisibleDistance) {
+                    errorMessage = "Target " + action.objectId + " is obstructed.";
+                    Debug.Log(errorMessage);
+                    Debug.Log(string.Format("Agent - X position: {0} - Z position {1}.", player.transform.position.x, player.transform.position.z));
+                    actionFinished(false);
+                    this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.OBSTRUCTED);
+                    return;
                 }
+                
             }
-
-            // TODO: MCS-83: Need to split into OUT_OF_REACH and OBSTRUCTED
-            if (target == null) {
-                errorMessage = "Target " + action.objectId + " is not visible.";
+            
+            if (!objectIsCurrentlyVisible(target, maxVisibleDistance)) {
+                errorMessage = "Target " + action.objectId + " is not visible";
                 Debug.Log(errorMessage);
+                Debug.Log(string.Format("Agent - X position: {0} - Z position {1}.", player.transform.position.x, player.transform.position.z));
                 actionFinished(false);
                 this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.OUT_OF_REACH);
                 return;
@@ -3996,6 +4005,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     ItemInHand.transform.localRotation = Quaternion.identity;
                     ItemInHand.GetComponent<Rigidbody>().isKinematic = true;
                     ItemInHand.GetComponent<SimObjPhysics>().isInAgentHand = false;//remove in agent hand flag
+                    ItemInHand.layer = 8; // SimObjVisible
                     ItemInHand = null;
                     DefaultAgentHand();
                     actionFinished(true);
@@ -4084,6 +4094,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // MCS CHANGE END
 
             if (script.PlaceObjectReceptacle(spawnPoints, ItemInHand.GetComponent<SimObjPhysics>(), action.placeStationary, -1, 90, placeUpright, null)) {
+                ItemInHand.layer = 8; // SimObjVisible
                 ItemInHand = null;
                 DefaultAgentHand();
 
@@ -4138,7 +4149,19 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 return;
             }
 
-            // TODO: MCS-83: Need to split into OUT_OF_REACH and OBSTRUCTED
+            if (!objectIsCurrentlyVisible(target, maxVisibleDistance)) { 
+                Vector3 targetMoveYHeightToAgentHeight = target.transform.position;
+                targetMoveYHeightToAgentHeight.y = transform.position.y;
+                if (Vector3.Distance(targetMoveYHeightToAgentHeight, transform.position) < maxVisibleDistance) {
+                    errorMessage = "Target " + action.objectId + " is obstructed.";
+                    Debug.Log(errorMessage);
+                    actionFinished(false);
+                    this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.OBSTRUCTED);
+                    return;
+                }
+                
+            }
+
             if (!action.forceAction && !objectIsCurrentlyVisible(target, maxVisibleDistance)) {
                 errorMessage = action.objectId + " is not visible.";
                 actionFinished(false);
@@ -4182,6 +4205,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             target.transform.rotation = transform.rotation;
             target.transform.SetParent(AgentHand.transform);
             ItemInHand = target.gameObject;
+            ItemInHand.layer = 9; // SimObjInvisible
 
             /* TODO MCS
             if (!action.forceAction && isHandObjectColliding(true)) {
@@ -4426,6 +4450,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     actionFinished(true);
 
                     ItemInHand.GetComponent<SimObjPhysics>().isInAgentHand = false;
+                    ItemInHand.layer = 8; // SimObjVisible
                     ItemInHand = null;
                     this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.SUCCESSFUL);
                     return true;
@@ -8522,6 +8547,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         }
 
                         targetsop.isInAgentHand = false;
+                        ItemInHand.layer = 8; // SimObjVisible
                         ItemInHand = null;
                         DefaultAgentHand();
                         //ok now we are ready to break go go go

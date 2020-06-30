@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using System.Linq;
 
-public class MachineCommonSensePerformerManager : AgentManager {
+public class MCSPerformerManager : AgentManager {
     public List<byte[]> imageList = new List<byte[]>();
     public List<byte[]> imageClassList = new List<byte[]>();
     public List<byte[]> imageDepthList = new List<byte[]>();

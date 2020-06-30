@@ -40,6 +40,8 @@ public class Contains : MonoBehaviour
 
 	public bool occupied = false;
 
+    private bool expanded = false;
+
 	//world coordinates of the Corners of this object's receptacles in case we need it for something
 	//public List<Vector3> Corners = new List<Vector3>();
 
@@ -54,6 +56,17 @@ public class Contains : MonoBehaviour
 			myParent = gameObject.GetComponentInParent<SimObjPhysics>().transform.gameObject;
 		}
 
+        // TODO MCS-267 Remove this code hack as well as the expanded variable
+        SimObjPhysics simObj = this.gameObject.GetComponentInParent<SimObjPhysics>();
+        BoxCollider triggerBoxCollider = this.GetComponent<BoxCollider>();
+        if (!this.expanded && simObj != null && (simObj.shape.Equals("bowl") || simObj.shape.Equals("box") || simObj.shape.Equals("plate"))) {
+            float multiplier = 10f / triggerBoxCollider.size.y;
+            triggerBoxCollider.size = new Vector3(triggerBoxCollider.size.x, triggerBoxCollider.size.y * multiplier,
+                triggerBoxCollider.size.z);
+            triggerBoxCollider.center = new Vector3(triggerBoxCollider.center.x, triggerBoxCollider.center.y +
+                (0.5f * triggerBoxCollider.size.y), triggerBoxCollider.center.z);
+            this.expanded = true;
+        }
 	}
 	void Start()
 	{
@@ -229,9 +242,25 @@ public class Contains : MonoBehaviour
             verticalDistance = zDiff;
         }
 
-        // TODO MCS-226 Adjust number of spawn points by receptacle trigger box size
+        // Position each spawn point slightly above this object in order to avoid possible
+        // collisions (we assume that the spawned object will fall gently toward the ground).
+        verticalDistance -= 0.05f;
+
 		//so lets make a grid, we can parametize the gridsize value later, for now we'll adjust it here
 		int gridsize = 4; //number of grid boxes we want, reduce this to SPEED THINGS UP but also GET WAY MORE INACCURATE
+		float xBoundsMin = triggerBoxCollider.bounds.min.x;
+		float xBoundsMax = triggerBoxCollider.bounds.max.x;
+		float zBoundsMin = triggerBoxCollider.bounds.min.z;
+		float zBoundsMax = triggerBoxCollider.bounds.max.z;
+
+		float xBoundsRange = Mathf.Abs(xBoundsMax - xBoundsMin);
+		float zBoundsRange = Mathf.Abs(zBoundsMax - zBoundsMin);
+		float counterForGridSize = 0.1f;
+
+		//this counteForGridSize amount can be changed but seems to be an apropriate size for increasing the number of points
+		//on a varitey of receptacle sizes. Affects both x and z axis of the receptacle
+		gridsize += (int) (Mathf.Ceil(((Mathf.Max(xBoundsRange,zBoundsRange) / counterForGridSize))));
+
 		int linepoints = gridsize + 1; //number of points on the line we need to make the number of grid boxes
 		float lineincrement =  1.0f / gridsize; //increment on the line to distribute the gridpoints
 

@@ -5,11 +5,11 @@ using UnityStandardAssets.Characters.FirstPerson;
 using System.Linq;
 using System.Collections.Generic;
 
-public class MachineCommonSenseController : PhysicsRemoteFPSAgentController {
+public class MCSController : PhysicsRemoteFPSAgentController {
     public static float POSITION_Y = 0.4625f;
 
     public static float DISTANCE_HELD_OBJECT_Y = 0.15f;
-    public static float DISTANCE_HELD_OBJECT_Z = 0.15f;
+    public static float DISTANCE_HELD_OBJECT_Z = 0.20f;
 
     // TODO MCS-95 Make the room size configurable in the scene configuration file.
     // The room dimensions are always 10x10 so the distance from corner to corner is around 14.15
@@ -53,7 +53,7 @@ public class MachineCommonSenseController : PhysicsRemoteFPSAgentController {
 
         int layerMask = (1 << 8); // Only look at objects on the SimObjVisible layer.
         List<RaycastHit> hits = Physics.RaycastAll(this.transform.position, direction,
-            MachineCommonSenseController.MAX_DISTANCE_ACROSS_ROOM, layerMask).ToList();
+            MCSController.MAX_DISTANCE_ACROSS_ROOM, layerMask).ToList();
         if (hits.Count == 0) {
             this.errorMessage = "Cannot find any object on the directional vector.";
             this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.NOT_OBJECT);
@@ -118,7 +118,7 @@ public class MachineCommonSenseController : PhysicsRemoteFPSAgentController {
         }
 
         List<string> visibleObjectIds = this.GetAllVisibleSimObjPhysics(this.m_Camera,
-            MachineCommonSenseController.MAX_DISTANCE_ACROSS_ROOM).Select((obj) => obj.UniqueID).ToList();
+            MCSController.MAX_DISTANCE_ACROSS_ROOM).Select((obj) => obj.UniqueID).ToList();
 
         ObjectMetadata[] objectMetadata = base.generateObjectMetadata().ToList().Select((metadata) => {
             // The "visible" property in the ObjectMetadata really describes if the object is within reach.
@@ -181,7 +181,7 @@ public class MachineCommonSenseController : PhysicsRemoteFPSAgentController {
         base.Initialize(action);
 
         this.step = 0;
-        MachineCommonSenseMain main = GameObject.Find("MCS").GetComponent<MachineCommonSenseMain>();
+        MCSMain main = GameObject.Find("MCS").GetComponent<MCSMain>();
         main.enableVerboseLog = main.enableVerboseLog || action.logs;
         // Reset the MCS scene configuration data and player.
         main.ChangeCurrentScene(action.sceneConfig);
@@ -211,7 +211,7 @@ public class MachineCommonSenseController : PhysicsRemoteFPSAgentController {
             objectMetadata.objectBounds = this.WorldCoordinatesOfBoundingBox(simObj);
         }
         if (objectMetadata.objectBounds != null) {
-            MachineCommonSenseMain main = GameObject.Find("MCS").GetComponent<MachineCommonSenseMain>();
+            MCSMain main = GameObject.Find("MCS").GetComponent<MCSMain>();
             if (main != null && main.enableVerboseLog) {
                 Debug.Log("MCS: " + objectMetadata.objectId + " CENTER = " +
                     simObj.BoundingBox.transform.position.ToString("F4"));
@@ -225,8 +225,8 @@ public class MachineCommonSenseController : PhysicsRemoteFPSAgentController {
             renderer.materials.ToList().ForEach((material) => {
                 // Object material names sometimes end with " (Instance)" during runtime though I'm not sure why.
                 string materialName = material.name.Replace(" (Instance)", "");
-                if (MachineCommonSenseConfig.MATERIAL_COLORS.ContainsKey(materialName)) {
-                    MachineCommonSenseConfig.MATERIAL_COLORS[materialName].ToList().ForEach((color) => {
+                if (MCSConfig.MATERIAL_COLORS.ContainsKey(materialName)) {
+                    MCSConfig.MATERIAL_COLORS[materialName].ToList().ForEach((color) => {
                         colors.Add(color);
                     });
                 }
@@ -314,7 +314,7 @@ public class MachineCommonSenseController : PhysicsRemoteFPSAgentController {
         base.ProcessControlCommand(controlCommand);
 
         // Clear the saved images from the previous step.
-        ((MachineCommonSensePerformerManager)this.agentManager).ClearSavedImages();
+        ((MCSPerformerManager)this.agentManager).ClearSavedImages();
 
         if (!controlCommand.action.Equals("Initialize")) {
             this.step++;
@@ -445,20 +445,20 @@ public class MachineCommonSenseController : PhysicsRemoteFPSAgentController {
         if (this.agentManager.renderImage) {
             // We only need to save ONE image of the scene after initialization.
             StartCoroutine(this.SimulatePhysicsSaveImagesIncreaseStep(this.step == 0 ? 1 :
-                MachineCommonSenseController.PHYSICS_SIMULATION_LOOPS));
+                MCSController.PHYSICS_SIMULATION_LOOPS));
         }
 
         else {
             // (Also simulate the physics after initialization so that the objects can settle down onto the floor.)
             this.SimulatePhysicsCompletely();
-            GameObject.Find("MCS").GetComponent<MachineCommonSenseMain>().UpdateOnPhysicsSubstep(1);
+            GameObject.Find("MCS").GetComponent<MCSMain>().UpdateOnPhysicsSubstep(1);
             // Notify the AgentManager to send the action output metadata and images to the Python API.
-            ((MachineCommonSensePerformerManager)this.agentManager).FinalizeEmit();
+            ((MCSPerformerManager)this.agentManager).FinalizeEmit();
         }
     }
 
     private void SimulatePhysicsCompletely() {
-        for (int i = 0; i < MachineCommonSenseController.PHYSICS_SIMULATION_LOOPS; ++i) {
+        for (int i = 0; i < MCSController.PHYSICS_SIMULATION_LOOPS; ++i) {
             this.SimulatePhysicsOnce();
         }
     }
@@ -467,22 +467,23 @@ public class MachineCommonSenseController : PhysicsRemoteFPSAgentController {
         // Call Physics.Simulate multiple times with a small step value because a large step
         // value causes collision errors.  From the Unity Physics.Simulate documentation:
         // "Using step values greater than 0.03 is likely to produce inaccurate results."
-        for (int i = 0; i < MachineCommonSenseController.PHYSICS_SIMULATION_STEPS; ++i) {
+        for (int i = 0; i < MCSController.PHYSICS_SIMULATION_STEPS; ++i) {
             // Simulate the physics a little more on initialization so that the objects can settle down onto the floor.
             Physics.Simulate(this.step == 0 ? 0.02f : 0.01f);
         }
     }
 
     private IEnumerator SimulatePhysicsSaveImagesIncreaseStep(int thisLoop) {
-        yield return new WaitForEndOfFrame(); // Required for coroutine functions
-
         // Run the physics simulation for a little bit, then pause and save the images for the current scene.
         this.SimulatePhysicsOnce();
 
-        GameObject.Find("MCS").GetComponent<MachineCommonSenseMain>().UpdateOnPhysicsSubstep(
-            MachineCommonSenseController.PHYSICS_SIMULATION_LOOPS);
+        GameObject.Find("MCS").GetComponent<MCSMain>().UpdateOnPhysicsSubstep(
+            MCSController.PHYSICS_SIMULATION_LOOPS);
 
-        ((MachineCommonSensePerformerManager)this.agentManager).SaveImages(this.imageSynthesis);
+        // Wait for the end of frame after we run the physics simulation but before we save the images.
+        yield return new WaitForEndOfFrame(); // Required for coroutine functions
+
+        ((MCSPerformerManager)this.agentManager).SaveImages(this.imageSynthesis);
 
         int nextLoop = thisLoop - 1;
 
@@ -492,7 +493,7 @@ public class MachineCommonSenseController : PhysicsRemoteFPSAgentController {
         }
         else {
             // Once finished, notify the AgentManager to send the action output metadata and images to the Python API.
-            ((MachineCommonSensePerformerManager)this.agentManager).FinalizeEmit();
+            ((MCSPerformerManager)this.agentManager).FinalizeEmit();
         }
     }
 
@@ -608,8 +609,8 @@ public class MachineCommonSenseController : PhysicsRemoteFPSAgentController {
                 handZ = ((handZ - meshFilter.transform.localPosition.z) * target.gameObject.transform.localScale.z);
             }
             this.AgentHand.transform.localPosition = new Vector3(this.AgentHand.transform.localPosition.x,
-                (handY + MachineCommonSenseController.DISTANCE_HELD_OBJECT_Y) * -1,
-                (handZ + MachineCommonSenseController.DISTANCE_HELD_OBJECT_Z) * (1.0f / this.transform.localScale.z));
+                (handY + MCSController.DISTANCE_HELD_OBJECT_Y) * -1,
+                (handZ + MCSController.DISTANCE_HELD_OBJECT_Z) * (1.0f / this.transform.localScale.z));
         } else {
             Debug.LogError("PickupObject target " + target.gameObject.name + " does not have a MeshFilter!");
         }
