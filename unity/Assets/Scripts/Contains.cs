@@ -42,7 +42,7 @@ public class Contains : MonoBehaviour
 
     private bool expanded = false;
 
-	private MCSSceneManager physScene;
+	private PhysicsSceneManager physScene;
 
 	private InstantiatePrefabTest iPrefabTest;
 
