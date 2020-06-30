@@ -31,6 +31,8 @@ public class MCSController : PhysicsRemoteFPSAgentController {
     protected float minRotation = -360f;
     protected float maxRotation = 360f;
 
+    public GameObject fpsAgent;
+
     public enum PlayerPose {
         STANDING,
         CRAWLING,
@@ -640,10 +642,7 @@ public class MCSController : PhysicsRemoteFPSAgentController {
             Debug.Log("Agent is already Lying Down");
         } else {
             float startHeight = (this.pose == PlayerPose.CRAWLING ? CRAWLING_POSITION_Y : STANDING_POSITION_Y);
-            CheckIfAgentCanCrawlLieOrStand(Vector3.down, startHeight, LYING_POSITION_Y, LYING_POSITION_COLLIDER_CENTER, PlayerPose.LYING);        
-            //agent looks down at the floor (increasing first parameter increases rotation downwards)  
-            Vector3 lookDirection = fpsAgent.transform.rotation.eulerAngles;
-            fpsAgent.transform.rotation = Quaternion.Euler (30, lookDirection.y, lookDirection.z);        
+            CheckIfAgentCanCrawlLieOrStand(Vector3.down, startHeight, LYING_POSITION_Y, LYING_POSITION_COLLIDER_CENTER, PlayerPose.LYING);              
         }
 
         
@@ -667,10 +666,9 @@ public class MCSController : PhysicsRemoteFPSAgentController {
         RaycastHit hit;
         Ray ray = new Ray(origin, direction);
         LayerMask layerMask = ~(1 << 10);
-
-        Debug.DrawLine(origin,end, Color.red, 20f);
+        
         //if raycast hits an object, the agent does not move on y-axis
-        if (Physics.Raycast(ray, out hit, endHeight, layerMask) && hit.collider.tag == "SimObjPhysics") {
+        if (Physics.SphereCast(origin, 0.12f, direction, out hit, endHeight, layerMask) && hit.collider.tag == "SimObjPhysics") {
             this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.OBSTRUCTED);
             actionFinished(false);
             Debug.Log("Agent is Obstructed");
@@ -684,6 +682,12 @@ public class MCSController : PhysicsRemoteFPSAgentController {
 
             //change collider height so agent can move
             GetComponent<CapsuleCollider>().center = new Vector3(0, colliderY, 0);
+
+            if (pose == PlayerPose.LYING) {
+                //agent looks down at the floor (increasing first parameter increases rotation downwards)
+                Vector3 lookDirection = fpsAgent.transform.rotation.eulerAngles;
+                fpsAgent.transform.rotation = Quaternion.Euler (30, lookDirection.y, lookDirection.z);
+            }
         }
     }
 }
