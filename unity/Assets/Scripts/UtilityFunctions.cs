@@ -67,10 +67,13 @@ public static class UtilityFunctions {
                 }
             }
         }
+
         foreach (BoxCollider bc in go.GetComponentsInChildren<BoxCollider>()) {
-            foreach (Collider c in PhysicsExtensions.OverlapBox(bc, layerMask, QueryTriggerInteraction.Ignore, expandBy)) {
-                if (!ignoreColliders.Contains(c)) {
-                    return true;
+            if (!(bc.isTrigger && bc.tag.Equals("Receptacle"))) {
+                foreach (Collider c in PhysicsExtensions.OverlapBox(bc, layerMask, QueryTriggerInteraction.Ignore, expandBy)) {
+                    if (!ignoreColliders.Contains(c)) {
+                        return true;
+                    }
                 }
             }
         }
