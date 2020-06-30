@@ -129,8 +129,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
         private ServerAction currentServerAction;
 
         protected string lastActionStatus;
-		
-        public GameObject fpsAgent;
 
         public enum ActionStatus
         {
@@ -175,7 +173,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			this.m_GravityMultiplier = 2;
 			//this.m_UseFovKick = true;
 			//this.m_StepInterval = 5;
-			fpsAgent = GameObject.Find("FirstPersonCharacter");
 		}
 
 
