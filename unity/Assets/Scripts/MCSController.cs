@@ -6,7 +6,12 @@ using System.Linq;
 using System.Collections.Generic;
 
 public class MCSController : PhysicsRemoteFPSAgentController {
-    public static float POSITION_Y = 0.4625f;
+    public static float STANDING_POSITION_Y = 0.4625f;
+    public static float CRAWLING_POSITION_Y = STANDING_POSITION_Y/2;
+    public static float LYING_POSITION_Y = 0.1f;
+    public static float STANDING_POSITION_COLLIDER_CENTER = -0.25f;
+    public static float CRAWLING_POSITION_COLLIDER_CENTER = -0.10f;
+    public static float LYING_POSITION_COLLIDER_CENTER = 0f;
 
     public static float DISTANCE_HELD_OBJECT_Y = 0.15f;
     public static float DISTANCE_HELD_OBJECT_Z = 0.20f;
@@ -622,18 +627,9 @@ public class MCSController : PhysicsRemoteFPSAgentController {
                 actionFinished(true);
                 Debug.Log("Agent is already Crawling");
         } else {
-            float startHeight;
-            Vector3 direction;
-
-            if (this.pose == PlayerPose.LYING) {
-                startHeight = 0.1f;
-                direction = Vector3.up;
-            }   else {
-                startHeight = POSITION_Y;
-                direction = Vector3.down;
-            }
-
-            CheckIfAgentCanCrawlLieOrStand(direction, startHeight, POSITION_Y/2, -0.10f, PlayerPose.CRAWLING);  
+            float startHeight = (this.pose == PlayerPose.LYING ? LYING_POSITION_Y : STANDING_POSITION_Y);
+            Vector3 direction = (this.pose == PlayerPose.LYING ? Vector3.up : Vector3.down);
+            CheckIfAgentCanCrawlLieOrStand(direction, startHeight, CRAWLING_POSITION_Y, CRAWLING_POSITION_COLLIDER_CENTER, PlayerPose.CRAWLING);  
         }
     }
     
@@ -643,17 +639,8 @@ public class MCSController : PhysicsRemoteFPSAgentController {
             actionFinished(true);
             Debug.Log("Agent is already Lying Down");
         } else {
-
-            float startHeight;
-
-            if (this.pose == PlayerPose.CRAWLING) {
-                startHeight = POSITION_Y/2;
-            }   else {
-                startHeight = POSITION_Y;
-            }
-
-            CheckIfAgentCanCrawlLieOrStand(Vector3.down, startHeight, 0.1f, 0, PlayerPose.LYING);
-            
+            float startHeight = (this.pose == PlayerPose.CRAWLING ? CRAWLING_POSITION_Y : STANDING_POSITION_Y);
+            CheckIfAgentCanCrawlLieOrStand(Vector3.down, startHeight, LYING_POSITION_Y, LYING_POSITION_COLLIDER_CENTER, PlayerPose.LYING);        
             //agent looks down at the floor (increasing first parameter increases rotation downwards)  
             Vector3 lookDirection = fpsAgent.transform.rotation.eulerAngles;
             fpsAgent.transform.rotation = Quaternion.Euler (30, lookDirection.y, lookDirection.z);        
@@ -667,17 +654,10 @@ public class MCSController : PhysicsRemoteFPSAgentController {
             this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.SUCCESSFUL);
             actionFinished(true);
             Debug.Log("Agent is already Standing");
-        }  
-
-        float startHeight;
-
-        if (this.pose == PlayerPose.CRAWLING) {
-            startHeight = POSITION_Y/2;
-        }   else {
-            startHeight = 0.1f;
-        }   
-
-        CheckIfAgentCanCrawlLieOrStand(Vector3.up, startHeight, POSITION_Y, -0.25f, PlayerPose.STANDING); 
+        } else {
+            float startHeight = (this.pose == PlayerPose.CRAWLING ? CRAWLING_POSITION_Y : LYING_POSITION_Y);
+            CheckIfAgentCanCrawlLieOrStand(Vector3.up, startHeight, STANDING_POSITION_Y, STANDING_POSITION_COLLIDER_CENTER, PlayerPose.STANDING); 
+        }
     }
 
     public void CheckIfAgentCanCrawlLieOrStand(Vector3 direction, float startHeight, float endHeight, float colliderY, PlayerPose pose) {
@@ -688,8 +668,9 @@ public class MCSController : PhysicsRemoteFPSAgentController {
         Ray ray = new Ray(origin, direction);
         LayerMask layerMask = ~(1 << 10);
 
+        Debug.DrawLine(origin,end, Color.red, 20f);
         //if raycast hits an object, the agent does not move on y-axis
-        if (Physics.Raycast(ray, out hit, endHeight, layerMask) && hit.collider.tag == "SimObj") {
+        if (Physics.Raycast(ray, out hit, endHeight, layerMask) && hit.collider.tag == "SimObjPhysics") {
             this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.OBSTRUCTED);
             actionFinished(false);
             Debug.Log("Agent is Obstructed");
