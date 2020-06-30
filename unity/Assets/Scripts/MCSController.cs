@@ -666,9 +666,10 @@ public class MCSController : PhysicsRemoteFPSAgentController {
         RaycastHit hit;
         Ray ray = new Ray(origin, direction);
         LayerMask layerMask = ~(1 << 10);
+        float agentRadius = 0.12f;
         
         //if raycast hits an object, the agent does not move on y-axis
-        if (Physics.SphereCast(origin, 0.12f, direction, out hit, endHeight, layerMask) && hit.collider.tag == "SimObjPhysics") {
+        if (Physics.SphereCast(origin, agentRadius, direction, out hit, endHeight, layerMask) && hit.collider.tag == "SimObjPhysics") {
             this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.OBSTRUCTED);
             actionFinished(false);
             Debug.Log("Agent is Obstructed");
