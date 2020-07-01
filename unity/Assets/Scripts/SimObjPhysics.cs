@@ -484,7 +484,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 			two.transform.position.y.CompareTo(one.transform.position.y));
 
 		foreach(GameObject rtb in sortedReceptacleTriggerBoxes)
-		{	
+		{
 			Contains containsScript = rtb.GetComponent<Contains>();
 			temp.AddRange(containsScript.GetValidSpawnPoints(ReturnPointsCloseToAgent));
 		}
