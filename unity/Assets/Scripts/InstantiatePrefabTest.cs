@@ -516,7 +516,7 @@ public class InstantiatePrefabTest : MonoBehaviour
         //     print(c.GetComponentInParent<Rigidbody>().transform.name);
         // }
         //if a collider was hit, then the space is not clear to spawn
-        return hitColliders.Length == 0;     
+        return hitColliders.Length == 0;
 	}
 
 #if UNITY_EDITOR

@@ -863,7 +863,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     updateAllAgentCollidersForVisibilityCheck(true);
                     //this should be set to true for object placement flexibility
                     return true;
-                } 
+                }
             }
             updateAllAgentCollidersForVisibilityCheck(true);
             return false;
