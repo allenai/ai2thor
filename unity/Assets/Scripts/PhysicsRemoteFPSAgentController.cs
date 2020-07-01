@@ -3946,7 +3946,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             //get the target receptacle based on the action receptacle object ID
             SimObjPhysics targetReceptacle = null;
 
-            foreach (SimObjPhysics sop in VisibleSimObjs(action.forceVisible)) {
+            foreach (SimObjPhysics sop in VisibleSimObjs(true)) {
                 if ((!string.IsNullOrEmpty(action.receptacleObjectId)) && action.receptacleObjectId == sop.UniqueID) {
                     targetReceptacle = sop;
                     break;
