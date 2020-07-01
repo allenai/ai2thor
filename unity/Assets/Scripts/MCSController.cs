@@ -4,7 +4,6 @@ using UnityEngine;
 using UnityStandardAssets.Characters.FirstPerson;
 using System.Linq;
 using System.Collections.Generic;
-using Random = System.Random;
 
 public class MCSController : PhysicsRemoteFPSAgentController {
     public static float STANDING_POSITION_Y = 0.4625f;
