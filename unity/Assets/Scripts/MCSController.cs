@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityStandardAssets.Characters.FirstPerson;
 using System.Linq;
 using System.Collections.Generic;
+using Random = System.Random;
 
 public class MCSController : PhysicsRemoteFPSAgentController {
     public static float STANDING_POSITION_Y = 0.4625f;
@@ -148,6 +149,7 @@ public class MCSController : PhysicsRemoteFPSAgentController {
         metadata.reachDistance = this.maxVisibleDistance;
         metadata.clippingPlaneFar = this.m_Camera.farClipPlane;
         metadata.clippingPlaneNear = this.m_Camera.nearClipPlane;
+        metadata.pose = this.pose.ToString();
         metadata.structuralObjects = metadata.objects.ToList().Where(objectMetadata => {
             GameObject gameObject = GameObject.Find(objectMetadata.name);
             // The object may be null if it is being held.
@@ -653,6 +655,10 @@ public class MCSController : PhysicsRemoteFPSAgentController {
             this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.SUCCESSFUL);
             actionFinished(true);
             Debug.Log("Agent is already Standing");
+        } else if (this.pose == PlayerPose.LYING) {
+            this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.WRONG_POSE);
+            actionFinished(false);
+            Debug.Log("Agent cannot Stand when lying down");
         } else {
             float startHeight = (this.pose == PlayerPose.CRAWLING ? CRAWLING_POSITION_Y : LYING_POSITION_Y);
             CheckIfAgentCanCrawlLieOrStand(Vector3.up, startHeight, STANDING_POSITION_Y, STANDING_POSITION_COLLIDER_CENTER, PlayerPose.STANDING); 
@@ -687,7 +693,7 @@ public class MCSController : PhysicsRemoteFPSAgentController {
             if (pose == PlayerPose.LYING) {
                 //agent looks down at the floor (increasing first parameter increases rotation downwards)
                 Vector3 lookDirection = fpsAgent.transform.rotation.eulerAngles;
-                fpsAgent.transform.rotation = Quaternion.Euler (30, lookDirection.y, lookDirection.z);
+                fpsAgent.transform.rotation = Quaternion.Euler (90, lookDirection.y, lookDirection.z);
             }
         }
     }
