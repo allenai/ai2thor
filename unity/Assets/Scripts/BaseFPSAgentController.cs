@@ -1264,17 +1264,18 @@ namespace UnityStandardAssets.Characters.FirstPerson
         public AxisAlignedBoundingBox GenerateAxisAlignedBoundingBox(SimObjPhysics sop)
         {
             AxisAlignedBoundingBox b = new AxisAlignedBoundingBox();
- 
+
             //get all colliders on the sop, excluding colliders if they are not enabled
             Collider[] cols = sop.GetComponentsInChildren<Collider>();
 
             //0 colliders mean the object is despawned, so this will cause objects broken into pieces to not generate an axis aligned box
             if(cols.Length == 0)
             {
-                if(sop.GetComponent<SimObjPhysics>().IsBroken)
+                SimObjPhysics sopc = sop.GetComponent<SimObjPhysics>();
+                if(sopc.IsBroken || sopc.IsSliced)
                 {
                     #if UNITY_EDITOR
-                    Debug.Log("Object is broken in pieces, no AxisAligned box generated: " + sop.name);
+                    Debug.Log("Object is broken or sliced in pieces, no AxisAligned box generated: " + sop.name);
                     #endif
                     return b;
                 }

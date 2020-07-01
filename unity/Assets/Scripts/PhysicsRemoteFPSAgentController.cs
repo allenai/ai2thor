@@ -1548,13 +1548,39 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 action.forceVisible = true;
             }
 
-            SimObjPhysics[] simObjPhysicsArray = VisibleSimObjs(action);
+            if(action.objectId == null)
+            {
+                if(!ScreenToWorldTarget(action.x, action.y, ref target))
+                {
+                    //error message is set insice ScreenToWorldTarget
+                    actionFinished(false);
+                    return;
+                }
+            }
 
-            foreach (SimObjPhysics sop in simObjPhysicsArray) {
-                if (action.objectId == sop.ObjectID) {
+            //an objectId was given, so find that target in the scene if it exists
+            else
+            {
+                if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(action.objectId)) {
+                    errorMessage = "Object ID appears to be invalid.";
+                    actionFinished(false);
+                    return;
+                }
+                
+                //if object is in the scene and visible, assign it to 'target'
+                foreach (SimObjPhysics sop in VisibleSimObjs(action)) 
+                {
                     target = sop;
                 }
             }
+
+            // SimObjPhysics[] simObjPhysicsArray = VisibleSimObjs(action);
+
+            // foreach (SimObjPhysics sop in simObjPhysicsArray) {
+            //     if (action.objectId == sop.ObjectID) {
+            //         target = sop;
+            //     }
+            // }
 
             if (target == null) {
                 errorMessage = "No valid target!";
@@ -1618,13 +1644,41 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 action.forceVisible = true;
             }
 
-            SimObjPhysics[] simObjPhysicsArray = VisibleSimObjs(action);
+            if(action.objectId == null)
+            {
+                if(!ScreenToWorldTarget(action.x, action.y, ref target))
+                {
+                    //error message is set insice ScreenToWorldTarget
+                    actionFinished(false);
+                    return;
+                }
+            }
 
-            foreach (SimObjPhysics sop in simObjPhysicsArray) {
-                if (action.objectId == sop.ObjectID) {
+            //an objectId was given, so find that target in the scene if it exists
+            else
+            {
+                if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(action.objectId)) {
+                    errorMessage = "Object ID appears to be invalid.";
+                    actionFinished(false);
+                    return;
+                }
+                
+                //if object is in the scene and visible, assign it to 'target'
+                foreach (SimObjPhysics sop in VisibleSimObjs(action)) 
+                {
                     target = sop;
                 }
             }
+
+            // SimObjPhysics[] simObjPhysicsArray = VisibleSimObjs(action);
+
+            // foreach (SimObjPhysics sop in simObjPhysicsArray) {
+            //     if (action.objectId == sop.ObjectID) {
+            //         target = sop;
+            //     }
+            // }
+            print(target.objectID);
+            print(target.isInteractable);
 
             if (target == null) {
                 errorMessage = "No valid target!";
@@ -1632,8 +1686,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 actionFinished(false);
                 return;
             }
-
-            //print(target.name);
 
             if (!target.GetComponent<SimObjPhysics>()) {
                 errorMessage = "Target must be SimObjPhysics!";
@@ -1655,7 +1707,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
 
             if (!action.forceAction && target.isInteractable == false) {
-                errorMessage = "Target is not interactable and is probably occluded by something!";
+                print(target.isInteractable);
+                errorMessage = "Target:" + target.objectID +  "is not interactable and is probably occluded by something!";
                 actionFinished(false);
                 return;
             }
@@ -3331,9 +3384,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         //used for placing objects on receptacles without enclosed restrictions (drawers, cabinets, etc)
         //only checks if the object can be placed on top of the target receptacle
         public void PlaceHeldObject(ServerAction action) {
-#if UNITY_EDITOR
-            var watch = System.Diagnostics.Stopwatch.StartNew();
-#endif
+            // #if UNITY_EDITOR
+            // var watch = System.Diagnostics.Stopwatch.StartNew();
+            // #endif
 
             //check if we are even holding anything
             if (ItemInHand == null) {
@@ -3345,13 +3398,40 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             //get the target receptacle based on the action object ID
             SimObjPhysics targetReceptacle = null;
 
-            SimObjPhysics[] simObjPhysicsArray = VisibleSimObjs(action);
+            //no target object specified, so instead try and use x/y screen coordinates
+            if(action.objectId == null)
+            {
+                if(!ScreenToWorldTarget(action.x, action.y, ref targetReceptacle))
+                {
+                    //error message is set insice ScreenToWorldTarget
+                    actionFinished(false);
+                    return;
+                }
+            }
 
-            foreach (SimObjPhysics sop in simObjPhysicsArray) {
-                if (action.objectId == sop.ObjectID) {
+            //an objectId was given, so find that target in the scene if it exists
+            else
+            {
+                if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(action.objectId)) {
+                    errorMessage = "Object ID appears to be invalid.";
+                    actionFinished(false);
+                    return;
+                }
+                
+                //if object is in the scene and visible, assign it to 'target'
+                foreach (SimObjPhysics sop in VisibleSimObjs(action)) 
+                {
                     targetReceptacle = sop;
                 }
             }
+
+            // SimObjPhysics[] simObjPhysicsArray = VisibleSimObjs(action);
+
+            // foreach (SimObjPhysics sop in simObjPhysicsArray) {
+            //     if (action.objectId == sop.ObjectID) {
+            //         targetReceptacle = sop;
+            //     }
+            // }
 
             if (targetReceptacle == null) {
                 errorMessage = "No valid Receptacle found";
@@ -3478,11 +3558,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 actionFinished(false);
             }
 
-#if UNITY_EDITOR
-            watch.Stop();
-            var elapsed = watch.ElapsedMilliseconds;
-            print("place object took: " + elapsed + "ms");
-#endif
+            // #if UNITY_EDITOR
+            // watch.Stop();
+            // var elapsed = watch.ElapsedMilliseconds;
+            // print("place object took: " + elapsed + "ms");
+            // #endif
         }
 
         //used for all actions that need a sim object target
@@ -3504,13 +3584,32 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     if(!CheckIfTargetPositionIsInViewportRange(hit.point))
                     {
                         errorMessage = "target sim object at screen coordinate: (" + x + ", " + y + ") is not within the viewport";
-
                         return false;
                     }
 
                     //it is within viewport, so we are good, assign as target
                     target = hit.transform.GetComponent<SimObjPhysics>();
-                    print(target);
+                }
+            }
+
+            //try again, this time cast for placeable surface for things like countertops or interior of cabinets
+            if(target == null)
+            {
+                if(Physics.Raycast(ray, out hit, Mathf.Infinity, 1 << 11, QueryTriggerInteraction.Ignore))
+                {
+                    if(hit.transform.GetComponentInParent<SimObjPhysics>())
+                    {
+                        //wait! First check if the point hit is withing visibility bounds (camera viewport, max distance etc)
+                        //this should basically only happen if the handDistance value is too big
+                        if(!CheckIfTargetPositionIsInViewportRange(hit.point))
+                        {
+                            errorMessage = "target sim object at screen coordinate: (" + x + ", " + y + ") is not within the viewport";
+                            return false;
+                        }
+
+                        //it is within viewport, so we are good, assign as target
+                        target = hit.transform.GetComponentInParent<SimObjPhysics>();
+                    }
                 }
             }
 
@@ -3521,6 +3620,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         {
             //specify target to pickup via objectId or coordinates
             SimObjPhysics target = null;
+            if (action.forceAction) {
+                action.forceVisible = true;
+            }
             //no target object specified, so instead try and use x/y screen coordinates
             if(action.objectId == null)
             {
@@ -3541,8 +3643,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     return;
                 }
                 
-                //if object is in the scene, assign it to 'target'
-                target = physicsSceneManager.ObjectIdToSimObjPhysics[action.objectId];
+                //if object is in the scene and visible, assign it to 'target'
+                foreach (SimObjPhysics sop in VisibleSimObjs(action)) 
+                {
+                    target = sop;
+                }
             }
 
             //neither objectId nor coordinates found an object
@@ -3943,30 +4048,39 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         public void CloseObject(ServerAction action) {
-            //pass name of object in from action.objectId
-            //check if that object is in the viewport
-            //also check to make sure that target object is interactable
-            if (action.objectId == null) {
-                Debug.Log("Hey, actually give me an object ID to pick up, yeah?");
-                errorMessage = "objectId required for OpenObject";
-                actionFinished(false);
-                Debug.Log("Hey, actually give me an object ID to pick up, yeah?");
-                return;
-            }
-
             SimObjPhysics target = null;
-
             if (action.forceAction) {
                 action.forceVisible = true;
             }
+            //no target object specified, so instead try and use x/y screen coordinates
+            if(action.objectId == null)
+            {
+                if(!ScreenToWorldTarget(action.x, action.y, ref target))
+                {
+                    //error message is set insice ScreenToWorldTarget
+                    actionFinished(false);
+                    return;
+                }
+            }
 
-            foreach (SimObjPhysics sop in VisibleSimObjs(action)) {
-                if (sop.GetComponent<CanOpen_Object>()) {
+            //an objectId was given, so find that target in the scene if it exists
+            else
+            {
+                if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(action.objectId)) {
+                    errorMessage = "Object ID appears to be invalid.";
+                    actionFinished(false);
+                    return;
+                }
+                
+                //if object is in the scene and visible, assign it to 'target'
+                foreach (SimObjPhysics sop in VisibleSimObjs(action)) 
+                {
                     target = sop;
                 }
             }
 
             if (target) {
+
                 if (!action.forceAction && target.isInteractable == false) {
                     errorMessage = "object is visible but occluded by something: " + action.objectId;
                     actionFinished(false);
@@ -3984,6 +4098,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         errorMessage = "object already closed: " + action.objectId;
                         actionFinished(false);
                     }
+                }
+
+                else
+                {
+                    errorMessage = "target must be Openable to close";
+                    actionFinished(false);
+                    return;
                 }
 
             } else {
@@ -4240,19 +4361,38 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         //swap an object's materials out to the cooked version of the object
         public void CookObject(ServerAction action) {
-            if (action.objectId == null) {
-                errorMessage = "objectId required for ToastObject";
-                actionFinished(false);
-                return;
+            //specify target to pickup via objectId or coordinates
+            SimObjPhysics target = null;
+            if (action.forceAction) {
+                action.forceVisible = true;
+            }
+            //no target object specified, so instead try and use x/y screen coordinates
+            if(action.objectId == null)
+            {
+                if(!ScreenToWorldTarget(action.x, action.y, ref target))
+                {
+                    //error message is set insice ScreenToWorldTarget
+                    actionFinished(false);
+                    return;
+                }
             }
 
-            SimObjPhysics target = null;
-            foreach (SimObjPhysics sop in VisibleSimObjs(action)) {
-                //can this object be cooked?
-                if (sop.GetComponent<CookObject>()) {
+            //an objectId was given, so find that target in the scene if it exists
+            else
+            {
+                if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(action.objectId)) {
+                    errorMessage = "Object ID appears to be invalid.";
+                    actionFinished(false);
+                    return;
+                }
+                
+                //if object is in the scene and visible, assign it to 'target'
+                foreach (SimObjPhysics sop in VisibleSimObjs(action)) 
+                {
                     target = sop;
                 }
             }
+
 
             if (target) {
                 if (!action.forceAction && target.isInteractable == false) {
@@ -4274,6 +4414,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     to.Cook();
 
                     actionFinished(true);
+                }
+
+                else
+                {
+                    errorMessage = "target object is not cookable";
+                    actionFinished(false);
+                    return;
                 }
             }
 
@@ -4343,28 +4490,38 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         public void ToggleObject(ServerAction action, bool toggleOn, bool forceAction)
         {
-            if (action.objectId == null)
-            {
-                errorMessage = "objectId required for ToggleObject";
-                actionFinished(false);
-                //return false;
-            }
-            
+            SimObjPhysics target = null;
             if (action.forceAction) 
             {
                 action.forceVisible = true;
             }
-
-            SimObjPhysics target = null;
-            foreach (SimObjPhysics sop in VisibleSimObjs(action))
+            //no target object specified, so instead try and use x/y screen coordinates
+            if(action.objectId == null)
             {
-                //check for CanOpen drawers, cabinets or CanOpen_Fridge fridge objects
-                if (sop.GetComponent<CanToggleOnOff>())
+                if(!ScreenToWorldTarget(action.x, action.y, ref target))
                 {
-                    target = sop;
-                    break;
+                    //error message is set insice ScreenToWorldTarget
+                    actionFinished(false);
+                    return;
                 }
             }
+
+            //an objectId was given, so find that target in the scene if it exists
+            else
+            {
+                if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(action.objectId)) {
+                    errorMessage = "Object ID appears to be invalid.";
+                    actionFinished(false);
+                    return;
+                }
+                
+                //if object is in the scene and visible, assign it to 'target'
+                foreach (SimObjPhysics sop in VisibleSimObjs(action)) 
+                {
+                    target = sop;
+                }
+            }
+
             if (!target)
             {
 
@@ -4499,27 +4656,37 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         public void OpenObject(ServerAction action) {
-            //pass name of object in from action.objectId
-            //check if that object is in the viewport
-            //also check to make sure that target object is interactable
-            if (action.objectId == null) {
-                errorMessage = "objectId required for OpenObject";
-                actionFinished(false);
-                return;
-            }
-
             SimObjPhysics target = null;
-
             if (action.forceAction) {
                 action.forceVisible = true;
             }
+            //no target object specified, so instead try and use x/y screen coordinates
+            if(action.objectId == null)
+            {
+                if(!ScreenToWorldTarget(action.x, action.y, ref target))
+                {
+                    //error message is set insice ScreenToWorldTarget
+                    actionFinished(false);
+                    return;
+                }
+            }
 
-            foreach (SimObjPhysics sop in VisibleSimObjs(action)) {
-                //check for CanOpen drawers, cabinets or CanOpen_Fridge fridge objects
-                if (sop.GetComponent<CanOpen_Object>()) {
+            //an objectId was given, so find that target in the scene if it exists
+            else
+            {
+                if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(action.objectId)) {
+                    errorMessage = "Object ID appears to be invalid.";
+                    actionFinished(false);
+                    return;
+                }
+                
+                //if object is in the scene and visible, assign it to 'target'
+                foreach (SimObjPhysics sop in VisibleSimObjs(action)) 
+                {
                     target = sop;
                 }
             }
+            
 
             if (target) {
                 if (!action.forceAction && target.isInteractable == false) {
@@ -4528,12 +4695,19 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     return;
                 }
 
+                if(!target.GetComponent<CanOpen_Object>())
+                {
+                    errorMessage = "object must be Openable to open";
+                    actionFinished(false);
+                    return;
+                }
+
                 if (target.GetComponent<CanOpen_Object>()) {
                     CanOpen_Object codd = target.GetComponent<CanOpen_Object>();
 
                     //check to make sure object is closed
                     if (codd.isOpen) {
-                        errorMessage = "Object already open";
+                        errorMessage = "Object already open and can't be opened again until closed fully";
                         actionFinished(false);
                         return;
                     }
@@ -5059,7 +5233,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     crouchingLocalCameraPosition.y,
                     standingLocalCameraPosition.z
                 );
-                //BoxChecks();
                 actionFinished(true);
             }
         }
@@ -5072,7 +5245,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 actionFinished(false);
             } else {
                 m_Camera.transform.localPosition = standingLocalCameraPosition;
-                //SetUpRotationBoxChecks();
                 actionFinished(true);
             }
         }
@@ -7202,21 +7374,39 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         public void SliceObject(ServerAction action) {
-            //pass name of object in from action.objectId
-            if (action.objectId == null) {
-                errorMessage = "objectId required for SliceObject";
-                actionFinished(false);
-                return;
-            }
 
+            //specify target to pickup via objectId or coordinates
             SimObjPhysics target = null;
 
             if (action.forceAction) {
                 action.forceVisible = true;
             }
 
-            foreach (SimObjPhysics sop in VisibleSimObjs(action)) {
-                target = sop;
+            //no target object specified, so instead try and use x/y screen coordinates
+            if(action.objectId == null)
+            {
+                if(!ScreenToWorldTarget(action.x, action.y, ref target))
+                {
+                    //error message is set insice ScreenToWorldTarget
+                    actionFinished(false);
+                    return;
+                }
+            }
+
+            //an objectId was given, so find that target in the scene if it exists
+            else
+            {
+                if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(action.objectId)) {
+                    errorMessage = "Object ID appears to be invalid.";
+                    actionFinished(false);
+                    return;
+                }
+                
+                //if object is in the scene and visible, assign it to 'target'
+                foreach (SimObjPhysics sop in VisibleSimObjs(action)) 
+                {
+                    target = sop;
+                }
             }
 
             //we found it!
@@ -7250,21 +7440,38 @@ namespace UnityStandardAssets.Characters.FirstPerson {
     
         public void BreakObject(ServerAction action)
         {
-            //pass name of object in from action.objectId
-            if (action.objectId == null) {
-                errorMessage = "objectId required for BreakObject";
-                actionFinished(false);
-                return;
-            }
-
+            //specify target to pickup via objectId or coordinates
             SimObjPhysics target = null;
 
             if (action.forceAction) {
                 action.forceVisible = true;
             }
 
-            foreach (SimObjPhysics sop in VisibleSimObjs(action)) {
-                target = sop;
+            //no target object specified, so instead try and use x/y screen coordinates
+            if(action.objectId == null)
+            {
+                if(!ScreenToWorldTarget(action.x, action.y, ref target))
+                {
+                    //error message is set insice ScreenToWorldTarget
+                    actionFinished(false);
+                    return;
+                }
+            }
+
+            //an objectId was given, so find that target in the scene if it exists
+            else
+            {
+                if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(action.objectId)) {
+                    errorMessage = "Object ID appears to be invalid.";
+                    actionFinished(false);
+                    return;
+                }
+                
+                //if object is in the scene and visible, assign it to 'target'
+                foreach (SimObjPhysics sop in VisibleSimObjs(action)) 
+                {
+                    target = sop;
+                }
             }
 
             //we found it!
@@ -7311,14 +7518,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         public void DirtyObject(ServerAction action)
         {
-            //pass name of object in from action.objectId
-            if (action.objectId == null) 
-            {
-                errorMessage = "objectId required for DirtyObject action";
-                actionFinished(false);
-                return;
-            } 
-
+            //specify target to pickup via objectId or coordinates
             SimObjPhysics target = null;
 
             if (action.forceAction) 
@@ -7326,9 +7526,31 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 action.forceVisible = true;
             }
 
-            foreach (SimObjPhysics sop in VisibleSimObjs(action)) 
+            //no target object specified, so instead try and use x/y screen coordinates
+            if(action.objectId == null)
             {
-                target = sop;
+                if(!ScreenToWorldTarget(action.x, action.y, ref target))
+                {
+                    //error message is set insice ScreenToWorldTarget
+                    actionFinished(false);
+                    return;
+                }
+            }
+
+            //an objectId was given, so find that target in the scene if it exists
+            else
+            {
+                if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(action.objectId)) {
+                    errorMessage = "Object ID appears to be invalid.";
+                    actionFinished(false);
+                    return;
+                }
+                
+                //if object is in the scene and visible, assign it to 'target'
+                foreach (SimObjPhysics sop in VisibleSimObjs(action)) 
+                {
+                    target = sop;
+                }
             }
 
             if(target)
@@ -7368,14 +7590,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         public void CleanObject(ServerAction action)
         {
-            //pass name of object in from action.objectId
-            if (action.objectId == null) 
-            {
-                errorMessage = "objectId required for CleanObject action";
-                actionFinished(false);
-                return;
-            }
-
+            //specify target to pickup via objectId or coordinates
             SimObjPhysics target = null;
 
             if (action.forceAction) 
@@ -7383,9 +7598,31 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 action.forceVisible = true;
             }
 
-            foreach (SimObjPhysics sop in VisibleSimObjs(action)) 
+            //no target object specified, so instead try and use x/y screen coordinates
+            if(action.objectId == null)
             {
-                target = sop;
+                if(!ScreenToWorldTarget(action.x, action.y, ref target))
+                {
+                    //error message is set insice ScreenToWorldTarget
+                    actionFinished(false);
+                    return;
+                }
+            }
+
+            //an objectId was given, so find that target in the scene if it exists
+            else
+            {
+                if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(action.objectId)) {
+                    errorMessage = "Object ID appears to be invalid.";
+                    actionFinished(false);
+                    return;
+                }
+                
+                //if object is in the scene and visible, assign it to 'target'
+                foreach (SimObjPhysics sop in VisibleSimObjs(action)) 
+                {
+                    target = sop;
+                }
             }
 
             if(target)
@@ -7426,20 +7663,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         //fill an object with a liquid specified by action.fillLiquid - coffee, water, soap, wine, etc
         public void FillObjectWithLiquid(ServerAction action)
         {
-            //pass name of object in from action.objectId
-            if (action.objectId == null) 
-            {
-                errorMessage = "objectId required for FillObject action";
-                actionFinished(false);
-                return;
-            }
-
-            if(action.fillLiquid == null)
-            {
-                errorMessage = "Missing Liquid string for FillObject action";
-                actionFinished(false);
-            }
-
+            //specify target to pickup via objectId or coordinates
             SimObjPhysics target = null;
 
             if (action.forceAction) 
@@ -7447,9 +7671,37 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 action.forceVisible = true;
             }
 
-            foreach (SimObjPhysics sop in VisibleSimObjs(action)) 
+            //no target object specified, so instead try and use x/y screen coordinates
+            if(action.objectId == null)
             {
-                target = sop;
+                if(!ScreenToWorldTarget(action.x, action.y, ref target))
+                {
+                    //error message is set insice ScreenToWorldTarget
+                    actionFinished(false);
+                    return;
+                }
+            }
+
+            //an objectId was given, so find that target in the scene if it exists
+            else
+            {
+                if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(action.objectId)) {
+                    errorMessage = "Object ID appears to be invalid.";
+                    actionFinished(false);
+                    return;
+                }
+                
+                //if object is in the scene and visible, assign it to 'target'
+                foreach (SimObjPhysics sop in VisibleSimObjs(action)) 
+                {
+                    target = sop;
+                }
+            }
+
+            if(action.fillLiquid == null)
+            {
+                errorMessage = "Missing Liquid string for FillObject action";
+                actionFinished(false);
             }
 
             if(target)
@@ -7509,14 +7761,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         public void EmptyLiquidFromObject(ServerAction action)
         {
-            //pass name of object in from action.objectId
-            if (action.objectId == null) 
-            {
-                errorMessage = "objectId required for EmptyLiquidFromObject action";
-                actionFinished(false);
-                return;
-            }
-
+            //specify target to pickup via objectId or coordinates
             SimObjPhysics target = null;
 
             if (action.forceAction) 
@@ -7524,9 +7769,31 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 action.forceVisible = true;
             }
 
-            foreach (SimObjPhysics sop in VisibleSimObjs(action)) 
+            //no target object specified, so instead try and use x/y screen coordinates
+            if(action.objectId == null)
             {
-                target = sop;
+                if(!ScreenToWorldTarget(action.x, action.y, ref target))
+                {
+                    //error message is set insice ScreenToWorldTarget
+                    actionFinished(false);
+                    return;
+                }
+            }
+
+            //an objectId was given, so find that target in the scene if it exists
+            else
+            {
+                if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(action.objectId)) {
+                    errorMessage = "Object ID appears to be invalid.";
+                    actionFinished(false);
+                    return;
+                }
+                
+                //if object is in the scene and visible, assign it to 'target'
+                foreach (SimObjPhysics sop in VisibleSimObjs(action)) 
+                {
+                    target = sop;
+                }
             }
 
             if(target)
@@ -7568,15 +7835,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         //use up the contents of this object (toilet paper, paper towel, tissue box, etc).
         public void UseUpObject(ServerAction action)
         {
-            //pass name of object in from action.objectId
-            if (action.objectId == null) 
-            {
-                Debug.Log("Hey, actually give me an object ID to open, yeah?");
-                errorMessage = "objectId required for UseUpObject action";
-                actionFinished(false);
-                return;
-            }
-
+            //specify target to pickup via objectId or coordinates
             SimObjPhysics target = null;
 
             if (action.forceAction) 
@@ -7584,9 +7843,31 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 action.forceVisible = true;
             }
 
-            foreach (SimObjPhysics sop in VisibleSimObjs(action)) 
+            //no target object specified, so instead try and use x/y screen coordinates
+            if(action.objectId == null)
             {
-                target = sop;
+                if(!ScreenToWorldTarget(action.x, action.y, ref target))
+                {
+                    //error message is set insice ScreenToWorldTarget
+                    actionFinished(false);
+                    return;
+                }
+            }
+
+            //an objectId was given, so find that target in the scene if it exists
+            else
+            {
+                if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(action.objectId)) {
+                    errorMessage = "Object ID appears to be invalid.";
+                    actionFinished(false);
+                    return;
+                }
+                
+                //if object is in the scene and visible, assign it to 'target'
+                foreach (SimObjPhysics sop in VisibleSimObjs(action)) 
+                {
+                    target = sop;
+                }
             }
 
             if(target)

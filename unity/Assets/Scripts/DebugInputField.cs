@@ -600,13 +600,14 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         }
 
                         else
-                            action.receptacleObjectId = PhysicsController.ObjectIdOfClosestReceptacleObject();
+                            //action.receptacleObjectId = PhysicsController.ObjectIdOfClosestReceptacleObject();
                             
                         //set this to false if we want to place it and let physics resolve by having it fall a short distance into position
 
                         //set true to place with kinematic = true so that it doesn't fall or roll in place - making placement more consistant and not physics engine reliant - this more closely mimics legacy pivot placement behavior
                         action.placeStationary = true; 
-
+                        action.x = 0.5f;
+                        action.y = 0.5f;
                         //set this true to ignore Placement Restrictions
                         action.forceAction = true;
 
@@ -1377,11 +1378,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 						else
 						{
-							action.objectId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().ObjectIdOfClosestVisibleObject();
+							//action.objectId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().ObjectIdOfClosestVisibleObject();
 						}
 
-                        //action.x = 0.5f; 
-                        //action.y = 0.3f;
+                        action.forceAction = true;
+                        action.x = 0.5f; 
+                        action.y = 0.5f;
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }
@@ -1417,9 +1419,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
                         else
                         {
-                            action.objectId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().ObjectIdOfClosestVisibleObject();
+                            //action.objectId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().ObjectIdOfClosestVisibleObject();
                         }
-
+                        action.x = 0.5f;
+                        action.y = 0.5f;
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }
@@ -1433,10 +1436,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
 							action.objectId = splitcommand[1];
 						}
 
-                        else
+                       else
                         {
-                            action.objectId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().ObjectIdOfClosestVisibleObject();
+                            //action.objectId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().ObjectIdOfClosestVisibleObject();
                         }
+                        action.x = 0.5f;
+                        action.y = 0.5f;
 
                         PhysicsController.ProcessControlCommand(action);
                         break;
@@ -1453,9 +1458,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
                         else
                         {
-                            action.objectId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().ObjectIdOfClosestVisibleObject();
+                            //action.objectId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().ObjectIdOfClosestVisibleObject();
                         }
-
+                        action.x = 0.5f;
+                        action.y = 0.5f;
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }
@@ -1563,9 +1569,11 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
                         else
                         {
-                            action.objectId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().ObjectIdOfClosestVisibleObject();
+                            //action.objectId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().ObjectIdOfClosestVisibleObject();
                         }
 
+                        action.x =0.5f;
+                        action.y = 0.5f;
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }
@@ -1619,7 +1627,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         ServerAction action = new ServerAction();
                         action.action = "TouchThenApplyForce";
                         action.x = 0.5f;
-                        action.y = 0.8f;
+                        action.y = 0.5f;
                         action.handDistance = 2.0f;
                         action.direction = new Vector3(0, 0, 1);
                         action.moveMagnitude = 800f;
@@ -1841,10 +1849,13 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
                         else
                         {
-                            action.objectId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().ObjectIdOfClosestPickupableOrMoveableObject();
+                            //action.objectId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().ObjectIdOfClosestPickupableOrMoveableObject();
                             //action.moveMagnitude = 200f;//4000f;
                         }
-							
+						
+                        action.x = 0.5f;
+                        action.y = 0.5f;
+
                         action.z = 1;
 						PhysicsController.ProcessControlCommand(action);                  
 						break;
@@ -1877,6 +1888,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
 							
                         //action.moveMagnitude = 200f;//4000f;
                         action.z = -1;
+                        action.x = 0.5f;
+                        action.y = 0.5f;
 						PhysicsController.ProcessControlCommand(action);                  
 						break;
 					}
@@ -1899,7 +1912,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         }
 
                         action.pushAngle = 279f;
-
+                        action.moveMagnitude = 159f;
+                        action.x = 0.5f;
+                        action.y = 0.5f;
 						PhysicsController.ProcessControlCommand(action);                  
 						break;
 					}
@@ -1915,9 +1930,11 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
                         else
                         {
-                            action.objectId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().ObjectIdOfClosestToggleObject();
+                            //action.objectId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().ObjectIdOfClosestToggleObject();
                         }
 
+                        action.x = 0.5f;
+                        action.y = 0.5f;
                         PhysicsController.ProcessControlCommand(action);
 
                         break;
@@ -1933,10 +1950,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         }
                         else
                         {
-                            action.objectId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().ObjectIdOfClosestToggleObject();
+                            //action.objectId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().ObjectIdOfClosestToggleObject();
                         }
 
-                        action.objectId = "DeskLamp|-01.32|+01.24|-00.99";
+                        action.x = 0.5f;
+                        action.y = 0.5f;
+                        //action.objectId = "DeskLamp|-01.32|+01.24|-00.99";
                         action.forceVisible = true;
                         action.forceAction = true;
                         PhysicsController.ProcessControlCommand(action);
@@ -1953,6 +1972,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
                             action.objectId = splitcommand[1];
                         }
 
+                        action.x = 0.5f;
+                        action.y = 0.5f;
                         PhysicsController.ProcessControlCommand(action);
 
                         break;
@@ -2014,9 +2035,11 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 						else
 						{
-                           action.objectId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().ObjectIdOfClosestVisibleOpenableObject();
+                           //action.objectId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().ObjectIdOfClosestVisibleOpenableObject();
 						}
 
+                        action.x = 0.5f;
+                        action.y = 0.5f;
 						PhysicsController.ProcessControlCommand(action);                  
 
 						break;
@@ -2032,11 +2055,13 @@ namespace UnityStandardAssets.Characters.FirstPerson
                             action.objectId = splitcommand[1];
                         }
                   
-                        else
-                        {
-                            action.objectId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().ObjectIdOfClosestVisibleOpenableObject();
-                        }
+						else
+						{
+                           //action.objectId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().ObjectIdOfClosestVisibleOpenableObject();
+						}
 
+                        action.x = 0.5f;
+                        action.y = 0.5f;
                         PhysicsController.ProcessControlCommand(action);
 
                         break;

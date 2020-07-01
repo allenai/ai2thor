@@ -437,14 +437,14 @@ public class AgentManager : MonoBehaviour
 
         //ok now if the scene is at rest, turn back on physics autosimulation automatically
         //note: you can do this earlier by manually using the UnpausePhysicsAutoSim() action found in PhysicsRemoteFPSAgentController
-        if(physicsSceneManager.isSceneAtRest && !droneMode &&
-        physicsSceneManager.physicsSimulationPaused && AdvancePhysicsStepCount > 0)
-        {
-            //print("soshite toki wa ugoki desu");
-            Physics.autoSimulation = true;
-            physicsSceneManager.physicsSimulationPaused = false;
-            AdvancePhysicsStepCount = 0;
-        }
+        // if(physicsSceneManager.isSceneAtRest && !droneMode &&
+        // physicsSceneManager.physicsSimulationPaused && AdvancePhysicsStepCount > 0)
+        // {
+        //     //print("soshite toki wa ugoki desu");
+        //     Physics.autoSimulation = true;
+        //     physicsSceneManager.physicsSimulationPaused = false;
+        //     AdvancePhysicsStepCount = 0;
+        // }
 
 	}
 
