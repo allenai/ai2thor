@@ -1243,6 +1243,9 @@ public class ServerAction
 
     public Gradient pathGradient;
 
+	//should actions like pickup and moveHand have more manual, less abstracted behavior?
+	public bool manualInteract = false;
+
     public SimObjType ReceptableSimObjType()
 	{
 		if (string.IsNullOrEmpty(receptacleObjectType))

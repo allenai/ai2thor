@@ -122,7 +122,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
         public override void Rotate(ServerAction action)
         {
+            //only default hand if not manually Interacting with things
+            if(!action.manualInteract)
             DefaultAgentHand(action);
+
             var rotateAmountDegrees = GetRotateMagnitudeWithNoise(action);
 
             //multiply quaternions to apply rotation based on rotateAmountDegrees

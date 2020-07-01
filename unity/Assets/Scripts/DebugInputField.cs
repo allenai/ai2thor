@@ -1040,8 +1040,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
 						else
                         action.moveMagnitude = 0.25f;
 						
-                        PhysicsController.ProcessControlCommand(action);
+                        //action.manualInteract = true;
 
+                        PhysicsController.ProcessControlCommand(action);
                         //PhysicsController.CheckIfAgentCanMove(5.0f, 0);
                         break;
                     }
@@ -1251,6 +1252,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 							action.degrees = float.Parse(splitcommand[1]);
 						}
 
+                        //action.manualInteract = true;
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }
@@ -1281,6 +1283,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 							action.degrees = float.Parse(splitcommand[1]);
 						}
 
+                        //action.manualInteract = true;
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }
@@ -1311,6 +1314,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 							action.degrees = float.Parse(splitcommand[1]);
 						}
 
+                        //action.manualInteract = true;
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }
@@ -1341,6 +1345,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 							action.degrees = float.Parse(splitcommand[1]);
 						}
                         
+                        //action.manualInteract = true;
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }   
@@ -1375,10 +1380,32 @@ namespace UnityStandardAssets.Characters.FirstPerson
 							action.objectId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().ObjectIdOfClosestVisibleObject();
 						}
 
+                        //action.x = 0.5f; 
+                        //action.y = 0.3f;
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }
-                
+
+                //manual pickup object- test hand                
+				case "pum":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "PickupObject";
+						if(splitcommand.Length > 1)
+						{
+							action.objectId = splitcommand[1];
+						}
+
+						else
+						{
+							action.objectId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().ObjectIdOfClosestVisibleObject();
+						}
+
+                        action.manualInteract = true;
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
                 case "slice":
                     {
                         ServerAction action = new ServerAction();
