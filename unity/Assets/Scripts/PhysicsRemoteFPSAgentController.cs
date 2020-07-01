@@ -750,7 +750,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     if (sop != null && !testedSops.Contains(sop)) {
                         testedSops.Add(sop);
                         //check against all visibility points, accumulate count. If at least one point is visible, set object to visible
-                        if (sop.VisibilityPoints == null || sop.VisibilityPoints.Length > 0) {
+                        if (sop.VisibilityPoints != null && sop.VisibilityPoints.Length > 0) {
                             Transform[] visPoints = sop.VisibilityPoints;
                             int visPointCount = 0;
 
