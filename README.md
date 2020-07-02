@@ -150,6 +150,7 @@ Take a GameObject (we'll call it the "Target" object) containing a MeshFilter, M
   - Added `lastActionStatus` to `Initialize` to help indicate success or failure
 - `Scripts/CanOpen_Object`:
   - Rewrote part of the `Interact` function so it doesn't use iTween if `animationTime` is `0`.  Also the `Interact` function now uses the `openPercentage` on both "open" and "close".
+  - Added `IsMovementTypeSlide` function
 - `Scripts/Contains`:
   - Added function `RemoveFromCurrentlyContains` to temporarily get around ReceptacleObjects not updating when an object is picked up (and deactivated).
   - In `GetValidSpawnPoints`, rewrote the method so that it generates the spawn points based on the global UP (which may actually be down, left, right, forward, or back) rather than the receptacle object's local UP, so the grid may be X/Y, X/Z, or Y/Z.
@@ -182,6 +183,7 @@ Take a GameObject (we'll call it the "Target" object) containing a MeshFilter, M
   - Added logic to `InteractAndWait` to reset an object to its prior position if open/close action fails, and to increase the radius used to check if an agent is in the way of the object to be opened/closed.
   - For `OpenObject` and `CloseObject`, only use coroutine if physics are enabled.
   - In `isAgentCapsuleCollidingWith`, added expandBy parameter.
+  - Added `isAgentOnTopOfObject` function to check for obstructions when opening objects that slide out (like drawers).
   - Change the layer of the `ItemInHand` to `SimObjInvisible` when picked up and to `SimObjVisible` when put/dropped/thrown.
 - `Scripts/PhysicsSceneManager`:
   - Added `virtual` to functions: `Generate_UniqueID`
