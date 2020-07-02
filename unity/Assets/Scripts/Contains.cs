@@ -230,7 +230,7 @@ public class Contains : MonoBehaviour
         Vector3 objectSideBack = center - (new Vector3(0, 0, size.z) * 0.5f);
 
 		Quaternion parentRotation = Quaternion.Euler(myParent.transform.eulerAngles);
-		physScene = GameObject.Find("PhysicsSceneManager").GetComponent<MCSSceneManager>();
+		physScene = GameObject.Find("PhysicsSceneManager").GetComponent<PhysicsSceneManager>();
 		//This is for setting the object being placed box collider checks to be the rotation of this receptacle
 		iPrefabTest = physScene.GetComponent<InstantiatePrefabTest>();
 		iPrefabTest.receptacleRotation = parentRotation;
