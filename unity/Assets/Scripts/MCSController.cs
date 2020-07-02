@@ -9,7 +9,7 @@ public class MCSController : PhysicsRemoteFPSAgentController {
     public static float POSITION_Y = 0.4625f;
 
     public static float DISTANCE_HELD_OBJECT_Y = 0.15f;
-    public static float DISTANCE_HELD_OBJECT_Z = 0.15f;
+    public static float DISTANCE_HELD_OBJECT_Z = 0.20f;
 
     // TODO MCS-95 Make the room size configurable in the scene configuration file.
     // The room dimensions are always 10x10 so the distance from corner to corner is around 14.15
@@ -466,13 +466,14 @@ public class MCSController : PhysicsRemoteFPSAgentController {
     }
 
     private IEnumerator SimulatePhysicsSaveImagesIncreaseStep(int thisLoop) {
-        yield return new WaitForEndOfFrame(); // Required for coroutine functions
-
         // Run the physics simulation for a little bit, then pause and save the images for the current scene.
         this.SimulatePhysicsOnce();
 
         GameObject.Find("MCS").GetComponent<MCSMain>().UpdateOnPhysicsSubstep(
             MCSController.PHYSICS_SIMULATION_LOOPS);
+
+        // Wait for the end of frame after we run the physics simulation but before we save the images.
+        yield return new WaitForEndOfFrame(); // Required for coroutine functions
 
         ((MCSPerformerManager)this.agentManager).SaveImages(this.imageSynthesis);
 
@@ -596,8 +597,8 @@ public class MCSController : PhysicsRemoteFPSAgentController {
             // once held, never collides with the player's body.
             float handZ = (meshFilter.mesh.bounds.size.z / 2.0f * meshFilter.transform.localScale.z);
             if (!GameObject.ReferenceEquals(meshFilter.gameObject, target.gameObject)) {
-                handY = (handY + (meshFilter.transform.localPosition.y * meshFilter.transform.localScale.y));
-                handZ = ((handZ - meshFilter.transform.localPosition.z) * target.gameObject.transform.localScale.z);
+                handY = (handY * target.gameObject.transform.localScale.y) + (meshFilter.transform.localPosition.y * meshFilter.transform.localScale.y);
+                handZ = (handZ * target.gameObject.transform.localScale.z) - (meshFilter.transform.localPosition.z * meshFilter.transform.localScale.z);
             }
             this.AgentHand.transform.localPosition = new Vector3(this.AgentHand.transform.localPosition.x,
                 (handY + MCSController.DISTANCE_HELD_OBJECT_Y) * -1,

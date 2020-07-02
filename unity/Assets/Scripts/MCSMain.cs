@@ -220,28 +220,41 @@ public class MCSMain : MonoBehaviour {
 
         else {
             if (!this.currentScene.observation) {
-                ceilingSimObjPhysics.VisibilityPoints = AssignVisibilityPoints(this.ceiling,
-                    this.GenerateCubeInternalVisibilityPoints(this.ceiling, null), false);
+                if (ceilingSimObjPhysics.VisibilityPoints.Length == 0) {
+                    ceilingSimObjPhysics.VisibilityPoints = AssignVisibilityPoints(this.ceiling,
+                        this.GenerateCubeInternalVisibilityPoints(this.ceiling, null), null);
+                }
                 AssignMaterial(this.ceiling, ceilingMaterial);
             }
-            floorSimObjPhysics.VisibilityPoints = AssignVisibilityPoints(this.floor,
-                this.GenerateCubeInternalVisibilityPoints(this.floor, null), false);
+
+            if (floorSimObjPhysics.VisibilityPoints.Length == 0) {
+                floorSimObjPhysics.VisibilityPoints = AssignVisibilityPoints(this.floor,
+                    this.GenerateCubeInternalVisibilityPoints(this.floor, null), null);
+            }
             AssignMaterial(this.floor, floorMaterial);
 
-            wallLeftSimObjPhysics.VisibilityPoints = AssignVisibilityPoints(this.wallLeft,
-                this.GenerateCubeInternalVisibilityPoints(this.wallLeft, null), false);
+            if (wallLeftSimObjPhysics.VisibilityPoints.Length == 0) {
+                wallLeftSimObjPhysics.VisibilityPoints = AssignVisibilityPoints(this.wallLeft,
+                    this.GenerateCubeInternalVisibilityPoints(this.wallLeft, null), null);
+            }
             AssignMaterial(this.wallLeft, wallsMaterial);
 
-            wallRightSimObjPhysics.VisibilityPoints = AssignVisibilityPoints(this.wallRight,
-                this.GenerateCubeInternalVisibilityPoints(this.wallRight, null), false);
+            if (wallRightSimObjPhysics.VisibilityPoints.Length == 0) {
+                wallRightSimObjPhysics.VisibilityPoints = AssignVisibilityPoints(this.wallRight,
+                    this.GenerateCubeInternalVisibilityPoints(this.wallRight, null), null);
+            }
             AssignMaterial(this.wallRight, wallsMaterial);
 
-            wallFrontSimObjPhysics.VisibilityPoints = AssignVisibilityPoints(this.wallFront,
-                this.GenerateCubeInternalVisibilityPoints(this.wallFront, null), false);
+            if (wallFrontSimObjPhysics.VisibilityPoints.Length == 0) {
+                wallFrontSimObjPhysics.VisibilityPoints = AssignVisibilityPoints(this.wallFront,
+                    this.GenerateCubeInternalVisibilityPoints(this.wallFront, null), null);
+            }
             AssignMaterial(this.wallFront, wallsMaterial);
 
-            wallBackSimObjPhysics.VisibilityPoints = AssignVisibilityPoints(this.wallBack,
-                this.GenerateCubeInternalVisibilityPoints(this.wallBack, null), false);
+            if (wallBackSimObjPhysics.VisibilityPoints.Length == 0) {
+                wallBackSimObjPhysics.VisibilityPoints = AssignVisibilityPoints(this.wallBack,
+                    this.GenerateCubeInternalVisibilityPoints(this.wallBack, null), null);
+            }
             AssignMaterial(this.wallBack, wallsMaterial);
 
             this.light.GetComponent<Light>().range = MCSMain.LIGHT_RANGE;
@@ -533,14 +546,19 @@ public class MCSMain : MonoBehaviour {
 
         // The object's visibility points define a subset of points along the outside of the object for AI2-THOR.
         if (objectDefinition.visibilityPoints.Count > 0) {
+            bool isCube = objectDefinition.id.Equals("cube");
             // Use the List constructor to copy the visibility points list from the object definition.
-            List<MCSConfigVector> points = new List<MCSConfigVector>(
-                objectDefinition.visibilityPoints);
-            if (objectDefinition.id.Equals("cube")) {
-                points.AddRange(this.GenerateCubeInternalVisibilityPoints(gameObject, objectConfig));
-            }
-            visibilityPoints = this.AssignVisibilityPoints(gameObject, points,
-                objectDefinition.visibilityPointsScaleOne);
+            List<MCSConfigVector> points = new List<MCSConfigVector>(!isCube ? objectDefinition.visibilityPoints :
+                this.GenerateCubeInternalVisibilityPoints(gameObject, objectConfig));
+            // For dynamically generated visibility points, set the scale of the visibility point parent component
+            // to be the inverse of the object's scale when the object is first shown.
+            MCSConfigShow showConfig = (objectConfig != null && objectConfig.shows.Count > 0) ?
+                objectConfig.shows[0] : null;
+            Vector3? scaleNull = null;
+            Vector3? scaleOverride = (isCube && showConfig != null) ? new Vector3(1f / showConfig.scale.GetX(),
+                1f / showConfig.scale.GetY(), 1f / showConfig.scale.GetZ()) : scaleNull;
+            visibilityPoints = this.AssignVisibilityPoints(gameObject, points, (scaleOverride.HasValue ?
+                scaleOverride : (objectDefinition.visibilityPointsScaleOne ? Vector3.one : scaleNull)));
         }
 
         if (shouldAddSimObjPhysicsScript) {
@@ -834,7 +852,7 @@ public class MCSMain : MonoBehaviour {
     private Transform[] AssignVisibilityPoints(
         GameObject gameObject,
         List<MCSConfigVector> points,
-        bool scaleOne
+        Vector3? scaleOverride
     ) {
         // The AI2-THOR scripts assume the visibility points have a parent object with the name VisibilityPoints.
         GameObject visibilityPointsParentObject = new GameObject {
@@ -844,8 +862,8 @@ public class MCSMain : MonoBehaviour {
         visibilityPointsParentObject.transform.parent = gameObject.transform;
         visibilityPointsParentObject.transform.localPosition = Vector3.zero;
         visibilityPointsParentObject.transform.localRotation = Quaternion.identity;
-        if (scaleOne) {
-            visibilityPointsParentObject.transform.localScale = Vector3.one;
+        if (scaleOverride.HasValue) {
+            visibilityPointsParentObject.transform.localScale = scaleOverride.Value;
         }
         int index = 0;
         return points.Select((point) => {
@@ -982,6 +1000,14 @@ public class MCSMain : MonoBehaviour {
         return point;
     }
 
+    private float calculateCubeGridValue(float size) {
+        float minGridValue = 2f;
+        float calculatedGrid = Mathf.Floor(size / MCSMain.CUBE_INTERNAL_GRID);
+
+        // Ensure visibility points still set for very small cubes
+        return Mathf.Max(calculatedGrid, minGridValue);
+    }
+
     private List<MCSConfigVector> GenerateCubeInternalVisibilityPoints(
         GameObject gameObject,
         MCSConfigGameObject objectConfig
@@ -993,9 +1019,13 @@ public class MCSMain : MonoBehaviour {
         float ySize = showConfig != null ? showConfig.scale.GetY() : gameObject.transform.localScale.y;
         float zSize = showConfig != null ? showConfig.scale.GetZ() : gameObject.transform.localScale.z;
 
-        float xGrid = Mathf.Floor(xSize / MCSMain.CUBE_INTERNAL_GRID);
-        float yGrid = Mathf.Floor(ySize / MCSMain.CUBE_INTERNAL_GRID);
-        float zGrid = Mathf.Floor(zSize / MCSMain.CUBE_INTERNAL_GRID);
+        float xHalf = xSize / 2f;
+        float yHalf = ySize / 2f;
+        float zHalf = zSize / 2f;
+
+        float xGrid = calculateCubeGridValue(xSize);
+        float yGrid = calculateCubeGridValue(ySize);
+        float zGrid = calculateCubeGridValue(zSize);
 
         float xSpan = xSize / xGrid;
         float ySpan = ySize / yGrid;
@@ -1005,28 +1035,28 @@ public class MCSMain : MonoBehaviour {
 
         for (float x = 1; x < xGrid; ++x) {
             for (float y = 1; y < yGrid; ++y) {
-                float xPosition = (x * xSpan) - (xSize / 2f);
-                float yPosition = (y * ySpan) - (ySize / 2f);
-                points.Add(this.GenerateCubeInternalVisibilityPoint(xPosition, yPosition, 0.5f));
-                points.Add(this.GenerateCubeInternalVisibilityPoint(xPosition, yPosition, -0.5f));
+                float xPosition = (x * xSpan) - xHalf;
+                float yPosition = (y * ySpan) - yHalf;
+                points.Add(this.GenerateCubeInternalVisibilityPoint(xPosition, yPosition, zHalf));
+                points.Add(this.GenerateCubeInternalVisibilityPoint(xPosition, yPosition, -zHalf));
             }
         }
 
         for (float y = 1; y < yGrid; ++y) {
             for (float z = 1; z < zGrid; ++z) {
-                float yPosition = (y * ySpan) - (ySize / 2f);
-                float zPosition = (z * zSpan) - (zSize / 2f);
-                points.Add(this.GenerateCubeInternalVisibilityPoint(0.5f, yPosition, zPosition));
-                points.Add(this.GenerateCubeInternalVisibilityPoint(-0.5f, yPosition, zPosition));
+                float yPosition = (y * ySpan) - yHalf;
+                float zPosition = (z * zSpan) - zHalf;
+                points.Add(this.GenerateCubeInternalVisibilityPoint(xHalf, yPosition, zPosition));
+                points.Add(this.GenerateCubeInternalVisibilityPoint(-xHalf, yPosition, zPosition));
             }
         }
 
         for (float x = 1; x < xGrid; ++x) {
             for (float z = 1; z < zGrid; ++z) {
-                float xPosition = (x * xSpan) - (xSize / 2f);
-                float zPosition = (z * zSpan) - (zSize / 2f);
-                points.Add(this.GenerateCubeInternalVisibilityPoint(xPosition, 0.5f, zPosition));
-                points.Add(this.GenerateCubeInternalVisibilityPoint(xPosition, -0.5f, zPosition));
+                float xPosition = (x * xSpan) - xHalf;
+                float zPosition = (z * zSpan) - zHalf;
+                points.Add(this.GenerateCubeInternalVisibilityPoint(xPosition, yHalf, zPosition));
+                points.Add(this.GenerateCubeInternalVisibilityPoint(xPosition, -yHalf, zPosition));
             }
         }
 

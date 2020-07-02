@@ -42,6 +42,10 @@ public class Contains : MonoBehaviour
 
     private bool expanded = false;
 
+	private PhysicsSceneManager physScene;
+
+	private InstantiatePrefabTest iPrefabTest;
+
 	//world coordinates of the Corners of this object's receptacles in case we need it for something
 	//public List<Vector3> Corners = new List<Vector3>();
 
@@ -225,6 +229,12 @@ public class Contains : MonoBehaviour
         Vector3 objectSideForward = center + (new Vector3(0, 0, size.z) * 0.5f);
         Vector3 objectSideBack = center - (new Vector3(0, 0, size.z) * 0.5f);
 
+		Quaternion parentRotation = Quaternion.Euler(myParent.transform.eulerAngles);
+		physScene = GameObject.Find("PhysicsSceneManager").GetComponent<PhysicsSceneManager>();
+		//This is for setting the object being placed box collider checks to be the rotation of this receptacle
+		iPrefabTest = physScene.GetComponent<InstantiatePrefabTest>();
+		iPrefabTest.receptacleRotation = parentRotation;
+
         // Identify the direction corresponding to the global UP based on this receptacle object's current local rotation.
         // Since gravity is always global DOWN, we want this receptacle object between the spawn object and the ground.
         Vector3 objectUpVector = objectSideTop.y > objectSideBottom.y ? Vector3.up : Vector3.down;
@@ -246,47 +256,76 @@ public class Contains : MonoBehaviour
         // collisions (we assume that the spawned object will fall gently toward the ground).
         verticalDistance -= 0.05f;
 
-        // TODO MCS-226 Adjust number of spawn points by receptacle trigger box size
 		//so lets make a grid, we can parametize the gridsize value later, for now we'll adjust it here
 		int gridsize = 4; //number of grid boxes we want, reduce this to SPEED THINGS UP but also GET WAY MORE INACCURATE
+		float xBoundsMin = triggerBoxCollider.bounds.min.x;
+		float xBoundsMax = triggerBoxCollider.bounds.max.x;
+		float zBoundsMin = triggerBoxCollider.bounds.min.z;
+		float zBoundsMax = triggerBoxCollider.bounds.max.z;
+
+		float xBoundsRange = Mathf.Abs(xBoundsMax - xBoundsMin);
+		float zBoundsRange = Mathf.Abs(zBoundsMax - zBoundsMin);
+		float counterForGridSize = 0.1f;
+
+		//this counteForGridSize amount can be changed but seems to be an apropriate size for increasing the number of points
+		//on a varitey of receptacle sizes. Affects both x and z axis of the receptacle
+		gridsize += (int) (Mathf.Ceil(((Mathf.Max(xBoundsRange,zBoundsRange) / counterForGridSize))));
+
 		int linepoints = gridsize + 1; //number of points on the line we need to make the number of grid boxes
 		float lineincrement =  1.0f / gridsize; //increment on the line to distribute the gridpoints
 
 		//these are all the points on the grid on the top of the receptacle box in local space
 		List<Vector3> gridpoints = new List<Vector3>();
 
-        if (objectUpVector.Equals(Vector3.up) || objectUpVector.Equals(Vector3.down)) {
-            for(int i = 0; i < linepoints; i++) {
-                float x = objectSideLeft.x + ((objectSideRight.x - objectSideLeft.x) * (lineincrement * i));
-                float y = objectUpVector.Equals(Vector3.up) ? objectSideTop.y : objectSideBottom.y;
-                for(int j = 0; j < linepoints; j++) {
-                    float z = objectSideBack.z + ((objectSideForward.z - objectSideBack.z) * (lineincrement * j));
-                    gridpoints.Add(new Vector3(x, y, z));
-                }
-            }
-        }
+        //The first if creates only one spawn point directly in the center of a receptacle 
+		//if the receptacle is smaller than the bounds below (for very small objects)
+		float smallObjectBounds = 0.125f; //need this variable or else stacking will not work properly
+		float raisedCenterForSingleSpawnPoint = 0.075f;
+		if (xBoundsRange < smallObjectBounds & zBoundsRange < smallObjectBounds) {
+			Vector3 centerOfReceptacleForSmallObjects = new Vector3(center.x, center.y + raisedCenterForSingleSpawnPoint, center.z);
+			gridpoints.Add(centerOfReceptacleForSmallObjects);
+		
+		} else {
+			if (objectUpVector.Equals(Vector3.up) || objectUpVector.Equals(Vector3.down)) {
+				for(int i = 0; i < linepoints; i++) {
+					float x = objectSideLeft.x + ((objectSideRight.x - objectSideLeft.x) * (lineincrement * i));
+					float y = objectUpVector.Equals(Vector3.up) ? objectSideTop.y : objectSideBottom.y;
+					for(int j = 0; j < linepoints; j++) {
+						float z = objectSideBack.z + ((objectSideForward.z - objectSideBack.z) * (lineincrement * j));
+						//Rotate the point around the y-axis of the parent GameObject
+						Vector3 returnVector = new Vector3(x,y,z);
+						returnVector = RotateAroundPivot(returnVector, center, parentRotation);
+						gridpoints.Add(returnVector);
+					}
+				}
+			}
 
-        else if (objectUpVector.Equals(Vector3.left) || objectUpVector.Equals(Vector3.right)) {
-            for(int i = 0; i < linepoints; i++) {
-                float x = objectUpVector.Equals(Vector3.left) ? objectSideLeft.x : objectSideRight.x;
-                float y = objectSideBottom.y + ((objectSideTop.y - objectSideBottom.y) * (lineincrement * i));
-                for(int j = 0; j < linepoints; j++) {
-                    float z = objectSideBack.z + ((objectSideForward.z - objectSideBack.z) * (lineincrement * j));
-                    gridpoints.Add(new Vector3(x, y, z));
-                }
-            }
-        }
+			else if (objectUpVector.Equals(Vector3.left) || objectUpVector.Equals(Vector3.right)) {
+				for(int i = 0; i < linepoints; i++) {
+					float x = objectUpVector.Equals(Vector3.left) ? objectSideLeft.x : objectSideRight.x;
+					float y = objectSideBottom.y + ((objectSideTop.y - objectSideBottom.y) * (lineincrement * i));
+					for(int j = 0; j < linepoints; j++) {
+						float z = objectSideBack.z + ((objectSideForward.z - objectSideBack.z) * (lineincrement * j));
+						Vector3 returnVector = new Vector3(x,y,z);
+						returnVector = RotateAroundPivot(returnVector, center, parentRotation);
+						gridpoints.Add(returnVector);
+					}
+				}
+			}
 
-        else if (objectUpVector.Equals(Vector3.forward) || objectUpVector.Equals(Vector3.back)) {
-            for(int i = 0; i < linepoints; i++) {
-                float x = objectSideLeft.x + ((objectSideRight.x - objectSideLeft.x) * (lineincrement * i));
-                float z = objectUpVector.Equals(Vector3.forward) ? objectSideForward.z : objectSideBack.z;
-                for(int j = 0; j < linepoints; j++) {
-                    float y = objectSideBottom.y + ((objectSideTop.y - objectSideBottom.y) * (lineincrement * j));
-                    gridpoints.Add(new Vector3(x, y, z));
-                }
-            }
-        }
+			else if (objectUpVector.Equals(Vector3.forward) || objectUpVector.Equals(Vector3.back)) {
+				for(int i = 0; i < linepoints; i++) {
+					float x = objectSideLeft.x + ((objectSideRight.x - objectSideLeft.x) * (lineincrement * i));
+					float z = objectUpVector.Equals(Vector3.forward) ? objectSideForward.z : objectSideBack.z;
+					for(int j = 0; j < linepoints; j++) {
+						float y = objectSideBottom.y + ((objectSideTop.y - objectSideBottom.y) * (lineincrement * j));
+						Vector3 returnVector = new Vector3(x,y,z);
+						returnVector = RotateAroundPivot(returnVector, center, parentRotation);
+						gridpoints.Add(returnVector);
+					}
+				}
+			}
+		}
 
 		//****** */debug draw the grid points as gizmos
 		// #if UNITY_EDITOR
@@ -477,4 +516,8 @@ public class Contains : MonoBehaviour
 
 	}
     #endif
+
+	public Vector3 RotateAroundPivot(Vector3 point, Vector3 pivot, Quaternion rotation) {
+    	return rotation * (point - pivot) + pivot;
+    }
 }

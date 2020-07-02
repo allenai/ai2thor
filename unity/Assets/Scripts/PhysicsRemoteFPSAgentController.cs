@@ -750,7 +750,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     if (sop != null && !testedSops.Contains(sop)) {
                         testedSops.Add(sop);
                         //check against all visibility points, accumulate count. If at least one point is visible, set object to visible
-                        if (sop.VisibilityPoints == null || sop.VisibilityPoints.Length > 0) {
+                        if (sop.VisibilityPoints != null && sop.VisibilityPoints.Length > 0) {
                             Transform[] visPoints = sop.VisibilityPoints;
                             int visPointCount = 0;
 
@@ -843,8 +843,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public bool CheckIfPointIsInViewport(Vector3 point) {
             Vector3 viewPoint = m_Camera.WorldToViewportPoint(point);
 
+            //increasing these grants a very slight flexibiltiy in object placement if the agent is below or above a receptacle
             float ViewPointRangeHigh = 1.0f;
-            float ViewPointRangeLow = 0.0f;
+            float ViewPointRangeLow = -1.0f;
 
             if (viewPoint.z > 0 //&& viewPoint.z < maxDistance * DownwardViewDistance //is in front of camera and within range of visibility sphere
                 &&
@@ -860,13 +861,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         Vector3.Distance(m_Camera.transform.position, point) - 0.01f, (1 << 8) | (1 << 10))) //reduce distance by slight offset
                 {
                     updateAllAgentCollidersForVisibilityCheck(true);
-                    return false;
-                } else {
-                    updateAllAgentCollidersForVisibilityCheck(true);
+                    //this should be set to true for object placement flexibility
                     return true;
                 }
             }
-
+            updateAllAgentCollidersForVisibilityCheck(true);
             return false;
         }
 
@@ -3946,7 +3945,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             //get the target receptacle based on the action receptacle object ID
             SimObjPhysics targetReceptacle = null;
 
-            foreach (SimObjPhysics sop in VisibleSimObjs(action.forceVisible)) {
+            //this needs to be true to account for objects scaled larger
+            //setting this to be true at all times seems to affect only the flexibility of object placement 
+            foreach (SimObjPhysics sop in VisibleSimObjs(true)) {
                 if ((!string.IsNullOrEmpty(action.receptacleObjectId)) && action.receptacleObjectId == sop.UniqueID) {
                     targetReceptacle = sop;
                     break;
@@ -4005,6 +4006,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     ItemInHand.transform.localRotation = Quaternion.identity;
                     ItemInHand.GetComponent<Rigidbody>().isKinematic = true;
                     ItemInHand.GetComponent<SimObjPhysics>().isInAgentHand = false;//remove in agent hand flag
+                    ItemInHand.layer = 8; // SimObjVisible
                     ItemInHand = null;
                     DefaultAgentHand();
                     actionFinished(true);
@@ -4093,6 +4095,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // MCS CHANGE END
 
             if (script.PlaceObjectReceptacle(spawnPoints, ItemInHand.GetComponent<SimObjPhysics>(), action.placeStationary, -1, 90, placeUpright, null)) {
+                ItemInHand.layer = 8; // SimObjVisible
                 ItemInHand = null;
                 DefaultAgentHand();
 
@@ -4203,6 +4206,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             target.transform.rotation = transform.rotation;
             target.transform.SetParent(AgentHand.transform);
             ItemInHand = target.gameObject;
+            ItemInHand.layer = 9; // SimObjInvisible
 
             /* TODO MCS
             if (!action.forceAction && isHandObjectColliding(true)) {
@@ -4447,6 +4451,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     actionFinished(true);
 
                     ItemInHand.GetComponent<SimObjPhysics>().isInAgentHand = false;
+                    ItemInHand.layer = 8; // SimObjVisible
                     ItemInHand = null;
                     this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.SUCCESSFUL);
                     return true;
@@ -8543,6 +8548,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         }
 
                         targetsop.isInAgentHand = false;
+                        ItemInHand.layer = 8; // SimObjVisible
                         ItemInHand = null;
                         DefaultAgentHand();
                         //ok now we are ready to break go go go
