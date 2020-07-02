@@ -1000,6 +1000,14 @@ public class MCSMain : MonoBehaviour {
         return point;
     }
 
+    private float calculateCubeGridValue(float size) {
+        float minGridValue = 2f;
+        float calculatedGrid = Mathf.Floor(size / MCSMain.CUBE_INTERNAL_GRID);
+
+        // Ensure visibility points still set for very small cubes
+        return Mathf.Max(calculatedGrid, minGridValue);
+    }
+
     private List<MCSConfigVector> GenerateCubeInternalVisibilityPoints(
         GameObject gameObject,
         MCSConfigGameObject objectConfig
@@ -1015,9 +1023,9 @@ public class MCSMain : MonoBehaviour {
         float yHalf = ySize / 2f;
         float zHalf = zSize / 2f;
 
-        float xGrid = Mathf.Floor(xSize / MCSMain.CUBE_INTERNAL_GRID);
-        float yGrid = Mathf.Floor(ySize / MCSMain.CUBE_INTERNAL_GRID);
-        float zGrid = Mathf.Floor(zSize / MCSMain.CUBE_INTERNAL_GRID);
+        float xGrid = calculateCubeGridValue(xSize);
+        float yGrid = calculateCubeGridValue(ySize);
+        float zGrid = calculateCubeGridValue(zSize);
 
         float xSpan = xSize / xGrid;
         float ySpan = ySize / yGrid;

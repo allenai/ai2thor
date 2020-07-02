@@ -1027,7 +1027,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 
 		//draw visibility points for editor
 		Gizmos.color = Color.yellow;
-		if (VisibilityPoints.Length > 0)
+		if (VisibilityPoints != null && VisibilityPoints.Length > 0)
 		{
 			foreach (Transform t in VisibilityPoints)
 			{
