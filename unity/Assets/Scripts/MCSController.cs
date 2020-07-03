@@ -24,6 +24,9 @@ public class MCSController : PhysicsRemoteFPSAgentController {
     public static int PHYSICS_SIMULATION_LOOPS = 5;
     public static int PHYSICS_SIMULATION_STEPS = 3;
 
+    //this is not the capsule radius, this is the radius of the x and z bounds of the agent.
+    public static float AGENT_RADIUS = 0.12f;
+
     public int step = 0;
 
     protected int minHorizon = -90;
@@ -666,10 +669,10 @@ public class MCSController : PhysicsRemoteFPSAgentController {
         RaycastHit hit;
         Ray ray = new Ray(origin, direction);
         LayerMask layerMask = ~(1 << 10);
-        float agentRadius = 0.12f;
         
         //if raycast hits an object, the agent does not move on y-axis
-        if (Physics.SphereCast(origin, agentRadius, direction, out hit, endHeight, layerMask) && hit.collider.tag == "SimObjPhysics") {
+        if (Physics.SphereCast(origin, AGENT_RADIUS, direction, out hit, Mathf.Abs(startHeight-endHeight), layerMask) && hit.collider.tag == "SimObjPhysics") 
+        {
             this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.OBSTRUCTED);
             actionFinished(false);
             Debug.Log("Agent is Obstructed");
@@ -683,12 +686,6 @@ public class MCSController : PhysicsRemoteFPSAgentController {
 
             //change collider height so agent can move
             GetComponent<CapsuleCollider>().center = new Vector3(0, colliderY, 0);
-
-            if (pose == PlayerPose.LYING) {
-                //agent looks down at the floor (increasing first parameter increases rotation downwards)
-                Vector3 lookDirection = fpsAgent.transform.rotation.eulerAngles;
-                fpsAgent.transform.rotation = Quaternion.Euler (30, lookDirection.y, lookDirection.z);
-            }
         }
     }
 }
