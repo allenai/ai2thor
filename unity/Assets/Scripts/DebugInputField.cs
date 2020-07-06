@@ -19,11 +19,11 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
         #if UNITY_EDITOR
         private Dictionary<KeyCode, ControlMode> debugKeyToController = new Dictionary<KeyCode, ControlMode>{
-            {KeyCode.Alpha1, ControlMode.DEBUG_TEXT_INPUT},
+            {KeyCode.F1, ControlMode.DEBUG_TEXT_INPUT},
             {KeyCode.BackQuote, ControlMode.FPS},
-            {KeyCode.Alpha2, ControlMode.DISCRETE_POINT_CLICK},
-            {KeyCode.Alpha3, ControlMode.DISCRETE_HIDE_N_SEEK},
-            {KeyCode.Alpha4, ControlMode.MINIMAL_FPS}
+            {KeyCode.F2, ControlMode.DISCRETE_POINT_CLICK},
+            {KeyCode.F3, ControlMode.DISCRETE_HIDE_N_SEEK},
+            {KeyCode.F4, ControlMode.MINIMAL_FPS}
         };
         #endif
 
@@ -211,7 +211,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         // action.renderObjectImage = true;
                         // action.renderFlowImage = true;
 
-                        action.gridSize = 0.01f;
+                        action.gridSize = 0.25f;
                         action.visibilityDistance = 1.0f;
 						PhysicsController.actionComplete = false;
                         action.fieldOfView = 60;
@@ -224,6 +224,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         action.snapToGrid = false;
                         action.action = "Initialize";
                         action.fieldOfView = 90;
+                        action.gridSize = 0.25f;
                         AManager.Initialize(action);
                         break;
                     }
@@ -261,7 +262,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                             action.forceVisible = false;
                             action.numPlacementAttempts = 5;
                         }
-    
+
                         else
                         {
                             action.randomSeed = 0;
@@ -394,6 +395,19 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         if (splitcommand.Length > 1) {
                             action.objectVariation = int.Parse(splitcommand[1]);
                         }
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
+                case "potwhcb":
+                    {
+                        ServerAction action = new ServerAction();
+
+                        action.action = "PointsOverTableWhereHandCanBe";
+                        action.objectId = splitcommand[1];
+                        action.x = float.Parse(splitcommand[2]);
+                        action.z = float.Parse(splitcommand[3]);
+
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }
@@ -531,6 +545,14 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         ServerAction action = new ServerAction();
                         action.action = "DisableAllObjectsOfType";
                         action.objectId = splitcommand[1];
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+                case "ctlq":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "ChangeQuality";
+                        action.quality = "Very Low";
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }
@@ -794,6 +816,17 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         break;
                     }
 
+                case "ruaa":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "RotateUniverseAroundAgent";
+
+                        action.rotation = new Vector3(
+                            0f, float.Parse(splitcommand[1]), 0f
+                        );
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
                 case "thas":
                     {
                         ServerAction action = new ServerAction();
@@ -844,6 +877,14 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }
+                case "grpfo":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "GetReachablePositionsForObject";
+                        action.objectId = splitcommand[1];
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
                 case "rspawnlifted":
                     {
                         ServerAction action = new ServerAction();
@@ -873,6 +914,14 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         
                         action.action = "CreateObjectOnFloor";
                         action.objectVariation = objectVariation;
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+                case "gusfo": {
+                        ServerAction action = new ServerAction();
+                        action.action = "GetUnreachableSilhouetteForObject";
+                        action.objectId = splitcommand[1];
+                        action.z = float.Parse(splitcommand[2]);
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }
@@ -957,6 +1006,14 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     {
                         ServerAction action = new ServerAction();
                         action.action = "ToggleMapView";
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+                case "nopfwoiv":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "NumberOfPositionsObjectsOfTypeAreVisibleFrom";
+                        action.objectType = splitcommand[1];
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }
@@ -1602,6 +1659,21 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     {
                         ServerAction action = new ServerAction();
                         action.action = "RotateHand";
+						if(splitcommand.Length > 1)
+						{
+							action.x = float.Parse(splitcommand[1]);
+                            action.y = float.Parse(splitcommand[2]);
+                            action.z = float.Parse(splitcommand[3]);
+                            PhysicsController.ProcessControlCommand(action);
+						}
+
+                        break;
+                    }
+
+                case "ror":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "RotateHandRelative";
 						if(splitcommand.Length > 1)
 						{
 							action.x = float.Parse(splitcommand[1]);

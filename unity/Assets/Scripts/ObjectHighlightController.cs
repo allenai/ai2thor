@@ -50,7 +50,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         private bool pickupState;
         private bool mouseDownThrow;
         private PhysicsRemoteFPSAgentController PhysicsController;
-        private bool throwEnabled;
+        public bool ThrowEnabled;
 
         //this was assigned but never used so uhhhhhh comment out for now Alvaro heeeelp
         //private float throwSliderValue = 0.0f;
@@ -70,7 +70,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             PhysicsRemoteFPSAgentController physicsController,
             float minHighlightDistance,
             bool highlightEnabled = true,
-            bool throwEnabled = true,
+            bool ThrowEnabled = true,
             float maxThrowForce = 1000.0f,
             float maxChargeThrowSeconds = 1.4f,
             bool highlightWhileHolding = false,
@@ -93,7 +93,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             if (throwForceBar) {
                 ThrowForceBarSlider = throwForceBar.GetComponent<Slider>();
             }
-            this.throwEnabled = throwEnabled;
+            this.ThrowEnabled = ThrowEnabled;
             this.highlightShader = Shader.Find("Custom/TransparentOutline");
         }
         
@@ -212,7 +212,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             #endif
 
             // Sets throw bar value
-            if (throwEnabled && ThrowForceBarSlider != null) {
+            if (ThrowEnabled && ThrowForceBarSlider != null) {
                 if (this.mouseDownThrow)
                 {
                     var diff = Time.time - this.timerAtPress;
@@ -242,7 +242,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         if (this.PhysicsController.actionComplete && (!this.highlightWhileHolding || (highlightedObject != null && this.PhysicsController.WhatAmIHolding() == highlightedObject.gameObject)))
                         {
                             ServerAction action;
-                            if (throwEnabled) {
+                            if (ThrowEnabled) {
                                 action = new ServerAction
                                 {
                                     action = "ThrowObject",

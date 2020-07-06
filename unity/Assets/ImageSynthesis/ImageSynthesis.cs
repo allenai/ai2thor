@@ -293,8 +293,6 @@ public class ImageSynthesis : MonoBehaviour {
 		colorIds = new Dictionary<Color, string> ();
 		var mpb = new MaterialPropertyBlock();
 
-
-
 		foreach (var r in renderers)
 		{
 			// var layer = r.gameObject.layer;
@@ -325,12 +323,10 @@ public class ImageSynthesis : MonoBehaviour {
 			}
 
 
-			Color classColor;
-			Color objColor;
-			classColor = ColorEncoding.EncodeTagAsColor (classTag);
-			objColor = ColorEncoding.EncodeTagAsColor(objTag);
+			Color classColor = ColorEncoding.EncodeTagAsColor (classTag);
+			Color objColor = ColorEncoding.EncodeTagAsColor(objTag);
 
-			capturePasses [0].camera.WorldToScreenPoint (r.bounds.center);
+			capturePasses[0].camera.WorldToScreenPoint (r.bounds.center);
 
 			if (so != null || sop != null) 
 			{

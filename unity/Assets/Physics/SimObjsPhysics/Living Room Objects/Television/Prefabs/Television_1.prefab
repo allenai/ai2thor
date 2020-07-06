@@ -1106,7 +1106,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b439f6e4ef5714ee2a3643acf37b7a9d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  uniqueID: Television|+01.43|+00.39|-01.89
+  objectID: 
   Type: 44
   PrimaryProperty: 2
   SecondaryProperties: 1d0000000b000000
@@ -1150,9 +1150,13 @@ MonoBehaviour:
   HFrbdrag: 0.1
   HFrbangulardrag: 0.15
   salientMaterials: 02000000
+  MySpawnPoints: []
   CurrentTemperature: 0
   HowManySecondsUntilRoomTemp: 10
   inMotion: 0
+  numSimObjHit: 0
+  numFloorHit: 0
+  numStructureHit: 0
   lastVelocity: 0
   ContainedObjectReferences: []
 --- !u!54 &54073293082404800
@@ -2015,11 +2019,6 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 4649092201568748}
     m_Modifications:
-    - target: {fileID: 8396441049647835788, guid: 89a0464aabe374f16bde3f8e779b3830,
-        type: 3}
-      propertyPath: m_Name
-      value: DeferredDecalSpawnPlane
-      objectReference: {fileID: 0}
     - target: {fileID: 8396441049647835780, guid: 89a0464aabe374f16bde3f8e779b3830,
         type: 3}
       propertyPath: m_LocalPosition.x
@@ -2084,6 +2083,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_LocalScale.y
       value: 0.44107035
+      objectReference: {fileID: 0}
+    - target: {fileID: 8396441049647835788, guid: 89a0464aabe374f16bde3f8e779b3830,
+        type: 3}
+      propertyPath: m_Name
+      value: DeferredDecalSpawnPlane
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 89a0464aabe374f16bde3f8e779b3830, type: 3}

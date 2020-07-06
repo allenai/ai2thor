@@ -42,6 +42,23 @@ public class AgentManager : MonoBehaviour
     private bool droneMode = false;
 
 
+	public Bounds sceneBounds = new Bounds(
+		new Vector3(float.PositiveInfinity, float.PositiveInfinity, float.PositiveInfinity),
+		new Vector3(-float.PositiveInfinity, -float.PositiveInfinity, -float.PositiveInfinity)
+	);
+	public Bounds SceneBounds
+    {
+        get {
+			if (sceneBounds.min.x == float.PositiveInfinity) {
+				ResetSceneBounds();
+			}
+			return sceneBounds;
+		}
+        set { 
+			sceneBounds = value; 
+		}
+    }
+
 	void Awake() {
 
         tex = new Texture2D(UnityEngine.Screen.width, UnityEngine.Screen.height, TextureFormat.RGB24, false);
@@ -229,7 +246,58 @@ public class AgentManager : MonoBehaviour
 		}
 		this.agents[0].m_Camera.depth = 9999;
 
+		if (action.startAgentsRotatedBy != 0f) {
+			RotateAgentsByRotatingUniverse(action.startAgentsRotatedBy);
+		} else {
+			ResetSceneBounds();
+		}
+
 		readyToEmit = true;
+	}
+
+	public void ResetSceneBounds() {
+		// Recordining initially disabled renderers and scene bounds 
+		sceneBounds = new Bounds(
+			new Vector3(float.PositiveInfinity, float.PositiveInfinity, float.PositiveInfinity),
+			new Vector3(-float.PositiveInfinity, -float.PositiveInfinity, -float.PositiveInfinity)
+		);
+		foreach (Renderer r in GameObject.FindObjectsOfType<Renderer>()) {
+			if (r.enabled) {
+				sceneBounds.Encapsulate(r.bounds);
+			}
+		}
+	}
+
+	public void RotateAgentsByRotatingUniverse(float rotation) {
+		List<Quaternion> startAgentRots = new List<Quaternion>();
+
+		foreach (BaseFPSAgentController agent in this.agents) {
+			startAgentRots.Add(agent.transform.rotation);
+		}
+
+		GameObject superObject = GameObject.Find("SuperTopLevel");
+		if (superObject == null) {
+			superObject = new GameObject("SuperTopLevel");
+		}
+
+		superObject.transform.position = this.agents[0].transform.position;
+
+		List<GameObject> topLevelObjects = new List<GameObject>();
+		foreach (GameObject go in UnityEngine.SceneManagement.SceneManager.GetActiveScene().GetRootGameObjects()) {
+			topLevelObjects.Add(go);
+			go.transform.SetParent(superObject.transform);
+		}
+
+		superObject.transform.rotation = Quaternion.Euler(0f, rotation, 0f);
+		foreach (GameObject go in topLevelObjects) {
+			go.transform.SetParent(null);
+		}
+
+		for (int i = 0; i < this.agents.Count; i++) {
+			agents[i].transform.rotation = startAgentRots[i];
+		}
+
+		ResetSceneBounds();
 	}
 
 	public void AddThirdPartyCamera(ServerAction action) {
@@ -239,7 +307,7 @@ public class AgentManager : MonoBehaviour
 
 		camera.cullingMask = ~(1 << 11);
 
-		if (this.renderDepthImage || this.renderClassImage || this.renderObjectImage || this.renderNormalsImage || this.renderFlowImage) 
+		if (this.renderDepthImage || this.renderClassImage || this.renderObjectImage || this.renderNormalsImage || this.renderFlowImage)
 		{
 			gameObject.AddComponent(typeof(ImageSynthesis));
 		}
@@ -829,7 +897,9 @@ public class AgentManager : MonoBehaviour
                 this.renderObjectImage = true;
             }
 
-            this.activeAgent().updateImageSynthesis(this.renderDepthImage || this.renderClassImage || this.renderObjectImage || this.renderNormalsImage);
+			if (this.renderDepthImage || this.renderClassImage || this.renderObjectImage || this.renderNormalsImage) {
+				this.activeAgent().updateImageSynthesis(true);
+			}
 			this.activeAgent().ProcessControlCommand (controlCommand);
 			readyToEmit = true;
 		}
@@ -1167,6 +1237,8 @@ public class ServerAction
 	public Vector3 rotation;
 	public Vector3 position;
     public Vector3 direction;
+
+	public bool allowAgentsToIntersect = false;
     public float handDistance;//used for max distance agent's hand can move
 	public List<Vector3> positions = null;
 	public bool standing = true;
@@ -1190,6 +1262,8 @@ public class ServerAction
 	public int randomSeed;
 	public float moveMagnitude;
 	public bool autoSimulation = true;
+	public bool simplifyPhysics = false;
+	public float startAgentsRotatedBy = 0f;
 	public float visibilityDistance;
 	public bool uniquePickupableObjectTypes; // only allow one of each object type to be visible
 	public float removeProb;
