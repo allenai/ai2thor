@@ -37,13 +37,17 @@ werkzeug.serving.WSGIRequestHandler.protocol_version = 'HTTP/1.1'
 MAX_DEPTH = 5000
 
 # get with timeout to allow quit
-def queue_get(que):
+def queue_get(que, unity_proc=None):
     res = None
     while True:
         try:
             res = que.get(block=True, timeout=0.5)
             break
         except Empty:
+            # we poll here for the unity proc in the event that it has
+            # exited otherwise we would wait indefinetly for the queue
+            if unity_proc and unity_proc.poll() is not None:
+                raise Exception("Unity process exited %s" % unity_proc.returncode)
             pass
     return res
 

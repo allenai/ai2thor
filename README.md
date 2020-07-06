@@ -7,6 +7,8 @@
 
 ## News
 
+* (6/2020) We provide a mini-framework to simplify running AI2-THOR in Docker. It can be accssed at: [https://github.com/allenai/ai2thor-docker](https://github.com/allenai/ai2thor-docker).
+
 * (4/2020) Version 2.4.0 update of the framework is here. All sim objects that aren't explicitly part of the environmental structure are now moveable with physics interactions. New object types have been added, and many new actions have been added. Please see the [full 2.4.0 release notes here](doc/static/ReleaseNotes/ReleaseNotes_2.4.md)
 
 * (2/2020) AI2-THOR now includes two frameworks: [iTHOR](https://ai2thor.allenai.org/ithor/) and [RoboTHOR](https://ai2thor.allenai.org/robothor/). iTHOR includes interactive objects and scenes and RoboTHOR consists of simulated scenes and their corresponding real world counterparts.  
@@ -15,11 +17,6 @@
 
 * (6/2019) Version 2.0 update of the AI2-THOR framework is now live! We have over quadrupled our action and object states, adding new actions that allow visually distinct state changes such as broken screens on electronics, shattered windows, breakable dishware, liquid fillable containers, cleanable dishware, messy and made beds and more! Along with these new state changes, objects have more physical properties like Temperature, Mass, and Salient Materials that are all reported back in object metadata. To combine all of these new properties and actions, new context sensitive interactions can now automatically change object states. This includes interactions like placing a dirty bowl under running sink water to clean it, placing a mug in a coffee machine to automatically fill it with coffee, putting out a lit candle by placing it in water, or placing an object over an active stove burner or in the fridge to change its temperature. Please see the [full 2.0 release notes here](doc/static/ReleaseNotes/ReleaseNotes_2.0.md) to view details on all the changes and new features.
 
-* (3/2019) Introducing Version 1.0 of the AI2-THOR framework! This release includes a full rework of all Sim Objects and Scenes to have additional physics functionality and improved fidelity. Physics based interactions can now be modeled in the THOR environment in realistic ways like never before! Object collision when placed in receptacles, moveable receptacles that contain other objects, collision based object position randomization, Multi-Agent support— these are a few of the many exciting new features that come with this update. Please check the [full 1.0 release notes here](doc/static/ReleaseNotes/ReleaseNotes_1.0.md) to view details on all the changes and new features.
-
-* (4/2018) We have released version 0.0.25 of AI2-THOR. The main changes include: upgrade to Unity 2017, performance optimization to improve frame rate, and various bug fixes. We have also added some physics functionalities. Please contact us for instructions. 
-
-* (1/2018) If you need a docker version, please contact us so we provide you with the instructions. Our docker version is in beta mode.
 
 ## Requirements
 

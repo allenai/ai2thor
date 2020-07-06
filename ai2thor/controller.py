@@ -395,6 +395,7 @@ class Controller(object):
         self.response_queue = Queue(maxsize=1)
         self.receptacle_nearest_pivot_points = {}
         self.server = None
+        self.unity_proc = None
         self.unity_pid = None
         self.docker_enabled = docker_enabled
         self.container_id = None
@@ -495,7 +496,7 @@ class Controller(object):
             )
 
         self.response_queue.put_nowait(dict(action='Reset', sceneName=scene, sequenceId=0))
-        self.last_event = queue_get(self.request_queue)  # can this be deleted?
+        self.last_event = queue_get(self.request_queue, self.unity_proc)  # can this be deleted?
         self.last_event = self.step(action='Initialize', **self.initialization_parameters)
 
         return self.last_event
@@ -687,7 +688,7 @@ class Controller(object):
         assert self.request_queue.empty()
 
         self.response_queue.put_nowait(action)
-        self.last_event = queue_get(self.request_queue)
+        self.last_event = queue_get(self.request_queue, self.unity_proc)
 
         if not self.last_event.metadata['lastActionSuccess'] and self.last_event.metadata['errorCode'] == 'InvalidAction':
             raise ValueError(self.last_event.metadata['errorMessage'])
@@ -725,12 +726,9 @@ class Controller(object):
             self.container_id = ai2thor.docker.run(image_name, self.base_dir(), ' '.join(command), env)
             atexit.register(lambda: ai2thor.docker.kill_container(self.container_id))
         else:
-            proc = subprocess.Popen(command, env=env)
+            self.unity_proc = proc = subprocess.Popen(command, env=env)
             self.unity_pid = proc.pid
             atexit.register(lambda: proc.poll() is None and proc.kill())
-            returncode = proc.wait()
-            if returncode != 0 and not self.killing_unity:
-                raise Exception("command: %s exited with %s" % (command, returncode))
 
     def check_docker(self):
         if self.docker_enabled:
@@ -940,14 +938,10 @@ class Controller(object):
                 self.prune_releases()
 
             _, port = self.server.wsgi_server.socket.getsockname()
-            unity_thread = threading.Thread(
-                target=self._start_unity_thread,
-                args=(env, width, height, host, port, image_name))
-            unity_thread.daemon = True
-            unity_thread.start()
+            self._start_unity_thread(env, width, height, host, port, image_name)
 
         # receive the first request
-        self.last_event = queue_get(self.request_queue)
+        self.last_event = queue_get(self.request_queue, self.unity_proc)
 
         return self.last_event
 

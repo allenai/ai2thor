@@ -876,7 +876,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
     }
 	private void FixedUpdate()
 	{
-		isInteractable = false;
+		//isInteractable = false;
 	}
 
 	//used for throwing the sim object, or anything that requires adding force for some reason

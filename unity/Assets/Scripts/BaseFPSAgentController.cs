@@ -665,24 +665,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			return Array.IndexOf(this.excludeObjectIds, objectId) >= 0;
 		}
 
-        // //currently unused
-		// public bool excludeObject(SimpleSimObj so)
-		// {
-		// 	return excludeObject(so.ObjectID);
-		// }
-
-        // //currently unused
-		// protected bool closeSimObj(SimpleSimObj so)
-		// {
-		// 	return so.Close();
-		// }
-
-        // //currently unused
-		// protected bool openSimObj(SimpleSimObj so)
-		// {
-		// 	return so.Open();
-		// }
-
         //for all translational movement, check if the item the player is holding will hit anything, or if the agent will hit anything
         //NOTE: (XXX) All four movements below no longer use base character controller Move() due to doing initial collision blocking
         //checks before actually moving. Previously we would moveCharacter() first and if we hit anything reset, but now to match
@@ -694,6 +676,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             string objectId="",
             float maxDistanceToObject=-1.0f,
             bool forceAction = false,
+            bool manualInteract = false,
             HashSet<Collider> ignoreColliders=null
         ) {
             Vector3 targetPosition = transform.position + direction;
@@ -708,7 +691,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
             if (checkIfSceneBoundsContainTargetPosition(targetPosition) &&
                 CheckIfItemBlocksAgentMovement(direction.magnitude, angleInt, forceAction) && // forceAction = true allows ignoring movement restrictions caused by held objects
                 CheckIfAgentCanMove(direction.magnitude, angleInt, ignoreColliders)) {
-                DefaultAgentHand();
+
+                //only default hand if not manually interacting with things    
+                if(!manualInteract) {
+                    DefaultAgentHand();
+                }
+
                 Vector3 oldPosition = transform.position;
                 transform.position = targetPosition;
                 this.snapAgentToGrid();
@@ -923,7 +911,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         } else {
                             errorMessage = res.transform.name + " is blocking the Agent from moving " + orientation + " with " + ItemInHand.name;
                             result = false;
-                            Debug.Log(errorMessage);
                             return result;
                         }
 
@@ -1295,17 +1282,18 @@ namespace UnityStandardAssets.Characters.FirstPerson
         public AxisAlignedBoundingBox GenerateAxisAlignedBoundingBox(SimObjPhysics sop)
         {
             AxisAlignedBoundingBox b = new AxisAlignedBoundingBox();
- 
+
             //get all colliders on the sop, excluding colliders if they are not enabled
             Collider[] cols = sop.GetComponentsInChildren<Collider>();
 
             //0 colliders mean the object is despawned, so this will cause objects broken into pieces to not generate an axis aligned box
             if(cols.Length == 0)
             {
-                if(sop.GetComponent<SimObjPhysics>().IsBroken)
+                SimObjPhysics sopc = sop.GetComponent<SimObjPhysics>();
+                if(sopc.IsBroken || sopc.IsSliced)
                 {
                     #if UNITY_EDITOR
-                    Debug.Log("Object is broken in pieces, no AxisAligned box generated: " + sop.name);
+                    Debug.Log("Object is broken or sliced in pieces, no AxisAligned box generated: " + sop.name);
                     #endif
                     return b;
                 }
@@ -2126,7 +2114,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
         public void DefaultAgentHand(ServerAction action = null) {
             ResetAgentHandPosition(action);
             ResetAgentHandRotation(action);
-            //SetUpRotationBoxChecks();
             IsHandDefault = true;
         }
 

@@ -266,21 +266,65 @@ public class CanOpen_Object : MonoBehaviour
                 
 				else if (movementType == MovementType.Slide)
 				{
+                    //this is used to determine which components of openPosition need to be scaled
+                    Vector3 lerpToPosition = new Vector3(1, 1, 1);
+
 					if (i == MovingParts.Length - 1)
                     {
+                        //default to open position without percentage open modifiers
+                        lerpToPosition = openPositions[i];
+                        //some x, y, z components don't change when sliding open
+                        //only aply openPercentage modifier to components of vector3 that actually change
+                        if(openPositions[i].x - closedPositions[i].x != Mathf.Epsilon)
+                        {
+                            lerpToPosition.x = ((openPositions[i].x - closedPositions[i].x) * openPercentage) + closedPositions[i].x;
+                        }
+
+                        if(openPositions[i].y - closedPositions[i].y != Mathf.Epsilon)
+                        {
+                            lerpToPosition.y = ((openPositions[i].y - closedPositions[i].y) * openPercentage) + closedPositions[i].y;
+                        }
+
+                        if(openPositions[i].z - closedPositions[i].z != Mathf.Epsilon)
+                        {
+                            lerpToPosition.z = ((openPositions[i].z - closedPositions[i].z) * openPercentage) + closedPositions[i].z;
+                        }
+
                         iTween.MoveTo(MovingParts[i], iTween.Hash(
-                        "position", openPositions[i] * openPercentage,
+                        "position", lerpToPosition,
                         "islocal", true,
                         "time", animationTime,
                         "easetype", "linear", "onComplete", "setisOpen", "onCompleteTarget", gameObject));
                     }
 
                     else
-					iTween.MoveTo(MovingParts[i], iTween.Hash(
-					"position", openPositions[i] * openPercentage,
-                    "islocal", true,
-                    "time", animationTime,
-                    "easetype", "linear"));
+                    {
+                        //default to open position without percentage open modifiers
+                        lerpToPosition = openPositions[i];
+                        //some x, y, z components don't change when sliding open
+                        //only aply openPercentage modifier to components of vector3 that actually change
+                        if(openPositions[i].x - closedPositions[i].x != Mathf.Epsilon)
+                        {
+                            lerpToPosition.x = ((openPositions[i].x - closedPositions[i].x) * openPercentage) + closedPositions[i].x;
+                        }
+
+                        if(openPositions[i].y - closedPositions[i].y != Mathf.Epsilon)
+                        {
+                            lerpToPosition.y = ((openPositions[i].y - closedPositions[i].y) * openPercentage) + closedPositions[i].y;
+                        }
+
+                        if(openPositions[i].z - closedPositions[i].z != Mathf.Epsilon)
+                        {
+                            lerpToPosition.z = ((openPositions[i].z - closedPositions[i].z) * openPercentage) + closedPositions[i].z;
+                        }
+
+                        iTween.MoveTo(MovingParts[i], iTween.Hash(
+                        "position", lerpToPosition,
+                        "islocal", true,
+                        "time", animationTime,
+                        "easetype", "linear"));
+                    }
+
 				}
 
                 //scale with Y axis
