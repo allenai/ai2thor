@@ -1048,7 +1048,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 objectCreated = randomlyCreateAndPlaceObjectOnFloor(
                     action.objectType, action.objectVariation, reachablePositions
                 );
-            } catch (Exception e) {}
+            } catch (Exception) {}
             if (objectCreated == null) {
                 for (int i = 0; i < this.agentManager.agents.Count; i++) {
                     var agent = this.agentManager.agents[i];
@@ -4204,89 +4204,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 Debug.Log(so.ObjectID);
                 #endif
             }
-            actionFinished(true);
-        }
-
-        public void UpdateDisplayGameObject(GameObject go, bool display) {
-            if (go != null) {
-                foreach (MeshRenderer mr in go.GetComponentsInChildren<MeshRenderer>() as MeshRenderer[]) {
-                    if (!initiallyDisabledRenderers.Contains(mr.GetInstanceID())) {
-                        mr.enabled = display;
-                    }
-                }
-            }
-        }
-
-        //not sure what this does, maybe delete?
-        public void SetTopLevelView(ServerAction action) {
-            inTopLevelView = action.topView;
-            actionFinished(true);
-        }
-
-        public void ToggleMapView(ServerAction action) {
-
-            SyncTransform[] syncInChildren;
-
-            List<StructureObject> structureObjsList = new List<StructureObject>();
-            StructureObject[] structureObjs = FindObjectsOfType(typeof(StructureObject)) as StructureObject[];
-
-            foreach(StructureObject so in structureObjs)
-            {
-                if(so.WhatIsMyStructureObjectTag == StructureObjectTag.Ceiling)
-                {
-                    structureObjsList.Add(so);
-                }
-            }
-
-            if (inTopLevelView) {
-                inTopLevelView = false;
-                m_Camera.orthographic = false;
-                m_Camera.transform.localPosition = lastLocalCameraPosition;
-                m_Camera.transform.localRotation = lastLocalCameraRotation;
-
-                //restore agent body culling
-                m_Camera.transform.GetComponent<FirstPersonCharacterCull>().StopCullingThingsForASecond = false;
-                syncInChildren = gameObject.GetComponentsInChildren<SyncTransform>();
-                foreach (SyncTransform sync in syncInChildren)
-                {
-                    sync.StopSyncingForASecond = false;
-                }
-
-                foreach(StructureObject so in structureObjsList)
-                {
-                    UpdateDisplayGameObject(so.gameObject, true);
-                }
-            } 
-            
-            else {
-
-                //stop culling the agent's body so it's visible from the top?
-                m_Camera.transform.GetComponent<FirstPersonCharacterCull>().StopCullingThingsForASecond = true;
-                syncInChildren = gameObject.GetComponentsInChildren<SyncTransform>();
-                foreach (SyncTransform sync in syncInChildren)
-                {
-                    sync.StopSyncingForASecond = true;
-                }
-
-                inTopLevelView = true;
-                lastLocalCameraPosition = m_Camera.transform.localPosition;
-                lastLocalCameraRotation = m_Camera.transform.localRotation;
-
-
-                Bounds b = agentManager.SceneBounds;
-                float midX = (b.max.x + b.min.x) / 2.0f;
-                float midZ = (b.max.z + b.min.z) / 2.0f;
-                m_Camera.transform.rotation = Quaternion.Euler(90.0f, 0.0f, 0.0f);
-                m_Camera.transform.position = new Vector3(midX, b.max.y + 5, midZ);
-                m_Camera.orthographic = true;
-
-                m_Camera.orthographicSize = Math.Max((b.max.x - b.min.x) / 2f, (b.max.z - b.min.z) / 2f);
-
-                cameraOrthSize = m_Camera.orthographicSize;
-                foreach(StructureObject so in structureObjsList)
-                {
-                    UpdateDisplayGameObject(so.gameObject, false);
-                }            }
             actionFinished(true);
         }
 
