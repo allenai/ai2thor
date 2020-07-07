@@ -15,7 +15,7 @@ import ai2thor.build
 from ai2thor.build import PUBLIC_S3_BUCKET, PRIVATE_S3_BUCKET
 
 
-UNITY_VERSION = "2018.4.16f1"
+UNITY_VERSION = "2019.4.2f1"
 
 
 def add_files(zipf, start_dir):
