@@ -147,6 +147,15 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
         private void DebugKeyboardControls()
 		{
+            InputField inField = InputFieldObj.GetComponentInChildren<InputField>();
+            if (inField != null) {
+                if (inField.isFocused) {
+                    highlightController.ThrowEnabled = false;
+                    return;
+                } else {
+                    highlightController.ThrowEnabled = true;
+                }
+            }
 			//swap between text input and not
 			if (Input.GetKeyDown(KeyCode.BackQuote) || Input.GetKeyDown(KeyCode.Escape))
             {
