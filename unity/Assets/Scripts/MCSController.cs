@@ -688,12 +688,6 @@ public class MCSController : PhysicsRemoteFPSAgentController {
 
             //change collider height so agent can move
             GetComponent<CapsuleCollider>().center = new Vector3(0, colliderY, 0);
-
-            if (pose == PlayerPose.LYING) {
-                //agent looks down at the floor (increasing first parameter increases rotation downwards)
-                Vector3 lookDirection = fpsAgent.transform.rotation.eulerAngles;
-                fpsAgent.transform.rotation = Quaternion.Euler (90, lookDirection.y, lookDirection.z);
-            }
         }
     }
 }
