@@ -812,7 +812,7 @@ class Controller(object):
                 bn,
                 bn + ".app",
                 "Contents/MacOS",
-                bn)
+                "AI2-Thor")
         else:
             raise Exception('unable to handle target arch %s' % target_arch)
 
