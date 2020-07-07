@@ -10,7 +10,7 @@ class UnityTestController(ai2thor.controller.Controller):
     def __init__(self,**kwargs):
         base_path = os.path.normpath(os.path.join(os.path.abspath(__file__), "..", "..", "..", "unity", "builds"))
         build_path = None
-        local_build_path = 'thor-local-OSXIntel64.app/Contents/MacOS/thor-local-OSXIntel64'
+        local_build_path = 'thor-local-OSXIntel64.app/Contents/MacOS/AI2-Thor'
         newest_build_time = 0
         if os.path.isfile(os.path.join(base_path, local_build_path)):
             newest_build_time = os.stat(os.path.join(base_path, 'thor-local-OSXIntel64.app')).st_mtime
@@ -23,7 +23,7 @@ class UnityTestController(ai2thor.controller.Controller):
                     mtime = os.stat(g).st_mtime
                     if mtime > newest_build_time:
                         newest_build_time = mtime
-                        build_path = os.path.join(base, base + '.app', 'Contents/MacOS/', base)
+                        build_path = os.path.join(base, base + '.app', 'Contents/MacOS/AI2-Thor')
 
         print("selected executable %s" % build_path)
         kwargs['local_executable_path'] = os.path.join(base_path, build_path)
