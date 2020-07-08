@@ -656,7 +656,7 @@ def build_log_push(build_info):
     )
 
 
-def archive_push(unity_path, build_path, build_dir, build_info, include_private_scenes=False):
+def archive_push(unity_path, build_path, build_dir, build_info, include_private_scenes):
     threading.current_thread().success = False
     archive_name = os.path.join(unity_path, build_path)
     zipf = zipfile.ZipFile(archive_name, 'w', zipfile.ZIP_DEFLATED)
@@ -823,7 +823,7 @@ def ci_build_arch(arch, include_private_scenes=False):
 
         print("pushing archive")
         proc = Process(
-            target=archive_push, args=(unity_path, build_path, build_dir, build_info)
+            target=archive_push, args=(unity_path, build_path, build_dir, build_info, include_private_scenes)
         )
         proc.start()
 
@@ -2816,5 +2816,3 @@ def reachable_pos(ctx, scene, editor_mode=False, local_build=False):
     )
 
     print("After teleport: {}".format(evt.metadata['agent']['position']))
-
-
