@@ -775,8 +775,9 @@ def ci_build(context):
                     procs.append(p)
 
 
+            ci_pytest(context)
+
             if build["branch"] == "master":
-                ci_pytest(context)
                 webgl_build_deploy_demo(
                     context, verbose=True, content_addressable=True, force=True
                 )
