@@ -6037,7 +6037,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
 
-        public void Stand(ServerAction action) {
+        public virtual void Stand(ServerAction action) {
             if (isStanding()) {
                 errorMessage = "Already standing.";
                 actionFinished(false);

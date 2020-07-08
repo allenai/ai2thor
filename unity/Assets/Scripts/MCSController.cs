@@ -6,7 +6,12 @@ using System.Linq;
 using System.Collections.Generic;
 
 public class MCSController : PhysicsRemoteFPSAgentController {
-    public static float POSITION_Y = 0.4625f;
+    public static float STANDING_POSITION_Y = 0.4625f;
+    public static float CRAWLING_POSITION_Y = STANDING_POSITION_Y/2;
+    public static float LYING_POSITION_Y = 0.1f;
+    public static float STANDING_POSITION_COLLIDER_CENTER = -0.25f;
+    public static float CRAWLING_POSITION_COLLIDER_CENTER = -0.10f;
+    public static float LYING_POSITION_COLLIDER_CENTER = 0f;
 
     public static float DISTANCE_HELD_OBJECT_Y = 0.15f;
     public static float DISTANCE_HELD_OBJECT_Z = 0.20f;
@@ -19,12 +24,25 @@ public class MCSController : PhysicsRemoteFPSAgentController {
     public static int PHYSICS_SIMULATION_LOOPS = 5;
     public static int PHYSICS_SIMULATION_STEPS = 3;
 
+    //this is not the capsule radius, this is the radius of the x and z bounds of the agent.
+    public static float AGENT_RADIUS = 0.12f;
+
     public int step = 0;
 
     protected int minHorizon = -90;
     protected int maxHorizon = 90;
     protected float minRotation = -360f;
     protected float maxRotation = 360f;
+
+    public GameObject fpsAgent;
+
+    public enum PlayerPose {
+        STANDING,
+        CRAWLING,
+        LYING
+    }
+
+    PlayerPose pose = PlayerPose.STANDING;
 
     public override void CloseObject(ServerAction action) {
         bool continueAction = TryConvertingEachObjectDirectionToId(action);
@@ -605,6 +623,69 @@ public class MCSController : PhysicsRemoteFPSAgentController {
                 (handZ + MCSController.DISTANCE_HELD_OBJECT_Z) * (1.0f / this.transform.localScale.z));
         } else {
             Debug.LogError("PickupObject target " + target.gameObject.name + " does not have a MeshFilter!");
+        }
+    }
+    
+    public void Crawl(ServerAction action) {
+        if (this.pose == PlayerPose.CRAWLING) {
+                this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.SUCCESSFUL);
+                actionFinished(true);
+                Debug.Log("Agent is already Crawling");
+        } else {
+            float startHeight = (this.pose == PlayerPose.LYING ? LYING_POSITION_Y : STANDING_POSITION_Y);
+            Vector3 direction = (this.pose == PlayerPose.LYING ? Vector3.up : Vector3.down);
+            CheckIfAgentCanCrawlLieOrStand(direction, startHeight, CRAWLING_POSITION_Y, CRAWLING_POSITION_COLLIDER_CENTER, PlayerPose.CRAWLING);  
+        }
+    }
+    
+    public void LieDown(ServerAction action) {
+        if (this.pose == PlayerPose.LYING) {
+            this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.SUCCESSFUL);
+            actionFinished(true);
+            Debug.Log("Agent is already Lying Down");
+        } else {
+            float startHeight = (this.pose == PlayerPose.CRAWLING ? CRAWLING_POSITION_Y : STANDING_POSITION_Y);
+            CheckIfAgentCanCrawlLieOrStand(Vector3.down, startHeight, LYING_POSITION_Y, LYING_POSITION_COLLIDER_CENTER, PlayerPose.LYING);              
+        }
+
+        
+    }
+
+    public override void Stand(ServerAction action) {
+        if (this.pose == PlayerPose.STANDING) {
+            this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.SUCCESSFUL);
+            actionFinished(true);
+            Debug.Log("Agent is already Standing");
+        } else {
+            float startHeight = (this.pose == PlayerPose.CRAWLING ? CRAWLING_POSITION_Y : LYING_POSITION_Y);
+            CheckIfAgentCanCrawlLieOrStand(Vector3.up, startHeight, STANDING_POSITION_Y, STANDING_POSITION_COLLIDER_CENTER, PlayerPose.STANDING); 
+        }
+    }
+
+    public void CheckIfAgentCanCrawlLieOrStand(Vector3 direction, float startHeight, float endHeight, float colliderY, PlayerPose pose) {
+        //Raycast up or down the distance of shifting on y-axis
+        Vector3 origin = new Vector3(transform.position.x, startHeight, transform.position.z);
+        Vector3 end = new Vector3(transform.position.x, endHeight, transform.position.z);
+        RaycastHit hit;
+        Ray ray = new Ray(origin, direction);
+        LayerMask layerMask = ~(1 << 10);
+        
+        //if raycast hits an object, the agent does not move on y-axis
+        if (Physics.SphereCast(origin, AGENT_RADIUS, direction, out hit, Mathf.Abs(startHeight-endHeight), layerMask) && hit.collider.tag == "SimObjPhysics") 
+        {
+            this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.OBSTRUCTED);
+            actionFinished(false);
+            Debug.Log("Agent is Obstructed");
+            
+        } else {
+            this.transform.position = new Vector3(this.transform.position.x, endHeight, this.transform.position.z);
+            this.pose = pose;
+            SetUpRotationBoxChecks();
+            this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.SUCCESSFUL);
+            actionFinished(true);
+
+            //change collider height so agent can move
+            GetComponent<CapsuleCollider>().center = new Vector3(0, colliderY, 0);
         }
     }
 }
