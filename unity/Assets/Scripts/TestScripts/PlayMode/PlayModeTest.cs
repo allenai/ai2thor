@@ -9,12 +9,10 @@ namespace Tests {
     public class PlayModeTest
     {
         private GameObject gameObject;
-        private MCSMain main;
 
         [SetUp]
         public void Setup(){
             gameObject = GameObject.Instantiate(new GameObject());
-            main = gameObject.AddComponent<MCSMain>();
 
         }
         
