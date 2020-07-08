@@ -542,25 +542,6 @@ class Controller(object):
 
         return scenes
 
-    def robothor_scenes(self, types={'val', 'train'}):
-        assert 'train' in types or 'test' in types or 'val' in types
-        # scene types -> [wall configurations, layouts per configuration]
-        scene_types = {'train': [15, 5],
-                       'val': [2, 2],
-                       'test': [5, 2]}
-        scenes = []
-        for scene_type in types:
-            name = scene_type
-            name = name.title()
-            if name == 'Val':
-                name = 'RVal'
-            if name == 'Test':
-                name = 'RTest'
-            for wall_config in range(1, scene_types[scene_type][0] + 1):
-                for layouts in range(1, scene_types[scene_type][1] + 1):
-                    scenes.append('FloorPlan_{}{}_{}'.format(name, wall_config, layouts))
-        return scenes
-
     def unlock_release(self):
         if self.lock_file:
             fcntl.flock(self.lock_file, fcntl.LOCK_UN)
