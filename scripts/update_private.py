@@ -21,11 +21,18 @@ def checkout_branch():
 
     cwd = os.getcwd()
     os.chdir(private_dir)
-    subprocess.check_call("git fetch", shell=True)
     branch = current_branch()
-    print("Moving private checkout %s -> %s" % (private_dir, branch))
-    subprocess.check_call("git checkout -B %s" % branch, shell=True)
-    subprocess.check_call("git pull origin %s" % branch, shell=True)
+    try:
+        print("Trying to checkout checkout %s -> %s" % (private_dir, branch))
+        subprocess.check_call("git fetch origin %s" % branch, shell=True)
+        subprocess.check_call("git checkout %s" % branch, shell=True)
+        subprocess.check_call("git pull origin %s" % branch, shell=True)
+    except subprocess.CalledProcessError as e:
+        print("No branch exists for private: %s - remaining on master" % branch )
+        subprocess.check_call("git fetch origin master", shell=True)
+        subprocess.check_call("git checkout master", shell=True)
+        subprocess.check_call("git pull origin master", shell=True)
+
     os.chdir(cwd)
 
 
