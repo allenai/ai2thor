@@ -463,7 +463,7 @@ public class MCSController : PhysicsRemoteFPSAgentController {
     }
 
     public void SimulatePhysics() {
-        if (!this.agentManager.renderImage) {
+        if (this.agentManager.renderImage) {
             // We only need to save ONE image of the scene after initialization.
             StartCoroutine(this.SimulatePhysicsSaveImagesIncreaseStep(this.step == 0 ? 1 :
                 MCSController.PHYSICS_SIMULATION_LOOPS));
