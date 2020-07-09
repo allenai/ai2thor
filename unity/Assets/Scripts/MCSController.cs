@@ -44,7 +44,7 @@ public class MCSController : PhysicsRemoteFPSAgentController {
     PlayerPose pose = PlayerPose.STANDING;
 
     private bool movementActionFinished = false;
-    private MovementAction movementAction; //stores movement direction
+    private MCSMovementActionData movementActionData; //stores movement direction
     private bool inputWasMovement = false;
     private int framesUntilGridSnap; //when moving, grid snap will engage on the last frame (rather than every frame)
 
@@ -487,10 +487,10 @@ public class MCSController : PhysicsRemoteFPSAgentController {
     private void SimulatePhysicsOnce() {
         //for movement
         if (inputWasMovement) {
-            movementActionFinished = moveInDirection((movementAction.direction/NUMBER_OF_FRAMES_FOR_MOVEMENT), 
-                    movementAction.UniqueID,
-                    movementAction.maxDistanceToObject,
-                    movementAction.forceAction);
+            movementActionFinished = moveInDirection((movementActionData.direction/NUMBER_OF_FRAMES_FOR_MOVEMENT), 
+                    movementActionData.UniqueID,
+                    movementActionData.maxDistanceToObject,
+                    movementActionData.forceAction);
             framesUntilGridSnap++;
             if (framesUntilGridSnap == NUMBER_OF_FRAMES_FOR_MOVEMENT) {
                 this.snapToGrid();
@@ -722,41 +722,41 @@ public class MCSController : PhysicsRemoteFPSAgentController {
     //overrides from PhysicsRemoteFPSAgentController which enable agent/object collisions
     public override void MoveLeft(ServerAction action) {
         action.moveMagnitude = action.moveMagnitude > 0 ? action.moveMagnitude : gridSize;
-        movementAction = new MovementAction(-1 * transform.right * action.moveMagnitude,
+        movementActionData = new MCSMovementActionData(-1 * transform.right * action.moveMagnitude,
             action.objectId,
             action.maxAgentsDistance, action.forceAction);   
     }
 
     public override void MoveRight(ServerAction action) {
         action.moveMagnitude = action.moveMagnitude > 0 ? action.moveMagnitude : gridSize;
-        movementAction = new MovementAction(transform.right * action.moveMagnitude,
+        movementActionData = new MCSMovementActionData(transform.right * action.moveMagnitude,
             action.objectId,
             action.maxAgentsDistance, action.forceAction);    
     }
 
     public override void MoveAhead(ServerAction action) {
         action.moveMagnitude = action.moveMagnitude > 0 ? action.moveMagnitude : gridSize;
-        movementAction = new MovementAction(transform.forward * action.moveMagnitude,
+        movementActionData = new MCSMovementActionData(transform.forward * action.moveMagnitude,
             action.objectId,
             action.maxAgentsDistance, action.forceAction);
     }
 
     public override void MoveBack(ServerAction action) {
         action.moveMagnitude = action.moveMagnitude > 0 ? action.moveMagnitude : gridSize;
-        movementAction = new MovementAction(-1 * transform.forward * action.moveMagnitude,
+        movementActionData = new MCSMovementActionData(-1 * transform.forward * action.moveMagnitude,
             action.objectId,
             action.maxAgentsDistance, action.forceAction);
     }
 }
 
 //class for contatining movement data
-public class MovementAction {
+public class MCSMovementActionData {
     public Vector3 direction;
     public string UniqueID;
     public float maxDistanceToObject;
     public bool forceAction;
 
-    public MovementAction(Vector3 direction, string UniqueID, float maxDistanceToObject, bool forceAction) {
+    public MCSMovementActionData(Vector3 direction, string UniqueID, float maxDistanceToObject, bool forceAction) {
         this.direction = direction;
         this.UniqueID = UniqueID;
         this.maxDistanceToObject = maxDistanceToObject;
