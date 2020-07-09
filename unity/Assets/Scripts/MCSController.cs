@@ -26,6 +26,7 @@ public class MCSController : PhysicsRemoteFPSAgentController {
 
     //this is not the capsule radius, this is the radius of the x and z bounds of the agent.
     public static float AGENT_RADIUS = 0.12f;
+    public static int NUMBER_OF_FRAMES_FOR_MOVEMENT = 5;
 
     public int step = 0;
 
@@ -43,6 +44,11 @@ public class MCSController : PhysicsRemoteFPSAgentController {
     }
 
     PlayerPose pose = PlayerPose.STANDING;
+
+    private bool movementActionFinished = false;
+    private MovementAction movementAction; //stores movement direction
+    private bool inputWasMovement = false;
+    private int framesUntilGridSnap; //when moving, grid snap will engage on the last frame (rather than every frame)
 
     public override void CloseObject(ServerAction action) {
         bool continueAction = TryConvertingEachObjectDirectionToId(action);
@@ -317,19 +323,25 @@ public class MCSController : PhysicsRemoteFPSAgentController {
     }
 
     public override void ProcessControlCommand(ServerAction controlCommand) {
+        bool controlCommandMove = controlCommand.action.Equals("MoveAhead") || 
+                controlCommand.action.Equals("MoveBack") ||
+                controlCommand.action.Equals("MoveLeft") ||
+                controlCommand.action.Equals("MoveRight");   
+        inputWasMovement = controlCommandMove == true ? true : false;
+        framesUntilGridSnap = 0; //for movement
+        
         // Never let the placeable objects ignore the physics simulation (they should always be affected by it).
         controlCommand.placeStationary = false;
 
         Debug.Log("MCS: Action = " + controlCommand.action);
-
+        
         base.ProcessControlCommand(controlCommand);
 
         // Clear the saved images from the previous step.
         ((MCSPerformerManager)this.agentManager).ClearSavedImages();
 
-        if (!controlCommand.action.Equals("Initialize")) {
+        if (!controlCommand.action.Equals("Initialize"))
             this.step++;
-        }
     }
 
     public override void PullObject(ServerAction action) {
@@ -453,7 +465,7 @@ public class MCSController : PhysicsRemoteFPSAgentController {
     }
 
     public void SimulatePhysics() {
-        if (this.agentManager.renderImage) {
+        if (!this.agentManager.renderImage) {
             // We only need to save ONE image of the scene after initialization.
             StartCoroutine(this.SimulatePhysicsSaveImagesIncreaseStep(this.step == 0 ? 1 :
                 MCSController.PHYSICS_SIMULATION_LOOPS));
@@ -475,6 +487,20 @@ public class MCSController : PhysicsRemoteFPSAgentController {
     }
 
     private void SimulatePhysicsOnce() {
+        //for movement
+        if (inputWasMovement) {
+            movementActionFinished = moveInDirection((movementAction.direction/NUMBER_OF_FRAMES_FOR_MOVEMENT), 
+                    movementAction.UniqueID,
+                    movementAction.maxDistanceToObject,
+                    movementAction.forceAction);
+            framesUntilGridSnap++;
+            if (framesUntilGridSnap == NUMBER_OF_FRAMES_FOR_MOVEMENT) {
+                this.snapToGrid();
+                //if (this.agentManager.renderImage == false) {
+                    actionFinished(movementActionFinished);
+                //}
+            }
+        }
         // Call Physics.Simulate multiple times with a small step value because a large step
         // value causes collision errors.  From the Unity Physics.Simulate documentation:
         // "Using step values greater than 0.03 is likely to produce inaccurate results."
@@ -692,5 +718,50 @@ public class MCSController : PhysicsRemoteFPSAgentController {
             //change collider height so agent can move
             GetComponent<CapsuleCollider>().center = new Vector3(0, colliderY, 0);
         }
+    }
+
+
+    //overrides from PhysicsRemoteFPSAgentController which enable agent/object collisions
+    public override void MoveLeft(ServerAction action) {
+        action.moveMagnitude = action.moveMagnitude > 0 ? action.moveMagnitude : gridSize;
+        movementAction = new MovementAction(-1 * transform.right * action.moveMagnitude,
+            action.objectId,
+            action.maxAgentsDistance, action.forceAction);   
+    }
+
+    public override void MoveRight(ServerAction action) {
+        action.moveMagnitude = action.moveMagnitude > 0 ? action.moveMagnitude : gridSize;
+        movementAction = new MovementAction(transform.right * action.moveMagnitude,
+            action.objectId,
+            action.maxAgentsDistance, action.forceAction);    
+    }
+
+    public override void MoveAhead(ServerAction action) {
+        action.moveMagnitude = action.moveMagnitude > 0 ? action.moveMagnitude : gridSize;
+        movementAction = new MovementAction(transform.forward * action.moveMagnitude,
+            action.objectId,
+            action.maxAgentsDistance, action.forceAction);
+    }
+
+    public override void MoveBack(ServerAction action) {
+        action.moveMagnitude = action.moveMagnitude > 0 ? action.moveMagnitude : gridSize;
+        movementAction = new MovementAction(-1 * transform.forward * action.moveMagnitude,
+            action.objectId,
+            action.maxAgentsDistance, action.forceAction);
+    }
+}
+
+//class for contatining movement data
+public class MovementAction {
+    public Vector3 direction;
+    public string UniqueID;
+    public float maxDistanceToObject;
+    public bool forceAction;
+
+    public MovementAction(Vector3 direction, string UniqueID, float maxDistanceToObject, bool forceAction) {
+        this.direction = direction;
+        this.UniqueID = UniqueID;
+        this.maxDistanceToObject = maxDistanceToObject;
+        this.forceAction = forceAction;
     }
 }

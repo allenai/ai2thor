@@ -1935,9 +1935,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 DefaultAgentHand();
                 Vector3 oldPosition = transform.position;
                 transform.position = targetPosition;
+
+                /* //Changed so grid snap is at the end of movement across 5 frames
                 if (!continuousMode) {
                     this.snapToGrid();
-                }
+                }*/
 
                 if (uniqueId != "" && maxDistanceToObject > 0.0f) {
                     if (!physicsSceneManager.UniqueIdToSimObjPhysics.ContainsKey(uniqueId)) {
@@ -2683,11 +2685,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                             return true;
                         }
 
-                        int thisAgentNum = agentManager.agents.IndexOf(this);
-                        errorMessage = res.transform.name + " is blocking Agent " + thisAgentNum.ToString() + " from moving " + orientation;
-                        //the moment we find a result that is blocking, return false here
-                        this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.OBSTRUCTED);
-                        return false;
+                        //objects heavier than agent
+                        if (res.rigidbody.mass >= 1) {
+                            int thisAgentNum = agentManager.agents.IndexOf(this);
+                            errorMessage = res.transform.name + " is blocking Agent " + thisAgentNum.ToString() + " from moving " + orientation;
+                            //the moment we find a result that is blocking, return false here
+                            this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.OBSTRUCTED);
+                            return false;
+                        }
                     }
                 }
             }
