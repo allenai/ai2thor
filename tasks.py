@@ -645,18 +645,26 @@ def fetch_source_textures(context):
     z.extractall(os.getcwd())
 
 
-def build_log_push(build_info):
+def build_log_push(build_info, include_private_scenes):
     with open(build_info["log"]) as f:
         build_log = f.read() + "\n" + build_info["build_exception"]
 
     build_log_key = "builds/" + build_info["log"]
     s3 = boto3.resource("s3")
-    s3.Object(PUBLIC_S3_BUCKET, build_log_key).put(
-        Body=build_log, ACL="public-read", ContentType="text/plain"
+
+    bucket = PUBLIC_S3_BUCKET 
+    acl = "public-read"
+
+    if include_private_scenes:
+        bucket = PRIVATE_S3_BUCKET 
+        acl = 'private'
+
+    s3.Object(bucket, build_log_key).put(
+        Body=build_log, ACL=acl, ContentType="text/plain"
     )
 
 
-def archive_push(unity_path, build_path, build_dir, build_info, include_private_scenes=False):
+def archive_push(unity_path, build_path, build_dir, build_info, include_private_scenes):
     threading.current_thread().success = False
     archive_name = os.path.join(unity_path, build_path)
     zipf = zipfile.ZipFile(archive_name, 'w', zipfile.ZIP_DEFLATED)
@@ -665,7 +673,7 @@ def archive_push(unity_path, build_path, build_dir, build_info, include_private_
 
     build_info["sha256"] = build_sha256(archive_name)
     push_build(archive_name, build_info["sha256"], include_private_scenes)
-    build_log_push(build_info)
+    build_log_push(build_info, include_private_scenes)
     print("Build successful")
     threading.current_thread().success = True
 
@@ -775,8 +783,9 @@ def ci_build(context):
                     procs.append(p)
 
 
+            ci_pytest(context)
+
             if build["branch"] == "master":
-                ci_pytest(context)
                 webgl_build_deploy_demo(
                     context, verbose=True, content_addressable=True, force=True
                 )
@@ -823,14 +832,14 @@ def ci_build_arch(arch, include_private_scenes=False):
 
         print("pushing archive")
         proc = Process(
-            target=archive_push, args=(unity_path, build_path, build_dir, build_info)
+            target=archive_push, args=(unity_path, build_path, build_dir, build_info, include_private_scenes)
         )
         proc.start()
 
     except Exception as e:
         print("Caught exception %s" % e)
         build_info["build_exception"] = "Exception building: %s" % e
-        build_log_push(build_info)
+        build_log_push(build_info, include_private_scenes)
 
     return proc
 
@@ -2816,5 +2825,3 @@ def reachable_pos(ctx, scene, editor_mode=False, local_build=False):
     )
 
     print("After teleport: {}".format(evt.metadata['agent']['position']))
-
-
