@@ -2194,6 +2194,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 
         foreach (SkinnedMeshRenderer skinnedMesh in skinnedMeshes)
         {
+            skinnedMesh.updateWhenOffscreen = true;
             newBoundingBox.Encapsulate(skinnedMesh.bounds.min);
             newBoundingBox.Encapsulate(skinnedMesh.bounds.max);
         }
