@@ -10,8 +10,8 @@ public class MCSController : PhysicsRemoteFPSAgentController {
     public static float CRAWLING_POSITION_Y = STANDING_POSITION_Y/2;
     public static float LYING_POSITION_Y = 0.1f;
     public static float STANDING_POSITION_COLLIDER_CENTER = -0.25f;
-    public static float CRAWLING_POSITION_COLLIDER_CENTER = -0.10f;
-    public static float LYING_POSITION_COLLIDER_CENTER = 0f;
+    public static float CRAWLING_POSITION_COLLIDER_CENTER = -0.01f;
+    public static float LYING_POSITION_COLLIDER_CENTER = 0.1f;
 
     public static float DISTANCE_HELD_OBJECT_Y = 0.15f;
     public static float DISTANCE_HELD_OBJECT_Z = 0.20f;
@@ -487,6 +487,7 @@ public class MCSController : PhysicsRemoteFPSAgentController {
     private void SimulatePhysicsOnce() {
         //for movement
         if (inputWasMovement) {
+            MatchAgentHeightToStructureBelow(false);
             movementActionFinished = moveInDirection((movementActionData.direction/NUMBER_OF_FRAMES_FOR_MOVEMENT), 
                     movementActionData.UniqueID,
                     movementActionData.maxDistanceToObject,
@@ -494,9 +495,7 @@ public class MCSController : PhysicsRemoteFPSAgentController {
             framesUntilGridSnap++;
             if (framesUntilGridSnap == NUMBER_OF_FRAMES_FOR_MOVEMENT) {
                 this.snapToGrid();
-                //if (this.agentManager.renderImage == false) {
-                    actionFinished(movementActionFinished);
-                //}
+                actionFinished(movementActionFinished);
             }
         }
         // Call Physics.Simulate multiple times with a small step value because a large step
@@ -658,6 +657,7 @@ public class MCSController : PhysicsRemoteFPSAgentController {
                 Debug.Log("Agent is already Crawling");
         } else {
             float startHeight = (this.pose == PlayerPose.LYING ? LYING_POSITION_Y : STANDING_POSITION_Y);
+            startHeight += MatchAgentHeightToStructureBelow(true);
             Vector3 direction = (this.pose == PlayerPose.LYING ? Vector3.up : Vector3.down);
             CheckIfAgentCanCrawlLieOrStand(direction, startHeight, CRAWLING_POSITION_Y, CRAWLING_POSITION_COLLIDER_CENTER, PlayerPose.CRAWLING);  
         }
@@ -670,6 +670,7 @@ public class MCSController : PhysicsRemoteFPSAgentController {
             Debug.Log("Agent is already Lying Down");
         } else {
             float startHeight = (this.pose == PlayerPose.CRAWLING ? CRAWLING_POSITION_Y : STANDING_POSITION_Y);
+            startHeight += MatchAgentHeightToStructureBelow(true);
             CheckIfAgentCanCrawlLieOrStand(Vector3.down, startHeight, LYING_POSITION_Y, LYING_POSITION_COLLIDER_CENTER, PlayerPose.LYING);              
         }
 
@@ -687,6 +688,7 @@ public class MCSController : PhysicsRemoteFPSAgentController {
             Debug.Log("Agent cannot Stand when lying down");
         } else {
             float startHeight = (this.pose == PlayerPose.CRAWLING ? CRAWLING_POSITION_Y : LYING_POSITION_Y);
+            startHeight += MatchAgentHeightToStructureBelow(true);
             CheckIfAgentCanCrawlLieOrStand(Vector3.up, startHeight, STANDING_POSITION_Y, STANDING_POSITION_COLLIDER_CENTER, PlayerPose.STANDING); 
         }
     }
@@ -707,8 +709,8 @@ public class MCSController : PhysicsRemoteFPSAgentController {
             Debug.Log("Agent is Obstructed");
             
         } else {
-            this.transform.position = new Vector3(this.transform.position.x, endHeight, this.transform.position.z);
             this.pose = pose;
+            this.transform.position = new Vector3(this.transform.position.x, MatchAgentHeightToStructureBelow(true)+endHeight, this.transform.position.z);
             SetUpRotationBoxChecks();
             this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.SUCCESSFUL);
             actionFinished(true);
@@ -747,6 +749,46 @@ public class MCSController : PhysicsRemoteFPSAgentController {
             action.objectId,
             action.maxAgentsDistance, action.forceAction);
     }
+    
+    private float MatchAgentHeightToStructureBelow(bool poseChange) {
+        float heightDifference;
+
+        heightDifference = heightDifference = pose == PlayerPose.STANDING ? STANDING_POSITION_Y : 
+            pose == PlayerPose.CRAWLING ? CRAWLING_POSITION_Y : LYING_POSITION_Y;
+
+        //Raycast down
+        Vector3 direction = Vector3.down;
+        Vector3 origin = new Vector3(transform.position.x, transform.position.y, transform.position.z);
+        RaycastHit hit;
+        Ray ray = new Ray(origin, Vector3.down);
+        LayerMask layerMask = ~(1 << 10);
+
+        float rayYHeightChange = pose == PlayerPose.STANDING ? 0.5f : 
+            pose == PlayerPose.CRAWLING ? 0.75f : 0.8f;
+
+        Vector3 rayOriginHeightIncrease = new Vector3(0,rayYHeightChange,0);
+        origin += rayOriginHeightIncrease;
+
+        //raycast to traverse structures at anything <= 45 degree angle incline
+        if (Physics.Raycast(origin, direction, out hit, Mathf.Infinity, layerMask) && hit.collider.tag == "Structure") {
+            //checks if point is above agent while also accommodating lying down
+            if ((hit.point.y - transform.position.y) > 0.1f) {
+                //return from method
+                return 0;
+            }
+            //for pose changes on structures only
+            else if (poseChange) {
+                return hit.point.y;
+            }
+            else {
+                Vector3 newHeight = new Vector3(transform.position.x, (hit.point.y + heightDifference), transform.position.z);
+                this.transform.position = newHeight;
+            }
+        }
+        //this doesn't do anything, method needs a return value
+        return 0;
+    }
+    
 }
 
 //class for contatining movement data
