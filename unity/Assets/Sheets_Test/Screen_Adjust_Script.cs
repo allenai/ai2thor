@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+[ExecuteInEditMode]
 public class Screen_Adjust_Script : MonoBehaviour
 {
     [Range(-1f, 1f)]
