@@ -4879,6 +4879,22 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return;
         }
 
+        protected bool isAgentOnTopOfObject(CanOpen_Object canOpen) {
+            // currently only handle openeable objects that can slide out into agent (like drawers)
+            if(canOpen.IsMovementTypeSlide()) {
+                RaycastHit hit;
+                GameObject attachedGameObj = canOpen.GetComponentInParent<SimObjPhysics>().gameObject;
+
+                if (Physics.Raycast(transform.position, Vector3.down, out hit, transform.position.y, 1 << 8, QueryTriggerInteraction.Ignore)) {
+                    if (hit.rigidbody != null && hit.rigidbody.gameObject.Equals(attachedGameObj)) {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+        }
+
         protected void OpenOrCloseObject(CanOpen_Object canOpen, float previousOpenPercent) {
             List<Collider> collidersDisabled = new List<Collider>();
             foreach (Collider collider in this.GetComponentsInChildren<Collider>()) {
@@ -4902,7 +4918,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             GameObject openedObject = canOpen.GetComponentInParent<SimObjPhysics>().gameObject;
 
-            if (isAgentCapsuleCollidingWith(openedObject, ExpandAgentCapsuleBy) || isHandObjectCollidingWith(openedObject)) {
+            if (isAgentCapsuleCollidingWith(openedObject, ExpandAgentCapsuleBy) ||
+                isHandObjectCollidingWith(openedObject) ||
+                isAgentOnTopOfObject(canOpen)) {
                 this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.OBSTRUCTED);
                 Debug.Log("Object failed to open/close successfully.");
                 success = false;
@@ -4968,7 +4986,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 GameObject openedObject = null;
                 openedObject = coo.GetComponentInParent<SimObjPhysics>().gameObject;
 
-                if (isAgentCapsuleCollidingWith(openedObject, ExpandAgentCapsuleBy) || isHandObjectCollidingWith(openedObject)) {
+                if (isAgentCapsuleCollidingWith(openedObject, ExpandAgentCapsuleBy) ||
+                    isHandObjectCollidingWith(openedObject) ||
+                    isAgentOnTopOfObject(coo)) {
                     Debug.Log("Object failed to open/close successfully.");
                     this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.OBSTRUCTED);
                     success = false;
