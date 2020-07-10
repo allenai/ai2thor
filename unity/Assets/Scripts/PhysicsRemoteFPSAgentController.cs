@@ -183,7 +183,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         public void ChangeColorOfMaterials(ServerAction action)
         {
-            ColorChanger ColorChangeComponent = GameObject.Find("PhysicsSceneManager").GetComponent<ColorChanger>();
+            ColorChanger ColorChangeComponent = physicsSceneManager.GetComponent<ColorChanger>();
             ColorChangeComponent.RandomizeColor();
             actionFinished(true);
         }
