@@ -5,24 +5,33 @@ using UnityEngine;
 public class MCSConfig {
     public static Dictionary<string, string[]> BLOCK_BLANK_MATERIAL_REGISTRY = new Dictionary<string, string[]>() {
         { "UnityAssetStore/Wooden_Toys_Bundle/ToyBlocks/meshes/Materials/blue_1x1", new string[] { "blue" } },
+        { "UnityAssetStore/Wooden_Toys_Bundle/ToyBlocks/meshes/Materials/gray_1x1", new string[] { "grey" } },
+        { "UnityAssetStore/Wooden_Toys_Bundle/ToyBlocks/meshes/Materials/green_1x1", new string[] { "green" } },
         { "UnityAssetStore/Wooden_Toys_Bundle/ToyBlocks/meshes/Materials/red_1x1", new string[] { "red" } },
         { "UnityAssetStore/Wooden_Toys_Bundle/ToyBlocks/meshes/Materials/wood_1x1", new string[] { "brown" } },
         { "UnityAssetStore/Wooden_Toys_Bundle/ToyBlocks/meshes/Materials/yellow_1x1", new string[] { "yellow" } }
     };
 
     public static Dictionary<string, string[]> BLOCK_DESIGN_MATERIAL_REGISTRY = new Dictionary<string, string[]>() {
+        { "UnityAssetStore/KD_AlphabetBlocks/Assets/Textures/Blue/TOYBlocks_AlphabetBlock_A_Blue_1K/ToyBlockBlueA", new string[] { "blue", "brown" } },
+        { "UnityAssetStore/KD_AlphabetBlocks/Assets/Textures/Blue/TOYBlocks_AlphabetBlock_B_Blue_1K/ToyBlockBlueB", new string[] { "blue", "brown" } },
         { "UnityAssetStore/KD_AlphabetBlocks/Assets/Textures/Blue/TOYBlocks_AlphabetBlock_C_Blue_1K/ToyBlockBlueC", new string[] { "blue", "brown" } },
+        { "UnityAssetStore/KD_AlphabetBlocks/Assets/Textures/Blue/TOYBlocks_AlphabetBlock_D_Blue_1K/ToyBlockBlueD", new string[] { "blue", "brown" } },
         { "UnityAssetStore/KD_AlphabetBlocks/Assets/Textures/Blue/TOYBlocks_AlphabetBlock_M_Blue_1K/ToyBlockBlueM", new string[] { "blue", "brown" } },
         { "UnityAssetStore/KD_AlphabetBlocks/Assets/Textures/Blue/TOYBlocks_AlphabetBlock_S_Blue_1K/ToyBlockBlueS", new string[] { "blue", "brown" } },
         { "UnityAssetStore/KD_NumberBlocks/Assets/Textures/Yellow/TOYBlocks_NumberBlock_1_Yellow_1K/NumberBlockYellow_1", new string[] { "yellow", "brown" } },
         { "UnityAssetStore/KD_NumberBlocks/Assets/Textures/Yellow/TOYBlocks_NumberBlock_2_Yellow_1K/NumberBlockYellow_2", new string[] { "yellow", "brown" } },
-        { "UnityAssetStore/KD_NumberBlocks/Assets/Textures/Yellow/TOYBlocks_NumberBlock_3_Yellow_1K/NumberBlockYellow_3", new string[] { "yellow", "brown" } }
+        { "UnityAssetStore/KD_NumberBlocks/Assets/Textures/Yellow/TOYBlocks_NumberBlock_3_Yellow_1K/NumberBlockYellow_3", new string[] { "yellow", "brown" } },
+        { "UnityAssetStore/KD_NumberBlocks/Assets/Textures/Yellow/TOYBlocks_NumberBlock_4_Yellow_1K/NumberBlockYellow_4", new string[] { "yellow", "brown" } },
+        { "UnityAssetStore/KD_NumberBlocks/Assets/Textures/Yellow/TOYBlocks_NumberBlock_5_Yellow_1K/NumberBlockYellow_5", new string[] { "yellow", "brown" } },
+        { "UnityAssetStore/KD_NumberBlocks/Assets/Textures/Yellow/TOYBlocks_NumberBlock_6_Yellow_1K/NumberBlockYellow_6", new string[] { "yellow", "brown" } }
     };
 
     public static Dictionary<string, string[]> CERAMIC_MATERIAL_REGISTRY = new Dictionary<string, string[]>() {
         { "AI2-THOR/Materials/Ceramics/BrownMarbleFake 1", new string[] { "brown" } },
         { "AI2-THOR/Materials/Ceramics/ConcreteBoards1", new string[] { "grey" } },
         { "AI2-THOR/Materials/Ceramics/GREYGRANITE", new string[] { "grey" } },
+        { "AI2-THOR/Materials/Ceramics/PinkConcrete_Bedroom1", new string[] { "red" } },
         { "AI2-THOR/Materials/Ceramics/RedBrick", new string[] { "red" } },
         { "AI2-THOR/Materials/Ceramics/TexturesCom_BrickRound0044_1_seamless_S", new string[] { "grey" } },
         { "AI2-THOR/Materials/Ceramics/WhiteCountertop", new string[] { "grey" } }
@@ -32,6 +41,7 @@ public class MCSConfig {
         { "AI2-THOR/Materials/Fabrics/Carpet2", new string[] { "brown" } },
         { "AI2-THOR/Materials/Fabrics/Carpet4", new string[] { "blue" } },
         { "AI2-THOR/Materials/Fabrics/CarpetDark", new string[] { "yellow" } },
+        { "AI2-THOR/Materials/Fabrics/CarpetGreen", new string[] { "green" } },
         { "AI2-THOR/Materials/Fabrics/CarpetWhite 3", new string[] { "white" } },
         { "AI2-THOR/Materials/Fabrics/HotelCarpet3", new string[] { "red", "black" } },
         { "AI2-THOR/Materials/Fabrics/RugPattern224", new string[] { "green", "brown", "white" } }
@@ -45,6 +55,7 @@ public class MCSConfig {
         { "AI2-THOR/Materials/Metals/BrownMetal 1", new string[] { "brown" } },
         { "AI2-THOR/Materials/Metals/BrushedIron_AlbedoTransparency", new string[] { "black" } },
         { "AI2-THOR/Materials/Metals/GenericStainlessSteel", new string[] { "grey" } },
+        { "AI2-THOR/Materials/Metals/HammeredMetal_AlbedoTransparency 1", new string[] { "green" } },
         { "AI2-THOR/Materials/Metals/Metal", new string[] { "grey" } },
         { "AI2-THOR/Materials/Metals/WhiteMetal", new string[] { "white" } },
         { "UnityAssetStore/Baby_Room/Models/Materials/cabinet metal", new string[] { "grey" } }
@@ -56,6 +67,7 @@ public class MCSConfig {
         { "AI2-THOR/Materials/Plastics/WhitePlastic", new string[] { "white" } },
         { "UnityAssetStore/Kindergarten_Interior/Models/Materials/color 1", new string[] { "red" } },
         { "UnityAssetStore/Kindergarten_Interior/Models/Materials/color 2", new string[] { "blue" } },
+        { "UnityAssetStore/Kindergarten_Interior/Models/Materials/color 3", new string[] { "green" } },
         { "UnityAssetStore/Kindergarten_Interior/Models/Materials/color 4", new string[] { "yellow" } }
     };
 
@@ -67,6 +79,7 @@ public class MCSConfig {
     public static Dictionary<string, string[]> WALL_MATERIAL_REGISTRY = new Dictionary<string, string[]>() {
         { "AI2-THOR/Materials/Walls/Drywall", new string[] { "white" } },
         { "AI2-THOR/Materials/Walls/DrywallBeige", new string[] { "brown" } },
+        { "AI2-THOR/Materials/Walls/DrywallGreen", new string[] { "green" } },
         { "AI2-THOR/Materials/Walls/DrywallOrange", new string[] { "orange" } },
         { "AI2-THOR/Materials/Walls/Drywall4Tiled", new string[] { "white" } },
         { "AI2-THOR/Materials/Walls/EggshellDrywall", new string[] { "blue" } },
@@ -89,9 +102,11 @@ public class MCSConfig {
         { "AI2-THOR/Materials/Wood/WhiteWoodClean", new string[] { "white" } },
         { "AI2-THOR/Materials/Wood/WoodFloorsCross", new string[] { "brown" } },
         { "AI2-THOR/Materials/Wood/WoodGrain_Brown", new string[] { "brown" } },
+        { "AI2-THOR/Materials/Wood/WoodGrain_Tan", new string[] { "brown" } },
         { "AI2-THOR/Materials/Wood/WornWood", new string[] { "brown" } },
         { "UnityAssetStore/Kindergarten_Interior/Models/Materials/color wood 1", new string[] { "blue" } },
         { "UnityAssetStore/Kindergarten_Interior/Models/Materials/color wood 2", new string[] { "red" } },
+        { "UnityAssetStore/Kindergarten_Interior/Models/Materials/color wood 3", new string[] { "green" } },
         { "UnityAssetStore/Kindergarten_Interior/Models/Materials/color wood 4", new string[] { "yellow" } },
         { "UnityAssetStore/Baby_Room/Models/Materials/wood 1", new string[] { "brown" } }
     };
