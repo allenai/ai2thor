@@ -2811,6 +2811,121 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
 
+        //spawn receptacle object at array index <objectVariation> rotated to <y>
+        //on <receptacleObjectId> using position <position>
+        public void SpawnExperimentReceptacleAtPoint(ServerAction action)
+        {
+            if(action.receptacleObjectId == null)
+            {
+                errorMessage = "please give valid receptacleObjectId for PlaceObjectAtPoint action";
+                actionFinished(false);
+                return;
+            }
+
+            SimObjPhysics target = null;
+            //find the object in the scene, disregard visibility
+            foreach(SimObjPhysics sop in VisibleSimObjs(true))
+            {
+                if(sop.objectID == action.receptacleObjectId)
+                {
+                    target = sop;
+                }
+            }
+
+            if(target == null)
+            {
+                errorMessage = "no receptacle object with id: "+ 
+                action.receptacleObjectId + " could not be found during PlaceObjectAtPoint";
+                actionFinished(false);
+                return;
+            }
+
+            ExperimentRoomSceneManager ersm = physicsSceneManager.GetComponent<ExperimentRoomSceneManager>();
+            if(ersm.SpawnExperimentReceptacleAtPoint(action.objectVariation, target, action.position, action.y))
+            actionFinished(true);
+
+            else
+            {
+                errorMessage = "Experiment object could not be placed on " + action.receptacleObjectId;
+                actionFinished(false);
+            }
+        }
+
+        //spawn receptacle object at array index <objectVariation> rotated to <y>
+        //on <receptacleObjectId> using random seed <randomSeed>
+        public void SpawnExperimentReceptacleAtRandom(ServerAction action)
+        {
+            if(action.receptacleObjectId == null)
+            {
+                errorMessage = "please give valid receptacleObjectId for PlaceObjectAtPoint action";
+                actionFinished(false);
+                return;
+            }
+
+            SimObjPhysics target = null;
+            //find the object in the scene, disregard visibility
+            foreach(SimObjPhysics sop in VisibleSimObjs(true))
+            {
+                if(sop.objectID == action.receptacleObjectId)
+                {
+                    target = sop;
+                }
+            }
+
+            if(target == null)
+            {
+                errorMessage = "no receptacle object with id: "+ 
+                action.receptacleObjectId + " could not be found during PlaceObjectAtPoint";
+                actionFinished(false);
+                return;
+            }
+
+            ExperimentRoomSceneManager ersm = physicsSceneManager.GetComponent<ExperimentRoomSceneManager>();
+            if(ersm.SpawnExperimentReceptacleAtRandom(action.objectVariation, action.randomSeed, target, action.y))
+            actionFinished(true);
+
+            else
+            {
+                errorMessage = "Experiment object could not be placed on " + action.receptacleObjectId;
+                actionFinished(false);
+            }
+        }
+
+        //returns valid spawn points for spawning an object on a receptacle in the experiment room
+        //checks if <action.objectId> at <action.y> rotation can spawn without falling off 
+        //table <receptacleObjectId>
+        public void ReturnValidSpawnsExpRoom(ServerAction action)
+        {
+            if(action.receptacleObjectId == null)
+            {
+                errorMessage = "please give valid receptacleObjectId for ReturnValidSpawnsExpRoom action";
+                actionFinished(false);
+                return;
+            }
+
+            SimObjPhysics target = null;
+            //find the object in the scene, disregard visibility
+            foreach(SimObjPhysics sop in VisibleSimObjs(true))
+            {
+                if(sop.objectID == action.receptacleObjectId)
+                {
+                    target = sop;
+                }
+            }
+
+            if(target == null)
+            {
+                errorMessage = "no receptacle object with id: "+ 
+                action.receptacleObjectId + " could not be found during ReturnValidSpawnsExpRoom";
+                actionFinished(false);
+                return;
+            }
+
+            //return all valid spawn coordinates
+            ExperimentRoomSceneManager ersm = physicsSceneManager.GetComponent<ExperimentRoomSceneManager>();
+            actionFinished(true, ersm.ReturnValidSpawns(action.objectVariation, target, action.y));
+        }
+
         //pass in a Vector3, presumably from GetReachablePositions, and try to place a specific Sim Object there
         //unlike PlaceHeldObject or InitialRandomSpawn, this won't be limited by a Receptacle, but only
         //limited by collision
@@ -2878,6 +2993,56 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(false);
         }
 
+        //same as PlaceObjectAtPoint(ServerAction action) but without a server action
+        public bool PlaceObjectAtPoint(SimObjPhysics t, Vector3 position)
+        {
+            SimObjPhysics target = null;
+            //find the object in the scene, disregard visibility
+            foreach(SimObjPhysics sop in VisibleSimObjs(true))
+            {
+                if(sop.objectID == t.objectID)
+                {
+                    target = sop;
+                }
+            }
+
+            if(target == null)
+            {
+                return false;
+            }
+
+            //make sure point we are moving the object to is valid
+            if(!agentManager.sceneBounds.Contains(position))
+            {
+                return false;
+            }
+
+            //ok let's get the distance from the simObj to the bottom most part of its colliders
+            Vector3 targetNegY = target.transform.position + new Vector3(0, -1, 0);
+            BoxCollider b = target.BoundingBox.GetComponent<BoxCollider>();
+
+            b.enabled = true;
+            Vector3 bottomPoint = b.ClosestPoint(targetNegY);
+            b.enabled = false;
+
+            float distFromSopToBottomPoint = Vector3.Distance(bottomPoint, target.transform.position);
+
+            float offset = distFromSopToBottomPoint;
+
+            //final position to place on surface
+            Vector3 finalPos = GetSurfacePointBelowPosition(position) +  new Vector3(0, offset, 0);
+
+
+            //check spawn area, if its clear, then place object at finalPos
+            InstantiatePrefabTest ipt = physicsSceneManager.GetComponent<InstantiatePrefabTest>();
+            if(ipt.CheckSpawnArea(target, finalPos, target.transform.rotation, false))
+            {
+                target.transform.position = finalPos;
+                return true;
+            }
+
+            return false;
+        }
         //uncomment this to debug draw valid points
         //private List<Vector3> validpointlist = new List<Vector3>();
 
@@ -2943,6 +3108,17 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             // #endif
 
             actionFinished(true, targetPoints);
+        }
+
+        //same as GetSpawnCoordinatesAboveReceptacle(Server Action) but takes a sim obj phys instead
+        //returns a list of vector3 coordinates above a receptacle. These coordinates will make up a grid above the receptacle
+        public List<Vector3> GetSpawnCoordinatesAboveReceptacle(SimObjPhysics t)
+        {
+            SimObjPhysics target = t;
+            //ok now get spawn points from target
+            List<Vector3> targetPoints = new List<Vector3>();
+            targetPoints = target.FindMySpawnPointsFromTopOfTriggerBox();
+            return targetPoints;
         }
 
         //instantiate a target circle, and then place it in a "SpawnOnlyOUtsideReceptacle" that is also within camera view
@@ -3620,14 +3796,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     targetReceptacle = sop;
                 }
             }
-
-            // SimObjPhysics[] simObjPhysicsArray = VisibleSimObjs(action);
-
-            // foreach (SimObjPhysics sop in simObjPhysicsArray) {
-            //     if (action.objectId == sop.ObjectID) {
-            //         targetReceptacle = sop;
-            //     }
-            // }
 
             if (targetReceptacle == null) {
                 errorMessage = "No valid Receptacle found";

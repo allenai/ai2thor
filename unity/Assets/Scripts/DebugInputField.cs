@@ -228,6 +228,42 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         AManager.Initialize(action);
                         break;
                     }
+                 case "exp":
+                    {
+                        ServerAction action = new ServerAction();
+
+                        action.action = "SpawnExperimentReceptacleAtRandom";
+                        action.randomSeed = 12;//UnityEngine.Random.Range(0, 1000);
+                        action.receptacleObjectId = "DiningTable|-00.59|00.00|+00.33";
+                        action.objectVariation = 12;
+                        action.y = 120f;//UnityEngine.Random.Range(0, 360);
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
+                 case "expp":
+                    {
+                        ServerAction action = new ServerAction();
+
+                        action.action = "SpawnExperimentReceptacleAtPoint";
+                        action.receptacleObjectId = "DiningTable|-00.59|00.00|+00.33";
+                        action.objectVariation = 12;
+                        action.position = new Vector3(-1.4f, 0.9f, 0.1f);
+                        action.y = 120f;//UnityEngine.Random.Range(0, 360);
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
+                 case "expspawn":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "ReturnValidSpawnsExpRoom";
+                        action.receptacleObjectId = "DiningTable|-00.59|00.00|+00.33";
+                        action.objectVariation = 12;
+                        action.y = 120f;//UnityEngine.Random.Range(0, 360);
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
 
                 //initialize drone mode
                  case "initd":
@@ -687,7 +723,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         ServerAction action = new ServerAction();
                         action.action = "PlaceObjectAtPoint";
                         action.position = GameObject.Find("TestPosition").transform.position;
-                        action.objectId = "Toaster|-01.84|+00.90|+00.13";
+                        action.objectId = "GarbageCan|+02.63|00.00|-01.48";
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }
@@ -736,7 +772,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         {
                             action.randomSeed = 0;
                             action.forceVisible = false;//true;
-                            action.numPlacementAttempts = 5;
+                            action.numPlacementAttempts = 20;
                         }
 
                         // ObjectTypeCount otc = new ObjectTypeCount();
