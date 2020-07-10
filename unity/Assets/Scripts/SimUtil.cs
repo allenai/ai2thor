@@ -523,7 +523,7 @@ public static class SimUtil {
 		UnityEditor.PlayerSettings.defaultScreenWidth = 300;
 		UnityEditor.PlayerSettings.runInBackground = true;
 		UnityEditor.PlayerSettings.captureSingleScreen = false;
-		UnityEditor.PlayerSettings.displayResolutionDialog = UnityEditor.ResolutionDialogSetting.Disabled;
+		//UnityEditor.PlayerSettings.displayResolutionDialog = UnityEditor.ResolutionDialogSetting.Disabled;
 		UnityEditor.PlayerSettings.usePlayerLog = true;
 		UnityEditor.PlayerSettings.resizableWindow = false;
         UnityEditor.PlayerSettings.fullScreenMode = FullScreenMode.FullScreenWindow;

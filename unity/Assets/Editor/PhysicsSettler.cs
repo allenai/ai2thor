@@ -34,7 +34,7 @@ class PhysicsSettler
             EditorApplication.update += Update;
 
             // and the scene view OnGui
-            SceneView.onSceneGUIDelegate += OnSceneGUI;
+            SceneView.duringSceneGui += OnSceneGUI;
             registered = true;
         }
     }
