@@ -2811,13 +2811,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
 
-        //spawn receptacle object at array index <objectVariation> rotated to <y>
-        //on <receptacleObjectId> using position <position>
-        public void SpawnExperimentReceptacleAtPoint(ServerAction action)
+        public void SpawnExperimentScreenAtPoint(ServerAction action)
         {
             if(action.receptacleObjectId == null)
             {
-                errorMessage = "please give valid receptacleObjectId for PlaceObjectAtPoint action";
+                errorMessage = "please give valid receptacleObjectId for SpawnExperimentScreenAtPoint action";
                 actionFinished(false);
                 return;
             }
@@ -2835,7 +2833,87 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             if(target == null)
             {
                 errorMessage = "no receptacle object with id: "+ 
-                action.receptacleObjectId + " could not be found during PlaceObjectAtPoint";
+                action.receptacleObjectId + " could not be found during SpawnExperimentScreenAtPoint";
+                actionFinished(false);
+                return;
+            }
+
+            ExperimentRoomSceneManager ersm = physicsSceneManager.GetComponent<ExperimentRoomSceneManager>();
+            if(ersm.SpawnExperimentScreenAtPoint(action.objectVariation, target, action.position, action.y))
+            actionFinished(true);
+
+            else
+            {
+                errorMessage = "Screen object could not be placed on " + action.receptacleObjectId;
+                actionFinished(false);
+            }
+        }
+
+        //spawn screen object at array index <objectVariation> rotated to <y>
+        //on <receptacleObjectId> using random seed <randomSeed>
+        public void SpawnExperimentScreenAtRandom(ServerAction action)
+        {
+            if(action.receptacleObjectId == null)
+            {
+                errorMessage = "please give valid receptacleObjectId for SpawnExperimentScreenAtRandom action";
+                actionFinished(false);
+                return;
+            }
+
+            SimObjPhysics target = null;
+            //find the object in the scene, disregard visibility
+            foreach(SimObjPhysics sop in VisibleSimObjs(true))
+            {
+                if(sop.objectID == action.receptacleObjectId)
+                {
+                    target = sop;
+                }
+            }
+
+            if(target == null)
+            {
+                errorMessage = "no receptacle object with id: "+ 
+                action.receptacleObjectId + " could not be found during SpawnExperimentScreenAtRandom";
+                actionFinished(false);
+                return;
+            }
+
+            ExperimentRoomSceneManager ersm = physicsSceneManager.GetComponent<ExperimentRoomSceneManager>();
+            if(ersm.SpawnExperimentScreenAtRandom(action.objectVariation, action.randomSeed, target, action.y))
+            actionFinished(true);
+
+            else
+            {
+                errorMessage = "Screen object could not be placed on " + action.receptacleObjectId;
+                actionFinished(false);
+            }
+        }
+
+        //spawn receptacle object at array index <objectVariation> rotated to <y>
+        //on <receptacleObjectId> using position <position>
+        public void SpawnExperimentReceptacleAtPoint(ServerAction action)
+        {
+            if(action.receptacleObjectId == null)
+            {
+                errorMessage = "please give valid receptacleObjectId for SpawnExperimentReceptacleAtPoint action";
+                actionFinished(false);
+                return;
+            }
+
+            SimObjPhysics target = null;
+            //find the object in the scene, disregard visibility
+            foreach(SimObjPhysics sop in VisibleSimObjs(true))
+            {
+                if(sop.objectID == action.receptacleObjectId)
+                {
+                    target = sop;
+                }
+            }
+
+            if(target == null)
+            {
+                errorMessage = "no receptacle object with id: "+ 
+                action.receptacleObjectId + " could not be found during SpawnExperimentReceptacleAtPoint";
                 actionFinished(false);
                 return;
             }
@@ -2857,7 +2935,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         {
             if(action.receptacleObjectId == null)
             {
-                errorMessage = "please give valid receptacleObjectId for PlaceObjectAtPoint action";
+                errorMessage = "please give valid receptacleObjectId for SpawnExperimentReceptacleAtRandom action";
                 actionFinished(false);
                 return;
             }
@@ -2875,7 +2953,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             if(target == null)
             {
                 errorMessage = "no receptacle object with id: "+ 
-                action.receptacleObjectId + " could not be found during PlaceObjectAtPoint";
+                action.receptacleObjectId + " could not be found during SpawnExperimentReceptacleAtRandom";
                 actionFinished(false);
                 return;
             }
@@ -3027,7 +3105,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             float distFromSopToBottomPoint = Vector3.Distance(bottomPoint, target.transform.position);
 
-            float offset = distFromSopToBottomPoint;
+            float offset = distFromSopToBottomPoint + 0.005f;
 
             //final position to place on surface
             Vector3 finalPos = GetSurfacePointBelowPosition(position) +  new Vector3(0, offset, 0);
@@ -3161,7 +3239,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             else
             {
                 //targetReceptacles.AddRange(physicsSceneManager.ReceptaclesInScene); 
-                foreach(SimObjPhysics sop in physicsSceneManager.ReceptaclesInScene)
+                foreach(SimObjPhysics sop in physicsSceneManager.GatherAllReceptaclesInScene())
                 {
                     if(ReceptacleRestrictions.SpawnOnlyOutsideReceptacles.Contains(sop.ObjType))
                     targetReceptacles.Add(sop);
