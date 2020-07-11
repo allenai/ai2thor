@@ -12,6 +12,18 @@ public class ExperimentRoomSceneManager : MonoBehaviour
     //screens to place on table
     public GameObject[] screensToSpawn = null;
 
+    //wall materials to swap between
+    public Material[] wallMaterials = null;
+
+    //wall material color selector
+    public Color wallColor = Color.white;
+
+    //floor materials to swap between
+    public Material[] floorMaterials = null;
+
+    //floor material color selector
+    public Color floorColor = Color.white;
+
     //the target table to spawn stuff on in the experiment room
     // [SerializeField]
     // public SimObjPhysics targetReceptacle;
