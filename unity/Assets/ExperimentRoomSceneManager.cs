@@ -10,7 +10,7 @@ public class ExperimentRoomSceneManager : MonoBehaviour
     public GameObject[] receptaclesToSpawn = null;
 
     //screens to place on table
-    public GameObject[] screens = null;
+    public GameObject[] screensToSpawn = null;
 
     //the target table to spawn stuff on in the experiment room
     // [SerializeField]
@@ -34,18 +34,6 @@ public class ExperimentRoomSceneManager : MonoBehaviour
     {
         
     }
-
-    //externally set which targetReceptacle we are using for the experiment in case
-    //we want to change it at some point
-    // public void SetTargetReceptacleForExperimentRoom(SimObjPhysics sop)
-    // {
-    //     targetReceptacle = sop;
-    // }
-
-    // public int NumberOfReceptaclesToSpawn()
-    // {
-    //     return receptaclesToSpawn.Length;
-    // }
 
     #if UNITY_EDITOR
     List<Vector3> debugCoords = new List<Vector3>();
@@ -116,6 +104,130 @@ public class ExperimentRoomSceneManager : MonoBehaviour
     //Note: always run ReturnValidSpawns - to get the current scene state's set of useable coordinates
     //spawn receptacle of index [variation] on <target> object at coordinate <point> 
     //a valid <point> should be generated from the ReturnValidSpawns() return
+    public bool SpawnExperimentScreenAtPoint(int variation, SimObjPhysics targetReceptacle, Vector3 point, float yRot = 0)
+    {
+        bool success = false;
+
+        SimObjPhysics toSpawn = screensToSpawn[variation].GetComponent<SimObjPhysics>();
+        //instantiate the prefab toSpawn away from every other object
+        SimObjPhysics spawned = Object.Instantiate(toSpawn, initialSpawnPosition, Quaternion.identity);
+        Rigidbody rb = spawned.GetComponent<Rigidbody>();
+        //make sure object doesn't fall until we are done preparing to reposition it on the target receptacle
+        rb.isKinematic = true;
+
+        //apply rotation to object, default quaternion.identity
+        spawned.transform.Rotate(new Vector3(0, yRot, 0), Space.Self);
+
+        PhysicsRemoteFPSAgentController fpsAgent = agentManager.ReturnPrimaryAgent().GetComponent<PhysicsRemoteFPSAgentController>();
+        if(fpsAgent.PlaceObjectAtPoint(toSpawn, point))
+        {
+            success = true;
+
+            List<Vector3> corners = GetCorners(spawned);
+
+            Contains con = targetReceptacle.ReceptacleTriggerBoxes[0].GetComponent<Contains>();
+            foreach(Vector3 p in corners)
+            {
+                if(!con.CheckIfPointIsAboveReceptacleTriggerBox(p))
+                {
+                    success = false;
+                    //this position would cause object to fall off table
+                    //double back and reset object to try again with another point
+                    spawned.transform.position = initialSpawnPosition;
+                    break;
+                }
+            }
+        }
+
+        if(success)
+        {
+            rb.isKinematic = false;
+            //run scene setup to grab reference to object and give it objectId
+            sceneManager.SetupScene();
+            sceneManager.ResetObjectIdToSimObjPhysics();
+        }
+
+        return success;
+    }
+
+
+    //spawn screen of index [variation] on <target> object using random seed to pick which spawn coordinate used
+    public bool SpawnExperimentScreenAtRandom(int variation, int seed, SimObjPhysics targetReceptacle, float yRot = 0)
+    {
+        bool success = false;
+        //init random state
+        Random.InitState(seed);
+        SimObjPhysics toSpawn = screensToSpawn[variation].GetComponent<SimObjPhysics>();
+
+        List<Vector3> spawnCoordinates = new List<Vector3>();
+        PhysicsRemoteFPSAgentController fpsAgent = agentManager.ReturnPrimaryAgent().GetComponent<PhysicsRemoteFPSAgentController>();
+        spawnCoordinates = fpsAgent.GetSpawnCoordinatesAboveReceptacle(targetReceptacle);
+        spawnCoordinates.Shuffle_(seed);
+
+        //instantiate the prefab toSpawn away from every other object
+        SimObjPhysics spawned = Object.Instantiate(toSpawn, initialSpawnPosition, Quaternion.identity);
+        Rigidbody rb = spawned.GetComponent<Rigidbody>();
+        //make sure object doesn't fall until we are done preparing to reposition it on the target receptacle
+        rb.isKinematic = true;
+
+        //apply rotation to object, default quaternion.identity
+        spawned.transform.Rotate(new Vector3(0, yRot, 0), Space.Self);
+
+        for(int i = 0; i < spawnCoordinates.Count; i++)
+        {
+            //place object at the given point, this also checks the spawn area to see if its clear
+            //if not clear, it will return false
+            if(fpsAgent.PlaceObjectAtPoint(toSpawn, spawnCoordinates[i]))
+            {
+                success = true;
+
+                List<Vector3> corners = GetCorners(spawned);
+
+                Contains con = targetReceptacle.ReceptacleTriggerBoxes[0].GetComponent<Contains>();
+                bool cornerCheck = true;
+                foreach(Vector3 p in corners)
+                {
+                    if(!con.CheckIfPointIsAboveReceptacleTriggerBox(p))
+                    {
+                        cornerCheck = false;
+                        //this position would cause object to fall off table
+                        //double back and reset object to try again with another point
+                        spawned.transform.position = initialSpawnPosition;
+                        break;
+                    }
+                }
+
+                if(!cornerCheck)
+                {
+                    success = false;
+                    continue;
+                }
+            }
+
+            //if all corners were succesful, break out of this loop, don't keep trying
+            if(success)
+            {
+                rb.isKinematic = false;
+                //run scene setup to grab reference to object and give it objectId
+                sceneManager.SetupScene();
+                sceneManager.ResetObjectIdToSimObjPhysics();
+                break;
+            }
+        }
+
+        //no objects could be spawned at any of the spawn points
+        //destroy the thing we tried to place on target receptacle
+        if(!success)
+        {
+            Destroy(spawned.transform.gameObject);
+        }
+
+        return success;
+    }
+
+    //Note: always run ReturnValidSpawns - to get the current scene state's set of useable coordinates
+    //spawn receptacle of index [variation] on <target> object at coordinate <point> 
+    //a valid <point> should be generated from the ReturnValidSpawns() return
     public bool SpawnExperimentReceptacleAtPoint(int variation, SimObjPhysics targetReceptacle, Vector3 point, float yRot = 0)
     {
         bool success = false;
@@ -164,6 +276,13 @@ public class ExperimentRoomSceneManager : MonoBehaviour
             //run scene setup to grab reference to object and give it objectId
             sceneManager.SetupScene();
             sceneManager.ResetObjectIdToSimObjPhysics();
+        }
+        
+        //no objects could be spawned at any of the spawn points
+        //destroy the thing we tried to place on target receptacle
+        if(!success)
+        {
+            Destroy(spawned.transform.gameObject);
         }
 
         return success;
