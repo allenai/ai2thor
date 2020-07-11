@@ -234,7 +234,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
                         action.action = "SpawnExperimentReceptacleAtRandom";
                         action.randomSeed = 12;//UnityEngine.Random.Range(0, 1000);
-                        action.receptacleObjectId = "DiningTable|-00.59|00.00|+00.33";
+                        action.receptacleObjectId = "DiningTable|-00.59|+00.00|+00.33";
                         action.objectVariation = 12;
                         action.y = 120f;//UnityEngine.Random.Range(0, 360);
                         PhysicsController.ProcessControlCommand(action);
@@ -246,7 +246,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         ServerAction action = new ServerAction();
 
                         action.action = "SpawnExperimentReceptacleAtPoint";
-                        action.receptacleObjectId = "DiningTable|-00.59|00.00|+00.33";
+                        action.receptacleObjectId = "DiningTable|-00.59|+00.00|+00.33";
                         action.objectVariation = 12;
                         action.position = new Vector3(-1.4f, 0.9f, 0.1f);
                         action.y = 120f;//UnityEngine.Random.Range(0, 360);
@@ -258,13 +258,38 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     {
                         ServerAction action = new ServerAction();
                         action.action = "ReturnValidSpawnsExpRoom";
-                        action.receptacleObjectId = "DiningTable|-00.59|00.00|+00.33";
+                        action.receptacleObjectId = "DiningTable|-00.59|+00.00|+00.33";
                         action.objectVariation = 12;
                         action.y = 120f;//UnityEngine.Random.Range(0, 360);
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }
 
+                 case "expscreenp":
+                    {
+                        ServerAction action = new ServerAction();
+
+                        action.action = "SpawnExperimentScreenAtPoint";
+                        action.receptacleObjectId = "DiningTable|-00.59|+00.00|+00.33";
+                        action.objectVariation = 0;
+                        action.position = new Vector3(-1.4f, 0.9f, 0.1f);
+                        action.y = 120f;//UnityEngine.Random.Range(0, 360);
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
+                 case "expscreen":
+                    {
+                        ServerAction action = new ServerAction();
+
+                        action.action = "SpawnExperimentScreenAtRandom";
+                        action.randomSeed = UnityEngine.Random.Range(0, 1000);
+                        action.receptacleObjectId = "DiningTable|-00.59|+00.00|+00.33";
+                        action.objectVariation = 0;
+                        action.y = 0f;//UnityEngine.Random.Range(0, 360);
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
                 //initialize drone mode
                  case "initd":
                     {
