@@ -291,10 +291,14 @@ public class Contains : MonoBehaviour
 					float y = objectUpVector.Equals(Vector3.up) ? objectSideTop.y : objectSideBottom.y;
 					for(int j = 0; j < linepoints; j++) {
 						float z = objectSideBack.z + ((objectSideForward.z - objectSideBack.z) * (lineincrement * j));
+<<<<<<< HEAD
 						//Rotate the point around the y-axis of the parent GameObject
 						Vector3 returnVector = new Vector3(x,y,z);
 						returnVector = RotateAroundPivot(returnVector, center, parentRotation);
 						gridpoints.Add(returnVector);
+=======
+						gridpoints.Add(new Vector3(x, y, z));
+>>>>>>> 408abd2572b4fdad7430580dfaae5a85b963973b
 					}
 				}
 			}
@@ -305,9 +309,13 @@ public class Contains : MonoBehaviour
 					float y = objectSideBottom.y + ((objectSideTop.y - objectSideBottom.y) * (lineincrement * i));
 					for(int j = 0; j < linepoints; j++) {
 						float z = objectSideBack.z + ((objectSideForward.z - objectSideBack.z) * (lineincrement * j));
+<<<<<<< HEAD
 						Vector3 returnVector = new Vector3(x,y,z);
 						returnVector = RotateAroundPivot(returnVector, center, parentRotation);
 						gridpoints.Add(returnVector);
+=======
+						gridpoints.Add(new Vector3(x, y, z));
+>>>>>>> 408abd2572b4fdad7430580dfaae5a85b963973b
 					}
 				}
 			}
@@ -318,9 +326,13 @@ public class Contains : MonoBehaviour
 					float z = objectUpVector.Equals(Vector3.forward) ? objectSideForward.z : objectSideBack.z;
 					for(int j = 0; j < linepoints; j++) {
 						float y = objectSideBottom.y + ((objectSideTop.y - objectSideBottom.y) * (lineincrement * j));
+<<<<<<< HEAD
 						Vector3 returnVector = new Vector3(x,y,z);
 						returnVector = RotateAroundPivot(returnVector, center, parentRotation);
 						gridpoints.Add(returnVector);
+=======
+						gridpoints.Add(new Vector3(x, y, z));
+>>>>>>> 408abd2572b4fdad7430580dfaae5a85b963973b
 					}
 				}
 			}
