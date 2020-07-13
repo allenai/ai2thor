@@ -282,10 +282,10 @@ public class MCSMain : MonoBehaviour {
         if (this.currentScene.performerStart != null && this.currentScene.performerStart.position != null) {
             // Always keep the Y position on the floor.
             controller.transform.position = new Vector3(this.currentScene.performerStart.position.x,
-                MCSController.POSITION_Y, this.currentScene.performerStart.position.z);
+                MCSController.STANDING_POSITION_Y, this.currentScene.performerStart.position.z);
         }
         else {
-            controller.transform.position = new Vector3(0, MCSController.POSITION_Y, 0);
+            controller.transform.position = new Vector3(0, MCSController.STANDING_POSITION_Y, 0);
         }
 
         if (this.currentScene.performerStart != null && this.currentScene.performerStart.rotation != null) {
