@@ -165,7 +165,11 @@ public class CanOpen_Object : MonoBehaviour
         return (previous < next ? (previous + ((next - previous) * percentage)) :
             (previous - ((previous - next) * percentage)));
     }
-    
+
+    public bool IsMovementTypeSlide() {
+        return movementType == MovementType.Slide;
+    }
+
     public void Interact()
     {
         //if this object is pickupable AND it's trying to open (book, box, laptop, etc)

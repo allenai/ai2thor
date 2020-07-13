@@ -17,6 +17,7 @@ public class InstantiatePrefabTest : MonoBehaviour
 	Vector3 gizmoscale;
 	Quaternion gizmoquaternion;
 
+    public Quaternion receptacleRotation;
 
     private float yoffset = 0.005f; //y axis offset of placing objects, useful to allow objects to fall just a tiny bit to allow physics to resolve consistently
 
@@ -437,8 +438,7 @@ public class InstantiatePrefabTest : MonoBehaviour
 
                 #if UNITY_EDITOR
                 //Debug.Log(sop.name + " succesfully spawned in " +rsp.ParentSimObjPhys.name + " at coordinate " + rsp.Point);
-                #endif
-
+                #endif               
                 return true;
             }
         }
@@ -482,8 +482,8 @@ public class InstantiatePrefabTest : MonoBehaviour
         GameObject boundingBox = simObj.BoundingBox.transform.gameObject;
         BoxCollider boxCollider = boundingBox.GetComponent<BoxCollider>();
         Vector3 size = new Vector3(simObj.transform.localScale.x * boundingBox.transform.localScale.x * boxCollider.size.x,
-            simObj.transform.localScale.y * boundingBox.transform.localScale.x * boxCollider.size.y,
-            simObj.transform.localScale.z * boundingBox.transform.localScale.x * boxCollider.size.z);
+            simObj.transform.localScale.y * boundingBox.transform.localScale.y * boxCollider.size.y,
+            simObj.transform.localScale.z * boundingBox.transform.localScale.z * boxCollider.size.z);
         Vector3 center = boundingBox.transform.TransformPoint(boxCollider.center);
         //keep track of all 8 corners of the OverlapBox
         this.SpawnCorners.Clear();
@@ -508,7 +508,7 @@ public class InstantiatePrefabTest : MonoBehaviour
         simObj.transform.rotation = originalRot;
 
         //we need the center of the box collider in world space, we need the box collider size/2, we need the rotation to set the box at, layermask, querytrigger
-        Collider[] hitColliders = Physics.OverlapBox(center, size / 2.0f, simObj.transform.rotation, layermask, QueryTriggerInteraction.Ignore);
+        Collider[] hitColliders = Physics.OverlapBox(center, size / 2.0f, receptacleRotation, layermask, QueryTriggerInteraction.Ignore);
         // print("trying to place " + simObj.transform.name + ", hitCollider length is: " + hitColliders.Length);                                             
         // foreach(Collider c in hitColliders)
         // {
@@ -525,7 +525,7 @@ public class InstantiatePrefabTest : MonoBehaviour
         Gizmos.color = Color.red;
         if (m_Started)
         {
-            Matrix4x4 cubeTransform = Matrix4x4.TRS(gizmopos, gizmoquaternion, gizmoscale);
+            Matrix4x4 cubeTransform = Matrix4x4.TRS(gizmopos, receptacleRotation, gizmoscale);
             Matrix4x4 oldGizmosMatrix = Gizmos.matrix;
 
             Gizmos.matrix *= cubeTransform;
