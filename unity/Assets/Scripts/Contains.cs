@@ -277,11 +277,10 @@ public class Contains : MonoBehaviour
 		//these are all the points on the grid on the top of the receptacle box in local space
 		List<Vector3> gridpoints = new List<Vector3>();
 
-        //The first if creates only one spawn point directly in the center of a receptacle 
-		//if the receptacle is smaller than the bounds below (for very small objects)
-		float smallObjectBounds = 0.125f; //need this variable or else stacking will not work properly
+        //The first if creates only one spawn point directly in the center of a receptacle if it is stacking
 		float raisedCenterForSingleSpawnPoint = 0.075f;
-		if (xBoundsRange < smallObjectBounds & zBoundsRange < smallObjectBounds) {
+		SimObjPhysics simObj = gameObject.GetComponentInParent<SimObjPhysics>();
+        if (simObj.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.Stacking)) {
 			Vector3 centerOfReceptacleForSmallObjects = new Vector3(center.x, center.y + raisedCenterForSingleSpawnPoint, center.z);
 			gridpoints.Add(centerOfReceptacleForSmallObjects);
 		
@@ -292,7 +291,7 @@ public class Contains : MonoBehaviour
 					float y = objectUpVector.Equals(Vector3.up) ? objectSideTop.y : objectSideBottom.y;
 					for(int j = 0; j < linepoints; j++) {
 						float z = objectSideBack.z + ((objectSideForward.z - objectSideBack.z) * (lineincrement * j));
-						//Rotate the point around the y-axis of the parent GameObject
+						///Rotate the point around the y-axis of the parent GameObject
 						Vector3 returnVector = new Vector3(x,y,z);
 						returnVector = RotateAroundPivot(returnVector, center, parentRotation);
 						gridpoints.Add(returnVector);
