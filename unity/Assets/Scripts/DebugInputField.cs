@@ -228,12 +228,40 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         AManager.Initialize(action);
                         break;
                     }
+
+                 case "expspawn":
+                    {
+                        ServerAction action = new ServerAction();
+
+						if (splitcommand.Length == 2 )
+                        {
+                            if(splitcommand[1] == "s")
+							action.objectType = "screen";
+
+                            if(splitcommand[1] == "r")
+							action.objectType = "receptacle";
+                        }
+
+                        else
+                        {
+                            action.objectType = "receptacle";
+                        }
+
+                        action.action = "ReturnValidSpawnsExpRoom";
+                        action.receptacleObjectId = "DiningTable|-00.59|+00.00|+00.33";
+                        action.objectVariation = 0;
+                        action.y = 120f;//UnityEngine.Random.Range(0, 360);
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
                  case "exp":
                     {
                         ServerAction action = new ServerAction();
 
-                        action.action = "SpawnExperimentReceptacleAtRandom";
-                        action.randomSeed = 12;//UnityEngine.Random.Range(0, 1000);
+                        action.action = "SpawnExperimentObjAtRandom";
+                        action.objectType = "receptacle";
+                        action.randomSeed = 50;//UnityEngine.Random.Range(0, 1000);
                         action.receptacleObjectId = "DiningTable|-00.59|+00.00|+00.33";
                         action.objectVariation = 12;
                         action.y = 120f;//UnityEngine.Random.Range(0, 360);
@@ -245,7 +273,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     {
                         ServerAction action = new ServerAction();
 
-                        action.action = "SpawnExperimentReceptacleAtPoint";
+                        action.action = "SpawnExperimentObjAtPoint";
+                        action.objectType = "receptacle";
                         action.receptacleObjectId = "DiningTable|-00.59|+00.00|+00.33";
                         action.objectVariation = 12;
                         action.position = new Vector3(-1.4f, 0.9f, 0.1f);
@@ -254,22 +283,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         break;
                     }
 
-                 case "expspawn":
-                    {
-                        ServerAction action = new ServerAction();
-                        action.action = "ReturnValidSpawnsExpRoom";
-                        action.receptacleObjectId = "DiningTable|-00.59|+00.00|+00.33";
-                        action.objectVariation = 12;
-                        action.y = 120f;//UnityEngine.Random.Range(0, 360);
-                        PhysicsController.ProcessControlCommand(action);
-                        break;
-                    }
-
-                 case "expscreenp":
+                 case "expscp":
                     {
                         ServerAction action = new ServerAction();
 
                         action.action = "SpawnExperimentScreenAtPoint";
+                        action.objectType = "screen";
                         action.receptacleObjectId = "DiningTable|-00.59|+00.00|+00.33";
                         action.objectVariation = 0;
                         action.position = new Vector3(-1.4f, 0.9f, 0.1f);
@@ -278,18 +297,72 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         break;
                     }
 
-                 case "expscreen":
+                 case "exps":
                     {
                         ServerAction action = new ServerAction();
 
-                        action.action = "SpawnExperimentScreenAtRandom";
+                        action.action = "SpawnExperimentObjAtRandom";
+                        action.objectType = "screen";
                         action.randomSeed = UnityEngine.Random.Range(0, 1000);
                         action.receptacleObjectId = "DiningTable|-00.59|+00.00|+00.33";
+
+						if (splitcommand.Length == 2 )
+                        {
+                            action.objectVariation = int.Parse(splitcommand[1]);
+                        }
+
+                        else
                         action.objectVariation = 0;
+
                         action.y = 0f;//UnityEngine.Random.Range(0, 360);
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }
+
+                 case "wallcolor":
+                    {
+                        ServerAction action = new ServerAction();
+
+                        action.action = "ChangeWallColorExpRoom";
+                        action.r = 100f;
+                        action.g = 100f;
+                        action.b = 100f;
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
+                 case "floorcolor":
+                    {
+                        ServerAction action = new ServerAction();
+
+                        action.action = "ChangeFloorColorExpRoom";
+                        action.r = 100f;
+                        action.g = 100f;
+                        action.b = 100f;
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
+                 case "wallmaterial":
+                    {
+                        ServerAction action = new ServerAction();
+
+                        action.action = "ChangeWallMaterialExpRoom";
+                        action.objectVariation = 1;
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
+                 case "floormaterial":
+                    {
+                        ServerAction action = new ServerAction();
+
+                        action.action = "ChangeFloorMaterialExpRoom";
+                        action.objectVariation = 1;
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
                 //initialize drone mode
                  case "initd":
                     {

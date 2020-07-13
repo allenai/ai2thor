@@ -2811,91 +2811,20 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
 
-        public void SpawnExperimentScreenAtPoint(ServerAction action)
-        {
-            if(action.receptacleObjectId == null)
-            {
-                errorMessage = "please give valid receptacleObjectId for SpawnExperimentScreenAtPoint action";
-                actionFinished(false);
-                return;
-            }
-
-            SimObjPhysics target = null;
-            //find the object in the scene, disregard visibility
-            foreach(SimObjPhysics sop in VisibleSimObjs(true))
-            {
-                if(sop.objectID == action.receptacleObjectId)
-                {
-                    target = sop;
-                }
-            }
-
-            if(target == null)
-            {
-                errorMessage = "no receptacle object with id: "+ 
-                action.receptacleObjectId + " could not be found during SpawnExperimentScreenAtPoint";
-                actionFinished(false);
-                return;
-            }
-
-            ExperimentRoomSceneManager ersm = physicsSceneManager.GetComponent<ExperimentRoomSceneManager>();
-            if(ersm.SpawnExperimentScreenAtPoint(action.objectVariation, target, action.position, action.y))
-            actionFinished(true);
-
-            else
-            {
-                errorMessage = "Screen object could not be placed on " + action.receptacleObjectId;
-                actionFinished(false);
-            }
-        }
-
-        //spawn screen object at array index <objectVariation> rotated to <y>
-        //on <receptacleObjectId> using random seed <randomSeed>
-        public void SpawnExperimentScreenAtRandom(ServerAction action)
-        {
-            if(action.receptacleObjectId == null)
-            {
-                errorMessage = "please give valid receptacleObjectId for SpawnExperimentScreenAtRandom action";
-                actionFinished(false);
-                return;
-            }
-
-            SimObjPhysics target = null;
-            //find the object in the scene, disregard visibility
-            foreach(SimObjPhysics sop in VisibleSimObjs(true))
-            {
-                if(sop.objectID == action.receptacleObjectId)
-                {
-                    target = sop;
-                }
-            }
-
-            if(target == null)
-            {
-                errorMessage = "no receptacle object with id: "+ 
-                action.receptacleObjectId + " could not be found during SpawnExperimentScreenAtRandom";
-                actionFinished(false);
-                return;
-            }
-
-            ExperimentRoomSceneManager ersm = physicsSceneManager.GetComponent<ExperimentRoomSceneManager>();
-            if(ersm.SpawnExperimentScreenAtRandom(action.objectVariation, action.randomSeed, target, action.y))
-            actionFinished(true);
-
-            else
-            {
-                errorMessage = "Screen object could not be placed on " + action.receptacleObjectId;
-                actionFinished(false);
-            }
-        }
-
         //spawn receptacle object at array index <objectVariation> rotated to <y>
         //on <receptacleObjectId> using position <position>
-        public void SpawnExperimentReceptacleAtPoint(ServerAction action)
+        public void SpawnExperimentObjAtPoint(ServerAction action)
         {
             if(action.receptacleObjectId == null)
             {
                 errorMessage = "please give valid receptacleObjectId for SpawnExperimentReceptacleAtPoint action";
+                actionFinished(false);
+                return;
+            }
+
+            if(action.objectType == null)
+            {
+                errorMessage = "please use either 'receptacle' or 'screen' to specify which experiment object to spawn";
                 actionFinished(false);
                 return;
             }
@@ -2919,7 +2848,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
 
             ExperimentRoomSceneManager ersm = physicsSceneManager.GetComponent<ExperimentRoomSceneManager>();
-            if(ersm.SpawnExperimentReceptacleAtPoint(action.objectVariation, target, action.position, action.y))
+            if(ersm.SpawnExperimentObjAtPoint(action.objectType, action.objectVariation, target, action.position, action.y))
             actionFinished(true);
 
             else
@@ -2931,11 +2860,18 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         //spawn receptacle object at array index <objectVariation> rotated to <y>
         //on <receptacleObjectId> using random seed <randomSeed>
-        public void SpawnExperimentReceptacleAtRandom(ServerAction action)
+        public void SpawnExperimentObjAtRandom(ServerAction action)
         {
             if(action.receptacleObjectId == null)
             {
                 errorMessage = "please give valid receptacleObjectId for SpawnExperimentReceptacleAtRandom action";
+                actionFinished(false);
+                return;
+            }
+
+            if(action.objectType == null)
+            {
+                errorMessage = "please use either 'receptacle' or 'screen' to specify which experiment object to spawn";
                 actionFinished(false);
                 return;
             }
@@ -2959,7 +2895,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
 
             ExperimentRoomSceneManager ersm = physicsSceneManager.GetComponent<ExperimentRoomSceneManager>();
-            if(ersm.SpawnExperimentReceptacleAtRandom(action.objectVariation, action.randomSeed, target, action.y))
+            if(ersm.SpawnExperimentObjAtRandom(action.objectType, action.objectVariation, action.randomSeed, target, action.y))
             actionFinished(true);
 
             else
@@ -2967,6 +2903,58 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 errorMessage = "Experiment object could not be placed on " + action.receptacleObjectId;
                 actionFinished(false);
             }
+        }
+
+        //change wall to material [variation]       
+        public void ChangeWallMaterialExpRoom(ServerAction action)
+        {
+            ExperimentRoomSceneManager ersm = physicsSceneManager.GetComponent<ExperimentRoomSceneManager>();
+            ersm.ChangeWallMaterial(action.objectVariation);
+            actionFinished(true);
+        }
+
+        //change wall color to rgb (0-255, 0-255, 0-255)
+        public void ChangeWallColorExpRoom(ServerAction action)
+        {
+            if(
+            action.r < 0 || action.r > 255 ||
+            action.g < 0 || action.g > 255 ||
+            action.b < 0 || action.b > 255)
+            {
+                errorMessage = "rgb values must be [0-255]";
+                actionFinished(false);
+                return;
+            }
+
+            ExperimentRoomSceneManager ersm = physicsSceneManager.GetComponent<ExperimentRoomSceneManager>();
+            ersm.ChangeWallColor(action.r, action.g, action.b);
+            actionFinished(true);
+        }
+
+        //change floor to material [variation]
+        public void ChangeFloorMaterialExpRoom(ServerAction action)
+        {
+            ExperimentRoomSceneManager ersm = physicsSceneManager.GetComponent<ExperimentRoomSceneManager>();
+            ersm.ChangeFloorMaterial(action.objectVariation);
+            actionFinished(true);
+        }
+
+        //change wall color to rgb (0-255, 0-255, 0-255)
+        public void ChangeFloorColorExpRoom(ServerAction action)
+        {
+            if(
+            action.r < 0 || action.r > 255 ||
+            action.g < 0 || action.g > 255 ||
+            action.b < 0 || action.b > 255)
+            {
+                errorMessage = "rgb values must be [0-255]";
+                actionFinished(false);
+                return;
+            }
+
+            ExperimentRoomSceneManager ersm = physicsSceneManager.GetComponent<ExperimentRoomSceneManager>();
+            ersm.ChangeFloorColor(action.r, action.g, action.b);
+            actionFinished(true);
         }
 
         //returns valid spawn points for spawning an object on a receptacle in the experiment room
@@ -2977,6 +2965,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             if(action.receptacleObjectId == null)
             {
                 errorMessage = "please give valid receptacleObjectId for ReturnValidSpawnsExpRoom action";
+                actionFinished(false);
+                return;
+            }
+
+            if(action.objectType == null)
+            {
+                errorMessage = "please use either 'receptacle' or 'screen' to specify which experiment object to spawn";
                 actionFinished(false);
                 return;
             }
@@ -3001,7 +2996,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             //return all valid spawn coordinates
             ExperimentRoomSceneManager ersm = physicsSceneManager.GetComponent<ExperimentRoomSceneManager>();
-            actionFinished(true, ersm.ReturnValidSpawns(action.objectVariation, target, action.y));
+            actionFinished(true, ersm.ReturnValidSpawns(action.objectType, action.objectVariation, target, action.y));
         }
 
         //pass in a Vector3, presumably from GetReachablePositions, and try to place a specific Sim Object there
@@ -3052,7 +3047,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             float distFromSopToBottomPoint = Vector3.Distance(bottomPoint, target.transform.position);
 
-            float offset = distFromSopToBottomPoint + 0.005f;
+            float offset = distFromSopToBottomPoint;
 
             Vector3 finalPos = GetSurfacePointBelowPosition(action.position) +  new Vector3(0, offset, 0);
 
@@ -3105,7 +3100,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             float distFromSopToBottomPoint = Vector3.Distance(bottomPoint, target.transform.position);
 
-            float offset = distFromSopToBottomPoint + 0.005f;
+            float offset = distFromSopToBottomPoint;
 
             //final position to place on surface
             Vector3 finalPos = GetSurfacePointBelowPosition(position) +  new Vector3(0, offset, 0);
