@@ -863,8 +863,8 @@ class Controller(object):
                           " parameter instead.")
             height = player_screen_height
 
-        if height < 300 or width < 300:
-            raise Exception("Screen resolution must be >= 300x300")
+        if height <= 0 or width <= 0:
+            raise Exception("Screen resolution must be > 0x0")
 
         if self.server_thread is not None:
             import warnings
@@ -923,6 +923,9 @@ class Controller(object):
 
         # receive the first request
         self.last_event = queue_get(self.request_queue, self.unity_proc)
+
+        if height < 300 or width < 300:
+            self.last_event = self.step('ChangeResolution', x=width, y=height)
 
         return self.last_event
 
