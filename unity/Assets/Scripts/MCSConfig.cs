@@ -129,7 +129,12 @@ public class MCSConfig {
         // Hard-code additional materials present in the original playroom scene but not available in the registry.
         Dictionary<string, string[]> materialColors = new Dictionary<string, string[]>() {
             { "childrens floor", new string[] { "blue", "green", "purple", "red", "yellow" } },
-            { "crayons", new string[] { "blue" } }, // TODO MCS-264
+            { "crayon_black", new string[] { "black" } },
+            { "crayon_blue", new string[] { "blue" } },
+            { "crayon_green", new string[] { "green" } },
+            { "crayon_pink", new string[] { "pink" } },
+            { "crayon_red", new string[] { "red" } },
+            { "crayon_yellow", new string[] { "yellow" } },
             { "mattress fabric", new string[] { "white" } },
             { "pacifier", new string[] { "blue" } },
             { "Apple1_Mat1", new string[] { "red" } },
