@@ -334,14 +334,15 @@ public class MCSController : PhysicsRemoteFPSAgentController {
         controlCommand.placeStationary = false;
 
         Debug.Log("MCS: Action = " + controlCommand.action);
-        
+
         base.ProcessControlCommand(controlCommand);
 
         // Clear the saved images from the previous step.
         ((MCSPerformerManager)this.agentManager).ClearSavedImages();
 
-        if (!controlCommand.action.Equals("Initialize"))
+        if (!controlCommand.action.Equals("Initialize")) {
             this.step++;
+        }
     }
 
     public override void PullObject(ServerAction action) {
@@ -496,9 +497,7 @@ public class MCSController : PhysicsRemoteFPSAgentController {
             framesUntilGridSnap++;
             if (framesUntilGridSnap == NUMBER_OF_FRAMES_FOR_MOVEMENT) {
                 this.snapToGrid();
-                //if (this.agentManager.renderImage == false) {
-                    actionFinished(movementActionFinished);
-                //}
+                actionFinished(movementActionFinished);
             }
         }
         // Call Physics.Simulate multiple times with a small step value because a large step
