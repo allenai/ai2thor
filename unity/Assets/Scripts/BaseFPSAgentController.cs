@@ -1514,6 +1514,11 @@ namespace UnityStandardAssets.Characters.FirstPerson
             actionFinished(true);
         }
 
+        //no op action
+        public void Done(ServerAction action) {
+            actionFinished(true);
+        }
+
 		// Handle collisions - CharacterControllers don't apply physics innately, see "PushMode" check below
         // XXX: this will be used for truly continuous movement over time, for now this is unused
 		protected void OnControllerColliderHit(ControllerColliderHit hit)
