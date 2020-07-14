@@ -24,6 +24,7 @@ namespace Tests
         {
             Assert.AreEqual(true, true);
             Assert.IsFalse(false);
-            Assert.False(false);        }
+            Assert.False(false);        
+        }
     }
 }

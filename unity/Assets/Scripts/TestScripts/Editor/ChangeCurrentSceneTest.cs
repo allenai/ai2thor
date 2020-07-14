@@ -74,20 +74,4 @@ namespace Tests
             
         }
     }
-
-    /*
-    public class MCSConfigScene {
-    public String name;
-    public String ceilingMaterial;
-    public String floorMaterial;
-    public String wallMaterial;
-    public bool observation;
-    public bool screenshot;
-    
-    public MCSConfigGoal goal;
-    public MCSConfigTransform performerStart = null;
-    public List<MCSConfigGameObject> objects;
-    public MCSConfigPhysicsProperties floorProperties;
-    public MCSConfigPhysicsProperties wallProperties;
-    */
 }
