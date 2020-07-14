@@ -56,6 +56,12 @@ def test_rectangle_aspect():
     event = controller.step(dict(action='Initialize', gridSize=0.25))
     assert event.frame.shape == (300, 600, 3)
 
+def test_small_aspect():
+    controller = UnityTestController(width=128, height=64)
+    controller.reset('FloorPlan28')
+    event = controller.step(dict(action='Initialize', gridSize=0.25))
+    assert event.frame.shape == (64, 128, 3)
+    
 def test_lookdown():
 
     e = controller.step(dict(action='RotateLook', rotation=0, horizon=0))
