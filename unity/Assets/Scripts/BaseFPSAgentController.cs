@@ -2874,14 +2874,14 @@ namespace UnityStandardAssets.Characters.FirstPerson
             // }
 
             //draw axis aligned bounds of objects after actionFinished() calls
-            if(gizmobounds != null)
-            {
-                Gizmos.color = Color.yellow;
-                foreach(Bounds g in gizmobounds)
-                {
-                    Gizmos.DrawWireCube(g.center, g.size);
-                }
-            }
+            // if(gizmobounds != null)
+            // {
+            //     Gizmos.color = Color.yellow;
+            //     foreach(Bounds g in gizmobounds)
+            //     {
+            //         Gizmos.DrawWireCube(g.center, g.size);
+            //     }
+            // }
         }
         #endif
 	}

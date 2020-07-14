@@ -363,6 +363,72 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         break;
                     }
 
+                 case "lightc":
+                    {
+                        ServerAction action = new ServerAction();
+
+                        action.action = "ChangeLightColorExpRoom";
+                        action.r = 20f;
+                        action.g = 94f;
+                        action.b = 10f;
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
+                 case "lighti":
+                    {
+                        ServerAction action = new ServerAction();
+
+                        action.action = "ChangeLightIntensityExpRoom";
+                        action.intensity = 3;
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
+                 case "tabletopc":
+                    {
+                        ServerAction action = new ServerAction();
+
+                        action.action = "ChangeTableTopColorExpRoom";
+                        action.r = 20f;
+                        action.g = 94f;
+                        action.b = 10f;
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
+                 case "tabletopm":
+                    {
+                        ServerAction action = new ServerAction();
+
+                        action.action = "ChangeTableTopMaterialExpRoom";
+                        action.objectVariation = 3;
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
+                 case "tablelegc":
+                    {
+                        ServerAction action = new ServerAction();
+
+                        action.action = "ChangeTableLegColorExpRoom";
+                        action.r = 20f;
+                        action.g = 94f;
+                        action.b = 10f;
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
+                 case "tablelegm":
+                    {
+                        ServerAction action = new ServerAction();
+
+                        action.action = "ChangeTableLegMaterialExpRoom";
+                        action.objectVariation = 3;
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
                 //initialize drone mode
                  case "initd":
                     {

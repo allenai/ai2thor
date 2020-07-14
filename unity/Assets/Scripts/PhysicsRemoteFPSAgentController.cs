@@ -2908,6 +2908,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         //change wall to material [variation]       
         public void ChangeWallMaterialExpRoom(ServerAction action)
         {
+            //only 5 material options at the moment
+            if(action.objectVariation < 0 || action.objectVariation > 4)
+            {
+                errorMessage = "please use objectVariation [0, 4] inclusive";
+                actionFinished(false);
+                return;
+            }
+
             ExperimentRoomSceneManager ersm = physicsSceneManager.GetComponent<ExperimentRoomSceneManager>();
             ersm.ChangeWallMaterial(action.objectVariation);
             actionFinished(true);
@@ -2934,6 +2942,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         //change floor to material [variation]
         public void ChangeFloorMaterialExpRoom(ServerAction action)
         {
+            //only 5 material options at the moment
+            if(action.objectVariation < 0 || action.objectVariation > 4)
+            {
+                errorMessage = "please use objectVariation [0, 4] inclusive";
+                actionFinished(false);
+                return;
+            }
+
             ExperimentRoomSceneManager ersm = physicsSceneManager.GetComponent<ExperimentRoomSceneManager>();
             ersm.ChangeFloorMaterial(action.objectVariation);
             actionFinished(true);
@@ -2954,6 +2970,105 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             ExperimentRoomSceneManager ersm = physicsSceneManager.GetComponent<ExperimentRoomSceneManager>();
             ersm.ChangeFloorColor(action.r, action.g, action.b);
+            actionFinished(true);
+        }
+
+        //change color of ceiling lights in exp room to rgb (0-255, 0-255, 0-255)
+        public void ChangeLightColorExpRoom(ServerAction action)
+        {
+            if(
+            action.r < 0 || action.r > 255 ||
+            action.g < 0 || action.g > 255 ||
+            action.b < 0 || action.b > 255)
+            {
+                errorMessage = "rgb values must be [0-255]";
+                actionFinished(false);
+                return;
+            }
+
+            ExperimentRoomSceneManager ersm = physicsSceneManager.GetComponent<ExperimentRoomSceneManager>();
+            ersm.ChangeLightColor(action.r, action.g, action.b);
+            actionFinished(true);
+        }
+
+        //change intensity of lights in exp room [0-5] these arent in like... lumens or anything
+        //just a relative intensity value
+        public void ChangeLightIntensityExpRoom(ServerAction action)
+        {
+            //restrict this to [0-5]
+            if(action.intensity < 0 || action.intensity > 5)
+            {
+                errorMessage = "light intensity must be [0.0 , 5.0] inclusive";
+                actionFinished(false);
+                return;
+            }
+
+            ExperimentRoomSceneManager ersm = physicsSceneManager.GetComponent<ExperimentRoomSceneManager>();
+            ersm.ChangeLightIntensity(action.intensity);
+            actionFinished(true);
+        }
+
+        public void ChangeTableTopMaterialExpRoom(ServerAction action)
+        {
+            //only 5 material options at the moment
+            if(action.objectVariation < 0 || action.objectVariation > 4)
+            {
+                errorMessage = "please use objectVariation [0, 4] inclusive";
+                actionFinished(false);
+                return;
+            }
+
+            ExperimentRoomSceneManager ersm = physicsSceneManager.GetComponent<ExperimentRoomSceneManager>();
+            ersm.ChangeTableTopMaterial(action.objectVariation);
+            actionFinished(true);
+        }
+
+        public void ChangeTableTopColorExpRoom(ServerAction action)
+        {
+            if(
+            action.r < 0 || action.r > 255 ||
+            action.g < 0 || action.g > 255 ||
+            action.b < 0 || action.b > 255)
+            {
+                errorMessage = "rgb values must be [0-255]";
+                actionFinished(false);
+                return;
+            }
+
+            ExperimentRoomSceneManager ersm = physicsSceneManager.GetComponent<ExperimentRoomSceneManager>();
+            ersm.ChangeTableTopColor(action.r, action.g, action.b);
+            actionFinished(true);
+        }
+
+        public void ChangeTableLegMaterialExpRoom(ServerAction action)
+        {
+            //only 5 material options at the moment
+            if(action.objectVariation < 0 || action.objectVariation > 4)
+            {
+                errorMessage = "please use objectVariation [0, 4] inclusive";
+                actionFinished(false);
+                return;
+            }
+
+            ExperimentRoomSceneManager ersm = physicsSceneManager.GetComponent<ExperimentRoomSceneManager>();
+            ersm.ChangeTableLegMaterial(action.objectVariation);
+            actionFinished(true);
+        }
+
+        public void ChangeTableLegColorExpRoom(ServerAction action)
+        {
+            if(
+            action.r < 0 || action.r > 255 ||
+            action.g < 0 || action.g > 255 ||
+            action.b < 0 || action.b > 255)
+            {
+                errorMessage = "rgb values must be [0-255]";
+                actionFinished(false);
+                return;
+            }
+
+            ExperimentRoomSceneManager ersm = physicsSceneManager.GetComponent<ExperimentRoomSceneManager>();
+            ersm.ChangeTableLegColor(action.r, action.g, action.b);
             actionFinished(true);
         }
 

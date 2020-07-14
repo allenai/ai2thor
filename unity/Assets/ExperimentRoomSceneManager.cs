@@ -5,38 +5,27 @@ using UnityStandardAssets.Characters.FirstPerson;
 
 public class ExperimentRoomSceneManager : MonoBehaviour
 {
-
     //set of experiment receptacle objects
     public GameObject[] receptaclesToSpawn = null;
-
     //screens to place on table
     public GameObject[] screensToSpawn = null;
-
     //reference to wall renderer
     public Renderer wall;
-
     //wall materials to swap between
     public Material[] wallMaterials = null;
-
-    //wall material color selector
-    public Color wallColor = Color.white;
-
     //reference to floor renderer
     public Renderer floor;
-
     //floor materials to swap between
     public Material[] floorMaterials = null;
-
-    //floor material color selector
-    public Color floorColor = Color.white;
-
-    //the target table to spawn stuff on in the experiment room
-    // [SerializeField]
-    // public SimObjPhysics targetReceptacle;
-
+    //reference to table renderer, material[0] is top, material [1] are legs
+    public Renderer table;
+    //table top materials to swap between
+    public Material[] tableTopMaterials = null;
+    //reference to table leg renderer
+    public Material[] tableLegMaterials = null;
+    public GameObject[] allOfTheLights;
     //object to spawn
     public SimObjPhysics toSpawn;
-
     private AgentManager agentManager;
     private PhysicsSceneManager sceneManager;
 
@@ -60,6 +49,56 @@ public class ExperimentRoomSceneManager : MonoBehaviour
     List<Vector3> debugCoords = new List<Vector3>();
     #endif
 
+    public void ChangeLightColor(float r, float g, float b)
+    {
+        foreach (GameObject light in allOfTheLights)
+        {
+            light.GetComponent<Light>().color = new Color(r/255f, g/255f, b/255f);
+        }
+    }
+
+    //0 to like 5 is reasonable
+    public void ChangeLightIntensity(float intensity)
+    {
+        foreach (GameObject light in allOfTheLights)
+        {
+            light.GetComponent<Light>().intensity = intensity;
+        }
+    }
+
+    public void ChangeTableTopMaterial(int variation = 0)
+    {
+        Material[] mats = table.materials;
+        mats[0] = tableTopMaterials[variation];
+        table.materials = mats;
+    }
+
+    public void ChangeTableTopColor(float r, float g, float b)
+    {
+        Material[] mats = table.materials;
+        mats[0].color = new Color(r/255f, g/255f, b/255f);
+        table.materials = mats;
+    }
+
+    public void ChangeTableLegMaterial(int variation = 0)
+    {
+        Material[] mats = table.materials;
+        mats[1] = tableTopMaterials[variation];
+        table.materials = mats;
+    }
+
+    public void ChangeTableLegColor(float r, float g, float b)
+    {
+        Material[] mats = table.materials;
+        mats[1].color = new Color(r/255f, g/255f, b/255f);
+        table.materials = mats;
+    }
+
+    public void ChangeLightConfig(int variation = 0)
+    {
+        //disable all lights
+        //enable the specific variation
+    }
 
     //change wall material variation
     public void ChangeWallMaterial(int variation = 0)

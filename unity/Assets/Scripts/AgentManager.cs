@@ -1325,6 +1325,8 @@ public class ServerAction
 	public float g;
 	public float b;
 
+	public float intensity;//used for light?
+
     public SimObjType ReceptableSimObjType()
 	{
 		if (string.IsNullOrEmpty(receptacleObjectType))
