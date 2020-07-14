@@ -32,11 +32,20 @@
         "pickupable": true,
         "receptacle": true
     }, {
+        "id": "box_4",
+        "resourceFile": "AI2-THOR/Objects/Physics/SimObjsPhysics/Living Room and Bedroom Objects/Box_Full/Prefabs/Box_4",
+        "shape": "box",
+        "mass": 0.5,
+        "materialRestrictions": ["no_material"],
+        "openable": true,
+        "pickupable": true,
+        "receptacle": true
+    }, {
         "id": "bowl_3",
         "resourceFile": "AI2-THOR/Objects/Physics/SimObjsPhysics/Kitchen Objects/Bowl/Prefabs/Bowl_3",
         "shape": "bowl",
         "mass": 0.25,
-        "materialRestrictions": ["plastic"],
+        "materialRestrictions": ["plastic", "wood"],
         "pickupable": true,
         "receptacle": true
     }, {
@@ -44,7 +53,15 @@
         "resourceFile": "AI2-THOR/Objects/Physics/SimObjsPhysics/Kitchen Objects/Bowl/Prefabs/Bowl_4",
         "shape": "bowl",
         "mass": 0.25,
-        "materialRestrictions": ["plastic"],
+        "materialRestrictions": ["plastic", "wood"],
+        "pickupable": true,
+        "receptacle": true
+    }, {
+        "id": "bowl_6",
+        "resourceFile": "AI2-THOR/Objects/Physics/SimObjsPhysics/Kitchen Objects/Bowl/Prefabs/Bowl_6",
+        "shape": "bowl",
+        "mass": 0.25,
+        "materialRestrictions": ["plastic", "wood"],
         "pickupable": true,
         "receptacle": true
     }, {
@@ -52,7 +69,7 @@
         "resourceFile": "AI2-THOR/Objects/Physics/SimObjsPhysics/Entryway Objects/Furniture/ChairWood",
         "shape": "chair",
         "mass": 2,
-        "materialRestrictions": ["wood"],
+        "materialRestrictions": ["wood", "plastic", "metal"],
         "salientMaterials": ["wood"],
         "moveable": true,
         "receptacle": true,
@@ -85,7 +102,7 @@
         "resourceFile": "AI2-THOR/Objects/Prefabs/SimObjs/UNFINISHED/Furniture/Chair2",
         "shape": "stool",
         "mass": 1,
-        "materialRestrictions": ["plastic"],
+        "materialRestrictions": ["plastic", "wood", "metal"],
         "salientMaterials": ["plastic"],
         "moveable": true,
         "receptacle": true,
@@ -236,7 +253,28 @@
         "resourceFile": "AI2-THOR/Objects/Physics/SimObjsPhysics/Kitchen Objects/Cup/Prefabs/Cup_2",
         "shape": "cup",
         "mass": 0.25,
-        "materialRestrictions": ["plastic"],
+        "materialRestrictions": ["plastic", "wood"],
+        "pickupable": true,
+        "receptacle": true,
+        "stacking":true,
+        "receptacleTriggerBoxes": [{
+            "position": {
+                "x": 0,
+                "y": 0.2,
+                "z": 0
+            },
+            "scale": {
+                "x": 0.08,
+                "y": 0.15,
+                "z": 0.08
+            }
+        }]
+    }, {
+        "id": "cup_3",
+        "resourceFile": "AI2-THOR/Objects/Physics/SimObjsPhysics/Kitchen Objects/Cup/Prefabs/Cup_3",
+        "shape": "cup",
+        "mass": 0.25,
+        "materialRestrictions": ["plastic", "wood"],
         "pickupable": true,
         "receptacle": true,
         "stacking":true,
@@ -257,7 +295,7 @@
         "resourceFile": "AI2-THOR/Objects/Physics/SimObjsPhysics/Kitchen Objects/Cup/Prefabs/Cup_6",
         "shape": "cup",
         "mass": 0.25,
-        "materialRestrictions": ["plastic"],
+        "materialRestrictions": ["plastic", "wood"],
         "pickupable": true,
         "receptacle": true,
         "stacking": true,
@@ -278,7 +316,7 @@
         "resourceFile": "AI2-THOR/Objects/Physics/SimObjsPhysics/Kitchen Objects/Plate/Prefabs/Plate_1",
         "shape": "plate",
         "mass": 0.25,
-        "materialRestrictions": ["plastic"],
+        "materialRestrictions": ["plastic", "wood"],
         "salientMaterials": ["plastic"],
         "pickupable": true,
         "receptacle": true,
@@ -288,7 +326,17 @@
         "resourceFile": "AI2-THOR/Objects/Physics/SimObjsPhysics/Kitchen Objects/Plate/Prefabs/Plate_3",
         "shape": "plate",
         "mass": 0.25,
-        "materialRestrictions": ["plastic"],
+        "materialRestrictions": ["plastic", "wood"],
+        "salientMaterials": ["plastic"],
+        "pickupable": true,
+        "receptacle": true,
+        "stacking": true
+    }, {
+        "id": "plate_4",
+        "resourceFile": "AI2-THOR/Objects/Physics/SimObjsPhysics/Kitchen Objects/Plate/Prefabs/Plate_4",
+        "shape": "plate",
+        "mass": 0.25,
+        "materialRestrictions": ["plastic", "wood"],
         "salientMaterials": ["plastic"],
         "pickupable": true,
         "receptacle": true,
@@ -564,6 +612,29 @@
         "shape": "potted plant",
         "materialRestrictions": ["no_material"]
     }, {
+        "id": "shelf_1",
+        "resourceFile": "UnityAssetStore/Custom/Shelves",
+        "shape": "shelves",
+        "mass": 100,
+        "materialRestrictions": ["wood", "metal"],
+        "materials": ["THORKEA_Shelving_Unit_Kallax_Small_Wood_2_Mat"],
+        "salientMaterials": ["wood"],
+        "kinematic": true,
+        "receptacle": true,
+        "interactables": [{
+            "id": "top_right_shelf",
+            "name": "TopRightShelf"
+        }, {
+            "id": "bottom_right_shelf",
+            "name": "BottomRightShelf"
+        }, {
+            "id": "top_left_shelf",
+            "name": "TopLeftShelf"
+        }, {
+            "id": "bottom_left_shelf",
+            "name": "BottomLeftShelf"
+        }]
+    }, {
         "id": "sofa_1",
         "resourceFile": "AI2-THOR/Objects/Prefabs/StaticObjects/Furniture/Sofas/Sofa",
         "shape": "sofa",
@@ -594,6 +665,224 @@
                 "x": 1.95,
                 "y": 1,
                 "z": 0.63
+            }
+        }],
+        "visibilityPoints": [{
+            "x": 1.25,
+            "y": 0,
+            "z": 0.5
+        }, {
+            "x": 0.75,
+            "y": 0,
+            "z": 0.5
+        }, {
+            "x": 0.25,
+            "y": 0,
+            "z": 0.5
+        }, {
+            "x": -0.25,
+            "y": 0,
+            "z": 0.5
+        }, {
+            "x": -0.75,
+            "y": 0,
+            "z": 0.5
+        }, {
+            "x": -1.25,
+            "y": 0,
+            "z": 0.5
+        }, {
+            "x": -1.25,
+            "y": 0,
+            "z": 0
+        }, {
+            "x": -1.25,
+            "y": 0,
+            "z": -0.55
+        }, {
+            "x": -0.75,
+            "y": 0,
+            "z": -0.55
+        }, {
+            "x": -0.25,
+            "y": 0,
+            "z": -0.55
+        }, {
+            "x": 0.25,
+            "y": 0,
+            "z": -0.55
+        }, {
+            "x": 0.75,
+            "y": 0,
+            "z": -0.55
+        }, {
+            "x": 1.25,
+            "y": 0,
+            "z": -0.55
+        }, {
+            "x": 1.25,
+            "y": 0,
+            "z": 0
+        }, {
+            "x": 1.25,
+            "y": 0.5,
+            "z": 0.5
+        }, {
+            "x": 0.75,
+            "y": 0.5,
+            "z": 0.5
+        }, {
+            "x": 0.25,
+            "y": 0.5,
+            "z": 0.5
+        }, {
+            "x": -0.25,
+            "y": 0.5,
+            "z": 0.5
+        }, {
+            "x": -0.75,
+            "y": 0.5,
+            "z": 0.5
+        }, {
+            "x": -1.25,
+            "y": 0.5,
+            "z": 0.5
+        }, {
+            "x": -1.25,
+            "y": 0.5,
+            "z": 0
+        }, {
+            "x": -1.25,
+            "y": 0.5,
+            "z": -0.55
+        }, {
+            "x": -0.75,
+            "y": 0.5,
+            "z": -0.55
+        }, {
+            "x": -0.25,
+            "y": 0.5,
+            "z": -0.55
+        }, {
+            "x": 0.25,
+            "y": 0.5,
+            "z": -0.55
+        }, {
+            "x": 0.75,
+            "y": 0.5,
+            "z": -0.55
+        }, {
+            "x": 1.25,
+            "y": 0.5,
+            "z": -0.55
+        }, {
+            "x": 1.25,
+            "y": 0.5,
+            "z": 0
+        }, {
+            "x": 1,
+            "y": 0.65,
+            "z": -0.15
+        }, {
+            "x": 0.5,
+            "y": 0.65,
+            "z": -0.15
+        }, {
+            "x": 0,
+            "y": 0.65,
+            "z": -0.15
+        }, {
+            "x": -0.5,
+            "y": 0.65,
+            "z": -0.15
+        }, {
+            "x": -1,
+            "y": 0.65,
+            "z": -0.15
+        }, {
+            "x": 1,
+            "y": 0.65,
+            "z": 0.1
+        }, {
+            "x": 0.5,
+            "y": 0.65,
+            "z": 0.1
+        }, {
+            "x": 0,
+            "y": 0.65,
+            "z": 0.1
+        }, {
+            "x": -0.5,
+            "y": 0.65,
+            "z": 0.1
+        }, {
+            "x": -1,
+            "y": 0.65,
+            "z": 0.1
+        }, {
+            "x": 0.5,
+            "y": 0.9,
+            "z": -0.2
+        }, {
+            "x": 0,
+            "y": 0.9,
+            "z": -0.2
+        }, {
+            "x": -0.5,
+            "y": 0.9,
+            "z": -0.2
+        }, {
+            "x": 1,
+            "y": 1.15,
+            "z": -0.45
+        }, {
+            "x": 0.5,
+            "y": 1.15,
+            "z": -0.45
+        }, {
+            "x": 0,
+            "y": 1.15,
+            "z": -0.45
+        }, {
+            "x": -0.5,
+            "y": 1.15,
+            "z": -0.45
+        }, {
+            "x": -1,
+            "y": 1.15,
+            "z": -0.45
+        }]
+    }, {
+        "id": "sofa_2",
+        "resourceFile": "AI2-THOR/Objects/Prefabs/StaticObjects/Furniture/Sofas/Sofa2",
+        "shape": "sofa",
+        "mass": 100,
+        "materialRestrictions": ["no_material"],
+        "salientMaterials": ["fabric"],
+        "kinematic": true,
+        "receptacle": true,
+        "boundingBox": {
+            "position": {
+                "x": 0,
+                "y": 0.625,
+                "z": -0.01
+            },
+            "scale": {
+                "x": 2.55,
+                "y": 1.25,
+                "z": 0.95
+            }
+        },
+        "receptacleTriggerBoxes": [{
+            "position": {
+                "x": 0,
+                "y": 1.1,
+                "z": 0.125
+            },
+            "scale": {
+                "x": 1.95,
+                "y": 1,
+                "z": 0.625
             }
         }],
         "visibilityPoints": [{
@@ -912,11 +1201,141 @@
             "z": -0.45
         }]
     }, {
+        "id": "sofa_chair_2",
+        "resourceFile": "AI2-THOR/Objects/Prefabs/StaticObjects/Furniture/Sofas/SofaChair2",
+        "shape": "sofa chair",
+        "mass": 50,
+        "materialRestrictions": ["no_material"],
+        "salientMaterials": ["fabric"],
+        "kinematic": true,
+        "receptacle": true,
+        "boundingBox": {
+            "position": {
+                "x": 0.005,
+                "y": 0.625,
+                "z": -0.015
+            },
+            "scale": {
+                "x": 1.425,
+                "y": 1.25,
+                "z": 0.95
+            }
+        },
+        "receptacleTriggerBoxes": [{
+            "position": {
+                "x": 0.005,
+                "y": 1.1,
+                "z": 0.125
+            },
+            "scale": {
+                "x": 0.975,
+                "y": 1,
+                "z": 0.65
+            }
+        }],
+        "visibilityPoints": [{
+            "x": 0.6,
+            "y": 0,
+            "z": 0.5
+        }, {
+            "x": 0,
+            "y": 0,
+            "z": 0.5
+        }, {
+            "x": -0.6,
+            "y": 0,
+            "z": 0.5
+        }, {
+            "x": -0.6,
+            "y": 0,
+            "z": 0
+        }, {
+            "x": -0.6,
+            "y": 0,
+            "z": -0.55
+        }, {
+            "x": 0,
+            "y": 0,
+            "z": -0.55
+        }, {
+            "x": 0.6,
+            "y": 0,
+            "z": -0.55
+        }, {
+            "x": 0.6,
+            "y": 0,
+            "z": 0
+        }, {
+            "x": 0.6,
+            "y": 0.5,
+            "z": 0.5
+        }, {
+            "x": 0,
+            "y": 0.5,
+            "z": 0.5
+        }, {
+            "x": -0.6,
+            "y": 0.5,
+            "z": 0.5
+        }, {
+            "x": -0.6,
+            "y": 0.5,
+            "z": 0
+        }, {
+            "x": -0.6,
+            "y": 0.5,
+            "z": -0.55
+        }, {
+            "x": 0,
+            "y": 0.5,
+            "z": -0.55
+        }, {
+            "x": 0.6,
+            "y": 0.5,
+            "z": -0.55
+        }, {
+            "x": 0.6,
+            "y": 0.5,
+            "z": 0
+        }, {
+            "x": 0,
+            "y": 0.6,
+            "z": -0.15
+        }, {
+            "x": 0.35,
+            "y": 0.6,
+            "z": 0.25
+        }, {
+            "x": -0.35,
+            "y": 0.6,
+            "z": 0.25
+        }, {
+            "x": 0,
+            "y": 0.6,
+            "z": 0.25
+        }, {
+            "x": 0,
+            "y": 0.9,
+            "z": -0.2
+        }, {
+            "x": 0.5,
+            "y": 1.15,
+            "z": -0.45
+        }, {
+            "x": 0,
+            "y": 1.15,
+            "z": -0.45
+        }, {
+            "x": -0.5,
+            "y": 1.15,
+            "z": -0.45
+        }]
+    }, {
         "id": "table_1",
         "resourceFile": "AI2-THOR/Objects/Physics/SimObjsPhysics/Custom Project Objects/Hide And Seek Objects/Tables/Long Table 2",
         "shape": "table",
         "mass": 10,
-        "materialRestrictions": ["wood"],
+        "materialRestrictions": ["wood", "metal"],
         "salientMaterials": ["metal"],
         "materials": ["WhiteMetal", "BrushedIron_AlbedoTransparency", "BlackFoil"],
         "kinematic": true,
@@ -934,11 +1353,22 @@
             }
         }
     }, {
+        "id": "table_3",
+        "resourceFile": "AI2-THOR/Objects/Physics/SimObjsPhysics/Entryway Objects/Furniture/DecorativeTable",
+        "shape": "table",
+        "mass": 2,
+        "materialRestrictions": ["wood", "metal"],
+        "salientMaterials": ["wood"],
+        "materials": ["DarkWood2"],
+        "kinematic": true,
+        "moveable": true,
+        "receptacle": true
+    }, {
         "id": "table_5",
         "resourceFile": "AI2-THOR/Objects/Prefabs/StaticObjects/Furniture/Tables/TVTable",
         "shape": "table",
         "mass": 20,
-        "materialRestrictions": ["wood"],
+        "materialRestrictions": ["wood", "metal"],
         "salientMaterials": ["wood"],
         "materials": ["LightWoodCounters3", "DarkWoodSmooth2"],
         "kinematic": true,
@@ -1032,6 +1462,23 @@
             "x": -0.18,
             "y": 0.7,
             "z": 0
+        }]
+    }, {
+        "id": "table_6",
+        "resourceFile": "UnityAssetStore/Custom/FlatTable",
+        "shape": "flat table",
+        "mass": 100,
+        "materialRestrictions": ["wood", "metal"],
+        "materials": [],
+        "salientMaterials": ["wood"],
+        "kinematic": true,
+        "receptacle": true,
+        "interactables": [{
+            "id": "middle_shelf",
+            "name": "MiddleShelf"
+        }, {
+            "id": "lower_shelf",
+            "name": "LowerShelf"
         }]
     }]
 }

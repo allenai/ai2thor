@@ -3945,8 +3945,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             //get the target receptacle based on the action receptacle object ID
             SimObjPhysics targetReceptacle = null;
 
-            //this needs to be true to account for objects scaled larger
-            //setting this to be true at all times seems to affect only the flexibility of object placement 
             foreach (SimObjPhysics sop in VisibleSimObjs(true)) {
                 if ((!string.IsNullOrEmpty(action.receptacleObjectId)) && action.receptacleObjectId == sop.UniqueID) {
                     targetReceptacle = sop;
