@@ -23,9 +23,13 @@ public class ExperimentRoomSceneManager : MonoBehaviour
     public Material[] tableTopMaterials = null;
     //reference to table leg renderer
     public Material[] tableLegMaterials = null;
+    //reference to lights in screen
     public GameObject[] allOfTheLights;
+    //material screen options
+    public Material[] screenMaterials = null;
+
     //object to spawn
-    public SimObjPhysics toSpawn;
+    private SimObjPhysics toSpawn;
     private AgentManager agentManager;
     private PhysicsSceneManager sceneManager;
 
@@ -48,6 +52,34 @@ public class ExperimentRoomSceneManager : MonoBehaviour
     #if UNITY_EDITOR
     List<Vector3> debugCoords = new List<Vector3>();
     #endif
+
+    //change specified screen object's material to color rgb
+    public void ChangeScreenColor(SimObjPhysics screen, float r, float g, float b)
+    {
+        List<SkinnedMeshRenderer> renderers = GetAllRenderersOfObject(screen);
+        foreach(SkinnedMeshRenderer sr in renderers)
+        {
+            //set first element, the primary mat, of the mat array's color
+            sr.material.color = new Color(r/255f, g/255f, b/255f);
+        }
+    }
+
+    //change specified screen object's material to variation
+    public void ChangeScreenMaterial(SimObjPhysics screen, int variation)
+    {
+        List<SkinnedMeshRenderer> renderers = GetAllRenderersOfObject(screen);
+        foreach(SkinnedMeshRenderer sr in renderers)
+        {
+            sr.material = screenMaterials[variation];
+        }
+    }
+
+    public List<SkinnedMeshRenderer> GetAllRenderersOfObject(SimObjPhysics obj)
+    {
+        List<SkinnedMeshRenderer> renderers = new List<SkinnedMeshRenderer>();
+        renderers.AddRange(obj.transform.gameObject.GetComponentsInChildren<SkinnedMeshRenderer>());
+        return renderers;
+    }
 
     public void ChangeLightColor(float r, float g, float b)
     {

@@ -429,6 +429,30 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         break;
                     }
 
+                 case "screenm":
+                    {
+                        ServerAction action = new ServerAction();
+
+                        action.action = "ChangeScreenMaterialExpRoom";
+                        action.objectVariation = 3;
+                        action.objectId = "Screen|-00.64|+00.78|+00.71";
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
+                 case "screenc":
+                    {
+                        ServerAction action = new ServerAction();
+
+                        action.action = "ChangeScreenColorExpRoom";
+                        action.r = 20f;
+                        action.g = 94f;
+                        action.b = 10f;
+                        action.objectId = "Screen|-00.64|+00.78|+00.71";
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
                 //initialize drone mode
                  case "initd":
                     {

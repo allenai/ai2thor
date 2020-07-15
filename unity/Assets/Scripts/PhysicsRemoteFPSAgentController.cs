@@ -2905,6 +2905,90 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
 
+        //specify a screen by objectId in exp room and change material to objectVariation
+        public void ChangeScreenMaterialExpRoom(ServerAction action)
+        {
+            //only 5 material options at the moment
+            if(action.objectVariation < 0 || action.objectVariation > 4)
+            {
+                errorMessage = "please use objectVariation [0, 4] inclusive";
+                actionFinished(false);
+                return;
+            }
+
+            if(action.objectId == null)
+            {
+                errorMessage = "please give valid objectId for ChangeScreenMaterialExpRoom action";
+                actionFinished(false);
+                return;
+            }
+
+            SimObjPhysics target = null;
+            //find the object in the scene, disregard visibility
+            foreach(SimObjPhysics sop in VisibleSimObjs(true))
+            {
+                if(sop.objectID == action.objectId)
+                {
+                    target = sop;
+                }
+            }
+
+            if(target == null)
+            {
+                errorMessage = "no object with id: "+ 
+                action.objectId + " could be found during ChangeScreenMaterialExpRoom";
+                actionFinished(false);
+                return;
+            }
+
+            ExperimentRoomSceneManager ersm = physicsSceneManager.GetComponent<ExperimentRoomSceneManager>();
+            ersm.ChangeScreenMaterial(target, action.objectVariation);
+            actionFinished(true);
+        }
+
+        //specify a screen in exp room by objectId and change material color to rgb
+        public void ChangeScreenColorExpRoom(ServerAction action)
+        {
+            if(
+            action.r < 0 || action.r > 255 ||
+            action.g < 0 || action.g > 255 ||
+            action.b < 0 || action.b > 255)
+            {
+                errorMessage = "rgb values must be [0-255]";
+                actionFinished(false);
+                return;
+            }
+
+            if(action.objectId == null)
+            {
+                errorMessage = "please give valid objectId for ChangescreenMaterialExpRoom action";
+                actionFinished(false);
+                return;
+            }
+
+            SimObjPhysics target = null;
+            //find the object in the scene, disregard visibility
+            foreach(SimObjPhysics sop in VisibleSimObjs(true))
+            {
+                if(sop.objectID == action.objectId)
+                {
+                    target = sop;
+                }
+            }
+
+            if(target == null)
+            {
+                errorMessage = "no receptacle object with id: "+ 
+                action.receptacleObjectId + " could not be found during ReturnValidSpawnsExpRoom";
+                actionFinished(false);
+                return;
+            }
+
+            ExperimentRoomSceneManager ersm = physicsSceneManager.GetComponent<ExperimentRoomSceneManager>();
+            ersm.ChangeScreenColor(target, action.r, action.g, action.b);
+            actionFinished(true);
+        }
+
         //change wall to material [variation]       
         public void ChangeWallMaterialExpRoom(ServerAction action)
         {
