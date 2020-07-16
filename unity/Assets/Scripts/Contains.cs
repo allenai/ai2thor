@@ -375,7 +375,10 @@ public class Contains : MonoBehaviour
 			// 
 			if(!ReturnPointsCloseToAgent)
 			{
-				PossibleSpawnPoints.Add(new ReceptacleSpawnPoint(point, triggerBoxCollider, this, myParent.GetComponent<SimObjPhysics>()));
+				if(simObj.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.Stacking))
+					PossibleSpawnPoints.Add(new ReceptacleSpawnPoint(point, triggerBoxCollider, this, myParent.GetComponent<SimObjPhysics>()));
+				else 
+					PossibleSpawnPoints.Add(new ReceptacleSpawnPoint(BottomPoint, triggerBoxCollider, this, myParent.GetComponent<SimObjPhysics>()));	
 			}
 
 			else if(NarrowDownValidSpawnPoints(BottomPoint))
