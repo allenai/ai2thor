@@ -2,6 +2,10 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+//NOTE: This fails to compile because it is calling some Setup scripts that are currently EDITOR define only
+//for now, i'm also wrapping this script so it can only be used in editor until we have more time to investigate
+#if UNITY_EDITOR
+
 [ExecuteInEditMode]
 public class Screen_Adjust_Script : MonoBehaviour
 {
@@ -220,3 +224,4 @@ public class Screen_Adjust_Script : MonoBehaviour
         return newBounds;
     }
 }
+#endif
