@@ -26,7 +26,7 @@ public class MCSController : PhysicsRemoteFPSAgentController {
 
     //this is not the capsule radius, this is the radius of the x and z bounds of the agent.
     public static float AGENT_RADIUS = 0.12f;
-    public static int NUMBER_OF_FRAMES_FOR_MOVEMENT = 5;
+    public static int NUMBER_OF_FRAMES_FOR_MOVEMENT = PHYSICS_SIMULATION_LOOPS;
 
     public int step = 0;
 
@@ -323,11 +323,10 @@ public class MCSController : PhysicsRemoteFPSAgentController {
     }
 
     public override void ProcessControlCommand(ServerAction controlCommand) {
-        bool controlCommandMove = controlCommand.action.Equals("MoveAhead") || 
+        inputWasMovement = controlCommand.action.Equals("MoveAhead") || 
                 controlCommand.action.Equals("MoveBack") ||
                 controlCommand.action.Equals("MoveLeft") ||
                 controlCommand.action.Equals("MoveRight");   
-        inputWasMovement = controlCommandMove == true ? true : false;
         framesUntilGridSnap = 0; //for movement
         
         // Never let the placeable objects ignore the physics simulation (they should always be affected by it).

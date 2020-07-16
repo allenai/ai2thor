@@ -1938,8 +1938,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 DefaultAgentHand();
                 Vector3 oldPosition = transform.position;
                 transform.position = targetPosition;
-
-                /* //Changed so grid snap is at the end of movement across 5 frames
+                /* MCS Changed so grid snap is at the end of movement across 5 frames
                 if (!continuousMode) {
                     this.snapToGrid();
                 }*/
@@ -2666,9 +2665,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 false
             );
 
-            if (AgentCanMoveRayCastSweep(ref moveMagnitude, orientation, structureSweepResults, true))
-                return AgentCanMoveRayCastSweep(ref moveMagnitude, orientation, collisionSweepResults, false);
-            return false;         
+            bool hasNoStructuresInWay = AgentCanMoveRayCastSweep(ref moveMagnitude, orientation, structureSweepResults, true);
+            bool hasNoObjectInWay = AgentCanMoveRayCastSweep(ref moveMagnitude, orientation, collisionSweepResults, false);
+
+            if(hasNoStructuresInWay) {
+                return hasNoObjectInWay;
+            }
+            
+            return false;    
         }
 
         private bool AgentCanMoveRayCastSweep(ref float moveMagnitude, int orientation, RaycastHit[] sweepResults, bool isStructure) {
@@ -2704,16 +2708,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                             return true;
                         }
 
-                        if (res.transform.tag == "Structure" && isStructure) {
-                            int thisAgentNum = agentManager.agents.IndexOf(this);
-                            errorMessage = res.transform.name + " is blocking Agent " + thisAgentNum.ToString() + " from moving " + orientation;
-                            //the moment we find a result that is blocking, return false here
-                            this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.OBSTRUCTED);
-                            return false;
-                        }
-
-                        //objects heavier than agent
-                        if (res.rigidbody.mass > this.GetComponent<Rigidbody>().mass && res.transform.tag == "SimObjPhysics") {
+                        if ((res.transform.tag == "Structure" && isStructure) || 
+                            (res.rigidbody.mass > this.GetComponent<Rigidbody>().mass && res.transform.tag == "SimObjPhysics"))
+                        {
                             int thisAgentNum = agentManager.agents.IndexOf(this);
                             errorMessage = res.transform.name + " is blocking Agent " + thisAgentNum.ToString() + " from moving " + orientation;
                             //the moment we find a result that is blocking, return false here
