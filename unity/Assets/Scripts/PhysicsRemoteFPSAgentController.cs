@@ -2820,7 +2820,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             var agent = this.agentManager.agents[0];
             ExperimentRoomSceneManager ersm = physicsSceneManager.GetComponent<ExperimentRoomSceneManager>();
             //good defaults would be gridSize 0.1m, maxStepCount 20 to cover the room
-            var ret = ersm.ValidGrid(agent.AgentHand.transform.position, 0.1f, 20, agent);
+            var ret = ersm.ValidGrid(agent.AgentHand.transform.position, action.gridSize, action.maxStepCount, agent);
             //var ret = ersm.ValidGrid(agent.AgentHand.transform.position, action.gridSize, action.maxStepCount, agent);
             actionFinished(true, ret);
         }
@@ -2975,7 +2975,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             if(action.objectId == null)
             {
-                errorMessage = "please give valid objectId for ChangescreenMaterialExpRoom action";
+                errorMessage = "please give valid objectId for ChangeScreenColorExpRoom action";
                 actionFinished(false);
                 return;
             }
@@ -2993,7 +2993,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             if(target == null)
             {
                 errorMessage = "no receptacle object with id: "+ 
-                action.receptacleObjectId + " could not be found during ReturnValidSpawnsExpRoom";
+                action.receptacleObjectId + " could not be found during ChangeScreenColorExpRoom";
                 actionFinished(false);
                 return;
             }

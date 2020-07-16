@@ -79,8 +79,10 @@ public class ExperimentRoomSceneManager : MonoBehaviour
                 pointsOnGrid.Add(thisPoint + -agent.transform.right * gridIncrement * j);
             }
         }
-
-        //debugCoords = pointsOnGrid;
+        
+        // #if UNITY_EDITOR
+        // debugCoords = pointsOnGrid;
+        // #endif
 
         List<Vector3> actualPoints = new List<Vector3>();
         RaycastHit[] hits;
@@ -110,7 +112,10 @@ public class ExperimentRoomSceneManager : MonoBehaviour
             }
         }
 
-        //debugCoords = actualPoints;
+        // #if UNITY_EDITOR
+        // debugCoords = actualPoints;
+        // #endif
+
         //ok we now have grid points in a grid, now raycast down from each of those and see if we hit a receptacle...
         return actualPoints;
 

@@ -269,34 +269,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         break;
                     }
 
-                 case "expp":
-                    {
-                        ServerAction action = new ServerAction();
-
-                        action.action = "SpawnExperimentObjAtPoint";
-                        action.objectType = "receptacle";
-                        action.receptacleObjectId = "DiningTable|-00.59|+00.00|+00.33";
-                        action.objectVariation = 12;
-                        action.position = new Vector3(-1.4f, 0.9f, 0.1f);
-                        action.y = 120f;//UnityEngine.Random.Range(0, 360);
-                        PhysicsController.ProcessControlCommand(action);
-                        break;
-                    }
-
-                 case "expscp":
-                    {
-                        ServerAction action = new ServerAction();
-
-                        action.action = "SpawnExperimentScreenAtPoint";
-                        action.objectType = "screen";
-                        action.receptacleObjectId = "DiningTable|-00.59|+00.00|+00.33";
-                        action.objectVariation = 0;
-                        action.position = new Vector3(-1.4f, 0.9f, 0.1f);
-                        action.y = 120f;//UnityEngine.Random.Range(0, 360);
-                        PhysicsController.ProcessControlCommand(action);
-                        break;
-                    }
-
                  case "exps":
                     {
                         ServerAction action = new ServerAction();
@@ -315,6 +287,20 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         action.objectVariation = 0;
 
                         action.y = 0f;//UnityEngine.Random.Range(0, 360);
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
+                 case "expp":
+                    {
+                        ServerAction action = new ServerAction();
+
+                        action.action = "SpawnExperimentObjAtPoint";
+                        action.objectType = "receptacle";
+                        action.receptacleObjectId = "DiningTable|-00.59|+00.00|+00.33";
+                        action.objectVariation = 12;
+                        action.position = new Vector3(-1.4f, 0.9f, 0.1f);
+                        action.y = 120f;//UnityEngine.Random.Range(0, 360);
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }
@@ -458,6 +444,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         ServerAction action = new ServerAction();
 
                         action.action = "GetReceptacleCoordinatesExpRoom";
+                        action.gridSize = 0.1f;
+                        action.maxStepCount = 5;
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }
