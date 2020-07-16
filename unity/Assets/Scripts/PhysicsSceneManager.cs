@@ -20,8 +20,6 @@ public class PhysicsSceneManager : MonoBehaviour
 	//get references to the spawned Required objects after spawning them for the first time.
 	public List<GameObject> SpawnedObjects = new List<GameObject>();
 	public Dictionary<string, SimObjPhysics> ObjectIdToSimObjPhysics = new Dictionary<string, SimObjPhysics>();
-	public List<SimObjPhysics> ReceptaclesInScene = new List<SimObjPhysics>();
-
 	public GameObject HideAndSeek;
 	public GameObject[] ManipulatorTables;
 	public GameObject[] ManipulatorReceptacles;
@@ -63,10 +61,8 @@ public class PhysicsSceneManager : MonoBehaviour
 
 	public void SetupScene()
 	{
-		ReceptaclesInScene.Clear();
 		ObjectIdToSimObjPhysics.Clear();
 		GatherSimObjPhysInScene();
-		GatherAllReceptaclesInScene();
         GatherAllRBsInScene();
 	}
 	// Use this for initialization
@@ -94,6 +90,9 @@ public class PhysicsSceneManager : MonoBehaviour
         //Rigidbody[] rbs = FindObjectsOfType(typeof(Rigidbody)) as Rigidbody[];
         foreach(Rigidbody rb in rbsInScene)
         {
+			if(rb == null)
+			return;
+
             //if this rigidbody is part of a SimObject, calculate rest using lastVelocity/currentVelocity comparisons
             if(rb.GetComponentInParent<SimObjPhysics>() && rb.transform.gameObject.activeSelf) // make sure the object is actually active, otherwise skip the check
             {
@@ -231,8 +230,10 @@ public class PhysicsSceneManager : MonoBehaviour
 		}
 	}
 
-	public void GatherAllReceptaclesInScene()
+	public List<SimObjPhysics> GatherAllReceptaclesInScene()
 	{
+		List<SimObjPhysics> ReceptaclesInScene = new List<SimObjPhysics>();
+
 		foreach(SimObjPhysics sop in ObjectIdToSimObjPhysics.Values)
 		{
 			if(sop.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.Receptacle))
@@ -259,7 +260,9 @@ public class PhysicsSceneManager : MonoBehaviour
 				}
 			}
 		}
+
 		ReceptaclesInScene.Sort((r0, r1) => (r0.gameObject.GetInstanceID().CompareTo(r1.gameObject.GetInstanceID())));
+		return ReceptaclesInScene;
 	}
     
 	public void Generate_ObjectID(SimObjPhysics o)
@@ -528,6 +531,9 @@ public class PhysicsSceneManager : MonoBehaviour
 
             unduplicatedSimObjects.Shuffle_(seed);
             simObjectDuplicates.AddRange(unduplicatedSimObjects);
+
+			List<SimObjPhysics> ReceptaclesInScene = new List<SimObjPhysics>();
+			ReceptaclesInScene = GatherAllReceptaclesInScene();
 
             //ok now simObjectDuplicates should have all the game objects, duplicated and unduplicated
             foreach (GameObject go in simObjectDuplicates)

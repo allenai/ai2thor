@@ -558,6 +558,22 @@ public class InstantiatePrefabTest : MonoBehaviour
 			layermask = (1 << 8) | (1 << 10);
 		}
 
+        //get list of all active colliders of sim object, then toggle them off for now
+        //disable all colliders of the object being placed
+        List<Collider> colsToDisable = new List<Collider>();
+        foreach(Collider g in simObj.MyColliders)
+        {
+            //only track this collider if it's enabled by default
+            //some objects, like houseplants, might have colliders in their simObj.MyColliders that are disabled
+            if(g.enabled)
+            colsToDisable.Add(g);
+        }
+
+        //disable collision before moving to check the spawn area
+        foreach(Collider c in colsToDisable)
+        {
+            c.enabled = false;
+        }
 
         //track original position and rotation in case we need to reset
         Vector3 originalPos = simObj.transform.position;
@@ -606,6 +622,12 @@ public class InstantiatePrefabTest : MonoBehaviour
         //move sim object back to it's original spot back so the overlap box doesn't hit it
         simObj.transform.position = originalPos;
         simObj.transform.rotation = originalRot;
+
+        //re-enable the collision after returning in place
+        foreach(Collider c in colsToDisable)
+        {
+            c.enabled = true;
+        }
 
         //spawn overlap box
         Collider[] hitColliders = Physics.OverlapBox(bbCenterTransformPoint,

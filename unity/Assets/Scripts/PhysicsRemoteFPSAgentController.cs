@@ -183,7 +183,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         public void ChangeColorOfMaterials(ServerAction action)
         {
-            ColorChanger ColorChangeComponent = GameObject.Find("PhysicsSceneManager").GetComponent<ColorChanger>();
+            ColorChanger ColorChangeComponent = physicsSceneManager.GetComponent<ColorChanger>();
             ColorChangeComponent.RandomizeColor();
             actionFinished(true);
         }
@@ -2811,6 +2811,407 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
 
+        //action to return points from a grid that have an experiment receptacle below it
+        //creates a grid startinng from the agent's current hand position and projects that grid
+        //forward relative to the agent
+        //grid will be a 2n+1 by n grid in the orientation of agent right/left by agent forward
+        public void GetReceptacleCoordinatesExpRoom(ServerAction action)
+        {
+            var agent = this.agentManager.agents[0];
+            ExperimentRoomSceneManager ersm = physicsSceneManager.GetComponent<ExperimentRoomSceneManager>();
+            //good defaults would be gridSize 0.1m, maxStepCount 20 to cover the room
+            var ret = ersm.ValidGrid(agent.AgentHand.transform.position, action.gridSize, action.maxStepCount, agent);
+            //var ret = ersm.ValidGrid(agent.AgentHand.transform.position, action.gridSize, action.maxStepCount, agent);
+            actionFinished(true, ret);
+        }
+
+        //spawn receptacle object at array index <objectVariation> rotated to <y>
+        //on <receptacleObjectId> using position <position>
+        public void SpawnExperimentObjAtPoint(ServerAction action)
+        {
+            if(action.receptacleObjectId == null)
+            {
+                errorMessage = "please give valid receptacleObjectId for SpawnExperimentReceptacleAtPoint action";
+                actionFinished(false);
+                return;
+            }
+
+            if(action.objectType == null)
+            {
+                errorMessage = "please use either 'receptacle' or 'screen' to specify which experiment object to spawn";
+                actionFinished(false);
+                return;
+            }
+
+            SimObjPhysics target = null;
+            //find the object in the scene, disregard visibility
+            foreach(SimObjPhysics sop in VisibleSimObjs(true))
+            {
+                if(sop.objectID == action.receptacleObjectId)
+                {
+                    target = sop;
+                }
+            }
+
+            if(target == null)
+            {
+                errorMessage = "no receptacle object with id: "+ 
+                action.receptacleObjectId + " could not be found during SpawnExperimentReceptacleAtPoint";
+                actionFinished(false);
+                return;
+            }
+
+            ExperimentRoomSceneManager ersm = physicsSceneManager.GetComponent<ExperimentRoomSceneManager>();
+            if(ersm.SpawnExperimentObjAtPoint(action.objectType, action.objectVariation, target, action.position, action.y))
+            actionFinished(true);
+
+            else
+            {
+                errorMessage = "Experiment object could not be placed on " + action.receptacleObjectId;
+                actionFinished(false);
+            }
+        }
+
+        //spawn receptacle object at array index <objectVariation> rotated to <y>
+        //on <receptacleObjectId> using random seed <randomSeed>
+        public void SpawnExperimentObjAtRandom(ServerAction action)
+        {
+            if(action.receptacleObjectId == null)
+            {
+                errorMessage = "please give valid receptacleObjectId for SpawnExperimentReceptacleAtRandom action";
+                actionFinished(false);
+                return;
+            }
+
+            if(action.objectType == null)
+            {
+                errorMessage = "please use either 'receptacle' or 'screen' to specify which experiment object to spawn";
+                actionFinished(false);
+                return;
+            }
+
+            SimObjPhysics target = null;
+            //find the object in the scene, disregard visibility
+            foreach(SimObjPhysics sop in VisibleSimObjs(true))
+            {
+                if(sop.objectID == action.receptacleObjectId)
+                {
+                    target = sop;
+                }
+            }
+
+            if(target == null)
+            {
+                errorMessage = "no receptacle object with id: "+ 
+                action.receptacleObjectId + " could not be found during SpawnExperimentReceptacleAtRandom";
+                actionFinished(false);
+                return;
+            }
+
+            ExperimentRoomSceneManager ersm = physicsSceneManager.GetComponent<ExperimentRoomSceneManager>();
+            if(ersm.SpawnExperimentObjAtRandom(action.objectType, action.objectVariation, action.randomSeed, target, action.y))
+            actionFinished(true);
+
+            else
+            {
+                errorMessage = "Experiment object could not be placed on " + action.receptacleObjectId;
+                actionFinished(false);
+            }
+        }
+
+        //specify a screen by objectId in exp room and change material to objectVariation
+        public void ChangeScreenMaterialExpRoom(ServerAction action)
+        {
+            //only 5 material options at the moment
+            if(action.objectVariation < 0 || action.objectVariation > 4)
+            {
+                errorMessage = "please use objectVariation [0, 4] inclusive";
+                actionFinished(false);
+                return;
+            }
+
+            if(action.objectId == null)
+            {
+                errorMessage = "please give valid objectId for ChangeScreenMaterialExpRoom action";
+                actionFinished(false);
+                return;
+            }
+
+            SimObjPhysics target = null;
+            //find the object in the scene, disregard visibility
+            foreach(SimObjPhysics sop in VisibleSimObjs(true))
+            {
+                if(sop.objectID == action.objectId)
+                {
+                    target = sop;
+                }
+            }
+
+            if(target == null)
+            {
+                errorMessage = "no object with id: "+ 
+                action.objectId + " could be found during ChangeScreenMaterialExpRoom";
+                actionFinished(false);
+                return;
+            }
+
+            ExperimentRoomSceneManager ersm = physicsSceneManager.GetComponent<ExperimentRoomSceneManager>();
+            ersm.ChangeScreenMaterial(target, action.objectVariation);
+            actionFinished(true);
+        }
+
+        //specify a screen in exp room by objectId and change material color to rgb
+        public void ChangeScreenColorExpRoom(ServerAction action)
+        {
+            if(
+            action.r < 0 || action.r > 255 ||
+            action.g < 0 || action.g > 255 ||
+            action.b < 0 || action.b > 255)
+            {
+                errorMessage = "rgb values must be [0-255]";
+                actionFinished(false);
+                return;
+            }
+
+            if(action.objectId == null)
+            {
+                errorMessage = "please give valid objectId for ChangeScreenColorExpRoom action";
+                actionFinished(false);
+                return;
+            }
+
+            SimObjPhysics target = null;
+            //find the object in the scene, disregard visibility
+            foreach(SimObjPhysics sop in VisibleSimObjs(true))
+            {
+                if(sop.objectID == action.objectId)
+                {
+                    target = sop;
+                }
+            }
+
+            if(target == null)
+            {
+                errorMessage = "no receptacle object with id: "+ 
+                action.receptacleObjectId + " could not be found during ChangeScreenColorExpRoom";
+                actionFinished(false);
+                return;
+            }
+
+            ExperimentRoomSceneManager ersm = physicsSceneManager.GetComponent<ExperimentRoomSceneManager>();
+            ersm.ChangeScreenColor(target, action.r, action.g, action.b);
+            actionFinished(true);
+        }
+
+        //change wall to material [variation]       
+        public void ChangeWallMaterialExpRoom(ServerAction action)
+        {
+            //only 5 material options at the moment
+            if(action.objectVariation < 0 || action.objectVariation > 4)
+            {
+                errorMessage = "please use objectVariation [0, 4] inclusive";
+                actionFinished(false);
+                return;
+            }
+
+            ExperimentRoomSceneManager ersm = physicsSceneManager.GetComponent<ExperimentRoomSceneManager>();
+            ersm.ChangeWallMaterial(action.objectVariation);
+            actionFinished(true);
+        }
+
+        //change wall color to rgb (0-255, 0-255, 0-255)
+        public void ChangeWallColorExpRoom(ServerAction action)
+        {
+            if(
+            action.r < 0 || action.r > 255 ||
+            action.g < 0 || action.g > 255 ||
+            action.b < 0 || action.b > 255)
+            {
+                errorMessage = "rgb values must be [0-255]";
+                actionFinished(false);
+                return;
+            }
+
+            ExperimentRoomSceneManager ersm = physicsSceneManager.GetComponent<ExperimentRoomSceneManager>();
+            ersm.ChangeWallColor(action.r, action.g, action.b);
+            actionFinished(true);
+        }
+
+        //change floor to material [variation]
+        public void ChangeFloorMaterialExpRoom(ServerAction action)
+        {
+            //only 5 material options at the moment
+            if(action.objectVariation < 0 || action.objectVariation > 4)
+            {
+                errorMessage = "please use objectVariation [0, 4] inclusive";
+                actionFinished(false);
+                return;
+            }
+
+            ExperimentRoomSceneManager ersm = physicsSceneManager.GetComponent<ExperimentRoomSceneManager>();
+            ersm.ChangeFloorMaterial(action.objectVariation);
+            actionFinished(true);
+        }
+
+        //change wall color to rgb (0-255, 0-255, 0-255)
+        public void ChangeFloorColorExpRoom(ServerAction action)
+        {
+            if(
+            action.r < 0 || action.r > 255 ||
+            action.g < 0 || action.g > 255 ||
+            action.b < 0 || action.b > 255)
+            {
+                errorMessage = "rgb values must be [0-255]";
+                actionFinished(false);
+                return;
+            }
+
+            ExperimentRoomSceneManager ersm = physicsSceneManager.GetComponent<ExperimentRoomSceneManager>();
+            ersm.ChangeFloorColor(action.r, action.g, action.b);
+            actionFinished(true);
+        }
+
+        //change color of ceiling lights in exp room to rgb (0-255, 0-255, 0-255)
+        public void ChangeLightColorExpRoom(ServerAction action)
+        {
+            if(
+            action.r < 0 || action.r > 255 ||
+            action.g < 0 || action.g > 255 ||
+            action.b < 0 || action.b > 255)
+            {
+                errorMessage = "rgb values must be [0-255]";
+                actionFinished(false);
+                return;
+            }
+
+            ExperimentRoomSceneManager ersm = physicsSceneManager.GetComponent<ExperimentRoomSceneManager>();
+            ersm.ChangeLightColor(action.r, action.g, action.b);
+            actionFinished(true);
+        }
+
+        //change intensity of lights in exp room [0-5] these arent in like... lumens or anything
+        //just a relative intensity value
+        public void ChangeLightIntensityExpRoom(ServerAction action)
+        {
+            //restrict this to [0-5]
+            if(action.intensity < 0 || action.intensity > 5)
+            {
+                errorMessage = "light intensity must be [0.0 , 5.0] inclusive";
+                actionFinished(false);
+                return;
+            }
+
+            ExperimentRoomSceneManager ersm = physicsSceneManager.GetComponent<ExperimentRoomSceneManager>();
+            ersm.ChangeLightIntensity(action.intensity);
+            actionFinished(true);
+        }
+
+        public void ChangeTableTopMaterialExpRoom(ServerAction action)
+        {
+            //only 5 material options at the moment
+            if(action.objectVariation < 0 || action.objectVariation > 4)
+            {
+                errorMessage = "please use objectVariation [0, 4] inclusive";
+                actionFinished(false);
+                return;
+            }
+
+            ExperimentRoomSceneManager ersm = physicsSceneManager.GetComponent<ExperimentRoomSceneManager>();
+            ersm.ChangeTableTopMaterial(action.objectVariation);
+            actionFinished(true);
+        }
+
+        public void ChangeTableTopColorExpRoom(ServerAction action)
+        {
+            if(
+            action.r < 0 || action.r > 255 ||
+            action.g < 0 || action.g > 255 ||
+            action.b < 0 || action.b > 255)
+            {
+                errorMessage = "rgb values must be [0-255]";
+                actionFinished(false);
+                return;
+            }
+
+            ExperimentRoomSceneManager ersm = physicsSceneManager.GetComponent<ExperimentRoomSceneManager>();
+            ersm.ChangeTableTopColor(action.r, action.g, action.b);
+            actionFinished(true);
+        }
+
+        public void ChangeTableLegMaterialExpRoom(ServerAction action)
+        {
+            //only 5 material options at the moment
+            if(action.objectVariation < 0 || action.objectVariation > 4)
+            {
+                errorMessage = "please use objectVariation [0, 4] inclusive";
+                actionFinished(false);
+                return;
+            }
+
+            ExperimentRoomSceneManager ersm = physicsSceneManager.GetComponent<ExperimentRoomSceneManager>();
+            ersm.ChangeTableLegMaterial(action.objectVariation);
+            actionFinished(true);
+        }
+
+        public void ChangeTableLegColorExpRoom(ServerAction action)
+        {
+            if(
+            action.r < 0 || action.r > 255 ||
+            action.g < 0 || action.g > 255 ||
+            action.b < 0 || action.b > 255)
+            {
+                errorMessage = "rgb values must be [0-255]";
+                actionFinished(false);
+                return;
+            }
+
+            ExperimentRoomSceneManager ersm = physicsSceneManager.GetComponent<ExperimentRoomSceneManager>();
+            ersm.ChangeTableLegColor(action.r, action.g, action.b);
+            actionFinished(true);
+        }
+
+        //returns valid spawn points for spawning an object on a receptacle in the experiment room
+        //checks if <action.objectId> at <action.y> rotation can spawn without falling off 
+        //table <receptacleObjectId>
+        public void ReturnValidSpawnsExpRoom(ServerAction action)
+        {
+            if(action.receptacleObjectId == null)
+            {
+                errorMessage = "please give valid receptacleObjectId for ReturnValidSpawnsExpRoom action";
+                actionFinished(false);
+                return;
+            }
+
+            if(action.objectType == null)
+            {
+                errorMessage = "please use either 'receptacle' or 'screen' to specify which experiment object to spawn";
+                actionFinished(false);
+                return;
+            }
+
+            SimObjPhysics target = null;
+            //find the object in the scene, disregard visibility
+            foreach(SimObjPhysics sop in VisibleSimObjs(true))
+            {
+                if(sop.objectID == action.receptacleObjectId)
+                {
+                    target = sop;
+                }
+            }
+
+            if(target == null)
+            {
+                errorMessage = "no receptacle object with id: "+ 
+                action.receptacleObjectId + " could not be found during ReturnValidSpawnsExpRoom";
+                actionFinished(false);
+                return;
+            }
+
+            //return all valid spawn coordinates
+            ExperimentRoomSceneManager ersm = physicsSceneManager.GetComponent<ExperimentRoomSceneManager>();
+            actionFinished(true, ersm.ReturnValidSpawns(action.objectType, action.objectVariation, target, action.y));
+        }
+
         //pass in a Vector3, presumably from GetReachablePositions, and try to place a specific Sim Object there
         //unlike PlaceHeldObject or InitialRandomSpawn, this won't be limited by a Receptacle, but only
         //limited by collision
@@ -2859,7 +3260,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             float distFromSopToBottomPoint = Vector3.Distance(bottomPoint, target.transform.position);
 
-            float offset = distFromSopToBottomPoint + 0.005f;
+            float offset = distFromSopToBottomPoint;
 
             Vector3 finalPos = GetSurfacePointBelowPosition(action.position) +  new Vector3(0, offset, 0);
 
@@ -2878,6 +3279,56 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(false);
         }
 
+        //same as PlaceObjectAtPoint(ServerAction action) but without a server action
+        public bool PlaceObjectAtPoint(SimObjPhysics t, Vector3 position)
+        {
+            SimObjPhysics target = null;
+            //find the object in the scene, disregard visibility
+            foreach(SimObjPhysics sop in VisibleSimObjs(true))
+            {
+                if(sop.objectID == t.objectID)
+                {
+                    target = sop;
+                }
+            }
+
+            if(target == null)
+            {
+                return false;
+            }
+
+            //make sure point we are moving the object to is valid
+            if(!agentManager.sceneBounds.Contains(position))
+            {
+                return false;
+            }
+
+            //ok let's get the distance from the simObj to the bottom most part of its colliders
+            Vector3 targetNegY = target.transform.position + new Vector3(0, -1, 0);
+            BoxCollider b = target.BoundingBox.GetComponent<BoxCollider>();
+
+            b.enabled = true;
+            Vector3 bottomPoint = b.ClosestPoint(targetNegY);
+            b.enabled = false;
+
+            float distFromSopToBottomPoint = Vector3.Distance(bottomPoint, target.transform.position);
+
+            float offset = distFromSopToBottomPoint;
+
+            //final position to place on surface
+            Vector3 finalPos = GetSurfacePointBelowPosition(position) +  new Vector3(0, offset, 0);
+
+
+            //check spawn area, if its clear, then place object at finalPos
+            InstantiatePrefabTest ipt = physicsSceneManager.GetComponent<InstantiatePrefabTest>();
+            if(ipt.CheckSpawnArea(target, finalPos, target.transform.rotation, false))
+            {
+                target.transform.position = finalPos;
+                return true;
+            }
+
+            return false;
+        }
         //uncomment this to debug draw valid points
         //private List<Vector3> validpointlist = new List<Vector3>();
 
@@ -2945,6 +3396,17 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true, targetPoints);
         }
 
+        //same as GetSpawnCoordinatesAboveReceptacle(Server Action) but takes a sim obj phys instead
+        //returns a list of vector3 coordinates above a receptacle. These coordinates will make up a grid above the receptacle
+        public List<Vector3> GetSpawnCoordinatesAboveReceptacle(SimObjPhysics t)
+        {
+            SimObjPhysics target = t;
+            //ok now get spawn points from target
+            List<Vector3> targetPoints = new List<Vector3>();
+            targetPoints = target.FindMySpawnPointsFromTopOfTriggerBox();
+            return targetPoints;
+        }
+
         //instantiate a target circle, and then place it in a "SpawnOnlyOUtsideReceptacle" that is also within camera view
         //If fails, return actionFinished(false) and despawn target circle
         public void SpawnTargetCircle(ServerAction action)
@@ -2985,7 +3447,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             else
             {
                 //targetReceptacles.AddRange(physicsSceneManager.ReceptaclesInScene); 
-                foreach(SimObjPhysics sop in physicsSceneManager.ReceptaclesInScene)
+                foreach(SimObjPhysics sop in physicsSceneManager.GatherAllReceptaclesInScene())
                 {
                     if(ReceptacleRestrictions.SpawnOnlyOutsideReceptacles.Contains(sop.ObjType))
                     targetReceptacles.Add(sop);
@@ -3620,14 +4082,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     targetReceptacle = sop;
                 }
             }
-
-            // SimObjPhysics[] simObjPhysicsArray = VisibleSimObjs(action);
-
-            // foreach (SimObjPhysics sop in simObjPhysicsArray) {
-            //     if (action.objectId == sop.ObjectID) {
-            //         targetReceptacle = sop;
-            //     }
-            // }
 
             if (targetReceptacle == null) {
                 errorMessage = "No valid Receptacle found";

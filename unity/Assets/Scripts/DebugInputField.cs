@@ -229,6 +229,227 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         break;
                     }
 
+                 case "expspawn":
+                    {
+                        ServerAction action = new ServerAction();
+
+						if (splitcommand.Length == 2 )
+                        {
+                            if(splitcommand[1] == "s")
+							action.objectType = "screen";
+
+                            if(splitcommand[1] == "r")
+							action.objectType = "receptacle";
+                        }
+
+                        else
+                        {
+                            action.objectType = "receptacle";
+                        }
+
+                        action.action = "ReturnValidSpawnsExpRoom";
+                        action.receptacleObjectId = "DiningTable|-00.59|+00.00|+00.33";
+                        action.objectVariation = 0;
+                        action.y = 120f;//UnityEngine.Random.Range(0, 360);
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
+                 case "exp":
+                    {
+                        ServerAction action = new ServerAction();
+
+                        action.action = "SpawnExperimentObjAtRandom";
+                        action.objectType = "receptacle";
+                        action.randomSeed = 50;//UnityEngine.Random.Range(0, 1000);
+                        action.receptacleObjectId = "DiningTable|-00.59|+00.00|+00.33";
+                        action.objectVariation = 12;
+                        action.y = 120f;//UnityEngine.Random.Range(0, 360);
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
+                 case "exps":
+                    {
+                        ServerAction action = new ServerAction();
+
+                        action.action = "SpawnExperimentObjAtRandom";
+                        action.objectType = "screen";
+                        action.randomSeed = UnityEngine.Random.Range(0, 1000);
+                        action.receptacleObjectId = "DiningTable|-00.59|+00.00|+00.33";
+
+						if (splitcommand.Length == 2 )
+                        {
+                            action.objectVariation = int.Parse(splitcommand[1]);
+                        }
+
+                        else
+                        action.objectVariation = 0;
+
+                        action.y = 0f;//UnityEngine.Random.Range(0, 360);
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
+                 case "expp":
+                    {
+                        ServerAction action = new ServerAction();
+
+                        action.action = "SpawnExperimentObjAtPoint";
+                        action.objectType = "receptacle";
+                        action.receptacleObjectId = "DiningTable|-00.59|+00.00|+00.33";
+                        action.objectVariation = 12;
+                        action.position = new Vector3(-1.4f, 0.9f, 0.1f);
+                        action.y = 120f;//UnityEngine.Random.Range(0, 360);
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
+                 case "wallcolor":
+                    {
+                        ServerAction action = new ServerAction();
+
+                        action.action = "ChangeWallColorExpRoom";
+                        action.r = 100f;
+                        action.g = 100f;
+                        action.b = 100f;
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
+                 case "floorcolor":
+                    {
+                        ServerAction action = new ServerAction();
+
+                        action.action = "ChangeFloorColorExpRoom";
+                        action.r = 100f;
+                        action.g = 100f;
+                        action.b = 100f;
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
+                 case "wallmaterial":
+                    {
+                        ServerAction action = new ServerAction();
+
+                        action.action = "ChangeWallMaterialExpRoom";
+                        action.objectVariation = 1;
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
+                 case "floormaterial":
+                    {
+                        ServerAction action = new ServerAction();
+
+                        action.action = "ChangeFloorMaterialExpRoom";
+                        action.objectVariation = 1;
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
+                 case "lightc":
+                    {
+                        ServerAction action = new ServerAction();
+
+                        action.action = "ChangeLightColorExpRoom";
+                        action.r = 20f;
+                        action.g = 94f;
+                        action.b = 10f;
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
+                 case "lighti":
+                    {
+                        ServerAction action = new ServerAction();
+
+                        action.action = "ChangeLightIntensityExpRoom";
+                        action.intensity = 3;
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
+                 case "tabletopc":
+                    {
+                        ServerAction action = new ServerAction();
+
+                        action.action = "ChangeTableTopColorExpRoom";
+                        action.r = 20f;
+                        action.g = 94f;
+                        action.b = 10f;
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
+                 case "tabletopm":
+                    {
+                        ServerAction action = new ServerAction();
+
+                        action.action = "ChangeTableTopMaterialExpRoom";
+                        action.objectVariation = 3;
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
+                 case "tablelegc":
+                    {
+                        ServerAction action = new ServerAction();
+
+                        action.action = "ChangeTableLegColorExpRoom";
+                        action.r = 20f;
+                        action.g = 94f;
+                        action.b = 10f;
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
+                 case "tablelegm":
+                    {
+                        ServerAction action = new ServerAction();
+
+                        action.action = "ChangeTableLegMaterialExpRoom";
+                        action.objectVariation = 3;
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
+                 case "screenm":
+                    {
+                        ServerAction action = new ServerAction();
+
+                        action.action = "ChangeScreenMaterialExpRoom";
+                        action.objectVariation = 3;
+                        action.objectId = "Screen|-00.64|+00.78|+00.71";
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
+                 case "screenc":
+                    {
+                        ServerAction action = new ServerAction();
+
+                        action.action = "ChangeScreenColorExpRoom";
+                        action.r = 20f;
+                        action.g = 94f;
+                        action.b = 10f;
+                        action.objectId = "Screen|-00.64|+00.78|+00.71";
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
+                 case "grid":
+                    {
+                        ServerAction action = new ServerAction();
+
+                        action.action = "GetReceptacleCoordinatesExpRoom";
+                        action.gridSize = 0.1f;
+                        action.maxStepCount = 5;
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
                 //initialize drone mode
                  case "initd":
                     {
@@ -687,7 +908,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         ServerAction action = new ServerAction();
                         action.action = "PlaceObjectAtPoint";
                         action.position = GameObject.Find("TestPosition").transform.position;
-                        action.objectId = "Toaster|-01.84|+00.90|+00.13";
+                        action.objectId = "GarbageCan|+02.63|00.00|-01.48";
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }
@@ -736,7 +957,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         {
                             action.randomSeed = 0;
                             action.forceVisible = false;//true;
-                            action.numPlacementAttempts = 5;
+                            action.numPlacementAttempts = 20;
                         }
 
                         // ObjectTypeCount otc = new ObjectTypeCount();

@@ -215,9 +215,7 @@ public class Contains : MonoBehaviour
 		return ids;
 	}
 
-	//generate a grid of potential spawn points, set ReturnPointsClosestToAgent to true if
-	//the list of points should be filtered closest to agent, if false
-	//it will return all points on the receptacle regardless of agent proximity
+	//returns a grid of points above the target receptacle
 	public List<Vector3> GetValidSpawnPointsFromTopOfTriggerBox()
 	{
 		Vector3 p1, p2, p4; //in case we need all the corners later for something...
@@ -284,7 +282,6 @@ public class Contains : MonoBehaviour
 		p2 = transform.TransformPoint(b.center + new Vector3(-b.size.x, b.size.y, b.size.z) * 0.5f);
 		//top back right
 		p4 = transform.TransformPoint(b.center + new Vector3(b.size.x, b.size.y, -b.size.z) * 0.5f);
-
 		//bottom forward right
 		p5 = transform.TransformPoint(b.center + new Vector3(b.size.x, -b.size.y, b.size.z) * 0.5f);
 
@@ -320,11 +317,16 @@ public class Contains : MonoBehaviour
 
 		foreach(Vector3 point in gridpoints)
 		{
-            // print("checking point in gridpoints on " + myParent.transform.name);
-
 			// //quick test to see if this point on the grid is blocked by anything by raycasting down
 			// //toward it
+
+			//debug draw the gridpoints if you wanna see em
+			// #if UNITY_EDITOR
+			// Debug.DrawLine(point, point + -(ydir * ydist), Color.red, 100f);
+			// #endif
+
 			RaycastHit hit;
+	
 			if(Physics.Raycast(point, -ydir, out hit, ydist, 1 << 8, QueryTriggerInteraction.Collide))//NOTE: QueryTriggerInteraction was previously Ignore
 			{
 
@@ -342,11 +344,6 @@ public class Contains : MonoBehaviour
 					{
 						PossibleSpawnPoints.Add(new ReceptacleSpawnPoint(hit.point, b, this, myParent.GetComponent<SimObjPhysics>()));
 					}
-
-                    // //debug draw the gridpoints if you wanna see em
-                    // #if UNITY_EDITOR
-                    // Debug.DrawLine(point, point + -(ydir * ydist), Color.red, 100f);
-                    // #endif
 				}
 			}
 

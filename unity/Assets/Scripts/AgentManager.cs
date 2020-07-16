@@ -1320,6 +1320,13 @@ public class ServerAction
 	//should actions like pickup and moveHand have more manual, less abstracted behavior?
 	public bool manualInteract = false;
 
+	//color 0-255
+	public float r;
+	public float g;
+	public float b;
+
+	public float intensity;//used for light?
+
     public SimObjType ReceptableSimObjType()
 	{
 		if (string.IsNullOrEmpty(receptacleObjectType))

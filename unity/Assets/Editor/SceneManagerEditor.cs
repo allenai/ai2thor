@@ -16,8 +16,8 @@ public class SceneManagerEditor : Editor
                 BuildTarget.StandaloneOSXIntel64,
 #endif
 		BuildTarget.StandaloneLinux64,
-		BuildTarget.StandaloneLinux,
-		BuildTarget.StandaloneLinuxUniversal,
+		//BuildTarget.StandaloneLinux,
+		//BuildTarget.StandaloneLinuxUniversal,
 		BuildTarget.StandaloneWindows,
 		BuildTarget.StandaloneWindows64,
 	};

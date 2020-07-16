@@ -760,7 +760,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
     void Start()
 	{
 		//For debug in editor only
-#if UNITY_EDITOR
+		#if UNITY_EDITOR
 		List<SimObjSecondaryProperty> temp = new List<SimObjSecondaryProperty>(SecondaryProperties);
 		if (temp.Contains(SimObjSecondaryProperty.Receptacle))
 		{
@@ -795,12 +795,8 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
         {
             Debug.LogError(this.name + " is not at uniform scale! Set scale to (1, 1, 1)!!!");
         }
-
-        // if(BoundingBox == null)
-        // {
-        //     Debug.LogError(this.name + "AAAAAAAHHH NO BOX");
-        // }
-#endif
+		#endif
+		
 		//end debug setup stuff
 
 		OriginalPhysicsMaterialValuesForAllMyColliders = new PhysicsMaterialValues[MyColliders.Length];
@@ -1073,12 +1069,14 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 
 		//draw visibility points for editor
 		Gizmos.color = Color.yellow;
-		if (VisibilityPoints.Length > 0)
+		if (VisibilityPoints != null && VisibilityPoints.Length > 0)
 		{
-			foreach (Transform t in VisibilityPoints)
-			{
-				Gizmos.DrawSphere(t.position, 0.01f);
-
+            foreach (Transform t in VisibilityPoints)
+            {
+                //if (t != null)
+                //{
+                    Gizmos.DrawSphere(t.position, 0.01f);
+                //}
 			}
 		}
 
@@ -1090,35 +1088,8 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 
 	//CONTEXT MENU STUFF FOR SETTING UP SIM OBJECTS
 	//RIGHT CLICK this script in the inspector to reveal these options
-    [ContextMenu("BoundingBox")]
-    void ContextCreateBoundingBox()
-    {
-        GameObject bb = new GameObject("BoundingBox");
-        bb.transform.position = gameObject.transform.position;
-        bb.transform.SetParent(gameObject.transform);
-        //bb.transform.localRotation = Quaternion.identity;//zero out rotation?
-        bb.AddComponent<BoxCollider>();
-        bb.GetComponent<BoxCollider>().enabled = false;
-        bb.tag = "Untagged";
-        bb.layer = 9;
 
-        //add box collider to the First mesh renderer found on the object i guess
-        MeshRenderer mr = this.GetComponentInChildren<MeshRenderer>();
-        BoxCollider tempBox = mr.transform.gameObject.AddComponent<BoxCollider>();
-
-        bb.transform.localPosition = mr.transform.localPosition;//move it so it's in line with the mesh?
-        bb.transform.localRotation = mr.transform.localRotation;
-
-        BoxCollider thisbox = bb.GetComponent<BoxCollider>();
-        thisbox.size = tempBox.size * 1.05f;//+ new Vector3(0.1f, 0.1f, 0.1f);
-        thisbox.center = tempBox.center;
-        DestroyImmediate(tempBox);
-
-
-        BoundingBox = bb;
-    }
-
-	[ContextMenu("Cabinet")]
+	//[ContextMenu("Cabinet")]
 	void SetUpCabinet()
 	{
 		Type = SimObjType.Cabinet;
@@ -1292,7 +1263,6 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		//MyTriggerColliders = tcols.ToArray();
 		ReceptacleTriggerBoxes = recepboxes.ToArray();
 
-
 		gameObject.GetComponent<CanOpen_Object>().MovingParts = movparts.ToArray();
 		gameObject.GetComponent<CanOpen_Object>().openPositions = new Vector3[movparts.Count];
 		gameObject.GetComponent<CanOpen_Object>().closedPositions = new Vector3[movparts.Count];
@@ -1300,10 +1270,9 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		if (openPositions.Count != 0)
 			gameObject.GetComponent<CanOpen_Object>().openPositions = openPositions.ToArray();
 
-
 		//this.GetComponent<CanOpen>().SetMovementToRotate();
 	}
-	[ContextMenu("Table")]
+	//[ContextMenu("Table")]
 	void SetUpTable()
 	{
 		this.Type = SimObjType.DiningTable;
@@ -1370,7 +1339,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 
 	}
 
-	[ContextMenu("Drawer")]
+	//[ContextMenu("Drawer")]
 	void SetUpDrawer()
 	{
 		this.Type = SimObjType.Drawer;
@@ -1568,7 +1537,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		}
 	}
 
-	[ContextMenu("Static Mesh Collider with Receptacle")]
+	//[ContextMenu("Static Mesh Collider with Receptacle")]
 	void SetUpSimObjWithStaticMeshCollider()
 	{
 		if (this.Type == SimObjType.Undefined || this.PrimaryProperty == SimObjPrimaryProperty.Undefined)
@@ -1794,11 +1763,12 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 	}
 
 
-	[ContextMenu("Setup Colliders And VisPoints")]
-	void SetupCollidersVisPoints()
+	[ContextMenu("Setup Colliders, VisPoints, and Bounding Box")]
+	public void SetupCollidersVisPoints()
 	{
 		ContextSetUpColliders();
 		ContextSetUpVisibilityPoints();
+        ContextSetUpBoundingBox();
 	}
 
 	//[UnityEditor.MenuItem("SimObjectPhysics/Toaster")]
@@ -1904,7 +1874,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 	}
 
 	[ContextMenu("Setup")]
-	void ContextSetUpSimObjPhysics()
+	public void ContextSetUpSimObjPhysics()
 	{
 		if (this.Type == SimObjType.Undefined || this.PrimaryProperty == SimObjPrimaryProperty.Undefined)
 		{
@@ -1925,12 +1895,14 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 			GameObject c = new GameObject("Colliders");
 			c.transform.position = gameObject.transform.position;
 			c.transform.SetParent(gameObject.transform);
+            c.transform.localEulerAngles = Vector3.zero;
             
 			GameObject cc = new GameObject("Col");
 			cc.transform.position = c.transform.position;
 			cc.transform.SetParent(c.transform);
-			//cc.AddComponent<CapsuleCollider>();
-			cc.AddComponent<BoxCollider>();
+            cc.transform.localEulerAngles = Vector3.zero;
+            //cc.AddComponent<CapsuleCollider>();
+            cc.AddComponent<BoxCollider>();
 			cc.tag = "SimObjPhysics";
 			cc.layer = 8;
 		}
@@ -1941,19 +1913,22 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 			GameObject vp = new GameObject("VisibilityPoints");
 			vp.transform.position = gameObject.transform.position;
 			vp.transform.SetParent(gameObject.transform);
+            vp.transform.localEulerAngles = Vector3.zero;
 
-			//create first Visibility Point to work with
-			GameObject vpc = new GameObject("vPoint");
+            //create first Visibility Point to work with
+            GameObject vpc = new GameObject("vPoint");
 			vpc.transform.position = vp.transform.position;
 			vpc.transform.SetParent(vp.transform);
-		}
+            vpc.transform.localEulerAngles = Vector3.zero;
+        }
 
 		if (!gameObject.transform.Find("BoundingBox"))
 		{
 			GameObject rac = new GameObject("BoundingBox");
 			rac.transform.position = gameObject.transform.position;
 			rac.transform.SetParent(gameObject.transform);
-			rac.AddComponent<BoxCollider>();
+            rac.transform.localEulerAngles = Vector3.zero;
+            rac.AddComponent<BoxCollider>();
 			rac.GetComponent<BoxCollider>().enabled = false;
 		}
 
@@ -2111,7 +2086,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 	}
 
 	// [ContextMenu("Set Up VisibilityPoints")]
-	void ContextSetUpVisibilityPoints()
+	public void ContextSetUpVisibilityPoints()
 	{
 		List<Transform> vplist = new List<Transform>();
 
@@ -2150,20 +2125,93 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 	//[ContextMenu("Set Up Rotate Agent Collider")]
 	void ContextSetUpBoundingBox()
 	{
-		if (transform.Find("BoundingBox"))
-		{
-			BoundingBox = transform.Find("BoundingBox").gameObject;
+        Vector3[] transformSaver = new Vector3[] { transform.localPosition, transform.localEulerAngles };
 
-			//This collider is used as a size reference for the Agent's Rotation checking boxes, so it does not need
-			//to be enabled. To ensure this doesn't interact with anything else, set the Tag to Untagged, the layer to 
-			//SimObjInvisible, and disable this component. Component values can still be accessed if the component itself
-			//is not enabled.
-			BoundingBox.tag = "Untagged";
-			BoundingBox.layer = 9;//layer 9 - SimObjInvisible
+        transform.localPosition = Vector3.zero;
+        transform.localEulerAngles = Vector3.zero;
 
-			if (BoundingBox.GetComponent<BoxCollider>())
-				BoundingBox.GetComponent<BoxCollider>().enabled = false;
-		}
-	}
+        if (!transform.Find("BoundingBox"))
+        {
+            GameObject BoundingBox = new GameObject();
+            BoundingBox.transform.parent = gameObject.transform;
+            BoundingBox.transform.position = Vector3.zero;
+            BoundingBox.transform.localEulerAngles = Vector3.zero;
+            BoundingBox.transform.localScale = Vector3.one;
+        }
+
+        BoundingBox = transform.Find("BoundingBox").gameObject;
+
+        //This collider is used as a size reference for the Agent's Rotation checking boxes, so it does not need
+        //to be enabled. To ensure this doesn't interact with anything else, set the Tag to Untagged, the layer to 
+        //SimObjInvisible, and disable this component. Component values can still be accessed if the component itself
+        //is not enabled.
+        BoundingBox.tag = "Untagged";
+        BoundingBox.layer = 9;//layer 9 - SimObjInvisible
+
+        Collider[] colliders = transform.GetComponentsInChildren<Collider>();
+        MeshFilter[] meshes = transform.GetComponentsInChildren<MeshFilter>();
+        SkinnedMeshRenderer[] skinnedMeshes = transform.GetComponentsInChildren<SkinnedMeshRenderer>();
+
+        if (BoundingBox.GetComponent<BoxCollider>())
+        {
+            BoundingBox.GetComponent<BoxCollider>().enabled = true;
+            BoundingBox.GetComponent<BoxCollider>().center = colliders[0].bounds.center;
+            BoundingBox.GetComponent<BoxCollider>().size = Vector3.zero;
+        }
+
+        Bounds newBoundingBox = new Bounds();
+        Vector3 minMeshXZ = colliders[0].bounds.center;
+        Vector3 maxMeshXYZ = colliders[0].bounds.center;
+        //Vector3 maxMeshXZ = colliders[0].bounds.center;
+
+        foreach (Collider collider in colliders)
+        {
+            newBoundingBox.Encapsulate(collider.gameObject.GetComponent<Collider>().bounds.min);
+            newBoundingBox.Encapsulate(collider.gameObject.GetComponent<Collider>().bounds.max);
+        }
+
+        //Excluded this because my material ID triangles are all located way below their respective main-meshes
+        //newBoundingBox.Encapsulate(meshGroup.GetComponent<meshFilter>().mesh.bounds.min);
+        foreach (MeshFilter meshFilter in meshes)
+        {
+            foreach (Vector3 vertex in meshFilter.sharedMesh.vertices)
+            {
+                if (minMeshXZ.x > meshFilter.gameObject.transform.TransformPoint(vertex).x)
+                    minMeshXZ.x = meshFilter.gameObject.transform.TransformPoint(vertex).x;
+                if (minMeshXZ.z > meshFilter.gameObject.transform.TransformPoint(vertex).z)
+                    minMeshXZ.z = meshFilter.gameObject.transform.TransformPoint(vertex).z;
+                if (maxMeshXYZ.x < meshFilter.gameObject.transform.TransformPoint(vertex).x)
+                    maxMeshXYZ.x = meshFilter.gameObject.transform.TransformPoint(vertex).x;
+                if (maxMeshXYZ.y < meshFilter.gameObject.transform.TransformPoint(vertex).y)
+                    maxMeshXYZ.y = meshFilter.gameObject.transform.TransformPoint(vertex).y;
+                if (maxMeshXYZ.z < meshFilter.gameObject.transform.TransformPoint(vertex).z)
+                    maxMeshXYZ.z = meshFilter.gameObject.transform.TransformPoint(vertex).z;
+
+                newBoundingBox.Encapsulate(minMeshXZ);
+                newBoundingBox.Encapsulate(maxMeshXYZ);
+            }
+        }
+
+        foreach (SkinnedMeshRenderer skinnedMesh in skinnedMeshes)
+        {
+            skinnedMesh.updateWhenOffscreen = true;
+            newBoundingBox.Encapsulate(skinnedMesh.bounds.min);
+            newBoundingBox.Encapsulate(skinnedMesh.bounds.max);
+        }
+
+        //Debug.Log("Min/max of BoundingBox: " + newBoundingBox.min + ", " + newBoundingBox.max);
+        BoundingBox.GetComponent<BoxCollider>().center = newBoundingBox.center;
+        //Set Bounding Box Buffer Here!!!
+        BoundingBox.GetComponent<BoxCollider>().size = newBoundingBox.size + new Vector3(0.01f, 0.01f, 0.01f);
+        BoundingBox.GetComponent<BoxCollider>().enabled = false;
+        
+        //var currentBoundingBox = currentGameObject.transform.Find("BoundingBox").GetComponent<BoxCollider>();
+        //currentBoundingBox.size = currentGameObject.GetComponent<MeshFilter>().sharedMesh.bounds.size + new Vector3(0.2f, 0.2f, 0.2f);
+        //currentBoundingBox.center = currentGameObject.GetComponent<MeshFilter>().sharedMesh.bounds.center
+
+        transform.localPosition = transformSaver[0];
+        transform.localEulerAngles = transformSaver[1];
+
+    }
 	#endif
 }
