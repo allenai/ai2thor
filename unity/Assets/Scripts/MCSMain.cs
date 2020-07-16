@@ -130,6 +130,11 @@ public class MCSMain : MonoBehaviour {
         }
     }
 
+    //public currentScene setter for Unit Testing
+    public void SetCurrentScene(MCSConfigScene currentScene) {
+        this.currentScene = currentScene;
+    }
+
     // Custom Methods
 
     public void ChangeCurrentScene(MCSConfigScene scene) {
