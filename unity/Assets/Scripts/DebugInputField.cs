@@ -453,6 +453,15 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         break;
                     }
 
+                 case "grid":
+                    {
+                        ServerAction action = new ServerAction();
+
+                        action.action = "GetReceptacleCoordinatesExpRoom";
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
                 //initialize drone mode
                  case "initd":
                     {

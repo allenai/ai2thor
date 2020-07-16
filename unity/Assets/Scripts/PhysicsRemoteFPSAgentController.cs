@@ -2811,6 +2811,20 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
 
+        //action to return points from a grid that have an experiment receptacle below it
+        //creates a grid startinng from the agent's current hand position and projects that grid
+        //forward relative to the agent
+        //grid will be a 2n+1 by n grid in the orientation of agent right/left by agent forward
+        public void GetReceptacleCoordinatesExpRoom(ServerAction action)
+        {
+            var agent = this.agentManager.agents[0];
+            ExperimentRoomSceneManager ersm = physicsSceneManager.GetComponent<ExperimentRoomSceneManager>();
+            //good defaults would be gridSize 0.1m, maxStepCount 20 to cover the room
+            var ret = ersm.ValidGrid(agent.AgentHand.transform.position, 0.1f, 20, agent);
+            //var ret = ersm.ValidGrid(agent.AgentHand.transform.position, action.gridSize, action.maxStepCount, agent);
+            actionFinished(true, ret);
+        }
+
         //spawn receptacle object at array index <objectVariation> rotated to <y>
         //on <receptacleObjectId> using position <position>
         public void SpawnExperimentObjAtPoint(ServerAction action)

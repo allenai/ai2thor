@@ -1,4 +1,5 @@
 ﻿using System.Collections;
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityStandardAssets.Characters.FirstPerson;
@@ -53,6 +54,67 @@ public class ExperimentRoomSceneManager : MonoBehaviour
     List<Vector3> debugCoords = new List<Vector3>();
     #endif
 
+    //returns grid points where there is an experiment receptacle (screens too) on the table
+    //this only returns areas where the ReceptacleTriggerBox of the object is, not the geometry of the object itself
+    //use agent's current forward as directionality- agent forward and agent left
+    //the y value will be wherever the agent's hand currently is
+    //gridIncrement- size between grid points in meters
+    //count - casts a grid forward <2 * count + 1> by <count>
+    public List<Vector3> ValidGrid(Vector3 origin, float gridIncrement, int count, BaseFPSAgentController agent)
+    {
+        //start from origin which will be agent's hand
+        List<Vector3> pointsOnGrid = new List<Vector3>();
+
+        for(int i = 0; i < count; i++)
+        {
+            //from origin, go gridIncrement a number of times equal to gridDimension
+            //in the agent's forward direction
+            Vector3 thisPoint = origin + agent.transform.forward * gridIncrement * i;
+            pointsOnGrid.Add(thisPoint);
+
+            //then, from this point, go gridDimension times in both left and right direction
+            for(int j = 1; j < count + 1; j++)
+            {
+                pointsOnGrid.Add(thisPoint + agent.transform.right * gridIncrement * j);
+                pointsOnGrid.Add(thisPoint + -agent.transform.right * gridIncrement * j);
+            }
+        }
+
+        //debugCoords = pointsOnGrid;
+
+        List<Vector3> actualPoints = new List<Vector3>();
+        RaycastHit[] hits;
+
+        foreach (Vector3 point in pointsOnGrid)
+        {
+            hits = Physics.RaycastAll(point + new Vector3(0, 5, 0), Vector3.down, 20.0f, 1<<9, QueryTriggerInteraction.Collide);
+            float[] hitDistances = new float[hits.Length];
+
+            for(int i = 0; i < hitDistances.Length; i++)
+            {
+                hitDistances[i] = hits[i].distance;
+            }
+
+            Array.Sort(hitDistances, hits);
+
+            foreach (RaycastHit h in hits)
+            {
+                if(h.transform.GetComponent<SimObjPhysics>())
+                {
+                    var o = h.transform.GetComponent<SimObjPhysics>();
+                    if(o.Type != SimObjType.DiningTable && o.Type != SimObjType.Floor)
+                    {
+                        actualPoints.Add(point);
+                    }
+                }
+            }
+        }
+
+        //debugCoords = actualPoints;
+        //ok we now have grid points in a grid, now raycast down from each of those and see if we hit a receptacle...
+        return actualPoints;
+
+    }
     //change specified screen object's material to color rgb
     public void ChangeScreenColor(SimObjPhysics screen, float r, float g, float b)
     {
@@ -176,7 +238,7 @@ public class ExperimentRoomSceneManager : MonoBehaviour
             toSpawn = receptaclesToSpawn[variation].GetComponent<SimObjPhysics>();
         }
         
-        SimObjPhysics spawned = Object.Instantiate(toSpawn, initialSpawnPosition, Quaternion.identity);
+        SimObjPhysics spawned = GameObject.Instantiate(toSpawn, initialSpawnPosition, Quaternion.identity);
         Rigidbody rb = spawned.GetComponent<Rigidbody>();
 
         //apply rotation to object, default quaternion.identity
@@ -250,7 +312,7 @@ public class ExperimentRoomSceneManager : MonoBehaviour
         }
 
         //instantiate the prefab toSpawn away from every other object
-        SimObjPhysics spawned = Object.Instantiate(toSpawn, initialSpawnPosition, Quaternion.identity);
+        SimObjPhysics spawned = GameObject.Instantiate(toSpawn, initialSpawnPosition, Quaternion.identity);
         Rigidbody rb = spawned.GetComponent<Rigidbody>();
         //make sure object doesn't fall until we are done preparing to reposition it on the target receptacle
         rb.isKinematic = true;
@@ -312,7 +374,7 @@ public class ExperimentRoomSceneManager : MonoBehaviour
 
         bool success = false;
         //init random state
-        Random.InitState(seed);
+        UnityEngine.Random.InitState(seed);
 
         if(objType == "screen")
         {
@@ -330,7 +392,7 @@ public class ExperimentRoomSceneManager : MonoBehaviour
         spawnCoordinates.Shuffle_(seed);
 
         //instantiate the prefab toSpawn away from every other object
-        SimObjPhysics spawned = Object.Instantiate(toSpawn, initialSpawnPosition, Quaternion.identity);
+        SimObjPhysics spawned = GameObject.Instantiate(toSpawn, initialSpawnPosition, Quaternion.identity);
         Rigidbody rb = spawned.GetComponent<Rigidbody>();
         //make sure object doesn't fall until we are done preparing to reposition it on the target receptacle
         rb.isKinematic = true;
