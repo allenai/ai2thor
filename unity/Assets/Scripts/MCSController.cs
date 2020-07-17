@@ -696,7 +696,6 @@ public class MCSController : PhysicsRemoteFPSAgentController {
         Vector3 origin = new Vector3(transform.position.x, startHeight, transform.position.z);
         Vector3 end = new Vector3(transform.position.x, endHeight, transform.position.z);
         RaycastHit hit;
-        Ray ray = new Ray(origin, direction);
         LayerMask layerMask = ~(1 << 10);
         
         //if raycast hits an object, the agent does not move on y-axis

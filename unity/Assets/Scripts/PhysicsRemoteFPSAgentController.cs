@@ -87,9 +87,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         // Used to expand agent capsule in collision checks for open/close actions
         protected const float ExpandAgentCapsuleBy = 0.1f;
 
-        //used for collision detection with SimObjPhysics
-        protected const float AgentCollisionCapsuleRadius = 0.27f;
-
         //change visibility check to use this distance when looking down
         //protected float DownwardViewDistance = 2.0f;
 
@@ -2651,8 +2648,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 transform.position,
                 dir,
                 moveMagnitude,
-                1 << 8 | 1 << 10,
-                true
+                1 << 8 | 1 << 10
             );
 
             RaycastHit[] structureSweepResults = capsuleCastAllForAgent(
@@ -2661,8 +2657,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 transform.position,
                 dir,
                 moveMagnitude,
-                1 << 8 | 1 << 10,
-                false
+                1 << 8 | 1 << 10
             );
 
             bool hasNoStructuresInWay = AgentCanMoveRayCastSweep(ref moveMagnitude, orientation, structureSweepResults, true);
@@ -2711,6 +2706,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         if ((res.transform.tag == "Structure" && isStructure) || 
                             (res.rigidbody.mass > this.GetComponent<Rigidbody>().mass && res.transform.tag == "SimObjPhysics"))
                         {
+                            Debug.Log("STRUCT");
                             int thisAgentNum = agentManager.agents.IndexOf(this);
                             errorMessage = res.transform.name + " is blocking Agent " + thisAgentNum.ToString() + " from moving " + orientation;
                             //the moment we find a result that is blocking, return false here
@@ -6865,14 +6861,23 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             Vector3 startPosition,
             Vector3 dir,
             float moveMagnitude,
-            int layerMask,
-            bool useCollisionRadius=false
+            int layerMask
             ) {
-            Vector3 center = cc.transform.position + cc.center;//make sure to offset this by cc.center since we shrank the capsule size
-            float radius = useCollisionRadius ? AgentCollisionCapsuleRadius : cc.radius + skinWidth;
+            Vector3 center = cc.transform.position;
+            float radius = cc.radius + skinWidth;
             float innerHeight = cc.height / 2.0f - radius;
             Vector3 point1 = new Vector3(startPosition.x, center.y + innerHeight, startPosition.z);
             Vector3 point2 = new Vector3(startPosition.x, center.y - innerHeight + skinWidth, startPosition.z);
+
+            //MCS large collider change
+            RaycastHit hit;
+            LayerMask layerMask2 = ~(1 << 10);
+
+            if (Physics.SphereCast(point1, cc.radius, Vector3.down, out hit, Mathf.Infinity, layerMask2)) 
+            {
+                point2.y = hit.point.y + radius + 0.01f;
+            }
+
             return Physics.CapsuleCastAll(
                 point1,
                 point2,
