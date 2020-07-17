@@ -87,6 +87,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         // Used to expand agent capsule in collision checks for open/close actions
         protected const float ExpandAgentCapsuleBy = 0.1f;
 
+        //used for collision detection with SimObjPhysics
+        protected const float AgentCollisionCapsuleRadius = 0.27f;
+
         //change visibility check to use this distance when looking down
         //protected float DownwardViewDistance = 2.0f;
 
@@ -1935,9 +1938,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 DefaultAgentHand();
                 Vector3 oldPosition = transform.position;
                 transform.position = targetPosition;
+                /* MCS Changed so grid snap is at the end of movement across 5 frames
                 if (!continuousMode) {
                     this.snapToGrid();
-                }
+                }*/
 
                 if (uniqueId != "" && maxDistanceToObject > 0.0f) {
                     if (!physicsSceneManager.UniqueIdToSimObjPhysics.ContainsKey(uniqueId)) {
@@ -2641,16 +2645,37 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     break;
             }
 
-            RaycastHit[] sweepResults = capsuleCastAllForAgent(
+            RaycastHit[] collisionSweepResults = capsuleCastAllForAgent(
                 GetComponent<CapsuleCollider>(),
                 m_CharacterController.skinWidth,
                 transform.position,
                 dir,
                 moveMagnitude,
-                1 << 8 | 1 << 10
+                1 << 8 | 1 << 10,
+                true
             );
 
-            //check if we hit an environmental structure or a sim object that we aren't actively holding. If so we can't move
+            RaycastHit[] structureSweepResults = capsuleCastAllForAgent(
+                GetComponent<CapsuleCollider>(),
+                m_CharacterController.skinWidth,
+                transform.position,
+                dir,
+                moveMagnitude,
+                1 << 8 | 1 << 10,
+                false
+            );
+
+            bool hasNoStructuresInWay = AgentCanMoveRayCastSweep(ref moveMagnitude, orientation, structureSweepResults, true);
+            bool hasNoObjectInWay = AgentCanMoveRayCastSweep(ref moveMagnitude, orientation, collisionSweepResults, false);
+
+            if(hasNoStructuresInWay) {
+                return hasNoObjectInWay;
+            }
+            
+            return false;    
+        }
+
+        private bool AgentCanMoveRayCastSweep(ref float moveMagnitude, int orientation, RaycastHit[] sweepResults, bool isStructure) {
             if (sweepResults.Length > 0) {
                 foreach (RaycastHit res in sweepResults) {
                     // Don't worry if we hit something thats in our hand.
@@ -2661,7 +2686,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     if (res.transform.gameObject != this.gameObject && res.transform.GetComponent<PhysicsRemoteFPSAgentController>()) {
                         // Check if distance to object is greater than 0.1, if so than we can move partial amount
                         // Use 0.1 instead of 0, because if we move right next to an object we can become attached to it.
-                        if(moveMagnitude > res.distance && res.distance > 0.1) {
+                        if(moveMagnitude > res.distance && res.distance > 0.10) {
                             moveMagnitude = res.distance - 0.1f / moveMagnitude;
                             return true;
                         }
@@ -2683,11 +2708,15 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                             return true;
                         }
 
-                        int thisAgentNum = agentManager.agents.IndexOf(this);
-                        errorMessage = res.transform.name + " is blocking Agent " + thisAgentNum.ToString() + " from moving " + orientation;
-                        //the moment we find a result that is blocking, return false here
-                        this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.OBSTRUCTED);
-                        return false;
+                        if ((res.transform.tag == "Structure" && isStructure) || 
+                            (res.rigidbody.mass > this.GetComponent<Rigidbody>().mass && res.transform.tag == "SimObjPhysics"))
+                        {
+                            int thisAgentNum = agentManager.agents.IndexOf(this);
+                            errorMessage = res.transform.name + " is blocking Agent " + thisAgentNum.ToString() + " from moving " + orientation;
+                            //the moment we find a result that is blocking, return false here
+                            this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.OBSTRUCTED);
+                            return false;
+                        }
                     }
                 }
             }
@@ -6836,10 +6865,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             Vector3 startPosition,
             Vector3 dir,
             float moveMagnitude,
-            int layerMask
+            int layerMask,
+            bool useCollisionRadius=false
             ) {
             Vector3 center = cc.transform.position + cc.center;//make sure to offset this by cc.center since we shrank the capsule size
-            float radius = cc.radius + skinWidth;
+            float radius = useCollisionRadius ? AgentCollisionCapsuleRadius : cc.radius + skinWidth;
             float innerHeight = cc.height / 2.0f - radius;
             Vector3 point1 = new Vector3(startPosition.x, center.y + innerHeight, startPosition.z);
             Vector3 point2 = new Vector3(startPosition.x, center.y - innerHeight + skinWidth, startPosition.z);

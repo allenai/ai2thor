@@ -26,6 +26,7 @@ public class MCSController : PhysicsRemoteFPSAgentController {
 
     //this is not the capsule radius, this is the radius of the x and z bounds of the agent.
     public static float AGENT_RADIUS = 0.12f;
+    public static int NUMBER_OF_FRAMES_FOR_MOVEMENT = PHYSICS_SIMULATION_LOOPS;
 
     public int step = 0;
 
@@ -43,6 +44,11 @@ public class MCSController : PhysicsRemoteFPSAgentController {
     }
 
     PlayerPose pose = PlayerPose.STANDING;
+
+    private bool movementActionFinished = false;
+    private MCSMovementActionData movementActionData; //stores movement direction
+    private bool inputWasMovement = false;
+    private int framesUntilGridSnap; //when moving, grid snap will engage on the last frame (rather than every frame)
 
     public override void CloseObject(ServerAction action) {
         bool continueAction = TryConvertingEachObjectDirectionToId(action);
@@ -317,6 +323,12 @@ public class MCSController : PhysicsRemoteFPSAgentController {
     }
 
     public override void ProcessControlCommand(ServerAction controlCommand) {
+        inputWasMovement = controlCommand.action.Equals("MoveAhead") || 
+                controlCommand.action.Equals("MoveBack") ||
+                controlCommand.action.Equals("MoveLeft") ||
+                controlCommand.action.Equals("MoveRight");   
+        framesUntilGridSnap = 0; //for movement
+        
         // Never let the placeable objects ignore the physics simulation (they should always be affected by it).
         controlCommand.placeStationary = false;
 
@@ -475,6 +487,18 @@ public class MCSController : PhysicsRemoteFPSAgentController {
     }
 
     private void SimulatePhysicsOnce() {
+        //for movement
+        if (inputWasMovement) {
+            movementActionFinished = moveInDirection((movementActionData.direction/NUMBER_OF_FRAMES_FOR_MOVEMENT), 
+                    movementActionData.UniqueID,
+                    movementActionData.maxDistanceToObject,
+                    movementActionData.forceAction);
+            framesUntilGridSnap++;
+            if (framesUntilGridSnap == NUMBER_OF_FRAMES_FOR_MOVEMENT) {
+                this.snapToGrid();
+                actionFinished(movementActionFinished);
+            }
+        }
         // Call Physics.Simulate multiple times with a small step value because a large step
         // value causes collision errors.  From the Unity Physics.Simulate documentation:
         // "Using step values greater than 0.03 is likely to produce inaccurate results."
@@ -692,5 +716,50 @@ public class MCSController : PhysicsRemoteFPSAgentController {
             //change collider height so agent can move
             GetComponent<CapsuleCollider>().center = new Vector3(0, colliderY, 0);
         }
+    }
+
+
+    //overrides from PhysicsRemoteFPSAgentController which enable agent/object collisions
+    public override void MoveLeft(ServerAction action) {
+        action.moveMagnitude = action.moveMagnitude > 0 ? action.moveMagnitude : gridSize;
+        movementActionData = new MCSMovementActionData(-1 * transform.right * action.moveMagnitude,
+            action.objectId,
+            action.maxAgentsDistance, action.forceAction);   
+    }
+
+    public override void MoveRight(ServerAction action) {
+        action.moveMagnitude = action.moveMagnitude > 0 ? action.moveMagnitude : gridSize;
+        movementActionData = new MCSMovementActionData(transform.right * action.moveMagnitude,
+            action.objectId,
+            action.maxAgentsDistance, action.forceAction);    
+    }
+
+    public override void MoveAhead(ServerAction action) {
+        action.moveMagnitude = action.moveMagnitude > 0 ? action.moveMagnitude : gridSize;
+        movementActionData = new MCSMovementActionData(transform.forward * action.moveMagnitude,
+            action.objectId,
+            action.maxAgentsDistance, action.forceAction);
+    }
+
+    public override void MoveBack(ServerAction action) {
+        action.moveMagnitude = action.moveMagnitude > 0 ? action.moveMagnitude : gridSize;
+        movementActionData = new MCSMovementActionData(-1 * transform.forward * action.moveMagnitude,
+            action.objectId,
+            action.maxAgentsDistance, action.forceAction);
+    }
+}
+
+//class for contatining movement data
+public class MCSMovementActionData {
+    public Vector3 direction;
+    public string UniqueID;
+    public float maxDistanceToObject;
+    public bool forceAction;
+
+    public MCSMovementActionData(Vector3 direction, string UniqueID, float maxDistanceToObject, bool forceAction) {
+        this.direction = direction;
+        this.UniqueID = UniqueID;
+        this.maxDistanceToObject = maxDistanceToObject;
+        this.forceAction = forceAction;
     }
 }
