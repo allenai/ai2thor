@@ -6875,7 +6875,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             if (Physics.SphereCast(point1, cc.radius, Vector3.down, out hit, Mathf.Infinity, layerMask2)) 
             {
-                point2.y = hit.point.y + radius + 0.01f;
+                float raiseMinHeightAboveGround = 0.01f;
+                point2.y = hit.point.y + radius + raiseMinHeightAboveGround;
             }
 
             return Physics.CapsuleCastAll(
