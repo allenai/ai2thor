@@ -86,6 +86,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         // Used to expand agent capsule in collision checks for open/close actions
         protected const float ExpandAgentCapsuleBy = 0.1f;
+        protected bool canMove = true;
+        protected string inputDirection;
+        protected float serverActionMoveMagnitude;
+
 
         //change visibility check to use this distance when looking down
         //protected float DownwardViewDistance = 2.0f;
@@ -1912,7 +1916,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         //Luca's movement grid and valid position generation, simple transform setting is used for movement instead.
 
         //XXX revisit what movement means when we more clearly define what "continuous" movement is
-        protected bool moveInDirection(Vector3 direction, string uniqueId="", float maxDistanceToObject=-1.0f, bool forceAction = false) {
+        protected virtual bool moveInDirection(Vector3 direction, string uniqueId="", float maxDistanceToObject=-1.0f, bool forceAction = false) {
             Vector3 targetPosition = transform.position + direction;
             float angle = Vector3.Angle(transform.forward, Vector3.Normalize(direction));
 
@@ -2642,7 +2646,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     break;
             }
 
-            RaycastHit[] collisionSweepResults = capsuleCastAllForAgent(
+            RaycastHit[] sweepResults = capsuleCastAllForAgent(
                 GetComponent<CapsuleCollider>(),
                 m_CharacterController.skinWidth,
                 transform.position,
@@ -2651,26 +2655,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 1 << 8 | 1 << 10
             );
 
-            RaycastHit[] structureSweepResults = capsuleCastAllForAgent(
-                GetComponent<CapsuleCollider>(),
-                m_CharacterController.skinWidth,
-                transform.position,
-                dir,
-                moveMagnitude,
-                1 << 8 | 1 << 10
-            );
-
-            bool hasNoStructuresInWay = AgentCanMoveRayCastSweep(ref moveMagnitude, orientation, structureSweepResults, true);
-            bool hasNoObjectInWay = AgentCanMoveRayCastSweep(ref moveMagnitude, orientation, collisionSweepResults, false);
-
-            if(hasNoStructuresInWay) {
-                return hasNoObjectInWay;
-            }
-            
-            return false;    
+            bool hasNoBlockingObjectsInWay = AgentCanMoveRayCastSweep(ref moveMagnitude, orientation, sweepResults);
+            return hasNoBlockingObjectsInWay; 
         }
 
-        private bool AgentCanMoveRayCastSweep(ref float moveMagnitude, int orientation, RaycastHit[] sweepResults, bool isStructure) {
+        private bool AgentCanMoveRayCastSweep(ref float moveMagnitude, int orientation, RaycastHit[] sweepResults) {
             if (sweepResults.Length > 0) {
                 foreach (RaycastHit res in sweepResults) {
                     // Don't worry if we hit something thats in our hand.
@@ -2703,10 +2692,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                             return true;
                         }
 
-                        if ((res.transform.tag == "Structure" && isStructure) || 
-                            (res.rigidbody.mass > this.GetComponent<Rigidbody>().mass && res.transform.tag == "SimObjPhysics"))
+                        if (res.rigidbody.mass > this.GetComponent<Rigidbody>().mass && res.transform.tag == "SimObjPhysics" ||
+                            (res.transform.tag == "Structure" && !ShootRay45DegreesUp(this.inputDirection, this.serverActionMoveMagnitude)))
                         {
-                            Debug.Log("STRUCT");
                             int thisAgentNum = agentManager.agents.IndexOf(this);
                             errorMessage = res.transform.name + " is blocking Agent " + thisAgentNum.ToString() + " from moving " + orientation;
                             //the moment we find a result that is blocking, return false here
@@ -2718,6 +2706,34 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
             return true;
         }
+
+        ////MCS Method////
+        //Acending and Descending Structures//
+        public bool ShootRay45DegreesUp(string inputDir, float length) {
+            RaycastHit baseHit;
+            LayerMask layerMask = ~(1 << 10);
+            float baseHeight = 0f;
+            if (Physics.Raycast(transform.position, Vector3.down, out baseHit, Mathf.Infinity, layerMask, QueryTriggerInteraction.Ignore)) {
+                baseHeight = baseHit.point.y;
+            }
+
+            Vector3 origin = new Vector3(transform.position.x, baseHeight, transform.position.z);
+            Vector3 direction = 
+                inputDir == "left" ? Quaternion.AngleAxis(-45, transform.forward) * (-1 * transform.right) : 
+                inputDir == "right" ? Quaternion.AngleAxis(45, transform.forward) * transform.right :
+                inputDir == "forward" ? Quaternion.AngleAxis(-45, transform.right) * transform.forward :
+                inputDir == "back" ? Quaternion.AngleAxis(45, transform.right) * (-1 * transform.forward) : new Vector3();
+                    
+            RaycastHit[] hit = Physics.RaycastAll(origin,direction, length, layerMask, QueryTriggerInteraction.Ignore);
+            foreach (RaycastHit point in hit) {
+                if (point.transform.tag == "Structure" || 
+                    (point.rigidbody.mass > this.GetComponent<Rigidbody>().mass && point.transform.tag == "SimObjPhysics")) {
+                    return false;
+                } 
+            }
+            return true;
+        }
+        
 
         /////AGENT HAND STUFF////
         protected IEnumerator moveHandToTowardsXYZWithForce(float x, float y, float z, float maxDistance) {

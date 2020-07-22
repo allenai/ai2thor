@@ -324,7 +324,8 @@ public class MCSController : PhysicsRemoteFPSAgentController {
                 controlCommand.action.Equals("MoveBack") ||
                 controlCommand.action.Equals("MoveLeft") ||
                 controlCommand.action.Equals("MoveRight");   
-        framesUntilGridSnap = 0; //for movement
+        this.framesUntilGridSnap = 0; //for movement
+        this.inputDirection = "";
         
         // Never let the placeable objects ignore the physics simulation (they should always be affected by it).
         controlCommand.placeStationary = false;
@@ -486,6 +487,7 @@ public class MCSController : PhysicsRemoteFPSAgentController {
     private void SimulatePhysicsOnce() {
         //for movement
         if (inputWasMovement) {
+            MatchAgentHeightToStructureBelow(false);
             movementActionFinished = moveInDirection((movementActionData.direction/NUMBER_OF_FRAMES_FOR_MOVEMENT), 
                     movementActionData.UniqueID,
                     movementActionData.maxDistanceToObject,
@@ -655,6 +657,7 @@ public class MCSController : PhysicsRemoteFPSAgentController {
                 Debug.Log("Agent is already Crawling");
         } else {
             float startHeight = (this.pose == PlayerPose.LYING ? LYING_POSITION_Y : STANDING_POSITION_Y);
+            startHeight += MatchAgentHeightToStructureBelow(true);
             Vector3 direction = (this.pose == PlayerPose.LYING ? Vector3.up : Vector3.down);
             CheckIfAgentCanCrawlLieOrStand(direction, startHeight, CRAWLING_POSITION_Y, PlayerPose.CRAWLING);  
         }
@@ -667,6 +670,7 @@ public class MCSController : PhysicsRemoteFPSAgentController {
             Debug.Log("Agent is already Lying Down");
         } else {
             float startHeight = (this.pose == PlayerPose.CRAWLING ? CRAWLING_POSITION_Y : STANDING_POSITION_Y);
+            startHeight += MatchAgentHeightToStructureBelow(true);
             CheckIfAgentCanCrawlLieOrStand(Vector3.down, startHeight, LYING_POSITION_Y, PlayerPose.LYING);              
         }
 
@@ -684,6 +688,7 @@ public class MCSController : PhysicsRemoteFPSAgentController {
             Debug.Log("Agent cannot Stand when lying down");
         } else {
             float startHeight = (this.pose == PlayerPose.CRAWLING ? CRAWLING_POSITION_Y : LYING_POSITION_Y);
+            startHeight += MatchAgentHeightToStructureBelow(true);
             CheckIfAgentCanCrawlLieOrStand(Vector3.up, startHeight, STANDING_POSITION_Y, PlayerPose.STANDING); 
         }
     }
@@ -703,7 +708,7 @@ public class MCSController : PhysicsRemoteFPSAgentController {
             Debug.Log("Agent is Obstructed");
             
         } else {
-            this.transform.position = new Vector3(this.transform.position.x, endHeight, this.transform.position.z);
+            this.transform.position = new Vector3(this.transform.position.x, MatchAgentHeightToStructureBelow(true)+endHeight, this.transform.position.z);
             this.pose = pose;
             SetUpRotationBoxChecks();
             this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.SUCCESSFUL);
@@ -717,14 +722,18 @@ public class MCSController : PhysicsRemoteFPSAgentController {
         action.moveMagnitude = action.moveMagnitude > 0 ? action.moveMagnitude : gridSize;
         movementActionData = new MCSMovementActionData(-1 * transform.right * action.moveMagnitude,
             action.objectId,
-            action.maxAgentsDistance, action.forceAction);   
+            action.maxAgentsDistance, action.forceAction);
+        this.inputDirection = "left";
+        this.serverActionMoveMagnitude = action.moveMagnitude;   
     }
 
     public override void MoveRight(ServerAction action) {
         action.moveMagnitude = action.moveMagnitude > 0 ? action.moveMagnitude : gridSize;
         movementActionData = new MCSMovementActionData(transform.right * action.moveMagnitude,
             action.objectId,
-            action.maxAgentsDistance, action.forceAction);    
+            action.maxAgentsDistance, action.forceAction);
+        this.inputDirection = "right";
+        this.serverActionMoveMagnitude = action.moveMagnitude;    
     }
 
     public override void MoveAhead(ServerAction action) {
@@ -732,6 +741,8 @@ public class MCSController : PhysicsRemoteFPSAgentController {
         movementActionData = new MCSMovementActionData(transform.forward * action.moveMagnitude,
             action.objectId,
             action.maxAgentsDistance, action.forceAction);
+        this.inputDirection = "forward";
+        this.serverActionMoveMagnitude = action.moveMagnitude; 
     }
 
     public override void MoveBack(ServerAction action) {
@@ -739,6 +750,33 @@ public class MCSController : PhysicsRemoteFPSAgentController {
         movementActionData = new MCSMovementActionData(-1 * transform.forward * action.moveMagnitude,
             action.objectId,
             action.maxAgentsDistance, action.forceAction);
+        this.inputDirection = "back";
+        this.serverActionMoveMagnitude = action.moveMagnitude; 
+    }
+
+    private float MatchAgentHeightToStructureBelow(bool poseChange) {
+        float heightDifference;
+        heightDifference = pose == PlayerPose.STANDING ? STANDING_POSITION_Y : 
+            pose == PlayerPose.CRAWLING ? CRAWLING_POSITION_Y : LYING_POSITION_Y;
+
+        //Raycast down
+        Vector3 origin = new Vector3(transform.position.x, this.GetComponent<CapsuleCollider>().bounds.max.y, transform.position.z);
+        RaycastHit hit;
+        LayerMask layerMask = ~(1 << 10);
+
+        //raycast to traverse structures at anything <= 45 degree angle incline
+        if (Physics.Raycast(origin, Vector3.down, out hit, Mathf.Infinity, layerMask, QueryTriggerInteraction.Ignore) && hit.collider.tag == "Structure") {
+            //for pose changes on structures only
+            if (poseChange)
+                return hit.point.y;
+            else 
+            {
+                Vector3 newHeight = new Vector3(transform.position.x, (hit.point.y + heightDifference), transform.position.z);
+                this.transform.position = newHeight;
+            }
+        }
+        //method needs a return value
+        return 0;
     }
 }
 
