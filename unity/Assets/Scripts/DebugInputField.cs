@@ -2651,6 +2651,32 @@ namespace UnityStandardAssets.Characters.FirstPerson
                          PhysicsController.ProcessControlCommand(action);
                         break;
                     }
+                    case "move_kinematic_arm":
+                    case "mka":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "MoveKinematicArm";
+                        action.timeStep = 1.0f;
+                        if (splitcommand.Length > 3)
+                        {
+                            action.position = new Vector3(
+                                    float.Parse(splitcommand[1]),
+                                    float.Parse(splitcommand[2]), 
+                                    float.Parse(splitcommand[3])
+                                );
+                            
+                             if (splitcommand.Length >= 4) {
+                                 action.timeStep = float.Parse(splitcommand[4]);
+                             }
+                        }
+                        else {
+                            Debug.LogError("Target x y z args needed for command");
+                        }
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                       
+                    }
+
 
 				default:
                     {   
