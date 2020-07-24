@@ -8921,12 +8921,27 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public void MoveKinematicArm(ServerAction action) {
             var arm = this.GetComponentInChildren<IK_Robot_Arm_Controller>();
             if (arm != null) {
-                StartCoroutine(arm.moveArmTarget(this, action.position, action.timeStep, action.returnArmToStartPositionIfFail));
+                StartCoroutine(arm.moveArmTarget(this, action.position, action.timeStep, arm.gameObject, action.returnArmToStartPositionIfFail));
             }
             else {
                 actionFinished(false, "Agent does not have kinematic arm or is not enabled. Make sure there is a '" + typeof(IK_Robot_Arm_Controller).Name + "' component as a child of this agent.");
             }
 
+        }
+
+        //constrain arm's y position based on the agent's current capsule collider center and extents
+        public void MoveKinematicArmHeight(ServerAction action)
+        {
+            var arm = this.GetComponentInChildren<IK_Robot_Arm_Controller>();
+            if(arm != null)
+            {
+
+            }
+
+            else
+            {
+                actionFinished(false);
+            }
         }
     }
 }
