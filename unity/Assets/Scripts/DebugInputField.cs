@@ -2670,9 +2670,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
                                  action.timeStep = float.Parse(splitcommand[4]);
                              }
 
-                            //   if (splitcommand.Length >= 5) {
-                            //      action.returnArmToStartPositionIfFail = bool.Parse(splitcommand[5]);
-                            //  }
+                              if (splitcommand.Length >= 5) {
+                                 action.returnArmToStartPositionIfFail = bool.Parse(splitcommand[5]);
+                             }
                         }
                         else {
                             Debug.LogError("Target x y z args needed for command");

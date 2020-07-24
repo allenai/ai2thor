@@ -59,8 +59,8 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
             if (staticCollided != null) {
                 
                 // TODO decide if we want to return to original position or last known position before collision
-                //armTarget.position = returnToStartPositionIfFailed ? originalPos : previousArmPosition - (targetDirectionWorld * unitsPerSecond * Time.fixedDeltaTime);
-                armTarget.position = previousArmPosition - (targetDirectionWorld * unitsPerSecond * Time.fixedDeltaTime);
+                armTarget.position = returnToStartPositionIfFailed ? originalPos : previousArmPosition - (targetDirectionWorld * unitsPerSecond * Time.fixedDeltaTime);
+                // armTarget.position = previousArmPosition - (targetDirectionWorld * unitsPerSecond * Time.fixedDeltaTime);
 
                 controller.actionFinished(false, "Arm collided with static object: '" + staticCollided.name + "' arm could not reach target position: '" + target + "'.");
                 staticCollided = null;
