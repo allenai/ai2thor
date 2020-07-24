@@ -1327,6 +1327,8 @@ public class ServerAction
 
 	public float intensity;//used for light?
 
+    public bool returnArmToStartPositionIfFail = false;
+
     public SimObjType ReceptableSimObjType()
 	{
 		if (string.IsNullOrEmpty(receptacleObjectType))

@@ -26,12 +26,13 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
         //debug collision print
         //print(collision.collider);
         //print(collision.gameObject);
-
+        staticCollided = null;
         if(collision.gameObject.GetComponent<SimObjPhysics>())
         {
             SimObjPhysics sop = collision.gameObject.GetComponent<SimObjPhysics>();
             if(sop.PrimaryProperty == SimObjPrimaryProperty.Static)
             {
+                Debug.Log("Collided with static " + sop.name);
                 staticCollided = sop;
                 //stop moving flag here
                 //something like check the stop moving flag while in moveArm xyz coroutine
@@ -42,8 +43,9 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
     }
 
 
-    public IEnumerator moveArmTarget(PhysicsRemoteFPSAgentController controller, Vector3 target, float unitsPerSecond) {
+    public IEnumerator moveArmTarget(PhysicsRemoteFPSAgentController controller, Vector3 target, float unitsPerSecond, bool returnToStartPositionIfFailed = false) {
 
+        staticCollided = null;
         Vector3 targetWorldPos = controller.transform.TransformPoint(target);
         
         Vector3 originalPos = armTarget.position;
@@ -57,17 +59,21 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
             if (staticCollided != null) {
                 
                 // TODO decide if we want to return to original position or last known position before collision
-                armTarget.position = previousArmPosition;
+                //armTarget.position = returnToStartPositionIfFailed ? originalPos : previousArmPosition - (targetDirectionWorld * unitsPerSecond * Time.fixedDeltaTime);
+                armTarget.position = previousArmPosition - (targetDirectionWorld * unitsPerSecond * Time.fixedDeltaTime);
+
                 controller.actionFinished(false, "Arm collided with static object: '" + staticCollided.name + "' arm could not reach target position: '" + target + "'.");
                 staticCollided = null;
                 Debug.Log("Action Failed collided with static");
                 yield break;
             }
 
+            previousArmPosition = armTarget.position;
             armTarget.position += targetDirectionWorld * unitsPerSecond * Time.fixedDeltaTime;
             // Jump the last epsilon to match exactly targetWorldPos
+            
             armTarget.position = Vector3.SqrMagnitude(targetWorldPos - armTarget.position) > eps ?  armTarget.position : targetWorldPos;
-            previousArmPosition = armTarget.position;
+           
             yield return new WaitForFixedUpdate();
 
         }

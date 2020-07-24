@@ -2657,6 +2657,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         ServerAction action = new ServerAction();
                         action.action = "MoveKinematicArm";
                         action.timeStep = 1.0f;
+                        //action.returnArmToStartPositionIfFail = true;
                         if (splitcommand.Length > 3)
                         {
                             action.position = new Vector3(
@@ -2668,6 +2669,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
                              if (splitcommand.Length >= 4) {
                                  action.timeStep = float.Parse(splitcommand[4]);
                              }
+
+                            //   if (splitcommand.Length >= 5) {
+                            //      action.returnArmToStartPositionIfFail = bool.Parse(splitcommand[5]);
+                            //  }
                         }
                         else {
                             Debug.LogError("Target x y z args needed for command");
