@@ -2706,7 +2706,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                         if ((res.transform.tag == "Structure" && isStructure) || 
                             (res.rigidbody.mass > this.GetComponent<Rigidbody>().mass && res.transform.tag == "SimObjPhysics"))
                         {
-                            Debug.Log("STRUCT");
                             int thisAgentNum = agentManager.agents.IndexOf(this);
                             errorMessage = res.transform.name + " is blocking Agent " + thisAgentNum.ToString() + " from moving " + orientation;
                             //the moment we find a result that is blocking, return false here
