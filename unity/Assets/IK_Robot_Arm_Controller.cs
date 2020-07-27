@@ -67,6 +67,71 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
         }
     }
 
+    public IEnumerator moveArmHeight(PhysicsRemoteFPSAgentController controller, float height, float unitsPerSecond, GameObject arm, bool returnToStartPositionIfFailed = false)
+    {
+        //first check if the target position is within bounds of the agent's capsule center/height extents
+        //if not, actionFinished false with error message listing valid range defined by extents
+        staticCollided.collided = false;
+
+        CapsuleCollider cc = controller.GetComponent<CapsuleCollider>();
+        Vector3 cc_center = cc.center;
+        Vector3 cc_maxY = cc.center + new Vector3(0, cc.height/2f, 0);
+        Vector3 cc_minY = cc.center + new Vector3(0, (-cc.height/2f)/2f, 0); //this is halved to prevent arm clipping into floor
+
+        //linear function that take height and adjusts targetY relative to min/max extents
+        //I think this does that... I think... probably...
+        // print("max y: " + cc_maxY.y);
+        // print("min y: " + cc_minY.y);
+        // print(cc_maxY.y - cc_minY.y);
+        float targetY = ((cc_maxY.y - cc_minY.y)*(height)) + cc_minY.y;
+        //float targetY = 1.4f*height - 0.5f;
+
+        print("calculated local y: " + targetY);
+
+        Vector3 target = new Vector3(0, targetY, 0);
+        Vector3 targetLocalPos = target;//arm.transform.TransformPoint(target);
+
+        Vector3 originalPos = arm.transform.localPosition;
+        Vector3 targetDirectionWorld = (targetLocalPos - originalPos).normalized;
+
+        var eps = 1e-3;
+        yield return new WaitForFixedUpdate();
+        var previousArmPosition = arm.transform.localPosition;
+        print("targetLocalPos: " + targetLocalPos);
+        print("arm.transform.localPosition: " + arm.transform.localPosition);
+        while (Vector3.SqrMagnitude(targetLocalPos - arm.transform.localPosition) > eps) {
+            if (staticCollided.collided != false) {
+                
+                // TODO decide if we want to return to original position or last known position before collision
+                //armTarget.position = returnToStartPositionIfFailed ? originalPos : previousArmPosition - (targetDirectionWorld * unitsPerSecond * Time.fixedDeltaTime);
+                arm.transform.localPosition = previousArmPosition - (targetDirectionWorld * unitsPerSecond * Time.fixedDeltaTime);
+
+                //if we hit a sim object
+                if(staticCollided.simObjPhysics && !staticCollided.gameObject)
+                controller.actionFinished(false, "Arm collided with static sim object: '" + staticCollided.simObjPhysics.name + "' arm could not reach target position: '" + target + "'.");
+                
+                //if we hit a structural object that isn't a sim object but still has static collision
+                if(!staticCollided.simObjPhysics && staticCollided.gameObject)
+                controller.actionFinished(false, "Arm collided with static structure in scene: '" + staticCollided.gameObject.name + "' arm could not reach target position: '" + target + "'.");
+                
+                staticCollided.collided = false;
+
+                Debug.Log("Action Failed collided with static");
+                yield break;
+            }
+
+            previousArmPosition = arm.transform.localPosition;
+            arm.transform.localPosition += targetDirectionWorld * unitsPerSecond * Time.fixedDeltaTime;
+            // Jump the last epsilon to match exactly targetWorldPos
+            
+            arm.transform.localPosition = Vector3.SqrMagnitude(targetLocalPos - arm.transform.localPosition) > eps ?  arm.transform.localPosition : targetLocalPos;
+           
+            yield return new WaitForFixedUpdate();
+
+        }
+        print("action fin?");
+        controller.actionFinished(true);
+    }
 
     public IEnumerator moveArmTarget(PhysicsRemoteFPSAgentController controller, Vector3 target, float unitsPerSecond,  GameObject arm, bool returnToStartPositionIfFailed = false) {
 
