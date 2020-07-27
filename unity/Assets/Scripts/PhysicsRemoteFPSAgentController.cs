@@ -2684,7 +2684,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     }
 
                     //including "Untagged" tag here so that the agent can't move through objects that are transparent
-                    if (res.transform.GetComponent<SimObjPhysics>() || res.transform.tag == "Structure" || res.transform.tag == "Untagged") {
+                    if (res.transform.GetComponent<SimObjPhysics>() || res.transform.GetComponent<StructureObject>()!=null
+                        || res.transform.tag == "Untagged") {
                         // Check if distance to object is greater than 0.1, if so than we can move partial amount
                         // Use 0.1 instead of 0, because if we move right next to an object we can become attached to it.
                         if(moveMagnitude > res.distance && res.distance > 0.1) {
@@ -2692,8 +2693,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                             return true;
                         }
 
-                        if (res.rigidbody.mass > this.GetComponent<Rigidbody>().mass && res.transform.tag == "SimObjPhysics" ||
-                            (res.transform.tag == "Structure" && !ShootRay45DegreesUp(this.inputDirection, this.serverActionMoveMagnitude)))
+                        if (res.rigidbody.mass > this.GetComponent<Rigidbody>().mass && res.transform.tag == "SimObjPhysics" && res.transform.GetComponent<StructureObject>()==null||
+                            (res.transform.GetComponent<StructureObject>()!=null && !ShootRay45DegreesUp(this.inputDirection, this.serverActionMoveMagnitude)))
                         {
                             int thisAgentNum = agentManager.agents.IndexOf(this);
                             errorMessage = res.transform.name + " is blocking Agent " + thisAgentNum.ToString() + " from moving " + orientation;
@@ -2726,7 +2727,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     
             RaycastHit[] hit = Physics.RaycastAll(origin,direction, length, layerMask, QueryTriggerInteraction.Ignore);
             foreach (RaycastHit point in hit) {
-                if (point.transform.tag == "Structure" || 
+                if (point.transform.GetComponent<StructureObject>()!=null || 
                     (point.rigidbody.mass > this.GetComponent<Rigidbody>().mass && point.transform.tag == "SimObjPhysics")) {
                     return false;
                 } 

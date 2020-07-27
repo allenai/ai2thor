@@ -701,7 +701,9 @@ public class MCSController : PhysicsRemoteFPSAgentController {
         LayerMask layerMask = ~(1 << 10);
         
         //if raycast hits an object, the agent does not move on y-axis
-        if (Physics.SphereCast(origin, AGENT_RADIUS, direction, out hit, Mathf.Abs(startHeight-endHeight), layerMask) && hit.collider.tag == "SimObjPhysics") 
+        if (Physics.SphereCast(origin, AGENT_RADIUS, direction, out hit, Mathf.Abs(startHeight-endHeight), layerMask) && 
+            hit.collider.tag == "SimObjPhysics" &&
+            hit.transform.GetComponent<StructureObject>() == null) 
         {
             this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.OBSTRUCTED);
             actionFinished(false);
@@ -766,7 +768,8 @@ public class MCSController : PhysicsRemoteFPSAgentController {
         LayerMask layerMask = ~(1 << 10);
 
         //raycast to traverse structures at anything <= 45 degree angle incline
-        if (Physics.Raycast(origin, Vector3.down, out hit, Mathf.Infinity, layerMask, QueryTriggerInteraction.Ignore) && hit.collider.tag == "Structure") {
+        if (Physics.Raycast(origin, Vector3.down, out hit, Mathf.Infinity, layerMask, QueryTriggerInteraction.Ignore) && 
+            (hit.transform.GetComponent<StructureObject>()!=null)) {
             //for pose changes on structures only
             if (poseChange)
                 return hit.point.y;
