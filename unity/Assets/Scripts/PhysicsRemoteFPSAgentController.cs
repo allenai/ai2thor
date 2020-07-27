@@ -8930,17 +8930,25 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         //constrain arm's y position based on the agent's current capsule collider center and extents
+        //valid Y height from action.y is [0, 1.0] to represent the relative min and max heights of the
+        //arm constrained by the agent's capsule
         public void MoveKinematicArmHeight(ServerAction action)
         {
+            // if(action.y < 0 || action.y > 1.0)
+            // {
+            //     actionFinished(false, "MoveKinematicArmHeight Y value must be [0, 1.0] inclusive");
+            //     return;
+            // }
+
             var arm = this.GetComponentInChildren<IK_Robot_Arm_Controller>();
             if(arm != null)
             {
-
+                StartCoroutine(arm.moveArmHeight(this, action.y, action.timeStep, arm.gameObject, action.returnArmToStartPositionIfFail));
             }
 
             else
             {
-                actionFinished(false);
+                actionFinished(false, "Agent does not have kinematic arm or is not enabled. Make sure there is a '" + typeof(IK_Robot_Arm_Controller).Name + "' component as a child of this agent.");
             }
         }
     }

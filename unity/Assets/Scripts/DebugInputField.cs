@@ -2682,6 +2682,30 @@ namespace UnityStandardAssets.Characters.FirstPerson
                        
                     }
 
+                    case "mkah":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "MoveKinematicArmHeight";
+
+                        if(splitcommand.Length > 1)
+                        {
+                            action.y = float.Parse(splitcommand[1]);
+
+                            if(splitcommand.Length > 2)
+                            {
+                                action.timeStep = float.Parse(splitcommand[1]);
+                            }
+                        }
+
+                        else
+                        {
+                            action.y = 0.9f;
+                            action.timeStep = 1.0f;
+                        }
+
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
 
 				default:
                     {   
