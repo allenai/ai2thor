@@ -1329,6 +1329,8 @@ public class ServerAction
 
     public bool returnArmToStartPositionIfFail = false;
 
+    public float speed;
+
     public SimObjType ReceptableSimObjType()
 	{
 		if (string.IsNullOrEmpty(receptacleObjectType))

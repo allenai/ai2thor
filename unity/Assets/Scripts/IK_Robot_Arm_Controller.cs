@@ -24,8 +24,6 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
     {
         // What a mess clean up this hierarchy, standarize naming
         armTarget = this.transform.Find("FK_IK_rig").Find("robot_arm_IK_rig").Find("pos_rot_manipulator");
-        Debug.Log("Start + " + (armTarget != null));
-
         staticCollided = new StaticCollided();
     }
 

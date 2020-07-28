@@ -2656,7 +2656,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     {
                         ServerAction action = new ServerAction();
                         action.action = "MoveKinematicArm";
-                        action.timeStep = 1.0f;
+                        action.speed = 1.0f;
                         //action.returnArmToStartPositionIfFail = true;
                         if (splitcommand.Length > 3)
                         {
@@ -2667,7 +2667,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                                 );
                             
                              if (splitcommand.Length >= 4) {
-                                 action.timeStep = float.Parse(splitcommand[4]);
+                                 action.speed = float.Parse(splitcommand[4]);
                              }
 
                               if (splitcommand.Length >= 5) {
@@ -2693,14 +2693,14 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
                             if(splitcommand.Length > 2)
                             {
-                                action.timeStep = float.Parse(splitcommand[2]);
+                                action.speed = float.Parse(splitcommand[2]);
                             }
                         }
 
                         else
                         {
                             action.y = 0.9f;
-                            action.timeStep = 1.0f;
+                            action.speed = 1.0f;
                         }
 
                         PhysicsController.ProcessControlCommand(action);
