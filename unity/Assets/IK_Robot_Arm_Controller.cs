@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityStandardAssets.Characters.FirstPerson;
@@ -38,8 +38,9 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
     public void OnCollisionEnter(Collision collision)
     {
         //debug collision print
-        //print(collision.collider);
-        //print(collision.gameObject);
+        // print(collision.collider);
+        // print(collision.gameObject);
+
         staticCollided.collided = false;
         staticCollided.simObjPhysics = null;
         staticCollided.gameObject = null;
@@ -52,10 +53,6 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
                 Debug.Log("Collided with static " + sop.name);
                 staticCollided.collided = true;
                 staticCollided.simObjPhysics = sop;
-                //stop moving flag here
-                //something like check the stop moving flag while in moveArm xyz coroutine
-                //if coroutine needs to stop, then reset the stop moving flag?
-                //the timing between this physics onCollisionEnter update and the coroutine update might be a problem... we'll see?
             }
         }
 
@@ -80,43 +77,37 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
 
         //linear function that take height and adjusts targetY relative to min/max extents
         //I think this does that... I think... probably...
-        // print("max y: " + cc_maxY.y);
-        // print("min y: " + cc_minY.y);
-        // print(cc_maxY.y - cc_minY.y);
         float targetY = ((cc_maxY.y - cc_minY.y)*(height)) + cc_minY.y;
-        //float targetY = 1.4f*height - 0.5f;
 
-        print("calculated local y: " + targetY);
 
         Vector3 target = new Vector3(0, targetY, 0);
         Vector3 targetLocalPos = target;//arm.transform.TransformPoint(target);
 
         Vector3 originalPos = arm.transform.localPosition;
         Vector3 targetDirectionWorld = (targetLocalPos - originalPos).normalized;
-
         var eps = 1e-3;
         yield return new WaitForFixedUpdate();
         var previousArmPosition = arm.transform.localPosition;
-        print("targetLocalPos: " + targetLocalPos);
-        print("arm.transform.localPosition: " + arm.transform.localPosition);
+
         while (Vector3.SqrMagnitude(targetLocalPos - arm.transform.localPosition) > eps) {
             if (staticCollided.collided != false) {
                 
                 // TODO decide if we want to return to original position or last known position before collision
                 //armTarget.position = returnToStartPositionIfFailed ? originalPos : previousArmPosition - (targetDirectionWorld * unitsPerSecond * Time.fixedDeltaTime);
                 arm.transform.localPosition = previousArmPosition - (targetDirectionWorld * unitsPerSecond * Time.fixedDeltaTime);
+                string debugMessage = "";
 
                 //if we hit a sim object
                 if(staticCollided.simObjPhysics && !staticCollided.gameObject)
-                controller.actionFinished(false, "Arm collided with static sim object: '" + staticCollided.simObjPhysics.name + "' arm could not reach target position: '" + target + "'.");
-                
+                debugMessage = "Arm collided with static sim object: '" + staticCollided.simObjPhysics.name + "' arm could not reach target position: '" + target + "'.";
+
                 //if we hit a structural object that isn't a sim object but still has static collision
                 if(!staticCollided.simObjPhysics && staticCollided.gameObject)
-                controller.actionFinished(false, "Arm collided with static structure in scene: '" + staticCollided.gameObject.name + "' arm could not reach target position: '" + target + "'.");
-                
+                debugMessage = "Arm collided with static structure in scene: '" + staticCollided.gameObject.name + "' arm could not reach target position: '" + target + "'.";
+
                 staticCollided.collided = false;
 
-                Debug.Log("Action Failed collided with static");
+                controller.actionFinished(false, debugMessage);
                 yield break;
             }
 
@@ -129,7 +120,6 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
             yield return new WaitForFixedUpdate();
 
         }
-        print("action fin?");
         controller.actionFinished(true);
     }
 
@@ -153,20 +143,21 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
             if (staticCollided.collided != false) {
                 
                 // TODO decide if we want to return to original position or last known position before collision
-                armTarget.position = returnToStartPositionIfFailed ? originalPos : previousArmPosition - (targetDirectionWorld * unitsPerSecond * Time.fixedDeltaTime);
-                // armTarget.position = previousArmPosition - (targetDirectionWorld * unitsPerSecond * Time.fixedDeltaTime);
+                //armTarget.position = returnToStartPositionIfFailed ? originalPos : previousArmPosition - (targetDirectionWorld * unitsPerSecond * Time.fixedDeltaTime);
+                armTarget.position = previousArmPosition - (targetDirectionWorld * unitsPerSecond * Time.fixedDeltaTime);
+                string debugMessage = "";
 
                 //if we hit a sim object
                 if(staticCollided.simObjPhysics && !staticCollided.gameObject)
-                controller.actionFinished(false, "Arm collided with static sim object: '" + staticCollided.simObjPhysics.name + "' arm could not reach target position: '" + target + "'.");
-                
+                debugMessage = "Arm collided with static sim object: '" + staticCollided.simObjPhysics.name + "' arm could not reach target position: '" + target + "'.";
+
                 //if we hit a structural object that isn't a sim object but still has static collision
                 if(!staticCollided.simObjPhysics && staticCollided.gameObject)
-                controller.actionFinished(false, "Arm collided with static structure in scene: '" + staticCollided.gameObject.name + "' arm could not reach target position: '" + target + "'.");
-                
+                debugMessage = "Arm collided with static structure in scene: '" + staticCollided.gameObject.name + "' arm could not reach target position: '" + target + "'.";
+                                
                 staticCollided.collided = false;
 
-                Debug.Log("Action Failed collided with static");
+                controller.actionFinished(false, debugMessage);
                 yield break;
             }
 
