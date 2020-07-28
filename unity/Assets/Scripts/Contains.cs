@@ -277,12 +277,16 @@ public class Contains : MonoBehaviour
 		//these are all the points on the grid on the top of the receptacle box in local space
 		List<Vector3> gridpoints = new List<Vector3>();
 
-        //The first if creates only one spawn point directly in the center of a receptacle if it is stacking
-		float raisedCenterForSingleSpawnPoint = 0.075f;
+		//for stacking receptacles
 		SimObjPhysics simObj = gameObject.GetComponentInParent<SimObjPhysics>();
+		Transform renderer = simObj.GetComponent<Transform>();
+		Renderer rend = renderer.transform.GetComponentInChildren<Renderer>();
+		float yMaxOfMesh = rend.bounds.max.y; //this is the y-point we place the object
+
+		//The first if creates only one spawn point directly in the center of a receptacle if it's stacking
         if (simObj.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.Stacking)) {
-			Vector3 centerOfReceptacleForSmallObjects = new Vector3(center.x, center.y + raisedCenterForSingleSpawnPoint, center.z);
-			gridpoints.Add(centerOfReceptacleForSmallObjects);
+			Vector3 centerOfReceptacleForStackingObjects = new Vector3(center.x, yMaxOfMesh, center.z);
+			gridpoints.Add(centerOfReceptacleForStackingObjects);
 		
 		} else {
 			if (objectUpVector.Equals(Vector3.up) || objectUpVector.Equals(Vector3.down)) {
@@ -351,7 +355,10 @@ public class Contains : MonoBehaviour
 				{
 					if(!ReturnPointsCloseToAgent)
 					{
-						PossibleSpawnPoints.Add(new ReceptacleSpawnPoint(hit.point, triggerBoxCollider, this, myParent.GetComponent<SimObjPhysics>()));
+						if(simObj.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.Stacking))
+							PossibleSpawnPoints.Add(new ReceptacleSpawnPoint(point, triggerBoxCollider, this, myParent.GetComponent<SimObjPhysics>()));
+						else 
+							PossibleSpawnPoints.Add(new ReceptacleSpawnPoint(hit.point, triggerBoxCollider, this, myParent.GetComponent<SimObjPhysics>()));
 					}
 
 					else if(NarrowDownValidSpawnPoints(hit.point))
@@ -368,7 +375,10 @@ public class Contains : MonoBehaviour
 			// 
 			if(!ReturnPointsCloseToAgent)
 			{
-				PossibleSpawnPoints.Add(new ReceptacleSpawnPoint(BottomPoint, triggerBoxCollider, this, myParent.GetComponent<SimObjPhysics>()));
+				if(simObj.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.Stacking))
+					PossibleSpawnPoints.Add(new ReceptacleSpawnPoint(point, triggerBoxCollider, this, myParent.GetComponent<SimObjPhysics>()));
+				else 
+					PossibleSpawnPoints.Add(new ReceptacleSpawnPoint(BottomPoint, triggerBoxCollider, this, myParent.GetComponent<SimObjPhysics>()));	
 			}
 
 			else if(NarrowDownValidSpawnPoints(BottomPoint))
@@ -467,6 +477,8 @@ public class Contains : MonoBehaviour
 
         SimObjPhysics simObj = gameObject.GetComponentInParent<SimObjPhysics>();
         if (simObj.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.Stacking)) {
+			if (simObj.shape == "plate") //plates behave differently
+				return true;
             return point.y >= (center.y - (size.y * 0.5f));
         }
 
