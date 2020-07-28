@@ -2693,7 +2693,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
                             if(splitcommand.Length > 2)
                             {
-                                action.timeStep = float.Parse(splitcommand[1]);
+                                action.timeStep = float.Parse(splitcommand[2]);
                             }
                         }
 
