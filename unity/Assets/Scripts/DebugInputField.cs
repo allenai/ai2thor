@@ -2658,7 +2658,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         action.action = "MoveKinematicArm";
                         action.speed = 1.0f;
                         //action.returnArmToStartPositionIfFail = true;
-                        if (splitcommand.Length > 3)
+                        if (splitcommand.Length > 4)
                         {
                             action.position = new Vector3(
                                     float.Parse(splitcommand[1]),
@@ -2666,11 +2666,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
                                     float.Parse(splitcommand[3])
                                 );
                             
-                             if (splitcommand.Length >= 4) {
+                             if (splitcommand.Length >= 5) {
                                  action.speed = float.Parse(splitcommand[4]);
                              }
 
-                              if (splitcommand.Length >= 5) {
+                              if (splitcommand.Length >= 6) {
+                                  print(splitcommand.Length);
                                  action.returnArmToStartPositionIfFail = bool.Parse(splitcommand[5]);
                              }
                         }

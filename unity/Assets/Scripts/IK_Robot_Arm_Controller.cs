@@ -89,10 +89,10 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
 
         while (Vector3.SqrMagnitude(targetLocalPos - arm.transform.localPosition) > eps) {
             if (staticCollided.collided != false) {
-                
-                // TODO decide if we want to return to original position or last known position before collision
-                //armTarget.position = returnToStartPositionIfFailed ? originalPos : previousArmPosition - (targetDirectionWorld * unitsPerSecond * Time.fixedDeltaTime);
-                arm.transform.localPosition = previousArmPosition - (targetDirectionWorld * unitsPerSecond * Time.fixedDeltaTime);
+            
+                //decide if we want to return to original position or last known position before collision
+                arm.transform.localPosition = returnToStartPositionIfFailed ? originalPos : previousArmPosition - (targetDirectionWorld * unitsPerSecond * Time.fixedDeltaTime);
+
                 string debugMessage = "";
 
                 //if we hit a sim object
@@ -140,9 +140,9 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
 
             if (staticCollided.collided != false) {
                 
-                // TODO decide if we want to return to original position or last known position before collision
-                //armTarget.position = returnToStartPositionIfFailed ? originalPos : previousArmPosition - (targetDirectionWorld * unitsPerSecond * Time.fixedDeltaTime);
-                armTarget.position = previousArmPosition - (targetDirectionWorld * unitsPerSecond * Time.fixedDeltaTime);
+                //decide if we want to return to original position or last known position before collision
+                armTarget.position = returnToStartPositionIfFailed ? originalPos : previousArmPosition - (targetDirectionWorld * unitsPerSecond * Time.fixedDeltaTime);
+
                 string debugMessage = "";
 
                 //if we hit a sim object
