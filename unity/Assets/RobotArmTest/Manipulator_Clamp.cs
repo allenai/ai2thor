@@ -36,10 +36,10 @@ public class Manipulator_Clamp : MonoBehaviour
                 //Debug.Log("Z from " + rootJoint.gameObject.name + " to " + transform.gameObject.name + ": " + rootToWrist);
                 rootToShoulder = shoulderJoint.localPosition;
                 //Debug.Log("Z from " + rootJoint.gameObject.name + " to shoulder: " + shoulderJoint.gameObject.name + ": " + rootToShoulder);
-                if (rootToWrist.z + 0.01f <= rootToShoulder.z)
+                if (rootToWrist.z - 0.01f <= rootToShoulder.z)
                 {
-                    //Debug.Log("Wrist is behind shoulder!");
-                    transform.position += rootJoint.TransformPoint(Vector3.forward * (rootToShoulder.z - rootToWrist.z + 0.01f));
+                    Debug.Log("Wrist is behind shoulder!");
+                    transform.position += rootJoint.TransformDirection(Vector3.forward * (rootToShoulder.z - rootToWrist.z + 0.01f));
                 }
 
                 //Clamp manipulator to radius
