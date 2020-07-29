@@ -8920,8 +8920,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         public void MoveKinematicArm(ServerAction action) {
             var arm = this.GetComponentInChildren<IK_Robot_Arm_Controller>();
+
             if (arm != null) {
-                StartCoroutine(arm.moveArmTarget(this, action.position, action.speed, arm.gameObject, action.returnArmToStartPositionIfFail));
+                
+                StartCoroutine(arm.moveArmTarget(this, action.position, action.speed, arm.gameObject, action.returnArmToStartPositionIfFail, action.handCameraSpace));
             }
             else {
                 actionFinished(false, "Agent does not have kinematic arm or is not enabled. Make sure there is a '" + typeof(IK_Robot_Arm_Controller).Name + "' component as a child of this agent.");
@@ -8958,10 +8960,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             if (arm != null) {
 
                 var target = new Quaternion();
-                //rotate around axis with magnitude based on vector3
+                //rotate around axis aliged x, y, z with magnitude based on vector3
                 if(action.degrees == 0)
                 {
-                    //use eulers
+                    //use euler angles
                     target = Quaternion.Euler(action.rotation);
                 }
 

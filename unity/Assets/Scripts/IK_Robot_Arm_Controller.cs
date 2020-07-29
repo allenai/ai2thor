@@ -19,11 +19,14 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
 
     private Transform armTarget;
     private StaticCollided staticCollided;
+    private Transform handCameraTransform;
     // Start is called before the first frame update
     void Start()
     {
         // What a mess clean up this hierarchy, standarize naming
         armTarget = this.transform.Find("FK_IK_rig").Find("robot_arm_IK_rig").Find("pos_rot_manipulator");
+        // handCameraTransform = this.GetComponentInChildren<Camera>().transform;
+        handCameraTransform = this.transform.FirstChildOrDefault(x => x.name == "robot_arm_4_jnt");
         staticCollided = new StaticCollided();
     }
 
@@ -168,14 +171,11 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
         controller.actionFinished(true);
     }
 
-    public IEnumerator moveArmTarget(PhysicsRemoteFPSAgentController controller, Vector3 target, float unitsPerSecond,  GameObject arm, bool returnToStartPositionIfFailed = false) {
+    public IEnumerator moveArmTarget(PhysicsRemoteFPSAgentController controller, Vector3 target, float unitsPerSecond,  GameObject arm, bool returnToStartPositionIfFailed = false, bool handCameraSpace = false) {
 
         staticCollided.collided = false;
-        //do we want this coordinate to be relative to the agent's coordinate space or the arm's coordinate space?
-        //using the controller.transform.TransformPoint(), a coordinate of (0, 0, 1) moves the arm toward the center of the agent. 
-        //I think since we can move the arm up and down, it may be more consistent to have the coordinate from the arm's perspective?
-        //Vector3 targetWorldPos = controller.transform.TransformPoint(target);
-        Vector3 targetWorldPos = arm.transform.TransformPoint(target);
+        // Move arm based on hand space or arm origin space
+        Vector3 targetWorldPos = handCameraSpace ? handCameraTransform.TransformPoint(target) : arm.transform.TransformPoint(target);
         
         Vector3 originalPos = armTarget.position;
         Vector3 targetDirectionWorld = (targetWorldPos - originalPos).normalized;
@@ -218,4 +218,5 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
         controller.actionFinished(true);
     }
 
+    
 }

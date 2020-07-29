@@ -1331,6 +1331,8 @@ public class ServerAction
 
     public float speed;
 
+    public bool handCameraSpace = false;
+
     public SimObjType ReceptableSimObjType()
 	{
 		if (string.IsNullOrEmpty(receptacleObjectType))

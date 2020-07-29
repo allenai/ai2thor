@@ -2670,9 +2670,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
                                  action.speed = float.Parse(splitcommand[4]);
                              }
 
-                              if (splitcommand.Length >= 6) {
-                                  print(splitcommand.Length);
+                            if (splitcommand.Length >= 6) {
                                  action.returnArmToStartPositionIfFail = bool.Parse(splitcommand[5]);
+                             }
+
+                             if(splitcommand.Length >= 7) {
+                                 action.handCameraSpace = bool.Parse(splitcommand[6]);
                              }
                         }
                         else {
@@ -2696,7 +2699,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                             {
                                 action.speed = float.Parse(splitcommand[2]);
 
-                                if(splitcommand.Length > 3)
+                                if(splitcommand.Length > 3) 
                                 action.returnArmToStartPositionIfFail = bool.Parse(splitcommand[3]);
                             }
                         }
