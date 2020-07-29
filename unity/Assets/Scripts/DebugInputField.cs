@@ -2695,6 +2695,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
                             if(splitcommand.Length > 2)
                             {
                                 action.speed = float.Parse(splitcommand[2]);
+
+                                if(splitcommand.Length > 3)
+                                action.returnArmToStartPositionIfFail = bool.Parse(splitcommand[3]);
                             }
                         }
 
