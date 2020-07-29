@@ -62,6 +62,53 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
         }
     }
 
+    //axis and angle
+    public IEnumerator rotateHand(PhysicsRemoteFPSAgentController controller, Quaternion targetQuat, float time, bool returnToStartPositionIfFailed = false)
+    {
+
+        staticCollided.collided=false;
+        float currentTime = 0.0f;
+
+        yield return new WaitForFixedUpdate();
+
+        var originalRot = armTarget.transform.rotation;
+
+        while (currentTime < time)
+        {
+            currentTime += Time.fixedDeltaTime;
+
+            //increment
+            var interp = currentTime/time;
+
+            if (staticCollided.collided != false) {
+            
+                //decide if we want to return to original rot or last known rot before collision
+                armTarget.transform.rotation = returnToStartPositionIfFailed ? originalRot : Quaternion.Slerp(armTarget.transform.rotation, targetQuat, (currentTime-Time.fixedDeltaTime)/time);
+
+                string debugMessage = "";
+
+                //if we hit a sim object
+                if(staticCollided.simObjPhysics && !staticCollided.gameObject)
+                debugMessage = "Arm collided with static sim object: '" + staticCollided.simObjPhysics.name + "' arm could not reach target rotation: '" + targetQuat.eulerAngles + "'.";
+
+                //if we hit a structural object that isn't a sim object but still has static collision
+                if(!staticCollided.simObjPhysics && staticCollided.gameObject)
+                debugMessage = "Arm collided with static structure in scene: '" + staticCollided.gameObject.name + "' arm could not reach target rotation: '" + targetQuat.eulerAngles + "'.";
+
+                staticCollided.collided = false;
+
+                controller.actionFinished(false, debugMessage);
+                yield break;
+            }
+
+            armTarget.transform.rotation = Quaternion.Slerp(armTarget.transform.rotation, targetQuat, interp);
+            yield return new WaitForFixedUpdate();
+
+        }
+        controller.actionFinished(true);
+
+    }
+
     public IEnumerator moveArmHeight(PhysicsRemoteFPSAgentController controller, float height, float unitsPerSecond, GameObject arm, bool returnToStartPositionIfFailed = false)
     {
         //first check if the target position is within bounds of the agent's capsule center/height extents

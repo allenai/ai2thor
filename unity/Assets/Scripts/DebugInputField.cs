@@ -2729,6 +2729,27 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         //Debug.Log("Invalid Command");
                         break;
                     }
+
+                    //rotate kinematic hand on arm
+                    case "rkh":
+                    {
+                        ServerAction action = new ServerAction();
+
+                        action.action = "RotateKinematicHand";
+
+                        //euler angle notation
+                        // action.degrees = 0;
+                        // action.rotation= new Vector3(0, 90, 0);
+
+                        //angle axis notation
+                        action.degrees = 74;
+                        action.rotation = new Vector3(1, 1, 0);
+
+                        action.timeStep=1.0f;
+                        PhysicsController.ProcessControlCommand(action);      
+
+                        break;
+                    }
 			}
 
 			//StartCoroutine(CheckIfactionCompleteWasSetToTrueAfterWaitingALittleBit(splitcommand[0]));

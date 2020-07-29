@@ -8951,5 +8951,31 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 actionFinished(false, "Agent does not have kinematic arm or is not enabled. Make sure there is a '" + typeof(IK_Robot_Arm_Controller).Name + "' component as a child of this agent.");
             }
         }
+
+        public void RotateKinematicHand(ServerAction action)
+        {
+            var arm = this.GetComponentInChildren<IK_Robot_Arm_Controller>();
+            if (arm != null) {
+
+                var target = new Quaternion();
+                //rotate around axis with magnitude based on vector3
+                if(action.degrees == 0)
+                {
+                    //use eulers
+                    target = Quaternion.Euler(action.rotation);
+                }
+
+                //rotate action.degrees about axis
+                else
+                {
+                    target = Quaternion.AngleAxis(action.degrees, action.rotation);
+                }
+
+                StartCoroutine(arm.rotateHand(this, target, action.timeStep, action.returnArmToStartPositionIfFail));
+            }
+            else {
+                actionFinished(false, "Agent does not have kinematic arm or is not enabled. Make sure there is a '" + typeof(IK_Robot_Arm_Controller).Name + "' component as a child of this agent.");
+            }
+        }
     }
 }
