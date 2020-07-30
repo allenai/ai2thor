@@ -8980,7 +8980,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
 
-        public void PickupMidLevelHand(ServerAction action)
+        public void PickUpMidLevelHand(ServerAction action)
         {
             var arm = this.GetComponentInChildren<IK_Robot_Arm_Controller>();
             if (arm != null) 
@@ -9005,6 +9005,28 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 //todo- only return after object(s) droped have finished moving
                 //currently this will return the frame the object is released
                 actionFinished(true);
+                return;
+            }
+
+            else 
+            {
+                actionFinished(false, "Agent does not have kinematic arm or is not enabled. Make sure there is a '" + typeof(IK_Robot_Arm_Controller).Name + "' component as a child of this agent.");
+            }
+        }
+
+        public void WhatObjectsCanHandPickUp(ServerAction action)
+        {
+            var arm = this.GetComponentInChildren<IK_Robot_Arm_Controller>();
+            List<String> listOfSOP = new List<String>();
+
+            if (arm != null) 
+            {
+                foreach (SimObjPhysics sop in arm.WhatObjectsAreInsideMagnetSphere())
+                {
+                    listOfSOP.Add(sop.objectID);
+                }
+
+                actionFinished(true, listOfSOP);
                 return;
             }
 

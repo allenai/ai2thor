@@ -2757,7 +2757,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     case "pumlh":
                     {
                         ServerAction action = new ServerAction();
-                        action.action = "PickupMidLevelHand";
+                        action.action = "PickUpMidLevelHand";
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }

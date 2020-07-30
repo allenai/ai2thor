@@ -220,10 +220,15 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
         controller.actionFinished(true);
     }
 
+    public List<SimObjPhysics> WhatObjectsAreInsideMagnetSphere()
+    {
+        return magnetSphere.GetComponent<WhatIsInsideMagnetSphere>().CurrentlyContainedObjects();
+    }
+
     public void PickupObject()
     {
         //grab all sim objects that are currently colliding with magnet sphere
-        foreach(SimObjPhysics sop in magnetSphere.GetComponent<WhatIsInsideMagnetSphere>().CurrentlyContainedObjects())
+        foreach(SimObjPhysics sop in WhatObjectsAreInsideMagnetSphere())
         {
             Rigidbody rb = sop.GetComponent<Rigidbody>();
             rb.collisionDetectionMode = CollisionDetectionMode.Discrete;
