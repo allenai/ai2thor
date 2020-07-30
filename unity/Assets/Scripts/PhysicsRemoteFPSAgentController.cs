@@ -4088,7 +4088,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             //if the target is something like a pot or bowl on a table, return all valid points instead of ONLY visible points since
             //the Agent can't see the bottom of the receptacle if it's placed too high on a table
             if (ReceptacleRestrictions.ReturnAllPoints.Contains(targetReceptacle.ObjType)) {
-                Debug.Log("FALSE");
                 onlyPointsCloseToAgent = false;
             }
 
