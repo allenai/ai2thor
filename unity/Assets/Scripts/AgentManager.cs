@@ -1327,7 +1327,7 @@ public class ServerAction
 
 	public float intensity;//used for light?
 
-    public bool returnArmToStartPositionIfFail = false;
+    public bool returnToStart = false;
 
     public float speed;
 

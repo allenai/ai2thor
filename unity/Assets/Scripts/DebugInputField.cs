@@ -2651,13 +2651,13 @@ namespace UnityStandardAssets.Characters.FirstPerson
                          PhysicsController.ProcessControlCommand(action);
                         break;
                     }
-                    case "move_kinematic_arm":
-                    case "mka":
+                    case "move_mid_arm":
+                    case "mmla":
                     {
                         ServerAction action = new ServerAction();
-                        action.action = "MoveKinematicArm";
+                        action.action = "MoveMidLevelArm";
                         action.speed = 1.0f;
-                        //action.returnArmToStartPositionIfFail = true;
+                        //action.returnToStart = true;
                         if (splitcommand.Length > 4)
                         {
                             action.position = new Vector3(
@@ -2671,7 +2671,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                              }
 
                             if (splitcommand.Length >= 6) {
-                                 action.returnArmToStartPositionIfFail = bool.Parse(splitcommand[5]);
+                                 action.returnToStart = bool.Parse(splitcommand[5]);
                              }
 
                              if(splitcommand.Length >= 7) {
@@ -2686,10 +2686,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
                        
                     }
 
-                    case "mkah":
+                    case "mmlah":
                     {
                         ServerAction action = new ServerAction();
-                        action.action = "MoveKinematicArmHeight";
+                        action.action = "MoveMidLevelArmHeight";
 
                         if(splitcommand.Length > 1)
                         {
@@ -2700,7 +2700,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                                 action.speed = float.Parse(splitcommand[2]);
 
                                 if(splitcommand.Length > 3) 
-                                action.returnArmToStartPositionIfFail = bool.Parse(splitcommand[3]);
+                                action.returnToStart = bool.Parse(splitcommand[3]);
                             }
                         }
 
@@ -2734,11 +2734,11 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     }
 
                     //rotate kinematic hand on arm
-                    case "rkh":
+                    case "rmlh":
                     {
                         ServerAction action = new ServerAction();
 
-                        action.action = "RotateKinematicHand";
+                        action.action = "RotateMidLevelHand";
 
                         //euler angle notation
                         // action.degrees = 0;
@@ -2754,18 +2754,18 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         break;
                     }
 
-                    case "pukh":
+                    case "pumlh":
                     {
                         ServerAction action = new ServerAction();
-                        action.action = "PickupKinematicHand";
+                        action.action = "PickupMidLevelHand";
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }
 
-                    case "dkh":
+                    case "dmlh":
                     {
                         ServerAction action = new ServerAction();
-                        action.action = "DropKinematicHand";
+                        action.action = "DropMidLevelHand";
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }

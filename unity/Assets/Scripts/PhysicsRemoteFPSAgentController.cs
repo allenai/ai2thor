@@ -8918,12 +8918,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true);
         }
 
-        public void MoveKinematicArm(ServerAction action) {
+        public void MoveMidLevelArm(ServerAction action) {
             var arm = this.GetComponentInChildren<IK_Robot_Arm_Controller>();
 
             if (arm != null) {
                 
-                StartCoroutine(arm.moveArmTarget(this, action.position, action.speed, arm.gameObject, action.returnArmToStartPositionIfFail, action.handCameraSpace));
+                StartCoroutine(arm.moveArmTarget(this, action.position, action.speed, arm.gameObject, action.returnToStart, action.handCameraSpace));
             }
             else {
                 actionFinished(false, "Agent does not have kinematic arm or is not enabled. Make sure there is a '" + typeof(IK_Robot_Arm_Controller).Name + "' component as a child of this agent.");
@@ -8934,18 +8934,18 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         //constrain arm's y position based on the agent's current capsule collider center and extents
         //valid Y height from action.y is [0, 1.0] to represent the relative min and max heights of the
         //arm constrained by the agent's capsule
-        public void MoveKinematicArmHeight(ServerAction action)
+        public void MoveMidLevelArmHeight(ServerAction action)
         {
             // if(action.y < 0 || action.y > 1.0)
             // {
-            //     actionFinished(false, "MoveKinematicArmHeight Y value must be [0, 1.0] inclusive");
+            //     actionFinished(false, "MoveMidLevelArmHeight Y value must be [0, 1.0] inclusive");
             //     return;
             // }
 
             var arm = this.GetComponentInChildren<IK_Robot_Arm_Controller>();
             if(arm != null)
             {
-                StartCoroutine(arm.moveArmHeight(this, action.y, action.speed, arm.gameObject, action.returnArmToStartPositionIfFail));
+                StartCoroutine(arm.moveArmHeight(this, action.y, action.speed, arm.gameObject, action.returnToStart));
             }
 
             else
@@ -8954,7 +8954,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
 
-        public void RotateKinematicHand(ServerAction action)
+        public void RotateMidLevelHand(ServerAction action)
         {
             var arm = this.GetComponentInChildren<IK_Robot_Arm_Controller>();
             if (arm != null) {
@@ -8973,14 +8973,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     target = Quaternion.AngleAxis(action.degrees, action.rotation);
                 }
 
-                StartCoroutine(arm.rotateHand(this, target, action.timeStep, action.returnArmToStartPositionIfFail));
+                StartCoroutine(arm.rotateHand(this, target, action.timeStep, action.returnToStart));
             }
             else {
                 actionFinished(false, "Agent does not have kinematic arm or is not enabled. Make sure there is a '" + typeof(IK_Robot_Arm_Controller).Name + "' component as a child of this agent.");
             }
         }
 
-        public void PickupKinematicHand(ServerAction action)
+        public void PickupMidLevelHand(ServerAction action)
         {
             var arm = this.GetComponentInChildren<IK_Robot_Arm_Controller>();
             if (arm != null) 
@@ -8996,7 +8996,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
 
-        public void DropKinematicHand(ServerAction action)
+        public void DropMidLevelHand(ServerAction action)
         {
             var arm = this.GetComponentInChildren<IK_Robot_Arm_Controller>();
             if (arm != null) 
