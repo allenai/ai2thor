@@ -279,14 +279,20 @@ public class Contains : MonoBehaviour
 
 		//for stacking receptacles
 		SimObjPhysics simObj = gameObject.GetComponentInParent<SimObjPhysics>();
-		Transform renderer = simObj.GetComponent<Transform>();
-		Renderer rend = renderer.transform.GetComponentInChildren<Renderer>();
-		float yMaxOfMesh = rend.bounds.max.y; //this is the y-point we place the object
+		bool stacking = simObj.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.Stacking);
+		Transform renderer = stacking ? simObj.GetComponent<Transform>() : null;
+		Renderer rend = stacking ? renderer.transform.GetComponentInChildren<Renderer>() : null;
+		float yMaxOfMesh = stacking ? rend.bounds.max.y : 0; //this is the y-point we place the object
+		float yMinOfRecBox = stacking ? triggerBoxCollider.bounds.min.y : 0; //for cups and plates
+		float yPlacementPosition = (simObj.shape == "cup" || simObj.shape == "plate") ? yMinOfRecBox : yMaxOfMesh;
 
 		//The first if creates only one spawn point directly in the center of a receptacle if it's stacking
-        if (simObj.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.Stacking)) {
-			Vector3 centerOfReceptacleForStackingObjects = new Vector3(center.x, yMaxOfMesh, center.z);
-			gridpoints.Add(centerOfReceptacleForStackingObjects);
+        if (stacking) {
+			Vector3 centerOfReceptacleForStackingObjects = new Vector3(center.x, yPlacementPosition, center.z);
+			if (NarrowDownValidSpawnPoints(centerOfReceptacleForStackingObjects)) {
+
+				gridpoints.Add(centerOfReceptacleForStackingObjects);
+			}
 		
 		} else {
 			if (objectUpVector.Equals(Vector3.up) || objectUpVector.Equals(Vector3.down)) {
@@ -391,11 +397,11 @@ public class Contains : MonoBehaviour
 		// validpointlist = PossibleSpawnPoints;
 		// #endif
 
-		//sort the possible spawn points by distance to the Agent before returning
-		// PossibleSpawnPoints.Sort(delegate(ReceptacleSpawnPoint one, ReceptacleSpawnPoint two)
-		// {
-		// 	return Vector3.Distance(agent.transform.position, one.Point).CompareTo(Vector3.Distance(agent.transform.position, two.Point));
-		// });
+		//sort the possible spawn points by distance to the center of the Receptacle before returning
+		PossibleSpawnPoints.Sort(delegate(ReceptacleSpawnPoint one, ReceptacleSpawnPoint two)
+		{
+			return Vector3.Distance(center, one.Point).CompareTo(Vector3.Distance(center, two.Point));
+		});
 
 		return PossibleSpawnPoints;
 	}

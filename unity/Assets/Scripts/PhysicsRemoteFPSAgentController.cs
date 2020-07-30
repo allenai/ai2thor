@@ -860,8 +860,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                 updateAllAgentCollidersForVisibilityCheck(false);
 
-                if (Physics.Raycast(m_Camera.transform.position, point - m_Camera.transform.position, out hit,
-                        Vector3.Distance(m_Camera.transform.position, point) - 0.01f, (1 << 8) | (1 << 10))) //reduce distance by slight offset
+                if (Physics.Raycast(m_Camera.transform.position, point - m_Camera.transform.position, out hit, (1 << 8) | (1 << 10)))
                 {
                     updateAllAgentCollidersForVisibilityCheck(true);
                     //this should be set to true for object placement flexibility
@@ -3974,9 +3973,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             //get the target receptacle based on the action receptacle object ID
             SimObjPhysics targetReceptacle = null;
 
-            foreach (SimObjPhysics sop in VisibleSimObjs(true)) {
+            foreach (SimObjPhysics sop in VisibleSimObjs(true)) { //action.forceVisible is usually false
                 if ((!string.IsNullOrEmpty(action.receptacleObjectId)) && action.receptacleObjectId == sop.UniqueID) {
-                    targetReceptacle = sop;
+                    if (sop.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.Stacking))
+                        targetReceptacle = sop;
+                    else if (VisibleSimObjs(action.forceVisible).Contains(sop)) 
+                        targetReceptacle = sop;
                     break;
                 }
             }
@@ -4086,6 +4088,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             //if the target is something like a pot or bowl on a table, return all valid points instead of ONLY visible points since
             //the Agent can't see the bottom of the receptacle if it's placed too high on a table
             if (ReceptacleRestrictions.ReturnAllPoints.Contains(targetReceptacle.ObjType)) {
+                Debug.Log("FALSE");
                 onlyPointsCloseToAgent = false;
             }
 
