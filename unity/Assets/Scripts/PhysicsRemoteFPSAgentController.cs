@@ -8979,5 +8979,39 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 actionFinished(false, "Agent does not have kinematic arm or is not enabled. Make sure there is a '" + typeof(IK_Robot_Arm_Controller).Name + "' component as a child of this agent.");
             }
         }
+
+        public void PickupKinematicHand(ServerAction action)
+        {
+            var arm = this.GetComponentInChildren<IK_Robot_Arm_Controller>();
+            if (arm != null) 
+            {
+                arm.PickupObject();
+                actionFinished(true);
+                return;
+            }
+
+            else 
+            {
+                actionFinished(false, "Agent does not have kinematic arm or is not enabled. Make sure there is a '" + typeof(IK_Robot_Arm_Controller).Name + "' component as a child of this agent.");
+            }
+        }
+
+        public void DropKinematicHand(ServerAction action)
+        {
+            var arm = this.GetComponentInChildren<IK_Robot_Arm_Controller>();
+            if (arm != null) 
+            {
+                arm.DropObject();
+                //todo- only return after object(s) droped have finished moving
+                //currently this will return the frame the object is released
+                actionFinished(true);
+                return;
+            }
+
+            else 
+            {
+                actionFinished(false, "Agent does not have kinematic arm or is not enabled. Make sure there is a '" + typeof(IK_Robot_Arm_Controller).Name + "' component as a child of this agent.");
+            }
+        }
     }
 }

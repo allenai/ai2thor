@@ -2753,6 +2753,22 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
                         break;
                     }
+
+                    case "pukh":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "PickupKinematicHand";
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
+                    case "dkh":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "DropKinematicHand";
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
 			}
 
 			//StartCoroutine(CheckIfactionCompleteWasSetToTrueAfterWaitingALittleBit(splitcommand[0]));

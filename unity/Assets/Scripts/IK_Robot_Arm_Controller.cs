@@ -20,6 +20,8 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
     private Transform armTarget;
     private StaticCollided staticCollided;
     private Transform handCameraTransform;
+    [SerializeField]
+    private SphereCollider magnetSphere = null;
     // Start is called before the first frame update
     void Start()
     {
@@ -218,5 +220,49 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
         controller.actionFinished(true);
     }
 
-    
+    public void PickupObject()
+    {
+        //grab all sim objects that are currently colliding with magnet sphere
+        foreach(SimObjPhysics sop in magnetSphere.GetComponent<WhatIsInsideMagnetSphere>().CurrentlyContainedObjects())
+        {
+            Rigidbody rb = sop.GetComponent<Rigidbody>();
+            rb.collisionDetectionMode = CollisionDetectionMode.Discrete;
+            rb.isKinematic = true;
+            sop.transform.SetParent(magnetSphere.transform);
+
+            //move colliders to be children of arm? stop arm from moving?
+            sop.transform.Find("Colliders").transform.SetParent(magnetSphere.transform);
+        }
+
+        //note: how to handle cases where object breaks if it is shoved into another object?
+        //make them all unbreakable?
+    }
+
+    public void DropObject()
+    {
+        //grab all sim objects that are currently colliding with magnet sphere
+        foreach(SimObjPhysics sop in magnetSphere.GetComponent<WhatIsInsideMagnetSphere>().CurrentlyContainedObjects())
+        {
+            Rigidbody rb = sop.GetComponent<Rigidbody>();
+            rb.collisionDetectionMode = CollisionDetectionMode.ContinuousSpeculative;
+            rb.isKinematic = false;
+
+            //move colliders back to the sop
+            magnetSphere.transform.Find("Colliders").transform.SetParent(sop.transform);
+            GameObject topObject = GameObject.Find("Objects");
+
+            if(topObject != null)
+            {
+                sop.transform.parent = topObject.transform;
+            }
+
+            else
+            {
+                sop.transform.parent = null;
+            }
+
+            rb.angularVelocity = UnityEngine.Random.insideUnitSphere;
+        }
+    }
+
 }
