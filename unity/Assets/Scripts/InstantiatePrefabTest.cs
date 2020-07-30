@@ -379,7 +379,6 @@ public class InstantiatePrefabTest : MonoBehaviour
                 {
                     if(!rsp.Script.CheckIfPointIsInsideReceptacleTriggerBox(SpawnCorners[i]))
                     {
-                        Debug.Log("InsideRecTrigBox");
                         sop.transform.rotation = originalRot;
                         sop.transform.position = originalPos;
                         return false;
@@ -447,7 +446,6 @@ public class InstantiatePrefabTest : MonoBehaviour
         //reset rotation if no valid spawns found
         //sop.transform.rotation = originalRot;
         //oh now we couldn't spawn it, all the spawn areas were not clear
-        Debug.Log("450");
         sop.transform.rotation = originalRot;
         sop.transform.position = originalPos;
         return false;
