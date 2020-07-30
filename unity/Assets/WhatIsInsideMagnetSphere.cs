@@ -45,6 +45,7 @@ public class WhatIsInsideMagnetSphere : MonoBehaviour
 			//check each "other" object, see if it is currently in the CurrentlyContains list, and make sure it is NOT one of this object's doors/drawer
 			if (!CurrentlyContains.Contains(sop))//&& !MyObjects.Contains(sop.transform.gameObject))
 			{
+				if(sop.PrimaryProperty == SimObjPrimaryProperty.CanPickup)
 				CurrentlyContains.Add(sop);
 			}
 		}
