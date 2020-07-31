@@ -1498,7 +1498,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
 
-        public void TeleportFull(ServerAction action) {
+        public override void TeleportFull(ServerAction action) {
             targetTeleport = new Vector3(action.x, action.y, action.z);
 
             if (action.forceAction) {
@@ -1578,7 +1578,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true);
         }
 
-        public void Teleport(ServerAction action) {
+        public override void Teleport(ServerAction action) {
             action.horizon = Convert.ToInt32(m_Camera.transform.localEulerAngles.x);
             action.standing = isStanding();
             if (!action.rotateOnTeleport) {
