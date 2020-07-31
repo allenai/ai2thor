@@ -2811,91 +2811,34 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
 
-        public void SpawnExperimentScreenAtPoint(ServerAction action)
+        //action to return points from a grid that have an experiment receptacle below it
+        //creates a grid startinng from the agent's current hand position and projects that grid
+        //forward relative to the agent
+        //grid will be a 2n+1 by n grid in the orientation of agent right/left by agent forward
+        public void GetReceptacleCoordinatesExpRoom(ServerAction action)
         {
-            if(action.receptacleObjectId == null)
-            {
-                errorMessage = "please give valid receptacleObjectId for SpawnExperimentScreenAtPoint action";
-                actionFinished(false);
-                return;
-            }
-
-            SimObjPhysics target = null;
-            //find the object in the scene, disregard visibility
-            foreach(SimObjPhysics sop in VisibleSimObjs(true))
-            {
-                if(sop.objectID == action.receptacleObjectId)
-                {
-                    target = sop;
-                }
-            }
-
-            if(target == null)
-            {
-                errorMessage = "no receptacle object with id: "+ 
-                action.receptacleObjectId + " could not be found during SpawnExperimentScreenAtPoint";
-                actionFinished(false);
-                return;
-            }
-
+            var agent = this.agentManager.agents[0];
             ExperimentRoomSceneManager ersm = physicsSceneManager.GetComponent<ExperimentRoomSceneManager>();
-            if(ersm.SpawnExperimentScreenAtPoint(action.objectVariation, target, action.position, action.y))
-            actionFinished(true);
-
-            else
-            {
-                errorMessage = "Screen object could not be placed on " + action.receptacleObjectId;
-                actionFinished(false);
-            }
-        }
-
-        //spawn screen object at array index <objectVariation> rotated to <y>
-        //on <receptacleObjectId> using random seed <randomSeed>
-        public void SpawnExperimentScreenAtRandom(ServerAction action)
-        {
-            if(action.receptacleObjectId == null)
-            {
-                errorMessage = "please give valid receptacleObjectId for SpawnExperimentScreenAtRandom action";
-                actionFinished(false);
-                return;
-            }
-
-            SimObjPhysics target = null;
-            //find the object in the scene, disregard visibility
-            foreach(SimObjPhysics sop in VisibleSimObjs(true))
-            {
-                if(sop.objectID == action.receptacleObjectId)
-                {
-                    target = sop;
-                }
-            }
-
-            if(target == null)
-            {
-                errorMessage = "no receptacle object with id: "+ 
-                action.receptacleObjectId + " could not be found during SpawnExperimentScreenAtRandom";
-                actionFinished(false);
-                return;
-            }
-
-            ExperimentRoomSceneManager ersm = physicsSceneManager.GetComponent<ExperimentRoomSceneManager>();
-            if(ersm.SpawnExperimentScreenAtRandom(action.objectVariation, action.randomSeed, target, action.y))
-            actionFinished(true);
-
-            else
-            {
-                errorMessage = "Screen object could not be placed on " + action.receptacleObjectId;
-                actionFinished(false);
-            }
+            //good defaults would be gridSize 0.1m, maxStepCount 20 to cover the room
+            var ret = ersm.ValidGrid(agent.AgentHand.transform.position, action.gridSize, action.maxStepCount, agent);
+            //var ret = ersm.ValidGrid(agent.AgentHand.transform.position, action.gridSize, action.maxStepCount, agent);
+            actionFinished(true, ret);
         }
 
         //spawn receptacle object at array index <objectVariation> rotated to <y>
         //on <receptacleObjectId> using position <position>
-        public void SpawnExperimentReceptacleAtPoint(ServerAction action)
+        public void SpawnExperimentObjAtPoint(ServerAction action)
         {
             if(action.receptacleObjectId == null)
             {
                 errorMessage = "please give valid receptacleObjectId for SpawnExperimentReceptacleAtPoint action";
+                actionFinished(false);
+                return;
+            }
+
+            if(action.objectType == null)
+            {
+                errorMessage = "please use either 'receptacle' or 'screen' to specify which experiment object to spawn";
                 actionFinished(false);
                 return;
             }
@@ -2919,7 +2862,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
 
             ExperimentRoomSceneManager ersm = physicsSceneManager.GetComponent<ExperimentRoomSceneManager>();
-            if(ersm.SpawnExperimentReceptacleAtPoint(action.objectVariation, target, action.position, action.y))
+            if(ersm.SpawnExperimentObjAtPoint(action.objectType, action.objectVariation, target, action.position, action.y))
             actionFinished(true);
 
             else
@@ -2931,11 +2874,18 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         //spawn receptacle object at array index <objectVariation> rotated to <y>
         //on <receptacleObjectId> using random seed <randomSeed>
-        public void SpawnExperimentReceptacleAtRandom(ServerAction action)
+        public void SpawnExperimentObjAtRandom(ServerAction action)
         {
             if(action.receptacleObjectId == null)
             {
                 errorMessage = "please give valid receptacleObjectId for SpawnExperimentReceptacleAtRandom action";
+                actionFinished(false);
+                return;
+            }
+
+            if(action.objectType == null)
+            {
+                errorMessage = "please use either 'receptacle' or 'screen' to specify which experiment object to spawn";
                 actionFinished(false);
                 return;
             }
@@ -2959,7 +2909,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
 
             ExperimentRoomSceneManager ersm = physicsSceneManager.GetComponent<ExperimentRoomSceneManager>();
-            if(ersm.SpawnExperimentReceptacleAtRandom(action.objectVariation, action.randomSeed, target, action.y))
+            if(ersm.SpawnExperimentObjAtRandom(action.objectType, action.objectVariation, action.randomSeed, target, action.y))
             actionFinished(true);
 
             else
@@ -2967,6 +2917,257 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 errorMessage = "Experiment object could not be placed on " + action.receptacleObjectId;
                 actionFinished(false);
             }
+        }
+
+        //specify a screen by objectId in exp room and change material to objectVariation
+        public void ChangeScreenMaterialExpRoom(ServerAction action)
+        {
+            //only 5 material options at the moment
+            if(action.objectVariation < 0 || action.objectVariation > 4)
+            {
+                errorMessage = "please use objectVariation [0, 4] inclusive";
+                actionFinished(false);
+                return;
+            }
+
+            if(action.objectId == null)
+            {
+                errorMessage = "please give valid objectId for ChangeScreenMaterialExpRoom action";
+                actionFinished(false);
+                return;
+            }
+
+            SimObjPhysics target = null;
+            //find the object in the scene, disregard visibility
+            foreach(SimObjPhysics sop in VisibleSimObjs(true))
+            {
+                if(sop.objectID == action.objectId)
+                {
+                    target = sop;
+                }
+            }
+
+            if(target == null)
+            {
+                errorMessage = "no object with id: "+ 
+                action.objectId + " could be found during ChangeScreenMaterialExpRoom";
+                actionFinished(false);
+                return;
+            }
+
+            ExperimentRoomSceneManager ersm = physicsSceneManager.GetComponent<ExperimentRoomSceneManager>();
+            ersm.ChangeScreenMaterial(target, action.objectVariation);
+            actionFinished(true);
+        }
+
+        //specify a screen in exp room by objectId and change material color to rgb
+        public void ChangeScreenColorExpRoom(ServerAction action)
+        {
+            if(
+            action.r < 0 || action.r > 255 ||
+            action.g < 0 || action.g > 255 ||
+            action.b < 0 || action.b > 255)
+            {
+                errorMessage = "rgb values must be [0-255]";
+                actionFinished(false);
+                return;
+            }
+
+            if(action.objectId == null)
+            {
+                errorMessage = "please give valid objectId for ChangeScreenColorExpRoom action";
+                actionFinished(false);
+                return;
+            }
+
+            SimObjPhysics target = null;
+            //find the object in the scene, disregard visibility
+            foreach(SimObjPhysics sop in VisibleSimObjs(true))
+            {
+                if(sop.objectID == action.objectId)
+                {
+                    target = sop;
+                }
+            }
+
+            if(target == null)
+            {
+                errorMessage = "no receptacle object with id: "+ 
+                action.receptacleObjectId + " could not be found during ChangeScreenColorExpRoom";
+                actionFinished(false);
+                return;
+            }
+
+            ExperimentRoomSceneManager ersm = physicsSceneManager.GetComponent<ExperimentRoomSceneManager>();
+            ersm.ChangeScreenColor(target, action.r, action.g, action.b);
+            actionFinished(true);
+        }
+
+        //change wall to material [variation]       
+        public void ChangeWallMaterialExpRoom(ServerAction action)
+        {
+            //only 5 material options at the moment
+            if(action.objectVariation < 0 || action.objectVariation > 4)
+            {
+                errorMessage = "please use objectVariation [0, 4] inclusive";
+                actionFinished(false);
+                return;
+            }
+
+            ExperimentRoomSceneManager ersm = physicsSceneManager.GetComponent<ExperimentRoomSceneManager>();
+            ersm.ChangeWallMaterial(action.objectVariation);
+            actionFinished(true);
+        }
+
+        //change wall color to rgb (0-255, 0-255, 0-255)
+        public void ChangeWallColorExpRoom(ServerAction action)
+        {
+            if(
+            action.r < 0 || action.r > 255 ||
+            action.g < 0 || action.g > 255 ||
+            action.b < 0 || action.b > 255)
+            {
+                errorMessage = "rgb values must be [0-255]";
+                actionFinished(false);
+                return;
+            }
+
+            ExperimentRoomSceneManager ersm = physicsSceneManager.GetComponent<ExperimentRoomSceneManager>();
+            ersm.ChangeWallColor(action.r, action.g, action.b);
+            actionFinished(true);
+        }
+
+        //change floor to material [variation]
+        public void ChangeFloorMaterialExpRoom(ServerAction action)
+        {
+            //only 5 material options at the moment
+            if(action.objectVariation < 0 || action.objectVariation > 4)
+            {
+                errorMessage = "please use objectVariation [0, 4] inclusive";
+                actionFinished(false);
+                return;
+            }
+
+            ExperimentRoomSceneManager ersm = physicsSceneManager.GetComponent<ExperimentRoomSceneManager>();
+            ersm.ChangeFloorMaterial(action.objectVariation);
+            actionFinished(true);
+        }
+
+        //change wall color to rgb (0-255, 0-255, 0-255)
+        public void ChangeFloorColorExpRoom(ServerAction action)
+        {
+            if(
+            action.r < 0 || action.r > 255 ||
+            action.g < 0 || action.g > 255 ||
+            action.b < 0 || action.b > 255)
+            {
+                errorMessage = "rgb values must be [0-255]";
+                actionFinished(false);
+                return;
+            }
+
+            ExperimentRoomSceneManager ersm = physicsSceneManager.GetComponent<ExperimentRoomSceneManager>();
+            ersm.ChangeFloorColor(action.r, action.g, action.b);
+            actionFinished(true);
+        }
+
+        //change color of ceiling lights in exp room to rgb (0-255, 0-255, 0-255)
+        public void ChangeLightColorExpRoom(ServerAction action)
+        {
+            if(
+            action.r < 0 || action.r > 255 ||
+            action.g < 0 || action.g > 255 ||
+            action.b < 0 || action.b > 255)
+            {
+                errorMessage = "rgb values must be [0-255]";
+                actionFinished(false);
+                return;
+            }
+
+            ExperimentRoomSceneManager ersm = physicsSceneManager.GetComponent<ExperimentRoomSceneManager>();
+            ersm.ChangeLightColor(action.r, action.g, action.b);
+            actionFinished(true);
+        }
+
+        //change intensity of lights in exp room [0-5] these arent in like... lumens or anything
+        //just a relative intensity value
+        public void ChangeLightIntensityExpRoom(ServerAction action)
+        {
+            //restrict this to [0-5]
+            if(action.intensity < 0 || action.intensity > 5)
+            {
+                errorMessage = "light intensity must be [0.0 , 5.0] inclusive";
+                actionFinished(false);
+                return;
+            }
+
+            ExperimentRoomSceneManager ersm = physicsSceneManager.GetComponent<ExperimentRoomSceneManager>();
+            ersm.ChangeLightIntensity(action.intensity);
+            actionFinished(true);
+        }
+
+        public void ChangeTableTopMaterialExpRoom(ServerAction action)
+        {
+            //only 5 material options at the moment
+            if(action.objectVariation < 0 || action.objectVariation > 4)
+            {
+                errorMessage = "please use objectVariation [0, 4] inclusive";
+                actionFinished(false);
+                return;
+            }
+
+            ExperimentRoomSceneManager ersm = physicsSceneManager.GetComponent<ExperimentRoomSceneManager>();
+            ersm.ChangeTableTopMaterial(action.objectVariation);
+            actionFinished(true);
+        }
+
+        public void ChangeTableTopColorExpRoom(ServerAction action)
+        {
+            if(
+            action.r < 0 || action.r > 255 ||
+            action.g < 0 || action.g > 255 ||
+            action.b < 0 || action.b > 255)
+            {
+                errorMessage = "rgb values must be [0-255]";
+                actionFinished(false);
+                return;
+            }
+
+            ExperimentRoomSceneManager ersm = physicsSceneManager.GetComponent<ExperimentRoomSceneManager>();
+            ersm.ChangeTableTopColor(action.r, action.g, action.b);
+            actionFinished(true);
+        }
+
+        public void ChangeTableLegMaterialExpRoom(ServerAction action)
+        {
+            //only 5 material options at the moment
+            if(action.objectVariation < 0 || action.objectVariation > 4)
+            {
+                errorMessage = "please use objectVariation [0, 4] inclusive";
+                actionFinished(false);
+                return;
+            }
+
+            ExperimentRoomSceneManager ersm = physicsSceneManager.GetComponent<ExperimentRoomSceneManager>();
+            ersm.ChangeTableLegMaterial(action.objectVariation);
+            actionFinished(true);
+        }
+
+        public void ChangeTableLegColorExpRoom(ServerAction action)
+        {
+            if(
+            action.r < 0 || action.r > 255 ||
+            action.g < 0 || action.g > 255 ||
+            action.b < 0 || action.b > 255)
+            {
+                errorMessage = "rgb values must be [0-255]";
+                actionFinished(false);
+                return;
+            }
+
+            ExperimentRoomSceneManager ersm = physicsSceneManager.GetComponent<ExperimentRoomSceneManager>();
+            ersm.ChangeTableLegColor(action.r, action.g, action.b);
+            actionFinished(true);
         }
 
         //returns valid spawn points for spawning an object on a receptacle in the experiment room
@@ -2977,6 +3178,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             if(action.receptacleObjectId == null)
             {
                 errorMessage = "please give valid receptacleObjectId for ReturnValidSpawnsExpRoom action";
+                actionFinished(false);
+                return;
+            }
+
+            if(action.objectType == null)
+            {
+                errorMessage = "please use either 'receptacle' or 'screen' to specify which experiment object to spawn";
                 actionFinished(false);
                 return;
             }
@@ -3001,7 +3209,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             //return all valid spawn coordinates
             ExperimentRoomSceneManager ersm = physicsSceneManager.GetComponent<ExperimentRoomSceneManager>();
-            actionFinished(true, ersm.ReturnValidSpawns(action.objectVariation, target, action.y));
+            actionFinished(true, ersm.ReturnValidSpawns(action.objectType, action.objectVariation, target, action.y));
         }
 
         //pass in a Vector3, presumably from GetReachablePositions, and try to place a specific Sim Object there
@@ -3052,7 +3260,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             float distFromSopToBottomPoint = Vector3.Distance(bottomPoint, target.transform.position);
 
-            float offset = distFromSopToBottomPoint + 0.005f;
+            float offset = distFromSopToBottomPoint;
 
             Vector3 finalPos = GetSurfacePointBelowPosition(action.position) +  new Vector3(0, offset, 0);
 
@@ -3105,7 +3313,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             float distFromSopToBottomPoint = Vector3.Distance(bottomPoint, target.transform.position);
 
-            float offset = distFromSopToBottomPoint + 0.005f;
+            float offset = distFromSopToBottomPoint;
 
             //final position to place on surface
             Vector3 finalPos = GetSurfacePointBelowPosition(position) +  new Vector3(0, offset, 0);
@@ -8708,6 +8916,124 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 }
             }
             actionFinished(true);
+        }
+
+        public void MoveMidLevelArm(ServerAction action) {
+            var arm = this.GetComponentInChildren<IK_Robot_Arm_Controller>();
+
+            if (arm != null) {
+                
+                StartCoroutine(arm.moveArmTarget(this, action.position, action.speed, arm.gameObject, action.returnToStart, action.handCameraSpace));
+            }
+            else {
+                actionFinished(false, "Agent does not have kinematic arm or is not enabled. Make sure there is a '" + typeof(IK_Robot_Arm_Controller).Name + "' component as a child of this agent.");
+            }
+
+        }
+
+        //constrain arm's y position based on the agent's current capsule collider center and extents
+        //valid Y height from action.y is [0, 1.0] to represent the relative min and max heights of the
+        //arm constrained by the agent's capsule
+        public void MoveMidLevelArmHeight(ServerAction action)
+        {
+            // if(action.y < 0 || action.y > 1.0)
+            // {
+            //     actionFinished(false, "MoveMidLevelArmHeight Y value must be [0, 1.0] inclusive");
+            //     return;
+            // }
+
+            var arm = this.GetComponentInChildren<IK_Robot_Arm_Controller>();
+            if(arm != null)
+            {
+                StartCoroutine(arm.moveArmHeight(this, action.y, action.speed, arm.gameObject, action.returnToStart));
+            }
+
+            else
+            {
+                actionFinished(false, "Agent does not have kinematic arm or is not enabled. Make sure there is a '" + typeof(IK_Robot_Arm_Controller).Name + "' component as a child of this agent.");
+            }
+        }
+
+        public void RotateMidLevelHand(ServerAction action)
+        {
+            var arm = this.GetComponentInChildren<IK_Robot_Arm_Controller>();
+            if (arm != null) {
+
+                var target = new Quaternion();
+                //rotate around axis aliged x, y, z with magnitude based on vector3
+                if(action.degrees == 0)
+                {
+                    //use euler angles
+                    target = Quaternion.Euler(action.rotation);
+                }
+
+                //rotate action.degrees about axis
+                else
+                {
+                    target = Quaternion.AngleAxis(action.degrees, action.rotation);
+                }
+
+                StartCoroutine(arm.rotateHand(this, target, action.timeStep, action.returnToStart));
+            }
+            else {
+                actionFinished(false, "Agent does not have kinematic arm or is not enabled. Make sure there is a '" + typeof(IK_Robot_Arm_Controller).Name + "' component as a child of this agent.");
+            }
+        }
+
+        public void PickUpMidLevelHand(ServerAction action)
+        {
+            var arm = this.GetComponentInChildren<IK_Robot_Arm_Controller>();
+            if (arm != null) 
+            {
+                arm.PickupObject();
+                actionFinished(true);
+                return;
+            }
+
+            else 
+            {
+                actionFinished(false, "Agent does not have kinematic arm or is not enabled. Make sure there is a '" + typeof(IK_Robot_Arm_Controller).Name + "' component as a child of this agent.");
+            }
+        }
+
+        public void DropMidLevelHand(ServerAction action)
+        {
+            var arm = this.GetComponentInChildren<IK_Robot_Arm_Controller>();
+            if (arm != null) 
+            {
+                arm.DropObject();
+                //todo- only return after object(s) droped have finished moving
+                //currently this will return the frame the object is released
+                actionFinished(true);
+                return;
+            }
+
+            else 
+            {
+                actionFinished(false, "Agent does not have kinematic arm or is not enabled. Make sure there is a '" + typeof(IK_Robot_Arm_Controller).Name + "' component as a child of this agent.");
+            }
+        }
+
+        public void WhatObjectsCanHandPickUp(ServerAction action)
+        {
+            var arm = this.GetComponentInChildren<IK_Robot_Arm_Controller>();
+            List<String> listOfSOP = new List<String>();
+
+            if (arm != null) 
+            {
+                foreach (SimObjPhysics sop in arm.WhatObjectsAreInsideMagnetSphere())
+                {
+                    listOfSOP.Add(sop.objectID);
+                }
+
+                actionFinished(true, listOfSOP);
+                return;
+            }
+
+            else 
+            {
+                actionFinished(false, "Agent does not have kinematic arm or is not enabled. Make sure there is a '" + typeof(IK_Robot_Arm_Controller).Name + "' component as a child of this agent.");
+            }
         }
     }
 }

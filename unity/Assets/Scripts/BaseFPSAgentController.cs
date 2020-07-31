@@ -30,7 +30,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
         }
         [SerializeField] protected bool IsHandDefault = true;
         [SerializeField] protected GameObject ItemInHand = null; //current object in inventory
-        [SerializeField] protected GameObject AgentHand = null;
+        [SerializeField] public GameObject AgentHand = null;
         [SerializeField] protected GameObject DefaultHandPosition = null;
         [SerializeField] protected Transform rotPoint;
         [SerializeField] protected GameObject DebugPointPrefab;
@@ -1514,6 +1514,11 @@ namespace UnityStandardAssets.Characters.FirstPerson
             actionFinished(true);
         }
 
+        //no op action
+        public void Done(ServerAction action) {
+            actionFinished(true);
+        }
+
 		// Handle collisions - CharacterControllers don't apply physics innately, see "PushMode" check below
         // XXX: this will be used for truly continuous movement over time, for now this is unused
 		protected void OnControllerColliderHit(ControllerColliderHit hit)
@@ -2874,14 +2879,14 @@ namespace UnityStandardAssets.Characters.FirstPerson
             // }
 
             //draw axis aligned bounds of objects after actionFinished() calls
-            if(gizmobounds != null)
-            {
-                Gizmos.color = Color.yellow;
-                foreach(Bounds g in gizmobounds)
-                {
-                    Gizmos.DrawWireCube(g.center, g.size);
-                }
-            }
+            // if(gizmobounds != null)
+            // {
+            //     Gizmos.color = Color.yellow;
+            //     foreach(Bounds g in gizmobounds)
+            //     {
+            //         Gizmos.DrawWireCube(g.center, g.size);
+            //     }
+            // }
         }
         #endif
 	}

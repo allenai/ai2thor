@@ -228,15 +228,65 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         AManager.Initialize(action);
                         break;
                     }
+
+                 case "expspawn":
+                    {
+                        ServerAction action = new ServerAction();
+
+						if (splitcommand.Length == 2 )
+                        {
+                            if(splitcommand[1] == "s")
+							action.objectType = "screen";
+
+                            if(splitcommand[1] == "r")
+							action.objectType = "receptacle";
+                        }
+
+                        else
+                        {
+                            action.objectType = "receptacle";
+                        }
+
+                        action.action = "ReturnValidSpawnsExpRoom";
+                        action.receptacleObjectId = "DiningTable|-00.59|+00.00|+00.33";
+                        action.objectVariation = 0;
+                        action.y = 120f;//UnityEngine.Random.Range(0, 360);
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
                  case "exp":
                     {
                         ServerAction action = new ServerAction();
 
-                        action.action = "SpawnExperimentReceptacleAtRandom";
-                        action.randomSeed = 12;//UnityEngine.Random.Range(0, 1000);
+                        action.action = "SpawnExperimentObjAtRandom";
+                        action.objectType = "receptacle";
+                        action.randomSeed = 50;//UnityEngine.Random.Range(0, 1000);
                         action.receptacleObjectId = "DiningTable|-00.59|+00.00|+00.33";
                         action.objectVariation = 12;
                         action.y = 120f;//UnityEngine.Random.Range(0, 360);
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
+                 case "exps":
+                    {
+                        ServerAction action = new ServerAction();
+
+                        action.action = "SpawnExperimentObjAtRandom";
+                        action.objectType = "screen";
+                        action.randomSeed = UnityEngine.Random.Range(0, 1000);
+                        action.receptacleObjectId = "DiningTable|-00.59|+00.00|+00.33";
+
+						if (splitcommand.Length == 2 )
+                        {
+                            action.objectVariation = int.Parse(splitcommand[1]);
+                        }
+
+                        else
+                        action.objectVariation = 0;
+
+                        action.y = 0f;//UnityEngine.Random.Range(0, 360);
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }
@@ -245,7 +295,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     {
                         ServerAction action = new ServerAction();
 
-                        action.action = "SpawnExperimentReceptacleAtPoint";
+                        action.action = "SpawnExperimentObjAtPoint";
+                        action.objectType = "receptacle";
                         action.receptacleObjectId = "DiningTable|-00.59|+00.00|+00.33";
                         action.objectVariation = 12;
                         action.position = new Vector3(-1.4f, 0.9f, 0.1f);
@@ -254,42 +305,151 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         break;
                     }
 
-                 case "expspawn":
+                 case "wallcolor":
                     {
                         ServerAction action = new ServerAction();
-                        action.action = "ReturnValidSpawnsExpRoom";
-                        action.receptacleObjectId = "DiningTable|-00.59|+00.00|+00.33";
-                        action.objectVariation = 12;
-                        action.y = 120f;//UnityEngine.Random.Range(0, 360);
+
+                        action.action = "ChangeWallColorExpRoom";
+                        action.r = 100f;
+                        action.g = 100f;
+                        action.b = 100f;
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }
 
-                 case "expscreenp":
+                 case "floorcolor":
                     {
                         ServerAction action = new ServerAction();
 
-                        action.action = "SpawnExperimentScreenAtPoint";
-                        action.receptacleObjectId = "DiningTable|-00.59|+00.00|+00.33";
-                        action.objectVariation = 0;
-                        action.position = new Vector3(-1.4f, 0.9f, 0.1f);
-                        action.y = 120f;//UnityEngine.Random.Range(0, 360);
+                        action.action = "ChangeFloorColorExpRoom";
+                        action.r = 100f;
+                        action.g = 100f;
+                        action.b = 100f;
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }
 
-                 case "expscreen":
+                 case "wallmaterial":
                     {
                         ServerAction action = new ServerAction();
 
-                        action.action = "SpawnExperimentScreenAtRandom";
-                        action.randomSeed = UnityEngine.Random.Range(0, 1000);
-                        action.receptacleObjectId = "DiningTable|-00.59|+00.00|+00.33";
-                        action.objectVariation = 0;
-                        action.y = 0f;//UnityEngine.Random.Range(0, 360);
+                        action.action = "ChangeWallMaterialExpRoom";
+                        action.objectVariation = 1;
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }
+
+                 case "floormaterial":
+                    {
+                        ServerAction action = new ServerAction();
+
+                        action.action = "ChangeFloorMaterialExpRoom";
+                        action.objectVariation = 1;
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
+                 case "lightc":
+                    {
+                        ServerAction action = new ServerAction();
+
+                        action.action = "ChangeLightColorExpRoom";
+                        action.r = 20f;
+                        action.g = 94f;
+                        action.b = 10f;
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
+                 case "lighti":
+                    {
+                        ServerAction action = new ServerAction();
+
+                        action.action = "ChangeLightIntensityExpRoom";
+                        action.intensity = 3;
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
+                 case "tabletopc":
+                    {
+                        ServerAction action = new ServerAction();
+
+                        action.action = "ChangeTableTopColorExpRoom";
+                        action.r = 20f;
+                        action.g = 94f;
+                        action.b = 10f;
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
+                 case "tabletopm":
+                    {
+                        ServerAction action = new ServerAction();
+
+                        action.action = "ChangeTableTopMaterialExpRoom";
+                        action.objectVariation = 3;
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
+                 case "tablelegc":
+                    {
+                        ServerAction action = new ServerAction();
+
+                        action.action = "ChangeTableLegColorExpRoom";
+                        action.r = 20f;
+                        action.g = 94f;
+                        action.b = 10f;
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
+                 case "tablelegm":
+                    {
+                        ServerAction action = new ServerAction();
+
+                        action.action = "ChangeTableLegMaterialExpRoom";
+                        action.objectVariation = 3;
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
+                 case "screenm":
+                    {
+                        ServerAction action = new ServerAction();
+
+                        action.action = "ChangeScreenMaterialExpRoom";
+                        action.objectVariation = 3;
+                        action.objectId = "Screen|-00.64|+00.78|+00.71";
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
+                 case "screenc":
+                    {
+                        ServerAction action = new ServerAction();
+
+                        action.action = "ChangeScreenColorExpRoom";
+                        action.r = 20f;
+                        action.g = 94f;
+                        action.b = 10f;
+                        action.objectId = "Screen|-00.64|+00.78|+00.71";
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
+                 case "grid":
+                    {
+                        ServerAction action = new ServerAction();
+
+                        action.action = "GetReceptacleCoordinatesExpRoom";
+                        action.gridSize = 0.1f;
+                        action.maxStepCount = 5;
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
                 //initialize drone mode
                  case "initd":
                     {
@@ -2491,6 +2651,68 @@ namespace UnityStandardAssets.Characters.FirstPerson
                          PhysicsController.ProcessControlCommand(action);
                         break;
                     }
+                    case "move_mid_arm":
+                    case "mmla":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "MoveMidLevelArm";
+                        action.speed = 1.0f;
+                        //action.returnToStart = true;
+                        if (splitcommand.Length > 4)
+                        {
+                            action.position = new Vector3(
+                                    float.Parse(splitcommand[1]),
+                                    float.Parse(splitcommand[2]), 
+                                    float.Parse(splitcommand[3])
+                                );
+                            
+                             if (splitcommand.Length >= 5) {
+                                 action.speed = float.Parse(splitcommand[4]);
+                             }
+
+                            if (splitcommand.Length >= 6) {
+                                 action.returnToStart = bool.Parse(splitcommand[5]);
+                             }
+
+                             if(splitcommand.Length >= 7) {
+                                 action.handCameraSpace = bool.Parse(splitcommand[6]);
+                             }
+                        }
+                        else {
+                            Debug.LogError("Target x y z args needed for command");
+                        }
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                       
+                    }
+
+                    case "mmlah":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "MoveMidLevelArmHeight";
+
+                        if(splitcommand.Length > 1)
+                        {
+                            action.y = float.Parse(splitcommand[1]);
+
+                            if(splitcommand.Length > 2)
+                            {
+                                action.speed = float.Parse(splitcommand[2]);
+
+                                if(splitcommand.Length > 3) 
+                                action.returnToStart = bool.Parse(splitcommand[3]);
+                            }
+                        }
+
+                        else
+                        {
+                            action.y = 0.9f;
+                            action.speed = 1.0f;
+                        }
+
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
 
 				default:
                     {   
@@ -2508,6 +2730,43 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         }
                         PhysicsController.ProcessControlCommand(action);      
                         //Debug.Log("Invalid Command");
+                        break;
+                    }
+
+                    //rotate kinematic hand on arm
+                    case "rmlh":
+                    {
+                        ServerAction action = new ServerAction();
+
+                        action.action = "RotateMidLevelHand";
+
+                        //euler angle notation
+                        // action.degrees = 0;
+                        // action.rotation= new Vector3(0, 90, 0);
+
+                        //angle axis notation
+                        action.degrees = 74;
+                        action.rotation = new Vector3(1, 1, 0);
+
+                        action.timeStep=1.0f;
+                        PhysicsController.ProcessControlCommand(action);      
+
+                        break;
+                    }
+
+                    case "pumlh":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "PickUpMidLevelHand";
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
+                    case "dmlh":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "DropMidLevelHand";
+                        PhysicsController.ProcessControlCommand(action);
                         break;
                     }
 			}
