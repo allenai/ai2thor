@@ -37,6 +37,12 @@ public class MCSConfig {
         { "AI2-THOR/Materials/Ceramics/WhiteCountertop", new string[] { "grey" } }
     };
 
+    public static Dictionary<string, string[]> CARDBOARD_MATERIAL_REGISTRY = new Dictionary<string, string[]>() {
+        { "AI2-THOR/Materials/Misc/Cardboard_Brown", new string[] { "brown" } },
+        { "AI2-THOR/Materials/Misc/Cardboard_Tan", new string[] { "brown" } },
+        { "AI2-THOR/Materials/Misc/Cardboard_White", new string[] { "white" } }
+    };
+
     public static Dictionary<string, string[]> FABRIC_MATERIAL_REGISTRY = new Dictionary<string, string[]>() {
         { "AI2-THOR/Materials/Fabrics/Carpet2", new string[] { "brown" } },
         { "AI2-THOR/Materials/Fabrics/Carpet4", new string[] { "blue" } },
@@ -114,6 +120,7 @@ public class MCSConfig {
     public static Dictionary<string, Dictionary<string, string[]>> MATERIAL_REGISTRY = new Dictionary<string, Dictionary<string, string[]>>() {
         { "block_blank", BLOCK_BLANK_MATERIAL_REGISTRY },
         { "block_design", BLOCK_DESIGN_MATERIAL_REGISTRY },
+        { "cardboard", CARDBOARD_MATERIAL_REGISTRY },
         { "ceramic", CERAMIC_MATERIAL_REGISTRY },
         { "fabric", FABRIC_MATERIAL_REGISTRY },
         { "metal", METAL_MATERIAL_REGISTRY },
