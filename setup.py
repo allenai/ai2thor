@@ -1,6 +1,6 @@
 from setuptools import setup, find_packages
 
-exec(open('ai2thor/_version.py').read())
+exec(open('ai2thor/__init__.py').read())
 
 VERSION = __version__
 
