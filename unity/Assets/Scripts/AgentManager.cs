@@ -117,9 +117,10 @@ public class AgentManager : MonoBehaviour
         //"drone" agentMode can ONLY use "drone" agentControllerType, and NOTHING ELSE (for now?)
         if(action.agentMode.ToLower() == "default")
         {
-            if(action.agentControllerType.ToLower() != "physics" || action.agentControllerType.ToLower() != "stochastic")
+            if(action.agentControllerType.ToLower() != "physics" && action.agentControllerType.ToLower() != "stochastic")
             {
                 Debug.Log("default mode must use either physics or stochastic controller. Defaulting to physics");
+                action.agentControllerType = "";
                 SetUpPhysicsController();
             }
 
@@ -149,8 +150,10 @@ public class AgentManager : MonoBehaviour
                 SetUpStochasticController(action);
             }
 
-            else
-            SetUpStochasticController(action);
+            else 
+            {
+                SetUpStochasticController(action);
+            }
         }
 
         else if(action.agentMode.ToLower() == "drone")
@@ -164,9 +167,37 @@ public class AgentManager : MonoBehaviour
                 SetUpDroneController(action);
             }
 
-            else
-            SetUpDroneController(action);
+            else 
+            {
+                SetUpDroneController(action);
+            }
 
+        }
+        else if(action.agentMode.ToLower() == "arm") {
+
+            if (action.agentControllerType == "") {
+                Debug.Log("Defaulting to mid-level.");
+                SetUpArmController(true);
+            }
+            else if(action.agentControllerType.ToLower() != "low-level" && action.agentControllerType.ToLower() != "mid-level")
+            {
+                var error = "'arm' mode must use either low-level or mid-level controller.";
+                Debug.Log(error);
+                primaryAgent.actionFinished(false, error);
+                return;
+            }
+
+            else if(action.agentControllerType.ToLower() == "mid-level")
+            {
+                //set up physics controller
+                SetUpArmController(true);
+            }
+            else {
+                var error = "unsupported";
+                Debug.Log(error);
+                primaryAgent.actionFinished(false, error);
+                return;
+            }
         }
         
 		primaryAgent.ProcessControlCommand (action);
@@ -223,6 +254,21 @@ public class AgentManager : MonoBehaviour
 		primaryAgent.agentManager = this;
 		primaryAgent.actionComplete = true;
         this.agents.Add(primaryAgent);
+    }
+
+    private void SetUpArmController(bool midLevelArm) {
+        this.agents.Clear();
+		GameObject fpsController = GameObject.FindObjectOfType<BaseFPSAgentController>().gameObject;
+        // TODO set correct component
+		primaryAgent = fpsController.GetComponent<PhysicsRemoteFPSAgentController>();
+		primaryAgent.enabled = true;
+		primaryAgent.agentManager = this;
+		primaryAgent.actionComplete = true;
+        this.agents.Add(primaryAgent);
+       
+        var handObj = primaryAgent.transform.FirstChildOrDefault((x) => x.name == "robot_arm_rig_gripper");
+        handObj.gameObject.SetActive(true);
+        this.registerAsThirdPartyCamera(handObj.GetComponentInChildren<Camera>());
     }
 
     //return reference to primary agent in case we need a reference to the primary
@@ -299,6 +345,11 @@ public class AgentManager : MonoBehaviour
 
 		ResetSceneBounds();
 	}
+
+    public void registerAsThirdPartyCamera(Camera camera) {
+        this.thirdPartyCameras.Add(camera);
+        camera.gameObject.AddComponent(typeof(ImageSynthesis));
+    }
 
 	public void AddThirdPartyCamera(ServerAction action) {
 		GameObject gameObject = new GameObject("ThirdPartyCamera" + thirdPartyCameras.Count);
@@ -1297,7 +1348,7 @@ public class ServerAction
     public float maxDistance;//used in target circle spawning function
     public float noise;
     public ControllerInitialization controllerInitialization = null;
-    public string agentControllerType = "physics";//default to physics controller
+    public string agentControllerType = "";//default to physics controller
     public string agentMode = "default"; //mode of Agent, valid values are "default" "bot" "drone", note certain modes are only compatible with certain controller types
 
     public float agentRadius = 2.0f;

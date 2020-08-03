@@ -22,6 +22,8 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
     private Transform handCameraTransform;
     [SerializeField]
     private SphereCollider magnetSphere = null;
+
+    private PhysicsRemoteFPSAgentController PhysicsController; 
     // Start is called before the first frame update
     void Start()
     {
@@ -30,6 +32,10 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
         // handCameraTransform = this.GetComponentInChildren<Camera>().transform;
         handCameraTransform = this.transform.FirstChildOrDefault(x => x.name == "robot_arm_4_jnt");
         staticCollided = new StaticCollided();
+
+        // PhysicsController = GetComponentInParent<PhysicsRemoteFPSAgentController>();
+
+
     }
 
     // Update is called once per frame
@@ -225,8 +231,21 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
         return magnetSphere.GetComponent<WhatIsInsideMagnetSphere>().CurrentlyContainedObjects();
     }
 
-    public void PickupObject()
+    public IEnumerator ReturnObjectsInMagnetAfterPhysicsUpdate(PhysicsRemoteFPSAgentController controller)
     {
+        yield return new WaitForFixedUpdate();
+        List<string> listOfSOP = new List<string>();
+        foreach (SimObjPhysics sop in this.WhatObjectsAreInsideMagnetSphere())
+        {
+            listOfSOP.Add(sop.objectID);
+        }
+        Debug.Log("objs: " + string.Join(", ", listOfSOP));
+        controller.actionFinished(true, listOfSOP);
+    }
+
+    public bool PickupObject()
+    {
+        bool pickedUp = false;
         //grab all sim objects that are currently colliding with magnet sphere
         foreach(SimObjPhysics sop in WhatObjectsAreInsideMagnetSphere())
         {
@@ -237,10 +256,12 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
 
             //move colliders to be children of arm? stop arm from moving?
             sop.transform.Find("Colliders").transform.SetParent(magnetSphere.transform);
+            pickedUp = true;
         }
 
         //note: how to handle cases where object breaks if it is shoved into another object?
         //make them all unbreakable?
+        return pickedUp;
     }
 
     public void DropObject()

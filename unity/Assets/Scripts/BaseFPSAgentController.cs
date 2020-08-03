@@ -387,7 +387,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
         {
             if(action.agentMode.ToLower() == "default" || 
                action.agentMode.ToLower() == "bot" || 
-               action.agentMode.ToLower() == "drone")
+               action.agentMode.ToLower() == "drone" ||
+               action.agentMode.ToLower() == "arm"
+               )
             {
                 //set agent mode to Default, Bot or Drone accordingly
                 SetAgentMode(action.agentMode);
@@ -395,7 +397,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             
             else
             {
-                errorMessage = "agentMode must be set to 'default' or 'bot' or 'drone'";
+                errorMessage = "agentMode must be set to 'default' or 'bot' or 'drone' or 'hand'";
                 Debug.Log(errorMessage);
                 actionFinished(false);
                 return;
@@ -490,7 +492,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             FirstPersonCharacterCull fpcc = m_Camera.GetComponent<FirstPersonCharacterCull>();
 
             //determine if we are in Tall or Bot mode (or other modes as we go on)
-            if(whichMode == "default")
+            if(whichMode == "default" || whichMode == "arm")
             {   
                 //toggle FirstPersonCharacterCull
                 fpcc.SwitchRenderersToHide(whichMode);

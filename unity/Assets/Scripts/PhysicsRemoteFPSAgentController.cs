@@ -8985,8 +8985,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             var arm = this.GetComponentInChildren<IK_Robot_Arm_Controller>();
             if (arm != null) 
             {
-                arm.PickupObject();
-                actionFinished(true);
+                
+                actionFinished(arm.PickupObject());
                 return;
             }
 
@@ -9017,17 +9017,20 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public void WhatObjectsCanHandPickUp(ServerAction action)
         {
             var arm = this.GetComponentInChildren<IK_Robot_Arm_Controller>();
-            List<String> listOfSOP = new List<String>();
+            
 
             if (arm != null) 
             {
-                foreach (SimObjPhysics sop in arm.WhatObjectsAreInsideMagnetSphere())
-                {
-                    listOfSOP.Add(sop.objectID);
-                }
 
-                actionFinished(true, listOfSOP);
-                return;
+                StartCoroutine(arm.ReturnObjectsInMagnetAfterPhysicsUpdate(this));
+                // List<String> listOfSOP = new List<String>();
+                // foreach (SimObjPhysics sop in arm.WhatObjectsAreInsideMagnetSphere())
+                // {
+                //     listOfSOP.Add(sop.objectID);
+                // }
+
+                // actionFinished(true, listOfSOP);
+                // return;
             }
 
             else 

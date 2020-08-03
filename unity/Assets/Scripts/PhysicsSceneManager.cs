@@ -225,6 +225,7 @@ public class PhysicsSceneManager : MonoBehaviour
 		}
 
 		BaseFPSAgentController fpsController =  GameObject.FindObjectOfType<BaseFPSAgentController>();
+        
 		if (fpsController.imageSynthesis != null) {
 			fpsController.imageSynthesis.OnSceneChange();
 		}
