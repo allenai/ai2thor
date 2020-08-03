@@ -40,7 +40,7 @@ public class MCSConfig {
     public static Dictionary<string, string[]> CARDBOARD_MATERIAL_REGISTRY = new Dictionary<string, string[]>() {
         { "AI2-THOR/Materials/Misc/Cardboard_Brown", new string[] { "brown" } },
         { "AI2-THOR/Materials/Misc/Cardboard_Tan", new string[] { "brown" } },
-        { "AI2-THOR/Materials/Misc/Cardboard_White", new string[] { "white" } }
+        { "AI2-THOR/Materials/Misc/Cardboard_Grey", new string[] { "grey" } }
     };
 
     public static Dictionary<string, string[]> FABRIC_MATERIAL_REGISTRY = new Dictionary<string, string[]>() {
