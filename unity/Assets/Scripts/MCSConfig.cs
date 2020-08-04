@@ -94,6 +94,19 @@ public class MCSConfig {
         { "AI2-THOR/Materials/Walls/YellowDrywall", new string[] { "yellow" } }
     };
 
+    public static Dictionary<string, string[]> SOFA_1_MATERIAL_REGISTRY = new Dictionary<string, string[]>() {
+        { "AI2-THOR/Materials/Fabrics/Sofa1_Brown", new string[] { "brown" } },
+    };
+
+    public static Dictionary<string, string[]> SOFA_CHAIR_1_MATERIAL_REGISTRY = new Dictionary<string, string[]>() {
+        { "AI2-THOR/Materials/Fabrics/SofaChair1_Black", new string[] { "black" } },
+        { "AI2-THOR/Materials/Fabrics/SofaChair1_Brown", new string[] { "brown" } }
+    };
+
+    public static Dictionary<string, string[]> SOFA_2_MATERIAL_REGISTRY = new Dictionary<string, string[]>() {
+        { "AI2-THOR/Materials/Fabrics/Sofa2_Grey", new string[] { "grey" } }
+    };
+
     public static Dictionary<string, string[]> WOOD_MATERIAL_REGISTRY = new Dictionary<string, string[]>() {
         { "AI2-THOR/Materials/Wood/BlackWood", new string[] { "black" } },
         { "AI2-THOR/Materials/Wood/BedroomFloor1", new string[] { "brown" } },
@@ -127,7 +140,10 @@ public class MCSConfig {
         { "plastic", PLASTIC_MATERIAL_REGISTRY },
         { "rubber", RUBBER_MATERIAL_REGISTRY },
         { "wall", WALL_MATERIAL_REGISTRY },
-        { "wood", WOOD_MATERIAL_REGISTRY }
+        { "wood", WOOD_MATERIAL_REGISTRY },
+        { "sofa_1", SOFA_1_MATERIAL_REGISTRY},
+        { "sofa_chair_1", SOFA_CHAIR_1_MATERIAL_REGISTRY},
+        { "sofa_2", SOFA_2_MATERIAL_REGISTRY}
     };
 
     public static Dictionary<string, string[]> MATERIAL_COLORS = MCSConfig.GenerateMaterialColors();
@@ -153,8 +169,6 @@ public class MCSConfig {
             { "Cup5_Mat (Plastic - UB)", new string[] { "black" } },
             { "Plate_Mat1", new string[] { "white" } },
             { "Plate_Mat3", new string[] { "grey" } },
-            { "Sofa_velvet.001_AlbedoTransparency", new string[] { "brown" } },
-            { "SofaChair_velvet.001_AlbedoTransparency", new string[] { "black" } },
             { "HousePlant_Leaves1A_Mat", new string[] { "green" } },
             { "HousePlant_Leaves2B_Mat", new string[] { "green" } },
             { "HousePlant_Leaves3B_Mat", new string[] { "red" } },
