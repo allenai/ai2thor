@@ -134,9 +134,9 @@ public class MCSConfig {
         { "rubber", RUBBER_MATERIAL_REGISTRY },
         { "wall", WALL_MATERIAL_REGISTRY },
         { "wood", WOOD_MATERIAL_REGISTRY },
-        { "sofa 1", SOFA_1_MATERIAL_REGISTRY},
-        { "sofa chair 1", SOFA_CHAIR_1_MATERIAL_REGISTRY},
-        { "sofa 2", SOFA_2_MATERIAL_REGISTRY}
+        { "sofa_1", SOFA_1_MATERIAL_REGISTRY},
+        { "sofa_chair_1", SOFA_CHAIR_1_MATERIAL_REGISTRY},
+        { "sofa_2", SOFA_2_MATERIAL_REGISTRY}
     };
 
     public static Dictionary<string, string[]> MATERIAL_COLORS = MCSConfig.GenerateMaterialColors();
