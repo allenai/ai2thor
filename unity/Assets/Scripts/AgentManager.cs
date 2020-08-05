@@ -348,7 +348,7 @@ public class AgentManager : MonoBehaviour
 
     public void registerAsThirdPartyCamera(Camera camera) {
         this.thirdPartyCameras.Add(camera);
-        camera.gameObject.AddComponent(typeof(ImageSynthesis));
+        // camera.gameObject.AddComponent(typeof(ImageSynthesis));
     }
 
 	public void AddThirdPartyCamera(ServerAction action) {
