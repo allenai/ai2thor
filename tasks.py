@@ -783,9 +783,9 @@ def ci_build(context):
                     procs.append(p)
 
 
-            ci_pytest(context)
 
             if build["branch"] == "master":
+                ci_pytest(context)
                 webgl_build_deploy_demo(
                     context, verbose=True, content_addressable=True, force=True
                 )
@@ -989,7 +989,8 @@ def interact(
             start_unity=False if editor_mode else True,
             save_image_per_frame=True,
             include_private_scenes=include_private_scenes,
-            add_depth_noise=noise
+            add_depth_noise=noise,
+            scene=scene
         )
     else:
         env = ai2thor.robot_controller.Controller(

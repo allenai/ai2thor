@@ -1048,6 +1048,7 @@ public class ObjectMetadata
 	public Vector3 rotation;
 	//public float cameraHorizon; moved to AgentMetadata, objects don't have a camerahorizon
 	public bool visible;
+	public bool obstructed; //if true, object is obstructed by something and actions cannot be performed on it. This means an object behind glass will be obstructed=True and visible=True
 	public bool receptacle;
 	///
 	//note: some objects are not themselves toggleable, because they must be toggled on/off via another sim object (stove knob -> stove burner)
