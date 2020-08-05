@@ -9,10 +9,7 @@ public class MCSController : PhysicsRemoteFPSAgentController {
     public static float STANDING_POSITION_Y = 0.4625f;
     public static float CRAWLING_POSITION_Y = STANDING_POSITION_Y/2;
     public static float LYING_POSITION_Y = 0.1f;
-    public static float STANDING_POSITION_COLLIDER_CENTER = -0.25f;
-    public static float CRAWLING_POSITION_COLLIDER_CENTER = -0.10f;
-    public static float LYING_POSITION_COLLIDER_CENTER = 0f;
-
+    
     public static float DISTANCE_HELD_OBJECT_Y = 0.15f;
     public static float DISTANCE_HELD_OBJECT_Z = 0.20f;
 
@@ -659,7 +656,7 @@ public class MCSController : PhysicsRemoteFPSAgentController {
         } else {
             float startHeight = (this.pose == PlayerPose.LYING ? LYING_POSITION_Y : STANDING_POSITION_Y);
             Vector3 direction = (this.pose == PlayerPose.LYING ? Vector3.up : Vector3.down);
-            CheckIfAgentCanCrawlLieOrStand(direction, startHeight, CRAWLING_POSITION_Y, CRAWLING_POSITION_COLLIDER_CENTER, PlayerPose.CRAWLING);  
+            CheckIfAgentCanCrawlLieOrStand(direction, startHeight, CRAWLING_POSITION_Y, PlayerPose.CRAWLING);  
         }
     }
     
@@ -670,7 +667,7 @@ public class MCSController : PhysicsRemoteFPSAgentController {
             Debug.Log("Agent is already Lying Down");
         } else {
             float startHeight = (this.pose == PlayerPose.CRAWLING ? CRAWLING_POSITION_Y : STANDING_POSITION_Y);
-            CheckIfAgentCanCrawlLieOrStand(Vector3.down, startHeight, LYING_POSITION_Y, LYING_POSITION_COLLIDER_CENTER, PlayerPose.LYING);              
+            CheckIfAgentCanCrawlLieOrStand(Vector3.down, startHeight, LYING_POSITION_Y, PlayerPose.LYING);              
         }
 
         
@@ -687,16 +684,15 @@ public class MCSController : PhysicsRemoteFPSAgentController {
             Debug.Log("Agent cannot Stand when lying down");
         } else {
             float startHeight = (this.pose == PlayerPose.CRAWLING ? CRAWLING_POSITION_Y : LYING_POSITION_Y);
-            CheckIfAgentCanCrawlLieOrStand(Vector3.up, startHeight, STANDING_POSITION_Y, STANDING_POSITION_COLLIDER_CENTER, PlayerPose.STANDING); 
+            CheckIfAgentCanCrawlLieOrStand(Vector3.up, startHeight, STANDING_POSITION_Y, PlayerPose.STANDING); 
         }
     }
 
-    public void CheckIfAgentCanCrawlLieOrStand(Vector3 direction, float startHeight, float endHeight, float colliderY, PlayerPose pose) {
+    public void CheckIfAgentCanCrawlLieOrStand(Vector3 direction, float startHeight, float endHeight, PlayerPose pose) {
         //Raycast up or down the distance of shifting on y-axis
         Vector3 origin = new Vector3(transform.position.x, startHeight, transform.position.z);
         Vector3 end = new Vector3(transform.position.x, endHeight, transform.position.z);
         RaycastHit hit;
-        Ray ray = new Ray(origin, direction);
         LayerMask layerMask = ~(1 << 10);
         
         //if raycast hits an object, the agent does not move on y-axis
@@ -712,9 +708,6 @@ public class MCSController : PhysicsRemoteFPSAgentController {
             SetUpRotationBoxChecks();
             this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.SUCCESSFUL);
             actionFinished(true);
-
-            //change collider height so agent can move
-            GetComponent<CapsuleCollider>().center = new Vector3(0, colliderY, 0);
         }
     }
 
