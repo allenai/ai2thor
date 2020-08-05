@@ -1167,6 +1167,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
             // in the multiagent setting, explicitly giving this information for now.
             objMeta.visible = isVisible; //simObj.isVisible;
 
+            objMeta.obstructed = !simObj.isInteractable;//if object is not interactable, it means it is obstructed
+
             objMeta.isMoving = simObj.inMotion;//keep track of if this object is actively moving
 
             if(simObj.PrimaryProperty == SimObjPrimaryProperty.CanPickup || simObj.PrimaryProperty == SimObjPrimaryProperty.Moveable) 
@@ -1686,6 +1688,81 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			actionFinished(true);
 		}
 
+        //teleport full, base version does not consider being able to hold objects
+        public virtual void TeleportFull(ServerAction action) {
+            targetTeleport = new Vector3(action.x, action.y, action.z);
+
+            if (action.forceAction) {
+                DefaultAgentHand(action);
+                transform.position = targetTeleport;
+                transform.rotation = Quaternion.Euler(new Vector3(0.0f, action.rotation.y, 0.0f));
+                if (action.standing) {
+                    m_Camera.transform.localPosition = standingLocalCameraPosition;
+                } else {
+                    m_Camera.transform.localPosition = crouchingLocalCameraPosition;
+                }
+                m_Camera.transform.localEulerAngles = new Vector3(action.horizon, 0.0f, 0.0f);
+            } else {
+                if (!agentManager.SceneBounds.Contains(targetTeleport)) {
+                    errorMessage = "Teleport target out of scene bounds.";
+                    actionFinished(false);
+                    return;
+                }
+
+                Vector3 oldPosition = transform.position;
+                Quaternion oldRotation = transform.rotation;
+                Vector3 oldCameraLocalEulerAngle = m_Camera.transform.localEulerAngles;
+                Vector3 oldCameraLocalPosition = m_Camera.transform.localPosition;
+
+                //DefaultAgentHand(action);
+                transform.position = targetTeleport;
+
+                //apply gravity after teleport so we aren't floating in the air
+                Vector3 m = new Vector3();
+                m.y = Physics.gravity.y * this.m_GravityMultiplier;
+                m_CharacterController.Move(m);
+
+                transform.rotation = Quaternion.Euler(new Vector3(0.0f, action.rotation.y, 0.0f));
+                if (action.standing) {
+                    m_Camera.transform.localPosition = standingLocalCameraPosition;
+                } else {
+                    m_Camera.transform.localPosition = crouchingLocalCameraPosition;
+                }
+                m_Camera.transform.localEulerAngles = new Vector3(action.horizon, 0.0f, 0.0f);
+
+                bool agentCollides = isAgentCapsuleColliding(collidersToIgnoreDuringMovement);
+
+                if (agentCollides) {
+                    errorMessage = "Cannot teleport due to agent collision.";
+                    Debug.Log(errorMessage);
+                } 
+
+                if (agentCollides) {
+                    transform.position = oldPosition;
+                    transform.rotation = oldRotation;
+                    m_Camera.transform.localPosition = oldCameraLocalPosition;
+                    m_Camera.transform.localEulerAngles = oldCameraLocalEulerAngle;
+                    actionFinished(false);
+                    return;
+                }
+            }
+
+            Vector3 v = new Vector3();
+            v.y = Physics.gravity.y * this.m_GravityMultiplier;
+            m_CharacterController.Move(v);
+
+            snapAgentToGrid();
+            actionFinished(true);
+        }
+
+        public virtual void Teleport(ServerAction action) {
+            action.horizon = Convert.ToInt32(m_Camera.transform.localEulerAngles.x);
+            if (!action.rotateOnTeleport) {
+                action.rotation = transform.eulerAngles;
+            }
+            TeleportFull(action);
+        }
+        
         protected T[] flatten2DimArray<T>(T[, ] array) {
             int nrow = array.GetLength(0);
             int ncol = array.GetLength(1);
