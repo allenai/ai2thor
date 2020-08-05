@@ -1165,6 +1165,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
             // in the multiagent setting, explicitly giving this information for now.
             objMeta.visible = isVisible; //simObj.isVisible;
 
+            objMeta.obstructed = !simObj.isInteractable;//if object is not interactable, it means it is obstructed
+
             objMeta.isMoving = simObj.inMotion;//keep track of if this object is actively moving
 
             if(simObj.PrimaryProperty == SimObjPrimaryProperty.CanPickup || simObj.PrimaryProperty == SimObjPrimaryProperty.Moveable) 

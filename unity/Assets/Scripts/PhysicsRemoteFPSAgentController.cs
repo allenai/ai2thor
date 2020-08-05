@@ -1849,8 +1849,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             //         target = sop;
             //     }
             // }
-            print(target.objectID);
-            print(target.isInteractable);
+            //print(target.objectID);
+            //print(target.isInteractable);
 
             if (target == null) {
                 errorMessage = "No valid target!";
