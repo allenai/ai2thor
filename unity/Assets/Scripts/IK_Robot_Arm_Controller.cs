@@ -257,9 +257,9 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
         foreach(SimObjPhysics sop in WhatObjectsAreInsideMagnetSphere())
         {
             Rigidbody rb = sop.GetComponent<Rigidbody>();
-            rb.collisionDetectionMode = CollisionDetectionMode.Discrete;
             rb.isKinematic = true;
             sop.transform.SetParent(magnetSphere.transform);
+            rb.collisionDetectionMode = CollisionDetectionMode.Discrete;
 
             //move colliders to be children of arm? stop arm from moving?
             sop.transform.Find("Colliders").transform.SetParent(magnetSphere.transform);
