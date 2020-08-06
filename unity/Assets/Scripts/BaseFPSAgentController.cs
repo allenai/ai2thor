@@ -66,6 +66,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
         public GameObject BotVisCap;//meshes used for Bot mode
         public GameObject DroneVisCap;//meshes used for Drone mode
         public GameObject DroneBasket;//reference to the drone's basket object
+        public GameObject IKArm; //reference to the IK_Robot_Arm_Controller arm
         private bool isVisible = true;
         public bool inHighFrictionArea = false;
 
@@ -408,6 +409,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 action.gridSize = 0.25f;
             }
 
+            //note: this overrides the default FOV values set in SetAgentMode()
 			if (action.fieldOfView > 0 && action.fieldOfView < 180) {
 				m_Camera.fieldOfView = action.fieldOfView;
 			} 
@@ -519,6 +521,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 //set camera stand/crouch local positions for Tall mode
                 standingLocalCameraPosition = m_Camera.transform.localPosition;
                 crouchingLocalCameraPosition = m_Camera.transform.localPosition + new Vector3(0, -0.675f, 0);// bigger y offset if tall
+
+                //enable arm component
+                if(whichMode == "arm")
+                IKArm.SetActive(true);
             }
 
             else if(whichMode == "bot")
