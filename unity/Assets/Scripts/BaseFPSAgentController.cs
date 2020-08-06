@@ -147,6 +147,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			get { return targetRotation; }
 		}
 
+        // Arm
+        private IK_Robot_Arm_Controller Arm;
+
         private PhysicsSceneManager _physicsSceneManager = null;
         //use as reference to the PhysicsSceneManager object
         protected PhysicsSceneManager physicsSceneManager
@@ -463,6 +466,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
             {
                 gridSize = action.gridSize;
                 StartCoroutine(checkInitializeAgentLocationAction());
+            }
+
+            if (action.agentMode.ToLower() == "arm") {
+                Arm = this.GetComponent<IK_Robot_Arm_Controller>();
             }
             	
             // Debug.Log("Object " + action.controllerInitialization.ToString() + " dict "  + (action.controllerInitialization.variableInitializations == null));//+ string.Join(";", action.controllerInitialization.variableInitializations.Select(x => x.Key + "=" + x.Value).ToArray()));
@@ -1419,6 +1426,11 @@ namespace UnityStandardAssets.Characters.FirstPerson
             metaMessage.hand.localPosition = AgentHand.transform.localPosition;
             metaMessage.hand.rotation = AgentHand.transform.eulerAngles;
             metaMessage.hand.localRotation = AgentHand.transform.localEulerAngles;
+
+             // ARM
+            if (Arm != null) {
+                metaMessage.arm = Arm.GenerateMetadata();
+            }
 
             // EXTRAS
             metaMessage.reachablePositions = reachablePositions;

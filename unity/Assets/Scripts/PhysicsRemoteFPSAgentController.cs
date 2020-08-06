@@ -9038,5 +9038,19 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 actionFinished(false, "Agent does not have kinematic arm or is not enabled. Make sure there is a '" + typeof(IK_Robot_Arm_Controller).Name + "' component as a child of this agent.");
             }
         }
+
+        public void SetMidLevelHandRadius(ServerAction action) {
+            var arm = this.GetComponentInChildren<IK_Robot_Arm_Controller>();
+
+            if (arm != null) 
+            {
+                arm.SetHandMagnetRadius(action.radius);
+            }
+
+            else 
+            {
+                actionFinished(false, "Agent does not have kinematic arm or is not enabled. Make sure there is a '" + typeof(IK_Robot_Arm_Controller).Name + "' component as a child of this agent.");
+            }
+        }
     }
 }

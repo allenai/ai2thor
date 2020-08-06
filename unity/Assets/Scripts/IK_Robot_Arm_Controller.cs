@@ -23,15 +23,22 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
     [SerializeField]
     private SphereCollider magnetSphere = null;
 
+    private GameObject Magnet = null;
+
     private PhysicsRemoteFPSAgentController PhysicsController; 
+
+    private Transform FirstJoint;
     // Start is called before the first frame update
     void Start()
     {
         // What a mess clean up this hierarchy, standarize naming
         armTarget = this.transform.Find("FK_IK_rig").Find("robot_arm_IK_rig").Find("pos_rot_manipulator");
         // handCameraTransform = this.GetComponentInChildren<Camera>().transform;
+        FirstJoint = this.transform.Find("robot_arm_1_jnt");
         handCameraTransform = this.transform.FirstChildOrDefault(x => x.name == "robot_arm_4_jnt");
         staticCollided = new StaticCollided();
+
+        Magnet = handCameraTransform.FirstChildOrDefault(x => x.name == "Magnet").gameObject;
 
         // PhysicsController = GetComponentInParent<PhysicsRemoteFPSAgentController>();
 
@@ -291,4 +298,33 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
         }
     }
 
+    public void SetHandMagnetRadius(float radius) {
+        Magnet.transform.localScale = new Vector3(radius, radius, radius);
+    }
+
+
+    public ArmMetadata GenerateMetadata() {
+        var meta = new ArmMetadata();
+        meta.handTarget = armTarget.position;
+        var joint = FirstJoint;
+        var joints = new List<JointMetadata>();
+        for (var i = 2; i <= 5; i++) {
+            var jointMeta = new JointMetadata();
+            jointMeta.name = joint.name;
+            jointMeta.position = joint.position;
+            jointMeta.localPosition = joint.localPosition;
+
+            float angleRot;
+            Vector3 vectorRot;
+            joint.localRotation.ToAngleAxis(out angleRot, out vectorRot);
+            jointMeta.localRotation = new Vector4(vectorRot.x, vectorRot.y, vectorRot.z, angleRot);
+
+            joint.rotation.ToAngleAxis(out angleRot, out vectorRot);
+            jointMeta.rotation = new Vector4(vectorRot.x, vectorRot.y, vectorRot.z, angleRot);
+
+            joints.Add(jointMeta);
+            joint = joint.Find("robot_arm_" + i + "_jnt");
+        }
+        return meta;
+    }
 }

@@ -2824,6 +2824,17 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }
+                    case "smlhr": {
+                        ServerAction action = new ServerAction();
+                        action.action = "SetMidLevelHandRadius";
+
+                         if (splitcommand.Length == 2) {
+                            action.radius = float.Parse(splitcommand[1]);
+                        }
+                        PhysicsController.ProcessControlCommand(action);
+                        
+                        break;
+                    }
 			}
 
 			//StartCoroutine(CheckIfactionCompleteWasSetToTrueAfterWaitingALittleBit(splitcommand[0]));

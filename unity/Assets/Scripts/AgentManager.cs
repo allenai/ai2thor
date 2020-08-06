@@ -1183,6 +1183,21 @@ public class HandMetadata {
 }
 
 [Serializable]
+public class JointMetadata {
+    public string name;
+	public Vector3 position;
+	public Vector4 rotation;
+	public Vector3 localPosition;
+	public Vector4 localRotation;
+}
+
+[Serializable]
+public class ArmMetadata {
+    public Vector3 handTarget;
+    public JointMetadata[] joints;
+}
+
+[Serializable]
 public class ObjectTypeCount
 {
     public string objectType; //specify object by type in scene
@@ -1223,6 +1238,7 @@ public struct MetadataWrapper
     public bool isSceneAtRest;//set true if all objects in the scene are at rest (or very very close to 0 velocity)
 	public AgentMetadata agent;
 	public HandMetadata hand;
+    public ArmMetadata arm;
 	public float fov;
 	public Vector3 cameraPosition;
 	public float cameraOrthSize;
@@ -1384,6 +1400,8 @@ public class ServerAction
     public float speed;
 
     public bool handCameraSpace = false;
+
+    public float radius;
 
     public SimObjType ReceptableSimObjType()
 	{
