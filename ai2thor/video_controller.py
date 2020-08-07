@@ -27,7 +27,7 @@ class VideoController(Controller):
                  **controller_kwargs):
         super().__init__(continuous=True, **controller_kwargs)
         self.step(
-            action='AddThirdPartyCamera', 
+            action='AddThirdPartyCamera',
             rotation=initial_camera_rotation,
             position=initial_camera_position,
             fieldOfView=initial_camera_fov)
@@ -42,7 +42,7 @@ class VideoController(Controller):
         """Changes the scene and adds a new third party camera to the initial position."""
         super().reset(scene)
         self.step(
-            action='AddThirdPartyCamera', 
+            action='AddThirdPartyCamera',
             rotation=self.initial_cam_rot,
             position=self.initial_cam_pos,
             fieldOfView=self.initial_cam_fov)
@@ -187,7 +187,7 @@ class VideoController(Controller):
                              dx=6, dz=6, xAngle=55, frames=60,
                              orbit_degrees_per_frame=0.5):
         """Orbits the camera around the scene.
-        
+
         Example: https://www.youtube.com/watch?v=KcELPpdN770&feature=youtu.be&t=14"""
         degrees = frames * orbit_degrees_per_frame
         rot0 = self.last_event.metadata['thirdPartyCameras'][0]['rotation']['y'] # starting angle
@@ -205,7 +205,7 @@ class VideoController(Controller):
     def RelativeCameraAnimation(self, px=0, py=0, pz=0, rx=0, ry=0, rz=0, frames=60):
         """Linear interpolation between the current camera position and rotation
            and the final camera position, given by deltas to the current values.
-           
+
         Params
         - px (int)=0: x offset from the current camera position.
         - py (int)=0: y offset from the current camera position.
@@ -252,32 +252,7 @@ class VideoController(Controller):
                 # turn ceiling on
                 self.ToggleCeiling()
 
-            # enables linear animation changes to the camera FOV
-            if FOVstart != None and FOVend != None:
-                # update third party camera does not change the FOV!
-                ap = self.last_event.metadata['agent']['position']
-                ar = self.last_event.metadata['agent']['rotation']['y']
-
-                # reset removes the current third party camera (max 1 else gives errors)
-                self.reset(self.last_event.metadata['sceneName'])
-                self.step(action='TeleportFull', rotation=ar, **ap)
-
-                kwargs = {
-                    'action': 'AddThirdPartyCamera',
-                    'rotation': {'x': r0['x'] + (rx - r0['x']) / frames * i,
-                              'y': r0['y'] + (ry - r0['y']) / frames * i,
-                              'z': r0['z'] + (rz - r0['z']) / frames * i},
-                    'position': {'x': p0['x'] + (px - p0['x']) / frames * i,
-                              'y': p0['y'] + (py - p0['y']) / frames * i,
-                              'z': p0['z'] + (pz - p0['z']) / frames * i},
-                    'fieldOfView': FOVstart + (FOVend - FOVstart) / frames * i,
-                    'makeAgentsVisible': visibleAgents
-                }
-                if not (smartSkybox and maxY > p0['y'] + (py - p0['y']) / frames * i):
-                    kwargs['skyboxColor'] = 'black'
-                yield self.step(**kwargs)
-            else:
-                kwargs = {
+            kwargs = {
                     'action': 'UpdateThirdPartyCamera',
                     'thirdPartyCameraId': 0,
                     'rotation': {'x': r0['x'] + (rx - r0['x']) / frames * i,
@@ -287,9 +262,14 @@ class VideoController(Controller):
                                  'y': p0['y'] + (py - p0['y']) / frames * i,
                                  'z': p0['z'] + (pz - p0['z']) / frames * i},
                 }
-                if not (smartSkybox and maxY > p0['y'] + (py - p0['y']) / frames * i):
-                    kwargs['skyboxColor'] = 'black'
-                yield self.step(**kwargs)
+
+            # enables linear animation changes to the camera FOV
+            if FOVstart != None and FOVend != None:
+                kwargs['fieldOfView'] = FOVstart + (FOVend - FOVstart) / frames * i
+
+            if not (smartSkybox and maxY > p0['y'] + (py - p0['y']) / frames * i):
+                kwargs['skyboxColor'] = 'black'
+            yield self.step(**kwargs)
 
     def LookUp(self):
         raise NotImplementedError()
@@ -327,7 +307,7 @@ class VideoController(Controller):
 
     def export_frames(self, path, file_type='.png'):
         """Exports all of the presently frames to the `path` directory.
-        
+
         The frames are numbered in sequential order (starting with 0)."""
         for i in range(len(self.saved_frames)):
             p = os.path.join(path, f'{i}.{file_type}')
