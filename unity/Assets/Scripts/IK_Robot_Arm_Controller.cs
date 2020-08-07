@@ -325,6 +325,7 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
             joints.Add(jointMeta);
             joint = joint.Find("robot_arm_" + i + "_jnt");
         }
+        meta.joints = joints.ToArray();
         return meta;
     }
 }

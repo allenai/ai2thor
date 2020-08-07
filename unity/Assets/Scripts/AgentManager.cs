@@ -512,6 +512,7 @@ public class AgentManager : MonoBehaviour
     }
 
     private void LateUpdate() {
+        
 		int completeCount = 0;
 		foreach (BaseFPSAgentController agent in this.agents) {
 			if (agent.actionComplete) {

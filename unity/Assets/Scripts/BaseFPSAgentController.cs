@@ -469,10 +469,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 gridSize = action.gridSize;
                 StartCoroutine(checkInitializeAgentLocationAction());
             }
-
-            if (action.agentMode.ToLower() == "arm") {
-                Arm = this.GetComponent<IK_Robot_Arm_Controller>();
-            }
             	
             // Debug.Log("Object " + action.controllerInitialization.ToString() + " dict "  + (action.controllerInitialization.variableInitializations == null));//+ string.Join(";", action.controllerInitialization.variableInitializations.Select(x => x.Key + "=" + x.Value).ToArray()));
 
@@ -530,8 +526,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 crouchingLocalCameraPosition = m_Camera.transform.localPosition + new Vector3(0, -0.675f, 0);// bigger y offset if tall
 
                 //enable arm component
-                if(whichMode == "arm")
-                IKArm.SetActive(true);
+                if (whichMode == "arm") {
+                    IKArm.SetActive(true);
+                    Arm = this.GetComponentInChildren<IK_Robot_Arm_Controller>();
+                }
             }
 
             else if(whichMode == "bot")
