@@ -2583,11 +2583,13 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
             var path = GetSimObjectNavMeshTarget(sop, startPosition, startRotation);
             if (path.status == UnityEngine.AI.NavMeshPathStatus.PathComplete) {
-                //VisualizePath(startPosition, path);
+               
+                VisualizePath(startPosition, path);
                 actionFinished(true, path);
                 return;
             }
             else {
+                Debug.Log("AI navmesh error");
                 errorMessage = "Path to target could not be found";
                 actionFinished(false);
                 return;
@@ -2845,6 +2847,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
             var originalAgentPosition = agentTransform.position;
             var orignalAgentRotation = agentTransform.rotation;
+            var originalCameraRotation = m_Camera.transform.rotation;
 
             var fixedPosition = Vector3.negativeInfinity;
 
@@ -2853,13 +2856,15 @@ namespace UnityStandardAssets.Characters.FirstPerson
             getReachablePositionToObjectVisible(targetSimObject, out fixedPosition);
             agentTransform.position = originalAgentPosition;
             agentTransform.rotation = orignalAgentRotation;
+            m_Camera.transform.rotation = originalCameraRotation;
+            
             var path = new UnityEngine.AI.NavMeshPath();
             var sopPos = targetSOP.transform.position;
             //var target = new Vector3(sopPos.x, initialPosition.y, sopPos.z);
 
             //make sure navmesh agent is active
             this.GetComponent<UnityEngine.AI.NavMeshAgent>().enabled = true;
-            //bool pathSuccess = UnityEngine.AI.NavMesh.CalculatePath(initialPosition, fixedPosition,  UnityEngine.AI.NavMesh.AllAreas, path);
+            bool pathSuccess = UnityEngine.AI.NavMesh.CalculatePath(initialPosition, fixedPosition,  UnityEngine.AI.NavMesh.AllAreas, path);
             
             var pathDistance = 0.0f;
             for (int i = 0; i < path.corners.Length - 1; i++) {
@@ -2872,7 +2877,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
             //disable navmesh agent
             this.GetComponent<UnityEngine.AI.NavMeshAgent>().enabled = false;
-
+            
             return path;
         }
 

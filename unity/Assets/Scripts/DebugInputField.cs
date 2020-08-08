@@ -2686,6 +2686,34 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }
+                    case "visualize_shortest_path":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "VisualizeShortestPaths";
+
+                        //pass in a min range, max range, delay
+                        if (splitcommand.Length > 1)
+                        {
+                            //ID of spawner
+                            action.objectType = splitcommand[1];
+
+                            if (splitcommand.Length == 5) {
+                                action.position = new Vector3(
+                                    float.Parse(splitcommand[2]),
+                                    float.Parse(splitcommand[3]), 
+                                    float.Parse(splitcommand[4])
+                                );
+                            }
+                            else {
+                                // var pos = PhysicsController.getReachablePositions().Shuffle();
+                                action.positions = new List<Vector3>() { PhysicsController.transform.position };
+                                action.grid = true;
+                            }
+                        }
+
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
 
                     case "get_object_type_ids":
                     {
