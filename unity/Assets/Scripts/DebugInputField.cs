@@ -214,8 +214,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         action.gridSize = 0.25f;
                         action.visibilityDistance = 1.0f;
 						PhysicsController.actionComplete = false;
-                        action.fieldOfView = 60;
-                        action.rotateStepDegrees = 45;
+                        action.fieldOfView = 90f;
+                        action.rotateStepDegrees = 30f;
                         action.agentMode = "bot";
                         action.agentControllerType = "stochastic";
 
@@ -2514,6 +2514,23 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         if (splitcommand.Length > 1)
                         {
                             action.objectId = splitcommand[1];
+                        }
+
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+                    
+                    // Will fail if navmeshes are not setup
+                    case "expact":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "ObjectNavExpertAction";
+
+                        //pass in a min range, max range, delay
+                        if (splitcommand.Length > 1)
+                        {
+                            //ID of spawner
+                            action.objectType = splitcommand[1];
                         }
 
                         PhysicsController.ProcessControlCommand(action);
