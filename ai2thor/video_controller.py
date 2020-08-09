@@ -264,7 +264,7 @@ class VideoController(Controller):
                 }
 
             # enables linear animation changes to the camera FOV
-            if FOVstart != None and FOVend != None:
+            if FOVstart is not None and FOVend is not None:
                 kwargs['fieldOfView'] = FOVstart + (FOVend - FOVstart) / frames * i
 
             if not (smartSkybox and maxY > p0['y'] + (py - p0['y']) / frames * i):
