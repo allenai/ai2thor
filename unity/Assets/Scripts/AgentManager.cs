@@ -325,7 +325,8 @@ public class AgentManager : MonoBehaviour
 		camera.fieldOfView = ClampFieldOfView(action.fieldOfView);
 
         if (action.orthographic) {
-			// REVIEW: should the orthographicSize use the clamped fov or the original value passed in?
+			// NOTE: orthographicSize uses the original fieldOfView value passed in
+			// TODO: this is an odd overload of the argument, consider adding another parameter
             camera.orthographicSize = action.fieldOfView;
         }
         camera.orthographic = action.orthographic;

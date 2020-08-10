@@ -34,8 +34,6 @@ class UnityTestController(ai2thor.controller.Controller):
         pass
 
 # Defining const classes to lessen the possibility of a misspelled key
-# Review: This pattern is inconsistent with this file, but I think its a better direction
-# let me know if I should revert to match the rest of the file
 class Actions:
     AddThirdPartyCamera = 'AddThirdPartyCamera'
     UpdateThirdPartyCamera = 'UpdateThirdPartyCamera'
