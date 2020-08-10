@@ -943,17 +943,36 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		}
 
 
-		private int nearestAngleIndex(float angle, float[] array)
+		protected int nearestAngleIndex(float angle, float[] array, bool upDown=false)
 		{
+			int closestIndex = 0;
+			float min = Math.Abs(angle - array[0]);
+			float lastHorizon = horizonAngles[horizonAngles.Length - 1];
 
-			for (int i = 0; i < array.Length; i++)
+			for (int i = 1; i < array.Length; i++)
 			{
-				if (Math.Abs(angle - array[i]) < 2.0f)
+				float difference = Math.Abs(angle - array[i]);
+				if (upDown) //up down
 				{
-					return i;
-				}
+					if (difference < min || (difference > lastHorizon + Mathf.Abs((lastHorizon - 360) / 2) && difference < 360)) 
+					{
+						if (difference > lastHorizon + Mathf.Abs((lastHorizon - 360) / 2) && difference < 360) //between 0 and 330 horizon angles
+						{
+							closestIndex = i;
+							break;
+						}
+						closestIndex = i;
+					}
+				} 
+
+				else if (!upDown && (difference < min)) //left right
+				{		
+					min = difference;
+					closestIndex = i;
+				}	
+				
 			}
-			return 0;
+			return closestIndex;
 		}
 
 		protected int currentHorizonAngleIndex()
@@ -961,7 +980,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			return nearestAngleIndex(Quaternion.LookRotation(m_Camera.transform.forward).eulerAngles.x, horizonAngles);
 		}
 
-		private int currentHeadingAngleIndex()
+		protected int currentHeadingAngleIndex()
 		{
 			return nearestAngleIndex(Quaternion.LookRotation(transform.forward).eulerAngles.y, headingAngles);
 		}
