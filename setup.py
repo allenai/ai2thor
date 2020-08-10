@@ -43,5 +43,5 @@ setup(name='ai2thor',
           'werkzeug>=0.15.0' # needed for unix socket support
       ],
       setup_requires=['pytest-runner'],
-      tests_require=['pytest', 'pytest-cov'],
+      tests_require=['pytest', 'pytest-cov', 'jsonschema'],
       include_package_data=False)

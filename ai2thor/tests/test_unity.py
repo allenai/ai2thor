@@ -1,6 +1,8 @@
 
 #import pytest
 import os
+import json
+import jsonschema
 import ai2thor.controller
 import glob
 import re
@@ -198,6 +200,14 @@ def test_moveahead_fail():
     controller.step(dict(action='Teleport', x=-1.5, z=-1.5, y=1.0), raise_for_failure=True)
     controller.step(dict(action='MoveAhead', moveMagnitude=5.0))
     assert not controller.last_event.metadata['lastActionSuccess']
+
+
+def test_jsonschema_metadata():
+    event = controller.step(dict(action='Pass'))
+    with open("ai2thor/tests/data/metadata-schema.json") as f:
+        schema = json.loads(f.read())
+
+    jsonschema.validate(instance=event.metadata, schema=schema)
 
 
 def test_get_scenes_in_build():
