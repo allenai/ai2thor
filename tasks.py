@@ -56,7 +56,7 @@ def push_build(build_archive_name, archive_sha256, include_private_scenes):
 def _local_build_path(prefix="local"):
     if platform.system() == "Darwin":
         suffix = "OSXIntel64.app"
-        build_path = "unity/builds/thor-{}-{}/Contents/MacOS/thor-local-OSXIntel64".format(
+        build_path = "unity/builds/thor-{}-{}/Contents/MacOS/AI2-Thor".format(
             prefix,
             suffix
         )

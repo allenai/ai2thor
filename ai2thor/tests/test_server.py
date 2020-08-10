@@ -13,12 +13,10 @@ def generate_multi_agent_form(metadata, sequence_id=1):
     agent2['agentId'] = 1
     agent1 = metadata
     agents = [agent1, agent2]
-    action_returns = [None, None]
     boundary = b'--OVCo05I3SVXLPeTvCgJjHl1EOleL4u9TDx5raRVt'
     data = b'\r\n' + boundary + b'\r\nContent-Type: text/plain; charset="utf-8"\r\nContent-disposition: form-data; name="metadata"\r\n\r\n'
     data += json.dumps(dict(agents=agents, sequenceId=sequence_id, activeAgentId=1)).encode('utf8')
     data += b'\r\n' + boundary + b'\r\nContent-Type: text/plain; charset="utf-8"\r\nContent-disposition: form-data; name="actionReturns"\r\n\r\n'
-    data += json.dumps(action_returns).encode('utf8')
     data += b'\r\n' + boundary + b'\r\nContent-Type: text/plain; charset="utf-8"\r\nContent-disposition: form-data; name="token"\r\n\r\n'
     data += b'12cb40b5-3a70-4316-8ae2-82cbff6c9902'
     data += b'\r\n' + boundary + b'--\r\n'
