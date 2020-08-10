@@ -58,8 +58,6 @@ public class MCSController : PhysicsRemoteFPSAgentController {
     protected float horizonConsistency = 15.0f; //ex. looking up while at 75 degrees will look up to 60 rather than 30
 
     private int framesUntilGridSnap; //when moving, grid snap will engage on the last frame (rather than every frame)
-    public float rotation;
-    public float look;
 
     public override void CloseObject(ServerAction action) {
         bool continueAction = TryConvertingEachObjectDirectionToId(action);
