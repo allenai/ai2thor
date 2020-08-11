@@ -37,6 +37,12 @@ public class MCSConfig {
         { "AI2-THOR/Materials/Ceramics/WhiteCountertop", new string[] { "grey" } }
     };
 
+    public static Dictionary<string, string[]> CARDBOARD_MATERIAL_REGISTRY = new Dictionary<string, string[]>() {
+        { "AI2-THOR/Materials/Misc/Cardboard_Brown", new string[] { "brown" } },
+        { "AI2-THOR/Materials/Misc/Cardboard_Tan", new string[] { "brown" } },
+        { "AI2-THOR/Materials/Misc/Cardboard_Grey", new string[] { "grey" } }
+    };
+
     public static Dictionary<string, string[]> FABRIC_MATERIAL_REGISTRY = new Dictionary<string, string[]>() {
         { "AI2-THOR/Materials/Fabrics/Carpet2", new string[] { "brown" } },
         { "AI2-THOR/Materials/Fabrics/Carpet4", new string[] { "blue" } },
@@ -88,6 +94,19 @@ public class MCSConfig {
         { "AI2-THOR/Materials/Walls/YellowDrywall", new string[] { "yellow" } }
     };
 
+    public static Dictionary<string, string[]> SOFA_1_MATERIAL_REGISTRY = new Dictionary<string, string[]>() {
+        { "AI2-THOR/Materials/Fabrics/Sofa1_Brown", new string[] { "brown" } },
+    };
+
+    public static Dictionary<string, string[]> SOFA_CHAIR_1_MATERIAL_REGISTRY = new Dictionary<string, string[]>() {
+        { "AI2-THOR/Materials/Fabrics/SofaChair1_Black", new string[] { "black" } },
+        { "AI2-THOR/Materials/Fabrics/SofaChair1_Brown", new string[] { "brown" } }
+    };
+
+    public static Dictionary<string, string[]> SOFA_2_MATERIAL_REGISTRY = new Dictionary<string, string[]>() {
+        { "AI2-THOR/Materials/Fabrics/Sofa2_Grey", new string[] { "grey" } }
+    };
+
     public static Dictionary<string, string[]> WOOD_MATERIAL_REGISTRY = new Dictionary<string, string[]>() {
         { "AI2-THOR/Materials/Wood/BlackWood", new string[] { "black" } },
         { "AI2-THOR/Materials/Wood/BedroomFloor1", new string[] { "brown" } },
@@ -114,13 +133,17 @@ public class MCSConfig {
     public static Dictionary<string, Dictionary<string, string[]>> MATERIAL_REGISTRY = new Dictionary<string, Dictionary<string, string[]>>() {
         { "block_blank", BLOCK_BLANK_MATERIAL_REGISTRY },
         { "block_design", BLOCK_DESIGN_MATERIAL_REGISTRY },
+        { "cardboard", CARDBOARD_MATERIAL_REGISTRY },
         { "ceramic", CERAMIC_MATERIAL_REGISTRY },
         { "fabric", FABRIC_MATERIAL_REGISTRY },
         { "metal", METAL_MATERIAL_REGISTRY },
         { "plastic", PLASTIC_MATERIAL_REGISTRY },
         { "rubber", RUBBER_MATERIAL_REGISTRY },
         { "wall", WALL_MATERIAL_REGISTRY },
-        { "wood", WOOD_MATERIAL_REGISTRY }
+        { "wood", WOOD_MATERIAL_REGISTRY },
+        { "sofa_1", SOFA_1_MATERIAL_REGISTRY},
+        { "sofa_chair_1", SOFA_CHAIR_1_MATERIAL_REGISTRY},
+        { "sofa_2", SOFA_2_MATERIAL_REGISTRY}
     };
 
     public static Dictionary<string, string[]> MATERIAL_COLORS = MCSConfig.GenerateMaterialColors();
@@ -129,7 +152,12 @@ public class MCSConfig {
         // Hard-code additional materials present in the original playroom scene but not available in the registry.
         Dictionary<string, string[]> materialColors = new Dictionary<string, string[]>() {
             { "childrens floor", new string[] { "blue", "green", "purple", "red", "yellow" } },
-            { "crayons", new string[] { "blue" } }, // TODO MCS-264
+            { "crayon_black", new string[] { "black" } },
+            { "crayon_blue", new string[] { "blue" } },
+            { "crayon_green", new string[] { "green" } },
+            { "crayon_pink", new string[] { "pink" } },
+            { "crayon_red", new string[] { "red" } },
+            { "crayon_yellow", new string[] { "yellow" } },
             { "mattress fabric", new string[] { "white" } },
             { "pacifier", new string[] { "blue" } },
             { "Apple1_Mat1", new string[] { "red" } },
@@ -141,8 +169,6 @@ public class MCSConfig {
             { "Cup5_Mat (Plastic - UB)", new string[] { "black" } },
             { "Plate_Mat1", new string[] { "white" } },
             { "Plate_Mat3", new string[] { "grey" } },
-            { "Sofa_velvet.001_AlbedoTransparency", new string[] { "brown" } },
-            { "SofaChair_velvet.001_AlbedoTransparency", new string[] { "black" } },
             { "HousePlant_Leaves1A_Mat", new string[] { "green" } },
             { "HousePlant_Leaves2B_Mat", new string[] { "green" } },
             { "HousePlant_Leaves3B_Mat", new string[] { "red" } },

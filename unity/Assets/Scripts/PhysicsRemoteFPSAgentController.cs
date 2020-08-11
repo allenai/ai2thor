@@ -86,9 +86,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         // Used to expand agent capsule in collision checks for open/close actions
         protected const float ExpandAgentCapsuleBy = 0.1f;
+        protected bool canMove = true;
+        protected string inputDirection;
+        protected float serverActionMoveMagnitude;
 
-        //used for collision detection with SimObjPhysics
-        protected const float AgentCollisionCapsuleRadius = 0.27f;
 
         //change visibility check to use this distance when looking down
         //protected float DownwardViewDistance = 2.0f;
@@ -1915,7 +1916,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         //Luca's movement grid and valid position generation, simple transform setting is used for movement instead.
 
         //XXX revisit what movement means when we more clearly define what "continuous" movement is
-        protected bool moveInDirection(Vector3 direction, string uniqueId="", float maxDistanceToObject=-1.0f, bool forceAction = false) {
+        protected virtual bool moveInDirection(Vector3 direction, string uniqueId="", float maxDistanceToObject=-1.0f, bool forceAction = false) {
             Vector3 targetPosition = transform.position + direction;
             float angle = Vector3.Angle(transform.forward, Vector3.Normalize(direction));
 
@@ -2645,37 +2646,20 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     break;
             }
 
-            RaycastHit[] collisionSweepResults = capsuleCastAllForAgent(
+            RaycastHit[] sweepResults = capsuleCastAllForAgent(
                 GetComponent<CapsuleCollider>(),
                 m_CharacterController.skinWidth,
                 transform.position,
                 dir,
                 moveMagnitude,
-                1 << 8 | 1 << 10,
-                true
+                1 << 8 | 1 << 10
             );
 
-            RaycastHit[] structureSweepResults = capsuleCastAllForAgent(
-                GetComponent<CapsuleCollider>(),
-                m_CharacterController.skinWidth,
-                transform.position,
-                dir,
-                moveMagnitude,
-                1 << 8 | 1 << 10,
-                false
-            );
-
-            bool hasNoStructuresInWay = AgentCanMoveRayCastSweep(ref moveMagnitude, orientation, structureSweepResults, true);
-            bool hasNoObjectInWay = AgentCanMoveRayCastSweep(ref moveMagnitude, orientation, collisionSweepResults, false);
-
-            if(hasNoStructuresInWay) {
-                return hasNoObjectInWay;
-            }
-            
-            return false;    
+            bool hasNoBlockingObjectsInWay = AgentCanMoveRayCastSweep(ref moveMagnitude, orientation, sweepResults);
+            return hasNoBlockingObjectsInWay; 
         }
 
-        private bool AgentCanMoveRayCastSweep(ref float moveMagnitude, int orientation, RaycastHit[] sweepResults, bool isStructure) {
+        private bool AgentCanMoveRayCastSweep(ref float moveMagnitude, int orientation, RaycastHit[] sweepResults) {
             if (sweepResults.Length > 0) {
                 foreach (RaycastHit res in sweepResults) {
                     // Don't worry if we hit something thats in our hand.
@@ -2700,7 +2684,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     }
 
                     //including "Untagged" tag here so that the agent can't move through objects that are transparent
-                    if (res.transform.GetComponent<SimObjPhysics>() || res.transform.tag == "Structure" || res.transform.tag == "Untagged") {
+                    if (res.transform.GetComponent<SimObjPhysics>() || res.transform.GetComponent<StructureObject>()!=null
+                        || res.transform.tag == "Untagged") {
                         // Check if distance to object is greater than 0.1, if so than we can move partial amount
                         // Use 0.1 instead of 0, because if we move right next to an object we can become attached to it.
                         if(moveMagnitude > res.distance && res.distance > 0.1) {
@@ -2708,8 +2693,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                             return true;
                         }
 
-                        if ((res.transform.tag == "Structure" && isStructure) || 
-                            (res.rigidbody.mass > this.GetComponent<Rigidbody>().mass && res.transform.tag == "SimObjPhysics"))
+                        if (res.rigidbody.mass > this.GetComponent<Rigidbody>().mass && res.transform.tag == "SimObjPhysics" && res.transform.GetComponent<StructureObject>()==null||
+                            (res.transform.GetComponent<StructureObject>()!=null && !ShootRay45DegreesUp(this.inputDirection, this.serverActionMoveMagnitude)))
                         {
                             int thisAgentNum = agentManager.agents.IndexOf(this);
                             errorMessage = res.transform.name + " is blocking Agent " + thisAgentNum.ToString() + " from moving " + orientation;
@@ -2722,6 +2707,34 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
             return true;
         }
+
+        ////MCS Method////
+        //Acending and Descending Structures//
+        public bool ShootRay45DegreesUp(string inputDir, float length) {
+            RaycastHit baseHit;
+            LayerMask layerMask = ~(1 << 10);
+            float baseHeight = 0f;
+            if (Physics.Raycast(transform.position, Vector3.down, out baseHit, Mathf.Infinity, layerMask, QueryTriggerInteraction.Ignore)) {
+                baseHeight = baseHit.point.y;
+            }
+
+            Vector3 origin = new Vector3(transform.position.x, baseHeight, transform.position.z);
+            Vector3 direction = 
+                inputDir == "left" ? Quaternion.AngleAxis(-45, transform.forward) * (-1 * transform.right) : 
+                inputDir == "right" ? Quaternion.AngleAxis(45, transform.forward) * transform.right :
+                inputDir == "forward" ? Quaternion.AngleAxis(-45, transform.right) * transform.forward :
+                inputDir == "back" ? Quaternion.AngleAxis(45, transform.right) * (-1 * transform.forward) : new Vector3();
+                    
+            RaycastHit[] hit = Physics.RaycastAll(origin,direction, length, layerMask, QueryTriggerInteraction.Ignore);
+            foreach (RaycastHit point in hit) {
+                if (point.transform.GetComponent<StructureObject>()!=null || 
+                    (point.rigidbody.mass > this.GetComponent<Rigidbody>().mass && point.transform.tag == "SimObjPhysics")) {
+                    return false;
+                } 
+            }
+            return true;
+        }
+        
 
         /////AGENT HAND STUFF////
         protected IEnumerator moveHandToTowardsXYZWithForce(float x, float y, float z, float maxDistance) {
@@ -6865,14 +6878,24 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             Vector3 startPosition,
             Vector3 dir,
             float moveMagnitude,
-            int layerMask,
-            bool useCollisionRadius=false
+            int layerMask
             ) {
-            Vector3 center = cc.transform.position + cc.center;//make sure to offset this by cc.center since we shrank the capsule size
-            float radius = useCollisionRadius ? AgentCollisionCapsuleRadius : cc.radius + skinWidth;
+            Vector3 center = cc.transform.position;
+            float radius = cc.radius + skinWidth;
             float innerHeight = cc.height / 2.0f - radius;
             Vector3 point1 = new Vector3(startPosition.x, center.y + innerHeight, startPosition.z);
             Vector3 point2 = new Vector3(startPosition.x, center.y - innerHeight + skinWidth, startPosition.z);
+
+            //MCS large collider change
+            RaycastHit hit;
+            LayerMask layerMask2 = ~(1 << 10);
+
+            if (Physics.SphereCast(point1, cc.radius, Vector3.down, out hit, Mathf.Infinity, layerMask2)) 
+            {
+                float raiseMinHeightAboveGround = 0.01f;
+                point2.y = hit.point.y + radius + raiseMinHeightAboveGround;
+            }
+
             return Physics.CapsuleCastAll(
                 point1,
                 point2,
