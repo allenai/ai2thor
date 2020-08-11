@@ -728,7 +728,11 @@ def pending_travis_build():
     )
 
     for b in res.json()["builds"]:
-        return dict(branch=b["branch"]["name"], commit_id=b["commit"]["sha"])
+        tag = None
+        if b['tag']:
+            tag = b['tag']['name']
+
+        return dict(branch=b["branch"]["name"], commit_id=b["commit"]["sha"], tag=tag)
 
 
 def pytest_s3_object(commit_id):
@@ -751,6 +755,7 @@ def ci_pytest(context):
     )
 
     s3_obj = pytest_s3_object(commit_id)
+
     s3_obj.put(
         Body=json.dumps(result), ACL="public-read", ContentType='application/json'
     )
@@ -784,8 +789,12 @@ def ci_build(context):
 
 
 
-            if build["branch"] == "master":
+            # don't run tests for a tag since results should exist
+            # for the branch commit
+            if build['tag'] is None:
                 ci_pytest(context)
+
+            if build["branch"] == "master":
                 webgl_build_deploy_demo(
                     context, verbose=True, content_addressable=True, force=True
                 )
