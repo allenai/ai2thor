@@ -54,7 +54,6 @@ public class MCSController : PhysicsRemoteFPSAgentController {
     private bool inputWasRotation = false;
     private bool inputWasLook = false;
     private bool inputWasRotateLook = false;
-    protected float angleLeniency = 0.005f; //ex. when rotating 30 degrees 3 times sometimes the result is 90.001 which resets the agent
     protected float horizonConsistency = 15.0f; //ex. looking up while at 75 degrees will look up to 60 rather than 30
 
     private int framesUntilGridSnap; //when moving, grid snap will engage on the last frame (rather than every frame)
@@ -449,8 +448,6 @@ public class MCSController : PhysicsRemoteFPSAgentController {
 
     public override void RotateLook(ServerAction response)
     {
-        response.rotation.y = rotation;
-        response.horizon = look;
         // Need to calculate current rotation/horizon and increment by inputs given
         float currentHorizonValue = m_Camera.transform.localEulerAngles.x;
         // The horizon should always be either between 0 and 90 (looking down) or 270 and 360 (looking up).
