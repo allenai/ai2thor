@@ -4891,7 +4891,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return;
         }
 
-        protected IEnumerator InteractAndWait(CanOpen_Object coo, bool freezeContained = false) {
+        protected IEnumerator InteractAndWait(CanOpen_Object coo, bool freezeContained = false, float openPercent = 1.0f) {
             bool ignoreAgentInTransition = true;
 
             List<Collider> collidersDisabled = new List<Collider>();
@@ -4919,7 +4919,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             bool success = false;
             if (coo != null) {
-                coo.Interact();
+                coo.Interact(openPercent);
             }
 
             yield return new WaitUntil( () => (coo != null && coo.GetiTweenCount() == 0));
@@ -4933,7 +4933,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 if (isAgentCapsuleCollidingWith(openedObject) || isHandObjectCollidingWith(openedObject)) {
                     success = false;
                     if (coo != null) {
-                        coo.Interact();
+                        coo.Interact(openPercent);
                     }
 
                     yield return new WaitUntil( () => (coo != null && coo.GetiTweenCount() == 0));
@@ -5423,13 +5423,23 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     }
 
                     //pass in percentage open if desired
-                    if (action.moveMagnitude > 0.0f) {
-                        //if this fails, invalid percentage given
-                        if (!codd.SetOpenPercent(action.moveMagnitude)) {
-                            errorMessage = "Please give an open percentage between 0.0f and 1.0f";
+                    if (action.moveMagnitude > 0.0f) 
+                    {
+                        if(action.moveMagnitude > 1.0)
+                        {
+                            errorMessage = "cannot open past 100%, please use moveMagnitude value in range (0.0, 1.0]";
                             actionFinished(false);
                             return;
                         }
+
+                        // //if this fails, invalid percentage given
+                        // if (!codd.SetOpenPercent(action.moveMagnitude)) {
+                        //     errorMessage = "Please give an open percentage between 0.0f and 1.0f";
+                        //     actionFinished(false);
+                        //     return;
+                        // }
+                        StartCoroutine(InteractAndWait(codd, false, action.moveMagnitude));
+                        return;
                     }
 
                     StartCoroutine(InteractAndWait(codd));

@@ -2331,6 +2331,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                            //action.objectId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().ObjectIdOfClosestVisibleOpenableObject();
 						}
 
+                        action.moveMagnitude = 0.5f;
                         action.x = 0.5f;
                         action.y = 0.5f;
 						PhysicsController.ProcessControlCommand(action);                  

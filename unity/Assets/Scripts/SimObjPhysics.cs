@@ -293,6 +293,12 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		get { return this.GetComponent<CanOpen_Object>(); }
 	}
 
+	//this value only has meaning if IsOpenable == True because... it has to open to have an open percentage right?
+	public float OpenPercentage
+	{
+		get {return this.GetComponent<CanOpen_Object>().currentOpenPercentage;}
+	}
+
 	public bool IsOpen
 	{
 		get

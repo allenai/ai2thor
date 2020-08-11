@@ -22,7 +22,7 @@ public class CanOpen_Object : MonoBehaviour
     public float animationTime = 0.2f;
 
     [SerializeField]
-    protected float openPercentage = 1.0f; //0.0 to 1.0 - percent of openPosition the object opens. 
+    public float currentOpenPercentage = 1.0f; //0.0 to 1.0 - percent of openPosition the object opens. 
 
 	[Header("Objects To Ignore Collision With - For Cabinets/Drawers with hinges too close together")]
     //these are objects to ignore collision with. This is in case the fridge doors touch each other or something that might
@@ -103,6 +103,9 @@ public class CanOpen_Object : MonoBehaviour
 			Debug.LogError(this.name + "is missing the CanOpen Secondary Property! Please set it!");
 		}
 		#endif
+
+        if(!isOpen)
+        currentOpenPercentage = 0.0f;
 	}
 
 	// Update is called once per frame
@@ -145,22 +148,22 @@ public class CanOpen_Object : MonoBehaviour
     }   
 #endif
 
-	public bool SetOpenPercent(float val)
-    {
-        if (val >= 0.0 && val <= 1.0)
-        {
-            //print(val);
-            openPercentage = val;
-            return true;
-        }
+	// public bool SetOpenPercent(float val)
+    // {
+    //     print("set open percent is happening");
+    //     if (val >= 0.0 && val <= 1.0)
+    //     {
+    //         openPercentage = val;
+    //         return true;
+    //     }
 
-        else
-        {
-            return false;
-        }
-    }
+    //     else
+    //     {
+    //         return false;
+    //     }
+    // }
     
-    public void Interact()
+    public void Interact(float openPercentage = 1.0f)
     {
         //if this object is pickupable AND it's trying to open (book, box, laptop, etc)
         //before trying to open or close, these objects must have kinematic = false otherwise it might clip through other objects
@@ -175,16 +178,19 @@ public class CanOpen_Object : MonoBehaviour
         {
 			for (int i = 0; i < MovingParts.Length; i++)
 			{
+                //print(MovingParts[i].name);
 				if(movementType == MovementType.Rotate)
 				{
 					//we are on the last loop here
 					if(i == MovingParts.Length - 1)
 					{
+                       // print("on last loop of movingPArts array");
 						iTween.RotateTo(MovingParts[i], iTween.Hash(
                         "rotation", closedPositions[i],
                         "islocal", true,
                         "time", animationTime,
-						"easetype", "linear", "onComplete", "setisOpen", "onCompleteTarget", gameObject));
+						"easetype", "linear", "onComplete", "setisOpen", "onCompleteTarget", gameObject,
+                        "oncompleteparams", 0f));
 					}
 
 					else
@@ -205,7 +211,8 @@ public class CanOpen_Object : MonoBehaviour
                         "position", closedPositions[i],
                         "islocal", true,
                         "time", animationTime,
-                        "easetype", "linear", "onComplete", "setisOpen", "onCompleteTarget", gameObject));
+                        "easetype", "linear", "onComplete", "setisOpen", "onCompleteTarget", gameObject,
+                        "oncompleteparams", 0f));
                     }
 
                     else
@@ -226,7 +233,8 @@ public class CanOpen_Object : MonoBehaviour
                         "scale", closedPositions[i],
                         "islocal", true,
                         "time", animationTime,
-                        "easetype", "linear", "onComplete", "setisOpen", "onCompleteTarget", gameObject));
+                        "easetype", "linear", "onComplete", "setisOpen", "onCompleteTarget", gameObject,
+                        "oncompleteparams", 0f));
                     }
 
                     else
@@ -252,7 +260,8 @@ public class CanOpen_Object : MonoBehaviour
                         "rotation", openPositions[i] * openPercentage,
                         "islocal", true,
                         "time", animationTime,
-						"easetype", "linear", "onComplete", "setisOpen", "onCompleteTarget", gameObject));
+						"easetype", "linear", "onComplete", "setisOpen", "onCompleteTarget", gameObject,
+                        "oncompleteparams", openPercentage));
 					}
 
 					else
@@ -294,7 +303,8 @@ public class CanOpen_Object : MonoBehaviour
                         "position", lerpToPosition,
                         "islocal", true,
                         "time", animationTime,
-                        "easetype", "linear", "onComplete", "setisOpen", "onCompleteTarget", gameObject));
+                        "easetype", "linear", "onComplete", "setisOpen", "onCompleteTarget", gameObject,
+                        "oncompleteparams", openPercentage));
                     }
 
                     else
@@ -337,7 +347,8 @@ public class CanOpen_Object : MonoBehaviour
                         "scale", new Vector3(openPositions[i].x, closedPositions[i].y + (openPositions[i].y - closedPositions[i].y) * openPercentage, openPositions[i].z),
                         "islocal", true,
                         "time", animationTime,
-                        "easetype", "linear", "onComplete", "setisOpen", "onCompleteTarget", gameObject));
+                        "easetype", "linear", "onComplete", "setisOpen", "onCompleteTarget", gameObject,
+                        "oncompleteparams", openPercentage));
                     }
 
                     else
@@ -358,7 +369,8 @@ public class CanOpen_Object : MonoBehaviour
                         "scale", new Vector3(closedPositions[i].x + (openPositions[i].x - closedPositions[i].x) * openPercentage, openPositions[i].y, openPositions[i].z),
                         "islocal", true,
                         "time", animationTime,
-                        "easetype", "linear", "onComplete", "setisOpen", "onCompleteTarget", gameObject));
+                        "easetype", "linear", "onComplete", "setisOpen", "onCompleteTarget", gameObject,
+                        "oncompleteparams", openPercentage));
                     }
 
                     else
@@ -379,7 +391,8 @@ public class CanOpen_Object : MonoBehaviour
                         "scale", new Vector3(openPositions[i].x, openPositions[i].y, closedPositions[i].z + (openPositions[i].z - closedPositions[i].z) * openPercentage),
                         "islocal", true,
                         "time", animationTime,
-                        "easetype", "linear", "onComplete", "setisOpen", "onCompleteTarget", gameObject));
+                        "easetype", "linear", "onComplete", "setisOpen", "onCompleteTarget", gameObject,
+                        "oncompleteparams", openPercentage));
                     }
 
                     else
@@ -391,19 +404,15 @@ public class CanOpen_Object : MonoBehaviour
                 }
 			}
         }
-
-        //default open percentage for next call
-        openPercentage = 1.0f;
     }
 
-    private void setisOpen()
+    private void setisOpen(float openPercentage)
 	{
+        //print("set is open happening");
 		isOpen = !isOpen;
 
-        //this updates bounding boxes as well as some Agent rotation box checkers if agent is holding an object that can open and close.
-        //UpdateOpenOrCloseBoundingBox();
+        currentOpenPercentage = openPercentage;
         SwitchActiveBoundingBox();
-
 	}
 
     // private void UpdateOpenOrCloseBoundingBox()
@@ -454,18 +463,18 @@ public class CanOpen_Object : MonoBehaviour
         }
     }
 
-    public float GetOpenPercent()
-    {
-        //if open, return the percent it is open
-        if (isOpen)
-        {
-            return openPercentage;
-        }
+    // public float GetOpenPercent()
+    // {
+    //     //if open, return the percent it is open
+    //     if (isOpen)
+    //     {
+    //         return openPercentage;
+    //     }
 
-        //we are closed, so I guess it's 0% open?
-        else
-            return 0.0f;
-    }
+    //     //we are closed, so I guess it's 0% open?
+    //     else
+    //         return 0.0f;
+    // }
 
     public bool GetisOpen()
     {
@@ -503,13 +512,16 @@ public class CanOpen_Object : MonoBehaviour
 		return count;//iTween.Count(this.transform.gameObject);
     }
 
+    //note: reset can interrupt the Interact() itween call because
+    //it will start a new set of tweens before onComplete is called from Interact()... it seems
     public void Reset()
     {
+        //print("inside reset");
         if (!canReset)
 		{
 			//Interact();
 
-            print("we are calling Reset() now");
+            //print("we are calling Reset() now");
             //we are still open, trying to close, but hit something - reset to open
 			if(isOpen)
 			{
@@ -518,7 +530,7 @@ public class CanOpen_Object : MonoBehaviour
                     if (movementType == MovementType.Rotate)
                     {
 						iTween.RotateTo(MovingParts[i], iTween.Hash(
-                        "rotation", openPositions[i] * openPercentage,
+                        "rotation", openPositions[i] * currentOpenPercentage,
                         "islocal", true,
                         "time", animationTime,
                         "easetype", "linear"));
@@ -529,7 +541,7 @@ public class CanOpen_Object : MonoBehaviour
                     else if (movementType == MovementType.Slide)
                     {
 						iTween.MoveTo(MovingParts[i], iTween.Hash(
-                        "position", openPositions[i] * openPercentage,
+                        "position", openPositions[i] * currentOpenPercentage,
                         "islocal", true,
                         "time", animationTime,
                         "easetype", "linear"));
@@ -539,7 +551,7 @@ public class CanOpen_Object : MonoBehaviour
                     else if (movementType == MovementType.ScaleY)
                     {
                         iTween.ScaleTo(MovingParts[i], iTween.Hash(
-                        "scale", new Vector3(openPositions[i].x, closedPositions[i].y + (openPositions[i].y - closedPositions[i].y) * openPercentage, openPositions[i].z),
+                        "scale", new Vector3(openPositions[i].x, closedPositions[i].y + (openPositions[i].y - closedPositions[i].y) * currentOpenPercentage, openPositions[i].z),
                         "islocal", true,
                         "time", animationTime,
                         "easetype", "linear"));
@@ -621,14 +633,15 @@ public class CanOpen_Object : MonoBehaviour
 
 		//if hitting the Agent AND not being currently held by the Agent(so things like Laptops don't constantly reset if the agent is holding them)
         //..., reset position and report failed action
-		if (other.name == "FPSController" && canReset == true && !gameObject.GetComponentInParent<PhysicsRemoteFPSAgentController>())
-		{
-            #if UNITY_EDITOR
-			Debug.Log(gameObject.name + " hit " + other.name + " Resetting position");
-            #endif
-			canReset = false;
-			Reset();
-		}
+        //NOTE: hitting the agent and resetting is now handled by the InteractAndWait coroutine in PhysicsRemote
+		// if (other.name == "FPSController" && canReset == true && !gameObject.GetComponentInParent<PhysicsRemoteFPSAgentController>())
+		// {
+        //     #if UNITY_EDITOR
+		// 	Debug.Log(gameObject.name + " hit " + other.name + " Resetting position");
+        //     #endif
+		// 	canReset = false;
+		// 	Reset();
+		// }
 
 		//// If the thing your colliding with is one of your (grand)-children then don't worry about it
 		if (hasAncestor(other.transform.gameObject, gameObject))
