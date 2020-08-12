@@ -2672,7 +2672,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     bool couldMove = moveInDirection(this.transform.forward * gridSize);
                     if (couldMove) {
                         float newDistance = Math.Abs(nextCorner.x - transform.position.x) + Math.Abs(nextCorner.z - transform.position.z);
-                        if (newDistance < bestDistance) {
+                        if (newDistance + 1e-6 < bestDistance) {
                             bestDistance = newDistance;
                             whichBest = i;
                         }
@@ -2687,12 +2687,20 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 }
                
                #if UNITY_EDITOR
-               transform.Rotate(0.0f, whichBest * rotateStepDegrees, 0.0f);
-               moveInDirection(this.transform.forward * gridSize);
+               transform.Rotate(0.0f, Math.Sign(whichBest) * rotateStepDegrees, 0.0f);
+               if (whichBest == 0) {
+                   moveInDirection(this.transform.forward * gridSize);
+               }
                Debug.Log(whichBest);
                #endif
 
-                actionFinished(true, whichBest);
+                if (whichBest < 0) {
+                    actionFinished(true, "RotateLeft");
+                } else if (whichBest > 0) {
+                    actionFinished(true, "RotateRight");
+                } else {
+                    actionFinished(true, "MoveAhead");
+                }
                 return;
             }
             else {
