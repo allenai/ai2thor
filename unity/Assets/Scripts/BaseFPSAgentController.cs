@@ -2595,7 +2595,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
         public void ObjectNavExpertAction(ServerAction action) {
             SimObjPhysics sop = getSimObjectFromTypeOrId(action);
-            rotateStepDegrees = 30f;
             var path = getShortestPath(sop, true);
             if (path.status == UnityEngine.AI.NavMeshPathStatus.PathComplete) {
 
