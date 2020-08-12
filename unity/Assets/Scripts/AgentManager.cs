@@ -6,6 +6,8 @@ using UnityStandardAssets.Characters.FirstPerson;
 using System.Net.Sockets;
 using System.Net;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
+using System.Reflection;
 using System.Text;
 using UnityEngine.Networking;
 
@@ -718,7 +720,6 @@ public class AgentManager : MonoBehaviour
 		WWWForm form = new WWWForm();
 
         MultiAgentMetadata multiMeta = new MultiAgentMetadata ();
-        System.Object[] actionReturns = new System.Object[this.agents.Count];
         multiMeta.agents = new MetadataWrapper[this.agents.Count];
         multiMeta.activeAgentId = this.activeAgentId;
         multiMeta.sequenceId = this.currentSequenceId;
@@ -755,7 +756,6 @@ public class AgentManager : MonoBehaviour
             #endif
             MetadataWrapper metadata = agent.generateMetadataWrapper ();
             metadata.agentId = i;
-            actionReturns[i] = agent.actionReturn;
 
             // we don't need to render the agent's camera for the first agent
             if (shouldRender) {
@@ -775,15 +775,16 @@ public class AgentManager : MonoBehaviour
             RenderTexture.active = currentTexture;
         }
 
-       var serializedActionReturns = Newtonsoft.Json.JsonConvert.SerializeObject(actionReturns, Newtonsoft.Json.Formatting.None,
+      var jsonResolver = new ShouldSerializeContractResolver();
+
+       var serializedMetadata = Newtonsoft.Json.JsonConvert.SerializeObject(multiMeta, Newtonsoft.Json.Formatting.None,
                 new Newtonsoft.Json.JsonSerializerSettings()
                        {
-                           ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore
+                           ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore,
+                           ContractResolver = jsonResolver
                        }
 
                );
-
-        var serializedMetadata = JsonUtility.ToJson(multiMeta);
 
 		#if UNITY_WEBGL
                 if (jsInterface != null) {
@@ -792,7 +793,6 @@ public class AgentManager : MonoBehaviour
         #endif
 
         form.AddField("metadata", serializedMetadata);
-        form.AddField("actionReturns", serializedActionReturns);
         form.AddField("token", robosimsClientToken);
 
         #if !UNITY_WEBGL 
@@ -1088,6 +1088,7 @@ public class ObjectMetadata
 	///
 	public bool openable;
 	public bool isOpen;
+	public float openPercent;//if the object is openable, what is the current open percent? value from 0 to 1.0
 	///
 	public bool pickupable;
 	public bool isPickedUp;//if the pickupable object is actively being held by the agent
@@ -1274,6 +1275,7 @@ public struct MetadataWrapper
 	public float[] actionFloatsReturn;
 	public Vector3[] actionVector3sReturn;
 	public List<Vector3> visibleRange;
+    public System.Object actionReturn;
 	public float currentTime;
     public SceneBounds sceneBounds;//return coordinates of the scene's bounds (center, size, extents)
 }
@@ -1457,4 +1459,29 @@ public class ControllerInitialization {
 public class TypedVariable {
     public string type;
     public object value;
+}
+
+public class ShouldSerializeContractResolver : DefaultContractResolver
+{
+   public static readonly ShouldSerializeContractResolver Instance = new ShouldSerializeContractResolver();
+
+   protected override JsonProperty CreateProperty( MemberInfo member,
+                                    MemberSerialization memberSerialization )
+   {
+      JsonProperty property = base.CreateProperty( member, memberSerialization );
+
+      // exclude these properties to make serialization match JsonUtility
+      if( property.DeclaringType == typeof(Vector3) &&
+            (property.PropertyName == "sqrMagnitude" || 
+            property.PropertyName == "magnitude"  ||
+            property.PropertyName == "normalized" 
+            ))
+      {
+         property.ShouldSerialize = instance => { return false; };
+         return property;
+      } else {
+          return base.CreateProperty(member, memberSerialization);
+      }
+
+   }
 }

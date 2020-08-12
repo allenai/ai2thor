@@ -344,7 +344,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         ServerAction action = new ServerAction();
 
                         action.action = "SpawnExperimentObjAtPoint";
-                        action.objectType = "receptacle";
+                        action.objectType = "replacement";//"receptacle";
                         action.receptacleObjectId = "DiningTable|-00.59|+00.00|+00.33";
                         action.objectVariation = 12;
                         action.position = new Vector3(-1.4f, 0.9f, 0.1f);
@@ -2379,6 +2379,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                            //action.objectId = Agent.GetComponent<PhysicsRemoteFPSAgentController>().ObjectIdOfClosestVisibleOpenableObject();
 						}
 
+                        action.moveMagnitude = 0.5f;
                         action.x = 0.5f;
                         action.y = 0.5f;
 						PhysicsController.ProcessControlCommand(action);                  
@@ -2731,7 +2732,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }
-
                     case "get_object_type_ids":
                     {
                         ServerAction action = new ServerAction();

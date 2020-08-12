@@ -457,12 +457,10 @@ class Server(object):
             if request.headers['Content-Type'].split(';')[0] == 'multipart/form-data':
                 form = MultipartFormParser(request.get_data(), MultipartFormParser.get_boundary(request.headers))
                 metadata = json.loads(form.form['metadata'][0])
-                action_returns = json.loads(form.form['actionReturns'][0])
                 token = form.form['token'][0]
             else:
                 form = request
                 metadata = json.loads(form.form['metadata'])
-                action_returns = json.loads(form.form['actionReturns'])
                 token = form.form['token']
 
             if self.client_token and token != self.client_token:
@@ -483,7 +481,6 @@ class Server(object):
 
             for i, a in enumerate(metadata['agents']):
                 e = Event(a)
-                e.metadata['actionReturn'] = action_returns[i]
                 image_mapping = dict(
                     image=e.add_image,
                     image_depth=lambda x: e.add_image_depth(

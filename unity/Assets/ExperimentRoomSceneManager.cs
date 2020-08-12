@@ -6,6 +6,7 @@ using UnityStandardAssets.Characters.FirstPerson;
 
 public class ExperimentRoomSceneManager : MonoBehaviour
 {
+    public GameObject[] replacementObjectsToSpawn = null;
     //set of experiment receptacle objects
     public GameObject[] receptaclesToSpawn = null;
     //screens to place on table
@@ -314,6 +315,11 @@ public class ExperimentRoomSceneManager : MonoBehaviour
         if(objType == "receptacle")
         {
             toSpawn = receptaclesToSpawn[variation].GetComponent<SimObjPhysics>();
+        }
+
+        if(objType == "replacement")
+        {
+            toSpawn = replacementObjectsToSpawn[variation].GetComponent<SimObjPhysics>();
         }
 
         //instantiate the prefab toSpawn away from every other object

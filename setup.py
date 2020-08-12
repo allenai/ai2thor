@@ -25,7 +25,8 @@ setup(name='ai2thor',
           'Programming Language :: Python :: 3.4',
           'Programming Language :: Python :: 3.5',
           'Programming Language :: Python :: 3.6',
-          'Programming Language :: Python :: 3.7'
+          'Programming Language :: Python :: 3.7',
+          'Programming Language :: Python :: 3.8'
       ],
       keywords='AI2 Thor API',
       url='https://github.com/allenai/ai2thor',
@@ -47,5 +48,5 @@ setup(name='ai2thor',
           'werkzeug>=0.15.0' # needed for unix socket support
       ],
       setup_requires=['pytest-runner'],
-      tests_require=['pytest', 'pytest-cov'],
+      tests_require=['pytest', 'pytest-cov', 'jsonschema'],
       include_package_data=False)
