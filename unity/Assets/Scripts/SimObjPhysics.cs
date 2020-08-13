@@ -2127,9 +2127,10 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 
 		VisibilityPoints = vplist.ToArray();
 	}
+	#endif
 
 	//[ContextMenu("Set Up Rotate Agent Collider")]
-	void ContextSetUpBoundingBox()
+	public void ContextSetUpBoundingBox()
 	{
         Vector3[] transformSaver = new Vector3[] { transform.localPosition, transform.localEulerAngles };
 
@@ -2146,6 +2147,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
         }
 
         BoundingBox = transform.Find("BoundingBox").gameObject;
+		BoundingBox.transform.localScale = Vector3.one;//make sure to default existing BoundingBox to 1 as well
 
         //This collider is used as a size reference for the Agent's Rotation checking boxes, so it does not need
         //to be enabled. To ensure this doesn't interact with anything else, set the Tag to Untagged, the layer to 
@@ -2219,5 +2221,5 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
         transform.localEulerAngles = transformSaver[1];
 
     }
-	#endif
+
 }

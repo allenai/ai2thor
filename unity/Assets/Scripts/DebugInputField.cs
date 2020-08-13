@@ -2680,6 +2680,22 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         break;
                     }
 
+                    case "scale":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "ScaleObject";
+                        action.objectId = "Cup|+00.23|+00.78|+00.83";
+                        action.scale = 2.0f;
+
+                        if (splitcommand.Length > 1)
+                        {
+                            action.scale = float.Parse(splitcommand[1]);
+                        }
+
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
 				default:
                     {   
                         ServerAction action = new ServerAction();

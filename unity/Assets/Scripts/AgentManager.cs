@@ -1329,6 +1329,7 @@ public class ServerAction
 	public float b;
 
 	public float intensity;//used for light?
+	public float scale;
 
     public SimObjType ReceptableSimObjType()
 	{
