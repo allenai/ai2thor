@@ -421,7 +421,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
                         action.action = "ChangeScreenMaterialExpRoom";
                         action.objectVariation = 3;
-                        action.objectId = "Screen|-00.64|+00.78|+00.71";
+                        action.objectId = "ScreenSheet|-00.18|+01.24|+00.23";
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }
@@ -434,7 +434,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         action.r = 20f;
                         action.g = 94f;
                         action.b = 10f;
-                        action.objectId = "Screen|-00.64|+00.78|+00.71";
+                        action.objectId = "ScreenSheet|-00.18|+01.24|+00.23";
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }
@@ -2684,7 +2684,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     {
                         ServerAction action = new ServerAction();
                         action.action = "ScaleObject";
-                        action.objectId = "Cup|+00.23|+00.78|+00.83";
+                        action.objectId = "Cup|-01.36|+00.78|+00.71";
                         action.scale = 2.0f;
 
                         if (splitcommand.Length > 1)

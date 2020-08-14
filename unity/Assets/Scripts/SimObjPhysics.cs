@@ -2147,7 +2147,8 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
         }
 
         BoundingBox = transform.Find("BoundingBox").gameObject;
-
+		BoundingBox.transform.localScale = Vector3.one;//make sure to default existing BoundingBox to 1 as well
+		
         //This collider is used as a size reference for the Agent's Rotation checking boxes, so it does not need
         //to be enabled. To ensure this doesn't interact with anything else, set the Tag to Untagged, the layer to 
         //SimObjInvisible, and disable this component. Component values can still be accessed if the component itself

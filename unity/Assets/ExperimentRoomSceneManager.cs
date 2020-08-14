@@ -124,8 +124,8 @@ public class ExperimentRoomSceneManager : MonoBehaviour
     //change specified screen object's material to color rgb
     public void ChangeScreenColor(SimObjPhysics screen, float r, float g, float b)
     {
-        List<SkinnedMeshRenderer> renderers = GetAllRenderersOfObject(screen);
-        foreach(SkinnedMeshRenderer sr in renderers)
+        List<MeshRenderer> renderers = GetAllRenderersOfObject(screen);
+        foreach(MeshRenderer sr in renderers)
         {
             //set first element, the primary mat, of the mat array's color
             sr.material.color = new Color(r/255f, g/255f, b/255f);
@@ -135,17 +135,17 @@ public class ExperimentRoomSceneManager : MonoBehaviour
     //change specified screen object's material to variation
     public void ChangeScreenMaterial(SimObjPhysics screen, int variation)
     {
-        List<SkinnedMeshRenderer> renderers = GetAllRenderersOfObject(screen);
-        foreach(SkinnedMeshRenderer sr in renderers)
+        List<MeshRenderer> renderers = GetAllRenderersOfObject(screen);
+        foreach(MeshRenderer sr in renderers)
         {
             sr.material = screenMaterials[variation];
         }
     }
 
-    public List<SkinnedMeshRenderer> GetAllRenderersOfObject(SimObjPhysics obj)
+    public List<MeshRenderer> GetAllRenderersOfObject(SimObjPhysics obj)
     {
-        List<SkinnedMeshRenderer> renderers = new List<SkinnedMeshRenderer>();
-        renderers.AddRange(obj.transform.gameObject.GetComponentsInChildren<SkinnedMeshRenderer>());
+        List<MeshRenderer> renderers = new List<MeshRenderer>();
+        renderers.AddRange(obj.transform.gameObject.GetComponentsInChildren<MeshRenderer>());
         return renderers;
     }
 
