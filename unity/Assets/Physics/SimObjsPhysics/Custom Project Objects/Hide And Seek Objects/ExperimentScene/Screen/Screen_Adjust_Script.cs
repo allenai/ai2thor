@@ -19,7 +19,7 @@ public class Screen_Adjust_Script : MonoBehaviour
     [Range(-1f, 1f)]
     public float widthShift = 0;
 
-    float spacingPrev, topShiftPrev, bottomShiftPrev, widthShiftPrev = 0;
+    float spacingPrev, topShiftPrev, bottomShiftPrev, widthShiftPrev;
 
     int stableVisPoints = 4;
 
@@ -29,13 +29,16 @@ public class Screen_Adjust_Script : MonoBehaviour
         {
             PrefabUtility.UnpackPrefabInstance(transform.gameObject, PrefabUnpackMode.Completely, InteractionMode.AutomatedAction);
         }
+
+        spacingPrev = spacing + 0.000001f;
+        topShiftPrev = topShift;
+        bottomShiftPrev = bottomShift;
+        widthShiftPrev = widthShift;
     }
 
     // Update is called once per frame
     void Update()
-    {
-
-        
+    {   
         if (spacing != spacingPrev || topShift != topShiftPrev || bottomShift != bottomShiftPrev || widthShift != widthShiftPrev)
         {
             //Zero out rotation for entirety of operation, for simplicity
@@ -287,24 +290,26 @@ public class Screen_Adjust_Script : MonoBehaviour
                     //For sub-SimObjects (move VisPoints and Colliders part of metadata from the first to the second...)
                     else
                     {
+                        deleteCollidersAndVisPoints(childGameObjects[currentchildGameObject]);
+
+
                         while (currentMetadataGroup.childCount != 0)
                         {
+
                             currentSubObjectMetadataGroup = currentMetadataGroup.GetChild(0);
-
-                            //Debug.Log(currentMetadataGroup + " is here, and located at " + currentMetadataGroup.position);
-                            //Debug.Log("Now performing operation on " + childGameObjects[currentchildGameObject]);
-                            deleteCollidersAndVisPoints(childGameObjects[currentchildGameObject]);
-
                             //If it's a collider group...
 
                             //Debug.Log(currentMetadataGroup.GetChild(0).name);
                             if (currentSubObjectMetadataGroup.name == "Colliders")
                             {
+
+                                Debug.Log("Adding colliders from " + currentMetadataGroup + " to " + childGameObjects[currentchildGameObject].Find("Colliders") + " which is a child of " + childGameObjects[currentchildGameObject]);
                                 while (currentSubObjectMetadataGroup.childCount != 0)
                                 {
-                                    //Debug.Log("Moving " + currentSubObjectMetadataGroup.GetChild(0) + " to proper spot.");
+                                    Debug.Log("Moving " + currentSubObjectMetadataGroup.GetChild(0) + " to proper spot, which is " + childGameObjects[currentchildGameObject].Find("Colliders"));
                                     //DestroyImmediate(currentSubObjectMetadataGroup.GetChild(0).gameObject);
                                     currentSubObjectMetadataGroup.GetChild(0).SetParent(childGameObjects[currentchildGameObject].Find("Colliders"));
+
                                 }
                             }
 
