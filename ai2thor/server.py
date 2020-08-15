@@ -9,14 +9,19 @@ are sent to the controller using a pair of request/response queues.
 
 import json
 import logging
+import threading
 import sys
 import os
 import os.path
+import tempfile
+from enum import IntEnum, unique
+from collections import defaultdict
+import struct
 
 try:
-    from queue import Empty
+    from queue import Queue, Empty
 except ImportError:
-    from Queue import Empty
+    from Queue import Queue, Empty
 
 import time
 import warnings
@@ -134,6 +139,7 @@ def unique_rows(arr, return_index=False, return_inverse=False):
         return unique, inv
     else:
         return unique
+
 
 class Event(object):
     """
@@ -403,10 +409,221 @@ class DepthFormat(Enum):
 
 class Server(object):
 
+    def __init__(self, width, height, depth_format=DepthFormat.Meters, add_depth_noise=False):
+        self.depth_format = depth_format
+        self.add_depth_noise = add_depth_noise
+        self.noise_indices = None
+        self.camera_near_plane = 0.1
+        self.camera_far_plane = 20.0
+        self.sequence_id = 0
+        self.started = False
+        self.client_token = None
+
+        if add_depth_noise:
+            assert width == height,\
+                "Noise supported with square dimension images only."
+            self.noise_indices = generate_noise_indices(width)
+
+    def set_init_params(self, init_params):
+        self.camera_near_plane = init_params['cameraNearPlane']
+        self.camera_far_plane = init_params['cameraFarPlane']
+
+    def create_event(self, metadata, files):
+        if metadata['sequenceId'] != self.sequence_id:
+            raise ValueError("Sequence id mismatch: %s vs %s" % (
+                metadata['sequenceId'], self.sequence_id))
+
+        events = []
+
+        for i, a in enumerate(metadata['agents']):
+            e = Event(a)
+            image_mapping = dict(
+                image=e.add_image,
+                image_depth=lambda x: e.add_image_depth(
+                    x,
+                    depth_format=self.depth_format,
+                    camera_near_plane=self.camera_near_plane,
+                    camera_far_plane=self.camera_far_plane,
+                    add_noise=self.add_depth_noise,
+                    noise_indices=self.noise_indices
+                ),
+                image_ids=e.add_image_ids,
+                image_classes=e.add_image_classes,
+                image_normals=e.add_image_normals,
+                image_flows=e.add_image_flows
+            )
+
+            for key in image_mapping.keys():
+                if key in files:
+                    image_mapping[key](files[key][i])
+
+            third_party_image_mapping = dict(
+                image=e.add_image,
+                image_thirdParty_depth=lambda x: e.add_third_party_image_depth(
+                    x,
+                    depth_format=self.depth_format,
+                    camera_near_plane=self.camera_near_plane,
+                    camera_far_plane=self.camera_far_plane
+                ),
+                image_thirdParty_image_ids=e.add_third_party_image_ids,
+                image_thirdParty_classes=e.add_third_party_image_classes,
+                image_thirdParty_normals=e.add_third_party_image_normals,
+                image_thirdParty_flows=e.add_third_party_image_flows
+            )
+
+            if a['thirdPartyCameras'] is not None:
+                for ti, t in enumerate(a['thirdPartyCameras']):
+                    for key in third_party_image_mapping.keys():
+                        if key in files:
+                            third_party_image_mapping[key](files[key][ti])
+            events.append(e)
+
+        if len(events) > 1:
+            self.last_event = event = MultiAgentEvent(metadata['activeAgentId'], events)
+        else:
+            self.last_event = event = events[0]
+
+        for img in files.get('image-thirdParty-camera', []):
+            self.last_event.add_third_party_camera_image(img)
+
+        return self.last_event
+# FifoFields
+@unique
+class FieldType(IntEnum):
+    METADATA = 1
+    ACTION = 2
+    ACTION_RESULT = 3
+    RGB_IMAGE = 4
+    DEPTH_IMAGE = 5
+    NORMALS_IMAGE = 6
+    FLOWS_IMAGE = 7
+    CLASSES_IMAGE = 8
+    IDS_IMAGE = 9
+    THIRD_PARTY_IMAGE = 10
+    END_OF_MESSAGE = 255
+
+class FifoServer(Server):
+    header_format = '!BI'
+    header_size = struct.calcsize(header_format)
+    field_types = {f.value:f for f in FieldType}
+
+    def __init__(self, width, height, depth_format=DepthFormat.Meters, add_depth_noise=False):
+
+        self.tmp_dir = tempfile.TemporaryDirectory()
+        self.server_pipe_path = os.path.join(self.tmp_dir.name, 'server.pipe')
+        self.client_pipe_path = os.path.join(self.tmp_dir.name, 'client.pipe')
+        self.server_pipe = None
+        self.client_pipe = None
+        # allows us to map the enum to form field names
+        # for backwards compatibility
+        # this can be removed when the wsgi server is removed
+        self.form_field_map = {
+            FieldType.RGB_IMAGE:'image',
+            FieldType.DEPTH_IMAGE:'image_depth',
+            FieldType.IDS_IMAGE:'image_ids',
+            FieldType.NORMALS_IMAGE:'image_normals',
+            FieldType.FLOWS_IMAGE:'image_flows',
+            FieldType.THIRD_PARTY_IMAGE:"image-thirdParty-camera"
+        }
+
+        self.image_fields = {
+            FieldType.IDS_IMAGE,
+            FieldType.CLASSES_IMAGE,
+            FieldType.FLOWS_IMAGE,
+            FieldType.NORMALS_IMAGE,
+            FieldType.DEPTH_IMAGE,
+            FieldType.RGB_IMAGE,
+            FieldType.THIRD_PARTY_IMAGE
+            }
+
+        self.eom_header = self._create_header(FieldType.END_OF_MESSAGE, b'')
+        super().__init__(width, height, depth_format, add_depth_noise)
+
+    def _create_header(self, message_type, body):
+        return struct.pack(self.header_format, message_type, len(body))
+
+    def _recv_message(self):
+        if self.server_pipe is None:
+            self.server_pipe = open(self.server_pipe_path, "rb" )
+
+        metadata = None
+        files = defaultdict(list)
+        while True:
+            header = self.server_pipe.read(self.header_size) # message type + length
+            # XXX
+            # check if len == 0 to disconnect
+            # check if pid is dead
+            
+            if header[0] == FieldType.END_OF_MESSAGE.value:
+                #print("GOT EOM")
+                break
+
+            #print("got header %s" % header)
+            field_type_int, message_length = struct.unpack(self.header_format, header)
+            field_type = self.field_types[field_type_int]
+            body = self.server_pipe.read(message_length)
+            #print("field type")
+            #print(field_type)
+            if field_type is FieldType.METADATA:
+                #print("body length %s" % len(body))
+                metadata = json.loads(body.decode('utf8'))
+                #print(metadata)
+            elif field_type in self.image_fields:
+                files[self.form_field_map[field_type]].append(body)
+            else:
+                raise ValueError("Invalid field type: %s" % field_type )
+
+        return metadata, files
+
+    def _send_message(self, message_type, body):
+        #print("trying to write to ")
+        if self.client_pipe is None:
+            self.client_pipe = open(self.client_pipe_path, "wb" )
+
+        header = self._create_header(message_type, body)
+        #print("len header %s" % len(header))
+        #print("sending body %s" % body)
+
+        self.client_pipe.write(header + body + self.eom_header)
+        self.client_pipe.flush()
+
+    def receive(self):
+        metadata, files = self._recv_message()
+        return self.create_event(metadata, files)
+
+    def send(self, action):
+        #print("got action to send")
+        if 'sequenceId' in action:
+            self.sequence_id = action['sequenceId']
+        else:
+            self.sequence_id += 1
+            action['sequenceId'] = self.sequence_id
+        #print(action)
+        self._send_message(FieldType.ACTION, json.dumps(action, cls=NumpyAwareEncoder).encode('utf8'))
+    
+
+    def start(self):
+        os.mkfifo(self.server_pipe_path)
+        os.mkfifo(self.client_pipe_path)
+        self.started = True
+
+    # params to pass up to unity
+    def unity_params(self):
+        params = dict(
+            server_type='FIFO',
+            fifo_server_pipe_path=self.server_pipe_path,
+            fifo_client_pipe_path=self.client_pipe_path
+        )
+        return params
+
+    def stop(self):
+        self.client_pipe.close()
+        self.server_pipe.close()
+
+class WsgiServer(Server):
+
     def __init__(
             self,
-            request_queue,
-            response_queue,
             host,
             port=0,
             threaded=False,
@@ -421,31 +638,17 @@ class Server(object):
                         os.path.join(
                             os.path.dirname(os.path.abspath(__file__)), '..', 'templates')))
 
-        self.image_buffer = None
-
+        self.request_queue = Queue(maxsize=1)
+        self.response_queue = Queue(maxsize=1)
         self.app = app
-        self.client_token = None
-        self.subscriptions = []
         self.app.config.update(PROPAGATE_EXCEPTIONS=False, JSONIFY_PRETTYPRINT_REGULAR=False)
         self.port = port
         self.last_rate_timestamp = time.time()
         self.frame_counter = 0
         self.debug_frames_per_interval = 50
-        self.xwindow_id = None
         self.wsgi_server = werkzeug.serving.make_server(host, self.port, self.app, threaded=threaded, request_handler=ThorRequestHandler)
         # used to ensure that we are receiving frames for the action we sent
-        self.sequence_id = 0
-        self.last_event = None
-        self.camera_near_plane = 0.1
-        self.camera_far_plane = 20.0
-        self.depth_format = depth_format
-        self.add_depth_noise = add_depth_noise
-        self.noise_indices = None
-
-        if add_depth_noise:
-            assert width == height,\
-                "Noise supported with square dimension images only."
-            self.noise_indices = generate_noise_indices(width)
+        super().__init__(width, height, depth_format, add_depth_noise)
 
         @app.route('/ping', methods=['get'])
         def ping():
@@ -473,68 +676,13 @@ class Server(object):
                 # import datetime
                 # print("%s %s/s" % (datetime.datetime.now().isoformat(), rate))
 
-            if metadata['sequenceId'] != self.sequence_id:
-                raise ValueError("Sequence id mismatch: %s vs %s" % (
-                    metadata['sequenceId'], self.sequence_id))
+            event = self.create_event(metadata, form.files)
 
-            events = []
-
-            for i, a in enumerate(metadata['agents']):
-                e = Event(a)
-                image_mapping = dict(
-                    image=e.add_image,
-                    image_depth=lambda x: e.add_image_depth(
-                        x,
-                        depth_format=self.depth_format,
-                        camera_near_plane=self.camera_near_plane,
-                        camera_far_plane=self.camera_far_plane,
-                        add_noise=self.add_depth_noise,
-                        noise_indices=self.noise_indices
-                    ),
-                    image_ids=e.add_image_ids,
-                    image_classes=e.add_image_classes,
-                    image_normals=e.add_image_normals,
-                    image_flows=e.add_image_flows
-                )
-
-                for key in image_mapping.keys():
-                    if key in form.files:
-                        image_mapping[key](form.files[key][i])
-
-                third_party_image_mapping = dict(
-                    image=e.add_image,
-                    image_thirdParty_depth=lambda x: e.add_third_party_image_depth(
-                        x,
-                        depth_format=self.depth_format,
-                        camera_near_plane=self.camera_near_plane,
-                        camera_far_plane=self.camera_far_plane
-                    ),
-                    image_thirdParty_image_ids=e.add_third_party_image_ids,
-                    image_thirdParty_classes=e.add_third_party_image_classes,
-                    image_thirdParty_normals=e.add_third_party_image_normals,
-                    image_thirdParty_flows=e.add_third_party_image_flows
-                )
-
-                if a['thirdPartyCameras'] is not None:
-                    for ti, t in enumerate(a['thirdPartyCameras']):
-                        for key in third_party_image_mapping.keys():
-                            if key in form.files:
-                                third_party_image_mapping[key](form.files[key][ti])
-                events.append(e)
-
-            if len(events) > 1:
-                self.last_event = event = MultiAgentEvent(metadata['activeAgentId'], events)
-            else:
-                self.last_event = event = events[0]
-
-            for img in form.files.get('image-thirdParty-camera', []):
-                self.last_event.add_third_party_camera_image(img)
-
-            request_queue.put_nowait(event)
+            self.request_queue.put_nowait(event)
 
             self.frame_counter += 1
 
-            next_action = queue_get(response_queue)
+            next_action = queue_get(self.response_queue)
             if 'sequenceId' not in next_action:
                 self.sequence_id += 1
                 next_action['sequenceId'] = self.sequence_id
@@ -545,9 +693,29 @@ class Server(object):
 
             return resp
 
-    def start(self):
+    def _start_server_thread(self):
         self.wsgi_server.serve_forever()
 
-    def set_init_params(self, init_params):
-        self.camera_near_plane = init_params['cameraNearPlane']
-        self.camera_far_plane = init_params['cameraFarPlane']
+    def start(self):
+        self.started = True
+        self.server_thread = threading.Thread(target=self._start_server_thread)
+        self.server_thread.daemon = True
+        self.server_thread.start()
+
+    def receive(self):
+        return queue_get(self.request_queue, self.unity_proc)
+    
+    def send(self, action):
+        assert self.request_queue.empty()
+        self.response_queue.put_nowait(action)
+
+    # params to pass up to unity
+    def unity_params(self):
+        host, port = self.wsgi_server.socket.getsockname()
+
+        params = dict(host=host, port=str(port), server_type='WSGI')
+        return params
+    
+    def stop(self):
+        self.wsgi_server.shutdown()
+

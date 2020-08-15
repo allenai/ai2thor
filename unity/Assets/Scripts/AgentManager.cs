@@ -31,7 +31,6 @@ public class AgentManager : MonoBehaviour
     private bool defaultRenderObjectImage;
 	private bool renderNormalsImage;
     private bool renderFlowImage;
-	private bool synchronousHttp = true;
 	private Socket sock = null;
 	private List<Camera> thirdPartyCameras = new List<Camera>();
 	private bool readyToEmit;
@@ -42,6 +41,9 @@ public class AgentManager : MonoBehaviour
     private PhysicsSceneManager physicsSceneManager;
     public int AdvancePhysicsStepCount = 0;
     private bool droneMode = false;
+    private FifoServer.Client fifoClient = null;
+	private enum serverTypes { WSGI, FIFO};
+    private serverTypes serverType;
 
 
 	public Bounds sceneBounds = new Bounds(
@@ -79,6 +81,18 @@ public class AgentManager : MonoBehaviour
 		robosimsHost = LoadStringVariable(robosimsHost, "HOST");
 		serverSideScreenshot = LoadBoolVariable (serverSideScreenshot, "SERVER_SIDE_SCREENSHOT");
 		robosimsClientToken = LoadStringVariable (robosimsClientToken, "CLIENT_TOKEN");
+        serverType = (serverTypes)Enum.Parse(typeof(serverTypes), LoadStringVariable (serverTypes.WSGI.ToString(), "SERVER_TYPE").ToUpper());
+        if (serverType == serverTypes.FIFO) {
+            string  serverPipePath = LoadStringVariable (null, "FIFO_SERVER_PIPE_PATH");
+            string  clientPipePath = LoadStringVariable (null, "FIFO_CLIENT_PIPE_PATH");
+            
+            Debug.Log("creating fifo server: " + serverPipePath);
+            Debug.Log("client fifo path: " + clientPipePath);
+            this.fifoClient = FifoServer.Client.GetInstance(serverPipePath, clientPipePath);
+
+        }
+
+
 		bool trainPhase = true;
 		trainPhase = LoadBoolVariable(trainPhase, "TRAIN_PHASE");
 
@@ -530,41 +544,30 @@ public class AgentManager : MonoBehaviour
 	}
 
 
-	private void addThirdPartyCameraImageForm(WWWForm form, Camera camera) {
+	private void addThirdPartyCameraImage(List<KeyValuePair<string, byte[]>> payload, Camera camera) {
 		RenderTexture.active = camera.activeTexture;
 		camera.Render ();
-		form.AddBinaryData("image-thirdParty-camera", captureScreen());
+        payload.Add(new KeyValuePair<string, byte[]>("image-thirdParty-camera", captureScreen()));
 	}
 
-	private void addImageForm(WWWForm form, BaseFPSAgentController agent) {
+	private void addImage(List<KeyValuePair<string, byte[]>> payload, BaseFPSAgentController agent) {
 		if (this.renderImage) {
 
 			if (this.agents.Count > 1 || this.thirdPartyCameras.Count > 0) {
 				RenderTexture.active = agent.m_Camera.activeTexture;
 				agent.m_Camera.Render ();
 			}
-			form.AddBinaryData("image", captureScreen());
+            payload.Add(new KeyValuePair<string, byte[]>("image", captureScreen()));
 		}
 	}
 
-	private void addDepthImageForm(WWWForm form, BaseFPSAgentController agent) {
-		if (this.renderDepthImage) {
-			if (!agent.imageSynthesis.hasCapturePass ("_depth")) {
-				Debug.LogError ("Depth image not available - returning empty image");
-			}
-
-			byte[] bytes = agent.imageSynthesis.Encode ("_depth", RenderTextureFormat.Default, RenderTextureReadWrite.Linear);
-			form.AddBinaryData ("image_depth", bytes);
-		}
-	}
-
-	private void addObjectImageForm(WWWForm form, BaseFPSAgentController agent, ref MetadataWrapper metadata) {
+	private void addObjectImage(List<KeyValuePair<string, byte[]>> payload, BaseFPSAgentController agent, ref MetadataWrapper metadata) {
 		if (this.renderObjectImage) {
 			if (!agent.imageSynthesis.hasCapturePass("_id")) {
 				Debug.LogError("Object Image not available in imagesynthesis - returning empty image");
 			}
 			byte[] bytes = agent.imageSynthesis.Encode ("_id");
-			form.AddBinaryData ("image_ids", bytes);
+            payload.Add(new KeyValuePair<string, byte[]>("image_ids", bytes));
 
 			Color[] id_image = agent.imageSynthesis.tex.GetPixels();
 			Dictionary<Color, int[]> colorBounds = new Dictionary<Color, int[]> ();
@@ -620,14 +623,14 @@ public class AgentManager : MonoBehaviour
 		}
 	}
 
-	private void addImageSynthesisImageForm(WWWForm form, ImageSynthesis synth, bool flag, string captureName, string fieldName)
+	private void addImageSynthesisImage(List<KeyValuePair<string, byte[]>> payload, ImageSynthesis synth, bool flag, string captureName, string fieldName)
 	{
 		if (flag) {
 			if (!synth.hasCapturePass (captureName)) {
 				Debug.LogError (captureName + " not available - sending empty image");
 			}
 			byte[] bytes = synth.Encode (captureName);
-			form.AddBinaryData (fieldName, bytes);
+            payload.Add(new KeyValuePair<string, byte[]>(fieldName, bytes));
 
 
 		}
@@ -643,15 +646,63 @@ public class AgentManager : MonoBehaviour
 		if (shouldRender) {
 			// we should only read the screen buffer after rendering is complete
 			yield return new WaitForEndOfFrame();
-			if (synchronousHttp) {
-				// must wait an additional frame when in synchronous mode otherwise the frame lags
-				yield return new WaitForEndOfFrame();
-			}
+			yield return new WaitForEndOfFrame();
 		}
 
 		string msg = "{\"action\": \"RotateRight\"}";
 		ProcessControlCommand(msg);
 	}
+
+    private void createPayload(MultiAgentMetadata multiMeta, ThirdPartyCameraMetadata[] cameraMetadata, List<KeyValuePair<string, byte[]>> renderPayload, bool shouldRender) {
+
+        multiMeta.agents = new MetadataWrapper[this.agents.Count];
+        multiMeta.activeAgentId = this.activeAgentId;
+        multiMeta.sequenceId = this.currentSequenceId;
+		RenderTexture currentTexture = null;
+
+        if (shouldRender) {
+            currentTexture = RenderTexture.active;
+            for (int i = 0; i < this.thirdPartyCameras.Count; i++) {
+                ThirdPartyCameraMetadata cMetadata = new ThirdPartyCameraMetadata();
+                Camera camera = thirdPartyCameras.ToArray()[i];
+                cMetadata.thirdPartyCameraId = i;
+                cMetadata.position = camera.gameObject.transform.position;
+                cMetadata.rotation = camera.gameObject.transform.eulerAngles;
+                cameraMetadata[i] = cMetadata;
+                ImageSynthesis imageSynthesis = camera.gameObject.GetComponentInChildren<ImageSynthesis> () as ImageSynthesis;
+                addThirdPartyCameraImage (renderPayload, camera);
+                addImageSynthesisImage(renderPayload, imageSynthesis, this.renderDepthImage, "_depth", "image_thirdParty_depth");
+                addImageSynthesisImage(renderPayload, imageSynthesis, this.renderNormalsImage, "_normals", "image_thirdParty_normals");
+                addImageSynthesisImage(renderPayload, imageSynthesis, this.renderObjectImage, "_id", "image_thirdParty_image_ids");
+                addImageSynthesisImage(renderPayload, imageSynthesis, this.renderClassImage, "_class", "image_thirdParty_classes");
+                addImageSynthesisImage(renderPayload, imageSynthesis, this.renderClassImage, "_flow", "image_thirdParty_flow");//XXX fix this in a bit
+            }
+        }
+        for (int i = 0; i < this.agents.Count; i++) {
+            BaseFPSAgentController agent = this.agents.ToArray () [i];
+            MetadataWrapper metadata = agent.generateMetadataWrapper ();
+            metadata.agentId = i;
+
+            // we don't need to render the agent's camera for the first agent
+            if (shouldRender) {
+                addImage (renderPayload, agent);
+                addImageSynthesisImage(renderPayload, agent.imageSynthesis, this.renderDepthImage, "_depth", "image_depth");
+                addImageSynthesisImage(renderPayload, agent.imageSynthesis, this.renderNormalsImage, "_normals", "image_normals");
+                addObjectImage (renderPayload, agent, ref metadata);
+                addImageSynthesisImage(renderPayload, agent.imageSynthesis, this.renderClassImage, "_class", "image_classes");
+                addImageSynthesisImage(renderPayload, agent.imageSynthesis, this.renderFlowImage, "_flow", "image_flow");
+
+                metadata.thirdPartyCameras = cameraMetadata;
+            }
+            multiMeta.agents [i] = metadata;
+        }
+
+        if (shouldRender) {
+            RenderTexture.active = currentTexture;
+        }
+
+        
+    }
 
 
 	public IEnumerator EmitFrame() {
@@ -665,63 +716,13 @@ public class AgentManager : MonoBehaviour
 			yield return new WaitForEndOfFrame();
 		}
 
-		WWWForm form = new WWWForm();
-
         MultiAgentMetadata multiMeta = new MultiAgentMetadata ();
-        multiMeta.agents = new MetadataWrapper[this.agents.Count];
-        multiMeta.activeAgentId = this.activeAgentId;
-        multiMeta.sequenceId = this.currentSequenceId;
 		
 
 		ThirdPartyCameraMetadata[] cameraMetadata = new ThirdPartyCameraMetadata[this.thirdPartyCameras.Count];
-		RenderTexture currentTexture = null;
-        #if UNITY_WEBGL
-        JavaScriptInterface jsInterface = null;
-        #endif
-        if (shouldRender) {
-            currentTexture = RenderTexture.active;
-            for (int i = 0; i < this.thirdPartyCameras.Count; i++) {
-                ThirdPartyCameraMetadata cMetadata = new ThirdPartyCameraMetadata();
-                Camera camera = thirdPartyCameras.ToArray()[i];
-                cMetadata.thirdPartyCameraId = i;
-                cMetadata.position = camera.gameObject.transform.position;
-                cMetadata.rotation = camera.gameObject.transform.eulerAngles;
-                cameraMetadata[i] = cMetadata;
-                ImageSynthesis imageSynthesis = camera.gameObject.GetComponentInChildren<ImageSynthesis> () as ImageSynthesis;
-                addThirdPartyCameraImageForm (form, camera);
-                addImageSynthesisImageForm(form, imageSynthesis, this.renderDepthImage, "_depth", "image_thirdParty_depth");
-                addImageSynthesisImageForm(form, imageSynthesis, this.renderNormalsImage, "_normals", "image_thirdParty_normals");
-                addImageSynthesisImageForm(form, imageSynthesis, this.renderObjectImage, "_id", "image_thirdParty_image_ids");
-                addImageSynthesisImageForm(form, imageSynthesis, this.renderClassImage, "_class", "image_thirdParty_classes");
-                addImageSynthesisImageForm(form, imageSynthesis, this.renderClassImage, "_flow", "image_thirdParty_flow");//XXX fix this in a bit
-            }
-        }
+        List<KeyValuePair<string, byte[]>> renderPayload = new List<KeyValuePair<string, byte[]>>();
+        createPayload(multiMeta, cameraMetadata, renderPayload, shouldRender);
 
-        for (int i = 0; i < this.agents.Count; i++) {
-            BaseFPSAgentController agent = this.agents.ToArray () [i];
-            #if UNITY_WEBGL
-            jsInterface = agent.GetComponent<JavaScriptInterface>();
-            #endif
-            MetadataWrapper metadata = agent.generateMetadataWrapper ();
-            metadata.agentId = i;
-
-            // we don't need to render the agent's camera for the first agent
-            if (shouldRender) {
-                addImageForm (form, agent);
-                addImageSynthesisImageForm(form, agent.imageSynthesis, this.renderDepthImage, "_depth", "image_depth");
-                addImageSynthesisImageForm(form, agent.imageSynthesis, this.renderNormalsImage, "_normals", "image_normals");
-                addObjectImageForm (form, agent, ref metadata);
-                addImageSynthesisImageForm(form, agent.imageSynthesis, this.renderClassImage, "_class", "image_classes");
-                addImageSynthesisImageForm(form, agent.imageSynthesis, this.renderFlowImage, "_flow", "image_flow");
-
-                metadata.thirdPartyCameras = cameraMetadata;
-            }
-            multiMeta.agents [i] = metadata;
-        }
-
-        if (shouldRender) {
-            RenderTexture.active = currentTexture;
-        }
 
       var jsonResolver = new ShouldSerializeContractResolver();
 
@@ -735,16 +736,21 @@ public class AgentManager : MonoBehaviour
                );
 
 		#if UNITY_WEBGL
-                if (jsInterface != null) {
-					jsInterface.SendActionMetadata(serializedMetadata);
-				}
+            jsInterface = this.primaryAgent.GetComponent<JavaScriptInterface>();
+            if (jsInterface != null) {
+                jsInterface.SendActionMetadata(serializedMetadata);
+            }
         #endif
 
-        form.AddField("metadata", serializedMetadata);
-        form.AddField("token", robosimsClientToken);
 
         #if !UNITY_WEBGL 
-		if (synchronousHttp) {
+		if (serverType == serverTypes.WSGI) {
+            WWWForm form = new WWWForm();
+            foreach(var item in renderPayload) {
+                form.AddBinaryData(item.Key, item.Value);
+            }
+            form.AddField("metadata", serializedMetadata);
+            form.AddField("token", robosimsClientToken);
 
 			if (this.sock == null) {
 				// Debug.Log("connecting to host: " + robosimsHost);
@@ -820,19 +826,14 @@ public class AgentManager : MonoBehaviour
                 string msg = Encoding.ASCII.GetString(bodyBuffer, 0, bodyBytesReceived);
                 ProcessControlCommand(msg);
             }
-		} else {
-
-			using (var www = UnityWebRequest.Post("http://" + robosimsHost + ":" + robosimsPort + "/train", form))
-			{
-				yield return www.SendWebRequest();
-
-				if (www.isNetworkError || www.isHttpError)
-				{
-					Debug.Log("Error: " + www.error);
-					yield break;
-				}
-				ProcessControlCommand(www.downloadHandler.text);
-			}
+		} else if (serverType == serverTypes.FIFO){
+            this.fifoClient.SendMessage(FifoServer.FieldType.Metadata, Encoding.ASCII.GetBytes(serializedMetadata));
+            foreach(var item in renderPayload) {
+                this.fifoClient.SendMessage(FifoServer.Client.FormMap[item.Key], item.Value);
+            }
+            this.fifoClient.SendEOM();
+            string msg = this.fifoClient.ReceiveMessage();
+            ProcessControlCommand(msg);
 		}
 
         if(droneMode)
