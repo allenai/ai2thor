@@ -40,7 +40,7 @@ class BlueBot(ai2thor.Agent):
     @property
     def reachable_positions(self) -> List[Dict[str, float]]:
         # TODO: Cache per scene
-        event = self._step('GetReachablePositions')
+        event = self._step('GetReachablePositions', renderImage=False)
         positions = event.metadata['reachablePositions']
         return [{
             'x': pos['x'],
