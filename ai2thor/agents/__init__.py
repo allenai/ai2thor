@@ -2,7 +2,7 @@
 TODO: Give Warning on action fail!
 """
 import ai2thor
-from typing import Union, Tuple, Dict
+from typing import Union, Dict, List
 
 
 class Agent:
@@ -14,32 +14,42 @@ class Agent:
         self.agent_idx = agent_idx
 
     @property
-    def last_event(self):
+    def last_event(self) -> ai2thor.Event:
         return self.controller.last_event
 
     @property
-    def pose(self) -> Dict[str, int]:
+    def pose(self) -> Dict[str, float]:
         # use this format for teleporting
         raise NotImplementedError()
 
     @property
-    def pos(self) -> Tuple[float, float, float]:
+    def horizon(self) -> float:
+        return self.last_event.metadata['agent']['cameraHorizon']
+
+    @property
+    def pos(self) -> Union[tuple, float]:
         # should only provide degrees of freedom that can change
         raise NotImplementedError()
 
     @property
-    def rot(self) -> Tuple[float, float, float]:
+    def reachable_positions(self) -> List[Dict[str, float]]:
+        # caches the reachable positions for the current agent
+        # in the current scene
+        raise NotImplementedError()
+
+    @property
+    def rot(self) -> Union[tuple, float]:
         # should only provide degrees of freedom that can change
         raise NotImplementedError()
 
-    def _step(self, action: str, **action_kwargs) -> None:
+    def _step(self, action: str, **action_kwargs) -> ai2thor.Event:
         # single agent
         if self.agent_idx is None:
-            self.controller.step(action, **action_kwargs)
+            return self.controller.step(action, **action_kwargs)
 
         # multi-agent
         else:
-            self.controller.step(
+            return self.controller.step(
                 action,
                 agentId=self.agent_idx,
                 **action_kwargs)
@@ -61,6 +71,7 @@ class Agent:
 
     def move(self, meters: float = 0.25, direction: str = 'ahead') -> None:
         """Translates the agent in 'direction' by a distance of 'meters'"""
+        # TODO: support vector direction with teleport
         valid_directions = {'ahead', 'right', 'left', 'back'}
         if direction not in valid_directions:
             raise ValueError(f'direction must be in {valid_directions}')
