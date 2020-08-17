@@ -3974,11 +3974,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             SimObjPhysics targetReceptacle = null;
 
             foreach (SimObjPhysics sop in VisibleSimObjs(true)) { //action.forceVisible is usually false
-                if ((!string.IsNullOrEmpty(action.receptacleObjectId)) && action.receptacleObjectId == sop.UniqueID) {
-                    if (sop.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.Stacking))
-                        targetReceptacle = sop;
-                    else if (VisibleSimObjs(action.forceVisible).Contains(sop)) 
-                        targetReceptacle = sop;
+            bool inSceneIsStackingOrInVisibleSimObjsIsNotStacking = (((!string.IsNullOrEmpty(action.receptacleObjectId)) && action.receptacleObjectId == sop.UniqueID) && 
+                (sop.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.Stacking) || VisibleSimObjs(action.forceVisible).Contains(sop)));
+                if (inSceneIsStackingOrInVisibleSimObjsIsNotStacking) {
+                    targetReceptacle = sop; 
                     break;
                 }
             }
