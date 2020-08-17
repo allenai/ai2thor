@@ -860,7 +860,7 @@ public class MCSController : PhysicsRemoteFPSAgentController {
         else 
         {
             float targetHorizon = 
-                m_Camera.transform.rotation.eulerAngles.x > horizonAngles[0] + horizonConsistency ? horizonAngles[0] : 
+                m_Camera.transform.rotation.eulerAngles.x > horizonAngles[0] ? horizonAngles[0] : 
                 currentHorizonAngleIndex() < horizonAngles.Length - 1 ? horizonAngles[currentHorizonAngleIndex() + 1] : 0.0f;
 
             int up = 1;
@@ -900,8 +900,8 @@ public class MCSController : PhysicsRemoteFPSAgentController {
         {    
             float targetHorizon = 
                 m_Camera.transform.rotation.eulerAngles.x > maxHorizon && 
-                m_Camera.transform.rotation.eulerAngles.x <= (horizonAngles[horizonAngles.Length - 1] - horizonConsistency) ? 
-                horizonAngles[horizonAngles.Length - 1] : currentHorizonAngleIndex() > 0 ? horizonAngles[currentHorizonAngleIndex() - 1] : 0.0f;
+                m_Camera.transform.rotation.eulerAngles.x <= (horizonAngles[horizonAngles.Length - 1]) ? horizonAngles[horizonAngles.Length - 1] : 
+                currentHorizonAngleIndex() > 0 ? horizonAngles[currentHorizonAngleIndex() - 1] : 0.0f;
 
             int down = -1;
             if (CheckIfAgentCanLook(targetHorizon, down))
