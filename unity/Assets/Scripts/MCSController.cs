@@ -51,7 +51,6 @@ public class MCSController : PhysicsRemoteFPSAgentController {
     private bool inputWasRotation = false;
     private bool inputWasLook = false;
     private bool inputWasRotateLook = false;
-    protected float horizonConsistency = 15.0f; //ex. looking up while at 75 degrees will look up to 60 rather than 30
 
     private int framesUntilGridSnap; //when moving, grid snap will engage on the last frame (rather than every frame)
 
