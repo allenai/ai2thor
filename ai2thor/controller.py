@@ -29,7 +29,6 @@ import uuid
 import tty
 import sys
 import termios
-import fcntl
 try:
     from queue import Queue
 except ImportError:
@@ -368,7 +367,6 @@ def key_for_point(x, z):
     return "%0.1f %0.1f" % (x, z)
 
 class Controller(object):
-
     def __init__(
             self,
             quality=DEFAULT_QUALITY,
@@ -389,8 +387,7 @@ class Controller(object):
             add_depth_noise=False,
             download_only=False,
             include_private_scenes=False,
-            **unity_initialization_parameters
-    ):
+            **unity_initialization_parameters):
         self.request_queue = Queue(maxsize=1)
         self.response_queue = Queue(maxsize=1)
         self.receptacle_nearest_pivot_points = {}

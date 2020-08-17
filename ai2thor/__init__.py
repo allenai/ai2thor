@@ -6,3 +6,4 @@ try:
 except ImportError:
     pass
 
+from ai2thor.controller import Controller
