@@ -116,7 +116,7 @@ public class Contains : MonoBehaviour
 		//clear the currently contains list so that if things were Initial Random Spawned in, the receptacle
 		//trigger boxes correctly re-populate with the current objects via OnTriggerStay. We need this here
 		//because OnTriggerExit will miss correctly editing the list if objects are teleported around like with
-		//the Initial Random Spawn Function! 
+		//the Initial Random Spawn Function!
 		//CurrentlyContains.Clear();
 		//occupied = false;
 	}
@@ -277,20 +277,16 @@ public class Contains : MonoBehaviour
 		//these are all the points on the grid on the top of the receptacle box in local space
 		List<Vector3> gridpoints = new List<Vector3>();
 
-		//for stacking receptacles
+		//The first if creates only one spawn point directly in the center of a receptacle for stacking receptacles
 		SimObjPhysics simObj = gameObject.GetComponentInParent<SimObjPhysics>();
-		bool stacking = simObj.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.Stacking);
-		Transform renderer = stacking ? simObj.GetComponent<Transform>() : null;
-		Renderer rend = stacking ? renderer.transform.GetComponentInChildren<Renderer>() : null;
-		float yMaxOfMesh = stacking ? rend.bounds.max.y : 0; //this is the y-point we place the object
-		float yMinOfRecBox = stacking ? triggerBoxCollider.bounds.min.y : 0; //for cups and plates
-		float yPlacementPosition = (simObj.shape == "cup" || simObj.shape == "plate") ? yMinOfRecBox : yMaxOfMesh;
-
-		//The first if creates only one spawn point directly in the center of a receptacle if it's stacking
-        if (stacking) {
+        if (simObj.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.Stacking)) {
+			Transform renderer = simObj.GetComponent<Transform>();
+			Renderer rend = renderer.transform.GetComponentInChildren<Renderer>();
+			float yMaxOfMesh = rend.bounds.max.y; //for cubes
+			float yMinOfRecBox = triggerBoxCollider.bounds.min.y;
+			float yPlacementPosition = (simObj.shape.Contains("cube")) ? yMaxOfMesh : yMinOfRecBox;
 			Vector3 centerOfReceptacleForStackingObjects = new Vector3(center.x, yPlacementPosition, center.z);
 			if (NarrowDownValidSpawnPoints(centerOfReceptacleForStackingObjects)) {
-
 				gridpoints.Add(centerOfReceptacleForStackingObjects);
 			}
 		
