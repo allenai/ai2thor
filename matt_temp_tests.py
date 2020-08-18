@@ -1,5 +1,112 @@
 import ai2thor
 
+from ai2thor import Controller
+from ai2thor.utils import AHEAD
+
+controller = Controller('FloorPlan_Train1_1')
+
+controller.agent.move(direction=AHEAD)
+
+controller.agent.move()
+
+controller.agent.camera
+
+
+
+print(ai2thor.utils.Camera())
+
+controller.agent
+
+controller.ag
+
+controller.ag
+
+controller.agents[0].move
+
+controller.ag
+
+controller.ag
+
+controller.agent.jarvis_method()
+
+controller.agents[0].
+
+
+controller.agent.jarvis_method()
+
+controller.agent.jarvis_method()
+
+
+controller.agent.jarvis_method()
+
+controller.agents[0].jar
+
+controller.agents[0].mov
+
+controller.agents[0].m
+
+controller.agents[0].move(direction='back')
+
+controller.agents[0].pose()
+
+
+
+controller.agents[0]
+
+controller.agents[0]._co
+
+ai2thor.Controller(
+    scene='FloorPlan_Train1_1',
+    
+)
+
+from ai2thor.utils import Camera
+
+from ai2thor.agents import Agent
+
+
+Agent()
+
+c = Camera(fov=60)
+
+c.fov = 50
+
+c.f
+
+
+c = Camera(fov=60)
+
+Camera()
+
+
+Camera(fov=)
+
+Camera()
+Camera()
+
+from ai2thor.utils import Camera
+
+from ai2thor import utils
+
+from ai2thor import utils
+from ai2thor.utils import camera
+
+ai2thor.util.Camera
+
+from ai2thor.utils import Camera
+
+
+
+from ai2thor.agents import Agent
+
+a = Agent()
+
+ai2thor.types.Vector
+
+ai2thor.types.Controller(5)
+
+ai2thor.typing.Controller
+
 
 from ai2thor import Controller
 
@@ -27,6 +134,11 @@ c.testing()
 c.t
 
 c.
+
+from types import SimpleNamespace
+
+types = SimpleNamespace(**{'key1': 'v2'})
+types.key1
 
 
 c = Controller()

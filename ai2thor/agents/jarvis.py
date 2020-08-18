@@ -4,12 +4,18 @@ and can only change it's yaw.
 """
 from typing import Union, Tuple, Dict, List
 from .agent import Agent
-# from ai2thor.agents import Agent
 
 
-class Jarvis:
-    def foo(self):
-        return 'Jarvis'
+class Jarvis(Agent):
+    def __init__(self):
+        Agent.__init__(self)
+
+    def pose(self):
+        raise NotImplementedError()
+
+    def jarvis_method(self):
+        return 'yo'
+
 
 
 '''

@@ -1,16 +1,65 @@
 from typing import Union, Dict, List
-import ai2thor
+import ai2thor.utils
+from ai2thor.utils import AHEAD, BACK, LEFT, RIGHT
+from abc import ABC, abstractmethod
+import numpy as np
 
 
-class Agent:
+class Agent(ABC):
     def __init__(
             self,
-            camera,
-            noise,
-            default_rotate_degrees,
-            default_move_meters,
-            nav_success_max_distance):
-        self._next_action_kwargs = None
+            camera: ai2thor.utils.Camera = ai2thor.utils.Camera(),
+            noise: None = None,
+            default_rotate_degrees: float = 30,
+            default_move_meters: float = 0.25,
+            nav_success_max_meters_dist: float = 1.5):
+        self._reset_camera = False
+        self.camera = camera
+        # TODO: add setter to camera
+
+    def _connect_base_controller(
+            self,
+            base_controller,
+            agent_idx: Union[None, int]):
+        self._base_controller = base_controller
+        self._agent_idx = agent_idx
+
+    def _step(self, action: str, **action_kwargs) -> object:
+        # single agent
+        if self._agent_idx is None:
+            return self._base_controller.step(action, **action_kwargs)
+        # multi-agent
+        else:
+            return self._base_controller.step(
+                action,
+                agentId=self._agent_idx,
+                **action_kwargs)
+
+    @property
+    @abstractmethod
+    def pose(self) -> Dict[str, float]:
+        # use this format for teleporting with the agent
+        raise NotImplementedError()
+
+    # def move(self, meters: float = 0.25, direction: str = 'ahead') -> None:
+    def move(
+            self,
+            meters: float = 0.25,
+            direction: np.ndarray = AHEAD) -> None:
+        """Translates the agent in 'direction' by a distance of 'meters'"""
+        # TODO: support vector direction with teleport
+
+        kwargs = {'moveMagnitude': meters}
+        if direction is AHEAD:
+            self._step(action='MoveAhead', **kwargs)
+        elif direction is BACK:
+            self._step(action='MoveBack', **kwargs)
+        elif direction is RIGHT:
+            self._step(action='MoveRight', **kwargs)
+        elif direction is LEFT:
+            self._step(action='MoveLeft', **kwargs)
+        else:
+            raise ValueError('Invalid direction!')
 
     '''
     @property
@@ -42,17 +91,6 @@ class Agent:
         # should only provide degrees of freedom that can change
         raise NotImplementedError()
 
-    def _step(self, action: str, **action_kwargs) -> ai2thor.server.Event:
-        # single agent
-        if self.agent_idx is None:
-            return self.controller.step(action, **action_kwargs)
-
-        # multi-agent
-        else:
-            return self.controller.step(
-                action,
-                agentId=self.agent_idx,
-                **action_kwargs)
 
     def done(self) -> None:
         """Updates last_event without changing the environment"""
@@ -69,22 +107,6 @@ class Agent:
         else:
             self._step(action='RotateLeft', degrees=degrees)
 
-    def move(self, meters: float = 0.25, direction: str = 'ahead') -> None:
-        """Translates the agent in 'direction' by a distance of 'meters'"""
-        # TODO: support vector direction with teleport
-        valid_directions = {'ahead', 'right', 'left', 'back'}
-        if direction not in valid_directions:
-            raise ValueError(f'direction must be in {valid_directions}')
-
-        kwargs = {'moveMagnitude': meters}
-        if direction == 'ahead':
-            self._step(action='MoveAhead', **kwargs)
-        elif direction == 'right':
-            self._step(action='MoveRight', **kwargs)
-        elif direction == 'left':
-            self._step(action='MoveLeft', **kwargs)
-        elif direction == 'back':
-            self._step(action='MoveBack', **kwargs)
 
     def peak(self, degrees: float = 30, direction: str = 'up', ) -> None:
         """Rotates the agent's head in 'direction' by 'degrees' without

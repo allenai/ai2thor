@@ -1,49 +1,58 @@
 from ai2thor.controller import Controller as BaseController
-from typing import List
-import ai2thor
+from typing import Sequence, Union, Type
 from ai2thor.agents import Jarvis, Agent
+import ai2thor
+import warnings
 
 
-class _DefaultController:
-    def foo(self):
-        return 'def'
+def _base_init(scene: str, agents: Sequence[ai2thor.Agent]) -> BaseController:
+    base_controller = BaseController(scene=scene)
+
+    # link each of the agents with the controller
+    for i, agent in enumerate(agents):
+        agent._connect_base_controller(
+            base_controller=base_controller,
+            agent_idx=i
+        )
+    return base_controller
+
+
+class _JarvisController:
+    def __init__(self, scene: str, agents: Sequence[Jarvis]):
+        self._base_controller = _base_init(scene, agents)
+        self.agents = agents
 
     @property
-    def last_event(self):
-        pass
+    def agent(self) -> Jarvis:
+        if len(self.agents) != 1:
+            raise ValueError('Use .agents[i] to access the ith multi-agent')
+        return self.agents[0]
 
 
 def Controller(
         scene: str = 'FloorPlan_Train1_1',
-        grid_size: float = 0.25,
-        agents: List[ai2thor.agents.Agent] = []) -> _DefaultController:
+        agents: Union[ai2thor.Agent, Sequence[ai2thor.Agent]] = Jarvis()):
     # Decides which controller to provide based on the agent.
     # This helps with mypy find functions specific to certain controllers.
-    if len(agents) == 0:
+
+    # only using a single agent
+    if issubclass(type(agents), ai2thor.Agent):
+        agent_list: Sequence[ai2thor.Agent] = [agents]
+    else:
+        agent_list = agents
+
+    if len(agent_list) == 0:
         raise ValueError('You must specify an agent')
 
-    agent_type = type(agents[0])
-    for i in range(1, len(agents)):
-        if type(agents[i]) != agent_type:
+    agent_type = type(agent_list[0])
+    for i in range(1, len(agent_list)):
+        if type(agent_list[i]) != agent_type:
             raise ValueError('For now, all agents must be the same type')
 
-    return _DefaultController()
+    if len(agent_list) > 1:
+        warnings.warn('Only 1 identical agent can currently be used.')
 
-    """
-    if foo == 'a':
-        return DefaultController()
-    else:
-        return JarvisController()
-    """
-
-
-class JarvisController:
-    def foo(self):
-        return 'jarvis'
-
-    def jarvis(self):
-        return 'jarvisss'
-
+    return _JarvisController(scene, agent_list)
 
 
 """
