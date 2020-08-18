@@ -3,10 +3,12 @@ import numpy as np
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
 
+
 def generate_noise_indices(img_size):
     img_size = int(img_size)
     default_size = 300
-    corners = np.load(os.path.join(dir_path, "depth_noise.npy"), allow_pickle=True)
+    corners = np.load(os.path.join(dir_path, "depth_noise.npy"),
+                      allow_pickle=True)
     indices = []
     for j, corner in enumerate(corners):
         height_indices = np.array([], dtype=np.int32)
@@ -60,8 +62,8 @@ def apply_real_noise(depth_arr, size, indices=None):
     Applies noise to depth image to look more similar to the real depth camera
     :param depth_arr: numpy square 2D array representing the depth
     :param size: square size of array
-    :param indices: cached indices where noise is going to be applied, if None they get calculated
-                    here based on the image size.
+    :param indices: cached indices where noise is going to be applied, if None
+        they get calculated here based on the image size.
     :return:
     """
     if indices is None:

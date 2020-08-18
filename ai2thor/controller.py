@@ -339,6 +339,7 @@ def get_term_character():
         termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
     return ch
 
+
 def process_alive(pid):
     """
     Use kill(0) to determine if pid is alive
@@ -352,10 +353,12 @@ def process_alive(pid):
 
     return True
 
+
 # python2.7 compatible makedirs
 def makedirs(directory):
     if not os.path.isdir(directory):
         os.makedirs(directory)
+
 
 def distance(point1, point2):
     x_diff = (point1['x'] - point2['x']) ** 2
@@ -365,6 +368,7 @@ def distance(point1, point2):
 
 def key_for_point(x, z):
     return "%0.1f %0.1f" % (x, z)
+
 
 class Controller(object):
     def __init__(

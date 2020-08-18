@@ -1,9 +1,10 @@
 # Copyright Allen Institute for Artificial Intelligence
 
-from ai2thor.controller import Controller
-from ai2thor.agents import Agent
-from ai2thor.server import Event
-
+from ai2thor import agents
+from ai2thor import controller
+from ai2thor.typing_controller import Controller
+from ai2thor import types
+from ai2thor import util as utils
 
 __version__ = None
 try:

@@ -1,28 +1,20 @@
-"""
-TODO: Give Warning on action fail!
-"""
-from ai2thor.agents.jarvis import Jarvis
-from ai2thor.agents.agent import Agent
-
-
-
-
-'''
-import ai2thor
 from typing import Union, Dict, List
-from ai2thor.agents.jarvis import Jarvis
+import ai2thor
 
 
 class Agent:
     def __init__(
             self,
-            controller: ai2thor.Controller,
-            agent_idx: Union[int, None] = None):
-        self.controller = controller
-        self.agent_idx = agent_idx
+            camera,
+            noise,
+            default_rotate_degrees,
+            default_move_meters,
+            nav_success_max_distance):
+        self._next_action_kwargs = None
 
+    '''
     @property
-    def last_event(self) -> ai2thor.Event:
+    def _last_event(self):
         return self.controller.last_event
 
     @property
@@ -32,7 +24,7 @@ class Agent:
 
     @property
     def horizon(self) -> float:
-        return self.last_event.metadata['agent']['cameraHorizon']
+        return self._last_event.metadata['agent']['cameraHorizon']
 
     @property
     def pos(self) -> Union[tuple, float]:
@@ -50,7 +42,7 @@ class Agent:
         # should only provide degrees of freedom that can change
         raise NotImplementedError()
 
-    def _step(self, action: str, **action_kwargs) -> ai2thor.Event:
+    def _step(self, action: str, **action_kwargs) -> ai2thor.server.Event:
         # single agent
         if self.agent_idx is None:
             return self.controller.step(action, **action_kwargs)
@@ -106,5 +98,4 @@ class Agent:
             self._step(action='LookUp', **kwargs)
         elif direction == 'down':
             self._step(action='LookDown', **kwargs)
-
-'''
+    '''
