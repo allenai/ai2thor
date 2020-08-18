@@ -133,42 +133,17 @@ class Agent(ABC):
                 'Invalid direction!\n'
                 'Please use ai2thor.utils.{RIGHT, LEFT}.')
 
-    '''
-    @property
-    def _last_event(self):
-        return self.controller.last_event
-
-    @property
-    def pose(self) -> Dict[str, float]:
-        # use this format for teleporting
-        raise NotImplementedError()
-
     @property
     def horizon(self) -> float:
-        return self._last_event.metadata['agent']['cameraHorizon']
-
-    @property
-    def pos(self) -> Union[tuple, float]:
-        # should only provide degrees of freedom that can change
-        raise NotImplementedError()
-
-    @property
-    def reachable_positions(self) -> List[Dict[str, float]]:
-        # caches the reachable positions for the current agent
-        # in the current scene
-        raise NotImplementedError()
-
-    @property
-    def rot(self) -> Union[tuple, float]:
-        # should only provide degrees of freedom that can change
-        raise NotImplementedError()
-
+        agent = self._base_controller.last_event.metadata['agent']
+        return agent['cameraHorizon']
 
     def done(self) -> None:
         """Updates last_event without changing the environment"""
         self._step(action='done')
 
 
+    '''
 
     def peak(self, degrees: float = 30, direction: str = 'up', ) -> None:
         """Rotates the agent's head in 'direction' by 'degrees' without
