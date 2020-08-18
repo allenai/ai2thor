@@ -48,8 +48,6 @@ public class MCSController : PhysicsRemoteFPSAgentController {
     
     private MCSRotationData bodyRotationActionData; //stores body rotation direction
     private MCSRotationData lookRotationActionData; //stores look rotation direction
-    private bool inputWasRotation = false;
-    private bool inputWasLook = false;
     private bool inputWasRotateLook = false;
 
     private int framesUntilGridSnap; //when moving, grid snap will engage on the last frame (rather than every frame)
@@ -332,14 +330,12 @@ public class MCSController : PhysicsRemoteFPSAgentController {
                 controlCommand.action.Equals("MoveBack") ||
                 controlCommand.action.Equals("MoveLeft") ||
                 controlCommand.action.Equals("MoveRight");
-        inputWasRotation =
+        inputWasRotateLook = 
+                controlCommand.action.Equals("RotateLook") ||
                 controlCommand.action.Equals("RotateLeft") ||
-                controlCommand.action.Equals("RotateRight");
-        inputWasLook = 
+                controlCommand.action.Equals("RotateRight") ||
                 controlCommand.action.Equals("LookUp") || 
                 controlCommand.action.Equals("LookDown");
-        inputWasRotateLook = 
-                controlCommand.action.Equals("RotateLook");
 
         framesUntilGridSnap = 0; //for movement and rotation
         
@@ -505,25 +501,7 @@ public class MCSController : PhysicsRemoteFPSAgentController {
                 this.snapToGrid();
                 actionFinished(movementActionFinished);
             }
-        } //rotation methods
-        else if (inputWasRotation) {
-            RotateBodyAcrossFrames(bodyRotationActionData);
-            framesUntilGridSnap++;
-            if (framesUntilGridSnap == NUMBER_OF_FRAMES_FOR_MOVEMENT)
-                actionFinished(true);
-        }
-        else if (inputWasLook) {
-            bool cannotExceed = lookRotationActionData.direction == MCSRotationData.Rotate.NONE;
-            if (lookRotationActionData.direction == MCSRotationData.Rotate.NONE) {
-                framesUntilGridSnap++;
-            } else {
-                LookAcrossFrames(lookRotationActionData);
-                framesUntilGridSnap++;
-            }
-
-            if (framesUntilGridSnap == NUMBER_OF_FRAMES_FOR_MOVEMENT)
-                actionFinished(!cannotExceed);
-        }
+        } //for rotation
         else if (inputWasRotateLook) {
             if (lookRotationActionData.direction == MCSRotationData.Rotate.RESET) {
                 ResetLookRotation(lookRotationActionData);
@@ -822,164 +800,31 @@ public class MCSController : PhysicsRemoteFPSAgentController {
     }
 
     public override void RotateLeft(ServerAction controlCommand) {
-        if (CheckIfAgentCanTurn(-90)||controlCommand.forceAction) {
-            framesUntilGridSnap = 0; //ensure this, necessary in some cases
-            DefaultAgentHand(controlCommand);
-
-            bodyRotationActionData = new MCSRotationData(MCSRotationData.Rotate.LEFT, transform.rotation, GetRotateQuaternion(-1));
-            this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.SUCCESSFUL);
-        } else {
-            actionFinished(false);
-        }
+        ServerAction rotate = new ServerAction();
+        rotate.rotation.y = -90;
+        RotateLook(rotate);
     }
 
     public override void RotateRight(ServerAction controlCommand) {
-        if (CheckIfAgentCanTurn(90)||controlCommand.forceAction) {
-            framesUntilGridSnap = 0;
-            DefaultAgentHand(controlCommand);
-
-            bodyRotationActionData = new MCSRotationData(MCSRotationData.Rotate.RIGHT, transform.rotation, GetRotateQuaternion(1));
-            this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.SUCCESSFUL);
-        } else {
-            actionFinished(false);
-        }
+        ServerAction rotate = new ServerAction();
+        rotate.rotation.y = 90;
+        RotateLook(rotate);
     }
 
     public override void LookUp(ServerAction controlCommand) 
     {
-        if (Mathf.Round(m_Camera.transform.rotation.eulerAngles.x) <= horizonAngles[horizonAngles.Length - 1] && 
-            Mathf.Round(m_Camera.transform.rotation.eulerAngles.x) >= maxHorizon)
-        {
-            lookRotationActionData = 
-                    new MCSRotationData(MCSRotationData.Rotate.NONE, m_Camera.transform.rotation, m_Camera.transform.rotation);
-            errorMessage = "can't LookUp beyond the max horizon angle";
-            errorCode = ServerActionErrorCode.LookUpCantExceedMax;
-            this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.FAILED);
-        } 
-        else 
-        {
-            float targetHorizon = 
-                m_Camera.transform.rotation.eulerAngles.x > horizonAngles[0] ? horizonAngles[0] : 
-                currentHorizonAngleIndex() < horizonAngles.Length - 1 ? horizonAngles[currentHorizonAngleIndex() + 1] : 0.0f;
-
-            int up = 1;
-            if (CheckIfAgentCanLook(targetHorizon, up)) 
-            {
-                DefaultAgentHand(controlCommand);
-                if (Mathf.Round(m_Camera.transform.rotation.eulerAngles.x) <= horizonAngles[horizonAngles.Length - 1])
-                {
-                    lookRotationActionData = 
-                        new MCSRotationData(MCSRotationData.Rotate.UP, 
-                        m_Camera.transform.rotation, 
-                        Quaternion.Euler(new Vector3(targetHorizon, 0.0f, 0.0f)));
-                    this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.SUCCESSFUL);
-                }
-            }
-            else
-            {
-                this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.FAILED);  
-                actionFinished(false);
-            }
-        }
-        SetUpRotationBoxChecks();
+        ServerAction rotate = new ServerAction();
+        rotate.horizon = -30;
+        RotateLook(rotate);
     }
 
     public override void LookDown(ServerAction controlCommand)
     {    
-        if (Mathf.Round(m_Camera.transform.rotation.eulerAngles.x) >= horizonAngles[0] && Mathf.Round(m_Camera.transform.rotation.eulerAngles.x) <= 270)
-        {
-            lookRotationActionData = 
-                    new MCSRotationData(MCSRotationData.Rotate.NONE, m_Camera.transform.rotation, m_Camera.transform.rotation);
-            errorMessage = "can't LookDown below the min horizon angle";
-            Debug.Log(errorMessage);
-            errorCode = ServerActionErrorCode.LookDownCantExceedMin;
-            this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.FAILED);
-        } 
-        else 
-        {    
-            float targetHorizon = 
-                m_Camera.transform.rotation.eulerAngles.x > maxHorizon && 
-                m_Camera.transform.rotation.eulerAngles.x <= (horizonAngles[horizonAngles.Length - 1]) ? horizonAngles[horizonAngles.Length - 1] : 
-                currentHorizonAngleIndex() > 0 ? horizonAngles[currentHorizonAngleIndex() - 1] : 0.0f;
-
-            int down = -1;
-            if (CheckIfAgentCanLook(targetHorizon, down))
-            {
-                DefaultAgentHand(controlCommand); 
-                if (Mathf.Round(m_Camera.transform.rotation.eulerAngles.x) <= horizonAngles[0] || m_Camera.transform.rotation.eulerAngles.x >= 270)
-                {
-                    lookRotationActionData = 
-                            new MCSRotationData(MCSRotationData.Rotate.DOWN, 
-                            m_Camera.transform.rotation, 
-                            Quaternion.Euler(new Vector3(targetHorizon, 0.0f, 0.0f)));
-                    this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.SUCCESSFUL);
-                }
-            }
-            else
-            {
-                this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.FAILED);
-                actionFinished(false);
-            }
-        }
-        SetUpRotationBoxChecks();
+        ServerAction rotate = new ServerAction();
+        rotate.horizon = 30;
+        RotateLook(rotate);
     }
 
-
-    public void RotateBodyAcrossFrames(MCSRotationData rotationActionData) 
-    {
-        int index = currentHeadingAngleIndex();
-        //float nearestHeadingAngle = headingAngles[currentHeadingAngleIndex()];
-        bool currentlyAtHeadingAngle = false;
-        foreach (int angle in headingAngles) {
-            if (Mathf.Round(rotationActionData.startingRotation.eulerAngles.y) == angle) {
-                currentlyAtHeadingAngle = true;
-                break;
-            }
-        }
-
-        if (!currentlyAtHeadingAngle)
-            rotationActionData.endRotation = RotateToHeadingAngles(rotationActionData);
-        
-        Quaternion currentAngle = rotationActionData.startingRotation;
-        Quaternion endAngle = rotationActionData.endRotation;
-
-        Vector3 change = currentAngle.eulerAngles - endAngle.eulerAngles;
-        change.y = Mathf.Abs(change.y);
-        change.y = Mathf.Round(change.y) >= headingAngles[headingAngles.Length - 1] ? Math.Abs(change.y-360f) : change.y; //270+ degree change goes to 0 
-
-        Vector3 changePerFrame = rotationActionData.direction == MCSRotationData.Rotate.LEFT ? -change / PHYSICS_SIMULATION_LOOPS : change / PHYSICS_SIMULATION_LOOPS;
-        transform.rotation = Quaternion.Euler(transform.rotation.eulerAngles + changePerFrame);      
-    }
-
-    public void LookAcrossFrames(MCSRotationData rotationActionData) 
-    {
-        bool currentlyAtHorizonAngle = false;
-        foreach (int angle in horizonAngles) {
-            if (Mathf.Round(rotationActionData.startingRotation.eulerAngles.x) == angle) {
-                currentlyAtHorizonAngle = true;
-                break;
-            }
-        }
-
-        if (!currentlyAtHorizonAngle)
-            rotationActionData.endRotation = RotateToHeadingAngles(rotationActionData);
-        
-        Quaternion currentAngle = rotationActionData.startingRotation;
-        Quaternion endAngle = rotationActionData.endRotation;
-
-        float horizonChange = Mathf.Abs(currentAngle.eulerAngles.x - endAngle.eulerAngles.x);
-        Vector3 lookChange = new Vector3(horizonChange, 0, 0);
-        if (lookChange.x > 180) {
-            lookChange.x = Mathf.Abs(lookChange.x - 360);
-        }
-
-        lookChange.x = lookChange.x >= horizonAngles[horizonAngles.Length - 1] ? Mathf.Abs(lookChange.x - 360): lookChange.x; //330 degree change becomes 30
-
-        Vector3 changePerFrame = rotationActionData.direction == MCSRotationData.Rotate.UP ? -lookChange / PHYSICS_SIMULATION_LOOPS : lookChange / PHYSICS_SIMULATION_LOOPS;
-        m_Camera.transform.rotation = Quaternion.Euler(m_Camera.transform.rotation.eulerAngles + changePerFrame);
-    }
-
-    //this needs it's own method because it is a free look while the other methods are locked into specific values
     public void RotateLookAcrossFrames(MCSRotationData rotationActionData) 
     {
         Quaternion currentAngle = rotationActionData.startingRotation;
@@ -1021,81 +866,9 @@ public class MCSController : PhysicsRemoteFPSAgentController {
         Vector3 changePerFrame = -lookChange / 5f; //up or down per frame
         m_Camera.transform.rotation = Quaternion.Euler(m_Camera.transform.rotation.eulerAngles + changePerFrame);
     }
-
-    //this is for changing between rotate look and other rotate methods without getting errors
-    public Quaternion RotateToHeadingAngles (MCSRotationData rotationData)
-    {
-        float[] angles = rotationData.direction == MCSRotationData.Rotate.UP || rotationData.direction == MCSRotationData.Rotate.DOWN ? horizonAngles : headingAngles;
-        
-        int index = rotationData.direction == MCSRotationData.Rotate.UP || rotationData.direction == MCSRotationData.Rotate.DOWN ?
-            nearestAngleIndex(rotationData.startingRotation.eulerAngles.x, angles, true) : 
-            nearestAngleIndex(rotationData.startingRotation.eulerAngles.y, angles, false);
-        
-        float nearestLockedAngle = angles[index]; //as in the locked values of the heading and horizon angle arrays
-        int lastAngleIndex = angles.Length - 1; 
-        float lastAngle = angles[angles.Length - 1];
-        float currentRotation = rotationData.direction == MCSRotationData.Rotate.UP || rotationData.direction == MCSRotationData.Rotate.DOWN ? 
-            rotationData.startingRotation.eulerAngles.x : rotationData.startingRotation.eulerAngles.y;
-
-        if (rotationData.direction == MCSRotationData.Rotate.LEFT) 
-        {
-            float leftHeadingAngle = 
-                index > 0 ? angles[index - 1] : 
-                index < lastAngleIndex ? lastAngle : nearestLockedAngle;
-            
-            float headingAngleToMoveTo = 
-                currentRotation - leftHeadingAngle > currentRotation - nearestLockedAngle &&
-                currentRotation < nearestLockedAngle ? leftHeadingAngle : nearestLockedAngle;
-
-            return Quaternion.Euler(new Vector3(0, headingAngleToMoveTo, 0));
-        }
-
-        if (rotationData.direction == MCSRotationData.Rotate.RIGHT) 
-        {
-            float rightHeadingAngle = 
-                index < lastAngleIndex ? angles[index + 1] : 
-                index == lastAngleIndex ? angles[0] : nearestLockedAngle;
-            
-            float headingAngleToMoveTo = 
-                currentRotation - rightHeadingAngle < currentRotation - nearestLockedAngle &&
-                currentRotation > nearestLockedAngle ? rightHeadingAngle : 
-                rightHeadingAngle == headingAngles[0] && currentRotation > lastAngle ? headingAngles[0] : nearestLockedAngle; 
-            
-            return Quaternion.Euler(new Vector3(0, headingAngleToMoveTo, 0));
-        }
-
-        if (rotationData.direction == MCSRotationData.Rotate.DOWN) 
-        {
-            float downHorizonAngle = 
-                index > 0 ? angles[index - 1] : nearestLockedAngle;     
-            
-            float horizonAngleToMoveTo = 
-                rotationData.startingRotation.eulerAngles.x < lastAngle && 
-                rotationData.startingRotation.eulerAngles.x > 270 ? lastAngle :
-                Math.Abs(currentRotation - downHorizonAngle) > Math.Abs(currentRotation - nearestLockedAngle) ? downHorizonAngle : nearestLockedAngle; 
-            
-            return Quaternion.Euler(new Vector3(horizonAngleToMoveTo, 0, 0));
-        }
-
-        if (rotationData.direction == MCSRotationData.Rotate.UP) 
-        {
-            float upHorizonAngle = 
-                index < lastAngleIndex ? angles[index + 1] : nearestLockedAngle;
-            
-            float horizonAngleToMoveTo = 
-                rotationData.startingRotation.eulerAngles.x > horizonAngles[0] && rotationData.startingRotation.eulerAngles.x > minHorizon ? horizonAngles[0]:
-                Math.Abs(currentRotation - upHorizonAngle) < 330 && Math.Abs(currentRotation - upHorizonAngle) > 300 ? nearestLockedAngle :
-                (Mathf.Abs(currentRotation - upHorizonAngle) > Mathf.Abs((upHorizonAngle - 360) / 2)) && (Mathf.Abs(currentRotation - upHorizonAngle) < 360)? upHorizonAngle: 
-                Math.Abs(currentRotation - upHorizonAngle) > Math.Abs(currentRotation - nearestLockedAngle) ? upHorizonAngle : nearestLockedAngle; 
-
-            return Quaternion.Euler(new Vector3(horizonAngleToMoveTo, 0, 0));
-        }
-
-        return new Quaternion();
-    }
 }
 
-//class for contatining movement data
+/* class for contatining movement data */
 public class MCSMovementActionData {
     public Vector3 direction;
     public string UniqueID;
@@ -1110,11 +883,9 @@ public class MCSMovementActionData {
     }
 }
 
-//class for contatining rotation data
+/* class for contatining rotation data */
 public class MCSRotationData {
-    public enum Rotate {
-        LEFT, RIGHT, UP, DOWN, NONE, RESET, ROTATE_LOOK
-    }
+    public enum Rotate {RESET, ROTATE_LOOK}
     public Quaternion startingRotation;
     public Quaternion endRotation;
     public Rotate direction;
