@@ -130,9 +130,11 @@ class Jarvis(Agent):
         return self._step('CloseObject', **kwargs)
 
     def turn_on(self):
+        # NOTE: Renamed from Toggle On
         pass
 
     def turn_off(self):
+        # NOTE: Renamed from Toggle Off
         pass
 
     def cook(
@@ -141,7 +143,9 @@ class Jarvis(Agent):
             y: Union[float, None] = None,
             object_id: Union[None, str] = None,
             force_action: bool = False) -> bool:
-        pass
+        kwargs = _get_interact_type_kwargs(x, y, object_id)
+        kwargs['forceAction'] = force_action
+        return self._step('CookObject', **kwargs)
 
     def cut(
             self,
@@ -149,6 +153,7 @@ class Jarvis(Agent):
             y: Union[float, None] = None,
             object_id: Union[None, str] = None,
             force_action: bool = False) -> bool:
+        # NOTE: Renamed from Slice
         pass
 
     def destroy(
@@ -157,7 +162,10 @@ class Jarvis(Agent):
             y: Union[float, None] = None,
             object_id: Union[None, str] = None,
             force_action: bool = False) -> bool:
-        pass
+        # NOTE: Renamed from Break
+        kwargs = _get_interact_type_kwargs(x, y, object_id)
+        kwargs['forceAction'] = force_action
+        return self._step('BreakObject', **kwargs)
 
     def dirty(
             self,
@@ -165,7 +173,9 @@ class Jarvis(Agent):
             y: Union[float, None] = None,
             object_id: Union[None, str] = None,
             force_action: bool = False) -> bool:
-        pass
+        kwargs = _get_interact_type_kwargs(x, y, object_id)
+        kwargs['forceAction'] = force_action
+        return self._step('DirtyObject', **kwargs)
 
     def clean(
             self,
@@ -173,7 +183,9 @@ class Jarvis(Agent):
             y: Union[float, None] = None,
             object_id: Union[None, str] = None,
             force_action: bool = False) -> bool:
-        pass
+        kwargs = _get_interact_type_kwargs(x, y, object_id)
+        kwargs['forceAction'] = force_action
+        return self._step('CleanObject', **kwargs)
 
     def liquid_fill(
             self,
@@ -182,7 +194,13 @@ class Jarvis(Agent):
             y: Union[float, None] = None,
             object_id: Union[None, str] = None,
             force_action: bool = False) -> bool:
-        pass
+        valid_liquid_types = {'coffee', 'wine', 'water'}
+        if liquid_type not in valid_liquid_types:
+            raise ValueError(f'Liquid must be in {valid_liquid_types}.')
+        kwargs = _get_interact_type_kwargs(x, y, object_id)
+        kwargs['forceAction'] = force_action
+        kwargs['fillLiquid'] = liquid_type
+        return self._step('FillObjectWithLiquid', **kwargs)
 
     def liquid_empty(
             self,
@@ -190,7 +208,9 @@ class Jarvis(Agent):
             y: Union[float, None] = None,
             object_id: Union[None, str] = None,
             force_action: bool = False) -> bool:
-        pass
+        kwargs = _get_interact_type_kwargs(x, y, object_id)
+        kwargs['forceAction'] = force_action
+        return self._step('EmptyLiquidFromObject', **kwargs)
 
     def use_up(
             self,
@@ -198,4 +218,6 @@ class Jarvis(Agent):
             y: Union[float, None] = None,
             object_id: Union[None, str] = None,
             force_action: bool = False) -> bool:
-        pass
+        kwargs = _get_interact_type_kwargs(x, y, object_id)
+        kwargs['forceAction'] = force_action
+        return self._step('UseUpObject', **kwargs)
