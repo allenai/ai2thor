@@ -124,8 +124,10 @@ class Jarvis(Agent):
             x: Union[float, None] = None,
             y: Union[float, None] = None,
             object_id: Union[None, str] = None,
-            force_action: bool = False) -> None:
-        pass
+            force_action: bool = False) -> bool:
+        kwargs = _get_interact_type_kwargs(x, y, object_id)
+        kwargs['forceAction'] = force_action
+        return self._step('CloseObject', **kwargs)
 
     def turn_on(self):
         pass
@@ -138,7 +140,7 @@ class Jarvis(Agent):
             x: Union[float, None] = None,
             y: Union[float, None] = None,
             object_id: Union[None, str] = None,
-            force_action: bool = False) -> None:
+            force_action: bool = False) -> bool:
         pass
 
     def cut(
@@ -146,7 +148,7 @@ class Jarvis(Agent):
             x: Union[float, None] = None,
             y: Union[float, None] = None,
             object_id: Union[None, str] = None,
-            force_action: bool = False) -> None:
+            force_action: bool = False) -> bool:
         pass
 
     def destroy(
@@ -154,7 +156,7 @@ class Jarvis(Agent):
             x: Union[float, None] = None,
             y: Union[float, None] = None,
             object_id: Union[None, str] = None,
-            force_action: bool = False) -> None:
+            force_action: bool = False) -> bool:
         pass
 
     def dirty(
@@ -162,7 +164,7 @@ class Jarvis(Agent):
             x: Union[float, None] = None,
             y: Union[float, None] = None,
             object_id: Union[None, str] = None,
-            force_action: bool = False) -> None:
+            force_action: bool = False) -> bool:
         pass
 
     def clean(
@@ -170,7 +172,7 @@ class Jarvis(Agent):
             x: Union[float, None] = None,
             y: Union[float, None] = None,
             object_id: Union[None, str] = None,
-            force_action: bool = False) -> None:
+            force_action: bool = False) -> bool:
         pass
 
     def liquid_fill(
@@ -179,7 +181,7 @@ class Jarvis(Agent):
             x: Union[float, None] = None,
             y: Union[float, None] = None,
             object_id: Union[None, str] = None,
-            force_action: bool = False) -> None:
+            force_action: bool = False) -> bool:
         pass
 
     def liquid_empty(
@@ -187,7 +189,7 @@ class Jarvis(Agent):
             x: Union[float, None] = None,
             y: Union[float, None] = None,
             object_id: Union[None, str] = None,
-            force_action: bool = False) -> None:
+            force_action: bool = False) -> bool:
         pass
 
     def use_up(
@@ -195,5 +197,5 @@ class Jarvis(Agent):
             x: Union[float, None] = None,
             y: Union[float, None] = None,
             object_id: Union[None, str] = None,
-            force_action: bool = False) -> None:
+            force_action: bool = False) -> bool:
         pass
