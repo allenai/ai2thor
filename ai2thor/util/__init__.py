@@ -8,5 +8,7 @@ from ai2thor.util import transforms
 import numpy as np
 AHEAD = np.array([1, 0, 0])
 BACK = np.array([-1, 0, 0])
-RIGHT = np.array([0, 1, 0])
-LEFT = np.array([0, -1, 0])
+RIGHT = np.array([0, 0, 1])
+LEFT = np.array([0, 0, -1])
+UP = np.array([0, 1, 0])
+DOWN = np.array([0, -1, 0])

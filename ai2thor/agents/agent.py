@@ -10,12 +10,33 @@ class Agent(ABC):
             self,
             camera: ai2thor.utils.Camera = ai2thor.utils.Camera(),
             noise: None = None,
-            default_rotate_degrees: float = 30,
+            default_rotate_degrees: float = 90,
             default_move_meters: float = 0.25,
             nav_success_max_meters_dist: float = 1.5):
         self._reset_camera = False
         self.camera = camera
+        self.default_rotate_degrees = default_rotate_degrees
+        self.default_move_meters = default_move_meters
         # TODO: add setter to camera
+
+    @property
+    def frame(self) -> np.ndarray:
+        if self.camera.frame_as_bgr:
+            return self._base_controller.last_event.cv2img
+        else:
+            return self._base_controller.last_event.frame
+
+    @property
+    def depth_frame(self):
+        raise NotImplementedError()
+
+    @property
+    def class_segmentation_frame(self):
+        raise NotImplementedError()
+
+    @property
+    def instance_segmantation_frame(self):
+        raise NotImplementedError()
 
     def _connect_base_controller(
             self,
@@ -24,16 +45,17 @@ class Agent(ABC):
         self._base_controller = base_controller
         self._agent_idx = agent_idx
 
-    def _step(self, action: str, **action_kwargs) -> object:
+    def _step(self, action: str, **action_kwargs) -> bool:
         # single agent
         if self._agent_idx is None:
-            return self._base_controller.step(action, **action_kwargs)
+            event = self._base_controller.step(action, **action_kwargs)
         # multi-agent
         else:
-            return self._base_controller.step(
+            event = self._base_controller.step(
                 action,
                 agentId=self._agent_idx,
                 **action_kwargs)
+        return event.metadata['lastActionSuccess']
 
     @property
     @abstractmethod
@@ -44,23 +66,41 @@ class Agent(ABC):
     def move(
             self,
             direction: np.ndarray = AHEAD,
-            meters: float = 0.25) -> None:
+            meters: Union[None, float] = None) -> bool:
         """Translates the agent in 'direction' by a distance of 'meters'"""
         # TODO: support vector direction with teleport
 
-        kwargs = {'moveMagnitude': meters}
+        kwargs = {
+            'moveMagnitude':
+                self.default_move_meters if meters is None else meters
+        }
         if direction is AHEAD:
-            self._step(action='MoveAhead', **kwargs)
+            return self._step(action='MoveAhead', **kwargs)
         elif direction is BACK:
-            self._step(action='MoveBack', **kwargs)
+            return self._step(action='MoveBack', **kwargs)
         elif direction is RIGHT:
-            self._step(action='MoveRight', **kwargs)
+            return self._step(action='MoveRight', **kwargs)
         elif direction is LEFT:
-            self._step(action='MoveLeft', **kwargs)
+            return self._step(action='MoveLeft', **kwargs)
         else:
             raise ValueError(
                 'Invalid direction!\n'
-                'Please use ai2thor.utils.{AHEAD, BACK, LEFT, RIGHT}.')
+                'Please use ai2thor.utils.{AHEAD, BACK, RIGHT, LEFT}.')
+
+    def rotate(
+            self,
+            direction: np.ndarray = RIGHT,
+            degrees: Union[None, float] = None) -> bool:
+        """Rotates the agent in 'direction' by 'degrees'"""
+        degrees = self.default_rotate_degrees if degrees is None else degrees
+        if direction is RIGHT:
+            return self._step('RotateRight', degrees=degrees)
+        elif direction is LEFT:
+            return self._step('RotateLeft', degrees=degrees)
+        else:
+            raise ValueError(
+                'Invalid direction!\n'
+                'Please use ai2thor.utils.{RIGHT, LEFT}.')
 
     '''
     @property
@@ -97,16 +137,6 @@ class Agent(ABC):
         """Updates last_event without changing the environment"""
         self._step(action='done')
 
-    def rotate(self, degrees: float = 90, direction: str = 'right') -> None:
-        """Translates the agent in 'direction' by 'degrees'"""
-        valid_directions = {'right', 'left'}
-        if direction not in valid_directions:
-            raise ValueError(f'direction must be in {valid_directions}')
-
-        if direction == 'right':
-            self._step(action='RotateRight', degrees=degrees)
-        else:
-            self._step(action='RotateLeft', degrees=degrees)
 
 
     def peak(self, degrees: float = 30, direction: str = 'up', ) -> None:

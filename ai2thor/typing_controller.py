@@ -6,7 +6,15 @@ import warnings
 
 
 def _base_init(scene: str, agents: Sequence[ai2thor.Agent]) -> BaseController:
-    base_controller = BaseController(scene=scene)
+    agent_count = {'agentCount': len(agents)} if len(agents) != 1 else {}
+    base_controller = BaseController(
+        scene=scene,
+        fov=agents[0].camera.fov,
+        width=agents[0].camera.width,
+        height=agents[0].camera.height,
+        renderClassimage=agents[0].camera.render_class_segmentation,
+        renderObjectImage=agents[0].camera.render_instance_segmentation,
+        **agent_count)
 
     # link each of the agents with the controller
     for i, agent in enumerate(agents):
@@ -30,7 +38,7 @@ class _JarvisController:
 
 
 def Controller(
-        scene: str = 'FloorPlan_Train1_1',
+        scene: str = 'FloorPlan28',
         agents: Union[ai2thor.Agent, Sequence[ai2thor.Agent]] = Jarvis()):
     # Decides which controller to provide based on the agent.
     # This helps with mypy find functions specific to certain controllers.

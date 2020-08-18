@@ -2,6 +2,9 @@
 Default AI2-THOR Blue Physics Based Agent. It can ONLY move in x/z directions
 and can only change it's yaw.
 """
+
+# TODO: raise exception for robothor scenes
+
 from typing import Union, Tuple, Dict, List
 from .agent import Agent
 
@@ -9,6 +12,7 @@ from .agent import Agent
 class Jarvis(Agent):
     def __init__(self):
         Agent.__init__(self)
+        # step here to set up the agent
 
     def pose(self):
         raise NotImplementedError()
