@@ -1,6 +1,7 @@
 # TODO: add setter to camera
 # TODO: Raise Exception for not building a controller
 from typing import Union, Dict, List
+from ai2thor.controller import Controller as BaseController
 import ai2thor.utils
 from ai2thor.utils import AHEAD, BACK, LEFT, RIGHT, UP, DOWN
 from abc import ABC, abstractmethod
@@ -21,13 +22,22 @@ class Agent(ABC):
         self.default_rotate_degrees = default_rotate_degrees
         self.default_move_meters = default_move_meters
         self.default_peak_degrees = default_peak_degrees
+        self._base_controllers: List[BaseController] = []
+
+    def _extract_sensors(self, event_fn):
+        if len(self._base_controllers) == 1:
+            # one to one mapping between agent and controller
+            return event_fn(self, self._base_controllers[0].last_event)
+        else:
+            return [
+                event_fn(self, contrl.last_event)
+                for contrl in self._base_controllers]
 
     @property
     def frame(self) -> np.ndarray:
-        if self.camera.frame_as_bgr:
-            return self._base_controller.last_event.cv2img
-        else:
-            return self._base_controller.last_event.frame
+        return self._extract_sensors(
+            lambda e: e.ev2img if self.camera.frame_as_bgr else e.frame
+        )
 
     @property
     def depth_frame(self) -> np.ndarray:
@@ -37,7 +47,7 @@ class Agent(ABC):
                 'pass camera=Camera(render_depth=True) to your Agent'
             )
         else:
-            return self._base_controller.last_event.depth_frame
+            return self._extract_sensors(lambda e: e.depth_frame)
 
     @property
     def class_segmentation_frame(self) -> np.ndarray:
@@ -48,10 +58,12 @@ class Agent(ABC):
                 'to your Agent'
             )
         else:
-            return self._base_controller.last_event.class_segmentation_frame
+            return self._extract_sensors(
+                lambda e: e.class_segmentation_frame)
 
     @property
-    def instance_segmantation_frame(self) -> np.ndarray:
+    def instance_segmantation_frame(
+            self) -> Union[np.ndarray, List[np.ndarray]]:
         if not self.camera.render_instance_segmentation:
             raise ValueError(
                 'Camera must render_instance_segmentation.\n'
@@ -59,7 +71,8 @@ class Agent(ABC):
                 'to your Agent'
             )
         else:
-            return self._base_controller.last_event.instance_segmentation_frame
+            return self._extract_sensors(
+                lambda e: e.instance_segmentation_frame)
 
     @property
     def bounding_box_frame(self) -> np.ndarray:
@@ -77,20 +90,20 @@ class Agent(ABC):
             base_controller,
             agent_idx: Union[None, int]):
         # TODO: Connect to multiple base controllers!
-        self._base_controller = base_controller
+        self._base_controllers.append(base_controller)
         self._agent_idx = agent_idx
 
     def _step(self, action: str, **action_kwargs) -> bool:
-        # single agent
-        if self._agent_idx is None:
-            event = self._base_controller.step(action, **action_kwargs)
-        # multi-agent
-        else:
-            event = self._base_controller.step(
-                action,
-                agentId=self._agent_idx,
-                **action_kwargs)
-        return event.metadata['lastActionSuccess']
+        out = []
+
+        # works for single agent and multi-agent
+        if self._agent_idx is not None:
+            action_kwargs['agentId'] = self._agent_idx
+
+        for ctrl in self._base_controllers:
+            event = ctrl.step(action, **action_kwargs)
+            out.append(event.metadata['lastActionSuccess'])
+        return out[0] if len(out) == 1 else out
 
     @property
     @abstractmethod
@@ -139,8 +152,8 @@ class Agent(ABC):
 
     @property
     def horizon(self) -> float:
-        agent = self._base_controller.last_event.metadata['agent']
-        return agent['cameraHorizon']
+        return self._extract_sensors(
+            lambda event: event.metadata['agent']['cameraHorizon'])
 
     def done(self) -> None:
         """Updates last_event without changing the environment"""

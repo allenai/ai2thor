@@ -69,6 +69,9 @@ class _JarvisController:
     def map_frame(self) -> np.ndarray:
         return _get_map_frame(self)
 
+    def stop(self):
+        self._base_controller.stop()
+
 
 def Controller(
         scene: str = 'FloorPlan28',

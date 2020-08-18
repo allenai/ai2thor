@@ -40,6 +40,11 @@ class Jarvis(Agent):
         # step here to set up the agent
 
     @property
+    def pose(self):
+        raise NotImplementedError()
+
+    '''
+    @property
     def pos(self) -> Tuple[float, float]:
         """Returns the tuple(x, z) position of the agent"""
         event = self._base_controller.last_event
@@ -103,6 +108,7 @@ class Jarvis(Agent):
             rotation={'x': rot_x, 'y': rot_y, 'z': rot_z},
             horizon=horizon
         )
+    '''
 
     def open(
             self,
