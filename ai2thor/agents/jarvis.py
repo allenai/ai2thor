@@ -27,8 +27,43 @@ class Jarvis(Agent):
             nav_success_max_meter_dist=nav_success_max_meter_dist)
         # step here to set up the agent
 
-    def pose(self):
-        raise NotImplementedError()
+    @property
+    def pos(self) -> Tuple[float, float]:
+        """Returns the tuple(x, z) position of the agent"""
+        event = self._base_controller.last_event
+        pos = event.metadata['agent']['position']
+        return pos['x'], pos['z']
+
+    @property
+    def rot(self) -> float:
+        """Returns the yaw (or heading direction) of the agent"""
+        event = self._base_controller.last_event
+        return event.metadata['agent']['rotation']['y']
+
+    @property
+    def pose(self) -> Dict[str, float]:
+        # use this format for teleporting
+        event = self._base_controller.last_event
+        horizon = event.metadata['agent']['cameraHorizon']
+        pos = self.pos
+        rot = self.rot
+        return {
+            'x': pos[0],
+            'z': pos[1],
+            'rot_y': rot,
+            'horizon': horizon
+        }
+
+    @property
+    def reachable_positions(self) -> List[Dict[str, float]]:
+        # TODO: Cache per scene
+        self._step('GetReachablePositions', renderImage=False)
+        event = self._base_controller.last_event
+        positions = event.metadata['reachablePositions']
+        return [{
+            'x': pos['x'],
+            'z': pos['z']
+        } for pos in positions]
 
     def jarvis_method(self):
         return 'yo'
@@ -43,40 +78,6 @@ class Jarvis(ai2thor.agents.Agent):
             controller: ai2thor.typing_controller.Controller,
             agent_idx: Union[int, None] = None):
         ai2thor.agents.Agent.__init__(self, controller, agent_idx)
-
-    @property
-    def pose(self) -> Dict[str, float]:
-        # use this format for teleporting
-        horizon = self.last_event.metadata['agent']['cameraHorizon']
-        pos = self.pos
-        rot = self.rot
-        return {
-            'x': pos[0],
-            'z': pos[1],
-            'rot_y': rot,
-            'horizon': horizon
-        }
-
-    @property
-    def pos(self) -> Tuple[float, float]:
-        """Returns the tuple(x, z) position of the agent"""
-        pos = self.last_event.metadata['agent']['position']
-        return pos['x'], pos['z']
-
-    @property
-    def rot(self) -> float:
-        """Returns the yaw (or heading direction) of the agent"""
-        return self.last_event.metadata['agent']['rotation']['y']
-
-    @property
-    def reachable_positions(self) -> List[Dict[str, float]]:
-        # TODO: Cache per scene
-        event = self._step('GetReachablePositions', renderImage=False)
-        positions = event.metadata['reachablePositions']
-        return [{
-            'x': pos['x'],
-            'z': pos['z']
-        } for pos in positions]
 
     def teleport(
             self,

@@ -37,12 +37,37 @@ class Agent(ABC):
             return self._base_controller.last_event.depth_frame
 
     @property
-    def class_segmentation_frame(self):
-        raise NotImplementedError()
+    def class_segmentation_frame(self) -> np.ndarray:
+        if not self.camera.render_class_segmentation:
+            raise ValueError(
+                'Camera must render_class_segmentation.\n'
+                'pass camera=Camera(render_class_segmentation=True) '
+                'to your Agent'
+            )
+        else:
+            return self._base_controller.last_event.class_segmentation_frame
 
     @property
-    def instance_segmantation_frame(self):
-        raise NotImplementedError()
+    def instance_segmantation_frame(self) -> np.ndarray:
+        if not self.camera.render_instance_segmentation:
+            raise ValueError(
+                'Camera must render_instance_segmentation.\n'
+                'pass camera=Camera(render_instance_segmentation=True) '
+                'to your Agent'
+            )
+        else:
+            return self._base_controller.last_event.instance_segmentation_frame
+
+    @property
+    def bounding_box_frame(self) -> np.ndarray:
+        if not self.camera.render_instance_segmentation:
+            raise ValueError(
+                'Camera must render_instance_segmentation.\n'
+                'pass camera=Camera(render_instance_segmentation=True) '
+                'to your Agent'
+            )
+        else:
+            raise NotImplementedError()
 
     def _connect_base_controller(
             self,

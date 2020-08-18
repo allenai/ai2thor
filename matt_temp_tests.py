@@ -1,10 +1,22 @@
 from ai2thor import Controller
-from ai2thor.utils import AHEAD, BACK, Camera
+from ai2thor.utils import AHEAD, RIGHT, LEFT, BACK, Camera
 from ai2thor.agents import Jarvis
+from PIL import Image
 
 agent = Jarvis(Camera(render_depth=True))
 controller = Controller(agents=agent)
+
+controller.agent.depth_frame
 controller.agent.move(BACK)
+
+controller.agent.rotate(RIGHT)
+controller.agent.rot
+
+controller.agent.pose
+
+Image.fromarray(controller.map_frame)
+
+controller
 
 
 controller.agent.move()

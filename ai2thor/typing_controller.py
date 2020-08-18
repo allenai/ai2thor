@@ -1,9 +1,15 @@
 from ai2thor.controller import Controller as BaseController
-from typing import Sequence, Union, Type
+from typing import Sequence, Union, Iterable, List, Dict, Any
 from ai2thor.agents import Jarvis, Agent
+import numpy as np
 import ai2thor
 import warnings
 
+
+# NOTE: These functions cannot be inherited from a base class as
+# it makes typing less flexible.
+
+# TODO: Log trajectory image
 
 def _base_init(scene: str, agents: Sequence[ai2thor.Agent]) -> BaseController:
     agent_count = {'agentCount': len(agents)} if len(agents) != 1 else {}
@@ -26,6 +32,28 @@ def _base_init(scene: str, agents: Sequence[ai2thor.Agent]) -> BaseController:
     return base_controller
 
 
+def _get_map_frame(self):
+    event = self._base_controller.step(action='ToggleMapView')
+    frame = event.frame
+    self._base_controller.step(action='ToggleMapView')
+    return frame
+
+
+"""
+def objects(
+        self,
+        types: Union[None, str, Iterable[str]] = None,
+        chopable: Union[None, bool] = None,  # TODO: Change this name
+        openable: Union[None, bool] = None,
+        pickupable: Union[None, bool] = None,
+        moveable: Union[None, bool] = None,
+        is_moving: Union[None, bool] = None,
+
+        ) -> List[Dict[str, Any]]:
+    raise NotImplementedError()
+"""
+
+
 class _JarvisController:
     def __init__(self, scene: str, agents: Sequence[Jarvis]):
         self._base_controller = _base_init(scene, agents)
@@ -36,6 +64,10 @@ class _JarvisController:
         if len(self.agents) != 1:
             raise ValueError('Use .agents[i] to access the ith multi-agent')
         return self.agents[0]
+
+    @property
+    def map_frame(self) -> np.ndarray:
+        return _get_map_frame(self)
 
 
 def Controller(
