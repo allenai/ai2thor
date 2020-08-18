@@ -1,11 +1,10 @@
-import ai2thor
-
 from ai2thor import Controller
-from ai2thor.utils import AHEAD
+from ai2thor.utils import AHEAD, BACK
+import numpy as np
 
 controller = Controller('FloorPlan_Train1_1')
 
-controller.agent.move(direction=AHEAD)
+controller.agent.move(AHEAD)
 
 controller.agent.move()
 

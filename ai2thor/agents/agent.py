@@ -41,11 +41,10 @@ class Agent(ABC):
         # use this format for teleporting with the agent
         raise NotImplementedError()
 
-    # def move(self, meters: float = 0.25, direction: str = 'ahead') -> None:
     def move(
             self,
-            meters: float = 0.25,
-            direction: np.ndarray = AHEAD) -> None:
+            direction: np.ndarray = AHEAD,
+            meters: float = 0.25) -> None:
         """Translates the agent in 'direction' by a distance of 'meters'"""
         # TODO: support vector direction with teleport
 
@@ -59,7 +58,9 @@ class Agent(ABC):
         elif direction is LEFT:
             self._step(action='MoveLeft', **kwargs)
         else:
-            raise ValueError('Invalid direction!')
+            raise ValueError(
+                'Invalid direction!\n'
+                'Please use ai2thor.utils.{AHEAD, BACK, LEFT, RIGHT}.')
 
     '''
     @property
