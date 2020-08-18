@@ -5,7 +5,7 @@ and can only change it's yaw.
 
 # TODO: raise exception for robothor scenes
 
-from typing import Union, Tuple, Dict, List
+from typing import Union, Tuple, Dict, List, Optional
 from .agent import Agent
 import ai2thor.utils
 
@@ -79,10 +79,10 @@ class Jarvis(Agent):
 
     def teleport(
             self,
-            x: Union[None, float] = None,
-            z: Union[None, float] = None,
-            rot_y: Union[None, float] = None,
-            horizon: Union[None, float] = None) -> bool:
+            x: Optional[float] = None,
+            z: Optional[float] = None,
+            rot_y: Optional[float] = None,
+            horizon: Optional[float] = None) -> bool:
         # uses default values if they're not specified
         event = self._base_controller.last_event
         pos = event.metadata['agent']['position']
@@ -106,10 +106,10 @@ class Jarvis(Agent):
 
     def open(
             self,
-            x: Union[float, None] = None,
-            y: Union[float, None] = None,
-            object_id: Union[None, str] = None,
-            openness: Union[None, float] = None,
+            x: Optional[float] = None,
+            y: Optional[float] = None,
+            object_id: Optional[str] = None,
+            openness: Optional[float] = None,
             force_action: bool = False) -> bool:
         kwargs = _get_interact_type_kwargs(x, y, object_id)
         if openness is not None:
@@ -121,9 +121,9 @@ class Jarvis(Agent):
 
     def close(
             self,
-            x: Union[float, None] = None,
-            y: Union[float, None] = None,
-            object_id: Union[None, str] = None,
+            x: Optional[float] = None,
+            y: Optional[float] = None,
+            object_id: Optional[str] = None,
             force_action: bool = False) -> bool:
         kwargs = _get_interact_type_kwargs(x, y, object_id)
         kwargs['forceAction'] = force_action
@@ -131,17 +131,17 @@ class Jarvis(Agent):
 
     def turn_on(self):
         # NOTE: Renamed from Toggle On
-        pass
+        raise NotImplementedError()
 
     def turn_off(self):
         # NOTE: Renamed from Toggle Off
-        pass
+        raise NotImplementedError()
 
     def cook(
             self,
-            x: Union[float, None] = None,
-            y: Union[float, None] = None,
-            object_id: Union[None, str] = None,
+            x: Optional[float] = None,
+            y: Optional[float] = None,
+            object_id: Optional[str] = None,
             force_action: bool = False) -> bool:
         kwargs = _get_interact_type_kwargs(x, y, object_id)
         kwargs['forceAction'] = force_action
@@ -149,18 +149,18 @@ class Jarvis(Agent):
 
     def cut(
             self,
-            x: Union[float, None] = None,
-            y: Union[float, None] = None,
-            object_id: Union[None, str] = None,
+            x: Optional[float] = None,
+            y: Optional[float] = None,
+            object_id: Optional[str] = None,
             force_action: bool = False) -> bool:
         # NOTE: Renamed from Slice
         pass
 
     def destroy(
             self,
-            x: Union[float, None] = None,
-            y: Union[float, None] = None,
-            object_id: Union[None, str] = None,
+            x: Optional[float] = None,
+            y: Optional[float] = None,
+            object_id: Optional[str] = None,
             force_action: bool = False) -> bool:
         # NOTE: Renamed from Break
         kwargs = _get_interact_type_kwargs(x, y, object_id)
@@ -169,9 +169,9 @@ class Jarvis(Agent):
 
     def dirty(
             self,
-            x: Union[float, None] = None,
-            y: Union[float, None] = None,
-            object_id: Union[None, str] = None,
+            x: Optional[float] = None,
+            y: Optional[float] = None,
+            object_id: Optional[str] = None,
             force_action: bool = False) -> bool:
         kwargs = _get_interact_type_kwargs(x, y, object_id)
         kwargs['forceAction'] = force_action
@@ -179,9 +179,9 @@ class Jarvis(Agent):
 
     def clean(
             self,
-            x: Union[float, None] = None,
-            y: Union[float, None] = None,
-            object_id: Union[None, str] = None,
+            x: Optional[float] = None,
+            y: Optional[float] = None,
+            object_id: Optional[str] = None,
             force_action: bool = False) -> bool:
         kwargs = _get_interact_type_kwargs(x, y, object_id)
         kwargs['forceAction'] = force_action
@@ -190,9 +190,9 @@ class Jarvis(Agent):
     def liquid_fill(
             self,
             liquid_type: str,
-            x: Union[float, None] = None,
-            y: Union[float, None] = None,
-            object_id: Union[None, str] = None,
+            x: Optional[float] = None,
+            y: Optional[float] = None,
+            object_id: Optional[str] = None,
             force_action: bool = False) -> bool:
         valid_liquid_types = {'coffee', 'wine', 'water'}
         if liquid_type not in valid_liquid_types:
@@ -204,9 +204,9 @@ class Jarvis(Agent):
 
     def liquid_empty(
             self,
-            x: Union[float, None] = None,
-            y: Union[float, None] = None,
-            object_id: Union[None, str] = None,
+            x: Optional[float] = None,
+            y: Optional[float] = None,
+            object_id: Optional[str] = None,
             force_action: bool = False) -> bool:
         kwargs = _get_interact_type_kwargs(x, y, object_id)
         kwargs['forceAction'] = force_action
@@ -214,10 +214,74 @@ class Jarvis(Agent):
 
     def use_up(
             self,
-            x: Union[float, None] = None,
-            y: Union[float, None] = None,
-            object_id: Union[None, str] = None,
+            x: Optional[float] = None,
+            y: Optional[float] = None,
+            object_id: Optional[str] = None,
             force_action: bool = False) -> bool:
         kwargs = _get_interact_type_kwargs(x, y, object_id)
         kwargs['forceAction'] = force_action
         return self._step('UseUpObject', **kwargs)
+
+    def pickup(
+            self,
+            x: Optional[float] = None,
+            y: Optional[float] = None,
+            object_id: Optional[str] = None,
+            teleport_hand_to_object: bool = False,
+            force_action: bool = False) -> bool:
+        kwargs = _get_interact_type_kwargs(x, y, object_id)
+        kwargs['forceAction'] = force_action
+        kwargs['manualInteract'] = teleport_hand_to_object
+        return self._step('PickupObject', **kwargs)
+
+    def put(
+            self,
+            x: Optional[float] = None,
+            y: Optional[float] = None,
+            object_id: Optional[str] = None,
+            let_object_settle: bool = False,
+            force_action: bool = False) -> bool:
+        kwargs = _get_interact_type_kwargs(x, y, object_id)
+        kwargs['forceAction'] = force_action
+        kwargs['placeStationary'] = let_object_settle
+        return self._step('PutObject', **kwargs)
+
+    def drop(
+            self,
+            force_action: bool = False) -> bool:
+        kwargs = {}
+        kwargs['forceAction'] = force_action
+        return self._step('DropHandObject', **kwargs)
+
+    def throw(
+            self,
+            newtons: Optional[float] = None) -> bool:
+        if newtons is None:
+            return self._step('ThrowObject')
+        else:
+            return self._step('ThrowObject', moveMagnitude=newtons)
+
+    def push(
+            self,
+            x: Optional[float] = None,
+            y: Optional[float] = None,
+            object_id: Optional[str] = None,
+            angled_degrees: Optional[float] = None,
+            force_action: bool = False) -> bool:
+        # Merges directional push
+        kwargs = _get_interact_type_kwargs(x, y, object_id)
+        kwargs['forceAction'] = force_action
+        if angled_degrees is None:
+            return self._step(
+                'DirectionalPush', pushAngle=angled_degrees, **kwargs)
+        return self._step('PushObject', **kwargs)
+
+    def pull(
+            self,
+            x: Optional[float] = None,
+            y: Optional[float] = None,
+            object_id: Optional[str] = None,
+            force_action: bool = False) -> bool:
+        kwargs = _get_interact_type_kwargs(x, y, object_id)
+        kwargs['forceAction'] = force_action
+        return self._step('PullObject', **kwargs)
