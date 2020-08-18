@@ -1,7 +1,7 @@
 # TODO: add setter to camera
 from typing import Union, Dict, List
 import ai2thor.utils
-from ai2thor.utils import AHEAD, BACK, LEFT, RIGHT
+from ai2thor.utils import AHEAD, BACK, LEFT, RIGHT, UP, DOWN
 from abc import ABC, abstractmethod
 import numpy as np
 
@@ -13,11 +13,13 @@ class Agent(ABC):
             noise: None = None,
             default_rotate_degrees: float = 90,
             default_move_meters: float = 0.25,
+            default_peak_degrees: float = 30,
             nav_success_max_meter_dist: float = 1.5):
         self._reset_camera = False
         self.camera = camera
         self.default_rotate_degrees = default_rotate_degrees
         self.default_move_meters = default_move_meters
+        self.default_peak_degrees = default_peak_degrees
 
     @property
     def frame(self) -> np.ndarray:
@@ -142,19 +144,20 @@ class Agent(ABC):
         """Updates last_event without changing the environment"""
         self._step(action='done')
 
-
-    '''
-
-    def peak(self, degrees: float = 30, direction: str = 'up', ) -> None:
+    def peak(
+            self,
+            direction: np.ndarray = UP,
+            degrees: Union[None, float] = None) -> None:
         """Rotates the agent's head in 'direction' by 'degrees' without
            rotating its body."""
-        valid_directions = {'up', 'down'}
-        if direction not in valid_directions:
-            raise ValueError(f'direction must be in {valid_directions}')
-
+        degrees = self.default_peak_degrees if degrees is None else degrees
         kwargs = {'degrees': degrees}
-        if direction == 'up':
-            self._step(action='LookUp', **kwargs)
-        elif direction == 'down':
-            self._step(action='LookDown', **kwargs)
-    '''
+
+        if direction is UP:
+            self._step('LookUp', **kwargs)
+        elif direction is DOWN:
+            self._step('LookDown', **kwargs)
+        else:
+            raise ValueError(
+                'Invalid direction!\n'
+                'Please use ai2thor.utils.{UP, DOWN}.')

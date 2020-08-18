@@ -65,45 +65,41 @@ class Jarvis(Agent):
             'z': pos['z']
         } for pos in positions]
 
-    def jarvis_method(self):
-        return 'yo'
-
-
-
-'''
-
-class Jarvis(ai2thor.agents.Agent):
-    def __init__(
-            self,
-            controller: ai2thor.typing_controller.Controller,
-            agent_idx: Union[int, None] = None):
-        ai2thor.agents.Agent.__init__(self, controller, agent_idx)
-
     def teleport(
             self,
             x: Union[None, float] = None,
             z: Union[None, float] = None,
             rot_y: Union[None, float] = None,
-            horizon: Union[None, float] = None) -> None:
+            horizon: Union[None, float] = None) -> bool:
         # uses default values if they're not specified
-        pos = self.last_event.metadata['agent']['position']
+        event = self._base_controller.last_event
+        pos = event.metadata['agent']['position']
         y = pos['y']
         x = pos['x'] if x is None else x
         z = pos['z'] if z is None else z
 
-        rot = self.last_event.metadata['agent']['rotation']
+        rot = event.metadata['agent']['rotation']
         rot_x = rot['x']
         rot_z = rot['z']
         rot_y = rot['y'] if rot_y is None else rot_y
 
         horizon = self.horizon if horizon is None else horizon
 
-        self._step(
+        return self._step(
             'TeleportFull',
-            x=x, y=y, z=y,
+            x=x, y=y, z=z,
             rotation={'x': rot_x, 'y': rot_y, 'z': rot_z},
             horizon=horizon
         )
+
+
+'''
+class Jarvis(ai2thor.agents.Agent):
+    def __init__(
+            self,
+            controller: ai2thor.typing_controller.Controller,
+            agent_idx: Union[int, None] = None):
+        ai2thor.agents.Agent.__init__(self, controller, agent_idx)
 
     def open(
             self,
