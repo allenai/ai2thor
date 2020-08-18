@@ -7,11 +7,24 @@ and can only change it's yaw.
 
 from typing import Union, Tuple, Dict, List
 from .agent import Agent
+import ai2thor.utils
 
 
 class Jarvis(Agent):
-    def __init__(self):
-        Agent.__init__(self)
+    def __init__(
+            self,
+            camera: ai2thor.utils.Camera = ai2thor.utils.Camera(),
+            noise: None = None,
+            default_rotate_degrees: float = 90,
+            default_move_meters: float = 0.25,
+            nav_success_max_meter_dist: float = 1.5):
+        Agent.__init__(
+            self,
+            camera=camera,
+            noise=noise,
+            default_rotate_degrees=default_rotate_degrees,
+            default_move_meters=default_move_meters,
+            nav_success_max_meter_dist=nav_success_max_meter_dist)
         # step here to set up the agent
 
     def pose(self):

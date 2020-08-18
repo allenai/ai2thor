@@ -13,6 +13,7 @@ class Camera:
         self.width = width
         self.height = height
         self.render_frame = render_frame
+        self.render_depth = render_depth
         self.render_class_segmentation = render_class_segmentation
         self.render_instance_segmentation = render_instance_segmentation
         self.frame_as_bgr = frame_as_bgr
@@ -28,6 +29,7 @@ class Camera:
         out += f('width', self.width)
         out += f('height', self.height)
         out += f('render_frame', self.render_frame)
+        out += f('render_depth', self.render_depth)
         out += f('render_class_segmentation', self.render_class_segmentation)
         out += f('render_instance_segmentation',
                  self.render_instance_segmentation)

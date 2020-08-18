@@ -1,3 +1,4 @@
+# TODO: add setter to camera
 from typing import Union, Dict, List
 import ai2thor.utils
 from ai2thor.utils import AHEAD, BACK, LEFT, RIGHT
@@ -12,12 +13,11 @@ class Agent(ABC):
             noise: None = None,
             default_rotate_degrees: float = 90,
             default_move_meters: float = 0.25,
-            nav_success_max_meters_dist: float = 1.5):
+            nav_success_max_meter_dist: float = 1.5):
         self._reset_camera = False
         self.camera = camera
         self.default_rotate_degrees = default_rotate_degrees
         self.default_move_meters = default_move_meters
-        # TODO: add setter to camera
 
     @property
     def frame(self) -> np.ndarray:
@@ -27,8 +27,14 @@ class Agent(ABC):
             return self._base_controller.last_event.frame
 
     @property
-    def depth_frame(self):
-        raise NotImplementedError()
+    def depth_frame(self) -> np.ndarray:
+        if not self.camera.render_depth:
+            raise ValueError(
+                'Camera must render_depth.\n'
+                'pass camera=Camera(render_depth=True) to your Agent'
+            )
+        else:
+            return self._base_controller.last_event.depth_frame
 
     @property
     def class_segmentation_frame(self):

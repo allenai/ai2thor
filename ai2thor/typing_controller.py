@@ -12,6 +12,7 @@ def _base_init(scene: str, agents: Sequence[ai2thor.Agent]) -> BaseController:
         fov=agents[0].camera.fov,
         width=agents[0].camera.width,
         height=agents[0].camera.height,
+        renderDepthImage=agents[0].camera.render_depth,
         renderClassimage=agents[0].camera.render_class_segmentation,
         renderObjectImage=agents[0].camera.render_instance_segmentation,
         **agent_count)

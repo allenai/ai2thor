@@ -1,15 +1,17 @@
 from ai2thor import Controller
-from ai2thor.utils import AHEAD, BACK
-import numpy as np
+from ai2thor.utils import AHEAD, BACK, Camera
+from ai2thor.agents import Jarvis
 
-controller = Controller('FloorPlan_Train1_1')
+agent = Jarvis(Camera(render_depth=True))
+controller = Controller(agents=agent)
+controller.agent.move(BACK)
 
-controller.agent.move(AHEAD)
 
 controller.agent.move()
 
 controller.agent.camera
 
+controller._base_controller.last_event.cv2img
 
 
 print(ai2thor.utils.Camera())
