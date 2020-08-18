@@ -55,7 +55,7 @@ def objects(
 
 
 class _JarvisController:
-    def __init__(self, scene: str, agents: Sequence[Jarvis]):
+    def __init__(self, agents: Sequence[Jarvis], scene: str):
         self._base_controller = _base_init(scene, agents)
         self.agents = agents
 
@@ -77,8 +77,8 @@ class _JarvisController:
 
 
 def Controller(
-        scene: str = 'FloorPlan28',
-        agents: Union[ai2thor.Agent, Sequence[ai2thor.Agent]] = Jarvis()):
+        agents: Union[ai2thor.Agent, Sequence[ai2thor.Agent]] = Jarvis(),
+        scene: str = 'FloorPlan28'):
     # Decides which controller to provide based on the agent.
     # This helps with mypy find functions specific to certain controllers.
 
@@ -99,7 +99,7 @@ def Controller(
     if len(agent_list) > 1:
         warnings.warn('Only 1 identical agent can currently be used.')
 
-    return _JarvisController(scene, agent_list)
+    return _JarvisController(agent_list, scene)
 
 
 """
