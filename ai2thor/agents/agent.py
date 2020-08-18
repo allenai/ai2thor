@@ -1,4 +1,5 @@
 # TODO: add setter to camera
+# TODO: Raise Exception for not building a controller
 from typing import Union, Dict, List
 import ai2thor.utils
 from ai2thor.utils import AHEAD, BACK, LEFT, RIGHT, UP, DOWN
@@ -75,6 +76,7 @@ class Agent(ABC):
             self,
             base_controller,
             agent_idx: Union[None, int]):
+        # TODO: Connect to multiple base controllers!
         self._base_controller = base_controller
         self._agent_idx = agent_idx
 

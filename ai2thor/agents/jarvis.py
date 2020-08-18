@@ -10,6 +10,18 @@ from .agent import Agent
 import ai2thor.utils
 
 
+# outside for typing
+def _get_interact_type_kwargs(x, y, object_id):
+    """Determines if the pixel was used to find the object."""
+    used_pixel = not (x is None or y is None)
+    used_id = object_id is not None
+
+    if used_pixel != used_id:
+        raise ValueError('Must supply (x and y) xor object_id')
+
+    return {'x': x, 'y': y} if used_pixel else {'objectid': object_id}
+
+
 class Jarvis(Agent):
     def __init__(
             self,
@@ -92,23 +104,20 @@ class Jarvis(Agent):
             horizon=horizon
         )
 
-
-'''
-class Jarvis(ai2thor.agents.Agent):
-    def __init__(
-            self,
-            controller: ai2thor.typing_controller.Controller,
-            agent_idx: Union[int, None] = None):
-        ai2thor.agents.Agent.__init__(self, controller, agent_idx)
-
     def open(
             self,
             x: Union[float, None] = None,
             y: Union[float, None] = None,
             object_id: Union[None, str] = None,
             openness: Union[None, float] = None,
-            force_action: bool = False) -> None:
-        pass
+            force_action: bool = False) -> bool:
+        kwargs = _get_interact_type_kwargs(x, y, object_id)
+        if openness is not None:
+            if openness > 1 or openness < 0:
+                raise ValueError('openness must be between [0:1]')
+            kwargs['moveMagnitude'] = openness
+        kwargs['forceAction'] = force_action
+        return self._step('OpenObject', **kwargs)
 
     def close(
             self,
@@ -188,5 +197,3 @@ class Jarvis(ai2thor.agents.Agent):
             object_id: Union[None, str] = None,
             force_action: bool = False) -> None:
         pass
-
-'''
