@@ -107,7 +107,7 @@ class Agent(ABC):
 
     @property
     @abstractmethod
-    def pose(self) -> Dict[str, float]:
+    def pose(self) -> Union[List[Dict[str, float]], Dict[str, float]]:
         # use this format for teleporting with the agent
         raise NotImplementedError()
 

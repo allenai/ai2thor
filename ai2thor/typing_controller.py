@@ -72,6 +72,9 @@ class _JarvisController:
     def stop(self):
         self._base_controller.stop()
 
+    def reset(self, scene: str = 'FloorPlan28') -> None:
+        self._base_controller.reset(scene)
+
 
 def Controller(
         scene: str = 'FloorPlan28',

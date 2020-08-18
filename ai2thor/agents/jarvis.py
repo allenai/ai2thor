@@ -5,7 +5,7 @@ and can only change it's yaw.
 
 # TODO: raise exception for robothor scenes
 
-from typing import Union, Tuple, Dict, List, Optional
+from typing import Union, Tuple, Dict, List, Optional, Sequence
 from .agent import Agent
 import ai2thor.utils
 
@@ -40,30 +40,34 @@ class Jarvis(Agent):
         # step here to set up the agent
 
     @property
-    def pose(self):
-        raise NotImplementedError()
-
-    '''
-    @property
-    def pos(self) -> Tuple[float, float]:
+    def pos(self) -> Union[Tuple[float, float], List[Tuple[float, float]]]:
         """Returns the tuple(x, z) position of the agent"""
-        event = self._base_controller.last_event
-        pos = event.metadata['agent']['position']
-        return pos['x'], pos['z']
+        return self._extract_sensors(
+            lambda e: (e.metadata['agent']['position']['x'],
+                       e.metadata['agent']['position']['z']))
 
     @property
-    def rot(self) -> float:
+    def rot(self) -> Union[float, List[float]]:
         """Returns the yaw (or heading direction) of the agent"""
-        event = self._base_controller.last_event
-        return event.metadata['agent']['rotation']['y']
+        return self._extract_sensors(
+            lambda e: e.metadata['agent']['rotation']['y'])
 
     @property
-    def pose(self) -> Dict[str, float]:
+    def pose(self) -> Union[List[Dict[str, float]], Dict[str, float]]:
         # use this format for teleporting
-        event = self._base_controller.last_event
-        horizon = event.metadata['agent']['cameraHorizon']
+        horizon = self.horizon
         pos = self.pos
         rot = self.rot
+
+        # ignore types. mypy isn't running them
+        if type(horizon) is list:
+            return [{
+                'x': pos[i][0],
+                'z': pos[i][1],
+                'rot_y': rot[i],
+                'horizon': horizon
+            } for i in range(len(pos))]
+
         return {
             'x': pos[0],
             'z': pos[1],
@@ -71,6 +75,7 @@ class Jarvis(Agent):
             'horizon': horizon
         }
 
+    '''
     @property
     def reachable_positions(self) -> List[Dict[str, float]]:
         # TODO: Cache per scene
