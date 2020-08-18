@@ -1,27 +1,13 @@
 import ai2thor.server
 import pytest
 import numpy as np
-import json
+import msgpack
 from ai2thor.server import Queue
 from ai2thor.tests.test_event import metadata_simple
 from ai2thor.tests.fifo_client import FifoClient
 from io import BytesIO
 import copy
 
-
-def generate_multi_agent_form(metadata, sequence_id=1):
-    agent2 = copy.deepcopy(metadata)
-    agent2['agentId'] = 1
-    agent1 = metadata
-    agents = [agent1, agent2]
-    boundary = b'--OVCo05I3SVXLPeTvCgJjHl1EOleL4u9TDx5raRVt'
-    data = b'\r\n' + boundary + b'\r\nContent-Type: text/plain; charset="utf-8"\r\nContent-disposition: form-data; name="metadata"\r\n\r\n'
-    data += json.dumps(dict(agents=agents, sequenceId=sequence_id, activeAgentId=1)).encode('utf8')
-    data += b'\r\n' + boundary + b'\r\nContent-Type: text/plain; charset="utf-8"\r\nContent-disposition: form-data; name="actionReturns"\r\n\r\n'
-    data += b'\r\n' + boundary + b'\r\nContent-Type: text/plain; charset="utf-8"\r\nContent-disposition: form-data; name="token"\r\n\r\n'
-    data += b'12cb40b5-3a70-4316-8ae2-82cbff6c9902'
-    data += b'\r\n' + boundary + b'--\r\n'
-    return data
 
 
 
@@ -54,10 +40,10 @@ def test_train_numpy_action():
     assert msg == {'action': 'Teleport', 'rotation': {'y': 24}, 'sequenceId': 1, 'moveMagnitude': 55.5}
 
 def generate_metadata_payload(metadata, sequence_id):
-    return json.dumps(dict(agents=[metadata], sequenceId=sequence_id)).encode('utf8')
+    return msgpack.dumps(dict(agents=[metadata], sequenceId=sequence_id))
 
 def generate_multi_agent_metadata_payload(metadata, sequence_id):
-    return json.dumps(dict(agents=[metadata, metadata], activeAgentId=1, sequenceId=sequence_id)).encode('utf8')
+    return msgpack.dumps(dict(agents=[metadata, metadata], activeAgentId=1, sequenceId=sequence_id))
 
 def test_simple():
 

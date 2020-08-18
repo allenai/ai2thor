@@ -11,6 +11,7 @@ import json
 import logging
 import threading
 import sys
+import msgpack
 import os
 import os.path
 import tempfile
@@ -566,7 +567,8 @@ class FifoServer(Server):
             #print(field_type)
             if field_type is FieldType.METADATA:
                 #print("body length %s" % len(body))
-                metadata = json.loads(body.decode('utf8'))
+                #print(body)
+                metadata = msgpack.loads(body, raw=False)
                 #print(metadata)
             elif field_type in self.image_fields:
                 files[self.form_field_map[field_type]].append(body)
@@ -599,6 +601,8 @@ class FifoServer(Server):
             self.sequence_id += 1
             action['sequenceId'] = self.sequence_id
         #print(action)
+
+        # need to switch this to msgpack
         self._send_message(FieldType.ACTION, json.dumps(action, cls=NumpyAwareEncoder).encode('utf8'))
     
 

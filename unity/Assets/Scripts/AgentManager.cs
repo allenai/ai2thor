@@ -3,8 +3,13 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityStandardAssets.Characters.FirstPerson;
+using SD = System.Diagnostics;
+using System.IO;
 using System.Net.Sockets;
 using System.Net;
+using MessagePack.Resolvers;
+using MessagePack.Formatters;
+using MessagePack;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using System.Reflection;
@@ -71,7 +76,7 @@ public class AgentManager : MonoBehaviour
         #if !UNITY_WEBGL
             // Creates warning for WebGL
             // https://forum.unity.com/threads/rendering-without-using-requestanimationframe-for-the-main-loop.373331/
-            Application.targetFrameRate = 300;
+            Application.targetFrameRate = 3000;
         #else
             Debug.unityLogger.logEnabled = false;
         #endif
@@ -704,6 +709,18 @@ public class AgentManager : MonoBehaviour
         
     }
 
+    private string serializeMetadataJson(MultiAgentMetadata multiMeta) {
+            var jsonResolver = new ShouldSerializeContractResolver();
+            return Newtonsoft.Json.JsonConvert.SerializeObject(multiMeta, Newtonsoft.Json.Formatting.None,
+                        new Newtonsoft.Json.JsonSerializerSettings()
+                            {
+                                ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore,
+                                ContractResolver = jsonResolver
+                            }
+
+            );
+    }
+
 
 	public IEnumerator EmitFrame() {
 
@@ -724,21 +741,14 @@ public class AgentManager : MonoBehaviour
         createPayload(multiMeta, cameraMetadata, renderPayload, shouldRender);
 
 
-      var jsonResolver = new ShouldSerializeContractResolver();
 
-       var serializedMetadata = Newtonsoft.Json.JsonConvert.SerializeObject(multiMeta, Newtonsoft.Json.Formatting.None,
-                new Newtonsoft.Json.JsonSerializerSettings()
-                       {
-                           ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore,
-                           ContractResolver = jsonResolver
-                       }
 
-               );
+
 
 		#if UNITY_WEBGL
             jsInterface = this.primaryAgent.GetComponent<JavaScriptInterface>();
             if (jsInterface != null) {
-                jsInterface.SendActionMetadata(serializedMetadata);
+                jsInterface.SendActionMetadata(serializeMetadataJson(multiMeta));
             }
         #endif
 
@@ -749,7 +759,7 @@ public class AgentManager : MonoBehaviour
             foreach(var item in renderPayload) {
                 form.AddBinaryData(item.Key, item.Value);
             }
-            form.AddField("metadata", serializedMetadata);
+            form.AddField("metadata", serializeMetadataJson(multiMeta));
             form.AddField("token", robosimsClientToken);
 
 			if (this.sock == null) {
@@ -827,7 +837,9 @@ public class AgentManager : MonoBehaviour
                 ProcessControlCommand(msg);
             }
 		} else if (serverType == serverTypes.FIFO){
-            this.fifoClient.SendMessage(FifoServer.FieldType.Metadata, Encoding.ASCII.GetBytes(serializedMetadata));
+            byte[] msgPackMetadata = MessagePack.MessagePackSerializer.Serialize(multiMeta, 
+            MessagePack.Resolvers.ThorContractlessStandardResolver.Options);
+            this.fifoClient.SendMessage(FifoServer.FieldType.Metadata, msgPackMetadata);
             foreach(var item in renderPayload) {
                 this.fifoClient.SendMessage(FifoServer.Client.FormMap[item.Key], item.Value);
             }
@@ -1070,7 +1082,7 @@ public class SceneBounds
     //8 corners of the world axis aligned box that bounds a sim object
     //8 rows - 8 corners, one per row
     //3 columns - x, y, z of each corner respectively
-    public float[,] cornerPoints = new float[8,3];
+    public float[][] cornerPoints;
 
     //center of the bounding box of the scene in worldspace coordinates
     public Vector3 center;
@@ -1087,7 +1099,7 @@ public class AxisAlignedBoundingBox
     //8 corners of the world axis aligned box that bounds a sim object
     //8 rows - 8 corners, one per row
     //3 columns - x, y, z of each corner respectively
-    public float[,] cornerPoints = new float[8,3];
+    public float[][] cornerPoints;
 
     //center of the bounding box of this object in worldspace coordinates
     public Vector3 center;
@@ -1103,7 +1115,7 @@ public class ObjectOrientedBoundingBox
 {
     //probably return these from the BoundingBox component of the object for now?
     //this means that it will only work for Pickupable objects at the moment
-    public float[,] cornerPoints = new float[8,3];
+    public float[][] cornerPoints;
 }
 
 [Serializable]
@@ -1386,6 +1398,8 @@ public class TypedVariable {
     public object value;
 }
 
+
+
 public class ShouldSerializeContractResolver : DefaultContractResolver
 {
    public static readonly ShouldSerializeContractResolver Instance = new ShouldSerializeContractResolver();
@@ -1410,3 +1424,6 @@ public class ShouldSerializeContractResolver : DefaultContractResolver
 
    }
 }
+
+
+
