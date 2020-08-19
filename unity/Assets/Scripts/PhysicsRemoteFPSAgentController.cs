@@ -297,24 +297,20 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 objMeta.isCooked = simObj.IsCooked;
             }
 
-            //if the sim object is moveable or pickupable
-            if(simObj.IsPickupable || simObj.IsMoveable)
+            //this object should report back mass and salient materials
+
+            string [] salientMaterialsToString = new string [simObj.salientMaterials.Length];
+
+            for(int i = 0; i < simObj.salientMaterials.Length; i++)
             {
-                //this object should report back mass and salient materials
-
-                string [] salientMaterialsToString = new string [simObj.salientMaterials.Length];
-
-                for(int i = 0; i < simObj.salientMaterials.Length; i++)
-                {
-                    salientMaterialsToString[i] = simObj.salientMaterials[i].ToString();
-                }
-
-                objMeta.salientMaterials = salientMaterialsToString;
-
-                //this object should also report back mass since it is moveable/pickupable
-                objMeta.mass = simObj.Mass;
+                salientMaterialsToString[i] = simObj.salientMaterials[i].ToString();
             }
 
+            objMeta.salientMaterials = salientMaterialsToString;
+
+            //this object should also report back mass since it is moveable/pickupable
+            objMeta.mass = simObj.gameObject.GetComponent<Rigidbody>().mass;
+            
             //can this object change others to hot?
             objMeta.canChangeTempToHot = simObj.canChangeTempToHot;
 
@@ -360,14 +356,15 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public WorldSpaceBounds WorldCoordinatesOfBoundingBox(SimObjPhysics sop)
         {
             WorldSpaceBounds b = new WorldSpaceBounds();
+            Transform recBox = sop.BoundingBox == null && sop.transform.parent != null && sop.transform.parent.name != "Objects" ? sop.transform.Find("ReceptacleTriggerBox") : null;
 
-            if(sop.BoundingBox== null)
+            if(sop.BoundingBox== null && recBox==null)
             {
                 Debug.LogError(sop.transform.name + " is missing BoundingBox reference!");
                 return b;
             }
 
-            BoxCollider col = sop.BoundingBox.GetComponent<BoxCollider>();
+            BoxCollider col = sop.BoundingBox != null ? sop.BoundingBox.GetComponent<BoxCollider>() : recBox.GetComponent<BoxCollider>();
             List<Vector3> corners = new List<Vector3>();
             
             Vector3 p0 = col.transform.TransformPoint(col.center + new Vector3(col.size.x, -col.size.y, col.size.z) * 0.5f);
@@ -390,6 +387,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             corners.Add(p7);
 
             b.objectBoundsCorners = corners.ToArray();
+
+            if (sop.name.Contains("Drawer")) {
+                foreach(Vector3 v in corners)
+                    Debug.Log(sop.name + " " + v);
+            }
             
             return b;
         }

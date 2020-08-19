@@ -221,7 +221,8 @@ public class MCSController : PhysicsRemoteFPSAgentController {
 
         objectMetadata = this.UpdatePositionDistanceAndDirectionInObjectMetadata(simObj.gameObject, objectMetadata);
 
-        if (objectMetadata.objectBounds == null && simObj.BoundingBox != null) {
+        Transform recBox = simObj.BoundingBox == null && simObj.transform.parent != null && simObj.transform.parent.name != "Objects" ? simObj.transform.Find("ReceptacleTriggerBox") : null;
+        if ((objectMetadata.objectBounds == null && (simObj.BoundingBox != null || recBox != null))) {
             objectMetadata.objectBounds = this.WorldCoordinatesOfBoundingBox(simObj);
         }
         if (objectMetadata.objectBounds != null) {
