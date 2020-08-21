@@ -387,11 +387,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             corners.Add(p7);
 
             b.objectBoundsCorners = corners.ToArray();
-
-            if (sop.name.Contains("Drawer")) {
-                foreach(Vector3 v in corners)
-                    Debug.Log(sop.name + " " + v);
-            }
             
             return b;
         }
