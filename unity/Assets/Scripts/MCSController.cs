@@ -458,10 +458,10 @@ public class MCSController : PhysicsRemoteFPSAgentController {
         }
         
         bodyRotationActionData = //left right
-            new MCSRotationData(MCSRotationData.Rotate.ROTATE_LOOK, transform.rotation, Quaternion.Euler(new Vector3(0.0f, response.rotation.y, 0.0f)));
+            new MCSRotationData(transform.rotation, Quaternion.Euler(new Vector3(0.0f, response.rotation.y, 0.0f)), false);
         lookRotationActionData = !reset ? //if not reseting then free look up down
-            new MCSRotationData(MCSRotationData.Rotate.ROTATE_LOOK, m_Camera.transform.rotation, Quaternion.Euler(new Vector3(response.horizon, 0.0f, 0.0f))) :
-            new MCSRotationData(MCSRotationData.Rotate.RESET, m_Camera.transform.rotation, Quaternion.Euler(Vector3.zero));
+            new MCSRotationData(m_Camera.transform.rotation, Quaternion.Euler(new Vector3(response.horizon, 0.0f, 0.0f)), false) :
+            new MCSRotationData(m_Camera.transform.rotation, Quaternion.Euler(Vector3.zero), true);
         
         this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.SUCCESSFUL);
     }
@@ -503,7 +503,7 @@ public class MCSController : PhysicsRemoteFPSAgentController {
             }
         } //for rotation
         else if (inputWasRotateLook) {
-            if (lookRotationActionData.direction == MCSRotationData.Rotate.RESET) {
+            if (lookRotationActionData.reset) {
                 ResetLookRotation(lookRotationActionData);
             } else {
                 RotateLookAcrossFrames(lookRotationActionData);
@@ -885,14 +885,13 @@ public class MCSMovementActionData {
 
 /* class for contatining rotation data */
 public class MCSRotationData {
-    public enum Rotate {RESET, ROTATE_LOOK}
     public Quaternion startingRotation;
     public Quaternion endRotation;
-    public Rotate direction;
+    public bool reset;
 
-    public MCSRotationData(Rotate direction, Quaternion startingRotation, Quaternion endRotation) {
+    public MCSRotationData(Quaternion startingRotation, Quaternion endRotation, bool reset) {
         this.startingRotation = startingRotation;
         this.endRotation = endRotation;
-        this.direction = direction;
+        this.reset = reset;
     }
 }
