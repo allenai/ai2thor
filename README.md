@@ -148,7 +148,7 @@ Take a GameObject (we'll call it the "Target" object) containing a MeshFilter, M
   - Removed the hard-coded camera properties in the `SetAgentMode` function
   - Replaced the call to `checkInitializeAgentLocationAction` in `Initialize` with calls to `snapToGrid` and `actionFinished` so re-initialization doesn't cause the player to move for a few steps
   - Added `lastActionStatus` to `Initialize` to help indicate success or failure
-  -Changed `nearestAngleIndex` to return the nearest index based on the minimum difference between the current angle and the angle at the index
+  - Changed `nearestAngleIndex` to return the nearest index based on the minimum difference between the current angle and the angle at the index
 - `Scripts/CanOpen_Object`:
   - Rewrote part of the `Interact` function so it doesn't use iTween if `animationTime` is `0`.  Also the `Interact` function now uses the `openPercentage` on both "open" and "close".
   - Added `IsMovementTypeSlide` function
