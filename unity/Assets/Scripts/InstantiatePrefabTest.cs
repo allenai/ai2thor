@@ -438,7 +438,7 @@ public class InstantiatePrefabTest : MonoBehaviour
 
                 #if UNITY_EDITOR
                 //Debug.Log(sop.name + " succesfully spawned in " +rsp.ParentSimObjPhys.name + " at coordinate " + rsp.Point);
-                #endif               
+                #endif       
                 return true;
             }
         }
@@ -466,7 +466,8 @@ public class InstantiatePrefabTest : MonoBehaviour
         //oh we are spawning it somehwere in the environment, we do need to make sure not to spawn inside the agent or the environment
 		else
 		{
-			layermask = (1 << 8) | (1 << 10);
+            //MCS remove agent layermask for stacking and because objects never seem to spawn inside the agent
+			layermask = (1 << 0); //(1 << 8) | (1 << 10);
 		}
 
 

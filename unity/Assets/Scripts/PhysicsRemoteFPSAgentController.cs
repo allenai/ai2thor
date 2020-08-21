@@ -861,8 +861,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                 updateAllAgentCollidersForVisibilityCheck(false);
 
-                if (Physics.Raycast(m_Camera.transform.position, point - m_Camera.transform.position, out hit,
-                        Vector3.Distance(m_Camera.transform.position, point) - 0.01f, (1 << 8) | (1 << 10))) //reduce distance by slight offset
+                if (Physics.Raycast(m_Camera.transform.position, point - m_Camera.transform.position, out hit, (1 << 8) | (1 << 10)))
                 {
                     updateAllAgentCollidersForVisibilityCheck(true);
                     //this should be set to true for object placement flexibility
@@ -3987,9 +3986,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             //get the target receptacle based on the action receptacle object ID
             SimObjPhysics targetReceptacle = null;
 
-            foreach (SimObjPhysics sop in VisibleSimObjs(true)) {
-                if ((!string.IsNullOrEmpty(action.receptacleObjectId)) && action.receptacleObjectId == sop.UniqueID) {
-                    targetReceptacle = sop;
+            foreach (SimObjPhysics sop in VisibleSimObjs(true)) { //action.forceVisible is usually false
+            bool inSceneIsStackingOrInVisibleSimObjsIsNotStacking = (((!string.IsNullOrEmpty(action.receptacleObjectId)) && action.receptacleObjectId == sop.UniqueID) && 
+                (sop.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.Stacking) || VisibleSimObjs(action.forceVisible).Contains(sop)));
+                if (inSceneIsStackingOrInVisibleSimObjsIsNotStacking) {
+                    targetReceptacle = sop; 
                     break;
                 }
             }

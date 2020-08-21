@@ -481,7 +481,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		// This is especially useful for stacking objects on top of blocks.
 		List<GameObject> sortedReceptacleTriggerBoxes = new List<GameObject>(this.ReceptacleTriggerBoxes);
 		sortedReceptacleTriggerBoxes.Sort((GameObject one, GameObject two) =>
-			two.transform.position.y.CompareTo(one.transform.position.y));
+			one.transform.position.y.CompareTo(two.transform.position.y));
 
 		foreach(GameObject rtb in sortedReceptacleTriggerBoxes)
 		{

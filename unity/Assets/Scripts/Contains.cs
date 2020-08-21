@@ -116,7 +116,7 @@ public class Contains : MonoBehaviour
 		//clear the currently contains list so that if things were Initial Random Spawned in, the receptacle
 		//trigger boxes correctly re-populate with the current objects via OnTriggerStay. We need this here
 		//because OnTriggerExit will miss correctly editing the list if objects are teleported around like with
-		//the Initial Random Spawn Function! 
+		//the Initial Random Spawn Function!
 		//CurrentlyContains.Clear();
 		//occupied = false;
 	}
@@ -277,16 +277,18 @@ public class Contains : MonoBehaviour
 		//these are all the points on the grid on the top of the receptacle box in local space
 		List<Vector3> gridpoints = new List<Vector3>();
 
-		//for stacking receptacles
+		//The first if creates only one spawn point directly in the center of a receptacle for stacking receptacles
 		SimObjPhysics simObj = gameObject.GetComponentInParent<SimObjPhysics>();
-		Transform renderer = simObj.GetComponent<Transform>();
-		Renderer rend = renderer.transform.GetComponentInChildren<Renderer>();
-		float yMaxOfMesh = rend.bounds.max.y; //this is the y-point we place the object
-
-		//The first if creates only one spawn point directly in the center of a receptacle if it's stacking
         if (simObj.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.Stacking)) {
-			Vector3 centerOfReceptacleForStackingObjects = new Vector3(center.x, yMaxOfMesh, center.z);
-			gridpoints.Add(centerOfReceptacleForStackingObjects);
+			Transform renderer = simObj.GetComponent<Transform>();
+			Renderer rend = renderer.transform.GetComponentInChildren<Renderer>();
+			float yMaxOfMesh = rend.bounds.max.y; //for cubes
+			float yMinOfRecBox = triggerBoxCollider.bounds.min.y;
+			float yPlacementPosition = (simObj.shape.Contains("cube")) ? yMaxOfMesh : yMinOfRecBox;
+			Vector3 centerOfReceptacleForStackingObjects = new Vector3(center.x, yPlacementPosition, center.z);
+			if (NarrowDownValidSpawnPoints(centerOfReceptacleForStackingObjects)) {
+				gridpoints.Add(centerOfReceptacleForStackingObjects);
+			}
 		
 		} else {
 			if (objectUpVector.Equals(Vector3.up) || objectUpVector.Equals(Vector3.down)) {
@@ -391,11 +393,11 @@ public class Contains : MonoBehaviour
 		// validpointlist = PossibleSpawnPoints;
 		// #endif
 
-		//sort the possible spawn points by distance to the Agent before returning
-		// PossibleSpawnPoints.Sort(delegate(ReceptacleSpawnPoint one, ReceptacleSpawnPoint two)
-		// {
-		// 	return Vector3.Distance(agent.transform.position, one.Point).CompareTo(Vector3.Distance(agent.transform.position, two.Point));
-		// });
+		//sort the possible spawn points by distance to the center of the Receptacle before returning
+		PossibleSpawnPoints.Sort(delegate(ReceptacleSpawnPoint one, ReceptacleSpawnPoint two)
+		{
+			return Vector3.Distance(center, one.Point).CompareTo(Vector3.Distance(center, two.Point));
+		});
 
 		return PossibleSpawnPoints;
 	}
