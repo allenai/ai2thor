@@ -33,10 +33,10 @@ import fcntl
 import zipfile
 
 import numpy as np
-
 import ai2thor.docker
 import ai2thor.downloader
-import ai2thor.server
+import ai2thor.wsgi_server
+import ai2thor.fifo_server
 from ai2thor.interact import InteractiveControllerPrompt, DefaultActions
 from ai2thor.server import DepthFormat
 from ai2thor.build import COMMIT_ID
@@ -461,7 +461,7 @@ class Controller(object):
             return
 
         if self.server_type == 'wsgi':
-            self.server = ai2thor.server.WsgiServer(
+            self.server = ai2thor.wsgi_server.WsgiServer(
                 host,
                 port=port,
                 depth_format=self.depth_format,
@@ -470,7 +470,7 @@ class Controller(object):
                 height=height
             )
         elif self.server_type == 'fifo':
-            self.server = ai2thor.server.FifoServer(
+            self.server = ai2thor.fifo_server.FifoServer(
                 depth_format=self.depth_format,
                 add_depth_noise=self.add_depth_noise,
                 width=width,
@@ -1446,3 +1446,4 @@ class BFSController(Controller):
                 self.grid_points.append(event.metadata['agent']['position'])
 
         return event
+

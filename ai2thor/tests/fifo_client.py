@@ -1,4 +1,4 @@
-import ai2thor.server
+import ai2thor.fifo_server
 import struct
 import json
 class FifoClient:
@@ -14,12 +14,12 @@ class FifoClient:
         if self.server_pipe is None:
             self.server_pipe = open(self.server_pipe_path, "wb" )
         
-        header = struct.pack(ai2thor.server.FifoServer.header_format, field_type, len(body))
+        header = struct.pack(ai2thor.fifo_server.FifoServer.header_format, field_type, len(body))
 
         self.server_pipe.write(header + body)
 
     def send_eom(self):
-        header = struct.pack(ai2thor.server.FifoServer.header_format, ai2thor.server.FieldType.END_OF_MESSAGE, 0)
+        header = struct.pack(ai2thor.fifo_server.FifoServer.header_format, ai2thor.fifo_server.FieldType.END_OF_MESSAGE, 0)
         self.server_pipe.write(header)
         self.server_pipe.flush()
 
@@ -30,20 +30,20 @@ class FifoClient:
         #print("trying to read")
         j = None
         while True:
-            header = self.client_pipe.read(ai2thor.server.FifoServer.header_size) # field_type + length
+            header = self.client_pipe.read(ai2thor.fifo_server.FifoServer.header_size) # field_type + length
             if len(header) == 0:
                 print("Read 0 - server closed")
                 break
             #print("got header %s" % header)
             #print("header length %s" % len(header))
-            field_type_int, field_length = struct.unpack(ai2thor.server.FifoServer.header_format, header)
-            field_type = ai2thor.server.FifoServer.field_types[field_type_int]
+            field_type_int, field_length = struct.unpack(ai2thor.fifo_server.FifoServer.header_format, header)
+            field_type = ai2thor.fifo_server.FifoServer.field_types[field_type_int]
             if field_length > 0: # EOM has length == 0
                 body = self.client_pipe.read(field_length)
 
-            if field_type is ai2thor.server.FieldType.ACTION:
+            if field_type is ai2thor.fifo_server.FieldType.ACTION:
                 j = json.loads(body)
-            elif field_type is ai2thor.server.FieldType.END_OF_MESSAGE:
+            elif field_type is ai2thor.fifo_server.FieldType.END_OF_MESSAGE:
             #    #print("got eom")
                 break
             else:
