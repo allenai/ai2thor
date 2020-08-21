@@ -35,6 +35,18 @@ class UnityTestController(ai2thor.controller.Controller):
     def prune_releases(self):
         pass
 
+# Defining const classes to lessen the possibility of a misspelled key
+class Actions:
+    AddThirdPartyCamera = 'AddThirdPartyCamera'
+    UpdateThirdPartyCamera = 'UpdateThirdPartyCamera'
+
+class MultiAgentMetadata:
+    thirdPartyCameras = 'thirdPartyCameras'
+
+class ThirdPartyCameraMetadata:
+    position = 'position'
+    rotation = 'rotation'
+    fieldOfView = 'fieldOfView'
 
 controller = UnityTestController()
 controller.reset('FloorPlan28')
@@ -47,10 +59,10 @@ def teardown_module(module):
 #def controller():
 #    return c
 
-def assert_near(point1, point2):
-    assert point1.keys() == point2.keys()
+def assert_near(point1, point2, error_message=''):
+    assert point1.keys() == point2.keys(), error_message
     for k in point1.keys():
-        assert round(point1[k], 3) == round(point2[k], 3)
+        assert round(point1[k], 3) == round(point2[k], 3), error_message
 
 def test_rectangle_aspect():
     controller = UnityTestController(width=600, height=300)
@@ -63,7 +75,7 @@ def test_small_aspect():
     controller.reset('FloorPlan28')
     event = controller.step(dict(action='Initialize', gridSize=0.25))
     assert event.frame.shape == (64, 128, 3)
-    
+
 def test_lookdown():
 
     e = controller.step(dict(action='RotateLook', rotation=0, horizon=0))
@@ -112,18 +124,54 @@ def test_rotate_left():
     assert e.metadata['agent']['rotation']['x'] == 0.0
     assert e.metadata['agent']['rotation']['z'] == 0.0
 
+
 def test_add_third_party_camera():
 
-    assert len(controller.last_event.metadata['thirdPartyCameras']) == 0
-    e = controller.step(dict(action='AddThirdPartyCamera', position=dict(x=1.2, y=2.3, z=3.4), rotation=dict(x=30, y=40,z=50)))
-    assert len(e.metadata['thirdPartyCameras']) == 1
-    assert_near(e.metadata['thirdPartyCameras'][0]['position'], dict(x=1.2, y=2.3, z=3.4))
-    assert_near(e.metadata['thirdPartyCameras'][0]['rotation'], dict(x=30, y=40, z=50))
-    assert len(e.third_party_camera_frames) == 1
-    assert e.third_party_camera_frames[0].shape == (300,300,3)
-    e = controller.step(dict(action='UpdateThirdPartyCamera', thirdPartyCameraId=0, position=dict(x=2.2, y=3.3, z=4.4), rotation=dict(x=10, y=20,z=30)))
-    assert_near(e.metadata['thirdPartyCameras'][0]['position'], dict(x=2.2, y=3.3, z=4.4))
-    assert_near(e.metadata['thirdPartyCameras'][0]['rotation'], dict(x=10, y=20, z=30))
+    expectedPosition = dict(x=1.2, y=2.3, z=3.4)
+    expectedRotation = dict(x=30, y=40, z=50)
+    expectedFieldOfView = 45.0
+    assert len(controller.last_event.metadata[MultiAgentMetadata.thirdPartyCameras]) == 0, 'there should be 0 cameras'
+
+    e = controller.step(dict(action=Actions.AddThirdPartyCamera, position=expectedPosition, rotation=expectedRotation, fieldOfView=expectedFieldOfView))
+    assert len(e.metadata[MultiAgentMetadata.thirdPartyCameras]) == 1, 'there should be 1 camera'
+    camera = e.metadata[MultiAgentMetadata.thirdPartyCameras][0]
+    assert_near(camera[ThirdPartyCameraMetadata.position], expectedPosition, 'initial position should have been set')
+    assert_near(camera[ThirdPartyCameraMetadata.rotation], expectedRotation, 'initial rotation should have been set')
+    assert camera[ThirdPartyCameraMetadata.fieldOfView] == expectedFieldOfView, 'initial fieldOfView should have been set'
+
+
+def test_update_third_party_camera():
+
+    expectedPosition = dict(x=2.2, y=3.3, z=4.4)
+    expectedRotation = dict(x=10, y=20, z=30)
+    expectedInitialFieldOfView = 45.0
+    expectedFieldOfView2 = 55.0
+    expectedFieldOfViewDefault = 90.0
+    assert len(controller.last_event.metadata[MultiAgentMetadata.thirdPartyCameras]) == 1, 'there should be 1 camera'
+
+    e = controller.step(dict(action=Actions.UpdateThirdPartyCamera, thirdPartyCameraId=0, position=expectedPosition, rotation=expectedRotation))
+    camera = e.metadata[MultiAgentMetadata.thirdPartyCameras][0]
+    assert_near(camera[ThirdPartyCameraMetadata.position], expectedPosition, 'position should have been updated')
+    assert_near(camera[ThirdPartyCameraMetadata.rotation], expectedRotation, 'rotation should have been updated')
+    assert camera[ThirdPartyCameraMetadata.fieldOfView] == expectedInitialFieldOfView, 'fieldOfView should not have changed'
+
+    # 0 is a special case, since nullable float does not get encoded properly, we need to pass 0 as null
+    e = controller.step(dict(action=Actions.UpdateThirdPartyCamera, thirdPartyCameraId=0, fieldOfView=0))
+    camera = e.metadata[MultiAgentMetadata.thirdPartyCameras][0]
+    assert camera[ThirdPartyCameraMetadata.fieldOfView] == expectedInitialFieldOfView, 'fieldOfView should have been updated'
+
+    e = controller.step(dict(action=Actions.UpdateThirdPartyCamera, thirdPartyCameraId=0, fieldOfView=expectedFieldOfView2))
+    camera = e.metadata[MultiAgentMetadata.thirdPartyCameras][0]
+    assert camera[ThirdPartyCameraMetadata.fieldOfView] == expectedFieldOfView2, 'fieldOfView should have been updated'
+
+    e = controller.step(dict(action=Actions.UpdateThirdPartyCamera, thirdPartyCameraId=0, fieldOfView=-1))
+    camera = e.metadata[MultiAgentMetadata.thirdPartyCameras][0]
+    assert camera[ThirdPartyCameraMetadata.fieldOfView] == expectedFieldOfViewDefault, 'fieldOfView should have been updated to default'
+
+    e = controller.step(dict(action=Actions.UpdateThirdPartyCamera, thirdPartyCameraId=0, fieldOfView=181))
+    camera = e.metadata[MultiAgentMetadata.thirdPartyCameras][0]
+    assert camera[ThirdPartyCameraMetadata.fieldOfView] == expectedFieldOfViewDefault, 'fieldOfView should have been updated to default'
+
 
 def test_rotate_look():
 
