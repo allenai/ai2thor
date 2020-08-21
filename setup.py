@@ -1,8 +1,11 @@
-from setuptools import setup, find_packages
+from setuptools import setup, find_packages, Extension
+from Cython.Build import cythonize
+import os
 
-exec(open('ai2thor/_version.py').read())
+VERSION = '0.0.1'
 
-VERSION = __version__
+if os.path.isfile('ai2thor/_version.py'):
+    exec(open('ai2thor/_version.py').read())
 
 
 setup(name='ai2thor',
@@ -31,6 +34,7 @@ setup(name='ai2thor',
       license='Apache',
       packages=find_packages(exclude=["*.tests", "*.tests.*", "tests.*", "tests"]),
       install_requires=[
+          'Cython',
           'flask',
           'numpy',
           'pyyaml',
@@ -43,6 +47,11 @@ setup(name='ai2thor',
           'opencv-python',
           'werkzeug>=0.15.0' # needed for unix socket support
       ],
-      setup_requires=['pytest-runner'],
       tests_require=['pytest', 'pytest-cov', 'jsonschema'],
-      include_package_data=False)
+      include_package_data=False,
+      ext_modules = cythonize(
+        Extension("ai2thor._x11", ["ai2thor/_x11.pyx"], libraries=["X11", "Xext"], optional=True),
+        language_level=3
+     )
+      
+  )
