@@ -45,6 +45,11 @@ public class MCSController : PhysicsRemoteFPSAgentController {
     private bool movementActionFinished = false;
     private MCSMovementActionData movementActionData; //stores movement direction
     private bool inputWasMovement = false;
+    
+    private MCSRotationData bodyRotationActionData; //stores body rotation direction
+    private MCSRotationData lookRotationActionData; //stores look rotation direction
+    private bool inputWasRotateLook = false;
+
     private int framesUntilGridSnap; //when moving, grid snap will engage on the last frame (rather than every frame)
 
     public override void CloseObject(ServerAction action) {
@@ -320,12 +325,19 @@ public class MCSController : PhysicsRemoteFPSAgentController {
     }
 
     public override void ProcessControlCommand(ServerAction controlCommand) {
-        inputWasMovement = controlCommand.action.Equals("MoveAhead") || 
+        inputWasMovement = 
+                controlCommand.action.Equals("MoveAhead") || 
                 controlCommand.action.Equals("MoveBack") ||
                 controlCommand.action.Equals("MoveLeft") ||
-                controlCommand.action.Equals("MoveRight");   
-        this.framesUntilGridSnap = 0; //for movement
-        this.inputDirection = "";
+                controlCommand.action.Equals("MoveRight");
+        inputWasRotateLook = 
+                controlCommand.action.Equals("RotateLook") ||
+                controlCommand.action.Equals("RotateLeft") ||
+                controlCommand.action.Equals("RotateRight") ||
+                controlCommand.action.Equals("LookUp") || 
+                controlCommand.action.Equals("LookDown");
+
+        framesUntilGridSnap = 0; //for movement and rotation
         
         // Never let the placeable objects ignore the physics simulation (they should always be affected by it).
         controlCommand.placeStationary = false;
@@ -429,37 +441,29 @@ public class MCSController : PhysicsRemoteFPSAgentController {
     public override void RotateLook(ServerAction response)
     {
         // Need to calculate current rotation/horizon and increment by inputs given
-        float updatedRotationValue = transform.localEulerAngles.y + response.rotation.y;
         float currentHorizonValue = m_Camera.transform.localEulerAngles.x;
         // The horizon should always be either between 0 and 90 (looking down) or 270 and 360 (looking up).
         // If looking up, we must change the horizon from [360, 270] to [0, -90].
         currentHorizonValue = (currentHorizonValue >= 270 ? (currentHorizonValue - 360) : currentHorizonValue);
-        float updatedHorizonValue = currentHorizonValue + response.horizon;
-
-        // Check to ensure rotation value stays between -360 and 360
-        while (updatedRotationValue >= maxRotation)
-        {
-            updatedRotationValue -= maxRotation;
-        }
-
-        while (updatedRotationValue <= minRotation)
-        {
-            updatedRotationValue += maxRotation;
-        }
 
         // Limiting where to look based on realistic expectation (for instance, a person can't turn
-        // their head 180 degrees)
-        if (updatedHorizonValue > maxHorizon || updatedHorizonValue < minHorizon)
+        // their head 180 degrees)    
+        bool reset = false;
+        if ((Mathf.Round(currentHorizonValue) + response.horizon > maxHorizon) || 
+            (Mathf.Round(currentHorizonValue) + response.horizon < minHorizon))
         {
             Debug.Log("Value of horizon needs to be between " + minHorizon + " and " + maxHorizon +
                 ". Setting value to 0.");
-            updatedHorizonValue = 0;
+            reset = true;
         }
-
-        ServerAction action = new ServerAction();
-        action.rotation.y = updatedRotationValue;
-        action.horizon = updatedHorizonValue;
-        base.RotateLook(action);
+        
+        bodyRotationActionData = //left right
+            new MCSRotationData(transform.rotation, Quaternion.Euler(new Vector3(0.0f, response.rotation.y, 0.0f)), false);
+        lookRotationActionData = !reset ? //if not reseting then free look up down
+            new MCSRotationData(m_Camera.transform.rotation, Quaternion.Euler(new Vector3(response.horizon, 0.0f, 0.0f)), false) :
+            new MCSRotationData(m_Camera.transform.rotation, Quaternion.Euler(Vector3.zero), true);
+        
+        this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.SUCCESSFUL);
     }
 
     public void SimulatePhysics() {
@@ -497,6 +501,18 @@ public class MCSController : PhysicsRemoteFPSAgentController {
                 this.snapToGrid();
                 actionFinished(movementActionFinished);
             }
+        } //for rotation
+        else if (inputWasRotateLook) {
+            if (lookRotationActionData.reset) {
+                ResetLookRotation(lookRotationActionData);
+            } else {
+                RotateLookAcrossFrames(lookRotationActionData);
+            }
+            
+            RotateLookBodyAcrossFrames(bodyRotationActionData);
+            framesUntilGridSnap++;
+            if (framesUntilGridSnap == NUMBER_OF_FRAMES_FOR_MOVEMENT)
+                actionFinished(true);
         }
         // Call Physics.Simulate multiple times with a small step value because a large step
         // value causes collision errors.  From the Unity Physics.Simulate documentation:
@@ -782,9 +798,77 @@ public class MCSController : PhysicsRemoteFPSAgentController {
         //method needs a return value
         return 0;
     }
+
+    public override void RotateLeft(ServerAction controlCommand) {
+        ServerAction rotate = new ServerAction();
+        rotate.rotation.y = -90;
+        RotateLook(rotate);
+    }
+
+    public override void RotateRight(ServerAction controlCommand) {
+        ServerAction rotate = new ServerAction();
+        rotate.rotation.y = 90;
+        RotateLook(rotate);
+    }
+
+    public override void LookUp(ServerAction controlCommand) 
+    {
+        ServerAction rotate = new ServerAction();
+        rotate.horizon = -30;
+        RotateLook(rotate);
+    }
+
+    public override void LookDown(ServerAction controlCommand)
+    {    
+        ServerAction rotate = new ServerAction();
+        rotate.horizon = 30;
+        RotateLook(rotate);
+    }
+
+    public void RotateLookAcrossFrames(MCSRotationData rotationActionData) 
+    {
+        Quaternion currentAngle = rotationActionData.startingRotation;
+        Quaternion distance = rotationActionData.endRotation;
+
+        bool upReset = distance.eulerAngles.x + currentAngle.eulerAngles.x > maxHorizon;
+        bool downReset = distance.eulerAngles.x + currentAngle.eulerAngles.x < minHorizon;
+        
+        float horizonChange = //this is because unity switches angles after 180 degrees. It sometimes switches to -180-0 or to 180-360.
+            distance.eulerAngles.x > maxHorizon ? distance.eulerAngles.x - 360 : 
+            distance.eulerAngles.x < minHorizon ? distance.eulerAngles.x + 360 : distance.eulerAngles.x;
+        
+        Vector3 updatedRotation = new Vector3(horizonChange / PHYSICS_SIMULATION_LOOPS, 0, 0);
+        m_Camera.transform.rotation = Quaternion.Euler(m_Camera.transform.rotation.eulerAngles + updatedRotation);
+    }
+
+    public void RotateLookBodyAcrossFrames(MCSRotationData rotationActionData) 
+    {
+        Quaternion currentAngle = rotationActionData.startingRotation;
+        Quaternion distance = rotationActionData.endRotation;
+
+        float rotationChange =
+            distance.eulerAngles.y > 90 ? distance.eulerAngles.y - 360 : 
+            distance.eulerAngles.y < -90 ? distance.eulerAngles.y + 360 : distance.eulerAngles.y;
+        
+        Vector3 updatedRotation = new Vector3(0, rotationChange / PHYSICS_SIMULATION_LOOPS, 0);
+        transform.rotation = Quaternion.Euler(transform.rotation.eulerAngles + updatedRotation);
+    }
+
+    public void ResetLookRotation(MCSRotationData rotationActionData) 
+    {
+        Quaternion currentAngle = rotationActionData.startingRotation;
+        Quaternion endAngle = rotationActionData.endRotation;
+
+        float horizonChange = currentAngle.eulerAngles.x - endAngle.eulerAngles.x;
+        horizonChange = horizonChange > maxHorizon ? horizonChange - 360 : horizonChange;
+        Vector3 lookChange = new Vector3(horizonChange, 0, 0);
+
+        Vector3 changePerFrame = -lookChange / 5f; //up or down per frame
+        m_Camera.transform.rotation = Quaternion.Euler(m_Camera.transform.rotation.eulerAngles + changePerFrame);
+    }
 }
 
-//class for contatining movement data
+/* class for contatining movement data */
 public class MCSMovementActionData {
     public Vector3 direction;
     public string UniqueID;
@@ -796,5 +880,18 @@ public class MCSMovementActionData {
         this.UniqueID = UniqueID;
         this.maxDistanceToObject = maxDistanceToObject;
         this.forceAction = forceAction;
+    }
+}
+
+/* class for contatining rotation data */
+public class MCSRotationData {
+    public Quaternion startingRotation;
+    public Quaternion endRotation;
+    public bool reset;
+
+    public MCSRotationData(Quaternion startingRotation, Quaternion endRotation, bool reset) {
+        this.startingRotation = startingRotation;
+        this.endRotation = endRotation;
+        this.reset = reset;
     }
 }
