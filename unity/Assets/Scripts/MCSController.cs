@@ -221,7 +221,8 @@ public class MCSController : PhysicsRemoteFPSAgentController {
 
         objectMetadata = this.UpdatePositionDistanceAndDirectionInObjectMetadata(simObj.gameObject, objectMetadata);
 
-        Transform recBox = simObj.BoundingBox == null && simObj.transform.parent != null && simObj.transform.parent.name != "Objects" ? simObj.transform.Find("ReceptacleTriggerBox") : null;
+        Transform recBox = simObj.BoundingBox == null && simObj.transform.parent != null &&
+            simObj.transform.parent.name != "Objects" ? simObj.transform.Find("ReceptacleTriggerBox") : null;
         if ((objectMetadata.objectBounds == null && (simObj.BoundingBox != null || recBox != null))) {
             objectMetadata.objectBounds = this.WorldCoordinatesOfBoundingBox(simObj);
         }
@@ -229,7 +230,7 @@ public class MCSController : PhysicsRemoteFPSAgentController {
             MCSMain main = GameObject.Find("MCS").GetComponent<MCSMain>();
             if (main != null && main.enableVerboseLog) {
                 Debug.Log("MCS: " + objectMetadata.objectId + " CENTER = " +
-                    simObj.BoundingBox.transform.position.ToString("F4"));
+                    (recBox != null ? recBox : simObj.BoundingBox.transform).position.ToString("F4"));
                 Debug.Log("MCS: " + objectMetadata.objectId + " BOUNDS = " + String.Join(", ",
                     objectMetadata.objectBounds.objectBoundsCorners.Select(point => point.ToString("F4")).ToArray()));
             }
