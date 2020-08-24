@@ -8,16 +8,23 @@ using System.Text;
 
 public class MCSMain : MonoBehaviour {
     private static float CUBE_INTERNAL_GRID = 0.25f;
+    private static float FLOOR_X_SCALE_OBSERVATION = 13f;
+    private static float FLOOR_X_SCALE_INTERACTION = 10f;
+    private static float FLOOR_Y_SCALE = 1f;
+    private static float FLOOR_Z_SCALE = 10f;
     private static float LIGHT_RANGE = 20f;
     private static float LIGHT_RANGE_SCREENSHOT = 10f;
     private static float LIGHT_Y_POSITION = 2.95f;
     private static float LIGHT_Y_POSITION_SCREENSHOT = 0.5f;
     private static float LIGHT_Z_POSITION = 0;
     private static float LIGHT_Z_POSITION_SCREENSHOT = -2.0f;
-    private static float FLOOR_X_SCALE_OBSERVATION = 13f;
-    private static float FLOOR_X_SCALE_INTERACTION = 10f;
-    private static float FLOOR_Y_SCALE = 1f;
-    private static float FLOOR_Z_SCALE = 10f;
+    private static float PHYSICS_FRICTION_DYNAMIC_DEFAULT = 0.6f;
+    private static float PHYSICS_FRICTION_DYNAMIC_PASSIVE = 0.1f;
+    private static float PHYSICS_FRICTION_STATIC_DEFAULT = 0.6f;
+    private static float PHYSICS_FRICTION_STATIC_PASSIVE = 0.1f;
+    private static float PHYSICS_BOUNCINESS_DEFAULT = 0;
+    private static float RIGIDBODY_DRAG_DEFAULT = 0;
+    private static float RIGIDBODY_ANGULAR_DRAG_DEFAULT = 0.5f;
     private static float WALL_SIDE_X_POSITION_OBSERVATION = 7.0f;
     private static float WALL_SIDE_X_POSITION_INTERACTION = 5.5f;
     private static float WALL_Y_POSITION = 1.5f;
@@ -166,7 +173,11 @@ public class MCSMain : MonoBehaviour {
             !this.currentScene.wallMaterial.Equals("")) ? this.currentScene.wallMaterial :
             this.defaultWallsMaterial;
 
-        if (this.currentScene.observation) {
+        // For all passive scenes: set the controller substeps to 1; expand all the walls of the room; remove the
+        // ceiling; and set the performer to start at a specific position and rotation.
+        if (this.currentScene.passive || this.currentScene.observation) {
+            this.agentController.substeps = 1;
+
             this.ceiling.SetActive(false);
 
             this.wallLeft.transform.position = new Vector3(-1 * MCSMain.WALL_SIDE_X_POSITION_OBSERVATION,
@@ -184,8 +195,19 @@ public class MCSMain : MonoBehaviour {
             this.currentScene.performerStart.position = new MCSConfigVector();
             this.currentScene.performerStart.position.z = -4.5f;
             this.currentScene.performerStart.rotation = new MCSConfigVector();
+
+            this.currentScene.wallProperties = null;
+            this.currentScene.floorProperties = new MCSConfigPhysicsProperties();
+            this.currentScene.floorProperties.enable = true;
+            this.currentScene.floorProperties.dynamicFriction = MCSMain.PHYSICS_FRICTION_DYNAMIC_PASSIVE;
+            this.currentScene.floorProperties.staticFriction = MCSMain.PHYSICS_FRICTION_STATIC_PASSIVE;
+            this.currentScene.floorProperties.bounciness = MCSMain.PHYSICS_BOUNCINESS_DEFAULT;
+            this.currentScene.floorProperties.drag = MCSMain.RIGIDBODY_DRAG_DEFAULT;
+            this.currentScene.floorProperties.angularDrag = MCSMain.RIGIDBODY_ANGULAR_DRAG_DEFAULT;
         }
         else {
+            this.agentController.substeps = MCSController.PHYSICS_SIMULATION_LOOPS;
+
             this.ceiling.SetActive(true);
 
             this.wallLeft.transform.position = new Vector3(-1 * MCSMain.WALL_SIDE_X_POSITION_INTERACTION,
@@ -219,7 +241,8 @@ public class MCSMain : MonoBehaviour {
         }
 
         else {
-            if (!this.currentScene.observation) {
+            // The passive scenes don't have ceilings.
+            if (!(this.currentScene.passive || this.currentScene.observation)) {
                 if (ceilingSimObjPhysics.VisibilityPoints.Length == 0) {
                     ceilingSimObjPhysics.VisibilityPoints = AssignVisibilityPoints(this.ceiling,
                         this.GenerateCubeInternalVisibilityPoints(this.ceiling, null), null);
@@ -798,31 +821,30 @@ public class MCSMain : MonoBehaviour {
         ai2thorPhysicsScript.Start();
     }
 
-    private void AssignPhysicsMaterialAndRigidBodyValues
-        (MCSConfigPhysicsProperties physicsObject,
+    private void AssignPhysicsMaterialAndRigidBodyValues(
+        MCSConfigPhysicsProperties physicsObject,
         GameObject gameObject, SimObjPhysics ai2thorPhysicsScript
-        ) {
-            ai2thorPhysicsScript.HFdynamicfriction = physicsObject.dynamicFriction;
-            ai2thorPhysicsScript.HFstaticfriction = physicsObject.staticFriction;
-            ai2thorPhysicsScript.HFbounciness = physicsObject.bounciness;
-            ai2thorPhysicsScript.HFrbdrag = physicsObject.drag;
-            ai2thorPhysicsScript.HFrbangulardrag = physicsObject.angularDrag;
+    ) {
+        ai2thorPhysicsScript.HFdynamicfriction = physicsObject.dynamicFriction;
+        ai2thorPhysicsScript.HFstaticfriction = physicsObject.staticFriction;
+        ai2thorPhysicsScript.HFbounciness = physicsObject.bounciness;
+        ai2thorPhysicsScript.HFrbdrag = physicsObject.drag;
+        ai2thorPhysicsScript.HFrbangulardrag = physicsObject.angularDrag;
 
-            Rigidbody rigidbody = gameObject.GetComponent<Rigidbody>();
-            //Gets rigid body of object and changes drag/angular drag
-            rigidbody.drag = ai2thorPhysicsScript.HFrbdrag;
-            rigidbody.angularDrag = ai2thorPhysicsScript.HFrbangulardrag;
+        Rigidbody rigidbody = gameObject.GetComponent<Rigidbody>();
+        //Gets rigid body of object and changes drag/angular drag
+        rigidbody.drag = ai2thorPhysicsScript.HFrbdrag;
+        rigidbody.angularDrag = ai2thorPhysicsScript.HFrbangulardrag;
 
-            //Loops through each collider on the object, creates a new material (other wise it would change)
-            //(every instance where this material is used) and then assigns each collider with an updated physics material
-            PhysicMaterial physicMaterial = new PhysicMaterial();
-            foreach (Collider collider in ai2thorPhysicsScript.MyColliders) {
-                physicMaterial.dynamicFriction = ai2thorPhysicsScript.HFdynamicfriction;
-                physicMaterial.staticFriction = ai2thorPhysicsScript.HFstaticfriction;
-                physicMaterial.bounciness = ai2thorPhysicsScript.HFbounciness;
-                
-                collider.material = physicMaterial;
-            }   
+        //Loops through each collider on the object, creates a new material (other wise it would change)
+        //(every instance where this material is used) and then assigns each collider with an updated physics material
+        PhysicMaterial physicMaterial = new PhysicMaterial();
+        foreach (Collider collider in ai2thorPhysicsScript.MyColliders) {
+            physicMaterial.dynamicFriction = ai2thorPhysicsScript.HFdynamicfriction;
+            physicMaterial.staticFriction = ai2thorPhysicsScript.HFstaticfriction;
+            physicMaterial.bounciness = ai2thorPhysicsScript.HFbounciness;
+            collider.material = physicMaterial;
+        }
     }
 
     private void AssignStructureScript(GameObject gameObject) {
@@ -1497,7 +1519,8 @@ public class MCSConfigScene {
     public String ceilingMaterial;
     public String floorMaterial;
     public String wallMaterial;
-    public bool observation;
+    public bool passive;
+    public bool observation; // deprecated; please use passive
     public bool screenshot;
     
     public MCSConfigGoal goal;

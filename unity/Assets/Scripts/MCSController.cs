@@ -23,7 +23,8 @@ public class MCSController : PhysicsRemoteFPSAgentController {
 
     //this is not the capsule radius, this is the radius of the x and z bounds of the agent.
     public static float AGENT_RADIUS = 0.12f;
-    public static int NUMBER_OF_FRAMES_FOR_MOVEMENT = PHYSICS_SIMULATION_LOOPS;
+
+    public int substeps = MCSController.PHYSICS_SIMULATION_LOOPS;
 
     public int step = 0;
 
@@ -471,8 +472,7 @@ public class MCSController : PhysicsRemoteFPSAgentController {
     public void SimulatePhysics() {
         if (this.agentManager.renderImage) {
             // We only need to save ONE image of the scene after initialization.
-            StartCoroutine(this.SimulatePhysicsSaveImagesIncreaseStep(this.step == 0 ? 1 :
-                MCSController.PHYSICS_SIMULATION_LOOPS));
+            StartCoroutine(this.SimulatePhysicsSaveImagesIncreaseStep(this.step == 0 ? 1 : this.substeps));
         }
 
         else {
@@ -485,7 +485,7 @@ public class MCSController : PhysicsRemoteFPSAgentController {
     }
 
     private void SimulatePhysicsCompletely() {
-        for (int i = 0; i < MCSController.PHYSICS_SIMULATION_LOOPS; ++i) {
+        for (int i = 0; i < this.substeps; ++i) {
             this.SimulatePhysicsOnce();
         }
     }
@@ -494,12 +494,12 @@ public class MCSController : PhysicsRemoteFPSAgentController {
         //for movement
         if (inputWasMovement) {
             MatchAgentHeightToStructureBelow(false);
-            movementActionFinished = moveInDirection((movementActionData.direction/NUMBER_OF_FRAMES_FOR_MOVEMENT), 
+            movementActionFinished = moveInDirection((movementActionData.direction / this.substeps), 
                     movementActionData.UniqueID,
                     movementActionData.maxDistanceToObject,
                     movementActionData.forceAction);
             framesUntilGridSnap++;
-            if (framesUntilGridSnap == NUMBER_OF_FRAMES_FOR_MOVEMENT) {
+            if (framesUntilGridSnap == this.substeps) {
                 this.snapToGrid();
                 actionFinished(movementActionFinished);
             }
@@ -513,8 +513,9 @@ public class MCSController : PhysicsRemoteFPSAgentController {
             
             RotateLookBodyAcrossFrames(bodyRotationActionData);
             framesUntilGridSnap++;
-            if (framesUntilGridSnap == NUMBER_OF_FRAMES_FOR_MOVEMENT)
+            if (framesUntilGridSnap == this.substeps) {
                 actionFinished(true);
+            }
         }
         // Call Physics.Simulate multiple times with a small step value because a large step
         // value causes collision errors.  From the Unity Physics.Simulate documentation:
@@ -529,8 +530,7 @@ public class MCSController : PhysicsRemoteFPSAgentController {
         // Run the physics simulation for a little bit, then pause and save the images for the current scene.
         this.SimulatePhysicsOnce();
 
-        GameObject.Find("MCS").GetComponent<MCSMain>().UpdateOnPhysicsSubstep(
-            MCSController.PHYSICS_SIMULATION_LOOPS);
+        GameObject.Find("MCS").GetComponent<MCSMain>().UpdateOnPhysicsSubstep(this.substeps);
 
         // Wait for the end of frame after we run the physics simulation but before we save the images.
         yield return new WaitForEndOfFrame(); // Required for coroutine functions
@@ -839,7 +839,7 @@ public class MCSController : PhysicsRemoteFPSAgentController {
             distance.eulerAngles.x > maxHorizon ? distance.eulerAngles.x - 360 : 
             distance.eulerAngles.x < minHorizon ? distance.eulerAngles.x + 360 : distance.eulerAngles.x;
         
-        Vector3 updatedRotation = new Vector3(horizonChange / PHYSICS_SIMULATION_LOOPS, 0, 0);
+        Vector3 updatedRotation = new Vector3(horizonChange / this.substeps, 0, 0);
         m_Camera.transform.rotation = Quaternion.Euler(m_Camera.transform.rotation.eulerAngles + updatedRotation);
     }
 
@@ -852,7 +852,7 @@ public class MCSController : PhysicsRemoteFPSAgentController {
             distance.eulerAngles.y > 90 ? distance.eulerAngles.y - 360 : 
             distance.eulerAngles.y < -90 ? distance.eulerAngles.y + 360 : distance.eulerAngles.y;
         
-        Vector3 updatedRotation = new Vector3(0, rotationChange / PHYSICS_SIMULATION_LOOPS, 0);
+        Vector3 updatedRotation = new Vector3(0, rotationChange / this.substeps, 0);
         transform.rotation = Quaternion.Euler(transform.rotation.eulerAngles + updatedRotation);
     }
 
