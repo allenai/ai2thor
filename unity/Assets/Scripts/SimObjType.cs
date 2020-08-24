@@ -265,7 +265,8 @@ public enum SimObjType : int
     Desktop = 157,
     TargetCircle = 158,
     Floor = 159,
-    Screen = 160,
+    ScreenFrame = 160,
+	ScreenSheet = 161,
 }
 
 public static class ReceptacleRestrictions

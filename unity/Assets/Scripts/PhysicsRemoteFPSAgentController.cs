@@ -3212,6 +3212,92 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true, ersm.ReturnValidSpawns(action.objectType, action.objectVariation, target, action.y));
         }
 
+        //change scale of sim object, this only works with sim objects not structures
+        public void ScaleObject(ServerAction action)
+        {
+            //specify target to pickup via objectId or coordinates
+            SimObjPhysics target = null;
+            if (action.forceAction) {
+                action.forceVisible = true;
+            }
+            //no target object specified, so instead try and use x/y screen coordinates
+            if(action.objectId == null)
+            {
+                if(!ScreenToWorldTarget(action.x, action.y, ref target, !action.forceAction))
+                {
+                    //error message is set inside ScreenToWorldTarget
+                    actionFinished(false);
+                    return;
+                }
+            }
+
+            //an objectId was given, so find that target in the scene if it exists
+            else
+            {
+                if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(action.objectId)) {
+                    errorMessage = "Object ID appears to be invalid.";
+                    actionFinished(false);
+                    return;
+                }
+                
+                //if object is in the scene and visible, assign it to 'target'
+                foreach (SimObjPhysics sop in VisibleSimObjs(action)) 
+                {
+                    target = sop;
+                }
+            }
+
+            //neither objectId nor coordinates found an object
+            if(target == null)
+            {
+                errorMessage = "No target found";
+                actionFinished(false);
+                return;
+            }
+
+            else
+            {
+                float scaleMultiplier = action.scale; //this can be something like 0.3 to shrink or 1.5 to grow
+                StartCoroutine(scaleObject(gameObject.transform.localScale * action.scale, target));
+            }
+        }
+
+        private IEnumerator scaleObject(Vector3 targetScale, SimObjPhysics target)
+        {
+            yield return new WaitForFixedUpdate();
+
+            Vector3 originalScale = target.transform.localScale;
+            float currentTime = 0.0f;
+
+            do
+            {
+                target.transform.localScale = Vector3.Lerp(originalScale, targetScale, currentTime / 1.0f);
+                currentTime += Time.deltaTime;
+                yield return null;
+            } while (currentTime <= 1.0f);
+
+            //store reference to all children
+            Transform[] children = new Transform[target.transform.childCount];
+
+            for(int i = 0; i < target.transform.childCount; i++)
+            {
+                children[i] = target.transform.GetChild(i);
+            }
+
+            //detach all children
+            target.transform.DetachChildren();
+            //zero out object transform to be 1, 1, 1
+            target.transform.transform.localScale = Vector3.one;
+            //reparent all children
+            foreach (Transform t in children)
+            {
+                t.SetParent(target.transform);
+            }
+
+            target.ContextSetUpBoundingBox();
+            actionFinished(true);
+        }
+        
         //pass in a Vector3, presumably from GetReachablePositions, and try to place a specific Sim Object there
         //unlike PlaceHeldObject or InitialRandomSpawn, this won't be limited by a Receptacle, but only
         //limited by collision
@@ -4891,7 +4977,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return;
         }
 
-        protected IEnumerator InteractAndWait(CanOpen_Object coo, bool freezeContained = false) {
+        protected IEnumerator InteractAndWait(CanOpen_Object coo, bool freezeContained = false, float openPercent = 1.0f) {
             bool ignoreAgentInTransition = true;
 
             List<Collider> collidersDisabled = new List<Collider>();
@@ -4919,7 +5005,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             bool success = false;
             if (coo != null) {
-                coo.Interact();
+                coo.Interact(openPercent);
             }
 
             yield return new WaitUntil( () => (coo != null && coo.GetiTweenCount() == 0));
@@ -4933,7 +5019,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 if (isAgentCapsuleCollidingWith(openedObject) || isHandObjectCollidingWith(openedObject)) {
                     success = false;
                     if (coo != null) {
-                        coo.Interact();
+                        coo.Interact(openPercent);
                     }
 
                     yield return new WaitUntil( () => (coo != null && coo.GetiTweenCount() == 0));
@@ -5423,13 +5509,23 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     }
 
                     //pass in percentage open if desired
-                    if (action.moveMagnitude > 0.0f) {
-                        //if this fails, invalid percentage given
-                        if (!codd.SetOpenPercent(action.moveMagnitude)) {
-                            errorMessage = "Please give an open percentage between 0.0f and 1.0f";
+                    if (action.moveMagnitude > 0.0f) 
+                    {
+                        if(action.moveMagnitude > 1.0)
+                        {
+                            errorMessage = "cannot open past 100%, please use moveMagnitude value in range (0.0, 1.0]";
                             actionFinished(false);
                             return;
                         }
+
+                        // //if this fails, invalid percentage given
+                        // if (!codd.SetOpenPercent(action.moveMagnitude)) {
+                        //     errorMessage = "Please give an open percentage between 0.0f and 1.0f";
+                        //     actionFinished(false);
+                        //     return;
+                        // }
+                        StartCoroutine(InteractAndWait(codd, false, action.moveMagnitude));
+                        return;
                     }
 
                     StartCoroutine(InteractAndWait(codd));

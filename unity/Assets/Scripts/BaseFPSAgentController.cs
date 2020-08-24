@@ -1096,6 +1096,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             objMeta.openable = simObj.IsOpenable;
             if (objMeta.openable) {
                 objMeta.isOpen = simObj.IsOpen;
+                objMeta.openPercent = simObj.OpenPercentage;
             }
 
             objMeta.toggleable = simObj.IsToggleable;
@@ -1407,6 +1408,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             metaMessage.lastAction = lastAction;
             metaMessage.lastActionSuccess = lastActionSuccess;
             metaMessage.errorMessage = errorMessage;
+            metaMessage.actionReturn = this.actionReturn;
 
             if (errorCode != ServerActionErrorCode.Undefined) {
                 metaMessage.errorCode = Enum.GetName(typeof(ServerActionErrorCode), errorCode);
@@ -2859,6 +2861,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             m_Camera.transform.rotation = originalCameraRotation;
             
             var path = new UnityEngine.AI.NavMeshPath();
+            
             var sopPos = targetSOP.transform.position;
             //var target = new Vector3(sopPos.x, initialPosition.y, sopPos.z);
 
@@ -2869,7 +2872,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
             var pathDistance = 0.0f;
             for (int i = 0; i < path.corners.Length - 1; i++) {
                 #if UNITY_EDITOR
-                    // Debug.DrawLine(path.corners[i], path.corners[i + 1], Color.red, 10.0f);
+                    //Debug.DrawLine(path.corners[i], path.corners[i + 1], Color.red, 10.0f);
+                    Debug.Log("Corner " + i + ": " + path.corners[i]);
                 #endif
                 pathDistance += Vector3.Distance(path.corners[i], path.corners[i + 1]);
             }
@@ -2887,11 +2891,11 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 startPosition = action.position;
             }
 
-            //var targetPosition = new Vector3(action.x, action.y, action.z);
+            var targetPosition = new Vector3(action.x, action.y, action.z);
 
             var path = new UnityEngine.AI.NavMeshPath();
             this.GetComponent<UnityEngine.AI.NavMeshAgent>().enabled = true;
-            //bool pathSuccess = UnityEngine.AI.NavMesh.CalculatePath(startPosition, targetPosition,  UnityEngine.AI.NavMesh.AllAreas, path);
+            bool pathSuccess = UnityEngine.AI.NavMesh.CalculatePath(startPosition, targetPosition,  UnityEngine.AI.NavMesh.AllAreas, path);
             if (path.status == UnityEngine.AI.NavMeshPathStatus.PathComplete) {
                 //VisualizePath(startPosition, path);
                 this.GetComponent<UnityEngine.AI.NavMeshAgent>().enabled = false;
