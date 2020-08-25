@@ -5316,6 +5316,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 //target not found in currently visible objects, report not found
                 errorMessage = "object not found: " + action.objectId;
                 actionFinished(false);
+                return;
             }
             
             ToggleObject(target, toggleOn, forceAction);
