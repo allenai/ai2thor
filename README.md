@@ -16,10 +16,11 @@ Checkout the [MCS private GitHub repository](https://github.com/NextCenturyCorpo
 
 If you want to run an MCS Scene in the Unity Editor:
 
-- Copy a config file from the [scenes folder in our MCS GitHub repository](https://github.com/NextCenturyCorporation/MCS/tree/master/python_api/scenes) into the `unity/Assets/Resources/MCS/Scenes/` folder.
-- In the "MCS" Game Object, enter the name of your scene file in the "Default Scene File" property.
-- If you want to see the class/depth/object masks, enable "Image Synthesis" in the "FirstPersonCharacter" (camera) within the "FPSController" Game Object.
-- While running, use WASD to move, arrow buttons to look, and escape to pass.
+- Open the MCS Scene: `File->Open Scene` then select `Assets/Scenes/MCS.unity`
+- Copy a config file from the [scenes folder in our MCS GitHub repository](https://github.com/NextCenturyCorporation/MCS/tree/master/python_api/scenes) into the `unity/Assets/Resources/MCS/Scenes/` folder, or use one of the existing scene files.
+- In the `MCS` Game Object, enter the name of your scene file in the `"Default Scene File"` property.
+- If you want to see the class/depth/object masks, activate the `Image Synthesis` script in the `FirstPersonCharacter` (camera) within the `FPSController` Game Object.
+- While running, use WASD to move, arrow buttons to look, and escape to pass. See [`unity/Assets/Scripts/DebugDiscreteAgentController.cs`](./unity/Assets/Scripts/DebugDiscreteAgentController.cs) for additional key bindings.
 
 ## Build
 
