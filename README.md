@@ -17,10 +17,16 @@ Checkout the [MCS private GitHub repository](https://github.com/NextCenturyCorpo
 If you want to run an MCS Scene in the Unity Editor:
 
 - Open the MCS Scene: `File->Open Scene` then select `Assets/Scenes/MCS.unity`
-- Copy a config file from the [scenes folder in our MCS GitHub repository](https://github.com/NextCenturyCorporation/MCS/tree/master/python_api/scenes) into the `unity/Assets/Resources/MCS/Scenes/` folder, or use one of the existing scene files.
-- In the `MCS` Game Object, enter the name of your scene file in the `"Default Scene File"` property WITHOUT the `.json` file extension.
-- If you want to see the class/depth/object masks, activate the `Image Synthesis` script in the `FirstPersonCharacter` (camera) within the `FPSController` Game Object. You can see them while running the scene in the Game window using the Display dropdown.
-- While running, use WASD to move, arrow buttons to look, and escape to pass. See [`unity/Assets/Scripts/DebugDiscreteAgentController.cs`](./unity/Assets/Scripts/DebugDiscreteAgentController.cs) for additional key bindings.
+- By default, in the Unity Editor, see the Hierarchy window on the left, the Scene and Game windows in the middle, the Inspector window on the right, and the Project and Console windows at the bottom.
+  - The Hierarchy window lists the Game Objects in the Scene.
+  - The Scene and Game windows show the Scene.
+  - The Inspector window lists the properties, scripts, materials, and other components of the selected Game Object.
+  - The Project window shows the files in the current project.
+  - The Console window shows the logs and errors.
+- To successfully run an MCS Scene, copy a JSON scene configuration file from the [scenes folder in our MCS GitHub repository](https://github.com/NextCenturyCorporation/MCS/tree/master/python_api/scenes) into the [`unity/Assets/Resources/MCS/Scenes/`](./unity/Assets/Resources/MCS/Scenes/) folder, or identify a JSON file in the folder to use (like `playroom.json`).
+- Click on the `MCS` Game Object in the Hierarchy window. Then, in the Inspector Window, under the `MCS Main (Script)` component, enter the name of your selected JSON file in the `"Default Scene File"` property WITHOUT the `.json` extension.
+- If you want to see the class/depth/object masks, click on the `FPSController->FirstPersonCharacter` Game Object in the Hierarchy window, then toggle-on the checkbox next to the `Image Synthesis (Script)` component in the Inspector window to activate that script. You can see the masks during a run using the Display dropdown in the Game window.
+- Click the Play button in the top center of the Unity Editor to run the Scene. Use WASD to move, arrow buttons (or R) to rotate or look, and escape to pass. To set action parameters, click the `FPSController` Game Object in the Hierarchy window, then use the inputs under `Debug Discrete Agent Controller (Script)`. See [`unity/Assets/Scripts/DebugDiscreteAgentController.cs`](./unity/Assets/Scripts/DebugDiscreteAgentController.cs) for additional key bindings.
 
 ## Build
 
