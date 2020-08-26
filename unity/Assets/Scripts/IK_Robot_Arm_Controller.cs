@@ -127,13 +127,14 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
                 yield break;
             }
 
-            //if the option to stop moving when the sphere touches any sim object is wanted
-            if(magnetSphereComp.isColliding && StopMotionOnContact)
-            {
-                string debugMessage = "Some object was hit by the arm's hand";
-                controller.actionFinished(false, debugMessage);
-                yield break;
-            }
+            //this currently shouldn't work for rotating an object because it will always be colliding with the held object....
+            // //if the option to stop moving when the sphere touches any sim object is wanted
+            // if(magnetSphereComp.isColliding && StopMotionOnContact)
+            // {
+            //     string debugMessage = "Some object was hit by the arm's hand";
+            //     controller.actionFinished(false, debugMessage);
+            //     yield break;
+            // }
 
             armTarget.transform.rotation = Quaternion.Slerp(armTarget.transform.rotation, targetQuat, interp);
             yield return new WaitForFixedUpdate();
@@ -336,6 +337,9 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
 
             rb.angularVelocity = UnityEngine.Random.insideUnitSphere;
         }
+
+        //clear all now dropped objects
+        HeldObjects.Clear();
     }
 
     public void SetHandMagnetRadius(float radius) {
