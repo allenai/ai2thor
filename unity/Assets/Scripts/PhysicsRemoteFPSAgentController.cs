@@ -3485,7 +3485,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         //same as GetSpawnCoordinatesAboveReceptacle(Server Action) but takes a sim obj phys instead
         //returns a list of vector3 coordinates above a receptacle. These coordinates will make up a grid above the receptacle
-        public List<Vector3> GetSpawnCoordinatesAboveReceptacle(SimObjPhysics t)
+        public List<Vector3> getSpawnCoordinatesAboveReceptacle(SimObjPhysics t)
         {
             SimObjPhysics target = t;
             //ok now get spawn points from target
@@ -9015,5 +9015,30 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
             actionFinished(true);
         }
+
+        #if UNITY_EDITOR
+        void OnDrawGizmos()
+        {
+            ////check for valid spawn points in GetSpawnCoordinatesAboveObject action
+            //  Gizmos.color = Color.magenta;
+            //     if(validpointlist.Count > 0)
+            //     {
+            //         foreach(Vector3 yes in validpointlist)
+            //         {
+            //             Gizmos.DrawCube(yes, new Vector3(0.01f, 0.01f, 0.01f));
+            //         }
+            //     }
+
+            //draw axis aligned bounds of objects after actionFinished() calls
+            // if(gizmobounds != null)
+            // {
+            //     Gizmos.color = Color.yellow;
+            //     foreach(Bounds g in gizmobounds)
+            //     {
+            //         Gizmos.DrawWireCube(g.center, g.size);
+            //     }
+            // }
+        }
+        #endif
     }
 }
