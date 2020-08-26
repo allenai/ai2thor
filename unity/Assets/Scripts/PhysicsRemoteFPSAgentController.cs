@@ -2766,6 +2766,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             if (ItemInHand == null) {
                 errorMessage = "Can't rotate hand unless holding object";
+                actionFinished(false);
                 return;
             }
 
