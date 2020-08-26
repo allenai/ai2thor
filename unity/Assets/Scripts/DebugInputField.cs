@@ -573,8 +573,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 case "spawnabove":
                     {
                         ServerAction action = new ServerAction();
-                        action.action = "GetSpawnCoordinatesAboveObject";
-                        action.objectId = "Floor|+00.00|+00.00|+00.00";
+                        action.action = "GetSpawnCoordinatesAboveReceptacle";
+                        action.objectId = "CounterTop|-01.94|+00.98|-03.67";
                         action.anywhere = false;
                         PhysicsController.ProcessControlCommand(action);
                         break;

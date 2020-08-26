@@ -2766,6 +2766,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             if (ItemInHand == null) {
                 errorMessage = "Can't rotate hand unless holding object";
+                actionFinished(false);
                 return;
             }
 
@@ -3484,7 +3485,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         //same as GetSpawnCoordinatesAboveReceptacle(Server Action) but takes a sim obj phys instead
         //returns a list of vector3 coordinates above a receptacle. These coordinates will make up a grid above the receptacle
-        public List<Vector3> GetSpawnCoordinatesAboveReceptacle(SimObjPhysics t)
+        public List<Vector3> getSpawnCoordinatesAboveReceptacle(SimObjPhysics t)
         {
             SimObjPhysics target = t;
             //ok now get spawn points from target
@@ -9151,5 +9152,29 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 actionFinished(false, "Agent does not have kinematic arm or is not enabled. Make sure there is a '" + typeof(IK_Robot_Arm_Controller).Name + "' component as a child of this agent.");
             }
         }
+        #if UNITY_EDITOR
+        void OnDrawGizmos()
+        {
+            ////check for valid spawn points in GetSpawnCoordinatesAboveObject action
+            //  Gizmos.color = Color.magenta;
+            //     if(validpointlist.Count > 0)
+            //     {
+            //         foreach(Vector3 yes in validpointlist)
+            //         {
+            //             Gizmos.DrawCube(yes, new Vector3(0.01f, 0.01f, 0.01f));
+            //         }
+            //     }
+
+            //draw axis aligned bounds of objects after actionFinished() calls
+            // if(gizmobounds != null)
+            // {
+            //     Gizmos.color = Color.yellow;
+            //     foreach(Bounds g in gizmobounds)
+            //     {
+            //         Gizmos.DrawWireCube(g.center, g.size);
+            //     }
+            // }
+        }
+        #endif
     }
 }

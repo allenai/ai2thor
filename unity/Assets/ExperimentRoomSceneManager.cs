@@ -254,7 +254,7 @@ public class ExperimentRoomSceneManager : MonoBehaviour
         //GetSpawnCoordinatesAboveReceptacle
         List<Vector3> spawnCoordinates = new List<Vector3>();
         PhysicsRemoteFPSAgentController fpsAgent = agentManager.ReturnPrimaryAgent().GetComponent<PhysicsRemoteFPSAgentController>();
-        spawnCoordinates = fpsAgent.GetSpawnCoordinatesAboveReceptacle(targetReceptacle);
+        spawnCoordinates = fpsAgent.getSpawnCoordinatesAboveReceptacle(targetReceptacle);
 
         List<Vector3> returnCoordinates = new List<Vector3>();
 
@@ -399,7 +399,7 @@ public class ExperimentRoomSceneManager : MonoBehaviour
 
         List<Vector3> spawnCoordinates = new List<Vector3>();
         PhysicsRemoteFPSAgentController fpsAgent = agentManager.ReturnPrimaryAgent().GetComponent<PhysicsRemoteFPSAgentController>();
-        spawnCoordinates = fpsAgent.GetSpawnCoordinatesAboveReceptacle(targetReceptacle);
+        spawnCoordinates = fpsAgent.getSpawnCoordinatesAboveReceptacle(targetReceptacle);
         spawnCoordinates.Shuffle_(seed);
 
         //instantiate the prefab toSpawn away from every other object
