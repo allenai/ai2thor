@@ -2759,9 +2759,45 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         else {
                             Debug.LogError("Target x y z args needed for command");
                         }
+                        //action.stopArmMovementOnContact = true;
                         PhysicsController.ProcessControlCommand(action);
                         break;
-                       
+                    }
+
+                    //move mid level arm stop motion
+                    case "mmlas":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "MoveMidLevelArm";
+                        action.speed = 1.0f;
+                        //action.returnToStart = true;
+                        if (splitcommand.Length > 4)
+                        {
+                            action.position = new Vector3(
+                                    float.Parse(splitcommand[1]),
+                                    float.Parse(splitcommand[2]), 
+                                    float.Parse(splitcommand[3])
+                                );
+                            
+                             if (splitcommand.Length >= 5) {
+                                 action.speed = float.Parse(splitcommand[4]);
+                             }
+
+                            if (splitcommand.Length >= 6) {
+                                 action.returnToStart = bool.Parse(splitcommand[5]);
+                             }
+
+                             if(splitcommand.Length >= 7) {
+                                 action.handCameraSpace = bool.Parse(splitcommand[6]);
+                             }
+                        }
+                        else {
+                            Debug.LogError("Target x y z args needed for command");
+                        }
+                        action.stopArmMovementOnContact = true;
+                        //action.stopArmMovementOnContact = true;
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
                     }
 
                     case "mmlah":

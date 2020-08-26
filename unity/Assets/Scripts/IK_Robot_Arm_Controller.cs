@@ -22,12 +22,17 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
     private Transform handCameraTransform;
     [SerializeField]
     private SphereCollider magnetSphere = null;
-
+    private WhatIsInsideMagnetSphere magnetSphereComp = null;
     private GameObject Magnet = null;
 
     private PhysicsRemoteFPSAgentController PhysicsController; 
 
     private Transform FirstJoint;
+
+    [SerializeField]
+    private List<SimObjPhysics> HeldObjects = null;
+
+    private bool StopMotionOnContact = false;
     // Start is called before the first frame update
     void Start()
     {
@@ -39,10 +44,13 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
         staticCollided = new StaticCollided();
 
         Magnet = handCameraTransform.FirstChildOrDefault(x => x.name == "Magnet").gameObject;
-
+        magnetSphereComp = magnetSphere.GetComponent<WhatIsInsideMagnetSphere>();
         // PhysicsController = GetComponentInParent<PhysicsRemoteFPSAgentController>();
+    }
 
-
+    public void SetStopMotionOnContact(bool b)
+    {
+        StopMotionOnContact = b;
     }
 
     // Update is called once per frame
@@ -119,6 +127,14 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
                 yield break;
             }
 
+            //if the option to stop moving when the sphere touches any sim object is wanted
+            if(magnetSphereComp.isColliding && StopMotionOnContact)
+            {
+                string debugMessage = "Some object was hit by the arm's hand";
+                controller.actionFinished(false, debugMessage);
+                yield break;
+            }
+
             armTarget.transform.rotation = Quaternion.Slerp(armTarget.transform.rotation, targetQuat, interp);
             yield return new WaitForFixedUpdate();
 
@@ -174,6 +190,14 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
                 yield break;
             }
 
+            //if the option to stop moving when the sphere touches any sim object is wanted
+            if(magnetSphereComp.isColliding && StopMotionOnContact)
+            {
+                string debugMessage = "Some object was hit by the arm's hand";
+                controller.actionFinished(false, debugMessage);
+                yield break;
+            }
+
             previousArmPosition = arm.transform.localPosition;
             arm.transform.localPosition += targetDirectionWorld * unitsPerSecond * Time.fixedDeltaTime;
             // Jump the last epsilon to match exactly targetWorldPos
@@ -198,6 +222,7 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
         var eps = 1e-3;
         yield return new WaitForFixedUpdate();
         var previousArmPosition = armTarget.position;
+
         while (Vector3.SqrMagnitude(targetWorldPos - armTarget.position) > eps) {
 
             if (staticCollided.collided != false) {
@@ -221,6 +246,14 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
                 yield break;
             }
 
+            //if the option to stop moving when the sphere touches any sim object is wanted
+            if(magnetSphereComp.isColliding && StopMotionOnContact)
+            {
+                string debugMessage = "Some object was hit by the arm's hand";
+                controller.actionFinished(false, debugMessage);
+                yield break;
+            }
+
             previousArmPosition = armTarget.position;
             armTarget.position += targetDirectionWorld * unitsPerSecond * Time.fixedDeltaTime;
             // Jump the last epsilon to match exactly targetWorldPos
@@ -233,18 +266,23 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
         controller.actionFinished(true);
     }
 
-    public List<SimObjPhysics> WhatObjectsAreInsideMagnetSphere()
+    public List<string> WhatObjectsAreInsideMagnetSphereAsObjectID()
     {
-        return magnetSphere.GetComponent<WhatIsInsideMagnetSphere>().CurrentlyContainedObjects();
+        return magnetSphereComp.CurrentlyContainedSimObjectsByID();
+    }
+
+    public List<SimObjPhysics> WhatObjectsAreInsideMagnetSphereAsSOP()
+    {
+        return magnetSphereComp.CurrentlyContainedSimObjects();
     }
 
     public IEnumerator ReturnObjectsInMagnetAfterPhysicsUpdate(PhysicsRemoteFPSAgentController controller)
     {
         yield return new WaitForFixedUpdate();
         List<string> listOfSOP = new List<string>();
-        foreach (SimObjPhysics sop in this.WhatObjectsAreInsideMagnetSphere())
+        foreach (string oid in this.WhatObjectsAreInsideMagnetSphereAsObjectID())
         {
-            listOfSOP.Add(sop.objectID);
+            listOfSOP.Add(oid);
         }
         Debug.Log("objs: " + string.Join(", ", listOfSOP));
         controller.actionFinished(true, listOfSOP);
@@ -254,7 +292,7 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
     {
         bool pickedUp = false;
         //grab all sim objects that are currently colliding with magnet sphere
-        foreach(SimObjPhysics sop in WhatObjectsAreInsideMagnetSphere())
+        foreach(SimObjPhysics sop in WhatObjectsAreInsideMagnetSphereAsSOP())
         {
             Rigidbody rb = sop.GetComponent<Rigidbody>();
             rb.isKinematic = true;
@@ -264,6 +302,8 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
             //move colliders to be children of arm? stop arm from moving?
             sop.transform.Find("Colliders").transform.SetParent(magnetSphere.transform);
             pickedUp = true;
+
+            HeldObjects.Add(sop);
         }
 
         //note: how to handle cases where object breaks if it is shoved into another object?
@@ -274,7 +314,7 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
     public void DropObject()
     {
         //grab all sim objects that are currently colliding with magnet sphere
-        foreach(SimObjPhysics sop in magnetSphere.GetComponent<WhatIsInsideMagnetSphere>().CurrentlyContainedObjects())
+        foreach(SimObjPhysics sop in HeldObjects) 
         {
             Rigidbody rb = sop.GetComponent<Rigidbody>();
             rb.collisionDetectionMode = CollisionDetectionMode.ContinuousSpeculative;

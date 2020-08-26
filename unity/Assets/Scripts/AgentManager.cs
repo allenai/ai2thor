@@ -1412,6 +1412,8 @@ public class ServerAction
 
     public float radius;
 
+	public bool stopArmMovementOnContact = false;
+
     public SimObjType ReceptableSimObjType()
 	{
 		if (string.IsNullOrEmpty(receptacleObjectType))
