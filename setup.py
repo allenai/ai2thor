@@ -8,7 +8,6 @@ if os.path.isfile('ai2thor/_version.py'):
 
 VERSION = __version__
 
-
 setup(name='ai2thor',
       version=VERSION,
       description='AI2 Thor framework',
