@@ -4304,6 +4304,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         //used for all actions that need a sim object target
         //instead of objectId, use screen coordinates to raycast toward potential targets
+        //will set the target object by reference if raycast is succesful
         public bool ScreenToWorldTarget(float x, float y, ref SimObjPhysics target, bool requireWithinViewportRange)
         {
             //float x = action.x;
@@ -4350,6 +4351,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 }
             }
 
+            //force update objects to be visible/interactable correctly
+            VisibleSimObjs(false);
             return true;
         }
 
