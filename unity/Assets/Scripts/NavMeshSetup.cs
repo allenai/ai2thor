@@ -221,14 +221,6 @@ public class NavMeshSetup : MonoBehaviour
                      UnityEditor.GameObjectUtility.SetStaticEditorFlags(meshRenderer.gameObject,  UnityEditor.StaticEditorFlags.NavigationStatic);
                      UnityEditor.GameObjectUtility.SetNavMeshArea(meshRenderer.gameObject, NavMesh.GetAreaFromName("Walkable"));
                  });
-            //  for (int i = 0; i < objectHierarchy.transform.childCount; i++) {
-            //      var child = objectHierarchy.transform.GetChild(i);
-            //      child.GetComponentsInChildren<MeshRenderer>().ToList().ForEach( meshRenderer => {
-            //          Debug.Log("Mesh Renderer " + meshRenderer.gameObject.name + " layer ");
-            //          UnityEditor.GameObjectUtility.SetStaticEditorFlags(meshRenderer.gameObject,  UnityEditor.StaticEditorFlags.NavigationStatic);
-            //          UnityEditor.GameObjectUtility.SetNavMeshArea(meshRenderer.gameObject, NavMesh.GetAreaFromName("Not Walkable"));
-            //      });
-            //      Debug.Log("Setting flag for " + child.gameObject.name + " layer " +  NavMesh.GetAreaFromName("Not Walkable"));
              }
     #endif
 }
