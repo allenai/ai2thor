@@ -3367,7 +3367,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         //same as PlaceObjectAtPoint(ServerAction action) but without a server action
-        public bool PlaceObjectAtPoint(SimObjPhysics t, Vector3 position)
+        public bool placeObjectAtPoint(SimObjPhysics t, Vector3 position)
         {
             SimObjPhysics target = null;
             //find the object in the scene, disregard visibility
