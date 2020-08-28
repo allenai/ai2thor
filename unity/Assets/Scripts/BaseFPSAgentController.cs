@@ -450,6 +450,16 @@ namespace UnityStandardAssets.Characters.FirstPerson
 				this.maxVisibleDistance = action.visibilityDistance;
 			}
 
+            var navmeshAgent = this.GetComponent<UnityEngine.AI.NavMeshAgent>();
+            var collider = this.GetComponent<CapsuleCollider>();
+
+            if (collider != null && navmeshAgent != null) {
+                navmeshAgent.radius = collider.radius;
+                navmeshAgent.height = collider.height;
+            }
+        
+            //navmeshAgent.radius = 
+
             if (action.gridSize <= 0 || action.gridSize > 5)
             {
                 errorMessage = "grid size must be in the range (0,5]";
@@ -2876,7 +2886,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             this.GetComponent<UnityEngine.AI.NavMeshAgent>().enabled = true;
             bool pathSuccess = UnityEngine.AI.NavMesh.CalculatePath(startPosition, targetPosition,  UnityEngine.AI.NavMesh.AllAreas, path);
             if (path.status == UnityEngine.AI.NavMeshPathStatus.PathComplete) {
-                //VisualizePath(startPosition, path);
+                VisualizePath(startPosition, path);
                 this.GetComponent<UnityEngine.AI.NavMeshAgent>().enabled = false;
                 actionFinished(true, path);
                 return;
