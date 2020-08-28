@@ -1284,7 +1284,6 @@ public class MCSMain : MonoBehaviour {
             .ToList().ForEach((force) => {
                 Rigidbody rigidbody = gameOrParentObject.GetComponent<Rigidbody>();
                 if (rigidbody != null) {
-                    rigidbody.velocity = Vector3.zero;
                     rigidbody.AddForce(new Vector3(force.vector.x, force.vector.y, force.vector.z));
                 }
             });
@@ -1293,7 +1292,6 @@ public class MCSMain : MonoBehaviour {
             torque.vector != null).ToList().ForEach((torque) => {
                 Rigidbody rigidbody = gameOrParentObject.GetComponent<Rigidbody>();
                 if (rigidbody != null) {
-                    rigidbody.angularVelocity = Vector3.zero;
                     rigidbody.AddTorque(new Vector3(torque.vector.x, torque.vector.y, torque.vector.z));
                 }
             });
