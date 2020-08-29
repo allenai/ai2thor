@@ -110,18 +110,14 @@ public class NavMeshSetup : MonoBehaviour
             // GetSceneNames(1, 30) + GetSceneNames(201, 230) + GetSceneNames(301, 330) + GetSceneNames(401, 430) + GetSceneNames(501, 530)
 
             var selection = new List<string>();
-            // selection.AddRange(testSceneNames);
-            // selection.AddRange(GetSceneNames(1, 30));
-            // selection.AddRange(GetSceneNames(201, 230));
-            // selection.AddRange(GetSceneNames(301, 330));
-            // selection.AddRange(GetSceneNames(401, 430));
-            // selection.AddRange(GetSceneNames(501, 530));
+            //selection.AddRange(testSceneNames);
+            selection.AddRange(GetSceneNames(1, 30));
+            selection.AddRange(GetSceneNames(201, 230));
+            selection.AddRange(GetSceneNames(301, 330));
+            selection.AddRange(GetSceneNames(401, 430));
+            selection.AddRange(GetSceneNames(501, 530));
 
             //selection.Add("Assets/Scenes/FloorPlan227_physics.unity");
-
-           selection.AddRange(GetSceneNames(3, 4));
-            // selection.AddRange(trainSceneNames);
-
             
             // These scenes were mannually adjusted so the nav mesh variables should not be set automatically and should be build manually 
             var exclude = new List<string>() {
