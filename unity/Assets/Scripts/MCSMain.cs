@@ -173,9 +173,9 @@ public class MCSMain : MonoBehaviour {
             !this.currentScene.wallMaterial.Equals("")) ? this.currentScene.wallMaterial :
             this.defaultWallsMaterial;
 
-        // For all passive scenes: set the controller substeps to 1; expand all the walls of the room; remove the
+        // For all IntPhys scenes: set the controller substeps to 1; expand all the walls of the room; remove the
         // ceiling; and set the performer to start at a specific position and rotation.
-        if (this.currentScene.passive || this.currentScene.observation) {
+        if (this.currentScene.intphys || this.currentScene.observation) {
             this.agentController.substeps = 1;
 
             this.ceiling.SetActive(false);
@@ -242,8 +242,8 @@ public class MCSMain : MonoBehaviour {
         }
 
         else {
-            // The passive scenes don't have ceilings.
-            if (!(this.currentScene.passive || this.currentScene.observation)) {
+            // The IntPhys scenes don't have ceilings.
+            if (!(this.currentScene.intphys || this.currentScene.observation)) {
                 if (ceilingSimObjPhysics.VisibilityPoints.Length == 0) {
                     ceilingSimObjPhysics.VisibilityPoints = AssignVisibilityPoints(this.ceiling,
                         this.GenerateCubeInternalVisibilityPoints(this.ceiling, null), null);
@@ -1519,8 +1519,8 @@ public class MCSConfigScene {
     public String ceilingMaterial;
     public String floorMaterial;
     public String wallMaterial;
-    public bool passive;
-    public bool observation; // deprecated; please use passive
+    public bool intphys;
+    public bool observation; // deprecated; please use intphys
     public bool screenshot;
     
     public MCSConfigGoal goal;
