@@ -203,11 +203,11 @@ public class MethodParamComparer: IComparer<MethodInfo> {
         return result;
     }
 
-    private int paramCount(MethodInfo method) {
+    private static int paramCount(MethodInfo method) {
         return method.GetParameters().Length;
     }
 
-    private int requiredParamCount(MethodInfo method) {
+    private static int requiredParamCount(MethodInfo method) {
         int count = 0;
         foreach(var p  in method.GetParameters()) {
             if (!p.HasDefaultValue) {
