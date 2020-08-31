@@ -44,13 +44,12 @@ public static class ActionDispatcher {
     private static Dictionary<Type, Dictionary<string, List<MethodInfo>>> methodDispatchTable = new Dictionary<Type, Dictionary<string, List<MethodInfo>>>();
 
 
-    private static MethodInfo getDispatchMethod(System.Object target, dynamic serverCommand) {
-        Type t = target.GetType();
-        if (!methodDispatchTable.ContainsKey(t)) {
-            System.Reflection.MethodInfo[] allMethods = target.GetType().GetMethods(BindingFlags.Public | BindingFlags.Instance);
+    private static MethodInfo getDispatchMethod(Type targetType, dynamic serverCommand) {
+        if (!methodDispatchTable.ContainsKey(targetType)) {
+            System.Reflection.MethodInfo[] allMethods = targetType.GetMethods(BindingFlags.Public | BindingFlags.Instance);
             List<Type> hierarchy = new List<Type>();
             // not completely generic
-            Type ht = t;
+            Type ht = targetType;
             while (ht != typeof(object)) {
                 hierarchy.Add(ht);
                 ht = ht.BaseType;
@@ -68,9 +67,32 @@ public static class ActionDispatcher {
                     // we do this to handle the case of a child method hiding a method in the parent
                     // in which case both methods will show up.  This happens if virtual, override or new
                     // are not used
+                    ParameterInfo[] sourceParams = mi.GetParameters();
+                    HashSet<string> paramSet = new HashSet<string>();
+                    foreach (var p in sourceParams) {
+                        paramSet.Add(p.Name);
+                    }
+
+                    for(int j = 0; j < methods.Count; j++) {
+                        ParameterInfo[] targetParams = methods[j].GetParameters();
+                        bool allVariableNamesMatch = true;
+                        if (targetParams.Length == sourceParams.Length) {
+                            foreach (var tp in targetParams) {
+                                if (!paramSet.Contains(tp.Name)) {
+                                    allVariableNamesMatch = false;
+                                    break;
+                                }
+                            }
+                        }
+                        if (allVariableNamesMatch) {
+                            List<string> variableNames = new List<string>(paramSet);
+                            throw new Exception("Please rename the variable names in one of the methods to allow for name based dispatching. Variable name conflict found with the method: " + mi.Name + " and " + string.Join(", ", variableNames.ToArray()));
+
+                        }
+                    }
+
                     for(int j = 0; j < methods.Count && !replaced; j++) {
                         bool signatureMatch = true;
-                        ParameterInfo[] sourceParams = mi.GetParameters();
                         ParameterInfo[] targetParams = methods[j].GetParameters();
                         if (targetParams.Length == sourceParams.Length) {
                             for(int k = 0; k < sourceParams.Length; k++) {
@@ -103,11 +125,11 @@ public static class ActionDispatcher {
                 }
             }
 
-            methodDispatchTable[t] = methodDispatch;
+            methodDispatchTable[targetType] = methodDispatch;
         }
 
         List<MethodInfo> actionMethods = null;
-        methodDispatchTable[t].TryGetValue(serverCommand.action.ToString(), out actionMethods);
+        methodDispatchTable[targetType].TryGetValue(serverCommand.action.ToString(), out actionMethods);
         MethodInfo matchedMethod = null;
         int bestMatchCount = -1; // we do this so that 
 
@@ -149,7 +171,7 @@ public static class ActionDispatcher {
 
     public static void Dispatch(System.Object target, dynamic serverCommand) {
 
-        MethodInfo method = getDispatchMethod(target, serverCommand);
+        MethodInfo method = getDispatchMethod(target.GetType(), serverCommand);
 
         if (method == null) {
             throw new InvalidActionException();
