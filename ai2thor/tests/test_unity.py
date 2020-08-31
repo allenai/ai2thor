@@ -231,27 +231,42 @@ def test_action_dispatch_invalid_action():
     assert controller.last_event.metadata['errorCode'] == 'InvalidAction'
 
 
-def test_action_dispatch():
+def test_action_dispatch_empty():
     event = controller.step(dict(action='TestActionDispatchNoop'))
     assert event.metadata['actionReturn'] == 'emptyargs'
+
+def test_action_disptatch_one_param():
     event = controller.step(dict(action='TestActionDispatchNoop', param1=True))
-    print(event.metadata['errorMessage'])
     assert event.metadata['actionReturn'] == 'param1'
+
+def test_action_disptatch_two_param():
     event = controller.step(dict(action='TestActionDispatchNoop', param1=True, param2=False))
     assert event.metadata['actionReturn'] == 'param1 param2'
+
+def test_action_disptatch_two_param_with_default():
     event = controller.step(dict(action='TestActionDispatchNoop', param3=True, param4='foobar'))
     assert event.metadata['actionReturn'] == 'param3 param4/default foobar'
+
+
+def test_action_disptatch_two_param_with_default_empty():
     event = controller.step(dict(action='TestActionDispatchNoop', param3=True))
     assert event.metadata['actionReturn'] == 'param3 param4/default foo'
+
+def test_action_disptatch_serveraction_default():
     event = controller.step(dict(action='TestActionDispatchNoopServerAction'))
     assert event.metadata['actionReturn'] == 'serveraction'
+
+
+def test_action_disptatch_serveraction_with_object_id():
     event = controller.step(dict(action='TestActionDispatchNoopServerAction', objectId='candle|1|2|3'))
     assert event.metadata['actionReturn'] == 'serveraction'
+
+def test_action_disptatch_all_default():
     event = controller.step(dict(action='TestActionDispatchNoopAllDefault'))
     assert event.metadata['actionReturn'] == 'alldefault'
 
+def test_action_disptatch_some_default():
     event = controller.step(dict(action='TestActionDispatchNoopAllDefault', param12=9.0))
-    print(event.metadata['errorMessage'])
     assert event.metadata['actionReturn'] == 'somedefault'
 
 def test_moveahead():
