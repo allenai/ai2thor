@@ -9,9 +9,9 @@ using System.Text;
 public class MCSMain : MonoBehaviour {
     private static float CUBE_INTERNAL_GRID = 0.25f;
     private static float FLOOR_X_SCALE_OBSERVATION = 13f;
-    private static float FLOOR_X_SCALE_INTERACTION = 10f;
-    private static float FLOOR_Y_SCALE = 1f;
-    private static float FLOOR_Z_SCALE = 10f;
+    private static float FLOOR_X_SCALE_INTERACTION = 11f;
+    private static float FLOOR_Y_SCALE = 0.5f;
+    private static float FLOOR_Z_SCALE = 11f;
     private static float LIGHT_RANGE = 20f;
     private static float LIGHT_RANGE_SCREENSHOT = 10f;
     private static float LIGHT_Y_POSITION = 2.95f;
@@ -26,17 +26,17 @@ public class MCSMain : MonoBehaviour {
     private static float RIGIDBODY_DRAG_DEFAULT = 0;
     private static float RIGIDBODY_ANGULAR_DRAG_DEFAULT = 0.5f;
     private static float WALL_SIDE_X_POSITION_OBSERVATION = 7.0f;
-    private static float WALL_SIDE_X_POSITION_INTERACTION = 5.5f;
+    private static float WALL_SIDE_X_POSITION_INTERACTION = 5.25f;
     private static float WALL_Y_POSITION = 1.5f;
     private static float WALL_SIDE_Z_POSITION = 0;
     private static float WALL_FRONT_X_POSITION = 0;
     private static float WALL_FRONT_Y_POSITION_OBSERVATION = 2.25f;
-    private static float WALL_FRONT_Z_POSITION = 5.5f;
+    private static float WALL_FRONT_Z_POSITION = 5.25f;
     private static float WALL_FRONT_X_SCALE_OBSERVATION = 13.0f;
-    private static float WALL_FRONT_X_SCALE_INTERACTION = 10.0f;
+    private static float WALL_FRONT_X_SCALE_INTERACTION = 11.0f;
     private static float WALL_FRONT_Y_SCALE_OBSERVATION = 4.5f;
     private static float WALL_FRONT_Y_SCALE_INTERACTION = 3.0f;
-    private static float WALL_FRONT_Z_SCALE = 1f;
+    private static float WALL_FRONT_Z_SCALE = 0.5f;
 
     public string defaultSceneFile = "";
     public bool enableVerboseLog = false;
@@ -824,7 +824,8 @@ public class MCSMain : MonoBehaviour {
 
     private void AssignPhysicsMaterialAndRigidBodyValues(
         MCSConfigPhysicsProperties physicsObject,
-        GameObject gameObject, SimObjPhysics ai2thorPhysicsScript
+        GameObject gameObject,
+        SimObjPhysics ai2thorPhysicsScript
     ) {
         ai2thorPhysicsScript.HFdynamicfriction = physicsObject.dynamicFriction;
         ai2thorPhysicsScript.HFstaticfriction = physicsObject.staticFriction;
