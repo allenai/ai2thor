@@ -654,6 +654,7 @@ public class AgentManager : MonoBehaviour
 		if (shouldRender) {
 			// we should only read the screen buffer after rendering is complete
 			yield return new WaitForEndOfFrame();
+            // must wait an additional frame when in synchronous mode otherwise the frame lags
 			yield return new WaitForEndOfFrame();
 		}
 
