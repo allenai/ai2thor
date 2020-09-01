@@ -145,7 +145,8 @@ def test_add_third_party_camera(controller):
     assert camera[ThirdPartyCameraMetadata.fieldOfView] == expectedFieldOfView, 'initial fieldOfView should have been set'
 
 
-def test_update_third_party_camera():
+@pytest.mark.parametrize("controller", [wsgi_controller, fifo_controller])
+def test_update_third_party_camera(controller):
 
     expectedPosition = dict(x=2.2, y=3.3, z=4.4)
     expectedRotation = dict(x=10, y=20, z=30)
