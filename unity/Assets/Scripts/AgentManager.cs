@@ -3,7 +3,6 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityStandardAssets.Characters.FirstPerson;
-using SD = System.Diagnostics;
 using System.IO;
 using System.Net.Sockets;
 using System.Net;
@@ -14,7 +13,6 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using System.Reflection;
 using System.Text;
-using SD = System.Diagnostics;
 using UnityEngine.Networking;
 
 public class AgentManager : MonoBehaviour
