@@ -141,7 +141,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		protected Quaternion targetRotation;
         // Javascript communication
         private JavaScriptInterface jsInterface = null;
-        private ServerAction currentServerAction;
+        private dynamic currentServerAction;
 		public Quaternion TargetRotation
 		{
 			get { return targetRotation; }
@@ -257,7 +257,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             if (this.jsInterface)
             {
                 // TODO: Check if the reflection method call was successfull add that to the sent event data
-                this.jsInterface.SendAction(currentServerAction);
+                this.jsInterface.SendAction(currentServerAction.ToObject(typeof(ServerAction)));
             }
 
             lastActionSuccess = success;
@@ -1469,49 +1469,58 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			imageSynthesis.enabled = status;
 		}
 
-		public void ProcessControlCommand(ServerAction controlCommand)
-		{
+
+        public void ProcessControlCommand(dynamic controlCommand)
+        {
             currentServerAction = controlCommand;
-			
-	        errorMessage = "";
-			errorCode = ServerActionErrorCode.Undefined;
-			collisionsInAction = new List<string>();
 
-			lastAction = controlCommand.action;
-			lastActionSuccess = false;
-			lastPosition = new Vector3(transform.position.x, transform.position.y, transform.position.z);
-			System.Reflection.MethodInfo method = this.GetType().GetMethod(controlCommand.action);
-			
-			this.actionComplete = false;
-			try
-			{
-				if (method == null) {
-					errorMessage = "Invalid action: " + controlCommand.action;
-					errorCode = ServerActionErrorCode.InvalidAction;
-					Debug.LogError(errorMessage);
-					actionFinished(false);
-				} else {
-					method.Invoke(this, new object[] { controlCommand });
-				}
-			}
-			catch (Exception e)
-			{
-				Debug.LogError("Caught error with invoke for action: " + controlCommand.action);
+            errorMessage = "";
+            errorCode = ServerActionErrorCode.Undefined;
+            collisionsInAction = new List<string>();
+
+            lastAction = controlCommand.action;
+            lastActionSuccess = false;
+            lastPosition = new Vector3(transform.position.x, transform.position.y, transform.position.z);
+            this.actionComplete = false;
+
+            try
+            {
+                ActionDispatcher.Dispatch(this, controlCommand);
+            }
+            catch (MissingArgumentsActionException e)
+            {
+                errorMessage = "action: " + controlCommand.action + " is missing the following arguments: " + string.Join(",", e.ArgumentNames.ToArray());
+                errorCode = ServerActionErrorCode.MissingArguments;
+                Debug.LogError(errorMessage);
+                actionFinished(false);
+            }
+            catch (InvalidActionException)
+            {
+                errorMessage = "Invalid action: " + controlCommand.action;
+                errorCode = ServerActionErrorCode.InvalidAction;
+                Debug.LogError(errorMessage);
+                actionFinished(false);
+            
+            }
+            catch (Exception e)
+            {
+                Debug.LogError("Caught error with invoke for action: " + controlCommand.action);
                 Debug.LogError("Action error message: " + errorMessage);
-				Debug.LogError(e);
+                Debug.LogError(e);
+                errorMessage += e.ToString();
+                actionFinished(false);
+            }
 
-				errorMessage += e.ToString();
-				actionFinished(false);
-			}
+
 
             #if UNITY_EDITOR
-			if (errorMessage != "") {
-				Debug.Log(errorMessage);
-			}
+            if (errorMessage != "") {
+                Debug.Log(errorMessage);
+            }
             #endif
 
-			agentManager.setReadyToEmit(true);
-		}
+            agentManager.setReadyToEmit(true);
+        }
 
         //no op action
         public void Pass(ServerAction action) {
@@ -2972,5 +2981,48 @@ namespace UnityStandardAssets.Characters.FirstPerson
             // }
         }
         #endif
+
+        public void TestActionDispatchNoopServerAction(ServerAction action) {
+            actionFinished(true, "serveraction");
+        }
+
+        public void TestActionDispatchNoopAllDefault(float param12, float param10=0.0f, float param11=1.0f) {
+            actionFinished(true, "somedefault");
+        }
+
+        public void TestActionDispatchNoopAllDefault(float param10=0.0f, float param11=1.0f) {
+            actionFinished(true, "alldefault");
+        }
+
+        public void TestActionDispatchNoop(bool param3,  string param4="foo") {
+            actionFinished(true, "param3 param4/default " + param4);
+        }
+
+        public void TestActionDispatchNoop(string param6, string param7) {
+            actionFinished(true, "param6 param7");
+        }
+
+        public void TestActionDispatchNoop(bool param1, bool param2) {
+            actionFinished(true, "param1 param2");
+        }
+
+        public void TestActionDispatchConflict(string param22) {
+            actionFinished(true);
+        }
+        public void TestActionDispatchConflict(bool param22) {
+            actionFinished(true);
+        }
+
+        public void TestActionDispatchNoop(bool param1) {
+            actionFinished(true, "param1");
+        }
+
+        public void TestActionDispatchNoop() {
+            actionFinished(true, "emptyargs");
+        }
+        public void TestActionDispatchFindConflicts(string typeName) {
+            Dictionary<string, List<string>> conflicts = ActionDispatcher.FindMethodVariableNameConflicts(Type.GetType(typeName));
+            actionFinished(true, conflicts);
+        }
 	}
 }

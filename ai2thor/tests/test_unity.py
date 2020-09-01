@@ -212,6 +212,83 @@ def test_teleport():
     position = controller.last_event.metadata['agent']['position']
     assert_near(position, dict(x=-2.0, z=-2.5, y=0.901))
 
+def test_action_dispatch_find_conflicts_stochastic():
+    event = controller.step(dict(action='TestActionDispatchFindConflicts'), typeName='UnityStandardAssets.Characters.FirstPerson.StochasticRemoteFPSAgentController')
+    known_conflicts = {
+        'GetComponent': ['type'],
+        'StopCoroutine': ['routine'],
+        'TestActionDispatchConflict': ['param22']
+    }
+    assert event.metadata['actionReturn'] == known_conflicts
+
+def test_action_dispatch_find_conflicts_physics():
+    event = controller.step(dict(action='TestActionDispatchFindConflicts'), typeName='UnityStandardAssets.Characters.FirstPerson.PhysicsRemoteFPSAgentController')
+    known_conflicts = {
+        'GetComponent': ['type'],
+        'StopCoroutine': ['routine'],
+        'TestActionDispatchConflict': ['param22']
+    }
+    assert event.metadata['actionReturn'] == known_conflicts
+
+
+def test_action_dispatch_missing_args():
+    caught_exception = False
+    try:
+        event = controller.step(dict(action='TestActionDispatchNoop', param6='foo'))
+        print(event.metadata['actionReturn'])
+    except ValueError as e:
+        caught_exception = True
+    assert caught_exception
+    assert controller.last_event.metadata['errorCode'] == 'MissingArguments'
+
+def test_action_dispatch_invalid_action():
+    caught_exception = False
+    try:
+        event = controller.step(dict(action='TestActionDispatchNoopFoo'))
+    except ValueError as e:
+        caught_exception = True
+    assert caught_exception
+    assert controller.last_event.metadata['errorCode'] == 'InvalidAction'
+
+
+def test_action_dispatch_empty():
+    event = controller.step(dict(action='TestActionDispatchNoop'))
+    assert event.metadata['actionReturn'] == 'emptyargs'
+
+def test_action_disptatch_one_param():
+    event = controller.step(dict(action='TestActionDispatchNoop', param1=True))
+    assert event.metadata['actionReturn'] == 'param1'
+
+def test_action_disptatch_two_param():
+    event = controller.step(dict(action='TestActionDispatchNoop', param1=True, param2=False))
+    assert event.metadata['actionReturn'] == 'param1 param2'
+
+def test_action_disptatch_two_param_with_default():
+    event = controller.step(dict(action='TestActionDispatchNoop', param3=True, param4='foobar'))
+    assert event.metadata['actionReturn'] == 'param3 param4/default foobar'
+
+
+def test_action_disptatch_two_param_with_default_empty():
+    event = controller.step(dict(action='TestActionDispatchNoop', param3=True))
+    assert event.metadata['actionReturn'] == 'param3 param4/default foo'
+
+def test_action_disptatch_serveraction_default():
+    event = controller.step(dict(action='TestActionDispatchNoopServerAction'))
+    assert event.metadata['actionReturn'] == 'serveraction'
+
+
+def test_action_disptatch_serveraction_with_object_id():
+    event = controller.step(dict(action='TestActionDispatchNoopServerAction', objectId='candle|1|2|3'))
+    assert event.metadata['actionReturn'] == 'serveraction'
+
+def test_action_disptatch_all_default():
+    event = controller.step(dict(action='TestActionDispatchNoopAllDefault'))
+    assert event.metadata['actionReturn'] == 'alldefault'
+
+def test_action_disptatch_some_default():
+    event = controller.step(dict(action='TestActionDispatchNoopAllDefault', param12=9.0))
+    assert event.metadata['actionReturn'] == 'somedefault'
+
 def test_moveahead():
     controller.step(dict(action='Teleport', x=-1.5, z=-1.5, y=1.0), raise_for_failure=True)
     controller.step(dict(action='MoveAhead'), raise_for_failure=True)
