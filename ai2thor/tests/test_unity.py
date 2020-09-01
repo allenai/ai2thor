@@ -211,6 +211,26 @@ def test_teleport():
     controller.step(dict(action='Teleport', x=-2.0, z=-2.5, y=1.0), raise_for_failure=True)
     position = controller.last_event.metadata['agent']['position']
     assert_near(position, dict(x=-2.0, z=-2.5, y=0.901))
+
+def test_action_dispatch_find_conflicts_stochastic():
+    event = controller.step(dict(action='TestActionDispatchFindConflicts'), typeName='UnityStandardAssets.Characters.FirstPerson.StochasticRemoteFPSAgentController')
+    known_conflicts = {
+        'GetComponent': ['type'],
+        'StopCoroutine': ['routine'],
+        'TestActionDispatchConflict': ['param22']
+    }
+    assert event.metadata['actionReturn'] == known_conflicts
+
+def test_action_dispatch_find_conflicts_physics():
+    event = controller.step(dict(action='TestActionDispatchFindConflicts'), typeName='UnityStandardAssets.Characters.FirstPerson.PhysicsRemoteFPSAgentController')
+    known_conflicts = {
+        'GetComponent': ['type'],
+        'StopCoroutine': ['routine'],
+        'TestActionDispatchConflict': ['param22']
+    }
+    assert event.metadata['actionReturn'] == known_conflicts
+
+
 def test_action_dispatch_missing_args():
     caught_exception = False
     try:

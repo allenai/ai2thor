@@ -3006,11 +3006,23 @@ namespace UnityStandardAssets.Characters.FirstPerson
             actionFinished(true, "param1 param2");
         }
 
+        public void TestActionDispatchConflict(string param22) {
+            actionFinished(true);
+        }
+        public void TestActionDispatchConflict(bool param22) {
+            actionFinished(true);
+        }
+
         public void TestActionDispatchNoop(bool param1) {
             actionFinished(true, "param1");
         }
+
         public void TestActionDispatchNoop() {
             actionFinished(true, "emptyargs");
+        }
+        public void TestActionDispatchFindConflicts(string typeName) {
+            Dictionary<string, List<string>> conflicts = ActionDispatcher.FindMethodVariableNameConflicts(Type.GetType(typeName));
+            actionFinished(true, conflicts);
         }
 	}
 }

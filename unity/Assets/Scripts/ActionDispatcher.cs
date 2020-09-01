@@ -43,6 +43,47 @@ using UnityEngine;
 public static class ActionDispatcher {
     private static Dictionary<Type, Dictionary<string, List<MethodInfo>>> methodDispatchTable = new Dictionary<Type, Dictionary<string, List<MethodInfo>>>();
 
+    // Find public/void methods that have matching Method names and idenitical parameter names,
+    // but either different parameter order or parameter types which make dispatching
+    // ambiguous.  This method is used during testing to find conflicts.
+    public static Dictionary<string, List<string>> FindMethodVariableNameConflicts(Type targetType) {
+        System.Reflection.MethodInfo[] allMethods = targetType.GetMethods(BindingFlags.Public | BindingFlags.Instance);
+        Dictionary<string, List<string>> methodConflicts = new Dictionary<string, List<string>>();
+
+        for(int i = 0; i < allMethods.Length - 1; i++) {
+            MethodInfo methodOut = allMethods[i];
+            HashSet<string> paramSet = new HashSet<string>();
+            ParameterInfo[] methodOutParams = methodOut.GetParameters();
+            foreach (var p in methodOutParams) {
+                paramSet.Add(p.Name);
+            }
+            for(int j = i + 1; j < allMethods.Length; j++) {
+                MethodInfo methodIn = allMethods[j];
+                ParameterInfo[] methodInParams = allMethods[j].GetParameters();
+                if (methodIn.Name == methodOut.Name && methodOutParams.Length == methodInParams.Length) {
+                    bool allVariableNamesMatch = true;
+                    bool allParamsMatch = true;
+                    for (int k = 0; k < methodInParams.Length; k++ ){
+                        var mpIn = methodInParams[k];
+                        var mpOut = methodOutParams[k];
+                        // we assume the method is overriding if everything matches
+                        if (mpIn.Name != mpOut.Name || mpOut.ParameterType != mpIn.ParameterType) {
+                            allParamsMatch = false;
+                        }
+                        if (!paramSet.Contains(mpIn.Name)) {
+                            allVariableNamesMatch = false;
+                            break;
+                        }
+                    }
+                    if (allVariableNamesMatch && !allParamsMatch) {
+                        methodConflicts[methodOut.Name] = new List<string>(paramSet);
+                    }
+                }
+            }
+        }
+        return methodConflicts;
+    }
+
 
     private static MethodInfo getDispatchMethod(Type targetType, dynamic serverCommand) {
         if (!methodDispatchTable.ContainsKey(targetType)) {
@@ -68,28 +109,6 @@ public static class ActionDispatcher {
                     // in which case both methods will show up.  This happens if virtual, override or new
                     // are not used
                     ParameterInfo[] sourceParams = mi.GetParameters();
-                    HashSet<string> paramSet = new HashSet<string>();
-                    foreach (var p in sourceParams) {
-                        paramSet.Add(p.Name);
-                    }
-
-                    for(int j = 0; j < methods.Count; j++) {
-                        ParameterInfo[] targetParams = methods[j].GetParameters();
-                        bool allVariableNamesMatch = true;
-                        if (targetParams.Length == sourceParams.Length) {
-                            foreach (var tp in targetParams) {
-                                if (!paramSet.Contains(tp.Name)) {
-                                    allVariableNamesMatch = false;
-                                    break;
-                                }
-                            }
-                        }
-                        if (allVariableNamesMatch) {
-                            List<string> variableNames = new List<string>(paramSet);
-                            throw new Exception("Please rename the variable names in one of the methods to allow for name based dispatching. Variable name conflict found with the method: " + mi.Name + " and " + string.Join(", ", variableNames.ToArray()));
-
-                        }
-                    }
 
                     for(int j = 0; j < methods.Count && !replaced; j++) {
                         bool signatureMatch = true;
