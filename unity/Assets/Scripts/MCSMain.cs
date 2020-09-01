@@ -7,6 +7,8 @@ using UnityStandardAssets.Characters.FirstPerson;
 using System.Text;
 
 public class MCSMain : MonoBehaviour {
+    private static int LATEST_SCENE_VERSION = 2;
+
     private static float CUBE_INTERNAL_GRID = 0.25f;
     private static float FLOOR_X_SCALE_OBSERVATION = 13f;
     private static float FLOOR_X_SCALE_INTERACTION = 11f;
@@ -99,6 +101,8 @@ public class MCSMain : MonoBehaviour {
             this.currentScene = LoadCurrentSceneFromFile(this.defaultSceneFile);
             this.currentScene.name = ((this.currentScene.name == null || this.currentScene.name.Equals("")) ?
                 this.defaultSceneFile : this.currentScene.name);
+            this.currentScene.version = (this.currentScene.version > 0 ? this.currentScene.version :
+                MCSMain.LATEST_SCENE_VERSION);
             ChangeCurrentScene(this.currentScene);
         }
     }
@@ -284,7 +288,7 @@ public class MCSMain : MonoBehaviour {
             this.light.GetComponent<Light>().range = MCSMain.LIGHT_RANGE;
             this.light.transform.position = new Vector3(0, MCSMain.LIGHT_Y_POSITION,
                 MCSMain.LIGHT_Z_POSITION);
-        }       
+        }
 
         if (this.currentScene.wallProperties != null && this.currentScene.wallProperties.enable) {
             AssignPhysicsMaterialAndRigidBodyValues(currentScene.wallProperties, this.wallLeft, wallLeftSimObjPhysics);
@@ -293,7 +297,7 @@ public class MCSMain : MonoBehaviour {
             AssignPhysicsMaterialAndRigidBodyValues(currentScene.wallProperties, this.wallBack, wallBackSimObjPhysics);
             AssignPhysicsMaterialAndRigidBodyValues(currentScene.wallProperties, this.ceiling, ceilingSimObjPhysics);
         }
-            
+
         if (this.currentScene.floorProperties != null && this.currentScene.floorProperties.enable) {
             AssignPhysicsMaterialAndRigidBodyValues(scene.floorProperties, this.floor, floorSimObjPhysics);
         }
@@ -388,7 +392,12 @@ public class MCSMain : MonoBehaviour {
         Collider[] colliders = gameObject.GetComponentsInChildren<Collider>().Where((collider) =>
             !collider.isTrigger).ToArray();
 
-        if (objectDefinition.colliders.Count > 0) {
+        MCSConfigLegacyObjectDefinition legacy = this.RetrieveLegacyObjectDefinition(objectDefinition,
+            this.currentScene.version);
+        List<MCSConfigCollider> collidersFromConfig = legacy != null && legacy.colliders.Count > 0 ?
+            legacy.colliders : objectDefinition.colliders;
+
+        if (collidersFromConfig.Count > 0) {
             // Deactivate any concave MeshCollider.  We expect other collider(s) to be defined on the object.
             // Concave MeshCollider cause Unity errors with our object's ContinuousDynamic Rigidbody component.
             colliders.ToList().ForEach((collider) => {
@@ -417,7 +426,7 @@ public class MCSMain : MonoBehaviour {
             colliderParentObject.transform.parent = gameObject.transform;
             colliderParentObject.transform.localPosition = Vector3.zero;
             int index = 0;
-            colliders = colliders.ToList().Concat(objectDefinition.colliders.Select((colliderDefinition) => {
+            colliders = colliders.ToList().Concat(collidersFromConfig.Select((colliderDefinition) => {
                 ++index;
                 GameObject colliderObject = new GameObject {
                     isStatic = true,
@@ -561,6 +570,11 @@ public class MCSMain : MonoBehaviour {
         Collider[] colliders = new Collider[] { };
         Transform[] visibilityPoints = new Transform[] { };
 
+        MCSConfigLegacyObjectDefinition legacy = this.RetrieveLegacyObjectDefinition(objectDefinition,
+            this.currentScene.version);
+        List<MCSConfigVector> visibilityPointsFromConfig = legacy != null && legacy.visibilityPoints.Count > 0 ?
+            legacy.visibilityPoints : objectDefinition.visibilityPoints;
+
         if (shouldAddSimObjPhysicsScript) {
             // Add Unity Rigidbody and Collider components to enable physics on this object.
             this.AssignRigidbody(gameObject, objectConfig.mass > 0 ? objectConfig.mass : objectDefinition.mass,
@@ -569,10 +583,10 @@ public class MCSMain : MonoBehaviour {
         }
 
         // The object's visibility points define a subset of points along the outside of the object for AI2-THOR.
-        if (objectDefinition.visibilityPoints.Count > 0) {
+        if (visibilityPointsFromConfig.Count > 0) {
             bool isCube = objectDefinition.id.Equals("cube");
             // Use the List constructor to copy the visibility points list from the object definition.
-            List<MCSConfigVector> points = new List<MCSConfigVector>(!isCube ? objectDefinition.visibilityPoints :
+            List<MCSConfigVector> points = new List<MCSConfigVector>(!isCube ? visibilityPointsFromConfig :
                 this.GenerateCubeInternalVisibilityPoints(gameObject, objectConfig));
             // For dynamically generated visibility points, set the scale of the visibility point parent component
             // to be the inverse of the object's scale when the object is first shown.
@@ -650,9 +664,14 @@ public class MCSMain : MonoBehaviour {
             Destroy(gameObject.transform.Find("ReceptacleTriggerBox").gameObject);
         }
 
+        MCSConfigLegacyObjectDefinition legacy = this.RetrieveLegacyObjectDefinition(objectDefinition,
+            this.currentScene.version);
+        List<MCSConfigTransform> triggerBoxesFromConfig = legacy != null && legacy.receptacleTriggerBoxes.Count > 0 ?
+            legacy.receptacleTriggerBoxes : objectDefinition.receptacleTriggerBoxes;
+
         // If this object will have multiple trigger boxes, create a common parent.
         GameObject receptacleParentObject = null;
-        if (objectDefinition.receptacleTriggerBoxes.Count > 1) {
+        if (triggerBoxesFromConfig.Count > 1) {
             receptacleParentObject = new GameObject {
                 isStatic = true,
                 layer = 9, // AI2-THOR Layer SimObjInvisible
@@ -663,8 +682,8 @@ public class MCSMain : MonoBehaviour {
         }
 
         int index = 0;
-        return objectDefinition.receptacleTriggerBoxes.Select((receptacleDefinition) => {
-            GameObject receptacleObject = this.AssignReceptacleTrigglerBox(gameObject, receptacleDefinition);
+        return triggerBoxesFromConfig.Select((triggerBoxDefinition) => {
+            GameObject receptacleObject = this.AssignReceptacleTrigglerBox(gameObject, triggerBoxDefinition);
             // If this object will have multiple trigger boxes, rename and assign each to a common parent.
             if (receptacleParentObject != null) {
                 ++index;
@@ -691,7 +710,7 @@ public class MCSMain : MonoBehaviour {
             rigidbody.mass = mass;
         }
     }
-    
+
     private void AssignSimObjPhysicsScript(
         GameObject gameObject,
         MCSConfigGameObject objectConfig,
@@ -719,14 +738,14 @@ public class MCSMain : MonoBehaviour {
             ai2thorPhysicsScript.SecondaryProperties = new SimObjSecondaryProperty[] { };
             ai2thorPhysicsScript.MyColliders = colliders ?? (new Collider[] { });
             ai2thorPhysicsScript.ReceptacleTriggerBoxes = new List<GameObject>().ToArray();
-        } 
+        }
 
         ai2thorPhysicsScript.shape = objectConfig.structure ? "structural" : objectDefinition.shape;
 
         if (objectConfig.physicsProperties != null && objectConfig.physicsProperties.enable) {
             AssignPhysicsMaterialAndRigidBodyValues(objectConfig.physicsProperties, gameObject, ai2thorPhysicsScript);
-        } 
-        
+        }
+
         else if (objectDefinition.physicsProperties != null && objectDefinition.physicsProperties.enable) {
             AssignPhysicsMaterialAndRigidBodyValues(objectDefinition.physicsProperties, gameObject, ai2thorPhysicsScript);
         }
@@ -793,8 +812,11 @@ public class MCSMain : MonoBehaviour {
         // The object's bounding box defines the complete bounding box around the object for AI2-THOR.
         // JsonUtility always sets objectDefinition.boundingBox, so verify that the position is not null.
         if (objectDefinition.boundingBox != null && objectDefinition.boundingBox.position != null) {
-            ai2thorPhysicsScript.BoundingBox = this.AssignBoundingBox(gameObject, objectDefinition.boundingBox)
-                .gameObject;
+            MCSConfigLegacyObjectDefinition legacy = this.RetrieveLegacyObjectDefinition(objectDefinition,
+                this.currentScene.version);
+            MCSConfigCollider boundingBoxFromConfig = legacy != null && legacy.boundingBox != null ?
+                legacy.boundingBox : objectDefinition.boundingBox;
+            ai2thorPhysicsScript.BoundingBox = this.AssignBoundingBox(gameObject, boundingBoxFromConfig).gameObject;
         }
 
         this.EnsureCanOpenObjectScriptAnimationTimeIsZero(gameObject);
@@ -907,11 +929,14 @@ public class MCSMain : MonoBehaviour {
         MCSConfigGameObject objectConfig,
         MCSConfigObjectDefinition objectDefinition
     ) {
-        GameObject gameObject = Instantiate(Resources.Load("MCS/" + objectDefinition.resourceFile,
-            typeof(GameObject))) as GameObject;
+        MCSConfigLegacyObjectDefinition legacy = this.RetrieveLegacyObjectDefinition(objectDefinition,
+            this.currentScene.version);
+        string resourceFile = legacy != null ? legacy.resourceFile : objectDefinition.resourceFile;
+
+        GameObject gameObject = Instantiate(Resources.Load("MCS/" + resourceFile, typeof(GameObject))) as GameObject;
 
         LogVerbose("LOAD CUSTOM GAME OBJECT " + objectDefinition.id + " FROM FILE Assets/Resources/MCS/" +
-            objectDefinition.resourceFile + (gameObject == null ? " IS NULL" : " IS DONE"));
+            resourceFile + (gameObject == null ? " IS NULL" : " IS DONE"));
 
         gameObject = AssignProperties(gameObject, objectConfig, objectDefinition);
 
@@ -1234,6 +1259,17 @@ public class MCSMain : MonoBehaviour {
         });
     }
 
+    private MCSConfigLegacyObjectDefinition RetrieveLegacyObjectDefinition(
+        MCSConfigObjectDefinition objectDefinition, int sceneVersion
+    ) {
+        if (objectDefinition.legacy.Count > 0) {
+            MCSConfigLegacyObjectDefinition[] legacy = objectDefinition.legacy
+                .Where(item => item.version == sceneVersion).ToArray();
+            return legacy.Length > 0 ? legacy[0] : null;
+        }
+        return null;
+    }
+
     private bool UpdateGameObjectOnStep(MCSConfigGameObject objectConfig, int step) {
         bool objectsWereShown = false;
 
@@ -1444,6 +1480,17 @@ public class MCSConfigObjectDefinition : MCSConfigAbstractObject {
     public List<MCSConfigOverride> overrides;
     public List<MCSConfigTransform> receptacleTriggerBoxes;
     public List<MCSConfigVector> visibilityPoints;
+    public List<MCSConfigLegacyObjectDefinition> legacy;
+}
+
+[Serializable]
+public class MCSConfigLegacyObjectDefinition {
+    public int version;
+    public string resourceFile;
+    public MCSConfigCollider boundingBox = null;
+    public List<MCSConfigCollider> colliders;
+    public List<MCSConfigTransform> receptacleTriggerBoxes;
+    public List<MCSConfigVector> visibilityPoints;
 }
 
 [Serializable]
@@ -1516,13 +1563,14 @@ public class MCSConfigVector {
 [Serializable]
 public class MCSConfigScene {
     public String name;
+    public int version;
     public String ceilingMaterial;
     public String floorMaterial;
     public String wallMaterial;
     public bool intphys;
     public bool observation; // deprecated; please use intphys
     public bool screenshot;
-    
+
     public MCSConfigGoal goal;
     public MCSConfigTransform performerStart = null;
     public List<MCSConfigGameObject> objects;
@@ -1546,7 +1594,6 @@ public class MCSConfigObjectRegistry {
 }
 
 [Serializable]
-
 public class MCSConfigPhysicsProperties {
     public bool enable;
     public float dynamicFriction;
