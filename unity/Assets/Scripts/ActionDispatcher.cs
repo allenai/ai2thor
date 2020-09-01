@@ -153,6 +153,10 @@ public static class ActionDispatcher {
         int bestMatchCount = -1; // we do this so that 
 
         if (actionMethods != null) {
+            // This is where the the actual matching occurs.  The matching is done strictly based on
+            // variable names.  In the future, this could be modified to include type information from
+            // the inbound JSON object by mapping JSON types to csharp primitive types 
+            // (i.e. number -> [short, float, int], bool -> bool, string -> string, dict -> object, list -> list)
             foreach (var method in actionMethods) {
                 int matchCount = 0;
                 ParameterInfo[] mParams = method.GetParameters();
