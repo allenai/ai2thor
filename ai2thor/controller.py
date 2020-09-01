@@ -384,7 +384,7 @@ class Controller(object):
             add_depth_noise=False,
             download_only=False,
             include_private_scenes=False,
-            server_type='wsgi',
+            server_class=ai2thor.wsgi_server.WsgiServer,
             **unity_initialization_parameters
     ):
         self.receptacle_nearest_pivot_points = {}
@@ -403,7 +403,7 @@ class Controller(object):
         self.depth_format = depth_format
         self.add_depth_noise = add_depth_noise
         self.include_private_scenes = include_private_scenes
-        self.server_type = server_type
+        self.server_class = server_class
 
 
         self.interactive_controller = InteractiveControllerPrompt(
@@ -460,7 +460,7 @@ class Controller(object):
         if self.server is not None:
             return
 
-        if self.server_type == 'wsgi':
+        if self.server_class == ai2thor.wsgi_server.WsgiServer:
             self.server = ai2thor.wsgi_server.WsgiServer(
                 host,
                 port=port,
@@ -469,14 +469,14 @@ class Controller(object):
                 width=width,
                 height=height
             )
-        elif self.server_type == 'fifo':
+        elif self.server_class == ai2thor.fifo_server.FifoServer:
             self.server = ai2thor.fifo_server.FifoServer(
                 depth_format=self.depth_format,
                 add_depth_noise=self.add_depth_noise,
                 width=width,
                 height=height)
         else:
-            raise ValueError("Invalid server type: %s" % self.server_type)
+            raise ValueError("Invalid server class: %s" % self.server_class)
 
     def __enter__(self):
         return self

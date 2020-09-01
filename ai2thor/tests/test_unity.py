@@ -5,6 +5,8 @@ import json
 import pytest
 import jsonschema
 import ai2thor.controller
+from ai2thor.wsgi_server import WsgiServer
+from ai2thor.fifo_server import FifoServer
 import glob
 import re
 class UnityTestController(ai2thor.controller.Controller):
@@ -37,8 +39,8 @@ class UnityTestController(ai2thor.controller.Controller):
 
 
 
-wsgi_controller = UnityTestController(server_type='wsgi')
-fifo_controller = UnityTestController(server_type='fifo')
+wsgi_controller = UnityTestController(server_class=WsgiServer)
+fifo_controller = UnityTestController(server_class=FifoServer)
 
 def teardown_module(module):
     wsgi_controller.stop()
