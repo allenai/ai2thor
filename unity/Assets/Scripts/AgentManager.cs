@@ -14,6 +14,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using System.Reflection;
 using System.Text;
+using SD = System.Diagnostics;
 using UnityEngine.Networking;
 
 public class AgentManager : MonoBehaviour
@@ -63,8 +64,8 @@ public class AgentManager : MonoBehaviour
 			}
 			return sceneBounds;
 		}
-        set { 
-			sceneBounds = value; 
+        set {
+			sceneBounds = value;
 		}
     }
 
@@ -109,7 +110,7 @@ public class AgentManager : MonoBehaviour
 
 	}
 
-	void Start() 
+	void Start()
 	{
         //default primary agent's agentController type to "PhysicsRemoteFPSAgentController"
 		initializePrimaryAgent();
@@ -125,11 +126,11 @@ public class AgentManager : MonoBehaviour
         physicsSceneManager = GameObject.Find("PhysicsSceneManager").GetComponent<PhysicsSceneManager>();
 	}
 
-	private void initializePrimaryAgent() 
+	private void initializePrimaryAgent()
     {
         SetUpPhysicsController();
 	}
-	
+
 	public void Initialize(ServerAction action)
 	{
         //first parse agentMode and agentControllerType
@@ -189,7 +190,7 @@ public class AgentManager : MonoBehaviour
             SetUpDroneController(action);
 
         }
-        
+
 		primaryAgent.ProcessControlCommand (action);
 		primaryAgent.IsVisible = action.makeAgentsVisible;
 		this.renderClassImage = action.renderClassImage;
@@ -277,7 +278,7 @@ public class AgentManager : MonoBehaviour
 	}
 
 	public void ResetSceneBounds() {
-		// Recordining initially disabled renderers and scene bounds 
+		// Recordining initially disabled renderers and scene bounds
 		sceneBounds = new Bounds(
 			new Vector3(float.PositiveInfinity, float.PositiveInfinity, float.PositiveInfinity),
 			new Vector3(-float.PositiveInfinity, -float.PositiveInfinity, -float.PositiveInfinity)
@@ -321,6 +322,11 @@ public class AgentManager : MonoBehaviour
 		ResetSceneBounds();
 	}
 
+	// If fov is <= min or > max, return defaultVal, else return fov
+	private float ClampFieldOfView(float fov, float defaultVal = 90f, float min = 0f, float max = 180f) {
+		return (fov <= min || fov > max) ? defaultVal : fov;
+	}
+
 	public void AddThirdPartyCamera(ServerAction action) {
 		GameObject gameObject = new GameObject("ThirdPartyCamera" + thirdPartyCameras.Count);
 		gameObject.AddComponent(typeof(Camera));
@@ -337,23 +343,15 @@ public class AgentManager : MonoBehaviour
 		gameObject.transform.eulerAngles = action.rotation;
 		gameObject.transform.position = action.position;
 
-        float fov;
+		// default to 90 fov on third party camera if value is too small or large
+		camera.fieldOfView = ClampFieldOfView(action.fieldOfView);
 
-        if(action.fieldOfView <= 0 || action.fieldOfView > 180)
-        {
-            //default to 90 fov on third party camera if nothing passed in, or if value is too large
-            fov = 90f;
-        }
-        else
-        {
-            fov = action.fieldOfView;
-        }
         if (action.orthographic) {
+			// NOTE: orthographicSize uses the original fieldOfView value passed in
+			// TODO: this is an odd overload of the argument, consider adding another parameter
             camera.orthographicSize = action.fieldOfView;
         }
         camera.orthographic = action.orthographic;
-
-        camera.fieldOfView = fov;
 
 		readyToEmit = true;
 	}
@@ -363,6 +361,13 @@ public class AgentManager : MonoBehaviour
 			Camera thirdPartyCamera = thirdPartyCameras.ToArray()[action.thirdPartyCameraId];
 			thirdPartyCamera.gameObject.transform.eulerAngles = action.rotation;
 			thirdPartyCamera.gameObject.transform.position = action.position;
+
+			// keep existing fieldOfView if we have one and are not passed a new one
+			// 0 gets passed for null
+			if(thirdPartyCamera.fieldOfView == 0 || action.fieldOfView != 0) {
+				// default to 90 fov on third party camera if value passed in is too small or large
+				thirdPartyCamera.fieldOfView = ClampFieldOfView(action.fieldOfView);
+			}
 
 			// set the skybox to default, white, or black (other colors can be added as needed)
 			if (action.skyboxColor == null) {
@@ -415,7 +420,7 @@ public class AgentManager : MonoBehaviour
 					maxHit = hit;
 					maxDirection = d;
 				}
-				
+
 			}
 		}
 
@@ -503,15 +508,15 @@ public class AgentManager : MonoBehaviour
             }
         }
 
-		if (completeCount == agents.Count && completeCount > 0 && readyToEmit) 
+		if (completeCount == agents.Count && completeCount > 0 && readyToEmit)
         {
             //start emit frame for physics and stochastic controllers
 			if(!droneMode)
             {
 				readyToEmit = false;
-				StartCoroutine (EmitFrame ());
+				StartCoroutine (EmitFrame());
 			}
-            
+
             //start emit frame for flying drone controller
             if(droneMode)
             {
@@ -519,7 +524,7 @@ public class AgentManager : MonoBehaviour
 				if (hasDroneAgentUpdatedCount == agents.Count && hasDroneAgentUpdatedCount > 0)
                 {
 					readyToEmit = false;
-					StartCoroutine (EmitFrame ());
+					StartCoroutine (EmitFrame());
 				}
 			}
 		}
@@ -538,7 +543,7 @@ public class AgentManager : MonoBehaviour
 	}
 
 	private byte[] captureScreen() {
-		if (tex.height != UnityEngine.Screen.height || 
+		if (tex.height != UnityEngine.Screen.height ||
 			tex.width != UnityEngine.Screen.width) {
 			tex = new Texture2D(UnityEngine.Screen.width, UnityEngine.Screen.height, TextureFormat.RGB24, false);
 			readPixelsRect = new Rect(0, 0, UnityEngine.Screen.width, UnityEngine.Screen.height);
@@ -654,7 +659,7 @@ public class AgentManager : MonoBehaviour
 			yield return new WaitForEndOfFrame();
 		}
 
-		string msg = "{\"action\": \"RotateRight\"}";
+		string msg = "{\"action\": \"RotateRight\", \"timeScale\": 90.0}";
 		ProcessControlCommand(msg);
 	}
 
@@ -663,6 +668,7 @@ public class AgentManager : MonoBehaviour
         multiMeta.agents = new MetadataWrapper[this.agents.Count];
         multiMeta.activeAgentId = this.activeAgentId;
         multiMeta.sequenceId = this.currentSequenceId;
+
 		RenderTexture currentTexture = null;
 
         if (shouldRender) {
@@ -673,6 +679,7 @@ public class AgentManager : MonoBehaviour
                 cMetadata.thirdPartyCameraId = i;
                 cMetadata.position = camera.gameObject.transform.position;
                 cMetadata.rotation = camera.gameObject.transform.eulerAngles;
+			    cMetadata.fieldOfView = camera.fieldOfView;
                 cameraMetadata[i] = cMetadata;
                 ImageSynthesis imageSynthesis = camera.gameObject.GetComponentInChildren<ImageSynthesis> () as ImageSynthesis;
                 addThirdPartyCameraImage (renderPayload, camera);
@@ -753,6 +760,7 @@ public class AgentManager : MonoBehaviour
         #endif
 
 
+
         #if !UNITY_WEBGL 
 		if (serverType == serverTypes.WSGI) {
             WWWForm form = new WWWForm();
@@ -761,6 +769,7 @@ public class AgentManager : MonoBehaviour
             }
             form.AddField("metadata", serializeMetadataJson(multiMeta));
             form.AddField("token", robosimsClientToken);
+
 
 			if (this.sock == null) {
 				// Debug.Log("connecting to host: " + robosimsHost);
@@ -802,7 +811,7 @@ public class AgentManager : MonoBehaviour
 
                 // read header
                 while (true) {
-                    int received = this.sock.Receive(headerBuffer, bytesReceived, headerBuffer.Length - bytesReceived, SocketFlags.None);	
+                    int received = this.sock.Receive(headerBuffer, bytesReceived, headerBuffer.Length - bytesReceived, SocketFlags.None);
                     if (received == 0) {
                         Debug.LogError("0 bytes received attempting to read header - connection closed");
                         break;
@@ -823,7 +832,7 @@ public class AgentManager : MonoBehaviour
                 // read body
                 while (bodyBytesReceived < contentLength) {
                     // check for 0 bytes received
-                    int received = this.sock.Receive(bodyBuffer, bodyBytesReceived, bodyBuffer.Length - bodyBytesReceived, SocketFlags.None);	
+                    int received = this.sock.Receive(bodyBuffer, bodyBytesReceived, bodyBuffer.Length - bodyBytesReceived, SocketFlags.None);
                     if (received == 0) {
                         Debug.LogError("0 bytes received attempting to read body - connection closed");
                         break;
@@ -884,29 +893,28 @@ public class AgentManager : MonoBehaviour
 	{
 
         this.renderObjectImage = this.defaultRenderObjectImage;
+        dynamic controlCommand = Newtonsoft.Json.JsonConvert.DeserializeObject<dynamic>(msg);
 
-		ServerAction controlCommand = new ServerAction();
-
-		JsonUtility.FromJsonOverwrite(msg, controlCommand);
 
 		this.currentSequenceId = controlCommand.sequenceId;
-		this.renderImage = controlCommand.renderImage;
+        // the following are handled this way since they can be null
+        this.renderImage = controlCommand.renderImage == null ? true : controlCommand.renderImage;
+        this.activeAgentId = controlCommand.agentId == null ? 0 : controlCommand.agentId;
 
-		activeAgentId = controlCommand.agentId;
 		if (controlCommand.action == "Reset") {
-			this.Reset (controlCommand);
+			this.Reset (controlCommand.ToObject(typeof(ServerAction)));
 		} else if (controlCommand.action == "Initialize") {
-			this.Initialize(controlCommand);
+			this.Initialize(controlCommand.ToObject(typeof(ServerAction)));
 		} else if (controlCommand.action == "AddThirdPartyCamera") {
-			this.AddThirdPartyCamera(controlCommand);
+			this.AddThirdPartyCamera(controlCommand.ToObject(typeof(ServerAction)));
 		} else if (controlCommand.action == "UpdateThirdPartyCamera") {
-			this.UpdateThirdPartyCamera(controlCommand);
+			this.UpdateThirdPartyCamera(controlCommand.ToObject(typeof(ServerAction)));
 		} else {
-            // we only allow renderObjectImage to be flipped on 
-            // on a per step() basis, since by default the param is false
-            // so we don't know if a request is meant to turn the param off
-            // or if it is just the value by default
-            if (controlCommand.renderObjectImage) {
+            //we only allow renderObjectImage to be flipped on
+            //on a per step() basis, since by default the param is null
+            //so we don't know if a request is meant to turn the param off
+            //or if it is just the value by default
+            if (controlCommand.renderObjectImage == true) {
                 this.renderObjectImage = true;
             }
 
@@ -949,7 +957,6 @@ public class AgentManager : MonoBehaviour
 
 }
 
-
 [Serializable]
 public class MultiAgentMetadata {
 
@@ -965,6 +972,7 @@ public class ThirdPartyCameraMetadata
 	public int thirdPartyCameraId;
 	public Vector3 position;
 	public Vector3 rotation;
+	public float fieldOfView;
 }
 
 //adding AgentMetdata class so there is less confusing
@@ -1015,7 +1023,7 @@ public class ObjectMetadata
 	///
 	//note: some objects are not themselves toggleable, because they must be toggled on/off via another sim object (stove knob -> stove burner)
 	public bool toggleable;//is this object able to be toggled on/off directly?
-	
+
 	//note some objects can still return the istoggle value even if they cannot directly be toggled on off (stove burner -> stove knob)
 	public bool isToggled;//is this object currently on or off? true is on
 	///
@@ -1029,7 +1037,7 @@ public class ObjectMetadata
 	public bool isDirty;//is this object in a dirty or clean state?
 	///
 	public bool canBeUsedUp;//for objects that can be emptied or depleted (toilet paper, paper towels, tissue box etc) - specifically not for liquids
-	public bool isUsedUp; 
+	public bool isUsedUp;
 	///
 	public bool cookable;//can this object be turned to a cooked state? object should not be able to toggle back to uncooked state with contextual interactions, only a direct action
 	public bool isCooked;//is it cooked right now? - context sensitive objects might set this automatically like Toaster/Microwave/ Pots/Pans if isHeated = true
@@ -1072,7 +1080,7 @@ public class ObjectMetadata
     public bool isMoving;//true if this game object currently has a non-zero velocity
     public AxisAlignedBoundingBox axisAlignedBoundingBox;
     public ObjectOrientedBoundingBox objectOrientedBoundingBox;
-    
+
 	public ObjectMetadata() { }
 }
 
@@ -1273,7 +1281,7 @@ public class ServerAction
 	public string sceneName;
 	public bool rotateOnTeleport;
 	public bool forceVisible;
-    public bool anywhere;//used for SpawnTargetCircle, GetSpawnCoordinatesAboveObject for if anywhere or only in agent view 
+    public bool anywhere;//used for SpawnTargetCircle, GetSpawnCoordinatesAboveObject for if anywhere or only in agent view
 	public bool randomizeOpen;
 	public int randomSeed;
 	public float moveMagnitude;
@@ -1306,7 +1314,7 @@ public class ServerAction
     public float angularDrag;
     public ObjectTypeCount[] numDuplicatesOfType; //specify, by object Type, how many duplicates of that given object type to try and spawn
     //use only the objectType class member to specify which receptacle objects should be excluded from the valid receptacles to spawn objects in
-    public String[] excludedReceptacles; 
+    public String[] excludedReceptacles;
     public ObjectPose[] objectPoses;
     public SetObjectStates SetObjectStates;
     public float minDistance;//used in target circle spawning function
@@ -1342,6 +1350,7 @@ public class ServerAction
 	public float b;
 
 	public float intensity;//used for light?
+	public float scale;
 
     public SimObjType ReceptableSimObjType()
 	{
@@ -1360,6 +1369,17 @@ public class ServerAction
 		}
 		return (SimObjType)Enum.Parse(typeof(SimObjType), objectType);
 	}
+    // allows this to be passed in as a dynamic which we then
+    // cast back to itself
+    public ServerAction ToObject<T>() {
+        return this;
+    }
+
+    public ServerAction ToObject(Type t) {
+        return this;
+    }
+
+
 }
 
 [Serializable]
@@ -1382,7 +1402,8 @@ public enum ServerActionErrorCode  {
 	ObjectNotPickupable,
 	LookUpCantExceedMax,
 	LookDownCantExceedMin,
-	InvalidAction
+	InvalidAction,
+    MissingArguments
 }
 
 

@@ -92,9 +92,13 @@ namespace UnityStandardAssets.Characters.FirstPerson
             if (InputMode_Text != null) {
                 InputMode_Text.SetActive(false);
             }
-            InputFieldObj.SetActive(false);
+            if (InputFieldObj != null) {
+                InputFieldObj.SetActive(false);
+            }
             var background = GameObject.Find("DebugCanvasPhysics/InputModeText_Background");
-            background.SetActive(false);
+            if (background != null) {
+                background.SetActive(false);
+            }
         }
 
         public void SetScroll2DEnabled(bool enabled)
@@ -147,13 +151,15 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
         private void DebugKeyboardControls()
 		{
-            InputField inField = InputFieldObj.GetComponentInChildren<InputField>();
-            if (inField != null) {
-                if (inField.isFocused) {
-                    highlightController.ThrowEnabled = false;
-                    return;
-                } else {
-                    highlightController.ThrowEnabled = true;
+            if (InputFieldObj != null) {
+                InputField inField = InputFieldObj.GetComponentInChildren<InputField>();
+                if (inField != null) {
+                    if (inField.isFocused) {
+                        highlightController.ThrowEnabled = false;
+                        return;
+                    } else {
+                        highlightController.ThrowEnabled = true;
+                    }
                 }
             }
 			//swap between text input and not

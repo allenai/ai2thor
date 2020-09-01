@@ -1,9 +1,12 @@
 from setuptools import setup, find_packages
+import os
 
-exec(open('ai2thor/_version.py').read())
+__version__ = '0.0.1'
+
+if os.path.isfile('ai2thor/_version.py'):
+    exec(open('ai2thor/_version.py').read())
 
 VERSION = __version__
-
 
 setup(name='ai2thor',
       version=VERSION,

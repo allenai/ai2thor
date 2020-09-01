@@ -296,7 +296,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         ServerAction action = new ServerAction();
 
                         action.action = "SpawnExperimentObjAtPoint";
-                        action.objectType = "receptacle";
+                        action.objectType = "replacement";//"receptacle";
                         action.receptacleObjectId = "DiningTable|-00.59|+00.00|+00.33";
                         action.objectVariation = 12;
                         action.position = new Vector3(-1.4f, 0.9f, 0.1f);
@@ -421,7 +421,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
                         action.action = "ChangeScreenMaterialExpRoom";
                         action.objectVariation = 3;
-                        action.objectId = "Screen|-00.64|+00.78|+00.71";
+                        action.objectId = "ScreenSheet|-00.18|+01.24|+00.23";
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }
@@ -434,7 +434,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         action.r = 20f;
                         action.g = 94f;
                         action.b = 10f;
-                        action.objectId = "Screen|-00.64|+00.78|+00.71";
+                        action.objectId = "ScreenSheet|-00.18|+01.24|+00.23";
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }
@@ -525,8 +525,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 case "spawnabove":
                     {
                         ServerAction action = new ServerAction();
-                        action.action = "GetSpawnCoordinatesAboveObject";
-                        action.objectId = "Floor|+00.00|+00.00|+00.00";
+                        action.action = "GetSpawnCoordinatesAboveReceptacle";
+                        action.objectId = "CounterTop|-01.94|+00.98|-03.67";
                         action.anywhere = false;
                         PhysicsController.ProcessControlCommand(action);
                         break;
@@ -2677,6 +2677,22 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         }
 
                          PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
+                    case "scale":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "ScaleObject";
+                        action.objectId = "Cup|-01.36|+00.78|+00.71";
+                        action.scale = 2.0f;
+
+                        if (splitcommand.Length > 1)
+                        {
+                            action.scale = float.Parse(splitcommand[1]);
+                        }
+
+                        PhysicsController.ProcessControlCommand(action);
                         break;
                     }
 

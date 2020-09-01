@@ -2766,6 +2766,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             if (ItemInHand == null) {
                 errorMessage = "Can't rotate hand unless holding object";
+                actionFinished(false);
                 return;
             }
 
@@ -3212,6 +3213,92 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true, ersm.ReturnValidSpawns(action.objectType, action.objectVariation, target, action.y));
         }
 
+        //change scale of sim object, this only works with sim objects not structures
+        public void ScaleObject(ServerAction action)
+        {
+            //specify target to pickup via objectId or coordinates
+            SimObjPhysics target = null;
+            if (action.forceAction) {
+                action.forceVisible = true;
+            }
+            //no target object specified, so instead try and use x/y screen coordinates
+            if(action.objectId == null)
+            {
+                if(!ScreenToWorldTarget(action.x, action.y, ref target, !action.forceAction))
+                {
+                    //error message is set inside ScreenToWorldTarget
+                    actionFinished(false);
+                    return;
+                }
+            }
+
+            //an objectId was given, so find that target in the scene if it exists
+            else
+            {
+                if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(action.objectId)) {
+                    errorMessage = "Object ID appears to be invalid.";
+                    actionFinished(false);
+                    return;
+                }
+                
+                //if object is in the scene and visible, assign it to 'target'
+                foreach (SimObjPhysics sop in VisibleSimObjs(action)) 
+                {
+                    target = sop;
+                }
+            }
+
+            //neither objectId nor coordinates found an object
+            if(target == null)
+            {
+                errorMessage = "No target found";
+                actionFinished(false);
+                return;
+            }
+
+            else
+            {
+                float scaleMultiplier = action.scale; //this can be something like 0.3 to shrink or 1.5 to grow
+                StartCoroutine(scaleObject(gameObject.transform.localScale * action.scale, target));
+            }
+        }
+
+        private IEnumerator scaleObject(Vector3 targetScale, SimObjPhysics target)
+        {
+            yield return new WaitForFixedUpdate();
+
+            Vector3 originalScale = target.transform.localScale;
+            float currentTime = 0.0f;
+
+            do
+            {
+                target.transform.localScale = Vector3.Lerp(originalScale, targetScale, currentTime / 1.0f);
+                currentTime += Time.deltaTime;
+                yield return null;
+            } while (currentTime <= 1.0f);
+
+            //store reference to all children
+            Transform[] children = new Transform[target.transform.childCount];
+
+            for(int i = 0; i < target.transform.childCount; i++)
+            {
+                children[i] = target.transform.GetChild(i);
+            }
+
+            //detach all children
+            target.transform.DetachChildren();
+            //zero out object transform to be 1, 1, 1
+            target.transform.transform.localScale = Vector3.one;
+            //reparent all children
+            foreach (Transform t in children)
+            {
+                t.SetParent(target.transform);
+            }
+
+            target.ContextSetUpBoundingBox();
+            actionFinished(true);
+        }
+        
         //pass in a Vector3, presumably from GetReachablePositions, and try to place a specific Sim Object there
         //unlike PlaceHeldObject or InitialRandomSpawn, this won't be limited by a Receptacle, but only
         //limited by collision
@@ -3260,7 +3347,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             float distFromSopToBottomPoint = Vector3.Distance(bottomPoint, target.transform.position);
 
-            float offset = distFromSopToBottomPoint;
+            float offset = distFromSopToBottomPoint + 0.005f;//offset in case the surface below isn't completely flat
 
             Vector3 finalPos = GetSurfacePointBelowPosition(action.position) +  new Vector3(0, offset, 0);
 
@@ -3280,7 +3367,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         //same as PlaceObjectAtPoint(ServerAction action) but without a server action
-        public bool PlaceObjectAtPoint(SimObjPhysics t, Vector3 position)
+        public bool placeObjectAtPoint(SimObjPhysics t, Vector3 position)
         {
             SimObjPhysics target = null;
             //find the object in the scene, disregard visibility
@@ -3398,7 +3485,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         //same as GetSpawnCoordinatesAboveReceptacle(Server Action) but takes a sim obj phys instead
         //returns a list of vector3 coordinates above a receptacle. These coordinates will make up a grid above the receptacle
-        public List<Vector3> GetSpawnCoordinatesAboveReceptacle(SimObjPhysics t)
+        public List<Vector3> getSpawnCoordinatesAboveReceptacle(SimObjPhysics t)
         {
             SimObjPhysics target = t;
             //ok now get spawn points from target
@@ -4217,6 +4304,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         //used for all actions that need a sim object target
         //instead of objectId, use screen coordinates to raycast toward potential targets
+        //will set the target object by reference if raycast is succesful
         public bool ScreenToWorldTarget(float x, float y, ref SimObjPhysics target, bool requireWithinViewportRange)
         {
             //float x = action.x;
@@ -4263,6 +4351,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 }
             }
 
+            //force update objects to be visible/interactable correctly
+            VisibleSimObjs(false);
             return true;
         }
 
@@ -4546,7 +4636,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true);
         }
 
-        public bool DropHandObject(ServerAction action) {
+        public void DropHandObject(ServerAction action) {
             //make sure something is actually in our hands
             if (ItemInHand != null) {
                 //we do need this to check if the item is currently colliding with the agent, otherwise
@@ -4555,7 +4645,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     errorMessage = ItemInHand.transform.name + " can't be dropped. It must be clear of all other collision first, including the Agent";
                     Debug.Log(errorMessage);
                     actionFinished(false);
-                    return false;
+                    return;
                 } else {
                     Rigidbody rb = ItemInHand.GetComponent<Rigidbody>();
                     rb.isKinematic = false;
@@ -4600,13 +4690,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                     ItemInHand.GetComponent<SimObjPhysics>().isInAgentHand = false;
                     ItemInHand = null;
-                    return true;
+                    return;
                 }
             } else {
                 errorMessage = "nothing in hand to drop!";
                 Debug.Log(errorMessage);
                 actionFinished(false);
-                return false;
+                return;
             }
         }
 
@@ -4621,8 +4711,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
 
             GameObject go = ItemInHand;
-
-            if (DropHandObject(action)) {
+            DropHandObject(action);
+            if (this.lastActionSuccess) {
                 Vector3 dir = m_Camera.transform.forward;
                 go.GetComponent<SimObjPhysics>().ApplyForce(dir, action.moveMagnitude);
             }
@@ -5230,6 +5320,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 //target not found in currently visible objects, report not found
                 errorMessage = "object not found: " + action.objectId;
                 actionFinished(false);
+                return;
             }
             
             ToggleObject(target, toggleOn, forceAction);
@@ -8927,5 +9018,30 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
             actionFinished(true);
         }
+
+        #if UNITY_EDITOR
+        void OnDrawGizmos()
+        {
+            ////check for valid spawn points in GetSpawnCoordinatesAboveObject action
+            //  Gizmos.color = Color.magenta;
+            //     if(validpointlist.Count > 0)
+            //     {
+            //         foreach(Vector3 yes in validpointlist)
+            //         {
+            //             Gizmos.DrawCube(yes, new Vector3(0.01f, 0.01f, 0.01f));
+            //         }
+            //     }
+
+            //draw axis aligned bounds of objects after actionFinished() calls
+            // if(gizmobounds != null)
+            // {
+            //     Gizmos.color = Color.yellow;
+            //     foreach(Bounds g in gizmobounds)
+            //     {
+            //         Gizmos.DrawWireCube(g.center, g.size);
+            //     }
+            // }
+        }
+        #endif
     }
 }
