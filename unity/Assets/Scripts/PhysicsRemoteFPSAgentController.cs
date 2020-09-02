@@ -3347,7 +3347,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             float distFromSopToBottomPoint = Vector3.Distance(bottomPoint, target.transform.position);
 
-            float offset = distFromSopToBottomPoint;
+            float offset = distFromSopToBottomPoint + 0.005f;//offset in case the surface below isn't completely flat
 
             Vector3 finalPos = GetSurfacePointBelowPosition(action.position) +  new Vector3(0, offset, 0);
 
@@ -4636,7 +4636,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true);
         }
 
-        public bool DropHandObject(ServerAction action) {
+        public void DropHandObject(ServerAction action) {
             //make sure something is actually in our hands
             if (ItemInHand != null) {
                 //we do need this to check if the item is currently colliding with the agent, otherwise
@@ -4645,7 +4645,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     errorMessage = ItemInHand.transform.name + " can't be dropped. It must be clear of all other collision first, including the Agent";
                     Debug.Log(errorMessage);
                     actionFinished(false);
-                    return false;
+                    return;
                 } else {
                     Rigidbody rb = ItemInHand.GetComponent<Rigidbody>();
                     rb.isKinematic = false;
@@ -4690,13 +4690,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                     ItemInHand.GetComponent<SimObjPhysics>().isInAgentHand = false;
                     ItemInHand = null;
-                    return true;
+                    return;
                 }
             } else {
                 errorMessage = "nothing in hand to drop!";
                 Debug.Log(errorMessage);
                 actionFinished(false);
-                return false;
+                return;
             }
         }
 
@@ -4711,8 +4711,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
 
             GameObject go = ItemInHand;
-
-            if (DropHandObject(action)) {
+            DropHandObject(action);
+            if (this.lastActionSuccess) {
                 Vector3 dir = m_Camera.transform.forward;
                 go.GetComponent<SimObjPhysics>().ApplyForce(dir, action.moveMagnitude);
             }

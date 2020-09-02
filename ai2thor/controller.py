@@ -671,7 +671,7 @@ class Controller(object):
         self.response_queue.put_nowait(action)
         self.last_event = queue_get(self.request_queue, self.unity_proc)
 
-        if not self.last_event.metadata['lastActionSuccess'] and self.last_event.metadata['errorCode'] == 'InvalidAction':
+        if not self.last_event.metadata['lastActionSuccess'] and self.last_event.metadata['errorCode'] in ['InvalidAction', 'MissingArguments']:
             raise ValueError(self.last_event.metadata['errorMessage'])
 
         if raise_for_failure:

@@ -9,6 +9,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using System.Reflection;
 using System.Text;
+using SD = System.Diagnostics;
 using UnityEngine.Networking;
 
 public class AgentManager : MonoBehaviour
@@ -547,7 +548,7 @@ public class AgentManager : MonoBehaviour
 			if(!droneMode)
             {
 				readyToEmit = false;
-				StartCoroutine (EmitFrame ());
+				StartCoroutine (EmitFrame());
 			}
 
             //start emit frame for flying drone controller
@@ -557,7 +558,7 @@ public class AgentManager : MonoBehaviour
 				if (hasDroneAgentUpdatedCount == agents.Count && hasDroneAgentUpdatedCount > 0)
                 {
 					readyToEmit = false;
-					StartCoroutine (EmitFrame ());
+					StartCoroutine (EmitFrame());
 				}
 			}
 		}
@@ -706,7 +707,7 @@ public class AgentManager : MonoBehaviour
 			}
 		}
 
-		string msg = "{\"action\": \"RotateRight\"}";
+		string msg = "{\"action\": \"RotateRight\", \"timeScale\": 90.0}";
 		ProcessControlCommand(msg);
 	}
 
@@ -928,29 +929,28 @@ public class AgentManager : MonoBehaviour
 	{
 
         this.renderObjectImage = this.defaultRenderObjectImage;
+        dynamic controlCommand = Newtonsoft.Json.JsonConvert.DeserializeObject<dynamic>(msg);
 
-		ServerAction controlCommand = new ServerAction();
-
-		JsonUtility.FromJsonOverwrite(msg, controlCommand);
 
 		this.currentSequenceId = controlCommand.sequenceId;
-		this.renderImage = controlCommand.renderImage;
+        // the following are handled this way since they can be null
+        this.renderImage = controlCommand.renderImage == null ? true : controlCommand.renderImage;
+        this.activeAgentId = controlCommand.agentId == null ? 0 : controlCommand.agentId;
 
-		activeAgentId = controlCommand.agentId;
 		if (controlCommand.action == "Reset") {
-			this.Reset (controlCommand);
+			this.Reset (controlCommand.ToObject(typeof(ServerAction)));
 		} else if (controlCommand.action == "Initialize") {
-			this.Initialize(controlCommand);
+			this.Initialize(controlCommand.ToObject(typeof(ServerAction)));
 		} else if (controlCommand.action == "AddThirdPartyCamera") {
-			this.AddThirdPartyCamera(controlCommand);
+			this.AddThirdPartyCamera(controlCommand.ToObject(typeof(ServerAction)));
 		} else if (controlCommand.action == "UpdateThirdPartyCamera") {
-			this.UpdateThirdPartyCamera(controlCommand);
+			this.UpdateThirdPartyCamera(controlCommand.ToObject(typeof(ServerAction)));
 		} else {
-            // we only allow renderObjectImage to be flipped on
-            // on a per step() basis, since by default the param is false
-            // so we don't know if a request is meant to turn the param off
-            // or if it is just the value by default
-            if (controlCommand.renderObjectImage) {
+            //we only allow renderObjectImage to be flipped on
+            //on a per step() basis, since by default the param is null
+            //so we don't know if a request is meant to turn the param off
+            //or if it is just the value by default
+            if (controlCommand.renderObjectImage == true) {
                 this.renderObjectImage = true;
             }
 
@@ -1436,6 +1436,17 @@ public class ServerAction
 		}
 		return (SimObjType)Enum.Parse(typeof(SimObjType), objectType);
 	}
+    // allows this to be passed in as a dynamic which we then
+    // cast back to itself
+    public ServerAction ToObject<T>() {
+        return this;
+    }
+
+    public ServerAction ToObject(Type t) {
+        return this;
+    }
+
+
 }
 
 [Serializable]
@@ -1458,7 +1469,8 @@ public enum ServerActionErrorCode  {
 	ObjectNotPickupable,
 	LookUpCantExceedMax,
 	LookDownCantExceedMin,
-	InvalidAction
+	InvalidAction,
+    MissingArguments
 }
 
 
