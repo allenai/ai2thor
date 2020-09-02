@@ -36,7 +36,10 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
     // Start is called before the first frame update
 
     [SerializeField]
-    private int ContactCount;
+    private CapsuleCollider[] ArmCapsuleColliders;
+    [SerializeField]
+    private BoxCollider[] ArmBoxColliders;
+
     void Start()
     {
         // What a mess clean up this hierarchy, standarize naming
@@ -59,45 +62,108 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        
+        // if(Input.GetKeyDown(KeyCode.Space))
+        // {
+        //     IsArmColliding();
+        // }
     }
 
-    public void OnCollisionEnter(Collision collision)
+    public bool IsArmColliding()
     {
-        //debug collision print
-        // print(collision.collider);
-        // print(collision.gameObject);
+        bool result = false;
 
+        //create overlap box/capsule for each collider and check the result I guess
+        foreach (CapsuleCollider c in ArmCapsuleColliders)
+        {
+            Vector3 center = c.transform.TransformPoint(c.center);
+            float radius = c.radius;
+            //direction of CapsuleCollider's orientation in local space
+            Vector3 dir = new Vector3();
+            //x just in case
+            if(c.direction == 0)
+            {
+                //get world space direction of this capsule's local right vector
+                dir = c.transform.right;
+            }
+
+            //y just in case
+            if(c.direction == 1)
+            {
+                //get world space direction of this capsule's local up vector
+                dir = c.transform.up;
+            }
+
+            //z because all arm colliders have direction z by default
+            if(c.direction == 2)
+            {
+                //get world space direction of this capsul's local forward vector
+                dir = c.transform.forward;
+                //this doesn't work because transform.right is in world space already,
+                //how to get transform.localRight?
+            }
+
+            //debug draw
+            //Debug.DrawLine(center, center + dir * 2.0f, Color.red, 10.0f);
+
+            //point 0
+            //center in world space + direction with magnitude (1/2 height - radius)
+            var point0 = center + dir * (c.height/2 - radius);
+
+            //point 1
+            //center in world space - direction with magnitude (1/2 height - radius)
+            var point1 = center - dir * (c.height/2 - radius);
+
+            // print("p0 " + point0);
+            // print("p1 " + point1);
+
+            //ok now finally let's make some overlap capsuuuules
+            if(Physics.OverlapCapsule(point0, point1, radius, 1 << 8, QueryTriggerInteraction.Ignore).Length > 0)
+            {
+                result = true;
+            }
+
+        }
+
+        foreach (BoxCollider b in ArmBoxColliders)
+        {
+
+        }
+
+        return result;
+    }
+
+    public void OnTriggerEnter(Collider col)
+    {
         staticCollided.collided = false;
         staticCollided.simObjPhysics = null;
         staticCollided.gameObject = null;
 
-        if(collision.gameObject.GetComponent<SimObjPhysics>())
+        if(col.GetComponentInParent<SimObjPhysics>())
         {
-            SimObjPhysics sop = collision.gameObject.GetComponent<SimObjPhysics>();
+            //how does this handle nested sim objects? maybe it's fine?
+            SimObjPhysics sop = col.GetComponentInParent<SimObjPhysics>();
             if(sop.PrimaryProperty == SimObjPrimaryProperty.Static)
             {
-                Debug.Log("Collided with static " + sop.name);
+                #if UNITY_EDITOR
+                Debug.Log("Collided with static sim obj " + sop.name);
+                #endif
+
                 staticCollided.collided = true;
                 staticCollided.simObjPhysics = sop;
             }
         }
 
-        //also do this if it hits a structure object that is static
-        if(collision.gameObject.isStatic)
+        //also check if the collider hit was a structure?
+        if(col.gameObject.isStatic)
         {
+            #if UNITY_EDITOR
+            Debug.Log("Collided with static structure " + col.gameObject.name);
+            #endif
+                
             staticCollided.collided = true;
-            staticCollided.gameObject = collision.gameObject;
+            staticCollided.gameObject = col.gameObject;
         }
     }
-
-    // public void OnCollisionStay(Collision collision)
-    // {
-    //     print("game object collided with is: " + collision.gameObject);
-    //     print("this transform's parent: " + transform.parent);
-    //     if(collision.gameObject != transform.parent)
-    //     ContactCount += collision.contactCount;
-    // }
 
     //axis and angle
     public IEnumerator rotateHand(PhysicsRemoteFPSAgentController controller, Quaternion targetQuat, float time, bool returnToStartPositionIfFailed = false)
