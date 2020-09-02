@@ -380,7 +380,7 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
 
     public ArmMetadata GenerateMetadata() {
         var meta = new ArmMetadata();
-        meta.handTarget = armTarget.position;
+        //meta.handTarget = armTarget.position;
         var joint = FirstJoint;
         var joints = new List<JointMetadata>();
         for (var i = 2; i <= 5; i++) {
@@ -410,6 +410,18 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
             joint = joint.Find("robot_arm_" + i + "_jnt");
         }
         meta.joints = joints.ToArray();
+
+        //metadata for any objects currently held by the hand on the arm
+        //note this is different from objects intersecting the hand's sphere,
+        //there could be a case where an object is inside the sphere but not picked up by the hand
+        List<string> HeldObjectIDs = new List<string>();
+
+        foreach(SimObjPhysics sop in HeldObjects)
+        {
+            HeldObjectIDs.Add(sop.objectID);
+        }
+        meta.HeldObjects = HeldObjectIDs;
+
         return meta;
     }
 }

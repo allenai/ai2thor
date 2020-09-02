@@ -1201,8 +1201,12 @@ public class JointMetadata {
 
 [Serializable]
 public class ArmMetadata {
-    public Vector3 handTarget;
+
+    //public Vector3 handTarget;
+	//joints 1 to 4, joint 4 is the wrist and joint 1 is the base that never moves
     public JointMetadata[] joints;
+
+	public List<String> HeldObjects;
 }
 
 [Serializable]
