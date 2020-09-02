@@ -249,6 +249,11 @@ namespace UnityStandardAssets.Characters.FirstPerson
                             PhysicsController.ProcessControlCommand(action);
                         }
 
+                        if (Input.GetKeyDown(KeyCode.B)) {
+                            action.action = "Blink";
+                            PhysicsController.ProcessControlCommand(action);
+                        }
+
                         if(Input.GetKeyDown(KeyCode.O))
                         {
                             action.action = "OpenObject";

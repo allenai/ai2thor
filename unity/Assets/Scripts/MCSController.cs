@@ -43,6 +43,8 @@ public class MCSController : PhysicsRemoteFPSAgentController {
 
     PlayerPose pose = PlayerPose.STANDING;
 
+    private int cameraCullingMask = -1;
+
     private bool movementActionFinished = false;
     private MCSMovementActionData movementActionData; //stores movement direction
     private bool inputWasMovement = false;
@@ -52,6 +54,12 @@ public class MCSController : PhysicsRemoteFPSAgentController {
     private bool inputWasRotateLook = false;
 
     private int framesUntilGridSnap; //when moving, grid snap will engage on the last frame (rather than every frame)
+
+    public void Blink(ServerAction action) {
+        this.GetComponentInChildren<Camera>().cullingMask = 0;
+        this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.SUCCESSFUL);
+        this.actionFinished(false);
+    }
 
     public override void CloseObject(ServerAction action) {
         bool continueAction = TryConvertingEachObjectDirectionToId(action);
@@ -328,6 +336,11 @@ public class MCSController : PhysicsRemoteFPSAgentController {
     }
 
     public override void ProcessControlCommand(ServerAction controlCommand) {
+        if (this.cameraCullingMask < 0) {
+            this.cameraCullingMask = this.GetComponentInChildren<Camera>().cullingMask;
+        }
+        this.GetComponentInChildren<Camera>().cullingMask = this.cameraCullingMask;
+
         inputWasMovement = 
                 controlCommand.action.Equals("MoveAhead") || 
                 controlCommand.action.Equals("MoveBack") ||

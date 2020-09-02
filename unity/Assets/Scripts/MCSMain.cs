@@ -27,6 +27,7 @@ public class MCSMain : MonoBehaviour {
     private static float PHYSICS_BOUNCINESS_DEFAULT = 0;
     private static float RIGIDBODY_DRAG_DEFAULT = 0;
     private static float RIGIDBODY_ANGULAR_DRAG_DEFAULT = 0.5f;
+    private static float TOP_DOWN_PERFORMER_START_Y = 3f;
     private static float WALL_SIDE_X_POSITION_OBSERVATION = 7.0f;
     private static float WALL_SIDE_X_POSITION_INTERACTION = 5.25f;
     private static float WALL_Y_POSITION = 1.5f;
@@ -177,13 +178,17 @@ public class MCSMain : MonoBehaviour {
             !this.currentScene.wallMaterial.Equals("")) ? this.currentScene.wallMaterial :
             this.defaultWallsMaterial;
 
-        // For all IntPhys scenes: set the controller substeps to 1; expand all the walls of the room; remove the
-        // ceiling; and set the performer to start at a specific position and rotation.
-        if (this.currentScene.intphys || this.currentScene.observation) {
+        // Remove the ceiling from all IntPhys and top-down scenes.
+        this.ceiling.SetActive(!(this.currentScene.intphys || this.currentScene.observation ||
+                this.currentScene.topdown));
+
+        // Set the controller's action substeps to 1 in all IntPhys and top-down scenes.
+        if (this.currentScene.intphys || this.currentScene.observation || this.currentScene.topdown) {
             this.agentController.substeps = 1;
+        }
 
-            this.ceiling.SetActive(false);
-
+        // Expand the walls of the room in all IntPhys scenes and set a specific performer start.
+        if (this.currentScene.intphys || this.currentScene.observation) {
             this.wallLeft.transform.position = new Vector3(-1 * MCSMain.WALL_SIDE_X_POSITION_OBSERVATION,
                 MCSMain.WALL_Y_POSITION, MCSMain.WALL_SIDE_Z_POSITION);
             this.wallRight.transform.position = new Vector3(MCSMain.WALL_SIDE_X_POSITION_OBSERVATION,
@@ -197,6 +202,7 @@ public class MCSMain : MonoBehaviour {
 
             this.currentScene.performerStart = new MCSConfigTransform();
             this.currentScene.performerStart.position = new MCSConfigVector();
+            this.currentScene.performerStart.position.y = MCSController.STANDING_POSITION_Y;
             this.currentScene.performerStart.position.z = -4.5f;
             this.currentScene.performerStart.rotation = new MCSConfigVector();
 
@@ -210,10 +216,15 @@ public class MCSMain : MonoBehaviour {
                 this.currentScene.floorProperties.angularDrag = MCSMain.RIGIDBODY_ANGULAR_DRAG_DEFAULT;
             }
         }
+        else if (this.currentScene.topdown) {
+            this.currentScene.performerStart = new MCSConfigTransform();
+            this.currentScene.performerStart.position = new MCSConfigVector();
+            this.currentScene.performerStart.position.y = MCSMain.TOP_DOWN_PERFORMER_START_Y;
+            this.currentScene.performerStart.rotation = new MCSConfigVector();
+            this.currentScene.performerStart.rotation.x = 90f;
+        }
         else {
             this.agentController.substeps = MCSController.PHYSICS_SIMULATION_LOOPS;
-
-            this.ceiling.SetActive(true);
 
             this.wallLeft.transform.position = new Vector3(-1 * MCSMain.WALL_SIDE_X_POSITION_INTERACTION,
                 MCSMain.WALL_Y_POSITION, MCSMain.WALL_SIDE_Z_POSITION);
@@ -225,6 +236,14 @@ public class MCSMain : MonoBehaviour {
                 MCSMain.WALL_FRONT_Y_SCALE_INTERACTION, MCSMain.WALL_FRONT_Z_SCALE);
             this.floor.transform.localScale = new Vector3(MCSMain.FLOOR_X_SCALE_INTERACTION,
                 MCSMain.FLOOR_Y_SCALE, MCSMain.FLOOR_Z_SCALE);
+
+            if (this.currentScene.performerStart == null) {
+                this.currentScene.performerStart = new MCSConfigTransform();
+            }
+            if (this.currentScene.performerStart.position == null) {
+                this.currentScene.performerStart.position = new MCSConfigVector();
+            }
+            this.currentScene.performerStart.position.y = MCSController.STANDING_POSITION_Y;
         }
 
         SimObjPhysics ceilingSimObjPhysics = this.ceiling.GetComponent<SimObjPhysics>();
@@ -246,8 +265,8 @@ public class MCSMain : MonoBehaviour {
         }
 
         else {
-            // The IntPhys scenes don't have ceilings.
-            if (!(this.currentScene.intphys || this.currentScene.observation)) {
+            // IntPhys and top-down scenes don't have ceilings.
+            if (!(this.currentScene.intphys || this.currentScene.observation || this.currentScene.topdown)) {
                 if (ceilingSimObjPhysics.VisibilityPoints.Length == 0) {
                     ceilingSimObjPhysics.VisibilityPoints = AssignVisibilityPoints(this.ceiling,
                         this.GenerateCubeInternalVisibilityPoints(this.ceiling, null), null);
@@ -310,10 +329,10 @@ public class MCSMain : MonoBehaviour {
         if (this.currentScene.performerStart != null && this.currentScene.performerStart.position != null) {
             // Always keep the Y position on the floor.
             controller.transform.position = new Vector3(this.currentScene.performerStart.position.x,
-                MCSController.STANDING_POSITION_Y, this.currentScene.performerStart.position.z);
+                this.currentScene.performerStart.position.y, this.currentScene.performerStart.position.z);
         }
         else {
-            controller.transform.position = new Vector3(0, MCSController.STANDING_POSITION_Y, 0);
+            controller.transform.position = new Vector3(0, this.currentScene.performerStart.position.y, 0);
         }
 
         if (this.currentScene.performerStart != null && this.currentScene.performerStart.rotation != null) {
@@ -1570,6 +1589,7 @@ public class MCSConfigScene {
     public bool intphys;
     public bool observation; // deprecated; please use intphys
     public bool screenshot;
+    public bool topdown;
 
     public MCSConfigGoal goal;
     public MCSConfigTransform performerStart = null;
