@@ -9024,7 +9024,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             if (arm != null) {
                 arm.SetStopMotionOnContact(action.stopArmMovementOnContact);
-                StartCoroutine(arm.moveArmTarget(this, action.position, action.speed, arm.gameObject, action.returnToStart, action.handCameraSpace));
+                StartCoroutine(arm.moveArmTarget(this, action.position, action.speed, arm.gameObject, action.returnToStart, action.coordinateSpace));
             }
             else {
                 actionFinished(false, "Agent does not have kinematic arm or is not enabled. Make sure there is a '" + typeof(IK_Robot_Arm_Controller).Name + "' component as a child of this agent.");
@@ -9037,11 +9037,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         //arm constrained by the agent's capsule
         public void MoveMidLevelArmHeight(ServerAction action)
         {
-            // if(action.y < 0 || action.y > 1.0)
-            // {
-            //     actionFinished(false, "MoveMidLevelArmHeight Y value must be [0, 1.0] inclusive");
-            //     return;
-            // }
+            if(action.y < 0 || action.y > 1.0)
+            {
+                actionFinished(false, "MoveMidLevelArmHeight Y value must be [0, 1.0] inclusive");
+                return;
+            }
 
             var arm = this.GetComponentInChildren<IK_Robot_Arm_Controller>();
             if(arm != null)
@@ -9142,6 +9142,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
 
+        //note this does not reposition the center point of the magnet orb
+        //so expanding the radius too much will cause it to clip backward into the wrist joint
         public void SetMidLevelHandRadius(ServerAction action) {
             var arm = this.GetComponentInChildren<IK_Robot_Arm_Controller>();
 

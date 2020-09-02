@@ -34,6 +34,9 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
 
     private bool StopMotionOnContact = false;
     // Start is called before the first frame update
+
+    [SerializeField]
+    private int ContactCount;
     void Start()
     {
         // What a mess clean up this hierarchy, standarize naming
@@ -87,6 +90,14 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
             staticCollided.gameObject = collision.gameObject;
         }
     }
+
+    // public void OnCollisionStay(Collision collision)
+    // {
+    //     print("game object collided with is: " + collision.gameObject);
+    //     print("this transform's parent: " + transform.parent);
+    //     if(collision.gameObject != transform.parent)
+    //     ContactCount += collision.contactCount;
+    // }
 
     //axis and angle
     public IEnumerator rotateHand(PhysicsRemoteFPSAgentController controller, Quaternion targetQuat, float time, bool returnToStartPositionIfFailed = false)
@@ -211,11 +222,31 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
         controller.actionFinished(true);
     }
 
-    public IEnumerator moveArmTarget(PhysicsRemoteFPSAgentController controller, Vector3 target, float unitsPerSecond,  GameObject arm, bool returnToStartPositionIfFailed = false, bool handCameraSpace = false) {
+    public IEnumerator moveArmTarget(PhysicsRemoteFPSAgentController controller, Vector3 target, float unitsPerSecond,  GameObject arm, bool returnToStartPositionIfFailed = false, string whichSpace = "arm") {
 
         staticCollided.collided = false;
         // Move arm based on hand space or arm origin space
-        Vector3 targetWorldPos = handCameraSpace ? handCameraTransform.TransformPoint(target) : arm.transform.TransformPoint(target);
+        //Vector3 targetWorldPos = handCameraSpace ? handCameraTransform.TransformPoint(target) : arm.transform.TransformPoint(target);
+
+        Vector3 targetWorldPos = Vector3.zero;
+
+        //world space, can be used to move directly toward positions returned by sim objects
+        if(whichSpace == "world")
+        {
+            targetWorldPos = target;
+        }
+
+        //space relative to base of the wrist, where the camera is
+        else if(whichSpace == "wrist")
+        {
+            targetWorldPos = handCameraTransform.TransformPoint(target);
+        }
+
+        //space relative to the root of the arm, joint 1
+        else if(whichSpace == "armBase")
+        {
+            targetWorldPos = arm.transform.TransformPoint(target);
+        }
         
         Vector3 originalPos = armTarget.position;
         Vector3 targetDirectionWorld = (targetWorldPos - originalPos).normalized;
@@ -356,15 +387,24 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
             var jointMeta = new JointMetadata();
             jointMeta.name = joint.name;
             jointMeta.position = joint.position;
-            jointMeta.localPosition = joint.localPosition;
+            //local position of joint is meaningless because it never changes relative to its parent joint, we use rootRelative instead
+            jointMeta.rootRelativePosition = FirstJoint.InverseTransformPoint(joint.position);
 
             float angleRot;
             Vector3 vectorRot;
+
+            //local rotation currently relative to immediate parent joint
             joint.localRotation.ToAngleAxis(out angleRot, out vectorRot);
             jointMeta.localRotation = new Vector4(vectorRot.x, vectorRot.y, vectorRot.z, angleRot);
 
+            //world relative rotation
             joint.rotation.ToAngleAxis(out angleRot, out vectorRot);
             jointMeta.rotation = new Vector4(vectorRot.x, vectorRot.y, vectorRot.z, angleRot);
+
+            //rotation relative to root joint/agent
+            //root forward and agent forward are always the same
+            Quaternion.Euler(FirstJoint.InverseTransformDirection(joint.eulerAngles)).ToAngleAxis(out angleRot, out vectorRot);
+            jointMeta.rootRelativeRotation = new Vector4(vectorRot.x, vectorRot.y, vectorRot.z, angleRot);
 
             joints.Add(jointMeta);
             joint = joint.Find("robot_arm_" + i + "_jnt");

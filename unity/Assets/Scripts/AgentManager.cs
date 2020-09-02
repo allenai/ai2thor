@@ -1193,8 +1193,9 @@ public class HandMetadata {
 public class JointMetadata {
     public string name;
 	public Vector3 position;
+	public Vector3 rootRelativePosition;
 	public Vector4 rotation;
-	public Vector3 localPosition;
+	public Vector4 rootRelativeRotation;
 	public Vector4 localRotation;
 }
 
@@ -1413,6 +1414,10 @@ public class ServerAction
     public float radius;
 
 	public bool stopArmMovementOnContact = false;
+
+	//used to determine which coordinate space is used in Mid Level Arm actions
+	//valid options are relative to: world, wrist, armBase
+	public string coordinateSpace = "armBase";
 
     public SimObjType ReceptableSimObjType()
 	{
