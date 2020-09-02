@@ -104,15 +104,20 @@ public class NavMeshSetup : MonoBehaviour
         [UnityEditor.MenuItem("NavMesh/Build NavMeshes for All Scenes")]
         public static void Build()
         {
-            // var testSceneNames = GetSceneNames(3, 5, "Val");
-            var trainSceneNames = GetSceneNames(12, 5, "Train");
+            // var testSceneNames = GetRoboSceneNames(3, 5, "Val");
+            // var trainSceneNames = GetRoboSceneNames(12, 5, "Train");
+
+            // GetSceneNames(1, 30) + GetSceneNames(201, 230) + GetSceneNames(301, 330) + GetSceneNames(401, 430) + GetSceneNames(501, 530)
 
             var selection = new List<string>();
-            // selection.AddRange(testSceneNames);
-            selection.AddRange(trainSceneNames);
-            
-            // selection.AddRange(trainSceneNames);
+            //selection.AddRange(testSceneNames);
+            selection.AddRange(GetSceneNames(1, 30));
+            selection.AddRange(GetSceneNames(201, 230));
+            selection.AddRange(GetSceneNames(301, 330));
+            selection.AddRange(GetSceneNames(401, 430));
+            selection.AddRange(GetSceneNames(501, 530));
 
+            //selection.Add("Assets/Scenes/FloorPlan227_physics.unity");
             
             // These scenes were mannually adjusted so the nav mesh variables should not be set automatically and should be build manually 
             var exclude = new List<string>() {
@@ -125,13 +130,24 @@ public class NavMeshSetup : MonoBehaviour
             selection.ToList().ForEach(sceneName => BuildNavmeshForScene(sceneName));
         }
 
-        private static  List<string> GetSceneNames(int lastIndex, int lastSubIndex, string nameTemplate, string pathPrefix="Assets/Scenes") {
+        private static  List<string> GetRoboSceneNames(int lastIndex, int lastSubIndex, string nameTemplate, string pathPrefix="Assets/Scenes") {
             var scenes = new List<string>();
             for (var i = 1; i <= lastIndex; i++) {
                 for (var j = 1; j <= lastSubIndex; j++) {
                     var scene = pathPrefix + "/FloorPlan_" + nameTemplate + i + "_" + j + ".unity";
                     scenes.Add(scene);
                 }
+            }
+            return scenes;
+        }
+
+        private static  List<string> GetSceneNames(int startIndex, int lastIndex, string nameTemplate="", string pathPrefix="Assets/Scenes") {
+            var scenes = new List<string>();
+            for (var i = startIndex; i <= lastIndex; i++) {
+                
+                    var scene = pathPrefix + "/FloorPlan" + nameTemplate + i + "_physics.unity";
+                    scenes.Add(scene);
+            
             }
             return scenes;
         }
@@ -148,6 +164,13 @@ public class NavMeshSetup : MonoBehaviour
             EditorSceneManager.OpenScene(sceneName);
             SetNavMeshNotWalkable(GameObject.Find("Objects"));
             SetNavMeshNotWalkable(GameObject.Find("Structure"));
+            SetNavMeshWalkable(GameObject.Find("Objects").transform.FirstChildOrDefault(x => x.name.Contains("Floor")).gameObject);
+
+            // var floorStruct = GameObject.Find("Structure").transform.FirstChildOrDefault(x => x.name.Contains("Decals"));
+            // if (floorStruct != null) {
+            //     SetNavMeshWalkable(floorStruct.gameObject);
+            // }
+           
             var agentController = FindObjectOfType<PhysicsRemoteFPSAgentController>();
             //var capsuleCollider = agentController.GetComponent<CapsuleCollider>();
             var navmeshAgent = agentController.GetComponent<NavMeshAgent>();
@@ -156,8 +179,8 @@ public class NavMeshSetup : MonoBehaviour
             //var buildSettings = 
             new NavMeshBuildSettings() {
                 agentTypeID = navmeshAgent.agentTypeID,
-                agentRadius = navmeshAgent.radius,
-                agentHeight = navmeshAgent.height,
+                agentRadius = 0.2f,
+                agentHeight = 1.8f,
                 agentSlope = 10,
                 agentClimb = 0.5f,
                 minRegionArea = 0.05f,
@@ -185,5 +208,15 @@ public class NavMeshSetup : MonoBehaviour
                  Debug.Log("Setting flag for " + child.gameObject.name + " layer " +  NavMesh.GetAreaFromName("Not Walkable"));
              }
         }
+
+        private static void SetNavMeshWalkable(GameObject hirerarchy) {
+            
+            //  var objectHierarchy = hirerarchy.transform.FirstChildOrDefault(x => x.name.Contains("Floor"));
+              hirerarchy.GetComponentsInChildren<MeshRenderer>().ToList().ForEach( meshRenderer => {
+                     Debug.Log("Mesh Renderer " + meshRenderer.gameObject.name + " layer ");
+                     UnityEditor.GameObjectUtility.SetStaticEditorFlags(meshRenderer.gameObject,  UnityEditor.StaticEditorFlags.NavigationStatic);
+                     UnityEditor.GameObjectUtility.SetNavMeshArea(meshRenderer.gameObject, NavMesh.GetAreaFromName("Walkable"));
+                 });
+             }
     #endif
 }
