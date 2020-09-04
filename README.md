@@ -6,7 +6,23 @@ Original documentation:  https://github.com/allenai/ai2thor
 
 ### Editor
 
-The AI2-THOR documetation wants us to use Unity Editor version `2018.3.6` but that version was not available for the Linux Unity Editor.  However, version [`2018.3.0f2`](https://forum.unity.com/threads/unity-on-linux-release-notes-and-known-issues.350256/page-2#post-4009651) does work fine.  Do NOT use any version that starts with `2019` because its build files are not compatible with AI2-THOR.
+The AI2-THOR v2.2.0 documetation instructs us to use Unity Editor version `2018.3.6` but that version was not available for the Linux Unity Editor.  However, version [`2018.3.0f2`](https://forum.unity.com/threads/unity-on-linux-release-notes-and-known-issues.350256/page-2#post-4009651) does work fine.  Do NOT use any version that starts with `2019` because its build files are not compatible with AI2-THOR.  Note that the Unity Hub download from Unity's Downloads page may not actually work on Linux (see the [Linux Installation Instructions](#linux-installation-instructions) below).
+
+#### Linux Installation Instructions
+
+Note that while installing and/or launching Unity, you may get an error about `libgconf-2.so.4`.  You should be able to solve this issue by `sudo apt install`-ing the library.
+
+1. Download the `2018.3.0f2` "Official Installer" from the Unity Linux Editor forums [here](https://forum.unity.com/threads/unity-on-linux-release-notes-and-known-issues.350256/page-2#post-4009651).  The download is called `UnitySetup-2018.3.0f2`.
+
+2. Run the `UnitySetup-2018.3.0f2` executable (you may need to `chmod` it).  This should install a `Unity-2018.3.0f2` folder.
+
+3. In `Unity-2018.3.0f2/Editor/` run the `Unity` executable to start the Unity Hub.
+
+4. Enter your MCS Unity License info into the Unity Hub.
+
+5. In the Unity Hub, under the Projects tab, click Open and select the `/unity/` folder in your local clone of this repository.  This should add a "unity" project to your Projects list.
+
+6. Double-click the "unity" project to launch the Unity Editor.  See [Run](#run) below for usage information.  Please note that the initial load of this project in the Unity Editor will take a long time.
 
 ### Assets
 
@@ -16,21 +32,26 @@ Checkout the [MCS private GitHub repository](https://github.com/NextCenturyCorpo
 
 If you want to run an MCS Scene in the Unity Editor:
 
-- Open the MCS Scene: `File->Open Scene` then select `Assets/Scenes/MCS.unity`
-- By default, in the Unity Editor, see the Hierarchy window on the left, the Scene and Game windows in the middle, the Inspector window on the right, and the Project and Console windows at the bottom.
+1. Open the MCS Scene: `File->Open Scene` then select `Assets/Scenes/MCS.unity`
+
+2. By default, in the Unity Editor, see the Hierarchy window on the left, the Scene and Game windows in the middle, the Inspector window on the right, and the Project and Console windows at the bottom.
   - The Hierarchy window lists the Game Objects in the Scene.
   - The Scene and Game windows show the Scene.
   - The Inspector window lists the properties, scripts, materials, and other components of the selected Game Object.
   - The Project window shows the files in the current project.
   - The Console window shows the logs and errors.
-- To successfully run an MCS Scene, copy a JSON scene configuration file from the [scenes folder in our MCS GitHub repository](https://github.com/NextCenturyCorporation/MCS/tree/master/python_api/scenes) into the [`unity/Assets/Resources/MCS/Scenes/`](./unity/Assets/Resources/MCS/Scenes/) folder, or identify a JSON file in the folder to use (like `playroom.json`).
-- Click on the `MCS` Game Object in the Hierarchy window. Then, in the Inspector Window, under the `MCS Main (Script)` component, enter the name of your selected JSON file in the `"Default Scene File"` property WITHOUT the `.json` extension.
-- If you want to see the class/depth/object masks, click on the `FPSController->FirstPersonCharacter` Game Object in the Hierarchy window, then toggle-on the checkbox next to the `Image Synthesis (Script)` component in the Inspector window to activate that script. You can see the masks during a run using the Display dropdown in the Game window.
-- Click the Play button in the top center of the Unity Editor to run the Scene. Use WASD to move, arrow buttons (or R) to rotate or look, and escape to pass. To set action parameters, click the `FPSController` Game Object in the Hierarchy window, then use the inputs under `Debug Discrete Agent Controller (Script)`. See [`unity/Assets/Scripts/DebugDiscreteAgentController.cs`](./unity/Assets/Scripts/DebugDiscreteAgentController.cs) for additional key bindings.
+
+3. To successfully run an MCS Scene, copy a JSON scene configuration file from the [scenes folder in our MCS GitHub repository](https://github.com/NextCenturyCorporation/MCS/tree/master/python_api/scenes) into the [`unity/Assets/Resources/MCS/Scenes/`](./unity/Assets/Resources/MCS/Scenes/) folder, or identify a JSON file in the folder to use (like `playroom.json`).
+
+4. Click on the `MCS` Game Object in the Hierarchy window. Then, in the Inspector Window, under the `MCS Main (Script)` component, enter the name of your selected JSON file in the `"Default Scene File"` property WITHOUT the `.json` extension.
+
+5. If you want to see the class/depth/object masks, click on the `FPSController->FirstPersonCharacter` Game Object in the Hierarchy window, then toggle-on the checkbox next to the `Image Synthesis (Script)` component in the Inspector window to activate that script. You can see the masks during a run using the Display dropdown in the Game window.
+
+6. Click the Play button in the top center of the Unity Editor to run the Scene. Use WASD to move, arrow buttons (or R) to rotate or look, and escape to pass. To set action parameters, click the `FPSController` Game Object in the Hierarchy window, then use the inputs under `Debug Discrete Agent Controller (Script)`. See [`unity/Assets/Scripts/DebugDiscreteAgentController.cs`](./unity/Assets/Scripts/DebugDiscreteAgentController.cs) for additional key bindings.
 
 ## Build
 
-Open the Unity Editor and build the project.
+Open the Unity Editor and build the project with `File->Build Settings`.  Check `Development Mode` and `Script Debugging` for detailed debug logging (but do NOT check these for any public release builds!).
 
 Alternatively, if you want to build the Unity project via the command line, run the command below, replacing the path to your Unity executable file, log file name, `<cloned_repository>`, and the `executeMethod` as needed.  Please note that this command will build ALL the AI2-THOR scenes which will take a very long time (my only solution was to delete all the AI2-THOR scenes with `rm <cloned_repository>/unity/Assets/Scenes/FloorPlan*`).
 
