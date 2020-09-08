@@ -743,10 +743,20 @@ def pytest_s3_object(commit_id):
 
 @task
 def ci_pytest(context):
+    commit_id = git_commit_id()
+
+    s3_obj = pytest_s3_object(commit_id)
+    s3_pytest_url = 'http://s3-us-west-2.amazonaws.com/%s/%s' % (s3_obj.bucket_name, s3_obj.key)
+    print("pytest url %s" % s3_pytest_url)
+    res = requests.get(s3_pytest_url)
+
+    if res.status_code == 200 and res.json()['success']:
+        # if we already have a successful pytest, skip running
+        return
+
 
     proc = subprocess.run("pytest", shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
-    commit_id = git_commit_id()
 
     result = dict(
         success=proc.returncode == 0,
@@ -754,7 +764,6 @@ def ci_pytest(context):
         stderr=proc.stderr.decode('ascii')
     )
 
-    s3_obj = pytest_s3_object(commit_id)
 
     s3_obj.put(
         Body=json.dumps(result), ACL="public-read", ContentType='application/json'
@@ -792,6 +801,7 @@ def ci_build(context):
             # don't run tests for a tag since results should exist
             # for the branch commit
             if build['tag'] is None:
+
                 ci_pytest(context)
 
             if build["branch"] == "master":
