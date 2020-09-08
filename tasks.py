@@ -2,6 +2,7 @@ import os
 import sys
 import datetime
 import json
+import time
 import zipfile
 import threading
 import hashlib
@@ -714,12 +715,27 @@ def link_build_cache(branch):
     os.makedirs(branch_cache_dir, exist_ok=True)
     os.symlink(branch_cache_dir, library_path)
 
+def travis_build(build_id):
+    import requests
+    res = requests.get(
+        "https://api.travis-ci.org/build/%s" % build_id,
+        headers={
+            "Accept": "application/json",
+            "Content-Type": "application/json",
+            "Travis-API-Version": "3",
+        },
+    )
+
+    res.raise_for_status()
+
+
+    return res.json()
 
 def pending_travis_build():
     import requests
 
     res = requests.get(
-        "https://api.travis-ci.org/repo/16690831/builds?repository_id=16690831&include=build.commit%2Cbuild.branch%2Cbuild.request%2Cbuild.created_by%2Cbuild.repository&build.state=started&sort_by=started_at:desc",
+        "https://api.travis-ci.org/repo/16690831/builds?repository_id=16690831&include=build.id%2Cbuild.commit%2Cbuild.branch%2Cbuild.request%2Cbuild.created_by%2Cbuild.repository&build.state=started&sort_by=started_at:desc",
         headers={
             "Accept": "application/json",
             "Content-Type": "application/json",
@@ -732,7 +748,7 @@ def pending_travis_build():
         if b['tag']:
             tag = b['tag']['name']
 
-        return dict(branch=b["branch"]["name"], commit_id=b["commit"]["sha"], tag=tag)
+        return {'branch':b["branch"]["name"], 'commit_id':b["commit"]["sha"], 'tag':tag, 'id': b['id']}
 
 
 def pytest_s3_object(commit_id):
@@ -804,6 +820,15 @@ def ci_build(context):
 
                 ci_pytest(context)
 
+            # give the travis poller time to see the result
+            for i in range(6):
+                b = travis_build(build['id'])
+                print("build state for %s: %s" % (build['id'], b['state']))
+
+                if b['state'] != 'started': 
+                    break
+                time.sleep(10)
+
             if build["branch"] == "master":
                 webgl_build_deploy_demo(
                     context, verbose=True, content_addressable=True, force=True
@@ -866,7 +891,6 @@ def ci_build_arch(arch, include_private_scenes=False):
 @task
 def poll_ci_build(context):
     from ai2thor.build import platform_map
-    import time
     import requests.exceptions
     import requests
 
@@ -1490,7 +1514,6 @@ def benchmark(
 ):
     import ai2thor.controller
     import random
-    import time
     import json
 
     move_actions = ["MoveAhead", "MoveBack", "MoveLeft", "MoveRight"]
@@ -1869,7 +1892,6 @@ def webgl_site_deploy(context, template_name, output_dir, bucket, unity_build_di
     webgl_deploy(context, bucket=bucket, prefix=None, source_dir=output_dir,  target_dir=s3_target_dir, verbose=verbose, force=force, extensions_no_cache='.css')
 @task
 def mock_client_request(context):
-    import time
     import msgpack
     import numpy as np
     import requests
