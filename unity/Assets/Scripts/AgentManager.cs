@@ -41,7 +41,6 @@ public class AgentManager : MonoBehaviour
 	private Color[] agentColors = new Color[]{Color.blue, Color.yellow, Color.green, Color.red, Color.magenta, Color.grey};
 	public int actionDuration = 3;
 	private BaseFPSAgentController primaryAgent;
-    //private JavaScriptInterface jsInterface;
     private PhysicsSceneManager physicsSceneManager;
     public int AdvancePhysicsStepCount = 0;
     private bool droneMode = false;
@@ -752,7 +751,7 @@ public class AgentManager : MonoBehaviour
 
 
 		#if UNITY_WEBGL
-            jsInterface = this.primaryAgent.GetComponent<JavaScriptInterface>();
+            JavaScriptInterface jsInterface = this.primaryAgent.GetComponent<JavaScriptInterface>();
             if (jsInterface != null) {
                 jsInterface.SendActionMetadata(serializeMetadataJson(multiMeta));
             }
