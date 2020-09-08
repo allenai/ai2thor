@@ -759,6 +759,7 @@ def pytest_s3_object(commit_id):
 
 @task
 def ci_pytest(context):
+    import requests
     commit_id = git_commit_id()
 
     s3_obj = pytest_s3_object(commit_id)
