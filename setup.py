@@ -2,11 +2,12 @@ from setuptools import setup, find_packages, Extension
 from Cython.Build import cythonize
 import os
 
-VERSION = '0.0.1'
+__version__ = '0.0.1'
 
 if os.path.isfile('ai2thor/_version.py'):
     exec(open('ai2thor/_version.py').read())
 
+VERSION = __version__
 
 setup(name='ai2thor',
       version=VERSION,

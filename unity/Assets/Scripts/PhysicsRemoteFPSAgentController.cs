@@ -2766,6 +2766,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             if (ItemInHand == null) {
                 errorMessage = "Can't rotate hand unless holding object";
+                actionFinished(false);
                 return;
             }
 
@@ -3366,7 +3367,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         //same as PlaceObjectAtPoint(ServerAction action) but without a server action
-        public bool PlaceObjectAtPoint(SimObjPhysics t, Vector3 position)
+        public bool placeObjectAtPoint(SimObjPhysics t, Vector3 position)
         {
             SimObjPhysics target = null;
             //find the object in the scene, disregard visibility
@@ -3484,7 +3485,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         //same as GetSpawnCoordinatesAboveReceptacle(Server Action) but takes a sim obj phys instead
         //returns a list of vector3 coordinates above a receptacle. These coordinates will make up a grid above the receptacle
-        public List<Vector3> GetSpawnCoordinatesAboveReceptacle(SimObjPhysics t)
+        public List<Vector3> getSpawnCoordinatesAboveReceptacle(SimObjPhysics t)
         {
             SimObjPhysics target = t;
             //ok now get spawn points from target
@@ -4303,6 +4304,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         //used for all actions that need a sim object target
         //instead of objectId, use screen coordinates to raycast toward potential targets
+        //will set the target object by reference if raycast is succesful
         public bool ScreenToWorldTarget(float x, float y, ref SimObjPhysics target, bool requireWithinViewportRange)
         {
             //float x = action.x;
@@ -4349,6 +4351,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 }
             }
 
+            //force update objects to be visible/interactable correctly
+            VisibleSimObjs(false);
             return true;
         }
 
@@ -5316,6 +5320,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 //target not found in currently visible objects, report not found
                 errorMessage = "object not found: " + action.objectId;
                 actionFinished(false);
+                return;
             }
             
             ToggleObject(target, toggleOn, forceAction);
@@ -9013,5 +9018,30 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
             actionFinished(true);
         }
+
+        #if UNITY_EDITOR
+        void OnDrawGizmos()
+        {
+            ////check for valid spawn points in GetSpawnCoordinatesAboveObject action
+            //  Gizmos.color = Color.magenta;
+            //     if(validpointlist.Count > 0)
+            //     {
+            //         foreach(Vector3 yes in validpointlist)
+            //         {
+            //             Gizmos.DrawCube(yes, new Vector3(0.01f, 0.01f, 0.01f));
+            //         }
+            //     }
+
+            //draw axis aligned bounds of objects after actionFinished() calls
+            // if(gizmobounds != null)
+            // {
+            //     Gizmos.color = Color.yellow;
+            //     foreach(Bounds g in gizmobounds)
+            //     {
+            //         Gizmos.DrawWireCube(g.center, g.size);
+            //     }
+            // }
+        }
+        #endif
     }
 }
