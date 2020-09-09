@@ -183,24 +183,63 @@ SBFirst = {
 
 
 
-cdef class X11(object):
+cdef class X11:
     cdef Display *display
     cdef XShmSegmentInfo shminfo
     cdef XImage *image
     cdef bint freed
 
-    # XXX merge with create_ximage
-    def get_np_image(self, width, height):
-        cdef char[:] mview = <char[:(height * width * 4)]>self.image.data
-        return np.frombuffer(mview, dtype=np.uint8).reshape(height, width, 4)
 
-    def get_xshm_image(self, long window_id, width, height):
+    def __cinit__(self):
+        self.shminfo.shmaddr = <char *> -1
+        self.display = XOpenDisplay(NULL)
+        if self.display == NULL:
+            self.free()
+            raise Exception("XOpenDisplay error -  display could not be opened")
+
+    def initialize(self, int width, int height):
+        cdef size_t size
+        cdef int depth = 32
+
+        # in case we are reinitializing
+        self.free_shm()
+
+        self.image = XShmCreateImage(self.display, DefaultVisual(self.display, 0), depth,
+                          ZPixmap, NULL, &self.shminfo,
+                          width, height)
+
+        if self.image == NULL:
+            self.free()
+            raise Exception("Failed to create XImage")
+
+        size = self.image.bytes_per_line * (self.image.height)
+        self.shminfo.shmid = shmget(IPC_PRIVATE, size, IPC_CREAT | 0777)
+        self.image.data = <char *>shmat(self.shminfo.shmid, NULL, 0)
+        self.shminfo.shmaddr = self.image.data
+        if self.shminfo.shmaddr == <char *> -1:
+            self.free()
+            raise Exception("failed to allocate shared memory ")
+        # set as read/write, and attach to the display:
+        self.shminfo.readOnly = False
+        a = XShmAttach(self.display, &self.shminfo)
+        XSync(self.display, False );
+        if not a:
+            self.free()
+            raise Exception("Failed to attach to shared memory")
+
+    def get_xshm_image(self, long window_id):
+        cdef int width = self.image.width
+        cdef int height = self.image.height
+
         if not XShmGetImage(self.display, window_id, self.image, 0, 0, AllPlanes):
             raise Exception("XShmGetImage failed for window_id %s" % window_id)
 
         cdef char[:] mview = <char[:(height * width * 4)]>self.image.data
 
-        return np.frombuffer(mview, dtype=np.uint8).reshape(height, width, 4)[:,:,:3]
+        # The data field comes in as format (4 bytes) BGRN, so this
+        # slicing reverses the order and removes the null field so 
+        # that our output matches that of Unity (RGB)
+        return np.frombuffer(mview, dtype=np.uint8).reshape(height, width, 4)[...,2::-1]
     
     def move_window(self, int window_id, int x, int y):
         res = XMoveWindow(self.display, window_id, x, y)
@@ -211,9 +250,9 @@ cdef class X11(object):
         cdef Window window = XDefaultRootWindow(self.display)
         return self.get_geometry(window)
 
-    def has_composite(self):
-        cdef int major, minor 
-        return XCompositeQueryExtension(self.display, &major, &minor) == 1
+    #def has_composite(self):
+    #    cdef int major, minor 
+    #    return XCompositeQueryExtension(self.display, &major, &minor) == 1
 
     def get_geometry(self, window_id):
         cdef Window root
@@ -263,47 +302,13 @@ cdef class X11(object):
         return pychildren
 
 
-    def setup(self, width, height):
-        self.display = XOpenDisplay(NULL)
-        cdef size_t size
-        self.freed = False
-        self.shminfo.shmaddr = <char *> -1
-        depth = 24
-        self.image = XShmCreateImage(self.display, DefaultVisual(self.display, 0), depth,
-                          ZPixmap, NULL, &self.shminfo,
-                          width, height)
-        if self.image==NULL:
-            self.cleanup()
-            raise Exception("Failed to create XImage")
-
-        size = self.image.bytes_per_line * (self.image.height)
-        print("size %s" % size)
-        self.shminfo.shmid = shmget(IPC_PRIVATE, size, IPC_CREAT | 0777)
-        print("shmid")
-        print(self.shminfo.shmid)
-        self.image.data = <char *>shmat(self.shminfo.shmid, NULL, 0)
-        self.shminfo.shmaddr = self.image.data
-        if self.shminfo.shmaddr == <char *> -1:
-            self.cleanup()
-            raise Exception("failed to allocate shared memory ")
-        # set as read/write, and attach to the display:
-        self.shminfo.readOnly = False
-        a = XShmAttach(self.display, &self.shminfo)
-        XSync(self.display, False );
-        if not a:
-            self.cleanup()
-            raise Exception("Failed to attach to shared memory")
-
     def __dealloc__(self):
         self.cleanup()
 
     def cleanup(self):
         self.free()
 
-    cdef free(self):
-        if self.freed:
-            print("already freed")
-            return
+    cdef free_shm(self):
         has_shm = self.shminfo.shmaddr!=<char *> -1
         print("has shm")
         print(has_shm)
@@ -320,5 +325,10 @@ cdef class X11(object):
             shmdt(self.shminfo.shmaddr)
             self.shminfo.shmaddr = <char *> -1
             self.shminfo.shmid = -1
-        XCloseDisplay(self.display)
-        self.freed = True
+
+    cdef free(self):
+        self.free_shm()
+        if self.display != NULL:
+            print("closing display ***")
+            XCloseDisplay(self.display)
+            self.display = NULL
