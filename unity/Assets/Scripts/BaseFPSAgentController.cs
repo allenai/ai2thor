@@ -457,6 +457,16 @@ namespace UnityStandardAssets.Characters.FirstPerson
 				this.maxVisibleDistance = action.visibilityDistance;
 			}
 
+            var navmeshAgent = this.GetComponent<UnityEngine.AI.NavMeshAgent>();
+            var collider = this.GetComponent<CapsuleCollider>();
+
+            if (collider != null && navmeshAgent != null) {
+                navmeshAgent.radius = collider.radius;
+                navmeshAgent.height = collider.height;
+            }
+        
+            //navmeshAgent.radius = 
+
             if (action.gridSize <= 0 || action.gridSize > 5)
             {
                 errorMessage = "grid size must be in the range (0,5]";
@@ -1208,46 +1218,22 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
             BoxCollider col = sop.BoundingBox.GetComponent<BoxCollider>();
             
-            Vector3 p0 = col.transform.TransformPoint(col.center + new Vector3(col.size.x, -col.size.y, col.size.z) * 0.5f);
-            Vector3 p1 = col.transform.TransformPoint(col.center + new Vector3(-col.size.x, -col.size.y, col.size.z) * 0.5f);
-            Vector3 p2 = col.transform.TransformPoint(col.center + new Vector3(-col.size.x, -col.size.y, -col.size.z) * 0.5f);
-            Vector3 p3 = col.transform.TransformPoint(col.center + new Vector3(col.size.x, -col.size.y, -col.size.z) * 0.5f);
-            Vector3 p4 = col.transform.TransformPoint(col.center + new Vector3(col.size.x, col.size.y, col.size.z) * 0.5f);
-            Vector3 p5 = col.transform.TransformPoint(col.center + new Vector3(-col.size.x, col.size.y, col.size.z) * 0.5f);
-            Vector3 p6 = col.transform.TransformPoint(col.center + new Vector3(-col.size.x, +col.size.y, -col.size.z) * 0.5f);
-            Vector3 p7 = col.transform.TransformPoint(col.center + new Vector3(col.size.x, col.size.y, -col.size.z) * 0.5f);
+            List<Vector3> points = new List<Vector3>();
+            points.Add(col.transform.TransformPoint(col.center + new Vector3(col.size.x, -col.size.y, col.size.z) * 0.5f));
+            points.Add(col.transform.TransformPoint(col.center + new Vector3(-col.size.x, -col.size.y, col.size.z) * 0.5f));
+            points.Add(col.transform.TransformPoint(col.center + new Vector3(-col.size.x, -col.size.y, -col.size.z) * 0.5f));
+            points.Add(col.transform.TransformPoint(col.center + new Vector3(col.size.x, -col.size.y, -col.size.z) * 0.5f));
+            points.Add(col.transform.TransformPoint(col.center + new Vector3(col.size.x, col.size.y, col.size.z) * 0.5f));
+            points.Add(col.transform.TransformPoint(col.center + new Vector3(-col.size.x, col.size.y, col.size.z) * 0.5f));
+            points.Add(col.transform.TransformPoint(col.center + new Vector3(-col.size.x, +col.size.y, -col.size.z) * 0.5f));
+            points.Add(col.transform.TransformPoint(col.center + new Vector3(col.size.x, col.size.y, -col.size.z) * 0.5f));
 
-            b.cornerPoints[0,0] = p0.x;
-            b.cornerPoints[0,1] = p0.y;
-            b.cornerPoints[0,2] = p0.z;
+            List<float[]> cornerPoints = new List<float[]>();
+            foreach(Vector3 p in points) {
+                cornerPoints.Add(new float[]{p.x, p.y, p.z});
+            }
 
-            b.cornerPoints[1,0] = p1.x;
-            b.cornerPoints[1,1] = p1.y;
-            b.cornerPoints[1,2] = p1.z;
-
-            b.cornerPoints[2,0] = p2.x;
-            b.cornerPoints[2,1] = p2.y;
-            b.cornerPoints[2,2] = p2.z;
-
-            b.cornerPoints[3,0] = p3.x;
-            b.cornerPoints[3,1] = p3.y;
-            b.cornerPoints[3,2] = p3.z;
-
-            b.cornerPoints[4,0] = p4.x;
-            b.cornerPoints[4,1] = p4.y;
-            b.cornerPoints[4,2] = p4.z;
-
-            b.cornerPoints[5,0] = p5.x;
-            b.cornerPoints[5,1] = p5.y;
-            b.cornerPoints[5,2] = p5.z;
-
-            b.cornerPoints[6,0] = p6.x;
-            b.cornerPoints[6,1] = p6.y;
-            b.cornerPoints[6,2] = p6.z;
-
-            b.cornerPoints[7,0] = p7.x;
-            b.cornerPoints[7,1] = p7.y;
-            b.cornerPoints[7,2] = p7.z;
+            b.cornerPoints = cornerPoints.ToArray();
 
             return b;
         }
@@ -1255,38 +1241,27 @@ namespace UnityStandardAssets.Characters.FirstPerson
         public SceneBounds GenerateSceneBounds(Bounds bounding)
         {
             SceneBounds b = new SceneBounds();
-
-            b.cornerPoints[0,0] = bounding.center.x + bounding.size.x/2f;
-            b.cornerPoints[0,1] = bounding.center.y + bounding.size.y/2f;
-            b.cornerPoints[0,2] = bounding.center.z + bounding.size.z/2f;
-
-            b.cornerPoints[1,0] = bounding.center.x + bounding.size.x/2f;
-            b.cornerPoints[1,1] = bounding.center.y + bounding.size.y/2f;
-            b.cornerPoints[1,2] = bounding.center.z - bounding.size.z/2f;
-            
-            b.cornerPoints[2,0] = bounding.center.x + bounding.size.x/2f;
-            b.cornerPoints[2,1] = bounding.center.y - bounding.size.y/2f;
-            b.cornerPoints[2,2] = bounding.center.z + bounding.size.z/2f;
-
-            b.cornerPoints[3,0] = bounding.center.x + bounding.size.x/2f;
-            b.cornerPoints[3,1] = bounding.center.y - bounding.size.y/2f;
-            b.cornerPoints[3,2] = bounding.center.z - bounding.size.z/2f;
-
-            b.cornerPoints[4,0] = bounding.center.x - bounding.size.x/2f;
-            b.cornerPoints[4,1] = bounding.center.y + bounding.size.y/2f;
-            b.cornerPoints[4,2] = bounding.center.z + bounding.size.z/2f;
-    
-            b.cornerPoints[5,0] = bounding.center.x - bounding.size.x/2f;
-            b.cornerPoints[5,1] = bounding.center.y + bounding.size.y/2f;
-            b.cornerPoints[5,2] = bounding.center.z - bounding.size.z/2f;
-
-            b.cornerPoints[6,0] = bounding.center.x - bounding.size.x/2f;
-            b.cornerPoints[6,1] = bounding.center.y - bounding.size.y/2f;
-            b.cornerPoints[6,2] = bounding.center.z + bounding.size.z/2f;
-
-            b.cornerPoints[7,0] = bounding.center.x - bounding.size.x/2f;
-            b.cornerPoints[7,1] = bounding.center.y - bounding.size.y/2f;
-            b.cornerPoints[7,2] = bounding.center.z - bounding.size.z/2f;
+            List<float[]> cornerPoints = new List<float[]>();
+            float[] xs = new float[]{
+                bounding.center.x + bounding.size.x/2f,
+                bounding.center.x - bounding.size.x/2f
+            };
+            float[] ys = new float[]{
+                bounding.center.y + bounding.size.y/2f,
+                bounding.center.y - bounding.size.y/2f
+            };
+            float[] zs = new float[]{
+                bounding.center.z + bounding.size.z/2f,
+                bounding.center.z - bounding.size.z/2f
+            };
+            foreach(float x in xs) {
+                foreach (float y in ys) {
+                    foreach (float z in zs) {
+                        cornerPoints.Add(new float[]{x, y, z});
+                    }
+                }
+            }
+            b.cornerPoints = cornerPoints.ToArray();
 
             b.center = bounding.center;
             b.size = bounding.size;
@@ -1338,37 +1313,27 @@ namespace UnityStandardAssets.Characters.FirstPerson
             #endif
 
             //ok now we have a bounds that encapsulates all the colliders of the object, including trigger colliders
-            b.cornerPoints[0,0] = bounding.center.x + bounding.size.x/2f;
-            b.cornerPoints[0,1] = bounding.center.y + bounding.size.y/2f;
-            b.cornerPoints[0,2] = bounding.center.z + bounding.size.z/2f;
-
-            b.cornerPoints[1,0] = bounding.center.x + bounding.size.x/2f;
-            b.cornerPoints[1,1] = bounding.center.y + bounding.size.y/2f;
-            b.cornerPoints[1,2] = bounding.center.z - bounding.size.z/2f;
-            
-            b.cornerPoints[2,0] = bounding.center.x + bounding.size.x/2f;
-            b.cornerPoints[2,1] = bounding.center.y - bounding.size.y/2f;
-            b.cornerPoints[2,2] = bounding.center.z + bounding.size.z/2f;
-
-            b.cornerPoints[3,0] = bounding.center.x + bounding.size.x/2f;
-            b.cornerPoints[3,1] = bounding.center.y - bounding.size.y/2f;
-            b.cornerPoints[3,2] = bounding.center.z - bounding.size.z/2f;
-
-            b.cornerPoints[4,0] = bounding.center.x - bounding.size.x/2f;
-            b.cornerPoints[4,1] = bounding.center.y + bounding.size.y/2f;
-            b.cornerPoints[4,2] = bounding.center.z + bounding.size.z/2f;
-    
-            b.cornerPoints[5,0] = bounding.center.x - bounding.size.x/2f;
-            b.cornerPoints[5,1] = bounding.center.y + bounding.size.y/2f;
-            b.cornerPoints[5,2] = bounding.center.z - bounding.size.z/2f;
-
-            b.cornerPoints[6,0] = bounding.center.x - bounding.size.x/2f;
-            b.cornerPoints[6,1] = bounding.center.y - bounding.size.y/2f;
-            b.cornerPoints[6,2] = bounding.center.z + bounding.size.z/2f;
-
-            b.cornerPoints[7,0] = bounding.center.x - bounding.size.x/2f;
-            b.cornerPoints[7,1] = bounding.center.y - bounding.size.y/2f;
-            b.cornerPoints[7,2] = bounding.center.z - bounding.size.z/2f;
+            List<float[]> cornerPoints = new List<float[]>();
+            float[] xs = new float[]{
+                bounding.center.x + bounding.size.x/2f,
+                bounding.center.x - bounding.size.x/2f
+            };
+            float[] ys = new float[]{
+                bounding.center.y + bounding.size.y/2f,
+                bounding.center.y - bounding.size.y/2f
+            };
+            float[] zs = new float[]{
+                bounding.center.z + bounding.size.z/2f,
+                bounding.center.z - bounding.size.z/2f
+            };
+            foreach(float x in xs) {
+                foreach (float y in ys) {
+                    foreach (float z in zs) {
+                        cornerPoints.Add(new float[]{x, y, z});
+                    }
+                }
+            }
+            b.cornerPoints = cornerPoints.ToArray();
 
             b.center = bounding.center;//also return the center of this bounding box in world coordinates
             b.size = bounding.size;//also return the size in the x, y, z axes of the bounding box in world coordinates
@@ -2906,7 +2871,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             this.GetComponent<UnityEngine.AI.NavMeshAgent>().enabled = true;
             bool pathSuccess = UnityEngine.AI.NavMesh.CalculatePath(startPosition, targetPosition,  UnityEngine.AI.NavMesh.AllAreas, path);
             if (path.status == UnityEngine.AI.NavMeshPathStatus.PathComplete) {
-                //VisualizePath(startPosition, path);
+                VisualizePath(startPosition, path);
                 this.GetComponent<UnityEngine.AI.NavMeshAgent>().enabled = false;
                 actionFinished(true, path);
                 return;

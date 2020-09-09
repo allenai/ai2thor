@@ -22,7 +22,6 @@ import signal
 import subprocess
 import shutil
 import re
-import threading
 import os
 import platform
 import uuid
@@ -30,20 +29,16 @@ import tty
 import sys
 import termios
 import fcntl
-try:
-    from queue import Queue
-except ImportError:
-    from Queue import Queue
 
 import zipfile
 
 import numpy as np
-
 import ai2thor.docker
 import ai2thor.downloader
-import ai2thor.server
+import ai2thor.wsgi_server
+import ai2thor.fifo_server
 from ai2thor.interact import InteractiveControllerPrompt, DefaultActions
-from ai2thor.server import queue_get, DepthFormat
+from ai2thor.server import DepthFormat
 from ai2thor.build import COMMIT_ID
 from ai2thor._quality_settings import QUALITY_SETTINGS, DEFAULT_QUALITY
 
@@ -389,20 +384,17 @@ class Controller(object):
             add_depth_noise=False,
             download_only=False,
             include_private_scenes=False,
+            server_class=ai2thor.wsgi_server.WsgiServer,
             **unity_initialization_parameters
     ):
-        self.request_queue = Queue(maxsize=1)
-        self.response_queue = Queue(maxsize=1)
         self.receptacle_nearest_pivot_points = {}
         self.server = None
-        self.unity_proc = None
         self.unity_pid = None
         self.docker_enabled = docker_enabled
         self.container_id = None
         self.local_executable_path = local_executable_path
         self.last_event = None
         self._scenes_in_build = None
-        self.server_thread = None
         self.killing_unity = False
         self.quality = quality
         self.lock_file = None
@@ -411,6 +403,7 @@ class Controller(object):
         self.depth_format = depth_format
         self.add_depth_noise = add_depth_noise
         self.include_private_scenes = include_private_scenes
+        self.server_class = server_class
 
 
         self.interactive_controller = InteractiveControllerPrompt(
@@ -423,6 +416,7 @@ class Controller(object):
         if download_only:
             self.download_binary()
         else:
+
             self.start(
                 port=port,
                 start_unity=start_unity,
@@ -461,6 +455,29 @@ class Controller(object):
                     event.metadata['errorMessage'])
                 )
 
+    def _build_server(self, host, port, width, height):
+
+        if self.server is not None:
+            return
+
+        if self.server_class == ai2thor.wsgi_server.WsgiServer:
+            self.server = ai2thor.wsgi_server.WsgiServer(
+                host,
+                port=port,
+                depth_format=self.depth_format,
+                add_depth_noise=self.add_depth_noise,
+                width=width,
+                height=height
+            )
+        elif self.server_class == ai2thor.fifo_server.FifoServer:
+            self.server = ai2thor.fifo_server.FifoServer(
+                depth_format=self.depth_format,
+                add_depth_noise=self.add_depth_noise,
+                width=width,
+                height=height)
+        else:
+            raise ValueError("Invalid server class: %s" % self.server_class)
+
     def __enter__(self):
         return self
 
@@ -495,8 +512,9 @@ class Controller(object):
                 )
             )
 
-        self.response_queue.put_nowait(dict(action='Reset', sceneName=scene, sequenceId=0))
-        self.last_event = queue_get(self.request_queue, self.unity_proc)  # can this be deleted?
+        self.server.send(dict(action='Reset', sceneName=scene, sequenceId=0))
+        self.last_event = self.server.receive()
+        
         self.last_event = self.step(action='Initialize', **self.initialization_parameters)
 
         return self.last_event
@@ -666,10 +684,9 @@ class Controller(object):
             self.last_event = new_event
             return new_event
 
-        assert self.request_queue.empty()
 
-        self.response_queue.put_nowait(action)
-        self.last_event = queue_get(self.request_queue, self.unity_proc)
+        self.server.send(action)
+        self.last_event = self.server.receive()
 
         if not self.last_event.metadata['lastActionSuccess'] and self.last_event.metadata['errorCode'] in ['InvalidAction', 'MissingArguments']:
             raise ValueError(self.last_event.metadata['errorMessage'])
@@ -691,14 +708,13 @@ class Controller(object):
             command += " -screen-fullscreen %s -screen-quality %s -screen-width %s -screen-height %s" % (fullscreen, QUALITY_SETTINGS[self.quality], width, height)
         return shlex.split(command)
 
-    def _start_unity_thread(self, env, width, height, host, port, image_name):
+    def _start_unity_thread(self, env, width, height, server_params, image_name):
         # get environment variables
 
         env['AI2THOR_CLIENT_TOKEN'] = self.server.client_token = str(uuid.uuid4())
-        env['AI2THOR_HOST'] = host
-        env['AI2THOR_PORT'] = str(port)
-
         env['AI2THOR_SERVER_SIDE_SCREENSHOT'] = 'False' if self.headless else 'True'
+        for k,v in server_params.items():
+            env['AI2THOR_' + k.upper()] = v
 
         # print("Viewer: http://%s:%s/viewer" % (host, port))
         command = self.unity_command(width, height, headless=self.headless)
@@ -707,7 +723,7 @@ class Controller(object):
             self.container_id = ai2thor.docker.run(image_name, self.base_dir(), ' '.join(command), env)
             atexit.register(lambda: ai2thor.docker.kill_container(self.container_id))
         else:
-            self.unity_proc = proc = subprocess.Popen(command, env=env)
+            self.server.unity_proc = proc = subprocess.Popen(command, env=env)
             self.unity_pid = proc.pid
             atexit.register(lambda: proc.poll() is None and proc.kill())
 
@@ -728,9 +744,6 @@ class Controller(object):
             if subprocess.call(['which', 'xdpyinfo'], stdout=dn) == 0:
                 assert subprocess.call("xdpyinfo", stdout=dn, env=env, shell=True) == 0, \
                     ("Invalid DISPLAY %s - cannot find X server with xdpyinfo" % x_display)
-
-    def _start_server_thread(self):
-        self.server.start()
 
     def releases_dir(self):
         return os.path.join(self.base_dir(), 'releases')
@@ -836,6 +849,7 @@ class Controller(object):
             fcntl.flock(download_lf, fcntl.LOCK_UN)
             download_lf.close()
 
+
     def start(
             self,
             port=0,
@@ -847,6 +861,7 @@ class Controller(object):
             player_screen_width=None,
             player_screen_height=None
     ):
+        self._build_server(host, port, width, height)
 
         if 'AI2THOR_VISIBILITY_DISTANCE' in os.environ:
             import warnings
@@ -866,7 +881,7 @@ class Controller(object):
         if height <= 0 or width <= 0:
             raise Exception("Screen resolution must be > 0x0")
 
-        if self.server_thread is not None:
+        if self.server.started:
             import warnings
             warnings.warn('start method depreciated. The server started when the Controller was initialized.')
 
@@ -882,22 +897,8 @@ class Controller(object):
             self.check_docker()
             host = ai2thor.docker.bridge_gateway()
 
-        self.server = ai2thor.server.Server(
-            self.request_queue,
-            self.response_queue,
-            host,
-            port=port,
-            depth_format=self.depth_format,
-            add_depth_noise=self.add_depth_noise,
-            width=width,
-            height=height
-        )
 
-
-        self.server_thread = threading.Thread(target=self._start_server_thread)
-
-        self.server_thread.daemon = True
-        self.server_thread.start()
+        self.server.start()
 
         if start_unity:
             if platform.system() == 'Linux':
@@ -918,11 +919,11 @@ class Controller(object):
                 self.lock_release()
                 self.prune_releases()
 
-            _, port = self.server.wsgi_server.socket.getsockname()
-            self._start_unity_thread(env, width, height, host, port, image_name)
+            unity_params = self.server.unity_params()
+            self._start_unity_thread(env, width, height, unity_params, image_name)
 
         # receive the first request
-        self.last_event = queue_get(self.request_queue, self.unity_proc)
+        self.last_event = self.server.receive()
 
         if height < 300 or width < 300:
             self.last_event = self.step('ChangeResolution', x=width, y=height)
@@ -930,9 +931,9 @@ class Controller(object):
         return self.last_event
 
     def stop(self):
-        self.response_queue.put_nowait({})
+        self.server.send({})
         self.stop_unity()
-        self.server.wsgi_server.shutdown()
+        self.server.stop()
         self.stop_container()
         self.unlock_release()
 
@@ -1445,3 +1446,4 @@ class BFSController(Controller):
                 self.grid_points.append(event.metadata['agent']['position'])
 
         return event
+
