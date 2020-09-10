@@ -932,7 +932,6 @@ class Controller(object):
 
     def stop(self):
         self.stop_unity()
-        self.server.send({})
         self.server.stop()
         self.stop_container()
         self.unlock_release()
