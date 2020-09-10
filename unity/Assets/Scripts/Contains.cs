@@ -193,23 +193,49 @@ public class Contains : MonoBehaviour
 
 		//get center of this box in world space
 		Vector3 worldCenter = b.transform.TransformPoint(b.center);
+
+        //Check if colliders are at correct spots
+        //Debug.Log(transform.parent.name + "'s collider is now at (" + b.transform.position.x + ", " + b.transform.position.y + ", " + b.transform.position.z + ").");
+
 		// Vector3 worldCenter = b.transform.position;
-		// worldCenter = transform.InverseTransformPoint(worldCenter) + b.center;
+		//worldCenter = transform.InverseTransformPoint(worldCenter) + b.center;
 
 		//size of this receptacle box, but we need to scale by transform
-		Vector3 worldHalfExtents = b.transform.TransformVector(b.size * 0.5f);
+		Vector3 worldHalfExtents = b.transform.TransformVector(b.transform.InverseTransformDirection(b.size * 0.5f));
+
+        //Test if OverlapBox has the correct dimensions using surrogate geometry (DOES NOT WORK IN TANDEM WITH DEBUG.LOG REPORTS ON OVERLAPS, for some reason)
+        //GameObject surrogateGeo = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        //surrogateGeo.name = transform.parent.gameObject + "_dimensions";
+        //surrogateGeo.transform.position = worldCenter;
+        //surrogateGeo.transform.rotation = b.transform.rotation;
+        //surrogateGeo.transform.localScale = worldHalfExtents * 2;
+
+        //surrogateGeo.transform.parent = b.transform;
+        //Destroy(surrogateGeo.GetComponent<Collider>());
+
+        Debug.Log(transform.parent.name + "'s ReceptacleTriggerBox is at worldCenter (" + worldCenter.x + ", " + worldCenter.y + ", " + worldCenter.z + ", " + ") and worldHalfExtents (" + worldHalfExtents.x + ", " + worldHalfExtents.y + ", " + worldHalfExtents.z + ", " + ").");
 
 		//ok now create an overlap box using these values and return all contained objects
 		foreach (Collider col in Physics.OverlapBox(worldCenter, worldHalfExtents, b.transform.rotation))
 		{
-			//ignore triggers
-			if(col.GetComponentInParent<SimObjPhysics>() && !col.isTrigger)
+            //Report which colliders are contained by which ReceptacleTriggerBoxes (DOES NOT WORK IN TANDEM WITH SURROGATE GEOMETRY, for some reason)
+            //if (col.transform.parent.parent == null)
+            //{
+            //    Debug.Log("The " + transform.parent.name + " has " + col.transform.parent.name + "'s " + col.name + " inside of it.");
+            //}
+            //else
+            //{
+            //    Debug.Log("The " + transform.parent.name + " has " + col.transform.parent.parent.name + "'s " + col.transform.name + " inside of it.");
+            //}
+
+            //ignore triggers
+            if (col.GetComponentInParent<SimObjPhysics>() && !col.isTrigger)
 			{
 				//grab reference to game object this collider is part of
 				SimObjPhysics sop = col.GetComponentInParent<SimObjPhysics>();
 
-				//don't add any colliders from our parent object
-				if(sop.transform != gameObject.GetComponentInParent<SimObjPhysics>().transform)
+                //don't add any colliders from our parent object
+                if (sop.transform != gameObject.GetComponentInParent<SimObjPhysics>().transform)
 				{
 					//don't add repeat objects in case there were multiple
 					//colliders from the same object
