@@ -224,6 +224,7 @@ class WsgiServer(ai2thor.server.Server):
         return params
     
     def stop(self):
+        self.send({})
         self.wsgi_server.shutdown()
         super().stop()
 
