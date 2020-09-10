@@ -114,7 +114,14 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		StartRoomTempTimer = b;
 	}
 
+	//used for PickupContainedObjects, this only references which objects were
+	//actively contained by the sim object at the moment of pickup.
 	public List<SimObjPhysics> ContainedObjectReferences;
+
+	#if UNITY_EDITOR
+	//all objects currently contained by this receptacle
+	public List<GameObject> CurrentlyContains;
+	#endif
 
 	public class PhysicsMaterialValues
 	{
@@ -909,6 +916,9 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
         myrb.AddForce(dir * magnitude);
     }
 
+	////////////////////////////////////////////////////////////////////////////////
+
+	//XXX: Replace with new Overlap Box check
 	//returns a game object list of all sim objects contained by this object if it is a receptacle
 	public List<GameObject> Contains_GameObject()
 	{
@@ -939,6 +949,7 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		return objs;
 	}
 
+	//XXX: Replace with new Overlap Box check
 	//if this is a receptacle object, return list of references to all objects currently contained
 	public List<SimObjPhysics> ContainsGameObject()
 	{
@@ -965,17 +976,15 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		return objs;
 	}
 
+	//XXX: Replace with new Overlap Box check
 	//if this is a receptacle object, check what is inside the Receptacle
 	//make sure to return array of strings so that this info can be put into MetaData
 	public List<string> Contains()
 	{
-		//grab a list of all secondary properties of this object
-		List<SimObjSecondaryProperty> sspList = new List<SimObjSecondaryProperty>(SecondaryProperties);
-
 		List<string> objs = new List<string>();
 
 		//is this object a receptacle?
-		if (sspList.Contains(SimObjSecondaryProperty.Receptacle))
+		if (IsReceptacle)
 		{
 			//this is a receptacle, now populate objs list of contained objets to return below
 			if (ReceptacleTriggerBoxes != null)
@@ -1007,6 +1016,34 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 			Debug.Log(gameObject.name + " is not a Receptacle!");
 			return objs;
 		}
+	}
+
+	////////////////////////////////////////////////////////////////////////////////
+
+	public List<GameObject> ContainedGameObjects()
+	{
+		List<GameObject> objs = new List<GameObject>();
+
+		//get box collider dimensions of ReceptacleTriggerBox if this is a receptacle
+		if(IsReceptacle)
+		{
+			foreach (GameObject rtb in ReceptacleTriggerBoxes)
+			{
+				foreach (GameObject g in rtb.GetComponent<Contains>().CurrentlyContainedGameObjects())
+				{
+					if(!objs.Contains(g))
+					{
+						objs.Add(g);
+					}
+				}
+			}
+		}
+
+		#if UNITY_EDITOR
+		CurrentlyContains = objs;
+		#endif
+
+		return objs;
 	}
 
 	public void OnTriggerEnter(Collider other) {

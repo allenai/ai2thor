@@ -1060,7 +1060,14 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 }
                 ObjectMetadata meta = ObjectMetadataFromSimObjPhysics(simObj, visibleSimObjsHash.Contains(simObj));
                 if (meta.receptacle) {
-                    List<string> roid = simObj.Contains();
+                    
+                    List<string> containedObjectsAsID = new List<String>();
+                    foreach(GameObject go in simObj.ContainedGameObjects())
+                    {
+                        containedObjectsAsID.Add(go.GetComponent<SimObjPhysics>().ObjectID);
+                    }
+                    List<string> roid = containedObjectsAsID;//simObj.Contains();
+
                     foreach (string oid in roid) {
                         if (!parentReceptacles.ContainsKey(oid)) {
                             parentReceptacles[oid] = new List<string>();
