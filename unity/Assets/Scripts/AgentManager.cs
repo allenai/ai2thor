@@ -38,6 +38,8 @@ public class AgentManager : MonoBehaviour
 	private Socket sock = null;
 	private List<Camera> thirdPartyCameras = new List<Camera>();
 	private bool readyToEmit;
+    private bool ximageCapture = false;
+    private bool allowEmit;
 	private Color[] agentColors = new Color[]{Color.blue, Color.yellow, Color.green, Color.red, Color.magenta, Color.grey};
 	public int actionDuration = 3;
 	private BaseFPSAgentController primaryAgent;
@@ -324,6 +326,11 @@ public class AgentManager : MonoBehaviour
 		return (fov <= min || fov > max) ? defaultVal : fov;
 	}
 
+    public void EnableXimageCapture() {
+        this.ximageCapture = true;
+		readyToEmit = true;
+    }
+
 	public void AddThirdPartyCamera(ServerAction action) {
 		GameObject gameObject = new GameObject("ThirdPartyCamera" + thirdPartyCameras.Count);
 		gameObject.AddComponent(typeof(Camera));
@@ -478,18 +485,28 @@ public class AgentManager : MonoBehaviour
     // Decide whether agent has stopped actions
     // And if we need to capture a new frame
 
+    private void emitXimage() {
+        int completeCount = agentCompleteCount();
+
+		if (ximageCapture && allowEmit && completeCount == agents.Count && completeCount > 0 && readyToEmit)
+        {
+            Debug.Log("Emitting using XImage");
+            allowEmit = false;
+            MultiAgentMetadata multiMeta = new MultiAgentMetadata ();
+            createPayload(multiMeta, null, null, false);
+            string msg = sendPayload(multiMeta, null);
+            ProcessControlCommand(msg);
+        }
+
+    }
+
     private void Update()
     {
         physicsSceneManager.isSceneAtRest = true;//assume the scene is at rest by default
     }
 
     private void LateUpdate() {
-		int completeCount = 0;
-		foreach (BaseFPSAgentController agent in this.agents) {
-			if (agent.actionComplete) {
-				completeCount++;
-			}
-		}
+		int completeCount = agentCompleteCount();
 
 		int hasDroneAgentUpdatedCount = 0;
 
@@ -537,7 +554,19 @@ public class AgentManager : MonoBehaviour
         //     AdvancePhysicsStepCount = 0;
         // }
 
+        allowEmit = true;
 	}
+
+    private int agentCompleteCount() {
+
+		int count = 0;
+		foreach (BaseFPSAgentController agent in this.agents) {
+			if (agent.actionComplete) {
+				count++;
+			}
+		}
+        return count;
+    }
 
 	private byte[] captureScreen() {
 		if (tex.height != UnityEngine.Screen.height ||
@@ -760,100 +789,8 @@ public class AgentManager : MonoBehaviour
 
 
         #if !UNITY_WEBGL 
-		if (serverType == serverTypes.WSGI) {
-            WWWForm form = new WWWForm();
-            foreach(var item in renderPayload) {
-                form.AddBinaryData(item.Key, item.Value);
-            }
-            form.AddField("metadata", serializeMetadataJson(multiMeta));
-            form.AddField("token", robosimsClientToken);
-
-
-			if (this.sock == null) {
-				// Debug.Log("connecting to host: " + robosimsHost);
-				IPAddress host = IPAddress.Parse(robosimsHost);
-				IPEndPoint hostep = new IPEndPoint(host, robosimsPort);
-				this.sock = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-                try {
-				    this.sock.Connect(hostep);
-                }
-                catch (SocketException e) {
-                    Debug.Log("Socket exception: " + e.ToString());
-                }
-			}
-
-            if (this.sock != null && this.sock.Connected) {
-                byte[] rawData = form.data;
-
-                string request = "POST /train HTTP/1.1\r\n" +
-                "Content-Length: " + rawData.Length.ToString() + "\r\n";
-
-                foreach(KeyValuePair<string, string> entry in form.headers) {
-                    request += entry.Key + ": " + entry.Value + "\r\n";
-                }
-                request += "\r\n";
-
-                this.sock.Send(Encoding.ASCII.GetBytes(request));
-                this.sock.Send(rawData);
-
-                // waiting for a frame here keeps the Unity window in sync visually
-                // its not strictly necessary, but allows the interact() command to work properly
-                // and does not reduce the overall FPS
-                yield return new WaitForEndOfFrame();
-
-                byte[] headerBuffer = new byte[1024];
-                int bytesReceived = 0;
-                byte[] bodyBuffer = null;
-                int bodyBytesReceived = 0;
-                int contentLength = 0;
-
-                // read header
-                while (true) {
-                    int received = this.sock.Receive(headerBuffer, bytesReceived, headerBuffer.Length - bytesReceived, SocketFlags.None);
-                    if (received == 0) {
-                        Debug.LogError("0 bytes received attempting to read header - connection closed");
-                        break;
-                    }
-
-                    bytesReceived += received;;
-                    string headerMsg = Encoding.ASCII.GetString(headerBuffer, 0, bytesReceived);
-                    int offset = headerMsg.IndexOf("\r\n\r\n");
-                    if (offset > 0){
-                        contentLength = parseContentLength(headerMsg.Substring(0, offset));
-                        bodyBuffer = new byte[contentLength];
-                        bodyBytesReceived = bytesReceived - (offset + 4);
-                        Array.Copy(headerBuffer, offset + 4, bodyBuffer, 0, bodyBytesReceived);
-                        break;
-                    }
-                }
-
-                // read body
-                while (bodyBytesReceived < contentLength) {
-                    // check for 0 bytes received
-                    int received = this.sock.Receive(bodyBuffer, bodyBytesReceived, bodyBuffer.Length - bodyBytesReceived, SocketFlags.None);
-                    if (received == 0) {
-                        Debug.LogError("0 bytes received attempting to read body - connection closed");
-                        break;
-                    }
-
-                    bodyBytesReceived += received;
-                    //Debug.Log("total bytes received: " + bodyBytesReceived);
-                }
-
-                string msg = Encoding.ASCII.GetString(bodyBuffer, 0, bodyBytesReceived);
-                ProcessControlCommand(msg);
-            }
-		} else if (serverType == serverTypes.FIFO){
-            byte[] msgPackMetadata = MessagePack.MessagePackSerializer.Serialize(multiMeta, 
-            MessagePack.Resolvers.ThorContractlessStandardResolver.Options);
-            this.fifoClient.SendMessage(FifoServer.FieldType.Metadata, msgPackMetadata);
-            foreach(var item in renderPayload) {
-                this.fifoClient.SendMessage(FifoServer.Client.FormMap[item.Key], item.Value);
-            }
-            this.fifoClient.SendEOM();
-            string msg = this.fifoClient.ReceiveMessage();
-            ProcessControlCommand(msg);
-		}
+        string msg = sendPayload(multiMeta, renderPayload);
+        ProcessControlCommand(msg);
 
         if(droneMode)
         {
@@ -868,6 +805,117 @@ public class AgentManager : MonoBehaviour
         }
 
         #endif
+    }
+
+    private string sendPayload(MultiAgentMetadata multiMeta, List<KeyValuePair<string, byte[]>> renderPayload) {
+        string msg = null;
+		if (serverType == serverTypes.WSGI) {
+            msg = sendWsgi(multiMeta, renderPayload);
+		} else if (serverType == serverTypes.FIFO){
+            msg = sendFifo(multiMeta, renderPayload);
+		}
+        return msg;
+    }
+
+    private string sendWsgi(MultiAgentMetadata multiMeta, List<KeyValuePair<string, byte[]>> renderPayload) {
+           WWWForm form = new WWWForm();
+           if (renderPayload != null) {
+            foreach(var item in renderPayload) {
+                form.AddBinaryData(item.Key, item.Value);
+            }
+           }
+           form.AddField("metadata", serializeMetadataJson(multiMeta));
+           form.AddField("token", robosimsClientToken);
+
+
+		if (this.sock == null) {
+			// Debug.Log("connecting to host: " + robosimsHost);
+			IPAddress host = IPAddress.Parse(robosimsHost);
+			IPEndPoint hostep = new IPEndPoint(host, robosimsPort);
+			this.sock = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+               try {
+			    this.sock.Connect(hostep);
+               }
+               catch (SocketException e) {
+                   Debug.Log("Socket exception: " + e.ToString());
+               }
+		}
+
+           if (this.sock != null && this.sock.Connected) {
+               byte[] rawData = form.data;
+
+               string request = "POST /train HTTP/1.1\r\n" +
+               "Content-Length: " + rawData.Length.ToString() + "\r\n";
+
+               foreach(KeyValuePair<string, string> entry in form.headers) {
+                   request += entry.Key + ": " + entry.Value + "\r\n";
+               }
+               request += "\r\n";
+
+               this.sock.Send(Encoding.ASCII.GetBytes(request));
+               this.sock.Send(rawData);
+
+               // waiting for a frame here keeps the Unity window in sync visually
+               // its not strictly necessary, but allows the interact() command to work properly
+               // and does not reduce the overall FPS
+               byte[] headerBuffer = new byte[1024];
+               int bytesReceived = 0;
+               byte[] bodyBuffer = null;
+               int bodyBytesReceived = 0;
+               int contentLength = 0;
+
+               // read header
+               while (true) {
+                   int received = this.sock.Receive(headerBuffer, bytesReceived, headerBuffer.Length - bytesReceived, SocketFlags.None);
+                   if (received == 0) {
+                       Debug.LogError("0 bytes received attempting to read header - connection closed");
+                       break;
+                   }
+
+                   bytesReceived += received;;
+                   string headerMsg = Encoding.ASCII.GetString(headerBuffer, 0, bytesReceived);
+                   int offset = headerMsg.IndexOf("\r\n\r\n");
+                   if (offset > 0){
+                       contentLength = parseContentLength(headerMsg.Substring(0, offset));
+                       bodyBuffer = new byte[contentLength];
+                       bodyBytesReceived = bytesReceived - (offset + 4);
+                       Array.Copy(headerBuffer, offset + 4, bodyBuffer, 0, bodyBytesReceived);
+                       break;
+                   }
+               }
+
+               // read body
+               while (bodyBytesReceived < contentLength) {
+                   // check for 0 bytes received
+                   int received = this.sock.Receive(bodyBuffer, bodyBytesReceived, bodyBuffer.Length - bodyBytesReceived, SocketFlags.None);
+                   if (received == 0) {
+                       Debug.LogError("0 bytes received attempting to read body - connection closed");
+                       break;
+                   }
+
+                   bodyBytesReceived += received;
+                   //Debug.Log("total bytes received: " + bodyBytesReceived);
+               }
+
+                return Encoding.ASCII.GetString(bodyBuffer, 0, bodyBytesReceived);
+        } else {
+            Debug.LogError("Can't connect to host in sendWsgi: " + robosimsHost);
+        }
+
+        return null;
+    }
+
+    private string sendFifo(MultiAgentMetadata multiMeta, List<KeyValuePair<string, byte[]>> renderPayload) {
+        byte[] msgPackMetadata = MessagePack.MessagePackSerializer.Serialize(multiMeta, 
+        MessagePack.Resolvers.ThorContractlessStandardResolver.Options);
+        this.fifoClient.SendMessage(FifoServer.FieldType.Metadata, msgPackMetadata);
+        if (renderPayload != null) {
+            foreach(var item in renderPayload) {
+                this.fifoClient.SendMessage(FifoServer.Client.FormMap[item.Key], item.Value);
+            }
+        }
+        this.fifoClient.SendEOM();
+        return this.fifoClient.ReceiveMessage();
     }
 
 	private int parseContentLength(string header) {
@@ -907,6 +955,8 @@ public class AgentManager : MonoBehaviour
 			this.AddThirdPartyCamera(controlCommand.ToObject(typeof(ServerAction)));
 		} else if (controlCommand.action == "UpdateThirdPartyCamera") {
 			this.UpdateThirdPartyCamera(controlCommand.ToObject(typeof(ServerAction)));
+		} else if (controlCommand.action == "EnableXimageCapture") {
+			this.EnableXimageCapture();
 		} else {
             //we only allow renderObjectImage to be flipped on
             //on a per step() basis, since by default the param is null
