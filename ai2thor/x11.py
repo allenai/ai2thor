@@ -8,7 +8,7 @@ import glob
 from contextlib import contextmanager
 from pprint import pprint
 import atexit
-import ai2thor.controller
+from ai2thor.util.proc import process_alive
 import json
 from itertools import product
 import numpy as np
@@ -27,26 +27,11 @@ try:
 except ImportError:
     pass
 
-
-# used when _X11 not available
-class NoopX11:
-
-    def cleanup(self):
-        pass
-
-    def list_all_windows(self, a):
-        return []
-
-
-    @contextmanager
-    def launch(self, controller):
-        yield
-
 class X11:
 
     def __init__(self):
 
-        self._x11 = NoopX11()
+        self._x11 = None
         if LOADED:
             self._x11 = ai2thor._x11.X11()
 
@@ -58,7 +43,7 @@ class X11:
         atexit.register(lambda: self._x11.cleanup())
 
     def __del__(self):
-        print("del called in x11")
+        self._x11.cleanup()
 
     def get_image(self):
         return self._x11.get_xshm_image(self.window_id)
@@ -121,18 +106,13 @@ class X11:
 
     def find_controller_window(self, event, width, height):
         self._x11.initialize(width, height)
-        print("looking for %s %s" % (width, height))
         candidates = self.get_candidate_windows(width, height)
-        from pprint import pprint
-        pprint(candidates)
 
         for c in candidates:
-
-            print("checing window contents")
             if self.check_window_contents(c, event):
                 self.window_id = c
-                #print("candidate match %s" % c)
                 return True
+
         return False
 
     def window_dimensions(self, window_id):
@@ -175,7 +155,7 @@ class X11:
             with open(g) as f:
                 j = json.loads(f.read())
 
-            if ai2thor.controller.process_alive(j['python']):
+            if process_alive(j['python']):
                 running.append(j)
             else:
                 print("unlinking %s" % g)

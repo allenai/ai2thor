@@ -136,7 +136,8 @@ class WsgiServer(ai2thor.server.Server):
             depth_format=ai2thor.server.DepthFormat.Meters,
             add_depth_noise=False,
             width=300,
-            height=300
+            height=300,
+            ximage_capture=False
     ):
 
         app = Flask(__name__,
@@ -154,7 +155,7 @@ class WsgiServer(ai2thor.server.Server):
         self.debug_frames_per_interval = 50
         self.wsgi_server = werkzeug.serving.make_server(host, self.port, self.app, threaded=threaded, request_handler=ThorRequestHandler)
         # used to ensure that we are receiving frames for the action we sent
-        super().__init__(width, height, depth_format, add_depth_noise)
+        super().__init__(width, height, depth_format, add_depth_noise, ximage_capture)
 
         @app.route('/ping', methods=['get'])
         def ping():
@@ -224,4 +225,5 @@ class WsgiServer(ai2thor.server.Server):
     
     def stop(self):
         self.wsgi_server.shutdown()
+        super().stop()
 

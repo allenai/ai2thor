@@ -2868,3 +2868,21 @@ def reachable_pos(ctx, scene, editor_mode=False, local_build=False):
     )
 
     print("After teleport: {}".format(evt.metadata['agent']['position']))
+
+@task
+def test_thor(context):
+    import ai2thor.controller
+    import time
+    import random
+    import cv2
+
+    c = ai2thor.controller.Controller(width=300, height=300, ximage_capture=True)
+    c.init_x11_capture()
+    while True:
+        for i in range(1):
+            c.step(action='RotateRight')
+            cv2.imshow('aoeu', c.last_event.cv2img)
+            cv2.waitKey(1000)
+            c.x11.move_window_free_space(c.x11.window_id)
+        c.reset(random.choice(['FloorPlan20', 'FloorPlan21', 'FloorPlan22']))
+

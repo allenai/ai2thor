@@ -35,7 +35,7 @@ class FifoServer(ai2thor.server.Server):
     header_size = struct.calcsize(header_format)
     field_types = {f.value:f for f in FieldType}
 
-    def __init__(self, width, height, depth_format=ai2thor.server.DepthFormat.Meters, add_depth_noise=False):
+    def __init__(self, width, height, depth_format=ai2thor.server.DepthFormat.Meters, add_depth_noise=False, ximage_capture=False):
 
         self.tmp_dir = tempfile.TemporaryDirectory()
         self.server_pipe_path = os.path.join(self.tmp_dir.name, 'server.pipe')
@@ -65,7 +65,7 @@ class FifoServer(ai2thor.server.Server):
             }
 
         self.eom_header = self._create_header(FieldType.END_OF_MESSAGE, b'')
-        super().__init__(width, height, depth_format, add_depth_noise)
+        super().__init__(width, height, depth_format, add_depth_noise, ximage_capture)
 
     def _create_header(self, message_type, body):
         return struct.pack(self.header_format, message_type, len(body))
@@ -150,4 +150,5 @@ class FifoServer(ai2thor.server.Server):
     def stop(self):
         self.client_pipe.close()
         self.server_pipe.close()
+        super().stop()
 

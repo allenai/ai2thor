@@ -28,7 +28,7 @@ import uuid
 import tty
 import sys
 import termios
-import fcntl
+import ai2thor.x11
 
 import zipfile
 
@@ -41,6 +41,7 @@ from ai2thor.interact import InteractiveControllerPrompt, DefaultActions
 from ai2thor.server import DepthFormat
 from ai2thor.build import COMMIT_ID
 from ai2thor._quality_settings import QUALITY_SETTINGS, DEFAULT_QUALITY
+from ai2thor.util.proc import process_alive
 
 import warnings
 
@@ -335,18 +336,6 @@ def get_term_character():
         termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
     return ch
 
-def process_alive(pid):
-    """
-    Use kill(0) to determine if pid is alive
-    :param pid: process id
-    :rtype: bool
-    """
-    try:
-        os.kill(pid, 0)
-    except OSError:
-        return False
-
-    return True
 
 # python2.7 compatible makedirs
 def makedirs(directory):
@@ -385,6 +374,7 @@ class Controller(object):
             download_only=False,
             include_private_scenes=False,
             server_class=ai2thor.wsgi_server.WsgiServer,
+            ximage_capture=False,
             **unity_initialization_parameters
     ):
         self.receptacle_nearest_pivot_points = {}
@@ -404,7 +394,7 @@ class Controller(object):
         self.add_depth_noise = add_depth_noise
         self.include_private_scenes = include_private_scenes
         self.server_class = server_class
-
+        self.ximage_capture = ximage_capture
 
         self.interactive_controller = InteractiveControllerPrompt(
             list(DefaultActions),
@@ -445,15 +435,6 @@ class Controller(object):
                 )
 
             event = self.reset(scene)
-            if event.metadata['lastActionSuccess']:
-                init_return = event.metadata['actionReturn']
-                self.server.set_init_params(init_return)
-
-                print("Initialize return: {}".format(init_return))
-            else:
-                raise RuntimeError('Initialize action failure: {}'.format(
-                    event.metadata['errorMessage'])
-                )
 
     def _build_server(self, host, port, width, height):
 
@@ -467,14 +448,17 @@ class Controller(object):
                 depth_format=self.depth_format,
                 add_depth_noise=self.add_depth_noise,
                 width=width,
-                height=height
+                height=height,
+                ximage_capture=self.ximage_capture
             )
         elif self.server_class == ai2thor.fifo_server.FifoServer:
             self.server = ai2thor.fifo_server.FifoServer(
                 depth_format=self.depth_format,
                 add_depth_noise=self.add_depth_noise,
                 width=width,
-                height=height)
+                height=height,
+                ximage_capture=self.ximage_capture
+                )
         else:
             raise ValueError("Invalid server class: %s" % self.server_class)
 
@@ -516,6 +500,17 @@ class Controller(object):
         self.last_event = self.server.receive()
         
         self.last_event = self.step(action='Initialize', **self.initialization_parameters)
+        if self.last_event.metadata['lastActionSuccess']:
+            init_return = self.last_event.metadata['actionReturn']
+            self.server.set_init_params(init_return)
+
+            print("Initialize return: {}".format(init_return))
+        else:
+            raise RuntimeError('Initialize action failure: {}'.format(
+                event.metadata['errorMessage'])
+            )
+
+        self.init_x11_capture()
 
         return self.last_event
 
@@ -639,6 +634,33 @@ class Controller(object):
 
         return events
 
+    def init_x11_capture(self):
+
+        print("trying to capture")
+        if self.ximage_capture:
+            x11 = self.server.x11
+            current_rotation = self.last_event.metadata['agent']['rotation']['y']
+            rotation = random.randint(0, 360)
+            event = self.step(action='Rotate', rotation=dict(y=rotation))
+            self.step(action='Pass')
+            if x11.window_id is None:
+                if not x11.find_controller_window(event, event._frame.shape[1], event._frame.shape[0]):
+                    raise Exception("couldn't find matching X11 window")
+            else:
+                matched = False
+                for i in range(10):
+                    rotation = random.randint(0, 360)
+                    self.step(action='Rotate', rotation=dict(y=rotation))
+                    self.step(action='Pass')
+                    if x11.check_window_contents(x11.window_id, self.last_event):
+                        matched = True
+                        print("got match")
+                        break
+                if not matched:
+                    raise Exception("windowId %s failed match check" % x11.window_id)
+            self.step(action='Rotate', rotation=dict(y=current_rotation))
+            self.step(action='EnableXimageCapture')
+
     def step(self, action=None, **action_args):
 
         if type(action) is dict:
@@ -685,8 +707,14 @@ class Controller(object):
             return new_event
 
 
-        self.server.send(action)
-        self.last_event = self.server.receive()
+        if action['action'] == 'ChangeResolution' and self.server.x11:
+            # if resolution changes we need to possibly rearrange windows
+            with self.server.x11.launch(self):
+                self.server.send(action)
+                self.last_event = self.server.receive()
+        else:
+            self.server.send(action)
+            self.last_event = self.server.receive()
 
         if not self.last_event.metadata['lastActionSuccess'] and self.last_event.metadata['errorCode'] in ['InvalidAction', 'MissingArguments']:
             raise ValueError(self.last_event.metadata['errorMessage'])
@@ -726,6 +754,8 @@ class Controller(object):
             self.server.unity_proc = proc = subprocess.Popen(command, env=env)
             self.unity_pid = proc.pid
             atexit.register(lambda: proc.poll() is None and proc.kill())
+            self.unity_pid = proc.pid
+
 
     def check_docker(self):
         if self.docker_enabled:
@@ -848,6 +878,31 @@ class Controller(object):
         finally:
             fcntl.flock(download_lf, fcntl.LOCK_UN)
             download_lf.close()
+    
+    def _start_unity(self, x_display, width, height, host, port):
+        env = os.environ.copy()
+        image_name = None
+
+        if platform.system() == 'Linux':
+
+            if self.docker_enabled:
+                image_name = ai2thor.docker.build_image()
+            else:
+
+                if x_display:
+                    env['DISPLAY'] = ':' + x_display
+                elif 'DISPLAY' not in env:
+                    env['DISPLAY'] = ':0.0'
+
+                self.check_x_display(env['DISPLAY'])
+
+        if not self.local_executable_path:
+            self.download_binary()
+            self.lock_release()
+            self.prune_releases()
+
+        unity_params = self.server.unity_params()
+        self._start_unity_thread(env, width, height, unity_params, image_name)
 
 
     def start(
@@ -881,6 +936,10 @@ class Controller(object):
         if height <= 0 or width <= 0:
             raise Exception("Screen resolution must be > 0x0")
 
+        # XXX check for renderDepth,renderObject etc
+        if self.ximage_capture and platform.system() != 'Linux':
+            raise ValueError("ximage_capture can only be used on Linux")
+
         if self.server.started:
             import warnings
             warnings.warn('start method depreciated. The server started when the Controller was initialized.')
@@ -889,10 +948,6 @@ class Controller(object):
             # that the arguments passed in will be used on the server.
             self.stop()
 
-        env = os.environ.copy()
-
-        image_name = None
-
         if self.docker_enabled:
             self.check_docker()
             host = ai2thor.docker.bridge_gateway()
@@ -900,33 +955,21 @@ class Controller(object):
 
         self.server.start()
 
-        if start_unity:
-            if platform.system() == 'Linux':
-
-                if self.docker_enabled:
-                    image_name = ai2thor.docker.build_image()
-                else:
-
-                    if x_display:
-                        env['DISPLAY'] = ':' + x_display
-                    elif 'DISPLAY' not in env:
-                        env['DISPLAY'] = ':0.0'
-
-                    self.check_x_display(env['DISPLAY'])
-
-            if not self.local_executable_path:
-                self.download_binary()
-                self.lock_release()
-                self.prune_releases()
-
-            unity_params = self.server.unity_params()
-            self._start_unity_thread(env, width, height, unity_params, image_name)
-
-        # receive the first request
-        self.last_event = self.server.receive()
+        if self.server.x11:
+            with self.server.x11.launch(self):
+                if start_unity:
+                    self._start_unity(x_display, width, height, host, port)
+                # receive the first request
+                self.last_event = self.server.receive()
+        else:
+            if start_unity:
+                self._start_unity(x_display, width, height, host, port)
+            # receive the first request
+            self.last_event = self.server.receive()
 
         if height < 300 or width < 300:
             self.last_event = self.step('ChangeResolution', x=width, y=height)
+
 
         return self.last_event
 

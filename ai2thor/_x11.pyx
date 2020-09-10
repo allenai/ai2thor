@@ -310,8 +310,6 @@ cdef class X11:
 
     cdef free_shm(self):
         has_shm = self.shminfo.shmaddr!=<char *> -1
-        print("has shm")
-        print(has_shm)
         if has_shm:
             XShmDetach(self.display, &self.shminfo)
 
@@ -320,7 +318,6 @@ cdef class X11:
             self.image = NULL
 
         if has_shm:
-            print("removing shmid")
             shmctl(self.shminfo.shmid, IPC_RMID, NULL)
             shmdt(self.shminfo.shmaddr)
             self.shminfo.shmaddr = <char *> -1
@@ -329,6 +326,5 @@ cdef class X11:
     cdef free(self):
         self.free_shm()
         if self.display != NULL:
-            print("closing display ***")
             XCloseDisplay(self.display)
             self.display = NULL

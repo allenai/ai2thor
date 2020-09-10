@@ -12,6 +12,7 @@ from enum import Enum
 from ai2thor.util.depth import apply_real_noise, generate_noise_indices
 import json
 import sys
+import ai2thor.x11
 
 
 class NumpyAwareEncoder(json.JSONEncoder):
@@ -74,19 +75,22 @@ def unique_rows(arr, return_index=False, return_inverse=False):
         return unique
 
 
-class Event(object):
+class Event:
     """
     Object that is returned from a call to  controller.step().
     This class wraps the screenshot that Unity captures as well
     as the metadata sent about each object
     """
 
-    def __init__(self, metadata):
+    
+    def __init__(self, metadata, x11=None):
+        self.x11 = x11
         self.metadata = metadata
         self.screen_width = metadata['screenWidth']
         self.screen_height = metadata['screenHeight']
 
-        self.frame = None
+        # frame has been changed to a property
+        self._frame = None
         self.depth_frame = None
         self.normals_frame = None
         self.flow_frame = None
@@ -232,7 +236,7 @@ class Event(object):
         self.third_party_camera_frames.append(read_buffer_image(third_party_image_data, self.screen_width, self.screen_height))
 
     def add_image(self, image_data, **kwargs):
-        self.frame = read_buffer_image(image_data, self.screen_width, self.screen_height, **kwargs)
+        self._frame = read_buffer_image(image_data, self.screen_width, self.screen_height, **kwargs)
 
     def add_image_ids(self, image_ids_data):
         self.instance_segmentation_frame = read_buffer_image(image_ids_data, self.screen_width, self.screen_height)
@@ -250,10 +254,19 @@ class Event(object):
     def cv2image(self):
         warnings.warn("Deprecated - please use event.cv2img")
         return self.cv2img
+    
+    @property
+    def frame(self):
+        if self._frame is not None:
+            return self._frame
+        elif self.x11:
+            self._frame = self.x11.get_image()
+
+        return self._frame
 
     @property
     def cv2img(self):
-        return self.frame[...,::-1]
+        return self._frame[...,::-1]
 
     @property
     def pose(self):
@@ -286,7 +299,7 @@ class DepthFormat(Enum):
 
 class Server(object):
 
-    def __init__(self, width, height, depth_format=DepthFormat.Meters, add_depth_noise=False):
+    def __init__(self, width, height, depth_format=DepthFormat.Meters, add_depth_noise=False, ximage_capture=False):
         self.depth_format = depth_format
         self.add_depth_noise = add_depth_noise
         self.noise_indices = None
@@ -295,6 +308,9 @@ class Server(object):
         self.sequence_id = 0
         self.started = False
         self.client_token = None
+        self.x11 = None
+        if ximage_capture:
+            self.x11 = ai2thor.x11.X11()
 
         if add_depth_noise:
             assert width == height,\
@@ -304,6 +320,12 @@ class Server(object):
     def set_init_params(self, init_params):
         self.camera_near_plane = init_params['cameraNearPlane']
         self.camera_far_plane = init_params['cameraFarPlane']
+    
+    def stop(self):
+        if self.x11:
+            self.x11.cleanup()
+            self.x11 = None
+
 
     def create_event(self, metadata, files):
         if metadata['sequenceId'] != self.sequence_id:
@@ -313,7 +335,7 @@ class Server(object):
         events = []
 
         for i, a in enumerate(metadata['agents']):
-            e = Event(a)
+            e = Event(a, self.x11)
             image_mapping = dict(
                 image=e.add_image,
                 image_depth=lambda x: e.add_image_depth(
@@ -365,5 +387,9 @@ class Server(object):
 
         return self.last_event
 
+    def __del__(self):
+        if self.x11:
+            self.x11.cleanup()
+            self.x11 = None
 
 
