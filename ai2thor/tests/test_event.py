@@ -2732,7 +2732,7 @@ def test_objets_by_test(event):
 
 
 def test_process_colors(event_complex):
-    event_complex.process_colors
+    event_complex.process_colors()
     assert len(event_complex.color_to_object_id.keys()) == 125
     assert event_complex.color_to_object_id[(207, 119, 70)] == 'Spatula3.001'
     assert event_complex.color_to_object_id[(141, 139, 54)] == 'Cabinet|-00.63|+00.39|-02.51'

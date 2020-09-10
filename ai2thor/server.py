@@ -31,7 +31,7 @@ class MultiAgentEvent(object):
         self.screen_width = self._active_event.screen_width
         self.screen_height = self._active_event.screen_height
         self.events = events
-        self.third_party_camera_frames = []
+        self.third_party_camera_frames = None
         # XXX add methods for depth,sem_seg
 
     @property
@@ -39,6 +39,8 @@ class MultiAgentEvent(object):
         return self._active_event.cv2img
 
     def add_third_party_camera_image(self, third_party_image_data):
+        if self.third_party_camera_frames is None:
+            self.third_party_camera_frames = []
         self.third_party_camera_frames.append(read_buffer_image(third_party_image_data, self.screen_width, self.screen_height))
 
 
@@ -98,12 +100,12 @@ class Event:
 
     class_detections2D = None
 
-    third_party_camera_frames = ()
-    third_party_class_segmentation_frames = ()
-    third_party_instance_segmentation_frames = ()
-    third_party_depth_frames = ()
-    third_party_normals_frames = ()
-    third_party_flows_frames = ()
+    third_party_camera_frames = None
+    third_party_class_segmentation_frames = None
+    third_party_instance_segmentation_frames = None
+    third_party_depth_frames = None
+    third_party_normals_frames = None
+    third_party_flows_frames = None
 
     
     def __init__(self, metadata, x11=None):
@@ -132,6 +134,8 @@ class Event:
 
     def process_colors(self):
         if 'colors' in self.metadata and self.metadata['colors']:
+            self.color_to_object_id = {}
+            self.object_id_to_color = {}
             for color_data in self.metadata['colors']:
                 name = color_data['name']
                 c_key = tuple(color_data['color'])
@@ -220,21 +224,30 @@ class Event:
         self.depth_frame = self._image_depth(image_depth_data, **kwargs)
 
     def add_third_party_image_depth(self, image_depth_data, **kwargs):
+        if self.third_party_depth_frames is None:
+            self.third_party_depth_frames = []
         self.third_party_depth_frames.append(self._image_depth(image_depth_data, **kwargs))
 
     def add_third_party_image_normals(self, normals_data):
+        if self.third_party_normals_frames is None:
+            self.third_party_normals_frames = []
         self.third_party_normals_frames.append(read_buffer_image(normals_data, self.screen_width, self.screen_height))
 
     def add_image_normals(self, image_normals_data):
         self.normals_frame = read_buffer_image(image_normals_data, self.screen_width, self.screen_height)
 
     def add_third_party_image_flows(self, flows_data):
+        if self.third_party_flows_frames is None:
+            self.third_party_flows_frames = []
         self.third_party_flows_frames.append(read_buffer_image(flows_data, self.screen_width, self.screen_height))
 
     def add_image_flows(self, image_flows_data):
         self.flows_frame = read_buffer_image(image_flows_data, self.screen_width, self.screen_height)
 
     def add_third_party_camera_image(self, third_party_image_data):
+        if self.third_party_camera_frames is None:
+            self.third_party_camera_frames = []
+
         self.third_party_camera_frames.append(read_buffer_image(third_party_image_data, self.screen_width, self.screen_height))
 
     def add_image(self, image_data, **kwargs):
@@ -247,12 +260,17 @@ class Event:
         self.process_colors()
 
     def add_third_party_image_ids(self, image_ids_data):
+        if self.third_party_instance_segmentation_frames is None:
+            self.third_party_instance_segmentation_frames = []
+
         self.third_party_instance_segmentation_frames.append(read_buffer_image(image_ids_data, self.screen_width, self.screen_height))
 
     def add_image_classes(self, image_classes_data):
         self.class_segmentation_frame = read_buffer_image(image_classes_data, self.screen_width, self.screen_height)
 
     def add_third_party_image_classes(self, image_classes_data):
+        if self.third_party_class_segmentation_frames is None:
+            self.third_party_class_segmentation_frames = []
         self.third_party_class_segmentation_frames.append(read_buffer_image(image_classes_data, self.screen_width, self.screen_height))
 
     def cv2image(self):
