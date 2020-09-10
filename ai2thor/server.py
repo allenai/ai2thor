@@ -81,42 +81,44 @@ class Event:
     This class wraps the screenshot that Unity captures as well
     as the metadata sent about each object
     """
+    _frame = None
+    depth_frame = None
+    normals_frame = None
+    flow_frame = None
+
+    color_to_object_id = None
+    object_id_to_color = None
+
+    instance_detections2D = None
+    instance_masks = None
+    class_masks = None
+
+    instance_segmentation_frame = None
+    class_segmentation_frame = None
+
+    class_detections2D = None
+
+    third_party_camera_frames = ()
+    third_party_class_segmentation_frames = ()
+    third_party_instance_segmentation_frames = ()
+    third_party_depth_frames = ()
+    third_party_normals_frames = ()
+    third_party_flows_frames = ()
 
     
     def __init__(self, metadata, x11=None):
         self.x11 = x11
         self.metadata = metadata
-        self.screen_width = metadata['screenWidth']
-        self.screen_height = metadata['screenHeight']
-
-        # frame has been changed to a property
-        self._frame = None
-        self.depth_frame = None
-        self.normals_frame = None
-        self.flow_frame = None
-
-        self.color_to_object_id = {}
-        self.object_id_to_color = {}
-
-        self.instance_detections2D = None
-        self.instance_masks = {}
-        self.class_masks = {}
-
-        self.instance_segmentation_frame = None
-        self.class_segmentation_frame = None
-
-        self.class_detections2D = {}
-
-        self.process_colors()
-        self.process_visible_bounds2D()
-        self.third_party_camera_frames = []
-        self.third_party_class_segmentation_frames = []
-        self.third_party_instance_segmentation_frames = []
-        self.third_party_depth_frames = []
-        self.third_party_normals_frames = []
-        self.third_party_flows_frames = []
 
         self.events = [self] # Ensure we have a similar API to MultiAgentEvent
+
+    @property
+    def screen_width(self):
+        return self.metadata['screenWidth']
+
+    @property
+    def screen_height(self):
+        return self.metadata['screenHeight']
 
     @property
     def image_data(self):
@@ -241,6 +243,8 @@ class Event:
     def add_image_ids(self, image_ids_data):
         self.instance_segmentation_frame = read_buffer_image(image_ids_data, self.screen_width, self.screen_height)
         self.process_colors_ids()
+        self.process_visible_bounds2D()
+        self.process_colors()
 
     def add_third_party_image_ids(self, image_ids_data):
         self.third_party_instance_segmentation_frames.append(read_buffer_image(image_ids_data, self.screen_width, self.screen_height))
