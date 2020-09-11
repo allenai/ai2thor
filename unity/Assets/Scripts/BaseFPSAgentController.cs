@@ -1866,7 +1866,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             return Time.time;
         }
 
-        public bool objectIsWithinViewport(SimObjPhysics sop) {
+        protected bool objectIsWithinViewport(SimObjPhysics sop) {
             if (sop.VisibilityPoints.Length > 0) {
                 Transform[] visPoints = sop.VisibilityPoints;
                 foreach (Transform point in visPoints) {
@@ -2576,6 +2576,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 if (Math.Abs((parts * 1.0f) - 360f / rotateStepDegrees) > 1e-5) {
                     errorMessage = "Invalid rotate step degrees for agent, must divide 360 without a remainder.";
                     actionFinished(false);
+                    return;
                 }
                 
                 int numLeft = parts / 2;
@@ -2586,7 +2587,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
                 if (path.corners.Length <= 1) {
                     if (objectIsWithinViewport(sop)) {
-                        actionFinished(true, null);
+                        actionFinished(true);
                         return;
                     }
 
@@ -2614,6 +2615,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     Debug.Log("Expert rotate and horizon:");
                     Debug.Log(relRotate);
                     Debug.Log(relHorizon);
+                    // When in the editor, rotate the agent and camera into the expert direction
                     m_Camera.transform.localEulerAngles = new Vector3(startCameraRot.x + 30f * relHorizon, 0.0f, 0.0f);
                     transform.Rotate(0.0f, relRotate * rotateStepDegrees, 0.0f);
                     #endif

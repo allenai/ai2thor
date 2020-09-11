@@ -6306,13 +6306,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                 updateAllAgentCollidersForVisibilityCheck(true);
                 return result;
-            }
-
-            else 
-            {
-                #if UNITY_EDITOR
+            } else {
                 Debug.Log("Error! Set at least 1 visibility point on SimObjPhysics prefab!");
-                #endif
             }
             
             return false;
@@ -6340,9 +6335,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     }
                 }
             } else {
-                #if UNITY_EDITOR
                 Debug.Log("Error! Set at least 1 visibility point on SimObjPhysics prefab!");
-                #endif
             }
             updateAllAgentCollidersForVisibilityCheck(true);
             return false;
