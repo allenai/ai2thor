@@ -28,23 +28,19 @@ public class ObjectSpecificReceptacle : MonoBehaviour
 		return result;
 	}
 
-	///REPLACE THIS CHECK WITH NEW CONTAINS CHECK
 	public bool isFull()
 	{
-		print("isFull being called");
 		SimObjPhysics sop = gameObject.GetComponent<SimObjPhysics>();
 
 		foreach (GameObject rtb in sop.ReceptacleTriggerBoxes)
 		{
 			if(rtb.GetComponent<Contains>().isOccupied())
 			{
-				print("osr is occupied, return true");
 				full = true;
 				return true;
 			}
 		}
 
-		print("osr is not occupied, return false");
 		full = false;
 		return false;
 	}
@@ -60,18 +56,4 @@ public class ObjectSpecificReceptacle : MonoBehaviour
 		#endif
 	}
 	
-	// Update is called once per frame
-	void Update () 
-	{
-		if(Input.GetKeyDown(KeyCode.Alpha7))
-		{
-			isFull();
-		}
-		//isFull();
-	}
-
-	void LateUpdate()
-	{
-		//isFull();
-	}
 }

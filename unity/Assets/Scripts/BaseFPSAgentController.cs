@@ -54,6 +54,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		[SerializeField]
 		protected float m_GravityMultiplier;
 		protected static float gridSize = 0.25f;
+        //time the checkIfObjectHasStoppedMoving coroutine waits for objects to stop moving
+        protected float TimeToWaitForObjectsToComeToRest = 0.0f;
         //determins default move distance for move actions
 		protected float moveMagnitude;
         //determines rotation increment of rotate functions
@@ -421,7 +423,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 	Time.timeScale = action.timeScale;
 				}
             } else {
-                errorMessage = "Time scale must be >0";
+                errorMessage = "Time scale must be > 0";
                 Debug.Log(errorMessage);
                 actionFinished(false);
                 return;
@@ -467,11 +469,15 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 actionFinished(false);
                 return;
             }
+
             else
             {
                 gridSize = action.gridSize;
                 StartCoroutine(checkInitializeAgentLocationAction());
             }
+
+            //initialize how long the default wait time for objects to stop moving is
+            this.TimeToWaitForObjectsToComeToRest = action.TimeToWaitForObjectsToComeToRest;
             	
             // Debug.Log("Object " + action.controllerInitialization.ToString() + " dict "  + (action.controllerInitialization.variableInitializations == null));//+ string.Join(";", action.controllerInitialization.variableInitializations.Select(x => x.Key + "=" + x.Value).ToArray()));
 

@@ -1347,6 +1347,8 @@ public class ServerAction
 	public float g;
 	public float b;
 
+	//default time for objects to wait before returning actionFinished() if an action put them in motion
+	public float TimeToWaitForObjectsToComeToRest = 10.0f;
 	public float intensity;//used for light?
 	public float scale;
 

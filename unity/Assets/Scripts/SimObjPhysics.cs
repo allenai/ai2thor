@@ -181,21 +181,20 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		}
 	}
 
-	//get all the ObjectID strings of all objects contained by this receptacle object
 	public List<string> ReceptacleObjectIds
 	{
 		get
 		{
-			return this.Contains();
+			return this.GetAllSimObjectsInReceptacleTriggersByObjectID();
 		}
 	}
 
 	//get all objects contained by this receptacle object as a list of SimObjPhysics
-	public List<SimObjPhysics> ReceptacleObjects
+	public List<SimObjPhysics> SimObjectsContainedByReceptacle
 	{
 		get
 		{
-			return this.ContainsGameObject();
+			return this.GetAllSimObjectsInReceptacleTriggers();
 		}
 
 	}
@@ -916,42 +915,8 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
         myrb.AddForce(dir * magnitude);
     }
 
-	////////////////////////////////////////////////////////////////////////////////
-
-	//XXX: Replace with new Overlap Box check
-	//returns a game object list of all sim objects contained by this object if it is a receptacle
-	public List<GameObject> Contains_GameObject()
-	{
-		List<SimObjSecondaryProperty> sspList = new List<SimObjSecondaryProperty>(SecondaryProperties);
-
-		List<GameObject> objs = new List<GameObject>();
-
-		//is this object a receptacle?
-		if (sspList.Contains(SimObjSecondaryProperty.Receptacle))
-		{
-			//this is a receptacle, now populate objs list of contained objets to return below
-			if (ReceptacleTriggerBoxes != null)
-			{
-				//do this once per ReceptacleTriggerBox referenced by this object
-				foreach (GameObject rtb in ReceptacleTriggerBoxes)
-				{
-					//now go through every object each ReceptacleTriggerBox is keeping track of and add their string ObjectID to objs
-					foreach (SimObjPhysics sop in rtb.GetComponent<Contains>().CurrentlyContainedObjects())
-					{
-						//don't add repeats
-						if (!objs.Contains(sop.gameObject))
-							objs.Add(sop.gameObject);
-					}
-				}
-			}
-		}
-
-		return objs;
-	}
-
-	//XXX: Replace with new Overlap Box check
-	//if this is a receptacle object, return list of references to all objects currently contained
-	public List<SimObjPhysics> ContainsGameObject()
+	//return all sim objects contained by this object if it is a receptacle
+	public List<SimObjPhysics> GetAllSimObjectsInReceptacleTriggers()
 	{
 		List<SimObjPhysics> objs = new List<SimObjPhysics>();
 
@@ -976,49 +941,31 @@ public class SimObjPhysics : MonoBehaviour, SimpleSimObj
 		return objs;
 	}
 
-	//XXX: Replace with new Overlap Box check
-	//if this is a receptacle object, check what is inside the Receptacle
-	//make sure to return array of strings so that this info can be put into MetaData
-	public List<string> Contains()
+	//return all sim objects by object ID contained by this object if it is a receptacle
+	public List<string> GetAllSimObjectsInReceptacleTriggersByObjectID()
 	{
 		List<string> objs = new List<string>();
 
-		//is this object a receptacle?
-		if (IsReceptacle)
+		if(DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.Receptacle))
 		{
-			//this is a receptacle, now populate objs list of contained objets to return below
-			if (ReceptacleTriggerBoxes != null)
+			if(ReceptacleTriggerBoxes != null)
 			{
-				//do this once per ReceptacleTriggerBox referenced by this object
-				foreach (GameObject rtb in ReceptacleTriggerBoxes)
+				foreach (GameObject go in ReceptacleTriggerBoxes)
 				{
-					//now go through every object each ReceptacleTriggerBox is keeping track of and add their string ObjectID to objs
-					foreach (string id in rtb.GetComponent<Contains>().CurrentlyContainedObjectIDs())
+					foreach(string s in go.GetComponent<Contains>().CurrentlyContainedObjectIDs())
 					{
-						//don't add repeats
-						if (!objs.Contains(id))
-							objs.Add(id);
+						if(!objs.Contains(s))
+						{
+                            //print(sop.transform.name);
+							objs.Add(s);
+						}
 					}
 				}
-
-				return objs;
-			}
-
-			else
-			{
-				Debug.Log("No Receptacle Trigger Box!");
-				return objs;
 			}
 		}
 
-		else
-		{
-			Debug.Log(gameObject.name + " is not a Receptacle!");
-			return objs;
-		}
+		return objs;
 	}
-
-	////////////////////////////////////////////////////////////////////////////////
 
 	public List<GameObject> ContainedGameObjects()
 	{
