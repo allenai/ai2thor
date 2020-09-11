@@ -2020,14 +2020,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             if(sop != null)
             {
-                print("here?");
-                print("useTimeout?: " + useTimeout);
+                // print("here?");
+                // print("useTimeout?: " + useTimeout);
                 Rigidbody rb = sop.GetComponentInChildren<Rigidbody>();
                 bool stoppedMoving = false;
 
                 while(Time.time - startTime < waitTime)
                 {
-                    print("in while loop");
+                    // print("in while loop");
                     if(sop == null)
                     break;
 
@@ -2037,7 +2037,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     //ok the accel is basically zero, so it has stopped moving
                     if(Mathf.Abs(accel) <= 0.001f)
                     {
-                        print("accel world");
+                        // print("accel world");
                         //force the rb to stop moving just to be safe
                         rb.velocity = Vector3.zero;
                         rb.angularVelocity = Vector3.zero;
@@ -2071,9 +2071,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                     #if UNITY_EDITOR
                     print("yield timed out");
-                    // print("didHandTouchSomething: " + feedback.didHandTouchSomething);
-                    // print("object id: " + feedback.objectId);
-                    // print("armslength: " + feedback.armsLength);
+                    print("didHandTouchSomething: " + feedback.didHandTouchSomething);
+                    print("object id: " + feedback.objectId);
+                    print("armslength: " + feedback.armsLength);
                     #endif
 
                     //force objec to stop moving 
