@@ -1866,6 +1866,29 @@ namespace UnityStandardAssets.Characters.FirstPerson
             return Time.time;
         }
 
+        protected bool objectIsWithinViewport(SimObjPhysics sop) {
+            if (sop.VisibilityPoints.Length > 0) {
+                Transform[] visPoints = sop.VisibilityPoints;
+                foreach (Transform point in visPoints) {
+                    Vector3 viewPoint = m_Camera.WorldToViewportPoint(point.position);
+                    float ViewPointRangeHigh = 1.0f;
+                    float ViewPointRangeLow = 0.0f;
+
+                    if (viewPoint.z > 0 &&
+                        viewPoint.x < ViewPointRangeHigh && viewPoint.x > ViewPointRangeLow && //within x bounds of viewport
+                        viewPoint.y < ViewPointRangeHigh && viewPoint.y > ViewPointRangeLow //within y bounds of viewport
+                    ) {
+                            return true;
+                    }
+                }
+            } else {
+                #if UNITY_EDITOR
+                Debug.Log("Error! Set at least 1 visibility point on SimObjPhysics prefab!");
+                #endif
+            }
+            return false;
+        }
+
         public SimObjPhysics[] VisibleSimObjs(ServerAction action) 
         {
             List<SimObjPhysics> simObjs = new List<SimObjPhysics>();
@@ -2544,23 +2567,143 @@ namespace UnityStandardAssets.Characters.FirstPerson
             actionFinished(true, reachablePositions);
         }
 
-        public void GetShortestPath(ServerAction action) {
+        public void ObjectNavExpertAction(ServerAction action) {
             SimObjPhysics sop = getSimObjectFromTypeOrId(action);
-            if (sop == null) {
+            var path = getShortestPath(sop, true);
+            if (path.status == UnityEngine.AI.NavMeshPathStatus.PathComplete) {
+
+                int parts = (int) Math.Round(360f / rotateStepDegrees);
+                if (Math.Abs((parts * 1.0f) - 360f / rotateStepDegrees) > 1e-5) {
+                    errorMessage = "Invalid rotate step degrees for agent, must divide 360 without a remainder.";
+                    actionFinished(false);
+                    return;
+                }
+                
+                int numLeft = parts / 2;
+                int numRight = numLeft + (parts % 2 == 0 ? 1 : 0);
+                Vector3 startPosition = this.transform.position;
+                Quaternion startRotation = this.transform.rotation;
+                Vector3 startCameraRot = m_Camera.transform.localEulerAngles;
+
+                if (path.corners.Length <= 1) {
+                    if (objectIsWithinViewport(sop)) {
+                        actionFinished(true);
+                        return;
+                    }
+
+                    int relRotate = 0;
+                    int relHorizon = 0;
+                    int bestNumActions = 1000000;
+                    for (int i = -numLeft; i <= numRight; i++) {
+                        transform.Rotate(0.0f, i * rotateStepDegrees, 0.0f);
+                        for (int horizon = -1; horizon <= 2; horizon++) {
+                            m_Camera.transform.localEulerAngles = new Vector3(30f * horizon, 0.0f, 0.0f);
+                            if (objectIsWithinViewport(sop)) {
+                                int numActions = Math.Abs(i) + Math.Abs(horizon - (int) (startCameraRot.x / 30f));
+                                if (numActions < bestNumActions) {
+                                    bestNumActions = numActions;
+                                    relRotate = i;
+                                    relHorizon = horizon - (int) (startCameraRot.x / 30f);
+                                }
+                            }
+                        }
+                        m_Camera.transform.localEulerAngles = startCameraRot;
+                        transform.rotation = startRotation;
+                    }
+
+                    #if UNITY_EDITOR
+                    Debug.Log("Expert rotate and horizon:");
+                    Debug.Log(relRotate);
+                    Debug.Log(relHorizon);
+                    // When in the editor, rotate the agent and camera into the expert direction
+                    m_Camera.transform.localEulerAngles = new Vector3(startCameraRot.x + 30f * relHorizon, 0.0f, 0.0f);
+                    transform.Rotate(0.0f, relRotate * rotateStepDegrees, 0.0f);
+                    #endif
+
+                    if (relRotate != 0) {
+                        if (relRotate < 0) {
+                            actionFinished(true, "RotateLeft");
+                        } else {
+                            actionFinished(true, "RotateRight");
+                        }
+                    } else if (relHorizon != 0) {
+                        if (relHorizon < 0) {
+                            actionFinished(true, "LookUp");
+                        } else {
+                            actionFinished(true, "LookDown");
+                        }
+                    } else {
+                        errorMessage = "Object doesn't seem visible from any rotation/horizon.";
+                        actionFinished(false);
+                    }
+                    return;
+                }
+
+                Vector3 nextCorner = path.corners[1];
+
+                int whichBest = 0;
+                float bestDistance = 1000f;
+                for (int i = -numLeft; i <= numRight; i++) {
+                    transform.Rotate(0.0f, i * rotateStepDegrees, 0.0f);
+
+                    bool couldMove = moveInDirection(this.transform.forward * gridSize);
+                    if (couldMove) {
+                        float newDistance = Math.Abs(nextCorner.x - transform.position.x) + Math.Abs(nextCorner.z - transform.position.z);
+                        if (newDistance + 1e-6 < bestDistance) {
+                            bestDistance = newDistance;
+                            whichBest = i;
+                        }
+                    }
+                    transform.position = startPosition;
+                    transform.rotation = startRotation;
+                }
+
+                if (bestDistance >= 1000f) {
+                    errorMessage = "Can't seem to move in any direction...";
+                    actionFinished(false);
+                }
+               
+               #if UNITY_EDITOR
+               transform.Rotate(0.0f, Math.Sign(whichBest) * rotateStepDegrees, 0.0f);
+               if (whichBest == 0) {
+                   moveInDirection(this.transform.forward * gridSize);
+               }
+               Debug.Log(whichBest);
+               #endif
+
+                if (whichBest < 0) {
+                    actionFinished(true, "RotateLeft");
+                } else if (whichBest > 0) {
+                    actionFinished(true, "RotateRight");
+                } else {
+                    actionFinished(true, "MoveAhead");
+                }
+                return;
+            }
+            else {
+                errorMessage = "Path to target could not be found";
                 actionFinished(false);
                 return;
             }
+        }
+
+        public UnityEngine.AI.NavMeshPath getShortestPath(SimObjPhysics sop, bool useAgentTransform, ServerAction action=null) {
             var startPosition = this.transform.position;
             var startRotation = this.transform.rotation;
-            if (!action.useAgentTransform) {
+            if (!useAgentTransform) {
                 startPosition = action.position;
                 startRotation = Quaternion.Euler(action.rotation);
             }
 
-            var path = GetSimObjectNavMeshTarget(sop, startPosition, startRotation);
+            return GetSimObjectNavMeshTarget(sop, startPosition, startRotation);
+        }
+
+        public void GetShortestPath(ServerAction action) {
+            SimObjPhysics sop = getSimObjectFromTypeOrId(action);
+            var path = getShortestPath(sop, action.useAgentTransform, action);
             if (path.status == UnityEngine.AI.NavMeshPathStatus.PathComplete) {
                
-                VisualizePath(startPosition, path);
+                // VisualizePath(startPosition, path);
                 actionFinished(true, path);
                 return;
             }
@@ -2833,7 +2976,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             agentTransform.position = originalAgentPosition;
             agentTransform.rotation = orignalAgentRotation;
             m_Camera.transform.rotation = originalCameraRotation;
-            
+
             var path = new UnityEngine.AI.NavMeshPath();
             
             var sopPos = targetSOP.transform.position;
