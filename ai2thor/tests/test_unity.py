@@ -63,6 +63,11 @@ def assert_near(point1, point2, error_message=''):
     for k in point1.keys():
         assert round(point1[k], 3) == round(point2[k], 3), error_message
 
+def test_stochastic_controller():
+    controller = UnityTestController(agentControllerType='stochastic')
+    controller.reset('FloorPlan28')
+    assert controller.last_event.metadata['lastActionSuccess']
+
 def test_rectangle_aspect():
     controller = UnityTestController(width=600, height=300)
     controller.reset('FloorPlan28')

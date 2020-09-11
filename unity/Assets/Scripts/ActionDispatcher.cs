@@ -126,9 +126,13 @@ public static class ActionDispatcher {
 
                         // if the method is more specific and the parameters match
                         // we will dispatch to this method instead of the base type
-                        if (hierarchy.IndexOf(mi.DeclaringType) < hierarchy.IndexOf(methods[j].DeclaringType) && signatureMatch) { 
-                            methods[j] = mi;
+                        if (signatureMatch) {
+                            replaced = true;
+                            if (hierarchy.IndexOf(mi.DeclaringType) < hierarchy.IndexOf(methods[j].DeclaringType)) {
+                                methods[j] = mi;
+                            } 
                         }
+
                     }
                     if (!replaced) {
                         // we sort the list of methods so that we evaluate
