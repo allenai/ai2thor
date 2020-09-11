@@ -2,11 +2,13 @@
 #import pytest
 import os
 import json
+import pytest
 import jsonschema
 import ai2thor.controller
+from ai2thor.wsgi_server import WsgiServer
+from ai2thor.fifo_server import FifoServer
 import glob
 import re
-
 class UnityTestController(ai2thor.controller.Controller):
 
     def __init__(self,**kwargs):
@@ -35,22 +37,31 @@ class UnityTestController(ai2thor.controller.Controller):
     def prune_releases(self):
         pass
 
+# Defining const classes to lessen the possibility of a misspelled key
+class Actions:
+    AddThirdPartyCamera = 'AddThirdPartyCamera'
+    UpdateThirdPartyCamera = 'UpdateThirdPartyCamera'
 
-controller = UnityTestController()
-controller.reset('FloorPlan28')
-controller.step(dict(action='Initialize', gridSize=0.25))
+class MultiAgentMetadata:
+    thirdPartyCameras = 'thirdPartyCameras'
+
+class ThirdPartyCameraMetadata:
+    position = 'position'
+    rotation = 'rotation'
+    fieldOfView = 'fieldOfView'
+
+
+wsgi_controller = UnityTestController(server_class=WsgiServer)
+fifo_controller = UnityTestController(server_class=FifoServer)
 
 def teardown_module(module):
-    controller.stop()
+    wsgi_controller.stop()
+    fifo_controller.stop()
 
-#@pytest.fixture
-#def controller():
-#    return c
-
-def assert_near(point1, point2):
-    assert point1.keys() == point2.keys()
+def assert_near(point1, point2, error_message=''):
+    assert point1.keys() == point2.keys(), error_message
     for k in point1.keys():
-        assert round(point1[k], 3) == round(point2[k], 3)
+        assert round(point1[k], 3) == round(point2[k], 3), error_message
 
 def test_rectangle_aspect():
     controller = UnityTestController(width=600, height=300)
@@ -63,8 +74,9 @@ def test_small_aspect():
     controller.reset('FloorPlan28')
     event = controller.step(dict(action='Initialize', gridSize=0.25))
     assert event.frame.shape == (64, 128, 3)
-    
-def test_lookdown():
+
+@pytest.mark.parametrize("controller", [wsgi_controller, fifo_controller])
+def test_lookdown(controller):
 
     e = controller.step(dict(action='RotateLook', rotation=0, horizon=0))
     position = controller.last_event.metadata['agent']['position']
@@ -79,13 +91,15 @@ def test_lookdown():
     e = controller.step(dict(action='LookDown'))
     assert round(e.metadata['agent']['cameraHorizon']) == 60
 
-def test_no_leak_params():
+@pytest.mark.parametrize("controller", [wsgi_controller, fifo_controller])
+def test_no_leak_params(controller):
 
     action = dict(action='RotateLook', rotation=0, horizon=0)
     e = controller.step(action)
     assert 'sequenceId' not in action
 
-def test_lookup():
+@pytest.mark.parametrize("controller", [wsgi_controller, fifo_controller])
+def test_lookup(controller):
 
     e = controller.step(dict(action='RotateLook', rotation=0, horizon=0))
     position = controller.last_event.metadata['agent']['position']
@@ -98,7 +112,8 @@ def test_lookup():
     e = controller.step(dict(action='LookUp'))
     assert e.metadata['agent']['cameraHorizon'] == -30.0
 
-def test_rotate_left():
+@pytest.mark.parametrize("controller", [wsgi_controller, fifo_controller])
+def test_rotate_left(controller):
 
     e = controller.step(dict(action='RotateLook', rotation=0, horizon=0))
     position = controller.last_event.metadata['agent']['position']
@@ -112,20 +127,60 @@ def test_rotate_left():
     assert e.metadata['agent']['rotation']['x'] == 0.0
     assert e.metadata['agent']['rotation']['z'] == 0.0
 
-def test_add_third_party_camera():
 
-    assert len(controller.last_event.metadata['thirdPartyCameras']) == 0
-    e = controller.step(dict(action='AddThirdPartyCamera', position=dict(x=1.2, y=2.3, z=3.4), rotation=dict(x=30, y=40,z=50)))
-    assert len(e.metadata['thirdPartyCameras']) == 1
-    assert_near(e.metadata['thirdPartyCameras'][0]['position'], dict(x=1.2, y=2.3, z=3.4))
-    assert_near(e.metadata['thirdPartyCameras'][0]['rotation'], dict(x=30, y=40, z=50))
-    assert len(e.third_party_camera_frames) == 1
-    assert e.third_party_camera_frames[0].shape == (300,300,3)
-    e = controller.step(dict(action='UpdateThirdPartyCamera', thirdPartyCameraId=0, position=dict(x=2.2, y=3.3, z=4.4), rotation=dict(x=10, y=20,z=30)))
-    assert_near(e.metadata['thirdPartyCameras'][0]['position'], dict(x=2.2, y=3.3, z=4.4))
-    assert_near(e.metadata['thirdPartyCameras'][0]['rotation'], dict(x=10, y=20, z=30))
+@pytest.mark.parametrize("controller", [wsgi_controller, fifo_controller])
+def test_add_third_party_camera(controller):
 
-def test_rotate_look():
+
+    expectedPosition = dict(x=1.2, y=2.3, z=3.4)
+    expectedRotation = dict(x=30, y=40, z=50)
+    expectedFieldOfView = 45.0
+    assert len(controller.last_event.metadata[MultiAgentMetadata.thirdPartyCameras]) == 0, 'there should be 0 cameras'
+
+    e = controller.step(dict(action=Actions.AddThirdPartyCamera, position=expectedPosition, rotation=expectedRotation, fieldOfView=expectedFieldOfView))
+    assert len(e.metadata[MultiAgentMetadata.thirdPartyCameras]) == 1, 'there should be 1 camera'
+    camera = e.metadata[MultiAgentMetadata.thirdPartyCameras][0]
+    assert_near(camera[ThirdPartyCameraMetadata.position], expectedPosition, 'initial position should have been set')
+    assert_near(camera[ThirdPartyCameraMetadata.rotation], expectedRotation, 'initial rotation should have been set')
+    assert camera[ThirdPartyCameraMetadata.fieldOfView] == expectedFieldOfView, 'initial fieldOfView should have been set'
+
+
+@pytest.mark.parametrize("controller", [wsgi_controller, fifo_controller])
+def test_update_third_party_camera(controller):
+
+    expectedPosition = dict(x=2.2, y=3.3, z=4.4)
+    expectedRotation = dict(x=10, y=20, z=30)
+    expectedInitialFieldOfView = 45.0
+    expectedFieldOfView2 = 55.0
+    expectedFieldOfViewDefault = 90.0
+    assert len(controller.last_event.metadata[MultiAgentMetadata.thirdPartyCameras]) == 1, 'there should be 1 camera'
+
+    e = controller.step(dict(action=Actions.UpdateThirdPartyCamera, thirdPartyCameraId=0, position=expectedPosition, rotation=expectedRotation))
+    camera = e.metadata[MultiAgentMetadata.thirdPartyCameras][0]
+    assert_near(camera[ThirdPartyCameraMetadata.position], expectedPosition, 'position should have been updated')
+    assert_near(camera[ThirdPartyCameraMetadata.rotation], expectedRotation, 'rotation should have been updated')
+    assert camera[ThirdPartyCameraMetadata.fieldOfView] == expectedInitialFieldOfView, 'fieldOfView should not have changed'
+
+    # 0 is a special case, since nullable float does not get encoded properly, we need to pass 0 as null
+    e = controller.step(dict(action=Actions.UpdateThirdPartyCamera, thirdPartyCameraId=0, fieldOfView=0))
+    camera = e.metadata[MultiAgentMetadata.thirdPartyCameras][0]
+    assert camera[ThirdPartyCameraMetadata.fieldOfView] == expectedInitialFieldOfView, 'fieldOfView should have been updated'
+
+    e = controller.step(dict(action=Actions.UpdateThirdPartyCamera, thirdPartyCameraId=0, fieldOfView=expectedFieldOfView2))
+    camera = e.metadata[MultiAgentMetadata.thirdPartyCameras][0]
+    assert camera[ThirdPartyCameraMetadata.fieldOfView] == expectedFieldOfView2, 'fieldOfView should have been updated'
+
+    e = controller.step(dict(action=Actions.UpdateThirdPartyCamera, thirdPartyCameraId=0, fieldOfView=-1))
+    camera = e.metadata[MultiAgentMetadata.thirdPartyCameras][0]
+    assert camera[ThirdPartyCameraMetadata.fieldOfView] == expectedFieldOfViewDefault, 'fieldOfView should have been updated to default'
+
+    e = controller.step(dict(action=Actions.UpdateThirdPartyCamera, thirdPartyCameraId=0, fieldOfView=181))
+    camera = e.metadata[MultiAgentMetadata.thirdPartyCameras][0]
+    assert camera[ThirdPartyCameraMetadata.fieldOfView] == expectedFieldOfViewDefault, 'fieldOfView should have been updated to default'
+
+
+@pytest.mark.parametrize("controller", [wsgi_controller, fifo_controller])
+def test_rotate_look(controller):
 
     e = controller.step(dict(action='RotateLook', rotation=0, horizon=0))
     position = controller.last_event.metadata['agent']['position']
@@ -139,7 +194,8 @@ def test_rotate_look():
     assert e.metadata['agent']['rotation']['z'] == 0.0
 
 
-def test_rotate_right():
+@pytest.mark.parametrize("controller", [wsgi_controller, fifo_controller])
+def test_rotate_right(controller):
 
     e = controller.step(dict(action='RotateLook', rotation=0, horizon=0))
     position = controller.last_event.metadata['agent']['position']
@@ -154,7 +210,8 @@ def test_rotate_right():
     assert e.metadata['agent']['rotation']['z'] == 0.0
 
 
-def test_teleport():
+@pytest.mark.parametrize("controller", [wsgi_controller, fifo_controller])
+def test_teleport(controller):
     controller.step(dict(action='Teleport', x=-1.5, z=-1.5, y=1.0), raise_for_failure=True)
     position = controller.last_event.metadata['agent']['position']
 
@@ -164,45 +221,139 @@ def test_teleport():
     position = controller.last_event.metadata['agent']['position']
     assert_near(position, dict(x=-2.0, z=-2.5, y=0.901))
 
-def test_moveahead():
+
+@pytest.mark.parametrize("controller", [wsgi_controller, fifo_controller])
+def test_action_dispatch_find_conflicts_stochastic(controller):
+    event = controller.step(dict(action='TestActionDispatchFindConflicts'), typeName='UnityStandardAssets.Characters.FirstPerson.StochasticRemoteFPSAgentController')
+    known_conflicts = {
+        'GetComponent': ['type'],
+        'StopCoroutine': ['routine'],
+        'TestActionDispatchConflict': ['param22']
+    }
+    assert event.metadata['actionReturn'] == known_conflicts
+    
+@pytest.mark.parametrize("controller", [wsgi_controller, fifo_controller])
+def test_action_dispatch_find_conflicts_physics(controller):
+    event = controller.step(dict(action='TestActionDispatchFindConflicts'), typeName='UnityStandardAssets.Characters.FirstPerson.PhysicsRemoteFPSAgentController')
+    known_conflicts = {
+        'GetComponent': ['type'],
+        'StopCoroutine': ['routine'],
+        'TestActionDispatchConflict': ['param22']
+    }
+    assert event.metadata['actionReturn'] == known_conflicts
+
+@pytest.mark.parametrize("controller", [wsgi_controller, fifo_controller])
+def test_action_dispatch_missing_args(controller):
+    caught_exception = False
+    try:
+        event = controller.step(dict(action='TestActionDispatchNoop', param6='foo'))
+        print(event.metadata['actionReturn'])
+    except ValueError as e:
+        caught_exception = True
+    assert caught_exception
+    assert controller.last_event.metadata['errorCode'] == 'MissingArguments'
+    
+@pytest.mark.parametrize("controller", [wsgi_controller, fifo_controller])
+def test_action_dispatch_invalid_action(controller):
+    caught_exception = False
+    try:
+        event = controller.step(dict(action='TestActionDispatchNoopFoo'))
+    except ValueError as e:
+        caught_exception = True
+    assert caught_exception
+    assert controller.last_event.metadata['errorCode'] == 'InvalidAction'
+
+@pytest.mark.parametrize("controller", [wsgi_controller, fifo_controller])
+def test_action_dispatch_empty(controller):
+    event = controller.step(dict(action='TestActionDispatchNoop'))
+    assert event.metadata['actionReturn'] == 'emptyargs'
+
+@pytest.mark.parametrize("controller", [wsgi_controller, fifo_controller])
+def test_action_disptatch_one_param(controller):
+    event = controller.step(dict(action='TestActionDispatchNoop', param1=True))
+    assert event.metadata['actionReturn'] == 'param1'
+
+@pytest.mark.parametrize("controller", [wsgi_controller, fifo_controller])
+def test_action_disptatch_two_param(controller):
+    event = controller.step(dict(action='TestActionDispatchNoop', param1=True, param2=False))
+    assert event.metadata['actionReturn'] == 'param1 param2'
+
+@pytest.mark.parametrize("controller", [wsgi_controller, fifo_controller])
+def test_action_disptatch_two_param_with_default(controller):
+    event = controller.step(dict(action='TestActionDispatchNoop', param3=True, param4='foobar'))
+    assert event.metadata['actionReturn'] == 'param3 param4/default foobar'
+
+@pytest.mark.parametrize("controller", [wsgi_controller, fifo_controller])
+def test_action_disptatch_two_param_with_default_empty(controller):
+    event = controller.step(dict(action='TestActionDispatchNoop', param3=True))
+    assert event.metadata['actionReturn'] == 'param3 param4/default foo'
+
+@pytest.mark.parametrize("controller", [wsgi_controller, fifo_controller])
+def test_action_disptatch_serveraction_default(controller):
+    event = controller.step(dict(action='TestActionDispatchNoopServerAction'))
+    assert event.metadata['actionReturn'] == 'serveraction'
+
+@pytest.mark.parametrize("controller", [wsgi_controller, fifo_controller])
+def test_action_disptatch_serveraction_with_object_id(controller):
+    event = controller.step(dict(action='TestActionDispatchNoopServerAction', objectId='candle|1|2|3'))
+    assert event.metadata['actionReturn'] == 'serveraction'
+
+@pytest.mark.parametrize("controller", [wsgi_controller, fifo_controller])
+def test_action_disptatch_all_default(controller):
+    event = controller.step(dict(action='TestActionDispatchNoopAllDefault'))
+    assert event.metadata['actionReturn'] == 'alldefault'
+
+@pytest.mark.parametrize("controller", [wsgi_controller, fifo_controller])
+def test_action_disptatch_some_default(controller):
+    event = controller.step(dict(action='TestActionDispatchNoopAllDefault', param12=9.0))
+    assert event.metadata['actionReturn'] == 'somedefault'
+
+@pytest.mark.parametrize("controller", [wsgi_controller, fifo_controller])
+def test_moveahead(controller):
     controller.step(dict(action='Teleport', x=-1.5, z=-1.5, y=1.0), raise_for_failure=True)
     controller.step(dict(action='MoveAhead'), raise_for_failure=True)
     position = controller.last_event.metadata['agent']['position']
     assert_near(position, dict(x=-1.25, z=-1.5, y=0.901))
 
-def test_moveback():
+@pytest.mark.parametrize("controller", [wsgi_controller, fifo_controller])
+def test_moveback(controller):
     controller.step(dict(action='Teleport', x=-1.5, z=-1.5, y=1.0), raise_for_failure=True)
     controller.step(dict(action='MoveBack'), raise_for_failure=True)
     position = controller.last_event.metadata['agent']['position']
     assert_near(position, dict(x=-1.75, z=-1.5, y=0.900998652))
 
-def test_moveleft():
+@pytest.mark.parametrize("controller", [wsgi_controller, fifo_controller])
+def test_moveleft(controller):
     controller.step(dict(action='Teleport', x=-1.5, z=-1.5, y=1.0), raise_for_failure=True)
     controller.step(dict(action='MoveLeft'), raise_for_failure=True)
     position = controller.last_event.metadata['agent']['position']
     assert_near(position, dict(x=-1.5, z=-1.25, y=0.901))
 
-def test_moveright():
+@pytest.mark.parametrize("controller", [wsgi_controller, fifo_controller])
+def test_moveright(controller):
     controller.step(dict(action='Teleport', x=-1.5, z=-1.5, y=1.0), raise_for_failure=True)
     controller.step(dict(action='MoveRight'), raise_for_failure=True)
     position = controller.last_event.metadata['agent']['position']
     assert_near(position, dict(x=-1.5, z=-1.75, y=0.901))
 
 
-def test_moveahead_mag():
+@pytest.mark.parametrize("controller", [wsgi_controller, fifo_controller])
+def test_moveahead_mag(controller):
     controller.step(dict(action='Teleport', x=-1.5, z=-1.5, y=1.1), raise_for_failure=True)
     controller.step(dict(action='MoveAhead', moveMagnitude=0.5), raise_for_failure=True)
     position = controller.last_event.metadata['agent']['position']
     assert_near(position, dict(x=-1.0, z=-1.5, y=0.9009983))
 
 
-def test_moveahead_fail():
+@pytest.mark.parametrize("controller", [wsgi_controller, fifo_controller])
+def test_moveahead_fail(controller):
     controller.step(dict(action='Teleport', x=-1.5, z=-1.5, y=1.0), raise_for_failure=True)
     controller.step(dict(action='MoveAhead', moveMagnitude=5.0))
     assert not controller.last_event.metadata['lastActionSuccess']
 
 
-def test_jsonschema_metadata():
+@pytest.mark.parametrize("controller", [wsgi_controller, fifo_controller])
+def test_jsonschema_metadata(controller):
     event = controller.step(dict(action='Pass'))
     with open("ai2thor/tests/data/metadata-schema.json") as f:
         schema = json.loads(f.read())
@@ -210,7 +361,8 @@ def test_jsonschema_metadata():
     jsonschema.validate(instance=event.metadata, schema=schema)
 
 
-def test_get_scenes_in_build():
+@pytest.mark.parametrize("controller", [wsgi_controller, fifo_controller])
+def test_get_scenes_in_build(controller):
     scenes = set()
     for g in glob.glob('unity/Assets/Scenes/*.unity'):
         scenes.add(os.path.splitext(os.path.basename(g))[0])
@@ -224,7 +376,8 @@ def test_get_scenes_in_build():
     assert len(diff) == 0, "scenes in build diff: %s" % diff
 
 
-def test_change_resolution():
+@pytest.mark.parametrize("controller", [wsgi_controller, fifo_controller])
+def test_change_resolution(controller):
     event = controller.step(dict(action='Pass'), raise_for_failure=True)
     assert event.frame.shape == (300,300,3)
     event = controller.step(dict(action='ChangeResolution', x=400, y=400), raise_for_failure=True)

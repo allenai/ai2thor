@@ -469,7 +469,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
                         action.action = "ChangeScreenMaterialExpRoom";
                         action.objectVariation = 3;
-                        action.objectId = "Screen|-00.64|+00.78|+00.71";
+                        action.objectId = "ScreenSheet|-00.18|+01.24|+00.23";
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }
@@ -482,7 +482,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         action.r = 20f;
                         action.g = 94f;
                         action.b = 10f;
-                        action.objectId = "Screen|-00.64|+00.78|+00.71";
+                        action.objectId = "ScreenSheet|-00.18|+01.24|+00.23";
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }
@@ -573,8 +573,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 case "spawnabove":
                     {
                         ServerAction action = new ServerAction();
-                        action.action = "GetSpawnCoordinatesAboveObject";
-                        action.objectId = "Floor|+00.00|+00.00|+00.00";
+                        action.action = "GetSpawnCoordinatesAboveReceptacle";
+                        action.objectId = "CounterTop|-01.94|+00.98|-03.67";
                         action.anywhere = false;
                         PhysicsController.ProcessControlCommand(action);
                         break;
@@ -2704,6 +2704,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }
+                    
                     case "visualize_shortest_path":
                     {
                         ServerAction action = new ServerAction();
@@ -2732,6 +2733,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }
+
                     case "get_object_type_ids":
                     {
                         ServerAction action = new ServerAction();
@@ -2774,9 +2776,45 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         else {
                             Debug.LogError("Target x y z args needed for command");
                         }
+                        //action.stopArmMovementOnContact = true;
                         PhysicsController.ProcessControlCommand(action);
                         break;
-                       
+                    }
+
+                    //move mid level arm stop motion
+                    case "mmlas":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "MoveMidLevelArm";
+                        action.speed = 1.0f;
+                        //action.returnToStart = true;
+                        if (splitcommand.Length > 4)
+                        {
+                            action.position = new Vector3(
+                                    float.Parse(splitcommand[1]),
+                                    float.Parse(splitcommand[2]), 
+                                    float.Parse(splitcommand[3])
+                                );
+                            
+                             if (splitcommand.Length >= 5) {
+                                 action.speed = float.Parse(splitcommand[4]);
+                             }
+
+                            if (splitcommand.Length >= 6) {
+                                 action.returnToStart = bool.Parse(splitcommand[5]);
+                             }
+
+                             if(splitcommand.Length >= 7) {
+                                 action.handCameraSpace = bool.Parse(splitcommand[6]);
+                             }
+                        }
+                        else {
+                            Debug.LogError("Target x y z args needed for command");
+                        }
+                        action.stopArmMovementOnContact = true;
+                        //action.stopArmMovementOnContact = true;
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
                     }
 
                     case "mmlah":
@@ -2801,6 +2839,22 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         {
                             action.y = 0.9f;
                             action.speed = 1.0f;
+                        }
+
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
+                    case "scale":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "ScaleObject";
+                        action.objectId = "Cup|-01.36|+00.78|+00.71";
+                        action.scale = 2.0f;
+
+                        if (splitcommand.Length > 1)
+                        {
+                            action.scale = float.Parse(splitcommand[1]);
                         }
 
                         PhysicsController.ProcessControlCommand(action);

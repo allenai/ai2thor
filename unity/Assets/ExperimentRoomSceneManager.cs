@@ -124,8 +124,8 @@ public class ExperimentRoomSceneManager : MonoBehaviour
     //change specified screen object's material to color rgb
     public void ChangeScreenColor(SimObjPhysics screen, float r, float g, float b)
     {
-        List<SkinnedMeshRenderer> renderers = GetAllRenderersOfObject(screen);
-        foreach(SkinnedMeshRenderer sr in renderers)
+        List<MeshRenderer> renderers = GetAllRenderersOfObject(screen);
+        foreach(MeshRenderer sr in renderers)
         {
             //set first element, the primary mat, of the mat array's color
             sr.material.color = new Color(r/255f, g/255f, b/255f);
@@ -135,17 +135,17 @@ public class ExperimentRoomSceneManager : MonoBehaviour
     //change specified screen object's material to variation
     public void ChangeScreenMaterial(SimObjPhysics screen, int variation)
     {
-        List<SkinnedMeshRenderer> renderers = GetAllRenderersOfObject(screen);
-        foreach(SkinnedMeshRenderer sr in renderers)
+        List<MeshRenderer> renderers = GetAllRenderersOfObject(screen);
+        foreach(MeshRenderer sr in renderers)
         {
             sr.material = screenMaterials[variation];
         }
     }
 
-    public List<SkinnedMeshRenderer> GetAllRenderersOfObject(SimObjPhysics obj)
+    public List<MeshRenderer> GetAllRenderersOfObject(SimObjPhysics obj)
     {
-        List<SkinnedMeshRenderer> renderers = new List<SkinnedMeshRenderer>();
-        renderers.AddRange(obj.transform.gameObject.GetComponentsInChildren<SkinnedMeshRenderer>());
+        List<MeshRenderer> renderers = new List<MeshRenderer>();
+        renderers.AddRange(obj.transform.gameObject.GetComponentsInChildren<MeshRenderer>());
         return renderers;
     }
 
@@ -254,7 +254,7 @@ public class ExperimentRoomSceneManager : MonoBehaviour
         //GetSpawnCoordinatesAboveReceptacle
         List<Vector3> spawnCoordinates = new List<Vector3>();
         PhysicsRemoteFPSAgentController fpsAgent = agentManager.ReturnPrimaryAgent().GetComponent<PhysicsRemoteFPSAgentController>();
-        spawnCoordinates = fpsAgent.GetSpawnCoordinatesAboveReceptacle(targetReceptacle);
+        spawnCoordinates = fpsAgent.getSpawnCoordinatesAboveReceptacle(targetReceptacle);
 
         List<Vector3> returnCoordinates = new List<Vector3>();
 
@@ -262,7 +262,7 @@ public class ExperimentRoomSceneManager : MonoBehaviour
         for(int i = 0; i < spawnCoordinates.Count; i++)
         {
             //place object at the given point, then check if the corners are ok
-            fpsAgent.PlaceObjectAtPoint(toSpawn, spawnCoordinates[i]);
+            fpsAgent.placeObjectAtPoint(toSpawn, spawnCoordinates[i]);
 
             List<Vector3> corners = GetCorners(spawned);
 
@@ -332,7 +332,7 @@ public class ExperimentRoomSceneManager : MonoBehaviour
         spawned.transform.Rotate(new Vector3(0, yRot, 0), Space.Self);
 
         PhysicsRemoteFPSAgentController fpsAgent = agentManager.ReturnPrimaryAgent().GetComponent<PhysicsRemoteFPSAgentController>();
-        if(fpsAgent.PlaceObjectAtPoint(toSpawn, point))
+        if(fpsAgent.placeObjectAtPoint(toSpawn, point))
         {
             //we set success to true, if one of the corners doesn't fit on the table
             //this will be switched to false and will be returned at the end
@@ -399,7 +399,7 @@ public class ExperimentRoomSceneManager : MonoBehaviour
 
         List<Vector3> spawnCoordinates = new List<Vector3>();
         PhysicsRemoteFPSAgentController fpsAgent = agentManager.ReturnPrimaryAgent().GetComponent<PhysicsRemoteFPSAgentController>();
-        spawnCoordinates = fpsAgent.GetSpawnCoordinatesAboveReceptacle(targetReceptacle);
+        spawnCoordinates = fpsAgent.getSpawnCoordinatesAboveReceptacle(targetReceptacle);
         spawnCoordinates.Shuffle_(seed);
 
         //instantiate the prefab toSpawn away from every other object
@@ -415,7 +415,7 @@ public class ExperimentRoomSceneManager : MonoBehaviour
         {
             //place object at the given point, this also checks the spawn area to see if its clear
             //if not clear, it will return false
-            if(fpsAgent.PlaceObjectAtPoint(toSpawn, spawnCoordinates[i]))
+            if(fpsAgent.placeObjectAtPoint(toSpawn, spawnCoordinates[i]))
             {
                 //we set success to true, if one of the corners doesn't fit on the table
                 //this will be switched to false and will be returned at the end

@@ -22,13 +22,24 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
     private Transform handCameraTransform;
     [SerializeField]
     private SphereCollider magnetSphere = null;
-
+    private WhatIsInsideMagnetSphere magnetSphereComp = null;
     private GameObject Magnet = null;
 
     private PhysicsRemoteFPSAgentController PhysicsController; 
 
     private Transform FirstJoint;
+
+    [SerializeField]
+    private List<SimObjPhysics> HeldObjects = null;
+
+    private bool StopMotionOnContact = false;
     // Start is called before the first frame update
+
+    [SerializeField]
+    private CapsuleCollider[] ArmCapsuleColliders;
+    [SerializeField]
+    private BoxCollider[] ArmBoxColliders;
+
     void Start()
     {
         // What a mess clean up this hierarchy, standarize naming
@@ -39,44 +50,118 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
         staticCollided = new StaticCollided();
 
         Magnet = handCameraTransform.FirstChildOrDefault(x => x.name == "Magnet").gameObject;
-
+        magnetSphereComp = magnetSphere.GetComponent<WhatIsInsideMagnetSphere>();
         // PhysicsController = GetComponentInParent<PhysicsRemoteFPSAgentController>();
+    }
 
-
+    public void SetStopMotionOnContact(bool b)
+    {
+        StopMotionOnContact = b;
     }
 
     // Update is called once per frame
     void Update()
     {
-        
+        // if(Input.GetKeyDown(KeyCode.Space))
+        // {
+        //     IsArmColliding();
+        // }
     }
 
-    public void OnCollisionEnter(Collision collision)
+    public bool IsArmColliding()
     {
-        //debug collision print
-        // print(collision.collider);
-        // print(collision.gameObject);
+        bool result = false;
 
+        //create overlap box/capsule for each collider and check the result I guess
+        foreach (CapsuleCollider c in ArmCapsuleColliders)
+        {
+            Vector3 center = c.transform.TransformPoint(c.center);
+            float radius = c.radius;
+            //direction of CapsuleCollider's orientation in local space
+            Vector3 dir = new Vector3();
+            //x just in case
+            if(c.direction == 0)
+            {
+                //get world space direction of this capsule's local right vector
+                dir = c.transform.right;
+            }
+
+            //y just in case
+            if(c.direction == 1)
+            {
+                //get world space direction of this capsule's local up vector
+                dir = c.transform.up;
+            }
+
+            //z because all arm colliders have direction z by default
+            if(c.direction == 2)
+            {
+                //get world space direction of this capsul's local forward vector
+                dir = c.transform.forward;
+                //this doesn't work because transform.right is in world space already,
+                //how to get transform.localRight?
+            }
+
+            //debug draw
+            //Debug.DrawLine(center, center + dir * 2.0f, Color.red, 10.0f);
+
+            //point 0
+            //center in world space + direction with magnitude (1/2 height - radius)
+            var point0 = center + dir * (c.height/2 - radius);
+
+            //point 1
+            //center in world space - direction with magnitude (1/2 height - radius)
+            var point1 = center - dir * (c.height/2 - radius);
+
+            // print("p0 " + point0);
+            // print("p1 " + point1);
+
+            //ok now finally let's make some overlap capsuuuules
+            if(Physics.OverlapCapsule(point0, point1, radius, 1 << 8, QueryTriggerInteraction.Ignore).Length > 0)
+            {
+                result = true;
+            }
+
+        }
+
+        foreach (BoxCollider b in ArmBoxColliders)
+        {
+
+        }
+
+        return result;
+    }
+
+    public void OnTriggerEnter(Collider col)
+    {
         staticCollided.collided = false;
         staticCollided.simObjPhysics = null;
         staticCollided.gameObject = null;
 
-        if(collision.gameObject.GetComponent<SimObjPhysics>())
+        if(col.GetComponentInParent<SimObjPhysics>())
         {
-            SimObjPhysics sop = collision.gameObject.GetComponent<SimObjPhysics>();
+            //how does this handle nested sim objects? maybe it's fine?
+            SimObjPhysics sop = col.GetComponentInParent<SimObjPhysics>();
             if(sop.PrimaryProperty == SimObjPrimaryProperty.Static)
             {
-                Debug.Log("Collided with static " + sop.name);
+                #if UNITY_EDITOR
+                Debug.Log("Collided with static sim obj " + sop.name);
+                #endif
+
                 staticCollided.collided = true;
                 staticCollided.simObjPhysics = sop;
             }
         }
 
-        //also do this if it hits a structure object that is static
-        if(collision.gameObject.isStatic)
+        //also check if the collider hit was a structure?
+        if(col.gameObject.isStatic)
         {
+            #if UNITY_EDITOR
+            Debug.Log("Collided with static structure " + col.gameObject.name);
+            #endif
+                
             staticCollided.collided = true;
-            staticCollided.gameObject = collision.gameObject;
+            staticCollided.gameObject = col.gameObject;
         }
     }
 
@@ -118,6 +203,15 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
                 controller.actionFinished(false, debugMessage);
                 yield break;
             }
+
+            //this currently shouldn't work for rotating an object because it will always be colliding with the held object....
+            // //if the option to stop moving when the sphere touches any sim object is wanted
+            // if(magnetSphereComp.isColliding && StopMotionOnContact)
+            // {
+            //     string debugMessage = "Some object was hit by the arm's hand";
+            //     controller.actionFinished(false, debugMessage);
+            //     yield break;
+            // }
 
             armTarget.transform.rotation = Quaternion.Slerp(armTarget.transform.rotation, targetQuat, interp);
             yield return new WaitForFixedUpdate();
@@ -174,6 +268,14 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
                 yield break;
             }
 
+            //if the option to stop moving when the sphere touches any sim object is wanted
+            if(magnetSphereComp.isColliding && StopMotionOnContact)
+            {
+                string debugMessage = "Some object was hit by the arm's hand";
+                controller.actionFinished(false, debugMessage);
+                yield break;
+            }
+
             previousArmPosition = arm.transform.localPosition;
             arm.transform.localPosition += targetDirectionWorld * unitsPerSecond * Time.fixedDeltaTime;
             // Jump the last epsilon to match exactly targetWorldPos
@@ -186,11 +288,31 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
         controller.actionFinished(true);
     }
 
-    public IEnumerator moveArmTarget(PhysicsRemoteFPSAgentController controller, Vector3 target, float unitsPerSecond,  GameObject arm, bool returnToStartPositionIfFailed = false, bool handCameraSpace = false) {
+    public IEnumerator moveArmTarget(PhysicsRemoteFPSAgentController controller, Vector3 target, float unitsPerSecond,  GameObject arm, bool returnToStartPositionIfFailed = false, string whichSpace = "arm") {
 
         staticCollided.collided = false;
         // Move arm based on hand space or arm origin space
-        Vector3 targetWorldPos = handCameraSpace ? handCameraTransform.TransformPoint(target) : arm.transform.TransformPoint(target);
+        //Vector3 targetWorldPos = handCameraSpace ? handCameraTransform.TransformPoint(target) : arm.transform.TransformPoint(target);
+
+        Vector3 targetWorldPos = Vector3.zero;
+
+        //world space, can be used to move directly toward positions returned by sim objects
+        if(whichSpace == "world")
+        {
+            targetWorldPos = target;
+        }
+
+        //space relative to base of the wrist, where the camera is
+        else if(whichSpace == "wrist")
+        {
+            targetWorldPos = handCameraTransform.TransformPoint(target);
+        }
+
+        //space relative to the root of the arm, joint 1
+        else if(whichSpace == "armBase")
+        {
+            targetWorldPos = arm.transform.TransformPoint(target);
+        }
         
         Vector3 originalPos = armTarget.position;
         Vector3 targetDirectionWorld = (targetWorldPos - originalPos).normalized;
@@ -198,6 +320,7 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
         var eps = 1e-3;
         yield return new WaitForFixedUpdate();
         var previousArmPosition = armTarget.position;
+
         while (Vector3.SqrMagnitude(targetWorldPos - armTarget.position) > eps) {
 
             if (staticCollided.collided != false) {
@@ -221,6 +344,14 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
                 yield break;
             }
 
+            //if the option to stop moving when the sphere touches any sim object is wanted
+            if(magnetSphereComp.isColliding && StopMotionOnContact)
+            {
+                string debugMessage = "Some object was hit by the arm's hand";
+                controller.actionFinished(false, debugMessage);
+                yield break;
+            }
+
             previousArmPosition = armTarget.position;
             armTarget.position += targetDirectionWorld * unitsPerSecond * Time.fixedDeltaTime;
             // Jump the last epsilon to match exactly targetWorldPos
@@ -233,18 +364,23 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
         controller.actionFinished(true);
     }
 
-    public List<SimObjPhysics> WhatObjectsAreInsideMagnetSphere()
+    public List<string> WhatObjectsAreInsideMagnetSphereAsObjectID()
     {
-        return magnetSphere.GetComponent<WhatIsInsideMagnetSphere>().CurrentlyContainedObjects();
+        return magnetSphereComp.CurrentlyContainedSimObjectsByID();
+    }
+
+    public List<SimObjPhysics> WhatObjectsAreInsideMagnetSphereAsSOP()
+    {
+        return magnetSphereComp.CurrentlyContainedSimObjects();
     }
 
     public IEnumerator ReturnObjectsInMagnetAfterPhysicsUpdate(PhysicsRemoteFPSAgentController controller)
     {
         yield return new WaitForFixedUpdate();
         List<string> listOfSOP = new List<string>();
-        foreach (SimObjPhysics sop in this.WhatObjectsAreInsideMagnetSphere())
+        foreach (string oid in this.WhatObjectsAreInsideMagnetSphereAsObjectID())
         {
-            listOfSOP.Add(sop.objectID);
+            listOfSOP.Add(oid);
         }
         Debug.Log("objs: " + string.Join(", ", listOfSOP));
         controller.actionFinished(true, listOfSOP);
@@ -254,7 +390,7 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
     {
         bool pickedUp = false;
         //grab all sim objects that are currently colliding with magnet sphere
-        foreach(SimObjPhysics sop in WhatObjectsAreInsideMagnetSphere())
+        foreach(SimObjPhysics sop in WhatObjectsAreInsideMagnetSphereAsSOP())
         {
             Rigidbody rb = sop.GetComponent<Rigidbody>();
             rb.isKinematic = true;
@@ -264,6 +400,8 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
             //move colliders to be children of arm? stop arm from moving?
             sop.transform.Find("Colliders").transform.SetParent(magnetSphere.transform);
             pickedUp = true;
+
+            HeldObjects.Add(sop);
         }
 
         //note: how to handle cases where object breaks if it is shoved into another object?
@@ -274,7 +412,7 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
     public void DropObject()
     {
         //grab all sim objects that are currently colliding with magnet sphere
-        foreach(SimObjPhysics sop in magnetSphere.GetComponent<WhatIsInsideMagnetSphere>().CurrentlyContainedObjects())
+        foreach(SimObjPhysics sop in HeldObjects) 
         {
             Rigidbody rb = sop.GetComponent<Rigidbody>();
             rb.collisionDetectionMode = CollisionDetectionMode.ContinuousSpeculative;
@@ -296,6 +434,9 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
 
             rb.angularVelocity = UnityEngine.Random.insideUnitSphere;
         }
+
+        //clear all now dropped objects
+        HeldObjects.Clear();
     }
 
     public void SetHandMagnetRadius(float radius) {
@@ -305,27 +446,48 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
 
     public ArmMetadata GenerateMetadata() {
         var meta = new ArmMetadata();
-        meta.handTarget = armTarget.position;
+        //meta.handTarget = armTarget.position;
         var joint = FirstJoint;
         var joints = new List<JointMetadata>();
         for (var i = 2; i <= 5; i++) {
             var jointMeta = new JointMetadata();
             jointMeta.name = joint.name;
             jointMeta.position = joint.position;
-            jointMeta.localPosition = joint.localPosition;
+            //local position of joint is meaningless because it never changes relative to its parent joint, we use rootRelative instead
+            jointMeta.rootRelativePosition = FirstJoint.InverseTransformPoint(joint.position);
 
             float angleRot;
             Vector3 vectorRot;
+
+            //local rotation currently relative to immediate parent joint
             joint.localRotation.ToAngleAxis(out angleRot, out vectorRot);
             jointMeta.localRotation = new Vector4(vectorRot.x, vectorRot.y, vectorRot.z, angleRot);
 
+            //world relative rotation
             joint.rotation.ToAngleAxis(out angleRot, out vectorRot);
             jointMeta.rotation = new Vector4(vectorRot.x, vectorRot.y, vectorRot.z, angleRot);
+
+            //rotation relative to root joint/agent
+            //root forward and agent forward are always the same
+            Quaternion.Euler(FirstJoint.InverseTransformDirection(joint.eulerAngles)).ToAngleAxis(out angleRot, out vectorRot);
+            jointMeta.rootRelativeRotation = new Vector4(vectorRot.x, vectorRot.y, vectorRot.z, angleRot);
 
             joints.Add(jointMeta);
             joint = joint.Find("robot_arm_" + i + "_jnt");
         }
         meta.joints = joints.ToArray();
+
+        //metadata for any objects currently held by the hand on the arm
+        //note this is different from objects intersecting the hand's sphere,
+        //there could be a case where an object is inside the sphere but not picked up by the hand
+        List<string> HeldObjectIDs = new List<string>();
+
+        foreach(SimObjPhysics sop in HeldObjects)
+        {
+            HeldObjectIDs.Add(sop.objectID);
+        }
+        meta.HeldObjects = HeldObjectIDs;
+
         return meta;
     }
 }
