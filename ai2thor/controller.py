@@ -931,7 +931,6 @@ class Controller(object):
         return self.last_event
 
     def stop(self):
-        self.server.send({})
         self.stop_unity()
         self.server.stop()
         self.stop_container()
