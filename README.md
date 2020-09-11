@@ -47,7 +47,40 @@ If you want to run an MCS Scene in the Unity Editor:
 
 5. If you want to see the class/depth/object masks, click on the `FPSController->FirstPersonCharacter` Game Object in the Hierarchy window, then toggle-on the checkbox next to the `Image Synthesis (Script)` component in the Inspector window to activate that script. You can see the masks during a run using the Display dropdown in the Game window.
 
-6. Click the Play button in the top center of the Unity Editor to run the Scene. Use WASD to move, arrow buttons (or R) to rotate or look, and escape to pass. To set action parameters, click the `FPSController` Game Object in the Hierarchy window, then use the inputs under `Debug Discrete Agent Controller (Script)`. See [`unity/Assets/Scripts/DebugDiscreteAgentController.cs`](./unity/Assets/Scripts/DebugDiscreteAgentController.cs) for additional key bindings.
+6. Click the Play button in the top center of the Unity Editor to run the Scene. See the list of [keys and parameters](#keys-and-parameters) below. To set action parameters, click the `FPSController` Game Object in the Hierarchy window, then use the inputs under `Debug Discrete Agent Controller (Script)`. See [`unity/Assets/Scripts/DebugDiscreteAgentController.cs`](./unity/Assets/Scripts/DebugDiscreteAgentController.cs) for additional key bindings.
+
+#### Keys and Parameters
+
+- W/A/S/D: Move
+- R: Rotate
+  - Rotation Increment
+  - Horizon Increment (positive is look down, negative is look up, resets if over +/-90)
+- O: Open Object
+  - Receptacle Object ID
+  - Receptacle Object Direction (instead of using an object ID)
+- C: Close Object
+  - Receptacle Object ID (second object to put the held object onto)
+  - Receptacle Object Direction (instead of using an object ID)
+- P: Pickup Object
+  - Move Or Pickup Object ID (for the held object)
+  - Move Or Pickup Object Direction (instead of using an object ID)
+- Z: Put (held) Object (onto an object)
+  - Move Or Pickup Object ID (for the held object)
+  - Move Or Pickup Object Direction (instead of using an object ID)
+  - Receptacle Object ID (second object to put the held object onto)
+  - Receptacle Object Direction (instead of using an object ID)
+- X: Drop Object
+  - Move Or Pickup Object ID (for the held object)
+  - Move Or Pickup Object Direction (instead of using an object ID)
+- U: Push or Pull Object
+  - Move Or Pickup Object ID
+  - Move Or Pickup Object Direction (instead of using an object ID)
+  - Push Pull Force (positive is push, negative is pull)
+- Q: Crawl
+- E: Stand
+- L: Lie Down
+- Escape: Pass (do nothing)
+- Backspace: Initialize (reset the scene)
 
 ## Build
 
