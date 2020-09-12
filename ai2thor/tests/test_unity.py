@@ -53,6 +53,7 @@ class ThirdPartyCameraMetadata:
 
 wsgi_controller = UnityTestController(server_class=WsgiServer)
 fifo_controller = UnityTestController(server_class=FifoServer)
+stochastic_controller = UnityTestController(agentControllerType='stochastic')
 
 def teardown_module(module):
     wsgi_controller.stop()
@@ -62,11 +63,6 @@ def assert_near(point1, point2, error_message=''):
     assert point1.keys() == point2.keys(), error_message
     for k in point1.keys():
         assert round(point1[k], 3) == round(point2[k], 3), error_message
-
-def test_stochastic_controller():
-    controller = UnityTestController(agentControllerType='stochastic')
-    controller.reset('FloorPlan28')
-    assert controller.last_event.metadata['lastActionSuccess']
 
 def test_rectangle_aspect():
     controller = UnityTestController(width=600, height=300)
@@ -80,7 +76,7 @@ def test_small_aspect():
     event = controller.step(dict(action='Initialize', gridSize=0.25))
     assert event.frame.shape == (64, 128, 3)
 
-@pytest.mark.parametrize("controller", [wsgi_controller, fifo_controller])
+@pytest.mark.parametrize("controller", [wsgi_controller, fifo_controller, stochastic_controller])
 def test_lookdown(controller):
 
     e = controller.step(dict(action='RotateLook', rotation=0, horizon=0))
@@ -103,7 +99,7 @@ def test_no_leak_params(controller):
     e = controller.step(action)
     assert 'sequenceId' not in action
 
-@pytest.mark.parametrize("controller", [wsgi_controller, fifo_controller])
+@pytest.mark.parametrize("controller", [wsgi_controller, fifo_controller, stochastic_controller])
 def test_lookup(controller):
 
     e = controller.step(dict(action='RotateLook', rotation=0, horizon=0))
