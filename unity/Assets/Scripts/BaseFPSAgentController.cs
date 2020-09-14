@@ -870,6 +870,39 @@ namespace UnityStandardAssets.Characters.FirstPerson
             actionFinished(false);
         }
 
+        //remove a list of given sim object from the scene.
+        public void RemoveObjsFromScene(ServerAction action) {
+            if (action.objectIds == null || action.objectIds[0] == null)
+            {
+                errorMessage = "objectIds was not initialized correctly. Please make sure each element in the objectIds list is initialized.";
+                actionFinished(false);
+                return;
+            }
+            bool fail = false;
+            foreach (string objIds in action.objectIds)
+            {
+                if (physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objIds))
+                {
+                    physicsSceneManager.ObjectIdToSimObjPhysics[objIds].transform.gameObject.SetActive(false);
+                }
+                else
+                {
+                    fail = true;
+                }
+            }
+            physicsSceneManager.SetupScene();
+            if (fail)
+            {
+                errorMessage = "some objectsin objectIds were not removed correctly.";
+                actionFinished(false);
+            }
+            else
+            {
+                actionFinished(true);
+            }
+            return;
+        }
+
         //Sweeptest to see if the object Agent is holding will prohibit movement
         public bool CheckIfItemBlocksAgentMovement(float moveMagnitude, int orientation, bool forceAction = false) {
             bool result = false;
