@@ -138,12 +138,14 @@ def test_simobj_filter(controller):
     objects = controller.last_event.metadata['objects']
     unfiltered_object_ids = sorted([o['objectId'] for o in objects])
     filter_object_ids = sorted([o['objectId'] for o in objects[0:3]])
-    from pprint import pprint
-    pprint(filter_object_ids)
     e = controller.step(dict(action='SetObjectFilter', objectIds=filter_object_ids))
     assert len(e.metadata['objects']) == len(filter_object_ids)
     filtered_object_ids =sorted([o['objectId'] for o in e.metadata['objects']])
     assert filtered_object_ids == filter_object_ids
+
+    e = controller.step(dict(action='SetObjectFilter', objectIds=[]))
+    assert len(e.metadata['objects']) == 0
+
     e = controller.step(dict(action='ResetObjectFilter'))
     reset_filtered_object_ids =sorted([o['objectId'] for o in e.metadata['objects']])
     assert unfiltered_object_ids == reset_filtered_object_ids
