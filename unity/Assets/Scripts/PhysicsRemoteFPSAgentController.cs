@@ -2056,9 +2056,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 }
 
                 //we are past the wait time threshold, so force object to stop moving before
-                rb.velocity = Vector3.zero;
-                rb.angularVelocity = Vector3.zero;
-                rb.Sleep();
+                // rb.velocity = Vector3.zero;
+                // rb.angularVelocity = Vector3.zero;
+                //rb.Sleep();
 
                 //return to metadatawrapper.actionReturn if an object was touched during this interaction
                 if(length != 0.0f)
