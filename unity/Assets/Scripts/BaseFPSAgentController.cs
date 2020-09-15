@@ -70,6 +70,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
         public GameObject DroneBasket;//reference to the drone's basket object
         private bool isVisible = true;
         public bool inHighFrictionArea = false;
+        // outbound object filter
+        private HashSet<SimObjPhysics> simObjFilter = null;
 
         public bool IsVisible
         {
@@ -1073,16 +1075,39 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			return GameObject.FindObjectsOfType<SimObj>();
         }
 
+        public void ResetObjectFilter() {
+            this.simObjFilter = null;
+            actionFinished(true);
+        }
+        public void SetObjectFilter(string[] objectIds) {
+            SimObjPhysics[] simObjects = GameObject.FindObjectsOfType<SimObjPhysics>();
+            simObjFilter = new HashSet<SimObjPhysics>();
+            foreach(var simObj in simObjects) {
+                if(Array.IndexOf(objectIds, simObj.ObjectID) >= 0) {
+                    simObjFilter.Add(simObj);
+                }
+            }
+            actionFinished(true);
+        }
+
         public virtual ObjectMetadata[] generateObjectMetadata()
 		{
-            SimObjPhysics[] visibleSimObjs = VisibleSimObjs(false); // Update visibility for all sim objects for this agent
             HashSet<SimObjPhysics> visibleSimObjsHash = new HashSet<SimObjPhysics>();
-            foreach (SimObjPhysics sop in visibleSimObjs) {
-                visibleSimObjsHash.Add(sop);
+            SimObjPhysics[] simObjects = null;
+            if (this.simObjFilter != null) {
+                foreach (SimObjPhysics sop in this.simObjFilter) {
+                    if (isSimObjVisible(m_Camera, sop)) {
+                        visibleSimObjsHash.Add(sop);
+                    }
+                }
+                simObjects = this.simObjFilter.ToArray();
+            } else {
+                foreach (SimObjPhysics sop in VisibleSimObjs(false)) {
+                    visibleSimObjsHash.Add(sop);
+                }
+                simObjects = GameObject.FindObjectsOfType<SimObjPhysics>();
             }
 
-            // Encode these in a json string and send it to the server
-            SimObjPhysics[] simObjects = GameObject.FindObjectsOfType<SimObjPhysics>();
             int numObj = simObjects.Length;
             List<ObjectMetadata> metadata = new List<ObjectMetadata>();
             Dictionary<string, List<string>> parentReceptacles = new Dictionary<string, List<string>>();
@@ -1894,6 +1919,45 @@ namespace UnityStandardAssets.Characters.FirstPerson
             return Time.time;
         }
 
+        private bool isSimObjVisible(Camera agentCamera, SimObjPhysics sop) {
+            bool visible = false;
+            //check against all visibility points, accumulate count. If at least one point is visible, set object to visible
+            if (sop.VisibilityPoints == null || sop.VisibilityPoints.Length > 0) 
+            {
+                Transform[] visPoints = sop.VisibilityPoints;
+                int visPointCount = 0;
+
+                foreach (Transform point in visPoints) 
+                {
+                    //if this particular point is in view...
+                    if (CheckIfVisibilityPointInViewport(sop, point, agentCamera, false)) 
+                    {
+                        visPointCount++;
+                        #if !UNITY_EDITOR
+                        // If we're in the unity editor then don't break on finding a visible
+                        // point as we want to draw lines to each visible point.
+                        break;
+                        #endif
+                    }
+                }
+
+                //if we see at least one vis point, the object is "visible"
+                if (visPointCount > 0) 
+                {
+                    #if UNITY_EDITOR
+                    sop.isVisible = true;
+                    #endif
+                    visible = true;
+                }
+            } 
+            
+            else 
+            {
+                Debug.Log("Error! Set at least 1 visibility point on SimObjPhysics " + sop + ".");
+            }
+            return visible;
+        }
+
         public SimObjPhysics[] VisibleSimObjs(ServerAction action) 
         {
             List<SimObjPhysics> simObjs = new List<SimObjPhysics>();
@@ -1979,46 +2043,14 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     if (sop != null && !testedSops.Contains(sop)) 
                     {
                         testedSops.Add(sop);
-                        //check against all visibility points, accumulate count. If at least one point is visible, set object to visible
-                        if (sop.VisibilityPoints == null || sop.VisibilityPoints.Length > 0) 
+                        if (isSimObjVisible(agentCamera, sop) && !currentlyVisibleItems.Contains(sop)) 
                         {
-                            Transform[] visPoints = sop.VisibilityPoints;
-                            int visPointCount = 0;
-
-                            foreach (Transform point in visPoints) 
-                            {
-                                //if this particular point is in view...
-                                if (CheckIfVisibilityPointInViewport(sop, point, agentCamera, false)) 
-                                {
-                                    visPointCount++;
-                                    #if !UNITY_EDITOR
-                                    // If we're in the unity editor then don't break on finding a visible
-                                    // point as we want to draw lines to each visible point.
-                                    break;
-                                    #endif
-                                }
-                            }
-
-                            //if we see at least one vis point, the object is "visible"
-                            if (visPointCount > 0) 
-                            {
-                                #if UNITY_EDITOR
-                                sop.isVisible = true;
-                                #endif
-                                if (!currentlyVisibleItems.Contains(sop)) 
-                                {
-                                    currentlyVisibleItems.Add(sop);
-                                }
-                            }
-                        } 
-                        
-                        else 
-                        {
-                            Debug.Log("Error! Set at least 1 visibility point on SimObjPhysics " + sop + ".");
+                            currentlyVisibleItems.Add(sop);
                         }
                     }
                 }
             }
+
 
             //check against anything in the invisible layers that we actually want to have occlude things in this round.
             //normally receptacle trigger boxes must be ignored from the visibility check otherwise objects inside them will be occluded, but
