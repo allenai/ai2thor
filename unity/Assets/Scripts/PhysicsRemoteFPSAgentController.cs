@@ -2020,14 +2020,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             if(sop != null)
             {
-                // print("here?");
-                // print("useTimeout?: " + useTimeout);
                 Rigidbody rb = sop.GetComponentInChildren<Rigidbody>();
                 bool stoppedMoving = false;
 
                 while(Time.time - startTime < waitTime)
                 {
-                    // print("in while loop");
                     if(sop == null)
                     break;
 
@@ -2037,7 +2034,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     //ok the accel is basically zero, so it has stopped moving
                     if(Mathf.Abs(accel) <= 0.001f)
                     {
-                        // print("accel world");
                         //force the rb to stop moving just to be safe
                         rb.velocity = Vector3.zero;
                         rb.angularVelocity = Vector3.zero;
