@@ -54,6 +54,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		[SerializeField]
 		protected float m_GravityMultiplier;
 		protected static float gridSize = 0.25f;
+        //time the checkIfObjectHasStoppedMoving coroutine waits for objects to stop moving
+        protected float TimeToWaitForObjectsToComeToRest = 0.0f;
         //determins default move distance for move actions
 		protected float moveMagnitude;
         //determines rotation increment of rotate functions
@@ -428,7 +430,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 	Time.timeScale = action.timeScale;
 				}
             } else {
-                errorMessage = "Time scale must be >0";
+                errorMessage = "Time scale must be > 0";
                 Debug.Log(errorMessage);
                 actionFinished(false);
                 return;
@@ -474,11 +476,15 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 actionFinished(false);
                 return;
             }
+
             else
             {
                 gridSize = action.gridSize;
                 StartCoroutine(checkInitializeAgentLocationAction());
             }
+
+            //initialize how long the default wait time for objects to stop moving is
+            this.TimeToWaitForObjectsToComeToRest = action.TimeToWaitForObjectsToComeToRest;
             	
             // Debug.Log("Object " + action.controllerInitialization.ToString() + " dict "  + (action.controllerInitialization.variableInitializations == null));//+ string.Join(";", action.controllerInitialization.variableInitializations.Select(x => x.Key + "=" + x.Value).ToArray()));
 
@@ -877,6 +883,39 @@ namespace UnityStandardAssets.Characters.FirstPerson
             actionFinished(false);
         }
 
+        //remove a list of given sim object from the scene.
+        public void RemoveObjsFromScene(ServerAction action) {
+            if (action.objectIds == null || action.objectIds[0] == null)
+            {
+                errorMessage = "objectIds was not initialized correctly. Please make sure each element in the objectIds list is initialized.";
+                actionFinished(false);
+                return;
+            }
+            bool fail = false;
+            foreach (string objIds in action.objectIds)
+            {
+                if (physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objIds))
+                {
+                    physicsSceneManager.ObjectIdToSimObjPhysics[objIds].transform.gameObject.SetActive(false);
+                }
+                else
+                {
+                    fail = true;
+                }
+            }
+            physicsSceneManager.SetupScene();
+            if (fail)
+            {
+                errorMessage = "some objectsin objectIds were not removed correctly.";
+                actionFinished(false);
+            }
+            else
+            {
+                actionFinished(true);
+            }
+            return;
+        }
+
         //Sweeptest to see if the object Agent is holding will prohibit movement
         public bool CheckIfItemBlocksAgentMovement(float moveMagnitude, int orientation, bool forceAction = false) {
             bool result = false;
@@ -1073,7 +1112,14 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 }
                 ObjectMetadata meta = ObjectMetadataFromSimObjPhysics(simObj, visibleSimObjsHash.Contains(simObj));
                 if (meta.receptacle) {
-                    List<string> roid = simObj.Contains();
+                    
+                    List<string> containedObjectsAsID = new List<String>();
+                    foreach(GameObject go in simObj.ContainedGameObjects())
+                    {
+                        containedObjectsAsID.Add(go.GetComponent<SimObjPhysics>().ObjectID);
+                    }
+                    List<string> roid = containedObjectsAsID;//simObj.Contains();
+
                     foreach (string oid in roid) {
                         if (!parentReceptacles.ContainsKey(oid)) {
                             parentReceptacles[oid] = new List<string>();

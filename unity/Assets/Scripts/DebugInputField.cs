@@ -956,7 +956,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         ServerAction action = new ServerAction();
                         action.action = "PlaceObjectAtPoint";
                         action.position = GameObject.Find("TestPosition").transform.position;
-                        action.objectId = "GarbageCan|+02.63|00.00|-01.48";
+                        action.objectId = "Book|+00.15|+01.10|+00.62";
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }
@@ -2344,7 +2344,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
                         action.objectPoses[0] = new ObjectPose();
 
-                        action.objectPoses[0].objectName = "Potato_bb7defe9";
+                        action.objectPoses[0].objectName = "Book_3d15d052";
                         action.objectPoses[0].position = new Vector3(0, 0, 0);
                         action.objectPoses[0].rotation = new Vector3(0, 0, 0);
 
