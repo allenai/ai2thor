@@ -1981,6 +1981,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     actionFinished(true, feedback);
                 }
 
+                //why is this here?
                 else
                 {
                     actionFinished(true);
@@ -2002,14 +2003,15 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             sopApplyForce(action, sop, 0.0f);
         }
 
-        //used to check if an specified sim object has come to rest, max time of 40 seconds
+        //used to check if an specified sim object has come to rest
+        //set useTimeout bool to use a faster time out
         private IEnumerator checkIfObjectHasStoppedMoving(SimObjPhysics sop, float length, bool useTimeout = false)
         {
             //yield for the physics update to make sure this yield is consistent regardless of framerate
             yield return new WaitForFixedUpdate();
 
             float startTime = Time.time;
-            float waitTime = 2.0f;
+            float waitTime = TimeToWaitForObjectsToComeToRest;
 
             if(useTimeout)
             {
@@ -2032,12 +2034,11 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     //ok the accel is basically zero, so it has stopped moving
                     if(Mathf.Abs(accel) <= 0.001f)
                     {
-                        stoppedMoving = true;
-
                         //force the rb to stop moving just to be safe
                         rb.velocity = Vector3.zero;
                         rb.angularVelocity = Vector3.zero;
-
+                        rb.Sleep();
+                        stoppedMoving = true;
                         break;
                     }
 
@@ -2055,7 +2056,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 }
 
                 //we are past the wait time threshold, so force object to stop moving before
-                //returning actionFinished (true)
+                rb.velocity = Vector3.zero;
+                rb.angularVelocity = Vector3.zero;
+                rb.Sleep();
 
                 //return to metadatawrapper.actionReturn if an object was touched during this interaction
                 if(length != 0.0f)
@@ -2064,14 +2067,16 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
                     #if UNITY_EDITOR
                     print("yield timed out");
-                    // print("didHandTouchSomething: " + feedback.didHandTouchSomething);
-                    // print("object id: " + feedback.objectId);
-                    // print("armslength: " + feedback.armsLength);
+                    print("didHandTouchSomething: " + feedback.didHandTouchSomething);
+                    print("object id: " + feedback.objectId);
+                    print("armslength: " + feedback.armsLength);
                     #endif
 
                     //force objec to stop moving 
                     rb.velocity = Vector3.zero;
                     rb.angularVelocity = Vector3.zero;
+                    rb.Sleep();
+
                     actionFinished(true, feedback);
                 }
 
@@ -4508,7 +4513,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         {
             if (target.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.Receptacle)) 
             {
-                foreach (SimObjPhysics sop in target.ReceptacleObjects) 
+                foreach (SimObjPhysics sop in target.SimObjectsContainedByReceptacle) 
                 {
                     //for every object that is contained by this object...first make sure it's pickupable so we don't like, grab a Chair if it happened to be in the receptacle box or something
                     //turn off the colliders (so contained object doesn't block movement), leaving Trigger Colliders active (this is important to maintain visibility!)
@@ -4999,7 +5004,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             if (freezeContained) {
                 target = ancestorSimObjPhysics(coo.gameObject);
                 objectIdToOldParent = new Dictionary<string, Transform>();
-                foreach (string objectId in target.Contains()) {
+                foreach (string objectId in target.GetAllSimObjectsInReceptacleTriggersByObjectID()) {
                     SimObjPhysics toReParent = physicsSceneManager.ObjectIdToSimObjPhysics[objectId];
                     objectIdToOldParent[toReParent.ObjectID] = toReParent.transform.parent;
                     toReParent.transform.parent = coo.transform;
@@ -5103,7 +5108,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 foreach (CanOpen_Object coo in coos) {
                     SimObjPhysics target = ancestorSimObjPhysics(coo.gameObject);
                     targets.Add(target);
-                    foreach (string objectId in target.Contains()) {
+                    foreach (string objectId in target.GetAllSimObjectsInReceptacleTriggersByObjectID()) {
                         SimObjPhysics toReParent = physicsSceneManager.ObjectIdToSimObjPhysics[objectId];
                         objectIdToOldParent[toReParent.ObjectID] = toReParent.transform.parent;
                         toReParent.transform.parent = coo.transform;
@@ -5589,7 +5594,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
 
             if (target) {
-                List<string> ids = target.Contains();
+                List<string> ids = target.GetAllSimObjectsInReceptacleTriggersByObjectID();
 
             #if UNITY_EDITOR
                 foreach (string s in ids) 
@@ -5840,12 +5845,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             if (physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(action.objectId)) {
                 SimObjPhysics sop = physicsSceneManager.ObjectIdToSimObjPhysics[action.objectId];
                 if (!ReceptacleRestrictions.SpawnOnlyOutsideReceptacles.Contains(sop.ObjType)) {
-                    foreach (SimObjPhysics containedSop in sop.ReceptacleObjects) {
+                    foreach (SimObjPhysics containedSop in sop.SimObjectsContainedByReceptacle) {
                         UpdateDisplayGameObject(containedSop.gameObject, false);
                     }
                 }
                 UpdateDisplayGameObject(sop.gameObject, false);
-                sop.Contains();
+                sop.GetAllSimObjectsInReceptacleTriggersByObjectID();
 
                 actionFinished(true);
             } else {
@@ -5858,7 +5863,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             if (physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(action.objectId)) {
                 SimObjPhysics sop = physicsSceneManager.ObjectIdToSimObjPhysics[action.objectId];
                 if (!ReceptacleRestrictions.SpawnOnlyOutsideReceptacles.Contains(sop.ObjType)) {
-                    foreach (SimObjPhysics containedSop in sop.ReceptacleObjects) {
+                    foreach (SimObjPhysics containedSop in sop.SimObjectsContainedByReceptacle) {
                         UpdateDisplayGameObject(containedSop.gameObject, true);
                     }
                 }
@@ -7821,7 +7826,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             HashSet<string> objectIdsContained = new HashSet<string>();
             foreach (SimObjPhysics so in physicsSceneManager.ObjectIdToSimObjPhysics.Values) {
                 if (objectIsOfIntoType(so)) {
-                    foreach (string id in so.Contains()) {
+                    foreach (string id in so.GetAllSimObjectsInReceptacleTriggersByObjectID()) {
                         objectIdsContained.Add(id);
                     }
                 }
@@ -8000,7 +8005,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             HashSet<string> objectIdsContained = new HashSet<string>();
             foreach (SimObjPhysics so in physicsSceneManager.ObjectIdToSimObjPhysics.Values) {
                 if (objectIsOfIntoType(so)) {
-                    foreach (string id in so.Contains()) {
+                    foreach (string id in so.GetAllSimObjectsInReceptacleTriggersByObjectID()) {
                         objectIdsContained.Add(id);
                     }
                 }
