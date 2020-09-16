@@ -480,9 +480,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
         //for use with the Drone to be able to launch an object into the air
         //Launch an object at a given Force (action.moveMagnitude), and angle (action.rotation)
-        public void LaunchDroneObject(ServerAction action) 
+        public void LaunchDroneObject(float moveMagnitude, string objectName, bool objectRandom, float x, float y, float z)
         {
-            this.GetComponent<DroneFPSAgentController>().Launch(action);
+            this.GetComponent<DroneFPSAgentController>().Launch(moveMagnitude, objectName, objectRandom, x, y, z);
             actionFinished(true);
             fixupdateCnt = 0f;
         }
@@ -540,10 +540,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
             return caught_object_bool;
         }
 
-        public void Launch(ServerAction action)
+        public void Launch(float moveMagnitude, string objectName, bool objectRandom, float x, float y, float z)
         {
-            Vector3 LaunchAngle = new Vector3(action.x, action.y, action.z);
-            DroneObjectLauncher.Launch(action.moveMagnitude, LaunchAngle, action.objectName, action.objectRandom);
+            Vector3 LaunchAngle = new Vector3(x, y, z);
+            DroneObjectLauncher.Launch(moveMagnitude, LaunchAngle, objectName, objectRandom);
         }
 
         public void MoveLauncher(Vector3 position)
