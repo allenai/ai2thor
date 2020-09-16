@@ -4,6 +4,8 @@ using UnityEngine;
 using UnityEngine.UI;
 using System;
 using System.Linq;
+using Newtonsoft.Json.Linq;
+
 
 namespace UnityStandardAssets.Characters.FirstPerson
 {
@@ -2476,7 +2478,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     // Will fail if navmeshes are not setup
                     case "shortest_path":
                     {
-                        ServerAction action = new ServerAction();
+                        dynamic action = new JObject();
                         action.action = "GetShortestPath";
 
                         //pass in a min range, max range, delay
@@ -2492,9 +2494,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
                                     float.Parse(splitcommand[4])
                                 );
                             }
-                            else {
-                                action.useAgentTransform = true;
-                            }
                         }
 
                         PhysicsController.ProcessControlCommand(action);
@@ -2502,7 +2501,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     }
                      case "shortest_path_type":
                     {
-                        ServerAction action = new ServerAction();
+                        dynamic action = new JObject();
                         action.action = "GetShortestPath";
 
                         //pass in a min range, max range, delay
@@ -2518,9 +2517,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
                                     float.Parse(splitcommand[4])
                                 );
                             }
-                            else {
-                                action.useAgentTransform = true;
-                            }
                         }
 
                         PhysicsController.ProcessControlCommand(action);
@@ -2528,18 +2524,16 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     }
                     case "shortest_path_point":
                     {
-                        ServerAction action = new ServerAction();
+                        dynamic action = new JObject();
                         action.action = "GetShortestPathToPoint";
 
                         //pass in a min range, max range, delay
                         if (splitcommand.Length > 1)
                         {
-                             action.useAgentTransform = false;
                             //ID of spawner
                             //action.objectId = splitcommand[1];
 
                             if (splitcommand.Length == 4) {
-                                action.useAgentTransform = true;
                                 action.x = float.Parse(splitcommand[1]);
                                 action.y = float.Parse(splitcommand[2]);
                                 action.z = float.Parse(splitcommand[3]);

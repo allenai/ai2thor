@@ -2537,16 +2537,15 @@ namespace UnityStandardAssets.Characters.FirstPerson
             }
         }
 
-        private SimObjPhysics getSimObjectFromTypeOrId(ServerAction action) {
-            var objectId = action.objectId;
-            if (!String.IsNullOrEmpty(action.objectType) && String.IsNullOrEmpty(action.objectId)) {
-                var ids = objectTypeToObjectIds(action.objectType);
+        private SimObjPhysics getSimObjectFromTypeOrId(string objectType, string objectId) {
+            if (!String.IsNullOrEmpty(objectType) && String.IsNullOrEmpty(objectId)) {
+                var ids = objectTypeToObjectIds(objectType);
                 if (ids.Length == 0) {
-                    errorMessage = "Object type '" + action.objectType + "' was not found in the scene.";
+                    errorMessage = "Object type '" + objectType + "' was not found in the scene.";
                     return null;
                 }
                 else if (ids.Length > 1) {
-                    errorMessage = "Multiple objects of type '" + action.objectType + "' were found in the scene, cannot disambiguate.";
+                    errorMessage = "Multiple objects of type '" + objectType + "' were found in the scene, cannot disambiguate.";
                     return null;
                 }
                 
@@ -2572,19 +2571,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
             actionFinished(true, reachablePositions);
         }
 
-        public void GetShortestPath(ServerAction action) {
-            SimObjPhysics sop = getSimObjectFromTypeOrId(action);
+        private void getShortestPath(string objectType, string objectId,  Vector3 startPosition, Quaternion startRotation) {
+            SimObjPhysics sop = getSimObjectFromTypeOrId(objectType, objectId);
             if (sop == null) {
                 actionFinished(false);
                 return;
             }
-            var startPosition = this.transform.position;
-            var startRotation = this.transform.rotation;
-            if (!action.useAgentTransform) {
-                startPosition = action.position;
-                startRotation = Quaternion.Euler(action.rotation);
-            }
-
             var path = GetSimObjectNavMeshTarget(sop, startPosition, startRotation);
             if (path.status == UnityEngine.AI.NavMeshPathStatus.PathComplete) {
                 //VisualizePath(startPosition, path);
@@ -2596,6 +2588,18 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 actionFinished(false);
                 return;
             }
+        }
+
+        public void GetShortestPath(Vector3 position, Vector3 rotation, string objectType = null, string objectId = null) {
+            getShortestPath(objectType, objectId, position, Quaternion.Euler(rotation));
+        }
+
+        public void GetShortestPath(Vector3 position, string objectType = null, string objectId = null) {
+            getShortestPath(objectType, objectId, position, Quaternion.Euler(Vector3.zero));
+        }
+
+        public void GetShortestPath(string objectType = null, string objectId = null) {
+            getShortestPath(objectType, objectId, this.transform.position, this.transform.rotation);
         }
 
         private bool GetPathFromReachablePositions(
@@ -2884,13 +2888,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
             return path;
         }
 
-        public void GetShortestPathToPoint(ServerAction action) {
-            var startPosition = this.transform.position;
-            if (!action.useAgentTransform) {
-                startPosition = action.position;
-            }
-
-            var targetPosition = new Vector3(action.x, action.y, action.z);
+        public void GetShortestPathToPoint(Vector3 position, float x, float y, float z) {
+            Vector3 startPosition = position;
+            var targetPosition = new Vector3(x, y, z);
 
             var path = new UnityEngine.AI.NavMeshPath();
             this.GetComponent<UnityEngine.AI.NavMeshAgent>().enabled = true;
@@ -2908,9 +2908,15 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 return;
             }
         }
+
+        public void GetShortestPathToPoint(float x, float y, float z) {
+            var startPosition = this.transform.position;
+            GetShortestPathToPoint(startPosition, x, y, z);
+        }
+
         public void VisualizeShortestPaths(ServerAction action) {
             
-            SimObjPhysics sop = getSimObjectFromTypeOrId(action);
+            SimObjPhysics sop = getSimObjectFromTypeOrId(action.objectType, action.objectId);
             if (sop == null) {
                 actionFinished(false);
                 return;
