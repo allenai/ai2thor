@@ -909,6 +909,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         action.action = "PlaceObjectAtPoint";
                         action.position = GameObject.Find("TestPosition").transform.position;
                         action.objectId = "Book|+00.15|+01.10|+00.62";
+                        action.rotation = new Vector3(0, 90, 0);
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }

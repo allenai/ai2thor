@@ -3350,6 +3350,18 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             Vector3 bottomPoint = b.ClosestPoint(targetNegY);
             b.enabled = false;
 
+            Quaternion r = new Quaternion();
+
+            if(action.rotation != Vector3.zero)
+            {
+                r = Quaternion.Euler(action.rotation.x, action.rotation.y, action.rotation.z);
+            }
+
+            else
+            {
+                r = target.transform.rotation;
+            }
+
             float distFromSopToBottomPoint = Vector3.Distance(bottomPoint, target.transform.position);
 
             float offset = distFromSopToBottomPoint + 0.005f;//offset in case the surface below isn't completely flat
@@ -3359,10 +3371,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             //check spawn area here
             InstantiatePrefabTest ipt = physicsSceneManager.GetComponent<InstantiatePrefabTest>();
-            if(ipt.CheckSpawnArea(target, finalPos, target.transform.rotation, false))
+            if(ipt.CheckSpawnArea(target, finalPos, r, false))
             {
                 target.transform.position = finalPos;
-                
+                target.transform.rotation = r;
                 StartCoroutine(checkIfObjectHasStoppedMoving(target, 0, true));
                 return;
             }
