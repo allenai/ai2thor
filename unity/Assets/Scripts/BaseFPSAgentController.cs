@@ -143,7 +143,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		protected Quaternion targetRotation;
         // Javascript communication
         private JavaScriptInterface jsInterface = null;
-        private dynamic currentServerAction;
+        private ServerAction currentServerAction;
 		public Quaternion TargetRotation
 		{
 			get { return targetRotation; }
@@ -259,7 +259,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             if (this.jsInterface)
             {
                 // TODO: Check if the reflection method call was successfull add that to the sent event data
-                this.jsInterface.SendAction(currentServerAction.ToObject(typeof(ServerAction)));
+                this.jsInterface.SendAction(currentServerAction);
             }
 
             lastActionSuccess = success;
@@ -1481,10 +1481,48 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		}
 
 
-        public void ProcessControlCommand(dynamic controlCommand)
+#if UNITY_WEBGL
+        public void ProcessControlCommand(ServerAction controlCommand)
         {
             currentServerAction = controlCommand;
 
+            errorMessage = "";
+            errorCode = ServerActionErrorCode.Undefined;
+            collisionsInAction = new List<string>();
+
+            lastAction = controlCommand.action;
+            lastActionSuccess = false;
+            lastPosition = new Vector3(transform.position.x, transform.position.y, transform.position.z);
+			System.Reflection.MethodInfo method = this.GetType().GetMethod(controlCommand.action);
+			
+			this.actionComplete = false;
+			try
+			{
+				if (method == null) {
+					errorMessage = "Invalid action: " + controlCommand.action;
+					errorCode = ServerActionErrorCode.InvalidAction;
+					Debug.LogError(errorMessage);
+					actionFinished(false);
+				} else {
+					method.Invoke(this, new object[] { controlCommand });
+				}
+			}
+			catch (Exception e)
+			{
+				Debug.LogError("Caught error with invoke for action: " + controlCommand.action);
+                Debug.LogError("Action error message: " + errorMessage);
+				Debug.LogError(e);
+
+				errorMessage += e.ToString();
+				actionFinished(false);
+			}
+
+			agentManager.setReadyToEmit(true);
+        }
+#endif
+
+        public void ProcessControlCommand(dynamic controlCommand)
+        {
             errorMessage = "";
             errorCode = ServerActionErrorCode.Undefined;
             collisionsInAction = new List<string>();

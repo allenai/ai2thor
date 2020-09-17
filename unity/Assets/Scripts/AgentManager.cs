@@ -891,7 +891,12 @@ public class AgentManager : MonoBehaviour
 	{
 
         this.renderObjectImage = this.defaultRenderObjectImage;
+        #if UNITY_WEBGL
+		ServerAction controlCommand = new ServerAction();
+		JsonUtility.FromJsonOverwrite(msg, controlCommand);
+        #else
         dynamic controlCommand = Newtonsoft.Json.JsonConvert.DeserializeObject<dynamic>(msg);
+        #endif
 
 		this.currentSequenceId = controlCommand.sequenceId;
         // the following are handled this way since they can be null
