@@ -3342,6 +3342,20 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 return;
             }
 
+            Quaternion original_r = target.transform.rotation;
+            Quaternion r = new Quaternion();
+
+            if(action.rotation != Vector3.zero)
+            {
+                r = Quaternion.Euler(action.rotation.x, action.rotation.y, action.rotation.z);
+                target.transform.rotation = r;
+            }
+
+            else
+            {
+                r = target.transform.rotation;
+            }
+
             //ok let's get the distance from the simObj to the bottom most part of its colliders
             Vector3 targetNegY = target.transform.position + new Vector3(0, -1, 0);
             BoxCollider b = target.BoundingBox.GetComponent<BoxCollider>();
@@ -3349,18 +3363,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             b.enabled = true;
             Vector3 bottomPoint = b.ClosestPoint(targetNegY);
             b.enabled = false;
-
-            Quaternion r = new Quaternion();
-
-            if(action.rotation != Vector3.zero)
-            {
-                r = Quaternion.Euler(action.rotation.x, action.rotation.y, action.rotation.z);
-            }
-
-            else
-            {
-                r = target.transform.rotation;
-            }
 
             float distFromSopToBottomPoint = Vector3.Distance(bottomPoint, target.transform.position);
 
@@ -3374,11 +3376,40 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             if(ipt.CheckSpawnArea(target, finalPos, r, false))
             {
                 target.transform.position = finalPos;
-                target.transform.rotation = r;
+                //target.transform.rotation = r; rotation is now set before checking spawn in order to get the correct bottomPoint given the object's orientation
+
+                //aditional stuff we need to do if placing item that is currently in hand
+                if(ItemInHand != null)
+                {
+                    if(ItemInHand.transform.gameObject == target.transform.gameObject)
+                    {
+                        Rigidbody rb = ItemInHand.GetComponent<Rigidbody>();
+                        rb.isKinematic = false;
+                        rb.constraints = RigidbodyConstraints.None;
+                        rb.useGravity = true;
+
+                        //change collision detection mode while falling so that obejcts don't phase through colliders.
+                        //this is reset to discrete on SimObjPhysics.cs's update 
+                        rb.collisionDetectionMode = CollisionDetectionMode.ContinuousSpeculative;
+
+                        GameObject topObject = GameObject.Find("Objects");
+                        if (topObject != null) {
+                            ItemInHand.transform.parent = topObject.transform;
+                        } else {
+                            ItemInHand.transform.parent = null;
+                        }
+
+                        DropContainedObjects(ItemInHand.GetComponent<SimObjPhysics>());
+                        ItemInHand.GetComponent<SimObjPhysics>().isInAgentHand = false;
+                        ItemInHand = null;
+                    }
+                }
+
                 StartCoroutine(checkIfObjectHasStoppedMoving(target, 0, true));
                 return;
             }
 
+            target.transform.rotation = original_r;
             errorMessage = "spawn area not clear, can't place object at that point";
             actionFinished(false);
         }
