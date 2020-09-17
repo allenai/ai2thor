@@ -3726,11 +3726,18 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 actionFinished(false);
                 return;
             }
-
-            bool success = physicsSceneManager.SetObjectPoses(action.objectPoses);
-            actionFinished(success);
+            StartCoroutine(setObjectPoses(action.objectPoses));
         }
 
+        // SetObjectPoses is performed in a coroutine otherwise if
+        // a frame does not pass prior to this AND the imageSynthesis
+        // is enabled for say depth or normals, Unity will crash on 
+        // a subsequent scene reset()
+        protected IEnumerator setObjectPoses(ObjectPose[] objectPoses){
+            yield return new WaitForEndOfFrame();
+            bool success = physicsSceneManager.SetObjectPoses(objectPoses);
+            actionFinished(success);
+        }
 
         //set all objects objects of a given type to a specific state, if that object has that state
         //ie: All objects of type Bowl that have the state property breakable, set isBroken = true
