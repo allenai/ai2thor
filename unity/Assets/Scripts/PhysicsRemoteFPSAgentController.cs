@@ -2056,9 +2056,9 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 }
 
                 //we are past the wait time threshold, so force object to stop moving before
-                rb.velocity = Vector3.zero;
-                rb.angularVelocity = Vector3.zero;
-                rb.Sleep();
+                // rb.velocity = Vector3.zero;
+                // rb.angularVelocity = Vector3.zero;
+                //rb.Sleep();
 
                 //return to metadatawrapper.actionReturn if an object was touched during this interaction
                 if(length != 0.0f)
@@ -3342,6 +3342,20 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 return;
             }
 
+            Quaternion original_r = target.transform.rotation;
+            Quaternion r = new Quaternion();
+
+            if(action.rotation != Vector3.zero)
+            {
+                r = Quaternion.Euler(action.rotation.x, action.rotation.y, action.rotation.z);
+                target.transform.rotation = r;
+            }
+
+            else
+            {
+                r = target.transform.rotation;
+            }
+
             //ok let's get the distance from the simObj to the bottom most part of its colliders
             Vector3 targetNegY = target.transform.position + new Vector3(0, -1, 0);
             BoxCollider b = target.BoundingBox.GetComponent<BoxCollider>();
@@ -3359,14 +3373,43 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             //check spawn area here
             InstantiatePrefabTest ipt = physicsSceneManager.GetComponent<InstantiatePrefabTest>();
-            if(ipt.CheckSpawnArea(target, finalPos, target.transform.rotation, false))
+            if(ipt.CheckSpawnArea(target, finalPos, r, false))
             {
                 target.transform.position = finalPos;
-                
+                //target.transform.rotation = r; rotation is now set before checking spawn in order to get the correct bottomPoint given the object's orientation
+
+                //aditional stuff we need to do if placing item that is currently in hand
+                if(ItemInHand != null)
+                {
+                    if(ItemInHand.transform.gameObject == target.transform.gameObject)
+                    {
+                        Rigidbody rb = ItemInHand.GetComponent<Rigidbody>();
+                        rb.isKinematic = false;
+                        rb.constraints = RigidbodyConstraints.None;
+                        rb.useGravity = true;
+
+                        //change collision detection mode while falling so that obejcts don't phase through colliders.
+                        //this is reset to discrete on SimObjPhysics.cs's update 
+                        rb.collisionDetectionMode = CollisionDetectionMode.ContinuousSpeculative;
+
+                        GameObject topObject = GameObject.Find("Objects");
+                        if (topObject != null) {
+                            ItemInHand.transform.parent = topObject.transform;
+                        } else {
+                            ItemInHand.transform.parent = null;
+                        }
+
+                        DropContainedObjects(ItemInHand.GetComponent<SimObjPhysics>());
+                        ItemInHand.GetComponent<SimObjPhysics>().isInAgentHand = false;
+                        ItemInHand = null;
+                    }
+                }
+
                 StartCoroutine(checkIfObjectHasStoppedMoving(target, 0, true));
                 return;
             }
 
+            target.transform.rotation = original_r;
             errorMessage = "spawn area not clear, can't place object at that point";
             actionFinished(false);
         }
@@ -3714,11 +3757,18 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 actionFinished(false);
                 return;
             }
-
-            bool success = physicsSceneManager.SetObjectPoses(action.objectPoses);
-            actionFinished(success);
+            StartCoroutine(setObjectPoses(action.objectPoses));
         }
 
+        // SetObjectPoses is performed in a coroutine otherwise if
+        // a frame does not pass prior to this AND the imageSynthesis
+        // is enabled for say depth or normals, Unity will crash on 
+        // a subsequent scene reset()
+        protected IEnumerator setObjectPoses(ObjectPose[] objectPoses){
+            yield return new WaitForEndOfFrame();
+            bool success = physicsSceneManager.SetObjectPoses(objectPoses);
+            actionFinished(success);
+        }
 
         //set all objects objects of a given type to a specific state, if that object has that state
         //ie: All objects of type Bowl that have the state property breakable, set isBroken = true
@@ -6318,6 +6368,29 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return false;
         }
 
+        public bool objectIsWithinViewport(SimObjPhysics sop) {
+            if (sop.VisibilityPoints.Length > 0) {
+                Transform[] visPoints = sop.VisibilityPoints;
+                foreach (Transform point in visPoints) {
+                    Vector3 viewPoint = m_Camera.WorldToViewportPoint(point.position);
+                    float ViewPointRangeHigh = 1.0f;
+                    float ViewPointRangeLow = 0.0f;
+
+                    if (viewPoint.z > 0 &&
+                        viewPoint.x < ViewPointRangeHigh && viewPoint.x > ViewPointRangeLow && //within x bounds of viewport
+                        viewPoint.y < ViewPointRangeHigh && viewPoint.y > ViewPointRangeLow //within y bounds of viewport
+                    ) {
+                            return true;
+                    }
+                }
+            } else {
+                #if UNITY_EDITOR
+                Debug.Log("Error! Set at least 1 visibility point on SimObjPhysics prefab!");
+                #endif
+            }
+            return false;
+        }
+        
         public bool objectIsCurrentlyVisible(SimObjPhysics sop, float maxDistance) 
         {
             if (sop.VisibilityPoints.Length > 0) 

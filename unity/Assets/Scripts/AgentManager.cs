@@ -944,8 +944,12 @@ public class AgentManager : MonoBehaviour
 	{
 
         this.renderObjectImage = this.defaultRenderObjectImage;
+        #if UNITY_WEBGL
+		ServerAction controlCommand = new ServerAction();
+		JsonUtility.FromJsonOverwrite(msg, controlCommand);
+        #else
         dynamic controlCommand = Newtonsoft.Json.JsonConvert.DeserializeObject<dynamic>(msg);
-
+        #endif
 
 		this.currentSequenceId = controlCommand.sequenceId;
         // the following are handled this way since they can be null
@@ -1401,7 +1405,6 @@ public class ServerAction
     public int maxStepCount;
     public float rotateStepDegrees = 90.0f; //default rotation amount for RotateRight/RotateLeft actions
 
-    public bool useAgentTransform = false;
     public float degrees;//for overriding the default degree amount in look up/lookdown/rotaterRight/rotateLeft
 
     public bool topView = false;

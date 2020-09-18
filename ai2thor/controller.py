@@ -562,13 +562,14 @@ class Controller(object):
 
     def unlock_release(self):
         if self.lock_file:
-            fcntl.flock(self.lock_file, fcntl.LOCK_UN)
+            fcntl.lockf(self.lock_file, fcntl.LOCK_UN)
+            os.close(self.lock_file)
 
     def lock_release(self):
         build_dir = os.path.join(self.releases_dir(), self.build_name())
         if os.path.isdir(build_dir):
-            self.lock_file = open(os.path.join(build_dir, ".lock"), "w")
-            fcntl.flock(self.lock_file, fcntl.LOCK_SH)
+            self.lock_file = os.open(build_dir + ".lock", os.O_RDWR | os.O_CREAT)
+            fcntl.lockf(self.lock_file, fcntl.LOCK_SH)
 
     def prune_releases(self):
         current_exec_path = self.executable_path()
@@ -580,9 +581,11 @@ class Controller(object):
 
             if os.path.isdir(release):
                 try:
-                    with open(os.path.join(release, ".lock"), "w") as f:
-                        fcntl.flock(f, fcntl.LOCK_EX | fcntl.LOCK_NB)
-                        shutil.rmtree(release)
+                    lf = os.open(release + ".lock", os.O_RDWR | os.O_CREAT)
+                    fcntl.lockf(lf, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                    shutil.rmtree(release)
+                    fcntl.lockf(lf, fcntl.LOCK_UN)
+                    os.close(lf)
                 except Exception:
                     pass
 
@@ -822,9 +825,9 @@ class Controller(object):
         tmp_dir = os.path.join(self.base_dir(), 'tmp')
         makedirs(self.releases_dir())
         makedirs(tmp_dir)
-        download_lf = open(os.path.join(tmp_dir, self.build_name(url) + ".lock"), "w")
+        download_lf = os.open(os.path.join(tmp_dir, self.build_name(url) + ".lock"), os.O_RDWR | os.O_CREAT)
         try:
-            fcntl.flock(download_lf, fcntl.LOCK_EX)
+            fcntl.lockf(download_lf, fcntl.LOCK_EX)
 
             if not os.path.isfile(self.executable_path()):
                 zip_data = ai2thor.downloader.download(
@@ -846,8 +849,8 @@ class Controller(object):
                 logger.debug("%s exists - skipping download" % self.executable_path())
 
         finally:
-            fcntl.flock(download_lf, fcntl.LOCK_UN)
-            download_lf.close()
+            fcntl.lockf(download_lf, fcntl.LOCK_UN)
+            os.close(download_lf)
 
 
     def start(
