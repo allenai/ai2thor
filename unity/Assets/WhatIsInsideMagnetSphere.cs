@@ -5,10 +5,14 @@ using UnityEngine;
 public class WhatIsInsideMagnetSphere : MonoBehaviour
 {
 
-	[SerializeField] protected List<SimObjPhysics> CurrentlyContains = new List<SimObjPhysics>();
+	[SerializeField] protected List<string> CurrentlyContainedObjectIds = new List<string>();
+	[SerializeField] protected List<SimObjPhysics> CurrentlyContainedSOP = new List<SimObjPhysics>();
+
 	private List<SimObjPrimaryProperty> PropertiesToIgnore = new List<SimObjPrimaryProperty>(new SimObjPrimaryProperty[] {SimObjPrimaryProperty.Wall,
 		SimObjPrimaryProperty.Floor, SimObjPrimaryProperty.Ceiling, SimObjPrimaryProperty.Static}); //should we ignore SimObjPrimaryProperty.Static?
 
+	//check if the sphere is actively colliding with anything
+	public bool isColliding;
     // Start is called before the first frame update
     void Start()
     {
@@ -23,8 +27,10 @@ public class WhatIsInsideMagnetSphere : MonoBehaviour
 
     void FixedUpdate()
     {
-        //this is a bit jank but you know
-        CurrentlyContains.Clear();
+        //this is a bit jank but you know, reset objects inside sphere since onTriggerEnd don't work
+        CurrentlyContainedObjectIds.Clear();
+		CurrentlyContainedSOP.Clear();
+		isColliding = false;
     }
 
 	public void OnTriggerStay(Collider other)
@@ -33,6 +39,7 @@ public class WhatIsInsideMagnetSphere : MonoBehaviour
 		//don't detect other trigger colliders to prevent nested objects from containing each other
 		if (other.GetComponentInParent<SimObjPhysics>() && !other.isTrigger)
 		{
+			isColliding = true;
 			
 			SimObjPhysics sop = other.GetComponentInParent<SimObjPhysics>();
 
@@ -42,35 +49,50 @@ public class WhatIsInsideMagnetSphere : MonoBehaviour
 				return;
 			}
 
-			//check each "other" object, see if it is currently in the CurrentlyContains list, and make sure it is NOT one of this object's doors/drawer
-			if (!CurrentlyContains.Contains(sop))//&& !MyObjects.Contains(sop.transform.gameObject))
+			//populate list of sim objects inside sphere by objectID
+			if (!CurrentlyContainedObjectIds.Contains(sop.objectID))
 			{
 				if(sop.PrimaryProperty == SimObjPrimaryProperty.CanPickup)
-				CurrentlyContains.Add(sop);
+				CurrentlyContainedObjectIds.Add(sop.objectID);
+			}
+
+			//populate list of sim objects inside sphere by object reference
+			if(!CurrentlyContainedSOP.Contains(sop))
+			{
+				if(sop.PrimaryProperty == SimObjPrimaryProperty.CanPickup)
+				CurrentlyContainedSOP.Add(sop);
 			}
 		}
 	}
 
-	//report back what is currently inside this receptacle
-	public List<SimObjPhysics> CurrentlyContainedObjects()
+	//report back what is currently inside this receptacle as a list of sim object references
+	public List<SimObjPhysics> CurrentlyContainedSimObjects()
 	{
 
         //do a sphere cast to grab all sim objects 
         //Collider[] hitColliders = Physics.OverlapSphere()
 
-        List<SimObjPhysics> cleanedList = new List<SimObjPhysics>(CurrentlyContains);
+        // List<string> cleanedList = new List<string>(CurrentlyContains);
 
-        foreach(SimObjPhysics sop in CurrentlyContains)
-        {
-            if(sop.GetComponent<SliceObject>())
-            {
-                if(sop.GetComponent<SliceObject>().IsSliced())
-                cleanedList.Remove(sop);
-            }
-        }
+        // foreach(SimObjPhysics sop in CurrentlyContains)
+        // {
+		// 	//I don't remember why sliced objects were being filtered out?
+		// 	//why is this here please help
+        //     // if(sop.GetComponent<SliceObject>())
+        //     // {
+        //     //     if(sop.GetComponent<SliceObject>().IsSliced())
+        //     //     cleanedList.Remove(sop);
+        //     // }
+        // }
 
-        CurrentlyContains = cleanedList;
-		return CurrentlyContains;
+        // CurrentlyContains = cleanedList;
+		return CurrentlyContainedSOP;
+	}
+
+	//report back what is currently inside this receptacle as a list of object ids of sim objects
+	public List<string> CurrentlyContainedSimObjectsByID()
+	{
+		return CurrentlyContainedObjectIds;
 	}
 
 }

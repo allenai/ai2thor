@@ -241,6 +241,8 @@ public class PhysicsSceneManager : MonoBehaviour
 			{
 				ReceptaclesInScene.Add(sop);
 
+				#if UNITY_EDITOR
+				//debug if some of these receptacles were not set up correctly
 				foreach (GameObject go in sop.ReceptacleTriggerBoxes)
 				{
 					if (go == null) {
@@ -248,9 +250,9 @@ public class PhysicsSceneManager : MonoBehaviour
 						continue;
 					}
 					Contains c = go.GetComponent<Contains>();
-                    c.CurrentlyContainedObjects().Clear();
-                    c.GetComponent<Collider>().enabled = false;
-                    c.GetComponent<Collider>().enabled = true;
+                    // c.CurrentlyContainedObjects().Clear();
+                    // c.GetComponent<Collider>().enabled = false;
+                    // c.GetComponent<Collider>().enabled = true;
                     if (c == null) {
 						Debug.LogWarning(sop.gameObject + " is missing a contains script on one of its receptacle boxes.");
 						continue;
@@ -259,6 +261,7 @@ public class PhysicsSceneManager : MonoBehaviour
 						go.GetComponent<Contains>().myParent = sop.transform.gameObject;
 					}
 				}
+				#endif
 			}
 		}
 

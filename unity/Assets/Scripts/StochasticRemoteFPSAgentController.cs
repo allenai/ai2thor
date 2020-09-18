@@ -120,6 +120,97 @@ namespace UnityStandardAssets.Characters.FirstPerson
             base.Pass(action);
         }
 
+        private bool checkForUpDownAngleLimit(string direction, float degrees)
+        {   
+            bool result = true;
+            //check the angle between the agent's forward vector and the proposed rotation vector
+            //if it exceeds the min/max based on if we are rotating up or down, return false
+
+            //first move the rotPoint to the camera
+            rotPoint.transform.position = m_Camera.transform.position;
+            //zero out the rotation first
+            rotPoint.transform.rotation = m_Camera.transform.rotation;
+
+
+            //print(Vector3.Angle(rotPoint.transform.forward, m_CharacterController.transform.forward));
+            if(direction == "down")
+            {
+                rotPoint.Rotate(new Vector3(degrees, 0, 0));
+                //note: maxDownwardLookAngle is negative because SignedAngle() returns a... signed angle... so even though the input is LookDown(degrees) with
+                //degrees being positive, it still needs to check against this negatively signed direction.
+                if(Mathf.Round(Vector3.SignedAngle(rotPoint.transform.forward, m_CharacterController.transform.forward, m_CharacterController.transform.right)* 10.0f) / 10.0f < -maxDownwardLookAngle)
+                {
+                    result = false;
+                }
+            }
+
+            if(direction == "up")
+            {
+                rotPoint.Rotate(new Vector3(-degrees, 0, 0));
+                if(Mathf.Round(Vector3.SignedAngle(rotPoint.transform.forward, m_CharacterController.transform.forward, m_CharacterController.transform.right) * 10.0f) / 10.0f > maxUpwardLookAngle)
+                {
+                    result = false;
+                }
+            }
+            return result;
+        }
+
+        public override void LookDown(ServerAction action) 
+        {
+            //default degree increment to 30
+            if(action.degrees == 0)
+            {
+                action.degrees = 30f;
+            } else {
+                errorMessage = "Must have degrees == 0 for now.";
+                actionFinished(false);
+                return;
+            }
+
+            //force the degree increment to the nearest tenths place
+            //this is to prevent too small of a degree increment change that could cause float imprecision
+            action.degrees = Mathf.Round(action.degrees * 10.0f)/ 10.0f;
+
+            if(!checkForUpDownAngleLimit("down", action.degrees))
+            {
+                errorMessage = "can't look down beyond " + maxDownwardLookAngle + " degrees below the forward horizon";
+			 	errorCode = ServerActionErrorCode.LookDownCantExceedMin;
+			 	actionFinished(false);
+                return;
+            }
+
+            base.LookDown(action);
+            return;
+        }
+
+        public override void LookUp(ServerAction action) 
+        {
+
+            //default degree increment to 30
+            if(action.degrees == 0)
+            {
+                action.degrees = 30f;
+            } else {
+                errorMessage = "Must have degrees == 0 for now.";
+                actionFinished(false);
+                return;
+            }
+
+            //force the degree increment to the nearest tenths place
+            //this is to prevent too small of a degree increment change that could cause float imprecision
+            action.degrees = Mathf.Round(action.degrees * 10.0f)/ 10.0f;
+
+            if(!checkForUpDownAngleLimit("up", action.degrees))
+            {
+                errorMessage = "can't look up beyond " + maxUpwardLookAngle + " degrees above the forward horizon";
+			 	errorCode = ServerActionErrorCode.LookDownCantExceedMin;
+			 	actionFinished(false);
+                return;
+            }
+
+            base.LookUp(action);
+        }
+
         public override void Rotate(ServerAction action)
         {
             //only default hand if not manually Interacting with things

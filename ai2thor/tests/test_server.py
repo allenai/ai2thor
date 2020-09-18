@@ -1,8 +1,8 @@
-import ai2thor.server
+import ai2thor.wsgi_server
 import pytest
 import numpy as np
 import json
-from ai2thor.controller import Queue
+from ai2thor.wsgi_server import Queue
 from ai2thor.tests.test_event import metadata_simple
 from io import BytesIO
 import copy
@@ -13,12 +13,10 @@ def generate_multi_agent_form(metadata, sequence_id=1):
     agent2['agentId'] = 1
     agent1 = metadata
     agents = [agent1, agent2]
-    action_returns = [None, None]
     boundary = b'--OVCo05I3SVXLPeTvCgJjHl1EOleL4u9TDx5raRVt'
     data = b'\r\n' + boundary + b'\r\nContent-Type: text/plain; charset="utf-8"\r\nContent-disposition: form-data; name="metadata"\r\n\r\n'
     data += json.dumps(dict(agents=agents, sequenceId=sequence_id, activeAgentId=1)).encode('utf8')
     data += b'\r\n' + boundary + b'\r\nContent-Type: text/plain; charset="utf-8"\r\nContent-disposition: form-data; name="actionReturns"\r\n\r\n'
-    data += json.dumps(action_returns).encode('utf8')
     data += b'\r\n' + boundary + b'\r\nContent-Type: text/plain; charset="utf-8"\r\nContent-disposition: form-data; name="token"\r\n\r\n'
     data += b'12cb40b5-3a70-4316-8ae2-82cbff6c9902'
     data += b'\r\n' + boundary + b'--\r\n'
@@ -37,10 +35,7 @@ def generate_form(metadata, sequence_id=1):
 
 @pytest.fixture
 def server():
-    request_queue = Queue(maxsize=1)
-    response_queue = Queue(maxsize=1)
-
-    return ai2thor.server.Server(request_queue, response_queue, '127.0.0.1')
+    return ai2thor.wsgi_server.WsgiServer(host='127.0.0.1')
 
 @pytest.fixture
 def client(server):
@@ -51,12 +46,9 @@ def test_ping(client):
     assert res.data == b'pong'
 
 def test_multi_agent_train():
-    request_queue = Queue(maxsize=1)
-    response_queue = Queue(maxsize=1)
 
-    response_queue.put_nowait(dict(action='RotateRight'))
-
-    s = ai2thor.server.Server(request_queue, response_queue, '127.0.0.1')
+    s = ai2thor.wsgi_server.WsgiServer(host='127.0.0.1')
+    s.send(dict(action='RotateRight'))
     c = s.app.test_client()
     res = c.post(
         '/train', 
@@ -66,16 +58,13 @@ def test_multi_agent_train():
     assert res.status_code == 200
 
 def test_train_numpy_action():
-    request_queue = Queue(maxsize=1)
-    response_queue = Queue(maxsize=1)
 
-    response_queue.put_nowait(dict(
+    s = ai2thor.wsgi_server.WsgiServer(host='127.0.0.1')
+    s.send(dict(
         action='Teleport', 
         rotation=dict(y=np.array([24])[0]),
         moveMagnitude=np.array([55.5])[0],
     ))
-
-    s = ai2thor.server.Server(request_queue, response_queue, '127.0.0.1')
     c = s.app.test_client()
     res = c.post(
         '/train', 
@@ -87,12 +76,9 @@ def test_train_numpy_action():
     assert res.status_code == 200
 
 def test_train():
-    request_queue = Queue(maxsize=1)
-    response_queue = Queue(maxsize=1)
 
-    response_queue.put_nowait(dict(action='RotateRight'))
-
-    s = ai2thor.server.Server(request_queue, response_queue, '127.0.0.1')
+    s = ai2thor.wsgi_server.WsgiServer(host='127.0.0.1')
+    s.send(dict(action='RotateRight'))
     c = s.app.test_client()
     res = c.post(
         '/train',
@@ -102,12 +88,9 @@ def test_train():
     assert res.status_code == 200
 
 def test_client_token_mismatch():
-    request_queue = Queue(maxsize=1)
-    response_queue = Queue(maxsize=1)
 
-    response_queue.put_nowait(dict(action='RotateRight'))
-
-    s = ai2thor.server.Server(request_queue, response_queue, '127.0.0.1')
+    s = ai2thor.wsgi_server.WsgiServer(host='127.0.0.1')
+    s.send(dict(action='RotateRight'))
     s.client_token = '123456'
     c = s.app.test_client()
 
@@ -119,12 +102,8 @@ def test_client_token_mismatch():
     assert res.status_code == 403
 
 def test_non_multipart():
-    request_queue = Queue(maxsize=1)
-    response_queue = Queue(maxsize=1)
-
-    response_queue.put_nowait(dict(action='RotateRight'))
-
-    s = ai2thor.server.Server(request_queue, response_queue, '127.0.0.1')
+    s = ai2thor.wsgi_server.WsgiServer(host='127.0.0.1')
+    s.send(dict(action='RotateRight'))
     c = s.app.test_client()
     s.client_token = '1234567'
 
@@ -135,12 +114,9 @@ def test_non_multipart():
     assert res.status_code == 200
 
 def test_sequence_id_mismatch():
-    request_queue = Queue(maxsize=1)
-    response_queue = Queue(maxsize=1)
 
-    response_queue.put_nowait(dict(action='RotateRight'))
-
-    s = ai2thor.server.Server(request_queue, response_queue, '127.0.0.1')
+    s = ai2thor.wsgi_server.WsgiServer(host='127.0.0.1')
+    s.send(dict(action='RotateRight'))
     c = s.app.test_client()
 
     res = c.post(

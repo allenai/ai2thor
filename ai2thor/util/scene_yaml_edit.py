@@ -14,8 +14,8 @@ def updateNavMeshParamsForScene(scene_file_name):
             # print(entry.__class__.__name__)
             buildSettings = getattr(entry, 'm_BuildSettings', None)
             # pprint(buildSettings)
-            buildSettings['agentRadius'] = '0.175'
-            buildSettings['agentHeight'] = '0.9'
+            buildSettings['agentRadius'] = '0.2'
+            buildSettings['agentHeight'] = '1.8'
             buildSettings['agentClimb'] = '0.5'
             buildSettings['manualCellSize'] = '1'
 
@@ -24,19 +24,28 @@ def updateNavMeshParamsForScene(scene_file_name):
     doc.dump_yaml()
 
 
-def GetSceneNames(last_index, last_subIndex, nameTemplate, prefix_path='unity/Assets/Scenes'):
+def GetRoboSceneNames(last_index, last_subIndex, nameTemplate, prefix_path='unity/Assets/Scenes'):
     return ["{}/FloorPlan_{}{}_{}.unity".format(prefix_path, nameTemplate, i, j)  for i in range(1, last_index+1) for j in range(1, last_subIndex+1)]
 
 
+def GetSceneNames(start_index, last_index, nameTemplate="", prefix_path='unity/Assets/Scenes'):
+    return ["{}/FloorPlan{}{}_physics.unity".format(prefix_path, i, nameTemplate)  for i in range(start_index, last_index+1)]
+
+
 def main():
-    testSceneNames = GetSceneNames(3, 5, "Val")
-    valSceneNames = GetSceneNames(2, 2, "test-dev", 'unity/Assets/Private/Scenes')
-    trainSceneNames = GetSceneNames(12, 5, "Train")
+    testSceneNames = GetRoboSceneNames(3, 5, "Val")
+    valSceneNames = GetRoboSceneNames(2, 2, "test-dev", 'unity/Assets/Private/Scenes')
+    trainSceneNames = GetRoboSceneNames(12, 5, "Train")
 
     #allScenes = testSceneNames  + trainSceneNames
-    allScenes = valSceneNames
+    # allScenes = valSceneNames
+
+    iThorScenes = GetSceneNames(1, 30) + GetSceneNames(201, 230) + GetSceneNames(301, 330) + GetSceneNames(401, 430) + GetSceneNames(501, 530)
+    allScenes = iThorScenes
+    #print(allScenes)
     for scene_file_name in allScenes:
         updateNavMeshParamsForScene(scene_file_name)
+        #print(scene_file_name)
 
 
 if __name__== "__main__":
