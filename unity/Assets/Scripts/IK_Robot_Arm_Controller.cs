@@ -29,8 +29,10 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
 
     private Transform FirstJoint;
 
+    //dict to track which picked up object has which set of trigger colliders
+    //which we have to parent and reparent in order for arm collision to detect
     [SerializeField]
-    private List<SimObjPhysics> HeldObjects = null;
+    private Dictionary<SimObjPhysics, Transform> HeldObjects = new Dictionary<SimObjPhysics, Transform>();
 
     private bool StopMotionOnContact = false;
     // Start is called before the first frame update
@@ -68,6 +70,13 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
         // }
     }
 
+    //debug for gizmo draw
+    #if UNITY_EDITOR
+    Vector3 gizmo_p1;
+    Vector3 gizmo_p2;
+    float gizmo_radius;
+    #endif
+
     public bool IsArmColliding()
     {
         bool result = false;
@@ -103,7 +112,7 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
             }
 
             //debug draw
-            //Debug.DrawLine(center, center + dir * 2.0f, Color.red, 10.0f);
+            Debug.DrawLine(center, center + dir * 2.0f, Color.red, 10.0f);
 
             //point 0
             //center in world space + direction with magnitude (1/2 height - radius)
@@ -113,9 +122,14 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
             //center in world space - direction with magnitude (1/2 height - radius)
             var point1 = center - dir * (c.height/2 - radius);
 
+            #if UNITY_EDITOR
             // print("p0 " + point0);
             // print("p1 " + point1);
-
+            gizmo_p1 = point0;
+            gizmo_p2 = point1;
+            gizmo_radius = radius;
+            #endif
+            
             //ok now finally let's make some overlap capsuuuules
             if(Physics.OverlapCapsule(point0, point1, radius, 1 << 8, QueryTriggerInteraction.Ignore).Length > 0)
             {
@@ -144,21 +158,24 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
             SimObjPhysics sop = col.GetComponentInParent<SimObjPhysics>();
             if(sop.PrimaryProperty == SimObjPrimaryProperty.Static)
             {
-                #if UNITY_EDITOR
-                Debug.Log("Collided with static sim obj " + sop.name);
-                #endif
 
-                staticCollided.collided = true;
-                staticCollided.simObjPhysics = sop;
+                if(!col.isTrigger)
+                {
+                    // #if UNITY_EDITOR
+                    // Debug.Log("Collided with static sim obj " + sop.name);
+                    // #endif
+                    staticCollided.collided = true;
+                    staticCollided.simObjPhysics = sop;
+                }
             }
         }
 
         //also check if the collider hit was a structure?
         if(col.gameObject.isStatic)
         {
-            #if UNITY_EDITOR
-            Debug.Log("Collided with static structure " + col.gameObject.name);
-            #endif
+            // #if UNITY_EDITOR
+            // Debug.Log("Collided with static structure " + col.gameObject.name);
+            // #endif
                 
             staticCollided.collided = true;
             staticCollided.gameObject = col.gameObject;
@@ -398,10 +415,11 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
             rb.collisionDetectionMode = CollisionDetectionMode.Discrete;
 
             //move colliders to be children of arm? stop arm from moving?
-            sop.transform.Find("Colliders").transform.SetParent(magnetSphere.transform);
+            Transform cols = sop.transform.Find("TriggerColliders"); 
+            cols.SetParent(magnetSphere.transform);
             pickedUp = true;
 
-            HeldObjects.Add(sop);
+            HeldObjects.Add(sop, cols);
         }
 
         //note: how to handle cases where object breaks if it is shoved into another object?
@@ -412,24 +430,24 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
     public void DropObject()
     {
         //grab all sim objects that are currently colliding with magnet sphere
-        foreach(SimObjPhysics sop in HeldObjects) 
+        foreach(KeyValuePair<SimObjPhysics, Transform> sop in HeldObjects) 
         {
-            Rigidbody rb = sop.GetComponent<Rigidbody>();
+            Rigidbody rb = sop.Key.GetComponent<Rigidbody>();
             rb.collisionDetectionMode = CollisionDetectionMode.ContinuousSpeculative;
             rb.isKinematic = false;
 
             //move colliders back to the sop
-            magnetSphere.transform.Find("Colliders").transform.SetParent(sop.transform);
+            magnetSphere.transform.Find("TriggerColliders").transform.SetParent(sop.Key.transform);
             GameObject topObject = GameObject.Find("Objects");
 
             if(topObject != null)
             {
-                sop.transform.parent = topObject.transform;
+                sop.Key.transform.parent = topObject.transform;
             }
 
             else
             {
-                sop.transform.parent = null;
+                sop.Key.transform.parent = null;
             }
 
             rb.angularVelocity = UnityEngine.Random.insideUnitSphere;
@@ -482,12 +500,28 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
         //there could be a case where an object is inside the sphere but not picked up by the hand
         List<string> HeldObjectIDs = new List<string>();
 
-        foreach(SimObjPhysics sop in HeldObjects)
+        if(HeldObjects != null)
         {
-            HeldObjectIDs.Add(sop.objectID);
+            foreach(KeyValuePair<SimObjPhysics, Transform> sop in HeldObjects) 
+            {
+                HeldObjectIDs.Add(sop.Key.objectID);
+            }
         }
+
         meta.HeldObjects = HeldObjectIDs;
 
         return meta;
     }
+
+    #if UNITY_EDITOR
+    private void OnDrawGizmos()
+    {
+        if(gizmo_radius > 0.0f)
+        {
+            Gizmos.DrawWireSphere (gizmo_p1, gizmo_radius);
+            Gizmos.DrawWireSphere( gizmo_p2, gizmo_radius);
+        }
+
+    }
+    #endif
 }
