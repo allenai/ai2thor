@@ -9095,7 +9095,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             if(arm != null)
             {
                 arm.SetStopMotionOnContact(action.stopArmMovementOnContact);
-                StartCoroutine(arm.moveArmHeight(this, -action.y, action.speed, arm.gameObject, action.returnToStart));
+                StartCoroutine(arm.moveArmHeight(this, 1.0f-action.y, action.speed, arm.gameObject, action.returnToStart));
             }
 
             else
