@@ -1782,6 +1782,41 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			actionFinished(true);
 		}
 
+        protected bool checkForUpDownAngleLimit(string direction, float degrees)
+        {   
+            bool result = true;
+            //check the angle between the agent's forward vector and the proposed rotation vector
+            //if it exceeds the min/max based on if we are rotating up or down, return false
+
+            //first move the rotPoint to the camera
+            rotPoint.transform.position = m_Camera.transform.position;
+            //zero out the rotation first
+            rotPoint.transform.rotation = m_Camera.transform.rotation;
+
+
+            //print(Vector3.Angle(rotPoint.transform.forward, m_CharacterController.transform.forward));
+            if(direction == "down")
+            {
+                rotPoint.Rotate(new Vector3(degrees, 0, 0));
+                //note: maxDownwardLookAngle is negative because SignedAngle() returns a... signed angle... so even though the input is LookDown(degrees) with
+                //degrees being positive, it still needs to check against this negatively signed direction.
+                if(Mathf.Round(Vector3.SignedAngle(rotPoint.transform.forward, m_CharacterController.transform.forward, m_CharacterController.transform.right)* 10.0f) / 10.0f < -maxDownwardLookAngle)
+                {
+                    result = false;
+                }
+            }
+
+            if(direction == "up")
+            {
+                rotPoint.Rotate(new Vector3(-degrees, 0, 0));
+                if(Mathf.Round(Vector3.SignedAngle(rotPoint.transform.forward, m_CharacterController.transform.forward, m_CharacterController.transform.right) * 10.0f) / 10.0f > maxUpwardLookAngle)
+                {
+                    result = false;
+                }
+            }
+            return result;
+        }
+
         //teleport full, base version does not consider being able to hold objects
         public virtual void TeleportFull(ServerAction action) {
             targetTeleport = new Vector3(action.x, action.y, action.z);
@@ -1966,6 +2001,29 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
         public float TimeSinceStart() {
             return Time.time;
+        }
+
+        protected bool objectIsWithinViewport(SimObjPhysics sop) {
+            if (sop.VisibilityPoints.Length > 0) {
+                Transform[] visPoints = sop.VisibilityPoints;
+                foreach (Transform point in visPoints) {
+                    Vector3 viewPoint = m_Camera.WorldToViewportPoint(point.position);
+                    float ViewPointRangeHigh = 1.0f;
+                    float ViewPointRangeLow = 0.0f;
+
+                    if (viewPoint.z > 0 &&
+                        viewPoint.x < ViewPointRangeHigh && viewPoint.x > ViewPointRangeLow && //within x bounds of viewport
+                        viewPoint.y < ViewPointRangeHigh && viewPoint.y > ViewPointRangeLow //within y bounds of viewport
+                    ) {
+                            return true;
+                    }
+                }
+            } else {
+                #if UNITY_EDITOR
+                Debug.Log("Error! Set at least 1 visibility point on SimObjPhysics prefab!");
+                #endif
+            }
+            return false;
         }
 
         private bool isSimObjVisible(Camera agentCamera, SimObjPhysics sop) {
@@ -2643,11 +2701,148 @@ namespace UnityStandardAssets.Characters.FirstPerson
             return sop;
         }
 
+        private SimObjPhysics getSimObjectFromTypeOrId(ServerAction action) {
+            var objectId = action.objectId;
+            var objectType = action.objectType;
+            return getSimObjectFromTypeOrId(objectType, objectId);
+        }
+
         public void VisualizeGrid(ServerAction action) {
             var reachablePositions = getReachablePositions(1.0f, 10000, true);
             actionFinished(true, reachablePositions);
         }
 
+        public void ObjectNavExpertAction(ServerAction action) {
+            SimObjPhysics sop = getSimObjectFromTypeOrId(action);
+            var path = getShortestPath(sop, true);
+            if (path.status == UnityEngine.AI.NavMeshPathStatus.PathComplete) {
+
+                int parts = (int) Math.Round(360f / rotateStepDegrees);
+                if (Math.Abs((parts * 1.0f) - 360f / rotateStepDegrees) > 1e-5) {
+                    errorMessage = "Invalid rotate step degrees for agent, must divide 360 without a remainder.";
+                    actionFinished(false);
+                    return;
+                }
+                
+                int numLeft = parts / 2;
+                int numRight = numLeft + (parts % 2 == 0 ? 1 : 0);
+                Vector3 startPosition = this.transform.position;
+                Quaternion startRotation = this.transform.rotation;
+                Vector3 startCameraRot = m_Camera.transform.localEulerAngles;
+
+                if (path.corners.Length <= 1) {
+                    if (objectIsWithinViewport(sop)) {
+                        actionFinished(true);
+                        return;
+                    }
+
+                    int relRotate = 0;
+                    int relHorizon = 0;
+                    int bestNumActions = 1000000;
+                    for (int i = -numLeft; i <= numRight; i++) {
+                        transform.Rotate(0.0f, i * rotateStepDegrees, 0.0f);
+                        for (int horizon = -1; horizon <= 2; horizon++) {
+                            m_Camera.transform.localEulerAngles = new Vector3(30f * horizon, 0.0f, 0.0f);
+                            if (objectIsWithinViewport(sop)) {
+                                int numActions = Math.Abs(i) + Math.Abs(horizon - (int) (startCameraRot.x / 30f));
+                                if (numActions < bestNumActions) {
+                                    bestNumActions = numActions;
+                                    relRotate = i;
+                                    relHorizon = horizon - (int) (startCameraRot.x / 30f);
+                                }
+                            }
+                        }
+                        m_Camera.transform.localEulerAngles = startCameraRot;
+                        transform.rotation = startRotation;
+                    }
+
+                    #if UNITY_EDITOR
+                    Debug.Log("Expert rotate and horizon:");
+                    Debug.Log(relRotate);
+                    Debug.Log(relHorizon);
+                    // When in the editor, rotate the agent and camera into the expert direction
+                    m_Camera.transform.localEulerAngles = new Vector3(startCameraRot.x + 30f * relHorizon, 0.0f, 0.0f);
+                    transform.Rotate(0.0f, relRotate * rotateStepDegrees, 0.0f);
+                    #endif
+
+                    if (relRotate != 0) {
+                        if (relRotate < 0) {
+                            actionFinished(true, "RotateLeft");
+                        } else {
+                            actionFinished(true, "RotateRight");
+                        }
+                    } else if (relHorizon != 0) {
+                        if (relHorizon < 0) {
+                            actionFinished(true, "LookUp");
+                        } else {
+                            actionFinished(true, "LookDown");
+                        }
+                    } else {
+                        errorMessage = "Object doesn't seem visible from any rotation/horizon.";
+                        actionFinished(false);
+                    }
+                    return;
+                }
+
+                Vector3 nextCorner = path.corners[1];
+
+                int whichBest = 0;
+                float bestDistance = 1000f;
+                for (int i = -numLeft; i <= numRight; i++) {
+                    transform.Rotate(0.0f, i * rotateStepDegrees, 0.0f);
+
+                    bool couldMove = moveInDirection(this.transform.forward * gridSize);
+                    if (couldMove) {
+                        float newDistance = Math.Abs(nextCorner.x - transform.position.x) + Math.Abs(nextCorner.z - transform.position.z);
+                        if (newDistance + 1e-6 < bestDistance) {
+                            bestDistance = newDistance;
+                            whichBest = i;
+                        }
+                    }
+                    transform.position = startPosition;
+                    transform.rotation = startRotation;
+                }
+
+                if (bestDistance >= 1000f) {
+                    errorMessage = "Can't seem to move in any direction...";
+                    actionFinished(false);
+                }
+               
+               #if UNITY_EDITOR
+               transform.Rotate(0.0f, Math.Sign(whichBest) * rotateStepDegrees, 0.0f);
+               if (whichBest == 0) {
+                   moveInDirection(this.transform.forward * gridSize);
+               }
+               Debug.Log(whichBest);
+               #endif
+
+                if (whichBest < 0) {
+                    actionFinished(true, "RotateLeft");
+                } else if (whichBest > 0) {
+                    actionFinished(true, "RotateRight");
+                } else {
+                    actionFinished(true, "MoveAhead");
+                }
+                return;
+            }
+            else {
+                errorMessage = "Path to target could not be found";
+                actionFinished(false);
+                return;
+            }
+        }
+
+        public UnityEngine.AI.NavMeshPath getShortestPath(SimObjPhysics sop, bool useAgentTransform, ServerAction action=null) {
+            var startPosition = this.transform.position;
+            var startRotation = this.transform.rotation;
+            if (!useAgentTransform) {
+                startPosition = action.position;
+                startRotation = Quaternion.Euler(action.rotation);
+            }
+
+            return GetSimObjectNavMeshTarget(sop, startPosition, startRotation);
+        }
+        
         private void getShortestPath(string objectType, string objectId,  Vector3 startPosition, Quaternion startRotation) {
             SimObjPhysics sop = getSimObjectFromTypeOrId(objectType, objectId);
             if (sop == null) {
