@@ -2,6 +2,7 @@ using System.Linq;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.AI;
 using MessagePack;
 using MessagePack.Formatters;
 using MessagePack.Resolvers;
@@ -13,6 +14,25 @@ using MessagePack.Internal;
 */
 namespace MessagePack.Resolvers
 {
+ public class NavMeshPathFormatter : global::MessagePack.Formatters.IMessagePackFormatter<global::UnityEngine.AI.NavMeshPath>
+    {
+        public void Serialize(ref MessagePackWriter writer, global::UnityEngine.AI.NavMeshPath value, global::MessagePack.MessagePackSerializerOptions options)
+        {
+            writer.WriteMapHeader(2);
+            writer.Write("corners");
+            writer.WriteArrayHeader(value.corners.Length);
+            Vector3Formatter f = new Vector3Formatter();
+            foreach(Vector3 c in value.corners) {
+                f.Serialize(ref writer, c, options);
+            }
+            writer.Write("status");
+            writer.Write(value.status.ToString());
+        }
+         public global::UnityEngine.AI.NavMeshPath Deserialize(ref MessagePackReader reader, global::MessagePack.MessagePackSerializerOptions options){
+             throw new System.NotImplementedException();
+         }
+
+    }
  public class Vector3Formatter : global::MessagePack.Formatters.IMessagePackFormatter<global::UnityEngine.Vector3>
     {
         public void Serialize(ref MessagePackWriter writer, global::UnityEngine.Vector3 value, global::MessagePack.MessagePackSerializerOptions options)
@@ -113,7 +133,9 @@ namespace MessagePack.Resolvers
             private static readonly Dictionary<Type, object> FormatterMap = new Dictionary<Type, object>()
             {
                 // standard
-                { typeof(Vector3), new Vector3Formatter() }
+                { typeof(Vector3), new Vector3Formatter() },
+                { typeof(NavMeshPath), new NavMeshPathFormatter() }
+
             };
 
             static FormatterCache()
