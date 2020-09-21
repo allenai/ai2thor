@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.9432207, g: 0.96824485, b: 0.77938247, a: 1}
+  m_IndirectSpecularColor: {r: 0.9458867, g: 0.9721845, b: 0.7823393, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -54,7 +54,7 @@ LightmapSettings:
     m_EnableBakedLightmaps: 0
     m_EnableRealtimeLightmaps: 0
   m_LightmapEditorSettings:
-    serializedVersion: 10
+    serializedVersion: 12
     m_Resolution: 2
     m_BakeResolution: 40
     m_AtlasSize: 1024
@@ -62,6 +62,7 @@ LightmapSettings:
     m_AOMaxDistance: 1
     m_CompAOExponent: 1
     m_CompAOExponentDirect: 0
+    m_ExtractAmbientOcclusion: 0
     m_Padding: 2
     m_LightmapParameters: {fileID: 0}
     m_LightmapsBakeMode: 0
@@ -76,10 +77,16 @@ LightmapSettings:
     m_PVRDirectSampleCount: 32
     m_PVRSampleCount: 500
     m_PVRBounces: 2
+    m_PVREnvironmentSampleCount: 500
+    m_PVREnvironmentReferencePointCount: 2048
+    m_PVRFilteringMode: 0
+    m_PVRDenoiserTypeDirect: 0
+    m_PVRDenoiserTypeIndirect: 0
+    m_PVRDenoiserTypeAO: 0
     m_PVRFilterTypeDirect: 0
     m_PVRFilterTypeIndirect: 0
     m_PVRFilterTypeAO: 0
-    m_PVRFilteringMode: 0
+    m_PVREnvironmentMIS: 0
     m_PVRCulling: 1
     m_PVRFilteringGaussRadiusDirect: 1
     m_PVRFilteringGaussRadiusIndirect: 5
@@ -87,7 +94,9 @@ LightmapSettings:
     m_PVRFilteringAtrousPositionSigmaDirect: 0.5
     m_PVRFilteringAtrousPositionSigmaIndirect: 2
     m_PVRFilteringAtrousPositionSigmaAO: 1
-    m_ShowResolutionOverlay: 1
+    m_ExportTrainingData: 0
+    m_TrainingDataDestination: TrainingData
+    m_LightProbeSampleCountMultiplier: 4
   m_LightingDataAsset: {fileID: 0}
   m_UseShadowmask: 0
 --- !u!196 &4
@@ -97,21 +106,21 @@ NavMeshSettings:
   m_BuildSettings:
     serializedVersion: 2
     agentTypeID: 0
-    agentRadius: 0.05
-    agentHeight: 0.25
+    agentRadius: 0.2
+    agentHeight: 1.8
     agentSlope: 10
-    agentClimb: 0
+    agentClimb: 0.5
     ledgeDropHeight: 0
     maxJumpAcrossDistance: 0
     minRegionArea: 0.05
     manualCellSize: 1
-    cellSize: 0.02
+    cellSize: 0.03
     manualTileSize: 0
     tileSize: 256
     accuratePlacement: 0
     debug:
       m_Flags: 0
-  m_NavMeshData: {fileID: 23800000, guid: 2858859eadc5b4693bd9705e6eff1011, type: 2}
+  m_NavMeshData: {fileID: 23800000, guid: 7ed14e25658954f4393b70baf896573d, type: 2}
 --- !u!1 &1078497
 GameObject:
   m_ObjectHideFlags: 0
@@ -376,8 +385,8 @@ GameObject:
   m_Name: Pot
   m_TagString: Structure
   m_Icon: {fileID: 0}
-  m_NavMeshLayer: 3
-  m_StaticEditorFlags: 4294967295
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &15009618
 Transform:
@@ -409,6 +418,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -421,6 +431,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -519,6 +530,16 @@ PrefabInstance:
       propertyPath: m_Name
       value: QuadDecalSpawnPlane (3)
       objectReference: {fileID: 0}
+    - target: {fileID: 6270588446337126525, guid: 0f393baf8fb804bc6980b5c23b0fdce3,
+        type: 3}
+      propertyPath: m_NavMeshLayer
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 6270588446337126525, guid: 0f393baf8fb804bc6980b5c23b0fdce3,
+        type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 8
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 0f393baf8fb804bc6980b5c23b0fdce3, type: 3}
 --- !u!1001 &15988062
@@ -602,7 +623,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1940611943571462, guid: f04343d5a0f16304392b506c7a5d7b0f, type: 3}
       propertyPath: m_StaticEditorFlags
-      value: 76
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 1940611943571462, guid: f04343d5a0f16304392b506c7a5d7b0f, type: 3}
+      propertyPath: m_NavMeshLayer
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1960970894844316, guid: f04343d5a0f16304392b506c7a5d7b0f, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -691,7 +716,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1746991971303376, guid: 26df65a6a6afc4842b304c10f8fc6b90, type: 3}
       propertyPath: m_StaticEditorFlags
-      value: 64
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 1746991971303376, guid: 26df65a6a6afc4842b304c10f8fc6b90, type: 3}
+      propertyPath: m_NavMeshLayer
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1748974517339452, guid: 26df65a6a6afc4842b304c10f8fc6b90, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -928,7 +957,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1623753674133388, guid: 035ad2f9bd012fe44929a906e57e2990, type: 3}
       propertyPath: m_StaticEditorFlags
-      value: 64
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 1623753674133388, guid: 035ad2f9bd012fe44929a906e57e2990, type: 3}
+      propertyPath: m_NavMeshLayer
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1642127879318072, guid: 035ad2f9bd012fe44929a906e57e2990, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -1292,7 +1325,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1396084620326406, guid: 60fb4e4dcd48a4011812876791fd373f, type: 3}
       propertyPath: m_StaticEditorFlags
-      value: 64
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 1396084620326406, guid: 60fb4e4dcd48a4011812876791fd373f, type: 3}
+      propertyPath: m_NavMeshLayer
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1428461433561804, guid: 60fb4e4dcd48a4011812876791fd373f, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -1560,6 +1597,16 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Name
       value: QuadDecalSpawnPlane
+      objectReference: {fileID: 0}
+    - target: {fileID: 6270588446337126525, guid: 0f393baf8fb804bc6980b5c23b0fdce3,
+        type: 3}
+      propertyPath: m_NavMeshLayer
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 6270588446337126525, guid: 0f393baf8fb804bc6980b5c23b0fdce3,
+        type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 8
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 0f393baf8fb804bc6980b5c23b0fdce3, type: 3}
@@ -1849,8 +1896,8 @@ GameObject:
   m_Name: TurkeyPan
   m_TagString: Structure
   m_Icon: {fileID: 0}
-  m_NavMeshLayer: 3
-  m_StaticEditorFlags: 4294967295
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &70471037
 Transform:
@@ -1882,6 +1929,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -1893,6 +1941,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -1981,7 +2030,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1746991971303376, guid: 26df65a6a6afc4842b304c10f8fc6b90, type: 3}
       propertyPath: m_StaticEditorFlags
-      value: 64
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 1746991971303376, guid: 26df65a6a6afc4842b304c10f8fc6b90, type: 3}
+      propertyPath: m_NavMeshLayer
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1748974517339452, guid: 26df65a6a6afc4842b304c10f8fc6b90, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -2192,6 +2245,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -2203,6 +2257,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -2383,8 +2438,8 @@ GameObject:
   m_Name: Bottle
   m_TagString: Structure
   m_Icon: {fileID: 0}
-  m_NavMeshLayer: 3
-  m_StaticEditorFlags: 4294967295
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &105439607
 Transform:
@@ -2416,6 +2471,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -2430,6 +2486,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -2549,8 +2606,8 @@ GameObject:
   m_Name: Bowl
   m_TagString: Structure
   m_Icon: {fileID: 0}
-  m_NavMeshLayer: 3
-  m_StaticEditorFlags: 4294967295
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &112712421
 Transform:
@@ -2582,6 +2639,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -2593,6 +2651,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -2763,7 +2822,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1393603562001316, guid: 9105bb2a698eca947b0f73e14793401c, type: 3}
       propertyPath: m_StaticEditorFlags
-      value: 64
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 1393603562001316, guid: 9105bb2a698eca947b0f73e14793401c, type: 3}
+      propertyPath: m_NavMeshLayer
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1427989281773418, guid: 9105bb2a698eca947b0f73e14793401c, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -2845,6 +2908,14 @@ PrefabInstance:
     - target: {fileID: 1694244559796106, guid: 4e5d08b01c9e425489b019de1ab6704f, type: 3}
       propertyPath: m_Name
       value: Bowl_b1a695b9
+      objectReference: {fileID: 0}
+    - target: {fileID: 1828430191734010, guid: 4e5d08b01c9e425489b019de1ab6704f, type: 3}
+      propertyPath: m_NavMeshLayer
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1828430191734010, guid: 4e5d08b01c9e425489b019de1ab6704f, type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 8
       objectReference: {fileID: 0}
     - target: {fileID: 4659075595628542, guid: 4e5d08b01c9e425489b019de1ab6704f, type: 3}
       propertyPath: m_LocalPosition.x
@@ -3010,8 +3081,8 @@ GameObject:
   m_Name: SugarJar
   m_TagString: Structure
   m_Icon: {fileID: 0}
-  m_NavMeshLayer: 3
-  m_StaticEditorFlags: 4294967295
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &140410449
 Transform:
@@ -3044,6 +3115,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -3057,6 +3129,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -3142,8 +3215,8 @@ GameObject:
   m_Name: PlateStack
   m_TagString: Structure
   m_Icon: {fileID: 0}
-  m_NavMeshLayer: 3
-  m_StaticEditorFlags: 4294967295
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &156532315
 Transform:
@@ -3175,6 +3248,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -3186,6 +3260,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -3229,8 +3304,8 @@ GameObject:
   m_Name: Pot
   m_TagString: Structure
   m_Icon: {fileID: 0}
-  m_NavMeshLayer: 3
-  m_StaticEditorFlags: 4294967295
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &162329496
 Transform:
@@ -3262,6 +3337,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -3274,6 +3350,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -3311,8 +3388,8 @@ GameObject:
   m_Name: PlateStack
   m_TagString: Structure
   m_Icon: {fileID: 0}
-  m_NavMeshLayer: 3
-  m_StaticEditorFlags: 4294967295
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &164806652
 Transform:
@@ -3344,6 +3421,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -3355,6 +3433,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -3453,8 +3532,8 @@ GameObject:
   m_Name: Baseboard.002
   m_TagString: Structure
   m_Icon: {fileID: 0}
-  m_NavMeshLayer: 3
-  m_StaticEditorFlags: 68
+  m_NavMeshLayer: 1
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &169251011
 Transform:
@@ -3487,6 +3566,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -3499,6 +3579,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -3530,9 +3611,9 @@ MeshCollider:
   m_Material: {fileID: 0}
   m_IsTrigger: 0
   m_Enabled: 1
-  serializedVersion: 3
+  serializedVersion: 4
   m_Convex: 0
-  m_CookingOptions: 14
+  m_CookingOptions: 30
   m_Mesh: {fileID: 4300170, guid: bbe55e9be025f4c638f456252b5e2954, type: 3}
 --- !u!1 &177393229
 GameObject:
@@ -3589,12 +3670,14 @@ Light:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 179458329}
   m_Enabled: 1
-  serializedVersion: 8
+  serializedVersion: 10
   m_Type: 0
+  m_Shape: 0
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_Intensity: 0.37
   m_Range: 10
   m_SpotAngle: 151.3
+  m_InnerSpotAngle: 140.81543
   m_CookieSize: 10
   m_Shadows:
     m_Type: 2
@@ -3604,6 +3687,24 @@ Light:
     m_Bias: 0
     m_NormalBias: 0.583
     m_NearPlane: 0.1
+    m_CullingMatrixOverride:
+      e00: 1
+      e01: 0
+      e02: 0
+      e03: 0
+      e10: 0
+      e11: 1
+      e12: 0
+      e13: 0
+      e20: 0
+      e21: 0
+      e22: 1
+      e23: 0
+      e30: 0
+      e31: 0
+      e32: 0
+      e33: 1
+    m_UseCullingMatrixOverride: 0
   m_Cookie: {fileID: 0}
   m_DrawHalo: 0
   m_Flare: {fileID: 0}
@@ -3611,12 +3712,15 @@ Light:
   m_CullingMask:
     serializedVersion: 2
     m_Bits: 4294967295
+  m_RenderingLayerMask: 1
   m_Lightmapping: 4
   m_LightShadowCasterMode: 0
   m_AreaSize: {x: 1, y: 1}
   m_BounceIntensity: 1
   m_ColorTemperature: 6570
   m_UseColorTemperature: 0
+  m_BoundingSphereOverride: {x: 0, y: 0, z: 0, w: 0}
+  m_UseBoundingSphereOverride: 0
   m_ShadowRadius: 0
   m_ShadowAngle: 0
 --- !u!4 &179458331
@@ -3778,7 +3882,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1902772311765484, guid: da0d22d3406b25f4cb9af3d40b4029b3, type: 3}
       propertyPath: m_StaticEditorFlags
-      value: 64
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 1902772311765484, guid: da0d22d3406b25f4cb9af3d40b4029b3, type: 3}
+      propertyPath: m_NavMeshLayer
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1993613336705660, guid: da0d22d3406b25f4cb9af3d40b4029b3, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -4171,6 +4279,16 @@ PrefabInstance:
       propertyPath: m_Name
       value: QuadDecalSpawnPlane (2)
       objectReference: {fileID: 0}
+    - target: {fileID: 6270588446337126525, guid: 0f393baf8fb804bc6980b5c23b0fdce3,
+        type: 3}
+      propertyPath: m_NavMeshLayer
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 6270588446337126525, guid: 0f393baf8fb804bc6980b5c23b0fdce3,
+        type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 8
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 0f393baf8fb804bc6980b5c23b0fdce3, type: 3}
 --- !u!1 &203547070
@@ -4306,7 +4424,6 @@ Transform:
   - {fileID: 1246979411}
   - {fileID: 2021681938}
   - {fileID: 427913182}
-  - {fileID: 733491978}
   - {fileID: 1040655854}
   - {fileID: 1321442679}
   - {fileID: 1243727793}
@@ -4316,6 +4433,7 @@ Transform:
   - {fileID: 1987415212}
   - {fileID: 1035955275}
   - {fileID: 362039823}
+  - {fileID: 733491978}
   - {fileID: 1218814981}
   - {fileID: 116281013}
   - {fileID: 1202612666}
@@ -4327,11 +4445,11 @@ Transform:
   - {fileID: 5287604}
   - {fileID: 746127365}
   - {fileID: 2035121626}
+  - {fileID: 498308562}
   - {fileID: 1585074396}
   - {fileID: 913373778}
-  - {fileID: 498308562}
-  - {fileID: 35215416}
   - {fileID: 1369992860}
+  - {fileID: 35215416}
   - {fileID: 1891678119}
   - {fileID: 337972290}
   - {fileID: 313875777}
@@ -4421,7 +4539,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1409125458595002, guid: 365ddce364272443ca748cfb98355a45, type: 3}
       propertyPath: m_StaticEditorFlags
-      value: 64
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 1409125458595002, guid: 365ddce364272443ca748cfb98355a45, type: 3}
+      propertyPath: m_NavMeshLayer
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1446627295141184, guid: 365ddce364272443ca748cfb98355a45, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -4445,7 +4567,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1663584721031250, guid: 365ddce364272443ca748cfb98355a45, type: 3}
       propertyPath: m_StaticEditorFlags
-      value: 64
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 1663584721031250, guid: 365ddce364272443ca748cfb98355a45, type: 3}
+      propertyPath: m_NavMeshLayer
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1707675075720778, guid: 365ddce364272443ca748cfb98355a45, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -4894,7 +5020,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1623386477917516, guid: 899082a41b8354a93b913729ee68d417, type: 3}
       propertyPath: m_StaticEditorFlags
-      value: 76
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 1623386477917516, guid: 899082a41b8354a93b913729ee68d417, type: 3}
+      propertyPath: m_NavMeshLayer
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1636098153574350, guid: 899082a41b8354a93b913729ee68d417, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -4930,7 +5060,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1816707902670084, guid: 899082a41b8354a93b913729ee68d417, type: 3}
       propertyPath: m_StaticEditorFlags
-      value: 76
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 1816707902670084, guid: 899082a41b8354a93b913729ee68d417, type: 3}
+      propertyPath: m_NavMeshLayer
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1932215500635752, guid: 899082a41b8354a93b913729ee68d417, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -4986,8 +5120,8 @@ GameObject:
   m_Name: CabinetDoorMesh
   m_TagString: Structure
   m_Icon: {fileID: 0}
-  m_NavMeshLayer: 3
-  m_StaticEditorFlags: 76
+  m_NavMeshLayer: 1
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &247670155
 Transform:
@@ -5019,6 +5153,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -5031,6 +5166,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -5652,8 +5788,8 @@ GameObject:
   m_Name: CupStack
   m_TagString: Structure
   m_Icon: {fileID: 0}
-  m_NavMeshLayer: 3
-  m_StaticEditorFlags: 4294967295
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &277392930
 Transform:
@@ -5685,6 +5821,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -5696,6 +5833,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -6032,15 +6170,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1055349578454596, guid: c4b3a001f3479429197bc6ec7ad5e45b, type: 3}
       propertyPath: m_StaticEditorFlags
-      value: 76
+      value: 8
       objectReference: {fileID: 0}
     - target: {fileID: 1058487193034082, guid: c4b3a001f3479429197bc6ec7ad5e45b, type: 3}
       propertyPath: m_StaticEditorFlags
-      value: 76
+      value: 8
       objectReference: {fileID: 0}
     - target: {fileID: 1065586103577298, guid: c4b3a001f3479429197bc6ec7ad5e45b, type: 3}
       propertyPath: m_StaticEditorFlags
-      value: 76
+      value: 8
       objectReference: {fileID: 0}
     - target: {fileID: 1080523791344478, guid: c4b3a001f3479429197bc6ec7ad5e45b, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -6064,15 +6202,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1127775954345416, guid: c4b3a001f3479429197bc6ec7ad5e45b, type: 3}
       propertyPath: m_StaticEditorFlags
-      value: 76
+      value: 8
       objectReference: {fileID: 0}
     - target: {fileID: 1166876656038486, guid: c4b3a001f3479429197bc6ec7ad5e45b, type: 3}
       propertyPath: m_StaticEditorFlags
-      value: 76
+      value: 8
       objectReference: {fileID: 0}
     - target: {fileID: 1190479649829544, guid: c4b3a001f3479429197bc6ec7ad5e45b, type: 3}
       propertyPath: m_StaticEditorFlags
-      value: 76
+      value: 8
       objectReference: {fileID: 0}
     - target: {fileID: 1205479765224076, guid: c4b3a001f3479429197bc6ec7ad5e45b, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -6084,7 +6222,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1238072313821496, guid: c4b3a001f3479429197bc6ec7ad5e45b, type: 3}
       propertyPath: m_StaticEditorFlags
-      value: 76
+      value: 8
       objectReference: {fileID: 0}
     - target: {fileID: 1245711637597270, guid: c4b3a001f3479429197bc6ec7ad5e45b, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -6172,7 +6310,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1515540392533280, guid: c4b3a001f3479429197bc6ec7ad5e45b, type: 3}
       propertyPath: m_StaticEditorFlags
-      value: 76
+      value: 8
       objectReference: {fileID: 0}
     - target: {fileID: 1538819102345704, guid: c4b3a001f3479429197bc6ec7ad5e45b, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -6480,8 +6618,8 @@ GameObject:
   m_Name: GlassHolder1
   m_TagString: Structure
   m_Icon: {fileID: 0}
-  m_NavMeshLayer: 3
-  m_StaticEditorFlags: 4294967295
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &302482178
 Transform:
@@ -6513,6 +6651,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -6524,6 +6663,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -6978,7 +7118,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1528812968512200, guid: 8fcfc063180c741a1ae15e29187475f9, type: 3}
       propertyPath: m_StaticEditorFlags
-      value: 64
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 1528812968512200, guid: 8fcfc063180c741a1ae15e29187475f9, type: 3}
+      propertyPath: m_NavMeshLayer
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1534706557646092, guid: 8fcfc063180c741a1ae15e29187475f9, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -7159,7 +7303,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1641963463543480, guid: 17de1b8e1c6b24343b41a48e1df658f2, type: 3}
       propertyPath: m_StaticEditorFlags
-      value: 64
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 1641963463543480, guid: 17de1b8e1c6b24343b41a48e1df658f2, type: 3}
+      propertyPath: m_NavMeshLayer
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1675478475374778, guid: 17de1b8e1c6b24343b41a48e1df658f2, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -7258,7 +7406,7 @@ Transform:
   - {fileID: 1327647972}
   - {fileID: 1903548868}
   m_Father: {fileID: 206288970}
-  m_RootOrder: 21
+  m_RootOrder: 20
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &365146298
 GameObject:
@@ -7353,7 +7501,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1293163996932226, guid: 0d84661b3e0d34b55af8920efed8bc92, type: 3}
       propertyPath: m_StaticEditorFlags
-      value: 64
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 1293163996932226, guid: 0d84661b3e0d34b55af8920efed8bc92, type: 3}
+      propertyPath: m_NavMeshLayer
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1622216344525052, guid: 0d84661b3e0d34b55af8920efed8bc92, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -7524,7 +7676,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1591318064238650, guid: 0a9776a64b77a4b3f99f38ce4feccfe9, type: 3}
       propertyPath: m_StaticEditorFlags
-      value: 64
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 1591318064238650, guid: 0a9776a64b77a4b3f99f38ce4feccfe9, type: 3}
+      propertyPath: m_NavMeshLayer
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1641429054062576, guid: 0a9776a64b77a4b3f99f38ce4feccfe9, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -7829,8 +7985,8 @@ GameObject:
   m_Name: Bowl
   m_TagString: Structure
   m_Icon: {fileID: 0}
-  m_NavMeshLayer: 3
-  m_StaticEditorFlags: 4294967295
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &390028682
 Transform:
@@ -7862,6 +8018,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -7873,6 +8030,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -8434,7 +8592,7 @@ MonoBehaviour:
   closedPositions:
   - {x: 0, y: 0, z: 0}
   animationTime: 0.2
-  openPercentage: 1
+  currentOpenPercentage: 1
   IgnoreTheseObjects: []
   isOpen: 0
   canReset: 1
@@ -8582,8 +8740,8 @@ GameObject:
   m_Name: Cube.004
   m_TagString: Structure
   m_Icon: {fileID: 0}
-  m_NavMeshLayer: 3
-  m_StaticEditorFlags: 4294967295
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &437484917
 Transform:
@@ -8615,6 +8773,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -8626,6 +8785,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -8709,8 +8869,8 @@ GameObject:
   m_Name: StoveHood
   m_TagString: Structure
   m_Icon: {fileID: 0}
-  m_NavMeshLayer: 3
-  m_StaticEditorFlags: 4294967295
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &445625915
 Transform:
@@ -8742,6 +8902,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -8754,6 +8915,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -8785,9 +8947,9 @@ MeshCollider:
   m_Material: {fileID: 0}
   m_IsTrigger: 0
   m_Enabled: 1
-  serializedVersion: 3
+  serializedVersion: 4
   m_Convex: 0
-  m_CookingOptions: 14
+  m_CookingOptions: 30
   m_Mesh: {fileID: 4300132, guid: bbe55e9be025f4c638f456252b5e2954, type: 3}
 --- !u!114 &445625919
 MonoBehaviour:
@@ -8887,7 +9049,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1196970024129214, guid: dd17b63fca1004ad7bfba3b4fc9761a0, type: 3}
       propertyPath: m_StaticEditorFlags
-      value: 64
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 1196970024129214, guid: dd17b63fca1004ad7bfba3b4fc9761a0, type: 3}
+      propertyPath: m_NavMeshLayer
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1204430045659874, guid: dd17b63fca1004ad7bfba3b4fc9761a0, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -8915,7 +9081,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1464073517191158, guid: dd17b63fca1004ad7bfba3b4fc9761a0, type: 3}
       propertyPath: m_StaticEditorFlags
-      value: 64
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 1464073517191158, guid: dd17b63fca1004ad7bfba3b4fc9761a0, type: 3}
+      propertyPath: m_NavMeshLayer
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1621169450491988, guid: dd17b63fca1004ad7bfba3b4fc9761a0, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -9003,8 +9173,8 @@ GameObject:
   m_Name: Column_box_top
   m_TagString: Structure
   m_Icon: {fileID: 0}
-  m_NavMeshLayer: 3
-  m_StaticEditorFlags: 4294967295
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &460755139
 Transform:
@@ -9036,6 +9206,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -9047,6 +9218,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -9260,8 +9432,8 @@ GameObject:
   m_Name: Spatula1
   m_TagString: Structure
   m_Icon: {fileID: 0}
-  m_NavMeshLayer: 3
-  m_StaticEditorFlags: 4294967295
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &474917441
 Transform:
@@ -9293,6 +9465,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -9305,6 +9478,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -9385,7 +9559,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1401756666827790, guid: bf146d8dcd333a448b5b553e2ed3bb4e, type: 3}
       propertyPath: m_StaticEditorFlags
-      value: 64
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 1401756666827790, guid: bf146d8dcd333a448b5b553e2ed3bb4e, type: 3}
+      propertyPath: m_NavMeshLayer
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1415764515868066, guid: bf146d8dcd333a448b5b553e2ed3bb4e, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -9586,6 +9764,14 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 206288970}
     m_Modifications:
+    - target: {fileID: 126860556, guid: 82ba74a59a83b4fe495ea5288c87e1bb, type: 3}
+      propertyPath: m_NavMeshLayer
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 126860556, guid: 82ba74a59a83b4fe495ea5288c87e1bb, type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 8
+      objectReference: {fileID: 0}
     - target: {fileID: 1038569490963054, guid: 82ba74a59a83b4fe495ea5288c87e1bb, type: 3}
       propertyPath: m_StaticEditorFlags
       value: 64
@@ -10246,8 +10432,8 @@ GameObject:
   m_Name: Spatula3
   m_TagString: Structure
   m_Icon: {fileID: 0}
-  m_NavMeshLayer: 3
-  m_StaticEditorFlags: 4294967295
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &530437413
 Transform:
@@ -10279,6 +10465,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -10291,6 +10478,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -10328,8 +10516,8 @@ GameObject:
   m_Name: Bowl
   m_TagString: Structure
   m_Icon: {fileID: 0}
-  m_NavMeshLayer: 3
-  m_StaticEditorFlags: 4294967295
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &534068254
 Transform:
@@ -10361,6 +10549,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -10372,6 +10561,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -10476,7 +10666,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1590253245015984, guid: 88b41a60cd3ad44628599681322305b2, type: 3}
       propertyPath: m_StaticEditorFlags
-      value: 64
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 1590253245015984, guid: 88b41a60cd3ad44628599681322305b2, type: 3}
+      propertyPath: m_NavMeshLayer
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1593372823968126, guid: 88b41a60cd3ad44628599681322305b2, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -11088,8 +11282,8 @@ GameObject:
   m_Name: SugarFill
   m_TagString: Untagged
   m_Icon: {fileID: 0}
-  m_NavMeshLayer: 3
-  m_StaticEditorFlags: 4294967295
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &564375622
 Transform:
@@ -11121,6 +11315,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -11132,6 +11327,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -11169,8 +11365,8 @@ GameObject:
   m_Name: SaltFill.001
   m_TagString: Untagged
   m_Icon: {fileID: 0}
-  m_NavMeshLayer: 3
-  m_StaticEditorFlags: 4294967295
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &568055047
 Transform:
@@ -11202,6 +11398,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -11213,6 +11410,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -11241,6 +11439,10 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 206288970}
     m_Modifications:
+    - target: {fileID: 1441461082378904, guid: 8f1141233b0ae344a99cb6b708d8be8e, type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 8
+      objectReference: {fileID: 0}
     - target: {fileID: 1556709772475454, guid: 8f1141233b0ae344a99cb6b708d8be8e, type: 3}
       propertyPath: m_Name
       value: ButterKnife_dk2u4hsf
@@ -11529,7 +11731,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1599658165662560, guid: b18673dc5d4f14842a68d4dc9a891f3a, type: 3}
       propertyPath: m_StaticEditorFlags
-      value: 76
+      value: 8
       objectReference: {fileID: 0}
     - target: {fileID: 1640176557916810, guid: b18673dc5d4f14842a68d4dc9a891f3a, type: 3}
       propertyPath: m_Name
@@ -11708,8 +11910,8 @@ GameObject:
   m_Name: SideCabinet
   m_TagString: Structure
   m_Icon: {fileID: 0}
-  m_NavMeshLayer: 3
-  m_StaticEditorFlags: 4294967295
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &597209187
 Transform:
@@ -11741,6 +11943,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -11752,6 +11955,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -11819,8 +12023,8 @@ GameObject:
   m_Name: SheetPans
   m_TagString: Structure
   m_Icon: {fileID: 0}
-  m_NavMeshLayer: 3
-  m_StaticEditorFlags: 4294967295
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &600070263
 Transform:
@@ -11852,6 +12056,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -11863,6 +12068,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -11962,8 +12168,8 @@ GameObject:
   m_Name: SideCabinet
   m_TagString: Structure
   m_Icon: {fileID: 0}
-  m_NavMeshLayer: 3
-  m_StaticEditorFlags: 4294967295
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &605416130
 Transform:
@@ -11995,6 +12201,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -12006,6 +12213,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -12043,8 +12251,8 @@ GameObject:
   m_Name: CupStack
   m_TagString: Structure
   m_Icon: {fileID: 0}
-  m_NavMeshLayer: 3
-  m_StaticEditorFlags: 4294967295
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &607263894
 Transform:
@@ -12076,6 +12284,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -12087,6 +12296,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -12225,7 +12435,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1275894204746736, guid: 428d9828a3b7b2a44a4a31386ccdbc89, type: 3}
       propertyPath: m_StaticEditorFlags
-      value: 64
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 1275894204746736, guid: 428d9828a3b7b2a44a4a31386ccdbc89, type: 3}
+      propertyPath: m_NavMeshLayer
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1313275473410936, guid: 428d9828a3b7b2a44a4a31386ccdbc89, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -12362,8 +12576,8 @@ GameObject:
   m_Name: TurkeyPan
   m_TagString: Structure
   m_Icon: {fileID: 0}
-  m_NavMeshLayer: 3
-  m_StaticEditorFlags: 4294967295
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &626941522
 Transform:
@@ -12395,6 +12609,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -12406,6 +12621,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -12579,8 +12795,8 @@ GameObject:
   m_Name: PlateStack
   m_TagString: Structure
   m_Icon: {fileID: 0}
-  m_NavMeshLayer: 3
-  m_StaticEditorFlags: 4294967295
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &646667066
 Transform:
@@ -12612,6 +12828,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -12623,6 +12840,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -12965,8 +13183,8 @@ GameObject:
   m_Name: CeilingLights
   m_TagString: Structure
   m_Icon: {fileID: 0}
-  m_NavMeshLayer: 3
-  m_StaticEditorFlags: 4294967295
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &660995645
 Transform:
@@ -12998,6 +13216,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -13010,6 +13229,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -13320,6 +13540,26 @@ PrefabInstance:
     - target: {fileID: 4068097004244804, guid: 4dcb85c8bd624de44bc7c48c19882f61, type: 3}
       propertyPath: m_RootOrder
       value: 43
+      objectReference: {fileID: 0}
+    - target: {fileID: 1805464299872510975, guid: 4dcb85c8bd624de44bc7c48c19882f61,
+        type: 3}
+      propertyPath: m_NavMeshLayer
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1805464299872510975, guid: 4dcb85c8bd624de44bc7c48c19882f61,
+        type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 8053515053024641465, guid: 4dcb85c8bd624de44bc7c48c19882f61,
+        type: 3}
+      propertyPath: m_NavMeshLayer
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 8053515053024641465, guid: 4dcb85c8bd624de44bc7c48c19882f61,
+        type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 8
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 4dcb85c8bd624de44bc7c48c19882f61, type: 3}
@@ -13763,6 +14003,16 @@ PrefabInstance:
       propertyPath: m_Name
       value: QuadDecalSpawnPlane (5)
       objectReference: {fileID: 0}
+    - target: {fileID: 6270588446337126525, guid: 0f393baf8fb804bc6980b5c23b0fdce3,
+        type: 3}
+      propertyPath: m_NavMeshLayer
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 6270588446337126525, guid: 0f393baf8fb804bc6980b5c23b0fdce3,
+        type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 8
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 0f393baf8fb804bc6980b5c23b0fdce3, type: 3}
 --- !u!1 &689148751
@@ -13841,8 +14091,8 @@ GameObject:
   m_Name: SaltShaker
   m_TagString: Structure
   m_Icon: {fileID: 0}
-  m_NavMeshLayer: 3
-  m_StaticEditorFlags: 4294967295
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &693488142
 Transform:
@@ -13875,6 +14125,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -13887,6 +14138,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -13961,7 +14213,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1457113182682476, guid: 03544085c8acd8546a745fbc3572b6e7, type: 3}
       propertyPath: m_StaticEditorFlags
-      value: 64
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 1457113182682476, guid: 03544085c8acd8546a745fbc3572b6e7, type: 3}
+      propertyPath: m_NavMeshLayer
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1462734446234188, guid: 03544085c8acd8546a745fbc3572b6e7, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -14515,7 +14771,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1653911480869300, guid: dec05f10ba56c4903becf2bb2eca1f2b, type: 3}
       propertyPath: m_StaticEditorFlags
-      value: 64
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 1653911480869300, guid: dec05f10ba56c4903becf2bb2eca1f2b, type: 3}
+      propertyPath: m_NavMeshLayer
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1747410899554640, guid: dec05f10ba56c4903becf2bb2eca1f2b, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -14810,7 +15070,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1284072124309546, guid: a977be9bbffcf4db0883f46581976fbb, type: 3}
       propertyPath: m_StaticEditorFlags
-      value: 64
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 1284072124309546, guid: a977be9bbffcf4db0883f46581976fbb, type: 3}
+      propertyPath: m_NavMeshLayer
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1490215385945640, guid: a977be9bbffcf4db0883f46581976fbb, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -14924,8 +15188,8 @@ GameObject:
   m_Name: Bowl
   m_TagString: Structure
   m_Icon: {fileID: 0}
-  m_NavMeshLayer: 3
-  m_StaticEditorFlags: 4294967295
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &736003929
 Transform:
@@ -14957,6 +15221,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -14968,6 +15233,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -15334,7 +15600,7 @@ GameObject:
   m_TagString: Receptacle
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 1
-  m_StaticEditorFlags: 76
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &745880898
 Transform:
@@ -15375,6 +15641,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -15387,6 +15654,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -15470,8 +15738,8 @@ GameObject:
   m_Name: MetalCabinet
   m_TagString: Structure
   m_Icon: {fileID: 0}
-  m_NavMeshLayer: 3
-  m_StaticEditorFlags: 4294967295
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &749166935
 Transform:
@@ -15503,6 +15771,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -15514,6 +15783,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -15545,9 +15815,9 @@ MeshCollider:
   m_Material: {fileID: 0}
   m_IsTrigger: 0
   m_Enabled: 1
-  serializedVersion: 3
+  serializedVersion: 4
   m_Convex: 0
-  m_CookingOptions: 14
+  m_CookingOptions: 30
   m_Mesh: {fileID: 4300110, guid: bbe55e9be025f4c638f456252b5e2954, type: 3}
 --- !u!1 &749462709
 GameObject:
@@ -15644,7 +15914,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1599658165662560, guid: b18673dc5d4f14842a68d4dc9a891f3a, type: 3}
       propertyPath: m_StaticEditorFlags
-      value: 76
+      value: 8
       objectReference: {fileID: 0}
     - target: {fileID: 1640176557916810, guid: b18673dc5d4f14842a68d4dc9a891f3a, type: 3}
       propertyPath: m_Name
@@ -15880,8 +16150,8 @@ GameObject:
   m_Name: Stove
   m_TagString: Structure
   m_Icon: {fileID: 0}
-  m_NavMeshLayer: 3
-  m_StaticEditorFlags: 4294967295
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &766267352
 Transform:
@@ -15913,6 +16183,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -15925,6 +16196,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -15956,9 +16228,9 @@ MeshCollider:
   m_Material: {fileID: 0}
   m_IsTrigger: 0
   m_Enabled: 1
-  serializedVersion: 3
+  serializedVersion: 4
   m_Convex: 0
-  m_CookingOptions: 14
+  m_CookingOptions: 30
   m_Mesh: {fileID: 4300104, guid: bbe55e9be025f4c638f456252b5e2954, type: 3}
 --- !u!114 &766267356
 MonoBehaviour:
@@ -16249,6 +16521,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -16261,6 +16534,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -16345,8 +16619,8 @@ GameObject:
   m_Name: Pot
   m_TagString: Structure
   m_Icon: {fileID: 0}
-  m_NavMeshLayer: 3
-  m_StaticEditorFlags: 4294967295
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &783095459
 Transform:
@@ -16378,6 +16652,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -16392,6 +16667,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -16429,8 +16705,8 @@ GameObject:
   m_Name: Pot
   m_TagString: Structure
   m_Icon: {fileID: 0}
-  m_NavMeshLayer: 3
-  m_StaticEditorFlags: 4294967295
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &784540191
 Transform:
@@ -16462,6 +16738,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -16474,6 +16751,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -16520,12 +16798,14 @@ Light:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 787768054}
   m_Enabled: 1
-  serializedVersion: 8
+  serializedVersion: 10
   m_Type: 1
+  m_Shape: 0
   m_Color: {r: 1, g: 0.95686275, b: 0.8392157, a: 1}
   m_Intensity: 1.16
   m_Range: 10
   m_SpotAngle: 30
+  m_InnerSpotAngle: 21.802082
   m_CookieSize: 10
   m_Shadows:
     m_Type: 2
@@ -16535,6 +16815,24 @@ Light:
     m_Bias: 0.138
     m_NormalBias: 0
     m_NearPlane: 1.01
+    m_CullingMatrixOverride:
+      e00: 1
+      e01: 0
+      e02: 0
+      e03: 0
+      e10: 0
+      e11: 1
+      e12: 0
+      e13: 0
+      e20: 0
+      e21: 0
+      e22: 1
+      e23: 0
+      e30: 0
+      e31: 0
+      e32: 0
+      e33: 1
+    m_UseCullingMatrixOverride: 0
   m_Cookie: {fileID: 0}
   m_DrawHalo: 0
   m_Flare: {fileID: 0}
@@ -16542,12 +16840,15 @@ Light:
   m_CullingMask:
     serializedVersion: 2
     m_Bits: 4294967295
+  m_RenderingLayerMask: 1
   m_Lightmapping: 4
   m_LightShadowCasterMode: 0
   m_AreaSize: {x: 1, y: 1}
   m_BounceIntensity: 1.18
   m_ColorTemperature: 6570
   m_UseColorTemperature: 0
+  m_BoundingSphereOverride: {x: 0, y: 0, z: 0, w: 0}
+  m_UseBoundingSphereOverride: 0
   m_ShadowRadius: 0
   m_ShadowAngle: 0
 --- !u!4 &787768056
@@ -16834,6 +17135,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -16848,6 +17150,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -16894,9 +17197,9 @@ MeshCollider:
   m_Material: {fileID: 0}
   m_IsTrigger: 0
   m_Enabled: 1
-  serializedVersion: 3
+  serializedVersion: 4
   m_Convex: 0
-  m_CookingOptions: 14
+  m_CookingOptions: 30
   m_Mesh: {fileID: 4300638, guid: bbe55e9be025f4c638f456252b5e2954, type: 3}
 --- !u!114 &823434002
 MonoBehaviour:
@@ -16927,8 +17230,8 @@ GameObject:
   m_Name: PlateStack
   m_TagString: Structure
   m_Icon: {fileID: 0}
-  m_NavMeshLayer: 3
-  m_StaticEditorFlags: 4294967295
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &824018751
 Transform:
@@ -16960,6 +17263,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -16971,6 +17275,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -17008,8 +17313,8 @@ GameObject:
   m_Name: SugarJar
   m_TagString: Structure
   m_Icon: {fileID: 0}
-  m_NavMeshLayer: 3
-  m_StaticEditorFlags: 4294967295
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &828438089
 Transform:
@@ -17042,6 +17347,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -17055,6 +17361,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -17235,8 +17542,8 @@ GameObject:
   m_Name: CupStack
   m_TagString: Structure
   m_Icon: {fileID: 0}
-  m_NavMeshLayer: 3
-  m_StaticEditorFlags: 4294967295
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &855329688
 Transform:
@@ -17268,6 +17575,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -17279,6 +17587,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -17412,8 +17721,8 @@ GameObject:
   m_Name: Bottle
   m_TagString: Structure
   m_Icon: {fileID: 0}
-  m_NavMeshLayer: 3
-  m_StaticEditorFlags: 4294967295
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &875737809
 Transform:
@@ -17445,6 +17754,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -17459,6 +17769,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -17660,8 +17971,8 @@ GameObject:
   m_Name: WineGlass
   m_TagString: Structure
   m_Icon: {fileID: 0}
-  m_NavMeshLayer: 3
-  m_StaticEditorFlags: 4294967295
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &886223838
 Transform:
@@ -17693,6 +18004,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -17705,6 +18017,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -17810,7 +18123,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1698762412420052, guid: d38f2e4e6f0a340bca9b3c2b2a2bfe41, type: 3}
       propertyPath: m_StaticEditorFlags
-      value: 64
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 1698762412420052, guid: d38f2e4e6f0a340bca9b3c2b2a2bfe41, type: 3}
+      propertyPath: m_NavMeshLayer
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1981295185611828, guid: d38f2e4e6f0a340bca9b3c2b2a2bfe41, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -18122,7 +18439,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1837158549159752, guid: 4764689ff1b454595b0f96f8940e176b, type: 3}
       propertyPath: m_StaticEditorFlags
-      value: 64
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 1837158549159752, guid: 4764689ff1b454595b0f96f8940e176b, type: 3}
+      propertyPath: m_NavMeshLayer
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1932285119316962, guid: 4764689ff1b454595b0f96f8940e176b, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -18348,8 +18669,8 @@ GameObject:
   m_Name: Bowl
   m_TagString: Structure
   m_Icon: {fileID: 0}
-  m_NavMeshLayer: 3
-  m_StaticEditorFlags: 4294967295
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &942706084
 Transform:
@@ -18381,6 +18702,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -18392,6 +18714,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -18435,8 +18758,8 @@ GameObject:
   m_Name: Bowl
   m_TagString: Structure
   m_Icon: {fileID: 0}
-  m_NavMeshLayer: 3
-  m_StaticEditorFlags: 4294967295
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &945826504
 Transform:
@@ -18468,6 +18791,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -18479,6 +18803,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -18613,7 +18938,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1813160859316164, guid: d8248b44b0929474aa42bbc3a70ddfb5, type: 3}
       propertyPath: m_StaticEditorFlags
-      value: 64
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 1813160859316164, guid: d8248b44b0929474aa42bbc3a70ddfb5, type: 3}
+      propertyPath: m_NavMeshLayer
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1818085039748142, guid: d8248b44b0929474aa42bbc3a70ddfb5, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -18667,6 +18996,16 @@ PrefabInstance:
       propertyPath: m_RootOrder
       value: 41
       objectReference: {fileID: 0}
+    - target: {fileID: 9101075573903583483, guid: d8248b44b0929474aa42bbc3a70ddfb5,
+        type: 3}
+      propertyPath: m_NavMeshLayer
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 9101075573903583483, guid: d8248b44b0929474aa42bbc3a70ddfb5,
+        type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 8
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: d8248b44b0929474aa42bbc3a70ddfb5, type: 3}
 --- !u!1 &956461324
@@ -18705,6 +19044,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -18716,6 +19056,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -18883,7 +19224,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1692681773560658, guid: ca09fa8b2e7644483bb2a512ab644e03, type: 3}
       propertyPath: m_StaticEditorFlags
-      value: 64
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 1692681773560658, guid: ca09fa8b2e7644483bb2a512ab644e03, type: 3}
+      propertyPath: m_NavMeshLayer
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1736639376270074, guid: ca09fa8b2e7644483bb2a512ab644e03, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -19047,8 +19392,8 @@ GameObject:
   m_Name: PlateStack
   m_TagString: Structure
   m_Icon: {fileID: 0}
-  m_NavMeshLayer: 3
-  m_StaticEditorFlags: 4294967295
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &976885475
 Transform:
@@ -19080,6 +19425,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -19091,6 +19437,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -19157,7 +19504,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1653911480869300, guid: dec05f10ba56c4903becf2bb2eca1f2b, type: 3}
       propertyPath: m_StaticEditorFlags
-      value: 64
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 1653911480869300, guid: dec05f10ba56c4903becf2bb2eca1f2b, type: 3}
+      propertyPath: m_NavMeshLayer
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1747410899554640, guid: dec05f10ba56c4903becf2bb2eca1f2b, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -19378,7 +19729,7 @@ GameObject:
   m_TagString: Receptacle
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 1
-  m_StaticEditorFlags: 76
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &989799273
 Transform:
@@ -19419,6 +19770,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -19431,6 +19783,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -19696,8 +20049,8 @@ GameObject:
   m_Name: TurkeyPan
   m_TagString: Structure
   m_Icon: {fileID: 0}
-  m_NavMeshLayer: 3
-  m_StaticEditorFlags: 4294967295
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &1023368894
 Transform:
@@ -19729,6 +20082,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -19740,6 +20094,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -19820,7 +20175,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1301124746114864, guid: a8de9d781773c48a5806766e220564f2, type: 3}
       propertyPath: m_StaticEditorFlags
-      value: 64
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 1301124746114864, guid: a8de9d781773c48a5806766e220564f2, type: 3}
+      propertyPath: m_NavMeshLayer
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1413154682832478, guid: a8de9d781773c48a5806766e220564f2, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -20066,7 +20425,7 @@ Transform:
   - {fileID: 1052155976}
   - {fileID: 555613699}
   m_Father: {fileID: 206288970}
-  m_RootOrder: 20
+  m_RootOrder: 19
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1038061161
 GameObject:
@@ -20149,7 +20508,7 @@ Transform:
   - {fileID: 1336595184}
   - {fileID: 1246371235}
   m_Father: {fileID: 206288970}
-  m_RootOrder: 13
+  m_RootOrder: 12
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &1040655856
 MonoBehaviour:
@@ -20170,7 +20529,7 @@ MonoBehaviour:
   closedPositions:
   - {x: 0, y: 0, z: 0}
   animationTime: 0.2
-  openPercentage: 1
+  currentOpenPercentage: 1
   IgnoreTheseObjects: []
   isOpen: 0
   canReset: 1
@@ -20553,8 +20912,8 @@ GameObject:
   m_Name: WineGlass
   m_TagString: Structure
   m_Icon: {fileID: 0}
-  m_NavMeshLayer: 3
-  m_StaticEditorFlags: 4294967295
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &1067020060
 Transform:
@@ -20586,6 +20945,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -20597,6 +20957,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -20634,8 +20995,8 @@ GameObject:
   m_Name: Bowl
   m_TagString: Structure
   m_Icon: {fileID: 0}
-  m_NavMeshLayer: 3
-  m_StaticEditorFlags: 4294967295
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &1069083079
 Transform:
@@ -20667,6 +21028,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -20678,6 +21040,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -20759,8 +21122,8 @@ GameObject:
   m_Name: Mesh
   m_TagString: Untagged
   m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 64
+  m_NavMeshLayer: 1
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &1076958627
 Transform:
@@ -20792,6 +21155,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -20803,6 +21167,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -20984,8 +21349,8 @@ GameObject:
   m_Name: WineGlass
   m_TagString: Structure
   m_Icon: {fileID: 0}
-  m_NavMeshLayer: 3
-  m_StaticEditorFlags: 4294967295
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &1083796271
 Transform:
@@ -21017,6 +21382,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -21028,6 +21394,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -21065,8 +21432,8 @@ GameObject:
   m_Name: PotLid
   m_TagString: Untagged
   m_Icon: {fileID: 0}
-  m_NavMeshLayer: 3
-  m_StaticEditorFlags: 4294967295
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &1084054555
 Transform:
@@ -21098,6 +21465,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -21111,6 +21479,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -21148,8 +21517,8 @@ GameObject:
   m_Name: SaltFill
   m_TagString: Untagged
   m_Icon: {fileID: 0}
-  m_NavMeshLayer: 3
-  m_StaticEditorFlags: 4294967295
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &1084253428
 Transform:
@@ -21181,6 +21550,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -21192,6 +21562,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -21405,7 +21776,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1563438938434564, guid: addd322c9e50d3740a53b6c74a904ceb, type: 3}
       propertyPath: m_StaticEditorFlags
-      value: 64
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 1563438938434564, guid: addd322c9e50d3740a53b6c74a904ceb, type: 3}
+      propertyPath: m_NavMeshLayer
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1565424391369022, guid: addd322c9e50d3740a53b6c74a904ceb, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -21562,7 +21937,11 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 1012905050873652, guid: 7b8b4766c176b49beacf60c10ae52cde, type: 3}
       propertyPath: m_StaticEditorFlags
-      value: 64
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 1012905050873652, guid: 7b8b4766c176b49beacf60c10ae52cde, type: 3}
+      propertyPath: m_NavMeshLayer
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1166468625017276, guid: 7b8b4766c176b49beacf60c10ae52cde, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -21582,7 +21961,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1597305181299518, guid: 7b8b4766c176b49beacf60c10ae52cde, type: 3}
       propertyPath: m_StaticEditorFlags
-      value: 64
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 1597305181299518, guid: 7b8b4766c176b49beacf60c10ae52cde, type: 3}
+      propertyPath: m_NavMeshLayer
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1671479514837368, guid: 7b8b4766c176b49beacf60c10ae52cde, type: 3}
       propertyPath: m_IsActive
@@ -21732,8 +22115,8 @@ GameObject:
   m_Name: Cube.001
   m_TagString: Structure
   m_Icon: {fileID: 0}
-  m_NavMeshLayer: 3
-  m_StaticEditorFlags: 4294967295
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &1115995461
 Transform:
@@ -21766,6 +22149,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -21778,6 +22162,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -21809,9 +22194,9 @@ MeshCollider:
   m_Material: {fileID: 0}
   m_IsTrigger: 0
   m_Enabled: 1
-  serializedVersion: 3
+  serializedVersion: 4
   m_Convex: 0
-  m_CookingOptions: 14
+  m_CookingOptions: 30
   m_Mesh: {fileID: 4300130, guid: bbe55e9be025f4c638f456252b5e2954, type: 3}
 --- !u!114 &1115995465
 MonoBehaviour:
@@ -21873,7 +22258,7 @@ GameObject:
   m_TagString: Receptacle
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 1
-  m_StaticEditorFlags: 76
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &1120415480
 Transform:
@@ -21914,6 +22299,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -21926,6 +22312,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -21954,8 +22341,8 @@ GameObject:
   m_Name: SugarFill.002
   m_TagString: Untagged
   m_Icon: {fileID: 0}
-  m_NavMeshLayer: 3
-  m_StaticEditorFlags: 4294967295
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &1121603881
 Transform:
@@ -21988,6 +22375,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -21999,6 +22387,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -22192,8 +22581,8 @@ GameObject:
   m_Name: Ladel3
   m_TagString: Structure
   m_Icon: {fileID: 0}
-  m_NavMeshLayer: 3
-  m_StaticEditorFlags: 4294967295
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &1145777107
 Transform:
@@ -22225,6 +22614,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -22237,6 +22627,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -22335,6 +22726,16 @@ PrefabInstance:
       propertyPath: m_Name
       value: QuadDecalSpawnPlane (4)
       objectReference: {fileID: 0}
+    - target: {fileID: 6270588446337126525, guid: 0f393baf8fb804bc6980b5c23b0fdce3,
+        type: 3}
+      propertyPath: m_NavMeshLayer
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 6270588446337126525, guid: 0f393baf8fb804bc6980b5c23b0fdce3,
+        type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 8
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 0f393baf8fb804bc6980b5c23b0fdce3, type: 3}
 --- !u!1 &1152583343
@@ -22389,8 +22790,8 @@ GameObject:
   m_Name: ladel2
   m_TagString: Structure
   m_Icon: {fileID: 0}
-  m_NavMeshLayer: 3
-  m_StaticEditorFlags: 4294967295
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &1154701618
 Transform:
@@ -22422,6 +22823,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -22434,6 +22836,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -22668,7 +23071,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1778628231951232, guid: 90b97a130f6184840915ce985cdb27eb, type: 3}
       propertyPath: m_StaticEditorFlags
-      value: 64
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 1778628231951232, guid: 90b97a130f6184840915ce985cdb27eb, type: 3}
+      propertyPath: m_NavMeshLayer
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1808692385697988, guid: 90b97a130f6184840915ce985cdb27eb, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -22750,12 +23157,14 @@ Light:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1192399765}
   m_Enabled: 1
-  serializedVersion: 8
+  serializedVersion: 10
   m_Type: 2
+  m_Shape: 0
   m_Color: {r: 1, g: 0.8572008, b: 0.6764706, a: 1}
   m_Intensity: 0.9
   m_Range: 6
   m_SpotAngle: 30
+  m_InnerSpotAngle: 21.802082
   m_CookieSize: 10
   m_Shadows:
     m_Type: 2
@@ -22765,6 +23174,24 @@ Light:
     m_Bias: 0
     m_NormalBias: 0.369
     m_NearPlane: 0.1
+    m_CullingMatrixOverride:
+      e00: 1
+      e01: 0
+      e02: 0
+      e03: 0
+      e10: 0
+      e11: 1
+      e12: 0
+      e13: 0
+      e20: 0
+      e21: 0
+      e22: 1
+      e23: 0
+      e30: 0
+      e31: 0
+      e32: 0
+      e33: 1
+    m_UseCullingMatrixOverride: 0
   m_Cookie: {fileID: 0}
   m_DrawHalo: 0
   m_Flare: {fileID: 0}
@@ -22772,12 +23199,15 @@ Light:
   m_CullingMask:
     serializedVersion: 2
     m_Bits: 4294967295
+  m_RenderingLayerMask: 1
   m_Lightmapping: 4
   m_LightShadowCasterMode: 0
   m_AreaSize: {x: 1, y: 1}
   m_BounceIntensity: 1
   m_ColorTemperature: 6570
   m_UseColorTemperature: 0
+  m_BoundingSphereOverride: {x: 0, y: 0, z: 0, w: 0}
+  m_UseBoundingSphereOverride: 0
   m_ShadowRadius: 0
   m_ShadowAngle: 0
 --- !u!4 &1192399767
@@ -22943,7 +23373,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1003596796365936, guid: 0b0d3d43ad51845dcb55b9eb473e66f3, type: 3}
       propertyPath: m_StaticEditorFlags
-      value: 64
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 1003596796365936, guid: 0b0d3d43ad51845dcb55b9eb473e66f3, type: 3}
+      propertyPath: m_NavMeshLayer
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1055198960653792, guid: 0b0d3d43ad51845dcb55b9eb473e66f3, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -23019,7 +23453,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1791039649430480, guid: 0b0d3d43ad51845dcb55b9eb473e66f3, type: 3}
       propertyPath: m_StaticEditorFlags
-      value: 64
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 1791039649430480, guid: 0b0d3d43ad51845dcb55b9eb473e66f3, type: 3}
+      propertyPath: m_NavMeshLayer
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1867925189604788, guid: 0b0d3d43ad51845dcb55b9eb473e66f3, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -23286,7 +23724,11 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 1101225393274276, guid: aea0d622fdae343b6ba2946b07f8d256, type: 3}
       propertyPath: m_StaticEditorFlags
-      value: 64
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 1101225393274276, guid: aea0d622fdae343b6ba2946b07f8d256, type: 3}
+      propertyPath: m_NavMeshLayer
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1112444212626324, guid: aea0d622fdae343b6ba2946b07f8d256, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -23482,8 +23924,8 @@ GameObject:
   m_Name: Mesh
   m_TagString: Untagged
   m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 64
+  m_NavMeshLayer: 1
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!23 &1214070068
 MeshRenderer:
@@ -23500,6 +23942,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -23511,6 +23954,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -23692,8 +24136,8 @@ GameObject:
   m_Name: PlateStack
   m_TagString: Structure
   m_Icon: {fileID: 0}
-  m_NavMeshLayer: 3
-  m_StaticEditorFlags: 4294967295
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &1234152749
 Transform:
@@ -23725,6 +24169,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -23736,6 +24181,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -23908,7 +24354,7 @@ Transform:
   - {fileID: 2070006184}
   - {fileID: 1429282406}
   m_Father: {fileID: 206288970}
-  m_RootOrder: 15
+  m_RootOrder: 14
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &1243727795
 MonoBehaviour:
@@ -23929,7 +24375,7 @@ MonoBehaviour:
   closedPositions:
   - {x: 0, y: 0, z: 0}
   animationTime: 0.2
-  openPercentage: 1
+  currentOpenPercentage: 1
   IgnoreTheseObjects: []
   isOpen: 0
   canReset: 1
@@ -24308,6 +24754,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -24319,6 +24766,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -24476,7 +24924,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1529660751721024, guid: 2532efc33a6ebf84ab44b48536851cf3, type: 3}
       propertyPath: m_StaticEditorFlags
-      value: 64
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 1529660751721024, guid: 2532efc33a6ebf84ab44b48536851cf3, type: 3}
+      propertyPath: m_NavMeshLayer
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1533897344804128, guid: 2532efc33a6ebf84ab44b48536851cf3, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -24824,6 +25276,16 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Name
       value: QuadDecalSpawnPlane (1)
+      objectReference: {fileID: 0}
+    - target: {fileID: 6270588446337126525, guid: 0f393baf8fb804bc6980b5c23b0fdce3,
+        type: 3}
+      propertyPath: m_NavMeshLayer
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 6270588446337126525, guid: 0f393baf8fb804bc6980b5c23b0fdce3,
+        type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 8
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 0f393baf8fb804bc6980b5c23b0fdce3, type: 3}
@@ -25995,8 +26457,8 @@ GameObject:
   m_Name: HangingRing
   m_TagString: Structure
   m_Icon: {fileID: 0}
-  m_NavMeshLayer: 3
-  m_StaticEditorFlags: 4294967295
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &1279476074
 Transform:
@@ -26028,6 +26490,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -26039,6 +26502,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -26160,8 +26624,8 @@ GameObject:
   m_Name: Bottle
   m_TagString: Structure
   m_Icon: {fileID: 0}
-  m_NavMeshLayer: 3
-  m_StaticEditorFlags: 4294967295
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &1287428938
 Transform:
@@ -26193,6 +26657,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -26208,6 +26673,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -26260,12 +26726,14 @@ Light:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1299111307}
   m_Enabled: 1
-  serializedVersion: 8
+  serializedVersion: 10
   m_Type: 2
+  m_Shape: 0
   m_Color: {r: 1, g: 0.82058823, b: 0.5514706, a: 1}
   m_Intensity: 0.25
   m_Range: 25
   m_SpotAngle: 30
+  m_InnerSpotAngle: 21.802082
   m_CookieSize: 10
   m_Shadows:
     m_Type: 2
@@ -26275,6 +26743,24 @@ Light:
     m_Bias: 0
     m_NormalBias: 0.4
     m_NearPlane: 0.2
+    m_CullingMatrixOverride:
+      e00: 1
+      e01: 0
+      e02: 0
+      e03: 0
+      e10: 0
+      e11: 1
+      e12: 0
+      e13: 0
+      e20: 0
+      e21: 0
+      e22: 1
+      e23: 0
+      e30: 0
+      e31: 0
+      e32: 0
+      e33: 1
+    m_UseCullingMatrixOverride: 0
   m_Cookie: {fileID: 0}
   m_DrawHalo: 0
   m_Flare: {fileID: 0}
@@ -26282,12 +26768,15 @@ Light:
   m_CullingMask:
     serializedVersion: 2
     m_Bits: 4294967295
+  m_RenderingLayerMask: 1
   m_Lightmapping: 4
   m_LightShadowCasterMode: 0
   m_AreaSize: {x: 1, y: 1}
   m_BounceIntensity: 1
   m_ColorTemperature: 6570
   m_UseColorTemperature: 0
+  m_BoundingSphereOverride: {x: 0, y: 0, z: 0, w: 0}
+  m_UseBoundingSphereOverride: 0
   m_ShadowRadius: 0
   m_ShadowAngle: 0
 --- !u!4 &1299111309
@@ -26320,8 +26809,8 @@ GameObject:
   m_Name: WineGlass
   m_TagString: Structure
   m_Icon: {fileID: 0}
-  m_NavMeshLayer: 3
-  m_StaticEditorFlags: 4294967295
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &1301635615
 Transform:
@@ -26353,6 +26842,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -26364,6 +26854,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -26514,7 +27005,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1599658165662560, guid: b18673dc5d4f14842a68d4dc9a891f3a, type: 3}
       propertyPath: m_StaticEditorFlags
-      value: 76
+      value: 8
       objectReference: {fileID: 0}
     - target: {fileID: 1640176557916810, guid: b18673dc5d4f14842a68d4dc9a891f3a, type: 3}
       propertyPath: m_Name
@@ -26638,8 +27129,8 @@ GameObject:
   m_Name: Pot
   m_TagString: Structure
   m_Icon: {fileID: 0}
-  m_NavMeshLayer: 3
-  m_StaticEditorFlags: 4294967295
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &1311186789
 Transform:
@@ -26671,6 +27162,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -26685,6 +27177,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -26820,8 +27313,8 @@ GameObject:
   m_Name: PlateStack
   m_TagString: Structure
   m_Icon: {fileID: 0}
-  m_NavMeshLayer: 3
-  m_StaticEditorFlags: 4294967295
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &1314231288
 Transform:
@@ -26853,6 +27346,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -26864,6 +27358,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -26901,8 +27396,8 @@ GameObject:
   m_Name: SugarJar
   m_TagString: Structure
   m_Icon: {fileID: 0}
-  m_NavMeshLayer: 3
-  m_StaticEditorFlags: 4294967295
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &1318245201
 Transform:
@@ -26934,6 +27429,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -26946,6 +27442,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -27000,11 +27497,19 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1353275438901450, guid: 76fc5e7e7f4554c57a2d9696fb8c9bc7, type: 3}
       propertyPath: m_StaticEditorFlags
-      value: 64
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 1353275438901450, guid: 76fc5e7e7f4554c57a2d9696fb8c9bc7, type: 3}
+      propertyPath: m_NavMeshLayer
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1371724722790366, guid: 76fc5e7e7f4554c57a2d9696fb8c9bc7, type: 3}
       propertyPath: m_StaticEditorFlags
-      value: 64
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 1371724722790366, guid: 76fc5e7e7f4554c57a2d9696fb8c9bc7, type: 3}
+      propertyPath: m_NavMeshLayer
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1371960757633630, guid: 76fc5e7e7f4554c57a2d9696fb8c9bc7, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -27168,7 +27673,7 @@ Transform:
   - {fileID: 1038061162}
   - {fileID: 736211814}
   m_Father: {fileID: 206288970}
-  m_RootOrder: 14
+  m_RootOrder: 13
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &1321442681
 MonoBehaviour:
@@ -27189,7 +27694,7 @@ MonoBehaviour:
   closedPositions:
   - {x: 0, y: 0, z: 0}
   animationTime: 0.2
-  openPercentage: 1
+  currentOpenPercentage: 1
   IgnoreTheseObjects: []
   isOpen: 0
   canReset: 1
@@ -27425,8 +27930,8 @@ GameObject:
   m_Name: Pot
   m_TagString: Structure
   m_Icon: {fileID: 0}
-  m_NavMeshLayer: 3
-  m_StaticEditorFlags: 4294967295
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &1332933854
 Transform:
@@ -27458,6 +27963,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -27472,6 +27978,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -27703,7 +28210,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1284072124309546, guid: a977be9bbffcf4db0883f46581976fbb, type: 3}
       propertyPath: m_StaticEditorFlags
-      value: 64
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 1284072124309546, guid: a977be9bbffcf4db0883f46581976fbb, type: 3}
+      propertyPath: m_NavMeshLayer
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1490215385945640, guid: a977be9bbffcf4db0883f46581976fbb, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -27800,8 +28311,8 @@ GameObject:
   m_Name: SaltShaker.001
   m_TagString: Structure
   m_Icon: {fileID: 0}
-  m_NavMeshLayer: 3
-  m_StaticEditorFlags: 4294967295
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &1344147693
 Transform:
@@ -27834,6 +28345,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -27846,6 +28358,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -28065,8 +28578,8 @@ GameObject:
   m_Name: Collandar
   m_TagString: Structure
   m_Icon: {fileID: 0}
-  m_NavMeshLayer: 3
-  m_StaticEditorFlags: 4294967295
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &1358150403
 Transform:
@@ -28098,6 +28611,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -28109,6 +28623,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -28171,8 +28686,8 @@ GameObject:
   m_Name: WineGlass
   m_TagString: Structure
   m_Icon: {fileID: 0}
-  m_NavMeshLayer: 3
-  m_StaticEditorFlags: 4294967295
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &1363874517
 Transform:
@@ -28204,6 +28719,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -28215,6 +28731,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -28312,8 +28829,8 @@ GameObject:
   m_Name: Spatula2
   m_TagString: Structure
   m_Icon: {fileID: 0}
-  m_NavMeshLayer: 3
-  m_StaticEditorFlags: 4294967295
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &1369972957
 Transform:
@@ -28345,6 +28862,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -28356,6 +28874,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -28417,8 +28936,8 @@ GameObject:
   m_Name: HoldingBar
   m_TagString: Structure
   m_Icon: {fileID: 0}
-  m_NavMeshLayer: 3
-  m_StaticEditorFlags: 4294967295
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &1372321082
 Transform:
@@ -28450,6 +28969,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -28464,6 +28984,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -29013,8 +29534,8 @@ GameObject:
   m_Name: PlateStack
   m_TagString: Structure
   m_Icon: {fileID: 0}
-  m_NavMeshLayer: 3
-  m_StaticEditorFlags: 4294967295
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &1404398741
 Transform:
@@ -29046,6 +29567,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -29057,6 +29579,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -29148,8 +29671,8 @@ GameObject:
   m_Name: Ladel1
   m_TagString: Structure
   m_Icon: {fileID: 0}
-  m_NavMeshLayer: 3
-  m_StaticEditorFlags: 4294967295
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &1406649674
 Transform:
@@ -29181,6 +29704,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -29193,6 +29717,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -29723,7 +30248,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1160273677263342, guid: 9842fa28d000f40cdadb3b6ff3c0bb5a, type: 3}
       propertyPath: m_StaticEditorFlags
-      value: 64
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 1160273677263342, guid: 9842fa28d000f40cdadb3b6ff3c0bb5a, type: 3}
+      propertyPath: m_NavMeshLayer
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1191043968237730, guid: 9842fa28d000f40cdadb3b6ff3c0bb5a, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -29775,7 +30304,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1436235660834028, guid: 9842fa28d000f40cdadb3b6ff3c0bb5a, type: 3}
       propertyPath: m_StaticEditorFlags
-      value: 64
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 1436235660834028, guid: 9842fa28d000f40cdadb3b6ff3c0bb5a, type: 3}
+      propertyPath: m_NavMeshLayer
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1447419298905790, guid: 9842fa28d000f40cdadb3b6ff3c0bb5a, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -30040,8 +30573,8 @@ GameObject:
   m_Name: Mug
   m_TagString: Structure
   m_Icon: {fileID: 0}
-  m_NavMeshLayer: 3
-  m_StaticEditorFlags: 4294967295
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &1458061174
 Transform:
@@ -30073,6 +30606,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -30084,6 +30618,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -30121,8 +30656,8 @@ GameObject:
   m_Name: Bottle
   m_TagString: Structure
   m_Icon: {fileID: 0}
-  m_NavMeshLayer: 3
-  m_StaticEditorFlags: 4294967295
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &1462441615
 Transform:
@@ -30154,6 +30689,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -30168,6 +30704,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -30222,7 +30759,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1282127951944002, guid: 253b27bbf18b340178bf6b2bf59011b3, type: 3}
       propertyPath: m_StaticEditorFlags
-      value: 64
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 1282127951944002, guid: 253b27bbf18b340178bf6b2bf59011b3, type: 3}
+      propertyPath: m_NavMeshLayer
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1326022266553858, guid: 253b27bbf18b340178bf6b2bf59011b3, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -30262,7 +30803,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1615087195358608, guid: 253b27bbf18b340178bf6b2bf59011b3, type: 3}
       propertyPath: m_StaticEditorFlags
-      value: 64
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 1615087195358608, guid: 253b27bbf18b340178bf6b2bf59011b3, type: 3}
+      propertyPath: m_NavMeshLayer
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1624445631472254, guid: 253b27bbf18b340178bf6b2bf59011b3, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -30702,7 +31247,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1293163996932226, guid: 0d84661b3e0d34b55af8920efed8bc92, type: 3}
       propertyPath: m_StaticEditorFlags
-      value: 64
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 1293163996932226, guid: 0d84661b3e0d34b55af8920efed8bc92, type: 3}
+      propertyPath: m_NavMeshLayer
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1622216344525052, guid: 0d84661b3e0d34b55af8920efed8bc92, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -31070,7 +31619,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1837158549159752, guid: 4764689ff1b454595b0f96f8940e176b, type: 3}
       propertyPath: m_StaticEditorFlags
-      value: 64
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 1837158549159752, guid: 4764689ff1b454595b0f96f8940e176b, type: 3}
+      propertyPath: m_NavMeshLayer
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1932285119316962, guid: 4764689ff1b454595b0f96f8940e176b, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -31161,7 +31714,7 @@ Transform:
   - {fileID: 508598229}
   - {fileID: 2021995270}
   m_Father: {fileID: 206288970}
-  m_RootOrder: 18
+  m_RootOrder: 17
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1536770110
 GameObject:
@@ -31462,7 +32015,11 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 1020430464427386, guid: 455a094c271f5394f9d1f479ae9a4a8b, type: 3}
       propertyPath: m_StaticEditorFlags
-      value: 76
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 1020430464427386, guid: 455a094c271f5394f9d1f479ae9a4a8b, type: 3}
+      propertyPath: m_NavMeshLayer
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1023104502298976, guid: 455a094c271f5394f9d1f479ae9a4a8b, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -31588,8 +32145,8 @@ GameObject:
   m_Name: SideCabinet
   m_TagString: Structure
   m_Icon: {fileID: 0}
-  m_NavMeshLayer: 3
-  m_StaticEditorFlags: 4294967295
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &1557895250
 Transform:
@@ -31621,6 +32178,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -31632,6 +32190,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -31663,9 +32222,9 @@ MeshCollider:
   m_Material: {fileID: 0}
   m_IsTrigger: 0
   m_Enabled: 1
-  serializedVersion: 3
+  serializedVersion: 4
   m_Convex: 0
-  m_CookingOptions: 14
+  m_CookingOptions: 30
   m_Mesh: {fileID: 4300112, guid: bbe55e9be025f4c638f456252b5e2954, type: 3}
 --- !u!1 &1561457793
 GameObject:
@@ -31808,8 +32367,8 @@ GameObject:
   m_Name: MetalCabinet
   m_TagString: Structure
   m_Icon: {fileID: 0}
-  m_NavMeshLayer: 3
-  m_StaticEditorFlags: 4294967295
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &1565565055
 Transform:
@@ -31841,6 +32400,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -31852,6 +32412,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -31883,9 +32444,9 @@ MeshCollider:
   m_Material: {fileID: 0}
   m_IsTrigger: 0
   m_Enabled: 1
-  serializedVersion: 3
+  serializedVersion: 4
   m_Convex: 0
-  m_CookingOptions: 14
+  m_CookingOptions: 30
   m_Mesh: {fileID: 4300024, guid: bbe55e9be025f4c638f456252b5e2954, type: 3}
 --- !u!1 &1567262022
 GameObject:
@@ -31903,8 +32464,8 @@ GameObject:
   m_Name: Pot
   m_TagString: Structure
   m_Icon: {fileID: 0}
-  m_NavMeshLayer: 3
-  m_StaticEditorFlags: 4294967295
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &1567262023
 Transform:
@@ -31936,6 +32497,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -31950,6 +32512,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -32018,8 +32581,8 @@ GameObject:
   m_Name: SinkMesh
   m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
-  m_NavMeshLayer: 3
-  m_StaticEditorFlags: 76
+  m_NavMeshLayer: 1
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &1573657740
 Transform:
@@ -32051,6 +32614,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -32062,6 +32626,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -32093,9 +32658,9 @@ MeshCollider:
   m_Material: {fileID: 0}
   m_IsTrigger: 0
   m_Enabled: 1
-  serializedVersion: 3
+  serializedVersion: 4
   m_Convex: 0
-  m_CookingOptions: 14
+  m_CookingOptions: 30
   m_Mesh: {fileID: 4300102, guid: bbe55e9be025f4c638f456252b5e2954, type: 3}
 --- !u!1001 &1578138152
 PrefabInstance:
@@ -32187,7 +32752,11 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 1015689725858356, guid: 32ac1c3eab83ecd4e87bc906f74483f4, type: 3}
       propertyPath: m_StaticEditorFlags
-      value: 64
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 1015689725858356, guid: 32ac1c3eab83ecd4e87bc906f74483f4, type: 3}
+      propertyPath: m_NavMeshLayer
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1020696372823376, guid: 32ac1c3eab83ecd4e87bc906f74483f4, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -32207,7 +32776,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1095039018167108, guid: 32ac1c3eab83ecd4e87bc906f74483f4, type: 3}
       propertyPath: m_StaticEditorFlags
-      value: 64
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 1095039018167108, guid: 32ac1c3eab83ecd4e87bc906f74483f4, type: 3}
+      propertyPath: m_NavMeshLayer
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1101400444778754, guid: 32ac1c3eab83ecd4e87bc906f74483f4, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -32691,7 +33264,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1228122066291026, guid: 91972c5a86358cb448b3bba9832ddb08, type: 3}
       propertyPath: m_StaticEditorFlags
-      value: 64
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 1228122066291026, guid: 91972c5a86358cb448b3bba9832ddb08, type: 3}
+      propertyPath: m_NavMeshLayer
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1234739388399938, guid: 91972c5a86358cb448b3bba9832ddb08, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -32855,7 +33432,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1513018951733270, guid: 91972c5a86358cb448b3bba9832ddb08, type: 3}
       propertyPath: m_StaticEditorFlags
-      value: 64
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 1513018951733270, guid: 91972c5a86358cb448b3bba9832ddb08, type: 3}
+      propertyPath: m_NavMeshLayer
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1521047743642020, guid: 91972c5a86358cb448b3bba9832ddb08, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -33229,8 +33810,8 @@ GameObject:
   m_Name: Baseboard.003
   m_TagString: Structure
   m_Icon: {fileID: 0}
-  m_NavMeshLayer: 3
-  m_StaticEditorFlags: 68
+  m_NavMeshLayer: 1
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &1591747031
 Transform:
@@ -33262,6 +33843,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -33273,6 +33855,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -33381,7 +33964,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1396084620326406, guid: 60fb4e4dcd48a4011812876791fd373f, type: 3}
       propertyPath: m_StaticEditorFlags
-      value: 64
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 1396084620326406, guid: 60fb4e4dcd48a4011812876791fd373f, type: 3}
+      propertyPath: m_NavMeshLayer
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1428461433561804, guid: 60fb4e4dcd48a4011812876791fd373f, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -33608,8 +34195,8 @@ GameObject:
   m_Name: Bowl
   m_TagString: Structure
   m_Icon: {fileID: 0}
-  m_NavMeshLayer: 3
-  m_StaticEditorFlags: 4294967295
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &1597602173
 Transform:
@@ -33641,6 +34228,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -33652,6 +34240,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -34012,8 +34601,8 @@ GameObject:
   m_Name: MetalShelf
   m_TagString: Structure
   m_Icon: {fileID: 0}
-  m_NavMeshLayer: 3
-  m_StaticEditorFlags: 4294967295
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &1627147346
 Transform:
@@ -34045,6 +34634,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -34056,6 +34646,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -34093,8 +34684,8 @@ GameObject:
   m_Name: Mug
   m_TagString: Structure
   m_Icon: {fileID: 0}
-  m_NavMeshLayer: 3
-  m_StaticEditorFlags: 4294967295
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &1628189337
 Transform:
@@ -34126,6 +34717,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -34137,6 +34729,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -34243,7 +34836,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1778628231951232, guid: 90b97a130f6184840915ce985cdb27eb, type: 3}
       propertyPath: m_StaticEditorFlags
-      value: 64
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 1778628231951232, guid: 90b97a130f6184840915ce985cdb27eb, type: 3}
+      propertyPath: m_NavMeshLayer
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1808692385697988, guid: 90b97a130f6184840915ce985cdb27eb, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -34451,8 +35048,8 @@ GameObject:
   m_Name: TurkeyPan
   m_TagString: Structure
   m_Icon: {fileID: 0}
-  m_NavMeshLayer: 3
-  m_StaticEditorFlags: 4294967295
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &1657821815
 Transform:
@@ -34484,6 +35081,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -34495,6 +35093,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -34581,7 +35180,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1547147588158532, guid: f880910f8257dde4d8ea24e687be223a, type: 3}
       propertyPath: m_StaticEditorFlags
-      value: 64
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 1547147588158532, guid: f880910f8257dde4d8ea24e687be223a, type: 3}
+      propertyPath: m_NavMeshLayer
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1607122786613984, guid: f880910f8257dde4d8ea24e687be223a, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -34733,6 +35336,16 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 4537405886975431293, guid: 80d5a64d41224204c94480eea7829e26,
+        type: 3}
+      propertyPath: m_NavMeshLayer
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4537405886975431293, guid: 80d5a64d41224204c94480eea7829e26,
+        type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 8
+      objectReference: {fileID: 0}
     - target: {fileID: 4537635519413276369, guid: 80d5a64d41224204c94480eea7829e26,
         type: 3}
       propertyPath: m_Name
@@ -34844,7 +35457,7 @@ GameObject:
   m_TagString: Structure
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
-  m_StaticEditorFlags: 4294967295
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!23 &1676650513
 MeshRenderer:
@@ -34861,6 +35474,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -34873,6 +35487,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -34989,7 +35604,7 @@ Transform:
   - {fileID: 1972519859}
   - {fileID: 555729812}
   m_Father: {fileID: 206288970}
-  m_RootOrder: 16
+  m_RootOrder: 15
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &1682460825
 MonoBehaviour:
@@ -35010,7 +35625,7 @@ MonoBehaviour:
   closedPositions:
   - {x: -1.61, y: 0.682, z: -0.43002257}
   animationTime: 0.2
-  openPercentage: 1
+  currentOpenPercentage: 1
   IgnoreTheseObjects: []
   isOpen: 0
   canReset: 1
@@ -35303,7 +35918,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1597706590449832, guid: 00420b49c8585450f8f54739af302931, type: 3}
       propertyPath: m_StaticEditorFlags
-      value: 76
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 1597706590449832, guid: 00420b49c8585450f8f54739af302931, type: 3}
+      propertyPath: m_NavMeshLayer
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1603466768198802, guid: 00420b49c8585450f8f54739af302931, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -35311,7 +35930,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1627384830305008, guid: 00420b49c8585450f8f54739af302931, type: 3}
       propertyPath: m_StaticEditorFlags
-      value: 76
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 1627384830305008, guid: 00420b49c8585450f8f54739af302931, type: 3}
+      propertyPath: m_NavMeshLayer
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1918962728764382, guid: 00420b49c8585450f8f54739af302931, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -35431,8 +36054,8 @@ GameObject:
   m_Name: Bottle
   m_TagString: Structure
   m_Icon: {fileID: 0}
-  m_NavMeshLayer: 3
-  m_StaticEditorFlags: 4294967295
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &1708387672
 Transform:
@@ -35464,6 +36087,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -35475,6 +36099,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -35631,7 +36256,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1599658165662560, guid: b18673dc5d4f14842a68d4dc9a891f3a, type: 3}
       propertyPath: m_StaticEditorFlags
-      value: 76
+      value: 8
       objectReference: {fileID: 0}
     - target: {fileID: 1640176557916810, guid: b18673dc5d4f14842a68d4dc9a891f3a, type: 3}
       propertyPath: m_Name
@@ -35809,8 +36434,8 @@ GameObject:
   m_Name: WineGlass
   m_TagString: Structure
   m_Icon: {fileID: 0}
-  m_NavMeshLayer: 3
-  m_StaticEditorFlags: 4294967295
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &1727265185
 Transform:
@@ -35842,6 +36467,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -35853,6 +36479,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -35887,7 +36514,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1062301712404528, guid: c8bde4906aef34a18a46930896066c54, type: 3}
       propertyPath: m_StaticEditorFlags
-      value: 64
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 1062301712404528, guid: c8bde4906aef34a18a46930896066c54, type: 3}
+      propertyPath: m_NavMeshLayer
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1123325943534042, guid: c8bde4906aef34a18a46930896066c54, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -35967,7 +36598,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1828431767514802, guid: c8bde4906aef34a18a46930896066c54, type: 3}
       propertyPath: m_StaticEditorFlags
-      value: 64
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 1828431767514802, guid: c8bde4906aef34a18a46930896066c54, type: 3}
+      propertyPath: m_NavMeshLayer
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1853280341016278, guid: c8bde4906aef34a18a46930896066c54, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -36313,8 +36948,8 @@ GameObject:
   m_Name: Pot
   m_TagString: Structure
   m_Icon: {fileID: 0}
-  m_NavMeshLayer: 3
-  m_StaticEditorFlags: 4294967295
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &1751778520
 Transform:
@@ -36347,6 +36982,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -36359,6 +36995,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -36609,7 +37246,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1641661708669200, guid: befaaf65f0213f346826bb64b31b7e84, type: 3}
       propertyPath: m_StaticEditorFlags
-      value: 64
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 1641661708669200, guid: befaaf65f0213f346826bb64b31b7e84, type: 3}
+      propertyPath: m_NavMeshLayer
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1799010208500256, guid: befaaf65f0213f346826bb64b31b7e84, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -36887,8 +37528,8 @@ GameObject:
   m_Name: CabinetDoorMesh
   m_TagString: Structure
   m_Icon: {fileID: 0}
-  m_NavMeshLayer: 3
-  m_StaticEditorFlags: 76
+  m_NavMeshLayer: 1
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &1785290330
 Transform:
@@ -36920,6 +37561,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -36932,6 +37574,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -37148,8 +37791,8 @@ GameObject:
   m_Name: Bottle
   m_TagString: Structure
   m_Icon: {fileID: 0}
-  m_NavMeshLayer: 3
-  m_StaticEditorFlags: 4294967295
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &1795755183
 Transform:
@@ -37181,6 +37824,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -37196,6 +37840,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -37234,8 +37879,8 @@ GameObject:
   m_Name: MetalShelf
   m_TagString: Structure
   m_Icon: {fileID: 0}
-  m_NavMeshLayer: 3
-  m_StaticEditorFlags: 4294967295
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &1796329300
 Transform:
@@ -37267,6 +37912,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -37278,6 +37924,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -37358,8 +38005,8 @@ GameObject:
   m_Name: TurkeyPan
   m_TagString: Structure
   m_Icon: {fileID: 0}
-  m_NavMeshLayer: 3
-  m_StaticEditorFlags: 4294967295
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &1803827531
 Transform:
@@ -37391,6 +38038,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -37402,6 +38050,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -37439,8 +38088,8 @@ GameObject:
   m_Name: SideCabinet
   m_TagString: Structure
   m_Icon: {fileID: 0}
-  m_NavMeshLayer: 3
-  m_StaticEditorFlags: 4294967295
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &1804131172
 Transform:
@@ -37472,6 +38121,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -37483,6 +38133,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -37520,8 +38171,8 @@ GameObject:
   m_Name: CabinetDoorMesh
   m_TagString: Structure
   m_Icon: {fileID: 0}
-  m_NavMeshLayer: 3
-  m_StaticEditorFlags: 76
+  m_NavMeshLayer: 1
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &1807016302
 Transform:
@@ -37553,6 +38204,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -37565,6 +38217,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -37684,7 +38337,7 @@ Transform:
   - {fileID: 1055391394}
   - {fileID: 1404206740}
   m_Father: {fileID: 206288970}
-  m_RootOrder: 17
+  m_RootOrder: 16
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &1810070206
 MonoBehaviour:
@@ -37705,7 +38358,7 @@ MonoBehaviour:
   closedPositions:
   - {x: -1.61, y: 0.682, z: -1.2177}
   animationTime: 0.2
-  openPercentage: 1
+  currentOpenPercentage: 1
   IgnoreTheseObjects: []
   isOpen: 0
   canReset: 1
@@ -37842,7 +38495,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1701733674541528, guid: d8ef0fb3ca4de9140a79b4a8062f7ad2, type: 3}
       propertyPath: m_StaticEditorFlags
-      value: 64
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 1701733674541528, guid: d8ef0fb3ca4de9140a79b4a8062f7ad2, type: 3}
+      propertyPath: m_NavMeshLayer
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1740827128969128, guid: d8ef0fb3ca4de9140a79b4a8062f7ad2, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -37934,8 +38591,8 @@ GameObject:
   m_Name: SheetPans
   m_TagString: Structure
   m_Icon: {fileID: 0}
-  m_NavMeshLayer: 3
-  m_StaticEditorFlags: 4294967295
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &1814970486
 Transform:
@@ -37967,6 +38624,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -37978,6 +38636,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -38184,8 +38843,8 @@ GameObject:
   m_Name: MetalCabinet
   m_TagString: Structure
   m_Icon: {fileID: 0}
-  m_NavMeshLayer: 3
-  m_StaticEditorFlags: 4294967295
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &1839932485
 Transform:
@@ -38217,6 +38876,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -38228,6 +38888,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -38259,9 +38920,9 @@ MeshCollider:
   m_Material: {fileID: 0}
   m_IsTrigger: 0
   m_Enabled: 1
-  serializedVersion: 3
+  serializedVersion: 4
   m_Convex: 0
-  m_CookingOptions: 14
+  m_CookingOptions: 30
   m_Mesh: {fileID: 4300016, guid: bbe55e9be025f4c638f456252b5e2954, type: 3}
 --- !u!1 &1842310095
 GameObject:
@@ -38279,8 +38940,8 @@ GameObject:
   m_Name: Bottle
   m_TagString: Structure
   m_Icon: {fileID: 0}
-  m_NavMeshLayer: 3
-  m_StaticEditorFlags: 4294967295
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &1842310096
 Transform:
@@ -38312,6 +38973,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -38323,6 +38985,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -38497,7 +39160,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1152965478900672, guid: b4a502f01d229674e9eb68ebaa8e00a4, type: 3}
       propertyPath: m_StaticEditorFlags
-      value: 64
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 1152965478900672, guid: b4a502f01d229674e9eb68ebaa8e00a4, type: 3}
+      propertyPath: m_NavMeshLayer
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1162385533315788, guid: b4a502f01d229674e9eb68ebaa8e00a4, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -39245,8 +39912,8 @@ GameObject:
   m_Name: Decals
   m_TagString: Structure
   m_Icon: {fileID: 0}
-  m_NavMeshLayer: 3
-  m_StaticEditorFlags: 4294967295
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &1903927668
 Transform:
@@ -39278,6 +39945,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -39290,6 +39958,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -39387,8 +40056,8 @@ GameObject:
   m_Name: WineGlass
   m_TagString: Structure
   m_Icon: {fileID: 0}
-  m_NavMeshLayer: 3
-  m_StaticEditorFlags: 4294967295
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &1910930472
 Transform:
@@ -39420,6 +40089,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -39432,6 +40102,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -39654,7 +40325,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1787922909100220, guid: cca7be396b297474c8a07c38198e4fe8, type: 3}
       propertyPath: m_StaticEditorFlags
-      value: 64
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 1787922909100220, guid: cca7be396b297474c8a07c38198e4fe8, type: 3}
+      propertyPath: m_NavMeshLayer
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1807572670124864, guid: cca7be396b297474c8a07c38198e4fe8, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -40001,7 +40676,7 @@ GameObject:
   m_TagString: Receptacle
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 1
-  m_StaticEditorFlags: 76
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &1934582411
 Transform:
@@ -40042,6 +40717,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -40054,6 +40730,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -40157,6 +40834,11 @@ PrefabInstance:
       propertyPath: m_Enabled
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 4492823058425331622, guid: 5e9e851c0e142814dac026a256ba2ac0,
+        type: 3}
+      propertyPath: m_Enabled
+      value: 1
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 5e9e851c0e142814dac026a256ba2ac0, type: 3}
 --- !u!1 &1938902411
@@ -40175,8 +40857,8 @@ GameObject:
   m_Name: Bowl
   m_TagString: Structure
   m_Icon: {fileID: 0}
-  m_NavMeshLayer: 3
-  m_StaticEditorFlags: 4294967295
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &1938902412
 Transform:
@@ -40208,6 +40890,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -40219,6 +40902,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -40324,8 +41008,8 @@ GameObject:
   m_Name: Bottle
   m_TagString: Structure
   m_Icon: {fileID: 0}
-  m_NavMeshLayer: 3
-  m_StaticEditorFlags: 4294967295
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &1961101505
 Transform:
@@ -40357,6 +41041,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -40371,6 +41056,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -40561,7 +41247,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1698762412420052, guid: d38f2e4e6f0a340bca9b3c2b2a2bfe41, type: 3}
       propertyPath: m_StaticEditorFlags
-      value: 64
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 1698762412420052, guid: d38f2e4e6f0a340bca9b3c2b2a2bfe41, type: 3}
+      propertyPath: m_NavMeshLayer
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1981295185611828, guid: d38f2e4e6f0a340bca9b3c2b2a2bfe41, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -40754,8 +41444,8 @@ GameObject:
   m_Name: Bottle
   m_TagString: Structure
   m_Icon: {fileID: 0}
-  m_NavMeshLayer: 3
-  m_StaticEditorFlags: 4294967295
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &1982765706
 Transform:
@@ -40787,6 +41477,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -40801,6 +41492,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -40838,8 +41530,8 @@ GameObject:
   m_Name: Pot
   m_TagString: Structure
   m_Icon: {fileID: 0}
-  m_NavMeshLayer: 3
-  m_StaticEditorFlags: 4294967295
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &1984947223
 Transform:
@@ -40871,6 +41563,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -40883,6 +41576,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -40964,7 +41658,7 @@ Transform:
   - {fileID: 1763894561}
   - {fileID: 269025874}
   m_Father: {fileID: 206288970}
-  m_RootOrder: 19
+  m_RootOrder: 18
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1991904971
 GameObject:
@@ -41762,8 +42456,8 @@ GameObject:
   m_Name: CabinetDoorMesh
   m_TagString: Structure
   m_Icon: {fileID: 0}
-  m_NavMeshLayer: 3
-  m_StaticEditorFlags: 76
+  m_NavMeshLayer: 1
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &2022777583
 Transform:
@@ -41795,6 +42489,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -41807,6 +42502,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -41995,7 +42691,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1641963463543480, guid: 17de1b8e1c6b24343b41a48e1df658f2, type: 3}
       propertyPath: m_StaticEditorFlags
-      value: 64
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 1641963463543480, guid: 17de1b8e1c6b24343b41a48e1df658f2, type: 3}
+      propertyPath: m_NavMeshLayer
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1675478475374778, guid: 17de1b8e1c6b24343b41a48e1df658f2, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -42092,8 +42792,8 @@ GameObject:
   m_Name: MetalCabinet
   m_TagString: Structure
   m_Icon: {fileID: 0}
-  m_NavMeshLayer: 3
-  m_StaticEditorFlags: 4294967295
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &2039992931
 Transform:
@@ -42125,6 +42825,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -42136,6 +42837,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -42167,9 +42869,9 @@ MeshCollider:
   m_Material: {fileID: 0}
   m_IsTrigger: 0
   m_Enabled: 1
-  serializedVersion: 3
+  serializedVersion: 4
   m_Convex: 0
-  m_CookingOptions: 14
+  m_CookingOptions: 30
   m_Mesh: {fileID: 4300108, guid: bbe55e9be025f4c638f456252b5e2954, type: 3}
 --- !u!1 &2042785081
 GameObject:
@@ -42281,7 +42983,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1062301712404528, guid: c8bde4906aef34a18a46930896066c54, type: 3}
       propertyPath: m_StaticEditorFlags
-      value: 64
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 1062301712404528, guid: c8bde4906aef34a18a46930896066c54, type: 3}
+      propertyPath: m_NavMeshLayer
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1123325943534042, guid: c8bde4906aef34a18a46930896066c54, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -42361,7 +43067,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1828431767514802, guid: c8bde4906aef34a18a46930896066c54, type: 3}
       propertyPath: m_StaticEditorFlags
-      value: 64
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 1828431767514802, guid: c8bde4906aef34a18a46930896066c54, type: 3}
+      propertyPath: m_NavMeshLayer
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1853280341016278, guid: c8bde4906aef34a18a46930896066c54, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -43089,7 +43799,11 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 1015618779254786, guid: 1ce341f1fecc04bf6ac5a3b40605107d, type: 3}
       propertyPath: m_StaticEditorFlags
-      value: 64
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 1015618779254786, guid: 1ce341f1fecc04bf6ac5a3b40605107d, type: 3}
+      propertyPath: m_NavMeshLayer
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1059662105592842, guid: 1ce341f1fecc04bf6ac5a3b40605107d, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -43189,7 +43903,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1861786198114126, guid: 1ce341f1fecc04bf6ac5a3b40605107d, type: 3}
       propertyPath: m_StaticEditorFlags
-      value: 64
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 1861786198114126, guid: 1ce341f1fecc04bf6ac5a3b40605107d, type: 3}
+      propertyPath: m_NavMeshLayer
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1963489675066352, guid: 1ce341f1fecc04bf6ac5a3b40605107d, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -43430,8 +44148,8 @@ GameObject:
   m_Name: Mug
   m_TagString: Structure
   m_Icon: {fileID: 0}
-  m_NavMeshLayer: 3
-  m_StaticEditorFlags: 4294967295
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &2084553791
 Transform:
@@ -43463,6 +44181,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -43474,6 +44193,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -43840,8 +44560,8 @@ GameObject:
   m_Name: WineGlass
   m_TagString: Structure
   m_Icon: {fileID: 0}
-  m_NavMeshLayer: 3
-  m_StaticEditorFlags: 4294967295
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &2103194580
 Transform:
@@ -43873,6 +44593,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -43884,6 +44605,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -43975,8 +44697,8 @@ GameObject:
   m_Name: SideCabinet
   m_TagString: Structure
   m_Icon: {fileID: 0}
-  m_NavMeshLayer: 3
-  m_StaticEditorFlags: 4294967295
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &2120346856
 Transform:
@@ -44008,6 +44730,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -44019,6 +44742,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -44159,8 +44883,8 @@ GameObject:
   m_Name: Decals.001
   m_TagString: Structure
   m_Icon: {fileID: 0}
-  m_NavMeshLayer: 3
-  m_StaticEditorFlags: 4294967295
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &2140664198
 Transform:
@@ -44192,6 +44916,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -44203,6 +44928,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -44929,6 +45655,16 @@ PrefabInstance:
       propertyPath: m_Name
       value: mesh
       objectReference: {fileID: 0}
+    - target: {fileID: 26330277415928357, guid: 92055019fc3154e9e99dafa76188b139,
+        type: 3}
+      propertyPath: m_NavMeshLayer
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 26330277415928357, guid: 92055019fc3154e9e99dafa76188b139,
+        type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 8
+      objectReference: {fileID: 0}
     - target: {fileID: 779932364193533307, guid: 92055019fc3154e9e99dafa76188b139,
         type: 3}
       propertyPath: m_LocalPosition.x
@@ -45013,6 +45749,26 @@ PrefabInstance:
       propertyPath: m_Name
       value: Drawer_7bd14706
       objectReference: {fileID: 0}
+    - target: {fileID: 7732286698904585490, guid: 56feacbf2b504f743a091a39bf3273f7,
+        type: 3}
+      propertyPath: m_NavMeshLayer
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 7732286698904585490, guid: 56feacbf2b504f743a091a39bf3273f7,
+        type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 7732286698925451239, guid: 56feacbf2b504f743a091a39bf3273f7,
+        type: 3}
+      propertyPath: m_NavMeshLayer
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 7732286698925451239, guid: 56feacbf2b504f743a091a39bf3273f7,
+        type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 8
+      objectReference: {fileID: 0}
     - target: {fileID: 7732286698963156942, guid: 56feacbf2b504f743a091a39bf3273f7,
         type: 3}
       propertyPath: m_TranslationOffsets.Array.data[0].y
@@ -45043,6 +45799,16 @@ PrefabInstance:
       propertyPath: m_TranslationOffsets.Array.data[0].x
       value: -0.18911558
       objectReference: {fileID: 0}
+    - target: {fileID: 7732286699363457143, guid: 56feacbf2b504f743a091a39bf3273f7,
+        type: 3}
+      propertyPath: m_NavMeshLayer
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 7732286699363457143, guid: 56feacbf2b504f743a091a39bf3273f7,
+        type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 8
+      objectReference: {fileID: 0}
     - target: {fileID: 7732286699372506215, guid: 56feacbf2b504f743a091a39bf3273f7,
         type: 3}
       propertyPath: m_TranslationOffsets.Array.data[0].x
@@ -45057,6 +45823,16 @@ PrefabInstance:
         type: 3}
       propertyPath: m_TranslationOffsets.Array.data[0].z
       value: 0.32729667
+      objectReference: {fileID: 0}
+    - target: {fileID: 7732286699425402889, guid: 56feacbf2b504f743a091a39bf3273f7,
+        type: 3}
+      propertyPath: m_NavMeshLayer
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 7732286699425402889, guid: 56feacbf2b504f743a091a39bf3273f7,
+        type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 8
       objectReference: {fileID: 0}
     - target: {fileID: 7732286699467848031, guid: 56feacbf2b504f743a091a39bf3273f7,
         type: 3}
@@ -45073,6 +45849,16 @@ PrefabInstance:
       propertyPath: m_TranslationOffsets.Array.data[0].z
       value: 0.32738173
       objectReference: {fileID: 0}
+    - target: {fileID: 7732286699646204369, guid: 56feacbf2b504f743a091a39bf3273f7,
+        type: 3}
+      propertyPath: m_NavMeshLayer
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 7732286699646204369, guid: 56feacbf2b504f743a091a39bf3273f7,
+        type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 8
+      objectReference: {fileID: 0}
     - target: {fileID: 7732286699818232469, guid: 56feacbf2b504f743a091a39bf3273f7,
         type: 3}
       propertyPath: m_Name
@@ -45082,6 +45868,16 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Name
       value: Drawer_8057796e
+      objectReference: {fileID: 0}
+    - target: {fileID: 7732286699945188751, guid: 56feacbf2b504f743a091a39bf3273f7,
+        type: 3}
+      propertyPath: m_NavMeshLayer
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 7732286699945188751, guid: 56feacbf2b504f743a091a39bf3273f7,
+        type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 8
       objectReference: {fileID: 0}
     - target: {fileID: 7732286699965035196, guid: 56feacbf2b504f743a091a39bf3273f7,
         type: 3}
@@ -45163,6 +45959,16 @@ PrefabInstance:
       propertyPath: m_Name
       value: Drawer_a45873ea
       objectReference: {fileID: 0}
+    - target: {fileID: 7732286700513711380, guid: 56feacbf2b504f743a091a39bf3273f7,
+        type: 3}
+      propertyPath: m_NavMeshLayer
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 7732286700513711380, guid: 56feacbf2b504f743a091a39bf3273f7,
+        type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 8
+      objectReference: {fileID: 0}
     - target: {fileID: 7732286700597845316, guid: 56feacbf2b504f743a091a39bf3273f7,
         type: 3}
       propertyPath: m_TranslationOffsets.Array.data[0].y
@@ -45214,6 +46020,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -45225,6 +46032,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -45251,6 +46059,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -45262,6 +46071,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -45288,6 +46098,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -45299,6 +46110,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -45325,6 +46137,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -45336,6 +46149,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -45362,6 +46176,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -45373,6 +46188,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -45399,6 +46215,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -45410,6 +46227,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -45486,8 +46304,8 @@ GameObject:
   m_Name: mesh
   m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
+  m_NavMeshLayer: 1
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!64 &7035266474732934426
 MeshCollider:
@@ -45499,9 +46317,9 @@ MeshCollider:
   m_Material: {fileID: 0}
   m_IsTrigger: 0
   m_Enabled: 1
-  serializedVersion: 3
+  serializedVersion: 4
   m_Convex: 0
-  m_CookingOptions: 14
+  m_CookingOptions: 30
   m_Mesh: {fileID: 4300668, guid: bbe55e9be025f4c638f456252b5e2954, type: 3}
 --- !u!1 &7035266474732934427
 GameObject:
@@ -45519,8 +46337,8 @@ GameObject:
   m_Name: mesh
   m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
+  m_NavMeshLayer: 1
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!64 &7035266474732934428
 MeshCollider:
@@ -45532,9 +46350,9 @@ MeshCollider:
   m_Material: {fileID: 0}
   m_IsTrigger: 0
   m_Enabled: 1
-  serializedVersion: 3
+  serializedVersion: 4
   m_Convex: 0
-  m_CookingOptions: 14
+  m_CookingOptions: 30
   m_Mesh: {fileID: 4300670, guid: bbe55e9be025f4c638f456252b5e2954, type: 3}
 --- !u!1 &7035266474732934497
 GameObject:
@@ -45552,8 +46370,8 @@ GameObject:
   m_Name: mesh
   m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
+  m_NavMeshLayer: 1
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!64 &7035266474732934498
 MeshCollider:
@@ -45565,9 +46383,9 @@ MeshCollider:
   m_Material: {fileID: 0}
   m_IsTrigger: 0
   m_Enabled: 1
-  serializedVersion: 3
+  serializedVersion: 4
   m_Convex: 0
-  m_CookingOptions: 14
+  m_CookingOptions: 30
   m_Mesh: {fileID: 4300666, guid: bbe55e9be025f4c638f456252b5e2954, type: 3}
 --- !u!1 &7035266474732934501
 GameObject:
@@ -45585,8 +46403,8 @@ GameObject:
   m_Name: mesh
   m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
+  m_NavMeshLayer: 1
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!64 &7035266474732934502
 MeshCollider:
@@ -45598,9 +46416,9 @@ MeshCollider:
   m_Material: {fileID: 0}
   m_IsTrigger: 0
   m_Enabled: 1
-  serializedVersion: 3
+  serializedVersion: 4
   m_Convex: 0
-  m_CookingOptions: 14
+  m_CookingOptions: 30
   m_Mesh: {fileID: 4300672, guid: bbe55e9be025f4c638f456252b5e2954, type: 3}
 --- !u!1 &7035266474732934503
 GameObject:
@@ -45618,8 +46436,8 @@ GameObject:
   m_Name: mesh
   m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
+  m_NavMeshLayer: 1
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!64 &7035266474732934504
 MeshCollider:
@@ -45631,9 +46449,9 @@ MeshCollider:
   m_Material: {fileID: 0}
   m_IsTrigger: 0
   m_Enabled: 1
-  serializedVersion: 3
+  serializedVersion: 4
   m_Convex: 0
-  m_CookingOptions: 14
+  m_CookingOptions: 30
   m_Mesh: {fileID: 4300674, guid: bbe55e9be025f4c638f456252b5e2954, type: 3}
 --- !u!1 &7035266474732934509
 GameObject:
@@ -45651,8 +46469,8 @@ GameObject:
   m_Name: mesh
   m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
+  m_NavMeshLayer: 1
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!64 &7035266474732934510
 MeshCollider:
@@ -45664,9 +46482,9 @@ MeshCollider:
   m_Material: {fileID: 0}
   m_IsTrigger: 0
   m_Enabled: 1
-  serializedVersion: 3
+  serializedVersion: 4
   m_Convex: 0
-  m_CookingOptions: 14
+  m_CookingOptions: 30
   m_Mesh: {fileID: 4300676, guid: bbe55e9be025f4c638f456252b5e2954, type: 3}
 --- !u!4 &7035266474732962049
 Transform:

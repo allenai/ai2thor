@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.9432207, g: 0.96824485, b: 0.77938247, a: 1}
+  m_IndirectSpecularColor: {r: 0.9458867, g: 0.9721845, b: 0.7823393, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -54,7 +54,7 @@ LightmapSettings:
     m_EnableBakedLightmaps: 0
     m_EnableRealtimeLightmaps: 0
   m_LightmapEditorSettings:
-    serializedVersion: 10
+    serializedVersion: 12
     m_Resolution: 2
     m_BakeResolution: 40
     m_AtlasSize: 1024
@@ -62,6 +62,7 @@ LightmapSettings:
     m_AOMaxDistance: 1
     m_CompAOExponent: 1
     m_CompAOExponentDirect: 0
+    m_ExtractAmbientOcclusion: 0
     m_Padding: 2
     m_LightmapParameters: {fileID: 0}
     m_LightmapsBakeMode: 0
@@ -76,10 +77,16 @@ LightmapSettings:
     m_PVRDirectSampleCount: 32
     m_PVRSampleCount: 500
     m_PVRBounces: 2
+    m_PVREnvironmentSampleCount: 500
+    m_PVREnvironmentReferencePointCount: 2048
+    m_PVRFilteringMode: 0
+    m_PVRDenoiserTypeDirect: 0
+    m_PVRDenoiserTypeIndirect: 0
+    m_PVRDenoiserTypeAO: 0
     m_PVRFilterTypeDirect: 0
     m_PVRFilterTypeIndirect: 0
     m_PVRFilterTypeAO: 0
-    m_PVRFilteringMode: 0
+    m_PVREnvironmentMIS: 0
     m_PVRCulling: 1
     m_PVRFilteringGaussRadiusDirect: 1
     m_PVRFilteringGaussRadiusIndirect: 5
@@ -87,7 +94,9 @@ LightmapSettings:
     m_PVRFilteringAtrousPositionSigmaDirect: 0.5
     m_PVRFilteringAtrousPositionSigmaIndirect: 2
     m_PVRFilteringAtrousPositionSigmaAO: 1
-    m_ShowResolutionOverlay: 1
+    m_ExportTrainingData: 0
+    m_TrainingDataDestination: TrainingData
+    m_LightProbeSampleCountMultiplier: 4
   m_LightingDataAsset: {fileID: 0}
   m_UseShadowmask: 0
 --- !u!196 &4
@@ -97,21 +106,21 @@ NavMeshSettings:
   m_BuildSettings:
     serializedVersion: 2
     agentTypeID: 0
-    agentRadius: 0.05
-    agentHeight: 0.25
+    agentRadius: 0.2
+    agentHeight: 1.8
     agentSlope: 10
-    agentClimb: 0
+    agentClimb: 0.5
     ledgeDropHeight: 0
     maxJumpAcrossDistance: 0
     minRegionArea: 0.05
     manualCellSize: 1
-    cellSize: 0.02
+    cellSize: 0.03
     manualTileSize: 0
     tileSize: 256
     accuratePlacement: 0
     debug:
       m_Flags: 0
-  m_NavMeshData: {fileID: 23800000, guid: 0e990e18c64d04b9a80ff3ca3556f6e1, type: 2}
+  m_NavMeshData: {fileID: 23800000, guid: 27fb76e21d9bd43ad82d025da7931130, type: 2}
 --- !u!1 &1254367
 GameObject:
   m_ObjectHideFlags: 0
@@ -342,6 +351,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -353,6 +363,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -844,6 +855,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -855,6 +867,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -1291,8 +1304,8 @@ Transform:
   - {fileID: 1549055824}
   - {fileID: 4322412345018089}
   - {fileID: 1292783982}
-  - {fileID: 1237038295}
   - {fileID: 240171174}
+  - {fileID: 1237038295}
   - {fileID: 1448012889}
   - {fileID: 820113786}
   - {fileID: 972709555}
@@ -1577,7 +1590,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1103088675938512, guid: ec47e0ab5e9d34498b48a01ef9d60abe, type: 3}
       propertyPath: m_StaticEditorFlags
-      value: 64
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 1103088675938512, guid: ec47e0ab5e9d34498b48a01ef9d60abe, type: 3}
+      propertyPath: m_NavMeshLayer
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1231094864258216, guid: ec47e0ab5e9d34498b48a01ef9d60abe, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -1774,7 +1791,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1797810551659404, guid: 41e0d019caa774233bf63ed379d092ea, type: 3}
       propertyPath: m_StaticEditorFlags
-      value: 64
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 1797810551659404, guid: 41e0d019caa774233bf63ed379d092ea, type: 3}
+      propertyPath: m_NavMeshLayer
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1808348307445376, guid: 41e0d019caa774233bf63ed379d092ea, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -1798,7 +1819,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1936707908158098, guid: 41e0d019caa774233bf63ed379d092ea, type: 3}
       propertyPath: m_StaticEditorFlags
-      value: 64
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 1936707908158098, guid: 41e0d019caa774233bf63ed379d092ea, type: 3}
+      propertyPath: m_NavMeshLayer
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1958477847913010, guid: 41e0d019caa774233bf63ed379d092ea, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -2158,7 +2183,11 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 1020430464427386, guid: 455a094c271f5394f9d1f479ae9a4a8b, type: 3}
       propertyPath: m_StaticEditorFlags
-      value: 76
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 1020430464427386, guid: 455a094c271f5394f9d1f479ae9a4a8b, type: 3}
+      propertyPath: m_NavMeshLayer
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1023104502298976, guid: 455a094c271f5394f9d1f479ae9a4a8b, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -2585,7 +2614,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1697656132929736, guid: fdc09cab87950cc4c98ff3080290b1b6, type: 3}
       propertyPath: m_StaticEditorFlags
-      value: 64
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 1697656132929736, guid: fdc09cab87950cc4c98ff3080290b1b6, type: 3}
+      propertyPath: m_NavMeshLayer
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1747076008230944, guid: fdc09cab87950cc4c98ff3080290b1b6, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -2915,7 +2948,7 @@ MonoBehaviour:
   closedPositions:
   - {x: 0.3765, y: 0.5729, z: -1.51}
   animationTime: 0.2
-  openPercentage: 1
+  currentOpenPercentage: 1
   IgnoreTheseObjects: []
   isOpen: 0
   canReset: 1
@@ -3179,6 +3212,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -3190,6 +3224,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -3549,7 +3584,7 @@ GameObject:
   m_TagString: SimObj
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 1
-  m_StaticEditorFlags: 76
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &125159382
 Transform:
@@ -3579,6 +3614,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -3590,6 +3626,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -3906,7 +3943,7 @@ GameObject:
   m_TagString: SimObj
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 1
-  m_StaticEditorFlags: 76
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &138734523
 Transform:
@@ -3936,6 +3973,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -3947,6 +3985,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -6353,7 +6392,7 @@ MonoBehaviour:
   closedPositions:
   - {x: 3.021, y: 0.7692, z: -0.7838}
   animationTime: 0.2
-  openPercentage: 1
+  currentOpenPercentage: 1
   IgnoreTheseObjects: []
   isOpen: 0
   canReset: 1
@@ -6861,7 +6900,7 @@ MonoBehaviour:
   closedPositions:
   - {x: -0.86, y: 0.5772, z: 1.4298}
   animationTime: 0.2
-  openPercentage: 1
+  currentOpenPercentage: 1
   IgnoreTheseObjects: []
   isOpen: 0
   canReset: 1
@@ -7176,7 +7215,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1270797223513378, guid: 64bf624619bd74f6aa195b11c43fcef8, type: 3}
       propertyPath: m_StaticEditorFlags
-      value: 64
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 1270797223513378, guid: 64bf624619bd74f6aa195b11c43fcef8, type: 3}
+      propertyPath: m_NavMeshLayer
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1272448781516888, guid: 64bf624619bd74f6aa195b11c43fcef8, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -7204,7 +7247,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1400668517590272, guid: 64bf624619bd74f6aa195b11c43fcef8, type: 3}
       propertyPath: m_StaticEditorFlags
-      value: 64
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 1400668517590272, guid: 64bf624619bd74f6aa195b11c43fcef8, type: 3}
+      propertyPath: m_NavMeshLayer
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1421761969151224, guid: 64bf624619bd74f6aa195b11c43fcef8, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -8950,7 +8997,7 @@ GameObject:
   m_TagString: SimObj
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 1
-  m_StaticEditorFlags: 76
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &289419766
 Transform:
@@ -8980,6 +9027,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -8991,6 +9039,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -9057,7 +9106,7 @@ GameObject:
   m_TagString: SimObj
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 1
-  m_StaticEditorFlags: 76
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &295078023
 Transform:
@@ -9087,6 +9136,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -9098,6 +9148,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -9535,7 +9586,7 @@ MonoBehaviour:
   closedPositions:
   - {x: 0.3765, y: 0.1915, z: -1.51}
   animationTime: 0.2
-  openPercentage: 1
+  currentOpenPercentage: 1
   IgnoreTheseObjects: []
   isOpen: 0
   canReset: 1
@@ -9632,7 +9683,7 @@ MonoBehaviour:
   closedPositions:
   - {x: 0, y: 0, z: 0}
   animationTime: 0.2
-  openPercentage: 1
+  currentOpenPercentage: 1
   IgnoreTheseObjects: []
   isOpen: 0
   canReset: 1
@@ -9838,8 +9889,8 @@ GameObject:
   m_Name: Cube.046
   m_TagString: Untagged
   m_Icon: {fileID: 0}
-  m_NavMeshLayer: 3
-  m_StaticEditorFlags: 4294967295
+  m_NavMeshLayer: 1
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &313924442
 Transform:
@@ -9871,6 +9922,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -9882,6 +9934,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -10362,7 +10415,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1060765335409938, guid: 65d675d75e645425f9ce8066cb86edea, type: 3}
       propertyPath: m_StaticEditorFlags
-      value: 64
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 1060765335409938, guid: 65d675d75e645425f9ce8066cb86edea, type: 3}
+      propertyPath: m_NavMeshLayer
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1100857769463318, guid: 65d675d75e645425f9ce8066cb86edea, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -10398,7 +10455,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1296780562448096, guid: 65d675d75e645425f9ce8066cb86edea, type: 3}
       propertyPath: m_StaticEditorFlags
-      value: 64
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 1296780562448096, guid: 65d675d75e645425f9ce8066cb86edea, type: 3}
+      propertyPath: m_NavMeshLayer
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1342651025235244, guid: 65d675d75e645425f9ce8066cb86edea, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -10854,7 +10915,7 @@ MonoBehaviour:
   closedPositions:
   - {x: 0, y: 0, z: 0}
   animationTime: 0.2
-  openPercentage: 1
+  currentOpenPercentage: 1
   IgnoreTheseObjects:
   - {fileID: 1237949365}
   isOpen: 0
@@ -11438,7 +11499,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1526332963398614, guid: a8e652189b1870b4a88918b02d1501ce, type: 3}
       propertyPath: m_StaticEditorFlags
-      value: 64
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 1526332963398614, guid: a8e652189b1870b4a88918b02d1501ce, type: 3}
+      propertyPath: m_NavMeshLayer
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1526407830507806, guid: a8e652189b1870b4a88918b02d1501ce, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -11926,6 +11991,11 @@ PrefabInstance:
       propertyPath: m_Enabled
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 4492823058425331622, guid: 5e9e851c0e142814dac026a256ba2ac0,
+        type: 3}
+      propertyPath: m_Enabled
+      value: 1
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 5e9e851c0e142814dac026a256ba2ac0, type: 3}
 --- !u!1 &366715951
@@ -12069,6 +12139,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -12080,6 +12151,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -12167,7 +12239,7 @@ GameObject:
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 1
-  m_StaticEditorFlags: 76
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!23 &372493808
 MeshRenderer:
@@ -12184,6 +12256,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -12195,6 +12268,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -12273,7 +12347,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1892278270766436, guid: fc1ba553e6cb3ce41aeb2e1b82800a0d, type: 3}
       propertyPath: m_StaticEditorFlags
-      value: 64
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 1892278270766436, guid: fc1ba553e6cb3ce41aeb2e1b82800a0d, type: 3}
+      propertyPath: m_NavMeshLayer
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1956986709026948, guid: fc1ba553e6cb3ce41aeb2e1b82800a0d, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -12368,6 +12446,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -12380,6 +12459,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -12411,9 +12491,9 @@ MeshCollider:
   m_Material: {fileID: 0}
   m_IsTrigger: 0
   m_Enabled: 1
-  serializedVersion: 3
+  serializedVersion: 4
   m_Convex: 0
-  m_CookingOptions: 14
+  m_CookingOptions: 30
   m_Mesh: {fileID: 4300054, guid: 8640627d651564916bcef0651c1fdc73, type: 3}
 --- !u!114 &373987627
 MonoBehaviour:
@@ -12795,6 +12875,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -12806,6 +12887,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -13087,7 +13169,7 @@ MonoBehaviour:
   closedPositions:
   - {x: -0.86, y: 0.7657855, z: 1.4298}
   animationTime: 0.2
-  openPercentage: 1
+  currentOpenPercentage: 1
   IgnoreTheseObjects: []
   isOpen: 0
   canReset: 1
@@ -13140,7 +13222,7 @@ GameObject:
   m_TagString: SimObj
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 1
-  m_StaticEditorFlags: 76
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &397305499
 Transform:
@@ -13170,6 +13252,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -13181,6 +13264,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -13474,6 +13558,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -13486,6 +13571,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -13517,9 +13603,9 @@ MeshCollider:
   m_Material: {fileID: 0}
   m_IsTrigger: 0
   m_Enabled: 1
-  serializedVersion: 3
+  serializedVersion: 4
   m_Convex: 0
-  m_CookingOptions: 14
+  m_CookingOptions: 30
   m_Mesh: {fileID: 4300126, guid: 8640627d651564916bcef0651c1fdc73, type: 3}
 --- !u!114 &405431758
 MonoBehaviour:
@@ -13935,7 +14021,7 @@ MonoBehaviour:
   closedPositions:
   - {x: -0.6771, y: 0.76578534, z: -0.701}
   animationTime: 0.2
-  openPercentage: 1
+  currentOpenPercentage: 1
   IgnoreTheseObjects: []
   isOpen: 0
   canReset: 1
@@ -14005,7 +14091,7 @@ GameObject:
   m_TagString: SimObj
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 1
-  m_StaticEditorFlags: 76
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &424377179
 Transform:
@@ -14035,6 +14121,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -14046,6 +14133,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -14800,7 +14888,7 @@ GameObject:
   m_TagString: SimObj
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 1
-  m_StaticEditorFlags: 76
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &451824083
 Transform:
@@ -14830,6 +14918,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -14841,6 +14930,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -15070,6 +15160,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -15081,6 +15172,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -16115,6 +16207,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -16126,6 +16219,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -16228,7 +16322,7 @@ GameObject:
   m_TagString: SimObj
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 1
-  m_StaticEditorFlags: 76
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &511758419
 Transform:
@@ -16258,6 +16352,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -16269,6 +16364,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -16534,7 +16630,7 @@ GameObject:
   m_TagString: SimObj
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 1
-  m_StaticEditorFlags: 76
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &521735606
 Transform:
@@ -16564,6 +16660,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -16575,6 +16672,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -16760,7 +16858,7 @@ GameObject:
   m_TagString: SimObj
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 1
-  m_StaticEditorFlags: 76
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!23 &523727993
 MeshRenderer:
@@ -16777,6 +16875,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -16788,6 +16887,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -17476,7 +17576,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1627271083087066, guid: d9634031ad0b2af469ec7aa2056f6772, type: 3}
       propertyPath: m_StaticEditorFlags
-      value: 64
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 1627271083087066, guid: d9634031ad0b2af469ec7aa2056f6772, type: 3}
+      propertyPath: m_NavMeshLayer
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1684787160510538, guid: d9634031ad0b2af469ec7aa2056f6772, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -17565,7 +17669,7 @@ GameObject:
   m_TagString: Receptacle
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 1
-  m_StaticEditorFlags: 76
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &544480595
 Transform:
@@ -17606,6 +17710,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -17618,6 +17723,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -17708,7 +17814,7 @@ GameObject:
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 1
-  m_StaticEditorFlags: 76
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!23 &545691721
 MeshRenderer:
@@ -17725,6 +17831,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -17736,6 +17843,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -18490,7 +18598,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1219641320175144, guid: bc862083b5a214bceb38b5ecb2038b7f, type: 3}
       propertyPath: m_StaticEditorFlags
-      value: 76
+      value: 8
       objectReference: {fileID: 0}
     - target: {fileID: 1272886711361906, guid: bc862083b5a214bceb38b5ecb2038b7f, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -18498,7 +18606,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1315081978621472, guid: bc862083b5a214bceb38b5ecb2038b7f, type: 3}
       propertyPath: m_StaticEditorFlags
-      value: 76
+      value: 8
       objectReference: {fileID: 0}
     - target: {fileID: 1345572420276844, guid: bc862083b5a214bceb38b5ecb2038b7f, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -18574,7 +18682,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1771728341017432, guid: bc862083b5a214bceb38b5ecb2038b7f, type: 3}
       propertyPath: m_StaticEditorFlags
-      value: 76
+      value: 8
       objectReference: {fileID: 0}
     - target: {fileID: 1781068347555512, guid: bc862083b5a214bceb38b5ecb2038b7f, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -18586,7 +18694,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1839608240651238, guid: bc862083b5a214bceb38b5ecb2038b7f, type: 3}
       propertyPath: m_StaticEditorFlags
-      value: 76
+      value: 8
       objectReference: {fileID: 0}
     - target: {fileID: 1846870690032420, guid: bc862083b5a214bceb38b5ecb2038b7f, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -18971,6 +19079,16 @@ PrefabInstance:
       propertyPath: m_Name
       value: Bowl_69fe8bbb
       objectReference: {fileID: 0}
+    - target: {fileID: 1887596748338762159, guid: be792d8c58b26264384774cd32f68a11,
+        type: 3}
+      propertyPath: m_NavMeshLayer
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1887596748338762159, guid: be792d8c58b26264384774cd32f68a11,
+        type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 8
+      objectReference: {fileID: 0}
     - target: {fileID: 1889656168652091035, guid: be792d8c58b26264384774cd32f68a11,
         type: 3}
       propertyPath: m_LocalPosition.x
@@ -19336,7 +19454,7 @@ MonoBehaviour:
   closedPositions:
   - {x: 3.021, y: 0.7692, z: -0.4076}
   animationTime: 0.2
-  openPercentage: 1
+  currentOpenPercentage: 1
   IgnoreTheseObjects: []
   isOpen: 0
   canReset: 1
@@ -19662,7 +19780,11 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 1170754491289346, guid: 880bc4bb7aa104d49af5b63510b0f0ee, type: 3}
       propertyPath: m_StaticEditorFlags
-      value: 64
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 1170754491289346, guid: 880bc4bb7aa104d49af5b63510b0f0ee, type: 3}
+      propertyPath: m_NavMeshLayer
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1183513978677344, guid: 880bc4bb7aa104d49af5b63510b0f0ee, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -19894,7 +20016,7 @@ GameObject:
   m_TagString: SimObj
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 1
-  m_StaticEditorFlags: 76
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &625064426
 Transform:
@@ -19924,6 +20046,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -19935,6 +20058,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -20321,7 +20445,7 @@ GameObject:
   m_TagString: SimObj
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 1
-  m_StaticEditorFlags: 76
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &635105329
 Transform:
@@ -20351,6 +20475,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -20362,6 +20487,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -20511,7 +20637,7 @@ MonoBehaviour:
   closedPositions:
   - {x: -0.86, y: 0.5772, z: 0.6631}
   animationTime: 0.2
-  openPercentage: 1
+  currentOpenPercentage: 1
   IgnoreTheseObjects: []
   isOpen: 0
   canReset: 1
@@ -21179,7 +21305,7 @@ GameObject:
   m_TagString: SimObj
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 1
-  m_StaticEditorFlags: 76
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &667292716
 Transform:
@@ -21209,6 +21335,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -21220,6 +21347,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -21296,7 +21424,7 @@ MonoBehaviour:
   closedPositions:
   - {x: 0, y: 0, z: 0}
   animationTime: 0.2
-  openPercentage: 1
+  currentOpenPercentage: 1
   IgnoreTheseObjects: []
   isOpen: 0
   canReset: 1
@@ -21501,7 +21629,7 @@ GameObject:
   m_TagString: Receptacle
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 1
-  m_StaticEditorFlags: 76
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &671986037
 Transform:
@@ -21542,6 +21670,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -21554,6 +21683,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -21982,7 +22112,7 @@ GameObject:
   m_TagString: SimObj
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 1
-  m_StaticEditorFlags: 76
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &687312588
 Transform:
@@ -22012,6 +22142,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -22023,6 +22154,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -22436,7 +22568,7 @@ GameObject:
   m_TagString: Receptacle
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 1
-  m_StaticEditorFlags: 76
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &707448630
 Transform:
@@ -22477,6 +22609,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -22489,6 +22622,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -23090,7 +23224,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1749240358268860, guid: a60ab6d1d983b454ebba04293816064f, type: 3}
       propertyPath: m_StaticEditorFlags
-      value: 64
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 1749240358268860, guid: a60ab6d1d983b454ebba04293816064f, type: 3}
+      propertyPath: m_NavMeshLayer
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1765321880329342, guid: a60ab6d1d983b454ebba04293816064f, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -23718,7 +23856,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1402059018762232, guid: 8686599a01a9f4076be10c7089658aa1, type: 3}
       propertyPath: m_StaticEditorFlags
-      value: 64
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 1402059018762232, guid: 8686599a01a9f4076be10c7089658aa1, type: 3}
+      propertyPath: m_NavMeshLayer
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1422473346425252, guid: 8686599a01a9f4076be10c7089658aa1, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -23750,7 +23892,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1628838298057184, guid: 8686599a01a9f4076be10c7089658aa1, type: 3}
       propertyPath: m_StaticEditorFlags
-      value: 64
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 1628838298057184, guid: 8686599a01a9f4076be10c7089658aa1, type: 3}
+      propertyPath: m_NavMeshLayer
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1646165961521694, guid: 8686599a01a9f4076be10c7089658aa1, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -24237,7 +24383,7 @@ MonoBehaviour:
   closedPositions:
   - {x: -0.86, y: 0.3856, z: 0.6631}
   animationTime: 0.2
-  openPercentage: 1
+  currentOpenPercentage: 1
   IgnoreTheseObjects: []
   isOpen: 0
   canReset: 1
@@ -24387,7 +24533,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1311368171409214, guid: 8576bb2b459f749888f1f59f6ffd376c, type: 3}
       propertyPath: m_StaticEditorFlags
-      value: 64
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 1311368171409214, guid: 8576bb2b459f749888f1f59f6ffd376c, type: 3}
+      propertyPath: m_NavMeshLayer
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1356166424623152, guid: 8576bb2b459f749888f1f59f6ffd376c, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -24783,6 +24933,16 @@ PrefabInstance:
       propertyPath: m_Name
       value: DeferredDecalSpawnPlane
       objectReference: {fileID: 0}
+    - target: {fileID: 8396441049647835788, guid: 89a0464aabe374f16bde3f8e779b3830,
+        type: 3}
+      propertyPath: m_NavMeshLayer
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 8396441049647835788, guid: 89a0464aabe374f16bde3f8e779b3830,
+        type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 8
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 89a0464aabe374f16bde3f8e779b3830, type: 3}
 --- !u!1 &776648200
@@ -25100,7 +25260,7 @@ GameObject:
   m_TagString: SimObj
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 1
-  m_StaticEditorFlags: 76
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &785726668
 Transform:
@@ -25130,6 +25290,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -25141,6 +25302,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -27579,7 +27741,7 @@ GameObject:
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 1
-  m_StaticEditorFlags: 76
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!23 &869806456
 MeshRenderer:
@@ -27596,6 +27758,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -27607,6 +27770,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -27791,7 +27955,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1267701652429328, guid: 7ff92a034e8134e19a09a238aec8514e, type: 3}
       propertyPath: m_StaticEditorFlags
-      value: 64
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 1267701652429328, guid: 7ff92a034e8134e19a09a238aec8514e, type: 3}
+      propertyPath: m_NavMeshLayer
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1285518930252126, guid: 7ff92a034e8134e19a09a238aec8514e, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -28181,7 +28349,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1940611943571462, guid: f04343d5a0f16304392b506c7a5d7b0f, type: 3}
       propertyPath: m_StaticEditorFlags
-      value: 76
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 1940611943571462, guid: f04343d5a0f16304392b506c7a5d7b0f, type: 3}
+      propertyPath: m_NavMeshLayer
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1960970894844316, guid: f04343d5a0f16304392b506c7a5d7b0f, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -28419,7 +28591,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1298114059276780, guid: 516a3a667ad6a4348997a8a61e638d1a, type: 3}
       propertyPath: m_StaticEditorFlags
-      value: 64
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 1298114059276780, guid: 516a3a667ad6a4348997a8a61e638d1a, type: 3}
+      propertyPath: m_NavMeshLayer
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1354570030203662, guid: 516a3a667ad6a4348997a8a61e638d1a, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -28830,7 +29006,7 @@ MonoBehaviour:
   closedPositions:
   - {x: -0.0475, y: 0.5736, z: -1.3243}
   animationTime: 0.2
-  openPercentage: 1
+  currentOpenPercentage: 1
   IgnoreTheseObjects: []
   isOpen: 0
   canReset: 1
@@ -29360,7 +29536,7 @@ GameObject:
   m_TagString: SimObj
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 1
-  m_StaticEditorFlags: 76
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &952557660
 Transform:
@@ -29390,6 +29566,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -29401,6 +29578,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -29610,7 +29788,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1143001021410514, guid: 27f98f341f6294cf39a7d20b30f3575c, type: 3}
       propertyPath: m_StaticEditorFlags
-      value: 64
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 1143001021410514, guid: 27f98f341f6294cf39a7d20b30f3575c, type: 3}
+      propertyPath: m_NavMeshLayer
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1192662058135180, guid: 27f98f341f6294cf39a7d20b30f3575c, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -30003,7 +30185,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1837158549159752, guid: 4764689ff1b454595b0f96f8940e176b, type: 3}
       propertyPath: m_StaticEditorFlags
-      value: 64
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 1837158549159752, guid: 4764689ff1b454595b0f96f8940e176b, type: 3}
+      propertyPath: m_NavMeshLayer
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1932285119316962, guid: 4764689ff1b454595b0f96f8940e176b, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -30136,7 +30322,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1401756666827790, guid: bf146d8dcd333a448b5b553e2ed3bb4e, type: 3}
       propertyPath: m_StaticEditorFlags
-      value: 64
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 1401756666827790, guid: bf146d8dcd333a448b5b553e2ed3bb4e, type: 3}
+      propertyPath: m_NavMeshLayer
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1415764515868066, guid: bf146d8dcd333a448b5b553e2ed3bb4e, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -30588,6 +30778,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -30599,6 +30790,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -30630,9 +30822,9 @@ MeshCollider:
   m_Material: {fileID: 0}
   m_IsTrigger: 0
   m_Enabled: 1
-  serializedVersion: 3
+  serializedVersion: 4
   m_Convex: 0
-  m_CookingOptions: 14
+  m_CookingOptions: 30
   m_Mesh: {fileID: 4300050, guid: 8640627d651564916bcef0651c1fdc73, type: 3}
 --- !u!114 &984904583
 MonoBehaviour:
@@ -30707,7 +30899,7 @@ GameObject:
   m_TagString: SimObj
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 1
-  m_StaticEditorFlags: 76
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &987759389
 Transform:
@@ -30737,6 +30929,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -30748,6 +30941,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -30814,7 +31008,7 @@ GameObject:
   m_TagString: SimObj
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 1
-  m_StaticEditorFlags: 76
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &991090570
 Transform:
@@ -30844,6 +31038,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -30855,6 +31050,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -31089,7 +31285,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1143001021410514, guid: 27f98f341f6294cf39a7d20b30f3575c, type: 3}
       propertyPath: m_StaticEditorFlags
-      value: 64
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 1143001021410514, guid: 27f98f341f6294cf39a7d20b30f3575c, type: 3}
+      propertyPath: m_NavMeshLayer
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1192662058135180, guid: 27f98f341f6294cf39a7d20b30f3575c, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -31420,6 +31620,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -31432,6 +31633,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -31463,9 +31665,9 @@ MeshCollider:
   m_Material: {fileID: 0}
   m_IsTrigger: 0
   m_Enabled: 1
-  serializedVersion: 3
+  serializedVersion: 4
   m_Convex: 0
-  m_CookingOptions: 14
+  m_CookingOptions: 30
   m_Mesh: {fileID: 4300052, guid: 8640627d651564916bcef0651c1fdc73, type: 3}
 --- !u!114 &1009421876
 MonoBehaviour:
@@ -31926,7 +32128,7 @@ MonoBehaviour:
   closedPositions:
   - {x: -0.86, y: 0.7657855, z: 0.6631}
   animationTime: 0.2
-  openPercentage: 1
+  currentOpenPercentage: 1
   IgnoreTheseObjects: []
   isOpen: 0
   canReset: 1
@@ -32034,7 +32236,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1265739145539028, guid: 847011d73c1ce42c982d6484888e14ab, type: 3}
       propertyPath: m_StaticEditorFlags
-      value: 64
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 1265739145539028, guid: 847011d73c1ce42c982d6484888e14ab, type: 3}
+      propertyPath: m_NavMeshLayer
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1280791156055026, guid: 847011d73c1ce42c982d6484888e14ab, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -32042,7 +32248,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1286798505716886, guid: 847011d73c1ce42c982d6484888e14ab, type: 3}
       propertyPath: m_StaticEditorFlags
-      value: 64
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 1286798505716886, guid: 847011d73c1ce42c982d6484888e14ab, type: 3}
+      propertyPath: m_NavMeshLayer
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1294709212422808, guid: 847011d73c1ce42c982d6484888e14ab, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -32477,6 +32687,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -32488,6 +32699,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -32519,9 +32731,9 @@ MeshCollider:
   m_Material: {fileID: 0}
   m_IsTrigger: 0
   m_Enabled: 1
-  serializedVersion: 3
+  serializedVersion: 4
   m_Convex: 0
-  m_CookingOptions: 14
+  m_CookingOptions: 30
   m_Mesh: {fileID: 4300130, guid: 8640627d651564916bcef0651c1fdc73, type: 3}
 --- !u!114 &1043022184
 MonoBehaviour:
@@ -33030,7 +33242,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1941517829909346, guid: 35d504002ed0e4552b42e9275dc2683c, type: 3}
       propertyPath: m_StaticEditorFlags
-      value: 64
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 1941517829909346, guid: 35d504002ed0e4552b42e9275dc2683c, type: 3}
+      propertyPath: m_NavMeshLayer
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 4601833612635280, guid: 35d504002ed0e4552b42e9275dc2683c, type: 3}
       propertyPath: m_LocalPosition.x
@@ -33106,7 +33322,7 @@ GameObject:
   m_TagString: SimObj
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 1
-  m_StaticEditorFlags: 76
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &1064320485
 Transform:
@@ -33136,6 +33352,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -33147,6 +33364,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -33373,7 +33591,7 @@ MonoBehaviour:
   closedPositions:
   - {x: -0.86, y: 0.3856, z: -0.1}
   animationTime: 0.2
-  openPercentage: 1
+  currentOpenPercentage: 1
   IgnoreTheseObjects: []
   isOpen: 0
   canReset: 1
@@ -34181,7 +34399,11 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 1026559000239786, guid: 4e98163d12cf5b844967076eb276319d, type: 3}
       propertyPath: m_StaticEditorFlags
-      value: 64
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 1026559000239786, guid: 4e98163d12cf5b844967076eb276319d, type: 3}
+      propertyPath: m_NavMeshLayer
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1037382133058980, guid: 4e98163d12cf5b844967076eb276319d, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -34664,7 +34886,7 @@ MonoBehaviour:
   closedPositions:
   - {x: 0.3765, y: 0.3808, z: -1.51}
   animationTime: 0.2
-  openPercentage: 1
+  currentOpenPercentage: 1
   IgnoreTheseObjects: []
   isOpen: 0
   canReset: 1
@@ -34846,7 +35068,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1049635631792230, guid: 59815311428a0484e8a099ef2dd71574, type: 3}
       propertyPath: m_StaticEditorFlags
-      value: 64
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 1049635631792230, guid: 59815311428a0484e8a099ef2dd71574, type: 3}
+      propertyPath: m_NavMeshLayer
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1070003594686614, guid: 59815311428a0484e8a099ef2dd71574, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -35263,7 +35489,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1581691103796636, guid: 1551de002feeca44f881f9599ca8e14f, type: 3}
       propertyPath: m_StaticEditorFlags
-      value: 64
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 1581691103796636, guid: 1551de002feeca44f881f9599ca8e14f, type: 3}
+      propertyPath: m_NavMeshLayer
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1599872350231558, guid: 1551de002feeca44f881f9599ca8e14f, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -35413,9 +35643,9 @@ MeshCollider:
   m_Material: {fileID: 0}
   m_IsTrigger: 0
   m_Enabled: 1
-  serializedVersion: 3
+  serializedVersion: 4
   m_Convex: 0
-  m_CookingOptions: 14
+  m_CookingOptions: 30
   m_Mesh: {fileID: 4300040, guid: 8640627d651564916bcef0651c1fdc73, type: 3}
 --- !u!23 &1134054750
 MeshRenderer:
@@ -35432,6 +35662,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -35443,6 +35674,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -35544,6 +35776,16 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 37245776}
     m_Modifications:
+    - target: {fileID: 4800116993984724066, guid: 78f635d28540b459bb9faae524f96e30,
+        type: 3}
+      propertyPath: m_NavMeshLayer
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4800116993984724066, guid: 78f635d28540b459bb9faae524f96e30,
+        type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 8
+      objectReference: {fileID: 0}
     - target: {fileID: 5122161660437329736, guid: 78f635d28540b459bb9faae524f96e30,
         type: 3}
       propertyPath: m_Name
@@ -35792,7 +36034,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1263003178140582, guid: a38ad65fc3c01a240b7d73e240dd703b, type: 3}
       propertyPath: m_StaticEditorFlags
-      value: 64
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 1263003178140582, guid: a38ad65fc3c01a240b7d73e240dd703b, type: 3}
+      propertyPath: m_NavMeshLayer
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1268309156351564, guid: a38ad65fc3c01a240b7d73e240dd703b, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -36138,7 +36384,7 @@ GameObject:
   m_TagString: SimObj
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 1
-  m_StaticEditorFlags: 76
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &1151014178
 Transform:
@@ -36168,6 +36414,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -36179,6 +36426,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -36347,7 +36595,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1441461082378904, guid: 8f1141233b0ae344a99cb6b708d8be8e, type: 3}
       propertyPath: m_StaticEditorFlags
-      value: 64
+      value: 8
       objectReference: {fileID: 0}
     - target: {fileID: 1496348773642974, guid: 8f1141233b0ae344a99cb6b708d8be8e, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -36492,6 +36740,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -36503,6 +36752,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -36534,9 +36784,9 @@ MeshCollider:
   m_Material: {fileID: 0}
   m_IsTrigger: 0
   m_Enabled: 1
-  serializedVersion: 3
+  serializedVersion: 4
   m_Convex: 0
-  m_CookingOptions: 14
+  m_CookingOptions: 30
   m_Mesh: {fileID: 4300140, guid: 8640627d651564916bcef0651c1fdc73, type: 3}
 --- !u!114 &1159772465
 MonoBehaviour:
@@ -39241,7 +39491,7 @@ GameObject:
   m_TagString: SimObj
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 1
-  m_StaticEditorFlags: 76
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &1203907675
 Transform:
@@ -39271,6 +39521,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -39282,6 +39533,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -39734,7 +39986,7 @@ GameObject:
   m_TagString: SimObj
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 1
-  m_StaticEditorFlags: 76
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &1220089680
 Transform:
@@ -39764,6 +40016,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -39775,6 +40028,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -39846,6 +40100,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -39858,6 +40113,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -39889,9 +40145,9 @@ MeshCollider:
   m_Material: {fileID: 0}
   m_IsTrigger: 0
   m_Enabled: 1
-  serializedVersion: 3
+  serializedVersion: 4
   m_Convex: 0
-  m_CookingOptions: 14
+  m_CookingOptions: 30
   m_Mesh: {fileID: 4300138, guid: 8640627d651564916bcef0651c1fdc73, type: 3}
 --- !u!114 &1222935222
 MonoBehaviour:
@@ -40020,7 +40276,7 @@ GameObject:
   m_TagString: SimObj
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 1
-  m_StaticEditorFlags: 76
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &1227472919
 Transform:
@@ -40050,6 +40306,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -40061,6 +40318,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -40409,11 +40667,19 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1813746951639616, guid: 0273c68581fb5407486ac49320c9575e, type: 3}
       propertyPath: m_StaticEditorFlags
-      value: 64
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 1813746951639616, guid: 0273c68581fb5407486ac49320c9575e, type: 3}
+      propertyPath: m_NavMeshLayer
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1815787812840958, guid: 0273c68581fb5407486ac49320c9575e, type: 3}
       propertyPath: m_StaticEditorFlags
-      value: 64
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 1815787812840958, guid: 0273c68581fb5407486ac49320c9575e, type: 3}
+      propertyPath: m_NavMeshLayer
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1933324720161784, guid: 0273c68581fb5407486ac49320c9575e, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -40530,6 +40796,14 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 37245776}
     m_Modifications:
+    - target: {fileID: 126860660, guid: 516db061633ca4ad5ac050fcb7316e73, type: 3}
+      propertyPath: m_NavMeshLayer
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 126860660, guid: 516db061633ca4ad5ac050fcb7316e73, type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 8
+      objectReference: {fileID: 0}
     - target: {fileID: 1021620587589208, guid: 516db061633ca4ad5ac050fcb7316e73, type: 3}
       propertyPath: m_StaticEditorFlags
       value: 64
@@ -40823,7 +41097,7 @@ MonoBehaviour:
   closedPositions:
   - {x: 0.3765, y: 0.76578534, z: -1.51}
   animationTime: 0.2
-  openPercentage: 1
+  currentOpenPercentage: 1
   IgnoreTheseObjects: []
   isOpen: 0
   canReset: 1
@@ -40939,7 +41213,7 @@ MonoBehaviour:
   closedPositions:
   - {x: -0.86, y: 0.7657855, z: -0.1}
   animationTime: 0.2
-  openPercentage: 1
+  currentOpenPercentage: 1
   IgnoreTheseObjects: []
   isOpen: 0
   canReset: 1
@@ -41055,7 +41329,7 @@ MonoBehaviour:
   closedPositions:
   - {x: -0.0475, y: 0.76578534, z: -1.3243}
   animationTime: 0.2
-  openPercentage: 1
+  currentOpenPercentage: 1
   IgnoreTheseObjects: []
   isOpen: 0
   canReset: 1
@@ -41284,7 +41558,7 @@ MonoBehaviour:
   - {x: 0, y: 0, z: 0}
   - {x: 0, y: 0, z: 0}
   animationTime: 0.2
-  openPercentage: 1
+  currentOpenPercentage: 1
   IgnoreTheseObjects: []
   isOpen: 0
   canReset: 1
@@ -41473,7 +41747,7 @@ MonoBehaviour:
   - {x: 0, y: 0, z: 0}
   - {x: 0, y: 0, z: 0}
   animationTime: 0.2
-  openPercentage: 1
+  currentOpenPercentage: 1
   IgnoreTheseObjects:
   - {fileID: 1237949357}
   isOpen: 0
@@ -41573,7 +41847,7 @@ MonoBehaviour:
   - {x: 0, y: 0, z: 0}
   - {x: 0, y: 0, z: 0}
   animationTime: 0.2
-  openPercentage: 1
+  currentOpenPercentage: 1
   IgnoreTheseObjects:
   - {fileID: 1237949358}
   isOpen: 0
@@ -41670,7 +41944,7 @@ MonoBehaviour:
   closedPositions:
   - {x: 0, y: 0, z: 0}
   animationTime: 0.2
-  openPercentage: 1
+  currentOpenPercentage: 1
   IgnoreTheseObjects: []
   isOpen: 0
   canReset: 1
@@ -41761,7 +42035,7 @@ MonoBehaviour:
   closedPositions:
   - {x: 0, y: 0, z: 0}
   animationTime: 0.2
-  openPercentage: 1
+  currentOpenPercentage: 1
   IgnoreTheseObjects: []
   isOpen: 0
   canReset: 1
@@ -41852,7 +42126,7 @@ MonoBehaviour:
   closedPositions:
   - {x: 0, y: 0, z: 0}
   animationTime: 0.2
-  openPercentage: 1
+  currentOpenPercentage: 1
   IgnoreTheseObjects: []
   isOpen: 0
   canReset: 1
@@ -41943,7 +42217,7 @@ MonoBehaviour:
   closedPositions:
   - {x: 0, y: 0, z: 0}
   animationTime: 0.2
-  openPercentage: 1
+  currentOpenPercentage: 1
   IgnoreTheseObjects: []
   isOpen: 0
   canReset: 1
@@ -42054,7 +42328,7 @@ MonoBehaviour:
   closedPositions:
   - {x: 0, y: 0, z: 0}
   animationTime: 0.2
-  openPercentage: 1
+  currentOpenPercentage: 1
   IgnoreTheseObjects:
   - {fileID: 341077967}
   isOpen: 0
@@ -42146,7 +42420,7 @@ MonoBehaviour:
   closedPositions:
   - {x: 0, y: 0, z: 0}
   animationTime: 0.2
-  openPercentage: 1
+  currentOpenPercentage: 1
   IgnoreTheseObjects:
   - {fileID: 1237949364}
   isOpen: 0
@@ -42238,7 +42512,7 @@ MonoBehaviour:
   closedPositions:
   - {x: 0, y: 0, z: 0}
   animationTime: 0.2
-  openPercentage: 1
+  currentOpenPercentage: 1
   IgnoreTheseObjects:
   - {fileID: 1237949363}
   isOpen: 0
@@ -42718,7 +42992,7 @@ GameObject:
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 1
-  m_StaticEditorFlags: 76
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!23 &1240760778
 MeshRenderer:
@@ -42735,6 +43009,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -42746,6 +43021,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -43318,7 +43594,7 @@ MonoBehaviour:
   closedPositions:
   - {x: -0.86, y: 0.1901, z: -0.1}
   animationTime: 0.2
-  openPercentage: 1
+  currentOpenPercentage: 1
   IgnoreTheseObjects: []
   isOpen: 0
   canReset: 1
@@ -43684,7 +43960,7 @@ GameObject:
   m_TagString: SimObj
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 1
-  m_StaticEditorFlags: 76
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &1269437383
 Transform:
@@ -43714,6 +43990,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -43725,6 +44002,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -44340,7 +44618,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1197172297906424, guid: 4d1e4d0fb2b514b4586e009f1c9a4efa, type: 3}
       propertyPath: m_StaticEditorFlags
-      value: 64
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 1197172297906424, guid: 4d1e4d0fb2b514b4586e009f1c9a4efa, type: 3}
+      propertyPath: m_NavMeshLayer
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1216874916652436, guid: 4d1e4d0fb2b514b4586e009f1c9a4efa, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -44725,12 +45007,14 @@ Light:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1294991724}
   m_Enabled: 1
-  serializedVersion: 8
+  serializedVersion: 10
   m_Type: 1
+  m_Shape: 0
   m_Color: {r: 1, g: 0.97829986, b: 0.9191176, a: 1}
   m_Intensity: 1.5
   m_Range: 10
   m_SpotAngle: 30
+  m_InnerSpotAngle: 21.802082
   m_CookieSize: 10
   m_Shadows:
     m_Type: 2
@@ -44740,6 +45024,24 @@ Light:
     m_Bias: 0
     m_NormalBias: 0.08
     m_NearPlane: 0.1
+    m_CullingMatrixOverride:
+      e00: 1
+      e01: 0
+      e02: 0
+      e03: 0
+      e10: 0
+      e11: 1
+      e12: 0
+      e13: 0
+      e20: 0
+      e21: 0
+      e22: 1
+      e23: 0
+      e30: 0
+      e31: 0
+      e32: 0
+      e33: 1
+    m_UseCullingMatrixOverride: 0
   m_Cookie: {fileID: 0}
   m_DrawHalo: 0
   m_Flare: {fileID: 0}
@@ -44747,12 +45049,15 @@ Light:
   m_CullingMask:
     serializedVersion: 2
     m_Bits: 4294967295
+  m_RenderingLayerMask: 1
   m_Lightmapping: 4
   m_LightShadowCasterMode: 0
   m_AreaSize: {x: 1, y: 1}
   m_BounceIntensity: 1
   m_ColorTemperature: 6570
   m_UseColorTemperature: 0
+  m_BoundingSphereOverride: {x: 0, y: 0, z: 0, w: 0}
+  m_UseBoundingSphereOverride: 0
   m_ShadowRadius: 0
   m_ShadowAngle: 0
 --- !u!4 &1294991726
@@ -45291,7 +45596,7 @@ GameObject:
   m_TagString: SimObj
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 1
-  m_StaticEditorFlags: 76
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &1323511569
 Transform:
@@ -45321,6 +45626,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -45332,6 +45638,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -45481,7 +45788,7 @@ MonoBehaviour:
   closedPositions:
   - {x: 3.021, y: 0.7692, z: 0.6955}
   animationTime: 0.2
-  openPercentage: 1
+  currentOpenPercentage: 1
   IgnoreTheseObjects: []
   isOpen: 0
   canReset: 1
@@ -45705,7 +46012,7 @@ MonoBehaviour:
   closedPositions:
   - {x: -0.6771, y: 0.577, z: -0.701}
   animationTime: 0.2
-  openPercentage: 1
+  currentOpenPercentage: 1
   IgnoreTheseObjects: []
   isOpen: 0
   canReset: 1
@@ -46047,7 +46354,7 @@ MonoBehaviour:
   closedPositions:
   - {x: -0.86, y: 0.1901, z: 1.4298}
   animationTime: 0.2
-  openPercentage: 1
+  currentOpenPercentage: 1
   IgnoreTheseObjects: []
   isOpen: 0
   canReset: 1
@@ -46601,7 +46908,7 @@ MonoBehaviour:
   closedPositions:
   - {x: -0.0475, y: 0.192, z: -1.3243}
   animationTime: 0.2
-  openPercentage: 1
+  currentOpenPercentage: 1
   IgnoreTheseObjects: []
   isOpen: 0
   canReset: 1
@@ -46939,12 +47246,14 @@ Light:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1372932101}
   m_Enabled: 1
-  serializedVersion: 8
+  serializedVersion: 10
   m_Type: 2
+  m_Shape: 0
   m_Color: {r: 0.97794116, g: 0.8946277, b: 0.5464965, a: 1}
   m_Intensity: 0.45
   m_Range: 415.11084
   m_SpotAngle: 30
+  m_InnerSpotAngle: 21.802082
   m_CookieSize: 10
   m_Shadows:
     m_Type: 2
@@ -46954,6 +47263,24 @@ Light:
     m_Bias: 0.05
     m_NormalBias: 0.4
     m_NearPlane: 0.2
+    m_CullingMatrixOverride:
+      e00: 1
+      e01: 0
+      e02: 0
+      e03: 0
+      e10: 0
+      e11: 1
+      e12: 0
+      e13: 0
+      e20: 0
+      e21: 0
+      e22: 1
+      e23: 0
+      e30: 0
+      e31: 0
+      e32: 0
+      e33: 1
+    m_UseCullingMatrixOverride: 0
   m_Cookie: {fileID: 0}
   m_DrawHalo: 0
   m_Flare: {fileID: 0}
@@ -46961,12 +47288,15 @@ Light:
   m_CullingMask:
     serializedVersion: 2
     m_Bits: 4294967295
+  m_RenderingLayerMask: 1
   m_Lightmapping: 4
   m_LightShadowCasterMode: 0
   m_AreaSize: {x: 1, y: 1}
   m_BounceIntensity: 1
   m_ColorTemperature: 6570
   m_UseColorTemperature: 0
+  m_BoundingSphereOverride: {x: 0, y: 0, z: 0, w: 0}
+  m_UseBoundingSphereOverride: 0
   m_ShadowRadius: 0
   m_ShadowAngle: 0
 --- !u!4 &1372932103
@@ -47742,7 +48072,7 @@ GameObject:
   m_TagString: SimObj
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 1
-  m_StaticEditorFlags: 76
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &1394558577
 Transform:
@@ -47772,6 +48102,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -47783,6 +48114,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -48031,7 +48363,11 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 1015618779254786, guid: 1ce341f1fecc04bf6ac5a3b40605107d, type: 3}
       propertyPath: m_StaticEditorFlags
-      value: 64
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 1015618779254786, guid: 1ce341f1fecc04bf6ac5a3b40605107d, type: 3}
+      propertyPath: m_NavMeshLayer
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1059662105592842, guid: 1ce341f1fecc04bf6ac5a3b40605107d, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -48131,7 +48467,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1861786198114126, guid: 1ce341f1fecc04bf6ac5a3b40605107d, type: 3}
       propertyPath: m_StaticEditorFlags
-      value: 64
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 1861786198114126, guid: 1ce341f1fecc04bf6ac5a3b40605107d, type: 3}
+      propertyPath: m_NavMeshLayer
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1963489675066352, guid: 1ce341f1fecc04bf6ac5a3b40605107d, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -48687,8 +49027,8 @@ GameObject:
   m_Name: mesh
   m_TagString: Structure
   m_Icon: {fileID: 0}
-  m_NavMeshLayer: 3
-  m_StaticEditorFlags: 76
+  m_NavMeshLayer: 1
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!23 &1422218430
 MeshRenderer:
@@ -48704,6 +49044,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -48715,6 +49056,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 1
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -48855,7 +49197,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1169718058858690, guid: 568ec89fbb400c643bd8eedfc3905328, type: 3}
       propertyPath: m_StaticEditorFlags
-      value: 64
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 1169718058858690, guid: 568ec89fbb400c643bd8eedfc3905328, type: 3}
+      propertyPath: m_NavMeshLayer
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1180738386174546, guid: 568ec89fbb400c643bd8eedfc3905328, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -48943,7 +49289,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1493700237178676, guid: 568ec89fbb400c643bd8eedfc3905328, type: 3}
       propertyPath: m_StaticEditorFlags
-      value: 64
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 1493700237178676, guid: 568ec89fbb400c643bd8eedfc3905328, type: 3}
+      propertyPath: m_NavMeshLayer
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1511263028634390, guid: 568ec89fbb400c643bd8eedfc3905328, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -49285,6 +49635,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -49298,6 +49649,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -49329,9 +49681,9 @@ MeshCollider:
   m_Material: {fileID: 0}
   m_IsTrigger: 0
   m_Enabled: 1
-  serializedVersion: 3
+  serializedVersion: 4
   m_Convex: 0
-  m_CookingOptions: 14
+  m_CookingOptions: 30
   m_Mesh: {fileID: 4300148, guid: 8640627d651564916bcef0651c1fdc73, type: 3}
 --- !u!114 &1436149706
 MonoBehaviour:
@@ -49406,7 +49758,7 @@ GameObject:
   m_TagString: SimObj
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 1
-  m_StaticEditorFlags: 76
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &1439374128
 Transform:
@@ -49436,6 +49788,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -49447,6 +49800,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -49862,7 +50216,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1661475927125840, guid: 80c6ccd2d3933394390c8255edad1dce, type: 3}
       propertyPath: m_StaticEditorFlags
-      value: 76
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 1661475927125840, guid: 80c6ccd2d3933394390c8255edad1dce, type: 3}
+      propertyPath: m_NavMeshLayer
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1663398541814220, guid: 80c6ccd2d3933394390c8255edad1dce, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -50097,7 +50455,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1630205185517010, guid: f9965335d92884dfa963506c38242108, type: 3}
       propertyPath: m_StaticEditorFlags
-      value: 64
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 1630205185517010, guid: f9965335d92884dfa963506c38242108, type: 3}
+      propertyPath: m_NavMeshLayer
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1675305332614930, guid: f9965335d92884dfa963506c38242108, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -50549,7 +50911,7 @@ MonoBehaviour:
   closedPositions:
   - {x: -0.6771, y: 0.193, z: -0.701}
   animationTime: 0.2
-  openPercentage: 1
+  currentOpenPercentage: 1
   IgnoreTheseObjects: []
   isOpen: 0
   canReset: 1
@@ -50803,7 +51165,7 @@ MonoBehaviour:
   closedPositions:
   - {x: -0.86, y: 0.5772, z: -0.1}
   animationTime: 0.2
-  openPercentage: 1
+  currentOpenPercentage: 1
   IgnoreTheseObjects: []
   isOpen: 0
   canReset: 1
@@ -51316,7 +51678,7 @@ GameObject:
   m_TagString: Receptacle
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 1
-  m_StaticEditorFlags: 76
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &1492132577
 Transform:
@@ -51357,6 +51719,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -51369,6 +51732,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -52182,6 +52546,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -52195,6 +52560,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -52380,6 +52746,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -52391,6 +52758,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -52593,7 +52961,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 126772, guid: 977d462d3da090443aa549827d636355, type: 3}
       propertyPath: m_StaticEditorFlags
-      value: 0
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 126772, guid: 977d462d3da090443aa549827d636355, type: 3}
+      propertyPath: m_NavMeshLayer
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 423996, guid: 977d462d3da090443aa549827d636355, type: 3}
       propertyPath: m_LocalPosition.x
@@ -52646,6 +53018,16 @@ PrefabInstance:
     - target: {fileID: 11435476, guid: 977d462d3da090443aa549827d636355, type: 3}
       propertyPath: AddFlareLayer
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1787223690284436693, guid: 977d462d3da090443aa549827d636355,
+        type: 3}
+      propertyPath: m_NavMeshLayer
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1787223690284436693, guid: 977d462d3da090443aa549827d636355,
+        type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 8
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 977d462d3da090443aa549827d636355, type: 3}
@@ -52789,8 +53171,8 @@ GameObject:
   m_Name: SinkMesh
   m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
-  m_NavMeshLayer: 3
-  m_StaticEditorFlags: 68
+  m_NavMeshLayer: 1
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &1543759421
 Transform:
@@ -52822,6 +53204,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -52833,6 +53216,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -52864,9 +53248,9 @@ MeshCollider:
   m_Material: {fileID: 0}
   m_IsTrigger: 0
   m_Enabled: 1
-  serializedVersion: 3
+  serializedVersion: 4
   m_Convex: 0
-  m_CookingOptions: 14
+  m_CookingOptions: 30
   m_Mesh: {fileID: 4300042, guid: 8640627d651564916bcef0651c1fdc73, type: 3}
 --- !u!1 &1545907684
 GameObject:
@@ -53359,7 +53743,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1457113182682476, guid: 03544085c8acd8546a745fbc3572b6e7, type: 3}
       propertyPath: m_StaticEditorFlags
-      value: 64
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 1457113182682476, guid: 03544085c8acd8546a745fbc3572b6e7, type: 3}
+      propertyPath: m_NavMeshLayer
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1462734446234188, guid: 03544085c8acd8546a745fbc3572b6e7, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -53532,8 +53920,8 @@ GameObject:
   m_Name: Cube.067
   m_TagString: Structure
   m_Icon: {fileID: 0}
-  m_NavMeshLayer: 3
-  m_StaticEditorFlags: 4294967295
+  m_NavMeshLayer: 1
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &1559298488
 Transform:
@@ -53565,6 +53953,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -53576,6 +53965,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -53903,7 +54293,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1255553334966792, guid: f55e5da7d930d37459586907eb1a72ac, type: 3}
       propertyPath: m_StaticEditorFlags
-      value: 64
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 1255553334966792, guid: f55e5da7d930d37459586907eb1a72ac, type: 3}
+      propertyPath: m_NavMeshLayer
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1259329070289998, guid: f55e5da7d930d37459586907eb1a72ac, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -54886,7 +55280,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1605155096237200, guid: 7175b761bed8f6d4998e8d9faec9c61a, type: 3}
       propertyPath: m_StaticEditorFlags
-      value: 64
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 1605155096237200, guid: 7175b761bed8f6d4998e8d9faec9c61a, type: 3}
+      propertyPath: m_NavMeshLayer
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1722308640160022, guid: 7175b761bed8f6d4998e8d9faec9c61a, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -55219,7 +55617,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1837158549159752, guid: 4764689ff1b454595b0f96f8940e176b, type: 3}
       propertyPath: m_StaticEditorFlags
-      value: 64
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 1837158549159752, guid: 4764689ff1b454595b0f96f8940e176b, type: 3}
+      propertyPath: m_NavMeshLayer
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1932285119316962, guid: 4764689ff1b454595b0f96f8940e176b, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -55469,7 +55871,7 @@ GameObject:
   m_TagString: SimObj
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 1
-  m_StaticEditorFlags: 76
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &1624975730
 Transform:
@@ -55499,6 +55901,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -55510,6 +55913,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -56523,7 +56927,7 @@ GameObject:
   m_TagString: SimObj
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 1
-  m_StaticEditorFlags: 76
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &1658033374
 Transform:
@@ -56553,6 +56957,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -56564,6 +56969,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -57107,7 +57513,7 @@ GameObject:
   m_TagString: SimObj
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 1
-  m_StaticEditorFlags: 76
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!23 &1693893210
 MeshRenderer:
@@ -57124,6 +57530,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -57135,6 +57542,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -57306,7 +57714,7 @@ GameObject:
   m_TagString: SimObj
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 1
-  m_StaticEditorFlags: 76
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &1702094411
 Transform:
@@ -57336,6 +57744,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -57347,6 +57756,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -57762,7 +58172,7 @@ MonoBehaviour:
   closedPositions:
   - {x: -0.86, y: 0.1901, z: 0.6631}
   animationTime: 0.2
-  openPercentage: 1
+  currentOpenPercentage: 1
   IgnoreTheseObjects: []
   isOpen: 0
   canReset: 1
@@ -57979,7 +58389,7 @@ GameObject:
   m_TagString: SimObj
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 1
-  m_StaticEditorFlags: 76
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &1729714869
 Transform:
@@ -58009,6 +58419,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -58020,6 +58431,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -58255,7 +58667,7 @@ GameObject:
   m_TagString: Structure
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
-  m_StaticEditorFlags: 4294967295
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &1739444871
 Transform:
@@ -58287,6 +58699,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -58298,6 +58711,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -58472,8 +58886,8 @@ GameObject:
   m_Name: mesh
   m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
+  m_NavMeshLayer: 1
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &1740903437
 Transform:
@@ -58499,9 +58913,9 @@ MeshCollider:
   m_Material: {fileID: 0}
   m_IsTrigger: 0
   m_Enabled: 1
-  serializedVersion: 3
+  serializedVersion: 4
   m_Convex: 0
-  m_CookingOptions: 14
+  m_CookingOptions: 30
   m_Mesh: {fileID: 4300506, guid: 8640627d651564916bcef0651c1fdc73, type: 3}
 --- !u!23 &1740903439
 MeshRenderer:
@@ -58517,6 +58931,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -58528,6 +58943,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -58843,7 +59259,7 @@ GameObject:
   m_TagString: SimObj
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 1
-  m_StaticEditorFlags: 76
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &1756906742
 Transform:
@@ -58873,6 +59289,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -58884,6 +59301,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -59265,6 +59683,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -59277,6 +59696,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -59308,9 +59728,9 @@ MeshCollider:
   m_Material: {fileID: 0}
   m_IsTrigger: 0
   m_Enabled: 1
-  serializedVersion: 3
+  serializedVersion: 4
   m_Convex: 0
-  m_CookingOptions: 14
+  m_CookingOptions: 30
   m_Mesh: {fileID: 4300056, guid: 8640627d651564916bcef0651c1fdc73, type: 3}
 --- !u!114 &1770560839
 MonoBehaviour:
@@ -59428,7 +59848,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1265739145539028, guid: 847011d73c1ce42c982d6484888e14ab, type: 3}
       propertyPath: m_StaticEditorFlags
-      value: 64
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 1265739145539028, guid: 847011d73c1ce42c982d6484888e14ab, type: 3}
+      propertyPath: m_NavMeshLayer
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1280791156055026, guid: 847011d73c1ce42c982d6484888e14ab, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -59436,7 +59860,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1286798505716886, guid: 847011d73c1ce42c982d6484888e14ab, type: 3}
       propertyPath: m_StaticEditorFlags
-      value: 64
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 1286798505716886, guid: 847011d73c1ce42c982d6484888e14ab, type: 3}
+      propertyPath: m_NavMeshLayer
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1294709212422808, guid: 847011d73c1ce42c982d6484888e14ab, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -60819,6 +61247,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -60830,6 +61259,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -60861,9 +61291,9 @@ MeshCollider:
   m_Material: {fileID: 0}
   m_IsTrigger: 0
   m_Enabled: 1
-  serializedVersion: 3
+  serializedVersion: 4
   m_Convex: 0
-  m_CookingOptions: 14
+  m_CookingOptions: 30
   m_Mesh: {fileID: 4300132, guid: 8640627d651564916bcef0651c1fdc73, type: 3}
 --- !u!114 &1826051094
 MonoBehaviour:
@@ -60982,7 +61412,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1058058741613030, guid: cab77ca7323aa4f7aa962911ebcfbcb3, type: 3}
       propertyPath: m_StaticEditorFlags
-      value: 64
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 1058058741613030, guid: cab77ca7323aa4f7aa962911ebcfbcb3, type: 3}
+      propertyPath: m_NavMeshLayer
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1154562944059872, guid: cab77ca7323aa4f7aa962911ebcfbcb3, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -61354,7 +61788,7 @@ GameObject:
   m_TagString: SimObj
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 1
-  m_StaticEditorFlags: 76
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &1838828867
 Transform:
@@ -61384,6 +61818,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -61395,6 +61830,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -61852,7 +62288,7 @@ MonoBehaviour:
   closedPositions:
   - {x: -0.0475, y: 0.3817, z: -1.3243}
   animationTime: 0.2
-  openPercentage: 1
+  currentOpenPercentage: 1
   IgnoreTheseObjects: []
   isOpen: 0
   canReset: 1
@@ -61996,7 +62432,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1228122066291026, guid: 91972c5a86358cb448b3bba9832ddb08, type: 3}
       propertyPath: m_StaticEditorFlags
-      value: 64
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 1228122066291026, guid: 91972c5a86358cb448b3bba9832ddb08, type: 3}
+      propertyPath: m_NavMeshLayer
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1234739388399938, guid: 91972c5a86358cb448b3bba9832ddb08, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -62160,7 +62600,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1513018951733270, guid: 91972c5a86358cb448b3bba9832ddb08, type: 3}
       propertyPath: m_StaticEditorFlags
-      value: 64
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 1513018951733270, guid: 91972c5a86358cb448b3bba9832ddb08, type: 3}
+      propertyPath: m_NavMeshLayer
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1521047743642020, guid: 91972c5a86358cb448b3bba9832ddb08, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -62717,7 +63161,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1837158549159752, guid: 4764689ff1b454595b0f96f8940e176b, type: 3}
       propertyPath: m_StaticEditorFlags
-      value: 64
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 1837158549159752, guid: 4764689ff1b454595b0f96f8940e176b, type: 3}
+      propertyPath: m_NavMeshLayer
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1932285119316962, guid: 4764689ff1b454595b0f96f8940e176b, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -63673,7 +64121,11 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 1043561136214146, guid: c8e7076580ab08641bb1a5caa216f490, type: 3}
       propertyPath: m_StaticEditorFlags
-      value: 64
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 1043561136214146, guid: c8e7076580ab08641bb1a5caa216f490, type: 3}
+      propertyPath: m_NavMeshLayer
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1044727677171548, guid: c8e7076580ab08641bb1a5caa216f490, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -63864,7 +64316,7 @@ GameObject:
   m_TagString: SimObj
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 1
-  m_StaticEditorFlags: 76
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &1895068438
 Transform:
@@ -63894,6 +64346,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -63905,6 +64358,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -64376,7 +64830,7 @@ MonoBehaviour:
   closedPositions:
   - {x: -0.6771, y: 0.3875, z: -0.701}
   animationTime: 0.2
-  openPercentage: 1
+  currentOpenPercentage: 1
   IgnoreTheseObjects: []
   isOpen: 0
   canReset: 1
@@ -64464,6 +64918,16 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Name
       value: QuadDecalSpawnPlane
+      objectReference: {fileID: 0}
+    - target: {fileID: 6270588446337126525, guid: 0f393baf8fb804bc6980b5c23b0fdce3,
+        type: 3}
+      propertyPath: m_NavMeshLayer
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 6270588446337126525, guid: 0f393baf8fb804bc6980b5c23b0fdce3,
+        type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 8
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 0f393baf8fb804bc6980b5c23b0fdce3, type: 3}
@@ -64666,6 +65130,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -64677,6 +65142,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -64708,9 +65174,9 @@ MeshCollider:
   m_Material: {fileID: 0}
   m_IsTrigger: 0
   m_Enabled: 1
-  serializedVersion: 3
+  serializedVersion: 4
   m_Convex: 0
-  m_CookingOptions: 14
+  m_CookingOptions: 30
   m_Mesh: {fileID: 4300128, guid: 8640627d651564916bcef0651c1fdc73, type: 3}
 --- !u!114 &1913115891
 MonoBehaviour:
@@ -65107,12 +65573,14 @@ Light:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1925764905}
   m_Enabled: 1
-  serializedVersion: 8
+  serializedVersion: 10
   m_Type: 0
+  m_Shape: 0
   m_Color: {r: 0.9411765, g: 0.6696723, b: 0.25605538, a: 1}
   m_Intensity: 0.55
   m_Range: 10
   m_SpotAngle: 147.23628
+  m_InnerSpotAngle: 135.51044
   m_CookieSize: 10
   m_Shadows:
     m_Type: 2
@@ -65122,6 +65590,24 @@ Light:
     m_Bias: 0.05
     m_NormalBias: 0.4
     m_NearPlane: 0.6
+    m_CullingMatrixOverride:
+      e00: 1
+      e01: 0
+      e02: 0
+      e03: 0
+      e10: 0
+      e11: 1
+      e12: 0
+      e13: 0
+      e20: 0
+      e21: 0
+      e22: 1
+      e23: 0
+      e30: 0
+      e31: 0
+      e32: 0
+      e33: 1
+    m_UseCullingMatrixOverride: 0
   m_Cookie: {fileID: 0}
   m_DrawHalo: 0
   m_Flare: {fileID: 0}
@@ -65129,12 +65615,15 @@ Light:
   m_CullingMask:
     serializedVersion: 2
     m_Bits: 4294967295
+  m_RenderingLayerMask: 1
   m_Lightmapping: 4
   m_LightShadowCasterMode: 0
   m_AreaSize: {x: 1, y: 1}
   m_BounceIntensity: 1
   m_ColorTemperature: 6570
   m_UseColorTemperature: 0
+  m_BoundingSphereOverride: {x: 0, y: 0, z: 0, w: 0}
+  m_UseBoundingSphereOverride: 0
   m_ShadowRadius: 0
   m_ShadowAngle: 0
 --- !u!4 &1925764907
@@ -65393,6 +65882,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -65405,6 +65895,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -66207,7 +66698,7 @@ GameObject:
   m_TagString: SimObj
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 1
-  m_StaticEditorFlags: 76
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &1967109811
 Transform:
@@ -66237,6 +66728,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -66248,6 +66740,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -66467,7 +66960,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1716848978916414, guid: 2f747246a56614a40af4a20baddb7da6, type: 3}
       propertyPath: m_StaticEditorFlags
-      value: 64
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 1716848978916414, guid: 2f747246a56614a40af4a20baddb7da6, type: 3}
+      propertyPath: m_NavMeshLayer
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1749801845342522, guid: 2f747246a56614a40af4a20baddb7da6, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -66808,7 +67305,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1471474579156020, guid: 588b43f56a2dd4e599d593c538844eb4, type: 3}
       propertyPath: m_StaticEditorFlags
-      value: 64
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 1471474579156020, guid: 588b43f56a2dd4e599d593c538844eb4, type: 3}
+      propertyPath: m_NavMeshLayer
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1590634364336386, guid: 588b43f56a2dd4e599d593c538844eb4, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -67454,7 +67955,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1938152386640812, guid: c7f0a59bee0bd0e40b75c8a22f7d99d9, type: 3}
       propertyPath: m_StaticEditorFlags
-      value: 64
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 1938152386640812, guid: c7f0a59bee0bd0e40b75c8a22f7d99d9, type: 3}
+      propertyPath: m_NavMeshLayer
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1943860649903888, guid: c7f0a59bee0bd0e40b75c8a22f7d99d9, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -67552,7 +68057,7 @@ GameObject:
   m_TagString: SimObj
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 1
-  m_StaticEditorFlags: 76
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &1994876518
 Transform:
@@ -67582,6 +68087,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -67593,6 +68099,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -68114,7 +68621,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1987697646498162, guid: 5768b36ae09474cd6bcfc84c3e861786, type: 3}
       propertyPath: m_StaticEditorFlags
-      value: 64
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 1987697646498162, guid: 5768b36ae09474cd6bcfc84c3e861786, type: 3}
+      propertyPath: m_NavMeshLayer
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 4871826034222286, guid: 5768b36ae09474cd6bcfc84c3e861786, type: 3}
       propertyPath: m_LocalPosition.x
@@ -68665,7 +69176,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1837158549159752, guid: 4764689ff1b454595b0f96f8940e176b, type: 3}
       propertyPath: m_StaticEditorFlags
-      value: 64
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 1837158549159752, guid: 4764689ff1b454595b0f96f8940e176b, type: 3}
+      propertyPath: m_NavMeshLayer
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1932285119316962, guid: 4764689ff1b454595b0f96f8940e176b, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -69127,7 +69642,7 @@ MonoBehaviour:
   closedPositions:
   - {x: -0.86, y: 0.3856, z: 1.4298}
   animationTime: 0.2
-  openPercentage: 1
+  currentOpenPercentage: 1
   IgnoreTheseObjects: []
   isOpen: 0
   canReset: 1
@@ -69331,7 +69846,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1267701652429328, guid: 7ff92a034e8134e19a09a238aec8514e, type: 3}
       propertyPath: m_StaticEditorFlags
-      value: 64
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 1267701652429328, guid: 7ff92a034e8134e19a09a238aec8514e, type: 3}
+      propertyPath: m_NavMeshLayer
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1285518930252126, guid: 7ff92a034e8134e19a09a238aec8514e, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -69811,7 +70330,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1275410685429018, guid: 3120b876570aa4661bedce0a2fc432b1, type: 3}
       propertyPath: m_StaticEditorFlags
-      value: 64
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 1275410685429018, guid: 3120b876570aa4661bedce0a2fc432b1, type: 3}
+      propertyPath: m_NavMeshLayer
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1437206891863424, guid: 3120b876570aa4661bedce0a2fc432b1, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -69839,7 +70362,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1641793677164242, guid: 3120b876570aa4661bedce0a2fc432b1, type: 3}
       propertyPath: m_StaticEditorFlags
-      value: 64
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 1641793677164242, guid: 3120b876570aa4661bedce0a2fc432b1, type: 3}
+      propertyPath: m_NavMeshLayer
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1665709042676634, guid: 3120b876570aa4661bedce0a2fc432b1, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -70372,7 +70899,11 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 1015618779254786, guid: 1ce341f1fecc04bf6ac5a3b40605107d, type: 3}
       propertyPath: m_StaticEditorFlags
-      value: 64
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 1015618779254786, guid: 1ce341f1fecc04bf6ac5a3b40605107d, type: 3}
+      propertyPath: m_NavMeshLayer
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1059662105592842, guid: 1ce341f1fecc04bf6ac5a3b40605107d, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -70476,7 +71007,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1861786198114126, guid: 1ce341f1fecc04bf6ac5a3b40605107d, type: 3}
       propertyPath: m_StaticEditorFlags
-      value: 64
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 1861786198114126, guid: 1ce341f1fecc04bf6ac5a3b40605107d, type: 3}
+      propertyPath: m_NavMeshLayer
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1963489675066352, guid: 1ce341f1fecc04bf6ac5a3b40605107d, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -70716,7 +71251,11 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 1203834981336008, guid: 03509c993799443f5ab57541667674aa, type: 3}
       propertyPath: m_StaticEditorFlags
-      value: 64
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 1203834981336008, guid: 03509c993799443f5ab57541667674aa, type: 3}
+      propertyPath: m_NavMeshLayer
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1267240119497684, guid: 03509c993799443f5ab57541667674aa, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -71269,11 +71808,19 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 1142369951717576, guid: 24820c60646ed4f1bbcf45ac808a83d7, type: 3}
       propertyPath: m_StaticEditorFlags
-      value: 64
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 1142369951717576, guid: 24820c60646ed4f1bbcf45ac808a83d7, type: 3}
+      propertyPath: m_NavMeshLayer
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1144777000882028, guid: 24820c60646ed4f1bbcf45ac808a83d7, type: 3}
       propertyPath: m_StaticEditorFlags
-      value: 64
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 1144777000882028, guid: 24820c60646ed4f1bbcf45ac808a83d7, type: 3}
+      propertyPath: m_NavMeshLayer
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1177201324878484, guid: 24820c60646ed4f1bbcf45ac808a83d7, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -71281,11 +71828,19 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1197618833492330, guid: 24820c60646ed4f1bbcf45ac808a83d7, type: 3}
       propertyPath: m_StaticEditorFlags
-      value: 64
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 1197618833492330, guid: 24820c60646ed4f1bbcf45ac808a83d7, type: 3}
+      propertyPath: m_NavMeshLayer
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1272851236693030, guid: 24820c60646ed4f1bbcf45ac808a83d7, type: 3}
       propertyPath: m_StaticEditorFlags
-      value: 64
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 1272851236693030, guid: 24820c60646ed4f1bbcf45ac808a83d7, type: 3}
+      propertyPath: m_NavMeshLayer
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1382362350800138, guid: 24820c60646ed4f1bbcf45ac808a83d7, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -71313,7 +71868,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1858451230953180, guid: 24820c60646ed4f1bbcf45ac808a83d7, type: 3}
       propertyPath: m_StaticEditorFlags
-      value: 64
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 1858451230953180, guid: 24820c60646ed4f1bbcf45ac808a83d7, type: 3}
+      propertyPath: m_NavMeshLayer
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 4316550144703594, guid: 24820c60646ed4f1bbcf45ac808a83d7, type: 3}
       propertyPath: m_LocalPosition.x
@@ -71826,7 +72385,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1541927451750852, guid: e0e2b048e94db4048bab7f500a7afa9f, type: 3}
       propertyPath: m_StaticEditorFlags
-      value: 64
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 1541927451750852, guid: e0e2b048e94db4048bab7f500a7afa9f, type: 3}
+      propertyPath: m_NavMeshLayer
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1579369198270232, guid: e0e2b048e94db4048bab7f500a7afa9f, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -72225,7 +72788,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1837158549159752, guid: 4764689ff1b454595b0f96f8940e176b, type: 3}
       propertyPath: m_StaticEditorFlags
-      value: 64
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 1837158549159752, guid: 4764689ff1b454595b0f96f8940e176b, type: 3}
+      propertyPath: m_NavMeshLayer
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1932285119316962, guid: 4764689ff1b454595b0f96f8940e176b, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -73140,7 +73707,7 @@ GameObject:
   m_TagString: SimObj
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 1
-  m_StaticEditorFlags: 76
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &2131812126
 Transform:
@@ -73170,6 +73737,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -73181,6 +73749,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -73261,7 +73830,7 @@ GameObject:
   m_TagString: SimObj
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 1
-  m_StaticEditorFlags: 76
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!4 &2134144037
 Transform:
@@ -73291,6 +73860,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -73302,6 +73872,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -74151,7 +74722,7 @@ GameObject:
   m_TagString: SimObj
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 1
-  m_StaticEditorFlags: 76
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!1 &1599656912525928
 GameObject:
@@ -74169,7 +74740,7 @@ GameObject:
   m_TagString: SimObj
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 1
-  m_StaticEditorFlags: 76
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!1 &1599657679170218
 GameObject:
@@ -74187,7 +74758,7 @@ GameObject:
   m_TagString: SimObj
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 1
-  m_StaticEditorFlags: 76
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!1 &1599657757460752
 GameObject:
@@ -74205,7 +74776,7 @@ GameObject:
   m_TagString: SimObj
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 1
-  m_StaticEditorFlags: 76
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!1 &1619291563161185
 GameObject:
@@ -75332,6 +75903,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -75344,6 +75916,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -75370,6 +75943,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -75382,6 +75956,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -75408,6 +75983,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -75420,6 +75996,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -75446,6 +76023,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -75458,6 +76036,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -75970,6 +76549,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -75981,6 +76561,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -76007,6 +76588,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -76018,6 +76600,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -76044,6 +76627,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -76055,6 +76639,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -76081,6 +76666,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -76092,6 +76678,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -76118,6 +76705,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -76129,6 +76717,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -76155,6 +76744,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -76166,6 +76756,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -76192,6 +76783,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -76203,6 +76795,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -76229,6 +76822,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -76240,6 +76834,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -76266,6 +76861,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -76277,6 +76873,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -76303,6 +76900,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -76314,6 +76912,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -76340,6 +76939,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -76351,6 +76951,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -76377,6 +76978,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -76388,6 +76990,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -76414,6 +77017,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -76425,6 +77029,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -76451,6 +77056,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -76462,6 +77068,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -76488,6 +77095,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -76499,6 +77107,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -76525,6 +77134,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -76536,6 +77146,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -76562,6 +77173,7 @@ MeshRenderer:
   m_MotionVectors: 1
   m_LightProbeUsage: 1
   m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -76573,6 +77185,7 @@ MeshRenderer:
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
   m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
   m_PreserveUVs: 0
   m_IgnoreNormalsForChartDetection: 0
   m_ImportantGI: 0
@@ -76737,8 +77350,8 @@ GameObject:
   m_Name: mesh
   m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
+  m_NavMeshLayer: 1
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!64 &7152854152096974370
 MeshCollider:
@@ -76750,9 +77363,9 @@ MeshCollider:
   m_Material: {fileID: 0}
   m_IsTrigger: 0
   m_Enabled: 1
-  serializedVersion: 3
+  serializedVersion: 4
   m_Convex: 0
-  m_CookingOptions: 14
+  m_CookingOptions: 30
   m_Mesh: {fileID: 4300500, guid: 8640627d651564916bcef0651c1fdc73, type: 3}
 --- !u!1 &7152854152096974371
 GameObject:
@@ -76770,8 +77383,8 @@ GameObject:
   m_Name: mesh
   m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
+  m_NavMeshLayer: 1
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!64 &7152854152096974372
 MeshCollider:
@@ -76783,9 +77396,9 @@ MeshCollider:
   m_Material: {fileID: 0}
   m_IsTrigger: 0
   m_Enabled: 1
-  serializedVersion: 3
+  serializedVersion: 4
   m_Convex: 0
-  m_CookingOptions: 14
+  m_CookingOptions: 30
   m_Mesh: {fileID: 4300498, guid: 8640627d651564916bcef0651c1fdc73, type: 3}
 --- !u!1 &7152854152096974373
 GameObject:
@@ -76803,8 +77416,8 @@ GameObject:
   m_Name: mesh
   m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
+  m_NavMeshLayer: 1
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!64 &7152854152096974374
 MeshCollider:
@@ -76816,9 +77429,9 @@ MeshCollider:
   m_Material: {fileID: 0}
   m_IsTrigger: 0
   m_Enabled: 1
-  serializedVersion: 3
+  serializedVersion: 4
   m_Convex: 0
-  m_CookingOptions: 14
+  m_CookingOptions: 30
   m_Mesh: {fileID: 4300496, guid: 8640627d651564916bcef0651c1fdc73, type: 3}
 --- !u!1 &7152854152096974375
 GameObject:
@@ -76836,8 +77449,8 @@ GameObject:
   m_Name: mesh
   m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
+  m_NavMeshLayer: 1
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!64 &7152854152096974376
 MeshCollider:
@@ -76849,9 +77462,9 @@ MeshCollider:
   m_Material: {fileID: 0}
   m_IsTrigger: 0
   m_Enabled: 1
-  serializedVersion: 3
+  serializedVersion: 4
   m_Convex: 0
-  m_CookingOptions: 14
+  m_CookingOptions: 30
   m_Mesh: {fileID: 4300478, guid: 8640627d651564916bcef0651c1fdc73, type: 3}
 --- !u!1 &7152854152096974377
 GameObject:
@@ -76869,8 +77482,8 @@ GameObject:
   m_Name: mesh
   m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
+  m_NavMeshLayer: 1
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!64 &7152854152096974378
 MeshCollider:
@@ -76882,9 +77495,9 @@ MeshCollider:
   m_Material: {fileID: 0}
   m_IsTrigger: 0
   m_Enabled: 1
-  serializedVersion: 3
+  serializedVersion: 4
   m_Convex: 0
-  m_CookingOptions: 14
+  m_CookingOptions: 30
   m_Mesh: {fileID: 4300492, guid: 8640627d651564916bcef0651c1fdc73, type: 3}
 --- !u!1 &7152854152096974379
 GameObject:
@@ -76902,8 +77515,8 @@ GameObject:
   m_Name: mesh
   m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
+  m_NavMeshLayer: 1
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!64 &7152854152096974380
 MeshCollider:
@@ -76915,9 +77528,9 @@ MeshCollider:
   m_Material: {fileID: 0}
   m_IsTrigger: 0
   m_Enabled: 1
-  serializedVersion: 3
+  serializedVersion: 4
   m_Convex: 0
-  m_CookingOptions: 14
+  m_CookingOptions: 30
   m_Mesh: {fileID: 4300490, guid: 8640627d651564916bcef0651c1fdc73, type: 3}
 --- !u!1 &7152854152096974381
 GameObject:
@@ -76935,8 +77548,8 @@ GameObject:
   m_Name: mesh
   m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
+  m_NavMeshLayer: 1
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!64 &7152854152096974382
 MeshCollider:
@@ -76948,9 +77561,9 @@ MeshCollider:
   m_Material: {fileID: 0}
   m_IsTrigger: 0
   m_Enabled: 1
-  serializedVersion: 3
+  serializedVersion: 4
   m_Convex: 0
-  m_CookingOptions: 14
+  m_CookingOptions: 30
   m_Mesh: {fileID: 4300494, guid: 8640627d651564916bcef0651c1fdc73, type: 3}
 --- !u!1 &7152854152096974383
 GameObject:
@@ -76968,8 +77581,8 @@ GameObject:
   m_Name: mesh
   m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
+  m_NavMeshLayer: 1
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!64 &7152854152096974384
 MeshCollider:
@@ -76981,9 +77594,9 @@ MeshCollider:
   m_Material: {fileID: 0}
   m_IsTrigger: 0
   m_Enabled: 1
-  serializedVersion: 3
+  serializedVersion: 4
   m_Convex: 0
-  m_CookingOptions: 14
+  m_CookingOptions: 30
   m_Mesh: {fileID: 4300486, guid: 8640627d651564916bcef0651c1fdc73, type: 3}
 --- !u!1 &7152854152096974385
 GameObject:
@@ -77001,8 +77614,8 @@ GameObject:
   m_Name: mesh
   m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
+  m_NavMeshLayer: 1
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!64 &7152854152096974386
 MeshCollider:
@@ -77014,9 +77627,9 @@ MeshCollider:
   m_Material: {fileID: 0}
   m_IsTrigger: 0
   m_Enabled: 1
-  serializedVersion: 3
+  serializedVersion: 4
   m_Convex: 0
-  m_CookingOptions: 14
+  m_CookingOptions: 30
   m_Mesh: {fileID: 4300488, guid: 8640627d651564916bcef0651c1fdc73, type: 3}
 --- !u!1 &7152854152096974387
 GameObject:
@@ -77034,8 +77647,8 @@ GameObject:
   m_Name: mesh
   m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
+  m_NavMeshLayer: 1
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!64 &7152854152096974388
 MeshCollider:
@@ -77047,9 +77660,9 @@ MeshCollider:
   m_Material: {fileID: 0}
   m_IsTrigger: 0
   m_Enabled: 1
-  serializedVersion: 3
+  serializedVersion: 4
   m_Convex: 0
-  m_CookingOptions: 14
+  m_CookingOptions: 30
   m_Mesh: {fileID: 4300482, guid: 8640627d651564916bcef0651c1fdc73, type: 3}
 --- !u!1 &7152854152096974389
 GameObject:
@@ -77067,8 +77680,8 @@ GameObject:
   m_Name: mesh
   m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
+  m_NavMeshLayer: 1
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!64 &7152854152096974390
 MeshCollider:
@@ -77080,9 +77693,9 @@ MeshCollider:
   m_Material: {fileID: 0}
   m_IsTrigger: 0
   m_Enabled: 1
-  serializedVersion: 3
+  serializedVersion: 4
   m_Convex: 0
-  m_CookingOptions: 14
+  m_CookingOptions: 30
   m_Mesh: {fileID: 4300484, guid: 8640627d651564916bcef0651c1fdc73, type: 3}
 --- !u!1 &7152854152096974391
 GameObject:
@@ -77100,8 +77713,8 @@ GameObject:
   m_Name: mesh
   m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
+  m_NavMeshLayer: 1
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!64 &7152854152096974392
 MeshCollider:
@@ -77113,9 +77726,9 @@ MeshCollider:
   m_Material: {fileID: 0}
   m_IsTrigger: 0
   m_Enabled: 1
-  serializedVersion: 3
+  serializedVersion: 4
   m_Convex: 0
-  m_CookingOptions: 14
+  m_CookingOptions: 30
   m_Mesh: {fileID: 4300474, guid: 8640627d651564916bcef0651c1fdc73, type: 3}
 --- !u!1 &7152854152096974393
 GameObject:
@@ -77133,8 +77746,8 @@ GameObject:
   m_Name: mesh
   m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
+  m_NavMeshLayer: 1
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!64 &7152854152096974394
 MeshCollider:
@@ -77146,9 +77759,9 @@ MeshCollider:
   m_Material: {fileID: 0}
   m_IsTrigger: 0
   m_Enabled: 1
-  serializedVersion: 3
+  serializedVersion: 4
   m_Convex: 0
-  m_CookingOptions: 14
+  m_CookingOptions: 30
   m_Mesh: {fileID: 4300480, guid: 8640627d651564916bcef0651c1fdc73, type: 3}
 --- !u!1 &7152854152096974395
 GameObject:
@@ -77166,8 +77779,8 @@ GameObject:
   m_Name: mesh
   m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
+  m_NavMeshLayer: 1
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!64 &7152854152096974396
 MeshCollider:
@@ -77179,9 +77792,9 @@ MeshCollider:
   m_Material: {fileID: 0}
   m_IsTrigger: 0
   m_Enabled: 1
-  serializedVersion: 3
+  serializedVersion: 4
   m_Convex: 0
-  m_CookingOptions: 14
+  m_CookingOptions: 30
   m_Mesh: {fileID: 4300502, guid: 8640627d651564916bcef0651c1fdc73, type: 3}
 --- !u!1 &7152854152096974397
 GameObject:
@@ -77199,8 +77812,8 @@ GameObject:
   m_Name: mesh
   m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
+  m_NavMeshLayer: 1
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!64 &7152854152096974398
 MeshCollider:
@@ -77212,9 +77825,9 @@ MeshCollider:
   m_Material: {fileID: 0}
   m_IsTrigger: 0
   m_Enabled: 1
-  serializedVersion: 3
+  serializedVersion: 4
   m_Convex: 0
-  m_CookingOptions: 14
+  m_CookingOptions: 30
   m_Mesh: {fileID: 4300472, guid: 8640627d651564916bcef0651c1fdc73, type: 3}
 --- !u!1 &7152854152096974399
 GameObject:
@@ -77232,8 +77845,8 @@ GameObject:
   m_Name: mesh
   m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
+  m_NavMeshLayer: 1
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!64 &7152854152096974400
 MeshCollider:
@@ -77245,9 +77858,9 @@ MeshCollider:
   m_Material: {fileID: 0}
   m_IsTrigger: 0
   m_Enabled: 1
-  serializedVersion: 3
+  serializedVersion: 4
   m_Convex: 0
-  m_CookingOptions: 14
+  m_CookingOptions: 30
   m_Mesh: {fileID: 4300504, guid: 8640627d651564916bcef0651c1fdc73, type: 3}
 --- !u!1 &7152854152096974559
 GameObject:
@@ -77265,8 +77878,8 @@ GameObject:
   m_Name: mesh
   m_TagString: SimObjPhysics
   m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
+  m_NavMeshLayer: 1
+  m_StaticEditorFlags: 8
   m_IsActive: 1
 --- !u!64 &7152854152096974560
 MeshCollider:
@@ -77278,9 +77891,9 @@ MeshCollider:
   m_Material: {fileID: 0}
   m_IsTrigger: 0
   m_Enabled: 1
-  serializedVersion: 3
+  serializedVersion: 4
   m_Convex: 0
-  m_CookingOptions: 14
+  m_CookingOptions: 30
   m_Mesh: {fileID: 4300476, guid: 8640627d651564916bcef0651c1fdc73, type: 3}
 --- !u!4 &7152854152097075905
 Transform:

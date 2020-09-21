@@ -3,8 +3,12 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityStandardAssets.Characters.FirstPerson;
+using System.IO;
 using System.Net.Sockets;
 using System.Net;
+using MessagePack.Resolvers;
+using MessagePack.Formatters;
+using MessagePack;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using System.Reflection;
@@ -31,17 +35,18 @@ public class AgentManager : MonoBehaviour
     private bool defaultRenderObjectImage;
 	private bool renderNormalsImage;
     private bool renderFlowImage;
-	private bool synchronousHttp = true;
 	private Socket sock = null;
 	private List<Camera> thirdPartyCameras = new List<Camera>();
 	private bool readyToEmit;
 	private Color[] agentColors = new Color[]{Color.blue, Color.yellow, Color.green, Color.red, Color.magenta, Color.grey};
 	public int actionDuration = 3;
 	private BaseFPSAgentController primaryAgent;
-    //private JavaScriptInterface jsInterface;
     private PhysicsSceneManager physicsSceneManager;
     public int AdvancePhysicsStepCount = 0;
     private bool droneMode = false;
+    private FifoServer.Client fifoClient = null;
+	private enum serverTypes { WSGI, FIFO};
+    private serverTypes serverType;
 
 
 	public Bounds sceneBounds = new Bounds(
@@ -69,7 +74,7 @@ public class AgentManager : MonoBehaviour
         #if !UNITY_WEBGL
             // Creates warning for WebGL
             // https://forum.unity.com/threads/rendering-without-using-requestanimationframe-for-the-main-loop.373331/
-            Application.targetFrameRate = 300;
+            Application.targetFrameRate = 3000;
         #else
             Debug.unityLogger.logEnabled = false;
         #endif
@@ -79,6 +84,18 @@ public class AgentManager : MonoBehaviour
 		robosimsHost = LoadStringVariable(robosimsHost, "HOST");
 		serverSideScreenshot = LoadBoolVariable (serverSideScreenshot, "SERVER_SIDE_SCREENSHOT");
 		robosimsClientToken = LoadStringVariable (robosimsClientToken, "CLIENT_TOKEN");
+        serverType = (serverTypes)Enum.Parse(typeof(serverTypes), LoadStringVariable (serverTypes.WSGI.ToString(), "SERVER_TYPE").ToUpper());
+        if (serverType == serverTypes.FIFO) {
+            string  serverPipePath = LoadStringVariable (null, "FIFO_SERVER_PIPE_PATH");
+            string  clientPipePath = LoadStringVariable (null, "FIFO_CLIENT_PIPE_PATH");
+            
+            Debug.Log("creating fifo server: " + serverPipePath);
+            Debug.Log("client fifo path: " + clientPipePath);
+            this.fifoClient = FifoServer.Client.GetInstance(serverPipePath, clientPipePath);
+
+        }
+
+
 		bool trainPhase = true;
 		trainPhase = LoadBoolVariable(trainPhase, "TRAIN_PHASE");
 
@@ -494,7 +511,7 @@ public class AgentManager : MonoBehaviour
 			if(!droneMode)
             {
 				readyToEmit = false;
-				StartCoroutine (EmitFrame ());
+				StartCoroutine (EmitFrame());
 			}
 
             //start emit frame for flying drone controller
@@ -504,7 +521,7 @@ public class AgentManager : MonoBehaviour
 				if (hasDroneAgentUpdatedCount == agents.Count && hasDroneAgentUpdatedCount > 0)
                 {
 					readyToEmit = false;
-					StartCoroutine (EmitFrame ());
+					StartCoroutine (EmitFrame());
 				}
 			}
 		}
@@ -534,41 +551,30 @@ public class AgentManager : MonoBehaviour
 	}
 
 
-	private void addThirdPartyCameraImageForm(WWWForm form, Camera camera) {
+	private void addThirdPartyCameraImage(List<KeyValuePair<string, byte[]>> payload, Camera camera) {
 		RenderTexture.active = camera.activeTexture;
 		camera.Render ();
-		form.AddBinaryData("image-thirdParty-camera", captureScreen());
+        payload.Add(new KeyValuePair<string, byte[]>("image-thirdParty-camera", captureScreen()));
 	}
 
-	private void addImageForm(WWWForm form, BaseFPSAgentController agent) {
+	private void addImage(List<KeyValuePair<string, byte[]>> payload, BaseFPSAgentController agent) {
 		if (this.renderImage) {
 
 			if (this.agents.Count > 1 || this.thirdPartyCameras.Count > 0) {
 				RenderTexture.active = agent.m_Camera.activeTexture;
 				agent.m_Camera.Render ();
 			}
-			form.AddBinaryData("image", captureScreen());
+            payload.Add(new KeyValuePair<string, byte[]>("image", captureScreen()));
 		}
 	}
 
-	private void addDepthImageForm(WWWForm form, BaseFPSAgentController agent) {
-		if (this.renderDepthImage) {
-			if (!agent.imageSynthesis.hasCapturePass ("_depth")) {
-				Debug.LogError ("Depth image not available - returning empty image");
-			}
-
-			byte[] bytes = agent.imageSynthesis.Encode ("_depth", RenderTextureFormat.Default, RenderTextureReadWrite.Linear);
-			form.AddBinaryData ("image_depth", bytes);
-		}
-	}
-
-	private void addObjectImageForm(WWWForm form, BaseFPSAgentController agent, ref MetadataWrapper metadata) {
+	private void addObjectImage(List<KeyValuePair<string, byte[]>> payload, BaseFPSAgentController agent, ref MetadataWrapper metadata) {
 		if (this.renderObjectImage) {
 			if (!agent.imageSynthesis.hasCapturePass("_id")) {
 				Debug.LogError("Object Image not available in imagesynthesis - returning empty image");
 			}
 			byte[] bytes = agent.imageSynthesis.Encode ("_id");
-			form.AddBinaryData ("image_ids", bytes);
+            payload.Add(new KeyValuePair<string, byte[]>("image_ids", bytes));
 
 			Color[] id_image = agent.imageSynthesis.tex.GetPixels();
 			Dictionary<Color, int[]> colorBounds = new Dictionary<Color, int[]> ();
@@ -624,14 +630,14 @@ public class AgentManager : MonoBehaviour
 		}
 	}
 
-	private void addImageSynthesisImageForm(WWWForm form, ImageSynthesis synth, bool flag, string captureName, string fieldName)
+	private void addImageSynthesisImage(List<KeyValuePair<string, byte[]>> payload, ImageSynthesis synth, bool flag, string captureName, string fieldName)
 	{
 		if (flag) {
 			if (!synth.hasCapturePass (captureName)) {
 				Debug.LogError (captureName + " not available - sending empty image");
 			}
 			byte[] bytes = synth.Encode (captureName);
-			form.AddBinaryData (fieldName, bytes);
+            payload.Add(new KeyValuePair<string, byte[]>(fieldName, bytes));
 
 
 		}
@@ -647,15 +653,78 @@ public class AgentManager : MonoBehaviour
 		if (shouldRender) {
 			// we should only read the screen buffer after rendering is complete
 			yield return new WaitForEndOfFrame();
-			if (synchronousHttp) {
-				// must wait an additional frame when in synchronous mode otherwise the frame lags
-				yield return new WaitForEndOfFrame();
-			}
+            // must wait an additional frame when in synchronous mode otherwise the frame lags
+			yield return new WaitForEndOfFrame();
 		}
 
-		string msg = "{\"action\": \"RotateRight\"}";
+		string msg = "{\"action\": \"RotateRight\", \"timeScale\": 90.0}";
 		ProcessControlCommand(msg);
 	}
+
+    private void createPayload(MultiAgentMetadata multiMeta, ThirdPartyCameraMetadata[] cameraMetadata, List<KeyValuePair<string, byte[]>> renderPayload, bool shouldRender) {
+
+        multiMeta.agents = new MetadataWrapper[this.agents.Count];
+        multiMeta.activeAgentId = this.activeAgentId;
+        multiMeta.sequenceId = this.currentSequenceId;
+
+		RenderTexture currentTexture = null;
+
+        if (shouldRender) {
+            currentTexture = RenderTexture.active;
+            for (int i = 0; i < this.thirdPartyCameras.Count; i++) {
+                ThirdPartyCameraMetadata cMetadata = new ThirdPartyCameraMetadata();
+                Camera camera = thirdPartyCameras.ToArray()[i];
+                cMetadata.thirdPartyCameraId = i;
+                cMetadata.position = camera.gameObject.transform.position;
+                cMetadata.rotation = camera.gameObject.transform.eulerAngles;
+			    cMetadata.fieldOfView = camera.fieldOfView;
+                cameraMetadata[i] = cMetadata;
+                ImageSynthesis imageSynthesis = camera.gameObject.GetComponentInChildren<ImageSynthesis> () as ImageSynthesis;
+                addThirdPartyCameraImage (renderPayload, camera);
+                addImageSynthesisImage(renderPayload, imageSynthesis, this.renderDepthImage, "_depth", "image_thirdParty_depth");
+                addImageSynthesisImage(renderPayload, imageSynthesis, this.renderNormalsImage, "_normals", "image_thirdParty_normals");
+                addImageSynthesisImage(renderPayload, imageSynthesis, this.renderObjectImage, "_id", "image_thirdParty_image_ids");
+                addImageSynthesisImage(renderPayload, imageSynthesis, this.renderClassImage, "_class", "image_thirdParty_classes");
+                addImageSynthesisImage(renderPayload, imageSynthesis, this.renderClassImage, "_flow", "image_thirdParty_flow");//XXX fix this in a bit
+            }
+        }
+        for (int i = 0; i < this.agents.Count; i++) {
+            BaseFPSAgentController agent = this.agents.ToArray () [i];
+            MetadataWrapper metadata = agent.generateMetadataWrapper ();
+            metadata.agentId = i;
+
+            // we don't need to render the agent's camera for the first agent
+            if (shouldRender) {
+                addImage (renderPayload, agent);
+                addImageSynthesisImage(renderPayload, agent.imageSynthesis, this.renderDepthImage, "_depth", "image_depth");
+                addImageSynthesisImage(renderPayload, agent.imageSynthesis, this.renderNormalsImage, "_normals", "image_normals");
+                addObjectImage (renderPayload, agent, ref metadata);
+                addImageSynthesisImage(renderPayload, agent.imageSynthesis, this.renderClassImage, "_class", "image_classes");
+                addImageSynthesisImage(renderPayload, agent.imageSynthesis, this.renderFlowImage, "_flow", "image_flow");
+
+                metadata.thirdPartyCameras = cameraMetadata;
+            }
+            multiMeta.agents [i] = metadata;
+        }
+
+        if (shouldRender) {
+            RenderTexture.active = currentTexture;
+        }
+
+        
+    }
+
+    private string serializeMetadataJson(MultiAgentMetadata multiMeta) {
+            var jsonResolver = new ShouldSerializeContractResolver();
+            return Newtonsoft.Json.JsonConvert.SerializeObject(multiMeta, Newtonsoft.Json.Formatting.None,
+                        new Newtonsoft.Json.JsonSerializerSettings()
+                            {
+                                ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore,
+                                ContractResolver = jsonResolver
+                            }
+
+            );
+    }
 
 
 	public IEnumerator EmitFrame() {
@@ -669,86 +738,36 @@ public class AgentManager : MonoBehaviour
 			yield return new WaitForEndOfFrame();
 		}
 
-		WWWForm form = new WWWForm();
-
         MultiAgentMetadata multiMeta = new MultiAgentMetadata ();
-        multiMeta.agents = new MetadataWrapper[this.agents.Count];
-        multiMeta.activeAgentId = this.activeAgentId;
-        multiMeta.sequenceId = this.currentSequenceId;
+		
 
 		ThirdPartyCameraMetadata[] cameraMetadata = new ThirdPartyCameraMetadata[this.thirdPartyCameras.Count];
-		RenderTexture currentTexture = null;
-        #if UNITY_WEBGL
-        JavaScriptInterface jsInterface = null;
-        #endif
-        if (shouldRender) {
-            currentTexture = RenderTexture.active;
-            for (int i = 0; i < this.thirdPartyCameras.Count; i++) {
-                ThirdPartyCameraMetadata cMetadata = new ThirdPartyCameraMetadata();
-                Camera camera = thirdPartyCameras.ToArray()[i];
-                cMetadata.thirdPartyCameraId = i;
-                cMetadata.position = camera.gameObject.transform.position;
-                cMetadata.rotation = camera.gameObject.transform.eulerAngles;
-			    cMetadata.fieldOfView = camera.fieldOfView;
-                cameraMetadata[i] = cMetadata;
-                ImageSynthesis imageSynthesis = camera.gameObject.GetComponentInChildren<ImageSynthesis> () as ImageSynthesis;
-                addThirdPartyCameraImageForm (form, camera);
-                addImageSynthesisImageForm(form, imageSynthesis, this.renderDepthImage, "_depth", "image_thirdParty_depth");
-                addImageSynthesisImageForm(form, imageSynthesis, this.renderNormalsImage, "_normals", "image_thirdParty_normals");
-                addImageSynthesisImageForm(form, imageSynthesis, this.renderObjectImage, "_id", "image_thirdParty_image_ids");
-                addImageSynthesisImageForm(form, imageSynthesis, this.renderClassImage, "_class", "image_thirdParty_classes");
-                addImageSynthesisImageForm(form, imageSynthesis, this.renderClassImage, "_flow", "image_thirdParty_flow");//XXX fix this in a bit
-            }
-        }
+        List<KeyValuePair<string, byte[]>> renderPayload = new List<KeyValuePair<string, byte[]>>();
+        createPayload(multiMeta, cameraMetadata, renderPayload, shouldRender);
 
-        for (int i = 0; i < this.agents.Count; i++) {
-            BaseFPSAgentController agent = this.agents.ToArray () [i];
-            #if UNITY_WEBGL
-            jsInterface = agent.GetComponent<JavaScriptInterface>();
-            #endif
-            MetadataWrapper metadata = agent.generateMetadataWrapper ();
-            metadata.agentId = i;
 
-            // we don't need to render the agent's camera for the first agent
-            if (shouldRender) {
-                addImageForm (form, agent);
-                addImageSynthesisImageForm(form, agent.imageSynthesis, this.renderDepthImage, "_depth", "image_depth");
-                addImageSynthesisImageForm(form, agent.imageSynthesis, this.renderNormalsImage, "_normals", "image_normals");
-                addObjectImageForm (form, agent, ref metadata);
-                addImageSynthesisImageForm(form, agent.imageSynthesis, this.renderClassImage, "_class", "image_classes");
-                addImageSynthesisImageForm(form, agent.imageSynthesis, this.renderFlowImage, "_flow", "image_flow");
 
-                metadata.thirdPartyCameras = cameraMetadata;
-            }
-            multiMeta.agents [i] = metadata;
-        }
 
-        if (shouldRender) {
-            RenderTexture.active = currentTexture;
-        }
 
-      var jsonResolver = new ShouldSerializeContractResolver();
-
-       var serializedMetadata = Newtonsoft.Json.JsonConvert.SerializeObject(multiMeta, Newtonsoft.Json.Formatting.None,
-                new Newtonsoft.Json.JsonSerializerSettings()
-                       {
-                           ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore,
-                           ContractResolver = jsonResolver
-                       }
-
-               );
 
 		#if UNITY_WEBGL
-                if (jsInterface != null) {
-					jsInterface.SendActionMetadata(serializedMetadata);
-				}
+            JavaScriptInterface jsInterface = this.primaryAgent.GetComponent<JavaScriptInterface>();
+            if (jsInterface != null) {
+                jsInterface.SendActionMetadata(serializeMetadataJson(multiMeta));
+            }
         #endif
 
-        form.AddField("metadata", serializedMetadata);
-        form.AddField("token", robosimsClientToken);
 
-        #if !UNITY_WEBGL
-		if (synchronousHttp) {
+
+        #if !UNITY_WEBGL 
+		if (serverType == serverTypes.WSGI) {
+            WWWForm form = new WWWForm();
+            foreach(var item in renderPayload) {
+                form.AddBinaryData(item.Key, item.Value);
+            }
+            form.AddField("metadata", serializeMetadataJson(multiMeta));
+            form.AddField("token", robosimsClientToken);
+
 
 			if (this.sock == null) {
 				// Debug.Log("connecting to host: " + robosimsHost);
@@ -824,19 +843,16 @@ public class AgentManager : MonoBehaviour
                 string msg = Encoding.ASCII.GetString(bodyBuffer, 0, bodyBytesReceived);
                 ProcessControlCommand(msg);
             }
-		} else {
-
-			using (var www = UnityWebRequest.Post("http://" + robosimsHost + ":" + robosimsPort + "/train", form))
-			{
-				yield return www.SendWebRequest();
-
-				if (www.isNetworkError || www.isHttpError)
-				{
-					Debug.Log("Error: " + www.error);
-					yield break;
-				}
-				ProcessControlCommand(www.downloadHandler.text);
-			}
+		} else if (serverType == serverTypes.FIFO){
+            byte[] msgPackMetadata = MessagePack.MessagePackSerializer.Serialize(multiMeta, 
+            MessagePack.Resolvers.ThorContractlessStandardResolver.Options);
+            this.fifoClient.SendMessage(FifoServer.FieldType.Metadata, msgPackMetadata);
+            foreach(var item in renderPayload) {
+                this.fifoClient.SendMessage(FifoServer.Client.FormMap[item.Key], item.Value);
+            }
+            this.fifoClient.SendEOM();
+            string msg = this.fifoClient.ReceiveMessage();
+            ProcessControlCommand(msg);
 		}
 
         if(droneMode)
@@ -875,29 +891,32 @@ public class AgentManager : MonoBehaviour
 	{
 
         this.renderObjectImage = this.defaultRenderObjectImage;
-
+        #if UNITY_WEBGL
 		ServerAction controlCommand = new ServerAction();
-
 		JsonUtility.FromJsonOverwrite(msg, controlCommand);
+        #else
+        dynamic controlCommand = Newtonsoft.Json.JsonConvert.DeserializeObject<dynamic>(msg);
+        #endif
 
 		this.currentSequenceId = controlCommand.sequenceId;
-		this.renderImage = controlCommand.renderImage;
+        // the following are handled this way since they can be null
+        this.renderImage = controlCommand.renderImage == null ? true : controlCommand.renderImage;
+        this.activeAgentId = controlCommand.agentId == null ? 0 : controlCommand.agentId;
 
-		activeAgentId = controlCommand.agentId;
 		if (controlCommand.action == "Reset") {
-			this.Reset (controlCommand);
+			this.Reset (controlCommand.ToObject(typeof(ServerAction)));
 		} else if (controlCommand.action == "Initialize") {
-			this.Initialize(controlCommand);
+			this.Initialize(controlCommand.ToObject(typeof(ServerAction)));
 		} else if (controlCommand.action == "AddThirdPartyCamera") {
-			this.AddThirdPartyCamera(controlCommand);
+			this.AddThirdPartyCamera(controlCommand.ToObject(typeof(ServerAction)));
 		} else if (controlCommand.action == "UpdateThirdPartyCamera") {
-			this.UpdateThirdPartyCamera(controlCommand);
+			this.UpdateThirdPartyCamera(controlCommand.ToObject(typeof(ServerAction)));
 		} else {
-            // we only allow renderObjectImage to be flipped on
-            // on a per step() basis, since by default the param is false
-            // so we don't know if a request is meant to turn the param off
-            // or if it is just the value by default
-            if (controlCommand.renderObjectImage) {
+            //we only allow renderObjectImage to be flipped on
+            //on a per step() basis, since by default the param is null
+            //so we don't know if a request is meant to turn the param off
+            //or if it is just the value by default
+            if (controlCommand.renderObjectImage == true) {
                 this.renderObjectImage = true;
             }
 
@@ -1073,7 +1092,7 @@ public class SceneBounds
     //8 corners of the world axis aligned box that bounds a sim object
     //8 rows - 8 corners, one per row
     //3 columns - x, y, z of each corner respectively
-    public float[,] cornerPoints = new float[8,3];
+    public float[][] cornerPoints;
 
     //center of the bounding box of the scene in worldspace coordinates
     public Vector3 center;
@@ -1090,7 +1109,7 @@ public class AxisAlignedBoundingBox
     //8 corners of the world axis aligned box that bounds a sim object
     //8 rows - 8 corners, one per row
     //3 columns - x, y, z of each corner respectively
-    public float[,] cornerPoints = new float[8,3];
+    public float[][] cornerPoints;
 
     //center of the bounding box of this object in worldspace coordinates
     public Vector3 center;
@@ -1106,7 +1125,7 @@ public class ObjectOrientedBoundingBox
 {
     //probably return these from the BoundingBox component of the object for now?
     //this means that it will only work for Pickupable objects at the moment
-    public float[,] cornerPoints = new float[8,3];
+    public float[][] cornerPoints;
 }
 
 [Serializable]
@@ -1232,6 +1251,7 @@ public class ServerAction
 	public string receptacleObjectId;
 	public float gridSize;
 	public string[] excludeObjectIds;
+        public string [] objectIds;
 	public string objectId;
 	public int agentId;
 	public int thirdPartyCameraId;
@@ -1311,7 +1331,6 @@ public class ServerAction
     public int maxStepCount;
     public float rotateStepDegrees = 90.0f; //default rotation amount for RotateRight/RotateLeft actions
 
-    public bool useAgentTransform = false;
     public float degrees;//for overriding the default degree amount in look up/lookdown/rotaterRight/rotateLeft
 
     public bool topView = false;
@@ -1332,6 +1351,8 @@ public class ServerAction
 	public float g;
 	public float b;
 
+	//default time for objects to wait before returning actionFinished() if an action put them in motion
+	public float TimeToWaitForObjectsToComeToRest = 10.0f;
 	public float intensity;//used for light?
 	public float scale;
 
@@ -1352,6 +1373,17 @@ public class ServerAction
 		}
 		return (SimObjType)Enum.Parse(typeof(SimObjType), objectType);
 	}
+    // allows this to be passed in as a dynamic which we then
+    // cast back to itself
+    public ServerAction ToObject<T>() {
+        return this;
+    }
+
+    public ServerAction ToObject(Type t) {
+        return this;
+    }
+
+
 }
 
 [Serializable]
@@ -1374,7 +1406,8 @@ public enum ServerActionErrorCode  {
 	ObjectNotPickupable,
 	LookUpCantExceedMax,
 	LookDownCantExceedMin,
-	InvalidAction
+	InvalidAction,
+    MissingArguments
 }
 
 
@@ -1389,6 +1422,8 @@ public class TypedVariable {
     public string type;
     public object value;
 }
+
+
 
 public class ShouldSerializeContractResolver : DefaultContractResolver
 {
@@ -1414,3 +1449,6 @@ public class ShouldSerializeContractResolver : DefaultContractResolver
 
    }
 }
+
+
+
