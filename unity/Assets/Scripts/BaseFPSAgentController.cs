@@ -1092,7 +1092,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             SimObjPhysics[] simObjects = null;
             if (this.simObjFilter != null) {
                 foreach (SimObjPhysics sop in this.simObjFilter) {
-                    if (isSimObjVisible(m_Camera, sop)) {
+                    if (isSimObjVisible(m_Camera, sop, false, this.maxVisibleDistance)) {
                         visibleSimObjsHash.Add(sop);
                     }
                 }
@@ -1950,18 +1950,25 @@ namespace UnityStandardAssets.Characters.FirstPerson
             return Time.time;
         }
 
-        private bool isSimObjVisible(Camera agentCamera, SimObjPhysics sop) {
+        private bool isSimObjVisible(Camera agentCamera, SimObjPhysics sop, bool includeInvisible, float maxDistance = 0.0f) {
             bool visible = false;
             //check against all visibility points, accumulate count. If at least one point is visible, set object to visible
-            if (sop.VisibilityPoints == null || sop.VisibilityPoints.Length > 0) 
+            if (sop.VisibilityPoints != null && sop.VisibilityPoints.Length > 0) 
             {
                 Transform[] visPoints = sop.VisibilityPoints;
                 int visPointCount = 0;
 
+
                 foreach (Transform point in visPoints) 
                 {
+                    if (maxDistance > 0.0f) {
+                        Vector3 agentPoint = new Vector3(this.transform.position.x, point.position.y, this.transform.position.z);
+                        if (Vector3.Distance(agentPoint, point.position) > maxDistance) {
+                            continue;
+                        }
+                    }
                     //if this particular point is in view...
-                    if (CheckIfVisibilityPointInViewport(sop, point, agentCamera, false)) 
+                    if (CheckIfVisibilityPointInViewport(sop, point, agentCamera, includeInvisible)) 
                     {
                         visPointCount++;
                         #if !UNITY_EDITOR
@@ -2074,7 +2081,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     if (sop != null && !testedSops.Contains(sop)) 
                     {
                         testedSops.Add(sop);
-                        if (isSimObjVisible(agentCamera, sop)) 
+                        if (isSimObjVisible(agentCamera, sop, false)) 
                         {
                             currentlyVisibleItems.Add(sop);
                         }
@@ -2100,35 +2107,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         sop = item.GetComponentInParent<SimObjPhysics>();
 
                         //now we have a reference to our sim object 
-                        if (sop) 
+                        if (sop && isSimObjVisible(agentCamera, sop, true))  
                         {
-                            //check against all visibility points, accumulate count. If at least one point is visible, set object to visible
-                            if (sop.VisibilityPoints.Length > 0) 
-                            {
-                                Transform[] visPoints = sop.VisibilityPoints;
-                                int visPointCount = 0;
-
-                                foreach (Transform point in visPoints) 
-                                {
-                                    //if this particular point is in view...
-                                    if (CheckIfVisibilityPointInViewport(sop, point, agentCamera, true)) 
-                                    {
-                                        visPointCount++;
-                                    }
-                                }
-
-                                //if we see at least one vis point, the object is "visible"
-                                if (visPointCount > 0) 
-                                {
-                                    #if UNITY_EDITOR
-                                    sop.isVisible = true;
-                                    #endif
-                                    currentlyVisibleItems.Add(sop);
-                                }
-                            } 
-                            
-                            else
-                                Debug.Log("Error! Set at least 1 visibility point on SimObjPhysics prefab!");
+                            currentlyVisibleItems.Add(sop);
                         }
                     }
                 }
