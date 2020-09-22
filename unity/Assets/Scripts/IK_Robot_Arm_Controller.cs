@@ -146,39 +146,69 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
         return result;
     }
 
-    public void OnTriggerEnter(Collider col)
+    // public void OnTriggerEnter(Collider col)
+    // {
+    //     staticCollided.collided = false;
+    //     staticCollided.simObjPhysics = null;
+    //     staticCollided.gameObject = null;
+
+    //     if(col.GetComponentInParent<SimObjPhysics>())
+    //     {
+    //         //how does this handle nested sim objects? maybe it's fine?
+    //         SimObjPhysics sop = col.GetComponentInParent<SimObjPhysics>();
+    //         if(sop.PrimaryProperty == SimObjPrimaryProperty.Static)
+    //         {
+
+    //             if(!col.isTrigger)
+    //             {
+    //                 // #if UNITY_EDITOR
+    //                 // Debug.Log("Collided with static sim obj " + sop.name);
+    //                 // #endif
+    //                 staticCollided.collided = true;
+    //                 staticCollided.simObjPhysics = sop;
+    //             }
+    //         }
+    //     }
+
+    //     //also check if the collider hit was a structure?
+    //     if(col.gameObject.isStatic)
+    //     {
+    //         // #if UNITY_EDITOR
+    //         // Debug.Log("Collided with static structure " + col.gameObject.name);
+    //         // #endif
+                
+    //         staticCollided.collided = true;
+    //         staticCollided.gameObject = col.gameObject;
+    //     }
+    // }
+
+    //try with OnCollision event back instead of OnTrigger
+    public void OnCollisionEnter(Collision collision)
     {
+        //debug collision print
+        // print(collision.collider);
+        // print(collision.gameObject);
+
         staticCollided.collided = false;
         staticCollided.simObjPhysics = null;
         staticCollided.gameObject = null;
 
-        if(col.GetComponentInParent<SimObjPhysics>())
+        if(collision.gameObject.GetComponent<SimObjPhysics>())
         {
-            //how does this handle nested sim objects? maybe it's fine?
-            SimObjPhysics sop = col.GetComponentInParent<SimObjPhysics>();
+            SimObjPhysics sop = collision.gameObject.GetComponent<SimObjPhysics>();
             if(sop.PrimaryProperty == SimObjPrimaryProperty.Static)
             {
-
-                if(!col.isTrigger)
-                {
-                    // #if UNITY_EDITOR
-                    // Debug.Log("Collided with static sim obj " + sop.name);
-                    // #endif
-                    staticCollided.collided = true;
-                    staticCollided.simObjPhysics = sop;
-                }
+                Debug.Log("Collided with static " + sop.name);
+                staticCollided.collided = true;
+                staticCollided.simObjPhysics = sop;
             }
         }
 
-        //also check if the collider hit was a structure?
-        if(col.gameObject.isStatic)
+        //also do this if it hits a structure object that is static
+        if(collision.gameObject.isStatic)
         {
-            // #if UNITY_EDITOR
-            // Debug.Log("Collided with static structure " + col.gameObject.name);
-            // #endif
-                
             staticCollided.collided = true;
-            staticCollided.gameObject = col.gameObject;
+            staticCollided.gameObject = collision.gameObject;
         }
     }
 
