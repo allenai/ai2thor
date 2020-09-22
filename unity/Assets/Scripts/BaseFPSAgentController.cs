@@ -1950,7 +1950,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             return Time.time;
         }
 
-        private bool isSimObjVisible(Camera agentCamera, SimObjPhysics sop, bool includeInvisible, float maxDistance = 0.0f) {
+        private bool isSimObjVisible(Camera agentCamera, SimObjPhysics sop, bool includeInvisible, float maxDistance) {
             bool visible = false;
             //check against all visibility points, accumulate count. If at least one point is visible, set object to visible
             if (sop.VisibilityPoints != null && sop.VisibilityPoints.Length > 0) 
@@ -1958,14 +1958,14 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 Transform[] visPoints = sop.VisibilityPoints;
                 int visPointCount = 0;
 
-
+                // avoiding recreating an agent point for each visPoint
+                Vector3 agentPoint = new Vector3(this.transform.position.x, 0.0f, this.transform.position.z);
                 foreach (Transform point in visPoints) 
                 {
-                    if (maxDistance > 0.0f) {
-                        Vector3 agentPoint = new Vector3(this.transform.position.x, point.position.y, this.transform.position.z);
-                        if (Vector3.Distance(agentPoint, point.position) > maxDistance) {
-                            continue;
-                        }
+                    // visibility distance is measured at the height of the visibility point
+                    agentPoint.y = point.position.y;
+                    if (Vector3.Distance(agentPoint, point.position) > maxDistance) {
+                        continue;
                     }
                     //if this particular point is in view...
                     if (CheckIfVisibilityPointInViewport(sop, point, agentCamera, includeInvisible)) 
@@ -1988,7 +1988,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     visible = true;
                 }
             } 
-            
             else 
             {
                 Debug.Log("Error! Set at least 1 visibility point on SimObjPhysics " + sop + ".");
@@ -2081,7 +2080,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     if (sop != null && !testedSops.Contains(sop)) 
                     {
                         testedSops.Add(sop);
-                        if (isSimObjVisible(agentCamera, sop, false)) 
+                        if (isSimObjVisible(agentCamera, sop, false, maxDistance)) 
                         {
                             currentlyVisibleItems.Add(sop);
                         }
@@ -2107,7 +2106,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         sop = item.GetComponentInParent<SimObjPhysics>();
 
                         //now we have a reference to our sim object 
-                        if (sop && isSimObjVisible(agentCamera, sop, true))  
+                        if (sop && isSimObjVisible(agentCamera, sop, true, maxDistance))  
                         {
                             currentlyVisibleItems.Add(sop);
                         }
