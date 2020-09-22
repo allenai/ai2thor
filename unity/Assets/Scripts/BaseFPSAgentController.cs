@@ -3171,7 +3171,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             this.GetComponent<UnityEngine.AI.NavMeshAgent>().enabled = true;
             bool pathSuccess = UnityEngine.AI.NavMesh.CalculatePath(startPosition, targetPosition,  UnityEngine.AI.NavMesh.AllAreas, path);
             if (path.status == UnityEngine.AI.NavMeshPathStatus.PathComplete) {
-                VisualizePath(startPosition, path);
+                // VisualizePath(startPosition, path);
                 this.GetComponent<UnityEngine.AI.NavMeshAgent>().enabled = false;
                 actionFinished(true, path);
                 return;
