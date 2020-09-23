@@ -1355,6 +1355,7 @@ public class ServerAction
 	public float TimeToWaitForObjectsToComeToRest = 10.0f;
 	public float intensity;//used for light?
 	public float scale;
+    public string visibilityScheme;
 
     public SimObjType ReceptableSimObjType()
 	{
@@ -1364,6 +1365,13 @@ public class ServerAction
 		}
 		return (SimObjType)Enum.Parse(typeof(SimObjType), receptacleObjectType);
 	}
+
+    public VisibilityScheme GetVisibilityScheme() {
+        if (string.IsNullOrEmpty(visibilityScheme)) {
+            return VisibilityScheme.Collider;
+        }
+		return (VisibilityScheme)Enum.Parse(typeof(VisibilityScheme), visibilityScheme);
+    }
 
 	public SimObjType GetSimObjType()
 	{
@@ -1409,6 +1417,12 @@ public enum ServerActionErrorCode  {
 	InvalidAction,
     MissingArguments
 }
+
+public enum VisibilityScheme {
+    Collider,
+    Distance
+}
+
 
 
 [Serializable]
