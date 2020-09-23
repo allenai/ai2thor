@@ -1997,7 +1997,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     }
 
                     //if this particular point is in view...
-                    if (CheckIfVisibilityPointInViewport(sop, point, agentCamera, false)) 
+                    if (CheckIfVisibilityPointInViewport(sop, point, agentCamera, sop.IsReceptacle)) 
                     {
                         visPointCount++;
                         #if !UNITY_EDITOR
