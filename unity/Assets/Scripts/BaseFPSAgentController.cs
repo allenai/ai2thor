@@ -12,6 +12,7 @@ using UnityStandardAssets.ImageEffects;
 using System.Linq;
 using UnityEngine.Rendering.PostProcessing;
 using UnityEngine.AI;
+using Newtonsoft.Json.Linq;
 
 namespace UnityStandardAssets.Characters.FirstPerson
 {
@@ -1539,6 +1540,19 @@ namespace UnityStandardAssets.Characters.FirstPerson
         }
 #endif
 
+        public void ProcessControlCommand(Dictionary<string, object> controlCommand){
+            var jsonResolver = new ShouldSerializeContractResolver();
+            dynamic action = JObject.FromObject(controlCommand,
+                        new Newtonsoft.Json.JsonSerializer()
+                            {
+                                ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore,
+                                ContractResolver = jsonResolver
+                            });
+
+
+            ProcessControlCommand(action);
+        }
+
         public void ProcessControlCommand(dynamic controlCommand)
         {
             errorMessage = "";
@@ -1577,8 +1591,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 errorMessage += e.ToString();
                 actionFinished(false);
             }
-
-
 
             #if UNITY_EDITOR
             if (errorMessage != "") {
