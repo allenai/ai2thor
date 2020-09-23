@@ -1092,16 +1092,13 @@ namespace UnityStandardAssets.Characters.FirstPerson
             HashSet<SimObjPhysics> visibleSimObjsHash = new HashSet<SimObjPhysics>();
             SimObjPhysics[] simObjects = null;
             if (this.simObjFilter != null) {
-                foreach (SimObjPhysics sop in this.simObjFilter) {
-                    if (isSimObjVisible(m_Camera, sop)) {
-                        visibleSimObjsHash.Add(sop);
-                    }
-                }
+                visibleSimObjsHash.UnionWith(GetAllVisibleSimObjPhysicsFilter(
+                    this.simObjFilter,
+                    this.m_Camera,
+                    this.maxVisibleDistance));
                 simObjects = this.simObjFilter;
             } else {
-                foreach (SimObjPhysics sop in VisibleSimObjs(false)) {
-                    visibleSimObjsHash.Add(sop);
-                }
+                visibleSimObjsHash.UnionWith(VisibleSimObjs(false));
                 simObjects = GameObject.FindObjectsOfType<SimObjPhysics>();
             }
 
@@ -1965,16 +1962,40 @@ namespace UnityStandardAssets.Characters.FirstPerson
             return Time.time;
         }
 
-        private bool isSimObjVisible(Camera agentCamera, SimObjPhysics sop) {
+        private bool isSimObjVisible(Camera agentCamera, SimObjPhysics sop, float maxDistance) {
             bool visible = false;
             //check against all visibility points, accumulate count. If at least one point is visible, set object to visible
-            if (sop.VisibilityPoints == null || sop.VisibilityPoints.Length > 0) 
+            if (sop.VisibilityPoints != null && sop.VisibilityPoints.Length > 0) 
             {
                 Transform[] visPoints = sop.VisibilityPoints;
                 int visPointCount = 0;
 
                 foreach (Transform point in visPoints) 
                 {
+                    float xdelta = Math.Abs(this.transform.position.x - point.position.x);
+                    if (xdelta > maxDistance) 
+                    {
+                        continue;
+                    }
+
+                    float zdelta = Math.Abs(this.transform.position.z - point.position.z);
+                    if (zdelta > maxDistance) 
+                    {
+                        continue;
+                    }
+
+                    // if the object is too far above the Agent, skip
+                    float ydelta =  point.position.y - this.transform.position.y;
+                    if (ydelta > maxDistance) {
+                        continue;
+                    }
+
+                    double distance = Math.Sqrt((xdelta * xdelta) + (zdelta * zdelta));
+                    if (distance > maxDistance) 
+                    {
+                        continue;
+                    }
+
                     //if this particular point is in view...
                     if (CheckIfVisibilityPointInViewport(sop, point, agentCamera, false)) 
                     {
@@ -1995,7 +2016,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     #endif
                     visible = true;
                 }
-            } 
+            }
             
             else 
             {
@@ -2043,6 +2064,19 @@ namespace UnityStandardAssets.Characters.FirstPerson
             }
         }
 
+        protected SimObjPhysics[] GetAllVisibleSimObjPhysicsFilter(IEnumerable<SimObjPhysics> simObjs, Camera agentCamera, float maxDistance) 
+        {
+            List<SimObjPhysics> visible = new List<SimObjPhysics>();
+            foreach(var sop in simObjs)
+            {
+                if(isSimObjVisible(agentCamera, sop, this.maxVisibleDistance)) 
+                {
+                    visible.Add(sop);
+                }
+            }
+            return visible.ToArray();
+        }
+
         protected SimObjPhysics[] GetAllVisibleSimObjPhysics(Camera agentCamera, float maxDistance) 
         {
             #if UNITY_EDITOR        
@@ -2053,7 +2087,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             }
             #endif
 
-            HashSet<SimObjPhysics> currentlyVisibleItems = new HashSet<SimObjPhysics>();
+            List<SimObjPhysics> currentlyVisibleItems = new List<SimObjPhysics>();
 
             Vector3 agentCameraPos = agentCamera.transform.position;
 
@@ -2089,14 +2123,45 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     if (sop != null && !testedSops.Contains(sop)) 
                     {
                         testedSops.Add(sop);
-                        if (isSimObjVisible(agentCamera, sop)) 
+                        //check against all visibility points, accumulate count. If at least one point is visible, set object to visible
+                        if (sop.VisibilityPoints != null && sop.VisibilityPoints.Length > 0) 
                         {
-                            currentlyVisibleItems.Add(sop);
+                            Transform[] visPoints = sop.VisibilityPoints;
+                            int visPointCount = 0;
+
+                            foreach (Transform point in visPoints) 
+                            {
+                                //if this particular point is in view...
+                                if (CheckIfVisibilityPointInViewport(sop, point, agentCamera, false)) 
+                                {
+                                    visPointCount++;
+                                    #if !UNITY_EDITOR
+                                    // If we're in the unity editor then don't break on finding a visible
+                                    // point as we want to draw lines to each visible point.
+                                    break;
+                                    #endif
+                                }
+                            }
+
+                            //if we see at least one vis point, the object is "visible"
+                            if (visPointCount > 0) 
+                            {
+                                #if UNITY_EDITOR
+                                sop.isVisible = true;
+                                #endif
+                                if (!currentlyVisibleItems.Contains(sop)) 
+                                {
+                                    currentlyVisibleItems.Add(sop);
+                                }
+                            }
+                        }
+                        else 
+                        {
+                            Debug.Log("Error! Set at least 1 visibility point on SimObjPhysics " + sop + ".");
                         }
                     }
                 }
             }
-
 
             //check against anything in the invisible layers that we actually want to have occlude things in this round.
             //normally receptacle trigger boxes must be ignored from the visibility check otherwise objects inside them will be occluded, but
@@ -2138,24 +2203,28 @@ namespace UnityStandardAssets.Characters.FirstPerson
                                     #if UNITY_EDITOR
                                     sop.isVisible = true;
                                     #endif
-                                    currentlyVisibleItems.Add(sop);
+                                    if (!currentlyVisibleItems.Contains(sop)) 
+                                    {
+                                        currentlyVisibleItems.Add(sop);
+                                    }
                                 }
                             } 
-                            
-                            else
+                            else 
+                            {
                                 Debug.Log("Error! Set at least 1 visibility point on SimObjPhysics prefab!");
+                            }
+
                         }
-                    }
+                    } 
                 }
             }
 
             // Turn back on the colliders corresponding to this agent and invisible agents.
             updateAllAgentCollidersForVisibilityCheck(true);
 
-            List<SimObjPhysics> currentVisible = currentlyVisibleItems.ToList();
             //populate array of visible items in order by distance
-            currentVisible.Sort((x, y) => Vector3.Distance(x.transform.position, agentCameraPos).CompareTo(Vector3.Distance(y.transform.position, agentCameraPos)));
-            return currentVisible.ToArray();
+            currentlyVisibleItems.Sort((x, y) => Vector3.Distance(x.transform.position, agentCameraPos).CompareTo(Vector3.Distance(y.transform.position, agentCameraPos)));
+            return currentlyVisibleItems.ToArray();
         }
 
         //check if the visibility point on a sim object, sop, is within the viewport
