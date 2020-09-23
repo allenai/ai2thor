@@ -1540,9 +1540,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
         }
 #endif
 
-        public void ProcessControlCommand(Dictionary<string, object> controlCommand){
+        // the parameter name is different to avoid failing a test
+        // that looks for methods with identical param names, since
+        // we dispatch using method + param names
+        public void ProcessControlCommand(Dictionary<string, object> actionDict){
             var jsonResolver = new ShouldSerializeContractResolver();
-            dynamic action = JObject.FromObject(controlCommand,
+            dynamic action = JObject.FromObject(actionDict,
                         new Newtonsoft.Json.JsonSerializer()
                             {
                                 ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore,
