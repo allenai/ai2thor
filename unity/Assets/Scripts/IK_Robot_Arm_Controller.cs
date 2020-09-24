@@ -148,6 +148,8 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
 
     public void OnTriggerEnter(Collider col)
     {
+        Debug.Log("OnTriggerEnter is firing: " + col.transform.name);
+        
         staticCollided.collided = false;
         staticCollided.simObjPhysics = null;
         staticCollided.gameObject = null;
@@ -158,12 +160,12 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
             SimObjPhysics sop = col.GetComponentInParent<SimObjPhysics>();
             if(sop.PrimaryProperty == SimObjPrimaryProperty.Static)
             {
-
                 if(!col.isTrigger)
                 {
-                    // #if UNITY_EDITOR
-                    // Debug.Log("Collided with static sim obj " + sop.name);
-                    // #endif
+                    //#if UNITY_EDITOR
+                    Debug.Log("Collided with static sim obj " + sop.name);
+                    //#endif
+
                     staticCollided.collided = true;
                     staticCollided.simObjPhysics = sop;
                 }
@@ -172,13 +174,16 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
 
         //also check if the collider hit was a structure?
         if(col.gameObject.isStatic)
-        {
-            // #if UNITY_EDITOR
-            // Debug.Log("Collided with static structure " + col.gameObject.name);
-            // #endif
-                
-            staticCollided.collided = true;
-            staticCollided.gameObject = col.gameObject;
+        {                
+            if(!col.isTrigger)
+            {
+                //#if UNITY_EDITOR
+                Debug.Log("Collided with static structure " + col.gameObject.name);
+                //#endif
+
+                staticCollided.collided = true;
+                staticCollided.gameObject = col.gameObject;
+            }
         }
     }
 
