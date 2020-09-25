@@ -4,7 +4,6 @@ using UnityEngine;
 using UnityEngine.UI;
 using System;
 using System.Linq;
-using Newtonsoft.Json.Linq;
 
 
 namespace UnityStandardAssets.Characters.FirstPerson
@@ -2544,17 +2543,17 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     // Will fail if navmeshes are not setup
                     case "shortest_path":
                     {
-                        dynamic action = new JObject();
-                        action.action = "GetShortestPath";
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "GetShortestPath";
 
                         //pass in a min range, max range, delay
                         if (splitcommand.Length > 1)
                         {
                             //ID of spawner
-                            action.objectId = splitcommand[1];
+                            action["objectId"] = splitcommand[1];
 
                             if (splitcommand.Length == 5) {
-                                action.position = new Vector3(
+                                action["position"] = new Vector3(
                                     float.Parse(splitcommand[2]),
                                     float.Parse(splitcommand[3]), 
                                     float.Parse(splitcommand[4])
@@ -2567,17 +2566,18 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     }
                      case "shortest_path_type":
                     {
-                        dynamic action = new JObject();
-                        action.action = "GetShortestPath";
+
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "GetShortestPath";
 
                         //pass in a min range, max range, delay
                         if (splitcommand.Length > 1)
                         {
                             //ID of spawner
-                            action.objectType = splitcommand[1];
+                            action["objectType"] = splitcommand[1];
 
                             if (splitcommand.Length == 5) {
-                                action.position = new Vector3(
+                                action["position"] = new Vector3(
                                     float.Parse(splitcommand[2]),
                                     float.Parse(splitcommand[3]), 
                                     float.Parse(splitcommand[4])
@@ -2590,8 +2590,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     }
                     case "shortest_path_point":
                     {
-                        dynamic action = new JObject();
-                        action.action = "GetShortestPathToPoint";
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "GetShortestPathToPoint";
 
                         //pass in a min range, max range, delay
                         if (splitcommand.Length > 1)
@@ -2600,19 +2600,19 @@ namespace UnityStandardAssets.Characters.FirstPerson
                             //action.objectId = splitcommand[1];
 
                             if (splitcommand.Length == 4) {
-                                action.x = float.Parse(splitcommand[1]);
-                                action.y = float.Parse(splitcommand[2]);
-                                action.z = float.Parse(splitcommand[3]);
+                                action["x"] = float.Parse(splitcommand[1]);
+                                action["y"] = float.Parse(splitcommand[2]);
+                                action["z"] = float.Parse(splitcommand[3]);
                             }
                             if (splitcommand.Length == 7) {
-                                action.position = new Vector3(
+                                action["position"] = new Vector3(
                                     float.Parse(splitcommand[1]),
                                     float.Parse(splitcommand[2]), 
                                     float.Parse(splitcommand[3])
                                 );
-                                action.x = float.Parse(splitcommand[4]);
-                                action.y = float.Parse(splitcommand[5]);
-                                action.z = float.Parse(splitcommand[6]);
+                                action["x"] = float.Parse(splitcommand[4]);
+                                action["y"] = float.Parse(splitcommand[5]);
+                                action["z"] = float.Parse(splitcommand[6]);
                             }
                              if (splitcommand.Length < 4) {
                                 throw new ArgumentException("need to provide 6 floats, first 3 source position second 3 target position");

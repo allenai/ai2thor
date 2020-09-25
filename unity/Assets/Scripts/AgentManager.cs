@@ -536,7 +536,6 @@ public class AgentManager : MonoBehaviour
     }
 
     private void LateUpdate() {
-        
 		int completeCount = 0;
 		foreach (BaseFPSAgentController agent in this.agents) {
 			if (agent.actionComplete) {
@@ -1429,6 +1428,7 @@ public class ServerAction
 	public float TimeToWaitForObjectsToComeToRest = 10.0f;
 	public float intensity;//used for light?
 	public float scale;
+    public string visibilityScheme = VisibilityScheme.Collider.ToString();
 
     public bool returnToStart = false;
 
@@ -1452,6 +1452,19 @@ public class ServerAction
 		}
 		return (SimObjType)Enum.Parse(typeof(SimObjType), receptacleObjectType);
 	}
+
+    public VisibilityScheme GetVisibilityScheme() {
+        VisibilityScheme result = VisibilityScheme.Collider;
+        try 
+        {
+            result = (VisibilityScheme)Enum.Parse(typeof(VisibilityScheme), visibilityScheme, true);
+        } 
+        catch (ArgumentException ex) { 
+            Debug.LogError("Error parsing visibilityScheme: '" + visibilityScheme + "' defaulting to Collider");
+        }
+
+		return result;
+    }
 
 	public SimObjType GetSimObjType()
 	{
@@ -1497,6 +1510,12 @@ public enum ServerActionErrorCode  {
 	InvalidAction,
     MissingArguments
 }
+
+public enum VisibilityScheme {
+    Collider,
+    Distance
+}
+
 
 
 [Serializable]
