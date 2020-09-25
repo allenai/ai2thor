@@ -148,7 +148,7 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
 
     public void OnTriggerEnter(Collider col)
     {
-        Debug.Log("OnTriggerEnter is firing: " + col.transform.name);
+        //Debug.Log("OnTriggerEnter is firing: " + col.transform.name);
         
         staticCollided.collided = false;
         staticCollided.simObjPhysics = null;
@@ -156,18 +156,23 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
 
         if(col.GetComponentInParent<SimObjPhysics>())
         {
+            Debug.Log("Sim Object hit: " + col.transform.name);
             //how does this handle nested sim objects? maybe it's fine?
             SimObjPhysics sop = col.GetComponentInParent<SimObjPhysics>();
             if(sop.PrimaryProperty == SimObjPrimaryProperty.Static)
             {
+                Debug.Log("Sim Object was PrimaryProperty.Static: " + col.transform.name);
+                Debug.Log("For Sim Object, col.isTrigger evaluated to: " + col.isTrigger);
                 if(!col.isTrigger)
                 {
                     //#if UNITY_EDITOR
-                    Debug.Log("Collided with static sim obj " + sop.name);
+                    Debug.Log("Not a trigger, Collided with static sim obj " + sop.name);
                     //#endif
 
                     staticCollided.collided = true;
                     staticCollided.simObjPhysics = sop;
+
+                    Debug.Log("collided flag being set to: " + staticCollided.collided);
                 }
             }
         }
@@ -175,14 +180,19 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
         //also check if the collider hit was a structure?
         if(col.gameObject.isStatic)
         {                
+            Debug.Log("Static GameObject hit: " + col.transform.name);
+            Debug.Log("For static game obj, col.isTrigger evaluated to: " + col.isTrigger);
             if(!col.isTrigger)
             {
+
                 //#if UNITY_EDITOR
-                Debug.Log("Collided with static structure " + col.gameObject.name);
+                Debug.Log("Not a trigger, Collided with static structure " + col.gameObject.name);
                 //#endif
 
                 staticCollided.collided = true;
                 staticCollided.gameObject = col.gameObject;
+
+                Debug.Log("collided flag being set to: " + staticCollided.collided);
             }
         }
     }
@@ -245,6 +255,7 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
 
     public IEnumerator moveArmHeight(PhysicsRemoteFPSAgentController controller, float height, float unitsPerSecond, GameObject arm, bool returnToStartPositionIfFailed = false)
     {
+        Debug.Log("moveArmHeight Called ///////////////////////////////////////////////////");
         //first check if the target position is within bounds of the agent's capsule center/height extents
         //if not, actionFinished false with error message listing valid range defined by extents
         staticCollided.collided = false;
