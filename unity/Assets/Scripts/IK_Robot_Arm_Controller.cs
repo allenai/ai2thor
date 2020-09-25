@@ -255,6 +255,7 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
 
     public IEnumerator moveArmHeight(PhysicsRemoteFPSAgentController controller, float height, float unitsPerSecond, GameObject arm, bool returnToStartPositionIfFailed = false)
     {
+        float startTime = Time.realtimeSinceStartup;
         Debug.Log("moveArmHeight Called ///////////////////////////////////////////////////");
         //first check if the target position is within bounds of the agent's capsule center/height extents
         //if not, actionFinished false with error message listing valid range defined by extents
@@ -297,6 +298,7 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
 
                 staticCollided.collided = false;
 
+                Debug.Log(string.Format("MoveHand Stopped due to Collision- took {0} ms to complete", Time.realtimeSinceStartup - startTime));
                 controller.actionFinished(false, debugMessage);
                 yield break;
             }
@@ -318,6 +320,7 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
             yield return new WaitForFixedUpdate();
 
         }
+        Debug.Log(string.Format("NO COLLISION: MoveHand took {0} ms to complete", Time.realtimeSinceStartup - startTime));
         controller.actionFinished(true);
     }
 
