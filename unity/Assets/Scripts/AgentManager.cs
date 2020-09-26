@@ -799,10 +799,6 @@ public class AgentManager : MonoBehaviour
         createPayload(multiMeta, cameraMetadata, renderPayload, shouldRender);
 
 
-
-
-
-
 		#if UNITY_WEBGL
             JavaScriptInterface jsInterface = this.primaryAgent.GetComponent<JavaScriptInterface>();
             if (jsInterface != null) {
