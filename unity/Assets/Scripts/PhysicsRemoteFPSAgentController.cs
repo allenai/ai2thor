@@ -1464,6 +1464,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         public override void TeleportFull(ServerAction action) {
+            Debug.Log("TeleportFull Happening ////////////////////////////////////////");
             targetTeleport = new Vector3(action.x, action.y, action.z);
 
             if (action.forceAction) {

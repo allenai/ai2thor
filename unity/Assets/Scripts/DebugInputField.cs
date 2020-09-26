@@ -2867,6 +2867,19 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         break;
                     }
 
+                    case "telefull":
+                    {
+                        ServerAction action = new ServerAction();
+                        action.action = "TeleportFull";
+                        action.x = -1.0f;
+                        action.y = 0.9009995460510254f;
+                        action.z = 1;
+                        action.rotation = new Vector3(0, 135, 0);
+
+                        PhysicsController.ProcessControlCommand(action);
+                        break;
+                    }
+
                     case "scale":
                     {
                         ServerAction action = new ServerAction();
