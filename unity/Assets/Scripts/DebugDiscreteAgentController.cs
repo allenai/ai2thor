@@ -249,8 +249,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
                             PhysicsController.ProcessControlCommand(action);
                         }
 
-                        if (Input.GetKeyDown(KeyCode.B)) {
-                            action.action = "Blink";
+                        if (Input.GetKeyDown(KeyCode.H)) {
+                            action.action = "EndHabituation";
                             PhysicsController.ProcessControlCommand(action);
                         }
 

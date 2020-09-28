@@ -178,12 +178,12 @@ public class MCSMain : MonoBehaviour {
             !this.currentScene.wallMaterial.Equals("")) ? this.currentScene.wallMaterial :
             this.defaultWallsMaterial;
 
-        // Remove the ceiling from all IntPhys and top-down scenes.
+        // Remove the ceiling from all IntPhys and isometric scenes.
         this.ceiling.SetActive(!(this.currentScene.intphys || this.currentScene.observation ||
-                this.currentScene.topdown));
+                this.currentScene.isometric));
 
-        // Set the controller's action substeps to 1 in all IntPhys and top-down scenes.
-        if (this.currentScene.intphys || this.currentScene.observation || this.currentScene.topdown) {
+        // Set the controller's action substeps to 1 in all IntPhys and isometric scenes.
+        if (this.currentScene.intphys || this.currentScene.observation || this.currentScene.isometric) {
             this.agentController.substeps = 1;
         }
 
@@ -216,7 +216,7 @@ public class MCSMain : MonoBehaviour {
                 this.currentScene.floorProperties.angularDrag = MCSMain.RIGIDBODY_ANGULAR_DRAG_DEFAULT;
             }
         }
-        else if (this.currentScene.topdown) {
+        else if (this.currentScene.isometric) {
             this.currentScene.performerStart = new MCSConfigTransform();
             this.currentScene.performerStart.position = new MCSConfigVector();
             this.currentScene.performerStart.position.y = MCSMain.TOP_DOWN_PERFORMER_START_Y;
@@ -265,8 +265,8 @@ public class MCSMain : MonoBehaviour {
         }
 
         else {
-            // IntPhys and top-down scenes don't have ceilings.
-            if (!(this.currentScene.intphys || this.currentScene.observation || this.currentScene.topdown)) {
+            // IntPhys and isometric scenes don't have ceilings.
+            if (!(this.currentScene.intphys || this.currentScene.observation || this.currentScene.isometric)) {
                 if (ceilingSimObjPhysics.VisibilityPoints.Length == 0) {
                     ceilingSimObjPhysics.VisibilityPoints = AssignVisibilityPoints(this.ceiling,
                         this.GenerateCubeInternalVisibilityPoints(this.ceiling, null), null);
@@ -1589,7 +1589,7 @@ public class MCSConfigScene {
     public bool intphys;
     public bool observation; // deprecated; please use intphys
     public bool screenshot;
-    public bool topdown;
+    public bool isometric;
 
     public MCSConfigGoal goal;
     public MCSConfigTransform performerStart = null;

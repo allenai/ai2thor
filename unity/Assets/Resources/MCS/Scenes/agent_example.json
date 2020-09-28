@@ -1,0 +1,606 @@
+{
+    "isometric": true,
+    "name": "agent_example",
+    "version": 2,
+    "ceilingMaterial": "AI2-THOR/Materials/Walls/Drywall",
+    "floorMaterial": "AI2-THOR/Materials/Fabrics/Carpet4",
+    "wallMaterial": "AI2-THOR/Materials/Walls/Drywall",
+    "goal": {
+      "last_step": 101,
+      "action_list": [
+          ["Pass"], ["Pass"], ["Pass"], ["Pass"], ["Pass"],
+          ["Pass"], ["Pass"], ["Pass"], ["Pass"], ["Pass"],
+          ["Pass"], ["Pass"], ["Pass"], ["EndHabituation"], ["Pass"],
+          ["Pass"], ["Pass"], ["Pass"], ["Pass"], ["Pass"],
+          ["Pass"], ["Pass"], ["Pass"], ["Pass"], ["Pass"],
+          ["Pass"], ["Pass"], ["EndHabituation"], ["Pass"], ["Pass"],
+          ["Pass"], ["Pass"], ["Pass"], ["Pass"], ["Pass"],
+          ["Pass"], ["Pass"], ["Pass"], ["Pass"], ["EndHabituation"],
+          ["Pass"], ["Pass"], ["Pass"], ["Pass"], ["Pass"],
+          ["Pass"], ["Pass"], ["Pass"], ["Pass"], ["Pass"],
+          ["Pass"], ["EndHabituation"], ["Pass"], ["Pass"], ["Pass"],
+          ["Pass"], ["Pass"], ["Pass"], ["Pass"], ["Pass"],
+          ["Pass"], ["Pass"], ["Pass"], ["Pass"], ["Pass"],
+          ["EndHabituation"], ["Pass"], ["Pass"], ["Pass"], ["Pass"],
+          ["EndHabituation"], ["Pass"], ["Pass"], ["Pass"], ["Pass"],
+          ["Pass"], ["Pass"], ["Pass"], ["Pass"], ["Pass"],
+          ["Pass"], ["Pass"], ["Pass"], ["EndHabituation"], ["Pass"],
+          ["Pass"], ["Pass"], ["Pass"], ["EndHabituation"], ["Pass"],
+          ["Pass"], ["Pass"], ["Pass"], ["Pass"], ["Pass"],
+          ["Pass"], ["Pass"], ["Pass"], ["Pass"], ["Pass"],
+          ["EndHabituation"]
+      ]
+    },
+    "objects": [{
+        "id": "wall",
+        "type": "cube",
+        "materials": ["AI2-THOR/Materials/Walls/Drywall"],
+        "shows": [{
+            "stepBegin": 0,
+            "position": {
+                "x": 0,
+                "y": 1,
+                "z": 0.5
+            },
+            "scale": {
+                "x": 0.05,
+                "y": 2,
+                "z": 1
+            }
+        }]
+    }, {
+        "id": "shelf",
+        "type": "table_6",
+        "materials": ["AI2-THOR/Materials/Wood/LightWoodCounters3"],
+        "shows": [{
+            "stepBegin": 0,
+            "position": {
+                "x": -1,
+                "y": 0,
+                "z": 0.5
+            },
+            "scale": {
+                "x": 0.675,
+                "y": 1,
+                "z": 0.337
+            }
+        }]
+    }, {
+        "id": "chair",
+        "type": "chair_1",
+        "materials": ["AI2-THOR/Materials/Wood/WornWood"],
+        "shows": [{
+            "stepBegin": 0,
+            "position": {
+                "x": -0.5,
+                "y": 0,
+                "z": -0.5
+            }
+        }]
+    }, {
+        "id": "box",
+        "type": "box_2",
+        "materials": ["AI2-THOR/Materials/Misc/Cardboard_Tan"],
+        "shows": [{
+            "stepBegin": 0,
+            "position": {
+                "x": 1,
+                "y": 0.01,
+                "z": 0
+            },
+            "scale": {
+                "x": 1,
+                "y": 1,
+                "z": 1
+            }
+        }]
+    }, {
+        "id": "plate",
+        "type": "plate_1",
+        "materials": ["AI2-THOR/Materials/Plastics/WhitePlastic"],
+        "shows": [{
+            "stepBegin": 0,
+            "position": {
+                "x": 0.5,
+                "y": 0.01,
+                "z": -0.5
+            },
+            "scale": {
+                "x": 1,
+                "y": 1,
+                "z": 1
+            }
+        }]
+    }, {
+        "id": "duck_on_wheels",
+        "type": "duck_on_wheels",
+        "materials": ["UnityAssetStore/Wooden_Toys_Bundle/ToyBlocks/meshes/Materials/yellow_1x1"],
+        "shows": [{
+            "stepBegin": 0,
+            "position": {
+                "x": 1.25,
+                "y": 0.01,
+                "z": 0.75
+            },
+            "rotation": {
+                "x": 90,
+                "y": 45,
+                "z": 0
+            }
+        }]
+    }, {
+        "id": "racecar",
+        "type": "racecar_red",
+        "materials": ["UnityAssetStore/Wooden_Toys_Bundle/ToyBlocks/meshes/Materials/red_1x1"],
+        "shows": [{
+            "stepBegin": 0,
+            "position": {
+                "x": -0.5,
+                "y": 0.01,
+                "z": 0
+            },
+            "rotation": {
+                "x": 0,
+                "y": 45,
+                "z": 0
+            }
+        }]
+    }, {
+        "id": "block_a",
+        "type": "block_blue_letter_c",
+        "materials": ["UnityAssetStore/KD_AlphabetBlocks/Assets/Textures/Blue/TOYBlocks_AlphabetBlock_A_Blue_1K/ToyBlockBlueA"],
+        "shows": [{
+            "stepBegin": 0,
+            "position": {
+                "x": 1.25,
+                "y": 0.01,
+                "z": -0.75
+            },
+            "rotation": {
+                "x": 0,
+                "y": 0,
+                "z": 0
+            }
+        }]
+    }, {
+        "id": "ball",
+        "type": "sphere",
+        "mass": 0.1,
+        "salientMaterials": ["plastic"],
+        "materials": ["UnityAssetStore/Kindergarten_Interior/Models/Materials/color 2"],
+        "pickupable": true,
+        "shows": [{
+            "stepBegin": 0,
+            "position": {
+                "x": 0.5,
+                "y": 0.05,
+                "z": 0.75
+            },
+            "scale": {
+                "x": 0.1,
+                "y": 0.1,
+                "z": 0.1
+            }
+        }, {
+            "stepBegin": 14,
+            "position": {
+                "x": -1,
+                "y": 0.05,
+                "z": 0
+            }
+        }, {
+            "stepBegin": 28,
+            "position": {
+                "x": 1.25,
+                "y": 0.05,
+                "z": -0.5
+            }
+        }, {
+            "stepBegin": 40,
+            "position": {
+                "x": -0.25,
+                "y": 0.05,
+                "z": 0.5
+            }
+        }, {
+            "stepBegin": 52,
+            "position": {
+                "x": -1.5,
+                "y": 0.05,
+                "z": -1
+            }
+        }, {
+            "stepBegin": 66,
+            "position": {
+                "x": 0,
+                "y": 0.05,
+                "z": -0.25
+            }
+        }, {
+            "stepBegin": 71,
+            "position": {
+                "x": 1,
+                "y": 0.05,
+                "z": 0.5
+            }
+        }, {
+            "stepBegin": 84,
+            "position": {
+                "x": 0.5,
+                "y": 0.05,
+                "z": -1
+            }
+        }, {
+            "stepBegin": 89,
+            "position": {
+                "x": -1.5,
+                "y": 0.05,
+                "z": 0
+            }
+        }]
+    }, {
+        "id": "block_blank",
+        "type": "block_blank_wood_cube",
+        "materials": ["UnityAssetStore/Wooden_Toys_Bundle/ToyBlocks/meshes/Materials/green_1x1"],
+        "shows": [{
+            "stepBegin": 0,
+            "position": {
+                "x": 0,
+                "y": 0.01,
+                "z": -0.25
+            },
+            "rotation": {
+                "x": 0,
+                "y": 0,
+                "z": 0
+            },
+            "scale": {
+                "x": 1,
+                "y": 1,
+                "z": 1
+            }
+        }, {
+            "stepBegin": 14,
+            "position": {
+                "x": 1.25,
+                "y": 0.01,
+                "z": -0.5
+            }
+        }, {
+            "stepBegin": 28,
+            "position": {
+                "x": -1.5,
+                "y": 0.01,
+                "z": -1
+            }
+        }, {
+            "stepBegin": 40,
+            "position": {
+                "x": -1,
+                "y": 0.01,
+                "z": 0
+            }
+        }, {
+            "stepBegin": 52,
+            "position": {
+                "x": 0.5,
+                "y": 0.01,
+                "z": -1
+            }
+        }, {
+            "stepBegin": 66,
+            "position": {
+                "x": 1,
+                "y": 0.01,
+                "z": 0.5
+            }
+        }, {
+            "stepBegin": 71,
+            "position": {
+                "x": 0.5,
+                "y": 0.01,
+                "z": 0.75
+            }
+        }, {
+            "stepBegin": 84,
+            "position": {
+                "x": -0.25,
+                "y": 0.01,
+                "z": 0.5
+            }
+        }, {
+            "stepBegin": 89,
+            "position": {
+                "x": 0.25,
+                "y": 0.01,
+                "z": 0.5
+            }
+        }]
+    }, {
+        "id": "agent",
+        "type": "emoji_smile_up",
+        "shows": [{
+            "stepBegin": 0,
+            "position": {
+                "x": 0,
+                "y": 0.25,
+                "z": -0.75
+            },
+            "rotation": {
+                "x": 0,
+                "y": 0,
+                "z": 0
+            },
+            "scale": {
+                "x": 0.25,
+                "y": 0.25,
+                "z": 0.25
+            }
+        }, {
+            "stepBegin": 14,
+            "position": {
+                "x": 0,
+                "y": 0.25,
+                "z": -0.75
+            },
+            "rotation": {
+                "x": 0,
+                "y": 0,
+                "z": 0
+            }
+        }, {
+            "stepBegin": 28,
+            "position": {
+                "x": 0,
+                "y": 0.25,
+                "z": -0.75
+            },
+            "rotation": {
+                "x": 0,
+                "y": 0,
+                "z": 0
+            }
+        }, {
+            "stepBegin": 40,
+            "position": {
+                "x": 0,
+                "y": 0.25,
+                "z": -0.75
+            },
+            "rotation": {
+                "x": 0,
+                "y": 0,
+                "z": 0
+            }
+        }, {
+            "stepBegin": 52,
+            "position": {
+                "x": 0,
+                "y": 0.25,
+                "z": -0.75
+            },
+            "rotation": {
+                "x": 0,
+                "y": 0,
+                "z": 0
+            }
+        }, {
+            "stepBegin": 66,
+            "position": {
+                "x": 0,
+                "y": 0.25,
+                "z": -0.75
+            },
+            "rotation": {
+                "x": 0,
+                "y": 0,
+                "z": 0
+            }
+        }, {
+            "stepBegin": 71,
+            "position": {
+                "x": 0,
+                "y": 0.25,
+                "z": -0.75
+            },
+            "rotation": {
+                "x": 0,
+                "y": 0,
+                "z": 0
+            }
+        }, {
+            "stepBegin": 84,
+            "position": {
+                "x": 0,
+                "y": 0.25,
+                "z": -0.75
+            },
+            "rotation": {
+                "x": 0,
+                "y": 0,
+                "z": 0
+            }
+        }, {
+            "stepBegin": 89,
+            "position": {
+                "x": 0,
+                "y": 0.25,
+                "z": -0.75
+            },
+            "rotation": {
+                "x": 0,
+                "y": 0,
+                "z": 0
+            }
+        }],
+        "moves": [{
+            "stepBegin": 1,
+            "stepEnd": 5,
+            "vector": {
+                "x": 0.1,
+                "y": 0,
+                "z": 0.1
+            }
+        }, {
+            "stepBegin": 6,
+            "stepEnd": 13,
+            "vector": {
+                "x": 0,
+                "y": 0,
+                "z": 0.1
+            }
+        }, {
+            "stepBegin": 16,
+            "stepEnd": 19,
+            "vector": {
+                "x": 0,
+                "y": 0,
+                "z": 0.1
+            }
+        }, {
+            "stepBegin": 20,
+            "stepEnd": 22,
+            "vector": {
+                "x": -0.1,
+                "y": 0,
+                "z": 0.1
+            }
+        }, {
+            "stepBegin": 23,
+            "stepEnd": 27,
+            "vector": {
+                "x": -0.1,
+                "y": 0,
+                "z": 0
+            }
+        }, {
+            "stepBegin": 30,
+            "stepEnd": 32,
+            "vector": {
+                "x": 0.1,
+                "y": 0,
+                "z": 0.1
+            }
+        }, {
+            "stepBegin": 33,
+            "stepEnd": 39,
+            "vector": {
+                "x": 0.1,
+                "y": 0,
+                "z": 0
+            }
+        }, {
+            "stepBegin": 42,
+            "stepEnd": 45,
+            "vector": {
+                "x": 0,
+                "y": 0,
+                "z": 0.1
+            }
+        }, {
+            "stepBegin": 46,
+            "stepEnd": 48,
+            "vector": {
+                "x": -0.1,
+                "y": 0,
+                "z": 0.1
+            }
+        }, {
+            "stepBegin": 49,
+            "stepEnd": 51,
+            "vector": {
+                "x": 0,
+                "y": 0,
+                "z": 0.1
+            }
+        }, {
+            "stepBegin": 54,
+            "stepEnd": 55,
+            "vector": {
+                "x": -0.1,
+                "y": 0,
+                "z": -0.1
+            }
+        }, {
+            "stepBegin": 56,
+            "stepEnd": 65,
+            "vector": {
+                "x": -0.1,
+                "y": 0,
+                "z": 0
+            }
+        }, {
+            "stepBegin": 68,
+            "stepEnd": 70,
+            "vector": {
+                "x": 0,
+                "y": 0,
+                "z": 0.1
+            }
+        }, {
+            "stepBegin": 73,
+            "stepEnd": 78,
+            "vector": {
+                "x": 0.1,
+                "y": 0,
+                "z": 0.1
+            }
+        }, {
+            "stepBegin": 79,
+            "stepEnd": 82,
+            "vector": {
+                "x": 0,
+                "y": 0,
+                "z": 0.1
+            }
+        }, {
+            "stepBegin": 83,
+            "stepEnd": 83,
+            "vector": {
+                "x": 0.1,
+                "y": 0,
+                "z": 0.1
+            }
+        }, {
+            "stepBegin": 86,
+            "stepEnd": 87,
+            "vector": {
+                "x": 0.1,
+                "y": 0,
+                "z": 0
+            }
+        }, {
+            "stepBegin": 88,
+            "stepEnd": 88,
+            "vector": {
+                "x": 0.1,
+                "y": 0,
+                "z": -0.1
+            }
+        }, {
+            "stepBegin": 91,
+            "stepEnd": 94,
+            "vector": {
+                "x": 0,
+                "y": 0,
+                "z": 0.1
+            }
+        }, {
+            "stepBegin": 95,
+            "stepEnd": 97,
+            "vector": {
+                "x": 0.1,
+                "y": 0,
+                "z": 0.1
+            }
+        }, {
+            "stepBegin": 98,
+            "stepEnd": 100,
+            "vector": {
+                "x": 0,
+                "y": 0,
+                "z": 0.1
+            }
+        }]
+    }]
+}

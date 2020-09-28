@@ -55,12 +55,6 @@ public class MCSController : PhysicsRemoteFPSAgentController {
 
     private int framesUntilGridSnap; //when moving, grid snap will engage on the last frame (rather than every frame)
 
-    public void Blink(ServerAction action) {
-        this.GetComponentInChildren<Camera>().cullingMask = 0;
-        this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.SUCCESSFUL);
-        this.actionFinished(false);
-    }
-
     public override void CloseObject(ServerAction action) {
         bool continueAction = TryConvertingEachObjectDirectionToId(action);
 
@@ -134,6 +128,12 @@ public class MCSController : PhysicsRemoteFPSAgentController {
         }
 
         return status;
+    }
+
+    public void EndHabituation(ServerAction action) {
+        this.GetComponentInChildren<Camera>().cullingMask = 0;
+        this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.SUCCESSFUL);
+        this.actionFinished(false);
     }
 
     public override ObjectMetadata[] generateObjectMetadata() {
