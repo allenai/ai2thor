@@ -19,7 +19,7 @@ public class MCSController : PhysicsRemoteFPSAgentController {
 
     // The number of times to run Physics.Simulate after each action from the player is LOOPS * STEPS.
     public static int PHYSICS_SIMULATION_LOOPS = 5;
-    public static int PHYSICS_SIMULATION_STEPS = 3;
+    public static int PHYSICS_SIMULATION_STEPS = 5;
 
     //this is not the capsule radius, this is the radius of the x and z bounds of the agent.
     public static float AGENT_RADIUS = 0.12f;
@@ -521,8 +521,7 @@ public class MCSController : PhysicsRemoteFPSAgentController {
         // value causes collision errors.  From the Unity Physics.Simulate documentation:
         // "Using step values greater than 0.03 is likely to produce inaccurate results."
         for (int i = 0; i < MCSController.PHYSICS_SIMULATION_STEPS; ++i) {
-            // Simulate the physics a little more on initialization so that the objects can settle down onto the floor.
-            Physics.Simulate(this.step == 0 ? 0.02f : 0.01f);
+            Physics.Simulate(0.01f);
         }
     }
 
