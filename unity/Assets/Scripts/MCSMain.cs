@@ -299,7 +299,7 @@ public class MCSMain : MonoBehaviour {
         }
 
         if (this.currentScene.floorProperties != null && this.currentScene.floorProperties.enable) {
-            AssignPhysicsMaterialAndRigidBodyValues(scene.floorProperties, this.floor, floorSimObjPhysics);
+            AssignPhysicsMaterialAndRigidBodyValues(this.currentScene.floorProperties, this.floor, floorSimObjPhysics);
         }
 
         if (this.currentScene.goal != null && this.currentScene.goal.description != null) {
