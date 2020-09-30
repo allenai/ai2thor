@@ -148,10 +148,6 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
 
     public void OnTriggerEnter(Collider col)
     {
-        staticCollided.collided = false;
-        staticCollided.simObjPhysics = null;
-        staticCollided.gameObject = null;
-
         if(col.GetComponentInParent<SimObjPhysics>())
         {
             //how does this handle nested sim objects? maybe it's fine?
@@ -171,14 +167,13 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
         }
 
         //also check if the collider hit was a structure?
-        if(col.gameObject.isStatic)
-        {
-            // #if UNITY_EDITOR
-            // Debug.Log("Collided with static structure " + col.gameObject.name);
-            // #endif
-                
-            staticCollided.collided = true;
-            staticCollided.gameObject = col.gameObject;
+        else if(col.gameObject.tag == "Structure")
+        {                
+            if(!col.isTrigger)
+            {
+                staticCollided.collided = true;
+                staticCollided.gameObject = col.gameObject;
+            }
         }
     }
 
@@ -186,7 +181,10 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
     public IEnumerator rotateHand(PhysicsRemoteFPSAgentController controller, Quaternion targetQuat, float time, bool returnToStartPositionIfFailed = false)
     {
 
-        staticCollided.collided=false;
+        staticCollided.collided = false;
+        staticCollided.simObjPhysics = null;
+        staticCollided.gameObject = null;
+
         float currentTime = 0.0f;
 
         yield return new WaitForFixedUpdate();
@@ -243,6 +241,8 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
         //first check if the target position is within bounds of the agent's capsule center/height extents
         //if not, actionFinished false with error message listing valid range defined by extents
         staticCollided.collided = false;
+        staticCollided.simObjPhysics = null;
+        staticCollided.gameObject = null;
 
         CapsuleCollider cc = controller.GetComponent<CapsuleCollider>();
         Vector3 cc_center = cc.center;
@@ -308,6 +308,8 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
     public IEnumerator moveArmTarget(PhysicsRemoteFPSAgentController controller, Vector3 target, float unitsPerSecond,  GameObject arm, bool returnToStartPositionIfFailed = false, string whichSpace = "arm") {
 
         staticCollided.collided = false;
+        staticCollided.simObjPhysics = null;
+        staticCollided.gameObject = null;
         // Move arm based on hand space or arm origin space
         //Vector3 targetWorldPos = handCameraSpace ? handCameraTransform.TransformPoint(target) : arm.transform.TransformPoint(target);
 
