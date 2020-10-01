@@ -24,6 +24,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         //face swap stuff here
         public Material[] ScreenFaces; //0 - neutral, 1 - Happy, 2 - Mad, 3 - Angriest
         public MeshRenderer MyFaceMesh;
+        public int AdvancePhysicsStepCount;
 
         public GameObject[] TargetCircles = null;
 
@@ -149,7 +150,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             //using VisibleSimObjs(action), so be aware of that
 
             #if UNITY_EDITOR || UNITY_WEBGL
-            if (this.actionComplete) {
+            if (this.agentState == AgentState.ActionComplete) {
                 ServerAction action = new ServerAction();
                 VisibleSimObjPhysics = VisibleSimObjs(action); //GetAllVisibleSimObjPhysics(m_Camera, maxVisibleDistance);
             }
@@ -1950,7 +1951,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             //pass in the timeStep to advance the physics simulation
             Physics.Simulate(action.timeStep);
-            agentManager.AdvancePhysicsStepCount++;
+            this.AdvancePhysicsStepCount++;
             actionFinished(true);
         }
 

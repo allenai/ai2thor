@@ -151,7 +151,7 @@ public int objectVariation;
                 highlightController.UpdateHighlightedObject(Input.mousePosition);
                 highlightController.MouseControls();
 
-                if (PhysicsController.actionComplete) {
+                if (PhysicsController.ReadyForCommand) {
                         handMode = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
                         float WalkMagnitude = 0.25f;
                         if (!handMode && !hidingPhase) {
@@ -267,7 +267,7 @@ public int objectVariation;
                                 }
                             }
                         }
-                        if ((Input.GetKeyDown(KeyCode.LeftControl) || Input.GetKeyDown(KeyCode.C) || Input.GetKeyDown(KeyCode.RightControl) ) && PhysicsController.actionComplete) {
+                        if ((Input.GetKeyDown(KeyCode.LeftControl) || Input.GetKeyDown(KeyCode.C) || Input.GetKeyDown(KeyCode.RightControl) ) && PhysicsController.ReadyForCommand) {
                             ServerAction action = new ServerAction();
                             if (this.PhysicsController.isStanding()) {
                                 action.action = "Crouch";

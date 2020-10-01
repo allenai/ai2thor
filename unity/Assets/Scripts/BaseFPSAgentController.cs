@@ -74,6 +74,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
         // outbound object filter
         private SimObjPhysics[] simObjFilter = null;
         private VisibilityScheme visibilityScheme = VisibilityScheme.Collider;
+        public AgentState agentState = AgentState.Emit;
 
         public bool IsVisible
         {
@@ -96,6 +97,19 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			}
         }
 
+        public bool IsProcessing {
+            get {
+                return this.agentState == AgentState.Processing;
+            }
+        }
+
+        public bool ReadyForCommand {
+            get {
+                return this.agentState == AgentState.Emit;
+            }
+
+        }
+
 		protected float maxDownwardLookAngle = 60f;
 		protected float maxUpwardLookAngle = 30f;
 		//allow agent to push sim objects that can move, for physics
@@ -116,7 +130,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		protected bool lastActionSuccess;
 		protected string errorMessage;
 		protected ServerActionErrorCode errorCode;
-		public bool actionComplete;
 		public System.Object actionReturn;
         [SerializeField] protected Vector3 standingLocalCameraPosition;
         [SerializeField] protected Vector3 crouchingLocalCameraPosition;
@@ -251,12 +264,16 @@ namespace UnityStandardAssets.Characters.FirstPerson
             }
         }
 
-		public void actionFinished(bool success, System.Object actionReturn=null) 
+		public void actionFinishedEmit(bool success, System.Object actionReturn=null) 
 		{
-			
-			if (actionComplete) 
+            actionFinished(success, AgentState.Emit, actionReturn);
+		}
+
+		protected virtual void actionFinished(bool success, AgentState newState, System.Object actionReturn=null) 
+		{
+			if (!this.IsProcessing)
 			{
-				Debug.LogError ("ActionFinished called with actionComplete already set to true");
+				Debug.LogError ("ActionFinished called with agentState not in processing ");
 			}
 
             if (this.jsInterface)
@@ -266,11 +283,20 @@ namespace UnityStandardAssets.Characters.FirstPerson
             }
 
             lastActionSuccess = success;
-			this.actionComplete = true;
+			this.agentState = newState;
 			this.actionReturn = actionReturn;
 			actionCounter = 0;
 			targetTeleport = Vector3.zero;
+
+        }
+
+		public virtual void actionFinished(bool success, System.Object actionReturn=null) 
+		{
+            actionFinished(success, AgentState.ActionComplete, actionReturn);
+            this.resumePhysics();
 		}
+
+        protected virtual void resumePhysics() {}
 
         public Vector3[] getReachablePositions(float gridMultiplier = 1.0f, int maxStepCount = 10000, bool visualize = false, Color? gridColor = null) { //max step count represents a 100m * 100m room. Adjust this value later if we end up making bigger rooms?
             CapsuleCollider cc = GetComponent<CapsuleCollider>();
@@ -1390,6 +1416,19 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
             return b;
         }
+		public virtual  MetadataPatch generateMetadataPatch()
+		{
+            MetadataPatch patch = new MetadataPatch();
+            patch.lastAction = this.lastAction;
+            patch.lastActionSuccess = this.lastActionSuccess;
+            patch.actionReturn = this.actionReturn;
+            if (errorCode != ServerActionErrorCode.Undefined) {
+                patch.errorCode = Enum.GetName(typeof(ServerActionErrorCode), errorCode);
+            }
+            patch.errorMessage = this.errorMessage;
+            return patch;
+        }
+
 		public virtual MetadataWrapper generateMetadataWrapper()
 		{
             // AGENT METADATA
@@ -1512,7 +1551,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             lastPosition = new Vector3(transform.position.x, transform.position.y, transform.position.z);
 			System.Reflection.MethodInfo method = this.GetType().GetMethod(controlCommand.action);
 			
-			this.actionComplete = false;
+            this.agentState = AgentState.Processing;
 			try
 			{
 				if (method == null) {
@@ -1534,7 +1573,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
 				actionFinished(false);
 			}
 
-			agentManager.setReadyToEmit(true);
         }
 #endif
 
@@ -1563,7 +1601,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             lastAction = controlCommand.action;
             lastActionSuccess = false;
             lastPosition = new Vector3(transform.position.x, transform.position.y, transform.position.z);
-            this.actionComplete = false;
+            this.agentState = AgentState.Processing;
 
             try
             {
@@ -1598,8 +1636,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 Debug.Log(errorMessage);
             }
             #endif
-
-            agentManager.setReadyToEmit(true);
         }
 
         //no op action
@@ -2717,12 +2753,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
             var path = GetSimObjectNavMeshTarget(sop, startPosition, startRotation);
             if (path.status == UnityEngine.AI.NavMeshPathStatus.PathComplete) {
                 //VisualizePath(startPosition, path);
-                actionFinished(true, path);
+                actionFinishedEmit(true, path);
                 return;
             }
             else {
                 errorMessage = "Path to target could not be found";
-                actionFinished(false);
+                actionFinishedEmit(false);
                 return;
             }
         }
@@ -3138,6 +3174,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
         public void TestActionDispatchNoopServerAction(ServerAction action) {
             actionFinished(true, "serveraction");
+        }
+
+        public void TestFastEmit(string rvalue) {
+            actionFinishedEmit(true, rvalue);
         }
 
         public void TestActionDispatchNoopAllDefault(float param12, float param10=0.0f, float param11=1.0f) {
