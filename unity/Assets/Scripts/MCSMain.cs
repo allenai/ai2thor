@@ -19,15 +19,25 @@ public class MCSMain : MonoBehaviour {
     private static float INTUITIVE_PHYSICS_WALL_FRONT_SCALE_Y = 4.5f;
     private static float INTUITIVE_PHYSICS_WALL_LEFT_POSITION_X = -7.0f;
     private static float INTUITIVE_PHYSICS_WALL_RIGHT_POSITION_X = 7.0f;
-    private static float ISOMETRIC_PERFORMER_START_POSITION_X = 0.5f;
+    private static float ISOMETRIC_FLOOR_SCALE_X = 20f;
+    private static float ISOMETRIC_FLOOR_SCALE_Z = 20f;
+    private static float ISOMETRIC_PERFORMER_START_POSITION_X = 4f;
     private static float ISOMETRIC_PERFORMER_START_POSITION_Y = 3f;
-    private static float ISOMETRIC_PERFORMER_START_POSITION_Z = -0.5f;
+    private static float ISOMETRIC_PERFORMER_START_POSITION_Z = -4f;
     private static float ISOMETRIC_PERFORMER_START_ROTATION_X = 35.264f;
     private static float ISOMETRIC_PERFORMER_START_ROTATION_Y = -45f;
-    private static float ISOMETRIC_WALL_BACK_POSITION_Z = -2f;
-    private static float ISOMETRIC_WALL_BACK_SCALE_Z = 6f;
-    private static float ISOMETRIC_WALL_RIGHT_POSITION_X = 2f;
-    private static float ISOMETRIC_WALL_RIGHT_SCALE_X = 6f;
+    private static float ISOMETRIC_WALL_BACK_FRONT_SCALE_X = 5.5f;
+    private static float ISOMETRIC_WALL_BACK_FRONT_SCALE_Z = 0.5f;
+    private static float ISOMETRIC_WALL_BACK_POSITION_X = 0f;
+    private static float ISOMETRIC_WALL_BACK_POSITION_Z = -2.5f;
+    private static float ISOMETRIC_WALL_FRONT_POSITION_X = 0f;
+    private static float ISOMETRIC_WALL_FRONT_POSITION_Z = 2.5f;
+    private static float ISOMETRIC_WALL_LEFT_POSITION_X = -2.5f;
+    private static float ISOMETRIC_WALL_LEFT_POSITION_Z = 0f;
+    private static float ISOMETRIC_WALL_LEFT_RIGHT_SCALE_X = 0.5f;
+    private static float ISOMETRIC_WALL_LEFT_RIGHT_SCALE_Z = 5.5f;
+    private static float ISOMETRIC_WALL_RIGHT_POSITION_X = 2.5f;
+    private static float ISOMETRIC_WALL_RIGHT_POSITION_Z = 0f;
     private static float ISOMETRIC_WALL_POSITION_Y = 0.05f;
     private static float ISOMETRIC_WALL_SCALE_Y = 0.1f;
     private static float LIGHT_RANGE = 20f;
@@ -43,10 +53,10 @@ public class MCSMain : MonoBehaviour {
     private static float PHYSICS_BOUNCINESS_DEFAULT = 0;
     private static float RIGIDBODY_DRAG_DEFAULT = 0;
     private static float RIGIDBODY_ANGULAR_DRAG_DEFAULT = 0.5f;
+    private static float WALL_BACK_FRONT_POSITION_X = 0;
+    private static float WALL_BACK_FRONT_SCALE_X = 11.0f;
+    private static float WALL_BACK_FRONT_SCALE_Z = 0.5f;
     private static float WALL_BACK_POSITION_Z = -5.25f;
-    private static float WALL_FRONT_BACK_POSITION_X = 0;
-    private static float WALL_FRONT_BACK_SCALE_X = 11.0f;
-    private static float WALL_FRONT_BACK_SCALE_Z = 0.5f;
     private static float WALL_FRONT_POSITION_Z = 5.25f;
     private static float WALL_LEFT_POSITION_X = -5.25f;
     private static float WALL_LEFT_RIGHT_POSITION_Z = 0;
@@ -214,15 +224,15 @@ public class MCSMain : MonoBehaviour {
             this.wallRight.transform.localScale = new Vector3(MCSMain.WALL_LEFT_RIGHT_SCALE_X,
                 MCSMain.WALL_SCALE_Y, MCSMain.WALL_LEFT_RIGHT_SCALE_Z);
 
-            this.wallFront.transform.position = new Vector3(MCSMain.WALL_FRONT_BACK_POSITION_X,
+            this.wallFront.transform.position = new Vector3(MCSMain.WALL_BACK_FRONT_POSITION_X,
                 MCSMain.INTUITIVE_PHYSICS_WALL_FRONT_POSITION_Y, MCSMain.WALL_FRONT_POSITION_Z);
             this.wallFront.transform.localScale = new Vector3(MCSMain.INTUITIVE_PHYSICS_WALL_FRONT_SCALE_X,
-                MCSMain.INTUITIVE_PHYSICS_WALL_FRONT_SCALE_Y, MCSMain.WALL_FRONT_BACK_SCALE_Z);
+                MCSMain.INTUITIVE_PHYSICS_WALL_FRONT_SCALE_Y, MCSMain.WALL_BACK_FRONT_SCALE_Z);
 
-            this.wallBack.transform.position = new Vector3(MCSMain.WALL_FRONT_BACK_POSITION_X,
+            this.wallBack.transform.position = new Vector3(MCSMain.WALL_BACK_FRONT_POSITION_X,
                 MCSMain.WALL_POSITION_Y, MCSMain.WALL_BACK_POSITION_Z);
-            this.wallBack.transform.localScale = new Vector3(MCSMain.WALL_FRONT_BACK_SCALE_X,
-                MCSMain.WALL_SCALE_Y, MCSMain.WALL_FRONT_BACK_SCALE_Z);
+            this.wallBack.transform.localScale = new Vector3(MCSMain.WALL_BACK_FRONT_SCALE_X,
+                MCSMain.WALL_SCALE_Y, MCSMain.WALL_BACK_FRONT_SCALE_Z);
 
             this.floor.transform.localScale = new Vector3(MCSMain.INTUITIVE_PHYSICS_FLOOR_SCALE_X,
                 MCSMain.FLOOR_SCALE_Y, MCSMain.FLOOR_SCALE_Z);
@@ -253,28 +263,28 @@ public class MCSMain : MonoBehaviour {
             this.currentScene.performerStart.rotation.x = MCSMain.ISOMETRIC_PERFORMER_START_ROTATION_X;
             this.currentScene.performerStart.rotation.y = MCSMain.ISOMETRIC_PERFORMER_START_ROTATION_Y;
 
-            this.wallLeft.transform.position = new Vector3(MCSMain.WALL_LEFT_POSITION_X,
-                MCSMain.WALL_POSITION_Y, MCSMain.WALL_LEFT_RIGHT_POSITION_Z);
-            this.wallFront.transform.localScale = new Vector3(MCSMain.WALL_LEFT_RIGHT_SCALE_X,
-                MCSMain.WALL_SCALE_Y, MCSMain.WALL_LEFT_RIGHT_SCALE_Z);
+            this.wallLeft.transform.position = new Vector3(MCSMain.ISOMETRIC_WALL_LEFT_POSITION_X,
+                MCSMain.ISOMETRIC_WALL_POSITION_Y, MCSMain.ISOMETRIC_WALL_LEFT_POSITION_Z);
+            this.wallLeft.transform.localScale = new Vector3(MCSMain.ISOMETRIC_WALL_LEFT_RIGHT_SCALE_X,
+                MCSMain.ISOMETRIC_WALL_SCALE_Y, MCSMain.ISOMETRIC_WALL_LEFT_RIGHT_SCALE_Z);
 
             this.wallRight.transform.position = new Vector3(MCSMain.ISOMETRIC_WALL_RIGHT_POSITION_X,
-                MCSMain.ISOMETRIC_WALL_POSITION_Y, MCSMain.WALL_LEFT_RIGHT_POSITION_Z);
-            this.wallRight.transform.localScale = new Vector3(MCSMain.ISOMETRIC_WALL_RIGHT_SCALE_X,
-                MCSMain.ISOMETRIC_WALL_SCALE_Y, MCSMain.WALL_LEFT_RIGHT_SCALE_Z);
+                MCSMain.ISOMETRIC_WALL_POSITION_Y, MCSMain.ISOMETRIC_WALL_RIGHT_POSITION_Z);
+            this.wallRight.transform.localScale = new Vector3(MCSMain.ISOMETRIC_WALL_LEFT_RIGHT_SCALE_X,
+                MCSMain.ISOMETRIC_WALL_SCALE_Y, MCSMain.ISOMETRIC_WALL_LEFT_RIGHT_SCALE_Z);
 
-            this.wallFront.transform.position = new Vector3(MCSMain.WALL_FRONT_BACK_POSITION_X,
-                MCSMain.WALL_POSITION_Y, MCSMain.WALL_FRONT_POSITION_Z);
-            this.wallFront.transform.localScale = new Vector3(MCSMain.WALL_FRONT_BACK_SCALE_X,
-                MCSMain.WALL_SCALE_Y, MCSMain.WALL_FRONT_BACK_SCALE_Z);
+            this.wallFront.transform.position = new Vector3(MCSMain.ISOMETRIC_WALL_FRONT_POSITION_X,
+                MCSMain.ISOMETRIC_WALL_POSITION_Y, MCSMain.ISOMETRIC_WALL_FRONT_POSITION_Z);
+            this.wallFront.transform.localScale = new Vector3(MCSMain.ISOMETRIC_WALL_BACK_FRONT_SCALE_X,
+                MCSMain.ISOMETRIC_WALL_SCALE_Y, MCSMain.ISOMETRIC_WALL_BACK_FRONT_SCALE_Z);
 
-            this.wallBack.transform.position = new Vector3(MCSMain.WALL_FRONT_BACK_POSITION_X,
+            this.wallBack.transform.position = new Vector3(MCSMain.ISOMETRIC_WALL_BACK_POSITION_X,
                 MCSMain.ISOMETRIC_WALL_POSITION_Y, MCSMain.ISOMETRIC_WALL_BACK_POSITION_Z);
-            this.wallBack.transform.localScale = new Vector3(MCSMain.WALL_FRONT_BACK_SCALE_X,
-                MCSMain.ISOMETRIC_WALL_SCALE_Y, MCSMain.ISOMETRIC_WALL_BACK_SCALE_Z);
+            this.wallBack.transform.localScale = new Vector3(MCSMain.ISOMETRIC_WALL_BACK_FRONT_SCALE_X,
+                MCSMain.ISOMETRIC_WALL_SCALE_Y, MCSMain.ISOMETRIC_WALL_BACK_FRONT_SCALE_Z);
 
-            this.floor.transform.localScale = new Vector3(MCSMain.FLOOR_SCALE_X,
-                MCSMain.FLOOR_SCALE_Y, MCSMain.FLOOR_SCALE_Z);
+            this.floor.transform.localScale = new Vector3(MCSMain.ISOMETRIC_FLOOR_SCALE_X,
+                MCSMain.FLOOR_SCALE_Y, MCSMain.ISOMETRIC_FLOOR_SCALE_Z);
         }
         else {
             this.agentController.substeps = MCSController.PHYSICS_SIMULATION_LOOPS;
@@ -289,15 +299,15 @@ public class MCSMain : MonoBehaviour {
             this.wallFront.transform.localScale = new Vector3(MCSMain.WALL_LEFT_RIGHT_SCALE_X,
                 MCSMain.WALL_SCALE_Y, MCSMain.WALL_LEFT_RIGHT_SCALE_Z);
 
-            this.wallFront.transform.position = new Vector3(MCSMain.WALL_FRONT_BACK_POSITION_X,
+            this.wallFront.transform.position = new Vector3(MCSMain.WALL_BACK_FRONT_POSITION_X,
                 MCSMain.WALL_POSITION_Y, MCSMain.WALL_FRONT_POSITION_Z);
-            this.wallFront.transform.localScale = new Vector3(MCSMain.WALL_FRONT_BACK_SCALE_X,
-                MCSMain.WALL_SCALE_Y, MCSMain.WALL_FRONT_BACK_SCALE_Z);
+            this.wallFront.transform.localScale = new Vector3(MCSMain.WALL_BACK_FRONT_SCALE_X,
+                MCSMain.WALL_SCALE_Y, MCSMain.WALL_BACK_FRONT_SCALE_Z);
 
-            this.wallBack.transform.position = new Vector3(MCSMain.WALL_FRONT_BACK_POSITION_X,
+            this.wallBack.transform.position = new Vector3(MCSMain.WALL_BACK_FRONT_POSITION_X,
                 MCSMain.WALL_POSITION_Y, MCSMain.WALL_BACK_POSITION_Z);
-            this.wallBack.transform.localScale = new Vector3(MCSMain.WALL_FRONT_BACK_SCALE_X,
-                MCSMain.WALL_SCALE_Y, MCSMain.WALL_FRONT_BACK_SCALE_Z);
+            this.wallBack.transform.localScale = new Vector3(MCSMain.WALL_BACK_FRONT_SCALE_X,
+                MCSMain.WALL_SCALE_Y, MCSMain.WALL_BACK_FRONT_SCALE_Z);
 
             this.floor.transform.localScale = new Vector3(MCSMain.FLOOR_SCALE_X,
                 MCSMain.FLOOR_SCALE_Y, MCSMain.FLOOR_SCALE_Z);
