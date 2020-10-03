@@ -94,6 +94,13 @@ public class MCSMain : MonoBehaviour {
     private GameObject wallFront;
     private GameObject wallBack;
 
+    public static MCSConfigScene LoadCurrentSceneFromFile(String filePath) {
+        TextAsset currentSceneFile = Resources.Load<TextAsset>("MCS/Scenes/" + filePath);
+        Debug.Log("MCS: Config file Assets/Resources/MCS/Scenes/" + filePath + ".json" + (currentSceneFile == null ?
+            " is null!" : (":\n" + currentSceneFile.text)));
+        return JsonUtility.FromJson<MCSConfigScene>(currentSceneFile.text);
+    }
+
     // Unity's Start method is called before the first frame update
     void Start() {
         this.agentController = GameObject.Find("FPSController").GetComponent<MCSController>();
@@ -124,7 +131,7 @@ public class MCSMain : MonoBehaviour {
 
         // Load the default MCS scene set in the Unity Editor.
         if (!this.defaultSceneFile.Equals("")) {
-            this.currentScene = LoadCurrentSceneFromFile(this.defaultSceneFile);
+            this.currentScene = MCSMain.LoadCurrentSceneFromFile(this.defaultSceneFile);
             this.currentScene.name = ((this.currentScene.name == null || this.currentScene.name.Equals("")) ?
                 this.defaultSceneFile : this.currentScene.name);
             this.currentScene.version = (this.currentScene.version > 0 ? this.currentScene.version :
@@ -291,12 +298,12 @@ public class MCSMain : MonoBehaviour {
 
             this.wallLeft.transform.position = new Vector3(MCSMain.WALL_LEFT_POSITION_X,
                 MCSMain.WALL_POSITION_Y, MCSMain.WALL_LEFT_RIGHT_POSITION_Z);
-            this.wallFront.transform.localScale = new Vector3(MCSMain.WALL_LEFT_RIGHT_SCALE_X,
+            this.wallLeft.transform.localScale = new Vector3(MCSMain.WALL_LEFT_RIGHT_SCALE_X,
                 MCSMain.WALL_SCALE_Y, MCSMain.WALL_LEFT_RIGHT_SCALE_Z);
 
             this.wallRight.transform.position = new Vector3(MCSMain.WALL_RIGHT_POSITION_X,
                 MCSMain.WALL_POSITION_Y, MCSMain.WALL_LEFT_RIGHT_POSITION_Z);
-            this.wallFront.transform.localScale = new Vector3(MCSMain.WALL_LEFT_RIGHT_SCALE_X,
+            this.wallRight.transform.localScale = new Vector3(MCSMain.WALL_LEFT_RIGHT_SCALE_X,
                 MCSMain.WALL_SCALE_Y, MCSMain.WALL_LEFT_RIGHT_SCALE_Z);
 
             this.wallFront.transform.position = new Vector3(MCSMain.WALL_BACK_FRONT_POSITION_X,
@@ -1218,13 +1225,6 @@ public class MCSMain : MonoBehaviour {
         } catch (Exception e) {
             Debug.LogError("MCS: " + e);
         }
-    }
-
-    private MCSConfigScene LoadCurrentSceneFromFile(String filePath) {
-        TextAsset currentSceneFile = Resources.Load<TextAsset>("MCS/Scenes/" + filePath);
-        Debug.Log("MCS: Config file Assets/Resources/MCS/Scenes/" + filePath + ".json" + (currentSceneFile == null ?
-            " is null!" : (":\n" + currentSceneFile.text)));
-        return JsonUtility.FromJson<MCSConfigScene>(currentSceneFile.text);
     }
 
     private List<MCSConfigObjectDefinition> LoadObjectRegistryFromFile(String filePath) {
