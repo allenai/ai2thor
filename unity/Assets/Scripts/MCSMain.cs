@@ -400,7 +400,7 @@ public class MCSMain : MonoBehaviour {
         }
 
         if (this.currentScene.floorProperties != null && this.currentScene.floorProperties.enable) {
-            AssignPhysicsMaterialAndRigidBodyValues(scene.floorProperties, this.floor, floorSimObjPhysics);
+            AssignPhysicsMaterialAndRigidBodyValues(this.currentScene.floorProperties, this.floor, floorSimObjPhysics);
         }
 
         if (this.currentScene.goal != null && this.currentScene.goal.description != null) {
@@ -1428,6 +1428,18 @@ public class MCSMain : MonoBehaviour {
                 }
             });
 
+        // Shrouding an object will make it temporarily invisible.
+        bool shrouded = false;
+        objectConfig.shrouds.Where(shroud => shroud.stepBegin <= step && shroud.stepEnd >= step).ToList()
+            .ForEach((shroud) => {
+                shrouded = true;
+                gameOrParentObject.GetComponent<Renderer>().enabled = false;
+            });
+
+        if (!shrouded) {
+            gameOrParentObject.GetComponent<Renderer>().enabled = true;
+        }
+
         objectConfig.actions.Where(action => action.stepBegin == step).ToList().ForEach((action) => {
             // Play the animation on the game object, not on the parent object.
             Animator animator = objectConfig.GetGameObject().GetComponent<Animator>();
@@ -1523,6 +1535,7 @@ public class MCSConfigGameObject : MCSConfigAbstractObject {
     public List<MCSConfigResize> resizes;
     public List<MCSConfigMove> rotates;
     public List<MCSConfigShow> shows;
+    public List<MCSConfigStepBeginEnd> shrouds;
     public List<MCSConfigTeleport> teleports;
     public List<MCSConfigMove> torques;
 
