@@ -288,6 +288,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             };
 
             HashSet<Vector3> goodPoints = new HashSet<Vector3>();
+            HashSet<Vector3> seenPoints = new HashSet<Vector3>();
             int layerMask = 1 << 8;
             int stepsTaken = 0;
             while (pointsQueue.Count != 0) {
@@ -297,6 +298,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     goodPoints.Add(p);
                     HashSet<Collider> objectsAlreadyColliding = new HashSet<Collider>(objectsCollidingWithAgent());
                     foreach (Vector3 d in directions) {
+                        Vector3 newPosition = p + d * gridSize * gridMultiplier;
+                        if (seenPoints.Contains(newPosition)) {
+                            continue;
+                        }
+                        seenPoints.Add(newPosition);
+
                         RaycastHit[] hits = capsuleCastAllForAgent(
                             cc,
                             sw,
@@ -316,7 +323,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
                                 break;
                             }
                         }
-                        Vector3 newPosition = p + d * gridSize * gridMultiplier;
                         bool inBounds = agentManager.SceneBounds.Contains(newPosition);
                         if (errorMessage == "" && !inBounds) {
                             errorMessage = "In " +
@@ -2902,6 +2908,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             Quaternion originalRot = transform.rotation;
 
             HashSet<Vector3> goodPoints = new HashSet<Vector3>();
+            HashSet<Vector3> seenPoints = new HashSet<Vector3>();
             int layerMask = 1 << 8;
             int stepsTaken = 0;
             pos = Vector3.negativeInfinity;
@@ -2926,6 +2933,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     
                     HashSet<Collider> objectsAlreadyColliding = new HashSet<Collider>(objectsCollidingWithAgent());
                     foreach (Vector3 d in directions) {
+                        Vector3 newPosition = p + d * gridSize * gridMultiplier;
+                        if (seenPoints.Contains(newPosition)) {
+                            continue;
+                        }
+                        seenPoints.Add(newPosition);
+
                         RaycastHit[] hits = capsuleCastAllForAgent(
                             cc,
                             sw,
@@ -2945,7 +2958,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
                                 break;
                             }
                         }
-                        Vector3 newPosition = p + d * gridSize * gridMultiplier;
                         bool inBounds = agentManager.SceneBounds.Contains(newPosition);
                         if (errorMessage == "" && !inBounds) {
                             errorMessage = "In " +
