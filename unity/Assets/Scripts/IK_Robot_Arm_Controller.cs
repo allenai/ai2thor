@@ -232,6 +232,7 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
             yield return new WaitForFixedUpdate();
 
         }
+
         controller.actionFinished(true);
 
     }
@@ -263,36 +264,7 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
         yield return new WaitForFixedUpdate();
         var previousArmPosition = arm.transform.localPosition;
 
-        while (Vector3.SqrMagnitude(targetLocalPos - arm.transform.localPosition) > eps) {
-            if (staticCollided.collided != false) {
-            
-                //decide if we want to return to original position or last known position before collision
-                arm.transform.localPosition = returnToStartPositionIfFailed ? originalPos : previousArmPosition - (targetDirectionWorld * unitsPerSecond * Time.fixedDeltaTime);
-
-                string debugMessage = "";
-
-                //if we hit a sim object
-                if(staticCollided.simObjPhysics && !staticCollided.gameObject)
-                debugMessage = "Arm collided with static sim object: '" + staticCollided.simObjPhysics.name + "' arm could not reach target position: '" + target + "'.";
-
-                //if we hit a structural object that isn't a sim object but still has static collision
-                if(!staticCollided.simObjPhysics && staticCollided.gameObject)
-                debugMessage = "Arm collided with static structure in scene: '" + staticCollided.gameObject.name + "' arm could not reach target position: '" + target + "'.";
-
-                staticCollided.collided = false;
-
-                controller.actionFinished(false, debugMessage);
-                yield break;
-            }
-
-            //if the option to stop moving when the sphere touches any sim object is wanted
-            if(magnetSphereComp.isColliding && StopMotionOnContact)
-            {
-                string debugMessage = "Some object was hit by the arm's hand";
-                controller.actionFinished(false, debugMessage);
-                yield break;
-            }
-
+        while ((Vector3.SqrMagnitude(targetLocalPos - arm.transform.localPosition) > eps) && !staticCollided.collided && !magnetSphereComp.isColliding) {
             previousArmPosition = arm.transform.localPosition;
             arm.transform.localPosition += targetDirectionWorld * unitsPerSecond * Time.fixedDeltaTime;
             // Jump the last epsilon to match exactly targetWorldPos
@@ -300,8 +272,41 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
             arm.transform.localPosition = Vector3.SqrMagnitude(targetLocalPos - arm.transform.localPosition) > eps ?  arm.transform.localPosition : targetLocalPos;
            
             yield return new WaitForFixedUpdate();
-
         }
+
+        if (staticCollided.collided) {
+        
+            //decide if we want to return to original position or last known position before collision
+            arm.transform.localPosition = returnToStartPositionIfFailed ? originalPos : previousArmPosition - (targetDirectionWorld * unitsPerSecond * Time.fixedDeltaTime);
+
+            string debugMessage = "";
+
+            //if we hit a sim object
+            if(staticCollided.simObjPhysics && !staticCollided.gameObject)
+            {
+                debugMessage = "Arm collided with static sim object: '" + staticCollided.simObjPhysics.name + "' arm could not reach target position: '" + target + "'.";
+            }
+
+            //if we hit a structural object that isn't a sim object but still has static collision
+            if(!staticCollided.simObjPhysics && staticCollided.gameObject)
+            {
+                debugMessage = "Arm collided with static structure in scene: '" + staticCollided.gameObject.name + "' arm could not reach target position: '" + target + "'.";
+            }
+
+            staticCollided.collided = false;
+
+            controller.actionFinished(false, debugMessage);
+            yield break;
+        }
+
+        //if the option to stop moving when the sphere touches any sim object is wanted
+        if(magnetSphereComp.isColliding && StopMotionOnContact)
+        {
+            string debugMessage = "Some object was hit by the arm's hand";
+            controller.actionFinished(false, debugMessage);
+            yield break;
+        }
+
         controller.actionFinished(true);
     }
 
