@@ -120,41 +120,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
             base.Pass(action);
         }
 
-        private bool checkForUpDownAngleLimit(string direction, float degrees)
-        {   
-            bool result = true;
-            //check the angle between the agent's forward vector and the proposed rotation vector
-            //if it exceeds the min/max based on if we are rotating up or down, return false
-
-            //first move the rotPoint to the camera
-            rotPoint.transform.position = m_Camera.transform.position;
-            //zero out the rotation first
-            rotPoint.transform.rotation = m_Camera.transform.rotation;
-
-
-            //print(Vector3.Angle(rotPoint.transform.forward, m_CharacterController.transform.forward));
-            if(direction == "down")
-            {
-                rotPoint.Rotate(new Vector3(degrees, 0, 0));
-                //note: maxDownwardLookAngle is negative because SignedAngle() returns a... signed angle... so even though the input is LookDown(degrees) with
-                //degrees being positive, it still needs to check against this negatively signed direction.
-                if(Mathf.Round(Vector3.SignedAngle(rotPoint.transform.forward, m_CharacterController.transform.forward, m_CharacterController.transform.right)* 10.0f) / 10.0f < -maxDownwardLookAngle)
-                {
-                    result = false;
-                }
-            }
-
-            if(direction == "up")
-            {
-                rotPoint.Rotate(new Vector3(-degrees, 0, 0));
-                if(Mathf.Round(Vector3.SignedAngle(rotPoint.transform.forward, m_CharacterController.transform.forward, m_CharacterController.transform.right) * 10.0f) / 10.0f > maxUpwardLookAngle)
-                {
-                    result = false;
-                }
-            }
-            return result;
-        }
-
         public override void LookDown(ServerAction action) 
         {
             //default degree increment to 30

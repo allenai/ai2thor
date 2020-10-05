@@ -148,10 +148,6 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
 
     public void OnTriggerEnter(Collider col)
     {
-        staticCollided.collided = false;
-        staticCollided.simObjPhysics = null;
-        staticCollided.gameObject = null;
-
         if(col.GetComponentInParent<SimObjPhysics>())
         {
             //how does this handle nested sim objects? maybe it's fine?
@@ -171,14 +167,13 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
         }
 
         //also check if the collider hit was a structure?
-        if(col.gameObject.isStatic)
-        {
-            // #if UNITY_EDITOR
-            // Debug.Log("Collided with static structure " + col.gameObject.name);
-            // #endif
-                
-            staticCollided.collided = true;
-            staticCollided.gameObject = col.gameObject;
+        else if(col.gameObject.tag == "Structure")
+        {                
+            if(!col.isTrigger)
+            {
+                staticCollided.collided = true;
+                staticCollided.gameObject = col.gameObject;
+            }
         }
     }
 
@@ -186,7 +181,10 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
     public IEnumerator rotateHand(PhysicsRemoteFPSAgentController controller, Quaternion targetQuat, float time, bool returnToStartPositionIfFailed = false)
     {
 
-        staticCollided.collided=false;
+        staticCollided.collided = false;
+        staticCollided.simObjPhysics = null;
+        staticCollided.gameObject = null;
+
         float currentTime = 0.0f;
 
         yield return new WaitForFixedUpdate();
@@ -234,6 +232,7 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
             yield return new WaitForFixedUpdate();
 
         }
+
         controller.actionFinished(true);
 
     }
@@ -243,6 +242,8 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
         //first check if the target position is within bounds of the agent's capsule center/height extents
         //if not, actionFinished false with error message listing valid range defined by extents
         staticCollided.collided = false;
+        staticCollided.simObjPhysics = null;
+        staticCollided.gameObject = null;
 
         CapsuleCollider cc = controller.GetComponent<CapsuleCollider>();
         Vector3 cc_center = cc.center;
@@ -263,36 +264,7 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
         yield return new WaitForFixedUpdate();
         var previousArmPosition = arm.transform.localPosition;
 
-        while (Vector3.SqrMagnitude(targetLocalPos - arm.transform.localPosition) > eps) {
-            if (staticCollided.collided != false) {
-            
-                //decide if we want to return to original position or last known position before collision
-                arm.transform.localPosition = returnToStartPositionIfFailed ? originalPos : previousArmPosition - (targetDirectionWorld * unitsPerSecond * Time.fixedDeltaTime);
-
-                string debugMessage = "";
-
-                //if we hit a sim object
-                if(staticCollided.simObjPhysics && !staticCollided.gameObject)
-                debugMessage = "Arm collided with static sim object: '" + staticCollided.simObjPhysics.name + "' arm could not reach target position: '" + target + "'.";
-
-                //if we hit a structural object that isn't a sim object but still has static collision
-                if(!staticCollided.simObjPhysics && staticCollided.gameObject)
-                debugMessage = "Arm collided with static structure in scene: '" + staticCollided.gameObject.name + "' arm could not reach target position: '" + target + "'.";
-
-                staticCollided.collided = false;
-
-                controller.actionFinished(false, debugMessage);
-                yield break;
-            }
-
-            //if the option to stop moving when the sphere touches any sim object is wanted
-            if(magnetSphereComp.isColliding && StopMotionOnContact)
-            {
-                string debugMessage = "Some object was hit by the arm's hand";
-                controller.actionFinished(false, debugMessage);
-                yield break;
-            }
-
+        while ((Vector3.SqrMagnitude(targetLocalPos - arm.transform.localPosition) > eps) && !staticCollided.collided && !magnetSphereComp.isColliding) {
             previousArmPosition = arm.transform.localPosition;
             arm.transform.localPosition += targetDirectionWorld * unitsPerSecond * Time.fixedDeltaTime;
             // Jump the last epsilon to match exactly targetWorldPos
@@ -300,14 +272,49 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
             arm.transform.localPosition = Vector3.SqrMagnitude(targetLocalPos - arm.transform.localPosition) > eps ?  arm.transform.localPosition : targetLocalPos;
            
             yield return new WaitForFixedUpdate();
-
         }
+
+        if (staticCollided.collided) {
+        
+            //decide if we want to return to original position or last known position before collision
+            arm.transform.localPosition = returnToStartPositionIfFailed ? originalPos : previousArmPosition - (targetDirectionWorld * unitsPerSecond * Time.fixedDeltaTime);
+
+            string debugMessage = "";
+
+            //if we hit a sim object
+            if(staticCollided.simObjPhysics && !staticCollided.gameObject)
+            {
+                debugMessage = "Arm collided with static sim object: '" + staticCollided.simObjPhysics.name + "' arm could not reach target position: '" + target + "'.";
+            }
+
+            //if we hit a structural object that isn't a sim object but still has static collision
+            if(!staticCollided.simObjPhysics && staticCollided.gameObject)
+            {
+                debugMessage = "Arm collided with static structure in scene: '" + staticCollided.gameObject.name + "' arm could not reach target position: '" + target + "'.";
+            }
+
+            staticCollided.collided = false;
+
+            controller.actionFinished(false, debugMessage);
+            yield break;
+        }
+
+        //if the option to stop moving when the sphere touches any sim object is wanted
+        if(magnetSphereComp.isColliding && StopMotionOnContact)
+        {
+            string debugMessage = "Some object was hit by the arm's hand";
+            controller.actionFinished(false, debugMessage);
+            yield break;
+        }
+
         controller.actionFinished(true);
     }
 
     public IEnumerator moveArmTarget(PhysicsRemoteFPSAgentController controller, Vector3 target, float unitsPerSecond,  GameObject arm, bool returnToStartPositionIfFailed = false, string whichSpace = "arm") {
 
         staticCollided.collided = false;
+        staticCollided.simObjPhysics = null;
+        staticCollided.gameObject = null;
         // Move arm based on hand space or arm origin space
         //Vector3 targetWorldPos = handCameraSpace ? handCameraTransform.TransformPoint(target) : arm.transform.TransformPoint(target);
 

@@ -651,41 +651,6 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return result;
         }
 
-        private bool checkForUpDownAngleLimit(string direction, float degrees)
-        {   
-            bool result = true;
-            //check the angle between the agent's forward vector and the proposed rotation vector
-            //if it exceeds the min/max based on if we are rotating up or down, return false
-
-            //first move the rotPoint to the camera
-            rotPoint.transform.position = m_Camera.transform.position;
-            //zero out the rotation first
-            rotPoint.transform.rotation = m_Camera.transform.rotation;
-
-
-            //print(Vector3.Angle(rotPoint.transform.forward, m_CharacterController.transform.forward));
-            if(direction == "down")
-            {
-                rotPoint.Rotate(new Vector3(degrees, 0, 0));
-                //note: maxDownwardLookAngle is negative because SignedAngle() returns a... signed angle... so even though the input is LookDown(degrees) with
-                //degrees being positive, it still needs to check against this negatively signed direction.
-                if(Mathf.Round(Vector3.SignedAngle(rotPoint.transform.forward, m_CharacterController.transform.forward, m_CharacterController.transform.right)* 10.0f) / 10.0f < -maxDownwardLookAngle)
-                {
-                    result = false;
-                }
-            }
-
-            if(direction == "up")
-            {
-                rotPoint.Rotate(new Vector3(-degrees, 0, 0));
-                if(Mathf.Round(Vector3.SignedAngle(rotPoint.transform.forward, m_CharacterController.transform.forward, m_CharacterController.transform.right) * 10.0f) / 10.0f > maxUpwardLookAngle)
-                {
-                    result = false;
-                }
-            }
-            return result;
-        }
-
         public void TeleportObject(ServerAction action) {
             if (!physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(action.objectId)) {
                 errorMessage = "Cannot find object with id " + action.objectId;
@@ -6368,28 +6333,29 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return false;
         }
 
-        public bool objectIsWithinViewport(SimObjPhysics sop) {
-            if (sop.VisibilityPoints.Length > 0) {
-                Transform[] visPoints = sop.VisibilityPoints;
-                foreach (Transform point in visPoints) {
-                    Vector3 viewPoint = m_Camera.WorldToViewportPoint(point.position);
-                    float ViewPointRangeHigh = 1.0f;
-                    float ViewPointRangeLow = 0.0f;
+        //note this was moved into the BaseFPSAgentController because ObjectNavExpertAction stuff is now included in the BaseFPSAgentController
+        // public bool objectIsWithinViewport(SimObjPhysics sop) {
+        //     if (sop.VisibilityPoints.Length > 0) {
+        //         Transform[] visPoints = sop.VisibilityPoints;
+        //         foreach (Transform point in visPoints) {
+        //             Vector3 viewPoint = m_Camera.WorldToViewportPoint(point.position);
+        //             float ViewPointRangeHigh = 1.0f;
+        //             float ViewPointRangeLow = 0.0f;
 
-                    if (viewPoint.z > 0 &&
-                        viewPoint.x < ViewPointRangeHigh && viewPoint.x > ViewPointRangeLow && //within x bounds of viewport
-                        viewPoint.y < ViewPointRangeHigh && viewPoint.y > ViewPointRangeLow //within y bounds of viewport
-                    ) {
-                            return true;
-                    }
-                }
-            } else {
-                #if UNITY_EDITOR
-                Debug.Log("Error! Set at least 1 visibility point on SimObjPhysics prefab!");
-                #endif
-            }
-            return false;
-        }
+        //             if (viewPoint.z > 0 &&
+        //                 viewPoint.x < ViewPointRangeHigh && viewPoint.x > ViewPointRangeLow && //within x bounds of viewport
+        //                 viewPoint.y < ViewPointRangeHigh && viewPoint.y > ViewPointRangeLow //within y bounds of viewport
+        //             ) {
+        //                     return true;
+        //             }
+        //         }
+        //     } else {
+        //         #if UNITY_EDITOR
+        //         Debug.Log("Error! Set at least 1 visibility point on SimObjPhysics prefab!");
+        //         #endif
+        //     }
+        //     return false;
+        // }
         
         public bool objectIsCurrentlyVisible(SimObjPhysics sop, float maxDistance) 
         {
