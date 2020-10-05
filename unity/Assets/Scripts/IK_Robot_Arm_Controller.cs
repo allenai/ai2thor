@@ -345,36 +345,8 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
         yield return new WaitForFixedUpdate();
         var previousArmPosition = armTarget.position;
 
-        while (Vector3.SqrMagnitude(targetWorldPos - armTarget.position) > eps) {
+        while ((Vector3.SqrMagnitude(targetWorldPos - armTarget.position) > eps) && !staticCollided.collided && !magnetSphereComp.isColliding) {
 
-            if (staticCollided.collided != false) {
-                
-                //decide if we want to return to original position or last known position before collision
-                armTarget.position = returnToStartPositionIfFailed ? originalPos : previousArmPosition - (targetDirectionWorld * unitsPerSecond * Time.fixedDeltaTime);
-
-                string debugMessage = "";
-
-                //if we hit a sim object
-                if(staticCollided.simObjPhysics && !staticCollided.gameObject)
-                debugMessage = "Arm collided with static sim object: '" + staticCollided.simObjPhysics.name + "' arm could not reach target position: '" + target + "'.";
-
-                //if we hit a structural object that isn't a sim object but still has static collision
-                if(!staticCollided.simObjPhysics && staticCollided.gameObject)
-                debugMessage = "Arm collided with static structure in scene: '" + staticCollided.gameObject.name + "' arm could not reach target position: '" + target + "'.";
-                                
-                staticCollided.collided = false;
-
-                controller.actionFinished(false, debugMessage);
-                yield break;
-            }
-
-            //if the option to stop moving when the sphere touches any sim object is wanted
-            if(magnetSphereComp.isColliding && StopMotionOnContact)
-            {
-                string debugMessage = "Some object was hit by the arm's hand";
-                controller.actionFinished(false, debugMessage);
-                yield break;
-            }
 
             previousArmPosition = armTarget.position;
             armTarget.position += targetDirectionWorld * unitsPerSecond * Time.fixedDeltaTime;
@@ -385,6 +357,39 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
             yield return new WaitForFixedUpdate();
 
         }
+
+        if (staticCollided.collided) {
+            
+            //decide if we want to return to original position or last known position before collision
+            armTarget.position = returnToStartPositionIfFailed ? originalPos : previousArmPosition - (targetDirectionWorld * unitsPerSecond * Time.fixedDeltaTime);
+
+            string debugMessage = "";
+
+            //if we hit a sim object
+            if(staticCollided.simObjPhysics && !staticCollided.gameObject) {
+                debugMessage = "Arm collided with static sim object: '" + staticCollided.simObjPhysics.name + "' arm could not reach target position: '" + target + "'.";
+            }
+
+            //if we hit a structural object that isn't a sim object but still has static collision
+            if(!staticCollided.simObjPhysics && staticCollided.gameObject)
+            {
+                debugMessage = "Arm collided with static structure in scene: '" + staticCollided.gameObject.name + "' arm could not reach target position: '" + target + "'.";
+            }
+                            
+            staticCollided.collided = false;
+
+            controller.actionFinished(false, debugMessage);
+            yield break;
+        }
+
+        //if the option to stop moving when the sphere touches any sim object is wanted
+        if(magnetSphereComp.isColliding && StopMotionOnContact)
+        {
+            string debugMessage = "Some object was hit by the arm's hand";
+            controller.actionFinished(false, debugMessage);
+            yield break;
+        }
+
         controller.actionFinished(true);
     }
 
