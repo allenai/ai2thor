@@ -1433,11 +1433,11 @@ public class MCSMain : MonoBehaviour {
         objectConfig.shrouds.Where(shroud => shroud.stepBegin <= step && shroud.stepEnd >= step).ToList()
             .ForEach((shroud) => {
                 shrouded = true;
-                gameOrParentObject.GetComponent<Renderer>().enabled = false;
+                gameOrParentObject.GetComponentInChildren<Renderer>().enabled = false;
             });
 
         if (!shrouded) {
-            gameOrParentObject.GetComponent<Renderer>().enabled = true;
+            gameOrParentObject.GetComponentInChildren<Renderer>().enabled = true;
         }
 
         objectConfig.actions.Where(action => action.stepBegin == step).ToList().ForEach((action) => {
