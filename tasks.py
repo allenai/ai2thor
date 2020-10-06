@@ -718,7 +718,7 @@ def link_build_cache(branch):
 def travis_build(build_id):
     import requests
     res = requests.get(
-        "https://api.travis-ci.com/build/%s" % build_id,
+        "https://api.travis-ci.org/build/%s" % build_id,
         headers={
             "Accept": "application/json",
             "Content-Type": "application/json",
@@ -735,7 +735,7 @@ def pending_travis_build():
     import requests
 
     res = requests.get(
-        "https://api.travis-ci.com/repo/3459357/builds?repository_id=3459357&include=build.id%2Cbuild.commit%2Cbuild.branch%2Cbuild.request%2Cbuild.created_by%2Cbuild.repository&build.state=started&sort_by=started_at:desc",
+        "https://api.travis-ci.org/repo/16690831/builds?repository_id=16690831&include=build.id%2Cbuild.commit%2Cbuild.branch%2Cbuild.request%2Cbuild.created_by%2Cbuild.repository&build.state=started&sort_by=started_at:desc",
         headers={
             "Accept": "application/json",
             "Content-Type": "application/json",

@@ -1464,6 +1464,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         }
 
         public override void TeleportFull(ServerAction action) {
+            Debug.Log("TeleportFull Happening ////////////////////////////////////////");
             targetTeleport = new Vector3(action.x, action.y, action.z);
 
             if (action.forceAction) {
@@ -6333,29 +6334,28 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             return false;
         }
 
-        //note this was moved into the BaseFPSAgentController because ObjectNavExpertAction stuff is now included in the BaseFPSAgentController
-        // public bool objectIsWithinViewport(SimObjPhysics sop) {
-        //     if (sop.VisibilityPoints.Length > 0) {
-        //         Transform[] visPoints = sop.VisibilityPoints;
-        //         foreach (Transform point in visPoints) {
-        //             Vector3 viewPoint = m_Camera.WorldToViewportPoint(point.position);
-        //             float ViewPointRangeHigh = 1.0f;
-        //             float ViewPointRangeLow = 0.0f;
+        public bool objectIsWithinViewport(SimObjPhysics sop) {
+            if (sop.VisibilityPoints.Length > 0) {
+                Transform[] visPoints = sop.VisibilityPoints;
+                foreach (Transform point in visPoints) {
+                    Vector3 viewPoint = m_Camera.WorldToViewportPoint(point.position);
+                    float ViewPointRangeHigh = 1.0f;
+                    float ViewPointRangeLow = 0.0f;
 
-        //             if (viewPoint.z > 0 &&
-        //                 viewPoint.x < ViewPointRangeHigh && viewPoint.x > ViewPointRangeLow && //within x bounds of viewport
-        //                 viewPoint.y < ViewPointRangeHigh && viewPoint.y > ViewPointRangeLow //within y bounds of viewport
-        //             ) {
-        //                     return true;
-        //             }
-        //         }
-        //     } else {
-        //         #if UNITY_EDITOR
-        //         Debug.Log("Error! Set at least 1 visibility point on SimObjPhysics prefab!");
-        //         #endif
-        //     }
-        //     return false;
-        // }
+                    if (viewPoint.z > 0 &&
+                        viewPoint.x < ViewPointRangeHigh && viewPoint.x > ViewPointRangeLow && //within x bounds of viewport
+                        viewPoint.y < ViewPointRangeHigh && viewPoint.y > ViewPointRangeLow //within y bounds of viewport
+                    ) {
+                            return true;
+                    }
+                }
+            } else {
+                #if UNITY_EDITOR
+                Debug.Log("Error! Set at least 1 visibility point on SimObjPhysics prefab!");
+                #endif
+            }
+            return false;
+        }
         
         public bool objectIsCurrentlyVisible(SimObjPhysics sop, float maxDistance) 
         {

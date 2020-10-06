@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityStandardAssets.Characters.FirstPerson;
@@ -264,7 +264,7 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
         yield return new WaitForFixedUpdate();
         var previousArmPosition = arm.transform.localPosition;
 
-        while ((Vector3.SqrMagnitude(targetLocalPos - arm.transform.localPosition) > eps) && !staticCollided.collided && !magnetSphereComp.isColliding) {
+        while ((Vector3.SqrMagnitude(targetLocalPos - arm.transform.localPosition) > eps) && !staticCollided.collided) {
             previousArmPosition = arm.transform.localPosition;
             arm.transform.localPosition += targetDirectionWorld * unitsPerSecond * Time.fixedDeltaTime;
             // Jump the last epsilon to match exactly targetWorldPos
@@ -300,12 +300,16 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
         }
 
         //if the option to stop moving when the sphere touches any sim object is wanted
-        if(magnetSphereComp.isColliding && StopMotionOnContact)
-        {
-            string debugMessage = "Some object was hit by the arm's hand";
-            controller.actionFinished(false, debugMessage);
-            yield break;
-        }
+
+        // Removed StopMotionOnContact until someone needs it, also should be renamed to StopMotionOn(Magnet|Hand)Contact
+        // if(magnetSphereComp.isColliding && StopMotionOnContact)
+        // {
+        //     string debugMessage = "Some object was hit by the arm's hand";
+        //     controller.actionFinished(false, debugMessage);
+        //     yield break;
+        // }
+
+        
 
         controller.actionFinished(true);
     }
@@ -345,7 +349,7 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
         yield return new WaitForFixedUpdate();
         var previousArmPosition = armTarget.position;
 
-        while ((Vector3.SqrMagnitude(targetWorldPos - armTarget.position) > eps) && !staticCollided.collided && !magnetSphereComp.isColliding) {
+        while ((Vector3.SqrMagnitude(targetWorldPos - armTarget.position) > eps) && !staticCollided.collided) {
 
 
             previousArmPosition = armTarget.position;
@@ -383,12 +387,14 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
         }
 
         //if the option to stop moving when the sphere touches any sim object is wanted
-        if(magnetSphereComp.isColliding && StopMotionOnContact)
-        {
-            string debugMessage = "Some object was hit by the arm's hand";
-            controller.actionFinished(false, debugMessage);
-            yield break;
-        }
+
+        // Removed StopMotionOnContact until someone needs it, also should be renamed to StopMotionOn(Magnet|Hand)Contact
+        // if(magnetSphereComp.isColliding && StopMotionOnContact)
+        // {
+        //     string debugMessage = "Some object was hit by the arm's hand";
+        //     controller.actionFinished(false, debugMessage);
+        //     yield break;
+        // }
 
         controller.actionFinished(true);
     }
