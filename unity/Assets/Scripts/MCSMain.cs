@@ -210,17 +210,17 @@ public class MCSMain : MonoBehaviour {
             !this.currentScene.wallMaterial.Equals("")) ? this.currentScene.wallMaterial :
             this.defaultWallsMaterial;
 
-        // Remove the ceiling from all IntPhys and isometric scenes.
-        this.ceiling.SetActive(!(this.currentScene.intphys || this.currentScene.observation ||
+        // Remove the ceiling from all intuitive physics and isometric scenes.
+        this.ceiling.SetActive(!(this.currentScene.intuitivePhysics || this.currentScene.observation ||
                 this.currentScene.isometric));
 
-        // Set the controller's action substeps to 1 in all IntPhys and isometric scenes.
-        if (this.currentScene.intphys || this.currentScene.observation || this.currentScene.isometric) {
+        // Set the controller's action substeps to 1 in all intuitive physics and isometric scenes.
+        if (this.currentScene.intuitivePhysics || this.currentScene.observation || this.currentScene.isometric) {
             this.agentController.substeps = 1;
         }
 
-        // Expand the walls of the room in all IntPhys scenes and set a specific performer start.
-        if (this.currentScene.intphys || this.currentScene.observation) {
+        // Expand the walls of the room in all intuitive physics scenes and set a specific performer start.
+        if (this.currentScene.intuitivePhysics || this.currentScene.observation) {
             this.wallLeft.transform.position = new Vector3(MCSMain.INTUITIVE_PHYSICS_WALL_LEFT_POSITION_X,
                 MCSMain.WALL_POSITION_Y, MCSMain.WALL_LEFT_RIGHT_POSITION_Z);
             this.wallLeft.transform.localScale = new Vector3(MCSMain.WALL_LEFT_RIGHT_SCALE_X,
@@ -347,8 +347,8 @@ public class MCSMain : MonoBehaviour {
         }
 
         else {
-            // IntPhys and isometric scenes don't have ceilings.
-            if (!(this.currentScene.intphys || this.currentScene.observation || this.currentScene.isometric)) {
+            // Intuitive physics and isometric scenes don't have ceilings.
+            if (!(this.currentScene.intuitivePhysics || this.currentScene.observation || this.currentScene.isometric)) {
                 if (ceilingSimObjPhysics.VisibilityPoints.Length == 0) {
                     ceilingSimObjPhysics.VisibilityPoints = AssignVisibilityPoints(this.ceiling,
                         this.GenerateCubeInternalVisibilityPoints(this.ceiling, null), null);
@@ -400,7 +400,7 @@ public class MCSMain : MonoBehaviour {
         }
 
         if (this.currentScene.floorProperties != null && this.currentScene.floorProperties.enable) {
-            AssignPhysicsMaterialAndRigidBodyValues(scene.floorProperties, this.floor, floorSimObjPhysics);
+            AssignPhysicsMaterialAndRigidBodyValues(this.currentScene.floorProperties, this.floor, floorSimObjPhysics);
         }
 
         if (this.currentScene.goal != null && this.currentScene.goal.description != null) {
@@ -1661,8 +1661,8 @@ public class MCSConfigScene {
     public String ceilingMaterial;
     public String floorMaterial;
     public String wallMaterial;
-    public bool intphys;
-    public bool observation; // deprecated; please use intphys
+    public bool intuitivePhysics;
+    public bool observation; // deprecated; please use intuitivePhysics
     public bool screenshot;
     public bool isometric;
 

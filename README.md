@@ -80,7 +80,8 @@ If you want to run an MCS Scene in the Unity Editor:
 - E: Stand
 - L: Lie Down
 - Escape: Pass (do nothing)
-- Backspace: Initialize (reset the scene)
+- Backspace: Initialize (reset the current scene or go to a new scene)
+  - New Scene File
 
 ## Build
 
