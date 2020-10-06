@@ -2564,36 +2564,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }
-                    case "spt_b":
-                    {
-                        Debug.Log("EEEEE");
-                        Debug.Log(System.Attribute.IsDefined(typeof(Vector3), typeof(System.SerializableAttribute)));
-                        ServerAction action = new ServerAction();
-                        action.action = "GetShortestPath";
-
-                        //pass in a min range, max range, delay
-                        if (splitcommand.Length > 1)
-                        {
-                            //ID of spawner
-                            action.objectType = splitcommand[1];
-
-                            if (splitcommand.Length == 5) {
-                                action.position = new Vector3(
-                                    float.Parse(splitcommand[2]),
-                                    float.Parse(splitcommand[3]), 
-                                    float.Parse(splitcommand[4])
-                                );
-                            }
-                        }
-
-                        PhysicsController.ProcessControlCommand(action);
-                    
-                        
-                        break;
-                    }
                      case "shortest_path_type":
                     {
-
                         Dictionary<string, object> action = new Dictionary<string, object>();
                         action["action"] = "GetShortestPath";
 
@@ -2969,46 +2941,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         
                         break;
                     }
-                    case "mbs": {
-                        ServerAction action = new ServerAction();
-                        action.action = "MoveBallSpeed";
-
-                        if (splitcommand.Length > 1) {
-                            action.speed = float.Parse(splitcommand[1]);
-
-                                if (splitcommand.Length == 5) {
-                                    action.position = new Vector3(
-                                        float.Parse(splitcommand[2]),
-                                        float.Parse(splitcommand[3]), 
-                                        float.Parse(splitcommand[4])
-                                    );
-                                }
-                        }
-
-                        PhysicsController.ProcessControlCommand(action);
-
-                        break;
-                    }
-                    case "mbt": {
-                        ServerAction action = new ServerAction();
-                        action.action = "MoveBallTime";
-                        if (splitcommand.Length > 1) {
-                            action.timeStep = float.Parse(splitcommand[1]);
-
-                                if (splitcommand.Length == 5) {
-                                    action.position = new Vector3(
-                                        float.Parse(splitcommand[2]),
-                                        float.Parse(splitcommand[3]), 
-                                        float.Parse(splitcommand[4])
-                                    );
-                                }
-                        }
-
-                        PhysicsController.ProcessControlCommand(action);
-
-                        break;
-                    }
-			} 
+			}
 
 			//StartCoroutine(CheckIfactionCompleteWasSetToTrueAfterWaitingALittleBit(splitcommand[0]));
 

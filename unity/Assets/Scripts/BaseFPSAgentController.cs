@@ -269,8 +269,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 this.jsInterface.SendAction(currentServerAction);
             }
 
-            Debug.Log($"### Action finished called. realtimeSinceStartup {Time.realtimeSinceStartup}. success: {success}, lastAction: {this.lastAction}");
-
             lastActionSuccess = success;
 			this.actionComplete = true;
 			this.actionReturn = actionReturn;
@@ -2912,27 +2910,23 @@ namespace UnityStandardAssets.Characters.FirstPerson
             }
             else {
                 Debug.Log("AI navmesh error");
-                // errorMessage = "Path to target could not be found";
+                errorMessage = "Path to target could not be found";
                 actionFinished(false);
                 return;
             }
         }
 
-        // public void GetShortestPath(Vector3 position, Vector3 rotation, string objectType = null, string objectId = null) {
-        //     getShortestPath(objectType, objectId, position, Quaternion.Euler(rotation));
-        // }
-
-        // public void GetShortestPath(Vector3 position, string objectType = null, string objectId = null) {
-        //     getShortestPath(objectType, objectId, position, Quaternion.Euler(Vector3.zero));
-        // }
-
-        public void GetShortestPath(ServerAction action) {
-            getShortestPath(action.objectType, action.objectId, action.position, Quaternion.Euler(Vector3.zero));
+        public void GetShortestPath(Vector3 position, Vector3 rotation, string objectType = null, string objectId = null) {
+            getShortestPath(objectType, objectId, position, Quaternion.Euler(rotation));
         }
 
-        // public void GetShortestPath(string objectType = null, string objectId = null) {
-        //     getShortestPath(objectType, objectId, this.transform.position, this.transform.rotation);
-        // }
+        public void GetShortestPath(Vector3 position, string objectType = null, string objectId = null) {
+            getShortestPath(objectType, objectId, position, Quaternion.Euler(Vector3.zero));
+        }
+
+        public void GetShortestPath(string objectType = null, string objectId = null) {
+            getShortestPath(objectType, objectId, this.transform.position, this.transform.rotation);
+        }
 
         private bool GetPathFromReachablePositions(
             IEnumerable<Vector3> sortedPositions,
@@ -3158,13 +3152,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         if (shouldEnqueue) {
                             pointsQueue.Enqueue(newPosition);
                             #if UNITY_EDITOR
-                                Debug.DrawLine(p, newPosition, Color.yellow, 100000f);
+                                Debug.DrawLine(p, newPosition, Color.cyan, 100000f);
                             #endif
                         }
                     }
                 }
                 if (stepsTaken > Math.Floor(maxStepCount/(gridSize * gridSize))) {
-                    Debug.Log("Too many steps taken in GetReachablePositions.");
                     errorMessage = "Too many steps taken in GetReachablePositions.";
                     break;
                 }
@@ -3192,18 +3185,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
             agentTransform.position = initialPosition;
             agentTransform.rotation = initialRotation;
-            var successReachableVisible = getReachablePositionToObjectVisible(targetSimObject, out fixedPosition);
-
-            var path = new UnityEngine.AI.NavMeshPath();
-
+            getReachablePositionToObjectVisible(targetSimObject, out fixedPosition);
             agentTransform.position = originalAgentPosition;
             agentTransform.rotation = orignalAgentRotation;
             m_Camera.transform.rotation = originalCameraRotation;
 
-            if (!successReachableVisible) {
-                errorMessage += $"Could not find a reachable position from which the object '{targetSOP.name}' is visible with visibility '{this.maxVisibleDistance}'`.";
-                return path;
-            }
+            var path = new UnityEngine.AI.NavMeshPath();
             
             var sopPos = targetSOP.transform.position;
             //var target = new Vector3(sopPos.x, initialPosition.y, sopPos.z);
@@ -3215,18 +3202,15 @@ namespace UnityStandardAssets.Characters.FirstPerson
             var pathDistance = 0.0f;
             for (int i = 0; i < path.corners.Length - 1; i++) {
                 #if UNITY_EDITOR
-                    Debug.DrawLine(path.corners[i], path.corners[i + 1], Color.red, 10.0f);
+                    //Debug.DrawLine(path.corners[i], path.corners[i + 1], Color.red, 10.0f);
                     Debug.Log("Corner " + i + ": " + path.corners[i]);
                 #endif
                 pathDistance += Vector3.Distance(path.corners[i], path.corners[i + 1]);
             }
             
+
             //disable navmesh agent
             this.GetComponent<UnityEngine.AI.NavMeshAgent>().enabled = false;
-
-            if (path.status != UnityEngine.AI.NavMeshPathStatus.PathComplete) {
-                 errorMessage += $"Path from: '{initialPosition}' to '{fixedPosition}' could not be found in unity's navmesh.";
-            }
             
             return path;
         }
@@ -3238,7 +3222,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
             var path = new UnityEngine.AI.NavMeshPath();
             this.GetComponent<UnityEngine.AI.NavMeshAgent>().enabled = true;
             bool pathSuccess = UnityEngine.AI.NavMesh.CalculatePath(startPosition, targetPosition,  UnityEngine.AI.NavMesh.AllAreas, path);
-
             if (path.status == UnityEngine.AI.NavMeshPathStatus.PathComplete) {
                 // VisualizePath(startPosition, path);
                 this.GetComponent<UnityEngine.AI.NavMeshAgent>().enabled = false;
@@ -3246,6 +3229,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 return;
             }
             else {
+                errorMessage = "Path to target could not be found";
                 this.GetComponent<UnityEngine.AI.NavMeshAgent>().enabled = false;
                 actionFinished(false);
                 return;
@@ -3256,95 +3240,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
             var startPosition = this.transform.position;
             GetShortestPathToPoint(startPosition, x, y, z);
         }
-
-         public void MoveBallTime(ServerAction action) {
-
-             
-            var sphere = GameObject.Find("Sphere");
-
-            if (sphere == null) {
-                errorMessage = "Test sphere does not exist!";
-                  actionFinished(false);
-            }
-            else {
-                StartCoroutine(moveBallTime(action.timeStep, sphere.transform, action.position));
-            }
-
-           
-        }
-
-         public void MoveBallSpeed(ServerAction action) {
-              var sphere = GameObject.Find("Sphere");
-              if (sphere == null) {
-                  errorMessage = "Test sphere does not exist!";
-                  actionFinished(false);
-              }
-              else {
-                StartCoroutine(moveBallSpeed(action.speed, sphere.transform, action.position));
-              }
-        }
-
-
-    public IEnumerator moveBallTime(float seconds, Transform transform, Vector3 targetLocalPos)
-    {
-        Debug.Log($"Fixed Update Delta {Time.fixedDeltaTime}, timescale: {Time.timeScale}, deltaTime: {Time.deltaTime}, realtimeSinceStartup: {Time.realtimeSinceStartup}");
-
-        Debug.Log($"Args: seconds: {seconds}, targetRelativePosition: {targetLocalPos.ToString("F6")}");
-         var fixedStartTime = Time.fixedTime;
-        var startTime = Time.realtimeSinceStartup;
-        float currentTimeLeft = seconds;
-
-        var targetWorldPosition = transform.position + targetLocalPos;
-         Debug.Log($"Target WorldPosition: {targetWorldPosition.ToString("F6")}");
-
-        var distance = (targetWorldPosition - transform.localPosition).magnitude;
-        Vector3 targetDirectionWorld = (targetWorldPosition - transform.localPosition).normalized;
-        var speed = distance / seconds;
-        yield return new WaitForFixedUpdate();
-
-        Debug.Log("Starting position: " + transform.localPosition);
-
-        while (currentTimeLeft >= 0) {
-            currentTimeLeft -= Time.fixedDeltaTime;
-            Debug.Log($"Current timer countdown: {currentTimeLeft}, speed step: {targetDirectionWorld * speed * Time.fixedDeltaTime}");
-            transform.localPosition += targetDirectionWorld * speed * Time.fixedDeltaTime;
-            Debug.Log("updated position: " + transform.localPosition.ToString("F6"));
-            yield return new WaitForFixedUpdate();
-        }
-
-        var endTime = Time.realtimeSinceStartup;
-        Debug.Log($"--- Move ball elspsed time: {(endTime - startTime)} elapsed fixed time: {(Time.fixedTime - fixedStartTime)} final position: {transform.localPosition.ToString("F6")}, realtimeSinceStartup: {Time.realtimeSinceStartup}");
-        actionFinished(true);
-    }
-
-     public IEnumerator moveBallSpeed(float speed, Transform transform, Vector3 targetLocalPos)
-    {
-       Debug.Log($"Fixed Update Delta {Time.fixedDeltaTime}, timescale: {Time.timeScale}, deltaTime: {Time.deltaTime}, realtimeSinceStartup: {Time.realtimeSinceStartup}");
-
-         Debug.Log($"Args: speed: {speed} targetRelativePosition: {targetLocalPos.ToString("F6")}");
-        var fixedStartTime = Time.fixedTime;
-        var startTime = Time.realtimeSinceStartup;
-
-         var targetWorldPosition = transform.position + targetLocalPos;
-         Debug.Log($"Target WorldPosition: {targetWorldPosition.ToString("F6")}");
-
-        Vector3 targetDirectionWorld = (targetWorldPosition - transform.localPosition).normalized;
-         yield return new WaitForFixedUpdate();
-         var currentTime = 0.0f;
-         
-         var eps = 1e-3;
-        while (Vector3.SqrMagnitude(targetWorldPosition - transform.localPosition) > eps) {
-            currentTime += Time.fixedDeltaTime;
-            Debug.Log($"Current timer countdown: {currentTime}, speed step: {targetDirectionWorld * speed * Time.fixedDeltaTime}");
-            transform.localPosition += targetDirectionWorld * speed * Time.fixedDeltaTime;
-            Debug.Log("updated position: " + transform.localPosition.ToString("F6"));
-            yield return new WaitForFixedUpdate();
-        }
-
-        var endTime = Time.realtimeSinceStartup;
-        Debug.Log($"--- Move ball took {(endTime - startTime)}, added fixed: {currentTime}, elapsed fixed: {(Time.fixedTime - fixedStartTime)} position {transform.localPosition}, realtimeSinceStartup: {Time.realtimeSinceStartup}");
-        actionFinished(true);
-    }
 
         public void VisualizeShortestPaths(ServerAction action) {
             
