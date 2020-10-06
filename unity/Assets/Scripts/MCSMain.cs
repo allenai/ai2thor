@@ -7,6 +7,7 @@ using UnityStandardAssets.Characters.FirstPerson;
 using System.Text;
 
 public class MCSMain : MonoBehaviour {
+    private static string PATH_PREFIX = "MCS/";
     private static int LATEST_SCENE_VERSION = 2;
 
     private static float CUBE_INTERNAL_GRID = 0.25f;
@@ -95,7 +96,7 @@ public class MCSMain : MonoBehaviour {
     private GameObject wallBack;
 
     public static MCSConfigScene LoadCurrentSceneFromFile(String filePath) {
-        TextAsset currentSceneFile = Resources.Load<TextAsset>("MCS/Scenes/" + filePath);
+        TextAsset currentSceneFile = Resources.Load<TextAsset>(MCSMain.PATH_PREFIX + "Scenes/" + filePath);
         Debug.Log("MCS: Config file Assets/Resources/MCS/Scenes/" + filePath + ".json" + (currentSceneFile == null ?
             " is null!" : (":\n" + currentSceneFile.text)));
         return JsonUtility.FromJson<MCSConfigScene>(currentSceneFile.text);
@@ -174,7 +175,7 @@ public class MCSMain : MonoBehaviour {
         }
     }
 
-    // Custom Methods
+    // Custom Public Methods
 
     public void ChangeCurrentScene(MCSConfigScene scene) {
         if (scene == null && this.currentScene == null) {
@@ -200,6 +201,41 @@ public class MCSMain : MonoBehaviour {
             this.currentScene.objects.ForEach(InitializeGameObject);
         }
 
+        this.AdjustRoomStructuralObjects();
+
+        if (this.currentScene.goal != null && this.currentScene.goal.description != null) {
+            Debug.Log("MCS: Goal = " + this.currentScene.goal.description);
+        }
+
+        GameObject controller = GameObject.Find("FPSController");
+        if (this.currentScene.performerStart != null && this.currentScene.performerStart.position != null) {
+            // Always keep the Y position on the floor.
+            controller.transform.position = new Vector3(this.currentScene.performerStart.position.x,
+                this.currentScene.performerStart.position.y, this.currentScene.performerStart.position.z);
+        }
+        else {
+            controller.transform.position = new Vector3(0, this.currentScene.performerStart.position.y, 0);
+        }
+
+        if (this.currentScene.performerStart != null && this.currentScene.performerStart.rotation != null) {
+            // Only permit rotating left or right (along the Y axis).
+            controller.transform.rotation = Quaternion.Euler(0, this.currentScene.performerStart.rotation.y, 0);
+            controller.GetComponent<MCSController>().m_Camera.transform.localEulerAngles = new Vector3(
+                this.currentScene.performerStart.rotation.x, 0, 0);
+        }
+        else {
+            controller.transform.rotation = Quaternion.Euler(0, 0, 0);
+            controller.GetComponent<MCSController>().m_Camera.transform.localEulerAngles = new Vector3(
+                0, 0, 0);
+        }
+
+        this.lastStep = -1;
+        this.physicsSceneManager.SetupScene();
+    }
+
+    // Custom Private Methods
+
+    private void AdjustRoomStructuralObjects() {
         String ceilingMaterial = (this.currentScene.ceilingMaterial != null &&
             !this.currentScene.ceilingMaterial.Equals("")) ? this.currentScene.ceilingMaterial :
             this.defaultCeilingMaterial;
@@ -403,34 +439,6 @@ public class MCSMain : MonoBehaviour {
             AssignPhysicsMaterialAndRigidBodyValues(this.currentScene.floorProperties, this.floor, floorSimObjPhysics);
         }
 
-        if (this.currentScene.goal != null && this.currentScene.goal.description != null) {
-            Debug.Log("MCS: Goal = " + this.currentScene.goal.description);
-        }
-
-        GameObject controller = GameObject.Find("FPSController");
-        if (this.currentScene.performerStart != null && this.currentScene.performerStart.position != null) {
-            // Always keep the Y position on the floor.
-            controller.transform.position = new Vector3(this.currentScene.performerStart.position.x,
-                this.currentScene.performerStart.position.y, this.currentScene.performerStart.position.z);
-        }
-        else {
-            controller.transform.position = new Vector3(0, this.currentScene.performerStart.position.y, 0);
-        }
-
-        if (this.currentScene.performerStart != null && this.currentScene.performerStart.rotation != null) {
-            // Only permit rotating left or right (along the Y axis).
-            controller.transform.rotation = Quaternion.Euler(0, this.currentScene.performerStart.rotation.y, 0);
-            controller.GetComponent<MCSController>().m_Camera.transform.localEulerAngles = new Vector3(
-                this.currentScene.performerStart.rotation.x, 0, 0);
-        }
-        else {
-            controller.transform.rotation = Quaternion.Euler(0, 0, 0);
-            controller.GetComponent<MCSController>().m_Camera.transform.localEulerAngles = new Vector3(
-                0, 0, 0);
-        }
-
-        this.lastStep = -1;
-        this.physicsSceneManager.SetupScene();
     }
 
     private Collider AssignBoundingBox(
@@ -560,7 +568,7 @@ public class MCSMain : MonoBehaviour {
         foreach (KeyValuePair<string, Dictionary<string, string[]>> materialType in MCSConfig.MATERIAL_REGISTRY) {
             if (materialType.Value.ContainsKey(filename)) {
                 if (restrictions.Length == 0 || Array.IndexOf(restrictions, materialType.Key) >= 0) {
-                    Material material = Resources.Load<Material>("MCS/" + filename);
+                    Material material = Resources.Load<Material>(MCSMain.PATH_PREFIX + filename);
                     LogVerbose("LOAD OF MATERIAL FILE Assets/Resources/MCS/" + filename +
                         (material == null ? " IS NULL" : " IS DONE"));
                     return material;
@@ -1034,7 +1042,7 @@ public class MCSMain : MonoBehaviour {
             this.currentScene.version);
         string resourceFile = legacy != null ? legacy.resourceFile : objectDefinition.resourceFile;
 
-        GameObject gameObject = Instantiate(Resources.Load("MCS/" + resourceFile, typeof(GameObject))) as GameObject;
+        GameObject gameObject = Instantiate(Resources.Load(MCSMain.PATH_PREFIX + resourceFile, typeof(GameObject))) as GameObject;
 
         LogVerbose("LOAD CUSTOM GAME OBJECT " + objectDefinition.id + " FROM FILE Assets/Resources/MCS/" +
             resourceFile + (gameObject == null ? " IS NULL" : " IS DONE"));
@@ -1052,7 +1060,7 @@ public class MCSMain : MonoBehaviour {
             }
             objectDefinition.animations.ForEach((animationDefinition) => {
                 if (animationDefinition.animationFile != null && !animationDefinition.animationFile.Equals("")) {
-                    AnimationClip clip = Resources.Load<AnimationClip>("MCS/" +
+                    AnimationClip clip = Resources.Load<AnimationClip>(MCSMain.PATH_PREFIX +
                         animationDefinition.animationFile);
                     LogVerbose("LOAD OF ANIMATION CLIP FILE Assets/Resources/MCS/" +
                         animationDefinition.animationFile + (clip == null ? " IS NULL" : " IS DONE"));
@@ -1074,7 +1082,7 @@ public class MCSMain : MonoBehaviour {
                     LogVerbose("ASSIGN NEW ANIMATOR CONTROLLER TO GAME OBJECT " + gameObject.name);
                 }
                 RuntimeAnimatorController animatorController = Resources.Load<RuntimeAnimatorController>(
-                    "MCS/" + animatorDefinition.animatorFile);
+                    MCSMain.PATH_PREFIX + animatorDefinition.animatorFile);
                 LogVerbose("LOAD OF ANIMATOR CONTROLLER FILE Assets/Resources/MCS/" +
                     animatorDefinition.animatorFile + (animatorController == null ? " IS NULL" : " IS DONE"));
                 animator.runtimeAnimatorController = animatorController;
@@ -1228,7 +1236,7 @@ public class MCSMain : MonoBehaviour {
     }
 
     private List<MCSConfigObjectDefinition> LoadObjectRegistryFromFile(String filePath) {
-        TextAsset objectRegistryFile = Resources.Load<TextAsset>("MCS/" + filePath);
+        TextAsset objectRegistryFile = Resources.Load<TextAsset>(MCSMain.PATH_PREFIX + filePath);
         Debug.Log("MCS: Config file Assets/Resources/MCS/" + filePath + ".json" + (objectRegistryFile == null ?
             " is null!" : (":\n" + objectRegistryFile.text)));
         MCSConfigObjectRegistry objectRegistry = JsonUtility
