@@ -27,6 +27,12 @@ public class MCSConfig {
         { "UnityAssetStore/KD_NumberBlocks/Assets/Textures/Yellow/TOYBlocks_NumberBlock_6_Yellow_1K/NumberBlockYellow_6", new string[] { "yellow", "brown" } }
     };
 
+    public static Dictionary<string, string[]> CARDBOARD_MATERIAL_REGISTRY = new Dictionary<string, string[]>() {
+        { "AI2-THOR/Materials/Misc/Cardboard_Brown", new string[] { "brown" } },
+        { "AI2-THOR/Materials/Misc/Cardboard_Tan", new string[] { "brown" } },
+        { "AI2-THOR/Materials/Misc/Cardboard_Grey", new string[] { "grey" } }
+    };
+
     public static Dictionary<string, string[]> CERAMIC_MATERIAL_REGISTRY = new Dictionary<string, string[]>() {
         { "AI2-THOR/Materials/Ceramics/BrownMarbleFake 1", new string[] { "brown" } },
         { "AI2-THOR/Materials/Ceramics/ConcreteBoards1", new string[] { "grey" } },
@@ -35,12 +41,6 @@ public class MCSConfig {
         { "AI2-THOR/Materials/Ceramics/RedBrick", new string[] { "red" } },
         { "AI2-THOR/Materials/Ceramics/TexturesCom_BrickRound0044_1_seamless_S", new string[] { "grey" } },
         { "AI2-THOR/Materials/Ceramics/WhiteCountertop", new string[] { "grey" } }
-    };
-
-    public static Dictionary<string, string[]> CARDBOARD_MATERIAL_REGISTRY = new Dictionary<string, string[]>() {
-        { "AI2-THOR/Materials/Misc/Cardboard_Brown", new string[] { "brown" } },
-        { "AI2-THOR/Materials/Misc/Cardboard_Tan", new string[] { "brown" } },
-        { "AI2-THOR/Materials/Misc/Cardboard_Grey", new string[] { "grey" } }
     };
 
     public static Dictionary<string, string[]> FABRIC_MATERIAL_REGISTRY = new Dictionary<string, string[]>() {
@@ -82,6 +82,21 @@ public class MCSConfig {
         { "AI2-THOR/Materials/Plastics/LightBlueRubber", new string[] { "blue" } }
     };
 
+    public static Dictionary<string, string[]> SOFA_1_MATERIAL_REGISTRY = new Dictionary<string, string[]>() {
+        { "AI2-THOR/Materials/Fabrics/Sofa1_Brown", new string[] { "brown" } },
+        { "AI2-THOR/Materials/Fabrics/Sofa1_Red", new string[] { "red" } }
+    };
+
+    public static Dictionary<string, string[]> SOFA_CHAIR_1_MATERIAL_REGISTRY = new Dictionary<string, string[]>() {
+        { "AI2-THOR/Materials/Fabrics/SofaChair1_Black", new string[] { "black" } },
+        { "AI2-THOR/Materials/Fabrics/SofaChair1_Brown", new string[] { "brown" } }
+    };
+
+    public static Dictionary<string, string[]> SOFA_2_MATERIAL_REGISTRY = new Dictionary<string, string[]>() {
+        { "AI2-THOR/Materials/Fabrics/Sofa2_Grey", new string[] { "grey" } },
+        { "AI2-THOR/Materials/Fabrics/Sofa2_White", new string[] { "white" } }
+    };
+
     public static Dictionary<string, string[]> WALL_MATERIAL_REGISTRY = new Dictionary<string, string[]>() {
         { "AI2-THOR/Materials/Walls/Drywall", new string[] { "white" } },
         { "AI2-THOR/Materials/Walls/DrywallBeige", new string[] { "brown" } },
@@ -92,19 +107,6 @@ public class MCSConfig {
         { "AI2-THOR/Materials/Walls/RedDrywall", new string[] { "red" } },
         { "AI2-THOR/Materials/Walls/WallDrywallGrey", new string[] { "grey" } },
         { "AI2-THOR/Materials/Walls/YellowDrywall", new string[] { "yellow" } }
-    };
-
-    public static Dictionary<string, string[]> SOFA_1_MATERIAL_REGISTRY = new Dictionary<string, string[]>() {
-        { "AI2-THOR/Materials/Fabrics/Sofa1_Brown", new string[] { "brown" } },
-    };
-
-    public static Dictionary<string, string[]> SOFA_CHAIR_1_MATERIAL_REGISTRY = new Dictionary<string, string[]>() {
-        { "AI2-THOR/Materials/Fabrics/SofaChair1_Black", new string[] { "black" } },
-        { "AI2-THOR/Materials/Fabrics/SofaChair1_Brown", new string[] { "brown" } }
-    };
-
-    public static Dictionary<string, string[]> SOFA_2_MATERIAL_REGISTRY = new Dictionary<string, string[]>() {
-        { "AI2-THOR/Materials/Fabrics/Sofa2_Grey", new string[] { "grey" } }
     };
 
     public static Dictionary<string, string[]> WOOD_MATERIAL_REGISTRY = new Dictionary<string, string[]>() {
