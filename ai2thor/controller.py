@@ -668,10 +668,12 @@ class Controller(object):
         if ('objectId' in action and (action['action'] == 'OpenObject' or action['action'] == 'CloseObject')):
 
             force_visible = action.get('forceVisible', False)
-            if not force_visible and self.last_event.instance_detections2D and action['objectId'] not in self.last_event.instance_detections2D:
+            agent_id = action.get('agentId', 0)
+            instance_detections2D = self.last_event.events[agent_id].instance_detections2D
+            if not force_visible and instance_detections2D and action['objectId'] not in instance_detections2D:
                 should_fail = True
 
-            obj_metadata = self.last_event.get_object(action['objectId'])
+            obj_metadata = self.last_event.events[agent_id].get_object(action['objectId'])
             if obj_metadata is None or obj_metadata['isOpen'] == (action['action'] == 'OpenObject'):
                 should_fail = True
 
