@@ -20,6 +20,13 @@ public class MCSMain : MonoBehaviour {
     private static float LIGHT_Y_POSITION_SCREENSHOT = 0.5f;
     private static float LIGHT_Z_POSITION = 0;
     private static float LIGHT_Z_POSITION_SCREENSHOT = -2.0f;
+    private static float PHYSICS_FRICTION_DYNAMIC_DEFAULT = 0.6f;
+    private static float PHYSICS_FRICTION_DYNAMIC_PASSIVE = 0.1f;
+    private static float PHYSICS_FRICTION_STATIC_DEFAULT = 0.6f;
+    private static float PHYSICS_FRICTION_STATIC_PASSIVE = 0.1f;
+    private static float PHYSICS_BOUNCINESS_DEFAULT = 0;
+    private static float RIGIDBODY_DRAG_DEFAULT = 0;
+    private static float RIGIDBODY_ANGULAR_DRAG_DEFAULT = 0.5f;
     private static float WALL_SIDE_X_POSITION_OBSERVATION = 7.0f;
     private static float WALL_SIDE_X_POSITION_INTERACTION = 5.25f;
     private static float WALL_Y_POSITION = 1.5f;
@@ -170,7 +177,11 @@ public class MCSMain : MonoBehaviour {
             !this.currentScene.wallMaterial.Equals("")) ? this.currentScene.wallMaterial :
             this.defaultWallsMaterial;
 
-        if (this.currentScene.observation) {
+        // For all intuitive physics scenes: set the controller substeps to 1; expand all the walls of the room; remove
+        // the ceiling; and set the performer to start at a specific position and rotation.
+        if (this.currentScene.intuitivePhysics || this.currentScene.observation) {
+            this.agentController.substeps = 1;
+
             this.ceiling.SetActive(false);
 
             this.wallLeft.transform.position = new Vector3(-1 * MCSMain.WALL_SIDE_X_POSITION_OBSERVATION,
@@ -188,8 +199,20 @@ public class MCSMain : MonoBehaviour {
             this.currentScene.performerStart.position = new MCSConfigVector();
             this.currentScene.performerStart.position.z = -4.5f;
             this.currentScene.performerStart.rotation = new MCSConfigVector();
+
+            if (this.currentScene.floorProperties == null || !this.currentScene.floorProperties.enable) {
+                this.currentScene.floorProperties = new MCSConfigPhysicsProperties();
+                this.currentScene.floorProperties.enable = true;
+                this.currentScene.floorProperties.dynamicFriction = MCSMain.PHYSICS_FRICTION_DYNAMIC_PASSIVE;
+                this.currentScene.floorProperties.staticFriction = MCSMain.PHYSICS_FRICTION_STATIC_PASSIVE;
+                this.currentScene.floorProperties.bounciness = MCSMain.PHYSICS_BOUNCINESS_DEFAULT;
+                this.currentScene.floorProperties.drag = MCSMain.RIGIDBODY_DRAG_DEFAULT;
+                this.currentScene.floorProperties.angularDrag = MCSMain.RIGIDBODY_ANGULAR_DRAG_DEFAULT;
+            }
         }
         else {
+            this.agentController.substeps = MCSController.PHYSICS_SIMULATION_LOOPS;
+
             this.ceiling.SetActive(true);
 
             this.wallLeft.transform.position = new Vector3(-1 * MCSMain.WALL_SIDE_X_POSITION_INTERACTION,
@@ -223,7 +246,8 @@ public class MCSMain : MonoBehaviour {
         }
 
         else {
-            if (!this.currentScene.observation) {
+            // The intuitive physics scenes don't have ceilings.
+            if (!(this.currentScene.intuitivePhysics || this.currentScene.observation)) {
                 if (ceilingSimObjPhysics.VisibilityPoints.Length == 0) {
                     ceilingSimObjPhysics.VisibilityPoints = AssignVisibilityPoints(this.ceiling,
                         this.GenerateCubeInternalVisibilityPoints(this.ceiling, null), null);
@@ -275,7 +299,7 @@ public class MCSMain : MonoBehaviour {
         }
 
         if (this.currentScene.floorProperties != null && this.currentScene.floorProperties.enable) {
-            AssignPhysicsMaterialAndRigidBodyValues(scene.floorProperties, this.floor, floorSimObjPhysics);
+            AssignPhysicsMaterialAndRigidBodyValues(this.currentScene.floorProperties, this.floor, floorSimObjPhysics);
         }
 
         if (this.currentScene.goal != null && this.currentScene.goal.description != null) {
@@ -1298,7 +1322,6 @@ public class MCSMain : MonoBehaviour {
             .ToList().ForEach((force) => {
                 Rigidbody rigidbody = gameOrParentObject.GetComponent<Rigidbody>();
                 if (rigidbody != null) {
-                    rigidbody.velocity = Vector3.zero;
                     rigidbody.AddForce(new Vector3(force.vector.x, force.vector.y, force.vector.z));
                 }
             });
@@ -1307,7 +1330,6 @@ public class MCSMain : MonoBehaviour {
             torque.vector != null).ToList().ForEach((torque) => {
                 Rigidbody rigidbody = gameOrParentObject.GetComponent<Rigidbody>();
                 if (rigidbody != null) {
-                    rigidbody.angularVelocity = Vector3.zero;
                     rigidbody.AddTorque(new Vector3(torque.vector.x, torque.vector.y, torque.vector.z));
                 }
             });
@@ -1545,7 +1567,8 @@ public class MCSConfigScene {
     public String ceilingMaterial;
     public String floorMaterial;
     public String wallMaterial;
-    public bool observation;
+    public bool intuitivePhysics;
+    public bool observation; // deprecated; please use intuitivePhysics
     public bool screenshot;
 
     public MCSConfigGoal goal;
