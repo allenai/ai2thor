@@ -365,10 +365,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
                  case "lighti":
                     {
-                        dynamic action = new JObject();
-
-                        action.action = "ChangeLightIntensityExpRoom";
-                        action.intensity = 3;
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "ChangeLightIntensityExpRoom";
+                        action["intensity"] = 3;
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }
@@ -1152,10 +1151,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
                 case "rhs":
                     {
-                        dynamic action = new JObject();
-                        action.action = "RandomizeHideSeekObjects";
-                        action.removeProb = float.Parse(splitcommand[1]);
-                        action.randomSeed = int.Parse(splitcommand[2]);
+                        Dictionary<string, object> action = new Dictionary<string, object>();
+                        action["action"] = "RandomizeHideSeekObjects";
+                        action["removeProb"] = float.Parse(splitcommand[1]);
+                        action["randomSeed"] = int.Parse(splitcommand[2]);
                         PhysicsController.ProcessControlCommand(action);
                         break;
                     }
