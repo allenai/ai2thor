@@ -349,7 +349,7 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
         yield return new WaitForFixedUpdate();
         var previousArmPosition = armTarget.position;
 
-        while ((Vector3.SqrMagnitude(targetWorldPos - armTarget.position) > eps) && !staticCollided.collided && !magnetSphereComp.isColliding) {
+        while ((Vector3.SqrMagnitude(targetWorldPos - armTarget.position) > eps) && !staticCollided.collided) {
 
 
             previousArmPosition = armTarget.position;
