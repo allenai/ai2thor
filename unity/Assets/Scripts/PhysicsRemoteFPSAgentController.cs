@@ -9037,7 +9037,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             var arm = this.GetComponentInChildren<IK_Robot_Arm_Controller>();
 
             if (arm != null) {
-                arm.SetStopMotionOnContact(action.stopArmMovementOnContact);
+                //arm.SetStopMotionOnContact(action.stopArmMovementOnContact);
                 StartCoroutine(arm.moveArmTarget(this, action.position, action.speed, arm.gameObject, action.returnToStart, action.coordinateSpace));
             }
             else {
@@ -9060,7 +9060,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             var arm = this.GetComponentInChildren<IK_Robot_Arm_Controller>();
             if(arm != null)
             {
-                arm.SetStopMotionOnContact(action.stopArmMovementOnContact);
+                //arm.SetStopMotionOnContact(action.stopArmMovementOnContact);
                 StartCoroutine(arm.moveArmHeight(this, action.y, action.speed, arm.gameObject, action.returnToStart));
             }
 
@@ -9089,7 +9089,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     target = Quaternion.AngleAxis(action.degrees, action.rotation);
                 }
 
-                arm.SetStopMotionOnContact(action.stopArmMovementOnContact);
+                //arm.SetStopMotionOnContact(action.stopArmMovementOnContact);
                 StartCoroutine(arm.rotateHand(this, target, action.timeStep, action.returnToStart));
             }
             else {

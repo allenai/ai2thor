@@ -27,7 +27,15 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
 
     private PhysicsRemoteFPSAgentController PhysicsController; 
 
-    private Transform FirstJoint;
+    //references to the joints of the mid level arm
+    [SerializeField]
+    private Transform FirstJoint = null;
+    [SerializeField]
+    private Transform SecondJoint = null;
+    [SerializeField]
+    private Transform ThirdJoint = null;
+    [SerializeField]
+    private Transform FourthJoint = null;
 
     //dict to track which picked up object has which set of trigger colliders
     //which we have to parent and reparent in order for arm collision to detect
@@ -47,7 +55,7 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
         // What a mess clean up this hierarchy, standarize naming
         armTarget = this.transform.Find("FK_IK_rig").Find("robot_arm_IK_rig").Find("pos_rot_manipulator");
         // handCameraTransform = this.GetComponentInChildren<Camera>().transform;
-        FirstJoint = this.transform.Find("robot_arm_1_jnt");
+        //FirstJoint = this.transform.Find("robot_arm_1_jnt"); this is now set via serialize field, along with the other joints
         handCameraTransform = this.transform.FirstChildOrDefault(x => x.name == "robot_arm_4_jnt");
         staticCollided = new StaticCollided();
 
@@ -56,10 +64,11 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
         // PhysicsController = GetComponentInParent<PhysicsRemoteFPSAgentController>();
     }
 
-    public void SetStopMotionOnContact(bool b)
-    {
-        StopMotionOnContact = b;
-    }
+    //NOTE: removing this for now, will add back if functionality is required later
+    // public void SetStopMotionOnContact(bool b)
+    // {
+    //     StopMotionOnContact = b;
+    // }
 
     // Update is called once per frame
     void Update()
@@ -434,7 +443,7 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
 
             //move colliders to be children of arm? stop arm from moving?
             Transform cols = sop.transform.Find("TriggerColliders"); 
-            cols.SetParent(magnetSphere.transform);
+            cols.SetParent(FourthJoint);
             pickedUp = true;
 
             HeldObjects.Add(sop, cols);
@@ -455,7 +464,9 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
             rb.isKinematic = false;
 
             //move colliders back to the sop
-            magnetSphere.transform.Find("TriggerColliders").transform.SetParent(sop.Key.transform);
+            //magnetSphere.transform.Find("TriggerColliders").transform.SetParent(sop.Key.transform);
+            sop.Value.transform.SetParent(sop.Key.transform);
+
             GameObject topObject = GameObject.Find("Objects");
 
             if(topObject != null)
@@ -467,8 +478,7 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
             {
                 sop.Key.transform.parent = null;
             }
-
-            rb.angularVelocity = UnityEngine.Random.insideUnitSphere;
+            //rb.angularVelocity = UnityEngine.Random.insideUnitSphere;
         }
 
         //clear all now dropped objects
