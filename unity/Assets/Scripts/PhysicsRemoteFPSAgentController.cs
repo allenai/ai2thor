@@ -3097,10 +3097,10 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
         //change intensity of lights in exp room [0-5] these arent in like... lumens or anything
         //just a relative intensity value
-        public void ChangeLightIntensityExpRoom(ServerAction action)
+        public void ChangeLightIntensityExpRoom(float intensity)
         {
             //restrict this to [0-5]
-            if(action.intensity < 0 || action.intensity > 5)
+            if(intensity < 0 || intensity > 5)
             {
                 errorMessage = "light intensity must be [0.0 , 5.0] inclusive";
                 actionFinished(false);
@@ -3108,7 +3108,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
 
             ExperimentRoomSceneManager ersm = physicsSceneManager.GetComponent<ExperimentRoomSceneManager>();
-            ersm.ChangeLightIntensity(action.intensity);
+            ersm.ChangeLightIntensity(intensity);
             actionFinished(true);
         }
 
@@ -7573,8 +7573,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true);
         }
 
-        public void RandomizeHideSeekObjects(ServerAction action) {
-            System.Random rnd = new System.Random(action.randomSeed);
+        public void RandomizeHideSeekObjects(int randomSeed, float removeProb) {
+            System.Random rnd = new System.Random(randomSeed);
 
             if (!physicsSceneManager.ToggleHideAndSeek(true)) {
                 errorMessage = "Hide and Seek object reference not set, nothing to randomize.";
@@ -7583,7 +7583,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
 
             foreach (Transform child in physicsSceneManager.HideAndSeek.transform) {
-                child.gameObject.SetActive(rnd.NextDouble() > action.removeProb);
+                child.gameObject.SetActive(rnd.NextDouble() > removeProb);
             }
             physicsSceneManager.SetupScene();
             physicsSceneManager.ResetObjectIdToSimObjPhysics();

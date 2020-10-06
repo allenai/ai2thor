@@ -1294,11 +1294,8 @@ public class ServerAction
 	public float startAgentsRotatedBy = 0f;
 	public float visibilityDistance;
 	public bool uniquePickupableObjectTypes; // only allow one of each object type to be visible
-	public float removeProb;
 	public int numPlacementAttempts;
 	public bool randomizeObjectAppearance;
-    public bool objectRandom;
-    public string objectName;
 	public bool renderImage = true;
 	public bool renderDepthImage;
 	public bool renderClassImage;
@@ -1354,7 +1351,6 @@ public class ServerAction
 
 	//default time for objects to wait before returning actionFinished() if an action put them in motion
 	public float TimeToWaitForObjectsToComeToRest = 10.0f;
-	public float intensity;//used for light?
 	public float scale;
     public string visibilityScheme = VisibilityScheme.Collider.ToString();
 

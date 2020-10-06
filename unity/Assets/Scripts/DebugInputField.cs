@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using System;
 using System.Linq;
+using Newtonsoft.Json.Linq;
 
 
 namespace UnityStandardAssets.Characters.FirstPerson
@@ -364,7 +365,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
                  case "lighti":
                     {
-                        ServerAction action = new ServerAction();
+                        dynamic action = new JObject();
 
                         action.action = "ChangeLightIntensityExpRoom";
                         action.intensity = 3;
@@ -1151,7 +1152,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
                 case "rhs":
                     {
-                        ServerAction action = new ServerAction();
+                        dynamic action = new JObject();
                         action.action = "RandomizeHideSeekObjects";
                         action.removeProb = float.Parse(splitcommand[1]);
                         action.randomSeed = int.Parse(splitcommand[2]);
