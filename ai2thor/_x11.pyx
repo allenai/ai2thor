@@ -214,6 +214,11 @@ cdef class X11:
 
         size = self.image.bytes_per_line * (self.image.height)
         self.shminfo.shmid = shmget(IPC_PRIVATE, size, IPC_CREAT | 0777)
+
+        if self.shminfo.shmid == -1:
+            self.free()
+            raise Exception("failed to allocate shared memory ")
+
         self.image.data = <char *>shmat(self.shminfo.shmid, NULL, 0)
         self.shminfo.shmaddr = self.image.data
         if self.shminfo.shmaddr == <char *> -1:
