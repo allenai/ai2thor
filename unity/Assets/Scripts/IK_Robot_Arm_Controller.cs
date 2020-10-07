@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System;
 using UnityEngine;
 using UnityStandardAssets.Characters.FirstPerson;
 
@@ -147,11 +148,6 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
 
         }
 
-        foreach (BoxCollider b in ArmBoxColliders)
-        {
-
-        }
-
         return result;
     }
 
@@ -248,6 +244,8 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
 
     public IEnumerator moveArmHeight(PhysicsRemoteFPSAgentController controller, float height, float unitsPerSecond, GameObject arm, bool returnToStartPositionIfFailed = false)
     {
+        float oldFixedDeltaTime = Time.fixedDeltaTime;
+        Time.fixedDeltaTime = 0.00001f;
         //first check if the target position is within bounds of the agent's capsule center/height extents
         //if not, actionFinished false with error message listing valid range defined by extents
         staticCollided.collided = false;
@@ -269,18 +267,31 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
 
         Vector3 originalPos = arm.transform.localPosition;
         Vector3 targetDirectionWorld = (targetLocalPos - originalPos).normalized;
+        float startingDistance = Vector3.SqrMagnitude(targetLocalPos - arm.transform.localPosition);
         var eps = 1e-3;
-        yield return new WaitForFixedUpdate();
         var previousArmPosition = arm.transform.localPosition;
 
-        while ((Vector3.SqrMagnitude(targetLocalPos - arm.transform.localPosition) > eps) && !staticCollided.collided) {
+        float currentDistance = Vector3.SqrMagnitude(targetLocalPos - arm.transform.localPosition);
+        while (currentDistance > eps && !staticCollided.collided && currentDistance <= startingDistance) {
             previousArmPosition = arm.transform.localPosition;
-            arm.transform.localPosition += targetDirectionWorld * unitsPerSecond * Time.fixedDeltaTime;
+            arm.transform.localPosition += targetDirectionWorld * Math.Min(unitsPerSecond, currentDistance);
             // Jump the last epsilon to match exactly targetWorldPos
-            
-            arm.transform.localPosition = Vector3.SqrMagnitude(targetLocalPos - arm.transform.localPosition) > eps ?  arm.transform.localPosition : targetLocalPos;
            
             yield return new WaitForFixedUpdate();
+            currentDistance = Vector3.SqrMagnitude(targetLocalPos - arm.transform.localPosition);
+            if (currentDistance <= eps) {
+                arm.transform.localPosition = targetLocalPos;
+                yield return new WaitForFixedUpdate();
+                currentDistance = Vector3.SqrMagnitude(targetLocalPos - arm.transform.localPosition);
+            }
+
+        }
+        Time.fixedDeltaTime =  oldFixedDeltaTime;
+
+        if (currentDistance > startingDistance) {
+            Debug.Log("stopping arm height - target was overshot");
+            controller.actionFinished(false, "arm height has overshot the target position");
+            yield break;
         }
 
         if (staticCollided.collided) {
