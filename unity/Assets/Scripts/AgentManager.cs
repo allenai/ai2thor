@@ -39,7 +39,7 @@ public class AgentManager : MonoBehaviour
 	private List<Camera> thirdPartyCameras = new List<Camera>();
 	private bool readyToEmit;
     private bool ximageCapture = false;
-    private bool allowEmit;
+    private bool readyEmitXimage;
 	private Color[] agentColors = new Color[]{Color.blue, Color.yellow, Color.green, Color.red, Color.magenta, Color.grey};
 	public int actionDuration = 3;
 	private BaseFPSAgentController primaryAgent;
@@ -49,6 +49,7 @@ public class AgentManager : MonoBehaviour
     private FifoServer.Client fifoClient = null;
 	private enum serverTypes { WSGI, FIFO};
     private serverTypes serverType;
+    private float fixedDeltaTime;
 
 
 	public Bounds sceneBounds = new Bounds(
@@ -106,7 +107,6 @@ public class AgentManager : MonoBehaviour
 		string prefix = trainPhase ? "TRAIN_" : "TEST_";
 
 		actionDuration = LoadIntVariable(actionDuration, prefix + "ACTION_LENGTH");
-
 	}
 
 	void Start()
@@ -486,18 +486,23 @@ public class AgentManager : MonoBehaviour
     // And if we need to capture a new frame
 
     private void emitXimage() {
-        int completeCount = agentCompleteCount();
 
-		if (ximageCapture && allowEmit && completeCount == agents.Count && completeCount > 0 && readyToEmit)
+		if (readyEmitXimage)
         {
             Debug.Log("Emitting using XImage");
-            allowEmit = false;
+            readyEmitXimage = false;
+            readyToEmit = false;
+            Time.fixedDeltaTime = this.fixedDeltaTime;
             MultiAgentMetadata multiMeta = new MultiAgentMetadata ();
             createPayload(multiMeta, null, null, false);
             string msg = sendPayload(multiMeta, null);
             ProcessControlCommand(msg);
         }
 
+    }
+    
+    void FixedUpdate() {
+        emitXimage();
     }
 
     private void Update()
@@ -524,23 +529,30 @@ public class AgentManager : MonoBehaviour
 
 		if (completeCount == agents.Count && completeCount > 0 && readyToEmit)
         {
-            //start emit frame for physics and stochastic controllers
-			if(!droneMode)
-            {
-				readyToEmit = false;
-				StartCoroutine (EmitFrame());
-			}
-
-            //start emit frame for flying drone controller
-            if(droneMode)
-            {
-                //make sure each agent in flightMode has updated at least once
-				if (hasDroneAgentUpdatedCount == agents.Count && hasDroneAgentUpdatedCount > 0)
+            if (ximageCapture) {
+                // force FixedUpdate to get called
+                this.fixedDeltaTime = Time.fixedDeltaTime;
+                Time.fixedDeltaTime = 0.000001f;
+                readyEmitXimage = true;
+            } else {
+                //start emit frame for physics and stochastic controllers
+                if(!droneMode)
                 {
-					readyToEmit = false;
-					StartCoroutine (EmitFrame());
-				}
-			}
+                    readyToEmit = false;
+                    StartCoroutine (EmitFrame());
+                }
+
+                //start emit frame for flying drone controller
+                if(droneMode)
+                {
+                    //make sure each agent in flightMode has updated at least once
+                    if (hasDroneAgentUpdatedCount == agents.Count && hasDroneAgentUpdatedCount > 0)
+                    {
+                        readyToEmit = false;
+                        StartCoroutine (EmitFrame());
+                    }
+                }
+            }
 		}
 
         //ok now if the scene is at rest, turn back on physics autosimulation automatically
@@ -553,8 +565,6 @@ public class AgentManager : MonoBehaviour
         //     physicsSceneManager.physicsSimulationPaused = false;
         //     AdvancePhysicsStepCount = 0;
         // }
-
-        allowEmit = true;
 	}
 
     private int agentCompleteCount() {
