@@ -275,11 +275,11 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
         while (currentDistance > eps && !staticCollided.collided && currentDistance <= startingDistance) {
             previousArmPosition = arm.transform.localPosition;
             arm.transform.localPosition += targetDirectionWorld * Math.Min(unitsPerSecond, currentDistance);
-            // Jump the last epsilon to match exactly targetWorldPos
            
             yield return new WaitForFixedUpdate();
             currentDistance = Vector3.SqrMagnitude(targetLocalPos - arm.transform.localPosition);
             if (currentDistance <= eps) {
+                // Jump the last epsilon to match exactly targetWorldPos
                 arm.transform.localPosition = targetLocalPos;
                 yield return new WaitForFixedUpdate();
                 currentDistance = Vector3.SqrMagnitude(targetLocalPos - arm.transform.localPosition);
