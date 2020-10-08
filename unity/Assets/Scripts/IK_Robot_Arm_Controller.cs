@@ -130,17 +130,30 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
             var previousArmPosition = originalPosition;
 
             Vector3 targetDirection = (targetPosition - previousArmPosition).normalized;
+            float currentDistance = Vector3.SqrMagnitude(targetPosition - getPosition(moveTransform));
+            float startingDistance = currentDistance;
+            // running simulate once before we begin our movement loop to
+            // ensure that the arm is not in contact with any other object
+            // that should prevent it from moving
+            Physics.Simulate(fixedDeltaTime);
 
-            while (Vector3.SqrMagnitude(targetPosition - getPosition(moveTransform)) > eps && !staticCollided.collided) {
-                Physics.Simulate(fixedDeltaTime);
+            while ( currentDistance > eps && !staticCollided.collided && currentDistance <= startingDistance) {
+
                 previousArmPosition = getPosition(moveTransform);
 
                 addPosition(moveTransform, targetDirection * unitsPerSecond * fixedDeltaTime);
 
-                if (Vector3.SqrMagnitude(targetPosition - getPosition(moveTransform)) <= eps) {
-                    setPosition(moveTransform, targetPosition);
-                }
+                Physics.Simulate(fixedDeltaTime);
+
+                currentDistance = Vector3.SqrMagnitude(targetPosition - getPosition(moveTransform));
             }
+
+            if (currentDistance <= eps && !staticCollided.collided) {
+                setPosition(moveTransform, targetPosition);
+                // must run Simulate() one more time to ensure colliders are triggered
+                Physics.Simulate(fixedDeltaTime);
+            }
+
 
             if (staticCollided.collided) {
                 
@@ -162,6 +175,10 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
                 staticCollided.collided = false;
 
                 actionSuccess = false;
+        } else if (currentDistance > startingDistance) {
+            Debug.Log("stopping arm height - target was overshot");
+            debugMessage =  "arm height has overshot the target position";
+            actionSuccess = false;
         }
         Physics.autoSimulation = true;
         controller.actionFinished(actionSuccess, debugMessage);
