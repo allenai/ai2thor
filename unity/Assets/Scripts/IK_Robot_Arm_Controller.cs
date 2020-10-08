@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System;
 using UnityEngine;
 using UnityStandardAssets.Characters.FirstPerson;
+using SD = System.Diagnostics;
 
 public class IK_Robot_Arm_Controller : MonoBehaviour
 {
@@ -19,6 +20,8 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
     }
 
     private Transform armTarget;
+    private int armCounter;
+    private SD.Stopwatch sw = new SD.Stopwatch();
     private StaticCollided staticCollided;
     private Transform handCameraTransform;
     [SerializeField]
@@ -153,6 +156,7 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
 
     public void OnTriggerEnter(Collider col)
     {
+
         if(col.GetComponentInParent<SimObjPhysics>())
         {
             //how does this handle nested sim objects? maybe it's fine?
@@ -244,8 +248,9 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
 
     public IEnumerator moveArmHeight(PhysicsRemoteFPSAgentController controller, float height, float unitsPerSecond, GameObject arm, bool returnToStartPositionIfFailed = false)
     {
-        float oldFixedDeltaTime = Time.fixedDeltaTime;
-        Time.fixedDeltaTime = 0.00001f;
+        sw.Start();
+        armCounter++;
+        Physics.autoSimulation = false;
         //first check if the target position is within bounds of the agent's capsule center/height extents
         //if not, actionFinished false with error message listing valid range defined by extents
         staticCollided.collided = false;
@@ -274,23 +279,27 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
         float currentDistance = Vector3.SqrMagnitude(targetLocalPos - arm.transform.localPosition);
         while (currentDistance > eps && !staticCollided.collided && currentDistance <= startingDistance) {
             previousArmPosition = arm.transform.localPosition;
-            arm.transform.localPosition += targetDirectionWorld * Math.Min(unitsPerSecond, currentDistance);
+            arm.transform.localPosition += targetDirectionWorld * unitsPerSecond;
            
-            yield return new WaitForFixedUpdate();
+            //yield return new WaitForFixedUpdate();
             currentDistance = Vector3.SqrMagnitude(targetLocalPos - arm.transform.localPosition);
+            //Physics.Simulate(0.01f);
             if (currentDistance <= eps) {
                 // Jump the last epsilon to match exactly targetWorldPos
                 arm.transform.localPosition = targetLocalPos;
-                yield return new WaitForFixedUpdate();
+                //yield return new WaitForFixedUpdate();
+                Physics.Simulate(0.01f);
                 currentDistance = Vector3.SqrMagnitude(targetLocalPos - arm.transform.localPosition);
             }
 
         }
-        Time.fixedDeltaTime =  oldFixedDeltaTime;
+        Physics.autoSimulation = true;
 
         if (currentDistance > startingDistance) {
             Debug.Log("stopping arm height - target was overshot");
             controller.actionFinished(false, "arm height has overshot the target position");
+            sw.Stop();
+            Debug.Log("Elapsed move arm height" + (sw.ElapsedMilliseconds/(float)armCounter));
             yield break;
         }
 
@@ -315,6 +324,8 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
 
             staticCollided.collided = false;
 
+            sw.Stop();
+            Debug.Log("Elapsed move arm height" + (sw.ElapsedMilliseconds/(float)armCounter));
             controller.actionFinished(false, debugMessage);
             yield break;
         }
@@ -330,6 +341,8 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
         // }
 
         
+        sw.Stop();
+        Debug.Log("Elapsed move arm height" + (sw.ElapsedMilliseconds/(float)armCounter));
 
         controller.actionFinished(true);
     }
