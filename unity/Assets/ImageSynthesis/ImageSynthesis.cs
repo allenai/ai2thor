@@ -75,6 +75,9 @@ public class ImageSynthesis : MonoBehaviour {
 
 	public Texture2D tex;
 
+	// If needed, use a guid to generate unique segmentation mask colors for each step
+	private string guidForColors = "";
+
 	void Start()
 	{
 		//XXXXXXXXXXX************
@@ -274,6 +277,14 @@ public class ImageSynthesis : MonoBehaviour {
 		}
 	}
 
+	// If we need to generate random colors for segmentation masks, update color
+	// guid before calling OnSceneChange (which will recreate the colorsIds
+	// dictionary)
+	public void UpdateGuidForColors(bool consistentColors) {
+		if(!consistentColors) {
+			this.guidForColors = System.Guid.NewGuid().ToString();
+		}
+	}
 
 	public void OnSceneChange()
 	{
@@ -317,7 +328,7 @@ public class ImageSynthesis : MonoBehaviour {
 			Color classColor;
 			Color objColor;
 			classColor = ColorEncoding.EncodeTagAsColor (classTag);
-			objColor = ColorEncoding.EncodeTagAsColor(objTag);
+			objColor = ColorEncoding.EncodeTagAsColor(objTag + guidForColors);
 
             if (capturePasses[0].camera != null) {
 			    capturePasses [0].camera.WorldToScreenPoint (r.bounds.center);

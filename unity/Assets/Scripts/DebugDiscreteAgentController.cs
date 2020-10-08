@@ -23,6 +23,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
         public float pushPullForce = 150.0f;
         public float FlyMagnitude = 1.0f;
         public float WalkMagnitude = 0.2f;
+        public bool consistentColors = false;
 
         [SerializeField] private GameObject InputMode_Text = null;
         // Start is called before the first frame update
@@ -47,6 +48,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             action.action = "Initialize";
             action.gridSize = gridSize;
             action.visibilityDistance = visibilityDistance;
+            action.consistentColors = consistentColors;
             PhysicsController.ProcessControlCommand(action);
         }
 

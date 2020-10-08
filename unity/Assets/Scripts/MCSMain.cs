@@ -114,6 +114,12 @@ public class MCSMain : MonoBehaviour {
             this.lastStep++;
             Debug.Log("MCS: Run Step " + this.lastStep + " at Frame " + Time.frameCount);
             if (this.currentScene != null && this.currentScene.objects != null) {
+                // update segmentation mask colors
+                ImageSynthesis imageSynthesis = GameObject.Find("FPSController").GetComponentInChildren<ImageSynthesis>();
+                if (imageSynthesis != null && imageSynthesis.enabled) {
+                    imageSynthesis.UpdateGuidForColors(this.agentController.agentManager.consistentColors);
+                    imageSynthesis.OnSceneChange();
+                }
                 bool objectsWereShown = false;
                 List<MCSConfigGameObject> objects = this.currentScene.objects.Where(objectConfig =>
                     objectConfig.GetGameObject() != null).ToList();
@@ -130,8 +136,6 @@ public class MCSMain : MonoBehaviour {
                     // Notify the PhysicsSceneManager so the objects will be compatible with AI2-THOR scripts.
                     this.physicsSceneManager.SetupScene();
                     // Notify ImageSynthesis so the objects will appear in the masks.
-                    ImageSynthesis imageSynthesis = GameObject.Find("FPSController")
-                        .GetComponentInChildren<ImageSynthesis>();
                     if (imageSynthesis != null && imageSynthesis.enabled) {
                         imageSynthesis.OnSceneChange();
                     }
@@ -330,6 +334,7 @@ public class MCSMain : MonoBehaviour {
 
         this.lastStep = -1;
         this.physicsSceneManager.SetupScene();
+        
     }
 
     private Collider AssignBoundingBox(
