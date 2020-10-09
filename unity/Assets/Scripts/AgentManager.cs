@@ -1225,6 +1225,11 @@ public class ArmMetadata {
     public JointMetadata[] joints;
 
 	public List<String> HeldObjects;
+
+	//world coordinates of the center of the hand's sphere
+	public Vector3 HandSphereCenter;
+	//current radius of the hand sphere
+	public float HandSphereRadius;
 }
 
 [Serializable]

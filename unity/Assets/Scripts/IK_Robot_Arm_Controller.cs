@@ -693,6 +693,10 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
 
         meta.HeldObjects = HeldObjectIDs;
 
+        meta.HandSphereCenter = transform.TransformPoint(magnetSphere.center);
+
+        meta.HandSphereRadius = magnetSphere.radius;
+
         return meta;
     }
 
