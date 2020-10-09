@@ -23,7 +23,8 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
     [SerializeField]
     private SphereCollider magnetSphere = null;
     private WhatIsInsideMagnetSphere magnetSphereComp = null;
-    private GameObject Magnet = null;
+    [SerializeField]
+    private GameObject MagnetRenderer = null;
 
     private PhysicsRemoteFPSAgentController PhysicsController; 
 
@@ -59,7 +60,7 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
         handCameraTransform = this.transform.FirstChildOrDefault(x => x.name == "robot_arm_4_jnt");
         staticCollided = new StaticCollided();
 
-        Magnet = handCameraTransform.FirstChildOrDefault(x => x.name == "Magnet").gameObject;
+        //MagnetRenderer = handCameraTransform.FirstChildOrDefault(x => x.name == "Magnet").gameObject;
         magnetSphereComp = magnetSphere.GetComponent<WhatIsInsideMagnetSphere>();
         // PhysicsController = GetComponentInParent<PhysicsRemoteFPSAgentController>();
     }
@@ -636,7 +637,11 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
     }
 
     public void SetHandMagnetRadius(float radius) {
-        Magnet.transform.localScale = new Vector3(radius, radius, radius);
+        //Magnet.transform.localScale = new Vector3(radius, radius, radius);
+        magnetSphere.radius = radius;
+        MagnetRenderer.transform.localScale = new Vector3(2*radius, 2*radius, 2*radius);
+        magnetSphere.transform.localPosition = new Vector3(0, 0, 0.01f + radius);
+        MagnetRenderer.transform.localPosition = new Vector3(0, 0, 0.01f + radius);
     }
 
 

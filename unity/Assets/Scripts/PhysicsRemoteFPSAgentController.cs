@@ -9200,6 +9200,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             if (arm != null) 
             {
+                if(action.radius < 0.04 || action.radius > 0.5)
+                {
+                    errorMessage = "radius of hand cannot be less than 0.04m nor greater than 0.5m";
+                    actionFinished(false, errorMessage);
+                    return;
+                }
+
+                else
                 arm.SetHandMagnetRadius(action.radius);
             }
 
@@ -9208,6 +9216,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 actionFinished(false, "Agent does not have kinematic arm or is not enabled. Make sure there is a '" + typeof(IK_Robot_Arm_Controller).Name + "' component as a child of this agent.");
             }
         }
+        
         #if UNITY_EDITOR
         void OnDrawGizmos()
         {
