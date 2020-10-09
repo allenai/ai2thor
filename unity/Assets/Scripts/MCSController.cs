@@ -202,7 +202,6 @@ public class MCSController : PhysicsRemoteFPSAgentController {
         this.agentManager.consistentColors = action.consistentColors;
         if (this.imageSynthesis != null && this.imageSynthesis.enabled) {
             this.imageSynthesis.UpdateGuidForColors(this.agentManager.consistentColors);
-            this.imageSynthesis.OnSceneChange();
         }
         base.Initialize(action);
 
