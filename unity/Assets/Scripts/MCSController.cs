@@ -599,8 +599,13 @@ public class MCSController : PhysicsRemoteFPSAgentController {
         base.ToggleObject(action, toggleOn, forceAction);
     }
 
+    // Note that for screen points, (0,0) would be the bottom left of your
+    // screen, and the top is the top right.
+    // TODO: MCS-391: note this in the docs
     private bool TryConvertingEachScreenPointToId(ServerAction action) {
 
+        // TODO: MCS-391: rename objectDirection / receptacleObjectDirection props
+        // props as well as debug properties? also remove z (not needed anymore)
         action.objectId = this.ConvertScreenPointToId(action.objectDirection,
             action.objectId);
 
