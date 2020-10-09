@@ -283,7 +283,9 @@ public class ImageSynthesis : MonoBehaviour {
 	public void UpdateGuidForColors(bool consistentColors) {
 		if(!consistentColors) {
 			this.guidForColors = System.Guid.NewGuid().ToString();
-		}
+		} else {
+			this.guidForColors = "";
+        }
 	}
 
 	public void OnSceneChange()
