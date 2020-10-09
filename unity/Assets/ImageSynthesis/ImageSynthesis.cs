@@ -76,7 +76,7 @@ public class ImageSynthesis : MonoBehaviour {
 	public Texture2D tex;
 
 	// If needed, use a guid to generate unique segmentation mask colors for each step
-	private string guidForColors = "";
+	private string guidForColors = string.Empty;
 
 	void Start()
 	{
@@ -284,7 +284,7 @@ public class ImageSynthesis : MonoBehaviour {
 		if(!consistentColors) {
 			this.guidForColors = System.Guid.NewGuid().ToString();
 		} else {
-			this.guidForColors = "";
+			this.guidForColors = string.Empty;
         }
 	}
 
