@@ -1058,8 +1058,8 @@ public class ServerAction
 
     // MCS Additions
     public bool logs = false;
-    public Vector3 objectDirection;
-    public Vector3 receptacleObjectDirection;
+    public Vector3 objectScreenPoint;
+    public Vector3 receptacleObjectScreenPoint;
     public MCSConfigScene sceneConfig;
 
     public SimObjType ReceptableSimObjType()

@@ -574,8 +574,8 @@ public class MCSController : PhysicsRemoteFPSAgentController {
         GameObject gameObj = ItemInHand;
 
         if(base.DropHandObject(action)) {
-            if (action.objectDirection.x != 0 || action.objectDirection.y != 0 || action.objectDirection.z != 0) {
-                gameObj.GetComponent<SimObjPhysics>().ApplyRelativeForce(action.objectDirection, action.moveMagnitude);
+            if (action.objectScreenPoint.x != 0 || action.objectScreenPoint.y != 0 || action.objectScreenPoint.z != 0) {
+                gameObj.GetComponent<SimObjPhysics>().ApplyRelativeForce(action.objectScreenPoint, action.moveMagnitude);
             } else {
                 // throw object forward if no direction input is given
                 gameObj.GetComponent<SimObjPhysics>().ApplyRelativeForce(Vector3.forward, action.moveMagnitude);
@@ -601,12 +601,9 @@ public class MCSController : PhysicsRemoteFPSAgentController {
 
     // Note that for screen points, (0,0) would be the bottom left of your
     // screen, and the top is the top right.
-    // TODO: MCS-391: note this in the docs
     private bool TryConvertingEachScreenPointToId(ServerAction action) {
 
-        // TODO: MCS-391: rename objectDirection / receptacleObjectDirection props
-        // props as well as debug properties? also remove z (not needed anymore)
-        action.objectId = this.ConvertScreenPointToId(action.objectDirection,
+        action.objectId = this.ConvertScreenPointToId(action.objectScreenPoint,
             action.objectId);
 
         return TryReceptacleObjectIdFromScreenPoint(action);
@@ -623,7 +620,7 @@ public class MCSController : PhysicsRemoteFPSAgentController {
 
     private bool TryReceptacleObjectIdFromScreenPoint(ServerAction action) {
         if (!this.actionComplete) {
-            action.receptacleObjectId = this.ConvertScreenPointToId(action.receptacleObjectDirection,
+            action.receptacleObjectId = this.ConvertScreenPointToId(action.receptacleObjectScreenPoint,
                 action.receptacleObjectId);
         }
         // If we haven't yet called actionFinished then actionComplete will be false; continue the action.
