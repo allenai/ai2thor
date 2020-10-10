@@ -22,6 +22,7 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
     private Transform handCameraTransform;
     [SerializeField]
     private SphereCollider magnetSphere = null;
+    [SerializeField]
     private WhatIsInsideMagnetSphere magnetSphereComp = null;
     [SerializeField]
     private GameObject MagnetRenderer = null;
@@ -61,7 +62,7 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
         staticCollided = new StaticCollided();
 
         //MagnetRenderer = handCameraTransform.FirstChildOrDefault(x => x.name == "Magnet").gameObject;
-        magnetSphereComp = magnetSphere.GetComponent<WhatIsInsideMagnetSphere>();
+        //magnetSphereComp = magnetSphere.GetComponent<WhatIsInsideMagnetSphere>();
         // PhysicsController = GetComponentInParent<PhysicsRemoteFPSAgentController>();
     }
 
