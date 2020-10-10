@@ -74,14 +74,19 @@ namespace UnityStandardAssets.Characters.FirstPerson
                             
                 // }
 
-                if(Input.GetKeyDown(KeyCode.T)) {
-                    ServerAction action = new ServerAction();
-                    action.objectId = moveOrPickupObjectId;
-
-                    action.action = "ThrowObject";
-                    action.objectDirection = moveOrPickupObjectDirection;
-                    action.moveMagnitude = pushPullForce;
-                    PhysicsController.ProcessControlCommand(action);
+                // MCS:
+                // Left mouse click populates moveOrPickupObjectDirection with
+                // screen point vector coordinates, left mouse click + left shift key
+                // populates receptacleObjectDirection.
+                if (Input.GetMouseButtonDown(0)) {
+                    Debug.Log("MCS: Screen Point Clicked: " + Input.mousePosition.ToString());
+                    if (Input.GetKey(KeyCode.LeftShift)) {
+                        receptacleObjectDirection.x = Input.mousePosition.x;
+                        receptacleObjectDirection.y = Input.mousePosition.y;
+                    } else {
+                        moveOrPickupObjectDirection.x = Input.mousePosition.x;
+                        moveOrPickupObjectDirection.y = Input.mousePosition.y;
+                    }
                 }
 
                 // if(Input.GetKeyDown(KeyCode.U))
@@ -297,6 +302,16 @@ namespace UnityStandardAssets.Characters.FirstPerson
                             action.action = "DropHandObject";
                             action.objectDirection = this.moveOrPickupObjectDirection;
                             action.objectId = this.moveOrPickupObjectId;
+                            PhysicsController.ProcessControlCommand(action);
+                        }
+
+                        if(Input.GetKeyDown(KeyCode.T)) {
+                            ServerAction action = new ServerAction();
+                            action.objectId = moveOrPickupObjectId;
+
+                            action.action = "ThrowObject";
+                            action.objectDirection = moveOrPickupObjectDirection;
+                            action.moveMagnitude = pushPullForce;
                             PhysicsController.ProcessControlCommand(action);
                         }
 
