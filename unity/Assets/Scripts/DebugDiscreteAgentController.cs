@@ -75,9 +75,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 // }
 
                 // MCS:
-                // Left mouse click populates moveOrPickupObjectDirection with
+                // Left mouse click populates moveOrPickupObjectImageCoords with
                 // screen point vector coordinates, left mouse click + left shift key
-                // populates receptacleObjectDirection.
+                // populates receptacleObjectImageCoords.
                 if (Input.GetMouseButtonDown(0)) {
                     Vector2 screenPtToPixels = new Vector2(Input.mousePosition.x, (Screen.height - Input.mousePosition.y));
 
