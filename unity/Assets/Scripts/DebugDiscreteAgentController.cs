@@ -14,9 +14,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
         public bool forceAction = false;
         public float gridSize = 0.1f;
         public float visibilityDistance = 0.4f;
-        public Vector3 moveOrPickupObjectImageCoords = new Vector3(-1,-1);
+        public Vector2 moveOrPickupObjectImageCoords = new Vector2(-1,-1);
         public string moveOrPickupObjectId = "";
-        public Vector3 receptacleObjectImageCoords = new Vector3(-1,-1);
+        public Vector2 receptacleObjectImageCoords = new Vector2(-1,-1);
         public string receptacleObjectId = "";
         public float rotationIncrement = 45.0f;
         public float horizonIncrement = 30.0f;
@@ -79,7 +79,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 // screen point vector coordinates, left mouse click + left shift key
                 // populates receptacleObjectDirection.
                 if (Input.GetMouseButtonDown(0)) {
+                    Vector2 screenPtToPixels = new Vector2(Input.mousePosition.x, (Screen.height - Input.mousePosition.y));
+
+                    // Normally, (0,0) for pixels is the top left, but for Unity screen points, (0,0) is the
+                    // bottom left.
                     Debug.Log("MCS: Screen Point Clicked: " + Input.mousePosition.ToString());
+                    Debug.Log("MCS: Screen Point as Image Pixel Coords: " + screenPtToPixels.ToString());
                     if (Input.GetKey(KeyCode.LeftShift)) {
                         receptacleObjectImageCoords.x = Input.mousePosition.x;
                         receptacleObjectImageCoords.y = Input.mousePosition.y;
