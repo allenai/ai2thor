@@ -14,9 +14,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
         public bool forceAction = false;
         public float gridSize = 0.1f;
         public float visibilityDistance = 0.4f;
-        public Vector3 moveOrPickupObjectScreenPoint = new Vector3(-1,-1);
+        public Vector3 moveOrPickupObjectImageCoords = new Vector3(-1,-1);
         public string moveOrPickupObjectId = "";
-        public Vector3 receptacleObjectScreenPoint = new Vector3(-1,-1);
+        public Vector3 receptacleObjectImageCoords = new Vector3(-1,-1);
         public string receptacleObjectId = "";
         public float rotationIncrement = 45.0f;
         public float horizonIncrement = 30.0f;
@@ -81,11 +81,11 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 if (Input.GetMouseButtonDown(0)) {
                     Debug.Log("MCS: Screen Point Clicked: " + Input.mousePosition.ToString());
                     if (Input.GetKey(KeyCode.LeftShift)) {
-                        receptacleObjectScreenPoint.x = Input.mousePosition.x;
-                        receptacleObjectScreenPoint.y = Input.mousePosition.y;
+                        receptacleObjectImageCoords.x = Input.mousePosition.x;
+                        receptacleObjectImageCoords.y = Input.mousePosition.y;
                     } else {
-                        moveOrPickupObjectScreenPoint.x = Input.mousePosition.x;
-                        moveOrPickupObjectScreenPoint.y = Input.mousePosition.y;
+                        moveOrPickupObjectImageCoords.x = Input.mousePosition.x;
+                        moveOrPickupObjectImageCoords.y = Input.mousePosition.y;
                     }
                 }
 
@@ -258,7 +258,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         {
                             action.action = "OpenObject";
                             action.moveMagnitude = 1.0f;
-                            action.objectScreenPoint = this.receptacleObjectScreenPoint;
+                            action.objectImageCoords = this.receptacleObjectImageCoords;
                             action.objectId = this.receptacleObjectId;
                             PhysicsController.ProcessControlCommand(action);
                             /*
@@ -274,7 +274,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         {
                             action.action = "CloseObject";
                             action.moveMagnitude = 1.0f;
-                            action.objectScreenPoint = this.receptacleObjectScreenPoint;
+                            action.objectImageCoords = this.receptacleObjectImageCoords;
                             action.objectId = this.receptacleObjectId;
                             PhysicsController.ProcessControlCommand(action);
                         }
@@ -282,7 +282,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         if(Input.GetKeyDown(KeyCode.P))
                         {
                             action.action = "PickupObject";
-                            action.objectScreenPoint = this.moveOrPickupObjectScreenPoint;
+                            action.objectImageCoords = this.moveOrPickupObjectImageCoords;
                             action.objectId = this.moveOrPickupObjectId;
                             PhysicsController.ProcessControlCommand(action);
                         }
@@ -290,9 +290,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         if(Input.GetKeyDown(KeyCode.Z))
                         {
                             action.action = "PutObject";
-                            action.objectScreenPoint = this.moveOrPickupObjectScreenPoint;
+                            action.objectImageCoords = this.moveOrPickupObjectImageCoords;
                             action.objectId = this.moveOrPickupObjectId;
-                            action.receptacleObjectScreenPoint = this.receptacleObjectScreenPoint;
+                            action.receptacleObjectImageCoords = this.receptacleObjectImageCoords;
                             action.receptacleObjectId = this.receptacleObjectId;
                             PhysicsController.ProcessControlCommand(action);
                         }
@@ -300,7 +300,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         if(Input.GetKeyDown(KeyCode.X))
                         {
                             action.action = "DropHandObject";
-                            action.objectScreenPoint = this.moveOrPickupObjectScreenPoint;
+                            action.objectImageCoords = this.moveOrPickupObjectImageCoords;
                             action.objectId = this.moveOrPickupObjectId;
                             PhysicsController.ProcessControlCommand(action);
                         }
@@ -309,7 +309,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                             action.objectId = moveOrPickupObjectId;
 
                             action.action = "ThrowObject";
-                            action.objectScreenPoint = moveOrPickupObjectScreenPoint;
+                            action.objectImageCoords = moveOrPickupObjectImageCoords;
                             action.moveMagnitude = pushPullForce;
                             PhysicsController.ProcessControlCommand(action);
                         }
@@ -318,7 +318,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         {
                             action.action = this.pushPullForce > 0 ? "PushObject" : "PullObject";
                             action.moveMagnitude = System.Math.Abs(this.pushPullForce);
-                            action.objectScreenPoint = this.moveOrPickupObjectScreenPoint;
+                            action.objectImageCoords = this.moveOrPickupObjectImageCoords;
                             action.objectId = this.moveOrPickupObjectId;
                             PhysicsController.ProcessControlCommand(action);
                         }

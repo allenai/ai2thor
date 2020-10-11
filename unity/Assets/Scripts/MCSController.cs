@@ -574,12 +574,12 @@ public class MCSController : PhysicsRemoteFPSAgentController {
         GameObject gameObj = ItemInHand;
 
         if(base.DropHandObject(action)) {
-            if (action.objectScreenPoint.x >= 0 && action.objectScreenPoint.y >= 0) {
+            if (action.objectImageCoords.x >= 0 && action.objectImageCoords.y >= 0) {
                 // Need to calculate z for where to throw towards based on a raycast, since now
                 // we are using screen points instead of directional vectors as input, which
                 // will only give us (x,y).
                 int layerMask = (1 << 8); // Only look at objects on the SimObjVisible layer.
-                Ray screenPointRay = m_Camera.ScreenPointToRay(action.objectScreenPoint);
+                Ray screenPointRay = m_Camera.ScreenPointToRay(action.objectImageCoords);
                 List<RaycastHit> hits = Physics.RaycastAll(screenPointRay.origin, screenPointRay.direction,
                     MCSController.MAX_DISTANCE_ACROSS_ROOM, layerMask).ToList();
                 if (hits.Count == 0) {
@@ -622,7 +622,7 @@ public class MCSController : PhysicsRemoteFPSAgentController {
     // screen, and the top is the top right.
     private bool TryConvertingEachScreenPointToId(ServerAction action) {
 
-        action.objectId = this.ConvertScreenPointToId(action.objectScreenPoint,
+        action.objectId = this.ConvertScreenPointToId(action.objectImageCoords,
             action.objectId);
 
         return TryReceptacleObjectIdFromScreenPoint(action);
@@ -639,7 +639,7 @@ public class MCSController : PhysicsRemoteFPSAgentController {
 
     private bool TryReceptacleObjectIdFromScreenPoint(ServerAction action) {
         if (!this.actionComplete) {
-            action.receptacleObjectId = this.ConvertScreenPointToId(action.receptacleObjectScreenPoint,
+            action.receptacleObjectId = this.ConvertScreenPointToId(action.receptacleObjectImageCoords,
                 action.receptacleObjectId);
         }
         // If we haven't yet called actionFinished then actionComplete will be false; continue the action.
