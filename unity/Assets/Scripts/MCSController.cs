@@ -574,8 +574,27 @@ public class MCSController : PhysicsRemoteFPSAgentController {
         GameObject gameObj = ItemInHand;
 
         if(base.DropHandObject(action)) {
-            if (action.objectScreenPoint.x != 0 || action.objectScreenPoint.y != 0 || action.objectScreenPoint.z != 0) {
-                gameObj.GetComponent<SimObjPhysics>().ApplyRelativeForce(action.objectScreenPoint, action.moveMagnitude);
+            if (action.objectScreenPoint.x >= 0 && action.objectScreenPoint.y >= 0) {
+                // Need to calculate z for where to throw towards based on a raycast, since now
+                // we are using screen points instead of directional vectors as input, which
+                // will only give us (x,y).
+                int layerMask = (1 << 8); // Only look at objects on the SimObjVisible layer.
+                Ray screenPointRay = m_Camera.ScreenPointToRay(action.objectScreenPoint);
+                List<RaycastHit> hits = Physics.RaycastAll(screenPointRay.origin, screenPointRay.direction,
+                    MCSController.MAX_DISTANCE_ACROSS_ROOM, layerMask).ToList();
+                if (hits.Count == 0) {
+                    this.errorMessage = "Cannot convert screen point to directional vector.";
+                    Debug.Log(errorMessage);
+                    this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.FAILED);
+                    this.actionFinished(false);
+                } else {
+                    hits.Sort(delegate (RaycastHit one, RaycastHit two) {
+                        return one.distance.CompareTo(two.distance);
+                    });
+
+                    Vector3 directionToThrowTowards = hits.First().point;
+                    gameObj.GetComponent<SimObjPhysics>().ApplyForce(directionToThrowTowards, action.moveMagnitude);
+                }
             } else {
                 // throw object forward if no direction input is given
                 gameObj.GetComponent<SimObjPhysics>().ApplyRelativeForce(Vector3.forward, action.moveMagnitude);
