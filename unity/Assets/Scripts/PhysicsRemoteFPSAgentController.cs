@@ -9070,6 +9070,33 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
 
+        public void GetMidLevelArmCollisions() {
+            var arm = this.GetComponentInChildren<IK_Robot_Arm_Controller>();
+            if (arm != null) {
+                List<Dictionary<string, string>> collisions = new List<Dictionary<string, string>>();
+                foreach(var sc in arm.StaticCollisions()){
+                    var element = new Dictionary<string, string>();
+                    if (sc.simObjPhysics != null) {
+                        element["objectType"] = "simObjPhysics";
+                        element["name"] = sc.simObjPhysics.objectID;
+                    }
+                    else
+                    {
+                        element["objectType"] = "gameObject";
+                        element["name"] = sc.gameObject.name;
+                    }
+                    collisions.Add(element);
+                }
+                actionFinished(true, collisions);
+            }
+            else
+            {
+                errorMessage = "Agent does not have kinematic arm or is not enabled.";
+                actionFinished(false);
+            }
+
+        }
+
         public void MoveMidLevelArm(ServerAction action) {
             var arm = this.GetComponentInChildren<IK_Robot_Arm_Controller>();
 
