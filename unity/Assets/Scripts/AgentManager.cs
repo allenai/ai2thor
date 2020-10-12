@@ -46,6 +46,7 @@ public class AgentManager : MonoBehaviour
     private serverTypes serverType;
     private AgentState agentState = AgentState.Emit;
     private bool fastActionEmit;
+    private HashSet<string> agentManagerActions = new HashSet<string>{"Reset", "Initialize", "AddThirdPartyCamera", "UpdateThirdPartyCamera"};
 
 
 	public Bounds sceneBounds = new Bounds(
@@ -917,18 +918,9 @@ public class AgentManager : MonoBehaviour
         this.renderImage = controlCommand.renderImage == null ? true : controlCommand.renderImage;
         this.activeAgentId = controlCommand.agentId == null ? 0 : controlCommand.agentId;
 
-		if (controlCommand.action == "Reset") {
+		if (agentManagerActions.Contains(controlCommand.action.ToString())) {
             this.agentState = AgentState.Processing;
-			this.Reset (controlCommand.ToObject(typeof(ServerAction)));
-		} else if (controlCommand.action == "Initialize") {
-            this.agentState = AgentState.Processing;
-			this.Initialize(controlCommand.ToObject(typeof(ServerAction)));
-		} else if (controlCommand.action == "AddThirdPartyCamera") {
-            this.agentState = AgentState.Processing;
-			this.AddThirdPartyCamera(controlCommand.ToObject(typeof(ServerAction)));
-		} else if (controlCommand.action == "UpdateThirdPartyCamera") {
-            this.agentState = AgentState.Processing;
-			this.UpdateThirdPartyCamera(controlCommand.ToObject(typeof(ServerAction)));
+            ActionDispatcher.Dispatch(this, controlCommand);
 		} else {
             //we only allow renderObjectImage to be flipped on
             //on a per step() basis, since by default the param is null

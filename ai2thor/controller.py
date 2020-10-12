@@ -436,6 +436,9 @@ class Controller(object):
                     DeprecationWarning
                 )
 
+            if 'fastActionEmit' in self.initialization_parameters and self.server_class != ai2thor.fifo_server.FifoServer:
+                warnings.warn("fastAtionEmit is only available with the FifoServer");
+
             if 'continuousMode' in self.initialization_parameters:
                 warnings.warn(
                     "Warning: 'continuousMode' is deprecated and will be ignored,"
