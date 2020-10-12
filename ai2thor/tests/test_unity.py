@@ -80,6 +80,27 @@ def test_small_aspect():
     event = controller.step(dict(action='Initialize', gridSize=0.25))
     assert event.frame.shape == (64, 128, 3)
 
+def test_fast_emit():
+    fast_controller = UnityTestController(server_class=FifoServer, fastActionEmit=True)
+    event = fast_controller.step(dict(action='RotateRight'))
+    event_fast_emit = fast_controller.step(dict(action='TestFastEmit', rvalue='foo'))
+    event_no_fast_emit = fast_controller.step(dict(action='LookUp'))
+    event_no_fast_emit_2 = fast_controller.step(dict(action='RotateRight'))
+
+    assert event.metadata['actionReturn'] is None
+    assert event_fast_emit.metadata['actionReturn'] == 'foo' 
+    assert id(event.metadata['objects']) ==  id(event_fast_emit.metadata['objects'])
+    assert id(event.metadata['objects']) !=  id(event_no_fast_emit.metadata['objects'])
+    assert id(event_no_fast_emit_2.metadata['objects']) !=  id(event_no_fast_emit.metadata['objects'])
+
+@pytest.mark.parametrize("controller", [fifo_controller])
+def test_fast_emit_disabled(controller):
+    event = controller.step(dict(action='RotateRight'))
+    event_fast_emit = controller.step(dict(action='TestFastEmit', rvalue='foo'))
+    # assert that when actionFastEmit is off that the objects are different
+    assert id(event.metadata['objects']) !=  id(event_fast_emit.metadata['objects'])
+
+
 @pytest.mark.parametrize("controller", [wsgi_controller, fifo_controller])
 def test_lookdown(controller):
 

@@ -15,7 +15,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
         public GameObject basketTrigger;
         public DroneObjectLauncher DroneObjectLauncher;
         public List<SimObjPhysics> caught_object = new List<SimObjPhysics>();
-        public bool hasFixedUpdateHappened = true;//track if the fixed physics update has happened
+        private bool hasFixedUpdateHappened = true;//track if the fixed physics update has happened
         protected Vector3 thrust;
         public float dronePositionRandomNoiseSigma = 0f;
         //count of fixed updates for use in droneCurrentTime
@@ -24,6 +24,16 @@ namespace UnityStandardAssets.Characters.FirstPerson
         void Update () 
         {
             
+        }
+
+        protected override void resumePhysics() {
+            if (Time.timeScale == 0 && !Physics.autoSimulation && physicsSceneManager.physicsSimulationPaused)
+            {
+                Time.timeScale = this.autoResetTimeScale;
+                Physics.autoSimulation = true;
+                physicsSceneManager.physicsSimulationPaused = false;
+                this.hasFixedUpdateHappened = false;
+            }
         }
 
         public override void Start()
@@ -88,6 +98,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
             //here, the in-editor axisAlignedBoundingBox metadata for drone objects seems to be offset by some number of updates.
             //it's unclear whether this is only an in-editor debug draw issue, or the actual metadata for the axis
             //aligned box is messed up, but yeah.
+
+            if (this.agentState == AgentState.PendingFixedUpdate) {
+                this.agentState = AgentState.ActionComplete;
+            }
             if (hasFixedUpdateHappened)
             {   
                 Time.timeScale = 0;
@@ -560,5 +574,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
         {
             Instantiate(DroneObjectLauncher, position, Quaternion.identity);
         }
+
     }
 }
