@@ -28,6 +28,7 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
     private GameObject MagnetRenderer = null;
 
     private PhysicsRemoteFPSAgentController PhysicsController; 
+    private HashSet<Collider> activeColliders = new HashSet<Collider>();
 
     //references to the joints of the mid level arm
     [SerializeField]
@@ -139,7 +140,7 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
             // that should prevent it from moving
             Physics.Simulate(fixedDeltaTime);
 
-            while ( currentDistance > eps && !staticCollided.collided && currentDistance <= startingDistance) {
+            while ( currentDistance > eps && !shouldHalt() && currentDistance <= startingDistance) {
 
                 previousArmPosition = getPosition(moveTransform);
 
@@ -150,32 +151,35 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
                 currentDistance = Vector3.SqrMagnitude(targetPosition - getPosition(moveTransform));
             }
 
+            /*
+            DISABLING JUMP TO FINAL POSITION as it can lead to clipping
             if (currentDistance <= eps && !staticCollided.collided) {
                 setPosition(moveTransform, targetPosition);
                 // must run Simulate() one more time to ensure colliders are triggered
                 Physics.Simulate(fixedDeltaTime);
             }
+            */
+
+            var staticCollisions = StaticCollisions();
 
 
-            if (staticCollided.collided) {
+            if (staticCollisions.Count > 0) {
+                var sc = staticCollisions[0];
                 
                 //decide if we want to return to original position or last known position before collision
                 setPosition(moveTransform, returnToStartPositionIfFailed ? originalPosition :previousArmPosition - (targetDirection * unitsPerSecond * fixedDeltaTime));
 
                 //if we hit a sim object
-                if(staticCollided.simObjPhysics && !staticCollided.gameObject)
+                if(sc.simObjPhysics && !sc.gameObject)
                 {
-                    debugMessage = "Arm collided with static sim object: '" + staticCollided.simObjPhysics.name + "' arm could not reach target position: '" + targetPosition + "'.";
+                    debugMessage = "Arm collided with static sim object: '" + sc.simObjPhysics.name + "' arm could not reach target position: '" + targetPosition + "'.";
                 }
 
                 //if we hit a structural object that isn't a sim object but still has static collision
-                if(!staticCollided.simObjPhysics && staticCollided.gameObject)
+                if(!sc.simObjPhysics && sc.gameObject)
                 {
-                    debugMessage = "Arm collided with static structure in scene: '" + staticCollided.gameObject.name + "' arm could not reach target position: '" + targetPosition + "'.";
+                    debugMessage = "Arm collided with static structure in scene: '" + sc.gameObject.name + "' arm could not reach target position: '" + targetPosition + "'.";
                 }
-
-                staticCollided.collided = false;
-
                 actionSuccess = false;
         } else if (currentDistance > startingDistance) {
             Debug.Log("stopping arm height - target was overshot");
@@ -254,9 +258,61 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
 
         return result;
     }
+    public void OnTriggerExit(Collider col)
+    {
+        activeColliders.Remove(col);
+    }
+
+    public void OnTriggerStay(Collider col)
+    {
+        activeColliders.Add(col);
+    }
+
+    public List<StaticCollided> StaticCollisions() {
+        var staticCols = new List<StaticCollided>();
+        foreach(var col in activeColliders) {
+            if(col.GetComponentInParent<SimObjPhysics>())
+            {
+                //how does this handle nested sim objects? maybe it's fine?
+                SimObjPhysics sop = col.GetComponentInParent<SimObjPhysics>();
+                if(sop.PrimaryProperty == SimObjPrimaryProperty.Static)
+                {
+
+                    if(!col.isTrigger)
+                    {
+                        // #if UNITY_EDITOR
+                        // Debug.Log("Collided with static sim obj " + sop.name);
+                        // #endif
+                        var sc = new StaticCollided();
+                        sc.collided = true;
+                        sc.simObjPhysics = sop;
+                        staticCols.Add(sc);
+                    }
+                }
+            }
+
+            //also check if the collider hit was a structure?
+            else if(col.gameObject.tag == "Structure")
+            {                
+                if(!col.isTrigger)
+                {
+                    var sc = new StaticCollided();
+                    sc.collided = true;
+                    sc.gameObject = col.gameObject;
+                    staticCols.Add(sc);
+                }
+            }
+        }
+        return staticCols;
+    }
+
+    private bool shouldHalt() {
+        return StaticCollisions().Count > 0;
+    }
 
     public void OnTriggerEnter(Collider col)
     {
+        activeColliders.Add(col);
         if(col.GetComponentInParent<SimObjPhysics>())
         {
             //how does this handle nested sim objects? maybe it's fine?
