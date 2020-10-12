@@ -66,7 +66,7 @@ public class MCSController : PhysicsRemoteFPSAgentController {
     private string ConvertScreenPointToId(Vector3 screenPoint, string previousObjectId) {
         // If the objectId was set or the screen point vector was not set, return the previous objectId.
         if ((previousObjectId != null && !previousObjectId.Equals("")) ||
-            (screenPoint.x < 0 && screenPoint.y < 0)) {
+            (screenPoint.x <= 0 && screenPoint.y <= 0)) {
             return previousObjectId;
         }
 
@@ -574,7 +574,7 @@ public class MCSController : PhysicsRemoteFPSAgentController {
         GameObject gameObj = ItemInHand;
 
         if(base.DropHandObject(action)) {
-            if (action.objectImageCoords.x >= 0 && action.objectImageCoords.y >= 0) {
+            if (action.objectImageCoords.x > 0 && action.objectImageCoords.y > 0) {
                 // Need to calculate z for where to throw towards based on a raycast, since now
                 // we are using screen points instead of directional vectors as input, which
                 // will only give us (x,y).

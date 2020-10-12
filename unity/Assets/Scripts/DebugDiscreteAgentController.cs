@@ -14,9 +14,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
         public bool forceAction = false;
         public float gridSize = 0.1f;
         public float visibilityDistance = 0.4f;
-        public Vector2 moveOrPickupObjectImageCoords = new Vector2(-1,-1);
+        public Vector2 moveOrPickupObjectImageCoords;
         public string moveOrPickupObjectId = "";
-        public Vector2 receptacleObjectImageCoords = new Vector2(-1,-1);
+        public Vector2 receptacleObjectImageCoords;
         public string receptacleObjectId = "";
         public float rotationIncrement = 45.0f;
         public float horizonIncrement = 30.0f;
