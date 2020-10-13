@@ -99,9 +99,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
             //it's unclear whether this is only an in-editor debug draw issue, or the actual metadata for the axis
             //aligned box is messed up, but yeah.
 
-            if (this.agentState == AgentState.PendingFixedUpdate) {
-                this.agentState = AgentState.ActionComplete;
-            }
             if (hasFixedUpdateHappened)
             {   
                 Time.timeScale = 0;
@@ -127,6 +124,11 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     m_CharacterController.Move(thrust * Time.fixedDeltaTime);
                 }
             }
+
+            if (this.agentState == AgentState.PendingFixedUpdate) {
+                this.agentState = AgentState.ActionComplete;
+            }
+
         }
 
         //generates object metatada based on sim object's properties

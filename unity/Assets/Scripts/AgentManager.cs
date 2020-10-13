@@ -44,7 +44,7 @@ public class AgentManager : MonoBehaviour
     private FifoServer.Client fifoClient = null;
 	private enum serverTypes { WSGI, FIFO};
     private serverTypes serverType;
-    private AgentState agentState = AgentState.Emit;
+    private AgentState agentManagerState = AgentState.Emit;
     private bool fastActionEmit;
     private HashSet<string> agentManagerActions = new HashSet<string>{"Reset", "Initialize", "AddThirdPartyCamera", "UpdateThirdPartyCamera"};
 
@@ -271,7 +271,7 @@ public class AgentManager : MonoBehaviour
 			ResetSceneBounds();
 		}
 
-		this.agentState = AgentState.ActionComplete;
+		this.agentManagerState = AgentState.ActionComplete;
 	}
 
 	public void ResetSceneBounds() {
@@ -350,7 +350,7 @@ public class AgentManager : MonoBehaviour
         }
         camera.orthographic = action.orthographic;
 
-		this.agentState = AgentState.ActionComplete;
+		this.agentManagerState = AgentState.ActionComplete;
 	}
 
 	public void UpdateThirdPartyCamera(ServerAction action) {
@@ -379,7 +379,7 @@ public class AgentManager : MonoBehaviour
 				}
 			}
 		}
-		this.agentState = AgentState.ActionComplete;
+		this.agentManagerState = AgentState.ActionComplete;
 	}
 
 	private void addAgent(ServerAction action) {
@@ -714,7 +714,7 @@ public class AgentManager : MonoBehaviour
             }
         }
 
-        return this.agentState == AgentState.Emit && emit;
+        return this.agentManagerState == AgentState.Emit && emit;
     }
 
 
@@ -725,8 +725,8 @@ public class AgentManager : MonoBehaviour
 			yield return new WaitForEndOfFrame();
 
             frameCounter += 1;
-            if (this.agentState == AgentState.ActionComplete) {
-                this.agentState = AgentState.Emit;
+            if (this.agentManagerState == AgentState.ActionComplete) {
+                this.agentManagerState = AgentState.Emit;
             }
 
             foreach (BaseFPSAgentController agent in this.agents) {
@@ -919,7 +919,7 @@ public class AgentManager : MonoBehaviour
         this.activeAgentId = controlCommand.agentId == null ? 0 : controlCommand.agentId;
 
 		if (agentManagerActions.Contains(controlCommand.action.ToString())) {
-            this.agentState = AgentState.Processing;
+            this.agentManagerState = AgentState.Processing;
             ActionDispatcher.Dispatch(this, controlCommand);
 		} else {
             //we only allow renderObjectImage to be flipped on

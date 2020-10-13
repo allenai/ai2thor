@@ -1107,7 +1107,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
         public void ResetObjectFilter() {
             this.simObjFilter = null;
-            actionFinished(true);
+            actionFinishedEmit(true);
         }
         public void SetObjectFilter(string[] objectIds) {
             SimObjPhysics[] simObjects = GameObject.FindObjectsOfType<SimObjPhysics>();
@@ -1119,7 +1119,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 }
             }
             simObjFilter = filter.ToArray();
-            actionFinished(true);
+            actionFinishedEmit(true);
         }
 
         public virtual ObjectMetadata[] generateObjectMetadata()
