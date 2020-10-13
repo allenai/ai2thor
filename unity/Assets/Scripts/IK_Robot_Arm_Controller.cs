@@ -28,6 +28,7 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
     private GameObject MagnetRenderer = null;
 
     private PhysicsRemoteFPSAgentController PhysicsController; 
+    private HashSet<Collider> activeColliders = new HashSet<Collider>();
 
     //references to the joints of the mid level arm
     [SerializeField]
@@ -94,6 +95,106 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
     float gizmo_radius;
     #endif
 
+    private void moveTargetSimulatePhisics(
+        PhysicsRemoteFPSAgentController controller,
+        float fixedDeltaTime,
+        Transform moveTransform,
+        Vector3 targetPosition,
+        float unitsPerSecond,
+        bool returnToStartPositionIfFailed = false,
+        bool localPosition = true
+    )
+        {
+            const double eps = 1e-3;
+            staticCollided.collided = false;
+            staticCollided.simObjPhysics = null;
+            staticCollided.gameObject = null;
+            Physics.autoSimulation = false;
+
+            var actionSuccess = true;
+            var debugMessage = "";
+
+            System.Func<Transform, Vector3> getPosition = (t) => (localPosition ? t.localPosition : t.position);
+             System.Action<Transform, Vector3> setPosition = (t, pos) => {
+                if (localPosition) {
+                    t.localPosition = pos;
+                }
+                else {
+                    t.position = pos;
+                }
+            };
+            
+            System.Action<Transform, Vector3> addPosition = (t, pos) => {
+                if (localPosition) {
+                    t.localPosition += pos;
+                }
+                else {
+                    t.position += pos;
+                }
+            };
+
+            var originalPosition = getPosition(moveTransform);
+
+            var previousArmPosition = originalPosition;
+
+            Vector3 targetDirection = (targetPosition - previousArmPosition).normalized;
+            float currentDistance = Vector3.SqrMagnitude(targetPosition - getPosition(moveTransform));
+            float startingDistance = currentDistance;
+            // running simulate once before we begin our movement loop to
+            // ensure that the arm is not in contact with any other object
+            // that should prevent it from moving
+            Physics.Simulate(fixedDeltaTime);
+
+            while ( currentDistance > eps && !shouldHalt() && currentDistance <= startingDistance) {
+
+                previousArmPosition = getPosition(moveTransform);
+
+                addPosition(moveTransform, targetDirection * unitsPerSecond * fixedDeltaTime);
+
+                Physics.Simulate(fixedDeltaTime);
+
+                currentDistance = Vector3.SqrMagnitude(targetPosition - getPosition(moveTransform));
+            }
+
+            /*
+            DISABLING JUMP TO FINAL POSITION as it can lead to clipping
+            if (currentDistance <= eps && !staticCollided.collided) {
+                setPosition(moveTransform, targetPosition);
+                // must run Simulate() one more time to ensure colliders are triggered
+                Physics.Simulate(fixedDeltaTime);
+            }
+            */
+
+            var staticCollisions = StaticCollisions();
+
+
+            if (staticCollisions.Count > 0) {
+                var sc = staticCollisions[0];
+                
+                //decide if we want to return to original position or last known position before collision
+                setPosition(moveTransform, returnToStartPositionIfFailed ? originalPosition :previousArmPosition - (targetDirection * unitsPerSecond * fixedDeltaTime));
+
+                //if we hit a sim object
+                if(sc.simObjPhysics && !sc.gameObject)
+                {
+                    debugMessage = "Arm collided with static sim object: '" + sc.simObjPhysics.name + "' arm could not reach target position: '" + targetPosition + "'.";
+                }
+
+                //if we hit a structural object that isn't a sim object but still has static collision
+                if(!sc.simObjPhysics && sc.gameObject)
+                {
+                    debugMessage = "Arm collided with static structure in scene: '" + sc.gameObject.name + "' arm could not reach target position: '" + targetPosition + "'.";
+                }
+                actionSuccess = false;
+        } else if (currentDistance > startingDistance) {
+            Debug.Log("stopping arm height - target was overshot");
+            debugMessage =  "arm height has overshot the target position";
+            actionSuccess = false;
+        }
+        Physics.autoSimulation = true;
+        controller.actionFinished(actionSuccess, debugMessage);
+    }
+    
     public bool IsArmColliding()
     {
         bool result = false;
@@ -162,9 +263,61 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
 
         return result;
     }
+    public void OnTriggerExit(Collider col)
+    {
+        activeColliders.Remove(col);
+    }
+
+    public void OnTriggerStay(Collider col)
+    {
+        activeColliders.Add(col);
+    }
+
+    public List<StaticCollided> StaticCollisions() {
+        var staticCols = new List<StaticCollided>();
+        foreach(var col in activeColliders) {
+            if(col.GetComponentInParent<SimObjPhysics>())
+            {
+                //how does this handle nested sim objects? maybe it's fine?
+                SimObjPhysics sop = col.GetComponentInParent<SimObjPhysics>();
+                if(sop.PrimaryProperty == SimObjPrimaryProperty.Static)
+                {
+
+                    if(!col.isTrigger)
+                    {
+                        // #if UNITY_EDITOR
+                        // Debug.Log("Collided with static sim obj " + sop.name);
+                        // #endif
+                        var sc = new StaticCollided();
+                        sc.collided = true;
+                        sc.simObjPhysics = sop;
+                        staticCols.Add(sc);
+                    }
+                }
+            }
+
+            //also check if the collider hit was a structure?
+            else if(col.gameObject.tag == "Structure")
+            {                
+                if(!col.isTrigger)
+                {
+                    var sc = new StaticCollided();
+                    sc.collided = true;
+                    sc.gameObject = col.gameObject;
+                    staticCols.Add(sc);
+                }
+            }
+        }
+        return staticCols;
+    }
+
+    private bool shouldHalt() {
+        return StaticCollisions().Count > 0;
+    }
 
     public void OnTriggerEnter(Collider col)
     {
+        activeColliders.Add(col);
         if(col.GetComponentInParent<SimObjPhysics>())
         {
             //how does this handle nested sim objects? maybe it's fine?
@@ -193,63 +346,6 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
             }
         }
     }
-
-    private void moveTargetSimulatePhisics(
-        PhysicsRemoteFPSAgentController controller,
-        float fixedDeltaTime,
-        Transform moveTransform,
-        System.Func<Transform, Vector3> getPosition,
-        System.Action<Transform, Vector3> setPosition,
-        System.Action<Transform, Vector3> addPosition,
-        Vector3 targetPosition,
-        float unitsPerSecond,
-        bool returnToStartPositionIfFailed = false,
-        bool localPosition = true
-    ) 
-    {
-        const double eps = 1e-3;
-        Physics.autoSimulation = false;
-
-        var originalPosition = getPosition(moveTransform);
-
-        var previousArmPosition = originalPosition;
-
-        Vector3 targetDirection = (targetPosition - previousArmPosition).normalized;
-        float currentDistance = Vector3.SqrMagnitude(targetPosition - getPosition(moveTransform));
-        float startingDistance = currentDistance;
-        // running simulate once before we begin our movement loop to
-        // ensure that the arm is not in contact with any other object
-        // that should prevent it from moving
-        Physics.Simulate(fixedDeltaTime);
-
-        while ( currentDistance > eps && !staticCollided.collided && currentDistance <= startingDistance) {
-
-            previousArmPosition = getPosition(moveTransform);
-
-            addPosition(moveTransform, targetDirection * unitsPerSecond * fixedDeltaTime);
-
-            Physics.Simulate(fixedDeltaTime);
-
-            currentDistance = Vector3.SqrMagnitude(targetPosition - getPosition(moveTransform));
-        }
-
-        if (currentDistance <= eps && !staticCollided.collided) {
-            setPosition(moveTransform, targetPosition);
-            // must run Simulate() one more time to ensure colliders are triggered
-            Physics.Simulate(fixedDeltaTime);
-        }
-
-        Physics.autoSimulation = true;
-        moveArmFinish(
-            controller,
-            moveTransform, 
-            setPosition, 
-            targetPosition, 
-            returnToStartPositionIfFailed ? originalPosition : previousArmPosition - (targetDirection * unitsPerSecond * fixedDeltaTime), 
-            currentDistance > startingDistance
-        );
-    }
-
 
     private IEnumerator moveTargetFixedUpdate(
         PhysicsRemoteFPSAgentController controller,
