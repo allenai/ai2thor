@@ -1445,6 +1445,10 @@ public class ServerAction
 
 	public bool stopArmMovementOnContact = false;
 
+    public bool disableRendering = false;
+
+    public bool restrictMovement = false;
+
 	//used to determine which coordinate space is used in Mid Level Arm actions
 	//valid options are relative to: world, wrist, armBase
 	public string coordinateSpace = "armBase";

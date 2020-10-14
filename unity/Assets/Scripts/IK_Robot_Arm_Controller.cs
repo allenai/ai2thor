@@ -53,6 +53,11 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
     [SerializeField]
     private BoxCollider[] ArmBoxColliders;
 
+    // This value is wrong 0.6325f for the origin to shoulder, it should be the height of the z-oriented capsule, 0.34566f and we should get it dinamically
+    private float originToShoulderLength;
+
+    private const float extendedArmLenth = 0.6325f;
+
     void Start()
     {
         // What a mess clean up this hierarchy, standarize naming
@@ -60,6 +65,9 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
         // handCameraTransform = this.GetComponentInChildren<Camera>().transform;
         //FirstJoint = this.transform.Find("robot_arm_1_jnt"); this is now set via serialize field, along with the other joints
         handCameraTransform = this.transform.FirstChildOrDefault(x => x.name == "robot_arm_4_jnt");
+
+        this.originToShoulderLength = this.transform.FirstChildOrDefault(x => x.name == "robot_arm_1_col").GetComponent<CapsuleCollider>().height;
+
         staticCollided = new StaticCollided();
 
         //MagnetRenderer = handCameraTransform.FirstChildOrDefault(x => x.name == "Magnet").gameObject;
@@ -88,7 +96,6 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
     Vector3 gizmo_p2;
     float gizmo_radius;
     #endif
-
 
     private void moveTargetSimulatePhisics(
         PhysicsRemoteFPSAgentController controller,
@@ -189,7 +196,7 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
         Physics.autoSimulation = true;
         controller.actionFinished(actionSuccess, debugMessage);
     }
-
+    
     public bool IsArmColliding()
     {
         bool result = false;
@@ -342,6 +349,226 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
         }
     }
 
+    private IEnumerator moveTargetFixedUpdate(
+        PhysicsRemoteFPSAgentController controller,
+        Transform moveTransform,
+        System.Func<Transform, Vector3> getPosition,
+        System.Action<Transform, Vector3> setPosition,
+        System.Action<Transform, Vector3> addPosition,
+        Vector3 targetPosition,
+        float unitsPerSecond,
+        bool returnToStartPositionIfFailed = false,
+        bool localPosition = true
+    )
+    {
+        const double eps = 1e-3;
+
+        var originalPosition = getPosition(moveTransform);
+        var previousArmPosition = originalPosition;
+        Vector3 targetDirection = (targetPosition - previousArmPosition).normalized;
+
+        yield return new WaitForFixedUpdate();
+
+        float currentDistance = Vector3.SqrMagnitude(targetPosition - getPosition(moveTransform));
+        float startingDistance = currentDistance;
+
+        while ( currentDistance > eps && !staticCollided.collided && currentDistance <= startingDistance) {
+
+            previousArmPosition = getPosition(moveTransform);
+
+            addPosition(moveTransform, targetDirection * unitsPerSecond * Time.fixedDeltaTime);
+
+            yield return new WaitForFixedUpdate();
+
+            currentDistance = Vector3.SqrMagnitude(targetPosition - getPosition(moveTransform));
+        }
+
+        if (currentDistance <= eps && !staticCollided.collided) {
+            // Maybe switch to this?
+            // addPosition(moveTransform, targetDirection * currentDistance);
+            setPosition(moveTransform, targetPosition);
+        }
+
+        moveArmFinish(
+            controller,
+            moveTransform, 
+            setPosition, 
+            targetPosition, 
+            returnToStartPositionIfFailed ? originalPosition : previousArmPosition - (targetDirection * unitsPerSecond * Time.fixedDeltaTime), 
+            currentDistance > startingDistance
+        );
+    }
+
+    private void moveArmFinish(
+        PhysicsRemoteFPSAgentController controller,
+        Transform moveTransform,
+        System.Action<Transform, Vector3> setPosition,
+        Vector3 targetPosition,
+        Vector3 positionReset,
+        bool armOvershot = false
+       
+    ) {
+        var actionSuccess = true;
+        var debugMessage = "";
+        if (staticCollided.collided) {
+                
+                //decide if we want to return to original position or last known position before collision
+                setPosition(moveTransform, positionReset);
+
+                //if we hit a sim object
+                if(staticCollided.simObjPhysics && !staticCollided.gameObject)
+                {
+                    debugMessage = "Arm collided with static sim object: '" + staticCollided.simObjPhysics.name + "' arm could not reach target position: '" + targetPosition + "'.";
+                }
+
+                //if we hit a structural object that isn't a sim object but still has static collision
+                if(!staticCollided.simObjPhysics && staticCollided.gameObject)
+                {
+                    debugMessage = "Arm collided with static structure in scene: '" + staticCollided.gameObject.name + "' arm could not reach target position: '" + targetPosition + "'.";
+                }
+
+                staticCollided.collided = false;
+
+                actionSuccess = false;
+        } else if (armOvershot) {
+            Debug.Log("stopping arm height - target was overshot");
+            debugMessage =  "arm height has overshot the target position";
+            actionSuccess = false;
+        }
+        controller.actionFinished(actionSuccess, debugMessage);
+    }
+
+    // Restricts front hemisphere for arm movement
+    private bool validArmTargetPosition(Vector3 targetWorldPosition) {
+        var targetArmPos = this.transform.InverseTransformPoint(targetWorldPosition);
+        return (targetArmPos.z - originToShoulderLength) >= 0.0f && targetArmPos.sqrMagnitude <= extendedArmLenth*extendedArmLenth;
+    }
+
+    public void moveArmTarget(
+        PhysicsRemoteFPSAgentController controller,
+        Vector3 target, 
+        float unitsPerSecond,
+        float fixedDeltaTime = 0.02f,
+        bool returnToStartPositionIfFailed = false, 
+        string whichSpace = "arm", 
+        bool restrictTargetPosition = false,
+        bool disableRendering = false) {
+        
+        staticCollided.collided = false;
+        staticCollided.simObjPhysics = null;
+        staticCollided.gameObject = null;
+        var arm = this;
+        
+        // Move arm based on hand space or arm origin space
+        //Vector3 targetWorldPos = handCameraSpace ? handCameraTransform.TransformPoint(target) : arm.transform.TransformPoint(target);
+        Vector3 targetWorldPos = Vector3.zero;
+
+        //world space, can be used to move directly toward positions returned by sim objects
+        if(whichSpace == "world")
+        {
+            targetWorldPos = target;
+        }
+
+        //space relative to base of the wrist, where the camera is
+        else if(whichSpace == "wrist")
+        {
+            targetWorldPos = handCameraTransform.TransformPoint(target);
+        }
+
+        //space relative to the root of the arm, joint 1
+        else if(whichSpace == "armBase")
+        {
+            targetWorldPos = arm.transform.TransformPoint(target);
+        }
+
+        if (restrictTargetPosition && !validArmTargetPosition(targetWorldPos)) {
+            Debug.Log("Invalid pos target  " + target + " world " + targetWorldPos +" inversetr" + this.transform.InverseTransformPoint(targetWorldPos).z + " remaining " + (this.transform.InverseTransformPoint(targetWorldPos).z -originToShoulderLength));
+            controller.actionFinished(false, $"Invalid target: Position '{target}' in space '{whichSpace}' is behind shoulder.");
+            return;
+        }
+        
+        Vector3 originalPos = armTarget.position;
+        Vector3 targetDirectionWorld = (targetWorldPos - originalPos).normalized;
+
+        if (disableRendering) {
+            moveTargetSimulatePhisics(
+                controller, 
+                fixedDeltaTime, 
+                armTarget, 
+                (t) => t.position,
+                (t, pos) => t.position = pos,
+                (t, pos) => t.position += pos,
+                targetWorldPos,
+                unitsPerSecond, 
+                returnToStartPositionIfFailed
+            );
+        }
+        else {
+            StartCoroutine(
+                moveTargetFixedUpdate(
+                    controller,
+                    armTarget,
+                    (t) => t.position,
+                    (t, pos) => t.position = pos,
+                    (t, pos) => t.position += pos,
+                    targetWorldPos,
+                    unitsPerSecond,
+                    returnToStartPositionIfFailed
+                    )
+                );
+        }
+    }
+
+    public void moveArmHeight(
+        PhysicsRemoteFPSAgentController controller, 
+        float height, 
+        float unitsPerSecond, 
+        float fixedDeltaTime = 0.02f, 
+        bool returnToStartPositionIfFailed = false,
+        bool disableRendering = false) {
+            
+        //first check if the target position is within bounds of the agent's capsule center/height extents
+        //if not, actionFinished false with error message listing valid range defined by extents
+        CapsuleCollider cc = controller.GetComponent<CapsuleCollider>();
+        Vector3 cc_center = cc.center;
+        Vector3 cc_maxY = cc.center + new Vector3(0, cc.height/2f, 0);
+        Vector3 cc_minY = cc.center + new Vector3(0, (-cc.height/2f)/2f, 0); //this is halved to prevent arm clipping into floor
+
+        //linear function that take height and adjusts targetY relative to min/max extents
+        float targetY = ((cc_maxY.y - cc_minY.y)*(height)) + cc_minY.y;
+
+
+        Vector3 target = new Vector3(0, targetY, 0);
+        if (disableRendering) {
+            moveTargetSimulatePhisics(
+                controller, 
+                fixedDeltaTime, 
+                this.transform,
+                (t) => t.localPosition,
+                (t, pos) => t.localPosition = pos,
+                (t, pos) => t.localPosition += pos,
+                target,
+                unitsPerSecond, 
+                returnToStartPositionIfFailed
+            );
+        }
+        else {
+            StartCoroutine(
+                moveTargetFixedUpdate(
+                    controller, 
+                    this.transform, 
+                    (t) => t.localPosition,
+                    (t, pos) => t.localPosition = pos,
+                    (t, pos) => t.localPosition += pos,
+                    target, 
+                    unitsPerSecond, 
+                    returnToStartPositionIfFailed, 
+                    true
+                )
+            );
+        }
+    }
+
     //axis and angle
     public IEnumerator rotateHand(PhysicsRemoteFPSAgentController controller, Quaternion targetQuat, float time, bool returnToStartPositionIfFailed = false)
     {
@@ -401,220 +628,6 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
         controller.actionFinished(true);
 
     }
-
-    public IEnumerator moveArmHeight(PhysicsRemoteFPSAgentController controller, float height, float unitsPerSecond, GameObject arm, bool returnToStartPositionIfFailed = false)
-    {
-        //first check if the target position is within bounds of the agent's capsule center/height extents
-        //if not, actionFinished false with error message listing valid range defined by extents
-        staticCollided.collided = false;
-        staticCollided.simObjPhysics = null;
-        staticCollided.gameObject = null;
-
-        CapsuleCollider cc = controller.GetComponent<CapsuleCollider>();
-        Vector3 cc_center = cc.center;
-        Vector3 cc_maxY = cc.center + new Vector3(0, cc.height/2f, 0);
-        Vector3 cc_minY = cc.center + new Vector3(0, (-cc.height/2f)/2f, 0); //this is halved to prevent arm clipping into floor
-
-        //linear function that take height and adjusts targetY relative to min/max extents
-        //I think this does that... I think... probably...
-        float targetY = ((cc_maxY.y - cc_minY.y)*(height)) + cc_minY.y;
-
-
-        Vector3 target = new Vector3(0, targetY, 0);
-        Vector3 targetLocalPos = target;//arm.transform.TransformPoint(target);
-
-        Vector3 originalPos = arm.transform.localPosition;
-        Vector3 targetDirectionWorld = (targetLocalPos - originalPos).normalized;
-        var eps = 1e-3;
-        yield return new WaitForFixedUpdate();
-        var previousArmPosition = arm.transform.localPosition;
-
-        while ((Vector3.SqrMagnitude(targetLocalPos - arm.transform.localPosition) > eps) && !staticCollided.collided) {
-            previousArmPosition = arm.transform.localPosition;
-            arm.transform.localPosition += targetDirectionWorld * unitsPerSecond * Time.fixedDeltaTime;
-            // Jump the last epsilon to match exactly targetWorldPos
-            
-            arm.transform.localPosition = Vector3.SqrMagnitude(targetLocalPos - arm.transform.localPosition) > eps ?  arm.transform.localPosition : targetLocalPos;
-           
-            yield return new WaitForFixedUpdate();
-        }
-
-        if (staticCollided.collided) {
-        
-            //decide if we want to return to original position or last known position before collision
-            arm.transform.localPosition = returnToStartPositionIfFailed ? originalPos : previousArmPosition - (targetDirectionWorld * unitsPerSecond * Time.fixedDeltaTime);
-
-            string debugMessage = "";
-
-            //if we hit a sim object
-            if(staticCollided.simObjPhysics && !staticCollided.gameObject)
-            {
-                debugMessage = "Arm collided with static sim object: '" + staticCollided.simObjPhysics.name + "' arm could not reach target position: '" + target + "'.";
-            }
-
-            //if we hit a structural object that isn't a sim object but still has static collision
-            if(!staticCollided.simObjPhysics && staticCollided.gameObject)
-            {
-                debugMessage = "Arm collided with static structure in scene: '" + staticCollided.gameObject.name + "' arm could not reach target position: '" + target + "'.";
-            }
-
-            staticCollided.collided = false;
-
-            controller.actionFinished(false, debugMessage);
-            yield break;
-        }
-
-        //if the option to stop moving when the sphere touches any sim object is wanted
-
-        // Removed StopMotionOnContact until someone needs it, also should be renamed to StopMotionOn(Magnet|Hand)Contact
-        // if(magnetSphereComp.isColliding && StopMotionOnContact)
-        // {
-        //     string debugMessage = "Some object was hit by the arm's hand";
-        //     controller.actionFinished(false, debugMessage);
-        //     yield break;
-        // }
-
-        
-
-        controller.actionFinished(true);
-    }
-
-    public IEnumerator moveArmTarget(PhysicsRemoteFPSAgentController controller, Vector3 target, float unitsPerSecond,  GameObject arm, bool returnToStartPositionIfFailed = false, string whichSpace = "arm") {
-
-        staticCollided.collided = false;
-        staticCollided.simObjPhysics = null;
-        staticCollided.gameObject = null;
-        // Move arm based on hand space or arm origin space
-        //Vector3 targetWorldPos = handCameraSpace ? handCameraTransform.TransformPoint(target) : arm.transform.TransformPoint(target);
-
-        Vector3 targetWorldPos = Vector3.zero;
-
-        //world space, can be used to move directly toward positions returned by sim objects
-        if(whichSpace == "world")
-        {
-            targetWorldPos = target;
-        }
-
-        //space relative to base of the wrist, where the camera is
-        else if(whichSpace == "wrist")
-        {
-            targetWorldPos = handCameraTransform.TransformPoint(target);
-        }
-
-        //space relative to the root of the arm, joint 1
-        else if(whichSpace == "armBase")
-        {
-            targetWorldPos = arm.transform.TransformPoint(target);
-        }
-        
-        Vector3 originalPos = armTarget.position;
-        Vector3 targetDirectionWorld = (targetWorldPos - originalPos).normalized;
-        
-        var eps = 1e-3;
-        yield return new WaitForFixedUpdate();
-        var previousArmPosition = armTarget.position;
-
-        while ((Vector3.SqrMagnitude(targetWorldPos - armTarget.position) > eps) && !staticCollided.collided) {
-
-
-            previousArmPosition = armTarget.position;
-            armTarget.position += targetDirectionWorld * unitsPerSecond * Time.fixedDeltaTime;
-            // Jump the last epsilon to match exactly targetWorldPos
-            
-            armTarget.position = Vector3.SqrMagnitude(targetWorldPos - armTarget.position) > eps ?  armTarget.position : targetWorldPos;
-           
-            yield return new WaitForFixedUpdate();
-
-        }
-
-        if (staticCollided.collided) {
-            
-            //decide if we want to return to original position or last known position before collision
-            armTarget.position = returnToStartPositionIfFailed ? originalPos : previousArmPosition - (targetDirectionWorld * unitsPerSecond * Time.fixedDeltaTime);
-
-            string debugMessage = "";
-
-            //if we hit a sim object
-            if(staticCollided.simObjPhysics && !staticCollided.gameObject) {
-                debugMessage = "Arm collided with static sim object: '" + staticCollided.simObjPhysics.name + "' arm could not reach target position: '" + target + "'.";
-            }
-
-            //if we hit a structural object that isn't a sim object but still has static collision
-            if(!staticCollided.simObjPhysics && staticCollided.gameObject)
-            {
-                debugMessage = "Arm collided with static structure in scene: '" + staticCollided.gameObject.name + "' arm could not reach target position: '" + target + "'.";
-            }
-                            
-            staticCollided.collided = false;
-
-            controller.actionFinished(false, debugMessage);
-            yield break;
-        }
-
-        //if the option to stop moving when the sphere touches any sim object is wanted
-
-        // Removed StopMotionOnContact until someone needs it, also should be renamed to StopMotionOn(Magnet|Hand)Contact
-        // if(magnetSphereComp.isColliding && StopMotionOnContact)
-        // {
-        //     string debugMessage = "Some object was hit by the arm's hand";
-        //     controller.actionFinished(false, debugMessage);
-        //     yield break;
-        // }
-
-        controller.actionFinished(true);
-    }
-
-
-    public void moveArmHeightNoRender(PhysicsRemoteFPSAgentController controller, float height, float unitsPerSecond, GameObject arm, float fixedDeltaTime = 0.02f, bool returnToStartPositionIfFailed = false) {
-        //first check if the target position is within bounds of the agent's capsule center/height extents
-        //if not, actionFinished false with error message listing valid range defined by extents
-
-        CapsuleCollider cc = controller.GetComponent<CapsuleCollider>();
-        Vector3 cc_center = cc.center;
-        Vector3 cc_maxY = cc.center + new Vector3(0, cc.height/2f, 0);
-        Vector3 cc_minY = cc.center + new Vector3(0, (-cc.height/2f)/2f, 0); //this is halved to prevent arm clipping into floor
-
-        //linear function that take height and adjusts targetY relative to min/max extents
-        //I think this does that... I think... probably...
-        float targetY = ((cc_maxY.y - cc_minY.y)*(height)) + cc_minY.y;
-
-
-        Vector3 target = new Vector3(0, targetY, 0);
-
-        moveTargetSimulatePhisics(controller, fixedDeltaTime, arm.transform, target, unitsPerSecond, returnToStartPositionIfFailed,true);
-    } 
-
-
-    public void moveArmTargetNoRender(PhysicsRemoteFPSAgentController controller, Vector3 target, float unitsPerSecond,  GameObject arm, float fixedDeltaTime = 0.02f, bool returnToStartPositionIfFailed = false, string whichSpace = "arm") {
-        // Move arm based on hand space or arm origin space
-        //Vector3 targetWorldPos = handCameraSpace ? handCameraTransform.TransformPoint(target) : arm.transform.TransformPoint(target);
-
-        Vector3 targetWorldPos = Vector3.zero;
-
-        //world space, can be used to move directly toward positions returned by sim objects
-        if(whichSpace == "world")
-        {
-            targetWorldPos = target;
-        }
-
-        //space relative to base of the wrist, where the camera is
-        else if(whichSpace == "wrist")
-        {
-            targetWorldPos = handCameraTransform.TransformPoint(target);
-        }
-
-        //space relative to the root of the arm, joint 1
-        else if(whichSpace == "armBase")
-        {
-            targetWorldPos = arm.transform.TransformPoint(target);
-        }
-        
-        Vector3 originalPos = armTarget.position;
-        Vector3 targetDirectionWorld = (targetWorldPos - originalPos).normalized;
-
-        moveTargetSimulatePhisics(controller, fixedDeltaTime, armTarget, targetWorldPos, unitsPerSecond, returnToStartPositionIfFailed, false);
-    } 
-
 
     public List<string> WhatObjectsAreInsideMagnetSphereAsObjectID()
     {
