@@ -55,6 +55,8 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
     // This value is wrong 0.6325f for the origin to shoulder, it should be the height of the z-oriented capsule, 0.34566f and we should get it dinamically
     private float originToShoulderLength;
 
+    private const float extendedArmLenth = 0.6325f;
+
     void Start()
     {
         // What a mess clean up this hierarchy, standarize naming
@@ -342,7 +344,8 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
 
     // Restricts front hemisphere for arm movement
     private bool validArmTargetPosition(Vector3 targetWorldPosition) {
-        return (this.transform.InverseTransformPoint(targetWorldPosition).z - originToShoulderLength) >= 0.0f;
+        var targetArmPos = this.transform.InverseTransformPoint(targetWorldPosition);
+        return (targetArmPos.z - originToShoulderLength) >= 0.0f && targetArmPos.sqrMagnitude <= extendedArmLenth*extendedArmLenth;
     }
 
     public void moveArmTarget(
