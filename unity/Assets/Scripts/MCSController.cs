@@ -21,6 +21,8 @@ public class MCSController : PhysicsRemoteFPSAgentController {
     public static int PHYSICS_SIMULATION_LOOPS = 1;
     public static int PHYSICS_SIMULATION_STEPS = 5;
 
+    public static int ROTATION_DEGREES = 10;
+
     //this is not the capsule radius, this is the radius of the x and z bounds of the agent.
     public static float AGENT_RADIUS = 0.12f;
 
@@ -815,27 +817,27 @@ public class MCSController : PhysicsRemoteFPSAgentController {
 
     public override void RotateLeft(ServerAction controlCommand) {
         ServerAction rotate = new ServerAction();
-        rotate.rotation.y = -10;
+        rotate.rotation.y = -ROTATION_DEGREES;
         RotateLook(rotate);
     }
 
     public override void RotateRight(ServerAction controlCommand) {
         ServerAction rotate = new ServerAction();
-        rotate.rotation.y = 10;
+        rotate.rotation.y = ROTATION_DEGREES;
         RotateLook(rotate);
     }
 
     public override void LookUp(ServerAction controlCommand) 
     {
         ServerAction rotate = new ServerAction();
-        rotate.horizon = -10;
+        rotate.horizon = -ROTATION_DEGREES;
         RotateLook(rotate);
     }
 
     public override void LookDown(ServerAction controlCommand)
     {    
         ServerAction rotate = new ServerAction();
-        rotate.horizon = 10;
+        rotate.horizon = ROTATION_DEGREES;
         RotateLook(rotate);
     }
 
