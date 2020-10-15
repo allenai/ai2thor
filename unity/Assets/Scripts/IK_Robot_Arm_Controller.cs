@@ -196,7 +196,64 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
         Physics.autoSimulation = true;
         controller.actionFinished(actionSuccess, debugMessage);
     }
-    
+
+    //overload
+    private void moveTargetSimulatePhisics(
+        PhysicsRemoteFPSAgentController controller,
+        float fixedDeltaTime,
+        Transform moveTransform,
+        System.Func<Transform, Vector3> getPosition,
+        System.Action<Transform, Vector3> setPosition,
+        System.Action<Transform, Vector3> addPosition,
+        Vector3 targetPosition,
+        float unitsPerSecond,
+        bool returnToStartPositionIfFailed = false,
+        bool localPosition = true
+    ) 
+    {
+        const double eps = 1e-3;
+        Physics.autoSimulation = false;
+
+        var originalPosition = getPosition(moveTransform);
+
+        var previousArmPosition = originalPosition;
+
+        Vector3 targetDirection = (targetPosition - previousArmPosition).normalized;
+        float currentDistance = Vector3.SqrMagnitude(targetPosition - getPosition(moveTransform));
+        float startingDistance = currentDistance;
+        // running simulate once before we begin our movement loop to
+        // ensure that the arm is not in contact with any other object
+        // that should prevent it from moving
+        Physics.Simulate(fixedDeltaTime);
+
+        while ( currentDistance > eps && !staticCollided.collided && currentDistance <= startingDistance) {
+
+            previousArmPosition = getPosition(moveTransform);
+
+            addPosition(moveTransform, targetDirection * unitsPerSecond * fixedDeltaTime);
+
+            Physics.Simulate(fixedDeltaTime);
+
+            currentDistance = Vector3.SqrMagnitude(targetPosition - getPosition(moveTransform));
+        }
+
+        if (currentDistance <= eps && !staticCollided.collided) {
+            setPosition(moveTransform, targetPosition);
+            // must run Simulate() one more time to ensure colliders are triggered
+            Physics.Simulate(fixedDeltaTime);
+        }
+
+        Physics.autoSimulation = true;
+        moveArmFinish(
+            controller,
+            moveTransform, 
+            setPosition, 
+            targetPosition, 
+            returnToStartPositionIfFailed ? originalPosition : previousArmPosition - (targetDirection * unitsPerSecond * fixedDeltaTime), 
+            currentDistance > startingDistance
+        );
+    }
+
     public bool IsArmColliding()
     {
         bool result = false;

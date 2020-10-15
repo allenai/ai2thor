@@ -9033,42 +9033,43 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             actionFinished(true);
         }
 
-        public void MoveMidLevelArmNoRender(ServerAction action) {
-            var arm = this.GetComponentInChildren<IK_Robot_Arm_Controller>();
+        //NO RENDER option is now a parameter "disableRendering" on MoveMidLevelArm and MoveMidLevelArmHeight
+        // public void MoveMidLevelArmNoRender(ServerAction action) {
+        //     var arm = this.GetComponentInChildren<IK_Robot_Arm_Controller>();
 
-            if (arm != null) {
-                arm.moveArmTargetNoRender(this, action.position, action.speed, arm.gameObject, action.fixedDeltaTime, action.returnToStart, action.coordinateSpace);
+        //     if (arm != null) {
+        //         arm.moveArmTargetNoRender(this, action.position, action.speed, arm.gameObject, action.fixedDeltaTime, action.returnToStart, action.coordinateSpace);
                 
                 
-            }
-            else {
-                actionFinished(false, "Agent does not have kinematic arm or is not enabled. Make sure there is a '" + typeof(IK_Robot_Arm_Controller).Name + "' component as a child of this agent.");
-            }
+        //     }
+        //     else {
+        //         actionFinished(false, "Agent does not have kinematic arm or is not enabled. Make sure there is a '" + typeof(IK_Robot_Arm_Controller).Name + "' component as a child of this agent.");
+        //     }
 
-        }
+        // }
 
-        //constrain arm's y position based on the agent's current capsule collider center and extents
-        //valid Y height from action.y is [0, 1.0] to represent the relative min and max heights of the
-        //arm constrained by the agent's capsule
-        public void MoveMidLevelArmHeightNoRender(ServerAction action)
-        {
-            if(action.y < 0 || action.y > 1.0)
-            {
-                actionFinished(false, "MoveMidLevelArmHeight Y value must be [0, 1.0] inclusive");
-                return;
-            }
+        // //constrain arm's y position based on the agent's current capsule collider center and extents
+        // //valid Y height from action.y is [0, 1.0] to represent the relative min and max heights of the
+        // //arm constrained by the agent's capsule
+        // public void MoveMidLevelArmHeightNoRender(ServerAction action)
+        // {
+        //     if(action.y < 0 || action.y > 1.0)
+        //     {
+        //         actionFinished(false, "MoveMidLevelArmHeight Y value must be [0, 1.0] inclusive");
+        //         return;
+        //     }
 
-            var arm = this.GetComponentInChildren<IK_Robot_Arm_Controller>();
-            if(arm != null)
-            {
-                arm.moveArmHeightNoRender(this, action.y, action.speed, arm.gameObject, action.fixedDeltaTime, action.returnToStart);
-            }
+        //     var arm = this.GetComponentInChildren<IK_Robot_Arm_Controller>();
+        //     if(arm != null)
+        //     {
+        //         arm.moveArmHeightNoRender(this, action.y, action.speed, arm.gameObject, action.fixedDeltaTime, action.returnToStart);
+        //     }
 
-            else
-            {
-                actionFinished(false, "Agent does not have kinematic arm or is not enabled. Make sure there is a '" + typeof(IK_Robot_Arm_Controller).Name + "' component as a child of this agent.");
-            }
-        }
+        //     else
+        //     {
+        //         actionFinished(false, "Agent does not have kinematic arm or is not enabled. Make sure there is a '" + typeof(IK_Robot_Arm_Controller).Name + "' component as a child of this agent.");
+        //     }
+        // }
 
         public void GetMidLevelArmCollisions() {
             var arm = this.GetComponentInChildren<IK_Robot_Arm_Controller>();
