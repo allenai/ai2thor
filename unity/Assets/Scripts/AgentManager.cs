@@ -1062,8 +1062,8 @@ public class ServerAction
 
     // MCS Additions
     public bool logs = false;
-    public Vector3 objectDirection;
-    public Vector3 receptacleObjectDirection;
+    public Vector2 objectImageCoords;
+    public Vector2 receptacleObjectImageCoords;
     public MCSConfigScene sceneConfig;
 	public bool consistentColors = false;
 

@@ -14,9 +14,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
         public bool forceAction = false;
         public float gridSize = 0.1f;
         public float visibilityDistance = 0.4f;
-        public Vector3 moveOrPickupObjectDirection;
+        public Vector2 moveOrPickupObjectImageCoords;
         public string moveOrPickupObjectId = "";
-        public Vector3 receptacleObjectDirection;
+        public Vector2 receptacleObjectImageCoords;
         public string receptacleObjectId = "";
         public float rotationIncrement = 45.0f;
         public float horizonIncrement = 30.0f;
@@ -77,14 +77,24 @@ namespace UnityStandardAssets.Characters.FirstPerson
                             
                 // }
 
-                if(Input.GetKeyDown(KeyCode.T)) {
-                    ServerAction action = new ServerAction();
-                    action.objectId = moveOrPickupObjectId;
+                // MCS:
+                // Left mouse click populates moveOrPickupObjectImageCoords with
+                // screen point vector coordinates, left mouse click + left shift key
+                // populates receptacleObjectImageCoords.
+                if (Input.GetMouseButtonDown(0)) {
+                    Vector2 screenPtToPixels = new Vector2(Input.mousePosition.x, (Screen.height - Input.mousePosition.y));
 
-                    action.action = "ThrowObject";
-                    action.objectDirection = moveOrPickupObjectDirection;
-                    action.moveMagnitude = pushPullForce;
-                    PhysicsController.ProcessControlCommand(action);
+                    // Normally, (0,0) for pixels is the top left, but for Unity screen points, (0,0) is the
+                    // bottom left.
+                    Debug.Log("MCS: Screen Point Clicked: " + Input.mousePosition.ToString());
+                    Debug.Log("MCS: Screen Point as Image Pixel Coords: " + screenPtToPixels.ToString());
+                    if (Input.GetKey(KeyCode.LeftShift)) {
+                        receptacleObjectImageCoords.x = Input.mousePosition.x;
+                        receptacleObjectImageCoords.y = Input.mousePosition.y;
+                    } else {
+                        moveOrPickupObjectImageCoords.x = Input.mousePosition.x;
+                        moveOrPickupObjectImageCoords.y = Input.mousePosition.y;
+                    }
                 }
 
                 // if(Input.GetKeyDown(KeyCode.U))
@@ -264,7 +274,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         {
                             action.action = "OpenObject";
                             action.moveMagnitude = 1.0f;
-                            action.objectDirection = this.receptacleObjectDirection;
+                            action.objectImageCoords = this.receptacleObjectImageCoords;
                             action.objectId = this.receptacleObjectId;
                             PhysicsController.ProcessControlCommand(action);
                             /*
@@ -280,7 +290,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         {
                             action.action = "CloseObject";
                             action.moveMagnitude = 1.0f;
-                            action.objectDirection = this.receptacleObjectDirection;
+                            action.objectImageCoords = this.receptacleObjectImageCoords;
                             action.objectId = this.receptacleObjectId;
                             PhysicsController.ProcessControlCommand(action);
                         }
@@ -288,7 +298,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         if(Input.GetKeyDown(KeyCode.P))
                         {
                             action.action = "PickupObject";
-                            action.objectDirection = this.moveOrPickupObjectDirection;
+                            action.objectImageCoords = this.moveOrPickupObjectImageCoords;
                             action.objectId = this.moveOrPickupObjectId;
                             PhysicsController.ProcessControlCommand(action);
                         }
@@ -296,9 +306,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         if(Input.GetKeyDown(KeyCode.Z))
                         {
                             action.action = "PutObject";
-                            action.objectDirection = this.moveOrPickupObjectDirection;
+                            action.objectImageCoords = this.moveOrPickupObjectImageCoords;
                             action.objectId = this.moveOrPickupObjectId;
-                            action.receptacleObjectDirection = this.receptacleObjectDirection;
+                            action.receptacleObjectImageCoords = this.receptacleObjectImageCoords;
                             action.receptacleObjectId = this.receptacleObjectId;
                             PhysicsController.ProcessControlCommand(action);
                         }
@@ -306,8 +316,17 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         if(Input.GetKeyDown(KeyCode.X))
                         {
                             action.action = "DropHandObject";
-                            action.objectDirection = this.moveOrPickupObjectDirection;
+                            action.objectImageCoords = this.moveOrPickupObjectImageCoords;
                             action.objectId = this.moveOrPickupObjectId;
+                            PhysicsController.ProcessControlCommand(action);
+                        }
+
+                        if(Input.GetKeyDown(KeyCode.T)) {
+                            action.objectId = moveOrPickupObjectId;
+
+                            action.action = "ThrowObject";
+                            action.objectImageCoords = moveOrPickupObjectImageCoords;
+                            action.moveMagnitude = pushPullForce;
                             PhysicsController.ProcessControlCommand(action);
                         }
 
@@ -315,7 +334,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         {
                             action.action = this.pushPullForce > 0 ? "PushObject" : "PullObject";
                             action.moveMagnitude = System.Math.Abs(this.pushPullForce);
-                            action.objectDirection = this.moveOrPickupObjectDirection;
+                            action.objectImageCoords = this.moveOrPickupObjectImageCoords;
                             action.objectId = this.moveOrPickupObjectId;
                             PhysicsController.ProcessControlCommand(action);
                         }
