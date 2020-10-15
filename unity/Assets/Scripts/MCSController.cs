@@ -206,6 +206,8 @@ public class MCSController : PhysicsRemoteFPSAgentController {
     }
 
     public override void Initialize(ServerAction action) {
+        // Set consistentColors to randomize segmentation mask colors if required
+        this.agentManager.consistentColors = action.consistentColors;
         base.Initialize(action);
 
         this.step = 0;
