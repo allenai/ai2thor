@@ -7,8 +7,6 @@ import cv2
 from pprint import pprint
 import shutil
 import copy
-
-import ai2thor.docker
 from ai2thor._quality_settings import QUALITY_SETTINGS, DEFAULT_QUALITY
 from ai2thor.server import Event, MultiAgentEvent, DepthFormat
 from ai2thor.interact import InteractiveControllerPrompt, DefaultActions

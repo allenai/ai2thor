@@ -27,6 +27,7 @@ class FieldType(IntEnum):
     CLASSES_IMAGE = 8
     IDS_IMAGE = 9
     THIRD_PARTY_IMAGE = 10
+    METADATA_PATCH = 11
     END_OF_MESSAGE = 255
 
 
@@ -42,6 +43,8 @@ class FifoServer(ai2thor.server.Server):
         self.client_pipe_path = os.path.join(self.tmp_dir.name, 'client.pipe')
         self.server_pipe = None
         self.client_pipe = None
+        self.raw_metadata = None
+        self.raw_files = None
         # allows us to map the enum to form field names
         # for backwards compatibility
         # this can be removed when the wsgi server is removed
@@ -96,11 +99,27 @@ class FifoServer(ai2thor.server.Server):
                 #print("body length %s" % len(body))
                 #print(body)
                 metadata = msgpack.loads(body, raw=False)
-                #print(metadata)
+            elif field_type is FieldType.METADATA_PATCH:
+                metadata_patch = msgpack.loads(body, raw=False)
+                agents = self.raw_metadata['agents']
+                metadata = dict(
+                    agents=[{} for i in range(len(agents))],
+                    thirdPartyCameras=self.raw_metadata['thirdPartyCameras'],
+                    sequenceId=self.sequence_id,
+                    activeAgentId=metadata_patch['agentId']
+                )
+                for i in range(len(agents)):
+                    metadata["agents"][i].update(agents[i])
+
+                metadata["agents"][metadata_patch['agentId']].update(metadata_patch)
+                files = self.raw_files
             elif field_type in self.image_fields:
                 files[self.form_field_map[field_type]].append(body)
             else:
                 raise ValueError("Invalid field type: %s" % field_type )
+
+        self.raw_metadata = metadata
+        self.raw_files = files
 
         return metadata, files
 
@@ -117,7 +136,12 @@ class FifoServer(ai2thor.server.Server):
         self.client_pipe.flush()
 
     def receive(self):
+
         metadata, files = self._recv_message()
+
+        if metadata is None:
+            raise ValueError("no metadata received from recv_message")
+
         return self.create_event(metadata, files)
 
     def send(self, action):

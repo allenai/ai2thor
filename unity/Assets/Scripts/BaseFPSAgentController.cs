@@ -12,6 +12,7 @@ using UnityStandardAssets.ImageEffects;
 using System.Linq;
 using UnityEngine.Rendering.PostProcessing;
 using UnityEngine.AI;
+using Newtonsoft.Json.Linq;
 
 namespace UnityStandardAssets.Characters.FirstPerson
 {
@@ -54,6 +55,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		[SerializeField]
 		protected float m_GravityMultiplier;
 		protected static float gridSize = 0.25f;
+        //time the checkIfObjectHasStoppedMoving coroutine waits for objects to stop moving
+        protected float TimeToWaitForObjectsToComeToRest = 0.0f;
         //determins default move distance for move actions
 		protected float moveMagnitude;
         //determines rotation increment of rotate functions
@@ -68,6 +71,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
         public GameObject DroneBasket;//reference to the drone's basket object
         private bool isVisible = true;
         public bool inHighFrictionArea = false;
+        // outbound object filter
+        private SimObjPhysics[] simObjFilter = null;
+        private VisibilityScheme visibilityScheme = VisibilityScheme.Collider;
+        public AgentState agentState = AgentState.Emit;
 
         public bool IsVisible
         {
@@ -90,6 +97,19 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			}
         }
 
+        public bool IsProcessing {
+            get {
+                return this.agentState == AgentState.Processing;
+            }
+        }
+
+        public bool ReadyForCommand {
+            get {
+                return this.agentState == AgentState.Emit;
+            }
+
+        }
+
 		protected float maxDownwardLookAngle = 60f;
 		protected float maxUpwardLookAngle = 30f;
 		//allow agent to push sim objects that can move, for physics
@@ -97,7 +117,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		protected int actionCounter;
 		protected Vector3 targetTeleport;
         public AgentManager agentManager;
-		public string[] excludeObjectIds = new string[0];
 		public Camera m_Camera;
         [SerializeField] protected float cameraOrthSize;
 		protected float m_XRotation;
@@ -111,7 +130,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		protected bool lastActionSuccess;
 		protected string errorMessage;
 		protected ServerActionErrorCode errorCode;
-		public bool actionComplete;
 		public System.Object actionReturn;
         [SerializeField] protected Vector3 standingLocalCameraPosition;
         [SerializeField] protected Vector3 crouchingLocalCameraPosition;
@@ -141,7 +159,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		protected Quaternion targetRotation;
         // Javascript communication
         private JavaScriptInterface jsInterface = null;
-        private dynamic currentServerAction;
+        private ServerAction currentServerAction;
 		public Quaternion TargetRotation
 		{
 			get { return targetRotation; }
@@ -246,26 +264,41 @@ namespace UnityStandardAssets.Characters.FirstPerson
             }
         }
 
-		public void actionFinished(bool success, System.Object actionReturn=null) 
+		public void actionFinishedEmit(bool success, System.Object actionReturn=null) 
 		{
-			
-			if (actionComplete) 
+            actionFinished(success, AgentState.Emit, actionReturn);
+		}
+
+		protected virtual void actionFinished(bool success, AgentState newState, System.Object actionReturn=null) 
+		{
+			if (!this.IsProcessing)
 			{
-				Debug.LogError ("ActionFinished called with actionComplete already set to true");
+				Debug.LogError ("ActionFinished called with agentState not in processing ");
 			}
 
             if (this.jsInterface)
             {
                 // TODO: Check if the reflection method call was successfull add that to the sent event data
-                this.jsInterface.SendAction(currentServerAction.ToObject(typeof(ServerAction)));
+                this.jsInterface.SendAction(currentServerAction);
             }
 
             lastActionSuccess = success;
-			this.actionComplete = true;
+			this.agentState = newState;
 			this.actionReturn = actionReturn;
 			actionCounter = 0;
 			targetTeleport = Vector3.zero;
+
+        }
+
+		public virtual void actionFinished(bool success, System.Object actionReturn=null) 
+		{
+            actionFinished(success, AgentState.ActionComplete, actionReturn);
+            this.resumePhysics();
 		}
+
+        protected virtual void resumePhysics() {}
+
+        
 
         public Vector3[] getReachablePositions(float gridMultiplier = 1.0f, int maxStepCount = 10000, bool visualize = false, Color? gridColor = null) { //max step count represents a 100m * 100m room. Adjust this value later if we end up making bigger rooms?
             CapsuleCollider cc = GetComponent<CapsuleCollider>();
@@ -283,6 +316,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             };
 
             HashSet<Vector3> goodPoints = new HashSet<Vector3>();
+            HashSet<Vector3> seenPoints = new HashSet<Vector3>();
             int layerMask = 1 << 8;
             int stepsTaken = 0;
             while (pointsQueue.Count != 0) {
@@ -292,6 +326,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     goodPoints.Add(p);
                     HashSet<Collider> objectsAlreadyColliding = new HashSet<Collider>(objectsCollidingWithAgent());
                     foreach (Vector3 d in directions) {
+                        Vector3 newPosition = p + d * gridSize * gridMultiplier;
+                        if (seenPoints.Contains(newPosition)) {
+                            continue;
+                        }
+                        seenPoints.Add(newPosition);
+
                         RaycastHit[] hits = capsuleCastAllForAgent(
                             cc,
                             sw,
@@ -311,7 +351,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
                                 break;
                             }
                         }
-                        Vector3 newPosition = p + d * gridSize * gridMultiplier;
                         bool inBounds = agentManager.SceneBounds.Contains(newPosition);
                         if (errorMessage == "" && !inBounds) {
                             errorMessage = "In " +
@@ -377,9 +416,9 @@ namespace UnityStandardAssets.Characters.FirstPerson
             }
 
             if (errorMessage != "") {
-                actionFinished(false);
+                actionFinishedEmit(false);
             } else {
-                actionFinished(true, reachablePositions);
+                actionFinishedEmit(true, reachablePositions);
             }
         }
 
@@ -421,7 +460,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 	Time.timeScale = action.timeScale;
 				}
             } else {
-                errorMessage = "Time scale must be >0";
+                errorMessage = "Time scale must be > 0";
                 Debug.Log(errorMessage);
                 actionFinished(false);
                 return;
@@ -467,11 +506,15 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 actionFinished(false);
                 return;
             }
+
             else
             {
                 gridSize = action.gridSize;
                 StartCoroutine(checkInitializeAgentLocationAction());
             }
+
+            //initialize how long the default wait time for objects to stop moving is
+            this.TimeToWaitForObjectsToComeToRest = action.TimeToWaitForObjectsToComeToRest;
             	
             // Debug.Log("Object " + action.controllerInitialization.ToString() + " dict "  + (action.controllerInitialization.variableInitializations == null));//+ string.Join(";", action.controllerInitialization.variableInitializations.Select(x => x.Key + "=" + x.Value).ToArray()));
 
@@ -484,6 +527,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 }
 
             }
+
+            this.visibilityScheme = action.GetVisibilityScheme();
         }
 
         public void SetAgentMode(string mode)
@@ -669,11 +714,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 actionFinished(false);
             }
         }
-
-		public bool excludeObject(string objectId)
-		{
-			return Array.IndexOf(this.excludeObjectIds, objectId) >= 0;
-		}
 
         //for all translational movement, check if the item the player is holding will hit anything, or if the agent will hit anything
         //NOTE: (XXX) All four movements below no longer use base character controller Move() due to doing initial collision blocking
@@ -864,6 +904,39 @@ namespace UnityStandardAssets.Characters.FirstPerson
             actionFinished(false);
         }
 
+        //remove a list of given sim object from the scene.
+        public void RemoveObjsFromScene(ServerAction action) {
+            if (action.objectIds == null || action.objectIds[0] == null)
+            {
+                errorMessage = "objectIds was not initialized correctly. Please make sure each element in the objectIds list is initialized.";
+                actionFinished(false);
+                return;
+            }
+            bool fail = false;
+            foreach (string objIds in action.objectIds)
+            {
+                if (physicsSceneManager.ObjectIdToSimObjPhysics.ContainsKey(objIds))
+                {
+                    physicsSceneManager.ObjectIdToSimObjPhysics[objIds].transform.gameObject.SetActive(false);
+                }
+                else
+                {
+                    fail = true;
+                }
+            }
+            physicsSceneManager.SetupScene();
+            if (fail)
+            {
+                errorMessage = "some objectsin objectIds were not removed correctly.";
+                actionFinished(false);
+            }
+            else
+            {
+                actionFinished(true);
+            }
+            return;
+        }
+
         //Sweeptest to see if the object Agent is holding will prohibit movement
         public bool CheckIfItemBlocksAgentMovement(float moveMagnitude, int orientation, bool forceAction = false) {
             bool result = false;
@@ -1034,16 +1107,36 @@ namespace UnityStandardAssets.Characters.FirstPerson
 			return GameObject.FindObjectsOfType<SimObj>();
         }
 
+        public void ResetObjectFilter() {
+            this.simObjFilter = null;
+            actionFinishedEmit(true);
+        }
+        public void SetObjectFilter(string[] objectIds) {
+            SimObjPhysics[] simObjects = GameObject.FindObjectsOfType<SimObjPhysics>();
+            HashSet<SimObjPhysics> filter = new HashSet<SimObjPhysics>();
+            HashSet<string> filterObjectIds = new HashSet<string>(objectIds);
+            foreach(var simObj in simObjects) {
+                if (filterObjectIds.Contains(simObj.ObjectID)) {
+                    filter.Add(simObj);
+                }
+            }
+            simObjFilter = filter.ToArray();
+            actionFinishedEmit(true);
+        }
+
         public virtual ObjectMetadata[] generateObjectMetadata()
 		{
-            SimObjPhysics[] visibleSimObjs = VisibleSimObjs(false); // Update visibility for all sim objects for this agent
-            HashSet<SimObjPhysics> visibleSimObjsHash = new HashSet<SimObjPhysics>();
-            foreach (SimObjPhysics sop in visibleSimObjs) {
-                visibleSimObjsHash.Add(sop);
+            SimObjPhysics[] simObjects = null;
+            if (this.simObjFilter != null) {
+                simObjects = this.simObjFilter;
+            } else {
+                simObjects = GameObject.FindObjectsOfType<SimObjPhysics>();
             }
 
-            // Encode these in a json string and send it to the server
-            SimObjPhysics[] simObjects = GameObject.FindObjectsOfType<SimObjPhysics>();
+            HashSet<SimObjPhysics> visibleSimObjsHash = new HashSet<SimObjPhysics>(GetAllVisibleSimObjPhysics(
+                this.m_Camera,
+                this.maxVisibleDistance));
+
             int numObj = simObjects.Length;
             List<ObjectMetadata> metadata = new List<ObjectMetadata>();
             Dictionary<string, List<string>> parentReceptacles = new Dictionary<string, List<string>>();
@@ -1055,12 +1148,16 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
             for (int k = 0; k < numObj; k++) {
                 SimObjPhysics simObj = simObjects[k];
-                if (this.excludeObject(simObj.ObjectID)) {
-                    continue;
-                }
                 ObjectMetadata meta = ObjectMetadataFromSimObjPhysics(simObj, visibleSimObjsHash.Contains(simObj));
                 if (meta.receptacle) {
-                    List<string> roid = simObj.Contains();
+                    
+                    List<string> containedObjectsAsID = new List<String>();
+                    foreach(GameObject go in simObj.ContainedGameObjects())
+                    {
+                        containedObjectsAsID.Add(go.GetComponent<SimObjPhysics>().ObjectID);
+                    }
+                    List<string> roid = containedObjectsAsID;//simObj.Contains();
+
                     foreach (string oid in roid) {
                         if (!parentReceptacles.ContainsKey(oid)) {
                             parentReceptacles[oid] = new List<string>();
@@ -1327,6 +1424,19 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
             return b;
         }
+		public virtual  MetadataPatch generateMetadataPatch()
+		{
+            MetadataPatch patch = new MetadataPatch();
+            patch.lastAction = this.lastAction;
+            patch.lastActionSuccess = this.lastActionSuccess;
+            patch.actionReturn = this.actionReturn;
+            if (errorCode != ServerActionErrorCode.Undefined) {
+                patch.errorCode = Enum.GetName(typeof(ServerActionErrorCode), errorCode);
+            }
+            patch.errorMessage = this.errorMessage;
+            return patch;
+        }
+
 		public virtual MetadataWrapper generateMetadataWrapper()
 		{
             // AGENT METADATA
@@ -1435,7 +1545,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
 		}
 
 
-        public void ProcessControlCommand(dynamic controlCommand)
+#if UNITY_WEBGL
+        public void ProcessControlCommand(ServerAction controlCommand)
         {
             currentServerAction = controlCommand;
 
@@ -1446,7 +1557,59 @@ namespace UnityStandardAssets.Characters.FirstPerson
             lastAction = controlCommand.action;
             lastActionSuccess = false;
             lastPosition = new Vector3(transform.position.x, transform.position.y, transform.position.z);
-            this.actionComplete = false;
+			System.Reflection.MethodInfo method = this.GetType().GetMethod(controlCommand.action);
+			
+            this.agentState = AgentState.Processing;
+			try
+			{
+				if (method == null) {
+					errorMessage = "Invalid action: " + controlCommand.action;
+					errorCode = ServerActionErrorCode.InvalidAction;
+					Debug.LogError(errorMessage);
+					actionFinished(false);
+				} else {
+					method.Invoke(this, new object[] { controlCommand });
+				}
+			}
+			catch (Exception e)
+			{
+				Debug.LogError("Caught error with invoke for action: " + controlCommand.action);
+                Debug.LogError("Action error message: " + errorMessage);
+				Debug.LogError(e);
+
+				errorMessage += e.ToString();
+				actionFinished(false);
+			}
+
+        }
+#endif
+
+        // the parameter name is different to avoid failing a test
+        // that looks for methods with identical param names, since
+        // we dispatch using method + param names
+        public void ProcessControlCommand(Dictionary<string, object> actionDict){
+            var jsonResolver = new ShouldSerializeContractResolver();
+            dynamic action = JObject.FromObject(actionDict,
+                        new Newtonsoft.Json.JsonSerializer()
+                            {
+                                ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore,
+                                ContractResolver = jsonResolver
+                            });
+
+
+            ProcessControlCommand(action);
+        }
+
+        public void ProcessControlCommand(dynamic controlCommand)
+        {
+            errorMessage = "";
+            errorCode = ServerActionErrorCode.Undefined;
+            collisionsInAction = new List<string>();
+
+            lastAction = controlCommand.action;
+            lastActionSuccess = false;
+            lastPosition = new Vector3(transform.position.x, transform.position.y, transform.position.z);
+            this.agentState = AgentState.Processing;
 
             try
             {
@@ -1476,15 +1639,11 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 actionFinished(false);
             }
 
-
-
             #if UNITY_EDITOR
             if (errorMessage != "") {
                 Debug.Log(errorMessage);
             }
             #endif
-
-            agentManager.setReadyToEmit(true);
         }
 
         //no op action
@@ -1848,6 +2007,83 @@ namespace UnityStandardAssets.Characters.FirstPerson
             return Time.time;
         }
 
+        private bool isSimObjVisible(Camera agentCamera, SimObjPhysics sop, float maxDistance, Plane[] planes) {
+            bool visible = false;
+            //check against all visibility points, accumulate count. If at least one point is visible, set object to visible
+            if (sop.VisibilityPoints != null && sop.VisibilityPoints.Length > 0) 
+            {
+                Transform[] visPoints = sop.VisibilityPoints;
+                int visPointCount = 0;
+
+                foreach (Transform point in visPoints) 
+                {
+                    bool outsidePlane = false;
+                    for(int i = 0; i < planes.Length; i++){
+                        if (!planes[i].GetSide(point.position)) {
+                            outsidePlane = true;
+                            break;
+                        }
+                    } 
+
+                    if (outsidePlane) {
+                        continue;
+                    }
+
+
+                    float xdelta = Math.Abs(this.transform.position.x - point.position.x);
+                    if (xdelta > maxDistance) 
+                    {
+                        continue;
+                    }
+
+                    float zdelta = Math.Abs(this.transform.position.z - point.position.z);
+                    if (zdelta > maxDistance) 
+                    {
+                        continue;
+                    }
+
+                    // if the object is too far above the Agent, skip
+                    float ydelta =  point.position.y - this.transform.position.y;
+                    if (ydelta > maxDistance) {
+                        continue;
+                    }
+
+                    double distance = Math.Sqrt((xdelta * xdelta) + (zdelta * zdelta));
+                    if (distance > maxDistance) 
+                    {
+                        continue;
+                    }
+
+                    //if this particular point is in view...
+                    if (CheckIfVisibilityPointRaycast(sop, point, agentCamera, false) ||
+                        CheckIfVisibilityPointRaycast(sop, point, agentCamera, true)) 
+                    {
+                        visPointCount++;
+                        #if !UNITY_EDITOR
+                        // If we're in the unity editor then don't break on finding a visible
+                        // point as we want to draw lines to each visible point.
+                        break;
+                        #endif
+                    }
+                }
+
+                //if we see at least one vis point, the object is "visible"
+                if (visPointCount > 0) 
+                {
+                    #if UNITY_EDITOR
+                    sop.isVisible = true;
+                    #endif
+                    visible = true;
+                }
+            }
+            
+            else 
+            {
+                Debug.Log("Error! Set at least 1 visibility point on SimObjPhysics " + sop + ".");
+            }
+            return visible;
+        }
+
         public SimObjPhysics[] VisibleSimObjs(ServerAction action) 
         {
             List<SimObjPhysics> simObjs = new List<SimObjPhysics>();
@@ -1886,9 +2122,46 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 return GetAllVisibleSimObjPhysics(m_Camera, maxVisibleDistance);
             }
         }
-
         protected SimObjPhysics[] GetAllVisibleSimObjPhysics(Camera agentCamera, float maxDistance) 
         {
+            if (this.visibilityScheme == VisibilityScheme.Collider) {
+                return GetAllVisibleSimObjPhysicsCollider(agentCamera, maxDistance);
+            } else {
+                return GetAllVisibleSimObjPhysicsDistance(agentCamera, maxDistance);
+            }
+        }
+
+        // this is a faster version of the visibility check, but is not entirely 
+        // consistent with the collider based method.  In particular, if an object
+        // is within range of the maxVisibleDistance, but obscurred only within this
+        // range and is visibile outside of the range, it will get reported as invisible
+        // by the new scheme, but visible in the current scheme.
+        private SimObjPhysics[] GetAllVisibleSimObjPhysicsDistance(Camera agentCamera, float maxDistance) 
+        {
+            List<SimObjPhysics> visible = new List<SimObjPhysics>();
+            IEnumerable<SimObjPhysics> simObjs = null;
+            if (this.simObjFilter != null) {
+                simObjs = this.simObjFilter;
+            } else {
+                // this is faster than doing GameObject.FindObjectsOfType and is kept consistent when new objects are added
+                simObjs = physicsSceneManager.ObjectIdToSimObjPhysics.Values;
+            }
+
+            Plane[] planes = GeometryUtility.CalculateFrustumPlanes(agentCamera);
+            foreach(var sop in simObjs)
+            {
+                if(isSimObjVisible(agentCamera, sop, this.maxVisibleDistance, planes)) 
+                {
+                    visible.Add(sop);
+                }
+            }
+            return visible.ToArray();
+        }
+
+        private SimObjPhysics[] GetAllVisibleSimObjPhysicsCollider(Camera agentCamera, float maxDistance) 
+        {
+            List<SimObjPhysics> currentlyVisibleItems = new List<SimObjPhysics>();
+
             #if UNITY_EDITOR        
             foreach (KeyValuePair<string, SimObjPhysics> pair in physicsSceneManager.ObjectIdToSimObjPhysics) 
             {
@@ -1897,7 +2170,13 @@ namespace UnityStandardAssets.Characters.FirstPerson
             }
             #endif
 
-            List<SimObjPhysics> currentlyVisibleItems = new List<SimObjPhysics>();
+            HashSet<SimObjPhysics> filter = null;
+            if (this.simObjFilter != null) {
+                filter = new HashSet<SimObjPhysics>(this.simObjFilter);
+                if (filter.Count == 0) {
+                    return currentlyVisibleItems.ToArray();
+                }
+            }
 
             Vector3 agentCameraPos = agentCamera.transform.position;
 
@@ -1930,11 +2209,11 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 {
                     SimObjPhysics sop = ancestorSimObjPhysics(item.gameObject);
                     //now we have a reference to our sim object 
-                    if (sop != null && !testedSops.Contains(sop)) 
+                    if ((sop != null && !testedSops.Contains(sop)) && (filter == null || filter.Contains(sop)))
                     {
                         testedSops.Add(sop);
                         //check against all visibility points, accumulate count. If at least one point is visible, set object to visible
-                        if (sop.VisibilityPoints == null || sop.VisibilityPoints.Length > 0) 
+                        if (sop.VisibilityPoints != null && sop.VisibilityPoints.Length > 0) 
                         {
                             Transform[] visPoints = sop.VisibilityPoints;
                             int visPointCount = 0;
@@ -1964,8 +2243,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                                     currentlyVisibleItems.Add(sop);
                                 }
                             }
-                        } 
-                        
+                        }
                         else 
                         {
                             Debug.Log("Error! Set at least 1 visibility point on SimObjPhysics " + sop + ".");
@@ -1991,7 +2269,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                         sop = item.GetComponentInParent<SimObjPhysics>();
 
                         //now we have a reference to our sim object 
-                        if (sop) 
+                        if (sop && (filter == null || filter.Contains(sop)))
                         {
                             //check against all visibility points, accumulate count. If at least one point is visible, set object to visible
                             if (sop.VisibilityPoints.Length > 0) 
@@ -2020,11 +2298,13 @@ namespace UnityStandardAssets.Characters.FirstPerson
                                     }
                                 }
                             } 
-                            
-                            else
+                            else 
+                            {
                                 Debug.Log("Error! Set at least 1 visibility point on SimObjPhysics prefab!");
+                            }
+
                         }
-                    }
+                    } 
                 }
             }
 
@@ -2038,6 +2318,116 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
         //check if the visibility point on a sim object, sop, is within the viewport
         //has a inclueInvisible bool to check against triggerboxes as well, to check for visibility with things like Cabinets/Drawers
+        protected bool CheckIfVisibilityPointRaycast(
+            SimObjPhysics sop,
+            Transform point,
+            Camera agentCamera,
+            bool includeInvisible) {
+            bool result = false;
+            //now cast a ray out toward the point, if anything occludes this point, that point is not visible
+            RaycastHit hit;
+
+            float distFromPointToCamera = Vector3.Distance(point.position, m_Camera.transform.position);
+
+            //adding slight buffer to this distance to ensure the ray goes all the way to the collider of the object being cast to
+            float raycastDistance = distFromPointToCamera + 0.5f;
+
+            LayerMask mask = (1 << 8) | (1 << 9) | (1 << 10);
+
+            //change mask if its a floor so it ignores the receptacle trigger boxes on the floor
+            if(sop.Type == SimObjType.Floor)
+            mask = (1 << 8) | (1 << 10);
+
+
+            //check raycast against both visible and invisible layers, to check against ReceptacleTriggerBoxes which are normally
+            //ignored by the other raycast
+            if (includeInvisible) 
+            {
+                if (Physics.Raycast(agentCamera.transform.position, point.position - agentCamera.transform.position, out hit, raycastDistance, mask)) 
+                {
+                    if (hit.transform != sop.transform) 
+                    {
+                        result = false;
+                    }
+
+                    //if this line is drawn, then this visibility point is in camera frame and not occluded
+                    //might want to use this for a targeting check as well at some point....
+                    else 
+                    {
+                        result = true;
+                        sop.isInteractable = true;
+
+                        #if UNITY_EDITOR
+                        Debug.DrawLine(agentCamera.transform.position, point.position, Color.cyan);
+                        #endif
+                    }
+                }
+            }
+
+            //only check against the visible layer, ignore the invisible layer
+            //so if an object ONLY has colliders on it that are not on layer 8, this raycast will go through them 
+            else 
+            {
+                if (Physics.Raycast(agentCamera.transform.position, point.position - agentCamera.transform.position, out hit, raycastDistance, (1 << 8) | (1 << 10))) 
+                {
+                    if (hit.transform != sop.transform) 
+                    {
+                        //we didn't directly hit the sop we are checking for with this cast, 
+                        //check if it's because we hit something see-through
+                        SimObjPhysics hitSop = hit.transform.GetComponent<SimObjPhysics>();
+                        if (hitSop != null && hitSop.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanSeeThrough)) 
+                        {
+                            //we hit something see through, so now find all objects in the path between
+                            //the sop and the camera
+                            RaycastHit[] hits;
+                            hits = Physics.RaycastAll(agentCamera.transform.position, point.position - agentCamera.transform.position,
+                                raycastDistance, (1 << 8), QueryTriggerInteraction.Ignore);
+
+                            float[] hitDistances = new float[hits.Length];
+                            for (int i = 0; i < hitDistances.Length; i++) 
+                            {
+                                hitDistances[i] = hits[i].distance; //Vector3.Distance(hits[i].transform.position, m_Camera.transform.position);
+                            }
+
+                            Array.Sort(hitDistances, hits);
+
+                            foreach (RaycastHit h in hits) 
+                            {
+
+                                if (h.transform == sop.transform) 
+                                {
+                                    //found the object we are looking for, great!
+                                    result = true;
+                                    break;
+                                } 
+                                
+                                else 
+                                {
+                                    // Didn't find it, continue on only if the hit object was translucent
+                                    SimObjPhysics sopHitOnPath = null;
+                                    sopHitOnPath = h.transform.GetComponentInParent<SimObjPhysics>();
+                                    if (sopHitOnPath == null || !sopHitOnPath.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanSeeThrough)) 
+                                    {
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                    } 
+                    
+                    else 
+                    {
+                        //if this line is drawn, then this visibility point is in camera frame and not occluded
+                        //might want to use this for a targeting check as well at some point....
+                        result = true;
+                        sop.isInteractable = true;
+                    }
+                }
+            }
+
+            return result;
+        }
+
         protected bool CheckIfVisibilityPointInViewport(
             SimObjPhysics sop,
             Transform point,
@@ -2057,106 +2447,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 &&
                 viewPoint.y < ViewPointRangeHigh && viewPoint.y > ViewPointRangeLow) //within y bounds of viewport
             {
-                //now cast a ray out toward the point, if anything occludes this point, that point is not visible
-                RaycastHit hit;
-
-                float distFromPointToCamera = Vector3.Distance(point.position, m_Camera.transform.position);
-
-                //adding slight buffer to this distance to ensure the ray goes all the way to the collider of the object being cast to
-                float raycastDistance = distFromPointToCamera + 0.5f;
-
-                LayerMask mask = (1 << 8) | (1 << 9) | (1 << 10);
-
-                //change mask if its a floor so it ignores the receptacle trigger boxes on the floor
-                if(sop.Type == SimObjType.Floor)
-                mask = (1 << 8) | (1 << 10);
-
-
-                //check raycast against both visible and invisible layers, to check against ReceptacleTriggerBoxes which are normally
-                //ignored by the other raycast
-                if (includeInvisible) 
-                {
-                    if (Physics.Raycast(agentCamera.transform.position, point.position - agentCamera.transform.position, out hit, raycastDistance, mask)) 
-                    {
-                        if (hit.transform != sop.transform) 
-                        {
-                            result = false;
-                        }
-
-                        //if this line is drawn, then this visibility point is in camera frame and not occluded
-                        //might want to use this for a targeting check as well at some point....
-                        else 
-                        {
-                            result = true;
-                            sop.isInteractable = true;
-
-                            #if UNITY_EDITOR
-                            Debug.DrawLine(agentCamera.transform.position, point.position, Color.cyan);
-                            #endif
-                        }
-                    }
-                }
-
-                //only check against the visible layer, ignore the invisible layer
-                //so if an object ONLY has colliders on it that are not on layer 8, this raycast will go through them 
-                else 
-                {
-                    if (Physics.Raycast(agentCamera.transform.position, point.position - agentCamera.transform.position, out hit, raycastDistance, (1 << 8) | (1 << 10))) 
-                    {
-                        if (hit.transform != sop.transform) 
-                        {
-                            //we didn't directly hit the sop we are checking for with this cast, 
-                            //check if it's because we hit something see-through
-                            SimObjPhysics hitSop = hit.transform.GetComponent<SimObjPhysics>();
-                            if (hitSop != null && hitSop.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanSeeThrough)) 
-                            {
-                                //we hit something see through, so now find all objects in the path between
-                                //the sop and the camera
-                                RaycastHit[] hits;
-                                hits = Physics.RaycastAll(agentCamera.transform.position, point.position - agentCamera.transform.position,
-                                    raycastDistance, (1 << 8), QueryTriggerInteraction.Ignore);
-
-                                float[] hitDistances = new float[hits.Length];
-                                for (int i = 0; i < hitDistances.Length; i++) 
-                                {
-                                    hitDistances[i] = hits[i].distance; //Vector3.Distance(hits[i].transform.position, m_Camera.transform.position);
-                                }
-
-                                Array.Sort(hitDistances, hits);
-
-                                foreach (RaycastHit h in hits) 
-                                {
-
-                                    if (h.transform == sop.transform) 
-                                    {
-                                        //found the object we are looking for, great!
-                                        result = true;
-                                        break;
-                                    } 
-                                    
-                                    else 
-                                    {
-                                        // Didn't find it, continue on only if the hit object was translucent
-                                        SimObjPhysics sopHitOnPath = null;
-                                        sopHitOnPath = h.transform.GetComponentInParent<SimObjPhysics>();
-                                        if (sopHitOnPath == null || !sopHitOnPath.DoesThisObjectHaveThisSecondaryProperty(SimObjSecondaryProperty.CanSeeThrough)) 
-                                        {
-                                            break;
-                                        }
-                                    }
-                                }
-                            }
-                        } 
-                        
-                        else 
-                        {
-                            //if this line is drawn, then this visibility point is in camera frame and not occluded
-                            //might want to use this for a targeting check as well at some point....
-                            result = true;
-                            sop.isInteractable = true;
-                        }
-                    }
-                }
+                result = CheckIfVisibilityPointRaycast(sop, point, agentCamera, includeInvisible);
             }
 
             #if UNITY_EDITOR
@@ -2266,72 +2557,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
         // On demand public function for getting what sim objects are visible at that moment 
         public List<SimObjPhysics> GetAllVisibleSimObjPhysics(float maxDistance) {
-            List<SimObjPhysics> currentlyVisibleItems = new List<SimObjPhysics>();
-            CapsuleCollider agentCapsuleCollider = this.GetComponent<CapsuleCollider>();
             var camera = this.GetComponentInChildren<Camera>();
-            Vector3 point0, point1;
-            float radius;
-            
-            agentCapsuleCollider.ToWorldSpaceCapsule(out point0, out point1, out radius);
-            if (point0.y <= point1.y) {
-                point1.y += maxDistance;
-            } else {
-                point0.y += maxDistance;
-            }
-
-            this.updateAllAgentCollidersForVisibilityCheck(false);
-            Collider[] colliders_in_view = Physics.OverlapCapsule(point0, point1, maxDistance, 1 << 8, QueryTriggerInteraction.Collide);
-
-            if (colliders_in_view != null) {
-                HashSet<SimObjPhysics> testedSops = new HashSet<SimObjPhysics>();
-                foreach (Collider item in colliders_in_view) {
-                    SimObjPhysics sop = ancestorSimObjPhysics(item.gameObject);
-
-                    //now we have a reference to our sim object 
-                    if (sop != null && !testedSops.Contains(sop)) {
-                        testedSops.Add(sop);
-                        //check against all visibility points, accumulate count. If at least one point is visible, set object to visible
-                        if (sop.VisibilityPoints == null || sop.VisibilityPoints.Length > 0) {
-                            Transform[] visPoints = sop.VisibilityPoints;
-                            int visPointCount = 0;
-
-                            foreach (Transform point in visPoints) {
-
-                               
-
-                                //if this particular point is in view...
-                                if (CheckIfVisibilityPointInViewport(sop, point, camera, false)) {
-                                    visPointCount++;
-                                   
-                                    #if !UNITY_EDITOR
-                                    // If we're in the unity editor then don't break on finding a visible
-                                    // point as we want to draw lines to each visible point.
-                                    break;
-                                    #endif
-                                }
-                            }
-
-                            //if we see at least one vis point, the object is "visible"
-                            if (visPointCount > 0) {
-                                //  Debug.Log("------ Visible " + sop.Type);
-                                #if UNITY_EDITOR
-                                sop.isVisible = true;
-                                #endif
-                                if (!currentlyVisibleItems.Contains(sop)) {
-                                    currentlyVisibleItems.Add(sop);
-                                }
-                            }
-                        } else {
-                            Debug.Log("Error! Set at least 1 visibility point on SimObjPhysics " + sop + ".");
-                        }
-
-                    }
-                }
-            }
-
-            this.updateAllAgentCollidersForVisibilityCheck(true);
-
-            return currentlyVisibleItems;
+            return new List<SimObjPhysics>(GetAllVisibleSimObjPhysics(camera, maxDistance));
         }
 
         //not sure what this does, maybe delete?
@@ -2491,16 +2718,15 @@ namespace UnityStandardAssets.Characters.FirstPerson
             }
         }
 
-        private SimObjPhysics getSimObjectFromTypeOrId(ServerAction action) {
-            var objectId = action.objectId;
-            if (!String.IsNullOrEmpty(action.objectType) && String.IsNullOrEmpty(action.objectId)) {
-                var ids = objectTypeToObjectIds(action.objectType);
+        private SimObjPhysics getSimObjectFromTypeOrId(string objectType, string objectId) {
+            if (!String.IsNullOrEmpty(objectType) && String.IsNullOrEmpty(objectId)) {
+                var ids = objectTypeToObjectIds(objectType);
                 if (ids.Length == 0) {
-                    errorMessage = "Object type '" + action.objectType + "' was not found in the scene.";
+                    errorMessage = "Object type '" + objectType + "' was not found in the scene.";
                     return null;
                 }
                 else if (ids.Length > 1) {
-                    errorMessage = "Multiple objects of type '" + action.objectType + "' were found in the scene, cannot disambiguate.";
+                    errorMessage = "Multiple objects of type '" + objectType + "' were found in the scene, cannot disambiguate.";
                     return null;
                 }
                 
@@ -2526,30 +2752,35 @@ namespace UnityStandardAssets.Characters.FirstPerson
             actionFinished(true, reachablePositions);
         }
 
-        public void GetShortestPath(ServerAction action) {
-            SimObjPhysics sop = getSimObjectFromTypeOrId(action);
+        private void getShortestPath(string objectType, string objectId,  Vector3 startPosition, Quaternion startRotation) {
+            SimObjPhysics sop = getSimObjectFromTypeOrId(objectType, objectId);
             if (sop == null) {
                 actionFinished(false);
                 return;
             }
-            var startPosition = this.transform.position;
-            var startRotation = this.transform.rotation;
-            if (!action.useAgentTransform) {
-                startPosition = action.position;
-                startRotation = Quaternion.Euler(action.rotation);
-            }
-
             var path = GetSimObjectNavMeshTarget(sop, startPosition, startRotation);
             if (path.status == UnityEngine.AI.NavMeshPathStatus.PathComplete) {
                 //VisualizePath(startPosition, path);
-                actionFinished(true, path);
+                actionFinishedEmit(true, path);
                 return;
             }
             else {
                 errorMessage = "Path to target could not be found";
-                actionFinished(false);
+                actionFinishedEmit(false);
                 return;
             }
+        }
+
+        public void GetShortestPath(Vector3 position, Vector3 rotation, string objectType = null, string objectId = null) {
+            getShortestPath(objectType, objectId, position, Quaternion.Euler(rotation));
+        }
+
+        public void GetShortestPath(Vector3 position, string objectType = null, string objectId = null) {
+            getShortestPath(objectType, objectId, position, Quaternion.Euler(Vector3.zero));
+        }
+
+        public void GetShortestPath(string objectType = null, string objectId = null) {
+            getShortestPath(objectType, objectId, this.transform.position, this.transform.rotation);
         }
 
         private bool GetPathFromReachablePositions(
@@ -2715,6 +2946,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             Quaternion originalRot = transform.rotation;
 
             HashSet<Vector3> goodPoints = new HashSet<Vector3>();
+            HashSet<Vector3> seenPoints = new HashSet<Vector3>();
             int layerMask = 1 << 8;
             int stepsTaken = 0;
             pos = Vector3.negativeInfinity;
@@ -2739,6 +2971,12 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     
                     HashSet<Collider> objectsAlreadyColliding = new HashSet<Collider>(objectsCollidingWithAgent());
                     foreach (Vector3 d in directions) {
+                        Vector3 newPosition = p + d * gridSize * gridMultiplier;
+                        if (seenPoints.Contains(newPosition)) {
+                            continue;
+                        }
+                        seenPoints.Add(newPosition);
+
                         RaycastHit[] hits = capsuleCastAllForAgent(
                             cc,
                             sw,
@@ -2758,7 +2996,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
                                 break;
                             }
                         }
-                        Vector3 newPosition = p + d * gridSize * gridMultiplier;
                         bool inBounds = agentManager.SceneBounds.Contains(newPosition);
                         if (errorMessage == "" && !inBounds) {
                             errorMessage = "In " +
@@ -2838,19 +3075,15 @@ namespace UnityStandardAssets.Characters.FirstPerson
             return path;
         }
 
-        public void GetShortestPathToPoint(ServerAction action) {
-            var startPosition = this.transform.position;
-            if (!action.useAgentTransform) {
-                startPosition = action.position;
-            }
-
-            var targetPosition = new Vector3(action.x, action.y, action.z);
+        public void GetShortestPathToPoint(Vector3 position, float x, float y, float z) {
+            Vector3 startPosition = position;
+            var targetPosition = new Vector3(x, y, z);
 
             var path = new UnityEngine.AI.NavMeshPath();
             this.GetComponent<UnityEngine.AI.NavMeshAgent>().enabled = true;
             bool pathSuccess = UnityEngine.AI.NavMesh.CalculatePath(startPosition, targetPosition,  UnityEngine.AI.NavMesh.AllAreas, path);
             if (path.status == UnityEngine.AI.NavMeshPathStatus.PathComplete) {
-                VisualizePath(startPosition, path);
+                // VisualizePath(startPosition, path);
                 this.GetComponent<UnityEngine.AI.NavMeshAgent>().enabled = false;
                 actionFinished(true, path);
                 return;
@@ -2862,9 +3095,15 @@ namespace UnityStandardAssets.Characters.FirstPerson
                 return;
             }
         }
+
+        public void GetShortestPathToPoint(float x, float y, float z) {
+            var startPosition = this.transform.position;
+            GetShortestPathToPoint(startPosition, x, y, z);
+        }
+
         public void VisualizeShortestPaths(ServerAction action) {
             
-            SimObjPhysics sop = getSimObjectFromTypeOrId(action);
+            SimObjPhysics sop = getSimObjectFromTypeOrId(action.objectType, action.objectId);
             if (sop == null) {
                 actionFinished(false);
                 return;
@@ -2949,6 +3188,10 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
         public void TestActionDispatchNoopServerAction(ServerAction action) {
             actionFinished(true, "serveraction");
+        }
+
+        public void TestFastEmit(string rvalue) {
+            actionFinishedEmit(true, rvalue);
         }
 
         public void TestActionDispatchNoopAllDefault(float param12, float param10=0.0f, float param11=1.0f) {
