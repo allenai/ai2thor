@@ -89,20 +89,23 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
         public Vector3 p1;
         public float radius;
     }
-    List <GizmoDrawCapsule> debugCapsules = new List<GizmoDrawCapsule>();
 
+    List <GizmoDrawCapsule> debugCapsules = new List<GizmoDrawCapsule>();
     #endif
 
     // Update is called once per frame
     void Update()
     {
-        if(Input.GetKeyDown(KeyCode.Space))
-        {
-            #if UNITY_EDITOR
-            debugCapsules.Clear();
-            #endif
-            IsArmColliding();
-        }
+        // if(Input.GetKeyDown(KeyCode.Space))
+        // {
+        //     #if UNITY_EDITOR
+        //     debugCapsules.Clear();
+        //     #endif
+
+        //     bool result;
+        //     result = IsArmColliding();
+        //     print("Is the arm actively colliding RIGHT NOW?: " + result);
+        // }
     }
 
     private void moveTargetSimulatePhisics(
@@ -264,6 +267,10 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
 
     public bool IsArmColliding()
     {
+        #if UNITY_EDITOR
+        debugCapsules.Clear();
+        #endif
+
         bool result = false;
 
         //create overlap box/capsule for each collider and check the result I guess
@@ -296,10 +303,11 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
                 //how to get transform.localRight?
             }
 
+            #if UNITY_EDITOR
             //debug draw
             Debug.DrawLine(center, center + dir * 2.0f, Color.red, 10.0f);
+            #endif
 
-            //point 0
             //center in world space + direction with magnitude (1/2 height - radius)
             var point0 = center + dir * (c.height/2 - radius);
 
@@ -323,13 +331,18 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
 
         }
 
+        //also check if the couple of box colliders are colliding
         foreach (BoxCollider b in ArmBoxColliders)
         {
-
+            if(Physics.OverlapBox(b.transform.TransformPoint(b.center), b.size/2.0f, b.transform.rotation, 1 << 8, QueryTriggerInteraction.Ignore).Length > 0)
+            {
+                result = true;
+            }
         }
 
         return result;
     }
+
     public void OnTriggerExit(Collider col)
     {
         activeColliders.Remove(col);
@@ -846,7 +859,6 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
                 Gizmos.DrawWireSphere(thing.p1, thing.radius);
             }
         }
-
     }
     #endif
 }

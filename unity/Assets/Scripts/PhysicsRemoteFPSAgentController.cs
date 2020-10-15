@@ -9101,6 +9101,13 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         public void MoveMidLevelArm(ServerAction action) {
             var arm = this.GetComponentInChildren<IK_Robot_Arm_Controller>();
             if (arm != null) {
+
+                if(arm.IsArmColliding())
+                {
+                    actionFinished(false, "Mid Level Arm is actively clipping with some geometry in the environment. Manipulation of Arm cannot be done while stuck.");
+                    return;
+                }
+                
                 arm.moveArmTarget(
                     this,
                     action.position, 
@@ -9132,6 +9139,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             var arm = this.GetComponentInChildren<IK_Robot_Arm_Controller>();
             if(arm != null)
             {
+                if(arm.IsArmColliding())
+                {
+                    actionFinished(false, "Mid Level Arm is actively clipping with some geometry in the environment. Manipulation of Arm cannot be done while stuck.");
+                    return;
+                }
+
                 //arm.SetStopMotionOnContact(action.stopArmMovementOnContact);
                 arm.moveArmHeight(
                     this, 
@@ -9151,6 +9164,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
         {
             var arm = this.GetComponentInChildren<IK_Robot_Arm_Controller>();
             if (arm != null) {
+
+                if(arm.IsArmColliding())
+                {
+                    actionFinished(false, "Mid Level Arm is actively clipping with some geometry in the environment. Manipulation of Arm cannot be done while stuck.");
+                    return;
+                }
 
                 var target = new Quaternion();
                 //rotate around axis aliged x, y, z with magnitude based on vector3
@@ -9177,7 +9196,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             var arm = this.GetComponentInChildren<IK_Robot_Arm_Controller>();
             if (arm != null) 
             {
-                
+                if(arm.IsArmColliding())
+                {
+                    actionFinished(false, "Mid Level Arm is actively clipping with some geometry in the environment. Manipulation of Arm cannot be done while stuck.");
+                    return;
+                }
+
                 actionFinished(arm.PickupObject());
                 return;
             }
@@ -9193,6 +9217,12 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             var arm = this.GetComponentInChildren<IK_Robot_Arm_Controller>();
             if (arm != null) 
             {
+                if(arm.IsArmColliding())
+                {
+                    actionFinished(false, "Mid Level Arm is actively clipping with some geometry in the environment. Manipulation of Arm cannot be done while stuck.");
+                    return;
+                }
+
                 arm.DropObject();
                 //todo- only return after object(s) droped have finished moving
                 //currently this will return the frame the object is released
