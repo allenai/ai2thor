@@ -81,21 +81,29 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
     //     StopMotionOnContact = b;
     // }
 
+    //debug for gizmo draw
+    #if UNITY_EDITOR
+    public class GizmoDrawCapsule
+    {
+        public Vector3 p0;
+        public Vector3 p1;
+        public float radius;
+    }
+    List <GizmoDrawCapsule> debugCapsules = new List<GizmoDrawCapsule>();
+
+    #endif
+
     // Update is called once per frame
     void Update()
     {
-        // if(Input.GetKeyDown(KeyCode.Space))
-        // {
-        //     IsArmColliding();
-        // }
+        if(Input.GetKeyDown(KeyCode.Space))
+        {
+            #if UNITY_EDITOR
+            debugCapsules.Clear();
+            #endif
+            IsArmColliding();
+        }
     }
-
-    //debug for gizmo draw
-    #if UNITY_EDITOR
-    Vector3 gizmo_p1;
-    Vector3 gizmo_p2;
-    float gizmo_radius;
-    #endif
 
     private void moveTargetSimulatePhisics(
         PhysicsRemoteFPSAgentController controller,
@@ -300,11 +308,11 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
             var point1 = center - dir * (c.height/2 - radius);
 
             #if UNITY_EDITOR
-            // print("p0 " + point0);
-            // print("p1 " + point1);
-            gizmo_p1 = point0;
-            gizmo_p2 = point1;
-            gizmo_radius = radius;
+            GizmoDrawCapsule gdc = new GizmoDrawCapsule();
+            gdc.p0 = point0;
+            gdc.p1 = point1;
+            gdc.radius = radius;
+            debugCapsules.Add(gdc);
             #endif
             
             //ok now finally let's make some overlap capsuuuules
@@ -830,10 +838,13 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
     #if UNITY_EDITOR
     private void OnDrawGizmos()
     {
-        if(gizmo_radius > 0.0f)
+        if(debugCapsules.Count > 0)
         {
-            Gizmos.DrawWireSphere (gizmo_p1, gizmo_radius);
-            Gizmos.DrawWireSphere( gizmo_p2, gizmo_radius);
+            foreach (GizmoDrawCapsule thing in debugCapsules)
+            {
+                Gizmos.DrawWireSphere(thing.p0, thing.radius);
+                Gizmos.DrawWireSphere(thing.p1, thing.radius);
+            }
         }
 
     }
