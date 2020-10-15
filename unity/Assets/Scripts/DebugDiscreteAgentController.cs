@@ -24,6 +24,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
         public float FlyMagnitude = 1.0f;
         public float WalkMagnitude = 0.2f;
         public bool consistentColors = false;
+        public string newSceneFile = "";
 
         [SerializeField] private GameObject InputMode_Text = null;
         // Start is called before the first frame update
@@ -248,6 +249,14 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
                         if (Input.GetKeyDown(KeyCode.Backspace)) {
                             action.action = "Initialize";
+                            if (!this.newSceneFile.Equals("")) {
+                                action.sceneConfig = MCSMain.LoadCurrentSceneFromFile(this.newSceneFile);
+                            }
+                            PhysicsController.ProcessControlCommand(action);
+                        }
+
+                        if (Input.GetKeyDown(KeyCode.H)) {
+                            action.action = "EndHabituation";
                             PhysicsController.ProcessControlCommand(action);
                         }
 

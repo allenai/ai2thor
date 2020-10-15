@@ -7,13 +7,40 @@ using UnityStandardAssets.Characters.FirstPerson;
 using System.Text;
 
 public class MCSMain : MonoBehaviour {
+    private static string PATH_PREFIX = "MCS/";
     private static int LATEST_SCENE_VERSION = 2;
 
     private static float CUBE_INTERNAL_GRID = 0.25f;
-    private static float FLOOR_X_SCALE_OBSERVATION = 13f;
-    private static float FLOOR_X_SCALE_INTERACTION = 11f;
-    private static float FLOOR_Y_SCALE = 0.5f;
-    private static float FLOOR_Z_SCALE = 11f;
+    private static float FLOOR_SCALE_X = 11f;
+    private static float FLOOR_SCALE_Y = 0.5f;
+    private static float FLOOR_SCALE_Z = 11f;
+    private static float INTUITIVE_PHYSICS_FLOOR_SCALE_X = 13f;
+    private static float INTUITIVE_PHYSICS_WALL_FRONT_POSITION_Y = 2.25f;
+    private static float INTUITIVE_PHYSICS_WALL_FRONT_SCALE_X = 13.0f;
+    private static float INTUITIVE_PHYSICS_WALL_FRONT_SCALE_Y = 4.5f;
+    private static float INTUITIVE_PHYSICS_WALL_LEFT_POSITION_X = -7.0f;
+    private static float INTUITIVE_PHYSICS_WALL_RIGHT_POSITION_X = 7.0f;
+    private static float ISOMETRIC_FLOOR_SCALE_X = 20f;
+    private static float ISOMETRIC_FLOOR_SCALE_Z = 20f;
+    private static float ISOMETRIC_PERFORMER_START_POSITION_X = 4f;
+    private static float ISOMETRIC_PERFORMER_START_POSITION_Y = 3f;
+    private static float ISOMETRIC_PERFORMER_START_POSITION_Z = -4f;
+    private static float ISOMETRIC_PERFORMER_START_ROTATION_X = 35.264f;
+    private static float ISOMETRIC_PERFORMER_START_ROTATION_Y = -45f;
+    private static float ISOMETRIC_WALL_BACK_FRONT_SCALE_X = 5f;
+    private static float ISOMETRIC_WALL_BACK_FRONT_SCALE_Z = 0.5f;
+    private static float ISOMETRIC_WALL_BACK_POSITION_X = 0f;
+    private static float ISOMETRIC_WALL_BACK_POSITION_Z = -2.25f;
+    private static float ISOMETRIC_WALL_FRONT_POSITION_X = 0f;
+    private static float ISOMETRIC_WALL_FRONT_POSITION_Z = 2.25f;
+    private static float ISOMETRIC_WALL_LEFT_POSITION_X = -2.25f;
+    private static float ISOMETRIC_WALL_LEFT_POSITION_Z = 0f;
+    private static float ISOMETRIC_WALL_LEFT_RIGHT_SCALE_X = 0.5f;
+    private static float ISOMETRIC_WALL_LEFT_RIGHT_SCALE_Z = 5f;
+    private static float ISOMETRIC_WALL_RIGHT_POSITION_X = 2.25f;
+    private static float ISOMETRIC_WALL_RIGHT_POSITION_Z = 0f;
+    private static float ISOMETRIC_WALL_POSITION_Y = 0.0625f;
+    private static float ISOMETRIC_WALL_SCALE_Y = 0.125f;
     private static float LIGHT_RANGE = 20f;
     private static float LIGHT_RANGE_SCREENSHOT = 10f;
     private static float LIGHT_Y_POSITION = 2.95f;
@@ -27,18 +54,18 @@ public class MCSMain : MonoBehaviour {
     private static float PHYSICS_BOUNCINESS_DEFAULT = 0;
     private static float RIGIDBODY_DRAG_DEFAULT = 0;
     private static float RIGIDBODY_ANGULAR_DRAG_DEFAULT = 0.5f;
-    private static float WALL_SIDE_X_POSITION_OBSERVATION = 7.0f;
-    private static float WALL_SIDE_X_POSITION_INTERACTION = 5.25f;
-    private static float WALL_Y_POSITION = 1.5f;
-    private static float WALL_SIDE_Z_POSITION = 0;
-    private static float WALL_FRONT_X_POSITION = 0;
-    private static float WALL_FRONT_Y_POSITION_OBSERVATION = 2.25f;
-    private static float WALL_FRONT_Z_POSITION = 5.25f;
-    private static float WALL_FRONT_X_SCALE_OBSERVATION = 13.0f;
-    private static float WALL_FRONT_X_SCALE_INTERACTION = 11.0f;
-    private static float WALL_FRONT_Y_SCALE_OBSERVATION = 4.5f;
-    private static float WALL_FRONT_Y_SCALE_INTERACTION = 3.0f;
-    private static float WALL_FRONT_Z_SCALE = 0.5f;
+    private static float WALL_BACK_FRONT_POSITION_X = 0;
+    private static float WALL_BACK_FRONT_SCALE_X = 11.0f;
+    private static float WALL_BACK_FRONT_SCALE_Z = 0.5f;
+    private static float WALL_BACK_POSITION_Z = -5.25f;
+    private static float WALL_FRONT_POSITION_Z = 5.25f;
+    private static float WALL_LEFT_POSITION_X = -5.25f;
+    private static float WALL_LEFT_RIGHT_POSITION_Z = 0;
+    private static float WALL_LEFT_RIGHT_SCALE_X = 0.5f;
+    private static float WALL_LEFT_RIGHT_SCALE_Z = 11.0f;
+    private static float WALL_POSITION_Y = 1.5f;
+    private static float WALL_RIGHT_POSITION_X = 5.25f;
+    private static float WALL_SCALE_Y = 3.0f;
 
     public string defaultSceneFile = "";
     public bool enableVerboseLog = false;
@@ -67,6 +94,13 @@ public class MCSMain : MonoBehaviour {
     private GameObject wallRight;
     private GameObject wallFront;
     private GameObject wallBack;
+
+    public static MCSConfigScene LoadCurrentSceneFromFile(String filePath) {
+        TextAsset currentSceneFile = Resources.Load<TextAsset>(MCSMain.PATH_PREFIX + "Scenes/" + filePath);
+        Debug.Log("MCS: Config file Assets/Resources/MCS/Scenes/" + filePath + ".json" + (currentSceneFile == null ?
+            " is null!" : (":\n" + currentSceneFile.text)));
+        return JsonUtility.FromJson<MCSConfigScene>(currentSceneFile.text);
+    }
 
     // Unity's Start method is called before the first frame update
     void Start() {
@@ -98,7 +132,7 @@ public class MCSMain : MonoBehaviour {
 
         // Load the default MCS scene set in the Unity Editor.
         if (!this.defaultSceneFile.Equals("")) {
-            this.currentScene = LoadCurrentSceneFromFile(this.defaultSceneFile);
+            this.currentScene = MCSMain.LoadCurrentSceneFromFile(this.defaultSceneFile);
             this.currentScene.name = ((this.currentScene.name == null || this.currentScene.name.Equals("")) ?
                 this.defaultSceneFile : this.currentScene.name);
             this.currentScene.version = (this.currentScene.version > 0 ? this.currentScene.version :
@@ -145,7 +179,7 @@ public class MCSMain : MonoBehaviour {
         }
     }
 
-    // Custom Methods
+    // Custom Public Methods
 
     public void ChangeCurrentScene(MCSConfigScene scene) {
         if (scene == null && this.currentScene == null) {
@@ -171,6 +205,41 @@ public class MCSMain : MonoBehaviour {
             this.currentScene.objects.ForEach(InitializeGameObject);
         }
 
+        this.AdjustRoomStructuralObjects();
+
+        if (this.currentScene.goal != null && this.currentScene.goal.description != null) {
+            Debug.Log("MCS: Goal = " + this.currentScene.goal.description);
+        }
+
+        GameObject controller = GameObject.Find("FPSController");
+        if (this.currentScene.performerStart != null && this.currentScene.performerStart.position != null) {
+            // Always keep the Y position on the floor.
+            controller.transform.position = new Vector3(this.currentScene.performerStart.position.x,
+                this.currentScene.performerStart.position.y, this.currentScene.performerStart.position.z);
+        }
+        else {
+            controller.transform.position = new Vector3(0, this.currentScene.performerStart.position.y, 0);
+        }
+
+        if (this.currentScene.performerStart != null && this.currentScene.performerStart.rotation != null) {
+            // Only permit rotating left or right (along the Y axis).
+            controller.transform.rotation = Quaternion.Euler(0, this.currentScene.performerStart.rotation.y, 0);
+            controller.GetComponent<MCSController>().m_Camera.transform.localEulerAngles = new Vector3(
+                this.currentScene.performerStart.rotation.x, 0, 0);
+        }
+        else {
+            controller.transform.rotation = Quaternion.Euler(0, 0, 0);
+            controller.GetComponent<MCSController>().m_Camera.transform.localEulerAngles = new Vector3(
+                0, 0, 0);
+        }
+
+        this.lastStep = -1;
+        this.physicsSceneManager.SetupScene();
+    }
+
+    // Custom Private Methods
+
+    private void AdjustRoomStructuralObjects() {
         String ceilingMaterial = (this.currentScene.ceilingMaterial != null &&
             !this.currentScene.ceilingMaterial.Equals("")) ? this.currentScene.ceilingMaterial :
             this.defaultCeilingMaterial;
@@ -181,26 +250,43 @@ public class MCSMain : MonoBehaviour {
             !this.currentScene.wallMaterial.Equals("")) ? this.currentScene.wallMaterial :
             this.defaultWallsMaterial;
 
-        // For all intuitive physics scenes: set the controller substeps to 1; expand all the walls of the room; remove
-        // the ceiling; and set the performer to start at a specific position and rotation.
-        if (this.currentScene.intuitivePhysics || this.currentScene.observation) {
+        // Remove the ceiling from all intuitive physics and isometric scenes.
+        this.ceiling.SetActive(!(this.currentScene.intuitivePhysics || this.currentScene.observation ||
+                this.currentScene.isometric));
+
+        // Set the controller's action substeps to 1 in all intuitive physics and isometric scenes.
+        if (this.currentScene.intuitivePhysics || this.currentScene.observation || this.currentScene.isometric) {
             this.agentController.substeps = 1;
+        }
 
-            this.ceiling.SetActive(false);
+        // Expand the walls of the room in all intuitive physics scenes and set a specific performer start.
+        if (this.currentScene.intuitivePhysics || this.currentScene.observation) {
+            this.wallLeft.transform.position = new Vector3(MCSMain.INTUITIVE_PHYSICS_WALL_LEFT_POSITION_X,
+                MCSMain.WALL_POSITION_Y, MCSMain.WALL_LEFT_RIGHT_POSITION_Z);
+            this.wallLeft.transform.localScale = new Vector3(MCSMain.WALL_LEFT_RIGHT_SCALE_X,
+                MCSMain.WALL_SCALE_Y, MCSMain.WALL_LEFT_RIGHT_SCALE_Z);
 
-            this.wallLeft.transform.position = new Vector3(-1 * MCSMain.WALL_SIDE_X_POSITION_OBSERVATION,
-                MCSMain.WALL_Y_POSITION, MCSMain.WALL_SIDE_Z_POSITION);
-            this.wallRight.transform.position = new Vector3(MCSMain.WALL_SIDE_X_POSITION_OBSERVATION,
-                MCSMain.WALL_Y_POSITION, MCSMain.WALL_SIDE_Z_POSITION);
-            this.wallFront.transform.position = new Vector3(MCSMain.WALL_FRONT_X_POSITION,
-                MCSMain.WALL_FRONT_Y_POSITION_OBSERVATION, MCSMain.WALL_FRONT_Z_POSITION);
-            this.wallFront.transform.localScale = new Vector3(MCSMain.WALL_FRONT_X_SCALE_OBSERVATION,
-                MCSMain.WALL_FRONT_Y_SCALE_OBSERVATION, MCSMain.WALL_FRONT_Z_SCALE);
-            this.floor.transform.localScale = new Vector3(MCSMain.FLOOR_X_SCALE_OBSERVATION,
-                MCSMain.FLOOR_Y_SCALE, MCSMain.FLOOR_Z_SCALE);
+            this.wallRight.transform.position = new Vector3(MCSMain.INTUITIVE_PHYSICS_WALL_RIGHT_POSITION_X,
+                MCSMain.WALL_POSITION_Y, MCSMain.WALL_LEFT_RIGHT_POSITION_Z);
+            this.wallRight.transform.localScale = new Vector3(MCSMain.WALL_LEFT_RIGHT_SCALE_X,
+                MCSMain.WALL_SCALE_Y, MCSMain.WALL_LEFT_RIGHT_SCALE_Z);
+
+            this.wallFront.transform.position = new Vector3(MCSMain.WALL_BACK_FRONT_POSITION_X,
+                MCSMain.INTUITIVE_PHYSICS_WALL_FRONT_POSITION_Y, MCSMain.WALL_FRONT_POSITION_Z);
+            this.wallFront.transform.localScale = new Vector3(MCSMain.INTUITIVE_PHYSICS_WALL_FRONT_SCALE_X,
+                MCSMain.INTUITIVE_PHYSICS_WALL_FRONT_SCALE_Y, MCSMain.WALL_BACK_FRONT_SCALE_Z);
+
+            this.wallBack.transform.position = new Vector3(MCSMain.WALL_BACK_FRONT_POSITION_X,
+                MCSMain.WALL_POSITION_Y, MCSMain.WALL_BACK_POSITION_Z);
+            this.wallBack.transform.localScale = new Vector3(MCSMain.WALL_BACK_FRONT_SCALE_X,
+                MCSMain.WALL_SCALE_Y, MCSMain.WALL_BACK_FRONT_SCALE_Z);
+
+            this.floor.transform.localScale = new Vector3(MCSMain.INTUITIVE_PHYSICS_FLOOR_SCALE_X,
+                MCSMain.FLOOR_SCALE_Y, MCSMain.FLOOR_SCALE_Z);
 
             this.currentScene.performerStart = new MCSConfigTransform();
             this.currentScene.performerStart.position = new MCSConfigVector();
+            this.currentScene.performerStart.position.y = MCSController.STANDING_POSITION_Y;
             this.currentScene.performerStart.position.z = -4.5f;
             this.currentScene.performerStart.rotation = new MCSConfigVector();
 
@@ -214,21 +300,72 @@ public class MCSMain : MonoBehaviour {
                 this.currentScene.floorProperties.angularDrag = MCSMain.RIGIDBODY_ANGULAR_DRAG_DEFAULT;
             }
         }
+        else if (this.currentScene.isometric) {
+            this.currentScene.performerStart = new MCSConfigTransform();
+            this.currentScene.performerStart.position = new MCSConfigVector();
+            this.currentScene.performerStart.position.x = MCSMain.ISOMETRIC_PERFORMER_START_POSITION_X;
+            this.currentScene.performerStart.position.y = MCSMain.ISOMETRIC_PERFORMER_START_POSITION_Y;
+            this.currentScene.performerStart.position.z = MCSMain.ISOMETRIC_PERFORMER_START_POSITION_Z;
+            this.currentScene.performerStart.rotation = new MCSConfigVector();
+            this.currentScene.performerStart.rotation.x = MCSMain.ISOMETRIC_PERFORMER_START_ROTATION_X;
+            this.currentScene.performerStart.rotation.y = MCSMain.ISOMETRIC_PERFORMER_START_ROTATION_Y;
+
+            this.wallLeft.transform.position = new Vector3(MCSMain.ISOMETRIC_WALL_LEFT_POSITION_X,
+                MCSMain.ISOMETRIC_WALL_POSITION_Y, MCSMain.ISOMETRIC_WALL_LEFT_POSITION_Z);
+            this.wallLeft.transform.localScale = new Vector3(MCSMain.ISOMETRIC_WALL_LEFT_RIGHT_SCALE_X,
+                MCSMain.ISOMETRIC_WALL_SCALE_Y, MCSMain.ISOMETRIC_WALL_LEFT_RIGHT_SCALE_Z);
+
+            this.wallRight.transform.position = new Vector3(MCSMain.ISOMETRIC_WALL_RIGHT_POSITION_X,
+                MCSMain.ISOMETRIC_WALL_POSITION_Y, MCSMain.ISOMETRIC_WALL_RIGHT_POSITION_Z);
+            this.wallRight.transform.localScale = new Vector3(MCSMain.ISOMETRIC_WALL_LEFT_RIGHT_SCALE_X,
+                MCSMain.ISOMETRIC_WALL_SCALE_Y, MCSMain.ISOMETRIC_WALL_LEFT_RIGHT_SCALE_Z);
+
+            this.wallFront.transform.position = new Vector3(MCSMain.ISOMETRIC_WALL_FRONT_POSITION_X,
+                MCSMain.ISOMETRIC_WALL_POSITION_Y, MCSMain.ISOMETRIC_WALL_FRONT_POSITION_Z);
+            this.wallFront.transform.localScale = new Vector3(MCSMain.ISOMETRIC_WALL_BACK_FRONT_SCALE_X,
+                MCSMain.ISOMETRIC_WALL_SCALE_Y, MCSMain.ISOMETRIC_WALL_BACK_FRONT_SCALE_Z);
+
+            this.wallBack.transform.position = new Vector3(MCSMain.ISOMETRIC_WALL_BACK_POSITION_X,
+                MCSMain.ISOMETRIC_WALL_POSITION_Y, MCSMain.ISOMETRIC_WALL_BACK_POSITION_Z);
+            this.wallBack.transform.localScale = new Vector3(MCSMain.ISOMETRIC_WALL_BACK_FRONT_SCALE_X,
+                MCSMain.ISOMETRIC_WALL_SCALE_Y, MCSMain.ISOMETRIC_WALL_BACK_FRONT_SCALE_Z);
+
+            this.floor.transform.localScale = new Vector3(MCSMain.ISOMETRIC_FLOOR_SCALE_X,
+                MCSMain.FLOOR_SCALE_Y, MCSMain.ISOMETRIC_FLOOR_SCALE_Z);
+        }
         else {
             this.agentController.substeps = MCSController.PHYSICS_SIMULATION_LOOPS;
 
-            this.ceiling.SetActive(true);
+            this.wallLeft.transform.position = new Vector3(MCSMain.WALL_LEFT_POSITION_X,
+                MCSMain.WALL_POSITION_Y, MCSMain.WALL_LEFT_RIGHT_POSITION_Z);
+            this.wallLeft.transform.localScale = new Vector3(MCSMain.WALL_LEFT_RIGHT_SCALE_X,
+                MCSMain.WALL_SCALE_Y, MCSMain.WALL_LEFT_RIGHT_SCALE_Z);
 
-            this.wallLeft.transform.position = new Vector3(-1 * MCSMain.WALL_SIDE_X_POSITION_INTERACTION,
-                MCSMain.WALL_Y_POSITION, MCSMain.WALL_SIDE_Z_POSITION);
-            this.wallRight.transform.position = new Vector3(MCSMain.WALL_SIDE_X_POSITION_INTERACTION,
-                MCSMain.WALL_Y_POSITION, MCSMain.WALL_SIDE_Z_POSITION);
-            this.wallFront.transform.position = new Vector3(MCSMain.WALL_FRONT_X_POSITION,
-                MCSMain.WALL_Y_POSITION, MCSMain.WALL_FRONT_Z_POSITION);
-            this.wallFront.transform.localScale = new Vector3(MCSMain.WALL_FRONT_X_SCALE_INTERACTION,
-                MCSMain.WALL_FRONT_Y_SCALE_INTERACTION, MCSMain.WALL_FRONT_Z_SCALE);
-            this.floor.transform.localScale = new Vector3(MCSMain.FLOOR_X_SCALE_INTERACTION,
-                MCSMain.FLOOR_Y_SCALE, MCSMain.FLOOR_Z_SCALE);
+            this.wallRight.transform.position = new Vector3(MCSMain.WALL_RIGHT_POSITION_X,
+                MCSMain.WALL_POSITION_Y, MCSMain.WALL_LEFT_RIGHT_POSITION_Z);
+            this.wallRight.transform.localScale = new Vector3(MCSMain.WALL_LEFT_RIGHT_SCALE_X,
+                MCSMain.WALL_SCALE_Y, MCSMain.WALL_LEFT_RIGHT_SCALE_Z);
+
+            this.wallFront.transform.position = new Vector3(MCSMain.WALL_BACK_FRONT_POSITION_X,
+                MCSMain.WALL_POSITION_Y, MCSMain.WALL_FRONT_POSITION_Z);
+            this.wallFront.transform.localScale = new Vector3(MCSMain.WALL_BACK_FRONT_SCALE_X,
+                MCSMain.WALL_SCALE_Y, MCSMain.WALL_BACK_FRONT_SCALE_Z);
+
+            this.wallBack.transform.position = new Vector3(MCSMain.WALL_BACK_FRONT_POSITION_X,
+                MCSMain.WALL_POSITION_Y, MCSMain.WALL_BACK_POSITION_Z);
+            this.wallBack.transform.localScale = new Vector3(MCSMain.WALL_BACK_FRONT_SCALE_X,
+                MCSMain.WALL_SCALE_Y, MCSMain.WALL_BACK_FRONT_SCALE_Z);
+
+            this.floor.transform.localScale = new Vector3(MCSMain.FLOOR_SCALE_X,
+                MCSMain.FLOOR_SCALE_Y, MCSMain.FLOOR_SCALE_Z);
+
+            if (this.currentScene.performerStart == null) {
+                this.currentScene.performerStart = new MCSConfigTransform();
+            }
+            if (this.currentScene.performerStart.position == null) {
+                this.currentScene.performerStart.position = new MCSConfigVector();
+            }
+            this.currentScene.performerStart.position.y = MCSController.STANDING_POSITION_Y;
         }
 
         SimObjPhysics ceilingSimObjPhysics = this.ceiling.GetComponent<SimObjPhysics>();
@@ -250,8 +387,8 @@ public class MCSMain : MonoBehaviour {
         }
 
         else {
-            // The intuitive physics scenes don't have ceilings.
-            if (!(this.currentScene.intuitivePhysics || this.currentScene.observation)) {
+            // Intuitive physics and isometric scenes don't have ceilings.
+            if (!(this.currentScene.intuitivePhysics || this.currentScene.observation || this.currentScene.isometric)) {
                 if (ceilingSimObjPhysics.VisibilityPoints.Length == 0) {
                     ceilingSimObjPhysics.VisibilityPoints = AssignVisibilityPoints(this.ceiling,
                         this.GenerateCubeInternalVisibilityPoints(this.ceiling, null), null);
@@ -464,7 +601,7 @@ public class MCSMain : MonoBehaviour {
         foreach (KeyValuePair<string, Dictionary<string, string[]>> materialType in MCSConfig.MATERIAL_REGISTRY) {
             if (materialType.Value.ContainsKey(filename)) {
                 if (restrictions.Length == 0 || Array.IndexOf(restrictions, materialType.Key) >= 0) {
-                    Material material = Resources.Load<Material>("MCS/" + filename);
+                    Material material = Resources.Load<Material>(MCSMain.PATH_PREFIX + filename);
                     LogVerbose("LOAD OF MATERIAL FILE Assets/Resources/MCS/" + filename +
                         (material == null ? " IS NULL" : " IS DONE"));
                     return material;
@@ -938,7 +1075,7 @@ public class MCSMain : MonoBehaviour {
             this.currentScene.version);
         string resourceFile = legacy != null ? legacy.resourceFile : objectDefinition.resourceFile;
 
-        GameObject gameObject = Instantiate(Resources.Load("MCS/" + resourceFile, typeof(GameObject))) as GameObject;
+        GameObject gameObject = Instantiate(Resources.Load(MCSMain.PATH_PREFIX + resourceFile, typeof(GameObject))) as GameObject;
 
         LogVerbose("LOAD CUSTOM GAME OBJECT " + objectDefinition.id + " FROM FILE Assets/Resources/MCS/" +
             resourceFile + (gameObject == null ? " IS NULL" : " IS DONE"));
@@ -956,7 +1093,7 @@ public class MCSMain : MonoBehaviour {
             }
             objectDefinition.animations.ForEach((animationDefinition) => {
                 if (animationDefinition.animationFile != null && !animationDefinition.animationFile.Equals("")) {
-                    AnimationClip clip = Resources.Load<AnimationClip>("MCS/" +
+                    AnimationClip clip = Resources.Load<AnimationClip>(MCSMain.PATH_PREFIX +
                         animationDefinition.animationFile);
                     LogVerbose("LOAD OF ANIMATION CLIP FILE Assets/Resources/MCS/" +
                         animationDefinition.animationFile + (clip == null ? " IS NULL" : " IS DONE"));
@@ -978,7 +1115,7 @@ public class MCSMain : MonoBehaviour {
                     LogVerbose("ASSIGN NEW ANIMATOR CONTROLLER TO GAME OBJECT " + gameObject.name);
                 }
                 RuntimeAnimatorController animatorController = Resources.Load<RuntimeAnimatorController>(
-                    "MCS/" + animatorDefinition.animatorFile);
+                    MCSMain.PATH_PREFIX + animatorDefinition.animatorFile);
                 LogVerbose("LOAD OF ANIMATOR CONTROLLER FILE Assets/Resources/MCS/" +
                     animatorDefinition.animatorFile + (animatorController == null ? " IS NULL" : " IS DONE"));
                 animator.runtimeAnimatorController = animatorController;
@@ -1131,15 +1268,8 @@ public class MCSMain : MonoBehaviour {
         }
     }
 
-    private MCSConfigScene LoadCurrentSceneFromFile(String filePath) {
-        TextAsset currentSceneFile = Resources.Load<TextAsset>("MCS/Scenes/" + filePath);
-        Debug.Log("MCS: Config file Assets/Resources/MCS/Scenes/" + filePath + ".json" + (currentSceneFile == null ?
-            " is null!" : (":\n" + currentSceneFile.text)));
-        return JsonUtility.FromJson<MCSConfigScene>(currentSceneFile.text);
-    }
-
     private List<MCSConfigObjectDefinition> LoadObjectRegistryFromFile(String filePath) {
-        TextAsset objectRegistryFile = Resources.Load<TextAsset>("MCS/" + filePath);
+        TextAsset objectRegistryFile = Resources.Load<TextAsset>(MCSMain.PATH_PREFIX + filePath);
         Debug.Log("MCS: Config file Assets/Resources/MCS/" + filePath + ".json" + (objectRegistryFile == null ?
             " is null!" : (":\n" + objectRegistryFile.text)));
         MCSConfigObjectRegistry objectRegistry = JsonUtility
@@ -1339,6 +1469,18 @@ public class MCSMain : MonoBehaviour {
                 }
             });
 
+        // Shrouding an object will make it temporarily invisible.
+        bool shrouded = false;
+        objectConfig.shrouds.Where(shroud => shroud.stepBegin <= step && shroud.stepEnd >= step).ToList()
+            .ForEach((shroud) => {
+                shrouded = true;
+                gameOrParentObject.GetComponentInChildren<Renderer>().enabled = false;
+            });
+
+        if (!shrouded) {
+            gameOrParentObject.GetComponentInChildren<Renderer>().enabled = true;
+        }
+
         objectConfig.actions.Where(action => action.stepBegin == step).ToList().ForEach((action) => {
             // Play the animation on the game object, not on the parent object.
             Animator animator = objectConfig.GetGameObject().GetComponent<Animator>();
@@ -1434,6 +1576,7 @@ public class MCSConfigGameObject : MCSConfigAbstractObject {
     public List<MCSConfigResize> resizes;
     public List<MCSConfigMove> rotates;
     public List<MCSConfigShow> shows;
+    public List<MCSConfigStepBeginEnd> shrouds;
     public List<MCSConfigTeleport> teleports;
     public List<MCSConfigMove> torques;
 
@@ -1575,6 +1718,7 @@ public class MCSConfigScene {
     public bool intuitivePhysics;
     public bool observation; // deprecated; please use intuitivePhysics
     public bool screenshot;
+    public bool isometric;
 
     public MCSConfigGoal goal;
     public MCSConfigTransform performerStart = null;

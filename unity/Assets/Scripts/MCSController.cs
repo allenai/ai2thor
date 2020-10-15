@@ -43,6 +43,8 @@ public class MCSController : PhysicsRemoteFPSAgentController {
 
     PlayerPose pose = PlayerPose.STANDING;
 
+    private int cameraCullingMask = -1;
+
     private bool movementActionFinished = false;
     private MCSMovementActionData movementActionData; //stores movement direction
     private bool inputWasMovement = false;
@@ -126,6 +128,12 @@ public class MCSController : PhysicsRemoteFPSAgentController {
         }
 
         return status;
+    }
+
+    public void EndHabituation(ServerAction action) {
+        this.GetComponentInChildren<Camera>().cullingMask = 0;
+        this.lastActionStatus = Enum.GetName(typeof(ActionStatus), ActionStatus.SUCCESSFUL);
+        this.actionFinished(false);
     }
 
     public override ObjectMetadata[] generateObjectMetadata() {
@@ -330,6 +338,11 @@ public class MCSController : PhysicsRemoteFPSAgentController {
     }
 
     public override void ProcessControlCommand(ServerAction controlCommand) {
+        if (this.cameraCullingMask < 0) {
+            this.cameraCullingMask = this.GetComponentInChildren<Camera>().cullingMask;
+        }
+        this.GetComponentInChildren<Camera>().cullingMask = this.cameraCullingMask;
+
         inputWasMovement = 
                 controlCommand.action.Equals("MoveAhead") || 
                 controlCommand.action.Equals("MoveBack") ||
