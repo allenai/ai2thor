@@ -9070,12 +9070,46 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             }
         }
 
+        public void GetMidLevelArmCollisions() {
+            var arm = this.GetComponentInChildren<IK_Robot_Arm_Controller>();
+            if (arm != null) {
+                List<Dictionary<string, string>> collisions = new List<Dictionary<string, string>>();
+                foreach(var sc in arm.StaticCollisions()){
+                    var element = new Dictionary<string, string>();
+                    if (sc.simObjPhysics != null) {
+                        element["objectType"] = "simObjPhysics";
+                        element["name"] = sc.simObjPhysics.objectID;
+                    }
+                    else
+                    {
+                        element["objectType"] = "gameObject";
+                        element["name"] = sc.gameObject.name;
+                    }
+                    collisions.Add(element);
+                }
+                actionFinished(true, collisions);
+            }
+            else
+            {
+                errorMessage = "Agent does not have kinematic arm or is not enabled.";
+                actionFinished(false);
+            }
+
+        }
+
         public void MoveMidLevelArm(ServerAction action) {
             var arm = this.GetComponentInChildren<IK_Robot_Arm_Controller>();
-
             if (arm != null) {
-                //arm.SetStopMotionOnContact(action.stopArmMovementOnContact);
-                StartCoroutine(arm.moveArmTarget(this, action.position, action.speed, arm.gameObject, action.returnToStart, action.coordinateSpace));
+                arm.moveArmTarget(
+                    this,
+                    action.position, 
+                    action.speed, 
+                    action.fixedDeltaTime, 
+                    action.returnToStart, 
+                    action.coordinateSpace, 
+                    action.restrictMovement, 
+                    action.disableRendering
+                );
             }
             else {
                 actionFinished(false, "Agent does not have kinematic arm or is not enabled. Make sure there is a '" + typeof(IK_Robot_Arm_Controller).Name + "' component as a child of this agent.");
@@ -9098,11 +9132,16 @@ namespace UnityStandardAssets.Characters.FirstPerson {
             if(arm != null)
             {
                 //arm.SetStopMotionOnContact(action.stopArmMovementOnContact);
-                StartCoroutine(arm.moveArmHeight(this, action.y, action.speed, arm.gameObject, action.returnToStart));
+                arm.moveArmHeight(
+                    this, 
+                    action.y, 
+                    action.speed, 
+                    action.fixedDeltaTime, 
+                    action.returnToStart, 
+                    action.disableRendering
+                );
             }
-
-            else
-            {
+            else {
                 actionFinished(false, "Agent does not have kinematic arm or is not enabled. Make sure there is a '" + typeof(IK_Robot_Arm_Controller).Name + "' component as a child of this agent.");
             }
         }
@@ -9119,10 +9158,8 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                     //use euler angles
                     target = Quaternion.Euler(action.rotation);
                 }
-
                 //rotate action.degrees about axis
-                else
-                {
+                else {
                     target = Quaternion.AngleAxis(action.degrees, action.rotation);
                 }
 
@@ -9200,6 +9237,14 @@ namespace UnityStandardAssets.Characters.FirstPerson {
 
             if (arm != null) 
             {
+                if(action.radius < 0.04 || action.radius > 0.5)
+                {
+                    errorMessage = "radius of hand cannot be less than 0.04m nor greater than 0.5m";
+                    actionFinished(false, errorMessage);
+                    return;
+                }
+
+                else
                 arm.SetHandMagnetRadius(action.radius);
             }
 
@@ -9208,6 +9253,7 @@ namespace UnityStandardAssets.Characters.FirstPerson {
                 actionFinished(false, "Agent does not have kinematic arm or is not enabled. Make sure there is a '" + typeof(IK_Robot_Arm_Controller).Name + "' component as a child of this agent.");
             }
         }
+        
         #if UNITY_EDITOR
         void OnDrawGizmos()
         {

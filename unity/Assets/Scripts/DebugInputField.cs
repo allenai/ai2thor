@@ -2743,6 +2743,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
                     case "move_mid_arm":
                     case "mmla":
                     {
+                        // Limit around -0.084
+                        //"mmla 0 0 -0.08 1.0 false wrist true"
                         ServerAction action = new ServerAction();
                         action.action = "MoveMidLevelArm";
                         action.speed = 1.0f;
@@ -2764,7 +2766,11 @@ namespace UnityStandardAssets.Characters.FirstPerson
                              }
 
                              if(splitcommand.Length >= 7) {
-                                 action.handCameraSpace = bool.Parse(splitcommand[6]);
+                                 action.coordinateSpace = splitcommand[6];
+                             }
+
+                             if(splitcommand.Length >= 8) {
+                                 action.restrictMovement = bool.Parse(splitcommand[7]);
                              }
                         }
                         else {

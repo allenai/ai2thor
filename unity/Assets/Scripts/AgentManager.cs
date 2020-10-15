@@ -1225,6 +1225,11 @@ public class ArmMetadata {
     public JointMetadata[] joints;
 
 	public List<String> HeldObjects;
+
+	//world coordinates of the center of the hand's sphere
+	public Vector3 HandSphereCenter;
+	//current radius of the hand sphere
+	public float HandSphereRadius;
 }
 
 [Serializable]
@@ -1439,6 +1444,10 @@ public class ServerAction
     public float radius;
 
 	public bool stopArmMovementOnContact = false;
+
+    public bool disableRendering = false;
+
+    public bool restrictMovement = false;
 
 	//used to determine which coordinate space is used in Mid Level Arm actions
 	//valid options are relative to: world, wrist, armBase
