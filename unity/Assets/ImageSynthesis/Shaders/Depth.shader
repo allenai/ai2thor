@@ -11,29 +11,29 @@ Shader "Hidden/Depth" {
          Pass
          {
              CGPROGRAM
- 
+
              #pragma vertex vert
              #pragma fragment frag
              #include "UnityCG.cginc"
-             
+
              uniform sampler2D _MainTex;
              uniform sampler2D _CameraDepthTexture;
              uniform fixed _DepthLevel;
              uniform half4 _MainTex_TexelSize;
- 
+
              struct input
              {
                  float4 pos : POSITION;
                  half2 uv : TEXCOORD0;
              };
- 
+
              struct output
              {
                  float4 pos : SV_POSITION;
                  half2 uv : TEXCOORD0;
              };
 
- 
+
              output vert(input i)
              {
                  output o;
@@ -44,36 +44,24 @@ Shader "Hidden/Depth" {
                  if (_MainTex_TexelSize.y < 0)
                          o.uv.y = 1 - o.uv.y;
                  #endif
- 
+
                  return o;
              }
-             
-             fixed4 frag(output o) : COLOR
+
+             float4 frag(output o) : COLOR
              {
-                 /*
-                 //depth01 = pow(LinearEyeDepth(depth01), _DepthLevel);
-                 float depth01 = LinearEyeDepth(UNITY_SAMPLE_DEPTH(tex2D(_CameraDepthTexture, o.uv))) / 10;
+                 // LinearEyeDepth returns a value between the camera's near and far clipping planes.
+                 float depth = LinearEyeDepth(UNITY_SAMPLE_DEPTH(tex2D(_CameraDepthTexture, o.uv)));
 
-                 //float lowBits = depth01 / 2;
-                 //float medBits = depth01 / 4;
-                 //float highBits = depth01 / 8;
-
-                 //float depth01 = 1 - UNITY_SAMPLE_DEPTH(tex2D(_CameraDepthTexture, o.uv));
-     			 float lowBits = floor(depth01 * 256) / 256;
-				 float medBits = 256 * (depth01 - lowBits);
-				 medBits = floor(256 * medBits) / 256;
-				 float highBits = 256 * 256 * (depth01 - lowBits - medBits / 256);
-			  	 highBits = floor(256 * highBits) / 256;
-
-				 return fixed4(lowBits, medBits, highBits, 0.0);
-                 //return depth01;
-                 */
-
-                 float depth = Linear01Depth(UNITY_SAMPLE_DEPTH(tex2D(_CameraDepthTexture, o.uv)));
-                 return fixed4(depth, depth, depth, 0.0);
+                 // Assume the far clipping plane is always 15.
+                 // Split the distance into three sets of 5, each corresponding to an RGB element.
+                 float low = min(5, depth) / 5.0;
+                 float mid = min(5, max(depth - 5, 0)) / 5.0;
+                 float high = min(5, max(depth - 10, 0)) / 5.0;
+                 return float4(low, mid, high, 0.0);
              }
-             
+
              ENDCG
          }
-     } 
+     }
  }
