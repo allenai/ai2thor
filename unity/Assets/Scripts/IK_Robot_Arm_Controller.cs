@@ -535,6 +535,9 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
         string whichSpace = "arm", 
         bool restrictTargetPosition = false,
         bool disableRendering = false) {
+
+        // clearing out colliders here since OnTriggerExit is not consistently called in Editor
+        activeColliders.Clear();
         
         staticCollided.collided = false;
         staticCollided.simObjPhysics = null;
@@ -608,6 +611,9 @@ public class IK_Robot_Arm_Controller : MonoBehaviour
         float fixedDeltaTime = 0.02f, 
         bool returnToStartPositionIfFailed = false,
         bool disableRendering = false) {
+
+        // clearing out colliders here since OnTriggerExit is not consistently called in Editor
+        activeColliders.Clear();
             
         //first check if the target position is within bounds of the agent's capsule center/height extents
         //if not, actionFinished false with error message listing valid range defined by extents
